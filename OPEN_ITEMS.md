@@ -205,28 +205,6 @@ rewritten against the original applications, which run here; that is
 reverse-engineering, not transcription, and it is how SuperDisk! and
 SpaceSaver were done.
 
-## Two real DART "best" archives, expanded byte-exact and not yet pinned
-
-**Asked for 2026-09-19.** MacMount's `fixtures/real/` holds two archives
-Apple wrote: A/UX 3.0.1's 800K *Read Me* disk (40 blocks) and its 1.4 MB
-*Installation Boot Disk* (72 blocks) — the first real 72-block, 148-byte
-header archive this engine has met. Both expand here byte-exact, agree
-with MacMount's independent decoder to the byte, walk under `hfsutils`,
-and carry Disk Copy 4.2 checksums of E257EF53 and 3DF12BA6 over the
-volume (DECISIONS.md 2026-09-19, *the tree that was Yoshizaki's*).
-
-They are MacMount's fixtures, not this repository's. Their origin is a
-StuffIt on the Macintosh Garden FTP —
-`ftp://mirror:mirror@ftp.macintosh.garden/apps/APPLE_AUX_3-0-1_RETAIL_FLOPPY_IMAGES_DART.sit`,
-member SHA-256s pinned in MacMount's `tools/get_real_samples.py` — so
-the download and the unpacking of the member can be reproduced here.
-
-**What would close it:** a fetch step alongside the ciderpress2 specimens
-(`tools/fetch_references.sh` or `tools/run_dart.py` itself), a row each in
-`fixtures/SOURCES.md`, and two cases in `tools/run_dart.py` asserting the
-raw volume's DC42 checksum and the tags' shape, so the 72-block path is
-graded by `ci.sh` rather than by one afternoon's hand run.
-
 ## A DART's checksums, which this writes no fork to carry
 
 **Not a scope decision and not a missing specimen: it is a missing

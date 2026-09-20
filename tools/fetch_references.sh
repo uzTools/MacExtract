@@ -260,6 +260,22 @@ if [ ! -d reference/ciderpress2 ]; then
     done
 fi
 
+# The wrapper the two A/UX 3.0.1 floppies travel in. They are the only
+# DART archives here that Apple's tool wrote over a disk nobody in this
+# project chose, and the 1.4 MB one is the only 72-slot archive of any
+# kind the corpus holds — the one place a disk's SIZE changes a DART's
+# layout. Macintosh Garden's own FTP repository is the only place either
+# has ever been found; tools/get_dart_specimen.py takes the members out
+# of this with the engine's own CLI and fixtures/SOURCES.md pins both,
+# so the archive itself is kept here rather than in the corpus.
+# Be sparing with that host: public credentials, one volunteer's bandwidth.
+AUX301=APPLE_AUX_3-0-1_RETAIL_FLOPPY_IMAGES_DART.sit
+if [ ! -f "reference/macgarden/$AUX301" ]; then
+    mkdir -p reference/macgarden
+    curl -sSL -f -o "reference/macgarden/$AUX301" \
+        "ftp://mirror:mirror@ftp.macintosh.garden/apps/$AUX301"
+fi
+
 # Apple's own DartIntf.h, version 1.5.3, Ken McLeod, 1987-1994. DART was
 # never an Apple product and its format was never published; this header
 # is the whole of the documentation there is, and it says so ("The format

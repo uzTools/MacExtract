@@ -1825,8 +1825,12 @@ expansion, agrees with this engine byte for byte on four real "best"
 archives and 192 blocks — its two A/UX 3.0.1 disks (one of them the first
 real 72-block, 1.4 MB archive this engine had met) and ciderpress2's two
 (DECISIONS.md 2026-09-19, *the tree that was Yoshizaki's*). It is a
-cross-check run by hand, not a suite member, because those A/UX disks are
-MacMount's fixtures and not this repository's.
+cross-check run by hand and not a suite member, because it is another
+project's decoder, reached by that project's unit tests rather than by
+anything here. The two A/UX disks it agrees on are this repository's
+fixtures from 2026-09-20 and are graded here every run, against what
+DART recorded — a different oracle again.
+
 What CiderPress2 publishes instead is `TestData/dart/` — two 800K disks
 that DART 1.5.3 compressed under MAME, each in BOTH of DART's methods,
 **with the source images beside them**. `tools/fetch_references.sh`
@@ -1834,8 +1838,15 @@ fetches the lot into `reference/ciderpress2/`.
 
 ```sh
 sh tools/fetch_references.sh            # once
-python3 tools/run_dart.py               # ~15 s, 37 cases
+python3 tools/get_dart_specimen.py readme   -o fixtures/AUX301_ReadMe_MacSE.dart
+python3 tools/get_dart_specimen.py bootdisk -o fixtures/AUX301_BootDisk_Quadra.dart
+python3 tools/run_dart.py               # ~15 s, 53 cases
 ```
+
+The case count says which of the three sources are here: **53** with
+everything, 37 without the two A/UX specimens below, 9 with neither them
+nor `reference/ciderpress2` — the synthetic cases need nothing but the
+binary. It never fails for want of a specimen.
 
 Four assertions come out of the specimens, and each fails on a different
 kind of defect:
@@ -1857,7 +1868,38 @@ codecs: its two 256KB files are incompressible junk and its tags are
 random, so 18 of its 40 chunks take the per-chunk 0xFFFF stored fallback
 — a branch nothing else reaches.
 
-**Three of the four DART files live inside the 1440K images beside them**,
+**The two A/UX 3.0.1 floppies** (2026-09-20) are the other half of the
+grading, and what they answer is a different question: the CiderPress2
+four are disks somebody made for a test suite, and both are 800K. These
+are Apple's own retail floppies, compressed by Apple's own tool in 1993 —
+an 800K *Read Me* disk and the 1.4 MB *Installation Boot Disk*, which is
+**the only 72-slot archive this project has ever held**.
+
+They have no published source image, so the oracle is what DART wrote
+into their resource forks: 'CKSM' 1 (tags), 'CKSM' 2 (data) and a 'DART'
+0 string spelling both out, which
+`tools/get_dart_specimen.py --show readme` prints. Five assertions each:
+
+1. the fixture is the file `fixtures/SOURCES.md` pins, by SHA-256;
+2. the header states what it should — `01 01 03 20` and `01 10 05 a0`;
+3. **exactly the slot count `srcSize` calls for adds up to the file**, of
+   40 and 72, each tried. That is the 72-entry path checked from the
+   specimen rather than from our reading of it: a 40-entry table over the
+   boot disk falls 407,486 B short, and would put the payload 64 bytes
+   out;
+4. it expands to a stored DART of the disk's size, 819,200 or 1,474,560 B;
+5. the Disk Copy 4.2 checksums of the data and of the tags are the two
+   DART recorded — `E257EF53`/`AC4AA5C3` and `3DF12BA6`/`00000000`.
+
+The specimens are members of a StuffIt that lives in one place on Earth,
+Macintosh Garden's FTP repository (`fixtures/SOURCES.md` has the URL),
+and `tools/get_dart_specimen.py` takes them out of it **with this
+engine's own CLI** — graded against the SHA-256s MacMount pinned from
+`unar`'s output, so a StuffIt 5 walk that is one byte wrong produces a
+failure rather than a fixture. Be sparing with that host: public
+credentials, one volunteer's bandwidth.
+
+**Three of the four CiderPress2 DART files live inside the 1440K images beside them**,
 so reaching them needs `hfsutils` (`hmount`/`hcopy`). Without it the
 suite says so and grades `test1-best`, which sits in the ZIP as a plain
 member, together with everything synthetic below. It never fails for
@@ -1879,17 +1921,21 @@ want of the tools.
 
 ### What it cannot see
 
-- **DART is not in the fixture corpus**, and cannot be: a manifest comes
-  from `unar`, which has no idea what a DART is. So the 932-fixture diff
-  suite, `run_robustness.py` and `run_truncation.py` never meet one, and
-  the truncation and near-miss cases above are this suite's own. What
-  those three do that this does not is sweep BIT FLIPS; DART's crash
-  safety rests on `tools/fuzz.py` reaching it and on ASan over these 37
-  cases.
-- **No 1440K DART has ever been read here.** Every specimen is an 800K
-  Macintosh disk, so the 72-slot header — the other half of `dart_parse`
-  — is exercised only by the near-miss cases, which reject rather than
-  decode. The MS-DOS and Apple II disk types have never been seen at all.
+- **No DART has a manifest, and none can**: a manifest comes from `unar`,
+  which has no idea what a DART is. The two A/UX specimens sit in
+  `fixtures/` from 2026-09-20 and are graded only here, so the
+  932-fixture diff suite, `run_robustness.py` and `run_truncation.py`
+  still never meet a DART, and the truncation and near-miss cases above
+  are this suite's own. What those three do that this does not is sweep
+  BIT FLIPS; DART's crash safety rests on ASan over these 53 cases and on
+  `tools/fuzz.py`, which now reaches one — `AUX301_ReadMe_MacSE.dart` is
+  381,699 B and under that sweep's 512 KB ceiling, and the boot disk is
+  over it.
+- **The MS-DOS and Apple II disk types have never been seen**, and nor
+  has a 400K disk outside the synthetic cases. The 72-slot header stopped
+  being a hypothesis on 2026-09-20 (the boot disk above); the other five
+  type/size pairs `dart_parse` accepts are still exercised only by
+  near-miss cases, which reject rather than decode.
 - **The Macintosh runs are not in any suite.** Both methods were replayed
   through the Mac shell on 2026-09-09 and both are byte-exact — the
   harness's floppies are 1440 KB, so an 838 KB output fits — but DART has

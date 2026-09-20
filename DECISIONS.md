@@ -209,6 +209,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
 - 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
 - 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
+- 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
 
 ---
 
@@ -11862,7 +11863,9 @@ specimens this engine had never met — the boot disk is the first real
 byte-exact, but they are MacMount's fixtures (a StuffIt on the Macintosh
 Garden FTP, member SHA-256 pinned in its `tools/get_real_samples.py`) and
 are not pinned into `tools/run_dart.py`. That would be a download step
-and a `fixtures/SOURCES.md` row, and it is worth doing.
+and a `fixtures/SOURCES.md` row, and it is worth doing. *Done 2026-09-20
+(the checksums that came with the disks), where the disks turned out to
+carry a better oracle than the one asked for here.*
 
 
 ---
@@ -12471,3 +12474,109 @@ was exhaustive: it was `reference/` and nothing else, which is deark,
 macutils, lhasa, LHa, mpack, btoa, CiderPress2 and XADMaster. And
 nothing at all about the formats' correctness, which the differential
 suites already grade and which this row did not touch.
+
+---
+
+## 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
+
+**Claim (measured).** The two A/UX 3.0.1 floppies Apple's own DART 1.5.3
+compressed in 1993 are this repository's fixtures from today and are
+graded by `ci.sh`: `AUX301_ReadMe_MacSE.dart` (381,699 B, 800K, 40 slots)
+and `AUX301_BootDisk_Quadra.dart` (978,283 B, 1440K, **72 slots** — the
+only 72-slot archive of any kind this project has held). Ten cases in
+`tools/run_dart.py`, which went from 37 to 53; the other six are the
+synthetic cases, which used to be skipped when `reference/ciderpress2`
+was absent and now run on the binary alone.
+
+**The oracle came with the disks, and it is not the one the item asked
+for.** OPEN_ITEMS.md asked for the two Disk Copy 4.2 checksums MacMount
+had derived by walking the expanded volumes under `hfsutils`. Both
+members turn out to carry Apple's own: a 411-byte resource fork holding
+'CKSM' 1 over the tags, 'CKSM' 2 over the data, and a 'DART' 0 Pascal
+string that spells both out — *"1.5, tag checksum=$AC4AA5C3, data
+checksum=$E257EF53"*. The data halves agree with the derived numbers
+(`E257EF53`, `3DF12BA6`), so what the pinning added is the TAG side:
+`AC4AA5C3` over 19,200 B of real GCR tags, stated by the program that
+wrote them. `tools/get_dart_specimen.py --show readme` prints all three
+in one command, which is where the constants in `run_dart.py` are cited
+from.
+
+**The 72-entry table is checked from the specimen, not from our reading
+of it.** For each disk the suite tries BOTH table lengths and requires
+exactly the one `srcSize` calls for to add up to the file: 4 + 2n + Σ
+lengths, with 0xFFFF counted as 20,960. A 40-entry reading of the boot
+disk falls 407,486 B short, and would put the payload 64 bytes out — the
+defect this row exists to make impossible. Source for the arithmetic:
+`reference/ciderpress2/DART-notes.md`, which gives a "best" length in
+bytes and a "fast" one in words.
+
+**The specimens are unpacked by this engine's own CLI.** They are members
+of a StuffIt that exists in one place, Macintosh Garden's FTP; the
+SHA-256s MacMount pinned from `unar`'s output grade our StuffIt 5 walk on
+the way in, so a walk that is one byte wrong produces a failure rather
+than a fixture. All four members came out byte-identical to `unar`'s.
+`tools/fetch_references.sh` fetches the wrapper once into
+`reference/macgarden/` and `fixtures/SOURCES.md` names the generator as
+each member's provenance, so `harvest.py --restore` rebuilds them.
+
+**What the row found on the way, and the smell it came from.** A constant
+in a peak-RAM matrix is one of the ten smells; this was the other kind —
+a number that should have MOVED and did not. FORMATS.md's DART table read
+40,301–40,624 B for "best" and "15,568 B for the adaptive Huffman tree",
+both of which stopped being true on 2026-09-19, when the `-lh1-` coder
+DART borrows was rebuilt and its working state fell to 9,000 B (*the tree
+that was Yoshizaki's*). Measured on all seven specimens, "best" is now
+27,967–34,056 B and every figure is the sum of its parts exactly: longest
+chunk + 9,000 + 4,096. The Macintosh row is stale by the same 6,568 B and
+is labelled so rather than adjusted, because this machine has not re-run
+it. **A format's numbers live in the section of the format, not of the
+coder** — a shared decoder rewritten under one format's row leaves the
+other's untouched, and nothing checks that.
+
+The new specimens also disproved the sentence under that table. It said
+the saving from sizing the input buffer off the block table rather than
+at a fixed 20,960 B was "between 0 and 474 B" because "every real 800K
+disk has at least one chunk that barely compresses". The *Read Me* disk
+holds one document and is otherwise empty: its worst chunk compresses to
+14,871 B and it saves **6,089**. The hypothesis in the following sentence
+— that a mostly empty disk is where this sizing pays, and that it is the
+small machines which meet one — is the one that survived.
+
+**And what the corpus itself shifted.** `tools/run_only.py` sweeps every
+SIXTEENTH fixture by name. Two files sorting near the top of `fixtures/`
+moved that stride by two, and the new sample found `compact-pro-151.hqx`
+— an archive with a comment, which `--only` had never been run against
+in the three weeks the suite has existed. It failed: a selective
+extraction wrote `Compact Pro Package (English).comment.txt` beside the
+one entry asked for.
+
+That is the engine behaving as designed — an archive's comment belongs
+to the archive and to no entry of it, so it is written whatever was
+selected, and `--no-comment` declines it (cli/main.c, `sink_comment`) —
+and a suite that had never been told. No `src/` change: `run_only.py`
+now permits the file and, because a permission nothing grades is a hole,
+a fifth generated case asserts all three halves (written under `--only`,
+absent under `--no-comment`, and not selectable, since it is not an
+entry). The sweep does not GUESS the name: this fixture's comment is
+named after the archive inside the BinHex envelope rather than after the
+fixture, so it asks instead — what a `--no-comment` run does not write
+is the comment, by definition. All three assertions were checked by
+mutation.
+
+**The lesson is about the sample, not the comment.** A sweep that takes
+every Nth fixture by name covers a set that changes when the corpus
+gains a file, so it can never be said to cover a PROPERTY — only to have
+met one. This is the same shape as an aggregate that cannot fail on what
+it does not aggregate (CLAUDE.md), and it is worth knowing that adding a
+fixture reshuffles what several suites look at.
+
+**What is NOT claimed.** That anything in `src/` changed: nothing did, so
+there is no tick, size or heap movement to price, and the heap figures
+above are the corrected old ones rather than new behaviour. That a
+Macintosh has expanded either disk — neither has been through the shell,
+and the boot disk's 1,509,268 B output does not fit the harness's 1,440
+KB Out volume without `--out-kb`. That the other two members of the
+StuffIt (an 800K boot disk and a 1440K *Read Me*) add anything: they are
+the same two shapes again, and are named in the generator and left where
+they are. And nothing about the MS-DOS or Apple II disk types, or a real
+400K disk, none of which any specimen here has ever been.

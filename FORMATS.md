@@ -70,7 +70,7 @@ under *Table notes*.
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
-| DART (Apple's Disk Archive/Retrieval Tool) | **expand** — what comes out is an UNCOMPRESSED DART, not the files on the disk (*DART*, below) | 0 "fast" (a word-oriented RLE), 1 "best" (LZHUF over a window of zeros), and the per-chunk 0xFFFF stored fallback both of them fall back to; method 2 is **refused as already uncompressed**, which is a statement about the file rather than a failure of it | no fixture, and no second reader among the oracles — MacMount's independent decoder agrees byte for byte on four real archives since 2026-09-19 (TESTING.md, *DART*): graded against **the disks DART 1.5.3 itself was fed** — two 800K images, each compressed BOTH ways, published beside their sources — plus the checksums DART wrote into one of them in 1993, and one real archive from 1990 (*DART*, below) | 24.6–40.6 KB | full |
+| DART (Apple's Disk Archive/Retrieval Tool) | **expand** — what comes out is an UNCOMPRESSED DART, not the files on the disk (*DART*, below) | 0 "fast" (a word-oriented RLE), 1 "best" (LZHUF over a window of zeros), and the per-chunk 0xFFFF stored fallback both of them fall back to; method 2 is **refused as already uncompressed**, which is a statement about the file rather than a failure of it | no manifest, because no oracle here can read a DART, and no second reader among them — MacMount's independent decoder agrees byte for byte on four real archives since 2026-09-19 (TESTING.md, *DART*): graded against **the disks DART 1.5.3 itself was fed** — two 800K images, each compressed BOTH ways, published beside their sources — plus the checksums DART wrote into three of them, two of those Apple's own A/UX 3.0.1 floppies, and one real archive from 1990 (*DART*, below) | 24.6–34.1 KB | full |
 | AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
@@ -977,6 +977,8 @@ under MAME, each in both methods, with the source images beside them.
 | `test1-best` | best | 0 | the same | the same, **and** DART's own 'CKSM' resources: data `183F8B19`, tags `00000000` |
 | `random_t-fast` | fast | 19 | 819,200 B + 19,200 B of RANDOM tags | the Disk Copy 4.2 payload of `random_t-source.img` |
 | `random_t-best` | best | 18 | the same | the same |
+| `AUX301_ReadMe_MacSE.dart` | best | 0 | an 800K A/UX 3.0.1 *Read Me* disk, with 19,200 B of real GCR tags | DART's own 'CKSM' resources: data `E257EF53`, tags `AC4AA5C3` |
+| `AUX301_BootDisk_Quadra.dart` | best | 0 | the 1.4 MB A/UX 3.0.1 *Installation Boot Disk*, 1,474,560 B + 34,560 B of zero tags | DART's own 'CKSM' resources: data `3DF12BA6`, tags `00000000` |
 | `Studio8_Program.dart` | fast | 10 | an 800K HFS volume, "Studio/8", five files, October 1990 | mounts under `hfsutils`; no published source exists |
 
 The two methods over one disk agree with each other, which is two
@@ -984,21 +986,37 @@ independent codecs arriving at one answer. `Studio8_Program.dart` is a
 real archive from 1990 and is the only specimen here that Apple's tool
 did not write for a test suite.
 
+The two A/UX disks are the corpus's since 2026-09-20 (`fixtures/SOURCES.md`,
+`tools/get_dart_specimen.py`), and the boot disk is **the only 72-slot
+archive of any kind this project has ever held** — the one place a disk's
+SIZE changes a DART's layout, and until then a branch exercised only by
+near-miss headers that reject rather than decode. Neither has a published
+source image, so what grades them is what Apple's application wrote into
+their resource forks in 1993.
+
 ### Peak RAM, and why it is not a constant
 
 | method | peak | what it is |
 |---|---|---|
 | fast | 24,582–25,056 B | the longest chunk the table states, plus 4 KB of output staging |
-| best | 40,301–40,624 B | the same, plus 15,568 B for the adaptive Huffman tree, for as long as one chunk lasts |
+| best | 27,967–34,056 B | the same, plus 9,000 B for the adaptive Huffman tree, for as long as one chunk lasts |
+
+Both are the sum of their parts exactly, on all seven specimens. The
+`best` row read 40,301–40,624 B and "15,568 B" until 2026-09-20: the
+`-lh1-` coder DART borrows was rebuilt on 2026-09-19 and its working
+state fell to 9,000 B (DECISIONS.md, *the tree that was Yoshizaki's*),
+and this table was not moved with it.
 
 The input buffer is sized from the **table**, not from the 20,960 a
 chunk may be. The format's own fallback caps a compressed chunk at the
 size it expands to, so a fixed buffer would have been legitimate — and
 would have made the peak the same number for every archive, which is the
-smell CLAUDE.md names. Measured, the saving is between 0 and 474 B on
-these five: every real 800K disk has at least one chunk that barely
-compresses. A disk that is mostly empty has no such chunk, and it is the
-small machines that would meet one.
+smell CLAUDE.md names. Measured, the saving is between 0 and **6,089 B**
+on these seven. Five of them have a chunk that barely compresses and save
+0 to 474 B; the two A/UX disks save 2,315 and **6,089** — the *Read Me*
+disk holds one document and is otherwise empty, and its worst chunk still
+compresses to 14,871 B. A mostly empty disk was the case this sizing was
+written for, and it took a real one from 1993 to show what it is worth.
 
 ### On a Macintosh
 
@@ -1010,11 +1028,15 @@ Replayed through the Mac shell on an emulated Mac Plus (System 6.0.8,
 | `test1-best` (LZH) | **PASS**, 838,484 B out, peak heap 40,321 B | **PASS**, the same |
 | `Studio8_Program.dart` (RLE) | **PASS**, 838,484 B out, peak heap 25,072 B | **PASS**, the same |
 
-The peaks are the Linux figures plus the Mac allocator's per-block
-overhead (40,301 and 25,056). Neither archive is in the 69-fixture tier
-sample and neither has an oracle manifest, so these are `--expect` runs
-and are not part of any suite; TESTING.md, *DART*, has the commands and
-says what has NOT been run.
+The peaks were the Linux figures plus the Mac allocator's per-block
+overhead (40,301 and 25,056) on the day they were measured. **The LZH
+row is stale by 6,568 B** and has not been re-run: the `-lh1-` coder was
+rebuilt on 2026-09-19 and `test1-best` now peaks at 33,733 B on Linux,
+which no Macintosh has confirmed. The RLE row is untouched by that
+change. Neither archive is in the 69-fixture tier sample and neither has
+an oracle manifest, so these are `--expect` runs and are not part of any
+suite; TESTING.md, *DART*, has the commands and says what has NOT been
+run.
 
 **The refusal is photographed**, not inferred: an uncompressed 400K DART
 handed to the application on System 6.0.8 draws *"This DART disk image is

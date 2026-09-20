@@ -257,7 +257,12 @@ This project's decoders are transcriptions/ports of algorithms from:
     anything shipped. CiderPress2's `TestData/dart/` is the test-time
     oracle (`tools/run_dart.py`): two disks DART 1.5.3 compressed, with
     the images it was fed. Its README notes that DART itself is
-    copyright Apple Computer, Inc.
+    copyright Apple Computer, Inc. Two more oracles are archives Apple
+    shipped — the A/UX 3.0.1 *Read Me* and *Installation Boot Disk*
+    floppies, © Apple Computer, Inc., fetched from the Macintosh Garden
+    FTP by `tools/get_dart_specimen.py` and, like every other archive in
+    the corpus, never committed. What grades our output is what DART
+    wrote into their resource forks in 1993.
 
 CONTAINER FORMAT SPECIFICATIONS
 
