@@ -36,8 +36,12 @@ This project's decoders are transcriptions/ports of algorithms from:
     `XADCompressHandle.m` is a source of it. Nor the canonical
     code-length Huffman codes in `src/unc_huffman.c`, which follow
     RFC 1951 section 3.2.2 and puff.c (below) rather than
-    XADPrefixCode.m; the bit-serialized TREE in that same file still
-    cites XADStuffItHuffmanHandle.m, and so does macutils.
+    XADPrefixCode.m. Nor, since 2026-09-20, the bit-serialized TREE in
+    that same file, nor the fact that DiskDoubler method 4 and PackIt
+    write the same one: those are
+    `docs/formats/serialized-huffman-tree.md`, this project's own
+    description, derived from the three formats' output by experiment
+    and reproducible with `tools/derive_huffman_tree.py`.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
@@ -234,8 +238,10 @@ This project's decoders are transcriptions/ports of algorithms from:
     Compact Pro relies on. No code was copied, neither is committed
     (`tools/fetch_references.sh` fetches them) and neither is linked
     into anything shipped. The bit-serialized Huffman TREE in the same
-    file is a different thing with no public description and still
-    cites XADMaster and macutils.
+    file is a different thing, and has had no PUBLIC description at any
+    point; what it has since 2026-09-20 is one of this project's own,
+    `docs/formats/serialized-huffman-tree.md`, measured from the
+    formats rather than read out of anybody's program.
 
   * CiderPress2, by Andy McFadden (Apache-2.0), and Apple's own
     `DartIntf.h`, by Ken McLeod (© 1987-1994 Apple Computer, Inc.) —

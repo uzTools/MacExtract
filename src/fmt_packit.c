@@ -21,7 +21,14 @@
  * boundary after the compressed stream.
  *
  * Sources: reference/XADMaster/XADPackItParser.m and
- * reference/macutils/macunpack/pit.c — LGPL, see NOTICE.
+ * reference/macutils/macunpack/pit.c — LGPL, see NOTICE. Two things
+ * here are NOT theirs since 2026-09-20: the Huffman tree's
+ * serialisation, which is docs/formats/serialized-huffman-tree.md, and
+ * the fact that a PMa4 entry codes its 94-byte HEADER into the same
+ * stream as the two forks — measured, by decoding three entries of
+ * `synth-packit-2.pit` under that note's rule and finding each one's
+ * own name and fork lengths in the first 94 bytes out
+ * (tools/derive_huffman_tree.py).
  * (XADMaster ignores the header CRC; macutils checks it (pit.c
  * pit_filehdr) — we check it.)
  * PMa5 and PMa6 are decrypted where a password is available; without

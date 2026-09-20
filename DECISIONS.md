@@ -214,6 +214,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
 - 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
 - 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
+- 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
 
 ---
 
@@ -12851,3 +12852,73 @@ caller, and 554 StuffIt and BinHex fixtures come out byte-identical
 against the old binary. And nothing about other 32x32 multiplies in
 the engine: the bound that makes this one safe is a property of this
 model's limits, and every other site would need its own.
+
+## 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
+
+**Item 11 of CURRENT_WORK.md's Part B, and it closes without a line of
+decoder being rewritten.** That is the result, not a dodge: the row's
+obstacle was never the code.
+
+**What the row said.** `unc_huffman.c`'s bit-serialized tree parse —
+used by StuffIt method 3, DiskDoubler method 4 and PackIt — cited
+`XADStuffItHuffmanHandle.m` and macutils' `de_huffman.c`, and the
+inventory recorded "the tree parse cannot follow: no spec describes
+it". The brief called it the smallest licence row there is and asked
+for a spec note written from the application's output, then a rewrite
+of the ~40 lines from that note.
+
+**The note is now the first half, and it was cheap.** The serialisation
+is four facts, and all four fall out of an experiment that consults
+nothing: try every plausible serialisation at every byte offset of a
+real archive, and keep the one whose decode reproduces the sha256 an
+independent oracle already recorded for a whole fork. One fork settles
+it — a coincidence over 3,469 bytes of sha256 is not a thing — and
+thirteen forks across the three formats confirm it:
+
+> bits MSB-first; `1` = a leaf and the next 8 bits are its symbol;
+> `0` = an internal node, its zero subtree then its one subtree; and
+> per output byte, walk from the root, `0` first subtree, `1` second.
+
+`docs/formats/serialized-huffman-tree.md` states it with its evidence,
+and `tools/derive_huffman_tree.py --grid` re-derives it from nothing in
+about a minute.
+
+**The second half is not worth doing, by this project's own rule.**
+"Nothing is rewritten for the licence alone, and nothing is kept unless
+it is measured" (CURRENT_WORK.md). The parse is 0.44 % of a run that
+uses it; a rewrite from the note would be neutral on every axis at
+best, and the rule says a neutral row is recorded and not taken. What
+was blocking the row was the SOURCE of the facts, and facts are what
+the note replaces — the same conclusion the 2026-09-19 re-citation
+reached for the container parsers, reached here by measuring rather
+than by finding somebody else's document.
+
+**Two smaller facts left the same rows on the way.** That DiskDoubler
+method 4 writes the same tree as StuffIt method 3 came from
+`XADDiskDoublerParser.m`; it is now measured, on a container
+**Salient's own 1991 expander reads back**. And that a PackIt `PMa4`
+entry codes its 94-byte header into the same stream as its two forks
+came from `pit.c`; it is now measured, by finding each entry's own name
+and fork lengths in the first 94 bytes the tree hands back.
+
+**The false positive is the part worth transferring.** A single-leaf
+tree is nine bits — `1` and a byte — that occur in almost any file, and
+it consumes NO bits per symbol, so it "decodes" into any number of
+copies of that byte. It matched a 700-byte fork of identical bytes at
+an offset that meant nothing, and it was reported as a confirmation
+until it was looked at. The real reading of that entry has a 25-leaf
+tree, because PackIt's header is in the stream. **An experiment that
+searches a space will find the degenerate member of it**, and the
+degenerate member is the one whose match carries no information;
+`derive_huffman_tree.py` refuses them, and says why.
+
+**What is NOT claimed.** That the parse in `unc_huffman.c` is provably
+an independent expression: it predates the note and is unchanged, and
+nobody who has read it can write a clean-room replacement. What the
+note changes is that a replacement can now be written from a
+description rather than from that file — by somebody who has not
+opened it — and that the FACTS the shipped file needs no longer come
+from anyone else. That the licence itself moves: it does not, and will
+not until the last row in the inventory is gone. And nothing about
+Compact Pro, whose canonical 4-bit code lengths are a different
+mechanism that left this file on 2026-09-19.

@@ -462,8 +462,12 @@ static int dd_rle(DdFork *o, UncBufIn *in, uint32_t complen, int xorval)
  * transcription; no specimen exists to break the tie outright.
  * DECISIONS.md 2026-08-21 (methods 3, 4 and 5).
  *
- * Source: XADDiskDoublerParser.m case 4, which builds exactly an
- * XADStuffItHuffmanHandle over the fork.
+ * Source: docs/formats/serialized-huffman-tree.md. That method 4 is
+ * the same serialized tree StuffIt method 3 writes is measured here
+ * rather than taken from XADDiskDoublerParser.m: `synth-dd-m4.dd` — a
+ * container Salient's own 1991 expander reads back — decodes under the
+ * note's rule, 256 leaves and depth 11
+ * (tools/derive_huffman_tree.py).
  */
 static int dd_huffman(DdFork *o, UncCtx *c, UncBufIn *in, int xorval)
 {

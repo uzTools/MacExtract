@@ -152,6 +152,22 @@ times*). **Part A is otherwise empty.**
 
 # Part B — the licence rows, in the order they could possibly pay
 
+**Item 10 is done and struck**: removing `-lh2-`/`-lh3-` and their two
+dispatch arms is worth **3,472 B of `CODE` and 32 B of A5**, measured
+on a build without them. The number is beside the row in OPEN_ITEMS.md
+with what stands against it; taking the decision is the maintainer's
+and this file will not.
+
+**Item 11 is done and struck, and it closed without a rewrite**: the
+serialized Huffman tree now has a description of this project's own,
+derived from thirteen forks of the three formats that write it
+(`docs/formats/serialized-huffman-tree.md`,
+`tools/derive_huffman_tree.py`), so `unc_huffman.c`, `fmt_sit.c`'s
+method 3, `fmt_dd.c`'s method 4 and `fmt_packit.c`'s tree cite that
+instead of XADMaster and macutils. The decoder is unchanged, because
+the rule below says a neutral rewrite is recorded and not taken
+(DECISIONS.md 2026-09-20, *the tree that could be measured instead*).
+
 These are the rows of OPEN_ITEMS.md's inventory (*What is still
 XADMaster's, and what would have to replace it*) that have **no
 non-copyleft description anywhere**. Each can only be rewritten by
@@ -250,26 +266,6 @@ with a published shape, Crunch 1–9 is LZW with ARC's own quirks and
 Crush is PAK's LZW; ARC 5.21's source and PAK 2.51 run under DOSBox
 (`tools/pak.py`, `tools/run_pak.py`, `tools/get_arc.sh`). Small on every
 axis; note first.
-
-## Item 10 — `-lh2-`/`-lh3-` (`unc_lzdyn.c`)
-
-No corpus archive uses them and lhasa does not implement them; LHa for
-UNIX does, under its own licence. Inventory says "none". The only move
-that is not a rewrite for its own sake is to ask whether the two
-methods should stay at all — they cost CODE on every Mac Plus for a
-format nobody has a file of. Measure their CODE (`size` the `.obj`) and
-put the number beside the row; the decision is the maintainer's.
-
-## Item 11 — the bit-serialized Huffman tree parse (`unc_huffman.c`)
-
-Used by StuffIt methods 3 and 5 and DiskDoubler method 4 ("StuffIt
-Huffman"); the tree is written as a pre-order bit stream, which is a
-textbook serialisation whose only public description happens to be
-XADMaster's and macutils' `de_huffman.c`. A spec note stating "one bit
-per node, 0 = internal, 1 = leaf followed by 8 bits" from the
-application's output, and a rewrite of the ~40 lines from that note,
-is the smallest licence row there is. Neutral is the expectation;
-the note is the deliverable.
 
 ## Item 12 — the four container facts (`fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_sitseg.c`, `fmt_stubs.c`)
 

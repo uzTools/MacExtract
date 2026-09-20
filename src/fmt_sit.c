@@ -122,8 +122,11 @@ out:
     return err;
 }
 
-/* Method 3: Huffman with the bit-serialized tree (shared with
- * PackIt; source XADStuffItHuffmanHandle.m). */
+/* Method 3: Huffman with the bit-serialized tree, which PackIt and
+ * DiskDoubler method 4 write too. Source:
+ * docs/formats/serialized-huffman-tree.md, derived from this format's
+ * own output — nine method-3 forks across eight archives read by the
+ * rule it states, byte-exact against the oracle. */
 static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                        UncAlloc *al)
 {

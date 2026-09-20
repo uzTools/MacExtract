@@ -5,11 +5,19 @@
  * Two unrelated things share this file because they share the bit
  * reader, and they have different sources.
  *
- * The bit-serialized TREE — a node written as a bit and a leaf as a bit
- * plus its byte — is a StuffIt and Compact Pro container fact with no
- * public description: reference/XADMaster/XADStuffItHuffmanHandle.m
- * (parseTree) and reference/macutils/macunpack/de_huffman.c
- * (read_sub_tree, getbit_be) — LGPL, see NOTICE.
+ * The bit-serialized TREE owes neither, since 2026-09-20. Source:
+ * docs/formats/serialized-huffman-tree.md — this project's own
+ * description of the serialisation, derived from the output of the
+ * three formats that write it (StuffIt method 3, DiskDoubler method 4,
+ * PackIt) and from nothing else: a grid of plausible serialisations
+ * tried at every offset of a real archive, keeping the one whose
+ * decode reproduces an independent oracle's sha256 for a whole fork.
+ * Thirteen forks, re-runnable with tools/derive_huffman_tree.py.
+ * XADStuffItHuffmanHandle.m and macutils' de_huffman.c were the source
+ * of these FACTS until that note existed; what they are not a source
+ * of is the code below, which the engine's own rules shape — no
+ * recursion, so an explicit stack, and a lookup table the formats know
+ * nothing about (NOTICE).
  *
  * The CANONICAL codes owe neither, since 2026-09-19. Sources:
  *   reference/notes/rfc1951.txt section 3.2.2 — the definition: codes
