@@ -2564,6 +2564,62 @@ mutation: a matcher that ignores the fingerprint (4 failures — the
 name-alike intruder gets used) and a joiner that drops one byte per
 part boundary (27 failures). Both were reverted.
 
+## The 68000 profile (`tools/m68kprof.py`, not in `ci.sh`)
+
+**It ranks; it does not price.** The tick probe on an emulated Mac Plus
+(`tools/vmac/README.md`, `UNC_AT_TIMING`) is what prices a change. This
+is what says WHERE to look, and it has found the hot spot for every
+decoder rewritten since 2026-09-19 — including three that x86 counts
+ranked wrong or not at all.
+
+It reads a `qemu-m68k -d exec,nochain,in_asm` log: per-function
+instruction counts, then the hottest basic blocks with `file:line`
+through `addr2line`.
+
+    m68k-linux-gnu-gcc -static -std=c99 -g -Os -mcpu=68000 \
+      -fno-tree-loop-distribute-patterns \
+      -freorder-blocks-algorithm=simple -fipa-icf \
+      -Iinclude -Ithird_party/zlib -DZ_TESTW=0 -DNO_GZIP \
+      cli/main.c src/*.c third_party/zlib/*.c -o /tmp/me68k
+    mkfifo /tmp/q.fifo
+    python3 tools/m68kprof.py /tmp/q.fifo /tmp/me68k > /tmp/prof.txt &
+    qemu-m68k -d exec,nochain,in_asm -D /tmp/q.fifo /tmp/me68k t fixtures/<f>
+
+The flags are there to make this build resemble the Retro68 one: `-Os`
+and `-mcpu=68000` are what ships, and the other three suppress
+transformations the Mac build does not get. `nochain` is what makes the
+log complete — without it QEMU chains blocks and stops announcing them.
+The FIFO keeps a multi-gigabyte log off the disk.
+
+**Read the BLOCKS, not just the functions.** The function ranking
+attributes an inlined callee to its caller, so a hot loop can be
+invisible in it: on `macburger-helper.hqx` the function list read
+`bh_get_bits` 41 %, and the block list showed that 25 points of that
+were `bh_refill_line` inlined INTO it — which is where the work
+actually was, and where the 2026-09-20 rewrite went (DECISIONS.md, *the
+character that was touched three times*).
+
+**What it cannot see:**
+
+- **Cycles.** It counts instructions. A `mulu`, a `divu` or a libgcc
+  helper (`__mulsi3`, `__udivsi3`) costs far more than its count says,
+  and a memory-heavy addressing mode less. Two changes within a few
+  percent of each other are not ranked by this at all — settle them on
+  the tick probe.
+- **The inliner's actual choices on the target.** This is a static
+  Linux binary built by a different GCC from the Retro68 one, so what
+  is inlined here need not be inlined there. The `.obj` and the CODE
+  ratchet are the check for that.
+- **Anything in the Mac shell.** No Toolbox, no File Manager, no
+  progress dialog, no allocator pressure — `cli/main.c` drives the
+  engine. The shell's share was measured once and is 1.5 % of an
+  extraction (FORMATS.md, *What -O3 is worth, and where*), which is why
+  this omission is tolerable rather than fatal.
+- **Whether the change is worth anything.** −23.0 % of Linux `Ir` was
+  −9.4 % of Mac Plus ticks on one rewrite and −35.8 % of 68000
+  instructions was −36.7 % of ticks on the next. The 68000 count is
+  much the closer of the two, and still not the answer.
+
 ## On-Mac layers (not in `ci.sh` — they need an emulator)
 
 7. **Mini vMac replay** (`tools/vmac/run.py`, System 6.0.8 and 7.0.1 on a

@@ -331,13 +331,6 @@ split header or the Now Compress probe turns up; leave the row.
 
 # Part C — housekeeping the week left behind
 
-- **`tools/m68kprof.py` is load-bearing and undocumented.** It found
-  every hot spot of the last brief and this one, and only DECISIONS.md
-  mentions it. TESTING.md needs a section — the command in the
-  measurement protocol above, what it CANNOT see (cycles; the inliner's
-  choices, which change between a static Linux build and the Retro68
-  one; anything in the Mac shell), and the flags that make the build
-  match the Mac's.
 - **The Mac timing table is stale.** FORMATS.md, *Measured on a 7 MHz
   Mac Plus* and *Timed on the same Mac Plus (2026-08-29)*: every row
   whose format changed on 2026-09-18/19 (LZH, LZW, Compact Pro,
