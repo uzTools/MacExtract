@@ -23,7 +23,7 @@ from a 68000 instruction profile** (`tools/m68kprof.py`, below), run on
 | fixture | 68000 instructions | where they go |
 |---|---|---|
 | `macburger-helper.hqx` (BinHex) | 34.6 M | `bh_get_bits` 41 %, `bh_next` 29 %, `unc_bufin_next` 10 %, CRC-16 8 % — **taken 2026-09-20, 22.2 M** |
-| `derived-Ultimate_Copland_1.1.sit.1` (StuffIt 13) | 40.4 M | fork body 34 %, `unc_canon_decode` 28 %, **`unc_fork_put` 14 %**, CRC-16 10 % |
+| `derived-Ultimate_Copland_1.1.sit.1` (StuffIt 13) | 40.4 M | fork body 34 %, `unc_canon_decode` 28 %, **`unc_fork_put` 14 %**, CRC-16 10 % — **taken 2026-09-20, 35.8 M** |
 | `derived-MacPass390.sea` (Compact Pro) | 29.0 M | `unc_canon_decode` 34 %, `unc_cpt_lzh_fork` 34 %, two CRCs 23 % |
 | `derived-MUSFMT10.ZIP` (zip) | 15.3 M | zlib `inflate_fast` 53 %, CRC-32 35 % |
 | `derived-a2basic.dmg.sit` (Arsenic) | 162 M | `ars_decode` 56 %, MTF and BWT 31 %, `__mulsi3` 4 % |
@@ -127,40 +127,17 @@ probe prices, and three "roughly zero" claims last week measured +468 B,
 
 # Part A — speed, from the profile
 
-**Item 1 (BinHex) is done and struck**: the line is read, judged and
+**Items 1 and 2 are done and struck.** Method 13 flushes runs out of
+its own window instead of calling `unc_fork_put` per byte — engine
+4,395 → 3,867 ticks, −12.0 %, for +140 B of code and −12 B of A5
+(DECISIONS.md 2026-09-20, *the window that was already the staging
+buffer*); Item 4 below inherits it and now has a floor to beat.
+
+**Item 1 (BinHex)**: the line is read, judged and
 converted in one pass and four characters become three bytes at once —
 engine 3,771 → 2,386 ticks on a Mac Plus, −36.7 %, for +240 B of code
 (DECISIONS.md 2026-09-20, *the character that was touched three
-times*). The two below are still hypotheses, neither measured.
-
-## Item 2 — StuffIt method 13, flush runs instead of putting bytes
-
-**Files:** `src/fmt_sit.c` (`sit13_fork`), no new interface: use
-`unc_fork_write(UncForkOut *, const uint8_t *, uint32_t)`, which is
-what the LZHUF and LZW decoders got on 2026-09-19 for +76 B each
-(DECISIONS.md 2026-09-18, *the byte that left through a pointer*).
-
-**What it is:** every output byte, literal or copied, goes through a
-call to `unc_fork_put` — 14 % of the run, 4.6 M instructions on
-Copland. The decoder already keeps a window (`window[pos & (win - 1)]`);
-write there and flush the span since the last flush through
-`unc_fork_write` when it reaches a fixed length or wraps, and at the
-end. One static flush function with ONE call site at the loop head, the
-shape that came out at +76 B last time; the shared 6-argument version
-cost +468 B and was thrown away.
-
-**Not the licence:** method 13 has no description other than
-`XADStuffIt13Handle.m` (OPEN_ITEMS.md inventory, `fmt_sit.c` row). This
-row is speed only; say so in its DECISIONS.md entry.
-
-**Fixtures to price on:** `derived-Ultimate_Copland_1.1.sit.1`
-(profile above), `Ultimate_Copland_1.1.sit.bin`. Correctness: every
-StuffIt fixture whose manifest names method 13 (`grep -l '"method": 13'
-fixtures/manifests/*.json`, or the tables in FORMATS.md, *StuffIt*),
-plus the old-vs-new diff.
-
-**Expected, as a hypothesis:** about −10 % of a method-13 entry's engine
-ticks for +80 B. Heap unchanged (the window is already there).
+times*). **Item 3 below is the one left**, and is still a hypothesis.
 
 ## Item 3 — Arsenic's two products, without `__mulsi3`
 

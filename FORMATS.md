@@ -3126,6 +3126,19 @@ position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
 
+**Method 13 flushes runs, 2026-09-20.** Every output byte went to
+`unc_fork_put`, which is `static inline` and carries a call, so gcc
+leaves it out of line at `-Os` — 13.6 % of a method-13 run in the jsr,
+its ten instructions and the rts. The decoder writes into its own
+window anyway, so runs are flushed from the window through
+`unc_fork_write` at a quarter of it and at the end.
+`derived-Ultimate_Copland_1.1.sit.1` **−11.6 %** of the 68000's
+instructions, and on the Plus its engine **4,395 → 3,867 ticks,
+−12.0 %**. +140 B of code, −12 B of A5, peak heap identical at
+81,226 B, 948 fixtures byte-identical against the old binary
+(DECISIONS.md 2026-09-20, *the window that was already the staging
+buffer*).
+
 **BinHex reads a line once, 2026-09-20.** A character used to be
 touched three times — copied into the line buffer a call at a time,
 scanned there for validity, looked up again when its six bits were

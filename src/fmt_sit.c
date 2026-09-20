@@ -246,6 +246,33 @@ static int sit13_parse_code(UncCanon *cn, UncBitIn *bi, uint8_t *lengths,
     return unc_canon_build(cn, lengths, nsyms);
 }
 
+/* Hand over what the window has taken since the last flush.
+ *
+ * The decoder writes every byte into its own window anyway, so the
+ * window IS the staging buffer and a run costs no memory to keep. The
+ * alternative is what this file did until 2026-09-20: one
+ * `unc_fork_put` per output byte, which is a CALL — the function is
+ * `static inline` but carries a call to the flush, so gcc leaves it
+ * out of line at `-Os`, and a 68000 profile put the jsr, the ten
+ * instructions and the rts at 13.6 % of a method-13 run.
+ *
+ * `to - from` is never more than the window: the loop head below
+ * flushes at a quarter of it, and one iteration adds at most 32,832
+ * bytes (the 0x13f escape's 15 bits plus 65). */
+static int sit13_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
+                       uint32_t from, uint32_t to)
+{
+    uint32_t n = to - from, a = from & (win - 1);
+    if (n == 0) return UNC_OK;
+    if (a + n > win) {                      /* the run wraps the window */
+        int err = unc_fork_write(f, window + a, win - a);
+        if (err != UNC_OK) return err;
+        n -= win - a;
+        a = 0;
+    }
+    return unc_fork_write(f, window + a, n);
+}
+
 static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                       UncAlloc *al)
 {
@@ -253,8 +280,8 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
     uint8_t *window;
     UncBitIn bi;
     UncCanon *curr, *second;
-    uint32_t pos = 0;
-    uint32_t win = sit13_winsize(outlen);
+    uint32_t pos = 0, flushed = 0;
+    uint32_t win = sit13_winsize(outlen), thresh;
     int err = UNC_OK;
     int val, sel;
 
@@ -301,8 +328,15 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
     if (err != UNC_OK) goto out;
 
     curr = &hz->first;
+    thresh = win >> 2;
     while (pos < outlen) {
-        int sym = unc_canon_decode(curr, &bi);
+        int sym;
+        if (pos - flushed >= thresh) {
+            err = sit13_flush(f, window, win, flushed, pos);
+            if (err != UNC_OK) goto out;
+            flushed = pos;
+        }
+        sym = unc_canon_decode(curr, &bi);
         if (sym < 0) {
             err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
             goto out;
@@ -310,7 +344,6 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
         if (sym < 0x100) {
             curr = &hz->first;
             window[pos++ & (win - 1)] = (uint8_t)sym;
-            if (unc_fork_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
         } else {
             int32_t mlen, moff, bl;
             curr = second;
@@ -333,13 +366,12 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
             {
                 uint32_t from = pos - (uint32_t)moff;
                 while (mlen-- > 0 && pos < outlen) {
-                    uint8_t b = window[from++ & (win - 1)];
-                    window[pos++ & (win - 1)] = b;
-                    if (unc_fork_put(f, b) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
+                    window[pos++ & (win - 1)] = window[from++ & (win - 1)];
                 }
             }
         }
     }
+    err = sit13_flush(f, window, win, flushed, pos);
 
 out:
     unc_free(al, window);

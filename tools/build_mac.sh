@@ -178,7 +178,19 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # All 238 B of it are inside fmt_binhex.c.obj (2,181 -> 2,419 B); the
 # heap allocation is unchanged and so is the peak (DECISIONS.md
 # 2026-09-20, the character that was touched three times).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152216}
+# Raised 2026-09-20 from 152,216 to 152,356: +140 B for StuffIt method
+# 13, which handed every output byte to unc_fork_put — `static inline`,
+# but it carries a call to the flush, so gcc leaves it out of line at
+# -Os and a 68000 profile put the jsr, its ten instructions and the rts
+# at 13.6 % of a method-13 run. The decoder writes into its own window
+# anyway, so the window is the staging buffer: runs are flushed from it
+# through unc_fork_write, at a quarter of the window and at the end.
+# derived-Ultimate_Copland_1.1.sit.1 on a 7 MHz Mac Plus, engine
+# 4,395 → 3,867 ticks, −12.0 %; 68000 instructions −11.6 %; peak heap
+# identical at 81,226 B, and 948 fixtures byte-identical against the
+# old binary (DECISIONS.md 2026-09-20, the window that was already the
+# staging buffer).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152356}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -214,7 +226,11 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152216}
 # before or after. It is rodata alignment shifting under 240 B of new
 # text, the same effect measured on 2026-09-19 (+16 B "rodata alignment
 # around the 64-byte length table, not a new table").
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38664}
+# LOWERED 2026-09-20 from 38,664 to 38,652 with the method-13 work
+# above: −12 B, the two dead branches' error constants gone with the
+# per-byte put. A ratchet is set at the size on the day, and that cuts
+# both ways.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38652}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes

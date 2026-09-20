@@ -212,6 +212,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
 - 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
 - 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
+- 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
 
 ---
 
@@ -12730,3 +12731,66 @@ so that run selected the archive — which it could, the day before the
 with this instrument, so nothing else needs re-reading. And Expander's
 own column is untouched: its dialog lists only what it can expand, and
 its side of the harness never clicked a row.
+
+## 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
+
+**Item 2 of CURRENT_WORK.md, and it very nearly did not survive
+reading.** The plan was to flush runs through `unc_fork_write` instead
+of calling `unc_fork_put` per byte — and `unc_fork_write` **is a byte
+loop over `unc_fork_put`** (`unc_util.c`, and its comment says so: on a
+68000 a byte loop is what a copy is anyway, and chunking into the
+staging buffer was measured 100 B bigger on 2026-09-18). Swapping one
+byte loop for another buys nothing.
+
+**What makes it pay is where the loop is.** `unc_fork_put` is `static
+inline`, but it carries a call to `unc_fork_flush`, so gcc declines to
+inline it at `-Os` and emits it once: the 68000 profile shows it at its
+own address, 10 instructions plus the `jsr` and the `rts`, **13.6 % of
+a method-13 run**. Inside `unc_fork_write` — same translation unit as
+the definition — it IS inlined. So the byte work is identical and the
+CALL happens once per run instead of once per byte.
+
+The profile bears that out exactly: `unc_fork_write` now costs
+5,505,711 instructions where `unc_fork_put` cost 5,504,604 — the same
+work to the thousandth — and the saving is all in the decode loop,
+`unc_sit_decode_fork` 13,889,602 → 9,206,094.
+
+**The window is the staging buffer**, so a run costs no memory to keep:
+the decoder was already writing every literal and every copied byte
+into `window[pos & (win-1)]`. What is new is `flushed`, a second
+cursor, and one `sit13_flush` call at the head of the decode loop when
+`pos - flushed` reaches a quarter of the window, plus one at the end.
+
+**Why a quarter.** The flush hands over `to - from` bytes and must
+never be asked for more than the window holds. One iteration adds at
+most 32,832 bytes — the 0x13f escape is 15 bits plus 65 — so a quarter
+of a 64 KB window leaves 16,383 + 32,832 = 49,215 worst case, inside
+65,536. Below 64 KB the window is rounded up to at least `outlen`
+(*sit13_winsize*), so `pos` never wraps at all and the question does
+not arise.
+
+| | old | new | |
+|---|---|---|---|
+| `derived-Ultimate_Copland_1.1.sit.1`, Mac Plus engine ticks | 4,395 | **3,867** | **−12.0 %** |
+| the same, 68000 instructions | 40,451,161 | 35,769,616 | −11.6 % |
+| `CODE` | 152,216 | 152,356 | +140 B |
+| A5 | 38,664 | 38,652 | **−12 B** |
+| peak heap, the same fixture on the Mac | 81,226 B | 81,226 B | identical |
+| the whole corpus, old binary vs new | — | — | **948 fixtures, 0 differences** |
+
+**The wall clock did not move and that is not a contradiction.** That
+run reads 140.4 s before and 140.5 s after, because the autotest build
+CRC-reads both forks back off the volume after extracting, and the
+read-back is most of it. The engine ticks are the measurement; the
+seconds column of `run.py` is not, for this build.
+
+**What is NOT claimed.** That the licence moves: method 13 still has no
+description anywhere but `XADStuffIt13Handle.m`, and this is its speed
+half only — CURRENT_WORK.md's Item 4 is the rewrite, and it now has a
+floor to beat. That any other format changed: `sit13_flush` is static
+and has no other caller, and the corpus A/B covers every one of them.
+And nothing about cancel timing: the old code turned any non-`UNC_OK`
+from the put into `UNC_ERR_SINK` and the new code propagates what came
+back, which is what `fmt_lzh.c` has done since 2026-09-19 — a cancel
+mid-fork now reports `UNC_ERR_ABORTED` where it reported a sink error,
+and the 948-fixture A/B says no corpus path reaches either.
