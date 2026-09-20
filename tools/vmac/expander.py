@@ -373,7 +373,18 @@ def run_one(which, appbin, fixture, args, workdir, shots):
             # mkboot leaves exactly one expandable file on the volume.
             mac.click(*EXPAND_BUTTON)    # Expand -> straight to work
         else:
-            mac.click(*R_SF_ROW)
+            # NOT a click on the first row, which is what this did until
+            # 2026-09-20: Standard File sorts by name and our dialog shows
+            # every file, so the first row is the archive only when its
+            # name happens to sort first. The Finder's own `Desktop` file
+            # is on this volume, so `macburger-helper.hqx` and
+            # `unshar-111.hqx` both sat BELOW it — and the run extracted
+            # `Desktop`, reported "This file could not be extracted" in
+            # three seconds, and printed a number. `derived-FirstClass_
+            # Demo.cpt` sorts before `Desktop` and is why this went unseen.
+            # Type-ahead names the file instead of guessing where it is.
+            select_by_name(mac, macname)
+            shot("2-selected")
             mac.key("Return")            # Open -> destination dialog
             time.sleep(3.0)
             shot("2-destination")
@@ -456,10 +467,6 @@ def run_one(which, appbin, fixture, args, workdir, shots):
             "output": produced}
 
 
-# Standard File's first row on System 6.0.8, in the STOCK dialog our own
-# application uses. Measured by interactive.py off its own frames.
-R_SF_ROW = (150, 137)
-
 # The Expand button in Aladdin's dialog, measured off this harness's own
 # `expander-2-open.png`. Drive, the nearest button an aimless click could
 # reach, is 46 px above it and greyed.
@@ -471,6 +478,29 @@ R_SF_ROW = (150, 137)
 # FLUSH reason below, not because of the key, so whether Return works here is
 # untested rather than disproved. Re-testing it would cost one boot.
 EXPAND_BUTTON = (379, 194)
+
+
+def select_by_name(mac, macname):
+    """Select a file in Standard File by typing its name.
+
+    Standard File selects the first item whose name begins with what has
+    been typed, and keeps matching while the keystrokes keep coming
+    (Inside Macintosh I-519, the standard file package's key handling).
+    Eight characters is more than enough to separate any fixture from
+    `Desktop`, `System Folder` and the Expander's folder, and stopping at
+    the first character that is not plain ASCII keeps xdotool out of
+    keysym trouble — a prefix that is short is still a prefix."""
+    prefix = ""
+    for ch in macname:
+        if not (ch.isalnum() or ch in "-_ ."):
+            break
+        prefix += ch
+        if len(prefix) >= 8:
+            break
+    if not prefix:
+        raise SystemExit(f"expander: cannot type a prefix of {macname!r}")
+    mac._xdo("type", "--delay", "80", prefix)
+    time.sleep(1.0)
 
 
 def main():

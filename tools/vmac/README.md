@@ -1200,7 +1200,23 @@ pay the same quantisation and the same ~50 ms per poll of stolen CPU, and
 **the ratio is the durable part of the result**. Do not quote the seconds as
 Mac Plus times — `run.py --emu mv-4M-1x` is what those come from.
 
-**Three things cost a run each, and not one of them failed loudly:**
+**Four things cost a run each, and not one of them failed loudly:**
+
+- **The first row is not the archive.** Our side clicked the first row of
+  Standard File and pressed Return, on the assumption that the archive is
+  the only thing on the volume worth opening. `mkboot.py` stopped deleting
+  the Finder's **`Desktop` file** on 2026-08-30, one day after the yardstick
+  rows were published, because the password phase needs it kept — and that
+  file is invisible to `hdir` and VISIBLE in our dialog, which filters
+  nothing. Every fixture whose name sorts after `Desktop` therefore had
+  `Desktop` extracted instead: `macburger-helper.hqx` and `unshar-111.hqx`
+  both reported *"This file could not be extracted"* three seconds in,
+  photographed, on builds either side of 2026-09-20.
+  `derived-FirstClass_Demo.cpt` and `derived-Export.sit` sort BEFORE it
+  ("der" < "Des"), which is why the published rows were taken cleanly and
+  nobody saw this for three weeks. The file is named by type-ahead now
+  (`select_by_name`), and `ours-2-selected.png` photographs the highlighted
+  row before Return is pressed.
 
 - **Expander's dialog is not the stock one.** Aladdin's DLOG puts the file
   list ~48 px higher, so the row `interactive.py` measured lands below the last

@@ -4535,7 +4535,7 @@ with this archive."*
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 
-### Timed on the same Mac Plus (2026-08-29, one row re-run 2026-08-30)
+### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
 System 6.0.8 — over the same archive on the same volume, driven to a Standard
@@ -4547,19 +4547,40 @@ cannot see are in `tools/vmac/README.md`.
 |---|---|---|---|---|---|
 | `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s | both at the poll floor |
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | 56 s | 56 s | **1.00x** |
-| `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **133 s** | 156 s | **1.18x** |
-| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **269 s** | 426 s | **1.58x** |
+| `derived-FirstClass_Demo.cpt` | Compact Pro | 249 KB | **80 s** | 156 s | **1.95x** |
+| `macburger-helper.hqx` | BinHex → StuffIt | 307 KB | **250 s** | 426 s | **1.70x** |
 
-**Neither is faster.** The two are level on StuffIt — 56 s each, which at a
-±3 s poll means indistinguishable — and we expand a Compact Pro archive in five
-sixths of Expander's time and a BinHex envelope with an archive inside it in
-under two thirds. On this evidence a user choosing between them on speed alone
-has nothing to choose by.
+**Neither is faster, and on two formats we now are.** The two are level on
+StuffIt — 56 s each, which at a ±3 s poll means indistinguishable — and
+since the 2026-09-19/20 decoder work we expand a Compact Pro archive in
+half Expander's time and a BinHex envelope with an archive inside it in
+under three fifths. On the StuffIt evidence a user choosing between them
+on speed alone has nothing to choose by; on the other two there is now
+something to choose.
 
 **That row was 76 s against 56 s on 2026-08-29**, and 73 s after the LZW
-change; what closed it was `UNC_HOT`, below. The Compact Pro and BinHex rows
-predate it and are therefore pessimistic about us by some unmeasured amount —
-both share `unc_canon_decode` and `unc_crc16_arc` with the row that moved.
+change; what closed it was `UNC_HOT`, below.
+
+**Our two other columns were re-measured 2026-09-20 and both fell**, which
+is why the ratios above are not the ones this section was written with:
+Compact Pro 133 → **80 s** (the LZH and RLE stages fused, 2026-09-19,
+−31.7 % on the tick probe — the same change, through a different
+instrument) and the BinHex chain 269 → **250 s**, where the 19 s is the
+BinHex layer alone getting faster (*Decode cost*, 2026-09-20). Expander's
+column is unchanged code and was not re-run. `derived-Export.sit` and
+`derived-EmpireBuilderDemo.sit` were not re-run either and still carry
+2026-08-29/30.
+
+**Those two re-runs needed the harness repaired first**, and what was
+wrong with it is the point: `expander.py` clicked the FIRST ROW of
+Standard File, and since 2026-08-30 the Finder's invisible `Desktop` file
+has been left on the volume for another harness's sake — so a fixture
+whose name sorts after it had `Desktop` extracted instead, reported
+*"This file could not be extracted"* in three seconds, and printed a
+number in the seconds column. The two rows above happen to sort before
+`Desktop` and were taken cleanly. The file is selected by name now
+(`tools/vmac/README.md`, the yardstick's fourth trap; DECISIONS.md
+2026-09-20, *the row that was not the archive*).
 
 **Every figure is a lower bound with a ±3 s poll error, and the RATIO is what
 transfers**: both sides pay the same quantisation and the same stolen CPU, and

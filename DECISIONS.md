@@ -211,6 +211,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
 - 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
 - 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
+- 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
 
 ---
 
@@ -12681,3 +12682,51 @@ are now 12.3 % and 4 % of what is left. That any other format moved —
 is byte-for-byte what it was. And no 1 MB tier was re-run for this: the
 allocation is `UNC_IOBUF * 2` as before and the Mac peak is identical to
 the byte, so nothing a tier measures can have moved.
+
+## 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
+
+**Claim.** Since 2026-08-30 the yardstick has been extracting the
+Finder's `Desktop` file instead of the archive, for any fixture whose
+name sorts after it.
+
+**Evidence.** `expander.py` drove our side by clicking the first row of
+Standard File and pressing Return — the archive is the only thing on the
+volume worth opening, so the first row is the archive. On 2026-08-30
+`mkboot.py` stopped deleting the `Desktop` file (*the Desktop file the
+password phase needed*, BLOCKERS.md: deleting it broke the password
+phase, for reasons that are still not understood, so it is kept unless a
+Finder is wanted). That file is **invisible to `hdir`** — which is why
+`mkboot`'s own strip walk could not see it and `names_on` does not list
+it — and **visible in our dialog**, which filters nothing. So it sorts
+into row one, and `macburger-helper.hqx` and `unshar-111.hqx` both
+report *"This file could not be extracted"* three seconds in,
+photographed, on builds either side of today's BinHex change.
+
+**Consequence.** The file is named by type-ahead now, Standard File's
+own prefix search, and the frame that shows the selected row is
+photographed before Return. `unshar-111.hqx` went from 3 s and nothing
+to 60 s and ten files; `macburger-helper.hqx` to 250 s and 312 files,
+which is the same work FORMATS.md's 269 s row describes, 19 s faster —
+and 19 s is what today's BinHex work takes off that chain's first layer,
+measured separately. The two published rows sort BEFORE `Desktop`
+("der" < "Des") and were taken cleanly, which is the whole reason three
+weeks of sessions did not meet this.
+
+**The transferable part is not about Standard File.** A harness that
+addresses anything by POSITION measures whatever is in that position,
+and the thing that moved it was a deliberate, documented, correct change
+to a DIFFERENT harness — one whose own note says "do not delete it
+unconditionally again". Nothing connects those two files; nothing could
+have. What made it findable at all was that the failure had a
+photograph: the run printed `wrote 0: NOTHING` beside a seconds column
+that looked like a measurement, and the frame behind it was an alert.
+**A harness that prints what it produced can be caught lying; one that
+prints only a number cannot.**
+
+**What is NOT claimed.** That the 2026-08-29 figures were wrong: 269 s
+described 312 files then and the repaired harness writes 312 files now,
+so that run selected the archive — which it could, the day before the
+`Desktop` file came back. Nothing between those two dates was measured
+with this instrument, so nothing else needs re-reading. And Expander's
+own column is untouched: its dialog lists only what it can expand, and
+its side of the harness never clicked a row.
