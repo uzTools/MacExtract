@@ -20,10 +20,13 @@ and extracts byte-exact on every system the project claims:
 | System 7.0.1, 4 MB | **69/69** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **21/21** — re-run 2026-09-04 on the build that zeroes `UncOptions`, the sample one larger for Now Compress, the third folder-walking format; that morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
 
-**Both floor tiers were re-run 2026-09-20** — System 6.0.8 and System 3.0,
-each at 1 MB, each **69/69** — which is the first time either has been run
-since the decoder work of 2026-09-18/19/20 took 360 B net off the budget
-and changed six formats' peaks. No refusal moved.
+**Every Mini vMac tier was re-run 2026-09-20**, the first time any had
+been since the decoder work of 2026-09-18/19/20 changed six formats and
+took 360 B net off the budget. **Five sweeps of the 69-fixture sample,
+and every one reproduced its recorded figure**: System 6.0.8 at 4 MB
+69/69 and at 1 MB 69/69, System 3.0 at 1 MB 69/69, and at 512 KB
+System 3.0 66/69 against System 6.0.8's 63/69 — the same three and six
+per-entry memory refusals as before. No refusal moved anywhere.
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4

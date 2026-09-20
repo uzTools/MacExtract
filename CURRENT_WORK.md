@@ -298,13 +298,15 @@ better estimate.
   plus two controls that reproduced exactly, and both yardstick rows.
   Nothing in that section predates this week except the rows nothing
   touched.
-- **The 4 MB and 512 KB tiers have not been re-run** since the
-  decoder work of 2026-09-18/19/20. Both 1 MB tiers were, on
-  2026-09-20 — System 6.0.8 and System 3.0, **69/69 each**, no refusal
-  moved (BLOCKERS.md, the tier table) — and 1 MB is the floor the
-  refusals live at, so the other two are a formality rather than a
-  question. `tools/run_tiers.py` in `ci.sh` predicts; the emulator is
-  the measurement.
+- ~~The tiers~~ **done**. All five Mini vMac sweeps re-run
+  2026-09-20 and every one reproduced its recorded figure: 69/69 at
+  4 MB and at 1 MB on System 6.0.8, 69/69 at 1 MB on System 3.0, and
+  at 512 KB 66/69 on System 3.0 against 63/69 on System 6.0.8. No
+  refusal moved (BLOCKERS.md, the tier table). System 7.0.1 and Mac
+  OS 9.2 were not in this item and were not run.
+
+**Part C is empty.**
+
 ---
 
 ## Reporting, so the work can be assessed afterwards
