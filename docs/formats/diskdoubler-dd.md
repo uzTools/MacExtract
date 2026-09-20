@@ -1,4 +1,4 @@
-# DiskDoubler's DD coder (method 10)
+# DiskDoubler's DD (method 10) and AD (methods 6 and 9) coders
 
 **The inventory said "documented nowhere else". It is documented.**
 The Unarchiver's format wiki has a page for it, and
@@ -13,9 +13,9 @@ Pro's coder "with blocksize 0xfff0 instead of 0x1fff0".
 container parser, because the wiki does not document DiskDoubler's
 containers ("see XADDiskDoublerParser.m for now") and this reader is
 not allowed to; it finds blocks by the checksum every DD block header
-carries. It reads **32 of the corpus's 34 DDn forks** byte for byte
-against the oracle's sha256. Two it does not, and nobody here knows
-why yet.
+carries. It reads **32 of the corpus's 34 DDn forks** and **all 5 of its AD
+forks** byte for byte against the oracle's sha256 — 37 of 39. Two it
+does not, and nobody here knows why yet.
 
 ## The corrections
 
@@ -78,9 +78,28 @@ does not use a bound.
 there is one, `src/fmt_dd.c` keeps citing `XADDiskDoublerParser.m` for
 method 10, because 94 % of a format is not a description of it.
 
+## AD, methods 6 and 9
+
+`reference/notes/dd_ad_theunarchiver.md` describes a simpler thing: no
+Huffman at all, a 12-byte block header with the same
+XOR-of-the-preceding-bytes trick, and an LZSS whose dictionary is the
+block rather than a sliding window — 4,096 bytes for method 9, 8,192
+for method 6. The bit stream is most-significant-bit first: `0` and
+eight bits is a literal; `1` then a bit choosing an eight- or
+twelve-bit offset, then a length as a little prefix code (`0` two
+bytes, `100` three, `101` four, `11` plus four bits that many plus
+five). The page is right about all of it, and gives the length rules
+twice — once as prose and once as a code table — which is how a reader
+can check itself.
+
+**One correction.** The page says "bit 0 of the flags field indicates
+whether the block is compressed or not" and does not say which way
+round. It is set for an **un**compressed block: the first block of
+`derived-DandStoQIF2.sea` puts 2,752 bytes in and 4,096 out with that
+bit clear.
+
+All five AD forks in the corpus read.
+
 ## Not covered at all
 
-DiskDoubler's **containers** — the wiki punts them to the source — and
-the **AD** coder of methods 6 and 9, whose page
-(`reference/notes/dd_ad_theunarchiver.md`) is fetched and has not been
-held against anything.
+DiskDoubler's **containers** — the wiki punts them to the source.

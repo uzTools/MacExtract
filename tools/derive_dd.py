@@ -196,6 +196,87 @@ def blocks_at(d):
             yield p
 
 
+# ------------------------------------------------------------------ AD
+
+def ad_block(d, p, out):
+    """One AD block (methods 6 and 9), from
+    reference/notes/dd_ad_theunarchiver.md.
+
+    A 12-byte header — u16 compressed size, u16 uncompressed size, four
+    unused, the XOR of the compressed data, flags, one more unused, and
+    the XOR of the eleven bytes before it. Bit 0 of the flags says the
+    block is compressed. Then a most-significant-bit-first stream:
+
+      0          a literal, eight bits
+      1 0 ...    an eight-bit offset
+      1 1 ...    a twelve-bit offset
+      then 0     copy two, 10 0 copy three, 10 1 copy four,
+                 11 + four bits copy that many plus five
+
+    The dictionary is the block, not a sliding window, and offsets
+    count back from where the next byte goes.
+    """
+    clen, ulen = be(d, p, 2), be(d, p + 2, 2)
+    flags = d[p + 9]
+    x = 0
+    for k in range(11):
+        x ^= d[p + k]
+    if x != d[p + 11]:
+        raise ValueError("AD header checksum")
+    q = p + 12
+    # CORRECTION: the page says "bit 0 of the flags field indicates
+    # whether the block is compressed or not" without saying which way
+    # round. A block with 2,752 bytes in and 4,096 out has that bit
+    # CLEAR, so it is set for an UNCOMPRESSED block.
+    if flags & 1:
+        out.extend(d[q:q + ulen])
+        return out, q + clen
+    y = 0
+    for k in range(clen):
+        y ^= d[q + k]
+    if y != d[p + 8]:
+        raise ValueError("AD data checksum")
+    bs = MSB(d, q, q + clen)
+    base = len(out)
+    while len(out) - base < ulen:
+        if not bs.bit():
+            out.append(bs.bits(8))
+            continue
+        dist = bs.bits(12) if bs.bit() else bs.bits(8)
+        if not bs.bit():
+            n = 2
+        elif not bs.bit():
+            n = 3 if not bs.bit() else 4
+        else:
+            n = bs.bits(4) + 5
+        # "the last match can apparently stretch outside the block
+        # size. In this case, the match should be truncated to fit."
+        n = min(n, ulen - (len(out) - base))
+        for _ in range(n):
+            out.append(out[-dist])
+    return out, q + clen
+
+
+def ad_fork(d, start, nout):
+    out = bytearray()
+    p = start
+    while len(out) < nout:
+        before = len(out)
+        out, p = ad_block(d, p, out)
+        if len(out) == before:
+            raise ValueError("empty AD block")
+    return bytes(out[:nout])
+
+
+def ad_blocks_at(d):
+    for p in range(len(d) - 12):
+        x = 0
+        for k in range(11):
+            x ^= d[p + k]
+        if x == d[p + 11] and 0 < be(d, p + 2, 2) <= 8192 and be(d, p, 2):
+            yield p
+
+
 def check(path, SEL):
     d = open(path, "rb").read()
     mp = os.path.join(ROOT, "fixtures", "manifests",
@@ -203,17 +284,26 @@ def check(path, SEL):
     if not os.path.exists(mp):
         return 0, 0
     want = []
+    adwant = []
     for e in json.load(open(mp))["entries"]:
-        if "DDn" not in (e.get("oracle_methods") or []):
+        ms = e.get("oracle_methods") or []
+        if "AD/AD1" in ms or "ADn" in ms:
+            for kind in ("data", "rsrc"):
+                n = e.get(kind + "_size") or 0
+                sha = e.get(kind + "_sha256")
+                if n and sha:
+                    adwant.append((e["name"], kind, n, sha))
+        if "DDn" not in ms:
             continue
         for kind in ("data", "rsrc"):
             n = e.get(kind + "_size") or 0
             sha = e.get(kind + "_sha256")
             if n and sha:
                 want.append((e["name"], kind, n, sha))
-    if not want:
+    if not (want or adwant):
         return 0, 0
     starts = list(blocks_at(d))
+    adstarts = list(ad_blocks_at(d)) if adwant else []
     ok = bad = 0
     for name, kind, n, sha in want:
         hit = False
@@ -229,6 +319,21 @@ def check(path, SEL):
             ok += 1
         else:
             print(f"  --   {name[-28:]:30s} {kind} {n:7d} B  not read here")
+            bad += 1
+    for name, kind, n, sha in adwant:
+        hit = False
+        for p in adstarts:
+            try:
+                out = ad_fork(d, p, n)
+            except Exception:
+                continue
+            if hashlib.sha256(out).hexdigest() == sha:
+                hit = True
+                break
+        if hit:
+            ok += 1
+        else:
+            print(f"  --   {name[-28:]:30s} {kind} {n:7d} B  AD not read here")
             bad += 1
     return ok, bad
 
@@ -255,11 +360,11 @@ def main():
         ok, bad = check(p, SEL)
         if ok or bad:
             narch += 1
-            print(f"{os.path.basename(p):40s} {ok:3d} DDn fork(s)"
+            print(f"{os.path.basename(p):40s} {ok:3d} fork(s)"
                   + (f", {bad} not" if bad else ""))
         tok += ok
         tbad += bad
-    print(f"derive-dd: {tok} DDn forks of {narch} archive(s) read from the "
+    print(f"derive-dd: {tok} DD/AD forks of {narch} archive(s) read from the "
           f"published description, {tbad} not")
     return 0
 

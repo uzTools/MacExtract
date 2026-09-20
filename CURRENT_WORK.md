@@ -235,7 +235,7 @@ writes. **Acceptance:** `run_now.py` green, ticks and CODE not higher.
 **Half done, and the half that is left is small and specific.** Both
 coders are documented after all — `reference/notes/dd_dd_*.md` and
 `dd_ad_*.md`, fetched 2026-09-20 — and a reader written from the DD
-page alone, with five corrections, reads **32 of the corpus's 34 DDn
+page alone, with five corrections, reads **37 of the corpus's 39 DD and AD
 forks** (`docs/formats/diskdoubler-dd.md`, `tools/derive_dd.py`).
 
 What is left:
@@ -246,11 +246,9 @@ What is left:
   three code tables satisfying Kraft exactly. The note says what has
   been ruled out. Until they read, `fmt_dd.c` keeps citing XADMaster
   for method 10;
-- **`ADn`**, methods 6 and 9: the page is fetched and nothing has been
-  held against it. `tools/derive_dd.py` is the template — the block
-  checksum locates blocks without a container parser, which is what
-  makes this possible at all, since the wiki does not document
-  DiskDoubler's containers;
+- ~~`ADn`~~ **done**: all five AD forks in the corpus read from its
+  page, which needed one correction (flags bit 0 is set for an
+  UNcompressed block; the page does not say which way round);
 - **the containers**, which stay XADMaster's whatever happens to the
   coders.
 

@@ -13207,8 +13207,16 @@ that down is the whole point of doing these rows by decoding rather
 than by reading: a transcription can be 94 % right and nobody can
 tell.
 
-**What is NOT claimed.** Anything about `ADn` (methods 6 and 9): its
-page is fetched and has not been held against a single fork. Anything
+**`ADn` went the same way an hour later, and whole.** Methods 6 and 9
+are a simpler coder — no Huffman, an LZSS whose dictionary is the
+block — and **all five AD forks in the corpus read** from its page,
+which needed exactly one correction: the page says "bit 0 of the flags
+field indicates whether the block is compressed or not" without saying
+which way round, and it is set for an UNcompressed block. So the tally
+is **37 of 39 DD and AD forks**, and what stands between this row and
+closed is two forks of one archive.
+
+**What is NOT claimed.** Anything
 about DiskDoubler's containers, which the wiki does not describe.
 And no code changed — `derive_dd.py` is a probe, and `src/fmt_dd.c`
 is untouched.
