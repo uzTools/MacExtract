@@ -62,12 +62,35 @@ observation that 0 and 128 do the same thing, which they do.
 `derived-Terrainman_2.0__.sea`, the 19,240-byte and 16,524-byte data
 forks of two pictures. Both are genuinely method 10 (a scratch build
 that prints each fork's method says so), both decode to the right
-LENGTH without any error, and both diverge after a few hundred bytes —
-the literal stream yields a symbol the output disagrees with, while
-all three of that block's code tables satisfy Kraft's equality
-exactly and the first two literals come out right. No match in them
-reaches back before the fork's start. The block beside them in the
-same archive, same flags and same shape, reads perfectly.
+LENGTH without any error, and the block beside them in the same
+archive — same flags, same shape — reads perfectly.
+
+What has been established about them, so nobody starts over:
+
+- **the structure is right.** The block header states the number of
+  literals and the number of offsets, and a decode that ignores those
+  fields consumes **exactly** the stated counts: 5,443 literals and
+  3,380 offsets in one, 7,583 and 2,379 in the other. So the run
+  stream's literal/match decisions, and the number of offsets they
+  ask for, are being read correctly;
+- **the output POSITIONS stay right.** Substituting the true byte for
+  each literal and carrying on, the literals still land at the output
+  offsets the correct file has them at, for hundreds of symbols. So
+  match lengths and offsets are right too;
+- **it is literal VALUES, and not all of them.** Of the first thirty
+  literals, nineteen decode correctly — including a 10-bit and an
+  11-bit code, which is not luck — and eleven do not;
+- **and the wrong ones are not a permutation.** Two literals that
+  share a code (`101000`) want different bytes, which a prefix code
+  cannot do. Since a canonical code's SET of bit strings is fixed by
+  the lengths alone, and those lengths satisfy Kraft exactly, either
+  the length list is not what it appears to be for these blocks or
+  the stream carries something between literals that this reader does
+  not know about.
+
+No match in either reaches back before the fork's start, and
+descending-length code construction (the other plausible convention)
+decodes nothing at all.
 
 It is not the XADMaster DDn defect this project has a reproduction
 for: that one is an input BOUND a byte short
