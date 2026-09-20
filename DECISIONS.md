@@ -219,6 +219,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
 - 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
 - 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
+- 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
 
 ---
 
@@ -13160,3 +13161,54 @@ nothing has yet been held against the corpus (that is what the three
 was rewritten: it was not, here or in any row today. And that the
 licence moves: `fmt_sit.c` still owes macutils method 6 and the RLE90
 filter, and OPEN_ITEMS.md lists what every other file still owes.
+
+## 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
+
+**Item 6, half of it.** The same wiki index that gave up StuffIt
+method 13 has pages for DiskDoubler's `AD` and `DD` coders, against an
+inventory that said both were "documented nowhere else".
+
+**`tools/derive_dd.py` reads 32 of the corpus's 34 DDn forks** from
+that page alone, byte for byte against the oracle. It has **no
+container parser**, because the wiki does not document DiskDoubler's
+containers — it says "see XADDiskDoublerParser.m for now" — and a
+reader allowed to peek at that would prove nothing. It does not need
+one: **every DD block header ends with the XOR of its first
+twenty-one bytes**, so the format supplies its own locator, and
+scanning for valid headers finds the blocks. That trick is the reason
+this row could be attempted at all, and it generalises to any format
+whose blocks are self-checking.
+
+Five corrections, in `docs/formats/diskdoubler-dd.md`. Two are worth
+repeating:
+
+- **the streams are in the page's stated order — offset, literal, run
+  length — and not the header's**, which lists their sizes the other
+  way round. Reading the header's order decodes nothing, which is a
+  pleasant kind of wrong: it fails immediately;
+- **the window spans blocks.** The page says matches may reference
+  earlier blocks, and a reader that decodes each block into its own
+  buffer and concatenates gets every fork over ~12 KB wrong. That one
+  failed *slowly*, on the two largest forks of the first archive
+  tried, which is the dangerous kind.
+
+**And two forks refuse.** `derived-Terrainman_2.0__.sea`'s 19,240 B
+and 16,524 B data forks: genuinely method 10, decoding to exactly the
+right length with no error, diverging a few hundred bytes in, with all
+three of the block's code tables satisfying Kraft's equality exactly
+and no match reaching back before the fork's start. The block beside
+them, same flags and same shape, is perfect. It is **not** the
+XADMaster DDn defect this project has a reproduction for — that one is
+an input bound a byte short, and this reader has no bound.
+
+**So the row does not close, and `fmt_dd.c` keeps its citation.**
+Ninety-four per cent of a format is not a description of it. Writing
+that down is the whole point of doing these rows by decoding rather
+than by reading: a transcription can be 94 % right and nobody can
+tell.
+
+**What is NOT claimed.** Anything about `ADn` (methods 6 and 9): its
+page is fetched and has not been held against a single fork. Anything
+about DiskDoubler's containers, which the wiki does not describe.
+And no code changed — `derive_dd.py` is a probe, and `src/fmt_dd.c`
+is untouched.

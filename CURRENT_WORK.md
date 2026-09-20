@@ -230,19 +230,29 @@ the decoder moves only if it is not worse.
 FORMATS.md's table, and the specimens `nowcompress.py --case all`
 writes. **Acceptance:** `run_now.py` green, ticks and CODE not higher.
 
-## Item 6 — DiskDoubler `ADn` (methods 6/9) and `DDn` (method 10) (`fmt_dd.c`)
+## Item 6 — DiskDoubler `ADn` (6/9), and the two `DDn` forks (`fmt_dd.c`)
 
-Documented nowhere else. DiskDoubler 3.7, 4.0 and Pro 4.1 run here and
-graded every method (`tools/vmac/ddencode.py`, `tools/run_ddtf.py`,
-`tools/run_ddforks.py`); `tools/xadmaster-ddn-repro/` holds the DDn
-off-by-one this engine reads correctly and XADMaster does not — the
-note must state the correct reading, which is already this engine's.
-Methods 2/5 are splay, a published algorithm, and are not on this row.
+**Half done, and the half that is left is small and specific.** Both
+coders are documented after all — `reference/notes/dd_dd_*.md` and
+`dd_ad_*.md`, fetched 2026-09-20 — and a reader written from the DD
+page alone, with five corrections, reads **32 of the corpus's 34 DDn
+forks** (`docs/formats/diskdoubler-dd.md`, `tools/derive_dd.py`).
 
-**Fixtures:** the `ddtf-*` set (82 CC0 files against their originals),
-the 6 harvested and 28 specimen DiskDoubler fixtures. **Acceptance:**
-`run_ddtf.py` and `run_ddforks.py` green, ticks not higher on the
-largest method-10 fixture in FORMATS.md's DiskDoubler table.
+What is left:
+
+- **the two forks it does not read** — `derived-Terrainman_2.0__.sea`,
+  19,240 B and 16,524 B, both genuinely method 10, both decoding to
+  the right length and diverging after a few hundred bytes with all
+  three code tables satisfying Kraft exactly. The note says what has
+  been ruled out. Until they read, `fmt_dd.c` keeps citing XADMaster
+  for method 10;
+- **`ADn`**, methods 6 and 9: the page is fetched and nothing has been
+  held against it. `tools/derive_dd.py` is the template — the block
+  checksum locates blocks without a container parser, which is what
+  makes this possible at all, since the wiki does not document
+  DiskDoubler's containers;
+- **the containers**, which stay XADMaster's whatever happens to the
+  coders.
 
 ## Item 8 — PackIt only (`fmt_packit.c`, macutils)
 
