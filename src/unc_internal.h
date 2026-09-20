@@ -289,6 +289,23 @@ static inline int unc_bufin_next(UncBufIn *b)
     return unc_bufin_next_slow(b);
 }
 
+/* The bytes that are already in the buffer: *p is set to the first of
+ * them and their count returned, which is 0 when the buffer is spent —
+ * the caller's cue to go through unc_bufin_next, refill and ask again.
+ * unc_bufin_drop consumes n of them. Only fmt_binhex.c uses this, to
+ * take a whole 64-character line in one pass rather than pay the bounds
+ * test and the cursor store once per character. */
+static inline uint32_t unc_bufin_span(const UncBufIn *b, const uint8_t **p)
+{
+    *p = b->buf + b->pos;
+    return b->len - b->pos;
+}
+
+static inline void unc_bufin_drop(UncBufIn *b, uint32_t n)
+{
+    b->pos += n;
+}
+
 /* The next byte WITHOUT consuming it, or -1 at EOF (which sets the
  * sticky error, as reading it would have). One byte of lookahead is
  * enough for the only caller: unc_readline, which has to take CRLF as a

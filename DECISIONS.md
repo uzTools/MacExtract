@@ -210,6 +210,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
 - 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
 - 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
+- 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
 
 ---
 
@@ -12583,3 +12584,100 @@ StuffIt (an 800K boot disk and a 1440K *Read Me*) add anything: they are
 the same two shapes again, and are named in the generator and left where
 they are. And nothing about the MS-DOS or Apple II disk types, or a real
 400K disk, none of which any specimen here has ever been.
+
+## 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
+
+**Item 1 of CURRENT_WORK.md, chosen from a 68000 instruction profile**
+that read `bh_get_bits` 41 % and `bh_next` 29 % of
+`macburger-helper.hqx` — 204 of the 946 files in `fixtures/` are `.hqx`,
+the commonest format in the corpus. The brief proposed decoding four
+characters into three bytes at once and said, as an aside worth one
+look, that every character is touched three times.
+
+**The aside was the larger half, and only the per-BLOCK profile said
+so.** Read by function, the work is in the two that fetch six bits and
+assemble a byte. Read by block with `file:line`, `bh_refill_line` —
+which is inlined into `bh_get_bits` and so invisible in the function
+ranking — is 8.77 M of 34.6 M instructions, **25 %**, and the inlined
+`unc_bufin_next` under it another 9.7 %. The 6-bit fetch proper is
+15.6 %. The three touches are the reason: a character is copied into
+`line[]` one call at a time, scanned there by a second loop that judges
+whether the line belongs to the document, and looked up in the LUT a
+third time when its six bits are wanted.
+
+**What the line reader does now.** The line is normally in the reader's
+own buffer already, all 64 characters and the terminator with them, so
+it is taken with one scan for that terminator (`unc_bufin_span` /
+`unc_bufin_drop`, new and used only here) instead of a call, a bounds
+test and a cursor store per character. The pass that judges the line
+then also CONVERTS it: `line[]` holds 6-bit values and 0xFE for the
+':' from that point on, so neither the 6-bit fetch nor the group decode
+looks a character up again. Two touches, no call per character.
+
+**The whitespace rule is why the conversion cannot move into the copy.**
+hexbin trims trailing whitespace before judging a line, and space and
+tab are not in the BinHex alphabet — so a fused copy-and-judge would
+have to either reject every line a mailer padded or stop rejecting an
+interior space, and the alphabet omitting the space is load-bearing
+(`fmt_binhex.c`, `bh_refill_line`). The trim therefore still runs on
+CHARACTERS, between the scan and the conversion, and the rule is
+unchanged.
+
+**And the 4:3 group.** When four values are on the line and none is the
+terminator — one test on their OR, since every value is a 6-bit code or
+0xFE — all three bytes are computed at once and the second and third
+are served from the decoder. A BinHex line is 64 characters, a multiple
+of four, so a real file takes this path for every group but the last of
+a line; a short line, a group straddling two lines and the ':' all fall
+through to the byte-at-a-time path, which is unchanged.
+
+**Two shapes for serving those two bytes, and the cheaper one is not the
+tidier one.** Extending the existing `phase` counter to 3 and 4 costs
+14 instructions to hand back a byte already in hand. A pointer pair
+(`bp`, `bend`) tested before the phase costs 24 B more of 68000 code and
+is **−4.0 %** of the whole run: 23,126,796 → 22,209,542 instructions.
+Taken, and the phase machinery is left for the slow path alone.
+
+| | old | new | |
+|---|---|---|---|
+| `macburger-helper.hqx`, Mac Plus engine ticks | 3,771 | **2,386** | **−36.7 %** |
+| `macburger-helper.hqx`, 68000 instructions | 34,609,457 | 22,209,542 | −35.8 % |
+| `a2basic-09.hqx`, 68000 instructions | 22,963,608 | 14,508,403 | −36.8 % |
+| `CODE` | 151,976 | 152,216 | +240 B |
+| A5 | 38,648 | 38,664 | +16 B |
+| peak heap, `macburger-helper.hqx` on the Mac | 8,208 B | 8,208 B | identical |
+
+**The 68000 count and the tick probe agreed to one point**, which is new
+here: the same two instruments disagreed by 2.4x and 7x on the LZW
+rewrite the day before (*the buffer that became a length*), because what
+that one removed was a byte copy — the cheapest thing a 68000 does.
+What this one removes is calls, bounds tests and indexed loads, which
+the count and the clock price alike. One data point, and the rule
+stands: the profile RANKS, the probe PRICES.
+
+**The A5 growth is not a table.** `fmt_binhex.c.obj` carries no data at
+all, before or after; all 238 B of its growth is text. The 16 B is
+rodata alignment shifting under it, the same effect measured on
+2026-09-19 (+16 B "around the 64-byte length table, not a new table").
+
+**A defect the fixtures caught that a suite would not have.** The first
+draft of the fast path left `n` at the count the terminator scan had
+reached when it fell through to the byte-at-a-time loop, so a line that
+straddled a refill was appended after a copy of itself. 203 of 204
+`.hqx` fixtures failed their CRC immediately — but only because the
+old engine binary was kept and its output diffed against the new one
+over every fixture of the format, which is the check CURRENT_WORK.md's
+protocol asks for and the reason it asks. The 4 KB input buffer makes
+that path fire about once every 64 lines, so it is well covered; a
+smaller corpus, or grading on exit status alone, would have shipped it.
+
+**What is NOT claimed.** That the licence moves: `fmt_binhex.c` left the
+XADMaster row on 2026-09-19 for RFC 1741 and Lewis's definition, and
+nothing here changed a format detail — the alphabet, the banner, the
+CRC and the RLE layer are untouched, and so is hexbin's garbage rule.
+That the CRC-16 or the RLE filter got cheaper: they did not, and they
+are now 12.3 % and 4 % of what is left. That any other format moved —
+`unc_bufin_span` has one caller, and the 932-fixture differential run
+is byte-for-byte what it was. And no 1 MB tier was re-run for this: the
+allocation is `UNC_IOBUF * 2` as before and the Mac peak is identical to
+the byte, so nothing a tier measures can have moved.

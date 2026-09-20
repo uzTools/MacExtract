@@ -127,7 +127,10 @@ typedef struct BhDec {
                            * 3-byte cycle the next byte comes from. Kept
                            * ALREADY REDUCED rather than counted and taken
                            * mod 3, because that modulo ran once per output
-                           * byte and a 68000 has no divide instruction */
+                           * byte and a 68000 has no divide instruction.
+                           */
+    uint8_t  batch[2];    /* bytes 2 and 3 of a group decoded at once */
+    uint8_t *bp, *bend;   /* what is left of them; equal when none is */
     uint8_t  prev_bits;
     int      eof;         /* saw terminating ':' */
     /* RLE layer */
@@ -143,6 +146,7 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
     for (i = 0; i < 64; i++) d->lut[(uint8_t)bh_alphabet[i]] = (uint8_t)i;
     d->lut[':'] = 0xFE;
     d->phase = 0;
+    d->bp = d->bend = d->batch;
     d->prev_bits = 0;
     d->eof = 0;
     unc_rle90_init(&d->rle, 1);
@@ -170,31 +174,60 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
 static int bh_refill_line(BhDec *d)
 {
     for (;;) {
-        int ch;
-        int32_t i;
+        const uint8_t *q;
+        uint32_t avail;
+        int32_t n = 0, i;
         int ok = 1;
 
         d->llen = d->lpos = 0;
-        for (;;) {
-            ch = unc_bufin_next(&d->in);
-            if (ch < 0) {
-                if (d->llen == 0) { d->err = d->in.err; return -1; }
-                break;
+
+        /* The line is normally in the reader's buffer already, all 64
+         * characters and the terminator with them, so it is taken in
+         * one scan for that terminator rather than one call, one bounds
+         * test and one cursor store per character. */
+        avail = unc_bufin_span(&d->in, &q);
+        if (avail > (uint32_t)BH_LINE_MAX) avail = (uint32_t)BH_LINE_MAX;
+        while ((uint32_t)n < avail && q[n] != '\n' && q[n] != '\r') n++;
+        if ((uint32_t)n < avail) {
+            unc_bufin_drop(&d->in, (uint32_t)n + 1u);   /* and the terminator */
+        } else {
+            /* Not in hand: the line straddles a refill, or ends with
+             * the file, or is longer than the buffer. One character at
+             * a time, and a line that overflows is handed over in
+             * pieces — harmless, because every piece is judged by the
+             * same rule and the character order is unchanged. */
+            int ch;
+            n = 0;                      /* the scan above found nothing */
+            for (;;) {
+                ch = unc_bufin_next(&d->in);
+                if (ch < 0) {
+                    if (n == 0) { d->err = d->in.err; return -1; }
+                    break;
+                }
+                if (ch == '\n' || ch == '\r') break;
+                if (n >= BH_LINE_MAX) break;
+                d->line[n++] = (uint8_t)ch;
             }
-            if (ch == '\n' || ch == '\r') break;
-            if (d->llen >= BH_LINE_MAX) break;      /* hand over in pieces */
-            d->line[d->llen++] = (uint8_t)ch;
+            q = d->line;
         }
+
         /* Mailers eat trailing whitespace; hexbin trims it before
          * judging the line, so a trimmed line is not "garbage". */
-        while (d->llen > 0 && (d->line[d->llen - 1] == ' ' ||
-                               d->line[d->llen - 1] == '\t'))
-            d->llen--;
-        if (d->llen == 0) continue;                 /* blank line */
+        while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
+        if (n == 0) continue;                       /* blank line */
 
-        for (i = 0; i < d->llen; i++)
-            if (d->lut[d->line[i]] == 0xFF) { ok = 0; break; }
-        if (ok) return UNC_OK;
+        /* The one pass that judges the line also converts it: what
+         * line[] holds from here on is 6-bit values and 0xFE for the
+         * ':', not characters, so neither bh_get_bits nor the 4->3
+         * group in bh_decode_byte looks a character up again. In the
+         * straddling case q IS d->line and the conversion is in place,
+         * one element at a time. */
+        for (i = 0; i < n; i++) {
+            uint8_t v = d->lut[q[i]];
+            if (v == 0xFF) { ok = 0; break; }
+            d->line[i] = v;
+        }
+        if (ok) { d->llen = n; return UNC_OK; }
     }
 }
 
@@ -208,7 +241,7 @@ static int bh_get_bits(BhDec *d)
     for (;;) {
         uint8_t v;
         if (d->lpos < d->llen) {
-            v = d->lut[d->line[d->lpos++]];
+            v = d->line[d->lpos++];
             if (v < 0xFE) return v;
             if (v == 0xFE) { d->eof = 1; d->err = UNC_ERR_TRUNCATED; return -1; }
             continue;                               /* 0xFF: cannot happen */
@@ -217,11 +250,35 @@ static int bh_get_bits(BhDec *d)
     }
 }
 
-/* Next byte of the 6-bit layer (pre-RLE). */
+/* Next byte of the 6-bit layer (pre-RLE).
+ *
+ * Four characters make three bytes, and when all four are on the line in
+ * hand the group is decoded in one go: the caller gets the first byte
+ * and the other two are served from d->batch without the line, the
+ * bounds test or the LUT being touched again. A BinHex line is 64
+ * characters, a multiple of four, so a real file takes this path for
+ * every group except at a line break. Everything else — a short line, a
+ * group straddling two lines, the terminating ':' — falls through to
+ * the one-character-at-a-time path below, which is unchanged. */
 static int bh_decode_byte(BhDec *d)
 {
     int bits1, bits2;
     uint32_t ph = d->phase;
+
+    if (d->bp != d->bend) return *d->bp++;   /* rest of a decoded group */
+    if (ph == 0u && d->llen - d->lpos >= 4) {
+        const uint8_t *p = d->line + d->lpos;
+        uint32_t a = p[0], b = p[1], c = p[2], e = p[3];
+        /* Every value on the line is a 6-bit code or 0xFE (':'); one
+         * test on the OR of the four says all of them are codes. */
+        if (((a | b | c | e) & 0xC0u) == 0u) {
+            d->lpos += 4;
+            d->batch[0] = (uint8_t)((b << 4) | (c >> 2));
+            d->batch[1] = (uint8_t)((c << 6) | e);
+            d->bp = d->batch; d->bend = d->batch + 2;
+            return (int)(((a << 2) | (b >> 4)) & 0xFFu);
+        }
+    }
     d->phase = (ph == 2u) ? 0u : ph + 1u;
     switch (ph) {
     case 0:
@@ -379,6 +436,7 @@ static void bh_reset(BhDec *d)
 {
     d->llen = d->lpos = 0;
     d->phase = 0;
+    d->bp = d->bend = d->batch;
     d->prev_bits = 0;
     d->eof = 0;
     unc_rle90_init(&d->rle, 1);

@@ -22,7 +22,7 @@ from a 68000 instruction profile** (`tools/m68kprof.py`, below), run on
 
 | fixture | 68000 instructions | where they go |
 |---|---|---|
-| `macburger-helper.hqx` (BinHex) | 34.6 M | `bh_get_bits` 41 %, `bh_next` 29 %, `unc_bufin_next` 10 %, CRC-16 8 % |
+| `macburger-helper.hqx` (BinHex) | 34.6 M | `bh_get_bits` 41 %, `bh_next` 29 %, `unc_bufin_next` 10 %, CRC-16 8 % — **taken 2026-09-20, 22.2 M** |
 | `derived-Ultimate_Copland_1.1.sit.1` (StuffIt 13) | 40.4 M | fork body 34 %, `unc_canon_decode` 28 %, **`unc_fork_put` 14 %**, CRC-16 10 % |
 | `derived-MacPass390.sea` (Compact Pro) | 29.0 M | `unc_canon_decode` 34 %, `unc_cpt_lzh_fork` 34 %, two CRCs 23 % |
 | `derived-MUSFMT10.ZIP` (zip) | 15.3 M | zlib `inflate_fast` 53 %, CRC-32 35 % |
@@ -125,46 +125,13 @@ probe prices, and three "roughly zero" claims last week measured +468 B,
 
 ---
 
-# Part A — speed, from the profile (three hypotheses, none measured)
+# Part A — speed, from the profile
 
-## Item 1 — BinHex, four characters to three bytes at once
-
-**Files:** `src/fmt_binhex.c` (`bh_get_bits`, `bh_decode_byte`,
-`bh_next`, `bh_fork`). Format: RFC 1741 and hexbin, already cited.
-
-**Why it is first:** 70 % of a .hqx run is the two functions that fetch
-one 6-bit character and reassemble one byte, and `.hqx` is 204 of the
-946 files in `fixtures/` — the commonest format in the corpus. Today each output
-byte costs one or two `bh_get_bits` calls, each with a line-bounds
-test, a LUT lookup and two compares, then a three-way `switch` on the
-phase.
-
-**The shape to try:** when `phase == 0` and the line has four
-characters in hand (`llen - lpos >= 4`) and none of them is `:`
-(LUT ≥ 0xFE), decode all four straight-line into three bytes held in
-the decoder, and serve the next two from there without touching the
-line. Fall through to the current code otherwise, so the line-boundary,
-`:` and error paths do not change. The RLE layer (`bh_next`) stays as it
-is — DECISIONS.md 2026-08-27 (*the fork writer and the filter*) records
-two reshapes of THAT loop losing 4 % and 10 % because they grew it past
-what gcc inlines into `bh_fork`, so watch the `.obj` size of the file
-and whether `bh_next` is still inlined (`objdump -d` the obj and look
-for a call).
-
-**Also worth one look while there:** every character is touched three
-times — copied into `line[]` by `bh_refill_line`, scanned for validity
-by the same function, then looked up by `bh_get_bits`. The validity
-scan is format semantics (hexbin judges a whole line before using it)
-and must stay a whole-line decision; but the copy and the scan could be
-one pass. Price separately from the 4:3 batch.
-
-**Fixtures to price on:** `macburger-helper.hqx` (the profile above),
-`a2basic-09.hqx` (large). Correctness: all 204 `.hqx` in `./ci.sh`,
-`tools/run_multihqx.py`, and the old-vs-new output diff.
-
-**Expected, as a hypothesis:** −15 to −25 % of a .hqx's engine ticks
-for around +150 B of CODE. If the ticks do not pay for the bytes, do
-not take it; write the number down.
+**Item 1 (BinHex) is done and struck**: the line is read, judged and
+converted in one pass and four characters become three bytes at once —
+engine 3,771 → 2,386 ticks on a Mac Plus, −36.7 %, for +240 B of code
+(DECISIONS.md 2026-09-20, *the character that was touched three
+times*). The two below are still hypotheses, neither measured.
 
 ## Item 2 — StuffIt method 13, flush runs instead of putting bytes
 

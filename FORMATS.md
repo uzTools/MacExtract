@@ -3126,6 +3126,20 @@ position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
 
+**BinHex reads a line once, 2026-09-20.** A character used to be
+touched three times — copied into the line buffer a call at a time,
+scanned there for validity, looked up again when its six bits were
+wanted. The line is now taken out of the reader's own buffer in one
+scan for its terminator, and the pass that judges it converts it, so
+`line[]` holds 6-bit values from then on; four of them become three
+bytes at once, two served from the decoder. `macburger-helper.hqx`
+**−35.8 %** of the 68000's instructions and `a2basic-09.hqx` −36.8 %; on
+the Plus that fixture's engine is **3,771 → 2,386 ticks, −36.7 %**, the
+closest a 68000 count and a tick probe have come to agreeing here.
++240 B of code, +16 B of A5 (rodata alignment, not a table), peak heap
+identical to the byte (DECISIONS.md 2026-09-20, *the character that was
+touched three times*).
+
 **LZW writes into the caller's buffer, 2026-09-19.** The decoder is
 rewritten from deark's description of compress(1), and it stores each
 symbol's string LENGTH in the byte per symbol its staging array used to
@@ -3311,7 +3325,7 @@ accurate to ±one poll however reproducible it looks.
 | `derived-PCCTS.tar` | Tar | 287 KB | 46 s | 3 s |
 | `kermitut9test.bin` | MacBinary | 304 KB | 52 s | 3 s |
 | `PCCTS.tar.gz` | gzip | 64 KB | 58 s | 3 s |
-| `macburger-helper.hqx` | BinHex | 306 KB | 107 s | 3 s |
+| `macburger-helper.hqx` | BinHex | 306 KB | 83 s | 3 s |
 | `derived-MUSFMT10.ZIP` | Zip | 172 KB | 110 s | 3 s |
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **119 s** | 3 s |
 | `derived-MacPass390.sea` | DiskDoubler | 156 KB | 135 s | 3 s |
@@ -3326,8 +3340,13 @@ coarser ruler. The table carried a 30 s boot for `macburger-helper.hqx` until
 2026-08-28; boot does not depend on the fixture, so that was six polls.
 
 **The times fell by up to 31 % when re-measured**, on the same emulator with
-the same commands: `macburger-helper.hqx` was 150 s and is 104 s. The engine
-got faster and the table was not re-run.
+the same commands: `macburger-helper.hqx` was 150 s, then 104 s. The engine
+got faster and the table was not re-run. It is **83 s since 2026-09-20**,
+re-measured on the same command after the BinHex line reader (*Decode
+cost*, above) — and that row had read 107 s while this paragraph read
+104 s, which is one poll's disagreement nobody had collected; the row is
+the measurement and the number above is it. The other rows still carry
+the dates above them.
 
 **Two rows were measured at `--poll 20` because `--poll 3` mis-read them**,
 which was a harness defect and was fixed the same day — the grid's sync word
@@ -4547,7 +4566,7 @@ transfers**: both sides pay the same quantisation and the same stolen CPU, and
 neither absolute column belongs beside *Measured on a 7 MHz Mac Plus* above —
 that table is the autotest build, which calls `RunExtract` once and CRC-reads
 both forks back off the volume, so it measures neither the same layers nor the
-same work. `macburger-helper.hqx` is the clearest case: 104 s there is the
+same work. `macburger-helper.hqx` is the clearest case: 83 s there is the
 BinHex decode alone, 269 s here is that plus the 312-file archive inside it.
 
 **They wrote the same names.** On every fixture the two output sets are

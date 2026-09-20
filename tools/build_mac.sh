@@ -165,7 +165,20 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # refused there; a third — 128 B cheaper here for 1.5-3 % more Linux
 # instructions and NOTHING a tick probe can see — was taken, which is what
 # this ceiling is for.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151976}
+# Raised 2026-09-20 from 151,976 to 152,216: +240 B for BinHex, where a
+# character used to be touched three times — copied into the line buffer,
+# scanned there for validity, looked up again when its six bits were
+# wanted. The line is now taken out of the reader's own buffer in one
+# scan for its terminator, judged and converted to 6-bit values in the
+# same pass, and four characters become three bytes at once, two of them
+# served from the decoder. −35.8 % of the 68000's instructions on
+# macburger-helper.hqx and −36.8 % on a2basic-09.hqx, and on a 7 MHz Mac
+# Plus engine 3,771 → 2,386 ticks, −36.7 % — the closest a 68000 count
+# and a tick probe have come to agreeing here.
+# All 238 B of it are inside fmt_binhex.c.obj (2,181 -> 2,419 B); the
+# heap allocation is unchanged and so is the peak (DECISIONS.md
+# 2026-09-20, the character that was touched three times).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152216}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -196,7 +209,12 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-151976}
 # `left`, unsigned here) instead of comparing a running total against a
 # shifted constant. Net −12 B, and a ratchet is set at the size on the day,
 # so it is locked in.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38648}
+# Raised 2026-09-20 from 38,648 to 38,664 with the BinHex work above:
+# +16 B, and NOT a new table — fmt_binhex.c.obj carries no data at all,
+# before or after. It is rodata alignment shifting under 240 B of new
+# text, the same effect measured on 2026-09-19 (+16 B "rodata alignment
+# around the 64-byte length table, not a new table").
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38664}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes
