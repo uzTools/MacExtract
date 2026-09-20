@@ -134,6 +134,19 @@ fi
     curl -sL -o reference/notes/cpt_specs_theunarchiver.md \
     "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/CompactProSpecs.wiki"
 
+# The two pages that page's LAST LINE links to, and which nothing here
+# fetched until 2026-09-20 — so the project had a full description of
+# Compact Pro's coders one hop away from a file in reference/notes and
+# did not have it. Together they document the whole format; what they
+# get wrong is written up in docs/formats/compact-pro.md, which is
+# what src/fmt_cpt.c cites.
+[ -f reference/notes/cpt_lzh_theunarchiver.md ] || \
+    curl -sL -o reference/notes/cpt_lzh_theunarchiver.md \
+    "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/CompactProLzhAlgorithm.wiki"
+[ -f reference/notes/rle8182_theunarchiver.md ] || \
+    curl -sL -o reference/notes/rle8182_theunarchiver.md \
+    "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/Rle8182Algorithm.wiki"
+
 if [ ! -f reference/notes/cpt_users_guide.txt ]; then
     curl -sL -o /tmp/cpt_guide.pdf \
         "http://www.applefool.com/se30/files/Compact%20Pro%20User's%20Guide.pdf"

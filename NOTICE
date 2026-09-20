@@ -53,7 +53,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     `docs/formats/arc-container-and-coders.md` since the same day,
     derived from archives ARC 5.21q wrote to order
     (`tools/derive_arc.py`); XADARCCrunchHandle.m still has methods
-    5/6/7 and XADARCCrushHandle.m method 10.
+    5/6/7 and XADARCCrushHandle.m method 10. And **Compact Pro** is
+    `docs/formats/compact-pro.md` since the same day — the format's
+    own published description, three pages of The Unarchiver's format
+    wiki, plus the six corrections it needs; a reader written from
+    those alone reads every Compact Pro fork in the corpus, 536 of
+    them (`tools/derive_cpt.py`), so neither XADCompactProParser.m nor
+    XADCompactProLZHHandle.m nor macutils' cpt.c is a source of
+    `src/fmt_cpt.c` any longer.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 

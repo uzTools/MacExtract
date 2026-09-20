@@ -1,8 +1,14 @@
 /*
  * fmt_cpt.c — Compact Pro (.cpt) decoder.
  *
- * Layout (sources: reference/XADMaster/XADCompactProParser.m and
- * reference/macutils/macunpack/cpt.c — LGPL, see NOTICE):
+ * Layout. Source since 2026-09-20: docs/formats/compact-pro.md and
+ * the three pages of the format's own published description it
+ * corrects (reference/notes/cpt_specs_theunarchiver.md and the two
+ * beside it). A reader written from those alone reproduces every
+ * Compact Pro fork in the corpus — 536 of them across 68 archives —
+ * byte for byte (tools/derive_cpt.py). XADCompactProParser.m and
+ * macutils' cpt.c were the source of this layout until then; what
+ * they remain the source of is nothing here, and NOTICE says so:
  *
  *   File header (8 bytes): u8 signature (= 1), u8 volume, u16 xmagic,
  *   u32 offset of the index.
@@ -333,8 +339,16 @@ static UNC_HOT int cpt_rle_match(CptRle *r, uint8_t *window, uint32_t *wposp,
 /* LZH stage: LZSS over an 8 KB window + three canonical Huffman      */
 /* codes (literals 256, match lengths 64, match offsets 128), with a  */
 /* fresh set of codes every CPT_BLOCK cost units (2 per literal, 3    */
-/* per match). Sources: XADCompactProLZHHandle.m and macutils cpt.c   */
-/* cpt_rle_lzh.                                                       */
+/* per match).                                                        */
+/*                                                                    */
+/* Source since 2026-09-20: docs/formats/compact-pro.md, which is the */
+/* format's own published description of this coder plus the five     */
+/* corrections it needs — the count byte in front of each code list,  */
+/* no Reverse16, the offset taken exactly (and 0 legal), no length    */
+/* base, and the header's length measuring what the RLE produces      */
+/* rather than what this stage does. Each was established by decoding */
+/* whole forks, not by reading XADCompactProLZHHandle.m or macutils'  */
+/* cpt_rle_lzh, which were the source until then.                     */
 /* ------------------------------------------------------------------ */
 
 

@@ -152,6 +152,9 @@ times*). **Part A is otherwise empty.**
 
 # Part B — the licence rows, in the order they could possibly pay
 
+**Item 8's Compact Pro half is done and struck**: see the row below,
+which is now PackIt alone.
+
 **Item 9 is done and struck, most of it**: ARC's member header, its
 RLE90, and methods 4, 8 and 9 are derived from archives ARC 5.21q
 wrote to order (`docs/formats/arc-container-and-coders.md`,
@@ -259,16 +262,23 @@ the 6 harvested and 28 specimen DiskDoubler fixtures. **Acceptance:**
 `run_ddtf.py` and `run_ddforks.py` green, ticks not higher on the
 largest method-10 fixture in FORMATS.md's DiskDoubler table.
 
-## Item 8 — Compact Pro's container and stages, and PackIt (`fmt_cpt.c`, `fmt_packit.c`, macutils)
+## Item 8 — PackIt only (`fmt_packit.c`, macutils)
 
-Compact Pro 1.51 runs here (`tools/vmac/cptcrypt.py`, `cptsegment.py`);
-`tools/synth_cpt.py` and `synth_cptsplit.py` make inputs. The coder was
-fused and profiled on 2026-09-19 (−31.7 %), so the rewrite has a hard
-floor to meet. PackIt's format is trivial and its container is a page;
-the application is not on this machine (inventory row: "no"), so PackIt
-moves only if a specimen set written by PackIt itself turns up — the
-existing fixtures are the corpus's, not synthesized, which is enough to
-grade a parser rewrite against but not to write a note from.
+**Compact Pro left this row on 2026-09-20**: its format is published
+after all, in three pages of The Unarchiver's wiki that
+`fetch_references.sh` now fetches, and `docs/formats/compact-pro.md`
+carries the six corrections they need — 536 forks of 68 archives read
+from that description alone (DECISIONS.md, *the description that was
+one link away*).
+
+What is left is PackIt, whose container is macutils' `pit.c`. Two of
+its facts already moved on 2026-09-20 with the Huffman tree: the
+serialisation itself, and that a `PMa4` entry codes its 94-byte header
+into the same stream as its two forks. The application is not on this
+machine (inventory row: "no"), so PackIt moves only if a specimen set
+written by PackIt itself turns up — the existing fixtures are the
+corpus's and this project's own generator, which is enough to grade a
+parser against but not to write a description from.
 
 ## Item 12 — the four container facts (`fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_sitseg.c`, `fmt_stubs.c`)
 

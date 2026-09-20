@@ -217,6 +217,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
 - 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
 - 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
+- 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
 
 ---
 
@@ -13033,3 +13034,69 @@ was not, and the neutral-rewrite rule applies here as it did to Items
 it worth something is that it is not descended from XADMaster, not
 that it is descended from SEA. And nothing about ARC's encryption,
 which no specimen here uses.
+
+## 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
+
+**Item 8's Compact Pro half, and the row's premise was false.** The
+inventory read: "no non-copyleft description of the format exists, so
+the container and the stages are still XADMaster's and macutils'".
+The description exists. It is three pages of The Unarchiver's format
+wiki, and `reference/notes/cpt_specs_theunarchiver.md` — fetched into
+this repository long ago, cited by `fmt_cptseg.c` — **ends with links
+to the other two**:
+
+>   * Rle8182Algorithm - An RLE encoding
+>   * CompactProLzhAlgorithm - An LZSS+Huffman encoding
+
+`tools/fetch_references.sh` fetched the first page and not those. So
+the project has had a full description of Compact Pro's coder one hop
+from a file in its own reference directory, for as long as that file
+has been there, while an inventory row said no description existed.
+**"Have you looked at all" is one of the ten smells in BLOCKERS.md,
+and this is what it looks like from the inside**: nobody had followed
+a link at the bottom of a page they were already citing.
+
+**The pages are largely right, and where they are wrong it is
+specific.** `tools/derive_cpt.py` is a reader written from those three
+pages and nothing else; with six corrections it reproduces **536 forks
+of 68 archives — every Compact Pro fork in the corpus — byte for
+byte** against the oracle's sha256. The corrections, each established
+by decoding rather than by reading an implementation, are in
+`docs/formats/compact-pro.md`; the two that took longest are worth
+repeating here:
+
+- **a count byte in front of each code list**, where the page says the
+  three codes are "of fixed size". Kraft's equality settles it without
+  any implementation at all: exactly 1.000000 for all three codes when
+  the byte is read, nowhere near 1 when it is not. That test is how a
+  prefix code can be recognised in a stream whose layout is in doubt,
+  and it turned a stuck afternoon into one measurement;
+- **the header's length counts the RLE's output, not the LZSS's.**
+  Neither page says which. Driving the LZSS by it reads past the end
+  of short forks and stops short on forks whose `0x81 0x82 0x00`
+  escapes make the filter shrink — which is why the first full run
+  failed 57 forks out of 566 with two different symptoms at once.
+
+**And the inventory's other claim went with it.** A comment in
+`unc_internal.h` said Compact Pro's Huffman block was `0xfff0` and
+DiskDoubler method 8's `0x1fff0`. It is the other way round — the code
+has had it right all along (`CPT_BLOCK` is `0x1fff0`, and `fmt_dd.c`
+passes `0xFFF0` at the call), and the fetched page agrees with the
+code. A comment that contradicts the constant three lines from it
+survived because nothing reads comments.
+
+**A harness fault worth recording, because it looked like a format
+fault.** 28 forks "differed" until the reader kept the directory
+structure: `derived-_bot_1.0.cpt` has **twelve pairs of files with the
+same name in different folders**, and a reader that keys entries by
+leaf name compares half of them against the wrong hash. The spec's own
+sentence — "the directory structure can be entirely inferred from the
+entry count field" — is what fixes it, so the bug was in not
+implementing enough of the page.
+
+**What is NOT claimed.** That `src/fmt_cpt.c` was rewritten: it was
+not, and the neutral-rewrite rule applies. That the pages are
+complete: they say nothing about encryption, and the segmented scheme
+is `fmt_cptseg.c`'s own row. And nothing about PackIt, the other half
+of this inventory row, which keeps macutils' `pit.c` for its
+container.

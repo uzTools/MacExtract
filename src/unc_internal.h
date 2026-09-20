@@ -1011,7 +1011,11 @@ typedef int (*UncPutRun)(void *ctx, const uint8_t *p, uint32_t n);
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
 /* which is Compact Pro compression inside a DiskDoubler container      */
 /* (Source: XADDiskDoublerParser.m case 8). The only difference is the  */
-/* Huffman block size: 0x1fff0 there, 0xfff0 here.                      */
+/* Huffman block size: 0x1fff0 for Compact Pro (fmt_cpt.c, CPT_BLOCK,   */
+/* and the published description agrees) and 0xfff0 for DiskDoubler     */
+/* (fmt_dd.c, at the call). This comment had the two the WRONG WAY      */
+/* ROUND until 2026-09-20, when a fetched specification disagreed with  */
+/* it and the code turned out to be right.                              */
 /* ------------------------------------------------------------------ */
 
 typedef struct CptRle {
