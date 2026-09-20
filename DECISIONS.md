@@ -213,6 +213,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
 - 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
 - 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
+- 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
 
 ---
 
@@ -12794,3 +12795,59 @@ from the put into `UNC_ERR_SINK` and the new code propagates what came
 back, which is what `fmt_lzh.c` has done since 2026-09-19 — a cancel
 mid-fork now reports `UNC_ERR_ABORTED` where it reported a sink error,
 and the 948-fixture A/B says no corpus path reaches either.
+
+## 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
+
+**Item 3 of CURRENT_WORK.md, and the only row this week that came out
+better on every axis at once.**
+
+**The claim.** `renorm * low` and `renorm * freq[n]` are the arithmetic
+coder's inner two multiplications, and on a 68000 — which has no 32x32
+multiply — they went through libgcc's `__mulsi3`. They need not: a
+model's `total` never passes its `limit` by more than one increment
+(`ars_model_bump`), so the limits of 256 and 1,024 make `low` and
+`freq[n]` **11-bit numbers**, and only `renorm` needs 32 bits, `range`
+being `ARS_NUMBITS` wide. Two 16x16 products and a shift is the
+identity, and `mulu.w` is an instruction the 68000 has.
+
+**Seen, not assumed.** `objdump -dr` on the object: the relocations to
+`__mulsi3` go from 3 to 2, and the two that remain are at
+`ars_model_reset` and the model setup — once per entry, not once per
+symbol. `muluw` goes from 2 to 6. The brief said to check this rather
+than trust gcc's m68k backend to recognise the pattern, and the check
+is the reason the cast is on both operands.
+
+**The high half is shifted off the top of the word and that is exact**
+here: `renorm` is `range / total` rounded down and the multiplicand is
+at most `total`, so the true product is at most `range` — under 2^25 —
+and the discarded bits are zero. Unsigned throughout, so they are
+defined rather than overflow.
+
+| | old | new | |
+|---|---|---|---|
+| `derived-a2basic.dmg.sit` at 4 MB, Mac Plus engine ticks | 18,916 | **17,002** | **−10.1 %** |
+| the same, wall clock for the run | 341 s | 321 s | (±one 20 s poll) |
+| the same, 68000 instructions | 161,955,101 | 157,445,238 | **−2.78 %** |
+| `derived-KeyGraphics.sit`, 68000 instructions | 7,738,377 | 7,598,077 | −1.8 % |
+| `CODE` | 152,356 | **152,336** | **−20 B** |
+| A5 | 38,652 | **38,640** | **−12 B** |
+| peak heap, a2basic on the Mac | 829,041 B | 829,041 B | identical |
+
+**−2.78 % of the count bought −10.1 % of the clock, and that is the
+part worth transferring.** The trap list has always said a libgcc
+helper costs more than its count says; this is the first time the two
+instruments have been put either side of one and the factor measured.
+It is **3.6x**, and it points the OPPOSITE way from the LZW rewrite the
+day before, where −23.0 % of an x86 count was −9.4 % of ticks. So the
+error is not a constant and not even a sign: what the profile ranks is
+instructions, and a `jsr` into a shift-and-add loop with its stack
+traffic is not one instruction's worth of machine.
+
+**What is NOT claimed.** That the 1 MB sampled path moved: it has not
+been re-timed since the 2026-09-19 rewrite and this run is the 4 MB
+fast path (FORMATS.md, *StuffIt 5 / Arsenic at 1x*). That anything but
+StuffIt 5 changed — `ars_mulw` is static, `sit_arsenic.c` has no other
+caller, and 554 StuffIt and BinHex fixtures come out byte-identical
+against the old binary. And nothing about other 32x32 multiplies in
+the engine: the bound that makes this one safe is a property of this
+model's limits, and every other site would need its own.

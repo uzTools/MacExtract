@@ -149,6 +149,31 @@ static void ars_model_bump(ArsModel *m, int32_t n)
     }
 }
 
+/* renorm * x, where x is a frequency and renorm is not.
+ *
+ * The 68000 has no 32x32 multiply, so `renorm * low` and
+ * `renorm * freq[n]` both went through libgcc's __mulsi3 — 4 % of an
+ * Arsenic run by instruction count, and more than that by cycles,
+ * since a helper call is a jsr and a shift-add loop. But a model's
+ * total never passes its limit by more than one increment (1032 for
+ * the 1024 models, 257 for the initial one; ars_model_bump), and both
+ * `low` and `freq[n]` are bounded by the total — so x is an 11-bit
+ * number, and only renorm needs 32 bits (range is ARS_NUMBITS wide).
+ *
+ * Two 16x16 products is the identity that follows. Each is a `mulu.w`,
+ * which the 68000 has: verified in the disassembly of the object, not
+ * assumed of the pattern. The high half is shifted past the top of the
+ * word and those bits are discarded, which is exact here because the
+ * true product is bounded by `range`: renorm is range/total rounded
+ * down and x <= total, so renorm * x <= range < 2^25. Unsigned
+ * throughout, so the discarded bits are defined rather than overflow. */
+static uint32_t ars_mulw(uint32_t renorm, uint32_t x)
+{
+    uint32_t lo = (uint32_t)(uint16_t)renorm * (uint32_t)(uint16_t)x;
+    uint32_t hi = (uint32_t)(uint16_t)(renorm >> 16) * (uint32_t)(uint16_t)x;
+    return lo + (hi << 16);
+}
+
 /* Decode one symbol under `m`: the write-up's "decode a frequency" and
  * "remove symbol", with the search over the group sums first.
  *
@@ -193,10 +218,11 @@ static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
 
     /* Remove the symbol and renormalise. */
     {
-        int32_t lowincr = renorm * low;
+        int32_t lowincr = (int32_t)ars_mulw((uint32_t)renorm, (uint32_t)low);
         d->code -= lowincr;
         if (low + freq[n] == m->total) d->range -= lowincr;
-        else d->range = renorm * freq[n];
+        else d->range = (int32_t)ars_mulw((uint32_t)renorm,
+                                          (uint32_t)freq[n]);
         while (d->range <= ARS_HALF) {
             int bit = unc_bitin_bit(d->bi);
             if (bit < 0) { d->err = d->bi->err; return -1; }

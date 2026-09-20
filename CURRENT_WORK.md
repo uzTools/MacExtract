@@ -26,7 +26,7 @@ from a 68000 instruction profile** (`tools/m68kprof.py`, below), run on
 | `derived-Ultimate_Copland_1.1.sit.1` (StuffIt 13) | 40.4 M | fork body 34 %, `unc_canon_decode` 28 %, **`unc_fork_put` 14 %**, CRC-16 10 % — **taken 2026-09-20, 35.8 M** |
 | `derived-MacPass390.sea` (Compact Pro) | 29.0 M | `unc_canon_decode` 34 %, `unc_cpt_lzh_fork` 34 %, two CRCs 23 % |
 | `derived-MUSFMT10.ZIP` (zip) | 15.3 M | zlib `inflate_fast` 53 %, CRC-32 35 % |
-| `derived-a2basic.dmg.sit` (Arsenic) | 162 M | `ars_decode` 56 %, MTF and BWT 31 %, `__mulsi3` 4 % |
+| `derived-a2basic.dmg.sit` (Arsenic) | 162 M | `ars_decode` 56 %, MTF and BWT 31 %, `__mulsi3` 4 % — **taken 2026-09-20, 157.4 M** |
 
 What that profile says is at the floor, so nobody re-opens it: the three
 CRC routines are table-driven and unrolled at ~10 instructions a byte
@@ -127,51 +127,26 @@ probe prices, and three "roughly zero" claims last week measured +468 B,
 
 # Part A — speed, from the profile
 
-**Items 1 and 2 are done and struck.** Method 13 flushes runs out of
+**All three of Part A's rows are done and struck.** Method 13 flushes runs out of
 its own window instead of calling `unc_fork_put` per byte — engine
 4,395 → 3,867 ticks, −12.0 %, for +140 B of code and −12 B of A5
 (DECISIONS.md 2026-09-20, *the window that was already the staging
 buffer*); Item 4 below inherits it and now has a floor to beat.
 
+**Item 3 (Arsenic)**: the coder's two products are two `mulu.w` and a
+shift instead of `__mulsi3` — engine 18,916 → 17,002 ticks, −10.1 %,
+for −20 B of code and −12 B of A5 (DECISIONS.md 2026-09-20, *what a
+helper call costs that its count does not say*). **Its second half is
+NOT done**: taking `k` renormalisation bits at once, named a
+hypothesis in the previous brief and still never run — the count is
+usually 0 to 2, so the win is small and the code grows. One tick run
+settles it.
+
 **Item 1 (BinHex)**: the line is read, judged and
 converted in one pass and four characters become three bytes at once —
 engine 3,771 → 2,386 ticks on a Mac Plus, −36.7 %, for +240 B of code
 (DECISIONS.md 2026-09-20, *the character that was touched three
-times*). **Item 3 below is the one left**, and is still a hypothesis.
-
-## Item 3 — Arsenic's two products, without `__mulsi3`
-
-**Files:** `src/sit_arsenic.c` (`ars_decode`, the block that computes
-`lowincr = renorm * low` and `range = renorm * freq[n]`).
-
-**What it is:** the 68000 has no 32×32 multiply, so both products go
-through libgcc's `__mulsi3` — 4 % of an Arsenic run by count, more by
-cycles. `low` and `freq[n]` are bounded by the model's `limit` (256 or
-1,024, `ars_model_init` calls), so they fit 16 bits; `renorm` does not
-(`range` is 26 bits, `ARS_NUMBITS`), so a plain `mulu.w` is NOT valid.
-The split that is valid is two 16-bit products:
-`((renorm >> 16) * low << 16) + ((renorm & 0xFFFF) * low)`, written so
-gcc emits `mulu.w` for each (cast both operands to `uint16_t` before
-the multiply; check the disassembly of the `.obj`, gcc's m68k backend
-recognises the pattern but it must be seen, not assumed).
-
-**Also, with a lower expectation:** the renormalisation takes one bit
-per inline read (`unc_bitin_bit` 4 % + the loop 6 %). Counting the
-shift first and taking `k` bits at once was named a hypothesis in the
-last brief and never run; the count is usually 0 to 2, so the win is
-small and the code grows. One tick run, and only if Item 3 proper paid.
-
-**Fixtures to price on:** `derived-a2basic.dmg.sit` at 4 MB (the fast
-path; a 542 s wall run), `derived-KeyGraphics.sit` for a smoke.
-Correctness: all 31 StuffIt 5 fixtures (`t` verifies the block CRC-32)
-in every `ci.sh` variant including the `UNC_ARS_FORCE_SAMPLED` build —
-keep any helper OUTSIDE that `#ifndef`.
-
-**Expected, as a hypothesis:** −3 % by count, perhaps −5 % in ticks, for
-±0 B. **The sampled 1 MB path has not been re-timed since the 2026-09-19
-rewrite**; one `--emu mv-1M-1x` run of a2basic (12–24 minutes) closes
-that, whether or not this item is taken, and its number goes into
-FORMATS.md, *Measured on a 7 MHz Mac Plus*.
+times*). **Part A is otherwise empty.**
 
 ---
 

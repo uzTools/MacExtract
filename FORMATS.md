@@ -3126,6 +3126,19 @@ position through `unc_bufin_tell`. A `NowBits` is always memory-backed,
 where that call reduces to `pos`: **−2.33 %** on that fixture, −0.7 % on
 `synth-now-mixed.now`.
 
+**Arsenic's two products, 2026-09-20.** The coder's `renorm * low`
+and `renorm * freq[n]` went through libgcc's `__mulsi3`, which the
+68000 needs because it has no 32x32 multiply. A model's total never
+passes its limit by more than one increment, so both multiplicands are
+11-bit and only `renorm` is not: two `mulu.w` and a shift replace the
+call. `derived-a2basic.dmg.sit` at 4 MB, engine **18,916 → 17,002
+ticks, −10.1 %** (341 → 321 s wall), for **−20 B** of code and −12 B
+of A5 — better on every axis. Peak heap identical at 829,041 B.
+**The instruction count says −2.78 %** on that fixture and −1.8 % on
+`derived-KeyGraphics.sit`: the clock moved 3.6x further than the count,
+which is what a helper call costs that its count does not say
+(DECISIONS.md 2026-09-20, *what a helper call costs…*).
+
 **Method 13 flushes runs, 2026-09-20.** Every output byte went to
 `unc_fork_put`, which is `static inline` and carries a call, so gcc
 leaves it out of line at `-Os` — 13.6 % of a method-13 run in the jsr,

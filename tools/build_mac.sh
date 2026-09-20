@@ -190,7 +190,16 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # identical at 81,226 B, and 948 fixtures byte-identical against the
 # old binary (DECISIONS.md 2026-09-20, the window that was already the
 # staging buffer).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152356}
+# LOWERED 2026-09-20 from 152,356 to 152,336: −20 B for Arsenic's two
+# products, which went through libgcc's __mulsi3 because the 68000 has
+# no 32x32 multiply. A model's total never passes its limit by more
+# than one increment, so `low` and `freq[n]` are 11-bit numbers and
+# only `renorm` needs 32 bits: two `mulu.w` and a shift is the
+# identity, and it is SMALLER than the call it replaces. Engine
+# 18,916 → 17,002 ticks on derived-a2basic.dmg.sit at 4 MB, −10.1 %
+# (DECISIONS.md 2026-09-20, what a helper call costs that its count
+# does not say).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152336}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -230,7 +239,9 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152356}
 # above: −12 B, the two dead branches' error constants gone with the
 # per-byte put. A ratchet is set at the size on the day, and that cuts
 # both ways.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38652}
+# LOWERED 2026-09-20 from 38,652 to 38,640 with the Arsenic work above:
+# −12 B more.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38640}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes
