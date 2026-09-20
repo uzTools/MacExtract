@@ -13126,10 +13126,13 @@ for StuffIt method 13 and "documented nowhere else" for DiskDoubler's
 
 **Method 13 is now the page's**, and the page is good. A reader
 written from it alone — `tools/derive_sit13.py`, which parses the
-tables out of the page rather than holding a copy — reproduces **790
-method-13 forks across 94 archives** byte for byte against the
+tables out of the page rather than holding a copy — reproduces **897
+method-13 forks across 103 archives** byte for byte against the
 oracle's sha256, meeting **all six code selectors**: in-stream codes
-and each of the five predefined sets. It needs two corrections,
+352 times and each of the five predefined sets. (It read 790 of 94
+when this entry was first written, with forks over 30 KB skipped for
+time; the wider sweep found nothing new to say, which is the point of
+running it.) It needs two corrections,
 written up in `docs/formats/stuffit-method-13.md`:
 
 - the meta-code's **"in addition"**: values 34, 35 and 36 set their

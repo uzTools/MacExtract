@@ -83,10 +83,26 @@ And over `synth-arc-mixed.arc`, one member per method, against
   corpus fixture has one member of each and they are read by
   `src/fmt_arc.c` on `XADARCCrunchHandle.m`'s authority, which is
   where that row stays.
-- **Method 10 in either dialect.** PAK's **Crushed** did not fall to
-  the LZW parameter grid above — it is a different dictionary
-  organisation, and `src/fmt_arc.c` still reads it on
-  `XADARCCrushHandle.m` and `LZW.c`. ARC 7's **Trimmed** and PAK's
+- **Method 10 in either dialect.** PAK's **Crushed** is not an LZW of
+  the shape above, and that is now measured rather than assumed: a
+  grid of **288 combinations** — bytes inverted or not, codes read
+  either bit order, widths from 9 to 14 with five starting points,
+  with and without a clear code, two first-free codes, three leading
+  skips, and RLE90 either applied or not — produces **not one correct
+  byte** of `RUNS.TXT`, a 12,692-byte file that PAK itself crushed to
+  261 bytes from input this project chose
+  (`tools/pak.py --make`). Whatever it is, its dictionary is not
+  addressed by sequence, which is consistent with the hash table
+  `src/fmt_arc.c` describes — and that file still reads it on
+  `XADARCCrushHandle.m` and `LZW.c`, the only implementation of
+  Crushed anywhere.
+- **Methods 5, 6 and 7 are the same kind of no.** The same search
+  over the corpus fixture's members reads none of them. deark (MIT)
+  implements 5, 6 and 8 and calls 5 and 6 "static LZW", so a
+  description exists in a permissive implementation even though the
+  wiki has no page for them; what does not exist is a derivation, and
+  a parameter search is not going to supply one for a hash-addressed
+  table. ARC 7's **Trimmed** and PAK's
   **Distilled** share the number; Distilled is deark's (MIT) already
   and needs nothing from here.
 - **Anything about encryption**, ARC's `g` switch, which no specimen

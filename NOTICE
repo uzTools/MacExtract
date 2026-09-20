@@ -64,7 +64,7 @@ This project's decoders are transcriptions/ports of algorithms from:
     its method 13 or `src/sit13_tables.h`: that wiki documents method
     13 in full, tables included, and
     `docs/formats/stuffit-method-13.md` carries the two corrections it
-    needs — 790 forks across 94 archives read from the page alone
+    needs — 897 forks across 103 archives read from the page alone
     (`tools/derive_sit13.py`), and the tables compared array by array
     against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
     pointed at the page instead. What that file still owes XADMaster

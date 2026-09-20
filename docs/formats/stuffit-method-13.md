@@ -19,9 +19,9 @@ arrays. `tools/fetch_references.sh` fetches it since 2026-09-20:
 **What this note is.** The corrections those pages need. A reader
 written from them alone — `tools/derive_sit13.py`, which even parses
 the tables out of the page rather than holding a copy — reproduces
-**790 method-13 forks across 94 archives** byte for byte against the
+**897 method-13 forks across 103 archives** byte for byte against the
 oracle's sha256, meeting **all six code selectors**: in-stream codes
-245 times and each of the five predefined sets. Without either
+352 times and each of the five predefined sets. Without either
 correction below it reproduces none.
 
 ## The corrections
@@ -61,7 +61,7 @@ bit.
 The container page is right as written: a 112-byte file header
 whatever it describes, method 32 opening a folder and 33 closing one,
 the resource fork before the data fork, and the next header after
-both. Ninety-four archives walked with it, every entry matching the
+both. A hundred and three archives walked with it, every entry matching the
 name the oracle recorded.
 
 ## The tables are the page's now

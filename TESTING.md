@@ -2564,6 +2564,61 @@ mutation: a matcher that ignores the fingerprint (4 failures — the
 name-alike intruder gets used) and a joiner that drops one byte per
 part boundary (27 failures). Both were reverted.
 
+## The derivation tools (`tools/derive_*.py`, not in `ci.sh`)
+
+**These are not tests. They are the evidence that a format's facts
+come from somewhere other than somebody's program**, and they exist
+because a citation is a claim: `src/*.c` says a file follows a
+description, and these re-run the reading that says the description
+is right.
+
+Each is a reader for one format, written from a description and from
+nothing else, which decodes whole forks and compares them against the
+sha256 an independent oracle recorded in `fixtures/manifests/`.
+
+| tool | reads | against |
+|---|---|---|
+| `derive_huffman_tree.py` | the bit-serialized tree of StuffIt 3, DiskDoubler 4 and PackIt | 13 forks; `--grid` re-derives the rule from a 16-way search |
+| `derive_stuffit8.py` | StuffIt method 8 (Miller-Wegman) | all 4 method-8 forks in the corpus; `--grid` re-searches the parameters |
+| `derive_arc.py` | ARC's member header, RLE90, and methods 4, 8 and 9 | 6 members; `--grid` derives them from archives a real ARC 5.21q writes to order |
+| `derive_cpt.py` | Compact Pro, container and both coders | 536 forks of 68 archives |
+| `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
+| `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 37 of 39 forks; the two it misses are named in `docs/formats/diskdoubler-dd.md` |
+
+Each writes its corrections into `docs/formats/`, which is what the
+engine cites; the descriptions themselves are fetched into
+`reference/notes/` by `tools/fetch_references.sh`.
+
+**Why they are not in `ci.sh`.** They need the fixtures, which are
+copyrighted and not committed, and `derive_arc.py --grid` needs an
+encoder `get_arc.sh` downloads. All of them skip cleanly with a
+message when what they need is absent, which is what a fresh clone
+has. They are also slow: Python decoding half a megabyte of LZSS is
+minutes, and the whole set is the better part of an hour.
+
+**What they CANNOT see:**
+
+- **Whether the shipped C is independent of XADMaster.** They prove a
+  description is sufficient to read the format. They say nothing
+  about how `src/` came to be written, and no note claims otherwise.
+- **Anything about a fork no fixture has.** StuffIt method 8's table
+  restart, its end-of-stream code and its 14-bit ceiling are all
+  unreached by any specimen here, so the derivation is silent on them
+  and `fmt_sit.c` still cites XADMaster for those three rules. A tool
+  that printed "all forks decode" without saying how many forks there
+  are would be hiding exactly this.
+- **Whether the oracle is independent.** `unar` IS XADMaster, so a
+  fork it and the description agree on has been checked by one
+  lineage twice. Where a second lineage exists it is used instead —
+  `derive_arc.py --grid` grades against the bytes handed to a real
+  ARC, and the DiskDoubler method-4 specimen is one Salient's own
+  expander reads back.
+- **A degenerate match.** A single-leaf Huffman tree decodes any
+  number of copies of one byte from nine bits that occur in almost
+  any file; `derive_huffman_tree.py` refuses such matches, and the
+  reason it does is that one of them was reported as a confirmation
+  on 2026-09-20 before anybody looked at it.
+
 ## The 68000 profile (`tools/m68kprof.py`, not in `ci.sh`)
 
 **It ranks; it does not price.** The tick probe on an emulated Mac Plus

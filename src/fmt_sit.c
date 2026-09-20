@@ -5,7 +5,7 @@
  * Sources. The CONTAINER is the format's own published description
  * since 2026-09-20 — docs/formats/stuffit-method-13.md and
  * reference/notes/sit_format_theunarchiver.md, which a reader written
- * from it alone walks 94 archives with, every entry matching the name
+ * from it alone walks 103 archives with, every entry matching the name
  * the oracle recorded (tools/derive_sit13.py). Method 3's tree is
  * docs/formats/serialized-huffman-tree.md, method 8's coder is
  * docs/formats/stuffit-method-8-mw.md, method 13's is the first note
@@ -170,7 +170,7 @@ static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
 /* published description plus the two corrections it needs (the       */
 /* meta-code's "in addition" rule, and a match offset one further     */
 /* back than it says). A reader written from that page alone          */
-/* reproduces 790 method-13 forks across 94 archives, meeting all six */
+/* reproduces 897 method-13 forks across 103 archives, meeting all six */
 /* code selectors (tools/derive_sit13.py). sit13_tables.h is the      */
 /* page's too, and identical to what XADStuffIt13Handle.m carries —   */
 /* compared array by array before the generator was pointed at it.    */
