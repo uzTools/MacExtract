@@ -2,10 +2,16 @@
  * fmt_sit.c — StuffIt classic (1.5.1–4.x) container, methods 0/1/2/3
  * in M5; further methods land with M6.
  *
- * Sources: reference/XADMaster/XADStuffItParser.m (header layout,
- * SITFH_* offsets, folder markers), XADRLE90Handle.m,
- * XADCompressHandle.m, XADStuffItHuffmanHandle.m, and
- * reference/macutils/macunpack/sit.c — LGPL, see NOTICE.
+ * Sources. The CONTAINER is the format's own published description
+ * since 2026-09-20 — docs/formats/stuffit-method-13.md and
+ * reference/notes/sit_format_theunarchiver.md, which a reader written
+ * from it alone walks 94 archives with, every entry matching the name
+ * the oracle recorded (tools/derive_sit13.py). Method 3's tree is
+ * docs/formats/serialized-huffman-tree.md, method 8's coder is
+ * docs/formats/stuffit-method-8-mw.md, method 13's is the first note
+ * above. What is left of XADStuffItParser.m, XADCompressHandle.m and
+ * reference/macutils/macunpack/sit.c here is method 6 and the RLE90
+ * filter — LGPL, see NOTICE.
  *
  * Archive header (22 bytes): u32 magic ('SIT!' or installer 'ST..'
  * variants), u16 numfiles, u32 totalsize, u32 magic2 'rLau', u8
@@ -159,7 +165,15 @@ static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
 /* after a literal the "first" code is used, after a match the        */
 /* "second") and an offset code. A leading byte selects one of five   */
 /* fixed code sets or a dynamic set serialized via a fixed meta code. */
-/* Source: reference/XADMaster/XADStuffIt13Handle.m — LGPL, NOTICE.   */
+/*                                                                    */
+/* Source: docs/formats/stuffit-method-13.md — the format's own       */
+/* published description plus the two corrections it needs (the       */
+/* meta-code's "in addition" rule, and a match offset one further     */
+/* back than it says). A reader written from that page alone          */
+/* reproduces 790 method-13 forks across 94 archives, meeting all six */
+/* code selectors (tools/derive_sit13.py). sit13_tables.h is the      */
+/* page's too, and identical to what XADStuffIt13Handle.m carries —   */
+/* compared array by array before the generator was pointed at it.    */
 /* ------------------------------------------------------------------ */
 
 #include "sit13_tables.h"

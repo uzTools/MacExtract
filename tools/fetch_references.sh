@@ -147,6 +147,36 @@ fi
     curl -sL -o reference/notes/rle8182_theunarchiver.md \
     "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/Rle8182Algorithm.wiki"
 
+# And the rest of that wiki, which turned out to describe most of the
+# Macintosh formats this project had recorded as undocumented. Its
+# index is a JSON file — 40 pages, listed at
+# .../theunarchiver/wikis.json — and reading it on 2026-09-20 is what
+# turned "no description exists" into a fetch for StuffIt method 13,
+# DiskDoubler's AD and DD, and the rest below. These are FACTS pages,
+# not code; what each one gets wrong is written up in docs/formats/
+# where this project has held it against the corpus, and a row that
+# has not been held against the corpus says so.
+for page_name in \
+    "StuffItAlgorithm13:sit13" \
+    "StuffItAlgorithm3:sit3" \
+    "StuffItSpecs:sit_specs" \
+    "StuffItFormat:sit_format" \
+    "StuffIt5Format:sit5_format" \
+    "StuffItArsenicAlgorithm:sit_arsenic" \
+    "DiskDoublerSpecs:dd_specs" \
+    "DiskDoublerAdAlgorithm:dd_ad" \
+    "DiskDoublerDdAlgorithm:dd_dd" \
+    "DiskDoublerAlgorithm2:dd_method2" \
+    "Rle90Algorithm:rle90" \
+    "LzwAlgorithm:lzw" \
+    "MacBinarySpecs:macbinary_specs" ; do
+    page=${page_name%%:*}
+    name=${page_name##*:}
+    [ -f "reference/notes/${name}_theunarchiver.md" ] || \
+        curl -sL -o "reference/notes/${name}_theunarchiver.md" \
+        "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/${page}.wiki"
+done
+
 if [ ! -f reference/notes/cpt_users_guide.txt ]; then
     curl -sL -o /tmp/cpt_guide.pdf \
         "http://www.applefool.com/se30/files/Compact%20Pro%20User's%20Guide.pdf"

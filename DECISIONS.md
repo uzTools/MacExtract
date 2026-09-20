@@ -218,6 +218,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
 - 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
 - 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
+- 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
 
 ---
 
@@ -13100,3 +13101,62 @@ complete: they say nothing about encryption, and the segmented scheme
 is `fmt_cptseg.c`'s own row. And nothing about PackIt, the other half
 of this inventory row, which keeps macutils' `pit.c` for its
 container.
+
+## 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
+
+**Three inventory rows said a format was undocumented. All three were
+wrong, and finding out cost one HTTP request.**
+
+The Compact Pro row fell first (*the description that was one link
+away*), on a link at the bottom of a page already in
+`reference/notes/`. That raised the obvious question — what ELSE is on
+that wiki — and the answer is a file:
+
+    https://storage.googleapis.com/google-code-archive/v2/
+        code.google.com/theunarchiver/wikis.json
+
+**Forty pages**, listed in JSON, including `StuffItAlgorithm13.wiki`,
+`DiskDoublerAdAlgorithm.wiki`, `DiskDoublerDdAlgorithm.wiki`,
+`DiskDoublerSpecs.wiki`, `StuffItFormat.wiki`, `Rle90Algorithm.wiki`
+and `MacBinarySpecs.wiki`. `tools/fetch_references.sh` had fetched one
+of the forty. The inventory meanwhile read "no other reader anywhere"
+for StuffIt method 13 and "documented nowhere else" for DiskDoubler's
+`ADn` and `DDn`.
+
+**Method 13 is now the page's**, and the page is good. A reader
+written from it alone — `tools/derive_sit13.py`, which parses the
+tables out of the page rather than holding a copy — reproduces **790
+method-13 forks across 94 archives** byte for byte against the
+oracle's sha256, meeting **all six code selectors**: in-stream codes
+and each of the five predefined sets. It needs two corrections,
+written up in `docs/formats/stuffit-method-13.md`:
+
+- the meta-code's **"in addition"**: values 34, 35 and 36 set their
+  repeats AND one more entry. Kraft's equality is what says so —
+  1.53 against 1.00 — with no implementation to compare against;
+- the match offset is **one further back** than the page's sentence
+  says. Compact Pro's page has the same ambiguity and the opposite
+  answer, so nothing but decoding settles either.
+
+**And the tables moved with it.** `src/sit13_tables.h` was generated
+from `XADStuffIt13Handle.m`; the page prints the same seventeen
+arrays, they were compared element by element, they are identical, and
+regenerating from the page reproduces the committed header byte for
+byte. `gen_sit13_tables.py` reads the page now.
+
+**The lesson is not "read the wiki".** It is that
+`fetch_references.sh` encodes what this project believes exists, and
+nothing ever re-asked. Three rows of an inventory, a brief that
+planned reverse-engineering campaigns against emulated applications
+for two of them, and the answer was a JSON index nobody had opened. A
+**list of sources is a claim like any other** — and the cheapest of
+the ten smells to re-test, because a source either exists or it does
+not.
+
+**What is NOT claimed.** That DiskDoubler's rows are closed: the pages
+are fetched and the inventory says they are unverified, because
+nothing has yet been held against the corpus (that is what the three
+`derive_*.py` tools do, and DiskDoubler has none yet). That the code
+was rewritten: it was not, here or in any row today. And that the
+licence moves: `fmt_sit.c` still owes macutils method 6 and the RLE90
+filter, and OPEN_ITEMS.md lists what every other file still owes.

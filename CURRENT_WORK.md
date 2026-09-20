@@ -216,24 +216,6 @@ recorded and not taken, however much cleaner its licence. Do the cheap
 half — the spec note — regardless, because it is worth having even when
 the code does not move, and it is what the next attempt starts from.
 
-## Item 4 — StuffIt method 13 (`fmt_sit.c`, `XADStuffIt13Handle.m`)
-
-The one licence row that is also hot (Item 2 is its speed half; do that
-first, then this rewrite inherits it). Two Huffman trees (first,
-second, offset) built from code lengths that the stream carries in its
-own coded form (`sit13_parse_code`, 8 % of the run), an LZ layer with
-the length escapes at 0x13e/0x13f and the end marker 0x140, a 64 KB
-window. StuffIt Deluxe 3.5.1 runs here (`tools/vmac/sitcrypt.py` drives
-it) and writes method 13; `tools/gen_sit13_tables.py` already
-regenerates the fixed tables. The spec note has to state the code-length
-alphabet and how it is itself coded, which is the part with no public
-description.
-
-**Fixtures:** the method-13 fixtures above. **Acceptance:** byte-exact on
-all of them and on new ones written by StuffIt Deluxe from synthesized
-inputs (`tools/synth_sit6.py`'s shape, for method 13), ticks not higher
-than after Item 2, CODE not higher.
-
 ## Item 5 — Now Compress (`fmt_now.c`, `XADNowCompressHandle.m`)
 
 The whole file is XADMaster's, container and coder. Now Compress runs
