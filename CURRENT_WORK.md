@@ -283,13 +283,15 @@ split header or the Now Compress probe turns up; leave the row.
 
 # Part C — housekeeping the week left behind
 
-- **The Mac timing table is stale.** FORMATS.md, *Measured on a 7 MHz
-  Mac Plus* and *Timed on the same Mac Plus (2026-08-29)*: every row
-  whose format changed on 2026-09-18/19 (LZH, LZW, Compact Pro,
-  Arsenic, `-lh1-`/DART, StuffIt 13 if Item 2 lands) carries a number
-  from before the change. Re-run each with the tick probe and correct
-  the figure in place with one dated note; the rows that did not change
-  are the control and should reproduce within ±0.5 %.
+- **The Mac timing table is stale, and three of its rows are not.**
+  FORMATS.md, *Measured on a 7 MHz Mac Plus*: BinHex (107 → 83 s) and
+  Arsenic's a2basic (542 → 321 s, both memory columns) were re-measured
+  2026-09-20, and both yardstick rows with them (*Timed on the same Mac
+  Plus*). What is left is LZH, LZW, Compact Pro and `-lh1-`/DART, each
+  carrying a number from before 2026-09-18/19, plus
+  `derived-Library_ISBN_Barcoder.sit`, whose pair is half an hour of
+  emulator. The rows that did not change are the control and should
+  reproduce within ±0.5 %.
 - **The tiers have not been re-run** since the same changes
   (`tools/run_tiers.py` is in `ci.sh` and predicts; the emulator tiers
   in FORMATS.md, *Floor target verification* and *System 3.0 tier*, are
