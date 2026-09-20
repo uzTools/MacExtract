@@ -3333,12 +3333,12 @@ plan around. **Thirteen rows re-measured 2026-08-30**, on the shipping
 Compact Pro 333 s → 321 s, DiskDoubler 142 s → 135 s, PackIt 20 s → 18 s, and
 the rest within a poll of what they were. `popper-1.7.tar.Z` moved from
 `--poll 20` to `--poll 3` and reads the same 40 s through the finer ruler.
-**The two Arsenic rows below were NOT re-run** — `sit_arsenic.c` carries no
-`UNC_HOT`, but `unc_crc16_arc` does, so they may have moved a little and
-nothing here has looked. **The a2basic row was, on 2026-09-20**, after the
-week's Arsenic work: 542 → **321 s**, byte-exact, the same figure as the
-4 MB column of *StuffIt 5 / Arsenic at 1x* below, which has what moved it.
-`derived-Library_ISBN_Barcoder.sit` still has not been.
+**Both Arsenic rows were re-run on 2026-09-20** — they had stood since
+2026-08-28 under a note that `sit_arsenic.c` carried no `UNC_HOT` and
+nothing had looked. After the week's Arsenic work: a2basic 542 →
+**321 s** and ISBN 722 → **542 s**, both byte-exact, and both columns
+of each in *StuffIt 5 / Arsenic at 1x* below, which has what moved
+them.
 
 **Every figure is quantised to the poll interval**, which is why the poll is a
 column: the harness timestamps at poll instants at both ends, so a row is
@@ -3360,7 +3360,7 @@ accurate to ±one poll however reproducible it looks.
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **119 s** | 3 s |
 | `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 251 s | 3 s |
 | `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 321 s | 20 s |
-| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 722 s | 20 s |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 542 s | 20 s |
 
 **There is no boot column, because this harness cannot measure boot.** It
 reports the first poll at which the grid is visible, so every fixture reads
@@ -3404,9 +3404,9 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 | Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
 |---|---|---|---|---|
 | `derived-a2basic.dmg.sit` | 205,019 B | **321 s** (peak 829,041 B) | **522 s** (peak 476,933 B) | 1.62x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **722 s** (peak 1,683,101 B) | **1,284 s** (peak 559,805 B) | 1.78x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **542 s** (peak 1,353,789 B) | **842 s** (peak 644,858 B) | 1.55x |
 
-**The fallback costs 1.62x to 1.78x, and Arsenic is still the slow one.**
+**The fallback costs 1.55x to 1.62x, and Arsenic is still the slow one.**
 Five and a half minutes for a 205 KB output is what the *fast* path costs a
 7 MHz 68000; before 2026-08-07 a 1 MB machine could not extract either entry
 at all. The ratio widens with block fill, and neither the x86 ratio nor one
@@ -3420,9 +3420,19 @@ through `__mulsi3` (2026-09-20, *Decode cost* above): 542 → **321 s** at 4 MB
 and 742 → **522 s** at 1 MB, which is why the ratio widened from 1.37x. The
 peaks fell with them — 1,032,484 → 829,041 B and 482,861 → 476,933 B — the
 4 MB one by the transform vector's third byte (DECISIONS.md 2026-09-19,
-*three bytes hold a position*). `derived-Library_ISBN_Barcoder.sit` was NOT
-re-run: its pair costs half an hour of emulator and nothing here needed it,
-so that row still reads 2026-08-28 and is now the older of the two.
+*three bytes hold a position*). `derived-Library_ISBN_Barcoder.sit` was re-run the same day and
+**both its columns moved further**: 722 → **542 s** at 4 MB and
+1,284 → **842 s** at 1 MB, byte-exact, 34 files each time.
+
+**Its 1 MB peak went UP, 559,805 → 644,858 B, and that is the point of
+the dial rather than a regression.** The budget on a 1 MB Mac Plus is
+648,100 B since the stack was re-priced (*Budget*), and the sampled
+index sizes itself to what it is given — so the extra budget this
+year bought a bigger target, which is why the run is 442 s shorter
+while holding 85 KB more. The 4 MB peak fell over the same period,
+1,683,101 → 1,353,789 B, because the transform vector lost a byte in
+three (DECISIONS.md 2026-09-19, *three bytes hold a position*). The
+ratio narrowed from 1.78x to 1.55x for both reasons at once.
 
 **The 1 MB column is the 2026-08-24 performance pass.** It was 966 s (peak
 560,589 B) and 1,898 s (peak 614,134 B) before, which is where the "1.65x to
