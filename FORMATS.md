@@ -3135,7 +3135,7 @@ end instead of staging the reversed string and copying it out. On Linux
 `ddtf-dd377dda-testfile.TIF` (DiskDoubler method 1) −17.4 %,
 `derived-xmasbeeps.sit` −12.1 %, `derived-EmpireBuilderDemo.sit`
 −8.7 %, `synth-arc-mixed.arc` −1.7 %. On the Plus the same two fixtures
-are engine **@PO@ → @PN@ ticks (@PP@ %)** and **@XO@ → @XN@ (@XP@ %)** —
+are engine **713 → 646 ticks (−9.4 %)** and **2,850 → 2,801 (−1.7 %)** —
 the widest gap between a Linux count and a tick reading this project has
 measured, because the byte copy removed is what a 68000 does cheapest.
 +140 B of code, −12 B of A5, peak heap identical on all 113 fixtures

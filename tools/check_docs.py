@@ -152,6 +152,24 @@ def check_citations():
     return out
 
 
+PLACEHOLDER = re.compile(r"@[A-Z][A-Z0-9]{1,7}@")
+
+
+def check_placeholders():
+    """A figure left as `@PO@` reads as a typo and not as a hole, and one
+    sat in FORMATS.md's decode-cost list from 2026-09-19 to 2026-09-20
+    with the numbers it wanted already written out in DECISIONS.md. Six
+    of them in one sentence, and nothing in this file looked."""
+    out = []
+    for path in sorted(ROOT.glob("*.md")) + sorted(ROOT.glob("tools/**/*.md")):
+        for n, line in enumerate(path.read_text().split("\n"), 1):
+            for hit in PLACEHOLDER.findall(line):
+                out.append(f"{path.relative_to(ROOT)}:{n}: {hit} is an "
+                           "unfilled placeholder; write the number or "
+                           "delete the claim")
+    return out
+
+
 SYNTH_RE = re.compile(r"^\|\s*(\S+)\s*\|\s*([0-9a-f]{64})\s*\|\s*(\d+)\s*\|"
                       r"\s*synthetic:(.+?)\s*\|")
 
@@ -264,7 +282,8 @@ def check_target_struct():
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
-                check_synthetic() + check_target_struct())
+                check_synthetic() + check_target_struct() +
+                check_placeholders())
     for p in problems:
         print(p, file=sys.stderr)
     if problems:
