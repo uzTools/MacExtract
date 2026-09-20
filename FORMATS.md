@@ -3349,16 +3349,16 @@ accurate to ±one poll however reproducible it looks.
 | `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s |
 | `derived-PackIt.pit` | PackIt | 62 KB | 18 s | 3 s |
 | `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 24 s | 3 s |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 34 s | 3 s |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 31 s | 3 s |
 | `popper-1.7.tar.Z` | compress | 59 KB | 40 s | 3 s |
 | `derived-PCCTS.tar` | Tar | 287 KB | 46 s | 3 s |
 | `kermitut9test.bin` | MacBinary | 304 KB | 52 s | 3 s |
 | `PCCTS.tar.gz` | gzip | 64 KB | 58 s | 3 s |
 | `macburger-helper.hqx` | BinHex | 306 KB | 83 s | 3 s |
 | `derived-MUSFMT10.ZIP` | Zip | 172 KB | 110 s | 3 s |
+| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 110 s | 3 s |
 | `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **119 s** | 3 s |
-| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 135 s | 3 s |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 321 s | 3 s |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 251 s | 3 s |
 | `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 321 s | 20 s |
 | `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 722 s | 20 s |
 
@@ -3367,6 +3367,17 @@ reports the first poll at which the grid is visible, so every fixture reads
 9.2 s at `--poll 3` and 20.1 s at `--poll 20` — the same boot through a
 coarser ruler. The table carried a 30 s boot for `macburger-helper.hqx` until
 2026-08-28; boot does not depend on the fixture, so that was six polls.
+
+**Five rows were re-run on 2026-09-20**, after the decoder work of
+2026-09-18/19/20, and three of them moved: Now Compress 34 → **31 s**
+(the block slots), DiskDoubler 135 → **110 s** and Compact Pro 321 →
+**251 s** (both the fused LZH and RLE stages, which DiskDoubler method 8
+shares). The other two are the control and reproduced exactly —
+`popper-1.7.tar.Z` 40 s and `derived-EmpireBuilderDemo.sit` 119 s: the
+LZW rewrite is −9.4 % of that first one's ENGINE ticks, which is about
+a second of a forty-second wall and below this table's resolution, and
+EmpireBuilder's three forks are methods 2 and 3, which nothing this
+week touched. All five byte-exact.
 
 **The times fell by up to 31 % when re-measured**, on the same emulator with
 the same commands: `macburger-helper.hqx` was 150 s, then 104 s. The engine

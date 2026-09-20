@@ -291,15 +291,15 @@ taken (DECISIONS.md 2026-09-20, *four kilobytes for thirty-four*).
 What would reopen it is a decompressor with a small state, not a
 better estimate.
 
-- **The Mac timing table is stale, and three of its rows are not.**
-  FORMATS.md, *Measured on a 7 MHz Mac Plus*: BinHex (107 → 83 s) and
-  Arsenic's a2basic (542 → 321 s, both memory columns) were re-measured
-  2026-09-20, and both yardstick rows with them (*Timed on the same Mac
-  Plus*). What is left is LZH, LZW, Compact Pro and `-lh1-`/DART, each
-  carrying a number from before 2026-09-18/19, plus
-  `derived-Library_ISBN_Barcoder.sit`, whose pair is half an hour of
-  emulator. The rows that did not change are the control and should
-  reproduce within ±0.5 %.
+- **The Mac timing table is current, bar one row.** FORMATS.md,
+  *Measured on a 7 MHz Mac Plus*: BinHex, Arsenic's a2basic (both
+  memory columns), Now Compress, DiskDoubler, Compact Pro,
+  `popper-1.7.tar.Z` and `derived-EmpireBuilderDemo.sit` were all
+  re-run on 2026-09-20, and both yardstick rows with them. The last
+  one is `derived-Library_ISBN_Barcoder.sit`, whose 4 MB and 1 MB
+  pair is half an hour of emulator and which nothing this week
+  touched except Arsenic — so it is the row most likely to have
+  moved and the most expensive to ask.
 - **The 4 MB and 512 KB tiers have not been re-run** since the
   decoder work of 2026-09-18/19/20. Both 1 MB tiers were, on
   2026-09-20 — System 6.0.8 and System 3.0, **69/69 each**, no refusal
