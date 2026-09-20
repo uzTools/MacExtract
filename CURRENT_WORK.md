@@ -282,6 +282,15 @@ split header or the Now Compress probe turns up; leave the row.
 
 # Part C — housekeeping the week left behind
 
+**The SpaceSaver dictionary is done and struck: measured, and not
+taken.** Stored deflated it is 5,155 B instead of 9,679 and gives the
+budget back **4,240 B at rest** — for **+34,247 B of peak** during
+every SpaceSaver entry, three quarters of that being zlib's own state
+and window. The rule says a row worse on an axis is recorded and not
+taken (DECISIONS.md 2026-09-20, *four kilobytes for thirty-four*).
+What would reopen it is a decompressor with a small state, not a
+better estimate.
+
 - **The Mac timing table is stale, and three of its rows are not.**
   FORMATS.md, *Measured on a 7 MHz Mac Plus*: BinHex (107 → 83 s) and
   Arsenic's a2basic (542 → 321 s, both memory columns) were re-measured
@@ -298,18 +307,6 @@ split header or the Now Compress probe turns up; leave the row.
   refusals live at, so the other two are a formality rather than a
   question. `tools/run_tiers.py` in `ci.sh` predicts; the emulator is
   the measurement.
-- **The SpaceSaver dictionary** is 9,679 B of constant data
-  (`src/ss_dict.h`), in the CODE resource of every build (`size` puts
-  all of `fmt_spacesaver.c.obj` in text); deflated at level 9 it is
-  5,182 B. Storing it deflated and inflating it into the heap for the
-  one entry that needs it is a hypothesis worth pricing: zlib is already
-  linked, so the cost is a ~10 KB heap transient (the inflated
-  dictionary) plus inflate's state during a SpaceSaver entry, and the
-  inflate's ticks once per entry, against ~4.5 KB of CODE back for
-  every user. Price the ticks and the heap high-water mark on the
-  largest SpaceSaver fixture before deciding; a SpaceSaver entry near
-  its 1 MB minimum may not have the 10 KB.
-
 ---
 
 ## Reporting, so the work can be assessed afterwards

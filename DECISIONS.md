@@ -220,6 +220,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
 - 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
 - 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
+- 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
 
 ---
 
@@ -13223,3 +13224,60 @@ closed is two forks of one archive.
 about DiskDoubler's containers, which the wiki does not describe.
 And no code changed — `derive_dd.py` is a probe, and `src/fmt_dd.c`
 is untouched.
+
+## 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
+
+**Part C's last measurable item, and the answer is no** — with the
+numbers, because the answer was not obvious and the estimate in the
+brief was out by a factor of three.
+
+**The idea.** `ss_dict0` is 9,679 bytes of Aladdin's preset dictionary
+and it is in every build, on a machine where code and heap come off
+one budget. Deflated at level 9 with a 4 KB window it is 5,155 bytes,
+and zlib is linked already for zip and gzip, so it could be inflated
+into a scratch buffer at preset time and the difference given back to
+every format.
+
+**Built and measured**, not estimated:
+
+| | shipped | deflated | |
+|---|---|---|---|
+| `CODE` | 152,336 | 152,624 | +288 B (the inflate glue) |
+| A5 data | 27,220 | 22,696 | **−4,524 B** |
+| bss | 11,420 | 11,416 | −4 B |
+| **budget, at rest** | 190,976 | 186,736 | **−4,240 B** |
+| peak heap, `m4.ss` | 36,864 | 71,111 | **+34,247 B** |
+| peak heap, `m3.ss` | 42,120 | 76,367 | +34,247 B |
+| peak heap, m0/m1/m2 | — | — | unchanged; they use no dictionary |
+
+**The transient is eight times the saving, and three quarters of it is
+zlib.** 9,679 B of inflated table, 1,024 B of staging, **16,384 B of
+window and ~7,160 B of `inflate_state`** — and the window is that big
+because `unc_inflate_raw` sizes it from the declared output, which is
+9,679, rather than from the 4 KB the stream was written with. The
+brief guessed "a ~10 KB heap transient"; it is 34 KB.
+
+**So: not taken**, by this project's own rule — a row is taken when it
+is at least neutral on every axis and better on one, and peak heap is
+not neutral. Nothing else decided it: no refusal moves at 1 MB
+(648,100 B of budget against a 71 KB peak) or at 512 KB (186,444 B),
+and the ticks were never measured because the heap had already
+settled it.
+
+**What would change the verdict is not a better estimate, it is a
+different decompressor.** Four fifths of the transient is zlib's state
+and window; a decoder whose state is a few hundred bytes would make
+the trade −4,240 B against perhaps +10 KB, which is a different
+question. SpaceSaver's own LZSS is in the binary already and its
+window is the one this code has just allocated — what is missing is an
+encoder for it on this side, which is a `tools/` script and not a
+format risk.
+
+**Two smaller things fell out.** The brief said the dictionary is in
+`CODE` "(`size` puts all of `fmt_spacesaver.c.obj` in text)" — true of
+the OBJECT, which goes 16,272 → 12,036 B of text, and not of the
+linked image, where Retro68 places it in the A5 data section. Both
+numbers are right about different things and only the total matters.
+And `unc_inflate_raw`'s `produced` argument is not optional: passing
+NULL segfaults at the last line. Its doc comment says `*crc` may be
+NULL and says nothing about `produced`, which is how an hour went.
