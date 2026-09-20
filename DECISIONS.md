@@ -216,6 +216,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
 - 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
 - 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
+- 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
 
 ---
 
@@ -12979,3 +12980,56 @@ recorded and not taken applies here as it did to the Huffman tree.
 That Miller and Wegman's paper was consulted: it was not, and the note
 cites the algorithm by name because the derivation ARRIVED at that
 dictionary rule, not because a paper supplied it.
+
+## 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
+
+**Item 9 of Part B, and the first row where the format's own program
+could be ASKED rather than sampled.** `tools/get_arc.sh` fetches ARC
+**5.21q**, Howard Chu's UNIX port of SEA's own — an implementation
+whose lineage runs to the format's authors and not through XADMaster.
+It compresses what it is given, which turns derivation from a search
+over somebody else's archives into an experiment with a control.
+
+**What was derived**, each verified against the exact bytes handed to
+the encoder, then re-verified against `unar`'s sha256 over the corpus
+fixture (`tools/derive_arc.py`, with and without `--grid`):
+
+- **the member header** — `0x1a`, method, 13 bytes of name, u32
+  compressed size little-endian, date, time, CRC-16, and u32 original
+  size **except for method 1, which has no such field**. Walked end to
+  end through a real ARC 5, a real PAK and `derived-ARCDOS.arc`, an
+  ARC 7 archive `unar` cannot read at all;
+- **RLE90** (method 3 alone, and behind two others);
+- **method 4, squeezed** — a Huffman tree written as a `u16` count and
+  that many **pairs of `s16`**, negative for a leaf holding
+  `-value-1`, symbol 256 ending the stream, read LSB-first from pair 0;
+- **method 8, crunched** — the member's **first byte is the maximum
+  code width**, then LSB-first LZW from 9 bits, 256 clearing the
+  table, 257 the first code assigned, then RLE90;
+- **method 9, squashed** — the same LZW to 13 bits with neither the
+  width byte nor the RLE90.
+
+**Two things the encoder could not be asked, and they are the row's
+remainder.** ARC 5.21q will not write methods **5, 6 or 7**, so
+nothing here can produce a specimen to derive them from, and they stay
+`XADARCCrunchHandle.m`'s. PAK's **Crushed** did not fall to the LZW
+parameter grid at all — it is a different dictionary organisation, and
+it stays `XADARCCrushHandle.m`'s, which remains the only reading of it
+anywhere.
+
+**The tail taught something the other two derivations had not.** A
+squeezed member's bit stream ends with padding, and on the LAST member
+of an archive those bits run off the end of the file; the decoder that
+found this raised EOF rather than finishing. A real decoder never sees
+it, because the header's original size is what stops it — the same
+shape as StuffIt method 8's caller-supplied length. **A coder that has
+an end-of-stream symbol may still need the length**, and a derivation
+that only ever reads members from the middle of an archive will not
+discover that.
+
+**What is NOT claimed.** That `src/fmt_arc.c`'s code was rewritten: it
+was not, and the neutral-rewrite rule applies here as it did to Items
+7 and 11. That ARC 5.21q is the original: it is a port, and what makes
+it worth something is that it is not descended from XADMaster, not
+that it is descended from SEA. And nothing about ARC's encryption,
+which no specimen here uses.

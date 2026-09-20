@@ -48,7 +48,12 @@ This project's decoders are transcriptions/ports of algorithms from:
     forks in the corpus (`tools/derive_stuffit8.py`) — **except for
     three rules no specimen reaches**: the table restart, the
     end-of-stream code and the 14-bit ceiling, which are still
-    XADStuffItOldHandles.m's and say so where they are used.
+    XADStuffItOldHandles.m's and say so where they are used. And ARC's
+    member header, its RLE90 filter and its methods 4, 8 and 9 are
+    `docs/formats/arc-container-and-coders.md` since the same day,
+    derived from archives ARC 5.21q wrote to order
+    (`tools/derive_arc.py`); XADARCCrunchHandle.m still has methods
+    5/6/7 and XADARCCrushHandle.m method 10.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 

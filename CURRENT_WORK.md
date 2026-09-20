@@ -152,6 +152,14 @@ times*). **Part A is otherwise empty.**
 
 # Part B — the licence rows, in the order they could possibly pay
 
+**Item 9 is done and struck, most of it**: ARC's member header, its
+RLE90, and methods 4, 8 and 9 are derived from archives ARC 5.21q
+wrote to order (`docs/formats/arc-container-and-coders.md`,
+`tools/derive_arc.py`). Methods 5/6/7 stay XADMaster's because that
+encoder will not write them, and PAK's Crushed stays XADMaster's
+because it did not fall to an LZW parameter search — those two are
+what is left of the row.
+
 **Item 7 is done and struck, four fifths of it**: method 8 is Miller
 and Wegman's dictionary rule, derived from all four method-8 forks the
 corpus has (`docs/formats/stuffit-method-8-mw.md`,
@@ -261,14 +269,6 @@ the application is not on this machine (inventory row: "no"), so PackIt
 moves only if a specimen set written by PackIt itself turns up — the
 existing fixtures are the corpus's, not synthesized, which is enough to
 grade a parser rewrite against but not to write a note from.
-
-## Item 9 — ARC's Squeeze, Crunch and Crush (`fmt_arc.c`)
-
-Distilled and Trimmed are deark's (MIT) already. Squeeze is Huffman
-with a published shape, Crunch 1–9 is LZW with ARC's own quirks and
-Crush is PAK's LZW; ARC 5.21's source and PAK 2.51 run under DOSBox
-(`tools/pak.py`, `tools/run_pak.py`, `tools/get_arc.sh`). Small on every
-axis; note first.
 
 ## Item 12 — the four container facts (`fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_sitseg.c`, `fmt_stubs.c`)
 

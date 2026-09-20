@@ -3,11 +3,21 @@
  * ArcMac container that wraps each entry in Macintosh metadata.
  *
  * Sources (transcribed, never guessed):
- *   reference/XADMaster/XADARCParser.m       — header walk, the method
- *       numbers, which methods chain RLE90, and the CRC-16 contract
- *       (IBM CRC-16 over the DECODED bytes, unconditioned).
- *   reference/XADMaster/XADRLE90Handle.m     — the 0x90 run filter.
- *   reference/XADMaster/XADSqueezeHandle.m   — method 4's Huffman tree.
+ *   docs/formats/arc-container-and-coders.md — this project's own
+ *       description, derived 2026-09-20 from archives ARC 5.21q
+ *       wrote here (tools/derive_arc.py): the member HEADER, the
+ *       RLE90 filter, method 4's node-pair Huffman tree, method 8's
+ *       leading width byte and LZW, and method 9's LZW without
+ *       either. Methods 1, 2, 3, 4, 8 and 9 of the corpus fixture
+ *       are read back by that note's rules alone.
+ *   reference/XADMaster/XADARCParser.m       — the method numbers
+ *       this file names, which methods chain RLE90, and the CRC-16
+ *       contract (IBM CRC-16 over the DECODED bytes, unconditioned);
+ *       the header walk itself is the note above since 2026-09-20.
+ *   reference/XADMaster/XADRLE90Handle.m     — the 0x90 run filter,
+ *       superseded by the note above, which derives the same rule.
+ *   reference/XADMaster/XADSqueezeHandle.m   — method 4's Huffman
+ *       tree, likewise superseded.
  *   reference/XADMaster/XADARCCrunchHandle.m — methods 5/6/7, an LZW
  *       whose table is addressed by hash rather than by sequence.
  *   reference/XADMaster/XADARCCrushHandle.m + LZW.c — method 0x0a, the
