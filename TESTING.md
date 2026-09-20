@@ -1300,13 +1300,24 @@ held against. Requiring strictly fewer files is what catches that, and
 it was checked by disabling the filter: 362 failures, all three
 generated formats and every swept fixture.
 
-Four generated cases and a sampled corpus sweep. The generated ones are
+Five generated cases and a sampled corpus sweep. The generated ones are
 a zip (exact names, a folder selector that takes what is in it, two
 selectors at once, a name that matches nothing, one hit beside one miss,
-and `l`/`t` taking the same option), then DiskDoubler in both its
-containers and Now Compress — chosen because each holds a FOLDER, which
-is the entry both hosts have always skipped and the one those two
-formats reported the end of anyway until the same day.
+and `l`/`t` taking the same option), a zip with a COMMENT, then
+DiskDoubler in both its containers and Now Compress — the last three
+chosen because each holds a FOLDER, which is the entry both hosts have
+always skipped and the one those two formats reported the end of anyway
+until the same day.
+
+**An archive's own comment is not an entry**, so `--only` neither
+filters it nor can be pointed at it: it belongs to the archive and is
+written beside the selection as `<archive>.comment.txt` whatever was
+asked for, and `--no-comment` is how a caller declines it (cli/main.c,
+`sink_comment`). The comment case added 2026-09-20 asserts all three
+halves of that. The sweep has to permit the file, and it does not guess
+the NAME — a nested archive's comment is named after the archive inside
+the envelope, not after the fixture — it asks: what a `--no-comment` run
+of the same archive does not write is the comment, by definition.
 
 **What it cannot see.** Whether a skip SAVED anything: a format that
 seeks past a skipped entry and one that must decode and discard it —
@@ -1317,6 +1328,13 @@ is what grades that side. The sweep passes over any fixture whose names
 the filesystem shortened, because the path on disk is then not the name
 `--only` matches against. Encrypted entries and segmented sets are not
 reached. Neither is the Mac application, which has no selection UI.
+
+**The sweep is every sixteenth fixture by name**, so what it covers is a
+function of what the corpus is CALLED. Two fixtures added on 2026-09-20
+sorted early, moved the stride by two, and the new sample immediately
+found an archive with a comment — a case the suite had never met in
+three weeks. A sweep sampled this way cannot be said to cover a
+property; it can only be said to have met one.
 
 ## The three walks agree (`tools/walk_probe.c`, `tools/run_walk.py`, in `ci.sh`)
 
