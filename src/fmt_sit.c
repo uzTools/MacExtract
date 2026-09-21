@@ -427,6 +427,86 @@ out:
 
 #include "sit6_tables.h"
 
+/* Build the fixed tree from `sit6_runlen`/`sit6_runbits` into two
+ * 257-entry arrays the decoder walks. 26 bytes and this function stand
+ * in for the 1,028-byte table that used to be compiled in; the arrays
+ * are allocated per FORK, so what was permanent code is transient heap
+ * and only while a method-6 fork is being read.
+ *
+ * Source: reference/deark/modules/stuffit.c (MIT). A child <= 258 is a
+ * leaf whose value is the ordinal of a byte the segment declares, and
+ * 257/258 are the terminator; a larger value is the internal node at
+ * `value - 258`. **The terminator gets macunpack's extra level on
+ * purpose**: its code is 12 bits and the tree spends 13, accepting
+ * either final bit, and a tree that stopped at 12 would consume one
+ * bit fewer than every stream here was written for. Checked over all
+ * 8,192 bit paths of depth 13 against the table this replaces
+ * (sit6_tables.h). */
+static void sit6_build(uint16_t *zero, uint16_t *one)
+{
+    uint32_t code = 0, prev = 0, sym = 0, nodes = 1;
+    uint32_t run, k, i;
+    int len = 0, prevlen = 0;
+
+    for (i = 0; i < SIT6_INTERNAL; i++) {
+        zero[i] = 0;
+        one[i] = 0;
+    }
+    for (run = 0; run < SIT6_RUNS; run++) {
+        for (k = 0; k < sit6_runlen[run]; k++, sym++) {
+            uint32_t node = 0;
+            int b;
+
+            len = sit6_runbits[run];
+            if (prevlen == 0)              code = 0;
+            else if (len < prevlen)        code = (prev >> (prevlen - len)) + 1;
+            else                           code = (prev + 1) << (len - prevlen);
+            prev = code;
+            prevlen = len;
+
+            for (b = len - 1; b >= 0; b--) {
+                uint32_t bit = (code >> b) & 1u;
+                uint16_t child;
+
+                if (b == 0) {
+                    if (bit) one[node] = (uint16_t)(sym + 1);
+                    else     zero[node] = (uint16_t)(sym + 1);
+                    break;
+                }
+                child = bit ? one[node] : zero[node];
+                if (child == 0) {
+                    child = (uint16_t)(SIT6_LEAVES + nodes);
+                    if (bit) one[node] = child;
+                    else     zero[node] = child;
+                    nodes++;
+                }
+                node = (uint32_t)(child - SIT6_LEAVES);
+            }
+        }
+    }
+    /* Symbol 256 is the terminator, and macunpack's tree spends a
+     * thirteenth bit on it: its 12-bit code leads to an internal node
+     * whose two children are BOTH terminators. There is exactly one
+     * leaf 257 to replace, so this stops at the first — a scan that ran
+     * on would find the terminator it had just written and split that
+     * too, which is the whole of what went wrong the first time. */
+    if (nodes < SIT6_INTERNAL) {
+        for (i = 0; i < nodes; i++) {
+            if (zero[i] == SIT6_CODES) {
+                zero[i] = (uint16_t)(SIT6_LEAVES + nodes);
+            } else if (one[i] == SIT6_CODES) {
+                one[i] = (uint16_t)(SIT6_LEAVES + nodes);
+            } else {
+                continue;
+            }
+            zero[nodes] = SIT6_CODES;
+            one[nodes] = SIT6_LEAVES;
+            nodes++;
+            break;
+        }
+    }
+}
+
 /* Largest segment buffer we will allocate. macunpack decodes into a
  * fixed char[32768], so the format does not exceed that; the cap is
  * doubled to leave a real archive room to disagree. Nothing is
@@ -499,7 +579,8 @@ static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
 /* Decode one Huffman-coded segment into seg[0..explen). */
 static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
                         const uint8_t *leaf, uint32_t codes,
-                        uint32_t segbytes, uint32_t *used)
+                        uint32_t segbytes, uint32_t *used,
+                        const uint16_t *sit6_zero, const uint16_t *sit6_one)
 {
     UncBitIn bi;
     uint32_t start, got = 0;
@@ -539,7 +620,14 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
     uint32_t segcap = 0;
     uint32_t left = outlen;
     uint8_t leaf[256];
+    uint16_t *tree;
     int err = UNC_OK;
+
+    /* The fixed tree, built once per fork from 26 bytes (sit6_build).
+     * Per-entry on failure, like every other allocation here. */
+    tree = (uint16_t *)unc_alloc(al, 2u * SIT6_INTERNAL * sizeof(uint16_t));
+    if (!tree) return UNC_ERR_MEM;
+    sit6_build(tree, tree + SIT6_INTERNAL);
 
     /* Driven by the fork length rather than by the compressed length:
      * every iteration consumes at least the 4-byte segment header, and
@@ -590,7 +678,8 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
             size -= codes;
             if ((err = sit6_need(al, &seg, &segcap, explen)) != UNC_OK) goto out;
             if ((err = sit6_huffseg(in, seg, explen, leaf, codes, size,
-                                    &used)) != UNC_OK) goto out;
+                                    &used, tree, tree + SIT6_INTERNAL))
+                    != UNC_OK) goto out;
             /* The bitstream may end before the segment does. */
             for (i = used; i < size; i++) {
                 if (unc_bufin_next(in) < 0) { err = in->err; goto out; }
@@ -602,6 +691,7 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
 
 out:
     unc_free(al, seg);
+    unc_free(al, tree);
     return err;
 }
 

@@ -236,6 +236,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
 - 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
 - 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
+- 2026-09-21 (the table that was twenty-six bytes) — StuffIt method 6's fixed code book, priced on both axes
 
 ---
 
@@ -2026,9 +2027,14 @@ the format — macunpack derives it per fork from a fixed weight table
 (`code6[258]`) by recursively splitting the leaf range at half the remaining
 weight (`sit_dosplit`); only the byte each leaf stands for is declared per
 segment, which is what "fixed" means. So the shape depends on nothing but a
-constant, and `tools/gen_sit6_tables.py` computes it once into
+constant, and `tools/gen_sit6_tables.py` computed it once into
 `src/sit6_tables.h`: 514 nodes, depth 13, two `uint16_t` tables with the leaf
-rows dropped. The engine walks it and never builds it.
+rows dropped. The engine walked it and never built it.
+
+**The generated table is gone since 2026-09-21** — 26 bytes and a
+builder state the same code book, and `tools/check_sit6_tree.py`
+is what that generator became: *2026-09-21, (the table that was
+twenty-six bytes)*.
 
 That buys three things a per-fork build would not: no recursion (a rule here),
 no 68000 cycles spent recomputing a constant for every fork of every archive,
@@ -14550,3 +14556,53 @@ independent readings: a transcription error in either shows up, a
 misreading of the format shared with macunpack does not. That half of
 TESTING.md's caveat stands, and saying so is the difference between a
 second oracle and a second opinion.
+
+## 2026-09-21 (the table that was twenty-six bytes) — StuffIt method 6's fixed code book, priced on both axes
+
+**Claim.** The 1,028-byte fixed decode tree `src/sit6_tables.h` carried
+is **26 bytes of information**: thirteen (count, length) pairs and a
+twenty-line assignment rule, both stated in
+`reference/deark/modules/stuffit.c` (MIT). Built at run time they
+reproduce macunpack's tree over **every one of the 8,192 bit paths of
+depth 13** — same leaf, same number of bits — and the committed
+synthetic fixture regenerates byte-identical from them.
+
+**The price, measured before it was taken and on both axes**, because
+the axis that matters was not the obvious one:
+
+| | |
+|---|---|
+| code | **+408 B** |
+| A5 (data + bss) | **−1,000 B** |
+| net, and `build_mac.sh` counts the two one for one | **−592 B off every extraction's budget on a 1 MB Mac Plus** |
+| peak heap, method-6 forks only | 40,982 → **42,010 B** (+1,028, the tree) |
+| engine ticks on `derived-INITLoader.sit` | 3 → 3, the instrument's resolution |
+
+**The table was in A5, not in code**, which is the whole reason this is
+worth anything and is not what it looked like going in: removing 1,028
+bytes and adding a builder made the CODE ceiling fail by 408 B, and
+only the A5 line showed where the 1,028 had gone. Had both been code
+the change would have been a 620 B win; had the table been code and the
+builder A5 it would have been a loss. **Price every axis the ratchet
+measures, not the one the change is about.** A one-loop zeroing of the
+two arrays was tried on top and is worth exactly nothing: +4 B of code
+for −4 B of A5.
+
+**What made it safe was an exhaustive check rather than a sample.** A
+13-deep tree has 8,192 bit paths and all of them fit in a loop, so
+"equivalent" is provable rather than likely. It was worth doing: the
+terminator is the one place the two trees differ in shape — macunpack
+spends thirteen bits on it, reaching either of two leaves, where the
+code book gives symbol 256 twelve — and a tree built from the code book
+alone would have consumed one bit fewer on every segment end. `sit6_build`
+reproduces the split deliberately. The first draft of that split also
+rescanned the nodes it had just written and split the terminator it had
+just made, which the fixtures caught immediately.
+
+**What it is for.** `tools/gen_sit6_tables.py` generated that table from
+macutils and is now `tools/check_sit6_tree.py`, which compares the two
+trees instead of writing one — a generator that became a check, and one
+shown to fail on two different corruptions of the 26 bytes. What
+`fmt_sit.c` still owes macutils is method 6's **framing**: the segment
+header, the stored-segment rule and the PackBits tail. deark implements
+those too, so the row is not closed, it is smaller.

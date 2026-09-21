@@ -615,11 +615,23 @@ maximum token, output ending inside a run — are covered by
 (since 2026-08-08). It occurs once in the corpus: the 34,818-byte resource
 fork of `INITLoader` in `derived-INITLoader.sit`, two Huffman-coded segments,
 which we decode byte-exact. Every segment is coded with a tree whose SHAPE is
-a constant of the format, so it is generated once from the reference by
-`tools/gen_sit6_tables.py` into `src/sit6_tables.h` rather than rebuilt per
-fork on a 68000; only the byte each leaf stands for is declared per segment.
-Peak heap 39,998 B on that fixture — the segment buffer is sized from the
-segment (31,806 B here), capped at 64 KB.
+a constant of the format; only the byte each leaf stands for is declared per
+segment.
+
+**That tree is 26 bytes since 2026-09-21, and it is built per fork.** It was
+1,028 bytes of tables generated from macutils into `src/sit6_tables.h`, and
+deark states the same code book as thirteen (count, length) pairs plus an
+assignment rule (`sit6_build`). The trade, measured with
+`tools/build_mac.sh`: **code +408 B, A5 −1,000 B**, which that build counts
+one for one, so **−592 B off every extraction's budget on a 1 MB Mac Plus**;
+**+1,028 B of transient heap while a method-6 fork is read**, and engine
+ticks 3 → 3, which is that instrument's resolution. Peak heap on that
+fixture **40,982 → 42,010 B** (this section said 39,998, an older build's
+figure) — the segment buffer is sized from the
+segment (31,806 B here), capped at 64 KB. The two trees are held against
+each other over **every one of the 8,192 bit paths of depth 13** by
+`tools/check_sit6_tree.py`, and the committed synthetic fixture regenerates
+byte-identical from the 26 bytes.
 
 The branches one real fork cannot reach — a *stored* segment, PackBits fillers,
 the longest and shortest runs, a one-byte alphabet, twelve segments in a fork —

@@ -71,8 +71,15 @@ This project's decoders are transcriptions/ports of algorithms from:
     (`tools/derive_sit13.py`), and the tables compared array by array
     against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
     pointed at the page instead. What that file still owes XADMaster
-    and macutils is **method 6**, and that is the whole of it since
-    2026-09-21: the RLE90 filter is
+    and macutils is **method 6's framing** — its segment header, its
+    stored-segment rule and its PackBits tail — and that is the whole
+    of it since 2026-09-21. **Method 6's fixed code book is not
+    macutils' any more**: `src/sit6_tables.h` carried 1,028 bytes of
+    tables derived from `code6[258]` and `sit_dosplit`, and it is now
+    the thirteen (count, length) pairs and the assignment rule
+    `reference/deark/modules/stuffit.c` states (MIT), which reproduce
+    macunpack's tree over every one of the 8,192 bit paths of depth 13
+    (`tools/check_sit6_tree.py`). And the RLE90 filter is
     `reference/notes/rle90_theunarchiver.md`, the format's own
     published description, which states every rule
     `unc_internal.h`'s shared filter implements — including the
