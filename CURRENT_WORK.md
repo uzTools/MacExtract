@@ -1,40 +1,52 @@
-# CURRENT_WORK.md — what the 68000 profile left on the table, and the licence rows
+# CURRENT_WORK.md — the four licence rows that are left
 
-**Written 2026-09-20 as a brief for another session. Delete this file when
-its items are done or abandoned** — a plan file that keeps completed rows
-stops being readable as a list of what is left (DECISIONS.md 2026-08-24,
-*PLANNED_WORK.md, closed*). Status lives in OPEN_ITEMS.md (*What is still
-XADMaster's*), reasoning in DECISIONS.md, numbers in FORMATS.md. This file
-holds the HOW and the acceptance criteria, and nothing that belongs in
-those three.
+**Written 2026-09-20, rewritten 2026-09-21 when two thirds of it was
+done. Delete this file when its items are done or abandoned** — a plan
+file that keeps completed rows stops being readable as a list of what
+is left (DECISIONS.md 2026-08-24, *PLANNED_WORK.md, closed*). Status
+lives in OPEN_ITEMS.md (*What is still XADMaster's*), reasoning in
+DECISIONS.md, numbers in FORMATS.md. This file holds the HOW and the
+acceptance criteria, and nothing that belongs in those three.
 
 Read CLAUDE.md first. Everything below assumes its rules: 68000
 discipline, `./ci.sh` green before every commit, `dist/` rebuilt in the
-same commit as any `src/` change, small focused commits pushed to `main`,
-never a tag.
+same commit as any `src/` change, small focused commits pushed to
+`main`, never a tag.
 
-The previous brief of this name (PLANNED_WORK.md, 2026-09-19) is done:
-DES fold, Arsenic from Russotto, Compact Pro fused, LZH from lhasa, LZW
-from Welch, parsers re-cited, DART specimens pinned. Its items were
-chosen because Linux ranks said they were hot. **This one was chosen
-from a 68000 instruction profile** (`tools/m68kprof.py`, below), run on
-2026-09-20 over the five formats that had not been profiled that way:
+## What happened to the rest of it
 
-| fixture | 68000 instructions | where they go |
-|---|---|---|
-| `macburger-helper.hqx` (BinHex) | 34.6 M | `bh_get_bits` 41 %, `bh_next` 29 %, `unc_bufin_next` 10 %, CRC-16 8 % — **taken 2026-09-20, 22.2 M** |
-| `derived-Ultimate_Copland_1.1.sit.1` (StuffIt 13) | 40.4 M | fork body 34 %, `unc_canon_decode` 28 %, **`unc_fork_put` 14 %**, CRC-16 10 % — **taken 2026-09-20, 35.8 M** |
-| `derived-MacPass390.sea` (Compact Pro) | 29.0 M | `unc_canon_decode` 34 %, `unc_cpt_lzh_fork` 34 %, two CRCs 23 % |
-| `derived-MUSFMT10.ZIP` (zip) | 15.3 M | zlib `inflate_fast` 53 %, CRC-32 35 % |
-| `derived-a2basic.dmg.sit` (Arsenic) | 162 M | `ars_decode` 56 %, MTF and BWT 31 %, `__mulsi3` 4 % — **taken 2026-09-20, 157.4 M** |
+**Part A — speed, from a 68000 profile — is done**, and so is **Part C,
+the housekeeping**. BinHex −36.7 %, StuffIt method 13 −12.0 %, Arsenic
+−10.1 % and smaller on both size axes; the SpaceSaver dictionary priced
+and declined; the Mac timing table current; all five tiers re-run with
+every figure reproduced. Numbers in FORMATS.md, reasoning in
+DECISIONS.md under 2026-09-20.
 
-What that profile says is at the floor, so nobody re-opens it: the three
-CRC routines are table-driven and unrolled at ~10 instructions a byte
-(the 39 per block in the profile is a four-byte block), which is where
-C on a 68000 stops without the 3 KB slicing table the A5 world cannot
-afford; zlib is zlib; Compact Pro and every LZH family were rebuilt on
-2026-09-19. **The CRC share looks large only because the decoders got
-cheap.**
+**Part B was nine rows and is four**, one of which needs nothing done.
+What closed them was not the plan in this file. The plan assumed these
+formats were undescribed and budgeted reverse-engineering campaigns
+against emulated applications; **five of them turned out to be
+documented**, on a wiki whose forty-page index nobody had opened
+(DECISIONS.md 2026-09-20, *forty pages nobody had listed*). So:
+
+> **Before deriving anything, ask whether somebody wrote it down.**
+> `tools/fetch_references.sh` encodes what this project believes
+> exists, and it had fetched one page of forty. A list of sources is a
+> claim like any other.
+
+When nothing exists — true only of Now Compress — the answer is to
+**choose an input and look at what comes back**, not to search
+somebody else's archives. `tools/vmac/nowcompress.py` and
+`tools/pak.py` both compress what they are given.
+
+**The method, in the seven notes it produced** (`docs/formats/`): write
+a reader from the description alone, decode WHOLE forks, grade against
+the sha256 an independent oracle recorded, and write down every
+correction the description needed. `tools/derive_*.py` are those
+readers and TESTING.md says what they cannot see. Two tests earned
+their keep repeatedly — **Kraft's equality**, which finds a code table
+in a stream with no visible structure, and a **block header's own
+checksum**, which finds blocks without a container parser.
 
 ## Two sessions at once — the protocol
 
@@ -125,96 +137,11 @@ probe prices, and three "roughly zero" claims last week measured +468 B,
 
 ---
 
-# Part A — speed, from the profile
-
-**All three of Part A's rows are done and struck.** Method 13 flushes runs out of
-its own window instead of calling `unc_fork_put` per byte — engine
-4,395 → 3,867 ticks, −12.0 %, for +140 B of code and −12 B of A5
-(DECISIONS.md 2026-09-20, *the window that was already the staging
-buffer*); Item 4 below inherits it and now has a floor to beat.
-
-**Item 3 (Arsenic)**: the coder's two products are two `mulu.w` and a
-shift instead of `__mulsi3` — engine 18,916 → 17,002 ticks, −10.1 %,
-for −20 B of code and −12 B of A5 (DECISIONS.md 2026-09-20, *what a
-helper call costs that its count does not say*). **Its second half is
-NOT done**: taking `k` renormalisation bits at once, named a
-hypothesis in the previous brief and still never run — the count is
-usually 0 to 2, so the win is small and the code grows. One tick run
-settles it.
-
-**Item 1 (BinHex)**: the line is read, judged and
-converted in one pass and four characters become three bytes at once —
-engine 3,771 → 2,386 ticks on a Mac Plus, −36.7 %, for +240 B of code
-(DECISIONS.md 2026-09-20, *the character that was touched three
-times*). **Part A is otherwise empty.**
-
----
-
 # Part B — the licence rows, in the order they could possibly pay
 
-**Item 8's Compact Pro half is done and struck**: see the row below,
-which is now PackIt alone.
-
-**Item 9 is done and struck, most of it**: ARC's member header, its
-RLE90, and methods 4, 8 and 9 are derived from archives ARC 5.21q
-wrote to order (`docs/formats/arc-container-and-coders.md`,
-`tools/derive_arc.py`). Methods 5/6/7 stay XADMaster's because that
-encoder will not write them, and PAK's Crushed stays XADMaster's
-because it did not fall to an LZW parameter search — those two are
-what is left of the row.
-
-**Item 7 is done and struck, four fifths of it**: method 8 is Miller
-and Wegman's dictionary rule, derived from all four method-8 forks the
-corpus has (`docs/formats/stuffit-method-8-mw.md`,
-`tools/derive_stuffit8.py`). Three rules no specimen reaches — the
-table restart, the end-of-stream code, the 14-bit ceiling — stay
-XADMaster's and say so in the file; only a much larger fork closes
-them, and neither reader on this machine is independent of the rule in
-question (DECISIONS.md 2026-09-20, *four forks, and the three rules
-none of them reach*).
-
-**Item 10 is done and struck**: removing `-lh2-`/`-lh3-` and their two
-dispatch arms is worth **3,472 B of `CODE` and 32 B of A5**, measured
-on a build without them. The number is beside the row in OPEN_ITEMS.md
-with what stands against it; taking the decision is the maintainer's
-and this file will not.
-
-**Item 11 is done and struck, and it closed without a rewrite**: the
-serialized Huffman tree now has a description of this project's own,
-derived from thirteen forks of the three formats that write it
-(`docs/formats/serialized-huffman-tree.md`,
-`tools/derive_huffman_tree.py`), so `unc_huffman.c`, `fmt_sit.c`'s
-method 3, `fmt_dd.c`'s method 4 and `fmt_packit.c`'s tree cite that
-instead of XADMaster and macutils. The decoder is unchanged, because
-the rule below says a neutral rewrite is recorded and not taken
-(DECISIONS.md 2026-09-20, *the tree that could be measured instead*).
-
-These are the rows of OPEN_ITEMS.md's inventory (*What is still
-XADMaster's, and what would have to replace it*) that have **no
-non-copyleft description anywhere**. Each can only be rewritten by
-reverse-engineering against the original application, all of which run
-under the emulator harnesses here; that is how SuperDisk! and SpaceSaver
-were done (DECISIONS.md, *SuperDisk!, read out of SuperDisk!* and the
-2026-08-22 SpaceSaver series; the harness scripts are
-`tools/vmac/superdisk.py` and `spacesaver.py`, and the modules they
-graded live in `tools/sdmodule` and `tools/ssmodule`).
-
-**The method for every row is the same, and it is not "read the
-XADMaster file and paraphrase it"**, which produces a derivative work
-under the same licence. It is: write down what the FORMAT fixes (the
-bit-exact facts: header layout, code lengths, window sizes, the
-meaning of each symbol) as a spec in `reference/notes/<format>.md`,
-sourced from the original application's behaviour on synthesized inputs
-(the `tools/synth_*.py` scripts and the `tools/vmac/*.py` harnesses
-already produce those), then write the decoder from that note with the
-current file kept as the A/B oracle and never open while writing. The
-note is the deliverable that moves the licence; the code is the part
-that has to be at least neutral.
-
-**And the rule holds:** a row whose rewrite is slower or bigger is
-recorded and not taken, however much cleaner its licence. Do the cheap
-half — the spec note — regardless, because it is worth having even when
-the code does not move, and it is what the next attempt starts from.
+**A page is not a verified fact.** What closes a row is a reader
+written from it that reproduces the corpus. These three are what is
+left of nine, plus Item 12, which needs nothing.
 
 ## Item 5 — Now Compress: the blocks, not the coders (`fmt_now.c`)
 
@@ -297,35 +224,6 @@ and two whole layouts. These are facts, not code, and the licence never
 rested on them (DECISIONS.md 2026-09-19, *the facts that were somebody
 else's to state*). Nothing to do unless a specification for the StuffIt
 split header or the Now Compress probe turns up; leave the row.
-
----
-
-# Part C — housekeeping the week left behind
-
-**The SpaceSaver dictionary is done and struck: measured, and not
-taken.** Stored deflated it is 5,155 B instead of 9,679 and gives the
-budget back **4,240 B at rest** — for **+34,247 B of peak** during
-every SpaceSaver entry, three quarters of that being zlib's own state
-and window. The rule says a row worse on an axis is recorded and not
-taken (DECISIONS.md 2026-09-20, *four kilobytes for thirty-four*).
-What would reopen it is a decompressor with a small state, not a
-better estimate.
-
-- ~~The Mac timing table~~ **done**. Every row of FORMATS.md,
-  *Measured on a 7 MHz Mac Plus*, that the week's decoder work could
-  have moved was re-run on 2026-09-20 — BinHex, both Arsenic rows and
-  both their memory columns, Now Compress, DiskDoubler, Compact Pro —
-  plus two controls that reproduced exactly, and both yardstick rows.
-  Nothing in that section predates this week except the rows nothing
-  touched.
-- ~~The tiers~~ **done**. All five Mini vMac sweeps re-run
-  2026-09-20 and every one reproduced its recorded figure: 69/69 at
-  4 MB and at 1 MB on System 6.0.8, 69/69 at 1 MB on System 3.0, and
-  at 512 KB 66/69 on System 3.0 against 63/69 on System 6.0.8. No
-  refusal moved (BLOCKERS.md, the tier table). System 7.0.1 and Mac
-  OS 9.2 were not in this item and were not run.
-
-**Part C is empty.**
 
 ---
 
