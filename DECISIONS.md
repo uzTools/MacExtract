@@ -226,6 +226,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the archive that was never a fork) — Now Compress's container, and the third coder's table
 - 2026-09-21 (the manual for the other machine) — PackIt is published, in the documentation of a DOS extractor
 - 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
+- 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
 
 ---
 
@@ -13603,3 +13604,90 @@ writes.** All five extract byte-exact. Two of the same measurement's
 by-products confirm the fix above independently: members of 6,000
 bytes name offsets of 11,531 and 15,124, which no per-fork window
 could serve.
+
+
+## 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
+
+**Claim.** Shape 3 — the coder a Now Compress archive's members use,
+and the one this project had read no further than its code table — is
+described: its token grammar, a 33-symbol length alphabet whose
+longest match is **257 bytes**, and a 56-class distance alphabet
+reaching **65,791**. A reader written from that description alone
+(`tools/derive_now.py`, `docs/formats/now-compress.md`) decodes **every
+shape-3 block of every specimen here and of both corpus archives**,
+byte for byte and **with nothing searched for**: **76 of 76** blocks
+the harness made, **3 of 3** in the 1993 archive and **306 of 306** in
+the 1995 one — 9.9 MB of real data.
+
+**What made it measurable, and it is the transferable part.** Not
+staring at bit patterns: **inputs in which the answer is the only thing
+that can be there.** `nowcompress.py --case tokdist` and `--case
+toklen` build each member out of a **de Bruijn sequence of order 2
+over 256 symbols** — a sequence in which every pair of bytes occurs
+exactly once, so an LZ encoder can find *no* match in it at all — and
+then append a copy of that member's own first bytes. The only match in
+the member is therefore at a distance and of a length chosen here, and
+the token's bits are read off against them: forty distances from 2 to
+16,384, twenty-four lengths from 2 to 255. Two emulator runs.
+
+**Three things the bytes said that extrapolation did not.**
+
+- **The distance table's stored value is the code length plus two.**
+  Kraft's equality is what says so: over the stored values it comes to
+  0.250000 on every table with more than one symbol, and to exactly
+  1.000000 once two is subtracted. A constant offset is invisible in
+  one table and unmistakable in three.
+- **The main table is a fixed 290 entries, trailing zeros and all** —
+  see BLOCKERS.md, *Withdrawn claims*, for what the "ends where the
+  code completes" reading cost.
+- **The distance classes are not a uniform ladder.** They go four to an
+  octave up to 255 and then jump: eight classes of 256, then doubling
+  every four. Extrapolating the low end alone put a 3,000-byte distance
+  at symbol 41 in a block whose table has 38 symbols — a contradiction
+  that took a probe, not an argument, to settle.
+
+**The check that was not the derivation's own.** The last distance
+class starts at **57,600 and spans 8,192**, so the alphabet ends at
+65,791 — the number measured off this engine's own offset table from
+the other side on the same day (*the window that stopped at the fork*,
+above). Two routes, neither aware of the other, to one number; that is
+what makes the top of the table credible when nothing in the corpus
+reaches it.
+
+**And one thing the probes found that they were not built for.** Two
+members of the `tokdist` archive came back with mode `0x120`, a
+combination no specimen had shown — and chasing it settled a second
+shape: **`0x20` is Huffman ALONE**, one symbol per output byte with no
+flag bits and no matches, its stream one byte after its table. The
+mode word is a set of layers, not a number: the low five bits say LZSS,
+`0x20` says a Huffman code over it, `0x40` the archive coder, `0x100`
+inside an archive. Reading `0x20` as `0x3f` with bits missing is why
+the 1993 archive's MIDDLE block had never been read here either — and
+with it read, **every block of both corpus archives now decodes from
+this description**: 3 of 3 and 306 of 306. An input chosen for one
+property keeps testing the others.
+
+**And then the block header gave itself up, because the search had
+written its answer down.** Reading 75 blocks with the stream's start
+found by trial produced a column of "bits past the tables" — and
+header byte 4 was 16 minus that number in every row. Byte 1 is the
+same number again as a byte offset, plus 85; byte 3 is the same
+arithmetic at the far end, after which the last four bytes of the
+block are **a 32-bit sum of every byte before them** — the "presumably
+a checksum" this note had carried for a shape-1 trailer, now measured,
+and the same in all four shapes. Three of the four unread header bytes
+and the trailer, out of a table nobody would have thought to build:
+the search was not just a workaround, it was the instrument.
+
+**A rule fitted to 75 blocks was wrong on the 306 it had not seen.**
+"16 − byte 4" holds wherever that byte is nonzero, which it is in all
+75; the 1995 archive has twenty blocks where it is zero, and there the
+stream starts at the tables' end exactly. The rule is
+`(16 − byte) mod 16`. What caught it was that the header states the
+same number twice and the two accounts disagreed — **a redundancy in
+the format is a test you get for free, and only if you read both.**
+
+**What is left.** Byte 2 of the header, which is 255 on 59 blocks of
+75 and 0 on six, matches no bitmap of the lengths or distances a block
+uses, and tracks the shortest match on part of one probe and then
+stops. And where a shape-2 stream begins, one layer down.

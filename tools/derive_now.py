@@ -14,16 +14,23 @@ compresses files chosen here, keeping the inputs beside the outputs in
 `$UNC_VMAC_HOME/specimens/now/`. This tool reads those pairs back with
 a decoder written from nothing but the bytes.
 
-    tools/derive_now.py                 the harness's specimens
-    tools/derive_now.py ARCHIVE...      walk a .sea or .now
+    tools/derive_now.py                       the harness's specimens
+    tools/derive_now.py ARCHIVE...            walk a .sea or .now
+    tools/derive_now.py --expect DIR ARCHIVE  grade it against DIR, a
+                                              directory of extracted forks
 
-**Two coders, the block structure and the archive container.** Every
-compressed specimen the harness has made reads byte for byte, and the
-corpus's 1993 `derived-Expand_Now_1.0.1.sea` walks into the three
-blocks its fork needs — but the coder two of those three use is read
-only as far as its code table, so nothing in the corpus decodes here
-yet. `src/fmt_now.c` still cites XADMaster for everything, and will
-until that stream is described (docs/formats/now-compress.md).
+**All four coders, the block structure and the archive container.**
+Every compressed specimen the harness has made reads byte for byte — 76
+blocks of 76 — and so does every block of both corpus archives: the
+1993 `Expand Now` self-extractor, 3 of 3, and the 1995
+`SyntheticReferences2.0`, 306 of 306, whose 9.9 MB fork alone is 304
+blocks of the coder an archive uses — the one that was read no further
+than its code table until 2026-09-21.
+
+What is still searched for rather than read is where a block's bit
+stream begins; it is on a byte boundary a byte or two past the tables,
+and `shape3_tables` says what is known about which
+(docs/formats/now-compress.md).
 
 Not in `ci.sh`: it needs the emulator's specimen directory.
 """
@@ -42,7 +49,7 @@ SPECIMENS = os.path.join(HOME, "specimens", "now")
 PAYLOAD_AT = 164
 
 
-def decode(d, p, nout):
+def decode(d, p, nout, hist=b""):
     """The shape.
 
     A flag byte, then eight tokens, its bits taken most significant
@@ -78,10 +85,12 @@ def decode(d, p, nout):
                 else:
                     ln, dist = n + 2, d[p + 1]
                     p += 2
-                if dist == 0 or dist > len(out):
+                if dist == 0 or dist > len(hist) + len(out):
                     raise ValueError("distance %d" % dist)
                 for _ in range(ln):
-                    out.append(out[-dist])
+                    at = len(hist) + len(out) - dist
+                    out.append(hist[at] if at < len(hist)
+                               else out[at - len(hist)])
     return bytes(out[:nout]), p
 
 
@@ -138,7 +147,7 @@ def table_at(d, at=TABLE_AT):
     return build(L)
 
 
-def decode_huff(d, t, bitstart, nout):
+def decode_huff(d, t, bitstart, nout, hist=b""):
     """Shape 1's framing, with every byte of it Huffman-coded.
 
     The flag byte is a symbol like any other — which is why symbol 255
@@ -166,11 +175,27 @@ def decode_huff(d, t, bitstart, nout):
                 dist = ((S >> 3) << 8) | D
                 if (S & 7) == 0:
                     ln = r.sym(t) + 2
-                if dist == 0 or dist > len(out):
+                if dist == 0 or dist > len(hist) + len(out):
                     raise ValueError("distance %d" % dist)
                 for _ in range(ln):
-                    out.append(out[-dist])
+                    at = len(hist) + len(out) - dist
+                    out.append(hist[at] if at < len(hist)
+                               else out[at - len(hist)])
     return bytes(out[:nout])
+
+
+def decode_huffonly(d, at, nout):
+    """Huffman and nothing else: the same 128-byte table, then one
+    symbol per output byte — no flag bits and no matches.
+
+    The stream starts **one byte** after the table in all three blocks
+    that use it: the 1993 archive's middle block and two members of the
+    `tokdist` case. That is not the gap a shape-2 block has, which is
+    23 bits in one specimen and 18 in another and still unexplained.
+    """
+    t = table_at(d, at)
+    r = Bits(d, (at + 128 + 1) * 8)
+    return bytes(r.sym(t) for _ in range(nout))
 
 
 def try_huff(d, want):
@@ -217,14 +242,28 @@ BLOCK = 32768
 # the coder** on this evidence, and four data points is what that
 # claim rests on.
 STORED = 0x0000
-HUFFMAN_BIT = 0x20
+LZSS_BITS = 0x1F        # the low bits say an LZSS layer is there
+HUFFMAN_BIT = 0x20      # and this one a Huffman layer over it
+ARCHIVE_BIT = 0x40      # while this is the coder an archive uses
+IN_ARCHIVE = 0x100
 
 
 def block_kind(mode):
-    if mode == STORED:
+    """The mode word is a set of layers, not a number.
+
+    The low five bits say the block is LZSS-coded, `0x20` that a Huffman
+    code sits over it, `0x40` that the block uses the archive coder, and
+    `0x100` that it is inside an archive. So `0x20` ALONE is a Huffman
+    code over the bytes with no LZSS at all — which is the shape the
+    1993 archive's middle block uses and the one this reader could not
+    place until 2026-09-21, because it was decoding it as `0x3f`.
+    """
+    if not mode & (LZSS_BITS | HUFFMAN_BIT | ARCHIVE_BIT):
         return "stored", 0
+    if mode & ARCHIVE_BIT:
+        return "shape3", 0
     if mode & HUFFMAN_BIT:
-        return "shape2", 1
+        return ("shape2" if mode & LZSS_BITS else "huffman"), 1
     return "shape1", 2
 
 
@@ -256,7 +295,8 @@ def read_fork(d, nout):
     The one thing still searched is where a shape-2 block's BIT stream
     begins: 23 bits after its table in one specimen and 18 in another,
     so something variable sits between them that this note has not
-    identified.
+    identified. A Huffman-ONLY block (`0x20`) has no such trouble: its
+    stream starts one byte after the table.
     """
     recs = records(d)
     if not recs:
@@ -273,6 +313,8 @@ def read_fork(d, nout):
         elif kind == "shape1":
             piece, _ = decode(d, at, n)
             out.extend(piece)
+        elif kind == "huffman":
+            out.extend(decode_huffonly(d, at, n))
         else:
             t = table_at(d, at)
             for bs in range((at + 128) * 8, (at + 128 + 6) * 8):
@@ -285,6 +327,23 @@ def read_fork(d, nout):
             else:
                 return None
     return bytes(out[:nout])
+
+
+def fork_checksums(d):
+    """Every block of a bare fork, checked against its own trailer: the
+    last four bytes of a block are the 32-bit sum of the bytes before
+    them, in every shape (`shape3_check`). Returns (agreed, total)."""
+    recs = records(d)
+    if not recs:
+        return 0, 0
+    ok = tot = 0
+    for (off, _), (nxt, _) in zip(recs, recs[1:]):
+        if nxt <= off + 4:
+            continue
+        stored, calc = shape3_check(d, off, nxt)
+        tot += 1
+        ok += stored == calc
+    return ok, tot
 
 
 def read_blocks(d, want):
@@ -366,9 +425,12 @@ def members(d):
         st = int.from_bytes(d[b + 98:b + 102], "big")
         en = int.from_bytes(d[b + 102:b + 106], "big")
         if not 0 < st < en <= len(d):
-            return None
+            # A record whose bounds do not parse is a FOLDER — the 1995
+            # archive opens with one — so skip it rather than give up on
+            # the archive, which is what this did until 2026-09-21.
+            continue
         out.append((name, usize, st, en))
-    return out
+    return out or None
 
 
 def member_blocks(d, st, en):
@@ -386,40 +448,46 @@ def member_blocks(d, st, en):
     file loses the FIRST block, which is how that archive came to look
     like two blocks for a fork that needs three — and its three add up
     to 88,942 bytes exactly.
+
+    **And an archive over 64 KB widens the record**: the 1995
+    `derived-SyntheticReferences2.0.sea` addresses 2.9 MB, which a u16
+    offset cannot reach, so its records are a u32 offset and a u16 mode.
+    Both widths are tried and the terminator — a record whose offset is
+    the member's end — is what says which is right.
     """
-    first = int.from_bytes(d[st + 2:st + 4], "big")
-    for at in (st + 10, st + 2):
+    first16 = int.from_bytes(d[st + 2:st + 4], "big")
+    for width, at in ((2, st + 10), (2, st + 2), (4, st + 8), (4, st)):
         recs = []
         p = at
-        while p + 8 <= len(d) and len(recs) < 64:
-            off = int.from_bytes(d[p:p + 2], "big")
-            mode = int.from_bytes(d[p + 2:p + 4], "big")
+        while p + 8 <= len(d) and len(recs) < 2048:
+            off = int.from_bytes(d[p:p + width], "big")
+            mode = int.from_bytes(d[p + width:p + width + 2], "big")
             recs.append((off, mode))
             p += 8
             if off == en:
                 break
         else:
             continue
-        if recs and recs[0][0] == first and recs[-1][0] == en:
-            return recs
+        if not recs or recs[-1][0] != en:
+            continue
+        if width == 2 and recs[0][0] != first16:
+            continue
+        if width == 4 and recs[0][0] != int.from_bytes(d[at:at + 4], "big"):
+            continue
+        return recs
     return None
 
 
-# The coder lives in the mode word's bits, and the archive adds one the
-# bare forks never set:
-#   0x0000 / 0x0100  stored          0x0020  shape 2
-#   0x0010 / 0x001f  shape 1         0x0040  shape 3, below
-ARCHIVE_BIT = 0x40
+# The coder lives in the mode word's bits, and the archive sets one the
+# bare forks never do:
+#   0x0000 / 0x0100  stored          0x0020  Huffman only
+#   0x0010 / 0x001f  shape 1         0x003f  Huffman over shape 1
+#                                    0x0040  shape 3, below
 
 
 def archive_kind(mode):
-    if mode & ARCHIVE_BIT:
-        return "shape3", 0
-    if mode & HUFFMAN_BIT:
-        return "shape2", 1
-    if mode & 0x1F:
-        return "shape1", 2
-    return "stored", 0
+    """The same layers, one bit wider: see `block_kind`."""
+    return block_kind(mode)
 
 
 # ------------------------------------------------------- shape 3
@@ -451,27 +519,179 @@ def shape3_clc(b):
     return build(L)
 
 
-def shape3_table(b):
-    """The main table: one code length per symbol, each written in the
-    code-length code, **ending where the code is complete** — nothing
-    states its length and the trailing absent symbols are not sent.
+SHAPE3_SYMS = 290       # 256 literals, an unused 256, 33 lengths
+SHAPE3_DISTS = 56       # and this many distance classes
 
-    Symbols 0..255 are the literals. What follows them is the match
-    alphabet and is not read here.
+
+def shape3_table(b):
+    """The main table: **290 code lengths**, one per symbol, each written
+    in the code-length code — zeros and all.
+
+    Reading it as "until the code is complete" is what the 2026-09-21
+    note said, and it is wrong: the code often completes before the end
+    and the remaining symbols are written as zeros, so a reader that
+    stops early starts the NEXT table at the wrong bit. Four of the
+    harness's blocks looked like they had a 271- or 274-symbol alphabet
+    for exactly that reason.
+
+    Symbols 0..255 are the literals; 257..289 are the match lengths
+    (`shape3_len`), and 256 is used by nothing here.
     """
     t = shape3_clc(b)
     r = Bits(b, TABLE_AT_BIT)
-    lens, kraft = [], 0.0
-    while kraft < 1.0 - 1e-12:
-        v = r.sym(t)
-        lens.append(v)
-        if v:
-            kraft += 2.0 ** -v
-        if len(lens) > 600:
-            raise ValueError("table does not close")
-    if abs(kraft - 1.0) > 1e-12:
-        raise ValueError("table overshoots")
+    lens = [r.sym(t) for _ in range(SHAPE3_SYMS)]
+    kraft = sum(2.0 ** -v for v in lens if v)
+    used = sum(1 for v in lens if v)
+    if abs(kraft - 1.0) > 1e-9 and used != 1:
+        # one symbol is written with a length of 1 and so sums to 0.5:
+        # `runa.bin` codes one match symbol and no literal at all
+        raise ValueError("main table is not a complete code")
     return lens, r.p
+
+
+def shape3_len(sym):
+    """A match symbol -> (the class's shortest length, extra bits).
+
+    257..271 ARE the lengths 3..17; then the classes widen — two of 2,
+    five of 4, three of 8, four of 16, four of 32 — and 289 spans
+    226..257, so **257 bytes is the longest match this format has**.
+
+    Measured, not guessed: `nowcompress.py --case toklen` plants a match
+    of a chosen length in each member and the token is read against it,
+    and three files' block arithmetic agrees (docs/formats/now-compress.md).
+    """
+    if not 257 <= sym <= 289:
+        return None, None
+    table, ln = [], 3
+    for extra, count in ((0, 15), (1, 2), (2, 5), (3, 3), (4, 4), (5, 4)):
+        for _ in range(count):
+            table.append((ln, extra))
+            ln += 1 << extra
+    return table[sym - 257]
+
+
+def shape3_dist(idx):
+    """A distance symbol -> (the class's shortest distance, extra bits).
+
+    1..7 ARE the distances 1..7; 8..27 go four to an octave; 28..35 are
+    eight classes of 256; above that the width doubles every four. The
+    last class, 55, starts at 57,600 and spans 8,192 — which is where
+    the 65,791 this project measured off its own engine's table in
+    DECISIONS.md 2026-09-21 comes from, reached here from the other side.
+
+    Measured the same way: `--case tokdist` plants a match at a chosen
+    distance, 40 of them from 2 to 16,384.
+    """
+    if idx <= 7:
+        return idx, 0
+    if idx <= 27:
+        extra = idx // 4 - 1
+        return (4 + idx % 4) << extra, extra
+    if idx <= 35:
+        return 256 + (idx - 28) * 256, 8
+    extra, base, j = 9 + (idx - 36) // 4, 2304, 36
+    while j + 4 <= idx:
+        base += 4 << (9 + (j - 36) // 4)
+        j += 4
+    return base + ((idx - j) << (9 + (j - 36) // 4)), extra
+
+
+def shape3_tables(d, off):
+    """Both code tables of a shape-3 block, and where its stream starts.
+
+    The distance table follows the main one in the same code-length
+    code, 56 entries, zeros for the classes the block does not use and
+    all. **Where the stream starts the HEADER says, twice over**: byte
+    1 of the block is the stream's byte offset plus 85, and the bits of
+    flush between the tables and the stream are `(16 - byte 4) mod 16`
+    — nought when that byte is nought, which is 20 blocks of the 1995
+    archive and none of the 75 the rule was derived from. Both accounts
+    agree on all 381 blocks read here, which is what says either is
+    right (docs/formats/now-compress.md, *The header*).
+    """
+    clc = shape3_clc(d[off:])
+    r = Bits(d, off * 8 + TABLE_AT_BIT)
+    t1 = [r.sym(clc) for _ in range(SHAPE3_SYMS)]
+    t2 = [v if v == 0 else v - 2         # stored as the code length PLUS TWO
+          for v in (r.sym(clc) for _ in range(SHAPE3_DISTS))]
+    end = r.p - off * 8
+    start = end + ((16 - d[off + 4]) & 15)   # byte 4: bits of flush, mod 16
+    if start != (d[off + 1] - 85) * 8:       # byte 1: the same as a byte offset
+        raise ValueError("the header's two accounts of the stream differ")
+    return t1, t2, start
+
+
+def shape3_stream(bits, start, t1, t2, hist, nout):
+    """The stream itself: a literal symbol, or a match — its length
+    symbol, that length's extra bits, a distance symbol and that
+    distance's extra bits.
+
+    `hist` is everything the archive has produced already: the window
+    spans members, which is why a match may point back past this
+    member's own beginning.
+    """
+    out = bytearray()
+    p = start
+    while len(out) < nout:
+        s, p = bit_sym(bits, p, t1)
+        if s < 256:
+            out.append(s)
+            continue
+        base, extra = shape3_len(s)
+        if base is None:
+            raise ValueError("symbol %d is not a match" % s)
+        ln = base + (int(bits[p:p + extra], 2) if extra else 0)
+        p += extra
+        idx, p = bit_sym(bits, p, t2)
+        dbase, dextra = shape3_dist(idx)
+        dist = dbase + (int(bits[p:p + dextra], 2) if dextra else 0)
+        p += dextra
+        for _ in range(ln):
+            if len(out) >= nout:
+                break
+            at = len(hist) + len(out) - dist
+            if at < 0:
+                raise ValueError("distance %d reaches past the start" % dist)
+            out.append(hist[at] if at < len(hist) else out[at - len(hist)])
+    return bytes(out), p
+
+
+def bit_sym(bits, p, table):
+    """One symbol out of a string of '0'/'1', most significant bit first."""
+    c = 0
+    for length in range(1, 17):
+        if p + length > len(bits):
+            raise EOFError
+        c = (c << 1) | (1 if bits[p + length - 1] == "1" else 0)
+        if (length, c) in table:
+            return table[(length, c)], p + length
+    raise ValueError("no code at bit %d" % p)
+
+
+def shape3_decode(d, off, end, hist, nout, want=None):
+    """Decode one shape-3 block. Nothing here is searched for, and the
+    header's own account of where the stream ENDS is checked against
+    where it did: after the last token come `(16 - byte 3) mod 16` bits
+    of flush and then the four-byte trailer, on all 381 blocks read
+    here."""
+    bits = "".join(str((d[off + (i >> 3)] >> (7 - (i & 7))) & 1)
+                   for i in range((end - off) * 8))
+    t1lens, t2lens, start = shape3_tables(d, off)
+    out, last = shape3_stream(bits, start, build(t1lens), build(t2lens),
+                              hist, nout)
+    tail = (end - off) * 8 - last
+    if tail != 32 + ((16 - d[off + 3]) & 15):
+        raise ValueError("the stream does not end where byte 3 says")
+    return out, start
+
+
+def shape3_check(d, off, end):
+    """The block's last four bytes are a **32-bit sum of every byte
+    before them in the block** — the trailer the note had down as
+    "presumably a checksum", and it is one. Returns (stored, computed).
+    """
+    stored = int.from_bytes(d[end - 4:end], "big")
+    return stored, sum(d[off:end - 4]) & 0xFFFFFFFF
 
 
 def read_archive(d, want=None):
@@ -485,6 +705,7 @@ def read_archive(d, want=None):
     if not ms:
         return None
     out = []
+    hist = bytearray()          # the window spans members, so this does too
     for name, usize, st, en in ms:
         recs = member_blocks(d, st, en)
         if not recs:
@@ -492,8 +713,19 @@ def read_archive(d, want=None):
             continue
         blocks = []
         pos = 0
-        w = (want or {}).get(name)
+        forks = (want or {}).get(name)
+        if isinstance(forks, (bytes, bytearray)):
+            forks = [forks]
+        fork = 0
+        w = forks[0] if forks else None
         for (off, mode), (nxt, _) in zip(recs, recs[1:]):
+            if nxt == off:
+                # a record repeated is a fork boundary: no bytes of its
+                # own, the next block starts the member's other fork
+                fork += 1
+                pos = 0
+                w = forks[fork] if forks and fork < len(forks) else None
+                continue
             kind, skip = archive_kind(mode)
             n = min(BLOCK, (len(w) - pos) if w else BLOCK)
             read = None
@@ -502,26 +734,35 @@ def read_archive(d, want=None):
                     if kind == "stored":
                         read = d[off:off + n] == w[pos:pos + n]
                     elif kind == "shape1":
-                        read = decode(d, off + skip, n)[0] == w[pos:pos + n]
+                        read = (decode(d, off + skip, n, bytes(hist))[0]
+                                == w[pos:pos + n])
+                    elif kind == "huffman":
+                        read = (decode_huffonly(d, off + skip, n)
+                                == w[pos:pos + n])
                     elif kind == "shape2":
                         t = table_at(d, off + skip)
                         read = any(
-                            decode_huff_safe(d, t, bs, n) == w[pos:pos + n]
+                            decode_huff_safe(d, t, bs, n, bytes(hist))
+                            == w[pos:pos + n]
                             for bs in range((off + skip + 128) * 8,
                                             (off + skip + 128 + 8) * 8))
                     else:
-                        read = False
+                        got, _ = shape3_decode(d, off, nxt, bytes(hist), n,
+                                               want=w[pos:pos + n])
+                        read = got == w[pos:pos + n]
                 except Exception:
                     read = False
-            blocks.append((kind, off, mode, read))
+            blocks.append((kind, off, mode, read, nxt))
+            if w is not None and n > 0:
+                hist += w[pos:pos + n]
             pos += n
         out.append((name, usize, blocks))
     return out
 
 
-def decode_huff_safe(d, t, bs, n):
+def decode_huff_safe(d, t, bs, n, hist=b""):
     try:
-        return decode_huff(d, t, bs, n)
+        return decode_huff(d, t, bs, n, hist)
     except Exception:
         return None
 
@@ -539,31 +780,40 @@ def report_archive(path, d, want):
             print(f"      {name:12s} {usize:7d} B  no block table")
             continue
         parts = []
-        for kind, off, mode, read in blocks:
+        for kind, off, mode, read, nxt in blocks:
             tot += 1
             if read:
                 ok += 1
             mark = {True: "ok", False: "--", None: "?"}[read]
             parts.append(f"{kind}@{off} ({mode:#06x}) {mark}")
         print(f"      {name:12s} {usize:7d} B  " + ", ".join(parts))
-        for kind, off, mode, read in blocks:
+        for kind, off, mode, read, nxt in blocks:
             if kind != "shape3":
                 continue
             try:
-                lens, endbit = shape3_table(d[off:])
+                t1, t2, stream = shape3_tables(d, off)
             except Exception as e:
                 print(f"        shape 3 @{off}: {e}")
                 continue
-            nlit = sum(1 for v in lens[:256] if v)
-            print(f"        shape 3 @{off}: code-length code complete, "
-                  f"{len(lens)} symbols, {nlit} literals coded, "
-                  f"stream from bit {endbit}")
+            nlit = sum(1 for v in t1[:256] if v)
+            ndist = sum(1 for v in t2 if v)
+            stored, calc = shape3_check(d, off, nxt)
+            print(f"        shape 3 @{off}: {nlit} literals and "
+                  f"{sum(1 for v in t1[256:] if v)} match symbols coded, "
+                  f"{ndist} distance classes, stream from bit {stream}, "
+                  f"checksum {'ok' if stored == calc else 'WRONG'}")
     return ok, tot
 
 
-def archives(paths):
+def archives(paths, expect=None):
     """The archive pass: the harness's own `.sea` files, and any given
-    on the command line."""
+    on the command line.
+
+    `expect` is a directory of extracted forks — what `macextract x`
+    writes — so a corpus archive, which has no `in-` files beside it,
+    can be graded too: a member's stream is its RESOURCE fork followed
+    by its data fork.
+    """
     ok = tot = 0
     for path in paths:
         d = open(path, "rb").read()
@@ -571,7 +821,15 @@ def archives(paths):
         folder = os.path.dirname(path)
         for f in os.listdir(folder) if os.path.isdir(folder) else []:
             if f.startswith("in-"):
-                want[f[3:]] = open(os.path.join(folder, f), "rb").read()
+                want[f[3:]] = [open(os.path.join(folder, f), "rb").read()]
+        for root, _, files in os.walk(expect) if expect else []:
+            for f in files:
+                if f.endswith(".rsrc"):
+                    continue
+                data = open(os.path.join(root, f), "rb").read()
+                rsrc = os.path.join(root, f + ".rsrc")
+                want[f] = ([open(rsrc, "rb").read()] if os.path.exists(rsrc)
+                           else []) + [data]
         a, t = report_archive(path, d, want)
         ok += a
         tot += t
@@ -582,10 +840,12 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("archives", nargs="*", help="a .sea or .now to walk")
+    ap.add_argument("--expect", metavar="DIR",
+                    help="a directory of extracted forks to grade against")
     args = ap.parse_args()
     if args.archives:
         print("derive-now: archives")
-        ok, tot = archives(args.archives)
+        ok, tot = archives(args.archives, args.expect)
         print(f"derive-now: {ok} of {tot} member block(s) read")
         return 0
     if not os.path.isdir(SPECIMENS):
@@ -612,9 +872,11 @@ def main():
                 out, end = None, None
             table_read = read_fork(d, len(want))
             if table_read == want:
+                cok, ctot = fork_checksums(d)
                 print(f"ok  {mode:8s} {base:10s} {len(want):6d} B from "
                       f"{len(d):6d}  block table: "
-                      + ", ".join(f"{hex(o)}/{hex(m)}" for o, m in records(d)))
+                      + ", ".join(f"{hex(o)}/{hex(m)}" for o, m in records(d))
+                      + f"; {cok}/{ctot} checksum(s)")
                 ok += 1
                 continue
             if out == want:
@@ -654,8 +916,7 @@ def main():
     if seas:
         print("derive-now: archives")
         a, t = archives(seas)
-        print(f"derive-now: {a} of {t} member block(s) read; the rest are "
-              f"shape 3, whose tables this reads and whose stream it does not")
+        print(f"derive-now: {a} of {t} member block(s) read")
     return 0
 
 

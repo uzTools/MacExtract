@@ -310,11 +310,28 @@ emulated Mac Plus and drives its Compress and Archive commands, the way
 | Compress ▸ Smaller, text | 0x1f | LZSS only |
 | Compress ▸ Smaller, mixed content | 0x3f | Huffman then LZSS |
 | Compress ▸ Smaller, incompressible | 0x00 | stored |
-| Archive ▸ Smaller (a `.sea`) | 0x100 / 0x140 | stored / new LZSS |
+| Archive ▸ Smaller (a `.sea`) | 0x100 / 0x140 / **0x120** | stored / new LZSS / **Huffman alone** |
 
 Seven specimens, every one byte-exact through this decoder and through `unar`.
 With the 1993 fixture's Huffman-only block that is all five shapes on real
-bytes. Two things only the encoder could say: it REFUSES a wholly
+bytes. **0x120 — a Huffman block inside an ARCHIVE — arrived 2026-09-21**, in
+two members of the 40-member `tokdist` case; no earlier specimen had
+one, and chasing it showed that the mode word is a set of layers: the
+low five bits are LZSS, 0x20 a Huffman code over it, 0x40 the archive
+coder, 0x100 inside an archive. **0x20 alone is Huffman with no
+framing at all**, which is the shape the 1993 fixture's middle block
+uses.
+
+**The archive coder itself is described since 2026-09-21**, measured off
+matches planted at a chosen length and distance (`--case tokdist`,
+`--case toklen`). A reader written from `docs/formats/now-compress.md`
+alone decodes **306 of 306** blocks of the 1995 archive, **3 of 3** of
+the 1993 archive, and 76 of 76 the harness made, with nothing searched
+for — the block header says where its stream starts and ends, and a
+block's last four bytes are a 32-bit sum of the rest of it; the longest
+match the format has is 257 bytes and its offset alphabet ends at 65,791
+(TESTING.md, *the derivation tools*; DECISIONS.md 2026-09-21, *the pair
+that never repeats*). Two things only the encoder could say: it REFUSES a wholly
 incompressible file rather than storing it, so a stored block appears only
 inside a file that compresses somewhere else; and a stored block may carry
 flag bit 0x100, which no decoder here or in XADMaster examines

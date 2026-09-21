@@ -358,6 +358,63 @@ def alphabet(n, syms, weights, seed=b"macextract-now-probe"):
     return bytes(pool[b % len(pool)] for b in keystream(n, seed))
 
 
+def debruijn(n=65536):
+    """A sequence in which no pair of bytes ever repeats.
+
+    A de Bruijn sequence of order 2 over 256 symbols holds every two-byte
+    combination exactly once, so an LZ encoder can find NO match in it at
+    all — which is what makes a PLANTED match the only one in the file,
+    and its length and distance therefore known. Disjoint slices of it
+    share no pair either, so members cannot match each other.
+    """
+    k, m = 256, 2
+    a = [0] * (k * m)
+    seq = []
+
+    def db(t, p):
+        if t > m:
+            if m % p == 0:
+                seq.extend(a[1:p + 1])
+        else:
+            a[t] = a[t - p]
+            db(t + 1, p)
+            for j in range(a[t - p] + 1, k):
+                a[t] = j
+                db(t + 1, t)
+
+    db(1, 1)
+    return bytes(seq[:n])
+
+
+# What the two token cases plant. Each member is a slice of the de Bruijn
+# sequence, then a copy of that slice's own first bytes — one match, at a
+# distance and a length chosen here — then a compressible tail, because
+# Now Compress refuses a file it cannot compress.
+TOK_DISTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 24, 28, 32, 40,
+             48, 56, 64, 80, 96, 128, 160, 192, 224, 256, 320, 384, 448,
+             512, 640, 768, 1024, 1536, 2048, 3072, 4096, 8192, 16384]
+TOK_LENS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32,
+            40, 48, 64, 96, 128, 192, 255]
+
+
+def token_files(kind):
+    """`dist`: one match of 64 bytes at each distance in TOK_DISTS.
+    `len`: one match of each length in TOK_LENS, all at distance 400."""
+    seq = debruijn()
+    files, at = {}, 0
+    if kind == "dist":
+        for dist in TOK_DISTS:
+            seg = seq[at:at + dist]
+            at += dist
+            files["d%05d.bin" % dist] = seg + seg[:min(64, dist)] + FOX * 50
+    else:
+        for ln in TOK_LENS:
+            seg = seq[at:at + 400]
+            at += 400
+            files["l%05d.bin" % ln] = seg + seg[:ln] + FOX * 50
+    return files
+
+
 CASES = {
     # name: (files on the volume, what to do, which mode)
     "faster": (lambda: {"prose.txt": PROSE, "runs.bin": RUNS},
@@ -367,6 +424,27 @@ CASES = {
                 "compress", "smaller"),
     "stored": (lambda: {"mixed.bin": keystream(33000) + FOX * 800},
                "compress", "smaller"),
+    # Ten files of mixed content, each meant to come out as one Huffman
+    # block over an LZSS stream (mode 0x3f). What is wanted is the GAP
+    # between such a block's 128-byte table and its bit stream, which is
+    # 23 bits in one specimen and 18 in another and which two specimens
+    # cannot explain (docs/formats/now-compress.md, *What this note does
+    # NOT describe*). The contents vary on purpose: symbol counts from
+    # two to 256 and code depths from 2 to 15, so that anything the gap
+    # is a function of has room to move.
+    "huffgap": (lambda: {
+        "g01.bin": keystream(6000) + b"A" * 6000,
+        "g02.bin": keystream(3000) + FOX * 300,
+        "g03.bin": keystream(9000) + PROSE,
+        "g04.bin": alphabet(6000, b"AB", (1, 1), b"gap-4") + b"B" * 4000,
+        "g05.bin": alphabet(8000, b"ABCD", (4, 2, 1, 1), b"gap-5") + FOX * 200,
+        "g06.bin": keystream(1500) + b"z" * 1500,
+        "g07.bin": PROSE + keystream(2000) + PROSE,
+        "g08.bin": keystream(12000) + FOX * 600,
+        "g09.bin": alphabet(4000, bytes(range(32, 96)), (1,) * 64, b"gap-9")
+                   + FOX * 100,
+        "g10.bin": keystream(500) + b"Q" * 9500,
+    }, "compress", "smaller"),
     "archive": (lambda: {"mixed.bin": keystream(33000) + FOX * 800,
                          "one.txt": b"first file, compressible\n" * 300},
                 "archive", "smaller"),
@@ -386,6 +464,11 @@ CASES = {
                        "d.bin": alphabet(16000, b"AB", (1, 1), b"reach-d"),
                        "e.bin": alphabet(16000, b"AB", (1, 1), b"reach-a")},
               "archive", "smaller"),
+    # The stream the archive shape uses spells a length and a distance and
+    # nothing here says how. These two cases plant matches whose length and
+    # distance are known, so the token's bits can be read off against them.
+    "tokdist": (lambda: token_files("dist"), "archive", "smaller"),
+    "toklen": (lambda: token_files("len"), "archive", "smaller"),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),

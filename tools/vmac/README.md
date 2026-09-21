@@ -458,6 +458,22 @@ against a 32,768-byte window. That is what says `NOW_HISTORY` is right and
 the offset table's reach to 65,791 is capacity nothing writes
 (DECISIONS.md 2026-09-21, *the window that stopped at the fork*).
 
+**`--case tokdist` and `--case toklen` plant a match whose length and
+distance are known**, which is what turned the archive coder's tokens from
+a bit pattern into two tables. Each member is a slice of a **de Bruijn
+sequence of order 2 over 256 symbols** — every pair of bytes occurs
+exactly once in it, so an LZ encoder can find no match in it at all —
+followed by a copy of that member's own first bytes and a compressible
+tail, because Now Compress refuses a file it cannot compress. The one
+match in the member is therefore at a distance this file chose (40 of
+them, 2 to 16,384) or of a length this file chose (24, from 2 to 255),
+and `tools/derive_now.py` reads the token's bits off against it
+(DECISIONS.md 2026-09-21, *the pair that never repeats*).
+
+Both cases are one emulator run each, ~4 minutes, and they leave 64 members
+of real encoder output behind; two of `tokdist`'s came back as a shape-2
+block INSIDE an archive, a combination no other specimen has.
+
 What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".
 

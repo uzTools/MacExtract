@@ -1202,6 +1202,30 @@ a harness can click is not the same list.
   `mac/macextract_mac.c`; a Linux run exercises only the CLI's copy and can
   never see a Mac-side naming fault.
 
+- **"Now Compress's shape-3 main table ends where the code is
+  complete: nothing states its length and the trailing absent symbols
+  are not sent."** Written 2026-09-21 in `docs/formats/now-compress.md`
+  and withdrawn the same day. The table is a **fixed 290 entries** —
+  256 literals and 33 match symbols — and the entries past the point
+  where the code completes are written as **zeros**. The code often
+  does complete early, which is what made the wrong rule look right:
+  the reader stopped, got a table that decoded literals correctly, and
+  put the NEXT table at the wrong bit. **Cost:** four of the eight
+  harness specimens were recorded as having 271-, 274-, 275- or
+  349-symbol alphabets — a figure written into the note as an
+  observation — and the distance table read out of the wrong bits
+  behind them produced distance classes reaching 131,072 in a
+  16,000-byte member. That reading, and the contradiction it created
+  with a 32 KB window, is most of why shape 3's stream looked
+  undecodable for a day. **Why it survived:** the rule was TRUE of the
+  blocks it was derived from (the first four all complete at exactly
+  290) and it is the rule the format uses one layer down, for the
+  DISTANCE table, which does stop where its code completes. A rule
+  that holds on every specimen you have and on the neighbouring
+  structure reads as the format's rule rather than as a coincidence of
+  both — and what settled it was not an argument but the only test
+  that can fail: decoding the block and comparing the bytes.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

@@ -2590,7 +2590,7 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read |
 | `derive_packit.py` | PackIt's container, stored and Huffman-coded | 38 forks of 4 archives; it checks no CRC, so nothing here confirms the polynomial |
-| `derive_now.py` | Now Compress: shapes 1 and 2, the block table, and the archive container | the 8 specimens `nowcompress.py` makes, byte for byte; it also WALKS an archive given on the command line. The coder an archive's members use is read as far as its code table and no further, so it decodes none of the corpus |
+| `derive_now.py` | Now Compress: all four coders, the block table, and the archive container | the specimens `nowcompress.py` makes, byte for byte — 76 blocks of 76 across five cases — plus **both corpus archives**: `--expect DIR` grades an archive against a directory of extracted forks, and it reads the 1993 one's 3 blocks of 3 and the 1995 one's 306 of 306. **Nothing in a shape-3 block is searched for**: the header says where its stream starts and ends, and the block's last four bytes are a 32-bit sum of the rest of it, which the tool checks |
 
 Each writes its corrections into `docs/formats/`, which is what the
 engine cites; the descriptions themselves are fetched into
@@ -2620,12 +2620,15 @@ minutes, and the whole set is the better part of an hour.
   `derive_arc.py --grid` grades against the bytes handed to a real
   ARC, and the DiskDoubler method-4 specimen is one Salient's own
   expander reads back.
-- **The difference between reading a table and reading a format.**
-  `derive_now.py` reports a shape-3 block's code table as read when
-  its two Kraft checks pass and its literal set matches the block's
-  output. Both are strong — one block's table codes 252 literals and
-  its output holds exactly those 252 distinct bytes — and neither is
-  a decode. No shape-3 stream has ever been decoded here.
+- **A rule fitted to the blocks in front of it.** `derive_now.py` read
+  where a shape-3 stream starts out of the block header, and that rule
+  — "16 minus header byte 4" — was exact on the 75 blocks it was
+  derived from and wrong on 20 of the 1995 archive's 306, where that
+  byte is zero and the correction is `mod 16`. The tool catches such a
+  thing only because the header states the same number twice and it
+  checks the two against each other; where a format states something
+  once, a rule fitted to what is at hand is worth what the sample is
+  worth (docs/formats/now-compress.md, *The header*).
 - **A degenerate match.** A single-leaf Huffman tree decodes any
   number of copies of one byte from nine bits that occur in almost
   any file; `derive_huffman_tree.py` refuses such matches, and the
