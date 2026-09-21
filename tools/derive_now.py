@@ -362,6 +362,9 @@ def kraft_tables(d, lo, hi):
 
 
 BLOCK = 32768
+# The sliding history, and the size of the dictionary cache a
+# stream-starting block reloads: `NOW_HISTORY` in `src/fmt_now.c`.
+HISTORY = 32768
 
 # What a record's mode means, and how many bytes sit between the
 # record's offset and the block's data.
@@ -886,7 +889,18 @@ def read_archive(d, want=None):
     if not ms:
         return None
     out = []
-    hist = bytearray()          # the window spans members, so this does too
+    # The window a block reaches back into is NOT simply everything
+    # decoded so far. A block that STARTS a stream reloads the
+    # dictionary cache — the last NOW_HISTORY bytes ending where the
+    # previous stream's FIRST block ended — and that cache is written
+    # only by a stream-starting block, so it is not the running window
+    # once a stream runs past one block. Measured 2026-09-21 on
+    # `forks`'s `bothbig.bin`, whose resource fork is three blocks: its
+    # data fork's first block decodes against the resource fork's first
+    # 32,768 bytes and comes out as 19,909 wrong bytes against the
+    # running window (docs/formats/now-compress.md, *A member's blocks*).
+    cache = bytearray(HISTORY)  # zero until a stream-starting block ends
+    hist = bytearray()
     for name, dlen, rlen, st, en in ms:
         recs = member_blocks(d, st, en)
         if not recs:
@@ -900,19 +914,24 @@ def read_archive(d, want=None):
         sizes = [n for n in (rlen, dlen) if n] or [0]
         fork = 0
         w = forks[0] if forks else None
+        isstart = True          # a member's first block starts a stream
         for (off, mode, pad), (nxt, _, _) in zip(recs, recs[1:]):
             if nxt == off:
                 # A record that produces no bytes says the next block
-                # STARTS a stream. Where bytes have already come out of
-                # this member it is the boundary between its two forks
-                # (the 1995 archive's `SynRef2.0 INFO`); in front of a
-                # table it is what 5.0.1 writes before every one, and
-                # there is no fork to close.
+                # STARTS a stream, and every member here has exactly
+                # one: it is the boundary between its resource fork and
+                # its data fork, which lands at the head when the
+                # resource fork is empty and at the tail when the data
+                # fork is.
+                isstart = True
                 if pos:
                     fork += 1
                     pos = 0
                     w = forks[fork] if forks and fork < len(forks) else None
                 continue
+            first, isstart = isstart, False
+            if first:
+                hist = bytearray(cache)
             kind, skip = archive_kind(mode)
             left = (len(w) - pos) if w is not None else (
                 sizes[fork] - pos if fork < len(sizes) else 0)
@@ -953,6 +972,8 @@ def read_archive(d, want=None):
             blocks.append((kind, off, mode, read, nxt))
             if w is not None and n > 0:
                 hist += w[pos:pos + n]
+            if first:
+                cache = hist[-HISTORY:]
             pos += n
         out.append((name, dlen, blocks))
     return out
@@ -1123,9 +1144,16 @@ def archives(paths, expect=None):
         d = open(path, "rb").read()
         want = {}
         folder = os.path.dirname(path)
-        for f in os.listdir(folder) if os.path.isdir(folder) else []:
-            if f.startswith("in-"):
-                want[f[3:]] = [open(os.path.join(folder, f), "rb").read()]
+        for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            # `in-NAME` is the data fork and `in-NAME.rsrc` the
+            # resource fork; a member's stream holds the resource fork
+            # FIRST, which is the order the pair is listed in.
+            if not f.startswith("in-") or f.endswith(".rsrc"):
+                continue
+            data = open(os.path.join(folder, f), "rb").read()
+            rsrc = os.path.join(folder, f + ".rsrc")
+            want[f[3:]] = ([open(rsrc, "rb").read()]
+                           if os.path.exists(rsrc) else []) + [data]
         for root, _, files in os.walk(expect) if expect else []:
             for f in files:
                 if f.endswith(".rsrc"):

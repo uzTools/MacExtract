@@ -480,6 +480,41 @@ def fibonacci_file(nsyms, seed=b"deep"):
     return bytes(pool[i] for i in order)
 
 
+def fork_files():
+    """Files with a RESOURCE fork, which nothing this harness made has had.
+
+    What they are for: every member Now Compress has written here came
+    off a volume built with `hcopy -r`, so its resource fork is empty
+    and its block table's one empty record sits at the head. The two
+    real archives are the only specimens whose forks fall any other way
+    — one member with both forks, one with an empty DATA fork — and one
+    specimen cannot tell a rule from a coincidence
+    (docs/formats/now-compress.md, *A member's blocks*).
+
+    Four members, each predicting where the empty record lands:
+
+    | member | data | resource | the empty record should be |
+    |---|---|---|---|
+    | `dataonly.bin` | 40,000 | none | first, as in every file here |
+    | `rsrconly.bin` | 0 | 40,000 | **last**, as in the 1993 archive |
+    | `bothsmall.bin` | 574 | 332 | **between**, as in `SynRef2.0 INFO` |
+    | `bothbig.bin` | 40,000 | 70,000 | **after the resource fork's THREE blocks** — index 3, which is what tells a fork boundary from a leading record |
+
+    Returned as (name, type, creator, data, resource); `run_case` writes
+    them as MacBinary so `hcopy -m` keeps both forks.
+    """
+    from arcmac import make_rsrc
+    d40 = keystream(20000) + FOX * 1000
+    r40 = keystream(20000) + PROSE * 3
+    r70 = keystream(35000) + PROSE * 6
+    return [
+        ("dataonly.bin", "TEXT", "ttxt", d40, b""),
+        ("rsrconly.bin", "TEXT", "ttxt", b"", make_rsrc(r40)),
+        ("bothsmall.bin", "TEXT", "ttxt", FOX * 29, make_rsrc(b"\x14a small fork")),
+        ("bothbig.bin", "TEXT", "ttxt", d40, make_rsrc(r70)),
+    ]
+
+
 def token_files(kind):
     """`dist`: one match of 64 bytes at each distance in TOK_DISTS.
     `len`: one match of each length in TOK_LENS, all at distance 400."""
@@ -575,6 +610,10 @@ CASES = {
                          "d20.bin": fibonacci_file(20),
                          "d21.bin": fibonacci_file(21)},
                 "archive", "smaller"),
+    # Members with a RESOURCE fork, which is where the one empty record
+    # in a block table is claimed to sit. `fork_files` says what each
+    # member predicts.
+    "forks": (lambda: {}, "archive", "smaller", None, fork_files),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),
@@ -590,13 +629,27 @@ FOX = b"the quick brown fox\n"
 def run_case(name):
     spec = CASES[name]
     files, action, mode = spec[0], spec[1], spec[2]
-    folders = spec[3]() if len(spec) > 3 else ()
+    folders = spec[3]() if len(spec) > 3 and spec[3] else ()
+    # Members with two forks go on as MacBinary, which is the only way
+    # `hcopy` carries a resource fork; `hcopy -r` is what everything
+    # else here uses and it writes the data fork alone.
+    twofork = spec[4]() if len(spec) > 4 and spec[4] else ()
     files = files()
     dest = os.path.join(SPECIMENS, name)
     shutil.rmtree(dest, ignore_errors=True)
     os.makedirs(dest)
     img = os.path.join(dest, "volume.img")
-    make_volume(img, "Now", files, folders)
+    mbs = []
+    if twofork:
+        from arcmac import macbinary
+    for n, typ, crt, data, rsrc in twofork:
+        mb = os.path.join(dest, "mb-" + n)
+        open(mb, "wb").write(macbinary(n, typ, crt, data, rsrc))
+        mbs.append(mb)
+        open(os.path.join(dest, "in-" + n), "wb").write(data)
+        if rsrc:
+            open(os.path.join(dest, "in-" + n + ".rsrc"), "wb").write(rsrc)
+    make_volume(img, "Now", files, folders, macbinary=mbs)
     for n, blob in files.items():
         open(os.path.join(dest, "in-" + n), "wb").write(blob)
     for _, inner in folders:

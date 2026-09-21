@@ -319,7 +319,7 @@ def check_encoder_specimens(macextract, problems):
         print("run_now: no encoder specimens (tools/vmac/nowcompress.py) — "
               "skipping the from-the-encoder checks")
         return 0
-    ran = 0
+    ran = compared = 0
     for case in sorted(os.listdir(root)):
         d = os.path.join(root, case)
         if not os.path.isdir(d):
@@ -337,19 +337,32 @@ def check_encoder_specimens(macextract, problems):
                 if x.returncode != 0:
                     problems.append("%s/%s: we exited %d" % (case, f,
                                                              x.returncode))
+                # `in-NAME` is the data fork that went in and
+                # `in-NAME.rsrc` the resource fork, which is what
+                # `--case forks` puts on the volume as MacBinary.
+                seen = 0
                 for root_, _, names in os.walk(out):
                     for name in names:
                         want = os.path.join(d, "in-" + name)
                         if not os.path.exists(want):
                             continue
+                        seen += 1
                         got = open(os.path.join(root_, name), "rb").read()
                         if got != open(want, "rb").read():
                             problems.append("%s/%s: %r is not what was "
                                             "compressed" % (case, f, name))
+                # An archive whose forks match nothing on disk passes
+                # this loop without comparing a byte, which is how a
+                # suite reports a number it did not earn.
+                if seen == 0:
+                    problems.append("%s/%s: nothing to compare it against"
+                                    % (case, f))
+                compared += seen
                 ran += 1
             finally:
                 shutil.rmtree(out, ignore_errors=True)
-    print("run_now: %d specimen(s) from the encoder checked" % ran)
+    print("run_now: %d specimen(s) from the encoder checked, %d fork(s) "
+          "against what went in" % (ran, compared))
     return ran
 
 

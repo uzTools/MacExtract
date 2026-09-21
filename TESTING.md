@@ -2638,9 +2638,15 @@ minutes, and the whole set is the better part of an hour.
   what the encoder writes: their block trailers and file-header
   checksum are left **zero**, their mode words are `0x0001`/`0x0021`
   where Now Compress writes `0x0010`/`0x003f`, their block records
-  carry a padding of 2, and their LZSS streams open `00 00` where the
-  encoder writes `00 03`. The engine reads them because it checks none
-  of those things — which is exactly the point: **a suite of inputs
+  carry a padding of 2, their LZSS streams open `00 00` where the
+  encoder writes `00 03`, and **no member's table carries the
+  fork-boundary record every member of every file the encoder wrote
+  has** — including the two-fork member, where that record is what
+  separates the forks (docs/formats/now-compress.md, *A member's
+  blocks*). `build_fork`, which writes a compressed FILE for Now
+  Compress's own Decompress to read, gained one on 2026-09-21 because
+  without it Decompress refuses the file. The engine reads them because
+  it checks none of those things — which is exactly the point: **a suite of inputs
   made by one program can only test what that program happens to get
   right**. `derive_now.py` reads 4 of `synth-now-mixed.now`'s 15 blocks
   and every block of every archive Now Compress itself wrote

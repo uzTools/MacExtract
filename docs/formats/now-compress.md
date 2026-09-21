@@ -30,7 +30,7 @@ it, and `tools/vmac/nowcompress.py --expand` or `--adjudicate` hands
 the result back to Now Compress itself. That is what settled byte 2 of
 a shape-3 header, the two bytes an LZSS stream opens with, the byte in
 front of a Huffman stream and the offset delta, on 2026-09-21. What is
-left is named under *What this note does NOT describe*, and it is four
+left is named under *What this note does NOT describe*, and it is five
 short bullets.
 
 ## A compressed file is an archive of one entry
@@ -267,7 +267,7 @@ A whole file written here from scratch was a different matter until
 later the same day: Now Compress called one *"damaged and cannot be
 repaired"* even with a shallow code, which is why this specimen is a
 re-coding of a real file and not a construction. **What was missing was
-the leading record** (*A member's blocks*); `tools/synth_now.py`'s
+the fork-boundary record** (*A member's blocks*); `tools/synth_now.py`'s
 `build_fork` did not write one, and a file that gains one is read.
 
 ## Shape 3 — the coder an archive uses
@@ -282,7 +282,7 @@ archives are almost entirely written in.
 - **bytes 0..1 are a u16 equal to `0x2F59` plus the length of the
   compressed header that follows.** Read as a magic byte and an offset
   — `0x2f`, then the stream's byte position plus 85 — they give the
-  same answer on all **391 shape-3 blocks here**, because `4 + length`
+  same answer on all **429 shape-3 blocks here**, because `4 + length`
   aligned up
   to an even byte IS `byte 1 − 85` whenever the length is even, which
   it is in every block seen. That is also why byte 1 is always odd,
@@ -302,8 +302,9 @@ archives are almost entirely written in.
   forty near-identical members; their byte 2 runs 191, 224, 240, 248,
   252, 254, 255 and then 255 for the remaining thirty-two — each step
   halving the distance to 255. A per-block quantity cannot do that.
-  Which is also why every per-block hypothesis failed on all 391:
-  not the header size, the table sizes, the code depths, the flush
+  Which is also why every per-block hypothesis failed on all 391 it
+  was put to: not the header size, the table sizes, the code depths,
+  the flush
   counts, the ratio of a block's stream to its output, the token
   counts, the literal-to-match mix, the longest or mean match distance,
   the window's fill, nor a copy of any byte at a fixed offset in this
@@ -324,6 +325,15 @@ archives are almost entirely written in.
   field nothing reads, which no property of the block explains, is
   uninitialised memory the encoder never meant to write. It means
   something, and a repeat run cannot be what tells us what.
+
+  **And a second ENCODER writes the same byte.** The `tokdist` case was
+  compressed again by Now Utilities 6.0 (*Two encoders*), and its
+  archive is the same 46,548 bytes with all **38 shape-3 block headers
+  byte for byte identical to 5.0.1's** — the six values that are not
+  `0xff` included, 191, 224, 240, 248, 252 and 254. A repeat run says a
+  field is not noise within one build; the other build says what writes
+  it did not change between 1994 and 1996, in a file where two unread
+  fields beside it did.
 
   **What it does track is where the encoder is in its window.** The
   1995 archive is the only specimen long enough to ask: its 306 blocks
@@ -641,20 +651,42 @@ Nothing here turns on either — no file the encoder writes has any of
 these shapes.
 
 **`0d4c 0037` were the mode and padding of a record that produces no
-bytes**, whose end offset repeats the first-block offset the u32
-already gave. **Such a record says the next block STARTS a stream**,
-and where bytes have already come out of the member it is the boundary
-between its two forks: that is how the 1995 archive's `SynRef2.0 INFO`
-carries a 332-byte resource fork and a 574-byte data fork in one
-member, **resource fork first**.
+bytes**, whose end offset repeats the one before it. **Such a record
+says the next block STARTS a stream**, and there is **exactly one per
+member: the boundary between its resource fork and its data fork**,
+resource fork first.
 
-**105 of the 107 members Now Compress itself wrote here open with
-one** — the 108th is `synth-now-mixed.now`, which this project writes
-and which has none. The two that do not are the 1993 archive's only
-member and the **first** member of the 1995 archive — not "the 1993
-archive does not", which is what this note said until 2026-09-21 and
-which its own second corpus archive contradicts: that archive's INFO
-member has no leading record and its FileMaker member has one.
+That is the whole rule, and it fixes where the record sits from the two
+fork lengths alone:
+
+| the member | the empty record |
+|---|---|
+| a resource fork and a data fork | **between** them |
+| a data fork only — resource fork zero | **first**, with no block in front of it |
+| a resource fork only — data fork zero | **last**, with no block after it |
+
+**153 of the 153 members Now Compress wrote here, one empty record
+each, in that position.** The 154th is `synth-now-mixed.now`, which
+this project writes and which has none.
+
+**Until 2026-09-21 this was read as two separate things** — a "leading
+record" 5.0.1 writes in front of every table, plus a fork boundary —
+which left two members of the corpus filed as exceptions: the 1993
+archive's only member, whose data fork is empty so the record is last,
+and the 1995 archive's first member, which is the only real specimen
+with two non-empty forks. **Every other member here came off a volume
+built with `hcopy -r`**, which writes the data fork alone, so its
+resource fork is zero and the boundary lands at the head. A rule seen
+through 105 members that all have the same shape looks like a
+convention about tables; `--case forks` is what varied the shape
+(BLOCKERS.md, *Withdrawn claims*).
+
+**Which is also why the two words differ at the head.** An empty record
+that is not the first one carries the **mode and padding of the record
+before it** — 5 of 5 here. At the head there is no record before it,
+and what the encoder leaves in the field is its own: `0d4c 0037` in
+every file 5.0.1 wrote here, `0d4c 003a` in 6.0's, `84e4 01e4` in the
+1995 archive's.
 
 **And a compressed file that lacks one is refused** — this is what a
 file written here had wrong, measured 2026-09-21 from both sides on one
@@ -663,9 +695,9 @@ volume:
 | file | Now Compress |
 |---|---|
 | `half.bin` as the encoder wrote it | 16,000 bytes, byte-exact |
-| the same file **with its leading record dropped** | *"The compressed file is damaged and cannot be repaired"* |
+| the same file **with its fork-boundary record dropped** | *"The compressed file is damaged and cannot be repaired"* |
 | a file **built here from scratch** (`synth_now.py`'s `build_fork`) | the same alert, word for word |
-| **that same built file with a leading record added** | **16,000 bytes, byte-exact** |
+| **that same built file with the record added** | **16,000 bytes, byte-exact** |
 
 The negative and the positive were needed: dropping the record from a
 real file says only that something changed, and the file built here
@@ -681,24 +713,34 @@ encoder wrote: the Finder flags zeroed, the dates replaced, the u32 at
 **All six files came back byte-exact**, so a compressed file's entry
 record is read for its name, its fork lengths, its data bounds and its
 checksum, and nothing else here is looked at. The mode and padding in
-it are not constant either — `0d4c 0037` in every file 5.0.1 wrote
-here, **`0d4c 003a` in every file 6.0 wrote** and `84e4 01e4` in the
-1995 archive — so the field that carries the meaning is the end offset.
+a HEAD record are not constant either, so the field that carries the
+meaning is the end offset.
 
 **Those two words move with the PROGRAM and with nothing else**, which
 is what a second encoder was run to find out (*Two encoders*): constant
 over 27 files from 5.0.1 — compressed files and archives, two months
-apart, every case — and constant at a different value over the five
-from 6.0. A version stamp and a deterministic leftover both look like
-that, and nothing here separates them; what is new is that the value
-moves at all, which the note could not say while one program had
-written every file it had.
+apart, every case — and constant at a different value in every file
+6.0 has written here. A version stamp and a deterministic leftover both look like that,
+and nothing here separates them; what is new is that the value moves at
+all, which the note could not say while one program had written every
+file it had. What it is a leftover OF now has a candidate, though: away
+from the head the same two fields hold the previous record's mode and
+padding, so a head record is that copy made before there is anything to
+copy.
 
-**A stream restart is what the engine calls the same record.**
-FORMATS.md's "two stream-restart records" in the 1995 archive are that
-fork boundary and the leading one 5.0.1 writes in front of a table. The
-window is carried across either unchanged and the bytes come out right,
-so nothing here needs a reload.
+**A stream restart is what the engine calls the same record, and the
+reload is real.** The block after one does NOT reach back into the
+running window: it reaches into the **dictionary cache**, the last
+32,768 bytes ending where the previous stream's FIRST block ended.
+Those two are the same thing whenever the previous stream is one block
+long, which is every specimen this note had until 2026-09-21 —
+`SynRef2.0 INFO`'s resource fork is 332 bytes. `--case forks`'s
+`bothbig.bin` has a **three-block** resource fork, and there they
+differ: its data fork's first block decodes byte-exact against the
+resource fork's first 32,768 bytes and comes out with 19,909 wrong
+bytes against the running window. This note said the opposite until
+that file existed (BLOCKERS.md, *Withdrawn claims*); `src/fmt_now.c`
+had always reloaded, and `tools/derive_now.py` had not.
 
 FORMATS.md has recorded the 1993 archive's block sequence since
 2026-08-15, from instrumenting the engine: "three blocks, 'new' LZSS
@@ -725,9 +767,10 @@ reads the same three from the file, and 32,768 + 32,768 + 23,406 is
 | tree | 5 members in 2 folders | 11,150 | — | shape 3 |
 | deep | 4 forks, Fibonacci histograms | 55,713 | — | shape 2, codes 10–11 deep |
 | deeparc | the same four, archived | 55,713 | — | shape 3, codes 10–13 deep |
+| forks | 4 members, one of them a three-block **resource** fork | 196,463 | — | 1 stored, 10 shape 3 |
 
 **Every compressed block of every one of them reads byte for byte
-against the bytes that went in** — **85 of 85** inside the archives,
+against the bytes that went in** — **96 of 96** inside the archives,
 and every block of the sixteen bare forks besides, each agreeing with
 its own trailer as well (`tools/derive_now.py` with no arguments).
 
@@ -766,28 +809,30 @@ sits mid-bar instead of against the screen edge, so its submenus open
 the other way, and it ships `Compress Now` and `Archive Now` as
 droplets 5.0.1 has no equivalent of.
 
-**It writes the same bytes.** Six specimens across all four coders,
+**It writes the same bytes.** Seven specimens across all four coders,
 each the same LENGTH as 5.0.1's and each differing only in fields
 nothing reads:
 
 | case | bytes | what differs from 5.0.1's |
 |---|---|---|
-| Compress Faster, `prose.txt` | 386 | the entry record, and the leading record's `0037`→`003a` |
+| Compress Faster, `prose.txt` | 386 | the entry record, and the head record's `0037`→`003a` |
 | Compress Faster, `runs.bin` | 290 | the same |
 | Compress Smaller, `prose.txt` | 386 | the same |
 | Compress Smaller, `runs.bin` | 290 | the same, **and the padding byte** `ff`→`47` |
 | Compress Smaller, `g09.bin` | 3,704 | the same as the first |
 | Archive Smaller, 2 members | 33,694 | the same, once per member, and a date |
+| Archive Smaller, `tokdist`'s 40 members | 46,548 | the same, once per member |
 
 Everything else is identical byte for byte: every mode word, both block
-tables, the leading record's presence, every Huffman table, every LZSS
-stream including its `00 03`, and every block trailer that is not a sum
-over one of the bytes above. **The coder did not change between 1994
-and 1996.**
+tables, the fork-boundary record's presence, every Huffman table, every LZSS
+stream including its `00 03`, **all four header bytes of all 38 shape-3
+blocks the last row carries** (*The header*, for what byte 2 is), and
+every block trailer that is not a sum over one of the bytes above.
+**The coder did not change between 1994 and 1996.**
 
 **And what did change is the useful half.** Three things in these files
 are written by the encoder and read by nobody — the LZSS prefix, the
-padding byte between a stream and its trailer, and the leading record's
+padding byte between a stream and its trailer, and the head record's
 two words. Two of them moved and one did not, which is a distinction no
 number of files from one program could have drawn: a deterministic
 leftover and a constant the encoder means to write look identical until
@@ -866,16 +911,17 @@ than one that draws it.
   fits all seven — one constant tried and kept only if the blocks then
   check out — and it is a hypothesis. This engine's rule is a different
   one, and refuses three files its own format reads.
-- **Why the leading record is required.** *That* it is, is measured
-  from both sides (*A member's blocks*): a compressed file the encoder
-  wrote is refused when it loses one, and a file written here is read
-  when it gains one. What the decoder does with it — count the records
-  by it, take the stream's start from it, require a stream to be
-  started before a block may produce bytes — is not measured, and the
-  1993 archive and the 1995 archive's first member have none. **Not a
-  version difference**, or not only one: 6.0 writes the record exactly
-  where 5.0.1 does (*Two encoders*), and the 1995 archive has a member
-  with one and a member without in the same file.
+- **What the decoder DOES with a fork-boundary record.** Where it sits
+  is settled, and it is not a convention about tables: every member has
+  exactly one, at the boundary between its two forks, which for a
+  data-only member puts it at the head and for a resource-only member
+  at the tail (*A member's blocks*, 153 of 153). *That* it is required
+  is measured from both sides — a compressed file the encoder wrote is
+  refused when it loses one, a file written here is read when it gains
+  one — and what the block after it reaches back into is measured too.
+  Which of the jobs the record could be doing it is doing — counting
+  the records, giving the stream its start, gating a block from
+  producing bytes before a stream has been started — is not.
 - **Whether there are more shapes.** Four coders and "stored" account
   for every block in every specimen here, and that is five
   arrangements — which is what PROGRESS.md has called Now Compress's

@@ -231,6 +231,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
 - 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
 - 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
+- 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
 
 ---
 
@@ -14108,7 +14109,9 @@ same second encoder bears on a question worth more than this one:
 **what selects the leading record.** — *Both were run the same day:
 2026-09-21, (the other program), where the prefix does not move, two
 unread fields beside it do, and 3.0.2/4.0.2 turn out to have no
-compressor in them at all.*
+compressor in them at all. The leading record turned out not to be one,
+and the encoder was the wrong dimension for it: 2026-09-21, (the record
+that was never leading).*
 
 **The lesson is the one this repository keeps relearning under a new
 name.** "Nothing reads it" is a claim about readers, and four readers
@@ -14162,7 +14165,8 @@ Why 5.0.1 writes a leading record in front of every block table while
 the 1993 archive has none was down as possibly a version difference.
 6.0 writes one exactly where 5.0.1 does, and the 1995 archive has a
 member with one and a member without in the same file — so whatever
-selects it is not the program.
+selects it is not the program. *It is the fork lengths, and there is no
+leading record: 2026-09-21, (the record that was never leading).*
 
 **What it cost, so the next one can be priced.** Four emulator runs of
 about five minutes each and two downloads. The route was not the one
@@ -14178,8 +14182,74 @@ toolbox into `System Folder:Extensions`, the droplets at the root, the
 It runs on the System 7.0.1 image the harness already had, on an
 emulated Mac Plus.
 
+**And the same instrument, pointed at a fourth field, said the
+opposite — which is what makes it an instrument.** A shape-3 header's
+byte 2 had been shown not to be noise by a repeat run of the `probe`
+case, which is a claim about one build. `tokdist` compressed by 6.0
+settles it against another: the same 46,548 bytes, and **all 38 of its
+shape-3 block headers identical to 5.0.1's**, the six values that are
+not `0xff` included. A repeat run says a field is deterministic; a
+second build is what says the thing computing it did not change — in a
+file where two fields that ARE leftovers moved.
+
 **The generalisable part.** When a field is constant and nobody reads
 it, the question is not "what does it mean" — that one has no instrument
 — but "what is it constant WITH RESPECT TO?" Vary the thing the field
 belongs to rather than the thing it is written about, and the answer
 arrives as a difference somewhere else in the same file.
+
+## 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
+
+**Claim.** A Now Compress member's block table holds **exactly one
+record that produces no bytes, and it is the boundary between the
+member's resource fork and its data fork.** Where it sits follows from
+the two fork lengths: between the forks when both are non-empty, at the
+head when the resource fork is empty, at the tail when the data fork
+is. Measured on **153 of the 153 members Now Compress has written
+here**.
+
+**What it replaces.** Until today the same bytes were read as two
+things — a "leading record" 5.0.1 writes in front of every table, plus,
+separately, a fork boundary — with the 1993 archive's only member and
+the 1995 archive's first member filed as exceptions that have no
+leading record. Both are the rule seen from a position the corpus had
+one specimen of each: the 1993 member's data fork is empty, so its
+record is last; the 1995 archive's first member is the only real
+specimen with two non-empty forks, so its record is in the middle.
+
+**Why it survived, and this is the transferable half.** Every member
+this harness had ever made came off an HFS volume built with `hcopy
+-r`, which writes the **data fork alone**. So 105 of 107 members had a
+zero-length resource fork and therefore a boundary at the head, which
+is indistinguishable from a convention about tables. The mechanism is
+already in BLOCKERS.md's list — *every input a suite grades against,
+made by one program; ask what the generator never varies* — and what
+this generator never varied was the thing the format's rule is written
+in terms of. **The question to ask a harness is not what it covers but
+what it cannot produce.**
+
+`nowcompress.py --case forks` produces it: four members placed on the
+volume as MacBinary so `hcopy -m` carries both forks — data-only,
+resource-only, both forks small, and both forks with a **three-block**
+resource fork. One emulator run, and each record lands where the rule
+says, the big one at index 3 rather than index 1, which is what tells a
+fork boundary from a leading record.
+
+**And the same file disproved a second sentence, which is the one that
+mattered.** The note said the window is carried across a restart
+unchanged, "so nothing here needs a reload". It is not: the block after
+a restart reaches into the **dictionary cache**, the last 32,768 bytes
+ending where the previous stream's FIRST block ended. Those are the
+same bytes whenever the previous stream is one block long, which every
+specimen in the tree was until `bothbig.bin` existed; there they differ
+by 19,909 bytes of output. `src/fmt_now.c` had always reloaded — the
+behaviour was transcribed before it was described — but the note is
+what `fmt_now.c` now cites instead of XADMaster, and `tools/derive_now.py`
+is a reader written from the note: it read 8 of that archive's 11
+blocks. Both are fixed; the withdrawn sentences and what they cost are
+in BLOCKERS.md.
+
+**What it leaves open.** Not *where* the record goes, and not *that* a
+decoder requires one — both are measured from both sides. What the
+decoder DOES with it is still unmeasured, and that is the bullet the
+note now carries.

@@ -419,6 +419,7 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --case all  # write the specimens
     tools/vmac/nowcompress.py --case probe   # four inputs chosen to be read
     tools/vmac/nowcompress.py --case reach   # how far back a match may point
+    tools/vmac/nowcompress.py --case forks   # members with a RESOURCE fork
     tools/vmac/nowcompress.py --setup6    # fetch Now Utilities 6.0, build its boot image
     tools/vmac/nowcompress.py --case6 faster # the same case, the OTHER encoder
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
@@ -426,7 +427,12 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --expand OUTDIR FILE.bin ...   # and below
 
 The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
-and Archive ▸ Faster/Smaller. Specimens land in
+and Archive ▸ Faster/Smaller. Files go on the volume with `hcopy -r`, which
+writes the **data fork alone** — so until `--case forks` every member the
+harness had ever made had an empty resource fork, and a rule written in terms
+of the two forks looked like a rule about tables (BLOCKERS.md, *Withdrawn
+claims*). That case passes its members through `make_volume(macbinary=...)`
+instead, which is `hcopy -m` and carries both forks. Specimens land in
 `$UNC_VMAC_HOME/specimens/now/<case>/` with the inputs beside them and a
 screenshot per step; `tools/run_now.py` picks them up if they are there and
 skips them with a message if they are not.

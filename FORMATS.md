@@ -278,13 +278,20 @@ keeps it to fixed memory (DECISIONS.md 2026-08-15).
 loop — and reproduced from the file itself on 2026-09-21, once the archive
 container was derived (`docs/formats/now-compress.md`, *The archive layer*).
 `derived-Expand_Now_1.0.1.sea`: three blocks, "new" LZSS twice and
-Huffman-only once, zero padding, no offset delta, no stream restart, no length
+Huffman-only once, zero padding, no offset delta, no length
 past a nibble, deepest code 12. `derived-SyntheticReferences2.0.sea`
 (1995, found 2026-08-16): a folder, a two-fork file and a 9,949,696-byte
 FileMaker database out of 2.9 MB, in two streams of 306 blocks — all "new"
-LZSS, and **two stream-restart records**, the dictionary-cache reload no other
-real archive here uses. Peak heap on that extraction is 131,072 B, so the flat
+LZSS. Peak heap on that extraction is 131,072 B, so the flat
 128 KB is measured on a 9.9 MB output.
+
+**Every member of every one of them carries one stream-restart record**,
+and it is the boundary between its resource fork and its data fork:
+last when the data fork is empty, first when the resource fork is,
+between them otherwise (`docs/formats/now-compress.md`, *A member's
+blocks*, 153 members of 153). The dictionary-cache reload a restart asks
+for is not a curiosity of the 1995 archive, which is what this section
+said until 2026-09-21.
 
 Everything else — the other three shapes, a 17-bit code and both routes into
 the offset-delta search — is covered since 2026-08-15 by 13 generated archives

@@ -544,7 +544,10 @@ static int now_stream_open(NowStream *st, uint32_t headeroffset)
 /* Decode the next block of the current stream into st->avail.
  * Source: docs/formats/now-compress.md — the block table's records
  * (offset, flags, padding), the repeated offset that starts a stream,
- * and the four shapes a block can be. */
+ * and the four shapes a block can be. There is exactly one such
+ * repeated offset per member and it is the boundary between its two
+ * forks, so it is first when the resource fork is empty and last when
+ * the data fork is; a member's first block starts a stream either way. */
 static int now_next_block(NowStream *st)
 {
     UncCtx *c = st->c;
