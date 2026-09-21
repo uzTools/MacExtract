@@ -297,6 +297,18 @@ Everything else — the other three shapes, a 17-bit code and both routes into
 the offset-delta search — is covered since 2026-08-15 by 13 generated archives
 adjudicated by `unar` (TESTING.md), byte-exact there and under qemu-m68k.
 
+**And since 2026-09-21 one archive written here is read by Now Compress
+itself**, which none had been: the encoder's own extractor, run under the
+emulator over an archive `synth_now.py` built, produced both members
+byte-exact. What an archive needs to be opened at all is three things
+(`docs/formats/now-compress.md`) — a **16-byte trailer** past the last
+member, **32,768-byte blocks**, and every block starting on a **word
+boundary**. The first two are refusals and the third is a block that
+decodes wrong in an archive that otherwise extracts; the thirteen
+`unar`-graded archives keep the old shape, because an aligned region can
+leave `unar` fewer than the four spare bits it needs (TESTING.md, *The
+rungs*).
+
 **`unar` cannot read the 1995 archive at all**, so four of its forks are
 adjudicated by nobody: 129 of its 306 blocks end within 7 bits of their
 buffer, and XADMaster's bit reader raises end-of-buffer there (DECISIONS.md

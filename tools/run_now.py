@@ -118,8 +118,9 @@ def check(archive, want, macextract, problems):
                                .replace("\n", " | ")[-160:]))
 
 
-def check_word_aligned(tmp, macextract, problems):
-    """The aligned build: every block even, and every block READ.
+def check_encoder_shape(tmp, macextract, problems):
+    """The build Now Compress itself reads: every block even, every
+    block READ, and the sixteen bytes an archive ends with.
 
     Every one of the 479 blocks Now Compress has written here is an even
     number of bytes long, and a shape-3 block's coded region is even
@@ -137,13 +138,29 @@ def check_word_aligned(tmp, macextract, problems):
     the length up — reads every block. Those two readers agreeing is the
     whole point; on the unaligned build they do not, and 25 of the 37
     shape-3 blocks there are what they disagree about.
+
+    **The trailer is asserted here too**, because it is the difference
+    that decided the whole question: without those sixteen bytes Now
+    Compress refuses the archive outright (TESTING.md, *The rungs*).
+
+    The third requirement — 32,768-byte blocks — cannot be asserted on
+    these trees, which cut their members small on purpose so that a
+    member has several blocks. `check_now_readable` below is the one
+    archive built the way the encoder builds one.
     """
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import derive_now as D                                # noqa: E402
     for name, (tree, delta) in sorted(synth_now.archives().items()):
         if delta:
             continue            # the delta archives need the offset search
-        blob = synth_now.build_archive(tree, 0, word=True)
+        blob = synth_now.build_archive(tree, 0, word=True, trailer=True)
+        tail = blob[-16:]
+        if int.from_bytes(tail[12:16], "big") != sum(tail[:12]):
+            problems.append("%s aligned: the archive trailer's sum is wrong"
+                            % name)
+        if int.from_bytes(tail[0:4], "big") != len(blob) - 16:
+            problems.append("%s aligned: the archive trailer does not point "
+                            "at the last member's end" % name)
         members = D.members(blob)
         if not members:
             problems.append("%s aligned: no member table" % name)
@@ -185,6 +202,38 @@ def check_word_aligned(tmp, macextract, problems):
             fh.write(blob)
         extract_and_compare("us", macextract, path,
                             synth_now.expected(tree), problems)
+    return 1
+
+
+def check_now_readable(tmp, macextract, problems):
+    """The one archive here built the way Now Compress builds one, and
+    the only one all three readers agree on.
+
+    `synth_now.ladder`'s `no-tail` rung, spliced into a real
+    self-extractor, was extracted by **Now Compress itself** on
+    2026-09-21 — both members byte-exact, the first archive this project
+    has written that the format's own program will open (TESTING.md,
+    *The rungs*). What makes it one is the three things measured that
+    day: the 16-byte archive trailer, 32,768-byte blocks, and every
+    block starting on a word boundary.
+
+    So this rebuilds that archive and requires `unar` and this CLI to
+    agree with what went in, which the thirteen above cannot all do —
+    an aligned region can leave `unar` fewer than the four spare bits
+    it needs, and this content does not. If a change to `sample_data`
+    ever makes it, the failure is that and not a decoding fault.
+    """
+    d = synth_now.sample_data()
+    tree = [synth_now.file("alpha", data=d["text"][:3000],
+                           shapes=("newlzss",), chunk=0x8000),
+            synth_now.file("beta", data=d["runs"][:2000],
+                           shapes=("huffman",), chunk=0x8000)]
+    blob = synth_now.build_archive(tree, 0, lead=True, sums=True, arch=True,
+                                   word=True, trailer=True)
+    path = os.path.join(tmp, "now-readable.now")
+    with open(path, "wb") as fh:
+        fh.write(blob)
+    check(path, synth_now.expected(tree), macextract, problems)
     return 1
 
 
@@ -456,7 +505,8 @@ def main():
         for archive in sorted(made):
             check(archive, made[archive], macextract, problems)
             ran += 1
-        ran += check_word_aligned(tmp, macextract, problems)
+        ran += check_encoder_shape(tmp, macextract, problems)
+        ran += check_now_readable(tmp, macextract, problems)
         check_metadata(os.path.join(tmp, "synth-now-tree.now"), macextract,
                        problems)
         check_refusals(tmp, macextract, problems)

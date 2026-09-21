@@ -1658,7 +1658,21 @@ paths byte-for-byte on every run, including on a machine with no `unar` at
 all, and any future Mac replay can pick it up. It is restored from
 `tools/synth_now.py -o`, like every other synthetic fixture (see *Corpus*).
 
-**A fourteenth archive is graded ONE way**, because the two implementations
+**And since 2026-09-21 the same thirteen trees are built a second way** —
+`build_archive(word=True, trailer=True)`, the shape the encoder writes —
+and that build is required to be **word-aligned** (no block of an odd
+length or at an odd offset, and no shape-3 coded region of an odd length,
+which is what makes the two accounts its header gives of where its stream
+starts agree), to carry a well-formed **16-byte archive trailer**, and to be
+read by `derive_now.py` and by this CLI. The thirteen graded by `unar` keep
+the unaligned shape, because `unar` refuses a region that leaves it fewer
+than four spare bits; the aligned build is checked instead of replacing
+them. **One more archive is built the way Now Compress builds one** —
+those two plus 32,768-byte blocks — and graded all three ways, because it is
+the only one here that all three readers agree on: it is the rung Now
+Compress itself extracted (*The rungs*).
+
+**Another archive is graded ONE way**, because the two implementations
 genuinely disagree on it and the reference is wrong: a zero-length file
 anywhere but last leaves `unar` decoding the files after it from a stale
 block, so it fails one entry and writes the NEXT one at the right length
