@@ -90,11 +90,12 @@ This project's decoders are transcriptions/ports of algorithms from:
     exists anywhere. Its coders in `src/fmt_now.c` were **rewritten
     from that note on 2026-09-21**, the M12 transcription of
     XADNowCompressParser.m and XADNowCompressHandle.m having stood
-    until then. **One thing in the file still rests on the reference**
-    and is named where it is used: the code-length escape past 15,
-    which the encoder refuses to write. The offset-delta search is no
-    longer one of them: it was measured against the format's own
-    decoder the same day.
+    until then. **Nothing in that file rests on the reference any
+    more**: the last two things that did — the offset-delta search and
+    the code-length escape past 15, neither of which the encoder will
+    produce on request — were measured against the format's own decoder
+    the same day, by changing the field and handing the file back to
+    Now Compress (`tools/mutate_now.py`).
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
