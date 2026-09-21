@@ -13589,11 +13589,17 @@ that. **An input chosen for one property tests every other property
 too, which is the whole argument for generating inputs rather than
 collecting them.**
 
-**What is still open, as a hypothesis, and not fixed here.** The
-offset table reaches `0xe100` plus thirteen extra bits — **65,791
-bytes** — while `NOW_HISTORY` is 32,768. If an archive ever produced
-more than 32 KB and then named a match further back than that, this
-engine would refuse it exactly as it refused these two. Nothing in
-the corpus does, and nothing here has measured what the encoder's
-real ceiling is; the number above is what the tables permit, not what
-anything has been seen to write.
+**And the obvious next question, measured rather than left open.**
+The offset table reaches `0xe100` plus thirteen extra bits — **65,791
+bytes** — while `NOW_HISTORY` is 32,768, so a match further back than
+32 KB would be refused exactly as these two were. It does not happen:
+`nowcompress.py --case reach` archives five 16 KB members whose fifth
+is a byte-for-byte copy of the first, putting a perfect 16 KB match
+**64 KB back**, and the encoder does not take it — the archive's
+largest offset is **32,766**, two short of the window, and the fifth
+member compresses no better than the four before it. **The window is
+32,768 bytes and the offset table's extra reach is capacity nothing
+writes.** All five extract byte-exact. Two of the same measurement's
+by-products confirm the fix above independently: members of 6,000
+bytes name offsets of 11,531 and 15,124, which no per-fork window
+could serve.

@@ -407,7 +407,10 @@ name offsets of **6,228 and 13,000 bytes against a 6,000-byte window** and
 came back *archive structure is corrupt*. The bound is now the SUM of every
 fork, still capped at 32 KB, and all four extract byte-exact; **no fixture's
 peak heap changes**, because every Now archive in the corpus already has a
-fork over 32 KB.
+fork over 32 KB. The cap itself was then measured rather than assumed: an
+archive whose fifth member is a copy of its first, 64 KB back, takes a
+largest offset of **32,766** (`--case reach`), so 32,768 is the encoder's
+window and the offset table's reach to 65,791 is capacity nothing writes.
 
 **Cost: nothing yet, and only because no archive in the corpus has a match
 that crosses a member.** Two of the corpus's Now archives are real, thirteen

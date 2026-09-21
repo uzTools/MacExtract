@@ -373,6 +373,19 @@ CASES = {
     # Four inputs chosen to make the archive shape's code table legible:
     # one symbol, two, four with known frequencies, and one file that is
     # its own first half repeated so a single match reaches 3,000 back.
+    # The window question: the offset table reaches 65,791 bytes and the
+    # history this engine keeps is 32,768, so an archive that has
+    # produced more than 32 KB and then matches further back than that
+    # would be refused. Five 16 KB members, the last a copy of the
+    # first, put the only useful match 64 KB back and ask the encoder
+    # what it does about it (DECISIONS.md 2026-09-21, the window that
+    # stopped at the fork).
+    "reach": (lambda: {"a.bin": alphabet(16000, b"AB", (1, 1), b"reach-a"),
+                       "b.bin": alphabet(16000, b"AB", (1, 1), b"reach-b"),
+                       "c.bin": alphabet(16000, b"AB", (1, 1), b"reach-c"),
+                       "d.bin": alphabet(16000, b"AB", (1, 1), b"reach-d"),
+                       "e.bin": alphabet(16000, b"AB", (1, 1), b"reach-a")},
+              "archive", "smaller"),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),

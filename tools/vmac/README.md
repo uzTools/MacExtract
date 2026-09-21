@@ -418,6 +418,7 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --install   # install Now QuickFiler on System 7
     tools/vmac/nowcompress.py --case all  # write the specimens
     tools/vmac/nowcompress.py --case probe   # four inputs chosen to be read
+    tools/vmac/nowcompress.py --case reach   # how far back a match may point
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
     tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
 
@@ -448,6 +449,14 @@ only be two known bytes is found by what its table MUST contain rather than
 by where the table might be — which is how the archive coder's header was
 read at all, the harness's other members being prose and keystream whose
 tables look like every other table (docs/formats/now-compress.md, *Shape 3*).
+
+**`--case reach` answers a question about a bound, and that is the other
+thing a made-to-order archive is good for.** Five 16 KB members whose
+fifth is a byte-for-byte copy of the first put a perfect match 64 KB back;
+the encoder does not take it, and the archive's largest offset is 32,766
+against a 32,768-byte window. That is what says `NOW_HISTORY` is right and
+the offset table's reach to 65,791 is capacity nothing writes
+(DECISIONS.md 2026-09-21, *the window that stopped at the fork*).
 
 What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".
