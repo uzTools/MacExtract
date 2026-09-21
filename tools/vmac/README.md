@@ -468,6 +468,24 @@ the 5.0.1 path, each of which cost a run to find:
 compressor at all. Their two disks each are Super Boomerang, NowMenus,
 WYSIWYG Menus, Startup Manager and the rest; QuickFiler arrives in 5.
 
+**QuickFiler also compresses by itself, and both versions do.** Its
+menu's *Don't Compress* and *Compress When Idle* items belong to a
+background compressor: it keeps queues (`ToBeCompressedDB`,
+`ToBeRecompressedDB`, `ToBeDecompressedDB`) and an exclusion list
+(`DoNotCompressFileDBNV`), compresses files that have been unmodified
+for a set time once the system has been idle for one, and expands them
+again on open. *Don't Compress* excludes the selection — by item,
+creator, type or Finder label — and the System Folder is excluded
+always. Its own balloon help is the source, and 5.0.1's extension
+carries the same strings as 6.0's, so this is not new in 6.
+**It has never fired in a run here**: a case's volume comes back with
+only the files the menu was released on changed — the `archive` case
+leaves `mixed.bin` and `one.txt` at 49,000 and 7,500 bytes beside the
+`.sea` — and the mis-clicked first 6.0 run came back with nothing
+compressed at all. A specimen is still worth attributing to the menu
+pick the screenshot shows rather than to the run, which is why every
+case keeps that screenshot.
+
 **The `probe` case exists to make a code table legible**, and it is the
 technique worth reusing: its four members are a 4,000-byte run of one byte,
 6,000 bytes over `{A, B}`, 6,000 over `{A, B, C, D}` with known frequencies,
