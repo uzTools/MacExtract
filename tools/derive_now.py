@@ -158,9 +158,9 @@ def decode_huff(d, t, bitstart, nout, hist=b""):
     of eight literals IS 0xff, and it occurs once per eight bytes.
 
     A match is two symbols: `length = (S & 7) + 2` and
-    `distance = ((S >> 3) << 8) | D`, so the reach is 11 bits where
-    shape 1 had 8. A length of 2 — the low three bits zero — escapes
-    to a third symbol carrying `length - 2`.
+    `distance = ((S >> 3) << 8) | D` — the same 13-bit reach shape 1
+    has, because this IS shape 1's stream. A length of 2 — the low
+    three bits zero — escapes to a third symbol carrying `length - 2`.
     """
     return decode_huff_at(d, t, Bits(d, bitstart), nout, hist)
 
@@ -433,11 +433,14 @@ def members(d):
     at 24, **110 bytes each**, and this reads the fields it can name:
 
         +0    a Pascal name, 1 + up to 31 bytes
-        +38   type, +42 creator
-        +80   the entries inside a FOLDER (2 in the 1995 archive's one,
-              0 in every file record of a 5.0.1 archive; the 1993 one
-              has 0x20000 there, so this field is not read the same way
-              across versions)
+        +36   flags; **bit 0x10 marks a DIRECTORY**, found by comparing
+              the two folder records of the `tree` archive against its
+              five file records — the only bit that is set in both and
+              clear in all five. The 1995 archive's folder has 0x14
+              there, so the test is the bit and not the word
+        +38   type, +42 creator (zero on a folder)
+        +82   u16, the entries a folder holds: the table is a pre-order
+              flattening, so that many records follow it
         +86   u32 data fork length
         +90   u32 resource fork length
         +98   u32 start of the member's data area, +102 its end
@@ -446,10 +449,10 @@ def members(d):
               use, and it agrees on every record of every archive here,
               folders included
 
-    Returns (name, data length, resource length, start, end). A record
-    whose bounds do not parse is a folder — the 1995 archive opens with
-    one — and is skipped rather than taken as the end of the archive,
-    which is what this did until 2026-09-21.
+    Returns (name, data length, resource length, start, end) for the
+    FILES: a directory record is skipped by its flag rather than by its
+    bounds failing to parse, which is how this told them apart for the
+    first half of 2026-09-21.
     """
     if len(d) < MEMBER_AT + MEMBER_LEN:
         return None
@@ -466,6 +469,8 @@ def members(d):
             return None
         if int.from_bytes(r[106:110], "big") != (sum(r[:106]) & 0xFFFFFFFF):
             return None
+        if int.from_bytes(r[36:38], "big") & 0x10:
+            continue                            # a directory: no data area
         name = r[1:1 + r[0]].decode("mac-roman", "replace")
         dlen = int.from_bytes(r[86:90], "big")
         rlen = int.from_bytes(r[90:94], "big")
@@ -558,15 +563,18 @@ TABLE_AT_BIT = 128      # the main table, after 24 bits this reader
 
 
 def shape3_clc(b):
-    """The code-length code: sixteen four-bit lengths at byte 5, for
-    the sixteen lengths 0..15 the main table is written in.
+    """The code-length code: **twenty** four-bit lengths at byte 5, for
+    the values 0..19 the two tables are written in — twenty because a
+    distance entry is stored as its code length plus two, so 17 has to
+    fit.
 
-    Kraft's equality is the check, and it is exact on all eight
-    shape-3 blocks known — four made to order, two in the harness's own
-    archive and two in a 1993 one.
+    Kraft's equality is the check and it is exact on every shape-3
+    block seen. The last four are zero in all of them, which is why
+    reading sixteen worked and left "24 bits this note cannot account
+    for" behind it (docs/formats/now-compress.md, *The header*).
     """
     L = []
-    for k in range(8):
+    for k in range(10):
         L.append(b[CLC_AT + k] >> 4)
         L.append(b[CLC_AT + k] & 15)
     if abs(sum(2.0 ** -x for x in L if x) - 1.0) > 1e-12:

@@ -13772,6 +13772,21 @@ each other about the same LZSS layer for a day (BLOCKERS.md,
 *Withdrawn claims*). A cross-file contradiction is this project's
 cheapest smell; this one was inside a single file.
 
+**And the header turned out to be simpler than the reading that
+worked.** Bytes 0..1 of a shape-3 block are not a `0x2f` magic and an
+offset; they are **one u16, `0x2F59` plus the length of the compressed
+header that follows**. Both readings put the stream in the same place
+on all 386 blocks — `4 + length` rounded up to even IS `byte 1 − 85`
+whenever the length is even — and the second explains what the first
+could not: why byte 1 is always odd, where 85 comes from, and why
+"24 bits this note cannot account for" sat behind the code-length
+code. Those 24 bits are four more code lengths, all zero, and a count
+byte: the alphabet is **twenty** symbols, not sixteen, because a
+distance entry is stored as its length plus two and 17 has to fit.
+**An unexplained gap in a header is usually a field you have not
+finished reading**, and the giveaway was a constant nobody could
+source — an 85 that is 4 − 0x59.
+
 **Where that leaves the reader.** Given an archive and nothing else —
 no expected output, no oracle — `tools/derive_now.py` now decodes every
 block of both corpus archives, 3 of 3 and 306 of 306: the member

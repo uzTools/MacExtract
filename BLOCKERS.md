@@ -1248,6 +1248,24 @@ a harness can click is not the same list.
   decode — this project's cheapest smell, found this time inside a
   single file.
 
+- **"A shape-3 block's bytes 13..15 are 24 bits this note cannot
+  account for, zero in every specimen."** Written 2026-09-21 in
+  `docs/formats/now-compress.md`, withdrawn the same day. They are
+  **four more code lengths and a count byte** — the code-length
+  alphabet is twenty symbols, not sixteen, because a distance table
+  entry is stored as its length plus two — and the count is of the
+  "extra length" entries that let a code run past 15. **Cost:** none
+  measured; every block here has zeros there, so the short reading
+  gave the right codes, and a table needing the escape would have been
+  refused rather than misread. **Why it survived:** the sixteen-symbol
+  reading is the obvious one (the values ARE code lengths 0..15), it
+  satisfies Kraft exactly, and the leftover bits were zero — three
+  reasons to stop looking. The tell was in the same header: a constant
+  of 85 that nothing could source, which is `4 − 0x59` once bytes 0..1
+  are read as one size field. **An unexplained gap in a header is
+  usually a field you have not finished reading**, and an unexplained
+  CONSTANT beside it is the pointer.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

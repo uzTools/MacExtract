@@ -79,6 +79,18 @@ This project's decoders are transcriptions/ports of algorithms from:
     XADDiskDoublerParser.m's, which is also what says which forks use
     that second form; the wiki punts DiskDoubler's containers to that
     file by name.
+    **Now Compress is a different case and is not shed.** Since
+    2026-09-21 the FORMAT is described by this project —
+    `docs/formats/now-compress.md`, measured off Now Compress 5.0.1
+    under emulation, with a reader written from that note alone
+    decoding every block of both corpus archives
+    (`tools/derive_now.py`) — and `src/fmt_now.c`'s comments cite it.
+    The CODE in that file is still the transcription of
+    XADNowCompressParser.m and XADNowCompressHandle.m made in M12, so
+    the file stays XADMaster's and says so in its header. Two things
+    the description does not cover rest on the reference alone and are
+    named where they are used: the offset-delta search and the
+    code-length escape past 15.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 

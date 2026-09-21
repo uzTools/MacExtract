@@ -52,9 +52,7 @@ read off the engine.
 better say which facts are whose: `src/fmt_now.c` subtracts a
 `padding` field when it computes a block's length, and that file is
 transcribed from XADMaster. The check above is what makes it a
-measurement here rather than a borrowing. **Three facts in this note
-came that way** — this one, the block table's own checksum below, and
-the code-length escape named at the end;
+measurement here rather than a borrowing. See *What came from where*, at the end, for the tally;
 everything else was read out of the encoder's output before that file
 was opened, and the commit of 2026-09-21 is the record of which came
 first.
@@ -128,20 +126,21 @@ including its flag bytes — through one Huffman code of 256 symbols.
   exactly 1.000000 where the table is and nowhere else in the fork;
 - codes are **canonical**: shortest first, assigned in symbol order,
   read most-significant-bit first;
-- then **one zero byte**, whose meaning is unknown and whose value is
-  0 in every block seen, in this shape and in Huffman-only. A
-  hypothesis, not a measurement: it is two more four-bit entries, for
-  a 258-symbol alphabet whose last two symbols no block ever uses —
-  which is the shape of shape 3's main table, where symbol 256 is
-  likewise always absent;
+- then **one zero byte**: it is the count of "extra length" entries —
+  symbols whose code length gains 16, the escape past 15 — and it is 0
+  in every block seen here. After those entries (none, so far) the
+  stream starts at the next EVEN byte, which with a 1-byte header, a
+  128-byte table and a 1-byte count is already where it is. **Read off
+  `src/fmt_now.c` rather than measured**, like the escape itself;
 - then the LZSS stream — **starting with the `00 03` that opens a
   shape-1 block**, coded through this table like every other byte;
 - a **flag symbol**, then eight tokens as before, a 1 being a literal
   symbol;
 - a **match is two symbols**: `length = (S & 7) + 2` and
-  `distance = ((S >> 3) << 8) | D`, an 11-bit reach where shape 1 had
-  8. **A length of 2 escapes**: the low three bits zero means the real
-  `length - 2` is a third symbol.
+  `distance = ((S >> 3) << 8) | D` — **the same 13-bit reach shape 1
+  has**, because this IS shape 1's stream. **A length of 2 escapes**:
+  the low three bits zero means the real `length - 2` is a third
+  symbol.
 
 **The tell that this shape is shape 1 underneath** is that in a file
 of incompressible data the shortest code in the table belongs to
@@ -159,10 +158,10 @@ say so: the two it was measured on and the eight of
 `nowcompress.py --case huffgap`, which exists because two specimens
 could not tell a rule from a coincidence. What made it look
 like a gap is that a reader which starts at the prefix sees a flag
-byte of `0x00` — eight matches — and the first of them points 255
-bytes back at output position nought, so it fails, and fails in a way
-that looks like a wrong starting position rather than a wrong
-assumption about what the stream opens with.
+byte of `0x00` — eight matches — and the first of them reaches back
+from output position nought, where nothing has been produced. It
+fails, and it fails the way a wrong starting bit fails, so the symptom
+points at "where" when the fault is "what the stream opens with".
 
 ### Huffman alone — the same table, no framing at all
 
@@ -186,49 +185,45 @@ distances through **two Huffman codes**, and it is what a `.sea`'s
 members are made of. It is also the shape the corpus's two real
 archives are almost entirely written in.
 
-### The header, and the two places it says where the stream starts
+### The header, which is a size and three flush counts
 
-- byte 0 is **`0x2f`** in every shape-3 block known;
-- **byte 1 is the stream's byte offset within the block, plus 85** —
-  exact on all 381 blocks read here, both corpus archives included, and
-  the 85 is a constant this note cannot account for. Those offsets run
-  from 64 to 160, so the field is within ten of overflowing a byte and
-  **nothing here says what it does then**: byte 4 is the reading to
-  trust if they ever disagree;
-- byte 2 is **not identified**, and 377 blocks say what it is not: it
-  is no bitmap of the lengths or distances a block uses (its eight bits
-  were tested against every such predicate), no ratio of literals to
-  matches, and no count of either. Over the 1995 archive its values
-  cluster in `0x60..0x7f` and `0xf0..0xff`, and on one probe's members
-  it climbs with the shortest match — 224, 240, 248, 252, 254, 255 for
-  matches of 3 to 8 — and then stops meaning that on every other
-  block;
-- **byte 4 is where it BEGINS**: the bits between the end of the two
-  tables and the stream come to **(16 − byte 4) mod 16** — nought when
-  that byte is nought. So the header says it twice, and the two
-  accounts agree on every block, which is what says either is right;
-- **byte 3 is where the stream ENDS**, the same arithmetic: after the
-  last token come **(16 − byte 3) mod 16** bits of flush and then the
-  four-byte trailer;
-- **bytes 5..12 are a code-length code**: sixteen four-bit lengths,
-  one per length 0..15, and **Kraft's equality is exact on every
-  specimen**. Both tables that follow are written in it;
-- bytes 13..15 are **24 bits this note cannot account for**, zero in
-  every specimen; the first table starts at **bit 128**.
+- **bytes 0..1 are a u16 equal to `0x2F59` plus the length of the
+  compressed header that follows.** Read as a magic byte and an offset
+  — `0x2f`, then the stream's byte position plus 85 — they give the
+  same answer on all 386 blocks here, because `4 + length` aligned up
+  to an even byte IS `byte 1 − 85` whenever the length is even, which
+  it is in every block seen. That is also why byte 1 is always odd,
+  which was a puzzle while the field was read as two;
+- **byte 2 is unread**, here and in `src/fmt_now.c` alike;
+- **byte 3 is the outer stream's end flush**: after the last token come
+  `(16 − byte 3) mod 16` bits, and then the four-byte trailer;
+- **from byte 4 comes a Huffman-coded region of the length byte 0..1
+  states**, and the two code tables are inside it:
 
-Bytes 3 and 4 read as a bit count in a **16-bit register** — how many
-of its bits were still free when the encoder flushed, nought meaning
-nothing to flush. That is a guess at the why; what is measured is the
-arithmetic, and it is exact on every block of both corpus archives and
-every specimen.
+  | at | field |
+  |---|---|
+  | +4 | that inner stream's own end flush, same arithmetic |
+  | +5..+14 | **twenty four-bit code lengths** — the code the tables are written in. Twenty, not sixteen, because the values it codes run to 19: a distance entry is stored as its length **plus two** |
+  | +15 | the count of "extra length" entries, 0 in every block here |
+  | +16.. | the two tables, and then a word-aligned start for the stream |
 
-**The `mod 16` was not free.** Derived from the 75 blocks the harness
-and the 1993 archive supply, the rule read "16 − byte 4" and byte 4 was
-never nought in any of them. The 1995 archive has twenty blocks where
-it is, and there the stream starts at the tables' end exactly: a rule
-fitted to 75 blocks was wrong on the 306 it had not seen, and the
-disagreement between the header's two accounts of the same number is
-what caught it.
+  Kraft's equality on those twenty is exact on every specimen. This
+  note read them as sixteen lengths with "24 bits it cannot account
+  for" behind them until 2026-09-21: those 24 bits are four more
+  lengths, all zero, and the count byte, also zero.
+
+**The three flush counts are one idea.** A bit count of the form
+`(16 − b) mod 16` appears at byte 3 for the block's stream, at byte 4
+for the inner stream carrying its tables, and at byte 0 of a shape-2
+or Huffman-only block for that block's stream — the encoder's 16-bit
+register, and how much of it was still free when it stopped.
+
+**How much of this was measured here:** the arithmetic, on 386 blocks.
+**Where the shape came from:** `src/fmt_now.c`, which is XADMaster's —
+that bytes 0..1 are one size field, that the tables ride in a Huffman
+stream of their own, and that its alphabet is twenty symbols. Read as
+this note first had it, every number came out the same; read this way,
+the constants have reasons.
 
 ### The main table — 290 entries, zeros and all
 
@@ -267,15 +262,19 @@ the **56 distance classes**. Two things about it:
 
 ### Then the stream, where the header says
 
-Every block's stream starts at a **multiple of eight bits**, and the
-header gives the multiple twice: `(byte 1 − 85) × 8`, and the end of
-the 290 + 56 table entries plus `16 − byte 4`. Nothing is searched for.
+Every block's stream starts on a **byte boundary**, and the header
+gives it twice over: as `4 +` the header size in bytes 0..1, rounded
+up to even; and as the end of the 290 + 56 table entries plus
+`(16 − byte 4) mod 16` bits. Nothing is searched for.
 
 **Until this was read, it was a search**, and the search is what made
 the arithmetic findable: reading 75 blocks with the boundary found by
 trial produced a table of "how many bits past the tables", and byte 4
 was 16 minus that number every time — every time in those 75, which is
-not the same as every time.
+not the same as every time. The 1995 archive has twenty blocks where
+that byte is zero and no flush follows, which is what `mod 16` is for,
+and the disagreement between the header's two accounts of one number
+is what caught it.
 
 ### The tokens
 
@@ -329,6 +328,12 @@ window is what bounds it, not the table.
 
 ### The trailer — a sum, not a CRC, and not shape 3's alone
 
+**The end-flush byte has a second witness.** `src/fmt_now.c` computes
+a Huffman block's bit count as `(bytes × 8) − (16 − endbits)` where
+`endbits` is that block's first byte — which is `(16 − byte) mod 16`
+by another name, arrived at here from the byte counts of 385 blocks
+and there from the reference. The two readings of byte 0 agree.
+
 **A block's last four bytes are the 32-bit sum of every byte before
 them in the block**, header and tables included. **385 blocks of 385**
 agree, across every archive here — the 1993 one, the 1995 one and the
@@ -350,6 +355,10 @@ derived here — **33 length classes and 55 distance classes — they
 disagree nowhere**: every base, every extra-bit count, the jump from
 five extra bits to eight at distance 256 included, and the last base
 `0xe100`.
+
+The same file decodes a shape-3 header into exactly **346 values, 290
+then 56** — the two counts derived here, arrived at from the other
+side.
 
 That is a check and not a source, and the order matters: the tables
 above were committed on 2026-09-21 before this project's own engine was
@@ -382,12 +391,26 @@ corpus's two real specimens read as nonsense for a year. What sits at
   | at | field |
   |---|---|
   | +0 | a Pascal name, 1 + up to 31 bytes |
-  | +38, +42 | type and creator |
-  | +80 | the entries inside a FOLDER — 2 in the 1995 archive's one, 0 in every file record a 5.0.1 archive has. The 1993 archive's one record holds `0x20000` there, so this field is not read the same way across versions |
+  | +36 | flags; **bit `0x10` marks a directory** |
+  | +38, +42 | type and creator, zero on a directory |
+  | +46 | u16 Finder flags |
+  | +54, +58 | u32 created and modified, Mac dates |
+  | +82 | u16, **how many entries a directory holds** |
   | +86 | u32 **data fork length** |
   | +90 | u32 **resource fork length** |
   | +98, +102 | u32 start and end of the member's data area |
   | +106 | u32 **the sum of the record's first 106 bytes** |
+
+  The directory bit was found by comparing the `tree` archive's two
+  folder records against its five file records: `0x10` at +37 is the
+  only bit set in both and clear in all five. The 1995 archive's folder
+  has `0x14` there, so the test is the bit and not the word.
+
+  **The two dates are what identify themselves.** Read as seconds since
+  1904 they come out 1995-10-30 and -31 for the 1995 archive's three
+  entries, 1993-05-25 and 1993-11-05 for the 1993 one's single
+  application, and today's date for every entry of an archive the
+  harness made this morning.
 
   The two fork lengths are what let a reader split a member's stream
   without being told what went in — the stream is the resource fork
@@ -398,7 +421,7 @@ corpus's two real specimens read as nonsense for a year. What sits at
 - **a folder is followed by exactly the entries it says it holds.** The
   table is a pre-order flattening: `nowcompress.py --case tree`
   archives two folders and two loose files, and its seven records read
-  `Alpha` (+80 = 2), `a1.bin`, `a2.bin`, `Beta` (+80 = 1), `b1.bin`,
+  `Alpha` (+82 = 2), `a1.bin`, `a2.bin`, `Beta` (+82 = 1), `b1.bin`,
   then the two root files — which is the 1995 archive's shape too, its
   one folder saying 2 with two entries behind it. That case exists
   because one specimen cannot tell a rule from a coincidence, and the
@@ -497,6 +520,34 @@ one per block table, one per block — say the walk is on the rails. That
 is the difference between a description that reads a file and one that
 needs the answer first.
 
+## What came from where
+
+Most of this note was read off the encoder's output: the four coders,
+both of shape 3's alphabets, the block and entry tables, the three
+checksums, the fork boundary, the stream bounds. The de Bruijn probes
+did the tables; block arithmetic did the rest; `tools/derive_now.py`
+re-runs all of it, and the tables were compared with XADMaster's
+afterwards and matched on all 88 entries.
+
+**What came from reading `src/fmt_now.c`, which is XADMaster's**, and
+was then checked against the bytes here:
+
+- the `padding` count in a block-table record;
+- the u32 after a member's header and table that sums the bytes before
+  it — this note went looking because that file's delta search hunts
+  for it;
+- the "extra length" escape past 15, the count byte in front of it,
+  and the word alignment that follows;
+- the shape of a shape-3 block's header: that bytes 0..1 are one size
+  field rather than a magic and an offset, that the tables ride in a
+  Huffman stream of their own, and that its alphabet is twenty symbols.
+
+Each of those was verified here before being written down, and each
+gives the same numbers as the reading it replaced. The distinction
+matters for one reason: this note exists partly to say what the format
+is without the reference, and a note that blurs the line is worth less
+than one that draws it.
+
 ## What this note does NOT describe
 
 - **What `00 03` means**, the two bytes every LZSS stream opens with,
@@ -505,9 +556,8 @@ needs the answer first.
   bits, so 15 is as deep as it goes; `src/fmt_now.c` reads a count of
   "extra length" entries and their symbol indices after the nibbles,
   which adds 16 to those symbols' lengths. **No table here needs it** —
-  the deepest code in any specimen is 12 — so this note has no evidence
-  for or against, and that is the third fact in it whose lead came from
-  the engine rather than the bytes.
+  the deepest code in any specimen is 12, and the count byte is 0 in
+  every block — so this note has no evidence for or against.
 - **The offset delta, which may not be a property of the format at
   all.** `src/fmt_now.c` corrects a block table's offsets by a constant
   it finds through the table checksum above, transcribed from the

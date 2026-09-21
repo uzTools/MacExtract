@@ -1,10 +1,22 @@
 /*
  * fmt_now.c — Now Compress archives.
  *
- *   Source: reference/XADMaster/XADNowCompressParser.m  (entry table)
- *   Source: reference/XADMaster/XADNowCompressHandle.m  (block table,
- *           and the four ways a block can be compressed)
- * — LGPL, see NOTICE.
+ *   Source: docs/formats/now-compress.md — this project's own
+ *   description of the format, measured off Now Compress 5.0.1 driven
+ *   under emulation (tools/vmac/nowcompress.py) and re-read by
+ *   tools/derive_now.py, which decodes every block of both corpus
+ *   archives from that note alone: the entry table and its per-record
+ *   fields, both widths of block table, all four block shapes, the
+ *   three checksums and the header fields that bound a block's stream.
+ *
+ *   This CODE was transcribed in M12 from XADMaster —
+ *   XADNowCompressParser.m (entry table) and XADNowCompressHandle.m
+ *   (block table, the four shapes) — and stays LGPL for that reason
+ *   (NOTICE). What the note above does NOT cover, and what therefore
+ *   still rests on the reference alone, is named where it is used:
+ *   the offset-delta search (now_find_delta) and the code-length
+ *   escape past 15 (now_read_code). No file measured here needs
+ *   either.
  *
  * The archive is a flat entry table, nested by a per-directory entry
  * count, followed by one compressed stream per FILE. The reference
@@ -75,7 +87,12 @@ static uint32_t now_bit_offset(const NowBits *b)
 
 /* numvalues/2 bytes of two 4-bit lengths each, then a count of
  * "extra length" entries, then that many symbol indices whose length
- * gains 16. Source: AllocAndReadCode. */
+ * gains 16.
+ *
+ * The nibbles are docs/formats/now-compress.md, *Shape 2*; **the
+ * escape past 15 is not**, and no table in either corpus archive or
+ * any specimen the harness has made uses it — the deepest code seen
+ * anywhere is 12. Source for the escape alone: AllocAndReadCode. */
 static int now_read_code(UncCanon *c, const uint8_t *src, uint32_t len,
                          int32_t numvalues, uint32_t *used)
 {
@@ -111,7 +128,9 @@ static int now_read_code(UncCanon *c, const uint8_t *src, uint32_t len,
 struct NowCodes { UncCanon one, main, off; };
 
 /* Decode one Huffman-coded region. Returns the output length, or a
- * negative error. Source: UnpackHuffman. */
+ * negative error. Source: docs/formats/now-compress.md, *Shape 2* and
+ * *Huffman alone* — a block whose mode has 0x20 and no low bits codes
+ * one symbol per output byte, one with both codes shape 1's stream. */
 static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
                            uint8_t *dst, uint32_t dstcap, int32_t numvalues,
                            UncCanon *code, int *err)
@@ -156,7 +175,9 @@ static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
 
 /* Flag byte, MSB first: 1 = literal, 0 = a match whose offset is 13
  * bits split across two bytes and whose length is 3 bits, or a whole
- * byte when those 3 are zero. Source: UnpackLZSS. */
+ * byte when those 3 are zero. Source: docs/formats/now-compress.md,
+ * *Shape 1* — where that rule is now measured rather than borrowed,
+ * against shape 2's 1,340 match tokens whose offsets pass 255. */
 static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
                         uint8_t *dst, uint32_t dstcap, int *err)
 {
@@ -202,7 +223,11 @@ static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
     return out;
 }
 
-/* Source: UnpackNewLZSS — the tables are the format's, transcribed. */
+/* Source: docs/formats/now-compress.md, *Shape 3* — the same 88
+ * numbers, derived from matches planted at a chosen length and
+ * distance and compared with these arrays afterwards, disagreeing on
+ * none of them (DECISIONS.md 2026-09-21, *the pair that never
+ * repeats*). The arrays themselves came from UnpackNewLZSS. */
 static const uint8_t now_len_extra[0x22] = {
     0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
     1,1,2,2,2,2,2,3, 3,3,4,4,4,4,5,5, 5,5
@@ -231,7 +256,9 @@ static const uint16_t now_off_base[0x38] = {
 };
 
 /* `base` is where matches may reach back to (the history), `dst` where
- * this block's output starts. Source: UnpackNewLZSS. */
+ * this block's output starts. Source: docs/formats/now-compress.md,
+ * *Shape 3* — its tokens, both alphabets, and the window that spans
+ * members. */
 static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
                            uint8_t *base, uint8_t *dst, uint32_t dstcap,
                            struct NowCodes *cd, int *err)
@@ -363,6 +390,14 @@ static int now_read_u32(UncCtx *c, uint32_t at, uint32_t *out)
 /* The header's offsets are sometimes off by a constant. The reference
  * finds it by walking the table until a 4-byte field equals the running
  * sum of everything before it, which is where the table's checksum sits.
+ *
+ * **The checksum is described** (docs/formats/now-compress.md, *The
+ * archive layer*: a u32 after every member's header and table equal to
+ * the sum of the bytes before it, on all 75 members here). **The delta
+ * is not.** No corpus archive and no specimen needs one; the archives
+ * that exercise this search in ci.sh are written by tools/synth_now.py
+ * for that purpose. Kept because refusing a file this reads today
+ * would be a regression, and cited as the reference's:
  * Source: findFileHeaderDeltaWithHeaderOffset. */
 static int32_t now_find_delta(UncCtx *c, uint32_t headeroffset,
                               uint32_t firstoffset)
@@ -393,7 +428,8 @@ static uint32_t now_sum32(uint32_t v)
 }
 
 /* Walk the table once to verify its checksum. Source:
- * parseAndCheckFileHeaderWithHeaderOffset. */
+ * docs/formats/now-compress.md, *The archive layer*; the walk's shape
+ * is parseAndCheckFileHeaderWithHeaderOffset. */
 static int now_check_table(UncCtx *c, uint32_t headeroffset,
                            uint32_t firstoffset, int32_t delta,
                            uint32_t *nentries_out)
@@ -462,7 +498,9 @@ static int now_stream_open(NowStream *st, uint32_t headeroffset)
 }
 
 /* Decode the next block of the current stream into st->avail.
- * Source: produceBlockAtOffset. */
+ * Source: docs/formats/now-compress.md — the block table's records
+ * (offset, flags, padding), the repeated offset that starts a stream,
+ * and the four shapes a block can be. */
 static int now_next_block(NowStream *st)
 {
     UncCtx *c = st->c;
@@ -811,7 +849,10 @@ int unc_now_extract(UncCtx *c)
         /* This entry counts against the directory it is in; a directory
          * then opens one of its own. Levels close when their count runs
          * out, which is how an empty folder closes immediately.
-         * Source: parseDirectoryWithParent, which does it by recursing. */
+         * Source: docs/formats/now-compress.md, *The archive layer* —
+         * a directory is flagged by bit 0x10 at +36 and says at +82 how
+         * many entries follow it; the reference does the same by
+         * recursing (parseDirectoryWithParent). */
         if (path.depth > 0 && owed[path.depth - 1] > 0)
             owed[path.depth - 1]--;
 
