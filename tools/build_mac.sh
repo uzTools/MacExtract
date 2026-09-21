@@ -209,7 +209,16 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # heap changes — every Now archive in the corpus already has a fork
 # over 32 KB (DECISIONS.md 2026-09-21, the window that stopped at the
 # fork; BLOCKERS.md, *Withdrawn claims*).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152392}
+# LOWERED 2026-09-21 from 152,392 to 152,188 with Now Compress's coders
+# rewritten from docs/formats/now-compress.md: −204 B, the 346-byte staging
+# array for a shape-3 block's two code tables moved into the per-archive
+# allocation the tables themselves live in, and the block table's checksum
+# walks sharing one byte-sum. Engine 790 -> 792 ticks on
+# derived-Expand_Now_1.0.1.sea at 7 MHz, which is the instrument's own
+# resolution, and −616 B of this file's deepest call chain (DECISIONS.md
+# 2026-09-21, asking the program that wrote it). A ratchet is set at the
+# size on the day and that cuts both ways.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152188}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -256,7 +265,13 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152392}
 # on that one object before and after: text 4,658 -> 4,712, data 0,
 # bss 0. It is rodata alignment shifting under the new text, the same
 # effect measured twice on 2026-09-19 and 2026-09-20.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38648}
+# Raised 2026-09-21 from 38,648 to 38,660 with the Now Compress rewrite
+# above: +12 B, and NOT a new table — measured, `m68k-apple-macos-size` on
+# that one object before and after: data 0, bss 0, rodata 270 -> 270, with
+# only its text moving. It is rodata alignment shifting under changed text,
+# the same effect measured on 2026-09-19, -20 and -21, and the code ceiling
+# came down by 204 B in the same change.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38660}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes

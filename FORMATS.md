@@ -2958,7 +2958,7 @@ and the call graph comes from the relocations in the linked objects
 | | before 2026-08-24 | now |
 |---|---|---|
 | deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,386 B** |
-| Now Compress chain | 5,632 B | ~1,400 B |
+| Now Compress chain | 5,632 B | ~1,400 B, and **616 B less since 2026-09-21** — a shape-3 block's 346-byte table staging moved into the per-archive allocation its code tables already live in, measured `-Os -fstack-usage` as 2,264 → 1,648 B over this file's own deepest chain (OPEN_ITEMS.md, *What is still XADMaster's*) |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 | largest frame in the SHELL | — | **1,480 B** (`ExtractOne`) |
 
@@ -3246,6 +3246,22 @@ one (137,264 B, the old shape) when the budget refuses, so nothing that
 opened stops opening. `UNC_HOT` on the three hot functions, measured on
 the same run: 0.3 % for 1,152 B, not taken (DECISIONS.md 2026-09-19,
 *the slide that ran every block*).
+
+**Now Compress's coders rewritten, 2026-09-21.** Written from
+`docs/formats/now-compress.md` instead of transcribed, and priced at
+parity: **790 → 792 engine ticks** on `derived-Expand_Now_1.0.1.sea` at
+7 MHz, where the same fixture reproduces to the tick on either build,
+for **−204 B of code** and −616 B of this file's deepest call chain.
+
+**The draft that read better was 21 ticks slower, and Linux said the
+opposite.** Opening a Huffman region in its own function — clearer, and
+572 B less of frame — cost **790 → 811 ticks, +2.7 %**, on identical
+x86 instruction counts (callgrind: 5,871,817 → 5,859,843, i.e. the
+"slower" build executing FEWER instructions, and −1.1 % on the 9.9 MB
+archive). The 68000 pays for what a Linux profile cannot see: the
+register allocation across a call boundary in a loop that runs 32,768
+times a block. Four shapes were measured on the Plus before one landed
+(DECISIONS.md 2026-09-21, *asking the program that wrote it*).
 
 **The three-byte transform vector, 2026-09-19.** Arsenic's fast path
 reads its inverse-BWT vector once per output byte, and an entry is now

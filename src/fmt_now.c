@@ -6,30 +6,30 @@
  *   under emulation (tools/vmac/nowcompress.py) and re-read by
  *   tools/derive_now.py, which decodes every block of both corpus
  *   archives from that note alone: the entry table and its per-record
- *   fields, both widths of block table, all four block shapes, the
- *   three checksums and the header fields that bound a block's stream.
+ *   fields, the block table, all four block shapes, the three
+ *   checksums and the header fields that bound a block's stream.
  *
- *   This CODE was transcribed in M12 from XADMaster —
- *   XADNowCompressParser.m (entry table) and XADNowCompressHandle.m
- *   (block table, the four shapes) — and stays LGPL for that reason
- *   (NOTICE). What the note above does NOT cover, and what therefore
- *   still rests on the reference alone, is named where it is used:
- *   the offset-delta search (now_find_delta) and the code-length
- *   escape past 15 (now_read_code). No file measured here needs
- *   either.
+ *   The coders below were REWRITTEN from that note on 2026-09-21, the
+ *   M12 transcription of XADNowCompressParser.m and
+ *   XADNowCompressHandle.m having stood until then. **Nothing in this
+ *   file rests on the reference any more**: the last two things that
+ *   did — the offset-delta search and the code-length escape past 15 —
+ *   were measured against the format's own decoder that day, by
+ *   changing the field and handing the file back to Now Compress
+ *   (tools/mutate_now.py, tools/vmac/nowcompress.py).
  *
  * The archive is a flat entry table, nested by a per-directory entry
- * count, followed by one compressed stream per FILE. The reference
- * treats the whole archive as ONE solid stream and cuts entries out of
- * it by (offset, length); it does not have to. Each file's stream holds
- * exactly that file's resource fork followed by its data fork, in that
- * order, so this reader decodes file by file and never needs the solid
- * abstraction — which is also what lets it run in fixed memory.
+ * count, followed by one compressed stream per FILE, and **a compressed
+ * file is one of those with a single entry** — there is no second
+ * layout to read. The reference treats the whole archive as ONE solid
+ * stream and cuts entries out of it by (offset, length); it does not
+ * have to. Each file's stream holds exactly that file's resource fork
+ * followed by its data fork, in that order, so this reader decodes file
+ * by file and never needs the solid abstraction — which is also what
+ * lets it run in fixed memory.
  *
  * A stream is a table of blocks, each up to 32 KB of output, decoded
- * against a 32 KB sliding history. The block table's offsets are
- * sometimes wrong by a constant, which the reference finds by searching
- * for the header's own checksum; that search is transcribed here.
+ * against a 32 KB sliding history.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -39,7 +39,9 @@
 #define NOW_OUTBLOCK  0x10000u    /* history + one block's output       */
 #define NOW_INBLOCK   0x8000u     /* staging for a block's input        */
 #define NOW_ENTRY     110u        /* bytes per entry in the table       */
-#define NOW_MAXBLOCKS 0x2000u     /* the reference's own search bound   */
+#define NOW_MAXBLOCKS 0x2000u     /* a table walk's sanity bound: 8,192
+                                   * records is 64 KB of block table  */
+#define NOW_MAXSYMS   0x122u      /* the largest alphabet: shape 3's main */
 /* Block slots after the history, tried first and halved on refusal. Four
  * is where the tick probe put the knee on a 7 MHz Mac Plus: the window
  * slide was 19 % of the largest Now Compress run on Linux, and with four
@@ -82,81 +84,79 @@ static uint32_t now_bit_offset(const NowBits *b)
 }
 
 /* ------------------------------------------------------------------ */
-/* Huffman                                                            */
+/* A Huffman-coded region                                             */
 /* ------------------------------------------------------------------ */
 
-/* numvalues/2 bytes of two 4-bit lengths each, then a count of
- * "extra length" entries, then that many symbol indices whose length
- * gains 16.
+/* Three things in this format are one thing: a Huffman-only block, the
+ * stream under a shape-2 block, and the header a shape-3 block writes
+ * its two code tables in. Each is a REGION laid out the same way
+ * (docs/formats/now-compress.md, *Shape 2*, *Huffman alone*, *The
+ * header*):
  *
- * The nibbles are docs/formats/now-compress.md, *Shape 2*; **the
- * escape past 15 is not**, and no table in either corpus archive or
- * any specimen the harness has made uses it — the deepest code seen
- * anywhere is 12. Source for the escape alone: AllocAndReadCode. */
-static int now_read_code(UncCanon *c, const uint8_t *src, uint32_t len,
-                         int32_t numvalues, uint32_t *used)
+ *   +0        the end flush: `(16 - it) mod 16` bits follow the last
+ *             symbol, which is how much of the encoder's 16-bit
+ *             register was still free when it stopped
+ *   +1        the code, as `nsyms` four-bit lengths, high nibble first
+ *   then      a count of "extra length" entries and that many symbol
+ *             indices, each gaining 16 — the escape past the 15 four
+ *             bits can hold
+ *   then      a pad to an EVEN offset from the region's own start
+ *   then      the symbols
+ *
+ * so one function reads all three and the caller does what it likes
+ * with the symbols. **The escape is measured**, late and the hard way:
+ * Now Compress will not write a code deeper than 15, so a block it did
+ * write was re-coded here to use one and handed back to its own
+ * Decompress, which returned every byte (docs/formats/now-compress.md,
+ * *A code length past 15*). */
+static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
+                           uint8_t *dst, uint32_t dstcap, int32_t nsyms,
+                           UncCanon *code, int *err)
 {
-    uint8_t lengths[0x122];
-    int32_t i, n;
-    uint32_t at = 0;
+    uint8_t lengths[NOW_MAXSYMS];
+    NowBits b;
+    uint32_t at = 1, numbits;
+    int32_t i, n, out = 0;
+    int flush, e;
 
-    if (numvalues > (int32_t)sizeof lengths) return UNC_ERR_CORRUPT;
-    for (i = 0; i < numvalues / 2; i++) {
-        if (at >= len) return UNC_ERR_TRUNCATED;
+    *err = UNC_OK;
+    if (nsyms > (int32_t)NOW_MAXSYMS) { *err = UNC_ERR_CORRUPT; return -1; }
+    if (srclen < 1) { *err = UNC_ERR_TRUNCATED; return -1; }
+    flush = src[0];
+
+    for (i = 0; i < nsyms / 2; i++) {
+        if (at >= srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
         lengths[2 * i]     = (uint8_t)(src[at] >> 4);
         lengths[2 * i + 1] = (uint8_t)(src[at] & 0x0F);
         at++;
     }
-    if (numvalues & 1) lengths[numvalues - 1] = 0;
-    if (at >= len) return UNC_ERR_TRUNCATED;
-    n = src[at++];
-    for (i = 0; i < n; i++) {
-        if (at >= len) return UNC_ERR_TRUNCATED;
+    if (nsyms & 1) lengths[nsyms - 1] = 0;
+    if (at >= srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
+    for (n = src[at++]; n > 0; n--) {
+        if (at >= srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
         lengths[src[at]] = (uint8_t)(lengths[src[at]] + 16u);
         at++;
     }
-    *used = at;
-    return unc_canon_build(c, lengths, numvalues);
-}
-
-/* The code tables a block needs, on the heap rather than on the frame.
- * An UncCanon is ~1.3 KB and now_newlzss holds two while calling
- * now_huffman, which held a third: 4,960 B in one chain, under
- * unc_now_extract's own 1.2 KB, for 5,632 B against CLAUDE.md's 4 KB
- * call-depth rule (measured, m68k -Os -fstack-usage). They ride in the
- * same allocation as the block buffers. */
-struct NowCodes { UncCanon one, main, off; };
-
-/* Decode one Huffman-coded region. Returns the output length, or a
- * negative error. Source: docs/formats/now-compress.md, *Shape 2* and
- * *Huffman alone* — a block whose mode has 0x20 and no low bits codes
- * one symbol per output byte, one with both codes shape 1's stream. */
-static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
-                           uint8_t *dst, uint32_t dstcap, int32_t numvalues,
-                           UncCanon *code, int *err)
-{
-    NowBits b;
-    uint32_t used = 0, at, numbits;
-    int32_t out = 0;
-    int endbits, e;
-
-    *err = UNC_OK;
-    if (srclen < 1) { *err = UNC_ERR_TRUNCATED; return -1; }
-    endbits = src[0];
-
-    e = now_read_code(code, src + 1, srclen - 1, numvalues, &used);
-    if (e != UNC_OK) { *err = e; return -1; }
-
-    at = 1 + used;
-    if (at & 1) at++;               /* WordAlign, from the buffer start */
+    if (at & 1) at++;               /* even, from the region's start */
     if (at > srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
 
     numbits = (srclen - at) * 8u;
-    if (endbits) {
-        if (numbits < (uint32_t)(16 - endbits)) { *err = UNC_ERR_CORRUPT; return -1; }
-        numbits -= (uint32_t)(16 - endbits);
+    if (flush) {
+        if (numbits < (uint32_t)(16 - flush)) { *err = UNC_ERR_CORRUPT; return -1; }
+        numbits -= (uint32_t)(16 - flush);
+    }
+    if ((e = unc_canon_build(code, lengths, nsyms)) != UNC_OK) {
+        *err = e; return -1;
     }
 
+    /* The region says where it ends; nothing in it says how many
+     * symbols that is. **Everything this loop touches is a local**, and
+     * that is not a style choice: the same code with the opening above
+     * split into its own function — which reads better — cost 21 of 790
+     * engine ticks on derived-Expand_Now_1.0.1.sea at 7 MHz, while x86
+     * instruction counts said it was FASTER. It runs 32,768 times for a
+     * full block (DECISIONS.md 2026-09-21, asking the program that
+     * wrote it). */
     now_bits_start(&b, src + at, srclen - at);
     while (now_bit_offset(&b) < numbits) {
         int sym;
@@ -168,6 +168,21 @@ static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
     if (now_bit_offset(&b) != numbits) { *err = UNC_ERR_CORRUPT; return -1; }
     return out;
 }
+
+/* The code tables a block needs, on the heap rather than on the frame.
+ * An UncCanon is ~1.3 KB and a shape-3 block wants three of them at
+ * once: 4,960 B in one chain, under unc_now_extract's own 1.2 KB, for
+ * 5,632 B against CLAUDE.md's 4 KB call-depth rule (measured, m68k -Os
+ * -fstack-usage). They ride in the same allocation as the block
+ * buffers, and since 2026-09-21 so does the staging below — the file's
+ * deepest chain is 1,648 B. */
+struct NowCodes {
+    UncCanon one, main, off;
+    /* where a shape-3 header's 290 + 56 code lengths land on their way
+     * into the two builds above: 346 bytes that were a frame in the
+     * deepest chain in this file until they moved here */
+    uint8_t  tables[0x122 + 0x38];
+};
 
 /* ------------------------------------------------------------------ */
 /* The two LZSS variants                                              */
@@ -259,55 +274,78 @@ static const uint16_t now_off_base[0x38] = {
  * this block's output starts. Source: docs/formats/now-compress.md,
  * *Shape 3* — its tokens, both alphabets, and the window that spans
  * members. */
+/* A shape-3 block's two code tables, out of the Huffman-coded region
+ * that starts at byte 4: 290 code lengths for the main alphabet, then
+ * 56 for the distance classes, each of those stored as its code length
+ * PLUS TWO. Twenty symbols code them, because that plus-two runs the
+ * values to 19. Source: docs/formats/now-compress.md, *The header*. */
+static int now_tables(const uint8_t *src, uint32_t headersize,
+                      struct NowCodes *cd)
+{
+    uint8_t *t = cd->tables;
+    int32_t i, n;
+    int e;
+
+    n = now_huffman(src, headersize, t, (uint32_t)sizeof cd->tables, 20,
+                    &cd->one, &e);
+    if (n < 0) return e;
+    /* 290 + 56 is the whole region: the two tables are all it carries */
+    if (n != (int32_t)sizeof cd->tables) return UNC_ERR_CORRUPT;
+
+    if ((e = unc_canon_build(&cd->main, t, 0x122)) != UNC_OK) return e;
+    for (i = 0; i < 0x38; i++)
+        t[i] = t[i + 0x122] ? (uint8_t)(t[i + 0x122] - 2) : 0;
+    return unc_canon_build(&cd->off, t, 0x38);
+}
+
 static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
                            uint8_t *base, uint8_t *dst, uint32_t dstcap,
                            struct NowCodes *cd, int *err)
 {
-    uint8_t header[0x15a];
-    uint8_t lengths[0x122];
     NowBits b;
     uint32_t at, headersize, numbits;
-    int32_t out = 0, i, n;
-    int endbits, e;
+    int32_t out = 0;
+    int sym, e;
 
     *err = UNC_OK;
+    /* The header, which is a size and three flush counts. Bytes 0..1
+     * are 0x2F59 plus the length of the coded region that follows;
+     * **byte 2 is read by nothing** — not here, not in the format's own
+     * decoder (docs/formats/now-compress.md, *The header*); byte 3 is
+     * this block's own end flush, and from byte 4 comes the region the
+     * two code tables ride in. */
     if (srclen < 4) { *err = UNC_ERR_TRUNCATED; return -1; }
     headersize = (uint32_t)((unc_get_u16be(src) - 0x2F59u) & 0xFFFFu);
-    endbits = src[3];
     at = 4;
     if (headersize > srclen - at) { *err = UNC_ERR_TRUNCATED; return -1; }
-
-    n = now_huffman(src + at, headersize, header, (uint32_t)sizeof header,
-                    20, &cd->one, &e);
-    if (n < 0) { *err = e; return -1; }
-    if (n != (int32_t)sizeof header) { *err = UNC_ERR_CORRUPT; return -1; }
+    if ((e = now_tables(src + at, headersize, cd)) != UNC_OK) {
+        *err = e; return -1;
+    }
 
     at += headersize;
-    if (at & 1) at++;                       /* WordAlign */
+    if (at & 1) at++;                       /* the stream starts even */
     if (at > srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
 
-    for (i = 0; i < 0x122; i++) lengths[i] = header[i];
-    if ((e = unc_canon_build(&cd->main, lengths, 0x122)) != UNC_OK) {
-        *err = e; return -1;
-    }
-    for (i = 0; i < 0x38; i++)
-        lengths[i] = header[i + 0x122] ? (uint8_t)(header[i + 0x122] - 2) : 0;
-    if ((e = unc_canon_build(&cd->off, lengths, 0x38)) != UNC_OK) {
-        *err = e; return -1;
-    }
-
+    /* Then the stream, where the header says, running to the bit byte 3
+     * names. A symbol below 256 is a literal; 257..289 is a match — its
+     * length class, that class's extra bits, a distance symbol and that
+     * class's extra bits. The window spans members, which is what
+     * `base` bounds. */
     numbits = (srclen - at) * 8u;
-    if (endbits) {
-        if (numbits < (uint32_t)(16 - endbits)) { *err = UNC_ERR_CORRUPT; return -1; }
-        numbits -= (uint32_t)(16 - endbits);
+    if (src[3]) {
+        if (numbits < (uint32_t)(16 - src[3])) {
+            *err = UNC_ERR_CORRUPT; return -1;
+        }
+        numbits -= (uint32_t)(16 - src[3]);
     }
-
     now_bits_start(&b, src + at, srclen - at);
+
     while (now_bit_offset(&b) < numbits) {
-        int sym = unc_canon_decode(&cd->main, &b.bi);
         uint32_t length, offset, k;
         int sel;
-        if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
+        sym = unc_canon_decode(&cd->main, &b.bi);
+        if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT;
+                       return -1; }
         if (sym < 0x100) {
             if ((uint32_t)out >= dstcap) { *err = UNC_ERR_CORRUPT; return -1; }
             dst[out++] = (uint8_t)sym;
@@ -324,7 +362,8 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
         length += 2;
 
         sel = unc_canon_decode(&cd->off, &b.bi);
-        if (sel < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
+        if (sel < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT;
+                       return -1; }
         if (sel >= 0x38) { *err = UNC_ERR_CORRUPT; return -1; }
         offset = now_off_base[sel];
         if (now_off_extra[sel]) {
@@ -387,81 +426,86 @@ static int now_read_u32(UncCtx *c, uint32_t at, uint32_t *out)
     return UNC_OK;
 }
 
-/* The header's offsets are sometimes off by a constant. The reference
- * finds it by walking the table until a 4-byte field equals the running
- * sum of everything before it, which is where the table's checksum sits.
+/* A block table's offsets are sometimes all short by a constant. Walk
+ * the table until a 4-byte field equals the running sum of everything
+ * before it — which is where the table's checksum sits, so that
+ * position is the table's true end — and the difference from the offset
+ * the header states is the constant.
  *
- * **The checksum is described** (docs/formats/now-compress.md, *The
- * archive layer*: a u32 after every member's header and table equal to
- * the sum of the bytes before it, on all 75 members here). **The delta
- * is not.** No corpus archive and no specimen needs one; the archives
- * that exercise this search in ci.sh are written by tools/synth_now.py
- * for that purpose. Kept because refusing a file this reads today
- * would be a regression, and cited as the reference's:
- * Source: findFileHeaderDeltaWithHeaderOffset. */
-static int32_t now_find_delta(UncCtx *c, uint32_t headeroffset,
-                              uint32_t firstoffset)
+ * Source: docs/formats/now-compress.md, *The archive layer*, where the
+ * checksum is measured on 108 members and the correction on
+ * 2026-09-21: an archive rebased by 100 here, with that checksum
+ * recomputed, comes out of its OWN self-extractor byte for byte, and
+ * out of this engine not at all when this function is made to return 0
+ * (tools/mutate_now.py --delta). No file the encoder wrote needs it;
+ * the archives that exercise it in ci.sh are written by
+ * tools/synth_now.py for that purpose. */
+/* The sum of `n` bytes: what every one of this format's four checksums
+ * is made of (docs/formats/now-compress.md). */
+static uint32_t now_sum(const uint8_t *p, int n)
+{
+    uint32_t sum = 0;
+    while (n-- > 0) sum += *p++;
+    return sum;
+}
+
+static int32_t now_find_delta(UncCtx *c, uint32_t start, uint32_t first)
 {
     uint8_t buf[8];
-    uint32_t checksum = 0;
-    uint32_t n, i;
+    uint32_t sum = 0, n;
+    int i;
 
-    if (c->io->seek(c->io->ctx, headeroffset) < 0) return 0;
+    if (c->io->seek(c->io->ctx, start) < 0) return 0;
+    /* the u32 and one record: the least a table can hold */
     for (i = 0; i < 4; i++) {
         if (unc_read_full(c->io, buf, 4) != UNC_OK) return 0;
-        checksum += (uint32_t)buf[0] + buf[1] + buf[2] + buf[3];
+        sum += now_sum(buf, 4);
     }
     for (n = 2; n < NOW_MAXBLOCKS; n++) {
         if (unc_read_full(c->io, buf, 4) != UNC_OK) return 0;
-        if (unc_get_u32be(buf) == checksum)
-            return (int32_t)(headeroffset + n * 8u + 4u) - (int32_t)firstoffset;
-        checksum += (uint32_t)buf[0] + buf[1] + buf[2] + buf[3];
+        if (unc_get_u32be(buf) == sum)          /* the table ends here */
+            return (int32_t)(start + n * 8u + 4u) - (int32_t)first;
+        sum += now_sum(buf, 4);
         if (unc_read_full(c->io, buf, 4) != UNC_OK) return 0;
-        checksum += (uint32_t)buf[0] + buf[1] + buf[2] + buf[3];
+        sum += now_sum(buf, 4);
     }
     return 0;
 }
 
-static uint32_t now_sum32(uint32_t v)
+/* Count a member's block records and check the table against itself.
+ *
+ * Source: docs/formats/now-compress.md, *A member's blocks* — the data
+ * area opens with a u32 saying where the first block begins, which is
+ * also where the table ends, so `(first - start - 4) / 8 - 1` records
+ * of eight bytes lie between; then four bytes, then a u32 equal to the
+ * sum of every byte of the data area before it. That sum agrees on all
+ * 108 members measured there, this project's own synthetic archives
+ * included. */
+static int now_check_table(UncCtx *c, uint32_t start, uint32_t first,
+                           int32_t delta, uint32_t *nrecs_out)
 {
-    return (v >> 24) + ((v >> 16) & 0xFF) + ((v >> 8) & 0xFF) + (v & 0xFF);
-}
+    uint8_t buf[8];
+    uint32_t sum;
+    int32_t nrecs, i;
 
-/* Walk the table once to verify its checksum. Source:
- * docs/formats/now-compress.md, *The archive layer*; the walk's shape
- * is parseAndCheckFileHeaderWithHeaderOffset. */
-static int now_check_table(UncCtx *c, uint32_t headeroffset,
-                           uint32_t firstoffset, int32_t delta,
-                           uint32_t *nentries_out)
-{
-    uint8_t rec[8];
-    uint32_t checksum, lastoffset = firstoffset;
-    int32_t numentries;
-    int32_t i;
+    nrecs = ((int32_t)(first + (uint32_t)delta - start) - 4) / 8 - 1;
+    if (nrecs < 0 || (uint32_t)nrecs > NOW_MAXBLOCKS) return UNC_ERR_CORRUPT;
 
-    numentries = ((int32_t)(firstoffset + (uint32_t)delta - headeroffset) - 4) / 8 - 1;
-    if (numentries < 0 || (uint32_t)numentries > NOW_MAXBLOCKS)
-        return UNC_ERR_CORRUPT;
+    /* the u32 is the first thing summed, and it is summed as it is
+     * STORED — short by the delta, where there is one */
+    unc_put_u32be(buf, first);
+    sum = now_sum(buf, 4);
+    if (c->io->seek(c->io->ctx, start + 4) < 0) return UNC_ERR_IO;
 
-    if (c->io->seek(c->io->ctx, headeroffset + 4) < 0) return UNC_ERR_IO;
-    checksum = now_sum32(firstoffset);
-
-    for (i = 0; i < numentries; i++) {
-        uint32_t nextoffset;
-        if (unc_read_full(c->io, rec, 8) != UNC_OK) return UNC_ERR_TRUNCATED;
-        nextoffset = unc_get_u32be(rec + 4);
-        checksum += (uint32_t)rec[0] + rec[1];       /* flags   */
-        checksum += (uint32_t)rec[2] + rec[3];       /* padding */
-        checksum += now_sum32(nextoffset);
-        lastoffset = nextoffset;
+    for (i = 0; i < nrecs; i++) {
+        if (unc_read_full(c->io, buf, 8) != UNC_OK) return UNC_ERR_TRUNCATED;
+        sum += now_sum(buf, 8);
     }
-    if (unc_read_full(c->io, rec, 4) != UNC_OK) return UNC_ERR_TRUNCATED;
-    checksum += (uint32_t)rec[0] + rec[1] + rec[2] + rec[3];
-    if (unc_read_full(c->io, rec, 4) != UNC_OK) return UNC_ERR_TRUNCATED;
-    if (checksum != unc_get_u32be(rec)) return UNC_ERR_CORRUPT;
+    if (unc_read_full(c->io, buf, 8) != UNC_OK) return UNC_ERR_TRUNCATED;
+    sum += now_sum(buf, 4);
+    if (sum != unc_get_u32be(buf + 4)) return UNC_ERR_CORRUPT;
 
-    (void)lastoffset;
-    *nentries_out = (uint32_t)numentries;
+    *nrecs_out = (uint32_t)nrecs;
     return UNC_OK;
 }
 
