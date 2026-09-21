@@ -131,6 +131,18 @@ whatever the mode word changes, it did not change these two streams.
   not the archive's own fork. Finding that is the next layer, not the
   next coder.
 
+  **What the archive layer looks like**, from the harness's own
+  `Archive.sea` (two members, both inputs kept beside it): a header
+  whose fifth word is the member count, then one record per member
+  carrying a Pascal name at offset 24 and the same type, creator and
+  date fields a fork header has — `mixed.bin` at 24, `one.txt` at
+  134, so the records are about 110 bytes and NOT the 164-byte fork
+  header despite the resemblance. Member data follows, and the first
+  member's first block is stored: `mixed.bin`'s bytes appear verbatim
+  at 280. Eight-byte records in the shape of a block table sit just
+  before that data, at 262, with values that do not fit the reading
+  above. That is where the next attempt starts.
+
   **One near-miss, recorded so nobody follows it twice.** That `.sea`
   does have eight-byte records at 144, the first of them
   `(0x4ad6, 0x20)` — and `0x4ad6` is 19,158, exactly one before the
