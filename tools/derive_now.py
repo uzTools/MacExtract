@@ -19,17 +19,19 @@ a decoder written from nothing but the bytes.
     tools/derive_now.py --expect DIR ARCHIVE  grade it against DIR, a
                                               directory of extracted forks
 
-**All four coders, the block structure and the archive container.**
-Every compressed specimen the harness has made reads byte for byte — 76
-blocks of 76 — and so does every block of both corpus archives: the
-1993 `Expand Now` self-extractor, 3 of 3, and the 1995
-`SyntheticReferences2.0`, 306 of 306, whose 9.9 MB fork alone is 304
-blocks of the coder an archive uses — the one that was read no further
-than its code table until 2026-09-21.
+**All four coders, the block structure, and the container a compressed
+file and an archive share** — a compressed file is an archive of one
+entry. Every specimen the harness has made reads byte for byte — 85
+archive blocks of 85, 101 specimens across twelve cases — and so does
+every block of both corpus archives: the 1993 `Expand Now`
+self-extractor, 3 of 3, and the 1995 `SyntheticReferences2.0`, 306 of
+306, whose 9.9 MB fork alone is 304 blocks of the coder an archive
+uses.
 
-What is still searched for rather than read is where a block's bit
-stream begins; it is on a byte boundary a byte or two past the tables,
-and `shape3_tables` says what is known about which
+**Nothing is searched for.** A block table is one layout at one offset
+width, a shape-3 block's header says where its stream starts and ends,
+and four checksums — over the file header, each entry record, each
+block table and each block — say a walk is on the rails
 (docs/formats/now-compress.md).
 
 Not in `ci.sh`: it needs the emulator's specimen directory.
@@ -147,8 +149,11 @@ def table_at(d, at=TABLE_AT):
     15 four bits can hold. Kraft's equality is what says the result is
     a code.
 
-    No block here has ever set that count: the deepest code in any
-    specimen is 12 (`--case deep` asks the encoder for a deeper one).
+    No block the ENCODER wrote has ever set that count — the deepest
+    code in any specimen is 13, and `--case deep` asked for a deeper one
+    eight times in vain. What the escape means was measured instead by
+    writing one: `tools/mutate_now.py --recode 20`, read back by Now
+    Compress's own Decompress.
     """
     L, esc = table_lengths(d, at)
     if abs(sum(2.0 ** -x for x in L if x) - 1.0) > 1e-9:
@@ -381,11 +386,10 @@ def records(d, limit=64):
 def read_fork(d, nout):
     """Decode a whole fork from its block table.
 
-    The one thing still searched is where a shape-2 block's BIT stream
-    begins: 23 bits after its table in one specimen and 18 in another,
-    so something variable sits between them that this note has not
-    identified. A Huffman-ONLY block (`0x20`) has no such trouble: its
-    stream starts one byte after the table.
+    Where a shape-2 block's stream begins is read, not searched: one
+    byte after its table, and then the two symbols of the `00 03` every
+    LZSS stream opens with, whose coded lengths are what made the gap
+    look like "23 bits in one specimen and 18 in another".
     """
     recs = records(d)
     if not recs:
@@ -481,7 +485,8 @@ MEMBER_LEN = 110        # and the stride between them
 def members(d):
     """The archive's member records.
 
-    The file header is 24 bytes: `0x0002`, a version word, `0x0001`,
+    The file header is 24 bytes: `0x0002`, the compression setting in a
+    block mode word's own vocabulary, a u32 of 32,768 or 65,536,
     **the entry count as a u32 at +8**, and at +20 the sum of the
     bytes before it. The records follow at 24, **110 bytes each**, and
     this reads the fields it can name:
