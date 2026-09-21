@@ -216,19 +216,32 @@ recorded and not taken, however much cleaner its licence. Do the cheap
 half — the spec note — regardless, because it is worth having even when
 the code does not move, and it is what the next attempt starts from.
 
-## Item 5 — Now Compress (`fmt_now.c`, `XADNowCompressHandle.m`)
+## Item 5 — Now Compress: four shapes left (`fmt_now.c`)
 
-The whole file is XADMaster's, container and coder. Now Compress runs
-here and `tools/vmac/nowcompress.py` writes and adjudicates archives
-(`--case all`, `--verify`, `--adjudicate`); `tools/synth_now.py` and
-`tools/run_now.py` are the suite. The 2026-09-19 slot change made it
-0.3 % faster and `UNC_HOT` was declined at 0.3 %, so this row is
-licence-only and will be neutral at best: the note is the deliverable,
-the decoder moves only if it is not worse.
+**Started 2026-09-21, and it is the only row where nothing could be
+fetched**: no wiki page, no specification, no second implementation.
+So it is measured off the application, which is what the brief always
+said this row would need.
 
-**Fixtures:** `synth-now-mixed.now`, the Now Compress rows of
-FORMATS.md's table, and the specimens `nowcompress.py --case all`
-writes. **Acceptance:** `run_now.py` green, ticks and CODE not higher.
+**One shape of five is done** — a flag-byte LZSS with an 8-bit
+distance and an escape for long matches, payload at a fixed 164 bytes
+in, verified on four specimens Now Compress wrote from inputs chosen
+here (`docs/formats/now-compress.md`, `tools/derive_now.py`).
+
+What is left, in the order the evidence is already sitting here:
+
+- **the shape `half.bin` uses** (16,000 → 8,950 B): its payload is
+  visibly nibble-structured, so something Huffman-coded. That
+  specimen and its input are in the emulator cache already;
+- **the shape the corpus's real archives use** — `synth-now-mixed.now`
+  and `derived-Expand_Now_1.0.1.sea`, both with oracle hashes, so a
+  reader can be graded the moment it exists;
+- **the 164-byte header**, of which six fields are identified;
+- **blocks**, which nothing measured has yet had to cross.
+
+`tools/vmac/nowcompress.py --case all` makes more specimens, and any
+input can be chosen — which is the whole advantage of this row over
+the ones that had to be searched.
 
 ## Item 6 — DiskDoubler `ADn` (6/9), and the two `DDn` forks (`fmt_dd.c`)
 

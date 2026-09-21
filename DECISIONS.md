@@ -221,6 +221,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
 - 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
 - 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
+- 2026-09-21 (the one that had to be asked) — a shape of Now Compress, measured off the application
 
 ---
 
@@ -13281,3 +13282,54 @@ numbers are right about different things and only the total matters.
 And `unc_inflate_raw`'s `produced` argument is not optional: passing
 NULL segfaults at the last line. Its doc comment says `*crc` may be
 NULL and says nothing about `produced`, which is how an hour went.
+
+## 2026-09-21 (the one that had to be asked) — a shape of Now Compress, measured off the application
+
+**Item 5, and the only row in the inventory where nothing could be
+fetched.** Compact Pro, StuffIt method 13, DiskDoubler's AD and DD and
+ARC all turned out to have published descriptions that this project
+had not looked for (*forty pages nobody had listed*). Now Compress has
+none: no wiki page, no specification, no second implementation.
+`XADNowCompressHandle.m` really is the only account of it that exists.
+
+**So it was asked instead.** `tools/vmac/nowcompress.py` drives Now
+Compress under the emulator over inputs chosen here and keeps each
+input beside its output — a corpus made on 2026-08-16 for a different
+purpose, and exactly the material a derivation needs. Reading four of
+those pairs gives one of the format's stream shapes, whole:
+
+> a flag byte, eight tokens, bits most significant first; a 1 is a
+> literal byte; a 0 is a match of `length - 2` then distance, one byte
+> each — unless the length byte is zero, which is an escape, and then
+> the token is zero, distance, `length - 2`.
+
+Payload at a fixed 164 bytes in, a four-byte trailer after it, and no
+end marker that matters: the caller's byte count is what stops it, as
+in StuffIt method 8 and ARC's squeezed members.
+
+**Three things the reading gave away for free.** *Faster* and
+*Smaller* produce **byte-identical streams** for both test files, so
+whatever the mode word (`0x0010` against `0x003f`) changes, it is not
+these. *Archive* mode **stores** its members and compresses the `.sea`
+around them — 49,000 bytes in, 49,000 bytes out. And the match
+distance is eight bits, so this shape can never reach further than
+255 bytes back, which is presumably why the encoder chooses another
+for anything large: the two files it reads are under 8 KB, and the
+16,000- and 49,000-byte specimens are written some other way.
+
+**What this does not do is move the row**, and the note says so in its
+second paragraph. Every real Now Compress archive in the corpus uses a
+shape this does not describe, so `src/fmt_now.c` cites XADMaster for
+all of it, exactly as before. One shape of five, measured, is progress
+of a kind this row had none of yesterday — and it establishes the
+method: the specimens are already on disk, any input can be chosen,
+and `synth-now-mixed.now` has an oracle hash waiting for the reader
+that reads it.
+
+**The thing worth transferring is the shape of the search.** Six
+formats were re-described today and yesterday. Five of them fell to
+*reading a document and correcting it*; this one fell to *choosing an
+input and looking at what came back*. The tell for which you are in is
+whether anybody ever wrote the format down — and that question turned
+out to be worth asking for every row, because the answer was yes five
+times when the inventory said no.
