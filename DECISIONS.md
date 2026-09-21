@@ -14055,7 +14055,9 @@ is the cheapest experiment there is, and the only one that can answer
 it. What it does track is where the encoder is in its window — 41 of
 the 43 values above 200 in the 1995 archive are in blocks that start in
 the low half of its 64 KB window — which is a correlation and not a
-formula, and is filed as one.
+formula, and is filed as one. *Withdrawn: a case that CHOOSES a block's
+offset puts eight full blocks at each quarter of the window and byte 2
+is 0 in all eight — 2026-09-21, (the quarter that changed nothing).*
 
 ## 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
 
