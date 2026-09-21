@@ -125,10 +125,22 @@ whatever the mode word changes, it did not change these two streams.
   bytes.
 - **The corpus's real archives.** `synth-now-mixed.now` and
   `derived-Expand_Now_1.0.1.sea` are not read here, and the reason is
-  now known: **neither is a bare fork.** The block table is not at
-  144 in either, because what is at 144 is some outer container's
-  business — a self-extracting archive in the second case. Finding
-  the fork inside the wrapper is the next layer, not the next coder.
+  now known: **neither is a bare fork.** What sits at 144 in them
+  belongs to an outer container — the second is self-extracting, and
+  the resource fork wanted from it is an ENTRY inside the archive,
+  not the archive's own fork. Finding that is the next layer, not the
+  next coder.
+
+  **One near-miss, recorded so nobody follows it twice.** That `.sea`
+  does have eight-byte records at 144, the first of them
+  `(0x4ad6, 0x20)` — and `0x4ad6` is 19,158, exactly one before the
+  only offset in the whole file where 128 bytes of nibbles give
+  Kraft 1.000000, which is where a shape-2 block's table would be.
+  It decodes nothing, at any bit position within three bytes, with
+  the table read at 19,158, 19,159 or 19,160. Either the resemblance
+  is chance or that block is arranged differently; either way the
+  next attempt should start by finding the entry, not by trusting
+  that record.
 - **The rest of the fork header**, of which this note identifies the
   version word, the mode word, a ten-byte name field, two Mac dates,
   a `'????'`/`'UNIX'` type and creator — the harness's, not the
