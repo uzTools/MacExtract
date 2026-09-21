@@ -625,7 +625,9 @@ assignment rule (`sit6_build`). The trade, measured with
 `tools/build_mac.sh`: **code +408 B, A5 −1,000 B**, which that build counts
 one for one, so **−592 B off every extraction's budget on a 1 MB Mac Plus**;
 **+1,028 B of transient heap while a method-6 fork is read**, and engine
-ticks 3 → 3, which is that instrument's resolution. Peak heap on that
+ticks 3 → 3, which is that instrument's resolution; and **no extraction
+is lost** — `run_tiers.py` still reads 69/69 at the 1 MB floor and 66/69
+at 512 KB, the tallies recorded before the change. Peak heap on that
 fixture **40,982 → 42,010 B** (this section said 39,998, an older build's
 figure) — the segment buffer is sized from the
 segment (31,806 B here), capped at 64 KB. The two trees are held against

@@ -14577,6 +14577,7 @@ the axis that matters was not the obvious one:
 | net, and `build_mac.sh` counts the two one for one | **−592 B off every extraction's budget on a 1 MB Mac Plus** |
 | peak heap, method-6 forks only | 40,982 → **42,010 B** (+1,028, the tree) |
 | engine ticks on `derived-INITLoader.sit` | 3 → 3, the instrument's resolution |
+| extractions lost | **none** — `run_tiers.py` reads 69/69 at the 1 MB floor and 66/69 at 512 KB, the tallies recorded before the change |
 
 **The table was in A5, not in code**, which is the whole reason this is
 worth anything and is not what it looked like going in: removing 1,028
