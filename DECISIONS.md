@@ -14098,18 +14098,17 @@ program. So the field is constant over content, over both settings,
 over two shapes, over one block at index 1 — and over **one version of
 Now Compress**.
 
-**Which is the dimension to vary next, and it is not only this field's.**
+**Which is the dimension to vary, and it is not only this field's.**
 Now Utilities shipped as 3.0.2, 4.0.2, 5.0.1, 6.0.x and 6.5/6.7.x, and
-all of them are downloadable; the harness installs 5.0.1 alone. A value
-written by an encoder, ignored by every decoder and constant within a
-version is the shape of a version or parameter stamp, and a second
-encoder is the only instrument that could show it moving. The same
-second encoder answers a question worth more than this one: **what
-selects the leading record.** 5.0.1 writes one in front of every table
-and refuses a file that lacks one, while the 1993 archive and the 1995
-archive's first member have none (*six copies of one file*) — so either
-the record is conditional on something in the file, or it is conditional
-on the program, and one install of 4.0.2 distinguishes those.
+all of them are downloadable; the harness installed 5.0.1 alone. A
+value written by an encoder, ignored by every decoder and constant
+within a version is the shape of a version or parameter stamp, and a
+second encoder is the only instrument that could show it moving. The
+same second encoder bears on a question worth more than this one:
+**what selects the leading record.** — *Both were run the same day:
+2026-09-21, (the other program), where the prefix does not move, two
+unread fields beside it do, and 3.0.2/4.0.2 turn out to have no
+compressor in them at all.*
 
 **The lesson is the one this repository keeps relearning under a new
 name.** "Nothing reads it" is a claim about readers, and four readers
