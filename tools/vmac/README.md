@@ -421,6 +421,7 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --case reach   # how far back a match may point
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
     tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
+    tools/vmac/nowcompress.py --expand OUTDIR FILE.bin ...   # and below
 
 The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
 and Archive ▸ Faster/Smaller. Specimens land in
@@ -518,6 +519,35 @@ bytes 16..127 masked, the `vmac_check.py` convention, because the Resource
 Manager stamps that region whenever it touches a file. That is what settled
 the corpus's 1995 archive, which `unar` cannot decode at all. It works for any
 `.sea` in the corpus, not just this one.
+
+**`--expand` runs the DECOMPRESSING half**, which is what turns "nothing here
+reads this field" into a statement about the format:
+
+    tools/mutate_now.py --byte2 0x5a --splice IN.bin OUT.bin IN.dat OUT.dat
+    tools/vmac/nowcompress.py --expand /tmp/out OUT.bin ...
+
+`--expand` puts MacBinary files on a volume — MacBinary because the type and
+creator are what make QuickFiler offer the item at all — selects them all and
+releases the menu on **Decompress**, then reads the volume back into `OUTDIR`.
+`tools/mutate_now.py` is the other half: it changes ONE field, recomputes
+every checksum over it (a block's four-byte trailer, an entry record's, the
+block table's, the file header's) and can splice the result back into a
+MacBinary or a `.sea`, so what reaches the Mac is a file no correct reader can
+tell from the original. Between them they settled four fields on 2026-09-21
+(docs/formats/now-compress.md).
+
+Three things to know:
+
+- **Decompress and Dearchive are plain menu items** at y 300 and 235, not
+  submenus, which is the only reason this can be driven at all: Mini vMac
+  cannot select a submenu item however the mouse is moved (*hierarchical
+  menus*, above).
+- **Put a control on the volume.** Every run here carries one unmutated file
+  spliced through the same path; without it a failure cannot be told from a
+  harness fault, and the splice rewrites the MacBinary length and CRC.
+- **QuickFiler names what it expands after the entry record's name**, not the
+  file's, so `--rename` changes both when several mutations of one specimen
+  have to share a volume.
 
 ## Making ArcMac archives with ArcMac — `arcmac.py`
 

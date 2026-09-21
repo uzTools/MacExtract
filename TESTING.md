@@ -2590,11 +2590,23 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read |
 | `derive_packit.py` | PackIt's container, stored and Huffman-coded | 38 forks of 4 archives; it checks no CRC, so nothing here confirms the polynomial |
-| `derive_now.py` | Now Compress: all four coders, the block table, and the archive container | the specimens `nowcompress.py` makes, byte for byte — 85 archive blocks of 85 and every fork specimen of nine cases — plus **both corpus archives**: `--expect DIR` grades an archive against a directory of extracted forks, and it reads the 1993 one's 3 blocks of 3 and the 1995 one's 306 of 306. **Nothing is searched for**: a shape-3 block's header says where its stream starts and ends, a shape-2 block's stream starts a fixed distance past its table, and three checksums — per block, per block table and per member record — are checked as it goes. Given an archive and no `--expect`, it decodes every block anyway, the member records' fork lengths saying how long each fork is |
+| `derive_now.py` | Now Compress: all four coders, the block table, and the container a compressed file and an archive share | the specimens `nowcompress.py` makes, byte for byte — 85 archive blocks of 85 and 101 specimens across twelve cases — plus **both corpus archives**: `--expect DIR` grades an archive against a directory of extracted forks (`--forks visible`, so a member's resource fork is `NAME.rsrc`), and it reads the 1993 one's 3 blocks of 3 and the 1995 one's 306 of 306. **Nothing is searched for**: a block table is one layout at one offset width, a shape-3 block's header says where its stream starts and ends, a shape-2 block's stream starts a fixed distance past its table, and three checksums — per block, per block table and per member record — are checked as it goes. Given an archive and no `--expect`, it decodes every block anyway, the member records' fork lengths saying how long each fork is |
 
 Each writes its corrections into `docs/formats/`, which is what the
 engine cites; the descriptions themselves are fetched into
 `reference/notes/` by `tools/fetch_references.sh`.
+
+**One of them asks the other direction.** A reader that ignores a field
+cannot tell you whether the FORMAT ignores it, so `tools/mutate_now.py`
+changes one field of a Now Compress file, recomputes every checksum
+over it, and `tools/vmac/nowcompress.py --expand` / `--adjudicate`
+hands the file back to Now Compress itself. What it cannot see: only
+the ONE implementation that exists, so "nothing reads this" means
+nothing in Now Compress 5.0.1 and in the decoder a 1995 `.sea` carries;
+and a mutation that fails proves only that something changed, which is
+why the byte in front of a Huffman stream needed a second, POSITIVE
+specimen before its meaning could be called measured
+(docs/formats/now-compress.md, *A code length past 15*).
 
 **Why they are not in `ci.sh`.** They need the fixtures, which are
 copyrighted and not committed, and `derive_arc.py --grid` needs an

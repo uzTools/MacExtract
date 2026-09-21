@@ -87,6 +87,12 @@ ITEM_COMPRESS_Y = 285
 SUB_X = 225
 SUB_FASTER_Y = {"archive": 225, "compress": 291}
 SUB_SMALLER_Y = {"archive": 239, "compress": 305}
+# The two items that EXPAND, both of them plain items with no submenu.
+# Read off this harness's own menu screenshot by row profile: the item
+# text bands sit at 231..239 and 295..305 (Dearchive is 14 px under
+# Archive, Decompress 15 under Compress).
+ITEM_DEARCHIVE_Y = 235
+ITEM_DECOMPRESS_Y = 300
 
 
 def keystream(n, seed=b"macextract-now"):
@@ -283,18 +289,41 @@ class Session:
         x("mouseup", "1")
         time.sleep(2.0)
 
+    def item(self, item_y, tag):
+        """The same, releasing on an item that has NO submenu — which is
+        what Decompress and Dearchive are, and the reason this harness
+        can drive the expanding half of Now Compress at all: Mini vMac
+        cannot select a submenu item with the mouse (tools/vmac/README.md,
+        *hierarchical menus*), and these two need no submenu."""
+        ox, oy = self.mac.origin()
+        x = self.mac._xdo
+        x("mousemove", str(ox + QF_MENU_X), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.0)
+        x("mousemove", str(ox + 330), str(oy + item_y))
+        time.sleep(1.4)
+        self.shot(tag)
+        x("mouseup", "1")
+        time.sleep(2.0)
+
     def close(self):
         self.mac.close()
 
 
-def make_volume(path, volname, files, folders=()):
-    open(path, "wb").truncate(1400 * 1024)
+def make_volume(path, volname, files, folders=(), macbinary=(), size=1400):
+    open(path, "wb").truncate(size * 1024)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     tmp = tempfile.mkdtemp(prefix="nowvol-")
     try:
         subprocess.run(["hformat", "-l", volname, path], check=True,
                        capture_output=True, env=env)
         subprocess.run(["hmount", path], check=True, capture_output=True, env=env)
+        for mb in macbinary:
+            # -m keeps the TYPE and CREATOR, which is what makes a file
+            # Now Compress recognises as one of its own.
+            subprocess.run(["hcopy", "-m", os.path.abspath(mb), "%s:" % volname],
+                           check=True, capture_output=True, env=env)
         for name, blob in files.items():
             p = os.path.join(tmp, name)
             open(p, "wb").write(blob)
@@ -610,6 +639,57 @@ def verify():
                 shutil.rmtree(out, ignore_errors=True)
 
 
+def expand(outdir, macbinaries):
+    """Run Now Compress's own **Decompress** over compressed files, and
+    keep what comes out.
+
+    This is the other half of `--case`: that one asks the encoder what it
+    writes, this one asks the DECODER what it reads. It is the only
+    instrument here that can settle whether a field the encoder writes is
+    a field anybody reads — `tools/mutate_now.py` changes one, fixes
+    every checksum over it, and this hands the result back to the program
+    that wrote it (docs/formats/now-compress.md, *What this note does NOT
+    describe*).
+
+    The files go on the volume as MacBinary so they keep the type and
+    creator that make QuickFiler offer Decompress at all; what lands in
+    `outdir` is whatever is on the volume afterwards, under the names the
+    Mac gave it.
+    """
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(outdir, "volume.img")
+    total = sum(os.path.getsize(p) for p in macbinaries)
+    make_volume(img, "Now", {}, macbinary=macbinaries,
+                size=max(1400, (total * 6) // 1024 + 800))
+    s = Session(BOOT, [img], os.path.join(outdir, "shots"))
+    try:
+        s.boot()
+        s.demo()
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(8)
+        s.mac.command_key("a")
+        s.shot("selected", wait=3.0)
+        s.item(ITEM_DECOMPRESS_Y, "pick-decompress")
+        s.shot("working", wait=40.0)
+        s.mac.key("Return")                          # a report, if there is one
+        s.shot("done", wait=60.0)
+        s.mac.key("Return")
+        time.sleep(5)
+        s.mac.command_key("w")
+        time.sleep(3)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                       # Put Away: flush + eject
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = read_volume(img, outdir)
+    for name, (typ, crt, dlen, dat) in sorted(got.items()):
+        print("  %-20s %s/%s %8d B  %s" % (name, typ, crt, dlen,
+                                           os.path.basename(dat)))
+    return got
+
+
 def adjudicate(macbinary, archive):
     """Let a self-extracting archive's OWN extractor grade our output.
 
@@ -727,6 +807,9 @@ def main():
     ap.add_argument("--adjudicate", nargs=2, metavar=("SEA.bin", "ARCHIVE"),
                     help="run a self-extracting archive under the emulator and "
                          "compare its output with ours")
+    ap.add_argument("--expand", nargs="+", metavar=("OUTDIR", "FILE.bin"),
+                    help="run Now Compress's own Decompress over compressed "
+                         "files and keep what comes out")
     args = ap.parse_args()
     if args.setup:
         fetch_installer()
@@ -741,8 +824,12 @@ def main():
         verify()
     if args.adjudicate:
         return 1 if adjudicate(*args.adjudicate) else 0
+    if args.expand:
+        if len(args.expand) < 2:
+            raise SystemExit("nowcompress: --expand OUTDIR FILE.bin ...")
+        expand(args.expand[0], args.expand[1:])
     if not any((args.setup, args.install, args.case, args.verify,
-                args.adjudicate)):
+                args.adjudicate, args.expand)):
         ap.print_help()
     return 0
 
