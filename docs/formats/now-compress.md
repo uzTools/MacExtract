@@ -29,13 +29,31 @@ followed by one **Huffman-coded** block of 16,232, in a single fork.
 So "which coder does Now Compress use" has no answer: it is a
 per-block choice.
 
-Where each block begins is in the fork header, which is not decoded
-here — but the header plainly carries a table of records shaped
-`u16 value, u16 mode, four zero bytes`, of which the last value is the
-fork's own byte count (0x22f6 = 8,950 for `half.bin`, 0x8296 = 33,430
-for `mixed.bin`) and an earlier one points at the second block
-(0x80ae = 32,942, four bytes before that block's code table). Reading
-that properly is what stands between this note and the corpus.
+**Where each block begins is a table in the fork header**, and it is
+decoded here. From offset **144**, records of **eight bytes** — a u16
+offset, a u16 mode, and four bytes that are zero in every specimen —
+ending with a record whose offset is **the fork's own byte count**,
+which is how a reader knows it has them all.
+
+| fork | records |
+|---|---|
+| `runs.bin`, Faster | (162, `0x0010`), (290 = its size) |
+| `runs.bin`, Smaller | (162, `0x001f`), (290) |
+| `half.bin`, Smaller | (162, `0x003f`), (8,950) |
+| `mixed.bin`, Stored | (170, `0x0000`), (32,942, `0x003f`), (33,430) |
+
+The block's data begins a fixed distance after its record's offset:
+**none** for a stored block, **two** bytes for shape 1, **one** for
+shape 2.
+
+**What the mode word means, and what it does not.** `0x0000` is
+stored. Beyond that, the two `runs.bin` forks are **byte-identical
+except for that word** — `0x0010` from Faster and `0x001f` from
+Smaller, same payload — so the low bits are the user's setting and
+not the coder. **Bit `0x20` is the coder**: set for shape 2, clear
+for shape 1. That is four data points, and it is a hypothesis of the
+useful kind — it predicted `half.bin` (`0x3f`) and `mixed.bin`'s
+second block (`0x3f`) correctly before being written down here.
 
 ## Shape 1 — byte-aligned LZSS
 
@@ -100,23 +118,21 @@ whatever the mode word changes, it did not change these two streams.
 
 ## What this note does NOT describe
 
-- **How to find a block.** This is the gap that matters. The reader
-  in `tools/derive_now.py` walks the EXPECTED output and asks of each
-  block whether it was stored or Huffman-coded, searching a short
-  window for its table — which is legitimate for a derivation graded
-  against known bytes and useless as a decoder. The fork header's
-  record table is where the answer is.
+- **Where a shape-2 block's bit stream begins.** Its code table is
+  128 bytes, but the stream starts 23 bits after it in one specimen
+  and 18 in another, so something variable sits between — the one
+  thing `tools/derive_now.py` still searches for, within a couple of
+  bytes.
 - **The corpus's real archives.** `synth-now-mixed.now` and
-  `derived-Expand_Now_1.0.1.sea` are not read here. Both have
-  Kraft-1 tables in them — one at 19,159 in the second — so they are
-  very likely the same two shapes in blocks this reader cannot
-  locate. Both have oracle hashes waiting.
-- **The 164-byte fork header**, of which this note identifies the
+  `derived-Expand_Now_1.0.1.sea` are not read here, and the reason is
+  now known: **neither is a bare fork.** The block table is not at
+  144 in either, because what is at 144 is some outer container's
+  business — a self-extracting archive in the second case. Finding
+  the fork inside the wrapper is the next layer, not the next coder.
+- **The rest of the fork header**, of which this note identifies the
   version word, the mode word, a ten-byte name field, two Mac dates,
   a `'????'`/`'UNIX'` type and creator — the harness's, not the
-  format's — and the record table above.
-- **The bits between a block's code table and its stream**: 23 of
-  them in `half.bin`, unexplained.
+  format's — and the block table at 144.
 - **The trailer**, four bytes after a shape-1 payload, sometimes
   preceded by `0xff`. Presumably a checksum.
 - **Whether there are more shapes.** Two coders and "stored" account

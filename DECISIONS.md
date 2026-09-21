@@ -13358,11 +13358,23 @@ the rest of the format:
   Now Compress use" has no answer.
 
 **All eight specimens now read**, byte for byte against the inputs the
-application was handed. What is left is finding a block without being
-told where it is — the fork header's record table, which is the only
-reason the corpus's two real archives are still unread. Both carry
-Kraft-1 tables inside them, so they are very likely these same two
-shapes in blocks this reader cannot locate.
+application was handed — and seven of them **from the fork's own
+block table** rather than by searching, because that fell too: eight
+byte records from offset 144, a u16 offset and a u16 mode, ending on
+a record whose offset is the fork's size. Stored, shape 1 and shape 2
+blocks begin 0, 2 and 1 bytes past their record's offset.
+
+**And the mode word is not one value per coder.** The two `runs.bin`
+forks are byte-identical **except for that word** — `0x0010` from
+Faster, `0x001f` from Smaller, the same payload — so the low bits are
+the user's setting. **Bit `0x20` is the coder**, set for shape 2.
+That is four data points, and the kind of hypothesis worth writing
+down because it predicted the other two forks before it was recorded.
+
+**What is left is a layer, not a coder.** The corpus's two archives
+are not bare forks — one is self-extracting — so there is no block
+table at 144 in them, and the remaining work is finding the fork
+inside the wrapper.
 
 **Two habits did all the work here**, and neither is about Now
 Compress. Choosing the INPUT — random bytes then a long run — meant

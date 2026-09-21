@@ -206,6 +206,84 @@ def kraft_tables(d, lo, hi):
 
 BLOCK = 32768
 
+# What a record's mode means, and how many bytes sit between the
+# record's offset and the block's data.
+# Four mode words are attested: 0x0000 stored, 0x0010 and 0x001f
+# shape 1, 0x003f shape 2. The pair 0x0010/0x001f is the SAME payload
+# written by Faster and by Smaller — the two files differ in that word
+# and nowhere else — so the low bits are not the coder. **Bit 0x20 is
+# the coder** on this evidence, and four data points is what that
+# claim rests on.
+STORED = 0x0000
+HUFFMAN_BIT = 0x20
+
+
+def block_kind(mode):
+    if mode == STORED:
+        return "stored", 0
+    if mode & HUFFMAN_BIT:
+        return "shape2", 1
+    return "shape1", 2
+
+
+def records(d, limit=64):
+    """The fork's block table: 8-byte records from offset 144 — a u16
+    offset, a u16 mode, and four bytes that are zero in every specimen
+    here. The list ends with a record whose offset is the fork's own
+    size, which is how a reader knows it has them all.
+
+    Modes seen: 0x0000 stored, 0x0010 shape 1, 0x003f shape 2. A fork
+    may mix them — `mixed.bin` is (170, stored) then (32942, shape 2)
+    then the 33,430-byte sentinel.
+    """
+    out = []
+    p = 144
+    while p + 8 <= len(d) and len(out) < limit:
+        off = int.from_bytes(d[p:p + 2], "big")
+        mode = int.from_bytes(d[p + 2:p + 4], "big")
+        out.append((off, mode))
+        p += 8
+        if off == len(d):
+            return out
+    return None                     # no sentinel: not a bare fork
+
+
+def read_fork(d, nout):
+    """Decode a whole fork from its block table.
+
+    The one thing still searched is where a shape-2 block's BIT stream
+    begins: 23 bits after its table in one specimen and 18 in another,
+    so something variable sits between them that this note has not
+    identified.
+    """
+    recs = records(d)
+    if not recs:
+        return None
+    out = bytearray()
+    for (off, mode), (nxt, _) in zip(recs, recs[1:]):
+        if len(out) >= nout:
+            break
+        n = min(BLOCK, nout - len(out))
+        kind, skip = block_kind(mode)
+        at = off + skip
+        if kind == "stored":
+            out.extend(d[at:at + n])
+        elif kind == "shape1":
+            piece, _ = decode(d, at, n)
+            out.extend(piece)
+        else:
+            t = table_at(d, at)
+            for bs in range((at + 128) * 8, (at + 128 + 6) * 8):
+                try:
+                    piece = decode_huff(d, t, bs, n)
+                except Exception:
+                    continue
+                out.extend(piece)
+                break
+            else:
+                return None
+    return bytes(out[:nout])
+
 
 def read_blocks(d, want):
     """A fork is a sequence of BLOCKS, each coded its own way.
@@ -274,6 +352,13 @@ def main():
                 out, end = decode(d, PAYLOAD_AT, len(want))
             except Exception:
                 out, end = None, None
+            table_read = read_fork(d, len(want))
+            if table_read == want:
+                print(f"ok  {mode:8s} {base:10s} {len(want):6d} B from "
+                      f"{len(d):6d}  block table: "
+                      + ", ".join(f"{hex(o)}/{hex(m)}" for o, m in records(d)))
+                ok += 1
+                continue
             if out == want:
                 print(f"ok  {mode:8s} {base:10s} {len(want):6d} B from "
                       f"{len(d):6d}  payload {PAYLOAD_AT}..{end}, "

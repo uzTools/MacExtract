@@ -236,16 +236,19 @@ the brief always said this row would need.
   bytes, which is what gives symbol 255 the shortest code in an
   incompressible file and is how the shape was recognised.
 
-**What is left is finding a block, and it is the whole of the
-remainder.** `tools/derive_now.py` cheats: it walks the expected
-output and searches a short window for each block's table, which is
-fine for a derivation graded against known bytes and no use as a
-decoder. The answer is in the fork header's record table —
-`u16 value, u16 mode, four zero bytes` repeated, whose last value is
-the fork's byte count and whose earlier ones point at later blocks.
-Read that and the corpus's two real archives (`synth-now-mixed.now`
-and `derived-Expand_Now_1.0.1.sea`, both with oracle hashes, both
-carrying Kraft-1 tables inside them) should fall out.
+**The block table is derived too**, so the reader no longer searches
+for blocks: eight-byte records from offset 144, a u16 offset and a
+u16 mode, ending on a record holding the fork's own size; the data
+starts 0, 2 or 1 bytes past the offset for stored, shape 1 and
+shape 2. Seven of the eight specimens now read straight from it.
+
+**What is left is a layer, not a coder.** The corpus's two archives
+are not bare forks — `derived-Expand_Now_1.0.1.sea` is
+self-extracting — so there is no block table at 144 to read, and
+finding the fork inside the wrapper is the remaining work. Both have
+oracle hashes waiting. The only thing still searched INSIDE a fork is
+where a shape-2 block's bit stream starts: 23 bits after its table in
+one specimen, 18 in another.
 
 ## Item 6 — DiskDoubler `ADn` (6/9), and the two `DDn` forks (`fmt_dd.c`)
 
