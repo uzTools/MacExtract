@@ -536,7 +536,7 @@ MacBinary or a `.sea`, so what reaches the Mac is a file no correct reader can
 tell from the original. Between them they settled four fields on 2026-09-21
 (docs/formats/now-compress.md).
 
-Three things to know:
+Five things to know:
 
 - **Decompress and Dearchive are plain menu items** at y 300 and 235, not
   submenus, which is the only reason this can be driven at all: Mini vMac
@@ -547,7 +547,28 @@ Three things to know:
   harness fault, and the splice rewrites the MacBinary length and CRC.
 - **QuickFiler names what it expands after the entry record's name**, not the
   file's, so `--rename` changes both when several mutations of one specimen
-  have to share a volume.
+  have to share a volume. Give a rung a name **as long as the one it
+  replaces**: the encoder leaves 23 catalogue-shaped bytes after a short
+  Pascal name, and a longer name walks over them.
+- **A file it refuses puts up an alert and waits**, so `--expand` presses
+  Return once per file on the volume rather than twice per run, and waits
+  fifteen seconds per file after them. That is what makes a whole ladder
+  of mutations one run instead of one run each: before 2026-09-21 the
+  first refusal would have stopped every file behind it, and a ladder is
+  put on one volume precisely because some rungs are expected to be
+  refused. **A file it has not REACHED looks exactly like one it
+  refused** — same type, same creator, same bytes — which is how a
+  five-rung ladder first came back with three refusals of which only one
+  was real. Read the last screenshot before believing a refusal: an icon
+  still highlighted is one still in the selection, and one replaced by
+  its expansion is not.
+- **Two refusals, two different alerts, and the difference is the
+  measurement.** *"A part of the file X is damaged. Do you want to continue
+  decompressing…"* is a BLOCK the decoder could not accept — it offers
+  Continue and goes on to the next file. *"…is damaged and cannot be
+  repaired"* is the file being rejected outright, which is what a file
+  written here from scratch gets. Photograph the alert: which one it is
+  says which layer noticed.
 
 ## Making ArcMac archives with ArcMac — `arcmac.py`
 

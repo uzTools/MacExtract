@@ -234,11 +234,12 @@ bits**. Everything else about the file is what the encoder wrote.
 **Decompress returned all 16,000 bytes of it**, and so did the same
 file re-coded at 15 with no escape at all, which is the control.
 
-A whole file written here from scratch is a different matter: Now
-Compress calls it *"damaged and cannot be repaired"* even with a
-shallow code, which is why the specimen had to be a re-coding of a real
-one and not a construction (`tools/synth_now.py`'s `build_fork`, kept
-for the next attempt). What is wrong with it is not known.
+A whole file written here from scratch was a different matter until
+later the same day: Now Compress called one *"damaged and cannot be
+repaired"* even with a shallow code, which is why this specimen is a
+re-coding of a real file and not a construction. **What was missing was
+the leading record** (*A member's blocks*); `tools/synth_now.py`'s
+`build_fork` did not write one, and a file that gains one is read.
 
 ## Shape 3 — the coder an archive uses
 
@@ -257,8 +258,9 @@ archives are almost entirely written in.
   to an even byte IS `byte 1 − 85` whenever the length is even, which
   it is in every block seen. That is also why byte 1 is always odd,
   which was a puzzle while the field was read as two;
-- **byte 2 is read by nothing, and it is not a property of the block.**
-  Two measurements, both 2026-09-21, and between them they close it:
+- **byte 2 is read by nothing, it is not a property of the block, and
+  it is not noise.** Four things are measured about it, all
+  2026-09-21:
 
   **Nothing reads it.** All 38 shape-3 blocks of an archive the harness
   made were given a byte 2 of `0x5a`, each block's checksum recomputed,
@@ -276,10 +278,34 @@ archives are almost entirely written in.
   counts, the ratio of a block's stream to its output, the token
   counts, the literal-to-match mix, the longest or mean match distance,
   the window's fill, nor a copy of any byte at a fixed offset in this
-  block or the one before it. Whatever the encoder keeps there it
+  block or the one before it, nor of the first or last byte of its own
+  stream — that last pair added 2026-09-21 over the **390** of those
+  blocks the encoder itself wrote, 0 of 390 for the first byte and
+  noise for the last. Whatever the encoder keeps there it
   carries ACROSS blocks: the 1995 archive's 306 sit in `0x60..0x7f`
   with occasional excursions, the harness's in `0xe0..0xff`, the 1993
-  archive's are 19 and 239, and nine are zero;
+  archive's are 19 and 239, and nine are zero.
+
+  **And it is computed, not left over.** The `probe` case was run a
+  second time seven hours after the first, same inputs, same volume,
+  same application: the two archives differ **in their four date fields
+  and the checksums over them and nowhere else** — every compressed
+  byte identical, byte 2 included, 244, 0, 255, 0 both times. That
+  rules out the reading this project was closest to taking: that a
+  field nothing reads, which no property of the block explains, is
+  uninitialised memory the encoder never meant to write. It means
+  something, and a repeat run cannot be what tells us what.
+
+  **What it does track is where the encoder is in its window.** The
+  1995 archive is the only specimen long enough to ask: its 306 blocks
+  produce 32,768 bytes each against a 65,536-byte window, so they
+  alternate between starting in the low half of that window and the
+  high half. **41 of the 43 values above 200 are in blocks that start
+  in the LOW half**; the high-half blocks are 100..119 with two
+  exceptions. A per-block quantity cannot see which half of the window
+  its block begins in, so this is the same finding as the tokdist
+  sequence from the other side — and it is a correlation, not a
+  formula;
 - **byte 3 is the outer stream's end flush**: after the last token come
   `(16 − byte 3) mod 16` bits, and then the four-byte trailer;
 - **from byte 4 comes a Huffman-coded region of the length byte 0..1
@@ -539,24 +565,95 @@ self-extractor byte for byte**, 8 forks of 8, while this engine with
 the correction disabled refuses all four of its members
 (`tools/mutate_now.py --delta 100`, 2026-09-21).
 
-**And the format's decoder is more tolerant than this engine.** The
-same archive with only the u32 reduced — every record left correct —
-also comes out of its own self-extractor byte for byte, and this engine
-refuses it: it computes one constant from that u32 and adds it to every
-record, so correct records become wrong ones. **Whatever Now Compress
-does with a table it has to correct, it is not that.** Nothing here
-turns on it — no file the encoder writes has either shape — but a
-reader that must choose should know that the stored first-block offset
-is the field its own decoder trusts least.
+**And the correction is a WHOLE-TABLE constant that the u32 has no part
+in.** Six copies of `mixed.bin` as Now Compress compressed it, one
+field of the table moved in each, every checksum over it recomputed,
+all six handed back to its own **Decompress** on one volume
+(`tools/mutate_now.py`, `nowcompress.py --expand`, 2026-09-21):
+
+| what moved in the table | Now Compress | this engine |
+|---|---|---|
+| nothing — the control | byte-exact | reads it |
+| every stored offset − 100 | **byte-exact** | reads it, by the delta search |
+| the first-block u32 − 100 alone | **byte-exact** | refuses it |
+| every record's end offset − 100, the u32 left correct | **byte-exact** | refuses it |
+| every stored offset + 100 | **byte-exact** | reads it |
+| **record 1's end offset − 100 alone** | *"A part of the file is damaged"*, then 49,000 bytes that are not the input | refuses it |
+| **the LAST record's end offset − 100 alone** | *"A part of the file is damaged"*, and 49,000 bytes **right up to byte 32,768** | refuses it |
+
+So: **a constant wrong in every record is corrected, in either
+direction; a constant wrong in ONE record is not**, and is reported
+rather than silently accepted. The stored first-block offset is not
+what the decoder anchors on — and it is not where the record COUNT
+comes from either: `(first − start − 4) / 8 − 1` is how many records a
+table holds, and with that u32 short by 100 the numerator is **−68**,
+so no count comes out of it at all and the file still read.
+
+**The two rungs that failed say more than the five that passed**,
+because they say which block pays. With record 1 short, the stored
+block that record bounds came out shifted from its first byte and the
+shape-2 block after it came out right; with the LAST record short, the
+stored block came out right and only the block after it is wrong. A
+wrong record damages **its own block and no other**, in both
+directions.
+
+**One reading fits all seven rungs, and it is a hypothesis**: the first
+block starts where the table really ends rather than where the u32 says;
+each block is bounded by its own record; and when the blocks do not
+check out against their four-byte sums, **one constant is tried across
+every record and kept only if they then do**. That last clause is what
+the lone-record rungs need — a correction computed from the data-area
+end at +102 would have been +100 in the last-record rung too, and would
+have moved the first block, which came out right.
+
+This engine corrects by a constant computed from the u32 and adds it to
+every record, which is why it refuses three files its own format reads.
+Nothing here turns on either — no file the encoder writes has any of
+these shapes.
 
 **`0d4c 0037` were the mode and padding of a record that produces no
-bytes.** Now Compress 5.0.1 writes one in front of every table, whose
-end offset repeats the first-block offset the u32 already gave; the
-1993 archive does not. **Such a record says the next block STARTS a
-stream**, and where bytes have already come out of the member it is the
-boundary between its two forks: that is how the 1995 archive's
-`SynRef2.0 INFO` carries a 332-byte resource fork and a 574-byte data
-fork in one member, **resource fork first**.
+bytes**, whose end offset repeats the first-block offset the u32
+already gave. **Such a record says the next block STARTS a stream**,
+and where bytes have already come out of the member it is the boundary
+between its two forks: that is how the 1995 archive's `SynRef2.0 INFO`
+carries a 332-byte resource fork and a 574-byte data fork in one
+member, **resource fork first**.
+
+**105 of the 107 members Now Compress itself wrote here open with
+one** — the 108th is `synth-now-mixed.now`, which this project writes
+and which has none. The two that do not are the 1993 archive's only
+member and the **first** member of the 1995 archive — not "the 1993
+archive does not", which is what this note said until 2026-09-21 and
+which its own second corpus archive contradicts: that archive's INFO
+member has no leading record and its FileMaker member has one.
+
+**And a compressed file that lacks one is refused** — this is what a
+file written here had wrong, measured 2026-09-21 from both sides on one
+volume:
+
+| file | Now Compress |
+|---|---|
+| `half.bin` as the encoder wrote it | 16,000 bytes, byte-exact |
+| the same file **with its leading record dropped** | *"The compressed file is damaged and cannot be repaired"* |
+| a file **built here from scratch** (`synth_now.py`'s `build_fork`) | the same alert, word for word |
+| **that same built file with a leading record added** | **16,000 bytes, byte-exact** |
+
+The negative and the positive were needed: dropping the record from a
+real file says only that something changed, and the file built here
+differs from the encoder's in more than one way. It is the fourth row
+that names the field, and the first that says the question was fair
+(`tools/mutate_now.py --like-synth leadrec` and `--add-leadrec`).
+
+**The record is the only one of those differences that matters.** The
+other four were put to Decompress the same way, each on a file the
+encoder wrote: the Finder flags zeroed, the dates replaced, the u32 at
++94 zeroed, and the 23 catalogue-shaped bytes after a short name zeroed
+— whole, and split into the 21 bytes at +9 and the `0037` at +30.
+**All six files came back byte-exact**, so a compressed file's entry
+record is read for its name, its fork lengths, its data bounds and its
+checksum, and nothing else here is looked at. The mode and padding in it are not constant either,
+`0d4c 0037` in every file 5.0.1 wrote here and `84e4 01e4` in the 1995
+archive, so the field that carries the meaning is the end offset.
 
 **A stream restart is what the engine calls the same record.**
 FORMATS.md's "two stream-restart records" in the 1995 archive are that
@@ -662,21 +759,24 @@ than one that draws it.
   encoder's own decoder (*Shape 1*) — but not what the encoder thinks
   it is writing.
 - **What a shape-3 block's header byte 2 IS.** That nothing reads it,
-  and that it is not a property of the block, are both measured (*The
-  header*); what the encoder keeps there is not.
-- **How the format's decoder corrects a block table it has to
-  correct.** Both mutations tested read back byte for byte — every
-  offset short by a constant, and the first-block u32 short on its own
-  — and no single constant added to every record explains the second
-  (*The archive layer*). This engine implements the first and refuses
-  the second, which no file the encoder writes has.
-- **Why a file written here from scratch is refused.** Now Compress
-  calls one *"damaged and cannot be repaired"* even when every field
-  this note describes is right and its code is one the encoder could
-  have written (`tools/synth_now.py`'s `build_fork`). Something in a
-  compressed file is checked that is not checked in a file the encoder
-  wrote and this note has changed — which is why the specimen for the
-  escape is a re-coding of a real file (*A code length past 15*).
+  that it is not a property of the block, and that it is computed
+  rather than left over are all measured (*The header*), as is what it
+  tracks — which half of the window its block starts in. What the
+  encoder keeps there is not.
+- **Which rule the format's decoder corrects a block table by.** Seven
+  mutations say what it does (*The archive layer*): a constant wrong in
+  every record is corrected either way round, one wrong record is not,
+  and the stored first-block offset is no part of either. One reading
+  fits all seven — one constant tried and kept only if the blocks then
+  check out — and it is a hypothesis. This engine's rule is a different
+  one, and refuses three files its own format reads.
+- **Why the leading record is required.** *That* it is, is measured
+  from both sides (*A member's blocks*): a compressed file the encoder
+  wrote is refused when it loses one, and a file written here is read
+  when it gains one. What the decoder does with it — count the records
+  by it, take the stream's start from it, require a stream to be
+  started before a block may produce bytes — is not measured, and the
+  1993 archive and the 1995 archive's first member have none.
 - **Whether there are more shapes.** Four coders and "stored" account
   for every block in every specimen here, and that is five
   arrangements — which is what PROGRESS.md has called Now Compress's

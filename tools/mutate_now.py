@@ -24,6 +24,16 @@ bytes that went in.
     tools/mutate_now.py --delta 4096   IN.dat OUT.dat
     tools/mutate_now.py --splice OUT.dat IN.bin OUT.bin   (MacBinary)
 
+**The block table is a ladder rather than one question.** `--delta`
+moves every offset the table stores; `--first-only`, `--records-only`
+and `--record K` move one subset of them, and a negative delta moves
+them the other way. Each reading of how the format's own decoder
+anchors that table — correct everything by one constant, ignore the
+stored first-block offset, ignore the offsets altogether — predicts a
+different row of that ladder to survive, which is what makes it worth
+running rather than arguing (docs/formats/now-compress.md, *The archive
+layer*).
+
 Every mutation prints what it changed, and `--check` decodes the result
 with `tools/derive_now.py` to show that OUR reader still gets the
 original bytes out — which is what says the file is well formed and the
@@ -252,16 +262,34 @@ def mutate_recode(d, maxlen):
                "%d B -> %d B" % (maxlen, deep, en, newend))
 
 
-def mutate_delta(d, delta, firstonly=False):
-    """Rebase a member's block table: every offset it STORES falls short
-    of the real one by `delta`, which is the shape `src/fmt_now.c`'s
+def mutate_delta(d, delta, which="all"):
+    """Rebase a member's block table: the offsets it STORES fall short of
+    the real ones by `delta`, which is the shape `src/fmt_now.c`'s
     offset-delta search exists to correct (now_find_delta). The table's
     own checksum is recomputed over the stored values, so the file is
     consistent — the question is whether the format's own decoder
     corrects it.
 
-    The 5.0.1 layout only: the table at +10 of the member's data area,
-    with the first-block offset at +2 restated by the first record.
+    **`which` says WHICH offsets move, and that is the whole point of
+    the ladder**: every reading of how a decoder anchors this table
+    predicts a different answer for a different subset.
+
+        "all"       the u32 and every record's end offset
+        "first"     the u32 alone, every record left correct
+        "records"   every record's end offset, the u32 left correct
+        an int k    the end offset of record k alone, counting the
+                    leading no-bytes record 5.0.1 writes as 0
+
+    A negative `delta` moves the offsets the other way — past the block
+    rather than short of it — which is the case an "always correct
+    forward" reading and an "ignore them" reading disagree about.
+
+    The table is the one this project derived: a u32 at the start of the
+    member's data area saying where the first block begins, then one
+    `[mode][padding][end offset]` record per block from +4. This
+    docstring described the `[offset][mode][padding]` framing at +2 or
+    +10 until 2026-09-21, which is the reading the note dropped that day
+    and which this function never used.
     """
     ms = D.members(d)
     n = 0
@@ -270,18 +298,220 @@ def mutate_delta(d, delta, firstonly=False):
         nrec = (first - st - 4) // 8 - 1
         if nrec < 0 or st + 4 + 8 * nrec + 8 > len(d):
             continue
-        d[st:st + 4] = struct.pack(">I", first - delta)
+        if which in ("all", "first"):
+            d[st:st + 4] = struct.pack(">I", first - delta)
         p = st + 4
-        for _ in range(nrec):
-            if not firstonly:
+        for k in range(nrec):
+            if which in ("all", "records") or which == k:
                 end = int.from_bytes(d[p + 4:p + 8], "big")
                 d[p + 4:p + 8] = struct.pack(">I", end - delta)
             p += 8
         p += 4                              # the four bytes before the sum
         d[p:p + 4] = struct.pack(">I", sum(d[st:p]) & 0xFFFFFFFF)
         n += 1
-    return n, ("the first-block offset alone -= %d" if firstonly
-               else "every stored offset -= %d") % delta
+    how = {"all": "every stored offset",
+           "first": "the first-block offset alone",
+           "records": "every record's end offset, the first-block offset left"
+                      " correct"}.get(which, "record %s's end offset alone"
+                                             % which)
+    return n, "%s -= %d" % (how, delta)
+
+
+# ------------------------------------------------------------------
+# What this project writes that Now Compress will not read
+# ------------------------------------------------------------------
+
+# One rung per way a file `tools/synth_now.py` writes differs from one
+# Now Compress wrote, measured by diffing the two records field for
+# field. The file header is not in the list: the two agree on all 24
+# bytes, checksum included.
+SYNTH_GROUPS = ("namepad", "spare", "finder", "dates", "leadrec")
+
+
+def mutate_like_synth(d, group):
+    """Make a file the ENCODER wrote look, in ONE respect, like a file
+    written here — which Now Compress calls *"damaged and cannot be
+    repaired"* however right every field this project has measured is
+    (docs/formats/now-compress.md, *What this note does NOT describe*).
+
+    **A refusal of a file with five differences in it names none of
+    them.** Each group below is one of those differences applied to a
+    file Decompress reads today, so a rung that is refused names the
+    field; a ladder every rung of which survives says the cause is not
+    in these fields at all, and the next place to look is the block
+    payload — which `--recode` has already put a stream written here
+    through the same decoder intact.
+
+        namepad  the 23 bytes after a short Pascal name, which the
+                 encoder leaves full of catalogue-shaped values and
+                 this project zeroes
+        spare    the u32 at +94 of an entry record, which no field this
+                 project names accounts for
+        finder   the Finder flags at +46 (0x0100, `kHasBeenInited`)
+        dates    created and modified, +54 and +58
+        leadrec  the leading `0d4c 0037` record 5.0.1 writes in front of
+                 every block table and this project does not write at
+                 all — the one structural difference of the five, so the
+                 file is laid out again eight bytes shorter
+    """
+    rec = 24
+    if group == "namepad":
+        at = rec + 1 + d[rec]
+        was = bytes(d[at:rec + 32])
+        d[at:rec + 32] = bytes(len(was))
+        how = "the %d bytes after the name zeroed (were %s)" % (
+            len(was), was.hex() or "zero already")
+    elif group == "spare":
+        was = int.from_bytes(d[rec + 94:rec + 98], "big")
+        d[rec + 94:rec + 98] = bytes(4)
+        how = "the u32 at +94 zeroed (was %#x)" % was
+    elif group == "finder":
+        was = int.from_bytes(d[rec + 46:rec + 48], "big")
+        d[rec + 46:rec + 48] = bytes(2)
+        how = "the Finder flags zeroed (were %#06x)" % was
+    elif group == "dates":
+        d[rec + 54:rec + 58] = struct.pack(">I", 0x9E7C0000)
+        d[rec + 58:rec + 62] = struct.pack(">I", 0x9E7C0E10)
+        how = "created and modified := what synth_now.py writes"
+    elif group == "leadrec":
+        return drop_leading_record(d)
+    else:
+        raise SystemExit("mutate-now: no such group %r" % group)
+    d[rec + 106:rec + 110] = struct.pack(
+        ">I", sum(d[rec:rec + 106]) & 0xFFFFFFFF)
+    return 1, how
+
+
+def zero_field(d, at, n):
+    """Zero `n` bytes at `at` of the entry record and fix its checksum —
+    for bisecting INSIDE a field once a group has been shown to matter.
+
+    `--like-synth namepad` zeros all 23 bytes after a short name at once;
+    when that is refused, the question becomes which of them, and this
+    is how it gets asked without inventing a group name for a field
+    nobody has identified yet.
+    """
+    rec = 24
+    if at < 0 or at + n > 106:
+        raise SystemExit("mutate-now: --zero is inside the 106 bytes the "
+                         "record's checksum covers")
+    was = bytes(d[rec + at:rec + at + n])
+    d[rec + at:rec + at + n] = bytes(n)
+    d[rec + 106:rec + 110] = struct.pack(
+        ">I", sum(d[rec:rec + 106]) & 0xFFFFFFFF)
+    return 1, "%d byte(s) at +%d zeroed (were %s)" % (n, at, was.hex())
+
+
+def take_head(d, other):
+    """Give this file the 24-byte header and 110-byte entry record of
+    another one, keeping everything that describes its OWN data area.
+
+    The halving step, for when every named difference has been tested
+    one at a time and the file is still refused: a one-entry file is a
+    134-byte head and a data area, so the head of one and the body of
+    the other put the cause on one side of that line in a single rung.
+    Both directions are this one option — `--head` a file the encoder
+    wrote onto one written here, and the reverse.
+    """
+    head = bytearray(open(other, "rb").read()[:24 + 110])
+    if len(head) < 134:
+        raise SystemExit("mutate-now: --head wants a Now Compress file")
+    rec, mine = 24, d[24:24 + 110]
+    for at, n in ((86, 4), (90, 4), (98, 4), (102, 4)):
+        head[rec + at:rec + at + n] = mine[at:at + n]   # the fork lengths
+                                                       # and the data bounds
+    head[rec + 106:rec + 110] = struct.pack(
+        ">I", sum(head[rec:rec + 106]) & 0xFFFFFFFF)
+    head[20:24] = struct.pack(">I", sum(head[:20]) & 0xFFFFFFFF)
+    d[:134] = head
+    return 1, "the header and entry record of %s" % os.path.basename(other)
+
+
+def drop_leading_record(d):
+    """Take the leading record out of a one-entry file's block table and
+    lay the file out again around the eight bytes it loses.
+
+    That record produces no bytes — its end offset repeats the
+    first-block offset the u32 already gave — and 5.0.1 writes one in
+    front of every table while the 1993 archive writes none, so a
+    decoder that needs it would already refuse that archive. This asks
+    whether its own decoder needs it.
+    """
+    ms = D.members(d)
+    if not ms or len(ms) != 1:
+        raise SystemExit("mutate-now: --like-synth leadrec wants a "
+                         "one-entry file")
+    name, dlen, rlen, st, en = ms[0]
+    first = int.from_bytes(d[st:st + 4], "big")
+    nrec = (first - st - 4) // 8 - 1
+    recs = [bytes(d[st + 4 + 8 * k:st + 12 + 8 * k]) for k in range(nrec)]
+    lead = int.from_bytes(recs[0][4:8], "big")
+    if lead != first or nrec < 2:
+        raise SystemExit("mutate-now: this table has no leading record")
+    spare = bytes(d[st + 4 + 8 * nrec:st + 8 + 8 * nrec])   # the four bytes
+    tail = bytes(d[first:en])                               # the blocks
+
+    out = bytearray(d[:st])
+    out += struct.pack(">I", first - 8)
+    for r in recs[1:]:
+        out += r[:4] + struct.pack(">I", int.from_bytes(r[4:8], "big") - 8)
+    out += spare
+    out += struct.pack(">I", sum(out[st:]) & 0xFFFFFFFF)
+    out += tail
+    out += d[en:]
+    rec = 24
+    out[rec + 102:rec + 106] = struct.pack(">I", en - 8)
+    out[rec + 106:rec + 110] = struct.pack(
+        ">I", sum(out[rec:rec + 106]) & 0xFFFFFFFF)
+    d[:] = out
+    return 1, ("the leading %s record dropped, %d B -> %d B"
+               % (recs[0][:4].hex(), en, en - 8))
+
+
+# The mode and padding 5.0.1 writes in the record it puts in front of
+# every block table (docs/formats/now-compress.md, *A member's blocks*).
+LEAD_RECORD = bytes.fromhex("0d4c0037")
+
+
+def add_leading_record(d):
+    """Put that record into a one-entry file that has none — the inverse
+    of `drop_leading_record`, and the specimen that makes the answer
+    positive rather than negative.
+
+    A file written here is refused; dropping this record from a file the
+    encoder wrote gets the SAME refusal. Neither says the record is what
+    was missing — for that, a file that lacks one has to gain one and be
+    read (DECISIONS.md 2026-09-21, *the control that stopped the wrong
+    answer*).
+    """
+    ms = D.members(d)
+    if not ms or len(ms) != 1:
+        raise SystemExit("mutate-now: --add-leadrec wants a one-entry file")
+    name, dlen, rlen, st, en = ms[0]
+    first = int.from_bytes(d[st:st + 4], "big")
+    nrec = (first - st - 4) // 8 - 1
+    recs = [bytes(d[st + 4 + 8 * k:st + 12 + 8 * k]) for k in range(nrec)]
+    if nrec and int.from_bytes(recs[0][4:8], "big") == first:
+        raise SystemExit("mutate-now: this table already has one")
+    spare = bytes(d[st + 4 + 8 * nrec:st + 8 + 8 * nrec])
+    tail = bytes(d[first:en])
+
+    out = bytearray(d[:st])
+    out += struct.pack(">I", first + 8)
+    out += LEAD_RECORD + struct.pack(">I", first + 8)      # produces no bytes
+    for r in recs:
+        out += r[:4] + struct.pack(">I", int.from_bytes(r[4:8], "big") + 8)
+    out += spare
+    out += struct.pack(">I", sum(out[st:]) & 0xFFFFFFFF)
+    out += tail
+    out += d[en:]
+    rec = 24
+    out[rec + 102:rec + 106] = struct.pack(">I", en + 8)
+    out[rec + 106:rec + 110] = struct.pack(
+        ">I", sum(out[rec:rec + 106]) & 0xFFFFFFFF)
+    d[:] = out
+    return 1, ("a leading %s record added, %d B -> %d B"
+               % (LEAD_RECORD.hex(), en, en + 8))
 
 
 # ------------------------------------------------------------------
@@ -303,12 +533,21 @@ def rename(d, name):
     """Change the name a compressed file carries INSIDE it — the entry
     record's Pascal name — and fix that record's checksum. Several
     mutations of one specimen have to sit on one volume, and Now
-    Compress names what it expands after this field."""
+    Compress names what it expands after this field.
+
+    **What follows the name is left alone**, and that is not tidiness:
+    the encoder leaves 23 catalogue-shaped bytes there and this rewrote
+    them as zeros until 2026-09-21, which is `--like-synth namepad`
+    applied to every file on the volume — including the control. Give a
+    rung a name as long as the one it replaces and those bytes never
+    move.
+    """
     raw = name.encode("mac-roman")
     if not 1 <= len(raw) <= 31:
         raise SystemExit("mutate-now: a name is 1..31 bytes")
     rec = 24
-    d[rec:rec + 32] = bytes([len(raw)]) + raw + bytes(31 - len(raw))
+    d[rec] = len(raw)
+    d[rec + 1:rec + 1 + len(raw)] = raw
     d[rec + 106:rec + 110] = struct.pack(
         ">I", sum(d[rec:rec + 106]) & 0xFFFFFFFF)
     return name
@@ -372,6 +611,25 @@ def main():
     ap.add_argument("--first-only", action="store_true",
                     help="with --delta, move only the u32 that says where "
                          "the first block begins")
+    ap.add_argument("--records-only", action="store_true",
+                    help="with --delta, move every record's end offset and "
+                         "leave that u32 correct")
+    ap.add_argument("--record", type=int, metavar="K",
+                    help="with --delta, move the end offset of record K "
+                         "alone")
+    ap.add_argument("--zero", metavar="AT:LEN",
+                    help="zero LEN bytes at +AT of the entry record, for "
+                         "bisecting inside a field")
+    ap.add_argument("--add-leadrec", action="store_true",
+                    help="put the leading 0d4c 0037 record into a table "
+                         "that has none, the inverse of --like-synth leadrec")
+    ap.add_argument("--head", metavar="FILE",
+                    help="take FILE's 24-byte header and 110-byte entry "
+                         "record, keeping this file's own data area")
+    ap.add_argument("--like-synth", metavar="GROUP",
+                    help="make an encoder-written file look like one this "
+                         "project writes, in one respect: %s"
+                         % ", ".join(SYNTH_GROUPS))
     ap.add_argument("--recode", type=int, metavar="MAXLEN",
                     help="re-code a one-block file's Huffman region with a "
                          "code at most MAXLEN deep")
@@ -395,10 +653,22 @@ def main():
         did.append(mutate_prefix(d, bytes.fromhex(args.prefix)))
     if args.count is not None:
         did.append(mutate_count(d, args.count))
+    if args.zero:
+        at, _, n = args.zero.partition(":")
+        did.append(zero_field(d, int(at, 0), int(n or 1, 0)))
+    if args.add_leadrec:
+        did.append(add_leading_record(d))
+    if args.head:
+        did.append(take_head(d, args.head))
+    if args.like_synth:
+        did.append(mutate_like_synth(d, args.like_synth))
     if args.recode is not None:
         did.append(mutate_recode(d, args.recode))
     if args.delta is not None:
-        did.append(mutate_delta(d, args.delta, args.first_only))
+        which = ("first" if args.first_only else
+                 "records" if args.records_only else
+                 args.record if args.record is not None else "all")
+        did.append(mutate_delta(d, args.delta, which))
     if not did:
         raise SystemExit("mutate-now: nothing asked for")
     open(args.dst, "wb").write(bytes(d))

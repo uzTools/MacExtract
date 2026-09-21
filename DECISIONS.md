@@ -228,6 +228,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
 - 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
 - 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
+- 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
 
 ---
 
@@ -13956,3 +13957,98 @@ words the note could not name turning out to be the mode and padding of
 a leading record that produces no bytes. That reading is the
 reference's, and what makes it a measurement here is the 108 members
 and their checksums; it is also what `tools/derive_now.py` walks now.
+
+## 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
+
+**One mutation is a question with two answers.** The session before this
+one changed a field, handed the file back to Now Compress and learned
+that its decoder tolerated it — twice, for two shapes of a wrong block
+table — and the note it wrote said in as many words that the RULE was
+still unknown. What was missing was not a cleverer mutation: it was
+**six copies of the same file on one volume**, one field of its block
+table moved in each, every checksum over it recomputed, in a single
+run. Five came back byte for byte and one did not, and a seventh rung
+on a second volume — the LAST record short instead of the first — said
+which block pays: **a wrong record damages its own block and no
+other**, in both directions. Together they say what no pair of them
+could (docs/formats/now-compress.md, *The
+archive layer*, for the table): the correction Now Compress applies is
+a **whole-table constant**, it works in either direction, the stored
+first-block offset is no part of it, and it is not where the record
+count comes from either — short by 100, that u32 makes
+`(first − start − 4)` equal −68, and the file still read.
+
+**The engine was left as it is, deliberately.** It corrects by a
+constant computed from that u32, so it refuses three files the format
+reads; the reading that fits every rung — one constant tried across the
+records and kept only if the blocks then check out — is a hypothesis,
+and the files it would buy are files no encoder writes. Changing a walk
+that 124 Now files and 42 archives depend on, to accept specimens this
+project makes itself, is the shape of change this repository has
+learned to price before taking. What the measurement bought is the
+note: a reader that has to choose now knows which field is trusted
+least.
+
+**A constant in the harness was what made a ladder look expensive.**
+`nowcompress.py --expand` pressed Return twice per run, which is
+exactly enough for the report a clean run puts up — so the first file
+it refused would have stopped every file behind it, and six rungs would
+have been six boots of eight minutes rather than one. One Return per
+file on the volume, and a ladder costs what a single mutation used to.
+The smell is this repository's own: a constant that does not vary with
+its input is usually a ceiling nobody questioned.
+
+**A helper that tidies can erase what you are measuring.** `--rename`
+wrote the entry record's 32-byte name field whole — length, name,
+zeros — and the encoder leaves 23 catalogue-shaped bytes in that
+padding. Every file on the next volume, the control included, would
+have carried one of the differences that volume existed to test. What
+caught it was the mutation printing what it had changed: *"the 23 bytes
+after the name zeroed (were zero already)"*. A mutation that reports
+its own before-and-after is not decoration.
+
+**And a run that ends early looks exactly like a refusal.** The second
+ladder came back with four files unexpanded, of which **two** had been
+refused: the volume was ejected while QuickFiler was still working
+through the selection, and a file it had not REACHED is byte for byte a
+file it declined. The last screenshot is what tells them apart — an
+icon still highlighted is still in the selection — and the harness now
+waits fifteen seconds per file on the volume instead of a flat thirty.
+Re-run with that, both of the doubtful rungs came back byte-exact, so
+the note says what it would otherwise have got wrong twice over: the
+Finder flags, the dates, the u32 at +94 and the 23 bytes after a short
+name are read by nothing.
+
+**And the file this project could not get read was missing one
+record.** `synth_now.py` has written compressed files since M12 that
+Now Compress calls *"damaged and cannot be repaired"*, with every field
+right and every checksum agreeing; that refusal is why the specimen for
+the escape past 15 had to be a re-coding of a real file rather than a
+construction, and what was wrong with it went down as not known. It is
+the **leading record** — the eight bytes that produce no output and
+whose end offset repeats the first-block offset. Dropping it from a
+file the encoder wrote gets that alert word for word, and **a file
+built here with one added comes back out of Decompress byte for byte**,
+16,000 of 16,000.
+
+Neither half would have done alone, which is the same shape as the
+escape experiment the day before: a mutation that FAILS says only that
+something changed, and the file built here differs from the encoder's
+in more than one way, so the negative could have been about any of
+them. It took the positive specimen — the field ADDED to a file that
+lacked it — to name the field, and an encoder-written control beside it
+on the same volume to say the question was fair.
+
+**Byte 2 of a shape-3 header is computed, not left over.** Eight
+hypotheses about the block had failed and the sequence over
+near-identical members ruled out a per-block quantity, which left
+"uninitialised memory" as the reading this project was closest to
+taking. Running the same case a second time settles that without any
+theory of what the field means: **the two archives differ in their date
+fields and the checksums over them and nowhere else**, byte 2 included.
+Ask whether a value is noise before asking what it means; a repeat run
+is the cheapest experiment there is, and the only one that can answer
+it. What it does track is where the encoder is in its window — 41 of
+the 43 values above 200 in the 1995 archive are in blocks that start in
+the low half of its 64 KB window — which is a correlation and not a
+formula, and is filed as one.

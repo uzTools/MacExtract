@@ -396,7 +396,14 @@ def encode_stream(stream, shapes, chunk, dictcache, use_dict, restarts=()):
     return blocks, dictnow
 
 
-def build_table(blocks, table_off, delta=0, padding=0, restarts=()):
+# The mode and padding Now Compress 5.0.1 writes in the record it puts
+# in front of a compressed file's block table. The file the program
+# accepted on 2026-09-21 had these, so this writes these.
+LEAD_WORDS = bytes.fromhex("0d4c0037")
+
+
+def build_table(blocks, table_off, delta=0, padding=0, restarts=(),
+                restart_words=None):
     """A file's block table: the first data offset, one 8-byte record per
     block, four bytes, and a 32-bit sum of everything before them. Every
     offset stored is the real one less `delta`, which is how the archives
@@ -405,6 +412,16 @@ def build_table(blocks, table_off, delta=0, padding=0, restarts=()):
     `restarts` names blocks before which a zero-length record is written:
     the reference reads that as "the next block starts a stream", which
     is what makes it reload the dictionary cache mid-table.
+
+    `restart_words` are the mode and padding to write in such a record.
+    They mean nothing to any reader here — the field that carries the
+    meaning is the end offset — and the encoder's own values are not
+    constant either (`0d4c 0037` in every file 5.0.1 wrote here,
+    `84e4 01e4` in the 1995 archive). The default is zeros, which every
+    archive this file writes has used since M12 and `unar` reads; the
+    compressed files handed to Now Compress itself carry 5.0.1's pair,
+    because that is what the specimen it accepted had in it and nothing
+    here has measured the difference.
     """
     nrecs = len(blocks) + len(restarts)
     first = table_off + 4 + 8 * nrecs + 8
@@ -413,7 +430,7 @@ def build_table(blocks, table_off, delta=0, padding=0, restarts=()):
     last = first
     for i, (flags, payload) in enumerate(blocks):
         if i in restarts:
-            rec = u16(0) + u16(0) + u32(last - delta)
+            rec = (restart_words or (u16(0) + u16(0))) + u32(last - delta)
             recs += rec
             checksum += sum(rec)
         nxt = last + len(payload) + padding + 4
@@ -677,10 +694,22 @@ def build_fork(name, data, shapes=("huffman",), chunk=0x8000,
     one is to write the file here. Unlike the archives above, the block
     trailers here are the real 32-bit sums and the file header carries
     its checksum, because a file with those wrong is not a fair question.
+
+    **And the table opens with a leading record, since 2026-09-21.**
+    Without one Now Compress calls the file *"damaged and cannot be
+    repaired"* however right the rest of it is, which is what made every
+    file this function wrote unreadable to the program it was written
+    for — measured both ways round, by dropping that record from a file
+    the encoder wrote and by adding one to a file this wrote
+    (docs/formats/now-compress.md, *A member's blocks*). `restarts`
+    reaches `build_table` only: before the first block there is no
+    dictionary to reload, so the record the format wants costs the
+    stream nothing.
     """
     blocks, _ = encode_stream(data, shapes, chunk, bytes(HISTORY), False)
     st = 24 + 110
-    table, blob = build_table(blocks, st)
+    table, blob = build_table(blocks, st, restarts=(0,),
+                              restart_words=LEAD_WORDS)
     blob = bytearray(blob)
     at = 0                                   # fill in each block's trailer
     for _flags, payload in blocks:

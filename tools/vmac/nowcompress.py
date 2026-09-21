@@ -671,8 +671,21 @@ def expand(outdir, macbinaries):
         s.shot("selected", wait=3.0)
         s.item(ITEM_DECOMPRESS_Y, "pick-decompress")
         s.shot("working", wait=40.0)
-        s.mac.key("Return")                          # a report, if there is one
-        s.shot("done", wait=60.0)
+        # One alert per file it refuses, so the number of Returns scales
+        # with the volume rather than being a constant: a ladder of
+        # mutations is put on one volume BECAUSE some rungs are expected
+        # to be refused, and an alert nobody dismisses stops every file
+        # after it. On a volume where nothing is refused the spare
+        # Returns land on the Finder, which opens and closes a name.
+        for _ in range(len(macbinaries) + 1):
+            s.mac.key("Return")
+            time.sleep(10)
+        # And the wait AFTER the alerts scales too. A run that ejects
+        # while QuickFiler is still working reads a volume where the
+        # files it had not reached yet look exactly like the ones it
+        # refused, which is how a seven-file volume came back with four
+        # unexpanded of which only two had been declined (2026-09-21).
+        s.shot("done", wait=30.0 + 15.0 * len(macbinaries))
         s.mac.key("Return")
         time.sleep(5)
         s.mac.command_key("w")
