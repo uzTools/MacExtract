@@ -132,7 +132,7 @@ def canonical(lengths):
     return codes
 
 
-def encode_huffman(data, numvalues, maxlen=15):
+def encode_huffman(data, numvalues, maxlen=15, lengths=None):
     """One UnpackHuffman region: endbits, the code as 4-bit lengths in
     symbol order, then a count of symbols whose length gains 16 and
     their indices, then word alignment from the region's start, then the
@@ -142,14 +142,20 @@ def encode_huffman(data, numvalues, maxlen=15):
     list is for; `maxlen` above 15 is how the archive that exercises it
     is made. The corpus fixture's deepest code is 12 (measured
     2026-08-15), so nothing else here reaches that branch.
+
+    `lengths` overrides the code entirely, which is how a code DEEPER
+    than the data deserves gets written: a legal prefix code need not be
+    an optimal one, and `tools/mutate_now.py --recode` uses that to put
+    an escape into a block Now Compress itself wrote.
     """
-    freq = Counter(data)
-    if len(freq) < 2:
-        for sym in range(numvalues):        # a code needs two symbols
-            if sym not in freq:
-                freq[sym] = 1
-                break
-    lengths = huffman_lengths(freq, maxlen)
+    if lengths is None:
+        freq = Counter(data)
+        if len(freq) < 2:
+            for sym in range(numvalues):    # a code needs two symbols
+                if sym not in freq:
+                    freq[sym] = 1
+                    break
+        lengths = huffman_lengths(freq, maxlen)
     assert max(lengths.values()) <= 31       # 15 in the nibble, plus 16
     codes = canonical(lengths)
 
@@ -649,6 +655,47 @@ def expected(tree):
     for node in tree:
         walk(node, "")
     return out
+
+
+def build_fork(name, data, shapes=("huffman",), chunk=0x8000,
+               typ=b"????", creator=b"UNIX", mode=0x003F):
+    """A compressed FILE, which is an archive of one entry.
+
+    Measured 2026-09-21: what Now Compress writes when it compresses a
+    file rather than archiving one is the same 24-byte header and the
+    same 110-byte entry record an archive has, with an entry count of 1,
+    followed by that entry's data area (docs/formats/now-compress.md,
+    *A compressed file is an archive of one entry*). `shapes` picks the
+    coder: `huffman` writes a code no deeper than 15, `huffdeep` one
+    that needs the escape.
+
+    This writes one so that the encoder's own **Decompress** can be
+    asked to read it — `tools/vmac/nowcompress.py --expand`. The escape
+    past 15 is what it was written for: Now Compress refuses to produce
+    a code deeper than 15 (eight attempts, *What this note does NOT
+    describe*), so the only way to find out whether its decoder reads
+    one is to write the file here. Unlike the archives above, the block
+    trailers here are the real 32-bit sums and the file header carries
+    its checksum, because a file with those wrong is not a fair question.
+    """
+    blocks, _ = encode_stream(data, shapes, chunk, bytes(HISTORY), False)
+    st = 24 + 110
+    table, blob = build_table(blocks, st)
+    blob = bytearray(blob)
+    at = 0                                   # fill in each block's trailer
+    for _flags, payload in blocks:
+        at += len(payload)
+        blob[at:at + 4] = u32(sum(bytes(blob[at - len(payload):at])))
+        at += 4
+    rec = entry_record(name, False, 0, len(data), 0, st,
+                       st + len(table) + len(blob), typ, creator)
+    hdr = bytearray(24)
+    hdr[0:2] = u16(0x0002)
+    hdr[2:4] = u16(mode)
+    hdr[4:8] = u32(0x8000)                   # what the encoder writes here
+    hdr[8:12] = u32(1)                       # one entry
+    hdr[20:24] = u32(sum(hdr[:20]))
+    return bytes(hdr) + rec + bytes(table) + bytes(blob)
 
 
 def write_one(outdir, name, tree, delta=0):

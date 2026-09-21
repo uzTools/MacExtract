@@ -1266,6 +1266,35 @@ a harness can click is not the same list.
   usually a field you have not finished reading**, and an unexplained
   CONSTANT beside it is the pointer.
 
+- **"The block table sits at one of two places and the header says
+  which", and "an archive over 64 KB widens the record."** Both written
+  2026-09-21 in `docs/formats/now-compress.md`, both withdrawn the same
+  day. The eight-byte records are `[u16 mode][u16 padding][u32 END
+  offset]` from +4 of a member's data area, always, with a u32 in front
+  saying where the first block begins and therefore where the table
+  stops; the two readings pick out the same blocks on every file here,
+  and the simpler one needs no special case for the 1993 archive or for
+  the 1995 one's 2.9 MB. **Cost:** none to any output — but it left
+  `0d4c 0037` in the note as "two words this reader cannot name" for a
+  day, and they are the mode and padding of a leading record that
+  produces no bytes. **Why it survived:** reading the offset FIRST is
+  natural when a table's job is to say where blocks start, it decoded
+  every specimen, and each special case it needed looked like a fact
+  about the file that needed it. **A reading that grows a case per
+  specimen is a reading with the fields in the wrong order.**
+
+- **"The word at +2 of a Now Compress file header is a version."**
+  Written 2026-09-21, withdrawn the same day. It is the compression
+  SETTING, in the same layer bits a block's mode word uses: `0x0010`
+  Faster, `0x003f` Smaller, `0x0060`/`0x0160` an archive. What settles
+  it is four bare forks that asked for Smaller and came out as shape-1
+  blocks — `0x001f` — while their headers still say `0x003f`, so the
+  word is what the user picked and not what the coder did. **Cost:**
+  none; the 1993 archive is still told from a 5.0.1 one by that word,
+  which is all anything here used it for. **Why it survived:** two
+  values, two eras, and nothing else to compare them with until the
+  compressed FILES were read as archives of one entry.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

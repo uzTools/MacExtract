@@ -227,6 +227,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the manual for the other machine) — PackIt is published, in the documentation of a DOS extractor
 - 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
 - 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
+- 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
 
 ---
 
@@ -13830,4 +13831,128 @@ thing is worth more than silence**, and it is why the cases are kept.
 blocks of 75 and 0 on six, matches no bitmap of the lengths or
 distances a block uses, and tracks the shortest match on part of one
 probe and then stops. What `00 03` means. And the zero byte between a
-Huffman table and its stream.
+Huffman table and its stream. — *All three were settled later the same
+day, by changing each field and handing the file back to the encoder:
+2026-09-21, (asking the program that wrote it).*
+
+## 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
+
+**A reader that ignores a field cannot tell you whether the FORMAT
+ignores it.** The note written earlier the same day ended with three
+fields it could not account for — byte 2 of a shape-3 block header, the
+two bytes `00 03` every LZSS stream opens with, the byte between a
+Huffman table and its stream — and a fourth it could not test, the
+offset delta `src/fmt_now.c` corrects a block table by. All four were
+"nothing here reads it", which is a fact about this engine and about
+XADMaster, the only two readers there are.
+
+**So the question was put to the encoder.** `tools/mutate_now.py`
+changes one field and recomputes every checksum over it — a block's
+four-byte trailer, the block table's, the entry record's, the file
+header's — so that no correct reader can tell the file from the
+original; `tools/vmac/nowcompress.py --expand` drives Now Compress's own
+**Decompress** over a compressed file, and `--adjudicate` runs a
+self-extracting archive's own decoder. What comes back is compared with
+what went in. Four answers, all measured, all on this day:
+
+- **Byte 2 is read by nothing.** All 38 shape-3 blocks of an archive
+  were given `0x5a` there; its own self-extractor produced **80 forks of
+  80 byte for byte**.
+- **`00 03` is read by nothing** either — `5a a5` in a shape-1 block,
+  two other symbols of the same code length in a shape-2 one, both
+  files back out of Decompress unchanged.
+- **The byte after a Huffman table IS read**: set to 7, the same file
+  comes back as 16,000 bytes of something else.
+- **The offset delta is the format's, not the reference's belief.** An
+  archive with every stored offset short by 100 and the table checksum
+  recomputed — the shape `tools/synth_now.py` writes to exercise the
+  search — comes out of its own self-extractor byte for byte, while
+  this engine with `now_find_delta` disabled refuses all four of its
+  members. **And the same archive with only the first-block u32 short**
+  reads back too, where this engine refuses it: a correction that adds
+  one constant to every record turns its correct records into wrong
+  ones. So the delta is real and the reference's mechanism is not the
+  format's; what the format's is, is not known, and no file the encoder
+  writes needs either.
+
+**And byte 2 was not a hard question, it was 386 easy ones.** Every
+hypothesis this project had tested was a property of the BLOCK — header
+size, table sizes, code depths, flush counts, compression ratio,
+bitmaps of the lengths and distances used — and all of them failed
+because the answer is not in that class at all. `--case tokdist`
+archives forty near-identical members, and its byte 2 reads 191, 224,
+240, 248, 252, 254, 255, then 255 for the remaining thirty-two, each
+step halving the distance to 255. A per-block quantity cannot do that.
+**When a long list of hypotheses all fail, the list may be the
+problem**: one sequence over near-identical inputs said in a glance
+what 386 blocks of negative results had not.
+
+### The control that stopped the wrong answer
+
+The escape past 15 — a count of symbols whose code length gains 16 —
+had no specimen, because Now Compress will not write a code deeper than
+15 (eight attempts, and the reason is structural: every shape puts an
+LZ coder under the Huffman one and it eats the skew). So one was
+written here: a whole compressed file built from scratch, one block,
+a 20-deep code over Fibonacci data. **Now Compress called it "damaged
+and cannot be repaired"**, and that looked like an answer — the escape
+is a fiction the reference invented.
+
+It was not. The same volume carried **the same file with a code 13
+deep**, and Now Compress refused that one too: what it dislikes is
+something about a file written from scratch here, not the escape. The
+real specimen had to be a **re-coding of a file the encoder itself
+wrote** — `--recode 20` decodes the Huffman region of `half.bin` to the
+LZSS stream underneath and writes it back under a code that is legal
+but not optimal, a chain of lengths 1, 2, … 20, 20 with the shallowest
+leaf split as often as there are symbols to place, putting six symbols
+at 16 to 20 bits and changing nothing else in the file. **Decompress
+returned all 16,000 bytes**, and so did the control re-coded at 15.
+
+A mutation that FAILS proves only that something changed. It takes a
+positive specimen to say what a field means, and a control beside it to
+say the specimen is fair — the first draft of this experiment had
+neither, and its conclusion was the opposite of the truth.
+
+### What the four answers left, and what was under them
+
+Two of them were load-bearing for the licence. The offset delta and the
+escape were the last two facts in `src/fmt_now.c` that rested on
+XADMaster; both are measured now, and the file's coders were rewritten
+from the note the same day. **One Huffman-region reader serves all
+three of its consumers** — a Huffman-only block, the stream under a
+shape-2 block, and the header a shape-3 block writes its two code
+tables in — which is the note's own account of the format rather than
+the reference's three functions, and the 346-byte staging array that
+header needs moved into the per-archive allocation its code tables
+already live in. Byte-exact on all 124 Now Compress files here and on
+`run_now.py`'s 42 archives, **−204 B of code**, **−616 B** of the
+frames its deepest chain uses, and **790 → 792 engine ticks** on a
+7 MHz Mac Plus, which is that instrument's own resolution.
+
+**The draft that read best was 2.7 % slower, and Linux said it was
+faster.** Splitting the region's OPENING into its own function —
+clearer, and 572 B less of frame again — cost **790 → 811 ticks** on
+`derived-Expand_Now_1.0.1.sea`, reproducibly, while callgrind had that
+build executing 12,000 FEWER x86 instructions and 1.1 % fewer on the
+9.9 MB archive. Three more shapes were measured on the Plus before one
+landed at parity: the bound hoisted into a local (−2), the class bases
+fetched after their extra bits (0, reverted), and finally the loop put
+back in one function with every value it touches a local (−19). **What
+a 68000 pays for is not what a Linux profile counts** — here it was
+register allocation across a call boundary inside a loop that runs
+32,768 times a block — and this project has a probe for exactly that;
+the only mistake was reaching for it fourth instead of first.
+
+**And the container turned out to be one thing, not two.** A compressed
+FILE is an archive of one entry — the same 24-byte header, the same
+110-byte entry record, both checksums agreeing on all sixteen bare
+forks — which is what the engine had been reading since M12 without
+anybody writing it down, and which is why "the fork header" had a block
+table at 144: 134 + 10. The block table has **one layout and one
+offset width**, not the two the note had derived: records of
+`[mode][padding][end offset]` from +4, on all 108 members, with the two
+words the note could not name turning out to be the mode and padding of
+a leading record that produces no bytes. That reading is the
+reference's, and what makes it a measurement here is the 108 members
+and their checksums; it is also what `tools/derive_now.py` walks now.

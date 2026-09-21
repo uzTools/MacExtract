@@ -537,60 +537,61 @@ def members(d):
 
 
 def member_blocks(d, st, en):
-    """One member's block table: eight-byte records — an offset, a u16
-    mode and a u16 padding count (`records`) — ending on the record
-    whose offset is the member's end.
+    """One member's block table.
 
-    **It sits at one of two places, and the header says which.** The
-    member's data area opens with the first block's offset at `st + 2`,
-    and the table's first record must repeat it. In everything Now
-    Compress 5.0.1 wrote the table is at `st + 10`, with two words this
-    reader cannot name (`0d4c`, `0037`) between; in the corpus's 1993
-    `derived-Expand_Now_1.0.1.sea` those two words are absent and the
-    table starts at `st + 2`. Reading the later layout into the older
-    file loses the FIRST block, which is how that archive came to look
-    like two blocks for a fork that needs three — and its three add up
-    to 88,942 bytes exactly.
+    A member's data area opens with **a u32 saying where its first block
+    begins**, and that number is also where the table ENDS, so it says
+    how many records there are:
 
-    **And an archive over 64 KB widens the record**: the 1995
-    `derived-SyntheticReferences2.0.sea` addresses 2.9 MB, which a u16
-    offset cannot reach, so its records are a u32 offset, a u16 mode
-    and a u16 padding count — the same eight bytes with the offset
-    taking the zero half. Both widths are tried and the terminator — a
-    record whose offset is the member's end — is what says which is
-    right.
+        st + 0     u32, the first block's offset
+        st + 4     n records of [u16 mode][u16 padding][u32 END offset],
+                   n = (first - st - 4) / 8 - 1
+        then       four bytes, then a u32 equal to the sum of every byte
+                   of the data area before it
+        first      the first block
 
-    **A record whose offset repeats the one before it** produces no
-    bytes. This reader treats it as the boundary between a member's two
-    forks, which is what it is in the 1995 archive's `SynRef2.0 INFO`;
-    the engine calls the same record a stream restart and reloads its
-    dictionary cache there (FORMATS.md, *Now Compress*). Both accounts
-    are of one record, and the archive has two of them — that one, and
-    the repeat that opens the big member's table by restating the
-    first-block offset its header already gave.
+    One place and one width, on **all 108 members here** — the two
+    corpus archives, the sixteen bare forks and every archive the
+    harness has made — with that checksum agreeing on every one. This
+    reader read the same bytes as [offset][mode][padding] records at one
+    of two places and one of two widths until 2026-09-21; the two
+    readings pick out the same blocks, and this one needs no special
+    case for the 1993 archive (whose leading record the other one
+    dropped) or for the 1995 archive's 2.9 MB (which no u16 offset can
+    reach). `0d4c`/`0037`, the two words that reading could not name,
+    are the mode and padding of a LEADING record that produces no bytes.
+
+    Returned in this tool's own vocabulary — (start, mode, padding) per
+    block, ending with a sentinel whose start is the member's end —
+    because a start is what the decoders here take.
+
+    **A record whose end offset repeats the one before it** produces no
+    bytes: it is the boundary between a member's two forks, which is
+    what it is in the 1995 archive's `SynRef2.0 INFO`, and the record
+    5.0.1 writes in front of every table. The engine calls it a stream
+    restart and reloads its dictionary cache there (FORMATS.md, *Now
+    Compress*).
     """
-    first16 = int.from_bytes(d[st + 2:st + 4], "big")
-    for width, at in ((2, st + 10), (2, st + 2), (4, st + 8), (4, st)):
-        recs = []
-        p = at
-        while p + 8 <= len(d) and len(recs) < 2048:
-            off = int.from_bytes(d[p:p + width], "big")
-            mode = int.from_bytes(d[p + width:p + width + 2], "big")
-            pad = int.from_bytes(d[p + width + 2:p + width + 4], "big")
-            recs.append((off, mode, pad))
-            p += 8
-            if off == en:
-                break
-        else:
-            continue
-        if not recs or recs[-1][0] != en:
-            continue
-        if width == 2 and recs[0][0] != first16:
-            continue
-        if width == 4 and recs[0][0] != int.from_bytes(d[at:at + 4], "big"):
-            continue
-        return recs
-    return None
+    if st + 8 > len(d):
+        return None
+    first = int.from_bytes(d[st:st + 4], "big")
+    n = (first - st - 4) // 8 - 1
+    if n < 0 or n > 4096 or st + 4 + 8 * n + 8 > len(d) or first > len(d):
+        return None
+    recs, last, p = [], first, st + 4
+    for _ in range(n):
+        mode = int.from_bytes(d[p:p + 2], "big")
+        pad = int.from_bytes(d[p + 2:p + 4], "big")
+        end = int.from_bytes(d[p + 4:p + 8], "big")
+        recs.append((last, mode, pad))
+        last = end
+        p += 8
+    if last != en:
+        return None
+    if int.from_bytes(d[p + 4:p + 8], "big") != (sum(d[st:p + 4]) & 0xFFFFFFFF):
+        return None
+    recs.append((last, 0, 0))
+    return recs
 
 
 # The coder lives in the mode word's bits, and the archive sets one the
@@ -851,11 +852,16 @@ def read_archive(d, want=None):
         w = forks[0] if forks else None
         for (off, mode, pad), (nxt, _, _) in zip(recs, recs[1:]):
             if nxt == off:
-                # a record repeated is a fork boundary: no bytes of its
-                # own, the next block starts the member's other fork
-                fork += 1
-                pos = 0
-                w = forks[fork] if forks and fork < len(forks) else None
+                # A record that produces no bytes says the next block
+                # STARTS a stream. Where bytes have already come out of
+                # this member it is the boundary between its two forks
+                # (the 1995 archive's `SynRef2.0 INFO`); in front of a
+                # table it is what 5.0.1 writes before every one, and
+                # there is no fork to close.
+                if pos:
+                    fork += 1
+                    pos = 0
+                    w = forks[fork] if forks and fork < len(forks) else None
                 continue
             kind, skip = archive_kind(mode)
             left = (len(w) - pos) if w is not None else (
