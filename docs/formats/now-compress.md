@@ -1,4 +1,4 @@
-# Now Compress — one shape of five
+# Now Compress — two coders, its blocks and its archive
 
 **This is the only format left in this project's inventory with no
 published description of any kind.** There is no wiki page for it, no
@@ -12,12 +12,14 @@ Compress itself under the emulator and compresses files chosen here,
 keeping each input beside its output. This note is what reading those
 pairs yields, and `tools/derive_now.py` re-runs the reading.
 
-**How much of the format this is.** Two of its coders and its block
-structure — enough to read **every specimen the harness has made**,
-eight of eight, byte for byte against the inputs they were made from.
-Not enough to read the corpus's real archives, whose blocks this
-cannot yet locate: `src/fmt_now.c` still cites XADMaster for all of
-it. What follows is nevertheless the first account of any part of this
+**How much of the format this is.** Two of its coders, its block
+structure and its **archive container** — enough to read every
+compressed specimen the harness has made, eight of eight, byte for
+byte against the inputs they were made from, and enough to walk the
+corpus's 1993 archive into the three blocks its fork needs. A third
+coder, the one an archive uses, is read as far as its code table and
+no further. `src/fmt_now.c` still cites XADMaster for all of it.
+What follows is nevertheless the first account of any part of this
 format that owes nothing to that file.
 
 ## A fork is a sequence of blocks
@@ -116,6 +118,83 @@ was given.
 **Faster and Smaller produced the same bytes** for both files, so
 whatever the mode word changes, it did not change these two streams.
 
+## The archive layer
+
+**An archive is not a fork**, and treating one as a fork is why the
+corpus's two real specimens read as nonsense for a year. What sits at
+144 in them belongs to a member, not to the file.
+
+- the file header's **word 5 is the member count**;
+- **member records start at 24 and are 110 bytes each**: a Pascal
+  name in the first ten bytes, the member's uncompressed size at +88,
+  and the bounds of its data area at **+98** and **+102**;
+- a member's data area opens with the same header tail a bare fork
+  has — the **first block's offset** at +2 — and then its **block
+  table**, the same eight-byte records.
+
+**The table sits at one of two places and the header says which.**
+The first record must repeat the first-block offset the header states.
+In everything Now Compress 5.0.1 wrote the table is at **+10**, with
+two words this note cannot name (`0d4c`, `0037`) in between; in the
+corpus's 1993 `derived-Expand_Now_1.0.1.sea` those two words are
+absent and the table starts at **+2**.
+
+**FORMATS.md had the answer already.** Its *Now Compress* section has
+recorded since 2026-08-15, from instrumenting the engine's block
+loop, that this archive is "three blocks, 'new' LZSS twice and
+Huffman-only once" — which is `0x40`, `0x20`, `0x40` in that order.
+The walk above reproduces it from the file.
+
+That one distinction is the whole of what was missing. Reading the
+later layout into the older file drops its FIRST block, which is why
+that archive looked like two blocks of a fork that needs three. Read
+correctly it is three — `(178, 0x40)`, `(19158, 0x20)`,
+`(49796, 0x40)` and the end sentinel — and **32,768 + 32,768 + 23,406
+is 88,942, the fork's size exactly**.
+
+**The mode word gains a bit in an archive.** `0x20` is shape 2 and
+`0x40` is shape 3, below; a stored block inside an archive is `0x100`
+where a fork writes `0x0000`. The 1993 archive's middle block is
+`0x20`, and a 128-byte table with Kraft exactly 1.000000 sits one byte
+past its offset, where shape 2 puts one.
+
+## Shape 3 — the archive's coder, as far as its table
+
+The coder a `.sea` uses for its members is neither of the two above,
+and this note does not decode it. What it does read is the header,
+which is the same in all **eight** shape-3 blocks known — four made
+to order by `nowcompress.py --case probe`, two in the harness's own
+`Archive.sea`, two in the 1993 archive:
+
+- byte 0 is **`0x2f`** in every one of them;
+- bytes 1..4 are not identified;
+- **bytes 5..12 are a code-length code**: sixteen four-bit lengths,
+  one per length 0..15, and **Kraft's equality is exact on all eight**;
+- bytes 13..15 are **24 bits this note cannot account for**, zero in
+  every specimen;
+- from **bit 128** comes the main table, one code length per symbol
+  written in that code-length code, and it **ends where the code is
+  complete** — nothing states its length and the trailing absent
+  symbols are not sent;
+- **symbols 0..255 are the literals.** What follows them, from 257 up,
+  is the match alphabet: about 34 symbols, and not read here.
+
+**What says the literal region is right** is not the specimens it was
+derived from. In the 1993 archive's third block the table codes
+**252 literals, and the 23,406 bytes that block decodes to contain
+exactly those 252 distinct byte values** — none missing, none spare.
+Its first block codes 256 of 256. The four made-to-order blocks agree:
+a file written over `{A, B}` codes two literals at 65 and 66, one over
+`{A, B, C, D}` codes four, and the 15 distinct bytes of
+`one.txt` are the 15 the table codes.
+
+**One specimen the reading does not explain.** `runa.bin`, 4,000
+bytes of a single byte, produces a table with a complete code and
+**no literal coded at all** — which a file that has to emit its first
+byte somehow cannot be. Either that block is arranged differently or
+something before the table is being read wrongly on it. It is the one
+of eight that does not fit.
+
 ## What this note does NOT describe
 
 - **Where a shape-2 block's bit stream begins.** Its code table is
@@ -123,43 +202,17 @@ whatever the mode word changes, it did not change these two streams.
   and 18 in another, so something variable sits between — the one
   thing `tools/derive_now.py` still searches for, within a couple of
   bytes.
-- **The corpus's real archives.** `synth-now-mixed.now` and
-  `derived-Expand_Now_1.0.1.sea` are not read here, and the reason is
-  now known: **neither is a bare fork.** What sits at 144 in them
-  belongs to an outer container — the second is self-extracting, and
-  the resource fork wanted from it is an ENTRY inside the archive,
-  not the archive's own fork. Finding that is the next layer, not the
-  next coder.
-
-  **What the archive layer looks like**, from the harness's own
-  `Archive.sea` (two members, both inputs kept beside it): a header
-  whose fifth word is the member count, then one record per member
-  carrying a Pascal name at offset 24 and the same type, creator and
-  date fields a fork header has — `mixed.bin` at 24, `one.txt` at
-  134, so the records are about 110 bytes and NOT the 164-byte fork
-  header despite the resemblance. Member data follows, and the first
-  member's first block is stored: `mixed.bin`'s bytes appear verbatim
-  at 280. Eight-byte records in the shape of a block table sit just
-  before that data, at 262, with values that do not fit the reading
-  above. That is where the next attempt starts.
-
-  **One near-miss, recorded so nobody follows it twice.** That `.sea`
-  does have eight-byte records at 144, the first of them
-  `(0x4ad6, 0x20)` — and `0x4ad6` is 19,158, exactly one before the
-  only offset in the whole file where 128 bytes of nibbles give
-  Kraft 1.000000, which is where a shape-2 block's table would be.
-  It decodes nothing, at any bit position within three bytes, with
-  the table read at 19,158, 19,159 or 19,160. Either the resemblance
-  is chance or that block is arranged differently; either way the
-  next attempt should start by finding the entry, not by trusting
-  that record.
+- **Shape 3's stream.** The tokens after the table — how a literal,
+  a length and a distance are spelled — are not derived. That is what
+  stands between this note and the corpus's real archives.
 - **The rest of the fork header**, of which this note identifies the
   version word, the mode word, a ten-byte name field, two Mac dates,
   a `'????'`/`'UNIX'` type and creator — the harness's, not the
   format's — and the block table at 144.
 - **The trailer**, four bytes after a shape-1 payload, sometimes
   preceded by `0xff`. Presumably a checksum.
-- **Whether there are more shapes.** Two coders and "stored" account
-  for every block in every specimen here. PROGRESS.md's "five stream
-  shapes" counts something else — the container's five arrangements,
-  not five coders.
+- **Whether there are more shapes.** Three coders and "stored"
+  account for every block in every specimen here — shapes 1 and 2 in
+  a fork, shape 3 in an archive. PROGRESS.md's "five stream shapes"
+  counts something else — the container's five arrangements, not five
+  coders.

@@ -1702,7 +1702,12 @@ requires the bytes that went in to come back. They are not fixtures — the
 application is commercial and is not redistributed — so the check reports
 itself as skipped when the specimens are absent, which is what CI sees.
 Seven specimens cover stored, LZSS-only, Huffman-then-LZSS and new LZSS
-(FORMATS.md ✧).
+(FORMATS.md ✧). A fifth case, `--case probe`, archives four members
+deliberately made to RESEMBLE each other; it was built to make a code table
+legible and it found a decoder defect on its first run, because a match
+across a member boundary needs two members with something in common and
+nothing else in the corpus has that (DECISIONS.md 2026-09-21, *the window
+that stopped at the fork*).
 
 **What this cannot see.** XADMaster is the only implementation of Now
 Compress there is, and `fmt_now.c` was transcribed from it — so where a shape
@@ -2583,7 +2588,9 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_arc.py` | ARC's member header, RLE90, and methods 4, 8 and 9 | 6 members; `--grid` derives them from archives a real ARC 5.21q writes to order |
 | `derive_cpt.py` | Compact Pro, container and both coders | 536 forks of 68 archives |
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
-| `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 37 of 39 forks; the two it misses are named in `docs/formats/diskdoubler-dd.md` |
+| `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read |
+| `derive_packit.py` | PackIt's container, stored and Huffman-coded | 38 forks of 4 archives; it checks no CRC, so nothing here confirms the polynomial |
+| `derive_now.py` | Now Compress: shapes 1 and 2, the block table, and the archive container | the 8 specimens `nowcompress.py` makes, byte for byte; it also WALKS an archive given on the command line. The coder an archive's members use is read as far as its code table and no further, so it decodes none of the corpus |
 
 Each writes its corrections into `docs/formats/`, which is what the
 engine cites; the descriptions themselves are fetched into
@@ -2613,6 +2620,12 @@ minutes, and the whole set is the better part of an hour.
   `derive_arc.py --grid` grades against the bytes handed to a real
   ARC, and the DiskDoubler method-4 specimen is one Salient's own
   expander reads back.
+- **The difference between reading a table and reading a format.**
+  `derive_now.py` reports a shape-3 block's code table as read when
+  its two Kraft checks pass and its literal set matches the block's
+  output. Both are strong — one block's table codes 252 literals and
+  its output holds exactly those 252 distinct bytes — and neither is
+  a decode. No shape-3 stream has ever been decoded here.
 - **A degenerate match.** A single-leaf Huffman tree decodes any
   number of copies of one byte from nine bits that occur in almost
   any file; `derive_huffman_tree.py` refuses such matches, and the

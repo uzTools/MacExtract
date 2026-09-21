@@ -8,14 +8,14 @@ The Unarchiver's format wiki has a page for it, and
 and confirms, independently of this project, that method 8 is Compact
 Pro's coder "with blocksize 0xfff0 instead of 0x1fff0".
 
-**This row is NOT closed**, and the number below is why.
 `tools/derive_dd.py` is a reader written from that page alone — no
 container parser, because the wiki does not document DiskDoubler's
 containers ("see XADDiskDoublerParser.m for now") and this reader is
 not allowed to; it finds blocks by the checksum every DD block header
-carries. It reads **32 of the corpus's 34 DDn forks** and **all 5 of its AD
-forks** byte for byte against the oracle's sha256 — 37 of 39. Two it
-does not, and nobody here knows why yet.
+carries. It reads **all 34 of the corpus's DDn forks** and **all 5 of
+its AD forks** byte for byte against the oracle's sha256 — **39 of
+39** — once method 10's second form is added, which the page names and
+does not describe. That is correction 6 below.
 
 ## The corrections
 
@@ -44,6 +44,16 @@ the lengths are transmitted. Canonical codes — shortest first,
 assigned in symbol order, read most-significant-bit first — is what
 decodes; three other conventions were tried and read nothing.
 
+**6. Method 10 has two forms, and the page describes one.** The page
+names method 10 "DD1" and "DD2" and then describes a single coder. In
+the second form what the coder produces is not the fork but the fork's
+**first difference**: the fork is the running sum, `out[i] =
+out[i-1] + s[i]`, starting from zero. The transform is outside the
+coder, not inside its literal stream — matches copy differences, so a
+decoder that integrates only the literals gets the first few hundred
+bytes right and then drifts (BLOCKERS.md, *"The DD reader's structure
+is right; it is literal VALUES that are wrong"*).
+
 ## What the page gets right
 
 The 22-byte block header and every field in it, including the XOR
@@ -57,49 +67,36 @@ literals. The run-length stream's three cases — 0 a literal, under
 128 a match, 128 or over a run of `2^(code-128)` literals — and the
 observation that 0 and 128 do the same thing, which they do.
 
-## The two forks it does not read
+## The second form, and which forks use it
 
-`derived-Terrainman_2.0__.sea`, the 19,240-byte and 16,524-byte data
-forks of two pictures. Both are genuinely method 10 (a scratch build
-that prints each fork's method says so), both decode to the right
-LENGTH without any error, and the block beside them in the same
-archive — same flags, same shape — reads perfectly.
+Two forks of `derived-Terrainman_2.0__.sea` — the 19,240-byte and
+16,524-byte data forks of two pictures — are the corpus's only ones in
+the delta form, and they read with it. What identified it was a
+literal-substitution trace: feeding the true byte at every literal
+position and comparing the symbol the stream actually carried,
+**all 5,443 literals of one fork were the difference from the previous
+output byte and not the byte itself**, while only 167 of its 3,380
+matches copied the right source — which is what says the transform is
+over the whole stream rather than over the literals.
 
-What has been established about them, so nobody starts over:
+### Which form a fork uses
 
-- **the structure is right.** The block header states the number of
-  literals and the number of offsets, and a decode that ignores those
-  fields consumes **exactly** the stated counts: 5,443 literals and
-  3,380 offsets in one, 7,583 and 2,379 in the other. So the run
-  stream's literal/match decisions, and the number of offsets they
-  ask for, are being read correctly;
-- **the output POSITIONS stay right.** Substituting the true byte for
-  each literal and carrying on, the literals still land at the output
-  offsets the correct file has them at, for hundreds of symbols. So
-  match lengths and offsets are right too;
-- **it is literal VALUES, and not all of them.** Of the first thirty
-  literals, nineteen decode correctly — including a 10-bit and an
-  11-bit code, which is not luck — and eleven do not;
-- **and the wrong ones are not a permutation.** Two literals that
-  share a code (`101000`) want different bytes, which a prefix code
-  cannot do. Since a canonical code's SET of bit strings is fixed by
-  the lengths alone, and those lengths satisfy Kraft exactly, either
-  the length list is not what it appears to be for these blocks or
-  the stream carries something between literals that this reader does
-  not know about.
+That is a container fact, and the container is not described here. But
+the corpus states it twice, and the two statements agree on all **186
+forks** in it:
 
-No match in either reaches back before the fork's start, and
-descending-length code construction (the other plausible convention)
-decodes nothing at all.
+- the fork's **method byte** — `h[16]` for the data fork and `h[17]`
+  for the resource fork, where `h` is the header that follows the
+  `AB CD 00 54` marker — is `0x8a` rather than `0x0a`, so **bit 0x80
+  of the method byte** selects it;
+- the **u16 at `h+50`** (`h+52` for the resource fork) is 1 rather
+  than 0.
 
-It is not the XADMaster DDn defect this project has a reproduction
-for: that one is an input BOUND a byte short
-(`tools/xadmaster-ddn-repro/`), not a decoding rule, and this reader
-does not use a bound.
-
-**What would close it:** an explanation of those two forks. Until
-there is one, `src/fmt_dd.c` keeps citing `XADDiskDoublerParser.m` for
-method 10, because 94 % of a format is not a description of it.
+Both are set on exactly those two forks and on nothing else. Two
+fields that agree on every specimen cannot be told apart by any
+specimen here, so this note names both and claims neither.
+`tools/derive_dd.py` reads no container at all: it tries the plain
+form and then the delta form, and reports which read.
 
 ## AD, methods 6 and 9
 

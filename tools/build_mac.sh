@@ -199,7 +199,17 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # 18,916 → 17,002 ticks on derived-a2basic.dmg.sit at 4 MB, −10.1 %
 # (DECISIONS.md 2026-09-20, what a helper call costs that its count
 # does not say).
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152336}
+# Raised 2026-09-21 from 152,336 to 152,392: +56 B for a Now Compress
+# correctness fix, not an optimisation. The sliding history was sized
+# from the archive's LARGEST FORK on the strength of a comment saying a
+# back-reference cannot reach further than the fork has produced; the
+# window spans MEMBERS, and an archive Now Compress itself wrote names
+# offsets of 6,228 and 13,000 against a 6,000-byte window. The bound is
+# now the SUM of every fork, still capped at 32 KB. No fixture's peak
+# heap changes — every Now archive in the corpus already has a fork
+# over 32 KB (DECISIONS.md 2026-09-21, the window that stopped at the
+# fork; BLOCKERS.md, *Withdrawn claims*).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152392}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -241,7 +251,12 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152336}
 # both ways.
 # LOWERED 2026-09-20 from 38,652 to 38,640 with the Arsenic work above:
 # −12 B more.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38640}
+# Raised 2026-09-21 from 38,640 to 38,648 with the Now Compress fix
+# above: +8 B, and NOT a new table — measured, `m68k-apple-macos-size`
+# on that one object before and after: text 4,658 -> 4,712, data 0,
+# bss 0. It is rodata alignment shifting under the new text, the same
+# effect measured twice on 2026-09-19 and 2026-09-20.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-38648}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes

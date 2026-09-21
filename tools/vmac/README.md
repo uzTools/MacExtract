@@ -417,6 +417,7 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --setup     # fetch Now Utilities 5.0.1, convert
     tools/vmac/nowcompress.py --install   # install Now QuickFiler on System 7
     tools/vmac/nowcompress.py --case all  # write the specimens
+    tools/vmac/nowcompress.py --case probe   # four inputs chosen to be read
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
     tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
 
@@ -438,6 +439,15 @@ Three things to know before re-running it:
   result will not mount, which is the check.
 - **The installer's checkbox list is read back off the screen** after every
   click. Clicking it blind is how the first attempt turned QuickFiler off.
+
+**The `probe` case exists to make a code table legible**, and it is the
+technique worth reusing: its four members are a 4,000-byte run of one byte,
+6,000 bytes over `{A, B}`, 6,000 over `{A, B, C, D}` with known frequencies,
+and 6,000 whose second half repeats its first. A block whose literals can
+only be two known bytes is found by what its table MUST contain rather than
+by where the table might be — which is how the archive coder's header was
+read at all, the harness's other members being prose and keystream whose
+tables look like every other table (docs/formats/now-compress.md, *Shape 3*).
 
 What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".

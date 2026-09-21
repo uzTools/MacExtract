@@ -31,11 +31,13 @@ rather than under `build/`, which `make clean` removes.
 | Compress ▸ Smaller, text      | 0x1f        | LZSS only         |
 | Compress ▸ Smaller, mixed     | 0x3f        | Huffman then LZSS |
 | Compress ▸ Smaller, random    | 0x00        | stored            |
-| Archive ▸ Smaller (a .sea)    | 0x100/0x140 | stored / new LZSS |
+| Archive ▸ Smaller (a .sea)    | 0x100/0x140 | stored / shape 3  |
 
 so every shape but Huffman-only — which the corpus's 1993 fixture has —
 now exists as real bytes, and our decoder returns the input byte for byte
-on all of them. `unar` agrees on every specimen here, which is what makes
+on all of them. "Shape 3" is this project's name for the one an archive
+uses; `docs/formats/now-compress.md` describes its header and table and
+not its stream. `unar` agrees on every specimen here, which is what makes
 them worth keeping: the reading is confirmed against the ENCODER and the
 reference at once.
 
@@ -343,6 +345,19 @@ def read_volume(img, out):
     return got
 
 
+def alphabet(n, syms, weights, seed=b"macextract-now-probe"):
+    """A deterministic pseudo-random sequence over a SMALL alphabet.
+
+    What this is for: a block whose literals can only be two or four
+    known bytes makes a code table findable by what it MUST contain
+    rather than by where it might be. The archive shape's table could
+    not be located in `Archive.sea` any other way — its members are
+    prose and keystream, whose tables look like every other table.
+    """
+    pool = b"".join(bytes([s]) * w for s, w in zip(syms, weights))
+    return bytes(pool[b % len(pool)] for b in keystream(n, seed))
+
+
 CASES = {
     # name: (files on the volume, what to do, which mode)
     "faster": (lambda: {"prose.txt": PROSE, "runs.bin": RUNS},
@@ -355,6 +370,14 @@ CASES = {
     "archive": (lambda: {"mixed.bin": keystream(33000) + FOX * 800,
                          "one.txt": b"first file, compressible\n" * 300},
                 "archive", "smaller"),
+    # Four inputs chosen to make the archive shape's code table legible:
+    # one symbol, two, four with known frequencies, and one file that is
+    # its own first half repeated so a single match reaches 3,000 back.
+    "probe": (lambda: {"runa.bin": b"A" * 4000,
+                       "two.bin": alphabet(6000, b"AB", (1, 1)),
+                       "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),
+                       "far.bin": alphabet(3000, b"AB", (1, 1)) * 2},
+              "archive", "smaller"),
 }
 PROSE = (b"Now Compress was Now Software's, and it shipped with Now "
          b"Utilities. It compresses a fork at a time, in blocks.\n" * 60)

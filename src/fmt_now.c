@@ -649,7 +649,16 @@ int unc_now_extract(UncCtx *c)
      * One pass over the table bounds all three:
      *
      *   hist   <= NOW_HISTORY, and a back-reference cannot reach further
-     *            back than the fork has produced, so <= maxout too
+     *            back than the ARCHIVE has produced, so <= the sum of
+     *            every fork too. **Not the largest fork**: a stream's
+     *            first block reaches into the history the PREVIOUS
+     *            stream left behind (now_next_block, `first`), so a
+     *            match in the third member can name an offset longer
+     *            than any one fork in the file. Bounding this by
+     *            `maxout` refused two members of a four-member archive
+     *            Now Compress itself wrote, with offsets 6,228 and
+     *            13,000 against a 6,000-byte window
+     *            (BLOCKERS.md, *Withdrawn claims*)
      *   blkcap <= NOW_OUTBLOCK - NOW_HISTORY, and one block's output is
      *            part of a fork, so <= maxout
      *   incap  is left at NOW_INBLOCK: a block's COMPRESSED length is not
@@ -660,7 +669,7 @@ int unc_now_extract(UncCtx *c)
      * The tables go FIRST so their alignment is the allocator's own, and
      * everything after them is bytes. */
     {
-        uint32_t maxout = 0, i, scanat = at, left = totalentries;
+        uint32_t maxout = 0, totalout = 0, i, scanat = at, left = totalentries;
         while (left-- > 0) {
             uint32_t d, r;
             if (c->io->seek(c->io->ctx, scanat) < 0) return UNC_ERR_IO;
@@ -672,8 +681,15 @@ int unc_now_extract(UncCtx *c)
              * anything, and the two ceilings below clamp it anyway. */
             if (d > UNC_U32_MAX - r) d = UNC_U32_MAX - r;
             if (d + r > maxout) maxout = d + r;
+            /* Clamp BEFORE adding: a damaged header can declare a
+             * fork of 4 GB, and `totalout += d + r` wraps to a small
+             * number that would size the window too SHORT. */
+            if (totalout < NOW_HISTORY) {
+                if (d + r > NOW_HISTORY - totalout) totalout = NOW_HISTORY;
+                else totalout += d + r;
+            }
         }
-        st.hist   = maxout < NOW_HISTORY ? maxout : NOW_HISTORY;
+        st.hist   = totalout < NOW_HISTORY ? totalout : NOW_HISTORY;
         st.blkcap = maxout < (NOW_OUTBLOCK - NOW_HISTORY)
                     ? maxout : (NOW_OUTBLOCK - NOW_HISTORY);
         st.incap  = NOW_INBLOCK;

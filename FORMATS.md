@@ -275,7 +275,9 @@ exactly that file's resource fork followed by its data fork. That is what
 keeps it to fixed memory (DECISIONS.md 2026-08-15).
 
 **What the two real fixtures reach, measured** by instrumenting the block
-loop. `derived-Expand_Now_1.0.1.sea`: three blocks, "new" LZSS twice and
+loop — and reproduced from the file itself on 2026-09-21, once the archive
+container was derived (`docs/formats/now-compress.md`, *The archive layer*).
+`derived-Expand_Now_1.0.1.sea`: three blocks, "new" LZSS twice and
 Huffman-only once, zero padding, no offset delta, no stream restart, no length
 past a nibble, deepest code 12. `derived-SyntheticReferences2.0.sea`
 (1995, found 2026-08-16): a folder, a two-fork file and a 9,949,696-byte

@@ -461,4 +461,18 @@ if [ ! -f reference/notes/posix_ustar.txt ]; then
     rm -f /tmp/pax.html
 fi
 
+# PackIt — R. Scott McGinnis's unPACKIT 1.0 manual (1986, freeware), whose
+# appendices B and C are the only published description of the format this
+# project has found: the four subfile type words, the 94-byte entry header
+# field by field, and the note that a compressed entry codes that header
+# into the same stream as its forks. `reference/notes/PackIt.md` names it,
+# and that page had been here since the first fetch. Text, CR line endings.
+if [ ! -f reference/notes/packit_unpackit.txt ]; then
+    curl -sL -o /tmp/unpakit.zip \
+        "http://cd.textfiles.com/simtel/simtel9510/disk1/DISC1/MAC/UNPAKIT.ZIP"
+    unzip -p /tmp/unpakit.zip UNPACKIT.DOC | tr -d '\r' \
+        > reference/notes/packit_unpackit.txt
+    rm -f /tmp/unpakit.zip
+fi
+
 echo "references ready"

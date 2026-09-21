@@ -175,7 +175,27 @@ def decode(bs, t):
     raise ValueError("no code")
 
 
-def fork(d, start, nout, SEL):
+def integrate(b):
+    """The delta variant: what the coder produces is not the fork, it is
+    the fork's first difference. Each byte is an increment on the one
+    before it.
+
+    CORRECTION (the page does not mention this at all): method 10 has
+    two forms. The page names them — "DD1" and "DD2" — and describes
+    one. In the other, EVERY byte of the LZSS output is a difference:
+    literals and match bytes alike, so the transform sits outside the
+    coder and not inside its literal stream. That is what the two forks
+    of `derived-Terrainman_2.0__.sea` are, and with it they read.
+    """
+    out = bytearray(len(b))
+    prev = 0
+    for i, v in enumerate(b):
+        prev = (prev + v) & 0xFF
+        out[i] = prev
+    return bytes(out)
+
+
+def fork(d, start, nout, SEL, delta=False):
     out = bytearray()
     p = start
     while len(out) < nout:
@@ -183,7 +203,8 @@ def fork(d, start, nout, SEL):
         out, p = block(d, p, SEL, out)
         if len(out) == before:
             raise ValueError("empty block")
-    return bytes(out[:nout])
+    out = bytes(out[:nout])
+    return integrate(out) if delta else out
 
 
 def blocks_at(d):
@@ -277,7 +298,7 @@ def ad_blocks_at(d):
             yield p
 
 
-def check(path, SEL):
+def check(path, SEL, delta):
     d = open(path, "rb").read()
     mp = os.path.join(ROOT, "fixtures", "manifests",
                       os.path.basename(path) + ".json")
@@ -307,13 +328,22 @@ def check(path, SEL):
     ok = bad = 0
     for name, kind, n, sha in want:
         hit = False
+        # Which of method 10's two forms a fork uses is a CONTAINER fact
+        # and this reader has no container parser, so it tries both. A
+        # decoder that reads the entry header does not have to: see
+        # docs/formats/diskdoubler-dd.md, "Which form a fork uses".
         for p in starts:
-            try:
-                out = fork(d, p, n, SEL)
-            except Exception:
-                continue
-            if hashlib.sha256(out).hexdigest() == sha:
-                hit = True
+            for dl in (False, True):
+                try:
+                    out = fork(d, p, n, SEL, dl)
+                except Exception:
+                    continue
+                if hashlib.sha256(out).hexdigest() == sha:
+                    hit = True
+                    if dl:
+                        delta[0] += 1
+                    break
+            if hit:
                 break
         if hit:
             ok += 1
@@ -348,6 +378,7 @@ def main():
               "tools/fetch_references.sh (skipped)")
         return 0
     SEL = selectors()
+    delta = [0]
     if len(SEL) != 32:
         raise SystemExit(f"derive-dd: the page's selector table has {len(SEL)} rows")
     paths = a.fixtures or sorted(glob.glob(os.path.join(ROOT, "fixtures", "*.sea")) +
@@ -357,7 +388,7 @@ def main():
         return 0
     tok = tbad = narch = 0
     for p in paths:
-        ok, bad = check(p, SEL)
+        ok, bad = check(p, SEL, delta)
         if ok or bad:
             narch += 1
             print(f"{os.path.basename(p):40s} {ok:3d} fork(s)"
@@ -365,7 +396,8 @@ def main():
         tok += ok
         tbad += bad
     print(f"derive-dd: {tok} DD/AD forks of {narch} archive(s) read from the "
-          f"published description, {tbad} not")
+          f"published description, {tbad} not"
+          + (f" ({delta[0]} by the delta form)" if delta[0] else ""))
     return 0
 
 

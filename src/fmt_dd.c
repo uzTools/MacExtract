@@ -2,12 +2,18 @@
  * fmt_dd.c — DiskDoubler: single compressed files (0xABCD0054) and the
  * two archive containers, 'DDAR' and 'DDA2'.
  *
- * Layouts and every method number below are transcribed from
+ * The containers and every method number below are transcribed from
  *   Source: reference/XADMaster/XADDiskDoublerParser.m       (containers)
- *   Source: reference/XADMaster/XADDiskDoublerADnHandle.m    (methods 6, 9)
- *   Source: reference/XADMaster/XADDiskDoublerDDnHandle.m    (method 10)
  *   Source: reference/XADMaster/XADStacLZSHandle.m           (method 7)
  * — LGPL, see NOTICE.
+ *
+ * The AD and DD coders are NOT, since 2026-09-21. They are written
+ * from the format's own published description, with the corrections
+ * it needs measured here:
+ *   Source: reference/notes/dd_ad_theunarchiver.md
+ *           + docs/formats/diskdoubler-dd.md                 (methods 6, 9)
+ *   Source: reference/notes/dd_dd_theunarchiver.md
+ *           + docs/formats/diskdoubler-dd.md                 (method 10)
  *
  * A file header describes BOTH forks, each with its own method, so one
  * DiskDoubler entry is one entry here (XADMaster splits the forks into
@@ -39,8 +45,10 @@ typedef struct DdFork {
     /* Delta preprocessing (type 1, distance 1): each decompressed byte
      * is an increment on the byte `dist` back. It sits OUTSIDE the
      * checksum, which is why the sum is taken before the transform.
-     * Source: XADDiskDoublerParser.m (delta wraps the checksum handle)
-     * and XADDeltaHandle.m produceByteAtOffset. */
+     * The transform: docs/formats/diskdoubler-dd.md, "The second form",
+     * measured here. WHICH forks use it is the container's to say, and
+     * the container is still XADMaster's: Source: XADDiskDoublerParser.m
+     * (delta wraps the checksum handle). */
     uint32_t dist;
     uint32_t dpos;
     uint8_t  dbuf[256];
@@ -101,7 +109,11 @@ static int dd_store(DdFork *o, UncBufIn *in, uint32_t complen)
  * whose bytes XOR to zero, then either stored bytes or an LZSS bit
  * stream: 0 = 8-bit literal, 1 = match with an 8- or 12-bit offset and
  * a length of 2, 3, 4, or 5..20. Matches may overlap.
- * Source: XADDiskDoublerADnHandle.m produceBlockAtOffset.
+ *
+ * Source: reference/notes/dd_ad_theunarchiver.md — the format's own
+ * published description, which needs one correction (which way round
+ * the flags' bit 0 runs): docs/formats/diskdoubler-dd.md, "AD, methods
+ * 6 and 9". All five AD forks in the corpus read from it.
  */
 #define DD_AD_BLOCK 0x2000u
 
@@ -593,7 +605,11 @@ static int dd_stac(DdFork *o, UncBufIn *in, uint8_t *win, uint32_t complen)
  * literals, lengths — and the lengths stream drives the walk: symbol 0
  * is "take the next literal", 1..127 is a match of code+2 bytes using
  * the next offset, and 128+ is a run of 1<<(code-128) literals.
- * Source: XADDiskDoublerDDnHandle.m.
+ *
+ * Source: reference/notes/dd_dd_theunarchiver.md — the format's own
+ * published description — with the six corrections it needs in
+ * docs/formats/diskdoubler-dd.md, where a reader written from that page
+ * alone reads all 39 DD and AD forks in the corpus.
  */
 typedef struct DdnState {
     uint8_t  *win;          /* LZSS window */
@@ -616,7 +632,9 @@ typedef struct DdnCode { UncCanon canon; } DdnCode;
 
 /* One prefix code: a 4-byte head, then per-symbol code lengths, either
  * plain or with a present/absent bit each ("zero coding").
- * Source: XADDiskDoublerDDnHandle.m readCode. */
+ * Source: reference/notes/dd_dd_theunarchiver.md, "Huffman coding";
+ * the canonical-code convention it omits is docs/formats/diskdoubler-dd.md
+ * correction 5. */
 static int ddn_read_code(const DdnState *st, UncCanon *out, UncBufIn *in,
                          uint8_t *lenbuf, uint32_t *endout)
 {

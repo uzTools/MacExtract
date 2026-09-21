@@ -68,7 +68,17 @@ This project's decoders are transcriptions/ports of algorithms from:
     (`tools/derive_sit13.py`), and the tables compared array by array
     against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
     pointed at the page instead. What that file still owes XADMaster
-    and macutils is method 6 and the RLE90 filter.
+    and macutils is method 6 and the RLE90 filter. And **DiskDoubler's
+    coders** since 2026-09-21: the same wiki documents methods 6 and 9
+    (`ADn`) and method 10 (`DDn`), and
+    `docs/formats/diskdoubler-dd.md` carries the six corrections they
+    need — including method 10's second form, which the page names and
+    does not describe — so a reader written from those pages alone
+    reads all 39 DD and AD forks in the corpus
+    (`tools/derive_dd.py`). `src/fmt_dd.c`'s CONTAINERS are still
+    XADDiskDoublerParser.m's, which is also what says which forks use
+    that second form; the wiki punts DiskDoubler's containers to that
+    file by name.
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
@@ -83,6 +93,15 @@ This project's decoders are transcriptions/ports of algorithms from:
     ONLY reference for StuffIt method 6, "fixed Huffman", which
     XADMaster recognizes but does not implement: `src/fmt_sit.c` and
     the generated `src/sit6_tables.h` transcribe `macunpack/sit.c`.
+    **Not `src/fmt_packit.c`'s container since 2026-09-21**: PackIt is
+    published too, in appendices B and C of R. Scott McGinnis's 1986
+    unPACKIT manual, and `docs/formats/packit.md` carries the four
+    corrections they need — a reader written from those appendices
+    alone reads all 38 forks of the corpus's PackIt archives
+    (`tools/derive_packit.py`). What that file still owes macutils is
+    that the two CRCs the appendix names are CRC-16/XMODEM and the
+    resync strategy for an entry it cannot decode; the two ciphers are
+    XADMaster's.
     A build of `macunpack` is also the second oracle for the
     differential test suite (TESTING.md) — test-time only, not linked
     into anything shipped.

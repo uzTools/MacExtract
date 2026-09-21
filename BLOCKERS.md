@@ -366,6 +366,62 @@ line is what makes the next one worth re-testing.
 | Widening the end-of-central-directory scan window is what makes sniffing cheaper | it is worth ~6 % of the instructions and the rest is the byte scan. A POINTER walk over the same window is -30 % of an envelope open, and moving `unc_macbinary_probe` ahead of the scan is -78 % — the scan was never run for 234 of 929 fixtures' worth of work | 2026-08-24 |
 | `spacesaver.py` and `sitcrypt.py` end their runs with Special ▸ Shut Down | 123 is **Restart** on System 7. Forty-three of their own `*-special-menu.png` highlight the band y=116..131, and the screenshot taken with 139 highlights Shut Down; `rescomp.py` had already been bitten by the same borrowed coordinate and says so in `tools/vmac/README.md`. **Cost: nothing measurable** — Restart ejects the volumes too, so the flush every one of those runs depends on did happen; what it cost `rescomp.py` once was a torn resource fork that read as a format finding | 2026-09-01 |
 | The shortfall the Macintosh reports is "round enough to type and never short" | it is ONE request's shortfall, not the entry's demand. `synth-dd-m5.dd` at the 512 KB budget reports **928 B** and needs **203,680** — the entry takes 1,536 B per distinct context byte and is refused at the first one that crosses the line, so the figure is an artefact of granularity. Both front ends now say **at least**. **Cost: the advice sent a user to Get Info for 8K on an entry that wanted 200K**, and this is the SECOND defect in the same sentence — M46 fixed it firing after a successful extraction | 2026-09-01 |
+| The eight-byte record at 144 of `derived-Expand_Now_1.0.1.sea` resembles a Now Compress block table by chance, and the next attempt should not trust it | it is a block table — the SECOND block's record, shape 2, with its 128-byte code table one byte past the offset it names, exactly where that shape puts one. Nothing was wrong with the record; two things around it were, and both were assumed rather than checked: it is not the first block, so its output starts at 32,768 and its matches reach back into a block nobody had decoded. **Cost: one day, and the advice would have cost the next attempt more** — it was written as guidance ("recorded so nobody follows it twice") and pointed away from the answer. The smell is a general one: **a structure that matches in two independent ways is evidence, and "probably coincidence" is a claim that needs its own test** | 2026-09-21 |
+
+**"The DD reader's structure is right; it is literal VALUES that are wrong."**
+Written 2026-09-20 about the two forks of `derived-Terrainman_2.0__.sea`
+`tools/derive_dd.py` could not read, and supported by three real
+measurements: the decode consumed exactly the literal and offset counts the
+block header states, the literals landed at the output offsets the correct
+file has them at, and two literals sharing one code wanted different bytes.
+Every one of those observations holds. The conclusion drawn from them does
+not: **nothing was wrong with the literals.** Method 10 has a second form in
+which the coder's whole output is the fork's first difference, matches
+included, and the fork is the running sum of it. Both forks read with it, so
+the corpus is 39 of 39 (docs/formats/diskdoubler-dd.md, *The second form*).
+
+**Cost: method 10's citation of `XADDiskDoublerDDnHandle.m`, for as long as
+the two forks stood** — the row was explicitly held open on them ("94 % of a
+format is not a description of it"), so one undescribed transform kept a
+licence row open. The smell is a new one, and it is worth keeping: **a
+diagnosis that explains the failures and not the successes.** The reading
+under test accounted for the 11 literals that were wrong and never asked why
+the other 19 were right — and under the true reading all 5,443 of them are
+right, which is the kind of number a correct rule produces and a patch never
+does. When the substitution trace was re-run with the match sources checked
+as well, 3,213 of 3,380 matches were wrong: the defect was never in the
+literals at all, and the instrument that would have said so — checking the
+part of the decode that was ASSUMED good — cost one extra line.
+
+**"A Now Compress back-reference cannot reach further back than the fork has
+produced."** Written into `src/fmt_now.c` as the justification for sizing the
+sliding history from the archive's LARGEST FORK rather than the format's
+32 KB, which is what lets a small archive open in a 400 KB partition. The
+same file says the opposite seventy lines earlier — "a block that starts a
+stream reaches back into the history the PREVIOUS stream left behind. The
+reference calls this absurd and does it anyway; so do we, because the bytes
+require it" — so the window spans MEMBERS, and a match in the third member
+can name an offset longer than any one fork in the file. Disproved by an
+archive Now Compress itself wrote, four members of 4 to 6 KB: two of them
+name offsets of **6,228 and 13,000 bytes against a 6,000-byte window** and
+came back *archive structure is corrupt*. The bound is now the SUM of every
+fork, still capped at 32 KB, and all four extract byte-exact; **no fixture's
+peak heap changes**, because every Now archive in the corpus already has a
+fork over 32 KB.
+
+**Cost: nothing yet, and only because no archive in the corpus has a match
+that crosses a member.** Two of the corpus's Now archives are real, thirteen
+are this project's own synthetic ones, and eight came from the encoder —
+and the eight were single files or two dissimilar members, so none of them
+could produce one. The smell is two this file already names, together: **a
+limitation inherited as a premise rather than measured** (the sentence is
+an assertion about the format, in a comment, with no specimen behind it),
+and **inputs from outside the corpus** (`nowcompress.py --case probe`, four
+members chosen to be similar to each other, found it on the first run). The
+new one worth keeping is narrower: **an optimisation justified by a sentence
+that another comment in the same file contradicts.** A cross-file
+contradiction is this project's cheapest disproof; an intra-FILE one is
+cheaper still, and nothing had ever read the two paragraphs together.
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable

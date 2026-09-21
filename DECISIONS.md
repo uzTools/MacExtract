@@ -222,6 +222,10 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
 - 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
 - 2026-09-21 (the one that had to be asked) — Now Compress's two coders and its blocks, measured off the application
+- 2026-09-21 (the two forks that were never about their literals) — DiskDoubler method 10's second form, and 39 of 39
+- 2026-09-21 (the archive that was never a fork) — Now Compress's container, and the third coder's table
+- 2026-09-21 (the manual for the other machine) — PackIt is published, in the documentation of a DOS extractor
+- 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
 
 ---
 
@@ -13383,3 +13387,213 @@ And Kraft's equality, which found a code table in Compact Pro
 yesterday, found this one in a fork with no structure visible at all:
 **it is the cheapest test in this whole exercise**, one line, and it
 has now identified three formats' tables and refuted one guess.
+
+
+## 2026-09-21 (the two forks that were never about their literals) — DiskDoubler method 10's second form, and 39 of 39
+
+**Claim.** Method 10 has two forms. In the second, what the coder
+produces is not the fork but the fork's **first difference**: the fork
+is the running sum of it, `out[i] = out[i-1] + s[i]`, from zero. With
+it, `tools/derive_dd.py` reads **39 of the corpus's 39 DD and AD
+forks** from the format's published pages, and `src/fmt_dd.c` no
+longer cites XADMaster for either coder — only for the containers,
+which the wiki punts to that file by name.
+
+**Evidence.** The two forks of `derived-Terrainman_2.0__.sea` that had
+refused since 2026-09-20, byte for byte against the oracle's sha256.
+The reading was found by a literal-substitution trace: feed the true
+byte at every literal position, and record what the stream actually
+carried. **All 5,443 literals of the 19,240-byte fork were the
+difference from the previous output byte**, not the byte itself. That
+alone would have suggested a filter on the literal stream; what said
+it was the whole stream is the other half of the same trace — only
+**167 of 3,380 matches** copied the right source bytes, and under the
+delta reading they all do.
+
+**What was wrong before, and why it looked right.** The 2026-09-20
+write-up had three real measurements — the decode consumed exactly the
+literal and offset counts the block header states, the literals landed
+at the right output offsets, and two literals sharing one code wanted
+different bytes. Every one of them holds. The conclusion did not, and
+the reason is a smell worth keeping: **it explained the failures and
+not the successes.** Eleven of the first thirty literals were wrong
+and nineteen were right, and the reading under test accounted only for
+the eleven. A rule that is actually right produces numbers like 5,443
+of 5,443; a patch produces 19 of 30. The instrument that settles it is
+one line long — check the part of the decode you have ASSUMED is
+good — and it was not run for a day (BLOCKERS.md, *"The DD reader's
+structure is right"*).
+
+**Which forks use it, and what this does not claim.** That is a
+container fact and the container is not described here. The corpus
+states it twice and the two statements agree on all 186 of its forks:
+bit `0x80` of the fork's method byte, and a `u16` that is 1 rather
+than 0 fifty bytes further into the same header. Two fields that agree
+on every specimen cannot be told apart by any specimen here, so the
+note names both and claims neither, and the reader — which parses no
+container at all — tries both forms and reports which read.
+
+## 2026-09-21 (the archive that was never a fork) — Now Compress's container, and the third coder's table
+
+**Claim.** A Now Compress archive is not a fork with a wrapper round
+it; it is a container whose **members each carry their own
+fork-shaped header**, and the block table belongs to the member.
+Read that way, `derived-Expand_Now_1.0.1.sea` — the corpus's real
+1993 specimen, unread since the format was added — walks into
+**three blocks**, and 32,768 + 32,768 + 23,406 is 88,942, its fork's
+size exactly.
+
+**Evidence and the correction that mattered.** The member records are
+110 bytes from offset 24, with the data area's bounds at +98 and
++102. The block table sits **ten bytes into that data area in
+everything Now Compress 5.0.1 wrote and two bytes into it in the 1993
+file**, and the header's own first-block-offset field is what tells
+them apart. Reading the later layout into the older file silently
+drops the FIRST block — which is exactly the error that made that
+archive look like a fork whose table did not parse.
+
+**The near-miss that was not one.** The 2026-09-20 note recorded a
+record at 144 reading `(0x4ad6, 0x20)` as a probable coincidence,
+because 0x4ad6 sat one byte before the file's only Kraft-1.0 table,
+and advised the next attempt not to trust it. It was not a
+coincidence: that record is the archive's **second** block, shape 2,
+with its table one byte past its offset exactly where shape 2 puts
+one. What made it undecodable was not the record but the two things
+around it — it is not the first block, so its output starts at 32,768
+and its matches reach back into a block that had not been decoded.
+**A structure that matches in two independent ways is evidence, and
+"probably chance" is a claim that needs its own test.**
+
+**And FORMATS.md had said so for a month.** Its *Now Compress* section
+records, from instrumenting the engine's own block loop on
+2026-08-15, that this archive is "three blocks, 'new' LZSS twice and
+Huffman-only once". The derivation note written on 2026-09-21 said in
+the same tree that the file's blocks could not be located. Two files
+disagreeing is the cheapest smell this project has, it is first in
+BLOCKERS.md's list, and it was sitting between a measured count of
+three and a claim of none. **The shapes the container walk produced —
+`0x40`, `0x20`, `0x40` — are that sentence exactly.**
+
+**The third coder, and where this stops.** An archive's members use a
+shape the bare forks never do (mode bit `0x40`). Its header is read —
+`0x2f`, then a sixteen-entry four-bit **code-length code** whose Kraft
+sum is exactly 1 on all eight known blocks, then 24 bits nobody can
+account for, then a main table written in that code and ending where
+the code completes, whose symbols 0..255 are the literals. Its
+**stream is not read**, so no corpus archive decodes from this
+description and the citation cannot move.
+
+**What made the table findable** is the technique, not the format:
+four inputs chosen so that the answer would be recognisable —
+`nowcompress.py --case probe` archives a 4,000-byte run of one byte,
+6,000 bytes over `{A, B}`, 6,000 over `{A, B, C, D}`, and one file
+that is its own first half twice. **A table whose literal region must
+contain exactly two entries is found by what it must contain, not by
+where it might be**, and the harness's existing members — prose and
+keystream — could never have supplied that. The check afterwards came
+from the 1993 file, which the derivation never saw: its third block
+codes 252 literals and the 23,406 bytes it decodes to hold exactly
+those 252 distinct values, none missing and none spare.
+
+
+## 2026-09-21 (the manual for the other machine) — PackIt is published, in the documentation of a DOS extractor
+
+**Claim.** PackIt's container is documented, field for field, in
+appendices B and C of `UNPACKIT.DOC` — the manual of unPACKIT 1.0, a
+1986 freeware DOS extractor by R. Scott McGinnis. A reader written
+from those appendices and this project's own tree note reads **all 38
+forks of the corpus's four PackIt archives** byte for byte
+(`tools/derive_packit.py`, `docs/formats/packit.md`), so
+`src/fmt_packit.c`'s container is no longer macutils'.
+
+**What the appendices give** that the inventory said had to be read
+out of `pit.c`: the four subfile type words and the `PEnd` terminator,
+the 94-byte entry header with every field's offset and meaning, the
+order of forks and CRCs — and, in a boxed note, the fact this project
+spent 2026-09-20 measuring: for a compressed subfile the header is
+coded along with the forks, "therefore the entire subfile must be
+uncompressed in order to get to the next subfile".
+
+**Four corrections.** The name field is fixed at 63 bytes and not the
+length the count byte gives; there is no MacBinary header on a `.pit`
+(appendix B says there is, and four of the corpus's five specimens
+begin at the first type word); the type table lists `PMa5` twice, so
+the document cannot name the fourth word at all; and the compression
+is named — "huffman encoded" — and not described.
+
+**Why this was not found for a year, and it is the whole lesson.**
+The inventory's reason was *"PackIt's own format is trivial; the app
+is not here"*, and the plan it produced was to wait for a specimen set
+written by PackIt itself. Both sentences are about the APPLICATION.
+Neither is about whether anybody wrote the format down — and
+`reference/notes/PackIt.md` had been in this tree since the first
+reference fetch with a *Specifications* section naming this document,
+a second one (`macutils`' own `doc/README.unpit`, already on this
+disk), and PackIt's own source code. **The page was fetched, and read
+as far as the magic numbers.**
+
+That is the same failure as 2026-09-20's *forty pages nobody had
+listed*, one level down: there the index of a wiki went unopened, here
+the bibliography of a page that WAS open. `tools/fetch_references.sh`
+encodes what this project believes exists, and a reference that names
+other references is a fetch list nobody ran. **When a format's row
+says the reason is that some program is out of reach, that is a claim
+about programs; the question was whether anybody documented it, and
+those are not the same question.**
+
+**What this does not close.** The two CRCs are named by the appendix
+and their polynomial is not, so CRC-16/XMODEM is still macutils'; the
+resync rule for an undecodable entry is still macutils'; both ciphers
+and the `PMa6` word are still XADMaster's. The derivation tool checks
+no CRC, and says so.
+
+
+## 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
+
+**Claim.** `src/fmt_now.c` sized its sliding history from the archive's
+largest fork, and the window spans MEMBERS, so an archive whose forks
+are all small refused any match that reached into an earlier member.
+The bound is now the SUM of every fork, still capped at the format's
+32 KB. **No fixture's peak heap changes** — every Now archive in the
+corpus already has a fork over 32 KB — so this is a correctness fix
+that costs nothing measurable.
+
+**Evidence.** An archive Now Compress itself wrote, four members of 4
+to 6 KB (`nowcompress.py --case probe`). Two of the four came back
+*archive structure is corrupt*, at offsets **6,228 and 13,000 against
+a 6,000-byte window**. A reader written here from the block's own
+bytes decodes all four **only** when the members' output is carried
+forward as one history: alone, three of the four fail, and with the
+history they are byte-exact against what went in.
+
+**The claim was in a comment, and its refutation was in the same
+file.** The sizing block said "a back-reference cannot reach further
+back than the fork has produced, so <= maxout too". Seventy lines
+earlier `now_next_block` says "a block that starts a stream reaches
+back into the history the PREVIOUS stream left behind. The reference
+calls this absurd and does it anyway; so do we, because the bytes
+require it." Both were written here, months apart, and nothing had
+read them together. **An intra-file contradiction is cheaper to find
+than the cross-file kind this project already hunts, and no tool
+looks for either.**
+
+**Why the corpus could not find it.** Not for want of coverage in the
+usual sense — Now Compress has two real fixtures, thirteen synthetic
+archives and eight specimens from the encoder itself. It is that
+**every one of them is a single file, or members with nothing in
+common.** A match across a member boundary needs two members that
+resemble each other, and nothing in the corpus is shaped that way.
+The probe case was not built to find this; it was built to make a
+code table legible, and it needed four mutually similar members to do
+that. **An input chosen for one property tests every other property
+too, which is the whole argument for generating inputs rather than
+collecting them.**
+
+**What is still open, as a hypothesis, and not fixed here.** The
+offset table reaches `0xe100` plus thirteen extra bits — **65,791
+bytes** — while `NOW_HISTORY` is 32,768. If an archive ever produced
+more than 32 KB and then named a match further back than that, this
+engine would refuse it exactly as it refused these two. Nothing in
+the corpus does, and nothing here has measured what the encoder's
+real ceiling is; the number above is what the tables permit, not what
+anything has been seen to write.
