@@ -14307,9 +14307,13 @@ control, each spliced into a real self-extractor's data fork by
 
 The control is what makes the other two mean anything: the route works
 and a different length is not the obstacle. So something among what is
-LEFT — the `00 00` prefix where the encoder writes `00 03`, the entry
-record's own fields, or the coded stream itself — is fatal, and it is
-not among the four differences that were fixed. TESTING.md had listed
+LEFT is fatal, and it is not among the four differences that were
+fixed. **The LZSS prefix is not a candidate**, which is worth writing
+down because it was the first guess and it is wrong on its face: every
+block in that archive is shape 3 or Huffman-only, and only shapes 1 and
+2 carry a `00 03` at all. What is left is the entry record's own
+fields, the byte in front of a Huffman-only stream, and the shape-3
+blocks as this project encodes them. TESTING.md had listed
 five such differences; this session found two more before running
 anything (the `0x0100` bit and the header's window word), which is its
 own comment on a list nobody had tested.

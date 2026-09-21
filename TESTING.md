@@ -2659,9 +2659,14 @@ minutes, and the whole set is the better part of an hour.
   sum, every block trailer, the fork-boundary record AND the `0x0100`
   archive mode vocabulary is **still refused**: the extractor launches,
   asks for a destination folder, and writes nothing. So at least one of
-  what is left — the `00 00` prefix, the entry record's own fields, or
-  something in the coded stream — is fatal, and it is not among the
-  four that were fixed. The engine reads them because it checks none — which is exactly the point: **a suite of inputs
+  what is left is fatal, and it is not among the four that were fixed.
+  **Not the LZSS prefix**, which was the first guess and does not apply:
+  every block in that archive is shape 3 or Huffman-only, and only
+  shapes 1 and 2 carry the `00 03`. What remains is the entry record's
+  own fields, the single byte in front of a Huffman-only stream, and
+  the shape-3 blocks as `synth_now.py` encodes them — which parse,
+  checksum and decode here, and are still this project's encoder rather
+  than Now Software's. The engine reads them because it checks none — which is exactly the point: **a suite of inputs
   made by one program can only test what that program happens to get
   right**. `derive_now.py` reads 4 of `synth-now-mixed.now`'s 15 blocks
   and every block of every archive Now Compress itself wrote
