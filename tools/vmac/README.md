@@ -419,6 +419,8 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --case all  # write the specimens
     tools/vmac/nowcompress.py --case probe   # four inputs chosen to be read
     tools/vmac/nowcompress.py --case reach   # how far back a match may point
+    tools/vmac/nowcompress.py --setup6    # fetch Now Utilities 6.0, build its boot image
+    tools/vmac/nowcompress.py --case6 faster # the same case, the OTHER encoder
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
     tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
     tools/vmac/nowcompress.py --expand OUTDIR FILE.bin ...   # and below
@@ -441,6 +443,30 @@ Three things to know before re-running it:
   result will not mount, which is the check.
 - **The installer's checkbox list is read back off the screen** after every
   click. Clicking it blind is how the first attempt turned QuickFiler off.
+
+**`--setup6` and `--case6` are the SECOND encoder**, Now Utilities 6.0
+of March 1996, and they exist because a field constant across
+everything one program writes is a fact about that program
+(docs/formats/now-compress.md, *Two encoders*). Four differences from
+the 5.0.1 path, each of which cost a run to find:
+
+- **there is no installer to drive.** 6.0's `.sit` holds a StuffIt
+  archive of finished files, so `--setup6` places them instead: the
+  extension and its toolbox into `System Folder:Extensions` of a copy
+  of `Sys7.img`, the droplets at the root. It needs `unar`, the outer
+  archive being StuffIt 5;
+- **the leading spaces in `  Now Toolbox` and ` Now QuickFiler
+  Extension` are the load order** — extensions load alphabetically and
+  the Toolbox must come first — so they are kept, not stripped;
+- **6.0's QuickFiler menu sits mid-bar**, not against the screen edge,
+  so its submenus open to the RIGHT and its item rows are 36 px higher
+  than 5.0.1's. Its Demo button is at (264, 306) rather than (237, 306);
+- specimens land in `specimens/now6/` so that nothing overwrites
+  5.0.1's — comparing the two directories is the experiment.
+
+**Now Utilities 3.0.2 and 4.0.2 are not worth fetching**: they have no
+compressor at all. Their two disks each are Super Boomerang, NowMenus,
+WYSIWYG Menus, Startup Manager and the rest; QuickFiler arrives in 5.
 
 **The `probe` case exists to make a code table legible**, and it is the
 technique worth reusing: its four members are a 4,000-byte run of one byte,

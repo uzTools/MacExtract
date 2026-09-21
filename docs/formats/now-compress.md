@@ -147,14 +147,21 @@ and bumps the two counts before coding; both put them upstream of the
 Huffman stage, which is the part that narrows the question.)
 DECISIONS.md 2026-09-21, *the symbol that was only there once*.
 
-**And what they are constant across is narrower than it looks.** The
-corpus has **20 blocks** that carry this prefix, all from one installed
-encoder, **Now Compress 5.0.1**; nineteen are the first block of their
-member (`tools/derive_now.py --prefixes`), and neither corpus archive contributes one — the 1993 and 1995
-archives use shape 3 and Huffman-only throughout. Shape 3 has no prefix
-of any kind. So "constant in every specimen" is constant over content,
-over both Faster/Smaller settings, over shapes 1 and 2, and over one
-block at index 1 — and over exactly one version of the program.
+**And the constant survives a change of encoder.** The corpus has **25
+blocks** that carry this prefix (`tools/derive_now.py --prefixes`), all
+of them `00 03`: twenty from **Now Compress 5.0.1** and five from
+**6.0**, four years apart. Neither corpus archive contributes one — the
+1993 and 1995 archives use shape 3 and Huffman-only throughout, and
+shape 3 has no prefix of any kind.
+
+**Which is what says the two bytes are meant.** A second encoder is the
+instrument that separates a constant the program intends from a
+leftover that is merely deterministic, and it separates them inside one
+file: 6.0 writes `00 03` where 5.0.1 does, but leaves a **different
+byte** in the gap between `smaller/runs.bin`'s stream and its trailer —
+`0x47` where 5.0.1 leaves `0xff` — and different words in the leading
+block-table record. Those are unread too, and they moved. This one did
+not (*Two encoders*).
 
 - a **flag byte**, then eight tokens, bits **most significant first**;
 - a **1** is a literal: one byte, copied out;
@@ -673,9 +680,19 @@ encoder wrote: the Finder flags zeroed, the dates replaced, the u32 at
 — whole, and split into the 21 bytes at +9 and the `0037` at +30.
 **All six files came back byte-exact**, so a compressed file's entry
 record is read for its name, its fork lengths, its data bounds and its
-checksum, and nothing else here is looked at. The mode and padding in it are not constant either,
-`0d4c 0037` in every file 5.0.1 wrote here and `84e4 01e4` in the 1995
-archive, so the field that carries the meaning is the end offset.
+checksum, and nothing else here is looked at. The mode and padding in
+it are not constant either — `0d4c 0037` in every file 5.0.1 wrote
+here, **`0d4c 003a` in every file 6.0 wrote** and `84e4 01e4` in the
+1995 archive — so the field that carries the meaning is the end offset.
+
+**Those two words move with the PROGRAM and with nothing else**, which
+is what a second encoder was run to find out (*Two encoders*): constant
+over 27 files from 5.0.1 — compressed files and archives, two months
+apart, every case — and constant at a different value over the five
+from 6.0. A version stamp and a deterministic leftover both look like
+that, and nothing here separates them; what is new is that the value
+moves at all, which the note could not say while one program had
+written every file it had.
 
 **A stream restart is what the engine calls the same record.**
 FORMATS.md's "two stream-restart records" in the 1995 archive are that
@@ -737,6 +754,55 @@ count names, and what comes out is however many bytes that is — 32,768
 for every full block here and 23,406 for the 1993 archive's last one,
 neither written down anywhere in the file.
 
+## Two encoders
+
+Every specimen above came out of **Now Utilities 5.0.1**. A second
+program is the only instrument that can say whether something in these
+files is the format's or that build's, so **Now Utilities 6.0**, March
+1996 against 5.0.1's 1994, was installed beside it and given the same
+inputs at the same settings (`tools/vmac/nowcompress.py --setup6
+--case6`). It is a different product generation: its QuickFiler menu
+sits mid-bar instead of against the screen edge, so its submenus open
+the other way, and it ships `Compress Now` and `Archive Now` as
+droplets 5.0.1 has no equivalent of.
+
+**It writes the same bytes.** Six specimens across all four coders,
+each the same LENGTH as 5.0.1's and each differing only in fields
+nothing reads:
+
+| case | bytes | what differs from 5.0.1's |
+|---|---|---|
+| Compress Faster, `prose.txt` | 386 | the entry record, and the leading record's `0037`→`003a` |
+| Compress Faster, `runs.bin` | 290 | the same |
+| Compress Smaller, `prose.txt` | 386 | the same |
+| Compress Smaller, `runs.bin` | 290 | the same, **and the padding byte** `ff`→`47` |
+| Compress Smaller, `g09.bin` | 3,704 | the same as the first |
+| Archive Smaller, 2 members | 33,694 | the same, once per member, and a date |
+
+Everything else is identical byte for byte: every mode word, both block
+tables, the leading record's presence, every Huffman table, every LZSS
+stream including its `00 03`, and every block trailer that is not a sum
+over one of the bytes above. **The coder did not change between 1994
+and 1996.**
+
+**And what did change is the useful half.** Three things in these files
+are written by the encoder and read by nobody — the LZSS prefix, the
+padding byte between a stream and its trailer, and the leading record's
+two words. Two of them moved and one did not, which is a distinction no
+number of files from one program could have drawn: a deterministic
+leftover and a constant the encoder means to write look identical until
+the program changes underneath them.
+
+**And none of it is run-to-run noise**, which is the question to ask
+before asking what a value means: `--case6 faster` run twice, an hour
+apart, gives two files whose **data areas are byte-identical** and whose
+entry records differ only in the clock fields and the checksum over
+them. The `003a` is there both times.
+
+`src/fmt_now.c` reads all six of 6.0's files byte for byte, and so does
+`tools/derive_now.py`, neither having been told there was a second
+encoder.
+
 ## What came from where
 
 Most of this note was read off the encoder's output: the four coders,
@@ -780,14 +846,14 @@ than one that draws it.
   What they are worth is settled — nothing reads them, including the
   encoder's own decoder — and so is which stage of the encoder writes
   them: one upstream of the Huffman pass, which counts them (*Shape
-  1*). What the number 3 is, is not. The one dimension no experiment here has varied is **the
-  encoder**: every observation of this field comes from Now Compress
-  5.0.1, and Now Utilities shipped as 3.0.2, 4.0.2, 5.0.1, 6.0.x and
-  6.5/6.7.x. A field that is constant within a version and read by
-  nobody is what a version or parameter stamp looks like, and a second
-  encoder is the only instrument left that could say so — it would also
-  settle *Why the leading record is required*, which 5.0.1 writes and
-  the 1993 archive lacks (OPEN_ITEMS.md).
+  1*), and so is that the encoder MEANS it: two builds four years apart
+  write it identically while two other unread fields beside it differ
+  (*Two encoders*). What the number 3 is, is not — and no instrument
+  outside the encoder's own code is left to ask. Every experiment that
+  could vary something has been run: content, both settings, all four
+  coders, block position, mutation handed back to the encoder's own
+  decoder, and now the encoder itself. **This is where it stops**, and
+  saying so is the point of the entry.
 - **What a shape-3 block's header byte 2 IS.** That nothing reads it,
   that it is not a property of the block, and that it is computed
   rather than left over are all measured (*The header*), as is what it
@@ -806,7 +872,10 @@ than one that draws it.
   when it gains one. What the decoder does with it — count the records
   by it, take the stream's start from it, require a stream to be
   started before a block may produce bytes — is not measured, and the
-  1993 archive and the 1995 archive's first member have none.
+  1993 archive and the 1995 archive's first member have none. **Not a
+  version difference**, or not only one: 6.0 writes the record exactly
+  where 5.0.1 does (*Two encoders*), and the 1995 archive has a member
+  with one and a member without in the same file.
 - **Whether there are more shapes.** Four coders and "stored" account
   for every block in every specimen here, and that is five
   arrangements — which is what PROGRESS.md has called Now Compress's

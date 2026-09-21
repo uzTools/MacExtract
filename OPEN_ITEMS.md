@@ -232,37 +232,6 @@ writing a partial fork would be inventing the layout. An uncompressed
 DART written by whatever produced them — an earlier version of the
 application, per the same note — would settle it.
 
-## A second Now Compress, which two questions are waiting on
-
-Everything this project knows about the Now Compress **encoder** comes from
-one installed program, Now Utilities **5.0.1**, and two questions left open by
-`docs/formats/now-compress.md` are both of the form *"is this a property of
-the format or of that program?"* — which one install of another version
-answers and nothing else can:
-
-- **What selects the leading record.** 5.0.1 writes one in front of every
-  block table and calls a file that lacks one damaged; the 1993 archive and
-  the 1995 archive's first member have none. Either the record is conditional
-  on something in the file, or it is conditional on the program.
-- **What `00 03` is.** Read by no decoder, written by the LZSS coder — the
-  Huffman pass over that coder's output counts it — and constant across
-  content, both settings, two shapes and 20 blocks of one encoder. A value
-  constant within a version and read by nobody is the shape of a version or
-  parameter stamp, and only a second encoder could show it moving.
-
-**What would close them:** an install of Now Utilities 3.0.2/4.0.2 or 6.x,
-driven the way `tools/vmac/nowcompress.py` drives 5.0.1, compressing the same
-`--case` inputs. Macintosh Garden carries 3.0.2/4.0.2, 5.0, 6.0.x and
-6.5/6.7.x; `/apps/now-utilities-302402` is a 1.9 MB zip of five **DiskCopy
-4.2** images — an 84-byte header, then `dataSize` bytes of data and `tagSize`
-of tags, so a raw image for Mini vMac is bytes 84..84+819200 and needs no
-other conversion (checked 2026-09-21; the harness's `ndif_to_raw` is for the
-5.0.1 `.sit` and does not apply). **Not a missing file** — a download and a
-second install, whose cost is driving a UI this harness has not seen. A negative is worth having
-too: the same constant out of a 1992 encoder and a 1996 one says the field is
-the format's rather than one build's, which is as far as any instrument
-outside the encoder's own code can take it.
-
 ## Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or

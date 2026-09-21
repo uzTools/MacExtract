@@ -18,10 +18,16 @@ demo; no serial number is invented). Nothing from it is committed.
 
     nowcompress.py --setup      fetch + convert the image, install QuickFiler
     nowcompress.py --case all   run every case, write the specimens
+    nowcompress.py --setup6     the SECOND encoder: Now Utilities 6.0
+    nowcompress.py --case6 NAME the same case, compressed by 6.0
     nowcompress.py --verify     decode each specimen and report its blocks
 
 Specimens land in `$UNC_VMAC_HOME/specimens/now/`, beside the emulator
-rather than under `build/`, which `make clean` removes.
+rather than under `build/`, which `make clean` removes; 6.0's land in
+`specimens/now6/`, because comparing the two is the point of having it.
+A field constant across everything ONE program writes is a fact about
+that program, and 6.0 is what tells the two apart
+(docs/formats/now-compress.md, *Two encoders*).
 
 **What the encoder writes, measured 2026-08-16** (`--verify` prints it):
 
@@ -93,6 +99,33 @@ SUB_SMALLER_Y = {"archive": 239, "compress": 305}
 # Archive, Decompress 15 under Compress).
 ITEM_DEARCHIVE_Y = 235
 ITEM_DECOMPRESS_Y = 300
+
+# ------------------------------------------------------------------
+# And the SECOND encoder, which is the only instrument that can say
+# whether something this format does is the format's or one program's
+# (OPEN_ITEMS.md, *A second Now Compress*).
+#
+# Now Utilities **6.0**, March 1996, against 5.0.1's 1994. Its installer
+# is a StuffIt archive of finished files rather than an application, so
+# `--setup6` places them instead of running one: the extension and its
+# toolbox into System Folder:Extensions, the droplets at the root. The
+# LEADING SPACES in those two names are the load order — extensions load
+# alphabetically and the Toolbox must precede the extension that needs
+# it — so they are kept, not stripped.
+#
+# Its menu is 6.0's own, read off this harness's screenshots and not
+# inherited: the QuickFiler menu sits mid-bar rather than against the
+# screen edge, so its submenus open to the RIGHT where 5.0.1's open left.
+NU6_URL = "https://old.mac.gdn/apps/Now_Utilities_6.0.sit"
+NU6_MD5 = "8cfbed2b75a39422b87d712ddd6b910a"
+BOOT6 = os.path.join(WORK, "nu6boot.hfv")      # System 7 + QuickFiler 6.0
+NU6_ITEM_Y = {"compress": 249, "archive": 187}
+NU6_SUB_X = 450
+NU6_SUB_Y = {("compress", "faster"): 253, ("compress", "smaller"): 267,
+             ("archive", "faster"): 191, ("archive", "smaller"): 205}
+NU6_DEMO = (264, 306)                          # 5.0.1's Demo button is at 237
+NU6_EXT = ("  Now Toolbox", " Now QuickFiler Extension")
+NU6_APPS = ("Compress Now", "Archive Now", "Expand Now")
 
 
 def keystream(n, seed=b"macextract-now"):
@@ -814,7 +847,11 @@ def main():
                     help="fetch the installer image and convert it to raw HFS")
     ap.add_argument("--install", action="store_true",
                     help="install Now QuickFiler onto a System 7 boot image")
+    ap.add_argument("--setup6", action="store_true",
+                    help="fetch Now Utilities 6.0 and build its boot image")
     ap.add_argument("--case", help="one of %s, or 'all'" % ", ".join(sorted(CASES)))
+    ap.add_argument("--case6", metavar="NAME",
+                    help="the same case, compressed by 6.0 instead of 5.0.1")
     ap.add_argument("--verify", action="store_true",
                     help="decode the specimens and check them against the input")
     ap.add_argument("--adjudicate", nargs=2, metavar=("SEA.bin", "ARCHIVE"),
@@ -826,6 +863,8 @@ def main():
     args = ap.parse_args()
     if args.setup:
         fetch_installer()
+    if args.setup6:
+        setup6()
     if args.install:
         install()
     if args.case:
@@ -833,6 +872,11 @@ def main():
         for c in cases:
             print("case %s:" % c)
             run_case(c)
+    if args.case6:
+        cases = sorted(CASES) if args.case6 == "all" else [args.case6]
+        for c in cases:
+            print("case %s (Now Compress 6.0):" % c)
+            run_case6(c)
     if args.verify:
         verify()
     if args.adjudicate:
@@ -841,10 +885,157 @@ def main():
         if len(args.expand) < 2:
             raise SystemExit("nowcompress: --expand OUTDIR FILE.bin ...")
         expand(args.expand[0], args.expand[1:])
-    if not any((args.setup, args.install, args.case, args.verify,
-                args.adjudicate, args.expand)):
+    if not any((args.setup, args.setup6, args.install, args.case, args.case6,
+                args.verify, args.adjudicate, args.expand)):
         ap.print_help()
     return 0
+
+
+def appledouble(path):
+    """(type, creator, Finder flags, resource fork) out of an AppleDouble
+    file — what `unar -k visible` writes beside each extracted file."""
+    d = open(path, "rb").read()
+    if d[:4] != b"\x00\x05\x16\x07":
+        raise SystemExit("nowcompress: %s is not AppleDouble" % path)
+    typ, crt, flags, rsrc = b"????", b"????", 0, b""
+    for i in range(struct.unpack_from(">H", d, 24)[0]):
+        eid, off, ln = struct.unpack_from(">III", d, 26 + i * 12)
+        if eid == 9:
+            typ, crt = d[off:off + 4], d[off + 4:off + 8]
+            flags = struct.unpack_from(">H", d, off + 8)[0]
+        elif eid == 2:
+            rsrc = d[off:off + ln]
+    return (typ.decode("mac-roman"), crt.decode("mac-roman"), flags, rsrc)
+
+
+def setup6():
+    """Fetch Now Utilities 6.0 and build a System 7 boot image with its
+    QuickFiler in it.
+
+    Unlike 5.0.1 there is no installer to drive: what the `.sit` holds is
+    a StuffIt archive of the finished files, so this places them. That is
+    also why it needs `unar` — the outer archive is StuffIt 5, which this
+    project does not read (OPEN_ITEMS.md, *Out of scope for v1*).
+
+    The result is `nu6boot.hfv`, and the check that it worked is the
+    welcome dialog: Now Utilities asks for a serial number on first boot
+    and offers a week's demo, exactly as 5.0.1 does.
+    """
+    from arcmac import macbinary
+    os.makedirs(WORK, exist_ok=True)
+    sit = os.path.join(WORK, "nu60.sit")
+    if not os.path.exists(sit):
+        subprocess.run(["curl", "-sL", "-A", "Mozilla/5.0 (Macintosh)",
+                        "-o", sit, NU6_URL], check=True)
+    got = hashlib.md5(open(sit, "rb").read()).hexdigest()
+    if got != NU6_MD5:
+        raise SystemExit("nowcompress: %s has md5 %s, expected %s"
+                         % (sit, got, NU6_MD5))
+    out = os.path.join(WORK, "nu60")
+    shutil.rmtree(out, ignore_errors=True)
+    subprocess.run(["unar", "-q", "-k", "visible", "-o", out, sit], check=True)
+    inner = None
+    for root, _, files in os.walk(out):
+        if "Now Utilities 6.0 Installer" in files:
+            inner = os.path.join(root, "Now Utilities 6.0 Installer")
+    if not inner:
+        raise SystemExit("nowcompress: no 6.0 installer in %s" % sit)
+    apps = os.path.join(WORK, "nu60apps")
+    shutil.rmtree(apps, ignore_errors=True)
+    subprocess.run(["unar", "-q", "-k", "visible", "-o", apps, inner], check=True)
+    src = None
+    for root, dirs, files in os.walk(apps):
+        if "Compress Now.rsrc" in files:
+            src = root
+    if not src:
+        raise SystemExit("nowcompress: no Compress Now in the 6.0 installer")
+
+    shutil.copyfile(os.path.join(HOME, "Sys7.img"), BOOT6)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs6-"))
+    tmp = tempfile.mkdtemp(prefix="nu6-")
+    try:
+        subprocess.run(["hmount", BOOT6], check=True, capture_output=True,
+                       env=env)
+        vol = subprocess.run(["hvol"], capture_output=True, env=env
+                             ).stdout.decode().split('"')[1]
+        for name in NU6_EXT + NU6_APPS:
+            ad = os.path.join(src, name + ".rsrc")
+            typ, crt, flags, rsrc = appledouble(ad)
+            data = os.path.join(src, name)
+            blob = macbinary(name, typ, crt,
+                             open(data, "rb").read() if os.path.exists(data)
+                             else b"", rsrc,
+                             flags & ~0x4000)      # not invisible on our volume
+            p = os.path.join(tmp, name.strip() + ".bin")
+            open(p, "wb").write(blob)
+            dst = ("%s:System Folder:Extensions:" % vol if name in NU6_EXT
+                   else "%s:" % vol)
+            subprocess.run(["hcopy", "-m", p, dst], check=True,
+                           capture_output=True, env=env)
+            print("  %-28s %s/%s -> %s" % (name.strip(), typ, crt, dst))
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("nowcompress: boot image with QuickFiler 6.0 at %s" % BOOT6)
+
+
+def run_case6(name):
+    """The same case, compressed by the OTHER encoder.
+
+    Specimens land in `specimens/now6/<case>/` so that nothing overwrites
+    5.0.1's, which is the whole point: the two directories are compared.
+    """
+    spec = CASES[name]
+    files, action, mode = spec[0](), spec[1], spec[2]
+    dest = os.path.join(HOME, "specimens", "now6", name)
+    shutil.rmtree(dest, ignore_errors=True)
+    os.makedirs(dest)
+    img = os.path.join(dest, "volume.img")
+    make_volume(img, "Now", files)
+    for n, blob in files.items():
+        open(os.path.join(dest, "in-" + n), "wb").write(blob)
+    s = Session(BOOT6, [img], os.path.join(dest, "shots"))
+    try:
+        s.boot()
+        s.mac.click(*NU6_DEMO)
+        time.sleep(15)
+        s.mac.key("Return")
+        s.shot("desktop", wait=10.0)
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(8)
+        s.mac.command_key("a")
+        s.shot("selected", wait=3.0)
+        ox, oy = s.mac.origin()
+        x = s.mac._xdo
+        x("mousemove", str(ox + QF_MENU_X), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.2)
+        x("mousemove", str(ox + 330), str(oy + NU6_ITEM_Y[action]))
+        time.sleep(2.0)
+        s.shot("hover-%s" % action)
+        x("mousemove", str(ox + NU6_SUB_X), str(oy + NU6_SUB_Y[(action, mode)]))
+        time.sleep(1.5)
+        s.shot("pick-%s-%s" % (action, mode))
+        x("mouseup", "1")
+        s.shot("working", wait=40.0)
+        s.mac.key("Return")
+        s.shot("done", wait=60.0)
+        s.mac.key("Return")
+        time.sleep(5)
+        s.mac.command_key("w")
+        time.sleep(3)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                      # Put Away: flush + eject
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    for n, (typ, crt, dlen, dat) in sorted(read_volume(img, dest).items()):
+        print("  %-16s %s/%s %7d B  %s" % (n, typ, crt, dlen,
+                                           os.path.basename(dat)))
+    return dest
 
 
 def install():

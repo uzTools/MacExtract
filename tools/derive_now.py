@@ -1018,16 +1018,23 @@ def prefixes(paths=()):
     Then, per shape-2 block, the symbols its table codes against the
     symbols its stream uses. Exact correspondence with a prefix byte
     occurring only once says the encoder's Huffman pass counted the
-    prefix, so the LZSS coder emitted it.
+    prefix, so it is upstream of that pass.
 
     **What it cannot see**: anything about a version of Now Compress
-    that is not installed. Every specimen here comes from 5.0.1, and a
-    constant over one encoder is a fact about that encoder.
+    that is not installed. Pass 6.0's files as arguments and the census
+    covers both encoders — which is what says `00 03` is a constant the
+    program means rather than a deterministic leftover, two other unread
+    fields beside it having moved (docs/formats/now-compress.md, *Two
+    encoders*).
     """
     rows, tables = [], []
 
     def blocks_of(src, name, d, recs, kind_of, wants=None, done=0):
-        for i, ((off, mode, pad), (nxt, _, _)) in enumerate(zip(recs, recs[1:])):
+        i = -1
+        for (off, mode, pad), (nxt, _, _) in zip(recs, recs[1:]):
+            if nxt == off:
+                continue        # a leading or restart record: no bytes, and
+            i += 1              # not a block, so it takes no index either
             kind, skip = kind_of(mode)
             pre = None
             if kind == "shape1":

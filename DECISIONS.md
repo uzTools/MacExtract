@@ -230,6 +230,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
 - 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
 - 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
+- 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
 
 ---
 
@@ -14116,3 +14117,70 @@ agreeing is still four readers. The evidence that moved the question
 was not a better decoder experiment; it was noticing that the encoder
 had already written its answer down somewhere else — in a frequency
 table it had to build before it could write the byte at all.
+
+## 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
+
+**Three fields in a Now Compress file are written by the encoder and
+read by nobody**, and until today they were indistinguishable from each
+other: the two bytes `00 03` an LZSS stream opens with, the padding byte
+between a block's stream and its trailer, and the two words of the
+leading block-table record. Every one had been checked the same way —
+change it, recompute the checksums over it, hand the file back to Now
+Compress's own Decompress — and every one came back byte-exact. That
+says a decoder ignores them. It says nothing about whether the ENCODER
+means them.
+
+**The instrument for that is a second encoder, and there was one.** Now
+Utilities shipped through 6.7; the harness had only 5.0.1. Now Utilities
+**6.0**, March 1996 against 5.0.1's 1994, installed beside it and given
+the same inputs at the same settings, writes files of the same LENGTH
+across all four coders — and every byte identical except the entry
+record's dates, the leading record's `0037` → `003a`, one padding byte
+`ff` → `47`, and the checksums over those. Every mode word, both block
+tables, every Huffman table, every LZSS stream and every trailer are the
+same bytes. **The coder did not change in four years.**
+
+**Two of the three unread fields moved and one did not**, which is the
+whole of what the second encoder bought:
+
+| field | 5.0.1 | 6.0 | reading |
+|---|---|---|---|
+| the LZSS prefix | `00 03` | `00 03` | a constant the encoder means |
+| the padding byte | `ff` | `47` | leftover |
+| the leading record's words | `0d4c 0037` | `0d4c 003a` | moves with the program; version stamp and deterministic leftover both fit |
+
+A value that is constant across 27 files from one program, two months
+apart, both settings, compressed files and archives, looks exactly like
+a value the program intends — until a second program writes a different
+one in the next field along. **"Deterministic" and "deliberate" are the
+same observation until the thing underneath changes**, and nothing a
+single build writes can separate them. This project had already been
+close to calling a shape-3 header byte "uninitialised memory" on
+evidence of the same kind (*six copies of one file*).
+
+**And the second encoder retired a hypothesis about a THIRD question.**
+Why 5.0.1 writes a leading record in front of every block table while
+the 1993 archive has none was down as possibly a version difference.
+6.0 writes one exactly where 5.0.1 does, and the 1995 archive has a
+member with one and a member without in the same file — so whatever
+selects it is not the program.
+
+**What it cost, so the next one can be priced.** Four emulator runs of
+about five minutes each and two downloads. The route was not the one
+planned: Now Utilities **3.0.2 and 4.0.2 contain no compressor at all** —
+their disks are Super Boomerang, NowMenus, WYSIWYG Menus and the rest,
+and QuickFiler arrives in 5 — so the older half of the version range
+cannot answer anything, and the 1993 archive's encoder was a separate
+1993 product that is not on the mirrors. 6.0's installer is a StuffIt
+archive of finished files rather than an application, which made the
+install a file copy instead of a driven dialog: the extension and its
+toolbox into `System Folder:Extensions`, the droplets at the root, the
+**leading spaces in their names kept** because that is the load order.
+It runs on the System 7.0.1 image the harness already had, on an
+emulated Mac Plus.
+
+**The generalisable part.** When a field is constant and nobody reads
+it, the question is not "what does it mean" — that one has no instrument
+— but "what is it constant WITH RESPECT TO?" Vary the thing the field
+belongs to rather than the thing it is written about, and the answer
+arrives as a difference somewhere else in the same file.
