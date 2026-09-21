@@ -480,6 +480,51 @@ def fibonacci_file(nsyms, seed=b"deep"):
     return bytes(pool[i] for i in order)
 
 
+def window_files():
+    """Members sized so that block starts land at chosen offsets inside
+    the encoder's 64 KB window.
+
+    **The one dimension no byte-2 experiment has varied.** Byte 2 of a
+    shape-3 header is not a property of its block — ten hypotheses failed
+    on 391 blocks — and the only thing it has ever been seen to track is
+    which half of a 65,536-byte window its block starts in, 41 of the 43
+    values above 200 in the 1995 archive (docs/formats/now-compress.md,
+    *The header*). That is a correlation read off one file whose blocks
+    happen to alternate; nothing has ever CHOSEN a block's offset.
+
+    This does. Four members of 65,536 bytes each produce two full
+    32,768-byte blocks apiece and advance the window by exactly one turn,
+    so a spacer of 16,384 in front of each one moves that member's pair
+    of blocks a quarter of the window along:
+
+        spacer   position of the member's two blocks
+        —        0 and 32,768
+        16,384   16,384 and 49,152
+        16,384   32,768 and 0
+        16,384   49,152 and 16,384
+
+    Eight full blocks, two at each quarter, and **every one of them the
+    same content to within its seed** — so a byte 2 that depends on where
+    in the window a block starts has to show it, and one that does not
+    has nowhere left to hide.
+    """
+    # A member table is a pre-order flattening in NAME order, not the
+    # order the files were copied, so the names have to sort into the
+    # sequence the arithmetic above assumes: p0 member, p1 spacer, p2
+    # member, and so on. `probe`'s four members came back alphabetical
+    # from an insertion order that was not, which is how that was found.
+    out, k = {}, 0
+    for i in range(4):
+        if i:
+            out["p%d.bin" % k] = alphabet(16384, b"ABCD", (4, 2, 1, 1),
+                                          b"wpos-spacer-%d" % i)
+            k += 1
+        out["p%d.bin" % k] = alphabet(65536, b"ABCD", (4, 2, 1, 1),
+                                      b"wpos-member-%d" % i)
+        k += 1
+    return out
+
+
 def fork_files():
     """Files with a RESOURCE fork, which nothing this harness made has had.
 
@@ -614,6 +659,9 @@ CASES = {
     # in a block table is claimed to sit. `fork_files` says what each
     # member predicts.
     "forks": (lambda: {}, "archive", "smaller", None, fork_files),
+    # Block starts placed at each quarter of the 64 KB window, twice
+    # over, with the content held constant: `window_files` says why.
+    "wpos": (window_files, "archive", "smaller"),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),
@@ -650,6 +698,9 @@ def run_case(name):
         if rsrc:
             open(os.path.join(dest, "in-" + n + ".rsrc"), "wb").write(rsrc)
     make_volume(img, "Now", files, folders, macbinary=mbs)
+    nbytes = sum(len(b) for b in files.values())
+    nbytes += sum(len(d) + len(r) for _, _, _, d, r in twofork)
+    nbytes += sum(len(b) for _, inner in folders for b in inner.values())
     for n, blob in files.items():
         open(os.path.join(dest, "in-" + n), "wb").write(blob)
     for _, inner in folders:
@@ -668,7 +719,10 @@ def run_case(name):
         s.menu(item, sub, "pick-%s-%s" % (action, mode))
         s.shot("working", wait=40.0)
         s.mac.key("Return")                          # the save box, or a report
-        s.shot("done", wait=60.0)
+        # 60 s was enough for every case up to `forks`'s 196 KB; `wpos`
+        # is 311 KB, and a run that ejects while QuickFiler is still
+        # working reads a volume that looks like a refusal.
+        s.shot("done", wait=max(60.0, nbytes / 2000.0))
         s.mac.key("Return")
         time.sleep(5)
         s.mac.command_key("w")
@@ -789,6 +843,66 @@ def expand(outdir, macbinaries):
     return got
 
 
+def dearchive(outdir, macbinaries):
+    """Run Now Compress's own **Dearchive** over ARCHIVES, and keep what
+    comes out.
+
+    `--expand` is the same instrument one layer down: that one asks
+    Decompress about a compressed FILE, this one asks QuickFiler about an
+    archive, which is the shape `tools/synth_now.py` writes and which
+    nothing but `unar` had ever graded (`synth_now.py --ladder`).
+
+    The files go on as MacBinary typed `NCar`/`NCdc`, which is what makes
+    QuickFiler offer the item at all — the type is one of the four Expand
+    Now's own `FREF` resources claim, not a guess (`synth_now.py`,
+    *ARCHIVE_TYPE*).
+    """
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(outdir, "volume.img")
+    total = sum(os.path.getsize(p) for p in macbinaries)
+    make_volume(img, "Now", {}, macbinary=macbinaries,
+                size=max(1400, (total * 8) // 1024 + 800))
+    s = Session(BOOT, [img], os.path.join(outdir, "shots"))
+    try:
+        s.boot()
+        s.demo()
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(8)
+        s.mac.command_key("a")
+        s.shot("selected", wait=3.0)
+        s.item(ITEM_DEARCHIVE_Y, "pick-dearchive")
+        s.shot("working", wait=40.0)
+        # One alert per archive it refuses, and a rung that IS refused is
+        # the point of the ladder, so the Returns scale with the volume
+        # exactly as they do in `expand`.
+        for _ in range(len(macbinaries) + 1):
+            s.mac.key("Return")
+            time.sleep(10)
+        s.shot("done", wait=30.0 + 15.0 * len(macbinaries))
+        s.mac.key("Return")
+        time.sleep(5)
+        s.mac.command_key("w")
+        time.sleep(3)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                       # Put Away: flush + eject
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = read_forks(img)
+    for path, (data, rsrc) in sorted(got.items()):
+        print("  %-44s %8d B data, %6d B rsrc" % (path[-44:], len(data),
+                                                  len(rsrc)))
+    # The archives themselves are still there, so "some files" is not a
+    # result: what says an archive was read is a file that was not on
+    # the volume before.
+    new_ = [p for p in got if os.path.basename(p) not in
+            {os.path.basename(m).rsplit(".bin", 1)[0] for m in macbinaries}]
+    print("dearchive: %d file(s) on the volume afterwards, %d of them NEW"
+          % (len(got), len(new_)))
+    return got
+
+
 def adjudicate(macbinary, archive):
     """Let a self-extracting archive's OWN extractor grade our output.
 
@@ -853,6 +967,14 @@ def adjudicate(macbinary, archive):
             print("  %-34s %-4s %9d B  %s" % (path[-34:], fork, len(a),
                                               "IDENTICAL" if same else "DIFFERS"))
     shutil.rmtree(out, ignore_errors=True)
+    # A volume with nothing on it compares nothing and so "agrees" —
+    # which is how an archive the extractor REFUSED read as a pass on
+    # 2026-09-21, twice, before anyone looked at the fork count. An
+    # adjudication that graded no forks has measured nothing.
+    if not theirs:
+        print("adjudication: the extractor produced NOTHING — it refused the "
+              "archive, or the run did not reach it. Nothing was compared.")
+        return 1
     print("adjudication: %s" % ("the original extractor agrees with us on every "
                                 "fork" if not bad else "%d fork(s) DIFFER" % bad))
     return bad
@@ -903,6 +1025,8 @@ def main():
     ap.add_argument("--setup6", action="store_true",
                     help="fetch Now Utilities 6.0 and build its boot image")
     ap.add_argument("--case", help="one of %s, or 'all'" % ", ".join(sorted(CASES)))
+    ap.add_argument("--dearchive", nargs="+", metavar=("OUTDIR", "FILE.bin"),
+                    help="run Now Compress's own Dearchive over ARCHIVES")
     ap.add_argument("--case6", metavar="NAME",
                     help="the same case, compressed by 6.0 instead of 5.0.1")
     ap.add_argument("--verify", action="store_true",
@@ -938,8 +1062,12 @@ def main():
         if len(args.expand) < 2:
             raise SystemExit("nowcompress: --expand OUTDIR FILE.bin ...")
         expand(args.expand[0], args.expand[1:])
+    if args.dearchive:
+        if len(args.dearchive) < 2:
+            raise SystemExit("nowcompress: --dearchive OUTDIR FILE.bin ...")
+        dearchive(args.dearchive[0], args.dearchive[1:])
     if not any((args.setup, args.setup6, args.install, args.case, args.case6,
-                args.verify, args.adjudicate, args.expand)):
+                args.verify, args.adjudicate, args.expand, args.dearchive)):
         ap.print_help()
     return 0
 

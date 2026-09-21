@@ -480,13 +480,34 @@ def file(name, data=b"", rsrc=b"", shapes=("stored",), chunk=4096,
             "creator": creator}
 
 
-def build_archive(tree, delta=0):
+def build_archive(tree, delta=0, lead=False, sums=False, arch=False):
     """Lay out a whole archive: 24-byte header, the entry records in
     depth-first order, then one block table and its blocks per file.
 
     `delta` is how far the offsets a table STORES fall short of the real
     ones; "relative" means each table's offsets are relative to itself,
-    which is the shape that makes the first one obviously wrong."""
+    which is the shape that makes the first one obviously wrong.
+
+    `lead` and `sums` exist to ask **Now Compress** about these archives,
+    which nothing had until 2026-09-21: they are graded by `unar`, which
+    accepts them, and they differ from what the encoder writes in ways
+    nothing here checks (TESTING.md, *what the derivation tools cannot
+    see*). Each is one rung of that ladder and both default OFF, so the
+    thirteen archives and the committed fixture are unchanged:
+
+    - `lead` writes the **fork-boundary record** in front of each
+      member's first block. Every member of every file the encoder wrote
+      has exactly one, and a compressed FILE without one is refused
+      (docs/formats/now-compress.md, *A member's blocks*). These members
+      are data-only, so the boundary belongs at the head.
+    - `sums` fills in the four things the file header and the blocks
+      leave at zero: the setting at +2, the 65,536 at +4, the byte sum at
+      +20, and **each block's four-byte trailer**.
+    - `arch` sets the `0x0100` bit every mode word in an archive Now
+      Compress wrote carries and none of these has: `0140` shape 3,
+      `0120` Huffman only, `0100` stored, against the `0040`/`0020`
+      written here (docs/formats/now-compress.md, *The archive layer*).
+    """
     flat = []
 
     def walk(node):
@@ -503,17 +524,34 @@ def build_archive(tree, delta=0):
         if node["isdir"]:
             continue
         stream = node["rsrc"] + node["data"]
+        restarts = node["restarts"]
+        if lead:
+            restarts = tuple(sorted(set(restarts) | {0}))
         blocks, dictcache = encode_stream(stream, node["shapes"],
                                           node["chunk"], dictcache,
-                                          node["use_dict"], node["restarts"])
+                                          node["use_dict"], restarts)
         d = at if delta == "relative" else delta
-        table, blob = build_table(blocks, at, d, node["padding"],
-                                  node["restarts"])
+        if arch:
+            blocks = [(flags | 0x0100, payload) for flags, payload in blocks]
+        table, blob = build_table(blocks, at, d, node["padding"], restarts,
+                                  LEAD_WORDS if lead else None)
+        if sums:
+            blob = bytearray(blob)
+            end = 0
+            for _flags, payload in blocks:
+                end += len(payload) + node["padding"]
+                blob[end:end + 4] = u32(sum(blob[end - len(payload)
+                                                 - node["padding"]:end]))
+                end += 4
+            blob = bytes(blob)
         streams[i] = (at, table + blob)
         at += len(table) + len(blob)
 
     out = bytearray(24)
     out[0:2] = b"\x00\x02"
+    if sums:
+        out[2:4] = u16(0x0160)               # the setting an archive carries
+        out[4:8] = u32(0x10000)              # the window an archive needs
     out[8:12] = u32(len(flat))
     for i, node in enumerate(flat):
         if node["isdir"]:
@@ -524,6 +562,8 @@ def build_archive(tree, delta=0):
             out += entry_record(node["name"], False, 0, len(node["data"]),
                                 len(node["rsrc"]), start, start + len(blob),
                                 node["typ"], node["creator"])
+    if sums:
+        out[20:24] = u32(sum(out[:20]))
     for i in sorted(streams):
         out += streams[i][1]
     return bytes(out)
@@ -754,16 +794,81 @@ def write_empty_stream(outdir):
 FIXTURE = "synth-now-mixed"
 
 
+# What a plain (not self-extracting) Now Compress archive is on a
+# Macintosh. `NCdo`/`NCdc` is what the encoder stamps a compressed FILE
+# with here; `NCar` is one of the four document types **Expand Now's own
+# `FREF` resources claim** (128 APPL, 129 fold, 130 ****, 131 NCdo, 132
+# NCap, 133 NCar, 134 NCsg, 135 disk), which is how the type for an
+# archive was found without making one.
+ARCHIVE_TYPE, ARCHIVE_CREATOR = "NCar", "NCdc"
+
+
+def ladder(outdir, control=None):
+    """The four rungs that ask **Now Compress** about the archives this
+    project writes, plus a control it must accept.
+
+    Graded by `unar` since M12 and never put to the encoder: the
+    thirteen archives differ from what Now Compress writes in ways
+    nothing here checks, and *"our reader accepts it"* is the tolerance
+    that cannot fail (BLOCKERS.md's list of mechanisms). Two of those
+    differences are now separable, so this is a ladder and not a
+    question — a rung each, and both together:
+
+    | file | what it is |
+    |---|---|
+    | `ladder-control` | a real archive Now Compress wrote, its data fork retyped |
+    | `ladder-plain` | what `synth_now.py` has written since M12 |
+    | `ladder-sums` | plus the header's setting, window and byte sum, and every block trailer |
+    | `ladder-lead` | plus the fork-boundary record every member the encoder wrote has |
+    | `ladder-both` | plus both |
+    | `ladder-arch` | plus the `0x0100` bit every archive mode word carries |
+
+    `tools/vmac/nowcompress.py --dearchive` puts them on one volume and
+    gives the lot to QuickFiler's **Dearchive**.
+    """
+    from arcmac import macbinary
+    os.makedirs(outdir, exist_ok=True)
+    tree = [file("alpha", data=sample_data()["text"][:3000],
+                 shapes=("newlzss",), chunk=1500),
+            file("beta", data=sample_data()["runs"][:2000],
+                 shapes=("huffman",), chunk=2000)]
+    rungs = [("plain", dict(lead=False, sums=False)),
+             ("sums", dict(lead=False, sums=True)),
+             ("lead", dict(lead=True, sums=False)),
+             ("both", dict(lead=True, sums=True)),
+             ("arch", dict(lead=True, sums=True, arch=True))]
+    made = []
+    if control:
+        made.append(("control", open(control, "rb").read()))
+    for name, kw in rungs:
+        made.append((name, build_archive(tree, 0, **kw)))
+    out = []
+    for name, blob in made:
+        mb = os.path.join(outdir, "ladder-%s.bin" % name)
+        open(mb, "wb").write(macbinary("ladder-" + name, ARCHIVE_TYPE,
+                                       ARCHIVE_CREATOR, blob, b""))
+        open(os.path.join(outdir, "ladder-%s.now" % name), "wb").write(blob)
+        out.append(mb)
+        print("  ladder-%-8s %6d B" % (name, len(blob)))
+    return out
+
+
 def main():
     args = sys.argv[1:]
+    if len(args) >= 2 and args[0] == "--ladder":
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                        "vmac"))
+        ladder(args[1], args[2] if len(args) > 2 else None)
+        return 0
     if len(args) == 2 and args[0] == "-o":
         tree, delta = archives()[FIXTURE]
         with open(args[1], "wb") as fh:
             fh.write(build_archive(tree, delta))
         return 0
     if len(args) != 1:
-        print("usage: synth_now.py <outdir> | synth_now.py -o <file>",
-              file=sys.stderr)
+        print("usage: synth_now.py <outdir> | synth_now.py -o <file>\n"
+          "       synth_now.py --ladder <outdir> [CONTROL.dat]",
+          file=sys.stderr)
         return 2
     os.makedirs(sys.argv[1], exist_ok=True)
     made = write_all(sys.argv[1])

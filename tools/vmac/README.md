@@ -420,11 +420,13 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --case probe   # four inputs chosen to be read
     tools/vmac/nowcompress.py --case reach   # how far back a match may point
     tools/vmac/nowcompress.py --case forks   # members with a RESOURCE fork
+    tools/vmac/nowcompress.py --case wpos    # block starts at each quarter of the window
     tools/vmac/nowcompress.py --setup6    # fetch Now Utilities 6.0, build its boot image
     tools/vmac/nowcompress.py --case6 faster # the same case, the OTHER encoder
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
     tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
     tools/vmac/nowcompress.py --expand OUTDIR FILE.bin ...   # and below
+    tools/vmac/nowcompress.py --dearchive OUTDIR FILE.bin ...  # the same, for ARCHIVES
 
 The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
 and Archive ▸ Faster/Smaller. Files go on the volume with `hcopy -r`, which
@@ -569,6 +571,21 @@ bytes 16..127 masked, the `vmac_check.py` convention, because the Resource
 Manager stamps that region whenever it touches a file. That is what settled
 the corpus's 1995 archive, which `unar` cannot decode at all. It works for any
 `.sea` in the corpus, not just this one.
+
+**And it takes any archive at all, by splicing.** `tools/mutate_now.py`'s
+`splice` puts a different data fork into a `.sea`'s MacBinary, so the
+extractor Now Software shipped can be pointed at an archive this project
+wrote — which is how `synth_now.py --ladder` asks the encoder about the
+thirteen synthetic archives (TESTING.md). **The control that route needs
+is a length change**: `probe`'s 3,830-byte archive inside `tree`'s
+self-extractor, which was built around one 1,894 bytes long, extracts all
+four members byte-exact.
+
+**What `--adjudicate` could not see until 2026-09-21**: an extractor that
+refuses an archive leaves an empty volume, an empty volume compares zero
+forks, and zero forks all agree — so it printed *"agrees with us on every
+fork"* for two archives it had refused. It now fails when it graded
+nothing. Read the fork COUNT, not the verdict.
 
 **`--expand` runs the DECOMPRESSING half**, which is what turns "nothing here
 reads this field" into a statement about the format:

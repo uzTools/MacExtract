@@ -232,6 +232,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
 - 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
 - 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
+- 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
 
 ---
 
@@ -14253,3 +14254,77 @@ in BLOCKERS.md.
 decoder requires one — both are measured from both sides. What the
 decoder DOES with it is still unmeasured, and that is the bullet the
 note now carries.
+
+## 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
+
+**Two experiments the last handoff asked for, both negative, and a
+negative is what each was for.**
+
+### Where in the window a block starts changes byte 2 by nothing
+
+**Claim withdrawn.** A shape-3 header's byte 2 was said to track which
+half of a 65,536-byte window its block begins in, on a correlation in
+the 1995 archive: 41 of its 43 values above 200 are in low-half blocks.
+`nowcompress.py --case wpos` is the experiment that correlation asks
+for: four members of 65,536 bytes each, identical to within a seed,
+produce two full 32,768-byte blocks apiece and advance the window by
+exactly one turn, so a 16,384-byte spacer in front of each moves its
+pair a quarter along. **Eight full blocks, two at each quarter, byte 2
+= 0 in all eight.** Only the archive's first block differs, at 236.
+
+**Why the correlation looked real.** The 1995 archive's 306 blocks are
+all full and all in one member, so they alternate low/high half by
+construction; anything that drifts through that file correlates with
+the alternation. The lead survived because every previous byte-2
+experiment varied the block's CONTENT and read the offset off whatever
+came out. **Nothing had ever chosen the offset** — and a correlation
+you only ever observe is one you have not tested.
+
+**What replaced it is smaller and sharper.** `tokdist`'s forty members,
+none matchable against another, walk byte 2 191 → 224 → 240 → 248 →
+252 → 254 → 255, and every step is exactly `b2 + ((255 − b2) >> 1) + 1`
+— **101 transitions across the files here take it, 31 more sit at the
+cap**. Going the other way there is no law at all: `reach`'s five
+near-identical members, which DO match each other, go 224 and then 0,
+0, 0, 0, and `wpos` does the same. Rises toward a maximum when nothing
+matches, drops to zero when everything does. That is a hypothesis about
+what the encoder keeps there, labelled as one.
+
+### The archives this project writes are refused, and not for the reasons listed
+
+**Thirteen archives graded by `unar` since M12, never once put to Now
+Compress.** `synth_now.py --ladder` fixes that: four rungs and a
+control, each spliced into a real self-extractor's data fork by
+`mutate_now.py` so the decoder Now Software shipped reads it.
+
+| rung | what it adds | Now Compress |
+|---|---|---|
+| control | `probe`'s 3,830-byte archive in `tree`'s self-extractor, built around one half that size | **all four members byte-exact** |
+| `both` | the header's setting, window and byte sum, every block trailer, and the fork-boundary record | **refused** |
+| `arch` | plus the `0x0100` bit every archive mode word carries | **refused** |
+
+The control is what makes the other two mean anything: the route works
+and a different length is not the obstacle. So something among what is
+LEFT — the `00 00` prefix where the encoder writes `00 03`, the entry
+record's own fields, or the coded stream itself — is fatal, and it is
+not among the four differences that were fixed. TESTING.md had listed
+five such differences; this session found two more before running
+anything (the `0x0100` bit and the header's window word), which is its
+own comment on a list nobody had tested.
+
+**And the instrument lied twice before anyone noticed.** `--adjudicate`
+printed *"the original extractor agrees with us on every fork"* for both
+refused rungs, because a volume with nothing extracted onto it compares
+zero forks and zero forks disagree. It now fails when it graded nothing,
+and `--dearchive` counts the files that were not already there. **An
+aggregate over an empty set is the purest form of the failure this
+repository keeps rediscovering**: the check ran, the check passed, the
+check touched nothing.
+
+**What it cost, so the next one can be priced.** Five emulator runs.
+One was spent on `--dearchive`, a route built from scratch — QuickFiler
+does offer Dearchive for a file typed `NCar`/`NCdc`, with Archive and
+Compress correctly greyed out, so the type (read out of Expand Now's own
+`FREF` resources rather than guessed) is right — and it expanded
+nothing, not even the control. That route is unexplained and is not the
+one the results above rest on.

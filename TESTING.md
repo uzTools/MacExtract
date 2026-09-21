@@ -2645,8 +2645,23 @@ minutes, and the whole set is the better part of an hour.
   separates the forks (docs/formats/now-compress.md, *A member's
   blocks*). `build_fork`, which writes a compressed FILE for Now
   Compress's own Decompress to read, gained one on 2026-09-21 because
-  without it Decompress refuses the file. The engine reads them because
-  it checks none of those things — which is exactly the point: **a suite of inputs
+  without it Decompress refuses the file.
+
+  **And on 2026-09-21 the encoder was finally asked about the ARCHIVES,
+  which answered less than expected.** `synth_now.py --ladder` builds
+  four rungs and a control, and `tools/mutate_now.py`'s `splice` puts
+  each one in a real self-extractor's data fork so Now Compress's own
+  decoder reads it (`nowcompress.py --adjudicate`). The **control**
+  works: `probe`'s 3,830-byte archive inside `tree`'s self-extractor,
+  which was built around an archive half that size, extracts all four
+  members byte-exact — so the route is sound and a different length is
+  not the obstacle. The rung with the header's setting, window and byte
+  sum, every block trailer, the fork-boundary record AND the `0x0100`
+  archive mode vocabulary is **still refused**: the extractor launches,
+  asks for a destination folder, and writes nothing. So at least one of
+  what is left — the `00 00` prefix, the entry record's own fields, or
+  something in the coded stream — is fatal, and it is not among the
+  four that were fixed. The engine reads them because it checks none — which is exactly the point: **a suite of inputs
   made by one program can only test what that program happens to get
   right**. `derive_now.py` reads 4 of `synth-now-mixed.now`'s 15 blocks
   and every block of every archive Now Compress itself wrote

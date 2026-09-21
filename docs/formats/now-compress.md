@@ -282,7 +282,7 @@ archives are almost entirely written in.
 - **bytes 0..1 are a u16 equal to `0x2F59` plus the length of the
   compressed header that follows.** Read as a magic byte and an offset
   — `0x2f`, then the stream's byte position plus 85 — they give the
-  same answer on all **429 shape-3 blocks here**, because `4 + length`
+  same answer on all **449 shape-3 blocks here**, because `4 + length`
   aligned up
   to an even byte IS `byte 1 − 85` whenever the length is even, which
   it is in every block seen. That is also why byte 1 is always odd,
@@ -335,16 +335,33 @@ archives are almost entirely written in.
   it did not change between 1994 and 1996, in a file where two unread
   fields beside it did.
 
-  **What it does track is where the encoder is in its window.** The
-  1995 archive is the only specimen long enough to ask: its 306 blocks
-  produce 32,768 bytes each against a 65,536-byte window, so they
-  alternate between starting in the low half of that window and the
-  high half. **41 of the 43 values above 200 are in blocks that start
-  in the LOW half**; the high-half blocks are 100..119 with two
-  exceptions. A per-block quantity cannot see which half of the window
-  its block begins in, so this is the same finding as the tokdist
-  sequence from the other side — and it is a correlation, not a
-  formula;
+  **It does NOT track where in the window its block starts.** That was
+  this note's reading until 2026-09-21, on a correlation in the 1995
+  archive — 41 of its 43 values above 200 are in blocks that start in
+  the low half of a 65,536-byte window. `--case wpos` is the experiment
+  that correlation asks for and nothing had run: four members of 65,536
+  bytes each, of the same content to within a seed, produce two full
+  32,768-byte blocks apiece and advance the window by exactly one turn,
+  so a 16,384-byte spacer in front of each one moves its pair of blocks
+  a quarter of the window along. **Eight full blocks, two at each
+  quarter, and byte 2 is 0 in all eight** — only the archive's very
+  first block differs, at 236. Where a block starts in the window
+  changes this field by nothing, and the 1995 archive's correlation is
+  a property of that file (BLOCKERS.md, *Withdrawn claims*);
+
+  **What it does do is rise and collapse, by an exact law in one
+  direction.** `--case tokdist`'s forty near-identical members, none of
+  which can be matched against another, walk it 191, 224, 240, 248,
+  252, 254, 255 and then 255 for the remaining thirty-two — and every
+  one of those steps is `b2 + ((255 − b2) >> 1) + 1`, capped at 255.
+  **101 transitions across the files here take that step exactly**, and
+  31 more are already at the cap. In the other direction there is no
+  such law: `--case reach`'s five near-identical members, which CAN be
+  matched against one another, go 224 and then 0, 0, 0, 0, and `wpos`
+  does the same. A value that climbs toward a maximum when nothing
+  matches and drops to zero when everything does is a **hypothesis**
+  about what the encoder is keeping — how its matching is going — and
+  nothing here has measured it;
 - **byte 3 is the outer stream's end flush**: after the last token come
   `(16 − byte 3) mod 16` bits, and then the four-byte trailer;
 - **from byte 4 comes a Huffman-coded region of the length byte 0..1
@@ -768,9 +785,10 @@ reads the same three from the file, and 32,768 + 32,768 + 23,406 is
 | deep | 4 forks, Fibonacci histograms | 55,713 | — | shape 2, codes 10–11 deep |
 | deeparc | the same four, archived | 55,713 | — | shape 3, codes 10–13 deep |
 | forks | 4 members, one of them a three-block **resource** fork | 196,463 | — | 1 stored, 10 shape 3 |
+| wpos | 7 members, four of them a whole window long | 311,296 | — | 11 shape 3, 8 of them full blocks |
 
 **Every compressed block of every one of them reads byte for byte
-against the bytes that went in** — **96 of 96** inside the archives,
+against the bytes that went in** — **107 of 107** inside the archives,
 and every block of the sixteen bare forks besides, each agreeing with
 its own trailer as well (`tools/derive_now.py` with no arguments).
 
@@ -900,10 +918,15 @@ than one that draws it.
   decoder, and now the encoder itself. **This is where it stops**, and
   saying so is the point of the entry.
 - **What a shape-3 block's header byte 2 IS.** That nothing reads it,
-  that it is not a property of the block, and that it is computed
-  rather than left over are all measured (*The header*), as is what it
-  tracks — which half of the window its block starts in. What the
-  encoder keeps there is not.
+  that it is not a property of the block, that it is computed rather
+  than left over, and that two builds four years apart compute it
+  identically are all measured, and so now is that it does **not**
+  depend on where in the window its block starts (*The header*). What
+  is left is a shape rather than a formula: it rises toward 255 by
+  `((255 − b2) >> 1) + 1` over members nothing can match, and drops to
+  0 over members that match each other. Which quantity the encoder is
+  keeping there is not measured, and the reading that it is about
+  matching is a hypothesis.
 - **Which rule the format's decoder corrects a block table by.** Seven
   mutations say what it does (*The archive layer*): a constant wrong in
   every record is corrected either way round, one wrong record is not,
