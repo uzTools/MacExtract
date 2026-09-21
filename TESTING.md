@@ -2590,7 +2590,7 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read |
 | `derive_packit.py` | PackIt's container, stored and Huffman-coded | 38 forks of 4 archives; it checks no CRC, so nothing here confirms the polynomial |
-| `derive_now.py` | Now Compress: all four coders, the block table, and the archive container | the specimens `nowcompress.py` makes, byte for byte — 81 archive blocks of 81 and every fork specimen of seven cases — plus **both corpus archives**: `--expect DIR` grades an archive against a directory of extracted forks, and it reads the 1993 one's 3 blocks of 3 and the 1995 one's 306 of 306. **Nothing is searched for**: a shape-3 block's header says where its stream starts and ends, a shape-2 block's stream starts a fixed distance past its table, and three checksums — per block, per block table and per member record — are checked as it goes. Given an archive and no `--expect`, it decodes every block anyway, the member records' fork lengths saying how long each fork is |
+| `derive_now.py` | Now Compress: all four coders, the block table, and the archive container | the specimens `nowcompress.py` makes, byte for byte — 85 archive blocks of 85 and every fork specimen of nine cases — plus **both corpus archives**: `--expect DIR` grades an archive against a directory of extracted forks, and it reads the 1993 one's 3 blocks of 3 and the 1995 one's 306 of 306. **Nothing is searched for**: a shape-3 block's header says where its stream starts and ends, a shape-2 block's stream starts a fixed distance past its table, and three checksums — per block, per block table and per member record — are checked as it goes. Given an archive and no `--expect`, it decodes every block anyway, the member records' fork lengths saying how long each fork is |
 
 Each writes its corrections into `docs/formats/`, which is what the
 engine cites; the descriptions themselves are fetched into
@@ -2620,6 +2620,20 @@ minutes, and the whole set is the better part of an hour.
   `derive_arc.py --grid` grades against the bytes handed to a real
   ARC, and the DiskDoubler method-4 specimen is one Salient's own
   expander reads back.
+- **What this project's own Now Compress fixtures are not.** The 13
+  synthetic archives `tools/synth_now.py` writes exercise every block
+  shape and both routes into the offset-delta search, and they are not
+  what the encoder writes: their block trailers and file-header
+  checksum are left **zero**, their mode words are `0x0001`/`0x0021`
+  where Now Compress writes `0x0010`/`0x003f`, their block records
+  carry a padding of 2, and their LZSS streams open `00 00` where the
+  encoder writes `00 03`. The engine reads them because it checks none
+  of those things — which is exactly the point: **a suite of inputs
+  made by one program can only test what that program happens to get
+  right**. `derive_now.py` reads 4 of `synth-now-mixed.now`'s 15 blocks
+  and every block of every archive Now Compress itself wrote
+  (docs/formats/now-compress.md).
+
 - **A rule fitted to the blocks in front of it.** `derive_now.py` read
   where a shape-3 stream starts out of the block header, and that rule
   — "16 minus header byte 4" — was exact on the 75 blocks it was

@@ -397,6 +397,27 @@ TOK_LENS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32,
             40, 48, 64, 96, 128, 192, 255]
 
 
+def fibonacci_file(nsyms, seed=b"deep"):
+    """Bytes whose histogram is Fibonacci, which is what makes a Huffman
+    code as deep as it can be: 18 symbols reach 17 bits, 21 reach 20.
+
+    What it is for: the 128-byte code table gives each symbol four bits,
+    so a length past 15 needs the escape `src/fmt_now.c` reads after
+    the nibbles — a count of "extra length" entries and their symbols,
+    each gaining 16. **No specimen here has ever needed it** (the
+    deepest code in any is 12), so this asks the encoder for one.
+    """
+    fib = [1, 1]
+    while len(fib) < nsyms:
+        fib.append(fib[-1] + fib[-2])
+    pool = bytearray()
+    for i, n in enumerate(fib[:nsyms]):
+        pool += bytes([65 + i]) * n
+    ks = keystream(len(pool) * 2, seed)
+    order = sorted(range(len(pool)), key=lambda i: (ks[2 * i], ks[2 * i + 1], i))
+    return bytes(pool[i] for i in order)
+
+
 def token_files(kind):
     """`dist`: one match of 64 bytes at each distance in TOK_DISTS.
     `len`: one match of each length in TOK_LENS, all at distance 400."""
@@ -478,6 +499,20 @@ CASES = {
              lambda: (("Alpha", {"a1.bin": FOX * 60 + keystream(200),
                                  "a2.bin": PROSE[:2000] + keystream(200)}),
                       ("Beta", {"b1.bin": FOX * 80 + keystream(250)}))),
+    # Four skews, to find where a code stops fitting in four bits.
+    "deep": (lambda: {"d16.bin": fibonacci_file(16),
+                      "d18.bin": fibonacci_file(18),
+                      "d20.bin": fibonacci_file(20),
+                      "d21.bin": fibonacci_file(21)},
+             "compress", "smaller"),
+    # The same four skews, ARCHIVED: the Compress path put an LZSS
+    # layer under the Huffman and flattened them (deepest code 11), and
+    # Huffman-ONLY blocks have only ever come out of the archive path.
+    "deeparc": (lambda: {"d16.bin": fibonacci_file(16),
+                         "d18.bin": fibonacci_file(18),
+                         "d20.bin": fibonacci_file(20),
+                         "d21.bin": fibonacci_file(21)},
+                "archive", "smaller"),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),

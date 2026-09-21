@@ -49,7 +49,7 @@ SPECIMENS = os.path.join(HOME, "specimens", "now")
 PAYLOAD_AT = 164
 
 
-def decode(d, p, nout, hist=b""):
+def decode(d, p, nout=None, hist=b"", endbyte=None):
     """The shape.
 
     A flag byte, then eight tokens, its bits taken most significant
@@ -69,13 +69,16 @@ def decode(d, p, nout, hist=b""):
     does — the same as StuffIt method 8 and ARC's squeeze.
     """
     out = bytearray()
-    while len(out) < nout:
+    while (p < endbyte) if endbyte is not None else (len(out) < nout):
         if p >= len(d):
             raise EOFError
         flags = d[p]
         p += 1
         for bit in range(8):
-            if len(out) >= nout:
+            if endbyte is not None:
+                if p >= endbyte and bit:
+                    break
+            elif len(out) >= nout:
                 break
             if flags & (0x80 >> bit):
                 out.append(d[p])
@@ -94,7 +97,7 @@ def decode(d, p, nout, hist=b""):
                     at = len(hist) + len(out) - dist
                     out.append(hist[at] if at < len(hist)
                                else out[at - len(hist)])
-    return bytes(out[:nout]), p
+    return bytes(out[:nout] if nout is not None else out), p
 
 
 # ------------------------------------------------------------ shape 2
@@ -138,16 +141,45 @@ class Bits:
 
 
 def table_at(d, at=TABLE_AT):
-    """256 code lengths, four bits each, high nibble first. Kraft's
-    equality is what says it is one."""
+    """256 code lengths, four bits each, high nibble first, then **a
+    count of "extra length" entries and that many symbol indices**,
+    each of which gains 16 — the escape that lets a code run past the
+    15 four bits can hold. Kraft's equality is what says the result is
+    a code.
+
+    No block here has ever set that count: the deepest code in any
+    specimen is 12 (`--case deep` asks the encoder for a deeper one).
+    """
+    L, esc = table_lengths(d, at)
+    if abs(sum(2.0 ** -x for x in L if x) - 1.0) > 1e-9:
+        raise ValueError("not a code-length table")
+    return build(L)
+
+
+def table_lengths(d, at):
+    """The lengths and the escape entries behind them."""
     L = []
     for k in range(128):
         b = d[at + k]
         L.append(b >> 4)
         L.append(b & 15)
-    if abs(sum(2.0 ** -x for x in L if x) - 1.0) > 1e-9:
-        raise ValueError("not a code-length table")
-    return build(L)
+    n = d[at + 128]
+    esc = [d[at + 129 + i] for i in range(n)]
+    for sym in esc:
+        L[sym] += 16
+    return L, esc
+
+
+def table_stream_at(ds, at, nesc):
+    """Where a Huffman block's stream starts, in bytes: past the table
+    and its `nesc` escape entries, then a pad to an EVEN offset from
+    the block's own start (`ds`). With no escape entries the sum — one
+    flush byte, 128 of table, one count — is already even, which is why
+    every block here starts exactly there."""
+    p = at + 128 + 1 + nesc
+    if (p - ds) & 1:
+        p += 1
+    return p
 
 
 def decode_huff(d, t, bitstart, nout, hist=b""):
@@ -165,13 +197,16 @@ def decode_huff(d, t, bitstart, nout, hist=b""):
     return decode_huff_at(d, t, Bits(d, bitstart), nout, hist)
 
 
-def decode_huff_at(d, t, r, nout, hist=b""):
+def decode_huff_at(d, t, r, nout=None, hist=b"", endbit=None):
     """The same, carrying on from a bit reader already positioned."""
     out = bytearray()
-    while len(out) < nout:
+    while (r.p < endbit) if endbit is not None else (len(out) < nout):
         flags = r.sym(t)
         for b in range(8):
-            if len(out) >= nout:
+            if endbit is not None:
+                if r.p >= endbit and b:
+                    break
+            elif len(out) >= nout:
                 break
             if flags & (0x80 >> b):
                 out.append(r.sym(t))
@@ -188,10 +223,10 @@ def decode_huff_at(d, t, r, nout, hist=b""):
                     at = len(hist) + len(out) - dist
                     out.append(hist[at] if at < len(hist)
                                else out[at - len(hist)])
-    return bytes(out[:nout])
+    return bytes(out[:nout] if nout is not None else out)
 
 
-def decode_huffonly(d, at, nout):
+def decode_huffonly(d, at, nout=None, endbit=None):
     """Huffman and nothing else: the same 128-byte table, then one
     symbol per output byte — no flag bits and no matches.
 
@@ -201,14 +236,21 @@ def decode_huffonly(d, at, nout):
     23 bits in one specimen and 18 in another and still unexplained.
     """
     t = table_at(d, at)
-    r = Bits(d, (at + 128 + 1) * 8)
-    return bytes(r.sym(t) for _ in range(nout))
+    _, esc = table_lengths(d, at)
+    r = Bits(d, table_stream_at(at - 1, at, len(esc)) * 8)
+    if endbit is None:
+        return bytes(r.sym(t) for _ in range(nout))
+    out = bytearray()
+    while r.p < endbit:
+        out.append(r.sym(t))
+    return bytes(out[:nout] if nout is not None else out)
 
 
-LZSS_PREFIX = (0x00, 0x03)      # every LZSS stream starts with these
+LZSS_PREFIX = (0x00, 0x03)      # what the encoder writes there
+_warned = {}                    # anything else is reported once
 
 
-def decode_shape2(d, at, nout, hist=b""):
+def decode_shape2(d, at, nout=None, hist=b"", endbit=None):
     """A Huffman-over-LZSS block, from a position nothing searches for.
 
     The 128-byte table sits at `at`; **one zero byte** follows it, and
@@ -218,13 +260,22 @@ def decode_shape2(d, at, nout, hist=b""):
     first flag byte and match is what made this look like a gap of "23
     bits in one specimen and 18 in another": the gap was the prefix,
     and the prefix is two symbols whose code lengths differ per block.
+
+    They are skipped rather than checked, because a decoder does not
+    need them and because `tools/synth_now.py` writes `00 00` there —
+    its fixtures have exercised the engine for a year without anybody
+    noticing that the encoder writes `00 03`, the engine skipping two
+    bytes either way.
     """
     t = table_at(d, at)
-    r = Bits(d, (at + 128 + 1) * 8)
-    got = (r.sym(t), r.sym(t))
-    if got != LZSS_PREFIX:
-        raise ValueError("the stream does not open with %s" % (LZSS_PREFIX,))
-    return decode_huff_at(d, t, r, nout, hist)
+    _, esc = table_lengths(d, at)
+    r = Bits(d, table_stream_at(at - 1, at, len(esc)) * 8)
+    got = (r.sym(t), r.sym(t))          # the prefix, skipped like shape 1's
+    if got != LZSS_PREFIX and not _warned.get(got):
+        _warned[got] = 1
+        print("derive-now: an LZSS stream opens %s, not %s"
+              % (got, LZSS_PREFIX), file=sys.stderr)
+    return decode_huff_at(d, t, r, nout, hist, endbit)
 
 
 def try_huff(d, want):
@@ -319,7 +370,8 @@ def records(d, limit=64):
     while p + 8 <= len(d) and len(out) < limit:
         off = int.from_bytes(d[p:p + 2], "big")
         mode = int.from_bytes(d[p + 2:p + 4], "big")
-        out.append((off, mode))
+        pad = int.from_bytes(d[p + 4:p + 6], "big")
+        out.append((off, mode, pad))
         p += 8
         if off == len(d):
             return out
@@ -339,7 +391,7 @@ def read_fork(d, nout):
     if not recs:
         return None
     out = bytearray()
-    for (off, mode), (nxt, _) in zip(recs, recs[1:]):
+    for (off, mode, pad), (nxt, _, _) in zip(recs, recs[1:]):
         if len(out) >= nout:
             break
         n = min(BLOCK, nout - len(out))
@@ -365,7 +417,7 @@ def fork_checksums(d):
     if not recs:
         return 0, 0
     ok = tot = 0
-    for (off, _), (nxt, _) in zip(recs, recs[1:]):
+    for (off, _, _), (nxt, _, _) in zip(recs, recs[1:]):
         if nxt <= off + 4:
             continue
         stored, calc = shape3_check(d, off, nxt)
@@ -429,8 +481,10 @@ MEMBER_LEN = 110        # and the stride between them
 def members(d):
     """The archive's member records.
 
-    Word 5 of the file header is the member count; the records follow
-    at 24, **110 bytes each**, and this reads the fields it can name:
+    The file header is 24 bytes: `0x0002`, a version word, `0x0001`,
+    **the entry count as a u32 at +8**, and at +20 the sum of the
+    bytes before it. The records follow at 24, **110 bytes each**, and
+    this reads the fields it can name:
 
         +0    a Pascal name, 1 + up to 31 bytes
         +36   flags; **bit 0x10 marks a DIRECTORY**, found by comparing
@@ -456,8 +510,8 @@ def members(d):
     """
     if len(d) < MEMBER_AT + MEMBER_LEN:
         return None
-    n = int.from_bytes(d[10:12], "big")
-    if not 1 <= n <= 512:
+    n = int.from_bytes(d[8:12], "big")
+    if not 1 <= n <= 0xFFFF:
         return None
     out = []
     for k in range(n):
@@ -522,7 +576,8 @@ def member_blocks(d, st, en):
         while p + 8 <= len(d) and len(recs) < 2048:
             off = int.from_bytes(d[p:p + width], "big")
             mode = int.from_bytes(d[p + width:p + width + 2], "big")
-            recs.append((off, mode))
+            pad = int.from_bytes(d[p + width + 2:p + width + 4], "big")
+            recs.append((off, mode, pad))
             p += 8
             if off == en:
                 break
@@ -684,7 +739,7 @@ def shape3_tables(d, off):
     return t1, t2, start
 
 
-def shape3_stream(bits, start, t1, t2, hist, nout):
+def shape3_stream(bits, start, t1, t2, hist, nout=None, endbit=None):
     """The stream itself: a literal symbol, or a match — its length
     symbol, that length's extra bits, a distance symbol and that
     distance's extra bits.
@@ -695,7 +750,9 @@ def shape3_stream(bits, start, t1, t2, hist, nout):
     """
     out = bytearray()
     p = start
-    while len(out) < nout:
+    while (p < endbit) if endbit is not None else (len(out) < nout):
+        if nout is not None and len(out) >= nout and endbit is None:
+            break
         s, p = bit_sym(bits, p, t1)
         if s < 256:
             out.append(s)
@@ -710,7 +767,7 @@ def shape3_stream(bits, start, t1, t2, hist, nout):
         dist = dbase + (int(bits[p:p + dextra], 2) if dextra else 0)
         p += dextra
         for _ in range(ln):
-            if len(out) >= nout:
+            if nout is not None and len(out) >= nout:
                 break
             at = len(hist) + len(out) - dist
             if at < 0:
@@ -731,8 +788,13 @@ def bit_sym(bits, p, table):
     raise ValueError("no code at bit %d" % p)
 
 
-def shape3_decode(d, off, end, hist, nout, want=None, padding=0):
-    """Decode one shape-3 block. Nothing here is searched for, and the
+def shape3_decode(d, off, end, hist, nout=None, want=None, padding=0):
+    """Decode one shape-3 block. **Nothing outside the block is needed:
+    how much it produces is a result, not an input** — the stream runs
+    from where the header says to where byte 3 says, and `nout` only
+    caps the output for a caller that knows a fork ends inside it.
+
+    Nothing here is searched for, and the
     header's own account of where the stream ENDS is checked against
     where it did: after the last token come `(16 - byte 3) mod 16` bits
     of flush and then the four-byte trailer, on all 381 blocks read
@@ -740,12 +802,13 @@ def shape3_decode(d, off, end, hist, nout, want=None, padding=0):
     bits = "".join(str((d[off + (i >> 3)] >> (7 - (i & 7))) & 1)
                    for i in range((end - off) * 8))
     t1lens, t2lens, start = shape3_tables(d, off)
+    endbit = ((end - off) * 8 - 8 * padding - 32
+              - ((16 - d[off + 3]) & 15))
     out, last = shape3_stream(bits, start, build(t1lens), build(t2lens),
-                              hist, nout)
-    tail = (end - off) * 8 - last - 8 * padding
-    if tail != 32 + ((16 - d[off + 3]) & 15):
+                              hist, nout, endbit)
+    if last != endbit:
         raise ValueError("the stream does not end where byte 3 says")
-    return out, start
+    return (out[:nout] if nout is not None else out), start
 
 
 def shape3_check(d, off, end):
@@ -786,7 +849,7 @@ def read_archive(d, want=None):
         sizes = [n for n in (rlen, dlen) if n] or [0]
         fork = 0
         w = forks[0] if forks else None
-        for (off, mode), (nxt, _) in zip(recs, recs[1:]):
+        for (off, mode, pad), (nxt, _, _) in zip(recs, recs[1:]):
             if nxt == off:
                 # a record repeated is a fork boundary: no bytes of its
                 # own, the next block starts the member's other fork
@@ -797,26 +860,38 @@ def read_archive(d, want=None):
             kind, skip = archive_kind(mode)
             left = (len(w) - pos) if w is not None else (
                 sizes[fork] - pos if fork < len(sizes) else 0)
+            # A block says how much it produces: its stream runs to the
+            # bit its header names, and a stored one holds its own
+            # bytes. `left` only caps the last block of a fork.
             n = min(BLOCK, left)
+            if kind == "stored":
+                n = min(n, nxt - off - 4 - pad)
             read = None
             if n > 0:
                 try:
                     if kind == "stored":
                         got = d[off:off + n]
                     elif kind == "shape1":
-                        got = decode(d, off + skip, n, bytes(hist))[0]
+                        got = decode(d, off + skip, n, bytes(hist),
+                                     nxt - 4 - pad)[0]
                     elif kind == "huffman":
-                        got = decode_huffonly(d, off + skip, n)
+                        got = decode_huffonly(
+                            d, off + skip, n,
+                            (nxt - pad) * 8 - 32 - ((16 - d[off]) & 15))
                     elif kind == "shape2":
-                        got = decode_shape2(d, off + skip, n, bytes(hist))
+                        got = decode_shape2(
+                            d, off + skip, n, bytes(hist),
+                            (nxt - pad) * 8 - 32 - ((16 - d[off]) & 15))
                     else:
-                        got, _ = shape3_decode(d, off, nxt, bytes(hist), n)
+                        got, _ = shape3_decode(d, off, nxt, bytes(hist), n,
+                                               padding=pad)
                     # graded where something is expected; where nothing
-                    # is, a decode that runs to the fork length the
-                    # record states is still worth reporting
+                    # is, a decode that runs to the end its header names
+                    # is still worth reporting
                     read = (got == w[pos:pos + n]) if w is not None else "decoded"
                     if w is None:
                         hist += got
+                        n = len(got)        # the block said how much
                 except Exception:
                     read = False
             blocks.append((kind, off, mode, read, nxt))
@@ -945,7 +1020,8 @@ def main():
                 cok, ctot = fork_checksums(d)
                 print(f"ok  {mode:8s} {base:10s} {len(want):6d} B from "
                       f"{len(d):6d}  block table: "
-                      + ", ".join(f"{hex(o)}/{hex(m)}" for o, m in records(d))
+                      + ", ".join(f"{hex(o)}/{hex(m)}"
+                                  for o, m, _ in records(d))
                       + f"; {cok}/{ctot} checksum(s)")
                 ok += 1
                 continue

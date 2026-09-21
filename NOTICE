@@ -18,10 +18,13 @@ This project's decoders are transcriptions/ports of algorithms from:
     AppleSingle header, and the whole StuffIt split header in
     `src/fmt_sitseg.c`, which Aladdin never published and which nothing
     else in `reference/` reads (deark and macutils were both looked
-    at). Of the three detect-only probes in `src/fmt_stubs.c`, only
-    Now Compress is XADMaster's entire: StuffIt X's magic is deark's
-    as well, and DiskDoubler's two older headers are in macutils'
-    `macunpack/dd.h` — magic, offsets, CRC position and all.
+    at). Of the three detect-only probes in `src/fmt_stubs.c`, **none
+    is XADMaster's any longer**: StuffIt X's magic is deark's,
+    DiskDoubler's two older headers are in macutils' `macunpack/dd.h`
+    — magic, offsets, CRC position and all — and since 2026-09-21 the
+    Now Compress probe cites `docs/formats/now-compress.md`, where the
+    file header, the entry record and the byte-sum checksum it tests
+    are measured off nine archives.
     Arsenic (StuffIt method 15) no longer: since 2026-09-19
     `src/sit_arsenic.c` is written from Matthew T. Russotto's public
     description of the format (reference/notes/arsenic_russotto.md),

@@ -22,10 +22,17 @@ UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io)
 }
 
 /* Now Compress: 00 02 magic, plausible file count, Pascal name, and a
- * byte-sum checksum over bytes 24..129 stored at 130.
- * Source: reference/XADMaster/XADNowCompressParser.m — LGPL, see
- * NOTICE, and the sole source there is on this machine: nothing in
- * deark or macutils knows the format at all. */
+ * byte-sum checksum over bytes 24..129 stored at 130 — which is the
+ * first ENTRY RECORD's own checksum, the record being 110 bytes from
+ * 24 with a u32 at +106 summing the 106 before it.
+ *
+ * Source: docs/formats/now-compress.md, *The archive layer* — this
+ * project's own description, where every field this tests is measured:
+ * the 24-byte file header (0x0002, a version word, the entry count as
+ * a u32 at +8), the record layout, and that checksum, which nine
+ * archives here agree on. Until 2026-09-21 this cited
+ * XADNowCompressParser.m, the only account of the format that existed;
+ * `src/fmt_now.c` still does, for the code. */
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;

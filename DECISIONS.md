@@ -13615,7 +13615,7 @@ longest match is **257 bytes**, and a 56-class distance alphabet
 reaching **65,791**. A reader written from that description alone
 (`tools/derive_now.py`, `docs/formats/now-compress.md`) decodes **every
 shape-3 block of every specimen here and of both corpus archives**,
-byte for byte and **with nothing searched for**: **76 of 76** blocks
+byte for byte and **with nothing searched for**: **81 of 81** blocks
 the harness made, **3 of 3** in the 1993 archive and **306 of 306** in
 the 1995 one — 9.9 MB of real data.
 
@@ -13699,8 +13699,9 @@ other byte, which is why it measured differently in each block.
 
 **Why it read as a position problem for a month.** A reader that
 starts at the prefix sees a flag byte of `0x00` — eight matches — and
-the first of them points 255 bytes back at output position nought. It
-fails, and it fails exactly as a wrong starting bit fails, so the
+the first of them reaches back from output position nought, where
+nothing has been produced. It fails, and it fails exactly as a wrong
+starting bit fails, so the
 symptom points at "where" when the fault is "what". The fix came from
 the neighbouring shape: shape 1's payload was documented as starting
 **two bytes** into its block, and nobody had asked what those two
@@ -13795,6 +13796,35 @@ bounds, and three checksums (per record, per block table, per block)
 say the walk is on the rails. A description that needs the answer
 first is a different thing from one that reads the file, and this is
 now the second.
+
+**And the detect-only probe left the inventory the same day.** What
+`unc_nowcompress_probe` tests — a `00 02` file header, a plausible
+entry count, a Pascal name, and a byte sum over bytes 24..129 stored
+at 130 — is the archive's first ENTRY RECORD checking itself, which
+this note now describes along with the rest of the 24-byte file
+header: a version word that tells the 1993 archive from a 5.0.1 one,
+the count as a u32 at +8, and at +20 the sum of the twenty bytes
+before it. Nine archives agree on that sum; the one exception is this
+project's own synthetic fixture, whose generator leaves the field
+zero, and nothing had noticed because nothing reads it. So
+`src/fmt_stubs.c` cites the note now, and NOTICE can say that none of
+its three probes is XADMaster's any more.
+
+**One thing was asked for and refused, which is also an answer.** The
+code-length escape past 15 — a count of "extra length" entries after
+the 128-byte table, each symbol gaining 16 — is the other thing the
+note still attributes to the reference, and `--case deep` and
+`--case deeparc` went looking for a specimen: four files whose byte
+histograms are Fibonacci, the distribution that makes a Huffman code
+as deep as it can be (20 bits at 21 symbols), compressed in one case
+and archived in the other. **Eight tables came back 10 to 13 deep with
+the escape count zero.** The reason is structural: every shape puts an
+LZ coder under the Huffman one, and it eats exactly the skew that
+would have made a deep code — the commonest byte's repetitions become
+matches, so the code sees a far flatter histogram than the input has.
+An input both skewed and match-free would be needed, and those pull
+against each other. **A negative from a probe designed to force the
+thing is worth more than silence**, and it is why the cases are kept.
 
 **What is left.** Byte 2 of a shape-3 header, which is 255 on 59
 blocks of 75 and 0 on six, matches no bitmap of the lengths or

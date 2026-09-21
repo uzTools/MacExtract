@@ -485,6 +485,16 @@ because ten blocks is what makes the rule a measurement rather than a
 coincidence, and because its byte-0 values (4, 6, 7, 8, 10, 14) are what
 showed that byte to be a flush count.
 
+**`--case deep` and `--case deeparc` asked for a code past 15 bits and were
+refused.** Their four files have Fibonacci byte histograms — the distribution
+that makes a Huffman code as deep as it can be, 20 bits at 21 symbols — and
+are compressed in one case and archived in the other, because a Huffman-only
+block had only ever come out of the archive path. Every table that came back
+is 10 to 13 deep with an escape count of zero: each shape puts an LZ coder
+under the Huffman one, and it eats the skew that would have made the code
+deep. The cases are kept as the evidence for a negative
+(docs/formats/now-compress.md, *What this note does NOT describe*).
+
 **`--case tree` puts folders in an archive**, which only the corpus's 1995
 fixture had: two folders and two loose files, so that how the entry table
 nests them is read off more than one specimen. It is a pre-order
