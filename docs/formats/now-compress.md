@@ -67,9 +67,23 @@ whatever the mode word changes, it did not change these two streams.
 
 - **The other shapes.** `half.bin` (16,000 → 8,950) and `mixed.bin`
   (49,000 → 33,430) are written some other way, and so is every real
-  Now Compress file in the corpus. `half.bin`'s payload is visibly
-  nibble-structured, which suggests something Huffman-coded, and that
-  is a guess and not a reading.
+  Now Compress file in the corpus.
+
+  What is known about `half.bin`'s, so the next attempt starts here.
+  Its input is 8,000 random bytes followed by 8,000 `'A'`s, which
+  should be about 8,000 literals and one long run — and 8,950 bytes
+  out is close to nine bits a literal. **None of the input's bytes
+  appears verbatim anywhere in the stream**, so the literals are
+  coded, not copied. At **offset 163** there is what looks exactly
+  like a **256-entry table of 4-bit code lengths**, 128 bytes of
+  them, whose **Kraft sum is 1.000000** — one symbol at 3 bits, two
+  at 7, 187 at 8 and 66 at 9, which is the shape a near-random
+  alphabet gets. But the symbol holding the 3-bit code is `0xff`, not
+  the `'A'` that is half the file; and codes built from that table,
+  in four constructions and both bit orders, decode the stream into
+  repeated `0xff` and not into the input. So either the table is for
+  an alphabet that is not raw bytes, or it is a coincidence with
+  Kraft exactly 1, which would be a remarkable one.
 - **The header.** 164 bytes of it, of which this note identifies the
   version word, the mode word, a ten-byte name field, two Mac dates
   and a `'????'`/`'UNIX'` type and creator — the type and creator
