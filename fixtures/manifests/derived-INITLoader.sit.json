@@ -2,14 +2,14 @@
  "entries": [
   {
    "creator": "Load",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
    "name": "INITLoader",
    "oracle_methods": [
     "Fixed Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "35ffe59610552904d4db51f361620fcb1a0d581d02a721fdc41d495224c54357",
    "rsrc_size": 34818,
    "type": "cdev"

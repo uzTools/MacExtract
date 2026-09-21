@@ -10,8 +10,10 @@
  * docs/formats/serialized-huffman-tree.md, method 8's coder is
  * docs/formats/stuffit-method-8-mw.md, method 13's is the first note
  * above. What is left of XADStuffItParser.m, XADCompressHandle.m and
- * reference/macutils/macunpack/sit.c here is method 6 and the RLE90
- * filter — LGPL, see NOTICE.
+ * reference/macutils/macunpack/sit.c here is **method 6** — LGPL, see
+ * NOTICE. The RLE90 filter left that list on 2026-09-21 for the
+ * format's own published description, reference/notes/
+ * rle90_theunarchiver.md, which states every rule it implements.
  *
  * Archive header (22 bytes): u32 magic ('SIT!' or installer 'ST..'
  * variants), u16 numfiles, u32 totalsize, u32 magic2 'rLau', u8
@@ -82,7 +84,7 @@ static int sit_store(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 
 /* Method 1: RLE90 — 0x90 0x00 is a literal 0x90; 0x90 n>=2 repeats
  * the previous byte n-1 more times; 0x90 0x01 is illegal.
- * Source: XADRLE90Handle.m. */
+ * Source: reference/notes/rle90_theunarchiver.md (unc_internal.h). */
 static int sit_rle90(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 {
     UncRle90 r;
@@ -412,9 +414,15 @@ out:
 /* means here.                                                        */
 /*                                                                    */
 /* Source: reference/macutils/macunpack/sit.c (sit_fixhuf, code6,     */
-/* sit_dosplit) — LGPL, see NOTICE. This is the ONLY reference        */
-/* implementation the project has for method 6: XADMaster recognizes  */
-/* the method and refuses it (XADStuffItParser.m).                    */
+/* sit_dosplit) — LGPL, see NOTICE. XADMaster recognizes the method   */
+/* and refuses it (XADStuffItParser.m), which is where the name comes */
+/* from; this file called macunpack "the ONLY reference implementation*/
+/* the project has for method 6" until 2026-09-21, and that was false.*/
+/* reference/deark/modules/stuffit.c implements it too, under MIT,    */
+/* crediting macunpack as documentation and using none of its code —  */
+/* and it states the fixed code book as THIRTEEN (count, length)      */
+/* pairs plus an assignment rule, which reproduces every code in      */
+/* sit6_tables.h (OPEN_ITEMS.md, *What is still XADMaster's*).        */
 /* ------------------------------------------------------------------ */
 
 #include "sit6_tables.h"

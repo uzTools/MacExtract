@@ -15,9 +15,11 @@
    "oracle_methods": [
     "Implode"
    ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
    "unadjudicated": {
-    "data": "Attempted to read more data than was available",
-    "rsrc": "oracle wrote no output for this fork"
+    "data": "Attempted to read more data than was available"
    }
   },
   {

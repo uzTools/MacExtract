@@ -626,12 +626,19 @@ the longest and shortest runs, a one-byte alphabet, twelve segments in a fork �
 are covered by `synth-sit-fixhuf.sit` (`tools/synth_sit6.py`), also
 oracle-adjudicated, 10 forks over 5 entries.
 
-**The oracle for both is `macunpack`, not `unar`:** XADMaster recognizes the
-method and refuses it (`//case 6: fixed huffman`,
-`reference/XADMaster/XADStuffItParser.m`), which is where the name comes from;
-macunpack has decoded it since 1991 and is the reference the decoder is
-transcribed from. TESTING.md, "A second oracle", for what that does and does
-not prove; BLOCKERS.md for the claim that no oracle existed.
+**The oracle was `macunpack` alone, and since 2026-09-21 it is macunpack
+AND deark:** XADMaster recognizes the method and refuses it
+(`//case 6: fixed huffman`, `reference/XADMaster/XADStuffItParser.m`), which
+is where the name comes from; macunpack has decoded it since 1991 and is the
+reference the decoder is transcribed from. **deark implements it too** —
+MIT, in `reference/` since 2026-08-25 and compiled by `ci.sh` for another
+format the whole time — and agrees on all 12 method-6 forks here, the
+34,818-byte resource fork included. So the manifests record two
+implementations where they recorded a transcription and its own source.
+TESTING.md, "A third oracle", for what that does and does not prove — deark
+credits macunpack as DOCUMENTATION, so the two are independent code and not
+independent readings; BLOCKERS.md for the claim that no other reader
+existed.
 
 ### StuffIt classic: per-entry method coverage ‡‡
 
@@ -2227,8 +2234,10 @@ no more than that, and matches on all 26 identity bytes anyway.
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
   the number it actually ran, plus two figures that must be read with it:
-  **16 forks across 10 fixtures are oracle-unadjudicated** — both
-  implementations decline every one of them, so the engine's own CRC-16
+  **15 forks across 11 fixtures are oracle-unadjudicated** (2026-09-21;
+  this said 16 across 10 while the suite printed 23 across 12, which is
+  what a stale figure looks like) — both implementations decline every
+  one of them, so the engine's own CRC-16
   is the only byte-exact check; 8 more were compared
   with DiskDoubler's own expander on an emulated Mac and agree with the
   resource header's OS-stamped bytes masked, which `run_diff.py` reports

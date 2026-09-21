@@ -804,7 +804,15 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
 /* say whether it was a decision or a slip (DECISIONS.md 2026-08-27,   */
 /* the fork writer and the filter).                                   */
 /*                                                                    */
-/* Source: reference/XADMaster/XADRLE90Handle.m.                       */
+/* Source: reference/notes/rle90_theunarchiver.md — the format's own   */
+/* published description, which states all four rules this implements: */
+/* `0x90 N` for N nonzero is N-1 repeats of the last byte, `0x90 0x00` */
+/* is a literal 0x90, anything else is a literal, and `0x90 0x01`      */
+/* "seems to either be a no-op or illegal" — which is the `strict`     */
+/* flag above, named as an open question by the description and        */
+/* settled here by measuring five implementations. Re-cited from       */
+/* XADRLE90Handle.m on 2026-09-21: the page was in reference/notes/    */
+/* the whole time (OPEN_ITEMS.md, *What is still XADMaster's*).        */
 /* ------------------------------------------------------------------ */
 
 #define UNC_RLE90_ESC  0x90

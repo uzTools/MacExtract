@@ -14,7 +14,7 @@
  *       this file names, which methods chain RLE90, and the CRC-16
  *       contract (IBM CRC-16 over the DECODED bytes, unconditioned);
  *       the header walk itself is the note above since 2026-09-20.
- *   reference/XADMaster/XADRLE90Handle.m     — the 0x90 run filter,
+ *   reference/notes/rle90_theunarchiver.md  — the 0x90 run filter,
  *       superseded by the note above, which derives the same rule.
  *   reference/XADMaster/XADSqueezeHandle.m   — method 4's Huffman
  *       tree, likewise superseded.
@@ -891,7 +891,7 @@ static int arc_raw_byte(ArcDec *d)
 }
 
 /* One output byte, through the RLE90 filter where the method uses it.
- * Source: XADRLE90Handle.m. */
+ * Source: reference/notes/rle90_theunarchiver.md (unc_internal.h). */
 static int arc_byte(ArcDec *d)
 {
     if (!d->rle) return arc_raw_byte(d);

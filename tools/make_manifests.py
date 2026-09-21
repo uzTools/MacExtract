@@ -319,10 +319,31 @@ def adjudicate_with_macunpack(fixture_path, entries):
 # deark implements that method independently and agrees with the CRC PAK
 # itself stored, so it is offered the forks the others left open.
 #
-# It is a DATA-fork oracle only: deark has no notion of a resource fork
-# for these formats, and an entry that needs one stays unadjudicated.
+# **It reads BOTH forks**, which this file asserted the opposite of until
+# 2026-09-21: deark writes an AppleDouble `.adf` sidecar beside each
+# member that has a resource fork, and the corpus's only real StuffIt
+# method-6 entry is one whose data fork is EMPTY and whose resource fork
+# is 34,818 bytes. A premise that the third oracle could not see a
+# resource fork is why it was never offered one (BLOCKERS.md).
 DEARK = os.path.join(ROOT, "build", "deark", "deark")
 DEARK_ID = "deark"
+
+# **deark does not fail on a damaged file — it PADS.** Measured
+# 2026-09-21 on `sitdoc.sit`, a MacBinary whose header declares a
+# 286-byte resource fork and which physically ends 52 bytes short:
+# this engine writes the 234 bytes that are there and reports the file
+# truncated, `unar` says "Attempted to read more data than was
+# available", and deark writes 286 bytes whose last 52 are zeros it
+# made up. An oracle that always produces something is not ground
+# truth about a file that does not contain it.
+#
+# So deark fills a fork the others left open only where it cannot
+# invent one: when the fork is EMPTY — an assertion of absence — or
+# when the entry's methods are all ones deark is the designated oracle
+# for. Everything else it is offered is a CROSS-CHECK against a fork
+# another implementation already graded, where agreement is the whole
+# point and disagreement is reported rather than written down.
+DEARK_METHODS = {"Distilled"}
 
 
 def deark_id():
@@ -335,47 +356,116 @@ def deark_id():
         return DEARK_ID
 
 
+def deark_forks(fixture_path, tmp):
+    """member name -> {"data": bytes, "rsrc": bytes}, as deark reads it.
+
+    deark names its output `<prefix>.<index>.<member name>`, and a
+    member with a resource fork gets a second file with `.adf` on the
+    end — an AppleDouble sidecar. **The index counts output FILES, not
+    members**, so it is not a member ordinal as soon as any member has
+    two forks: this matched on it until 2026-09-21, which worked only
+    because the one format the third oracle was ever asked about has no
+    resource forks at all. Matching is by name, and a name that appears
+    twice in an archive is refused by the caller.
+    """
+    try:
+        r = subprocess.run([DEARK, "-od", tmp, "-o", "m",
+                            os.path.abspath(fixture_path)],
+                           capture_output=True, timeout=600)
+    except subprocess.TimeoutExpired:
+        return None
+    if r.returncode != 0:
+        return None
+    out = {}
+    for fn in os.listdir(tmp):
+        parts = fn.split(".", 2)
+        if len(parts) < 3:
+            continue
+        rest, path = parts[2], os.path.join(tmp, fn)
+        if rest.endswith(".adf"):
+            rsrc = parse_appledouble(path)[0]
+            if rsrc is not None:
+                out.setdefault(rest[:-4], {})["rsrc"] = rsrc
+        else:
+            with open(path, "rb") as fh:
+                out.setdefault(rest, {})["data"] = fh.read()
+    # A member deark wrote at all has both forks; the one it did not
+    # write a sidecar for has an EMPTY resource fork, which is an
+    # assertion and not an absence.
+    for v in out.values():
+        v.setdefault("data", b"")
+        v.setdefault("rsrc", b"")
+    return out
+
+
 def adjudicate_with_deark(fixture_path, entries):
-    if not any("unadjudicated" in e for e in entries):
+    """Fill what the others left open, and CHECK what only macunpack saw.
+
+    Two jobs, and the second is the one that was missing. `macunpack`
+    is where this project's StuffIt method-6 decoder was transcribed
+    from, so a fork it alone grades is a transcription checked against
+    its own source. deark implements that method independently — it
+    credits macunpack as DOCUMENTATION and uses none of its code — so
+    offering it those forks is worth doing even though nothing is open.
+    **A third oracle asked only where the others are silent can never
+    contradict them**, which is why this one sat in `reference/`,
+    compiled by `ci.sh` and running for another format, without ever
+    being put to the 23 forks macunpack alone had graded (BLOCKERS.md).
+
+    On agreement the fork records both oracles. On DISAGREEMENT nothing
+    is rewritten: two implementations differing is a finding, and it is
+    reported rather than resolved here.
+    """
+    wanted = [e for e in entries
+              if "unadjudicated" in e
+              or any("macunpack" in (e.get(k) or "")
+                     for k in ("data_oracle", "rsrc_oracle"))]
+    if not wanted:
         return 0
     if not os.path.exists(DEARK):
         MISSING_ORACLE.add(os.path.basename(fixture_path))
         return 0
 
-    # deark names its output <prefix>.<index>.<member name>, and the
-    # index is the member's position in the archive. Matching on the
-    # name alone would be ambiguous in an archive holding the same name
-    # twice, so both must agree, and a name that appears twice is
-    # refused outright.
     seen = {}
     for e in entries:
         seen[e["name"]] = seen.get(e["name"], 0) + 1
 
     with tempfile.TemporaryDirectory() as tmp:
-        try:
-            r = subprocess.run([DEARK, "-od", tmp, "-o", "m",
-                                os.path.abspath(fixture_path)],
-                               capture_output=True, timeout=600)
-        except subprocess.TimeoutExpired:
-            return 0
-        if r.returncode != 0:
+        got = deark_forks(fixture_path, tmp)
+        if not got:
             return 0
         filled = 0
-        for i, e in enumerate(entries):
-            un = e.get("unadjudicated")
-            if not un or "data" not in un or seen.get(e["name"], 0) != 1:
+        for e in wanted:
+            if seen.get(e["name"], 0) != 1 or e["name"] not in got:
                 continue
-            p = os.path.join(tmp, "m.%03d.%s" % (i, e["name"]))
-            if not os.path.exists(p):
-                continue
-            blob = open(p, "rb").read()
-            e["data_size"] = len(blob)
-            e["data_sha256"] = hashlib.sha256(blob).hexdigest()
-            e["data_oracle"] = deark_id()
-            del un["data"]
-            if not un:
-                del e["unadjudicated"]
-            filled += 1
+            for fork in ("data", "rsrc"):
+                blob = got[e["name"]][fork]
+                un = e.get("unadjudicated") or {}
+                if fork in un:
+                    m = e.get("oracle_methods")
+                    if blob and not (m and all(x in DEARK_METHODS for x in m)):
+                        continue        # it may be padding — see DEARK_METHODS
+                    e[fork + "_size"] = len(blob)
+                    e[fork + "_sha256"] = hashlib.sha256(blob).hexdigest()
+                    e[fork + "_oracle"] = deark_id()
+                    del un[fork]
+                    if not un:
+                        e.pop("unadjudicated", None)
+                    filled += 1
+                    continue
+                who = e.get(fork + "_oracle") or ""
+                if "macunpack" not in who or DEARK_ID in who:
+                    continue
+                if (hashlib.sha256(blob).hexdigest() == e.get(fork + "_sha256")
+                        and len(blob) == e.get(fork + "_size")):
+                    e[fork + "_oracle"] = "%s + %s" % (who, deark_id())
+                    filled += 1
+                else:
+                    print("  DEARK DISAGREES with macunpack on %s %s of %s "
+                          "(deark %d B) — two implementations differ, which "
+                          "is a finding, not a manifest edit"
+                          % (e["name"], fork, os.path.basename(fixture_path),
+                             len(blob)), file=sys.stderr)
         return filled
 
 
@@ -549,8 +639,17 @@ def build_manifest(fixture_path, verbose=False):
     # The warning about a missing second oracle is about forks that are
     # STILL open. A fixture the third oracle finished is not one of
     # them, and saying so would send the next reader to build a tool
-    # that had nothing left to decide.
-    if not any("unadjudicated" in e for e in entries):
+    # that had nothing left to decide — **unless the tool that is
+    # missing is macunpack**, which since 2026-09-21 deark can stand in
+    # for on the forks macunpack alone used to grade. Discarding the
+    # warning there would undo the thing this file was written to
+    # prevent: a rebuild without the second oracle writing WEAKER
+    # manifests than the committed ones and looking like success. It
+    # was measured the hard way on 2026-08-08 and then reproduced on
+    # 2026-09-21, one layer up, by the change that let deark close
+    # those gaps (BLOCKERS.md).
+    if (not any("unadjudicated" in e for e in entries)
+            and os.path.exists(MACUNPACK)):
         MISSING_ORACLE.discard(name)
     # Canonical order, so a rebuild on another machine produces the same
     # file. Every consumer looks entries up by name; none depends on the

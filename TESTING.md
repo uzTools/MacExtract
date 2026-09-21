@@ -211,11 +211,11 @@ different reason — the two fixtures that were being skipped whole started
 being graded, and a skipped fixture's unadjudicated forks had been counted
 nowhere. See "When our engine declines an entry", below.
 
-### A third oracle, for one method (`tools/build_deark.sh`)
+### A third oracle (`tools/build_deark.sh`)
 
 Since 2026-08-25 the forks `unar` AND `macunpack` leave open are offered to
 **deark**, recorded the same way (`"data_oracle": "deark (Deark version:
-…)"`). It exists for one method and one reason: `unar` decodes ARC/PAK
+…)"`). It arrived for one method and one reason: `unar` decodes ARC/PAK
 method 0x0b (Distilled) **wrong** — right length, wrong bytes, on 6 of the
 10 members of `derived-INTRECHO.pak` — because XADMaster starts the 8 KB
 window at zero where PAK fills it with spaces (BLOCKERS.md). Those entries
@@ -225,19 +225,52 @@ CRC PAK stored. `sh tools/build_deark.sh` copies `reference/deark` to
 `build/deark/` and builds it; nothing is patched and it needs only a C
 compiler.
 
-It is a **data-fork oracle only** — deark has no notion of a resource fork
-for these formats — and it is matched to entries by position AND name, with
-a name two entries share refused outright, the same rule the `macunpack`
-path uses.
+**Since 2026-09-21 it does two jobs, and the second is the one that was
+missing.** It is also offered the **23 forks macunpack alone had graded**,
+which nothing was open in, and it agrees with every one. That matters
+because macunpack is where this project's StuffIt method-6 decoder was
+transcribed from: those forks were a transcription checked against its own
+source. Such a fork now records both — `"macunpack (…) + deark (…)"` — and
+a DISAGREEMENT is printed and nothing is rewritten, because two
+implementations differing is a finding and not a manifest edit.
 
-**What this cannot see:** `macunpack` is where our method-6 decoder was
-transcribed from (`src/fmt_sit.c`, `src/sit6_tables.h`), so on method 6 it
-adjudicates a transcription against its source rather than two independent
-implementations — a transcription error shows up, a misreading of the format
-shared with the reference does not. (The same caveat applies to `unar`, which
-is the primary reference for everything else.) It also reads none of Zip,
-Gzip, tar or DiskDoubler, and it fails whole-archive far more often than
-`unar` does, which is why it is the second oracle and not the first.
+**It reads both forks**, which this section asserted the opposite of until
+that day: deark writes an AppleDouble `.adf` sidecar beside any member with
+a resource fork, and the corpus's only real method-6 entry is one whose
+data fork is EMPTY and whose resource fork is 34,818 bytes — so the fork
+the claim excluded was the only one that method occurs in. It also reads
+**Zip**, which the same paragraph denied; it decodes the Implode entries
+`unar` fails on.
+
+Matching is **by name**, with a name two entries share refused outright, the
+same rule the `macunpack` path uses. It was by position and name until
+2026-09-21, and the position is deark's OUTPUT-FILE counter rather than a
+member ordinal — which is the same number only while no member has two
+forks, i.e. only for the one format the third oracle was ever asked about.
+
+**And it does not fail on a damaged file — it PADS.** `sitdoc.sit` is a
+MacBinary declaring a 286-byte resource fork in a file that ends 52 bytes
+short: this engine writes the 234 bytes that are there and reports the file
+truncated, `unar` says *"Attempted to read more data than was available"*,
+and deark writes **286 bytes whose last 52 are zeros it made up**. An
+oracle that always produces something is not ground truth about a file that
+does not contain it. So deark fills a gap only where it cannot invent one —
+when the fork is **empty**, which is an assertion of absence, or when the
+entry's methods are all ones deark is the designated oracle for
+(`DEARK_METHODS`, currently Distilled). Everything else it is offered is a
+cross-check against a fork another implementation already graded. Lifting
+that guard for one run put 52 invented zeros into a manifest and then
+failed seven fixtures against them, which is how the padding was found.
+
+**What this still cannot see:** deark credits macunpack **as
+documentation** for method 6 and uses none of its code
+(`reference/deark/modules/stuffit.c`), so on that method the two are
+independent implementations but not independent readings — a transcription
+error in either shows up, a misreading of the format shared with macunpack
+does not. (The same caveat applies to `unar`, which is the primary
+reference for everything else.) It reads neither Gzip, tar nor DiskDoubler,
+and it fails whole-archive far more often than `unar` does, which is why it
+is the third oracle and not the first.
 
 **What this layer cannot see:**
 
@@ -256,17 +289,22 @@ Gzip, tar or DiskDoubler, and it fails whole-archive far more often than
   change to the harness. Until 2026-08-08 the whole FIXTURE was skipped
   instead, on the strength of our own error message; see "When our engine
   declines an entry".
-- Do not read "unadjudicated: 23 forks" as 23 defects. It is 23 forks
-  across 11 fixtures where two implementations cannot be compared: 8 in
-  damaged nested archives where the engine says "file is truncated" and
-  unar says "Error on decrunching", 4 in the two PKZIP 1.x zips, where
-  unar failed the entry and Implode is outside v1 scope for us — **both
-  sides decline on every one of those 12** — and 11 in two DiskDoubler
-  fixtures, which are the exception worth knowing about: **we extract
-  those and nobody grades them** (both oracles fail; see the DiskDoubler
-  section below). (The count was 8 across 7 until those two zips
-  stopped being skipped whole, which is the point: a skipped fixture's
-  unadjudicated forks were not counted anywhere.)
+- Do not read "unadjudicated: 15 forks" as 15 defects. It is **15 forks
+  across 11 fixtures**, measured 2026-09-21, where two implementations
+  cannot be compared: 8 in damaged nested archives where the engine says
+  "file is truncated" and unar says "Error on decrunching" — deark
+  produces a fork for those, and it is a PADDED one, which is why it is
+  not taken; 3 in the PKZIP 1.x zips and `arcplus712.zip`, where unar
+  failed the entry and Implode is outside v1 scope for us, so **both
+  sides decline**; and 4 in the 1995 Now Compress archive, which the
+  archive's own extractor has graded under emulation instead
+  (`nowcompress.py --adjudicate`). It was **23 across 12** until deark
+  was offered resource forks and the 6 empty ones of
+  `derived-INTRECHO.pak` closed. Three files had recorded three
+  different values for this tally — 16/10, 23/11 and the suite's own
+  23/12 — which is the cross-file contradiction BLOCKERS.md names as the
+  cheapest smell there is; the number `run_diff.py` prints is the one
+  that is measured.
 
 ### When our engine declines an entry
 

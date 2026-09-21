@@ -1,15 +1,15 @@
 {
  "entries": [
   {
-   "data_oracle": "deark (Deark version: 1.7.3-1)",
-   "data_sha256": "d959c23b10ab34af24846e0ab8781bb74f1cb9b1326c90fe5eb912a0618e3107",
-   "data_size": 335656,
    "name": "ARC712.EXE",
    "oracle_methods": [
     "None"
    ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
    "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
+    "data": "Wrong checksum"
    }
   }
  ],

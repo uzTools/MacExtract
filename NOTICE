@@ -71,7 +71,13 @@ This project's decoders are transcriptions/ports of algorithms from:
     (`tools/derive_sit13.py`), and the tables compared array by array
     against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
     pointed at the page instead. What that file still owes XADMaster
-    and macutils is method 6 and the RLE90 filter. And **DiskDoubler's
+    and macutils is **method 6**, and that is the whole of it since
+    2026-09-21: the RLE90 filter is
+    `reference/notes/rle90_theunarchiver.md`, the format's own
+    published description, which states every rule
+    `unc_internal.h`'s shared filter implements — including the
+    `0x90 0x01` case it calls open and this project settled by
+    measurement. And **DiskDoubler's
     coders** since 2026-09-21: the same wiki documents methods 6 and 9
     (`ADn`) and method 10 (`DDn`), and
     `docs/formats/diskdoubler-dd.md` carries the six corrections they

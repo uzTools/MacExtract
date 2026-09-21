@@ -396,7 +396,8 @@ static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
  * A run filter on an escape byte: ESC 0 is a literal ESC, and ESC n is
  * a run of n copies of the byte before it. Identical in shape to the
  * RLE90 this engine already runs for ARC (`arc_byte`), whose reference
- * is XADRLE90Handle.m, and to macutils' `dd_rle`.
+ * is the format's own published description
+ * (reference/notes/rle90_theunarchiver.md), and to macutils' `dd_rle`.
  *
  * **The escape byte is derived, not transcribed, and it is the one
  * thing here a specimen has never confirmed.** macutils declares it
@@ -417,8 +418,9 @@ static int dd_m2(DdFork *o, UncCtx *c, UncBufIn *in, int xorval, int ntrees)
  * (methods 3, 4 and 5).
  *
  * Source: reference/macutils/macunpack/dd.c dd_rle (the algorithm),
- * reference/XADMaster/XADRLE90Handle.m (the same filter, and the
- * escape byte).
+ * reference/notes/rle90_theunarchiver.md (the same filter, and the
+ * escape byte — re-cited from XADRLE90Handle.m on 2026-09-21, the
+ * page having been in reference/notes/ all along).
  */
 static int dd_rle(DdFork *o, UncBufIn *in, uint32_t complen, int xorval)
 {

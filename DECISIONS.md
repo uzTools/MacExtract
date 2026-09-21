@@ -235,6 +235,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
 - 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
 - 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
+- 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
 
 ---
 
@@ -14476,3 +14477,76 @@ and differ in byte 2; `n00` and `n01` have identical code tables and
 differ by half. So it is something the encoder knows and the block does
 not spell — a search depth, a hash occupancy, a cost estimate — and no
 instrument outside the encoder's own code is left to ask.
+
+## 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
+
+**Claim.** deark implements StuffIt method 6 and agrees with this engine
+on all 12 method-6 forks here. It is MIT, it has been in `reference/`
+since 2026-08-25, and `ci.sh` compiles it on every run. The claim it
+disproves — *"this is the ONLY reference implementation the project has
+for method 6"* — was written in `src/fmt_sit.c`, repeated in FORMATS.md
+and OPEN_ITEMS.md, and used in TESTING.md to state a blind spot: that on
+method 6 the second oracle "adjudicates a transcription against its
+source rather than two independent implementations".
+
+**Why it survived, and this is the transferable half.** The third oracle
+is offered a fork **only when `unar` and `macunpack` have both left it
+open**. Method 6 is a method macunpack reads, so nothing was ever open,
+so deark was never asked — on that method or on any other the others can
+read. **A check positioned where nothing can contradict it cannot
+contradict anything.** The question that finds this one is not "what
+does the suite cover" but "what is this check never run ON".
+
+The same three lines are why the ARC Distilled resource forks sat
+unadjudicated: they were open, deark could have said they are empty, and
+a second premise stopped it — *"deark has no notion of a resource fork
+for these formats"*. It writes AppleDouble sidecars, and **the only fork
+that premise excluded is the only fork method 6 occurs in**: the
+corpus's one real method-6 entry has an empty data fork and a
+34,818-byte resource fork.
+
+**What changed.** deark now cross-checks the 23 forks macunpack alone
+had graded — all 23 agree, and a fork records both oracles — and it fills
+resource forks. `oracle-unadjudicated` fell from **23 forks across 12
+fixtures to 15 across 11**.
+
+**And the guard that had to be added, which is the second lesson.**
+Lifting the gap-filling restriction let deark grade forks nobody else
+could, and seven fixtures immediately failed against it. deark does not
+FAIL on a damaged file — it **pads**. `sitdoc.sit` declares a 286-byte
+resource fork in a file that ends 52 bytes short; this engine writes the
+234 bytes present and reports the file truncated, and deark writes 286
+whose last 52 are zeros it made up. **An oracle that always produces
+something is not ground truth about a file that does not contain it**,
+and for one run the manifest asserted those 52 invented zeros and graded
+us against them. So deark now fills a gap only where it cannot invent
+one: an empty fork, which is an assertion of absence, or a method it is
+the designated oracle for. Everything else is a cross-check against a
+fork somebody else already graded.
+
+**A third thing fell out of the same rebuild, and it is the 2026-08-08
+trap one layer up.** `./ci.sh` runs `make clean`, which deletes
+`build/macunpack/`; a manifest rebuild without it writes weaker
+manifests and looks like success, which is why `MISSING_ORACLE` exists.
+Letting deark close the gaps macunpack used to fill made that warning
+**discard itself** — nothing was left unadjudicated, so the fixture no
+longer looked short of an oracle. The discard now requires macunpack to
+be present. The same hole, in the same file, reopened by the change that
+made the third oracle more capable.
+
+**What it is worth beyond the oracle.** `src/sit6_tables.h` is **1,028
+bytes** of tables transcribed from macutils, and deark states the same
+fixed code book as **13 (count, length) pairs — 26 bytes — plus a
+twenty-line assignment rule**. Expanding those 26 bytes and assigning
+codes by that rule reproduces **256 of the 257 codes exactly**; the
+257th is the terminator, where macunpack's tree carries two leaves under
+one 12-bit prefix and deark's carries one. So the row in OPEN_ITEMS.md
+that has kept macutils in `fmt_sit.c` is now a licence shed with a
+plausible size win attached, and the size is what should decide it.
+
+**What is NOT claimed.** deark credits macunpack as documentation and
+uses none of its code. The two are independent implementations and not
+independent readings: a transcription error in either shows up, a
+misreading of the format shared with macunpack does not. That half of
+TESTING.md's caveat stands, and saying so is the difference between a
+second oracle and a second opinion.
