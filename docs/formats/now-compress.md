@@ -52,8 +52,9 @@ read off the engine.
 better say which facts are whose: `src/fmt_now.c` subtracts a
 `padding` field when it computes a block's length, and that file is
 transcribed from XADMaster. The check above is what makes it a
-measurement here rather than a borrowing. **Two facts in this note
-came that way** — this one and the block table's own checksum, below;
+measurement here rather than a borrowing. **Three facts in this note
+came that way** — this one, the block table's own checksum below, and
+the code-length escape named at the end;
 everything else was read out of the encoder's output before that file
 was opened, and the commit of 2026-09-21 is the record of which came
 first.
@@ -99,12 +100,23 @@ front of it were.)
 
 - a **flag byte**, then eight tokens, bits **most significant first**;
 - a **1** is a literal: one byte, copied out;
-- a **0** is a match: **`length - 2`, then the distance**, one byte
-  each — **except** that a length byte of **zero is an escape**, and
-  the token is then three bytes: the zero, the distance, and
-  `length - 2`.
+- a **0** is a match, **two bytes holding a 3-bit length and a 13-bit
+  distance**: `length = (b0 & 7) + 2`, `distance = ((b0 >> 3) << 8) |
+  b1`, and a length of 2 — the low three bits zero — escapes to a
+  third byte carrying `length - 2`.
 
-A match copies 2 to 257 bytes from at most 255 back.
+A match copies 2 to 257 bytes from at most 8,191 back.
+
+**This note read that as "a length byte, then a distance byte" until
+2026-09-21**, and every shape-1 specimen here obeys both readings:
+they agree whenever the distance is under 256, and not one match token
+in six shape-1 blocks has a first byte of 8 or more. What settles it is
+the shape next door. Shape 2 is this stream Huffman-coded, its match
+rule has always been read here as the 13-bit one, and **1,340 of its
+2,162 match tokens are in the range where the two readings differ**,
+with distances up to 7,205 — decoding byte for byte. Two rules that
+agree on every specimen you have are not one rule; the counter-example
+was one layer up.
 
 ## Shape 2 — the same framing, Huffman-coded
 
@@ -489,6 +501,13 @@ needs the answer first.
 
 - **What `00 03` means**, the two bytes every LZSS stream opens with,
   and **the zero byte** between a Huffman table and its stream.
+- **A code length past 15.** The 128-byte table gives each symbol four
+  bits, so 15 is as deep as it goes; `src/fmt_now.c` reads a count of
+  "extra length" entries and their symbol indices after the nibbles,
+  which adds 16 to those symbols' lengths. **No table here needs it** —
+  the deepest code in any specimen is 12 — so this note has no evidence
+  for or against, and that is the third fact in it whose lead came from
+  the engine rather than the bytes.
 - **The offset delta, which may not be a property of the format at
   all.** `src/fmt_now.c` corrects a block table's offsets by a constant
   it finds through the table checksum above, transcribed from the

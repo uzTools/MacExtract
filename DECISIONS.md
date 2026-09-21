@@ -13759,6 +13759,19 @@ one here with a folder in it, so `nowcompress.py --case tree` made
 another: two folders and two loose files, seven records, pre-order,
 every checksum agreeing.
 
+**And reading the engine for leads found a wrong claim of this note's
+own.** Its shape-1 match rule — "a length byte, then a distance byte"
+— fits every shape-1 block here and is not the format's: the two bytes
+hold a 3-bit length and a **13-bit** distance, so a match reaches
+8,191 back rather than 255. The specimens cannot tell the readings
+apart, because they agree under 256 and no shape-1 token here has a
+first byte of 8 or more; **the shape one layer up can**, and 1,340 of
+shape 2's 2,162 match tokens live in the range where they differ.
+The note had both rules in it, one per shape, and they contradicted
+each other about the same LZSS layer for a day (BLOCKERS.md,
+*Withdrawn claims*). A cross-file contradiction is this project's
+cheapest smell; this one was inside a single file.
+
 **Where that leaves the reader.** Given an archive and nothing else —
 no expected output, no oracle — `tools/derive_now.py` now decodes every
 block of both corpus archives, 3 of 3 and 306 of 306: the member

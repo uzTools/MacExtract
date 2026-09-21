@@ -1226,6 +1226,28 @@ a harness can click is not the same list.
   both — and what settled it was not an argument but the only test
   that can fail: decoding the block and comparing the bytes.
 
+- **"A Now Compress shape-1 match is `length - 2` then the distance,
+  one byte each, so it reaches at most 255 back."** Written 2026-09-21
+  in `docs/formats/now-compress.md`, withdrawn the same day. The two
+  bytes hold a **3-bit length and a 13-bit distance** — the same rule
+  the shape above it uses on symbols — so a match reaches 8,191 back,
+  not 255. **Cost:** nothing yet, and that is the point: every shape-1
+  block in the corpus and the harness decodes under either reading,
+  because the two agree whenever the distance is under 256 and not one
+  match token in six blocks has a first byte of 8 or more. A reader
+  written from the note would have refused the first fork that reached
+  further, and nothing here would have caught it. **Why it survived:**
+  it was derived from specimens that cannot tell the two apart, and
+  read as measured because it decoded everything it was shown. What
+  disproved it was the neighbouring shape: shape 2 is this stream
+  Huffman-coded, its rule was already written the other way in this
+  same note, and 1,340 of its 2,162 match tokens sit in the range where
+  the readings differ. **A description that fits every specimen is not
+  thereby the format's**, and two descriptions in one note that
+  disagree about the same layer are a contradiction even when both
+  decode — this project's cheapest smell, found this time inside a
+  single file.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

@@ -55,12 +55,15 @@ def decode(d, p, nout, hist=b""):
     A flag byte, then eight tokens, its bits taken most significant
     first: a 1 is a literal byte, a 0 is a match.
 
-    A match is two bytes — `length - 2`, then the distance — EXCEPT
-    that a length byte of zero is an escape, and then the token is
-    three bytes: zero, the distance, and `length - 2`. So a match
-    reaches 2..257 bytes back at most 255 bytes, which is why this
-    shape only ever appears on small forks: the encoder picks another
-    when a file needs a longer reach.
+    **A match is two bytes holding a 3-bit length and a 13-bit
+    distance** — `length = (b0 & 7) + 2` and
+    `distance = ((b0 >> 3) << 8) | b1` — and a length of 2, the low
+    three bits zero, escapes to a third byte carrying `length - 2`.
+    That is the same rule shape 2 uses on symbols instead of bytes,
+    which is what says it is right: this note read it as "a length
+    byte then a distance byte" until 2026-09-21, a reading that agrees
+    with this one whenever the distance is under 256 and which every
+    shape-1 specimen here obeys (BLOCKERS.md, *Withdrawn claims*).
 
     Nothing in the stream says when to stop. The caller's byte count
     does — the same as StuffIt method 8 and ARC's squeeze.
@@ -78,13 +81,13 @@ def decode(d, p, nout, hist=b""):
                 out.append(d[p])
                 p += 1
             else:
-                n = d[p]
-                if n == 0:
-                    dist, ln = d[p + 1], d[p + 2] + 2
-                    p += 3
-                else:
-                    ln, dist = n + 2, d[p + 1]
-                    p += 2
+                s, low = d[p], d[p + 1]
+                p += 2
+                ln = (s & 7) + 2
+                dist = ((s >> 3) << 8) | low
+                if (s & 7) == 0:
+                    ln = d[p] + 2
+                    p += 1
                 if dist == 0 or dist > len(hist) + len(out):
                     raise ValueError("distance %d" % dist)
                 for _ in range(ln):
