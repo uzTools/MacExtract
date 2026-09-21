@@ -471,8 +471,25 @@ and `tools/derive_now.py` reads the token's bits off against it
 (DECISIONS.md 2026-09-21, *the pair that never repeats*).
 
 Both cases are one emulator run each, ~4 minutes, and they leave 64 members
-of real encoder output behind; two of `tokdist`'s came back as a shape-2
+of real encoder output behind; two of `tokdist`'s came back as a Huffman-only
 block INSIDE an archive, a combination no other specimen has.
+
+**`--case huffgap` was for the gap that turned out not to exist.** Ten files
+of mixed content, compressed rather than archived, to multiply the one
+shape this project had two specimens of — where a Huffman-over-LZSS block's
+bit stream begins was down as unknown, "23 bits after the table in one and 18
+in the other". Eight of the ten came back as that shape, and all eight start
+where the two did: one zero byte after the table, then the `00 03` that opens
+any LZSS stream, coded through the block's own table. The case is kept
+because ten blocks is what makes the rule a measurement rather than a
+coincidence, and because its byte-0 values (4, 6, 7, 8, 10, 14) are what
+showed that byte to be a flush count.
+
+**`--case tree` puts folders in an archive**, which only the corpus's 1995
+fixture had: two folders and two loose files, so that how the entry table
+nests them is read off more than one specimen. It is a pre-order
+flattening — a folder record, then exactly the number of entries its +80
+field states (docs/formats/now-compress.md, *The archive layer*).
 
 What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".

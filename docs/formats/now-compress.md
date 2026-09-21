@@ -18,10 +18,11 @@ compressed specimen the harness has made, and **every block of both of
 the corpus's real archives**: the 1993 `derived-Expand_Now_1.0.1.sea`,
 3 blocks of 3, and the 1995 `derived-SyntheticReferences2.0.sea`, 306
 of 306, whose 9.9 MB fork alone is 304 blocks of the coder an archive
-uses. **Nothing in a shape-3 block is searched for any more**: the
-header says where its stream starts, where it ends, and what the four
-bytes after it check. What is left is named under *What this note does
-NOT describe*, and the largest of it is where a shape-2 stream begins.
+uses. **Nothing in any block is searched for any more**: a shape-3
+block's header says where its stream starts and ends, a shape-2 block's
+stream starts a fixed distance after its table, and every block's last
+four bytes check the rest of it. What is left is named under *What this
+note does NOT describe*, and it is small.
 
 ## A fork is a sequence of blocks
 
@@ -34,9 +35,28 @@ per-block choice.
 
 **Where each block begins is a table in the fork header**, and it is
 decoded here. From offset **144**, records of **eight bytes** — a u16
-offset, a u16 mode, and four bytes that are zero in every specimen —
-ending with a record whose offset is **the fork's own byte count**,
-which is how a reader knows it has them all.
+offset, a u16 mode, **a u16 padding count** and a u16 that is zero in
+every specimen — ending with a record whose offset is **the fork's own
+byte count**, which is how a reader knows it has them all.
+
+**The padding count is how many bytes sit between a block's stream and
+its four-byte checksum.** It is 1 on four of the harness's shape-1
+blocks and 0 on every other block here, and what says so is that the
+shape-1 decoder stops exactly `padding + 4` bytes before the next
+block's offset on all six. This note called those four bytes "zero in
+every specimen" until 2026-09-21; two of them are this field, and
+FORMATS.md's "zero padding" for the 1993 archive is the same number
+read off the engine.
+
+**Where this one came from**, because a note kept for a licence had
+better say which facts are whose: `src/fmt_now.c` subtracts a
+`padding` field when it computes a block's length, and that file is
+transcribed from XADMaster. The check above is what makes it a
+measurement here rather than a borrowing. **Two facts in this note
+came that way** — this one and the block table's own checksum, below;
+everything else was read out of the encoder's output before that file
+was opened, and the commit of 2026-09-21 is the record of which came
+first.
 
 | fork | records |
 |---|---|
@@ -71,9 +91,11 @@ block has no flag bits and no matches at all, and its stream starts
 
 ## Shape 1 — byte-aligned LZSS
 
-The payload begins **164 bytes into the fork** in every specimen that
-uses it, with a mode word of `0x0010` (*Faster*) or `0x003f`
-(*Smaller* and *Stored*) at offset 2.
+The block opens with the two bytes **`00 03`**, constant in every
+specimen and in every shape that carries an LZSS layer, and then the
+stream. (In a bare fork that puts the first token at byte **164**,
+which is what this note recorded before it knew what the two bytes in
+front of it were.)
 
 - a **flag byte**, then eight tokens, bits **most significant first**;
 - a **1** is a literal: one byte, copied out;
@@ -94,9 +116,14 @@ including its flag bytes — through one Huffman code of 256 symbols.
   exactly 1.000000 where the table is and nowhere else in the fork;
 - codes are **canonical**: shortest first, assigned in symbol order,
   read most-significant-bit first;
-- then the stream, which begins a few bits after the table — **what
-  sits between them is not understood**, so this reader searches a
-  byte or two for it;
+- then **one zero byte**, whose meaning is unknown and whose value is
+  0 in every block seen, in this shape and in Huffman-only. A
+  hypothesis, not a measurement: it is two more four-bit entries, for
+  a 258-symbol alphabet whose last two symbols no block ever uses —
+  which is the shape of shape 3's main table, where symbol 256 is
+  likewise always absent;
+- then the LZSS stream — **starting with the `00 03` that opens a
+  shape-1 block**, coded through this table like every other byte;
 - a **flag symbol**, then eight tokens as before, a 1 being a literal
   symbol;
 - a **match is two symbols**: `length = (S & 7) + 2` and
@@ -110,6 +137,20 @@ symbol **255** — because a flag byte of eight literals IS `0xff`, and
 it occurs once per eight bytes. That is what unpicked it: a `0xff`
 appearing between correct literals, every nine symbols, emitting
 nothing.
+
+**And the same fact closed the one question left about this shape.**
+Where its stream begins was recorded here as unknown — "23 bits after
+the table in one specimen and 18 in another" — and both numbers are
+the zero byte plus those two symbols, whose codes are as long as that
+block's table makes them. The gap was the prefix, and ten blocks now
+say so: the two it was measured on and the eight of
+`nowcompress.py --case huffgap`, which exists because two specimens
+could not tell a rule from a coincidence. What made it look
+like a gap is that a reader which starts at the prefix sees a flag
+byte of `0x00` — eight matches — and the first of them points 255
+bytes back at output position nought, so it fails, and fails in a way
+that looks like a wrong starting position rather than a wrong
+assumption about what the stream opens with.
 
 ### Huffman alone — the same table, no framing at all
 
@@ -138,7 +179,10 @@ archives are almost entirely written in.
 - byte 0 is **`0x2f`** in every shape-3 block known;
 - **byte 1 is the stream's byte offset within the block, plus 85** —
   exact on all 381 blocks read here, both corpus archives included, and
-  the 85 is a constant this note cannot account for;
+  the 85 is a constant this note cannot account for. Those offsets run
+  from 64 to 160, so the field is within ten of overflowing a byte and
+  **nothing here says what it does then**: byte 4 is the reading to
+  trust if they ever disagree;
 - byte 2 is **not identified**, and 377 blocks say what it is not: it
   is no bitmap of the lengths or distances a block uses (its eight bits
   were tested against every such predicate), no ratio of literals to
@@ -274,17 +318,33 @@ window is what bounds it, not the table.
 ### The trailer — a sum, not a CRC, and not shape 3's alone
 
 **A block's last four bytes are the 32-bit sum of every byte before
-them in the block**, header and tables included. Exact on all 75
-shape-3 blocks the harness and the 1993 archive supply — and on the
-shape-1 and shape-2 blocks of the bare forks too, where this note had
-recorded the four bytes as "presumably a checksum" without saying of
-what. It is the one check this reader can apply to a block whose output
-nobody knows.
+them in the block**, header and tables included. **385 blocks of 385**
+agree, across every archive here — the 1993 one, the 1995 one and the
+five the harness wrote — and so do the shape-1 and shape-2 blocks of
+the bare forks, where this note had recorded the four bytes as
+"presumably a checksum" without saying of what. It is the one check
+this reader can apply to a block whose output nobody knows.
 
 It is not a CRC of the OUTPUT, which is what a decoder would want and
 what this note looked for first: sum, Adler-32, CRC-32 and two CRC-16s
 over the decoded bytes match nothing. The encoder checks its own
 compressed bytes, not its reconstruction.
+
+### The check that came after: both tables against the only other reader
+
+`src/fmt_now.c` carries these two tables as arrays transcribed from
+XADMaster's `UnpackNewLZSS`. Compared entry for entry with the ones
+derived here — **33 length classes and 55 distance classes — they
+disagree nowhere**: every base, every extra-bit count, the jump from
+five extra bits to eight at distance 256 included, and the last base
+`0xe100`.
+
+That is a check and not a source, and the order matters: the tables
+above were committed on 2026-09-21 before this project's own engine was
+opened, from the encoder's output alone. What the comparison adds is
+that two lineages which share nothing — a de Bruijn probe against Now
+Compress 5.0.1, and a transcription of somebody's reverse-engineering
+of it — produce the same 88 numbers.
 
 ### How the two tables were made legible
 
@@ -305,11 +365,32 @@ corpus's two real specimens read as nonsense for a year. What sits at
 144 in them belongs to a member, not to the file.
 
 - the file header's **word 5 is the member count**;
-- **member records start at 24 and are 110 bytes each**: a Pascal
-  name in the first ten bytes, the member's uncompressed size at +88,
-  and the bounds of its data area at **+98** and **+102**. A record
-  whose bounds do not parse is a FOLDER — the 1995 archive opens with
-  one — and carries no data area;
+- **member records start at 24 and are 110 bytes each**:
+
+  | at | field |
+  |---|---|
+  | +0 | a Pascal name, 1 + up to 31 bytes |
+  | +38, +42 | type and creator |
+  | +80 | the entries inside a FOLDER — 2 in the 1995 archive's one, 0 in every file record a 5.0.1 archive has. The 1993 archive's one record holds `0x20000` there, so this field is not read the same way across versions |
+  | +86 | u32 **data fork length** |
+  | +90 | u32 **resource fork length** |
+  | +98, +102 | u32 start and end of the member's data area |
+  | +106 | u32 **the sum of the record's first 106 bytes** |
+
+  The two fork lengths are what let a reader split a member's stream
+  without being told what went in — the stream is the resource fork
+  first — and the checksum agrees on every record of every archive
+  here, the folders' included. A record whose bounds do not parse is a
+  folder and carries no data area;
+
+- **a folder is followed by exactly the entries it says it holds.** The
+  table is a pre-order flattening: `nowcompress.py --case tree`
+  archives two folders and two loose files, and its seven records read
+  `Alpha` (+80 = 2), `a1.bin`, `a2.bin`, `Beta` (+80 = 1), `b1.bin`,
+  then the two root files — which is the 1995 archive's shape too, its
+  one folder saying 2 with two entries behind it. That case exists
+  because one specimen cannot tell a rule from a coincidence, and the
+  1995 archive was the only one here with a folder in it;
 - a member's data area opens with the same header tail a bare fork
   has — the **first block's offset** at +2 — and then its **block
   table**, the same eight-byte records.
@@ -332,6 +413,28 @@ boundary**: it produces no bytes, and the next block starts the
 member's other fork. That is how the 1995 archive's `SynRef2.0 INFO`
 carries a 332-byte resource fork and a 574-byte data fork in one
 member; the stream is the **resource fork first**.
+
+**The header and block table end with a checksum of themselves.**
+Immediately after the last record sits a **u32 equal to the sum of
+every byte of the member's data area up to that point** — the same
+idiom a block's four trailing bytes use, and true of all 75 members of
+the five harness archives and both corpus ones. It gives a reader a
+second way to find where a table stops, and it is what `src/fmt_now.c`
+searches for when the reference's offsets need a constant added: that
+file's delta search is where this note got the idea to look, and the
+sums are the evidence.
+
+**A repeated offset is also what the engine calls a stream restart**, and that
+reconciles a count this project has carried since 2026-08-16.
+FORMATS.md records **two stream-restart records** in the 1995 archive —
+"the zero-length table entry that reloads the dictionary cache" — and
+this walk finds one repeated offset inside `SynRef2.0 INFO`. The second
+is the repeat that OPENS the big member's table: its data area states
+the first block's offset and the table's first record restates it, so a
+reader walking the archive as one stream sees a zero-length entry
+there too. Two accounts, two records, one structure — and the bytes
+come out right with the window carried across unchanged, so whatever
+the reload is for, nothing here needs it.
 
 **FORMATS.md had the 1993 archive's shape sequence already.** Its
 *Now Compress* section has recorded since 2026-08-15, from
@@ -356,10 +459,13 @@ file, and now decodes two of the three: 32,768 + 32,768 + 23,406 is
 | reach | 5 members | 80,000 | — | shape 3 |
 | tokdist | 40 members | 82,656 | — | 38 shape 3, 2 Huffman-only |
 | toklen | 24 members | 34,641 | — | shape 3 |
+| huffgap | 10 forks | 116,980 | — | 8 shape 2, 2 shape 1 |
+| tree | 5 members in 2 folders | 11,150 | — | shape 3 |
 
 **Every compressed block of every one of them reads byte for byte
-against the bytes that went in** — 76 of 76, the two Huffman-only
-blocks in `tokdist` included.
+against the bytes that went in** — 76 of 76 inside the archives, and
+every block of the sixteen bare forks besides, each checked against its
+own trailer as well.
 
 And so do the corpus's real archives, graded against this project's
 own extraction of them — which is itself adjudicated, the 1993 one by
@@ -371,14 +477,27 @@ Compress*):
 | `derived-Expand_Now_1.0.1.sea` (1993) | 3 — shape 3, Huffman, shape 3 | 3 |
 | `derived-SyntheticReferences2.0.sea` (1995) | 306, all shape 3 | 306 |
 
+**And both decode from the archive alone.** Given no expected output at
+all, `derive_now.py` walks either file and decodes every block: the
+member records say how long each fork is, the block headers say where
+each stream starts and ends, and the three checksums — one per record,
+one per block table, one per block — say the walk is on the rails. That
+is the difference between a description that reads a file and one that
+needs the answer first.
+
 ## What this note does NOT describe
 
-- **Where a shape-2 block's bit stream begins**, the same question one
-  layer down: 23 bits after its table in one specimen and 18 in
-  another, and those two are all the specimens there are. Neither the
-  symbol count nor the deepest code predicts it. A Huffman-ONLY block
-  has no such trouble — one byte, three times out of three — so
-  whatever the gap carries belongs to the LZSS layer over it.
+- **What `00 03` means**, the two bytes every LZSS stream opens with,
+  and **the zero byte** between a Huffman table and its stream.
+- **The offset delta, which may not be a property of the format at
+  all.** `src/fmt_now.c` corrects a block table's offsets by a constant
+  it finds through the table checksum above, transcribed from the
+  reference. **No file measured here needs it**: both corpus archives
+  and all 75 harness members carry offsets that are already the file's
+  own, and the archives that exercise the search in `ci.sh` are written
+  by `tools/synth_now.py`, whose `build_table(..., delta=)` exists to
+  make them. So the delta is a claim about what the reference believes,
+  and this note has no evidence for or against it.
 - **A shape-3 block's header byte 2**, the one of its four this note
   cannot read, and the 24 bits between its code-length code and its
   first table, zero in every specimen.

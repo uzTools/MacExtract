@@ -13687,7 +13687,89 @@ stream starts at the tables' end exactly. The rule is
 same number twice and the two accounts disagreed — **a redundancy in
 the format is a test you get for free, and only if you read both.**
 
-**What is left.** Byte 2 of the header, which is 255 on 59 blocks of
-75 and 0 on six, matches no bitmap of the lengths or distances a block
-uses, and tracks the shortest match on part of one probe and then
-stops. And where a shape-2 stream begins, one layer down.
+**And the last search in the reader went the same way — by asking
+what the stream OPENS with rather than where it starts.** Where a
+shape-2 block's bit stream begins had been down here as unknown since
+the shape was read: "23 bits after its table in one specimen and 18 in
+another". Both numbers are one zero byte plus **two Huffman symbols,
+`0x00` and `0x03`** — and `00 03` is exactly what a shape-1 block
+opens with, in every specimen, before its first flag byte. The gap was
+the stream's own prefix, coded through the block's table like every
+other byte, which is why it measured differently in each block.
+
+**Why it read as a position problem for a month.** A reader that
+starts at the prefix sees a flag byte of `0x00` — eight matches — and
+the first of them points 255 bytes back at output position nought. It
+fails, and it fails exactly as a wrong starting bit fails, so the
+symptom points at "where" when the fault is "what". The fix came from
+the neighbouring shape: shape 1's payload was documented as starting
+**two bytes** into its block, and nobody had asked what those two
+bytes were.
+
+**And a count this project has carried since 2026-08-16 reconciles.**
+FORMATS.md records two "stream-restart records" in the 1995 archive,
+from instrumenting the engine's block loop; the container walk finds
+one repeated offset, inside `SynRef2.0 INFO`, where a member's resource
+fork ends and its data fork begins. The second is the repeat that OPENS
+the big member's table — its data area states the first block's offset
+and the table's first record restates it — which a reader walking the
+archive as one stream sees as another zero-length entry. **The two
+counts were of the same two records under different names**, and the
+disagreement only showed up because the derivation described the
+container from the file rather than from the decoder.
+
+The same reading cost this note another claim: the block record's last
+four bytes, "zero in every specimen", are **a u16 padding count** and a
+zero u16. The count is how many bytes sit between a block's stream and
+its checksum — 1 on four of the harness's shape-1 blocks — and the
+shape-1 decoder stopping exactly `padding + 4` bytes short of the next
+block is what says so. **That lead came from `src/fmt_now.c`, which is
+XADMaster's**, and the note says so where it states the field: a
+derivation kept for a licence is worth exactly what its provenance is,
+and one borrowed lead recorded is cheaper than a claim nobody can
+place.
+
+**And then the two tables were compared with the only other reader
+there is.** `src/fmt_now.c` carries XADMaster's own `UnpackNewLZSS`
+arrays; against the ones derived here they disagree **nowhere** — 33
+length classes and 55 distance classes, every base and every extra-bit
+count, including the jump from five extra bits to eight at distance
+256 and the last base `0xe100`. The derivation was committed before
+that file was opened, so the agreement is a check rather than a
+source, and it is the kind this project keeps asking for: two
+lineages, no shared evidence, 88 numbers, no difference.
+
+**And the engine's own comments are worth reading for leads, which is
+not the same as reading them for facts.** Two more pieces of the
+container came that way and were then measured here: the padding count
+above, and a **u32 after every member's header and block table that is
+the sum of every byte before it** — the same checksum idiom a block's
+trailer uses, true of all 75 members of the seven archives here. That
+sum is what `fmt_now.c` hunts for when the reference's offsets need a
+constant added; this note found it by looking where the hunt looks and
+then checking the arithmetic against the bytes.
+
+**And the container was pinned the same way the coders were — with a
+specimen made for the question.** The entry table's records give both
+fork lengths at +86 and +90, the data area's bounds, and at +106 a u32
+that is the sum of the record's first 106 bytes; a folder record is
+followed by exactly the entries its +80 field counts. That last was a
+rule read off ONE archive, the corpus's 1995 fixture being the only
+one here with a folder in it, so `nowcompress.py --case tree` made
+another: two folders and two loose files, seven records, pre-order,
+every checksum agreeing.
+
+**Where that leaves the reader.** Given an archive and nothing else —
+no expected output, no oracle — `tools/derive_now.py` now decodes every
+block of both corpus archives, 3 of 3 and 306 of 306: the member
+records give each fork's length, the block headers give each stream's
+bounds, and three checksums (per record, per block table, per block)
+say the walk is on the rails. A description that needs the answer
+first is a different thing from one that reads the file, and this is
+now the second.
+
+**What is left.** Byte 2 of a shape-3 header, which is 255 on 59
+blocks of 75 and 0 on six, matches no bitmap of the lengths or
+distances a block uses, and tracks the shortest match on part of one
+probe and then stops. What `00 03` means. And the zero byte between a
+Huffman table and its stream.

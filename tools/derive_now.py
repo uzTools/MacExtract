@@ -159,7 +159,11 @@ def decode_huff(d, t, bitstart, nout, hist=b""):
     shape 1 had 8. A length of 2 — the low three bits zero — escapes
     to a third symbol carrying `length - 2`.
     """
-    r = Bits(d, bitstart)
+    return decode_huff_at(d, t, Bits(d, bitstart), nout, hist)
+
+
+def decode_huff_at(d, t, r, nout, hist=b""):
+    """The same, carrying on from a bit reader already positioned."""
     out = bytearray()
     while len(out) < nout:
         flags = r.sym(t)
@@ -196,6 +200,28 @@ def decode_huffonly(d, at, nout):
     t = table_at(d, at)
     r = Bits(d, (at + 128 + 1) * 8)
     return bytes(r.sym(t) for _ in range(nout))
+
+
+LZSS_PREFIX = (0x00, 0x03)      # every LZSS stream starts with these
+
+
+def decode_shape2(d, at, nout, hist=b""):
+    """A Huffman-over-LZSS block, from a position nothing searches for.
+
+    The 128-byte table sits at `at`; **one zero byte** follows it, and
+    then the LZSS stream — whose first two bytes are the constant
+    `00 03` that opens a shape-1 block too, coded through the same
+    table like every other byte. Reading those two as the stream's
+    first flag byte and match is what made this look like a gap of "23
+    bits in one specimen and 18 in another": the gap was the prefix,
+    and the prefix is two symbols whose code lengths differ per block.
+    """
+    t = table_at(d, at)
+    r = Bits(d, (at + 128 + 1) * 8)
+    got = (r.sym(t), r.sym(t))
+    if got != LZSS_PREFIX:
+        raise ValueError("the stream does not open with %s" % (LZSS_PREFIX,))
+    return decode_huff_at(d, t, r, nout, hist)
 
 
 def try_huff(d, want):
@@ -269,9 +295,17 @@ def block_kind(mode):
 
 def records(d, limit=64):
     """The fork's block table: 8-byte records from offset 144 — a u16
-    offset, a u16 mode, and four bytes that are zero in every specimen
-    here. The list ends with a record whose offset is the fork's own
-    size, which is how a reader knows it has them all.
+    offset, a u16 mode, **a u16 padding count** and a u16 that is zero
+    in every specimen. The list ends with a record whose offset is the
+    fork's own size, which is how a reader knows it has them all.
+
+    **The padding count is how many bytes sit between the end of a
+    block's stream and its four-byte checksum**, and it is 1 on four of
+    the harness's shape-1 blocks and 0 on the rest. Measured: the
+    shape-1 decoder stops exactly `padding + 4` bytes before the next
+    block's offset, on every one of them. This note recorded those four
+    bytes as "zero in every specimen" until 2026-09-21, which they are
+    not.
 
     Modes seen: 0x0000 stored, 0x0010 shape 1, 0x003f shape 2. A fork
     may mix them — `mixed.bin` is (170, stored) then (32942, shape 2)
@@ -316,16 +350,7 @@ def read_fork(d, nout):
         elif kind == "huffman":
             out.extend(decode_huffonly(d, at, n))
         else:
-            t = table_at(d, at)
-            for bs in range((at + 128) * 8, (at + 128 + 6) * 8):
-                try:
-                    piece = decode_huff(d, t, bs, n)
-                except Exception:
-                    continue
-                out.extend(piece)
-                break
-            else:
-                return None
+            out.extend(decode_shape2(d, at, n, bytes(out)))
     return bytes(out[:nout])
 
 
@@ -402,10 +427,26 @@ def members(d):
     """The archive's member records.
 
     Word 5 of the file header is the member count; the records follow
-    at 24, 110 bytes each. Of each record this reads the five fields
-    it can name: a Pascal name in the first ten bytes, the member's
-    uncompressed size at +88, and at +98 and +102 the bounds of its
-    data area — which is where its own fork-shaped header sits.
+    at 24, **110 bytes each**, and this reads the fields it can name:
+
+        +0    a Pascal name, 1 + up to 31 bytes
+        +38   type, +42 creator
+        +80   the entries inside a FOLDER (2 in the 1995 archive's one,
+              0 in every file record of a 5.0.1 archive; the 1993 one
+              has 0x20000 there, so this field is not read the same way
+              across versions)
+        +86   u32 data fork length
+        +90   u32 resource fork length
+        +98   u32 start of the member's data area, +102 its end
+        +106  u32 **the sum of the record's first 106 bytes** — the same
+              checksum idiom a block's trailer and a block table's end
+              use, and it agrees on every record of every archive here,
+              folders included
+
+    Returns (name, data length, resource length, start, end). A record
+    whose bounds do not parse is a folder — the 1995 archive opens with
+    one — and is skipped rather than taken as the end of the archive,
+    which is what this did until 2026-09-21.
     """
     if len(d) < MEMBER_AT + MEMBER_LEN:
         return None
@@ -417,26 +458,26 @@ def members(d):
         b = MEMBER_AT + MEMBER_LEN * k
         if b + MEMBER_LEN > len(d):
             return None
-        nl = d[b]
-        if nl > 31:
+        r = d[b:b + MEMBER_LEN]
+        if r[0] > 31:
             return None
-        name = d[b + 1:b + 1 + nl].decode("mac-roman", "replace")
-        usize = int.from_bytes(d[b + 88:b + 90], "big")
-        st = int.from_bytes(d[b + 98:b + 102], "big")
-        en = int.from_bytes(d[b + 102:b + 106], "big")
+        if int.from_bytes(r[106:110], "big") != (sum(r[:106]) & 0xFFFFFFFF):
+            return None
+        name = r[1:1 + r[0]].decode("mac-roman", "replace")
+        dlen = int.from_bytes(r[86:90], "big")
+        rlen = int.from_bytes(r[90:94], "big")
+        st = int.from_bytes(r[98:102], "big")
+        en = int.from_bytes(r[102:106], "big")
         if not 0 < st < en <= len(d):
-            # A record whose bounds do not parse is a FOLDER — the 1995
-            # archive opens with one — so skip it rather than give up on
-            # the archive, which is what this did until 2026-09-21.
             continue
-        out.append((name, usize, st, en))
+        out.append((name, dlen, rlen, st, en))
     return out or None
 
 
 def member_blocks(d, st, en):
-    """One member's block table: eight-byte records — a u16 offset, a
-    u16 mode, four more bytes — ending on the record whose offset is
-    the member's end.
+    """One member's block table: eight-byte records — an offset, a u16
+    mode and a u16 padding count (`records`) — ending on the record
+    whose offset is the member's end.
 
     **It sits at one of two places, and the header says which.** The
     member's data area opens with the first block's offset at `st + 2`,
@@ -451,9 +492,20 @@ def member_blocks(d, st, en):
 
     **And an archive over 64 KB widens the record**: the 1995
     `derived-SyntheticReferences2.0.sea` addresses 2.9 MB, which a u16
-    offset cannot reach, so its records are a u32 offset and a u16 mode.
-    Both widths are tried and the terminator — a record whose offset is
-    the member's end — is what says which is right.
+    offset cannot reach, so its records are a u32 offset, a u16 mode
+    and a u16 padding count — the same eight bytes with the offset
+    taking the zero half. Both widths are tried and the terminator — a
+    record whose offset is the member's end — is what says which is
+    right.
+
+    **A record whose offset repeats the one before it** produces no
+    bytes. This reader treats it as the boundary between a member's two
+    forks, which is what it is in the 1995 archive's `SynRef2.0 INFO`;
+    the engine calls the same record a stream restart and reloads its
+    dictionary cache there (FORMATS.md, *Now Compress*). Both accounts
+    are of one record, and the archive has two of them — that one, and
+    the repeat that opens the big member's table by restating the
+    first-block offset its header already gave.
     """
     first16 = int.from_bytes(d[st + 2:st + 4], "big")
     for width, at in ((2, st + 10), (2, st + 2), (4, st + 8), (4, st)):
@@ -668,7 +720,7 @@ def bit_sym(bits, p, table):
     raise ValueError("no code at bit %d" % p)
 
 
-def shape3_decode(d, off, end, hist, nout, want=None):
+def shape3_decode(d, off, end, hist, nout, want=None, padding=0):
     """Decode one shape-3 block. Nothing here is searched for, and the
     header's own account of where the stream ENDS is checked against
     where it did: after the last token come `(16 - byte 3) mod 16` bits
@@ -679,7 +731,7 @@ def shape3_decode(d, off, end, hist, nout, want=None):
     t1lens, t2lens, start = shape3_tables(d, off)
     out, last = shape3_stream(bits, start, build(t1lens), build(t2lens),
                               hist, nout)
-    tail = (end - off) * 8 - last
+    tail = (end - off) * 8 - last - 8 * padding
     if tail != 32 + ((16 - d[off + 3]) & 15):
         raise ValueError("the stream does not end where byte 3 says")
     return out, start
@@ -698,24 +750,29 @@ def read_archive(d, want=None):
     """Walk an archive and report what each member's blocks are.
 
     `want` maps a member name to the bytes that went in, when they are
-    known; a block is then decoded and compared. Returns a list of
-    (member, [(kind, offset, read)]).
+    known; a block is then decoded and compared. **The member record's
+    own fork lengths say how long each fork is**, so how much a block
+    has to produce is read rather than assumed even when nothing is
+    expected. The stream is the RESOURCE fork first, which those two
+    lengths and the fork-boundary record together make checkable.
+    Returns a list of (member, size, [(kind, offset, mode, read, end)]).
     """
     ms = members(d)
     if not ms:
         return None
     out = []
     hist = bytearray()          # the window spans members, so this does too
-    for name, usize, st, en in ms:
+    for name, dlen, rlen, st, en in ms:
         recs = member_blocks(d, st, en)
         if not recs:
-            out.append((name, usize, None))
+            out.append((name, dlen, None))
             continue
         blocks = []
         pos = 0
         forks = (want or {}).get(name)
         if isinstance(forks, (bytes, bytearray)):
             forks = [forks]
+        sizes = [n for n in (rlen, dlen) if n] or [0]
         fork = 0
         w = forks[0] if forks else None
         for (off, mode), (nxt, _) in zip(recs, recs[1:]):
@@ -727,36 +784,35 @@ def read_archive(d, want=None):
                 w = forks[fork] if forks and fork < len(forks) else None
                 continue
             kind, skip = archive_kind(mode)
-            n = min(BLOCK, (len(w) - pos) if w else BLOCK)
+            left = (len(w) - pos) if w is not None else (
+                sizes[fork] - pos if fork < len(sizes) else 0)
+            n = min(BLOCK, left)
             read = None
-            if w is not None and n > 0:
+            if n > 0:
                 try:
                     if kind == "stored":
-                        read = d[off:off + n] == w[pos:pos + n]
+                        got = d[off:off + n]
                     elif kind == "shape1":
-                        read = (decode(d, off + skip, n, bytes(hist))[0]
-                                == w[pos:pos + n])
+                        got = decode(d, off + skip, n, bytes(hist))[0]
                     elif kind == "huffman":
-                        read = (decode_huffonly(d, off + skip, n)
-                                == w[pos:pos + n])
+                        got = decode_huffonly(d, off + skip, n)
                     elif kind == "shape2":
-                        t = table_at(d, off + skip)
-                        read = any(
-                            decode_huff_safe(d, t, bs, n, bytes(hist))
-                            == w[pos:pos + n]
-                            for bs in range((off + skip + 128) * 8,
-                                            (off + skip + 128 + 8) * 8))
+                        got = decode_shape2(d, off + skip, n, bytes(hist))
                     else:
-                        got, _ = shape3_decode(d, off, nxt, bytes(hist), n,
-                                               want=w[pos:pos + n])
-                        read = got == w[pos:pos + n]
+                        got, _ = shape3_decode(d, off, nxt, bytes(hist), n)
+                    # graded where something is expected; where nothing
+                    # is, a decode that runs to the fork length the
+                    # record states is still worth reporting
+                    read = (got == w[pos:pos + n]) if w is not None else "decoded"
+                    if w is None:
+                        hist += got
                 except Exception:
                     read = False
             blocks.append((kind, off, mode, read, nxt))
             if w is not None and n > 0:
                 hist += w[pos:pos + n]
             pos += n
-        out.append((name, usize, blocks))
+        out.append((name, dlen, blocks))
     return out
 
 
@@ -782,9 +838,10 @@ def report_archive(path, d, want):
         parts = []
         for kind, off, mode, read, nxt in blocks:
             tot += 1
-            if read:
+            if read is True or read == "decoded":
                 ok += 1
-            mark = {True: "ok", False: "--", None: "?"}[read]
+            mark = {True: "ok", False: "--", None: "?",
+                    "decoded": "(decodes)"}[read]
             parts.append(f"{kind}@{off} ({mode:#06x}) {mark}")
         print(f"      {name:12s} {usize:7d} B  " + ", ".join(parts))
         for kind, off, mode, read, nxt in blocks:
@@ -846,7 +903,9 @@ def main():
     if args.archives:
         print("derive-now: archives")
         ok, tot = archives(args.archives, args.expect)
-        print(f"derive-now: {ok} of {tot} member block(s) read")
+        how = ("read and graded against DIR" if args.expect else
+               "decoded; --expect DIR grades them against extracted forks")
+        print(f"derive-now: {ok} of {tot} member block(s) {how}")
         return 0
     if not os.path.isdir(SPECIMENS):
         print("derive-now: no specimens — tools/vmac/nowcompress.py --case all "
@@ -903,8 +962,9 @@ def main():
                 print(f"--  {mode:8s} {base:10s} {len(want):6d} B from "
                       f"{len(d):6d}  another shape")
                 other += 1
-    print(f"derive-now: {ok} specimen(s) by shape 1, {huff} by shape 2, "
-          f"{blocks} by several blocks, {stored} stored, {other} not read")
+    print(f"derive-now: {ok} specimen(s) read from their block table, "
+          f"{huff} by shape 2 alone, {blocks} by several blocks, "
+          f"{stored} stored, {other} not read")
     seas = []
     for mode in sorted(os.listdir(SPECIMENS)):
         mdir = os.path.join(SPECIMENS, mode)

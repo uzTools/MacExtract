@@ -469,6 +469,15 @@ CASES = {
     # distance are known, so the token's bits can be read off against them.
     "tokdist": (lambda: token_files("dist"), "archive", "smaller"),
     "toklen": (lambda: token_files("len"), "archive", "smaller"),
+    # An archive with FOLDERS in it, to check how the entry table nests
+    # them: the 1995 fixture is the only specimen here that has one, and
+    # one specimen cannot tell a rule from a coincidence.
+    "tree": (lambda: {"r1.bin": FOX * 100 + keystream(400),
+                      "r2.bin": PROSE[:3000] + keystream(300)},
+             "archive", "smaller",
+             lambda: (("Alpha", {"a1.bin": FOX * 60 + keystream(200),
+                                 "a2.bin": PROSE[:2000] + keystream(200)}),
+                      ("Beta", {"b1.bin": FOX * 80 + keystream(250)}))),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),
@@ -482,15 +491,20 @@ FOX = b"the quick brown fox\n"
 
 
 def run_case(name):
-    files, action, mode = CASES[name]
+    spec = CASES[name]
+    files, action, mode = spec[0], spec[1], spec[2]
+    folders = spec[3]() if len(spec) > 3 else ()
     files = files()
     dest = os.path.join(SPECIMENS, name)
     shutil.rmtree(dest, ignore_errors=True)
     os.makedirs(dest)
     img = os.path.join(dest, "volume.img")
-    make_volume(img, "Now", files)
+    make_volume(img, "Now", files, folders)
     for n, blob in files.items():
         open(os.path.join(dest, "in-" + n), "wb").write(blob)
+    for _, inner in folders:
+        for n, blob in inner.items():
+            open(os.path.join(dest, "in-" + n), "wb").write(blob)
     s = Session(BOOT, [img], os.path.join(dest, "shots"))
     try:
         s.boot()
