@@ -1659,15 +1659,21 @@ all, and any future Mac replay can pick it up. It is restored from
 `tools/synth_now.py -o`, like every other synthetic fixture (see *Corpus*).
 
 **And since 2026-09-21 the same thirteen trees are built a second way** —
-`build_archive(word=True, trailer=True)`, the shape the encoder writes —
+`build_archive(lead=True, word=True, trailer=True)`, the shape the encoder
+writes —
 and that build is required to be **word-aligned** (no block of an odd
 length or at an odd offset, and no shape-3 coded region of an odd length,
 which is what makes the two accounts its header gives of where its stream
 starts agree), to carry a well-formed **16-byte archive trailer**, and to be
-read by `derive_now.py` and by this CLI. The thirteen graded by `unar` keep
-the unaligned shape, because `unar` refuses a region that leaves it fewer
-than four spare bits; the aligned build is checked instead of replacing
-them. **One more archive is built the way Now Compress builds one** —
+read by `derive_now.py` and by this CLI, and to carry the **fork-boundary
+record** every member of every file the encoder wrote has. The thirteen
+graded by `unar` keep the unaligned shape, because `unar` refuses a region
+that leaves it fewer than four spare bits; the aligned build is checked
+instead of replacing them. The record is the one of those differences that
+would cost them nothing — what keeps it out of their default is that
+changing it means regenerating `synth-now-mixed.now` and its manifest, and
+this build is what makes that a decision about a committed fixture rather
+than a gap in what is checked. **One more archive is built the way Now Compress builds one** —
 those two plus 32,768-byte blocks — and graded all three ways, because it is
 the only one here that all three readers agree on: it is the rung Now
 Compress itself extracted (*The rungs*).

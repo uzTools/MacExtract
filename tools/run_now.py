@@ -142,6 +142,13 @@ def check_encoder_shape(tmp, macextract, problems):
     **The trailer is asserted here too**, because it is the difference
     that decided the whole question: without those sixteen bytes Now
     Compress refuses the archive outright (TESTING.md, *The rungs*).
+    So is the **fork-boundary record**, which every member of every file
+    the encoder wrote carries and which the thirteen do not: it is the
+    one difference of the five that costs the `unar`-graded archives
+    nothing, so the only reason they lack it is that changing their
+    default would mean regenerating the committed fixture and its
+    manifest. This build has it, which is what makes that a choice about
+    a fixture rather than a gap in what is checked.
 
     The third requirement — 32,768-byte blocks — cannot be asserted on
     these trees, which cut their members small on purpose so that a
@@ -153,7 +160,8 @@ def check_encoder_shape(tmp, macextract, problems):
     for name, (tree, delta) in sorted(synth_now.archives().items()):
         if delta:
             continue            # the delta archives need the offset search
-        blob = synth_now.build_archive(tree, 0, word=True, trailer=True)
+        blob = synth_now.build_archive(tree, 0, lead=True, word=True,
+                                       trailer=True)
         tail = blob[-16:]
         if int.from_bytes(tail[12:16], "big") != sum(tail[:12]):
             problems.append("%s aligned: the archive trailer's sum is wrong"
