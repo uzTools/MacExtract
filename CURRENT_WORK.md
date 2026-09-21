@@ -216,32 +216,36 @@ recorded and not taken, however much cleaner its licence. Do the cheap
 half — the spec note — regardless, because it is worth having even when
 the code does not move, and it is what the next attempt starts from.
 
-## Item 5 — Now Compress: four shapes left (`fmt_now.c`)
+## Item 5 — Now Compress: the blocks, not the coders (`fmt_now.c`)
 
-**Started 2026-09-21, and it is the only row where nothing could be
-fetched**: no wiki page, no specification, no second implementation.
-So it is measured off the application, which is what the brief always
-said this row would need.
+**Started and mostly done 2026-09-21**, and it is the only row where
+nothing could be fetched: no wiki page, no specification, no second
+implementation. So it was measured off the application, which is what
+the brief always said this row would need.
 
-**One shape of five is done** — a flag-byte LZSS with an 8-bit
-distance and an escape for long matches, payload at a fixed 164 bytes
-in, verified on four specimens Now Compress wrote from inputs chosen
-here (`docs/formats/now-compress.md`, `tools/derive_now.py`).
+**Two coders and the block structure are derived**, and they read
+**every specimen the harness has, eight of eight**, byte for byte
+(`docs/formats/now-compress.md`, `tools/derive_now.py`):
 
-What is left, in the order the evidence is already sitting here:
+- a fork is a sequence of **32,768-byte blocks**, each **coded its own
+  way** — `mixed.bin` is a stored block followed by a Huffman one;
+- **shape 1**, a byte-aligned LZSS: flag byte, eight tokens, matches
+  of `length - 2` then distance with a zero escape;
+- **shape 2**, the same framing with every byte of it Huffman-coded
+  through a 256-symbol table of 4-bit lengths — including the flag
+  bytes, which is what gives symbol 255 the shortest code in an
+  incompressible file and is how the shape was recognised.
 
-- **the shape `half.bin` uses** (16,000 → 8,950 B): its payload is
-  visibly nibble-structured, so something Huffman-coded. That
-  specimen and its input are in the emulator cache already;
-- **the shape the corpus's real archives use** — `synth-now-mixed.now`
-  and `derived-Expand_Now_1.0.1.sea`, both with oracle hashes, so a
-  reader can be graded the moment it exists;
-- **the 164-byte header**, of which six fields are identified;
-- **blocks**, which nothing measured has yet had to cross.
-
-`tools/vmac/nowcompress.py --case all` makes more specimens, and any
-input can be chosen — which is the whole advantage of this row over
-the ones that had to be searched.
+**What is left is finding a block, and it is the whole of the
+remainder.** `tools/derive_now.py` cheats: it walks the expected
+output and searches a short window for each block's table, which is
+fine for a derivation graded against known bytes and no use as a
+decoder. The answer is in the fork header's record table —
+`u16 value, u16 mode, four zero bytes` repeated, whose last value is
+the fork's byte count and whose earlier ones point at later blocks.
+Read that and the corpus's two real archives (`synth-now-mixed.now`
+and `derived-Expand_Now_1.0.1.sea`, both with oracle hashes, both
+carrying Kraft-1 tables inside them) should fall out.
 
 ## Item 6 — DiskDoubler `ADn` (6/9), and the two `DDn` forks (`fmt_dd.c`)
 

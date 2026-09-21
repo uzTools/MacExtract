@@ -221,7 +221,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
 - 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
 - 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
-- 2026-09-21 (the one that had to be asked) — a shape of Now Compress, measured off the application
+- 2026-09-21 (the one that had to be asked) — Now Compress's two coders and its blocks, measured off the application
 
 ---
 
@@ -13283,7 +13283,7 @@ And `unc_inflate_raw`'s `produced` argument is not optional: passing
 NULL segfaults at the last line. Its doc comment says `*crc` may be
 NULL and says nothing about `produced`, which is how an hour went.
 
-## 2026-09-21 (the one that had to be asked) — a shape of Now Compress, measured off the application
+## 2026-09-21 (the one that had to be asked) — Now Compress's two coders and its blocks, measured off the application
 
 **Item 5, and the only row in the inventory where nothing could be
 fetched.** Compact Pro, StuffIt method 13, DiskDoubler's AD and DD and
@@ -13333,3 +13333,41 @@ input and looking at what came back*. The tell for which you are in is
 whether anybody ever wrote the format down — and that question turned
 out to be worth asking for every row, because the answer was yes five
 times when the inventory said no.
+
+**Followed up the same day: the second coder, and the blocks.** The
+`half.bin` specimen — 8,000 random bytes then 8,000 `'A'`s — gave up
+the rest of the format:
+
+- there is a **256-symbol Huffman code** in front of it, 256 lengths
+  of four bits, and **Kraft's equality finds it**: exactly 1.000000 at
+  one offset in the fork and nowhere else;
+- what it codes is **shape 1's own stream, byte for byte, flag bytes
+  and all**. That is why symbol 255 carries the shortest code in a
+  file of incompressible data — a flag of eight literals IS `0xff`.
+  The clue was a `0xff` appearing between correct literals every nine
+  symbols, emitting nothing: not an escape, a flag;
+- a **match is two symbols**, `length = (S & 7) + 2` and
+  `distance = ((S >> 3) << 8) | D`, with a length of 2 escaping to a
+  third symbol. That was read off ONE match: the first in the
+  stream, whose distance had to be 4,237 — and `0x81 0x8d` is
+  `(0x81 >> 3) << 8 | 0x8d` exactly, with `(0x81 & 7) + 2` = 3, the
+  length. The first 5,520 bytes of that file are pure literals, so
+  the match path had never been exercised until that one symbol;
+- and a fork is **32,768-byte blocks, each coded its own way**:
+  `mixed.bin` is a stored block then a Huffman one. "Which coder does
+  Now Compress use" has no answer.
+
+**All eight specimens now read**, byte for byte against the inputs the
+application was handed. What is left is finding a block without being
+told where it is — the fork header's record table, which is the only
+reason the corpus's two real archives are still unread. Both carry
+Kraft-1 tables inside them, so they are very likely these same two
+shapes in blocks this reader cannot locate.
+
+**Two habits did all the work here**, and neither is about Now
+Compress. Choosing the INPUT — random bytes then a long run — meant
+the literal path and the match path could be told apart by eye.
+And Kraft's equality, which found a code table in Compact Pro
+yesterday, found this one in a fork with no structure visible at all:
+**it is the cheapest test in this whole exercise**, one line, and it
+has now identified three formats' tables and refuted one guess.
