@@ -118,6 +118,76 @@ def check(archive, want, macextract, problems):
                                .replace("\n", " | ")[-160:]))
 
 
+def check_word_aligned(tmp, macextract, problems):
+    """The aligned build: every block even, and every block READ.
+
+    Every one of the 479 blocks Now Compress has written here is an even
+    number of bytes long, and a shape-3 block's coded region is even
+    too — which is what makes the two accounts its header gives of where
+    its stream starts the same account (docs/formats/now-compress.md,
+    *Every block is an even number of bytes*). The thirteen archives
+    above deliberately do NOT align, because `unar` refuses a region
+    that leaves it fewer than four spare bits and they exist to be
+    graded by `unar`; `build_archive(word=True)` is the build that does,
+    and it is what `--ladder` hands to Now Compress.
+
+    So this asserts the property on that build and not on those
+    thirteen, and it asserts it twice over: the bytes are aligned, and
+    `derive_now.py` — which believes byte 1 where `src/fmt_now.c` rounds
+    the length up — reads every block. Those two readers agreeing is the
+    whole point; on the unaligned build they do not, and 25 of the 37
+    shape-3 blocks there are what they disagree about.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import derive_now as D                                # noqa: E402
+    for name, (tree, delta) in sorted(synth_now.archives().items()):
+        if delta:
+            continue            # the delta archives need the offset search
+        blob = synth_now.build_archive(tree, 0, word=True)
+        members = D.members(blob)
+        if not members:
+            problems.append("%s aligned: no member table" % name)
+            continue
+        seen = 0
+        for member, _dlen, _rlen, st, en in members:
+            recs = D.member_blocks(blob, st, en)
+            if not recs:
+                problems.append("%s aligned: %s has no block table"
+                                % (name, member))
+                continue
+            for (off, mode, pad), (nxt, _, _) in zip(recs, recs[1:]):
+                if nxt == off:
+                    continue
+                seen += 1
+                if off & 1 or (nxt - off) & 1:
+                    problems.append(
+                        "%s aligned: %s block at %d is %d B — the encoder "
+                        "writes neither an odd length nor an odd start"
+                        % (name, member, off, nxt - off))
+                if not mode & 0x40:
+                    continue
+                size = (int.from_bytes(blob[off:off + 2], "big")
+                        - 0x2F59) & 0xFFFF
+                if size & 1:
+                    problems.append(
+                        "%s aligned: %s shape-3 block at %d has a %d-byte "
+                        "region, so bytes 0..1 and byte 1 disagree about "
+                        "where its stream starts" % (name, member, off, size))
+                try:
+                    D.shape3_tables(blob, off)
+                except Exception as exc:
+                    problems.append("%s aligned: %s shape-3 block at %d: %s"
+                                    % (name, member, off, exc))
+        if not seen:
+            problems.append("%s aligned: no blocks to check" % name)
+        path = os.path.join(tmp, "aligned-" + name + ".now")
+        with open(path, "wb") as fh:
+            fh.write(blob)
+        extract_and_compare("us", macextract, path,
+                            synth_now.expected(tree), problems)
+    return 1
+
+
 def check_metadata(archive, macextract, problems):
     """Type and creator, which the fork comparison cannot see. Ours comes
     from `l -v`; the oracle's from the Finder info in its AppleDouble
@@ -386,6 +456,7 @@ def main():
         for archive in sorted(made):
             check(archive, made[archive], macextract, problems)
             ran += 1
+        ran += check_word_aligned(tmp, macextract, problems)
         check_metadata(os.path.join(tmp, "synth-now-tree.now"), macextract,
                        problems)
         check_refusals(tmp, macextract, problems)

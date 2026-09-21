@@ -233,6 +233,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
 - 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
 - 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
+- 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
 
 ---
 
@@ -14318,6 +14319,12 @@ five such differences; this session found two more before running
 anything (the `0x0100` bit and the header's window word), which is its
 own comment on a list nobody had tested.
 
+**And that list of three was wrong too — none of the answers is on
+it.** They are a 16-byte trailer past the end of everything any reader
+walks, the 32,768-byte block size, and word alignment: *2026-09-21,
+(sixteen bytes nobody had read)*, which is also where the reason a list
+was the wrong instrument is written down.
+
 **And the instrument lied twice before anyone noticed.** `--adjudicate`
 printed *"the original extractor agrees with us on every fork"* for both
 refused rungs, because a volume with nothing extracted onto it compares
@@ -14334,3 +14341,80 @@ Compress correctly greyed out, so the type (read out of Expand Now's own
 `FREF` resources rather than guessed) is right — and it expanded
 nothing, not even the control. That route is unexplained and is not the
 one the results above rest on.
+
+## 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
+
+**Claim.** An archive Now Compress will open needs three things this
+project's generator did not do, and the fork comparison says which
+does what: a **16-byte trailer** after the last member, **32,768-byte
+blocks**, and **every block starting on a word boundary**. The first
+two are outright refusals; the third is an archive that extracts with
+one block silently wrong. A fourth difference found the same way turned
+out not to matter. Ten rungs, ten emulator boots, one control
+(TESTING.md, *The rungs*).
+
+**The first archive this project has ever written that Now Compress
+reads** is the `no-tail` rung: two members, both byte-exact, four forks
+graded.
+
+**Where the three came from, and this is the whole lesson.** The
+previous session left a list of three suspects — the entry record's
+fields, the byte in front of a Huffman-only stream, and "the shape-3
+blocks as `synth_now.py` encodes them" — and **not one of the three
+answers is on it**. They came from diffing an archive the encoder wrote
+against one this project wrote, field by field, with no hypothesis in
+hand:
+
+- the trailer is 16 bytes **past the end of everything any reader
+  walks**. `unc_sniff`, `src/fmt_now.c`, `derive_now.py` and XADMaster
+  all stop at the last member's data end, so nothing had ever looked
+  at them. They were found by asking a question with no suspect in it
+  — *does the file length equal the last member's end?* — of every
+  specimen at once, and the answer was no for all ten archives and yes
+  for all sixteen compressed files;
+- the block size was found by printing block lengths next to fork
+  lengths;
+- the alignment was found by noticing that byte 1 of a shape-3 header
+  is always odd, which this note had recorded as a tally and not as a
+  cause.
+
+**The same session's earlier list was built the way lists are built,
+from what somebody had already thought of.** The previous entry records
+exactly this failure once already (*the symbol that was only there
+once*: a suspect named from the list of differences instead of from the
+file). It happened again, and the fix is the same: **census a property
+over every specimen rather than reason about one.** Three of today's
+four candidate differences came out of a loop over 34 files that
+printed one number each.
+
+**Why "refused" was nearly the wrong measurement.** Three rungs in a
+row were refused and each refusal said only *something among what is
+left*. The rung that finally discriminated is the one that was
+ACCEPTED and still wrong — `no-word` extracts both members and one of
+them differs — and that is the result which turns "the alignment
+matters" into "the alignment matters to the block that starts at an
+odd offset". **A pass/fail instrument would have called that rung a
+pass.** `--adjudicate` compares fork by fork, and the day before it had
+printed *"agrees with us on every fork"* for a volume with no forks on
+it at all; the guard added then is what makes today's four IDENTICAL
+lines mean something.
+
+**What it cost, so the next one can be priced.** Ten boots at about six
+minutes. Five were spent climbing one rung at a time from below, which
+is the wrong direction when several differences are fatal at once:
+every one of them said "still refused". The five that were worth
+anything were **leave-one-out from a rung that passed** — drop one
+thing from a working archive and see what breaks. Reaching a working
+archive first, by fixing everything found and then subtracting, is the
+cheaper order and it is what the next ladder should do.
+
+**What this does NOT change.** `src/fmt_now.c` reads every real
+archive and every synthetic one, and none of this is a decoding
+question: the three requirements are things a WRITER must do, and this
+project's only writer is a test tool. The thirteen archives keep their
+old shape on purpose — `unar` refuses a bit-coded region that leaves
+it fewer than four spare bits, and a 16-bit flush does not always
+leave more, so aligning them would cost the oracle that grades them
+(TESTING.md). What is fixed is that the difference is now measured,
+named and gated behind a flag instead of being an unexamined property
+of the generator.

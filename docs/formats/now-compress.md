@@ -30,7 +30,7 @@ it, and `tools/vmac/nowcompress.py --expand` or `--adjudicate` hands
 the result back to Now Compress itself. That is what settled byte 2 of
 a shape-3 header, the two bytes an LZSS stream opens with, the byte in
 front of a Huffman stream and the offset delta, on 2026-09-21. What is
-left is named under *What this note does NOT describe*, and it is five
+left is named under *What this note does NOT describe*, and it is six
 short bullets.
 
 ## A compressed file is an archive of one entry
@@ -59,6 +59,17 @@ followed by one **Huffman-coded** block of 16,232, in a single fork.
 So "which coder does Now Compress use" has no answer: it is a
 per-block choice.
 
+**The size is a requirement and not a habit.** Every block in every
+file here holds 32,768 bytes of its fork except the last of a fork,
+which holds the rest — and an archive written here whose 3,000-byte
+member was cut into two 1,500-byte blocks instead is **refused** by Now
+Compress with everything else about it right, while the same archive
+with one block per member is read byte-exact (2026-09-21; TESTING.md,
+*The rungs*). So a decoder takes how much a block produces from the
+fork rather than from the stream — which `src/fmt_now.c` and
+`tools/derive_now.py` do not, and which is why both read a file the
+format's own program will not open.
+
 **Where each block begins is the data area's own table**, described
 once under *The archive layer*, *A member's blocks*: a u32 saying where
 the first block starts, which is also where the table ends, then one
@@ -74,6 +85,63 @@ block's offset on all six. This note called those four bytes "zero in
 every specimen" until 2026-09-21; two of them are this field, and
 FORMATS.md's "zero padding" for the 1993 archive is the same number
 read off the engine.
+
+### Every block is an even number of bytes
+
+**Every one of the 479 blocks Now Compress has written here is an even
+number of bytes long, and so begins at an even offset.** The two
+corpus archives, the sixteen bare forks and every archive and
+compressed file the harness has made: 0 odd lengths, 0 odd starts.
+That is not a coincidence of the data, because the two mechanisms that
+produce it are visible in the two kinds of block:
+
+- **a bit-coded region is flushed to a 16-bit boundary**, which is
+  exactly what its flush count says — `(16 − b) mod 16` at byte 0, 3 or
+  4 is `(−numbits) mod 16` and can be nothing else, and the `b = 0`
+  case is "the register was empty", which 20 blocks of the 1995 archive
+  have;
+- **a byte-oriented block gets a padding byte** counted in its
+  record. The only five padded blocks anywhere here are the LZSS-only
+  ones whose stream came out odd — streams of 1,733, 707, 123, 123 and
+  123 bytes, modes `0x1f` and `0x10` — and no shape-2 or shape-3 block
+  is padded at all, because its flush has already done the job.
+
+**What the rule is worth is one line of a shape-3 header.** Bytes 0..1
+give the length of the coded region that follows and byte 1 alone gives
+where the stream starts, and the two agree only while that region is
+even — which is the whole of why byte 1 is odd on all 449 shape-3
+blocks, a fact this note carried as an observation without a cause
+(*The header*). A block whose region is odd says two different things
+about where its own stream is; `src/fmt_now.c` rounds the length up and
+`tools/derive_now.py` believes byte 1, and no file the encoder wrote can
+tell them apart.
+
+**`tools/synth_now.py` wrote such blocks until 2026-09-21** — 25 of the
+37 shape-3 blocks in the thirteen archives, three of them in the
+committed fixture — by taking the length before word-aligning rather
+than by flushing to a word. `build_archive(word=True)` is that fixed,
+and the thirteen archives keep the old padding on purpose: `unar` needs a
+whole spare byte left over (`synth_now.py`, `BitW`), which a 16-bit
+flush does not always leave, and an archive the oracle cannot read
+grades nothing.
+
+**What an unaligned block costs is one block, silently.** An archive
+written here with every other difference fixed but this one is
+extracted rather than refused, and the member whose block starts at an
+**odd offset** comes out wrong while the member whose block starts even
+comes out byte-exact — one each, measured 2026-09-21 (TESTING.md, *The
+rungs*). So what the alignment buys is a block that begins on a word
+boundary, which is what an odd block's padding byte gives the block
+AFTER it, and the reading that the decoder takes its stream in 16-bit
+words is a **hypothesis** with two observations under it.
+
+**An odd block is not by itself fatal**, which is worth saying because
+it is the obvious reading of a rule like this: the compressed file
+`build_fork` wrote from `in-half.bin` has a single Huffman-only block
+of **10,099** bytes, and Decompress read it back to 16,000 bytes
+byte-exact once its fork-boundary record was added (*A member's
+blocks*). That block is the first in its file, so it starts where the
+table ends and the table's length is even.
 
 **Where this one came from**, because a note kept for a licence had
 better say which facts are whose: the `padding` field was read out of
@@ -286,7 +354,13 @@ archives are almost entirely written in.
   aligned up
   to an even byte IS `byte 1 − 85` whenever the length is even, which
   it is in every block seen. That is also why byte 1 is always odd,
-  which was a puzzle while the field was read as two;
+  which was a puzzle while the field was read as two — and since
+  2026-09-21 it has a cause rather than a tally behind it: the length
+  is even because the region is flushed to a 16-bit boundary, as every
+  region in this format is (*Every block is an even number of bytes*).
+  **The two accounts are one account on any file the encoder wrote, and
+  two on a file whose region is odd**, which is a shape only this
+  project has ever written;
 - **byte 2 is read by nothing, it is not a property of the block, and
   it is not noise.** Four things are measured about it, all
   2026-09-21:
@@ -584,6 +658,43 @@ is one of these with a count of 1**, so this section describes both.
   archives two folders and two loose files: `Alpha` (+82 = 2),
   `a1.bin`, `a2.bin`, `Beta` (+82 = 1), `b1.bin`, then the root files,
   which is the 1995 archive's shape too;
+
+- **an ARCHIVE ends with sixteen more bytes, and it is not optional**:
+
+  | at | field |
+  |---|---|
+  | +0 | u32 **where the last member's data area ended** — i.e. the file's length less 16 |
+  | +4 | u16 `0x0001` |
+  | +6 | u32 a Mac date |
+  | +10 | u16 `0x0001` |
+  | +12 | u32 **the sum of the twelve bytes before it** — the checksum idiom a fifth time |
+
+  **10 archives of 10 here**, and **no compressed file has one**: the
+  sixteen bytes are what tells the two apart at the end of the file the
+  way the entry count tells them apart at the start. Both `0x0001`
+  fields are `0x0001` in all ten, 5.0.1's and 6.0's alike, and the date
+  is the archive's own.
+
+  **Without it Now Compress refuses the archive outright**, measured
+  2026-09-21 by adding it and nothing else to a rung that had been
+  refused, and by removing it again from one that had been read
+  (TESTING.md, *The rungs*). It is the one field of the format that
+  nothing here had even noticed was there: `unc_sniff`,
+  `src/fmt_now.c`, `tools/derive_now.py` and XADMaster all walk an
+  archive by its entry count and stop at the last member's end, so
+  sixteen bytes past that point are sixteen bytes nobody reads.
+
+  **Three things together are what an archive needs**, and the other
+  two are already above — **32,768-byte blocks** (*A fork is a sequence
+  of blocks*) and **word alignment** (*Every block is an even number of
+  bytes*). A leave-one-out from the first archive this project wrote
+  that Now Compress read says each is load-bearing and says how:
+  without the trailer or with a member cut into 1,500-byte blocks the
+  extractor **refuses the file**; without the alignment it extracts,
+  and the block that starts at an odd offset comes out **wrong** while
+  the one starting even comes out byte-exact. The four bytes before a
+  block table's checksum are the one difference that turned out NOT to
+  matter;
 ### A member's blocks
 
 A member's data area is its block table and then its blocks, and **the
@@ -945,6 +1056,14 @@ than one that draws it.
   Which of the jobs the record could be doing it is doing — counting
   the records, giving the stream its start, gating a block from
   producing bytes before a stream has been started — is not.
+- **What the two `0x0001` words of an archive's trailer are, and what
+  its date is of.** That the sixteen bytes are required is measured
+  from both sides (*The archive layer*), and so are the u32 that
+  repeats the last member's data end and the byte sum that closes it.
+  The two `0x0001`s are `0x0001` in all ten archives here, 5.0.1's and
+  6.0's alike, so nothing in reach varies them — the instrument that
+  would is a third encoder or an archive with a shape none of these
+  has.
 - **Whether there are more shapes.** Four coders and "stored" account
   for every block in every specimen here, and that is five
   arrangements — which is what PROGRESS.md has called Now Compress's

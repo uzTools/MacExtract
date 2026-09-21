@@ -2639,38 +2639,75 @@ minutes, and the whole set is the better part of an hour.
   checksum are left **zero**, their mode words are `0x0001`/`0x0021`
   where Now Compress writes `0x0010`/`0x003f`, their block records
   carry a padding of 2, their LZSS streams open `00 00` where the
-  encoder writes `00 03`, and **no member's table carries the
+  encoder writes `00 03`, **no member's table carries the
   fork-boundary record every member of every file the encoder wrote
   has** — including the two-fork member, where that record is what
   separates the forks (docs/formats/now-compress.md, *A member's
-  blocks*). `build_fork`, which writes a compressed FILE for Now
-  Compress's own Decompress to read, gained one on 2026-09-21 because
-  without it Decompress refuses the file.
+  blocks*) — and **their blocks are not word-aligned**, where all 479
+  of the encoder's are (*Every block is an even number of bytes*).
+  `build_fork`, which writes a compressed FILE for Now
+  Compress's own Decompress to read, gained the record on 2026-09-21
+  because without it Decompress refuses the file.
 
-  **And on 2026-09-21 the encoder was finally asked about the ARCHIVES,
-  which answered less than expected.** `synth_now.py --ladder` builds
-  four rungs and a control, and `tools/mutate_now.py`'s `splice` puts
-  each one in a real self-extractor's data fork so Now Compress's own
-  decoder reads it (`nowcompress.py --adjudicate`). The **control**
-  works: `probe`'s 3,830-byte archive inside `tree`'s self-extractor,
-  which was built around an archive half that size, extracts all four
-  members byte-exact — so the route is sound and a different length is
-  not the obstacle. The rung with the header's setting, window and byte
-  sum, every block trailer, the fork-boundary record AND the `0x0100`
-  archive mode vocabulary is **still refused**: the extractor launches,
-  asks for a destination folder, and writes nothing. So at least one of
-  what is left is fatal, and it is not among the four that were fixed.
-  **Not the LZSS prefix**, which was the first guess and does not apply:
-  every block in that archive is shape 3 or Huffman-only, and only
-  shapes 1 and 2 carry the `00 03`. What remains is the entry record's
-  own fields, the single byte in front of a Huffman-only stream, and
-  the shape-3 blocks as `synth_now.py` encodes them — which parse,
-  checksum and decode here, and are still this project's encoder rather
-  than Now Software's. The engine reads them because it checks none — which is exactly the point: **a suite of inputs
-  made by one program can only test what that program happens to get
-  right**. `derive_now.py` reads 4 of `synth-now-mixed.now`'s 15 blocks
-  and every block of every archive Now Compress itself wrote
-  (docs/formats/now-compress.md).
+  The alignment is the one of those that costs a READING rather than
+  only fidelity: a shape-3 header states where its stream starts twice
+  over, and the two agree only while the coded region is an even number
+  of bytes. 25 of the 37 shape-3 blocks these archives hold are odd, so
+  they say two different things about their own stream — `src/fmt_now.c`
+  rounds up and `derive_now.py` believes byte 1. They stay that way on
+  purpose: `unar` refuses a region that leaves it fewer than four spare
+  bits (measured 2026-08-15) and a 16-bit flush does not always leave
+  more, and these thirteen archives exist to be graded by `unar`.
+  `--ladder`'s `word` rung is the aligned build, and it is what Now
+  Compress is asked about.
+
+### The rungs
+
+  **On 2026-09-21 the encoder was finally asked about the ARCHIVES, and
+  it answered.** `synth_now.py --ladder` builds a control and a rung
+  per difference, and `tools/mutate_now.py`'s `splice` puts each one in
+  a real self-extractor's data fork so Now Compress's own decoder reads
+  it (`nowcompress.py --adjudicate`, one boot each, about six minutes).
+  The **control** is `probe`'s 3,830-byte archive inside `tree`'s
+  self-extractor, which was built around an archive half that size: it
+  extracts all four members byte-exact, so the route is sound and a
+  different length is not the obstacle.
+
+  | rung | over `arch` | Now Compress |
+  |---|---|---|
+  | `control` | a real archive | all four members byte-exact |
+  | `arch` | the header's setting, window and byte sum, every block trailer, the fork-boundary record and the `0x0100` mode vocabulary | **refused** |
+  | `word` | + every block word-aligned | **refused** |
+  | `chunk` | + 32,768-byte blocks | **refused** |
+  | `tail` | + the last record's mode and padding before a table's checksum | **refused** |
+  | `trail` | + **the 16-byte archive trailer** | **both members byte-exact** |
+  | `only` | `arch` + the trailer alone | **refused** |
+  | `no-tail` | `trail` less the table tail | **both members byte-exact** — the minimal set |
+  | `no-word` | `trail` less the alignment and the tail | extracts; the member whose block starts at an **odd offset** comes out wrong, the one starting even byte-exact |
+  | `no-chunk` | `trail` less the block size and the tail | **refused** |
+
+  **Three things are needed and the fourth is not**: the archive
+  trailer, 32,768-byte blocks and word alignment, in
+  docs/formats/now-compress.md under *The archive layer*, *A fork is a
+  sequence of blocks* and *Every block is an even number of bytes*.
+  Two of the three are refusals and the third is a silently wrong
+  block, which is the more useful half of the result: an archive can
+  be ACCEPTED and still be wrong, so the fork comparison is what
+  grades a rung and the verdict line is not.
+
+  **The first guess was the LZSS prefix and it was wrong on its face**:
+  every block in these archives is shape 3 or Huffman-only, and only
+  shapes 1 and 2 carry the `00 03`. Working from the list of
+  differences rather than from the file is what put it there; the
+  trailer, the block size and the alignment all came out of diffing an
+  archive the encoder wrote against one this project wrote, field by
+  field, and **none of the three was on any list**. The engine reads
+  these archives because it checks none of it — which is exactly the
+  point: **a suite of inputs made by one program can only test what
+  that program happens to get right**. `derive_now.py` reads 4 of
+  `synth-now-mixed.now`'s 15 blocks — three odd regions, each of which
+  stops its member's walk — and every block of every archive Now
+  Compress itself wrote (docs/formats/now-compress.md).
 
 - **A rule fitted to the blocks in front of it.** `derive_now.py` read
   where a shape-3 stream starts out of the block header, and that rule

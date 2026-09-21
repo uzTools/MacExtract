@@ -46,19 +46,26 @@ def u32(v):
 
 class BitW:
     """MSB-first bit writer. The format counts its stream in bits: the
-    decoder derives the count from the payload's length less `16 -
-    endbits`, so `endbits` is how much of the last 16-bit word is real,
-    and the padding it describes can be at most 15 bits.
+    decoder derives the count from the region's length less `(16 -
+    endbits) mod 16`, so `endbits` is how much of the encoder's last
+    16-bit word was real, and the padding it describes is 0..15 bits.
 
-    A whole spare BYTE is always left, which is more than the alignment
-    needs. XADMaster's bit reader tracks its position as
-    `currbyte*8 - (numbits & 7)` and raises end-of-buffer as soon as
-    `currbyte` passes the end, so it needs the padding to cover whatever
-    its register is still holding — at most 7 bits. Below that it can
-    refuse a stream this decoder reads perfectly well, which is a
-    property of the oracle rather than of the format, but a generated
-    archive it cannot read grades nothing. Measured 2026-08-15: with
-    3 or fewer spare bits `unar` fails a block it otherwise decodes.
+    **`finish(word=True)` is what the encoder does**: flush to a 16-bit
+    boundary, which is `(-numbits) mod 16` and nothing else. Every
+    region Now Compress wrote here ends on one, which is why every one
+    of its 479 blocks is an even number of bytes long
+    (docs/formats/now-compress.md, *Every block is an even number of
+    bytes*).
+
+    The default pads 8..15 bits instead, leaving `unar` a whole spare
+    BYTE to hold its register in. XADMaster's bit reader tracks its
+    position as `currbyte*8 - (numbits & 7)` and raises end-of-buffer as
+    soon as `currbyte` passes the end, so it needs the padding to cover
+    whatever its register is still holding — at most 7 bits. Measured
+    2026-08-15: with 3 or fewer spare bits `unar` fails a block this
+    decoder reads perfectly well. That is a property of the oracle
+    rather than of the format, but an archive it cannot read grades
+    nothing, and the thirteen archives here exist to be graded.
     """
 
     def __init__(self):
@@ -68,8 +75,9 @@ class BitW:
         for i in range(n - 1, -1, -1):
             self.bits.append((value >> i) & 1)
 
-    def finish(self):
-        pad = (-len(self.bits)) % 8 + 8       # 8..15 bits, i.e. endbits 1..8
+    def finish(self, word=False):
+        pad = ((-len(self.bits)) % 16 if word
+               else (-len(self.bits)) % 8 + 8)
         bits = self.bits + [0] * pad
         out = bytearray()
         for i in range(0, len(bits), 8):
@@ -77,8 +85,10 @@ class BitW:
             for k in range(8):
                 b = (b << 1) | bits[i + k]
             out.append(b)
-        # numbits = len(out)*8 - (16 - endbits), which must be len(self.bits).
-        return bytes(out), 16 - pad
+        # numbits = len(out)*8 - ((16 - endbits) mod 16), which must be
+        # len(self.bits); endbits 0 is "no flush at all", which 20 blocks
+        # of the 1995 archive have and which only `word` can produce.
+        return bytes(out), (16 - pad) & 15
 
 
 def _huffman_lengths(freq):
@@ -132,7 +142,7 @@ def canonical(lengths):
     return codes
 
 
-def encode_huffman(data, numvalues, maxlen=15, lengths=None):
+def encode_huffman(data, numvalues, maxlen=15, lengths=None, word=False):
     """One UnpackHuffman region: endbits, the code as 4-bit lengths in
     symbol order, then a count of symbols whose length gains 16 and
     their indices, then word alignment from the region's start, then the
@@ -174,7 +184,7 @@ def encode_huffman(data, numvalues, maxlen=15, lengths=None):
     for byte in data:
         code, ln = codes[byte]
         body.put(code, ln)
-    payload, endbits = body.finish()
+    payload, endbits = body.finish(word)
 
     out = bytearray([endbits]) + table
     if len(out) & 1:
@@ -283,7 +293,7 @@ def _selector(value, bases, extras):
     raise ValueError("no selector for %d" % value)
 
 
-def encode_newlzss(data, history=b""):
+def encode_newlzss(data, history=b"", word=False):
     """UnpackNewLZSS: a 0x15a-byte table of code lengths, itself Huffman
     coded over 20 values, then one stream of literals and matches under
     two codes. Matches may reach back into the 32 KB history."""
@@ -313,7 +323,7 @@ def encode_newlzss(data, history=b""):
         header[sym] = ln
     for sym, ln in offlen.items():
         header[0x122 + sym] = ln + 2
-    huffheader = encode_huffman(bytes(header), 20)
+    huffheader = encode_huffman(bytes(header), 20, word=word)
 
     maincodes = canonical(mainlen)
     offcodes = canonical(offlen)
@@ -333,14 +343,22 @@ def encode_newlzss(data, history=b""):
             body.put(code, ln)
             if OFF_EXTRA[osel]:
                 body.put(oextra, OFF_EXTRA[osel])
-    payload, endbits = body.finish()
+    payload, endbits = body.finish(word)
 
+    # Bytes 0..1 are 0x2F59 plus the length of the region that follows,
+    # and byte 1 alone is that region's END as a byte offset plus 85.
+    # The two agree only while the region is an even number of bytes —
+    # which is why byte 1 is odd on all 449 shape-3 blocks the encoder
+    # wrote here, and why the region is flushed to a 16-bit boundary
+    # rather than word-aligned afterwards: an alignment byte added after
+    # the length was taken is a byte the length does not count, and the
+    # block then says two different things about where its stream is.
     out = bytearray(u16((len(huffheader) + 0x2F59) & 0xFFFF))
     out.append(0)
     out.append(endbits)
     out += huffheader
     if len(out) & 1:                         # WordAlign from the block start
-        out.append(0)
+        out.append(0)                        # — see above: NOT the encoder's
     return bytes(out + payload)
 
 
@@ -351,7 +369,7 @@ def encode_newlzss(data, history=b""):
 SHAPES = ("stored", "lzss", "huffman", "hufflzss", "newlzss")
 
 
-def encode_block(shape, piece, history):
+def encode_block(shape, piece, history, word=False):
     """(flags, payload). The flag bits are the reference's:
     0x20 Huffman, 0x20|0x1f Huffman then LZSS, 0x40 new LZSS,
     0x1f alone LZSS, nothing at all stored."""
@@ -360,17 +378,18 @@ def encode_block(shape, piece, history):
     if shape == "lzss":
         return 0x0001, encode_lzss(piece)
     if shape == "huffman":
-        return 0x0020, encode_huffman(piece, 0x100)
+        return 0x0020, encode_huffman(piece, 0x100, word=word)
     if shape == "huffdeep":                  # same shape, deeper code
-        return 0x0020, encode_huffman(piece, 0x100, maxlen=25)
+        return 0x0020, encode_huffman(piece, 0x100, maxlen=25, word=word)
     if shape == "hufflzss":
-        return 0x0021, encode_huffman(encode_lzss(piece), 0x100)
+        return 0x0021, encode_huffman(encode_lzss(piece), 0x100, word=word)
     if shape == "newlzss":
-        return 0x0040, encode_newlzss(piece, history)
+        return 0x0040, encode_newlzss(piece, history, word=word)
     raise ValueError(shape)
 
 
-def encode_stream(stream, shapes, chunk, dictcache, use_dict, restarts=()):
+def encode_stream(stream, shapes, chunk, dictcache, use_dict, restarts=(),
+                  word=False):
     """Cut a file's fork bytes into blocks, tracking what the decoder's
     32 KB window will hold at each one. A block that STARTS a stream gets
     the dictionary cache rather than the running window, and is also the
@@ -387,7 +406,7 @@ def encode_stream(stream, shapes, chunk, dictcache, use_dict, restarts=()):
         if isfirst:
             window = dictnow
         history = window if (use_dict or not isfirst) else b""
-        blocks.append(encode_block(shape, piece, history))
+        blocks.append(encode_block(shape, piece, history, word))
         window = (window + piece)[-HISTORY:]
         if isfirst:
             dictnow = window
@@ -403,7 +422,7 @@ LEAD_WORDS = bytes.fromhex("0d4c0037")
 
 
 def build_table(blocks, table_off, delta=0, padding=0, restarts=(),
-                restart_words=None):
+                restart_words=None, align=False, tailwords=False):
     """A file's block table: the first data offset, one 8-byte record per
     block, four bytes, and a 32-bit sum of everything before them. Every
     offset stored is the real one less `delta`, which is how the archives
@@ -422,6 +441,17 @@ def build_table(blocks, table_off, delta=0, padding=0, restarts=(),
     compressed files handed to Now Compress itself carry 5.0.1's pair,
     because that is what the specimen it accepted had in it and nothing
     here has measured the difference.
+
+    **`align` makes `padding` do what it does in the encoder's files**:
+    a block whose stream is an odd number of bytes gets one more
+    padding byte than asked for. Every block Now Compress wrote here is
+    an even number of bytes long and starts at an even offset — 479 of
+    479 — and the only five that carry a padding byte are byte-oriented
+    LZSS blocks whose stream came out odd. A bit-coded region needs no
+    such byte because its flush count already takes it to a 16-bit
+    boundary (`BitW.finish`), which is why no shape-2 or shape-3 block
+    anywhere here is padded (docs/formats/now-compress.md, *Every block
+    is an even number of bytes*).
     """
     nrecs = len(blocks) + len(restarts)
     first = table_off + 4 + 8 * nrecs + 8
@@ -433,13 +463,22 @@ def build_table(blocks, table_off, delta=0, padding=0, restarts=(),
             rec = (restart_words or (u16(0) + u16(0))) + u32(last - delta)
             recs += rec
             checksum += sum(rec)
-        nxt = last + len(payload) + padding + 4
-        rec = u16(flags) + u16(padding) + u32(nxt - delta)
+        pad = padding + (((len(payload) + padding) & 1) if align else 0)
+        nxt = last + len(payload) + pad + 4
+        rec = u16(flags) + u16(pad) + u32(nxt - delta)
         recs += rec
         checksum += sum(rec)
-        blob += payload + bytes(padding + 4)
+        blob += payload + bytes(pad + 4)
         last = nxt
-    tail = bytes(4)
+    # The four bytes between the last record and the table's checksum
+    # are a mode and a padding count in a record's own shape, and they
+    # are **never zero in any of the 160 members here**: on 158 they are
+    # the last record's own pair, and the two that differ are the two
+    # whose last record is the fork boundary, where the value is instead
+    # the file-wide constant its head record carries. This file wrote
+    # four zeros there from M12 until 2026-09-21
+    # (docs/formats/now-compress.md, *A member's blocks*).
+    tail = bytes(recs[-8:-4]) if (tailwords and recs) else bytes(4)
     checksum += sum(tail)
     table = u32(first - delta) + recs + tail + u32(checksum & 0xFFFFFFFF)
     assert len(table) == 4 + 8 * nrecs + 8
@@ -480,7 +519,8 @@ def file(name, data=b"", rsrc=b"", shapes=("stored",), chunk=4096,
             "creator": creator}
 
 
-def build_archive(tree, delta=0, lead=False, sums=False, arch=False):
+def build_archive(tree, delta=0, lead=False, sums=False, arch=False,
+                  word=False, tailwords=False, trailer=False):
     """Lay out a whole archive: 24-byte header, the entry records in
     depth-first order, then one block table and its blocks per file.
 
@@ -507,6 +547,25 @@ def build_archive(tree, delta=0, lead=False, sums=False, arch=False):
       Compress wrote carries and none of these has: `0140` shape 3,
       `0120` Huffman only, `0100` stored, against the `0040`/`0020`
       written here (docs/formats/now-compress.md, *The archive layer*).
+    - `trailer` appends the **16 bytes every archive Now Compress wrote
+      here ends with and no archive this project writes has**: the last
+      member's data end as a u32, a 1, a date, another 1, and the sum
+      of those twelve bytes. 10 archives of 10, and no compressed FILE
+      has one (docs/formats/now-compress.md, *The archive layer*).
+    - `tailwords` fills the four bytes between a table's last record and
+      its checksum with that record's mode and padding, which is what
+      the encoder leaves there in 160 members of 160; this file wrote
+      four zeros.
+    - `word` flushes every bit-coded region to a 16-bit boundary and
+      pads every odd block, which is what makes all 479 of the
+      encoder's blocks even. The part of it that is not merely tidy is
+      the **shape-3 header**: bytes 0..1 hold the length of the coded
+      region, byte 1 alone holds where the stream starts, and the two
+      only agree while that region is even. Without `word`, 25 of the
+      37 shape-3 blocks this file writes say two different things about
+      where their own stream is — which the format's own encoder cannot
+      do, and which `tools/derive_now.py` reads one way and
+      `src/fmt_now.c` the other.
     """
     flat = []
 
@@ -529,19 +588,22 @@ def build_archive(tree, delta=0, lead=False, sums=False, arch=False):
             restarts = tuple(sorted(set(restarts) | {0}))
         blocks, dictcache = encode_stream(stream, node["shapes"],
                                           node["chunk"], dictcache,
-                                          node["use_dict"], restarts)
+                                          node["use_dict"], restarts, word)
         d = at if delta == "relative" else delta
         if arch:
             blocks = [(flags | 0x0100, payload) for flags, payload in blocks]
         table, blob = build_table(blocks, at, d, node["padding"], restarts,
-                                  LEAD_WORDS if lead else None)
+                                  LEAD_WORDS if lead else None, word,
+                                  tailwords)
         if sums:
             blob = bytearray(blob)
             end = 0
             for _flags, payload in blocks:
-                end += len(payload) + node["padding"]
+                pad = node["padding"] + (
+                    ((len(payload) + node["padding"]) & 1) if word else 0)
+                end += len(payload) + pad
                 blob[end:end + 4] = u32(sum(blob[end - len(payload)
-                                                 - node["padding"]:end]))
+                                                 - pad:end]))
                 end += 4
             blob = bytes(blob)
         streams[i] = (at, table + blob)
@@ -566,6 +628,11 @@ def build_archive(tree, delta=0, lead=False, sums=False, arch=False):
         out[20:24] = u32(sum(out[:20]))
     for i in sorted(streams):
         out += streams[i][1]
+    if trailer:
+        tail = bytearray(u32(len(out)) + u16(1)
+                         + u32(0x9E7C0E10) + u16(1))
+        tail += u32(sum(tail))
+        out += tail
     return bytes(out)
 
 
@@ -804,7 +871,7 @@ ARCHIVE_TYPE, ARCHIVE_CREATOR = "NCar", "NCdc"
 
 
 def ladder(outdir, control=None):
-    """The four rungs that ask **Now Compress** about the archives this
+    """The rungs that ask **Now Compress** about the archives this
     project writes, plus a control it must accept.
 
     Graded by `unar` since M12 and never put to the encoder: the
@@ -822,26 +889,56 @@ def ladder(outdir, control=None):
     | `ladder-lead` | plus the fork-boundary record every member the encoder wrote has |
     | `ladder-both` | plus both |
     | `ladder-arch` | plus the `0x0100` bit every archive mode word carries |
+    | `ladder-word` | plus the 16-bit flush that makes every one of the encoder's blocks even, and a shape-3 header whose two accounts of its stream agree |
+    | `ladder-chunk` | plus **32,768-byte blocks**, which is every block the encoder has ever written here bar a fork's last |
+    | `ladder-tail` | plus the mode and padding the encoder leaves in the four bytes before a block table's checksum, where this writes zeros |
+    | `ladder-trail` | plus the 16-byte trailer every archive the encoder wrote here ends with — **and Now Compress reads this one** |
+    | `ladder-only` | `ladder-arch` plus that trailer and nothing else: the rung that says whether the three in between are needed at all |
+    | `ladder-no-tail`, `ladder-no-word`, `ladder-no-chunk` | `ladder-trail` less one thing each — a leave-one-out from the rung that passed, because `ladder-only` says the trailer alone is not enough |
 
     `tools/vmac/nowcompress.py --dearchive` puts them on one volume and
     gives the lot to QuickFiler's **Dearchive**.
     """
     from arcmac import macbinary
     os.makedirs(outdir, exist_ok=True)
-    tree = [file("alpha", data=sample_data()["text"][:3000],
-                 shapes=("newlzss",), chunk=1500),
-            file("beta", data=sample_data()["runs"][:2000],
-                 shapes=("huffman",), chunk=2000)]
-    rungs = [("plain", dict(lead=False, sums=False)),
-             ("sums", dict(lead=False, sums=True)),
-             ("lead", dict(lead=True, sums=False)),
-             ("both", dict(lead=True, sums=True)),
-             ("arch", dict(lead=True, sums=True, arch=True))]
+
+    def sample(chunk_a, chunk_b):
+        return [file("alpha", data=sample_data()["text"][:3000],
+                     shapes=("newlzss",), chunk=chunk_a),
+                file("beta", data=sample_data()["runs"][:2000],
+                     shapes=("huffman",), chunk=chunk_b)]
+
+    tree = sample(1500, 2000)
+    # A block holds 32,768 bytes of a fork and the last one holds the
+    # rest — 479 of 479 here. The tree above cuts one member's 3,000
+    # bytes into two blocks of 1,500, which the encoder cannot do, and a
+    # decoder that takes "how much does this block produce" from the
+    # fork rather than from the stream cannot read.
+    big = sample(0x8000, 0x8000)
+    rungs = [("plain", tree, dict(lead=False, sums=False)),
+             ("sums", tree, dict(lead=False, sums=True)),
+             ("lead", tree, dict(lead=True, sums=False)),
+             ("both", tree, dict(lead=True, sums=True)),
+             ("arch", tree, dict(lead=True, sums=True, arch=True)),
+             ("word", tree, dict(lead=True, sums=True, arch=True, word=True)),
+             ("chunk", big, dict(lead=True, sums=True, arch=True, word=True)),
+             ("tail", big, dict(lead=True, sums=True, arch=True, word=True,
+                                tailwords=True)),
+             ("trail", big, dict(lead=True, sums=True, arch=True, word=True,
+                                 tailwords=True, trailer=True)),
+             ("only", tree, dict(lead=True, sums=True, arch=True,
+                                 trailer=True)),
+             ("no-tail", big, dict(lead=True, sums=True, arch=True,
+                                   word=True, trailer=True)),
+             ("no-word", big, dict(lead=True, sums=True, arch=True,
+                                   trailer=True)),
+             ("no-chunk", tree, dict(lead=True, sums=True, arch=True,
+                                     word=True, trailer=True))]
     made = []
     if control:
         made.append(("control", open(control, "rb").read()))
-    for name, kw in rungs:
-        made.append((name, build_archive(tree, 0, **kw)))
+    for name, nodes, kw in rungs:
+        made.append((name, build_archive(nodes, 0, **kw)))
     out = []
     for name, blob in made:
         mb = os.path.join(outdir, "ladder-%s.bin" % name)
