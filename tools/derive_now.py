@@ -23,8 +23,8 @@ a decoder written from nothing but the bytes.
 
 **All four coders, the block structure, and the container a compressed
 file and an archive share** — a compressed file is an archive of one
-entry. Every specimen the harness has made reads byte for byte — 85
-archive blocks of 85, 101 specimens across twelve cases — and so does
+entry. Every specimen the harness has made reads byte for byte — 139
+archive blocks of 139, 144 specimens across sixteen cases — and so does
 every block of both corpus archives: the 1993 `Expand Now`
 self-extractor, 3 of 3, and the 1995 `SyntheticReferences2.0`, 306 of
 306, whose 9.9 MB fork alone is 304 blocks of the coder an archive

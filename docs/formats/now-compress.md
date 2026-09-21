@@ -361,9 +361,9 @@ archives are almost entirely written in.
   **The two accounts are one account on any file the encoder wrote, and
   two on a file whose region is odd**, which is a shape only this
   project has ever written;
-- **byte 2 is read by nothing, it is not a property of the block, and
-  it is not noise.** Four things are measured about it, all
-  2026-09-21:
+- **byte 2 is read by nothing, it is computed from its own block, and
+  what it tracks is how much of that block could be matched.** Six
+  things are measured about it, all 2026-09-21:
 
   **Nothing reads it.** All 38 shape-3 blocks of an archive the harness
   made were given a byte 2 of `0x5a`, each block's checksum recomputed,
@@ -372,23 +372,21 @@ archives are almost entirely written in.
   `nowcompress.py --adjudicate`). The only implementation of this
   format that exists does not look at it.
 
-  **And it is not a function of the block.** `--case tokdist` archives
-  forty near-identical members; their byte 2 runs 191, 224, 240, 248,
-  252, 254, 255 and then 255 for the remaining thirty-two — each step
-  halving the distance to 255. A per-block quantity cannot do that.
-  Which is also why every per-block hypothesis failed on all 391 it
-  was put to: not the header size, the table sizes, the code depths,
-  the flush
-  counts, the ratio of a block's stream to its output, the token
-  counts, the literal-to-match mix, the longest or mean match distance,
-  the window's fill, nor a copy of any byte at a fixed offset in this
-  block or the one before it, nor of the first or last byte of its own
-  stream — that last pair added 2026-09-21 over the **390** of those
-  blocks the encoder itself wrote, 0 of 390 for the first byte and
-  noise for the last. Whatever the encoder keeps there it
-  carries ACROSS blocks: the 1995 archive's 306 sit in `0x60..0x7f`
-  with occasional excursions, the harness's in `0xe0..0xff`, the 1993
-  archive's are 19 and 239, and nine are zero.
+  **And it is none of the obvious properties of the block.** Every
+  per-block hypothesis was put to 391 of them and failed: not the
+  header size, the table sizes, the code depths, the flush counts, the
+  ratio of a block's stream to its output, the token counts, the
+  literal-to-match mix, the longest or mean match distance, the
+  window's fill, nor a copy of any byte at a fixed offset in this block
+  or the one before it, nor of the first or last byte of its own stream
+  — that last pair added 2026-09-21 over the **390** the encoder itself
+  wrote, 0 of 390 for the first byte and noise for the last. **This
+  note read that as "not a property of the block at all" until the same
+  day**, which was an inference and not a measurement; what it is a
+  property OF is below. The per-file ranges are the shape of the
+  puzzle: the 1995 archive's 306 sit in `0x60..0x7f` with occasional
+  excursions, the harness's in `0xe0..0xff`, the 1993 archive's are 19
+  and 239, and nine are zero.
 
   **And it is computed, not left over.** The `probe` case was run a
   second time seven hours after the first, same inputs, same volume,
@@ -423,19 +421,41 @@ archives are almost entirely written in.
   changes this field by nothing, and the 1995 archive's correlation is
   a property of that file (BLOCKERS.md, *Withdrawn claims*);
 
-  **What it does do is rise and collapse, by an exact law in one
-  direction.** `--case tokdist`'s forty near-identical members, none of
-  which can be matched against another, walk it 191, 224, 240, 248,
-  252, 254, 255 and then 255 for the remaining thirty-two — and every
-  one of those steps is `b2 + ((255 − b2) >> 1) + 1`, capped at 255.
-  **101 transitions across the files here take that step exactly**, and
-  31 more are already at the cap. In the other direction there is no
-  such law: `--case reach`'s five near-identical members, which CAN be
-  matched against one another, go 224 and then 0, 0, 0, 0, and `wpos`
-  does the same. A value that climbs toward a maximum when nothing
-  matches and drops to zero when everything does is a **hypothesis**
-  about what the encoder is keeping — how its matching is going — and
-  nothing here has measured it;
+  **What it does track is how much of its block could be MATCHED**,
+  measured 2026-09-21 by the one probe nobody had built: a ladder of
+  members varying matchability and nothing else. `--case match`
+  archives eleven members of 2,000 bytes — 1,000 de Bruijn bytes, whose
+  substrings are unique, and 1,000 copies of a letter of their own —
+  where the only difference is how many of those 1,000 bytes are copied
+  from the first member. Byte 2 comes out **255, 255, 127, 127, 127,
+  127, 63, 63, 31, 31, 8** as the shared prefix goes 0 to 1,000: it
+  falls, monotonically, in a staircase of values almost all of the form
+  `2^k - 1`.
+
+  **And it is computed from its own block, not carried between them.**
+  `--case matchv` walks the same ladder **up and back down** — 21
+  members, the shared prefix rising to 600 and falling to 0 again — and
+  byte 2 retraces exactly: 255, 127, 127, 63, 63, 63, 31, 31, 15, 15,
+  8, and then those eleven values in reverse, every mirrored pair
+  equal. A value carried between blocks and updated by half the
+  distance to a target would lag; there is no hysteresis anywhere in
+  the V, and not one of the ten transitions on the way back up takes
+  the halving step. That withdraws the reading this note gave the field
+  until then (BLOCKERS.md, *Withdrawn claims*): `--case tokdist`'s
+  forty members walk 191, 224, 240, 248, 252, 254, 255, every step is
+  `b2 + ((255 - b2) >> 1) + 1`, and 101 transitions across the files
+  here take that step exactly — but tokdist's members are ordered by a
+  parameter that only ever increases, so the law describes that ladder
+  and not a state machine. **Every case that had ever produced the
+  climb varied its parameter one way.**
+
+  **Which quantity it is remains unmeasured**, and the two ladders say
+  what it is not. It is not the literal count, the literal-to-output
+  ratio, the token counts, the table sizes, the longest match distance
+  or the block's own length: none of those is a function of byte 2 over
+  the 175 shape-3 blocks tokenised here, `matchv`'s `n09` and `n11`
+  agree on every one of them and differ in byte 2, and `n00` and `n01`
+  have identical code tables and differ by half;
 - **byte 3 is the outer stream's end flush**: after the last token come
   `(16 − byte 3) mod 16` bits, and then the four-byte trailer;
 - **from byte 4 comes a Huffman-coded region of the length byte 0..1
@@ -1029,15 +1049,17 @@ than one that draws it.
   decoder, and now the encoder itself. **This is where it stops**, and
   saying so is the point of the entry.
 - **What a shape-3 block's header byte 2 IS.** That nothing reads it,
-  that it is not a property of the block, that it is computed rather
-  than left over, and that two builds four years apart compute it
-  identically are all measured, and so now is that it does **not**
-  depend on where in the window its block starts (*The header*). What
-  is left is a shape rather than a formula: it rises toward 255 by
-  `((255 − b2) >> 1) + 1` over members nothing can match, and drops to
-  0 over members that match each other. Which quantity the encoder is
-  keeping there is not measured, and the reading that it is about
-  matching is a hypothesis.
+  that it is computed rather than left over, that two builds four years
+  apart compute it identically, that it does **not** depend on where in
+  the window its block starts, that it IS a property of its own block
+  rather than a value carried between them, and that it falls
+  monotonically as more of the block can be matched are all measured
+  (*The header*). What is missing is the quantity: six things a block
+  has are ruled out by name over 175 tokenised blocks, and the two
+  members that agree on every one of them still differ in this byte, so
+  it is something the ENCODER knows and the block does not spell —
+  a search depth, a hash occupancy, a cost estimate. The instrument
+  that would settle it is the encoder's own code.
 - **Which rule the format's decoder corrects a block table by.** Seven
   mutations say what it does (*The archive layer*): a constant wrong in
   every record is corrected either way round, one wrong record is not,

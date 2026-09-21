@@ -421,6 +421,8 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --case reach   # how far back a match may point
     tools/vmac/nowcompress.py --case forks   # members with a RESOURCE fork
     tools/vmac/nowcompress.py --case wpos    # block starts at each quarter of the window
+    tools/vmac/nowcompress.py --case match   # members varying only in how much MATCHES
+    tools/vmac/nowcompress.py --case matchv  # the same ladder up and back down
     tools/vmac/nowcompress.py --setup6    # fetch Now Utilities 6.0, build its boot image
     tools/vmac/nowcompress.py --case6 faster # the same case, the OTHER encoder
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
@@ -438,6 +440,15 @@ instead, which is `hcopy -m` and carries both forks. Specimens land in
 `$UNC_VMAC_HOME/specimens/now/<case>/` with the inputs beside them and a
 screenshot per step; `tools/run_now.py` picks them up if they are there and
 skips them with a message if they are not.
+
+**A case that varies one property of a COMPRESSED block has to keep the
+content compressible.** The first build of `--case match` used a keystream,
+which is incompressible: the encoder stored seven of its eleven members, and a
+stored block has no header and so no byte 2 to read. The rebuild gives each
+member 1,000 de Bruijn bytes — unique substrings, so nothing matches them —
+followed by 1,000 copies of a letter of its own, which compresses, matches
+nothing earlier, and costs every member the same (DECISIONS.md 2026-09-21,
+*the ladder that was walked back down*).
 
 Three things to know before re-running it:
 

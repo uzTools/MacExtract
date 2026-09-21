@@ -525,6 +525,100 @@ def window_files():
     return out
 
 
+MATCH_SHARE = (0, 32, 64, 125, 250, 375, 500, 625, 750, 1000)
+
+
+def match_files():
+    """Members that differ in **how much of them can be matched** and in
+    nothing else.
+
+    Byte 2 of a shape-3 header is not a property of its block — eleven
+    hypotheses failed on 391 blocks, and where in the window the block
+    starts was disproved on 2026-09-21. What is left is a shape: it
+    climbs toward 255 by `((255 - b2) >> 1) + 1` over `tokdist`'s forty
+    members, none of which can be matched against another, and it is 0
+    over `reach`'s five near-identical ones and over all eight of
+    `wpos`'s. Rising when nothing matches and collapsing when everything
+    does is a reading about the encoder's matching, and **every case
+    that produced it varied matchability by accident** — as a
+    consequence of what the case was really for.
+
+    This varies it on purpose and holds the rest. Eleven members of
+    **2,000 bytes each**, 22,000 bytes in all, so the first is still
+    inside the 32,768-byte window when the last is compressed. Each is
+    1,000 bytes off the **de Bruijn** stream, whose substrings are
+    unique and so match nothing, followed by 1,000 copies of one letter
+    — a letter of its own, so that tail matches nothing earlier either
+    while costing every member the same to code:
+
+        n00.bin   the pool
+        n01..n10  the same shape, with the first 0, 32, 64, 125, 250,
+                  375, 500, 625, 750 or 1,000 bytes of the de Bruijn
+                  half copied from the pool instead
+
+    Same length, same alphabet, same self-similarity, same block count
+    — one apiece — and the same distance back to what they match. The
+    only thing that moves is how many of a member's bytes the encoder
+    can code as a match.
+
+    **The content has to be compressible or the question is not asked.**
+    The first build of this case used a keystream, which is
+    incompressible: seven of the eleven members came out as STORED
+    blocks, which have no header and so no byte 2, and the ladder had
+    four rungs instead of eleven (2026-09-21).
+    """
+    seq = debruijn()
+    out, at = {}, 0
+    segs = []
+    for i in range(len(MATCH_SHARE) + 1):
+        segs.append(seq[at:at + 1000])
+        at += 1000
+    for i, seg in enumerate(segs):
+        share = 0 if i == 0 else MATCH_SHARE[i - 1]
+        half = segs[0][:share] + seg[share:]
+        out["n%02d.bin" % i] = half + bytes([0x41 + i]) * 1000
+    return out
+
+
+MATCHV_SHARE = (0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600,
+                540, 480, 420, 360, 300, 240, 180, 120, 60, 0)
+
+
+def matchv_files():
+    """The same ladder as `match_files`, walked **up and back down** —
+    the experiment that tells a running state from a per-block quantity.
+
+    `match` establishes that byte 2 of a shape-3 header falls as a
+    member's matchable fraction rises: 255, 255, 127, 127, 127, 127,
+    63, 63, 31, 31, 8 over eleven members that differ in nothing else.
+    What that cannot say is WHICH of the two it is, because matchability
+    only ever increased in it: a value computed from the block and a
+    value carried between blocks both fall down a monotone ladder.
+
+    Twenty-one members of **1,200 bytes** — 600 de Bruijn bytes and 600
+    copies of a letter of their own, 25,200 bytes in all so the first is
+    still inside the window at the last — whose shared prefix rises from
+    0 to 600 and then falls back to 0. The two readings predict
+    different second halves:
+
+    - **per-block**: byte 2 retraces the first half, symmetrically;
+    - **carried**: it climbs back by `b2 + ((255 - b2) >> 1) + 1`, the
+      law 101 transitions already take (docs/formats/now-compress.md,
+      *The header*), and lags the ladder.
+    """
+    seq = debruijn()
+    out, at = {}, 0
+    segs = []
+    for _ in range(len(MATCHV_SHARE)):
+        segs.append(seq[at:at + 600])
+        at += 600
+    for i, seg in enumerate(segs):
+        share = MATCHV_SHARE[i]
+        out["n%02d.bin" % i] = (segs[0][:share] + seg[share:]
+                                + bytes([0x41 + i]) * 600)
+    return out
+
+
 def fork_files():
     """Files with a RESOURCE fork, which nothing this harness made has had.
 
@@ -662,6 +756,12 @@ CASES = {
     # Block starts placed at each quarter of the 64 KB window, twice
     # over, with the content held constant: `window_files` says why.
     "wpos": (window_files, "archive", "smaller"),
+    # Members varying only in how much of them can be MATCHED, which is
+    # the dimension every byte-2 case so far varied by accident.
+    "match": (match_files, "archive", "smaller"),
+    # The same ladder up and back down, which says whether byte 2 is
+    # computed from the block or carried between blocks.
+    "matchv": (matchv_files, "archive", "smaller"),
     "probe": (lambda: {"runa.bin": b"A" * 4000,
                        "two.bin": alphabet(6000, b"AB", (1, 1)),
                        "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),

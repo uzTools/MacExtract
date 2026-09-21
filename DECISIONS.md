@@ -234,6 +234,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
 - 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
 - 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
+- 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
 
 ---
 
@@ -14293,6 +14294,12 @@ near-identical members, which DO match each other, go 224 and then 0,
 matches, drops to zero when everything does. That is a hypothesis about
 what the encoder keeps there, labelled as one.
 
+**Half of it survived the same day and half did not.** Byte 2 does fall
+as more of a block can be matched — a ladder that varies only that
+measures it — but it is computed from its own block, and the climb is a
+description of a ladder ordered one way rather than of anything the
+encoder keeps: *2026-09-21, (the ladder that was walked back down)*.
+
 ### The archives this project writes are refused, and not for the reasons listed
 
 **Thirteen archives graded by `unar` since M12, never once put to Now
@@ -14418,3 +14425,54 @@ leave more, so aligning them would cost the oracle that grades them
 (TESTING.md). What is fixed is that the difference is now measured,
 named and gated behind a flag instead of being an unexamined property
 of the generator.
+
+## 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
+
+**Claim.** A shape-3 header's byte 2 **falls as more of its block can
+be matched** and is computed **from that block**, not carried between
+blocks. Two archives measure it: eleven members varying matchability
+and nothing else give 255, 255, 127, 127, 127, 127, 63, 63, 31, 31, 8;
+twenty-one walking the same ladder up and back down give those values
+and then their mirror, **every mirrored pair equal**
+(`nowcompress.py --case match`, `--case matchv`).
+
+**What it withdraws.** Until today the note read the field as a running
+state: it climbs toward 255 by `b2 + ((255 − b2) >> 1) + 1` when
+nothing matches — 101 transitions take that step exactly — and collapses
+to 0 when everything does. A carried value updated by half the distance
+to a target **lags**, and there is no hysteresis anywhere in the V; not
+one of the ten transitions on the way back up takes the step. So the
+101 that do are a description of the ladders they were read off, all of
+which are ordered by a parameter that only ever increases.
+
+**That is the second time in one day the same mistake was found in the
+same field.** The morning's withdrawal was a window correlation read
+off one file whose blocks alternate by construction (*the quarter that
+changed nothing*), and the sentence written then was: *"a correlation
+you only ever observe is one you have not tested"*. The climb is the
+same thing with an equation attached — and an exact law over 101
+transitions looks like far better evidence than a correlation over 43
+blocks, which is precisely why it survived longer. **The number of
+confirmations is not the question; whether anything ever varied the
+input the other way is.** Walking a ladder backwards costs one run.
+
+**What it cost, so the next one can be priced.** Three emulator runs.
+**One of them was wasted on the content**, and the lesson is worth more
+than the run: the first `match` case used a keystream, which is
+incompressible, so seven of its eleven members came out as **stored**
+blocks — which have no header and therefore no byte 2 — and the ladder
+had four rungs instead of eleven. A probe that varies one property of a
+compressed block has to make sure the encoder compresses it at all.
+The second build uses de Bruijn bytes for the unmatchable half and a
+run of one letter for the rest, which is compressible, unmatchable
+across members, and the same cost to code in every member.
+
+**What is still open, and it is narrower than it was.** Six quantities
+a block has are now ruled out by name over 175 tokenised blocks — the
+literal count, the literal-to-output ratio, the token counts, the table
+sizes, the longest match distance and the block's length. `matchv`'s
+`n09` and `n11` agree on **every one of them**, block length included,
+and differ in byte 2; `n00` and `n01` have identical code tables and
+differ by half. So it is something the encoder knows and the block does
+not spell — a search depth, a hash occupancy, a cost estimate — and no
+instrument outside the encoder's own code is left to ask.
