@@ -229,6 +229,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
 - 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
 - 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
+- 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
 
 ---
 
@@ -14052,3 +14053,66 @@ it. What it does track is where the encoder is in its window — 41 of
 the 43 values above 200 in the 1995 archive are in blocks that start in
 the low half of its 64 KB window — which is a correlation and not a
 formula, and is filed as one.
+
+## 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
+
+**A field nothing reads still has a birthplace, and the Huffman table
+names it.** `00 03` opens every shape-1 LZSS stream; four experiments
+had established only what it is NOT — not read by this reader, not by
+XADMaster, and not by Now Compress's own Decompress, which returns a
+file with `5a a5` there byte for byte. Every one of those is a
+statement about decoders, and the question left over — what the encoder
+thinks it is writing — has no decoder in it at all.
+
+**So the question went to the encoder's other half.** A shape-2 block
+codes the shape-1 stream byte by byte, prefix included, and its
+128-byte table is built from that stream's frequencies. If the prefix
+is emitted by the LZSS coder, the Huffman pass counts it; if it is
+prepended afterwards by whatever writes the block, the table is built
+without it — and a symbol absent from the rest of the stream would have
+no code, so the prefix could not be written at all. The two readings
+differ only where a prefix byte occurs nowhere else, so the corpus was
+searched for that block rather than reasoned about. `huffgap/g09.bin`
+is it: **4,517 symbols, `0x03` occurring exactly once — as the prefix —
+and carrying a 12-bit code**, with 116 symbols coded and 116 occurring,
+the correspondence exact both ways and no other symbol coded-but-unused
+anywhere in the fourteen shape-2 blocks here. **The prefix is inside
+the byte stream the Huffman pass counts.**
+
+It does not separate the LZSS coder emitting those two bytes from a
+wrapper that adds them and bumps the two counts before coding — both
+put them upstream of the Huffman stage, and that is the whole of what
+is claimed. What it retires is the class of readings where the prefix
+is added AFTER that stage: a block header, a framing marker, alignment,
+anything wrapped around the coded output. And it says nothing about
+what 3 means, which it was not built to.
+
+**And the constant is narrower than "every specimen" sounded.** Walking
+every block of every specimen and both corpus archives finds **20** that
+carry this prefix at all: nineteen are their member's first block, one
+is `stored/mixed.bin`'s second, and **neither corpus archive contributes
+one**, because the 1993 and 1995 archives are shape 3 and Huffman-only
+throughout and shape 3 has no prefix. All 20 came out of one installed
+program. So the field is constant over content, over both settings,
+over two shapes, over one block at index 1 — and over **one version of
+Now Compress**.
+
+**Which is the dimension to vary next, and it is not only this field's.**
+Now Utilities shipped as 3.0.2, 4.0.2, 5.0.1, 6.0.x and 6.5/6.7.x, and
+all of them are downloadable; the harness installs 5.0.1 alone. A value
+written by an encoder, ignored by every decoder and constant within a
+version is the shape of a version or parameter stamp, and a second
+encoder is the only instrument that could show it moving. The same
+second encoder answers a question worth more than this one: **what
+selects the leading record.** 5.0.1 writes one in front of every table
+and refuses a file that lacks one, while the 1993 archive and the 1995
+archive's first member have none (*six copies of one file*) — so either
+the record is conditional on something in the file, or it is conditional
+on the program, and one install of 4.0.2 distinguishes those.
+
+**The lesson is the one this repository keeps relearning under a new
+name.** "Nothing reads it" is a claim about readers, and four readers
+agreeing is still four readers. The evidence that moved the question
+was not a better decoder experiment; it was noticing that the encoder
+had already written its answer down somewhere else — in a frequency
+table it had to build before it could write the byte at all.

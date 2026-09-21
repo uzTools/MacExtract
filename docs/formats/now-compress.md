@@ -118,11 +118,10 @@ block has no flag bits and no matches at all, and its stream starts
 
 ## Shape 1 — byte-aligned LZSS
 
-The block opens with the two bytes **`00 03`**, constant in every
-specimen and in every shape that carries an LZSS layer, and then the
-stream. (In a bare fork that puts the first token at byte **164**,
-which is what this note recorded before it knew what the two bytes in
-front of it were.)
+The block opens with the two bytes **`00 03`**, and then the stream.
+(In a bare fork that puts the first token at byte **164**, which is
+what this note recorded before it knew what the two bytes in front of
+it were.)
 
 **They mean nothing to any reader, including the encoder's own.**
 Changed to `5a a5` in a shape-1 block and to two other symbols of the
@@ -131,8 +130,31 @@ recomputed, so a reader that looks cannot tell — both files came back
 out of Now Compress's own **Decompress** byte for byte
 (`tools/mutate_now.py --prefix`, `tools/vmac/nowcompress.py --expand`,
 2026-09-21, with an unmutated third file as the control). So a decoder
-skips two bytes here and nothing more, which is what this one and
-`src/fmt_now.c` both do.
+skips two bytes here and nothing more, which is what this one,
+`src/fmt_now.c` and `XADNowCompressHandle.m`'s `sourcestart+2` all do.
+
+**But the encoder's Huffman pass counts them**, which is what says
+where in the encoder they are written. A shape-2 block codes the
+shape-1 stream byte by byte, and its table codes **exactly** the
+symbols that stream uses: on `huffgap/g09.bin` 116 symbols carry a
+code and 116 occur, with symbol `0x03` occurring **once in 4,517 — as
+the prefix and nowhere else** — and carrying a 12-bit code all the
+same. So the two bytes are **inside the byte stream the Huffman pass
+counts**, not prepended to its output afterwards — a prefix added after
+that pass could not have been coded at all. (What this does not
+separate is the LZSS coder emitting them from a wrapper that adds them
+and bumps the two counts before coding; both put them upstream of the
+Huffman stage, which is the part that narrows the question.)
+DECISIONS.md 2026-09-21, *the symbol that was only there once*.
+
+**And what they are constant across is narrower than it looks.** The
+corpus has **20 blocks** that carry this prefix, all from one installed
+encoder, **Now Compress 5.0.1**; nineteen are the first block of their
+member (`tools/derive_now.py --prefixes`), and neither corpus archive contributes one — the 1993 and 1995
+archives use shape 3 and Huffman-only throughout. Shape 3 has no prefix
+of any kind. So "constant in every specimen" is constant over content,
+over both Faster/Smaller settings, over shapes 1 and 2, and over one
+block at index 1 — and over exactly one version of the program.
 
 - a **flag byte**, then eight tokens, bits **most significant first**;
 - a **1** is a literal: one byte, copied out;
@@ -756,8 +778,16 @@ than one that draws it.
 
 - **What `00 03` MEANS**, the two bytes every LZSS stream opens with.
   What they are worth is settled — nothing reads them, including the
-  encoder's own decoder (*Shape 1*) — but not what the encoder thinks
-  it is writing.
+  encoder's own decoder — and so is which stage of the encoder writes
+  them: one upstream of the Huffman pass, which counts them (*Shape
+  1*). What the number 3 is, is not. The one dimension no experiment here has varied is **the
+  encoder**: every observation of this field comes from Now Compress
+  5.0.1, and Now Utilities shipped as 3.0.2, 4.0.2, 5.0.1, 6.0.x and
+  6.5/6.7.x. A field that is constant within a version and read by
+  nobody is what a version or parameter stamp looks like, and a second
+  encoder is the only instrument left that could say so — it would also
+  settle *Why the leading record is required*, which 5.0.1 writes and
+  the 1993 archive lacks (OPEN_ITEMS.md).
 - **What a shape-3 block's header byte 2 IS.** That nothing reads it,
   that it is not a property of the block, and that it is computed
   rather than left over are all measured (*The header*), as is what it

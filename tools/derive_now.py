@@ -18,6 +18,8 @@ a decoder written from nothing but the bytes.
     tools/derive_now.py ARCHIVE...            walk a .sea or .now
     tools/derive_now.py --expect DIR ARCHIVE  grade it against DIR, a
                                               directory of extracted forks
+    tools/derive_now.py --prefixes [ARCHIVE]  census the two bytes an
+                                              LZSS stream opens with
 
 **All four coders, the block structure, and the container a compressed
 file and an archive share** — a compressed file is an archive of one
@@ -253,6 +255,49 @@ def decode_huffonly(d, at, nout=None, endbit=None):
 
 LZSS_PREFIX = (0x00, 0x03)      # what the encoder writes there
 _warned = {}                    # anything else is reported once
+
+
+def shape2_symbols(d, at, nout, hist=b""):
+    """Every SYMBOL a shape-2 block codes, prefix included, and its
+    table's code lengths — which is what says where in the encoder the
+    prefix is written.
+
+    A shape-2 table is built from the frequencies of the shape-1 stream
+    it codes. If the prefix is upstream of that pass, those two bytes
+    are in the count; if it were prepended to the CODED output, they are
+    not, and a prefix byte occurring nowhere else in the stream would
+    have no code at all — so it could not be written. `--prefixes` looks
+    for that block (docs/formats/now-compress.md, *Shape 1*).
+    """
+    t = table_at(d, at)
+    lens, esc = table_lengths(d, at)
+    r = Bits(d, table_stream_at(at - 1, at, len(esc)) * 8)
+    syms, out, base = bytearray(), bytearray(hist), len(hist)
+    syms.append(r.sym(t))
+    syms.append(r.sym(t))                       # the prefix
+    while len(out) - base < nout:
+        flags = r.sym(t)
+        syms.append(flags)
+        for bit in range(8):
+            if len(out) - base >= nout:
+                break
+            if flags & (0x80 >> bit):
+                s = r.sym(t)
+                syms.append(s)
+                out.append(s)
+                continue
+            b0, b1 = r.sym(t), r.sym(t)
+            syms += bytes((b0, b1))
+            ln, dist = (b0 & 7) + 2, ((b0 >> 3) << 8) | b1
+            if ln == 2:
+                e = r.sym(t)
+                syms.append(e)
+                ln = e + 2
+            for _ in range(ln):
+                if len(out) - base >= nout:
+                    break
+                out.append(out[len(out) - dist])
+    return bytes(syms), bytes(out[base:]), lens
 
 
 def decode_shape2(d, at, nout=None, hist=b"", endbit=None):
@@ -959,6 +1004,104 @@ def report_archive(path, d, want):
     return ok, tot
 
 
+def prefixes(paths=()):
+    """The census behind two claims about `00 03`, re-run rather than
+    recalled: **which blocks carry it**, and **who counted it**.
+
+    Every block of every specimen and of any archive given, reported as
+    (shape, index within its member, the two bytes). Only shapes 1 and 2
+    have a prefix — shape 3's stream starts where its header says, with
+    no such bytes — so the count of blocks that carry one is much
+    smaller than the count of blocks, and how many of them are a
+    member's FIRST block is the thing to read off it.
+
+    Then, per shape-2 block, the symbols its table codes against the
+    symbols its stream uses. Exact correspondence with a prefix byte
+    occurring only once says the encoder's Huffman pass counted the
+    prefix, so the LZSS coder emitted it.
+
+    **What it cannot see**: anything about a version of Now Compress
+    that is not installed. Every specimen here comes from 5.0.1, and a
+    constant over one encoder is a fact about that encoder.
+    """
+    rows, tables = [], []
+
+    def blocks_of(src, name, d, recs, kind_of, wants=None, done=0):
+        for i, ((off, mode, pad), (nxt, _, _)) in enumerate(zip(recs, recs[1:])):
+            kind, skip = kind_of(mode)
+            pre = None
+            if kind == "shape1":
+                pre = (d[off], d[off + 1])
+            elif kind == "shape2":
+                try:
+                    if wants is None:
+                        # no expected bytes, so no way to know where the
+                        # stream ends: read the prefix and stop there.
+                        at = off + 1
+                        t = table_at(d, at)
+                        _, esc = table_lengths(d, at)
+                        r = Bits(d, table_stream_at(at - 1, at, len(esc)) * 8)
+                        pre = (r.sym(t), r.sym(t))
+                    else:
+                        n = min(BLOCK, len(wants) - done)
+                        syms, _, lens = shape2_symbols(
+                            d, off + 1, n, wants[:done] if done else b"")
+                        pre = (syms[0], syms[1])
+                        tables.append((src, name, i, syms, lens))
+                except Exception as e:
+                    pre = ("unread", str(e))
+            if pre is not None:
+                rows.append((src, name, i, kind, pre))
+            if wants:
+                done += min(BLOCK, len(wants) - done)
+
+    for mode in sorted(os.listdir(SPECIMENS)) if os.path.isdir(SPECIMENS) else []:
+        mdir = os.path.join(SPECIMENS, mode)
+        if not os.path.isdir(mdir):
+            continue
+        for f in sorted(os.listdir(mdir)):
+            if not f.endswith(".dat"):
+                continue
+            d = open(os.path.join(mdir, f), "rb").read()
+            inp = os.path.join(mdir, "in-" + f[:-4])
+            recs = records(d)
+            if recs and os.path.exists(inp):
+                blocks_of(mode, f[:-4], d, recs, block_kind,
+                          open(inp, "rb").read())
+    for path in paths:
+        d = open(path, "rb").read()
+        src = os.path.basename(path)
+        for name, dlen, rlen, st, en in members(d) or []:
+            recs = member_blocks(d, st, en)
+            if recs:
+                blocks_of(src, name, d, recs, archive_kind)
+
+    for src, name, i, kind, pre in rows:
+        print("  %-28s %-14s block %-3d %-7s %s"
+              % (src, name[:14], i, kind, pre))
+    seen = {}
+    for src, name, i, kind, pre in rows:
+        if not isinstance(pre[0], str):
+            n, f = seen.get(pre, (0, 0))
+            seen[pre] = (n + 1, f + (i == 0))
+    print("derive-now: %d block(s) carry an LZSS prefix; "
+          % len(rows)
+          + ", ".join("%d are %s, %d of them a member's first"
+                      % (n, v, f) for v, (n, f) in sorted(seen.items())))
+    for src, name, i, syms, lens in tables:
+        used = {s: syms.count(s) for s in set(syms)}
+        coded = {s for s in range(256) if lens[s]}
+        once = sorted(s for s in used if used[s] == 1)
+        print("  %-28s %-14s block %-3d %5d symbols; %d coded, %d used%s"
+              % (src, name[:14], i, len(syms), len(coded), len(used),
+                 "" if coded == set(used) else "  MISMATCH"))
+        for s in once:
+            if syms.count(s) == 1 and s in (syms[0], syms[1]):
+                print("        symbol %#04x occurs once — as the prefix — "
+                      "and is coded in %d bits" % (s, lens[s]))
+    return len(rows)
+
+
 def archives(paths, expect=None):
     """The archive pass: the harness's own `.sea` files, and any given
     on the command line.
@@ -996,7 +1139,12 @@ def main():
     ap.add_argument("archives", nargs="*", help="a .sea or .now to walk")
     ap.add_argument("--expect", metavar="DIR",
                     help="a directory of extracted forks to grade against")
+    ap.add_argument("--prefixes", action="store_true",
+                    help="census the two bytes every LZSS stream opens with")
     args = ap.parse_args()
+    if args.prefixes:
+        prefixes(args.archives)
+        return 0
     if args.archives:
         print("derive-now: archives")
         ok, tot = archives(args.archives, args.expect)
