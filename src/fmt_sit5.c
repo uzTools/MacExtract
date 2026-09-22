@@ -310,6 +310,13 @@ int unc_sit5_extract(UncCtx *c)
         }
         flags2 = unc_get_u16be(hdr);
         unc_entry_clear(&e);
+        /* This format's names are UTF-8 where StuffIt classic's are
+         * MacRoman. Source: reference/deark/modules/stuffit.c, which
+         * sets `d->input_encoding` to UTF-8 for `file_fmt==2` and to
+         * MacRoman otherwise; `lsar -nr` unforced reads them the same
+         * way. The engine converts nothing — it says which it is and
+         * the host decides (macextract.h, name_utf8). */
+        e.name_utf8    = 1;
         e.type         = unc_get_u32be(hdr + 4);
         e.creator      = unc_get_u32be(hdr + 8);
         e.finder_flags = unc_get_u16be(hdr + 12);

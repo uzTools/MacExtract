@@ -258,8 +258,9 @@ typedef struct UncAlloc {
 typedef enum UncFork { UNC_FORK_DATA = 0, UNC_FORK_RSRC = 1 } UncFork;
 
 typedef struct UncEntryInfo {
-    /* Filename: a '/'-separated path of raw name components (MacRoman
-     * for Mac formats), NUL-terminated. '/' is ALWAYS a path separator:
+    /* Filename: a '/'-separated path of raw name components, in the
+     * ARCHIVE's own encoding (MacRoman for most Mac formats; see
+     * name_utf8), NUL-terminated. '/' is ALWAYS a path separator:
      * in Mac-format components the engine applies the classic
      * reversible '/'->':' swap (':' cannot occur in an HFS name, '/'
      * can), so a raw '/' never leaks into a component. zip/tar paths
@@ -279,6 +280,15 @@ typedef struct UncEntryInfo {
     uint32_t comp_rsrc_size;
 
     uint8_t  is_dir;        /* directory entry (no forks)     */
+    /* The name bytes above are UTF-8, not the 8-bit encoding the rest
+     * of that format's family uses. StuffIt 5 is the one format here
+     * that sets it: its names are UTF-8 where StuffIt classic's are
+     * MacRoman (reference/deark/modules/stuffit.c picks the encoding
+     * on `file_fmt`, and `lsar -nr` unforced agrees). The engine does
+     * not convert — a host decides what its filesystem wants; the
+     * Linux CLI passes UTF-8 through and the Macintosh shell folds it
+     * into MacRoman, which is what an HFS name holds. */
+    uint8_t  name_utf8;
     uint8_t  method_data;   /* format-specific method id (informational) */
     uint8_t  method_rsrc;
     /* Set when the archive's name for this entry was LONGER than

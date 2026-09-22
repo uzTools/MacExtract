@@ -2362,8 +2362,9 @@ escape that arrives at 2 GB*) why the two Zip64 refusals differ.
 **Measured 2026-08-27.** A name meets two caps on its way to disk, and
 neither is negotiable. The ENGINE carries it in `UncEntryInfo.name`,
 `UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
-**298 bytes on the 68000 target** (corrected 2026-09-03: it was stated
-as 296, which is where the last field starts) and travels on a 4 KB
+**300 bytes on the 68000 target** (corrected 2026-09-03 from 296, which
+is where a field started rather than where the struct ended, and again
+2026-09-22 when `name_utf8` was added) and travels on a 4 KB
 call stack; the
 FILESYSTEM takes what `pathconf` says, which is 255 bytes per component
 and 4,096 per path on ext4 and less on others. Until this date the first
@@ -2380,6 +2381,27 @@ under a name that was not the archive's.
 | AppleSingle real name | 255 | was 64 until 2026-08-27, which cut a name no other format would have |
 | `pathconf(_PC_NAME_MAX)` | 255 on ext4 | one component: 255 MacRoman bytes are up to 765 of UTF-8 |
 | `pathconf(_PC_PATH_MAX)` | 4,096 on ext4 | `outdir/name`, and the only one of these that refuses |
+
+### A name in the wrong encoding is not a name
+
+**A StuffIt 5 name is UTF-8** and every other Mac format here states one
+in MacRoman (`UncEntryInfo.name_utf8`, set by `fmt_sit5.c` alone). The
+engine converts nothing; each front end does what its own filesystem
+wants:
+
+| | |
+|---|---|
+| Linux CLI | passes the bytes through, as it already did for zip and tar. `Cool Tools ƒ` instead of `Cool Tools ∆í`, and 35 names across 4 of the corpus's 31 StuffIt 5 fixtures change with it |
+| Macintosh shell | folds UTF-8 into MacRoman, once, on the whole path, before anything else reads the name (`Utf8ToMacRoman`), because an HFS name is MacRoman bytes. A code point MacRoman has no byte for becomes `_` and the end-of-run report says so per component; the 31-character cut then acts on the FOLDED name, which is how 16 `é` — 32 bytes of UTF-8, 16 of MacRoman — stop being cut at all |
+
+**What the fold costs a 1 MB Mac Plus: 896 B**, measured on the object
+before and after — 580 B of `CODE` (the fold inlined into `sink_begin`,
+`.text` 1,114 → 1,596 B, plus one report line's function) and 316 B of
+the A5 world (MacRoman's 128-entry high half, `.rodata` 11 → 268 B, and
+that line's string). Stack `sink_begin` 400 → 412 B, `ExtractOne`
+unchanged; peak heap and engine ticks 0, since the fold is in place and
+does not run at all unless the format set the flag. DECISIONS.md
+2026-09-22, *a name an HFS volume can hold*.
 
 **The notice is text, so it is not the filesystem's to constrain.** It
 carries the archive's own name IN FULL wherever the format still holds
@@ -2758,6 +2780,12 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 **What a 1 MB Mac Plus actually leaves the engine is 648,100 B** — measured
 **2026-08-31** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
 `FreeMem()` at **668,580 B** and the shell's reserve at a flat 20 KB.
+
+**Arithmetic, not measured: 647,204 B since 2026-09-22.** The UTF-8 fold
+(*Name limits*) put 580 B into `CODE` and 316 B into the A5 world, and the
+formula above — itself measured — takes both off the budget one for one. No
+Mac has been asked since; the tiers' pass/fail figures stand on the runs
+recorded below, which predate it.
 
 **It has moved three times in two days, every time by re-pricing a constant
 nobody had measured, and none of them cost a millisecond:** 566,164 →

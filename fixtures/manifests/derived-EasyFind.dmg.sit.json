@@ -13,7 +13,7 @@
  ],
  "fixture": "derived-EasyFind.dmg.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "99a499c0d2d23d3a5a999d74ededcf5b2d49b5c9fcdfa238aa6239a000e607db",
  "size": 210029
 }

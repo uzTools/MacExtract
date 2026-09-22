@@ -136,6 +136,12 @@ long for HFS (31 characters max) and what it became, an entry that could not
 be extracted and what was wrong with it. Save as Text files the whole thing as
 a document. A run with nothing to report just says so, as before.
 
+StuffIt 5 stores its names as Unicode, so they can say things a Mac cannot
+write. Accented and symbol names come out as themselves -- a folder called
+"Cool Tools f" with the florin sign is still that -- and anything with no
+Mac spelling at all, Japanese for instance, gets an underscore per character
+and a line in that list saying so.
+
 Two files whose names are the same for the first 31 characters do not
 overwrite each other -- the second gets a ~1 after its name, before the .txt
 or whatever the suffix is. Two FOLDERS in that position are kept apart the

@@ -38,9 +38,13 @@ second oracle with tools/build_macunpack.sh. TESTING.md, "A second
 oracle"; DECISIONS.md, 2026-08-08.
 
 Oracle invocation (see TESTING.md for rationale):
-    lsar -j -nr -e macintosh <fixture>          # format + metadata
-    unar -nr -D -f -q -k hidden -e macintosh -o <tmp> <fixture>
+    lsar -j -nr -e <enc> <fixture>              # format + metadata
+    unar -nr -D -f -q -k hidden -e <enc> -o <tmp> <fixture>
     macunpack -f <fixture>                      # second oracle, in <tmp>
+
+<enc> is "macintosh" for every format but StuffIt 5, whose names are
+the archive's own UTF-8 (ORACLE_ENCODING, below); the manifest records
+the invocation it was built with.
 """
 import argparse, hashlib, json, os, plistlib, re, struct, subprocess, sys
 import tempfile, unicodedata
@@ -143,7 +147,24 @@ def parse_oracle_failures(text):
     return failures, trailer
 
 
-def lsar_metadata(fixture):
+# --- which encoding to ask the oracle for --------------------------
+# `-e macintosh` forces MacRoman on every format, which is right for
+# every Mac archive family here EXCEPT StuffIt 5: its names are the
+# archive's own UTF-8, and forcing MacRoman makes the oracle produce
+# exactly the mojibake this engine used to produce, so the manifests
+# recorded it as ground truth and the diff suite was byte-exact against
+# a shared mistake (DECISIONS.md 2026-09-22, *the name that was never a
+# fork*). Keyed on lsar's own format name, because that is what a
+# fixture is identified by before anything else is read.
+ORACLE_ENCODING = {"StuffIt 5": "utf-8"}
+ORACLE_ENCODING_DEFAULT = "macintosh"
+
+
+def oracle_encoding(fmt):
+    return ORACLE_ENCODING.get(fmt, ORACLE_ENCODING_DEFAULT)
+
+
+def lsar_metadata(fixture, encoding=ORACLE_ENCODING_DEFAULT):
     """Return (formatname, {name: (type, creator)}, {name: [method, ...]},
     archive comment or None).
 
@@ -156,7 +177,7 @@ def lsar_metadata(fixture):
     """
     try:
         out = subprocess.run(
-            ["lsar", "-j", "-nr", "-e", "macintosh", fixture],
+            ["lsar", "-j", "-nr", "-e", encoding, fixture],
             capture_output=True, timeout=60)
         # strict=False: lsar's JSON may contain raw control characters
         # (e.g. binary XADNextSolidEntry keys in PackIt archives).
@@ -723,6 +744,13 @@ def adjudicate_from_macbinary(fixture_path, fmt, entries):
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
     fmt, meta, methods, comment = lsar_metadata(fixture_path)
+    # The format decides the encoding and the encoding decides the
+    # names, so the first call is only ever trusted for the format —
+    # which no encoding changes. One extra lsar for the formats that
+    # want another one, and none at all for the rest.
+    encoding = oracle_encoding(fmt)
+    if encoding != ORACLE_ENCODING_DEFAULT:
+        fmt, meta, methods, comment = lsar_metadata(fixture_path, encoding)
     # The "._" sidecar namespace is disjoint from real archive names in
     # every fixture harvested so far, which is why forks are taken from
     # `-k hidden` — but an entry literally named "._X" would collide
@@ -738,7 +766,7 @@ def build_manifest(fixture_path, verbose=False):
     with tempfile.TemporaryDirectory() as tmp:
         r = subprocess.run(
             ["unar", "-nr", "-D", "-f", "-q", "-k", "hidden",
-             "-e", "macintosh", "-o", tmp, fixture_path],
+             "-e", encoding, "-o", tmp, fixture_path],
             capture_output=True, timeout=300)
         # A non-zero exit is per-ENTRY failure or container failure, and
         # the difference is worth the whole manifest. Accept it as
@@ -917,7 +945,7 @@ def build_manifest(fixture_path, verbose=False):
         "sha256": sha256_file(fixture_path),
         "size": os.path.getsize(fixture_path),
         "format": fmt,
-        "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+        "oracle": "unar -nr -D -f -q -k hidden -e %s (v1.10.8)" % encoding,
         "entries": entries,
     }
     # Absent unless the archive carries one, so a manifest without the

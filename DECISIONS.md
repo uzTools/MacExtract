@@ -247,6 +247,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the sidecar is not an archive) — two fixtures that are inputs, and the declaration that says so
 - 2026-09-22 (the document that came with the decoder) — fmt_lzh.c's header walk, from LHa's own header.doc
 - 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
+- 2026-09-22 (a name an HFS volume can hold) — StuffIt 5's UTF-8 names, on both hosts, and what the fold costs a Mac Plus
 
 ---
 
@@ -7982,11 +7983,12 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 298 bytes on the
+**Why not just carry the name.** `UncEntryInfo` is 300 bytes on the
 68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
-never right, and the "296" this entry stated until 2026-09-03 stopped
+never right, the "296" this entry stated until 2026-09-03 stopped
 being right a few hours after it was written — 2026-09-03, *the struct
-that grew after it was measured*) and it travels on a 4 KB call stack.
+that grew after it was measured* — and 298 became 300 on 2026-09-22
+with `name_utf8`) and it travels on a 4 KB call stack.
 A name field big
 enough for zip's own maximum would be 65,535 bytes. The cap is the
 right decision; being silent about it was not.
@@ -15180,3 +15182,132 @@ says only "Encrypted (algorithm used is unknown)". **All 31 corpus
 archives read `0x10` in that flags byte and none is encrypted**, so the
 only archives that exercise the path are ones `tools/run_crypt.py`
 synthesises here — from the same reading, so they cannot grade it.
+
+## 2026-09-22 (a name an HFS volume can hold) — StuffIt 5's UTF-8 names, on both hosts, and what the fold costs a Mac Plus
+
+**Claim.** The three things that had to move together have moved: the
+engine says which encoding a name is in, the Linux CLI passes StuffIt
+5's UTF-8 through, the oracle is asked in that encoding and the
+manifests rebuilt from it, and the Macintosh shell folds UTF-8 into the
+MacRoman bytes an HFS name holds. The open item this closes is
+OPEN_ITEMS.md, *StuffIt 5 entry names are UTF-8* (the finding is
+2026-09-22, *the name that was never a fork*).
+
+**The engine says it; it does not convert.** `UncEntryInfo.name_utf8`
+is one byte, set by `fmt_sit5.c` and by nothing else. The alternative
+was a format table in each front end, and it would have been wrong in
+a place neither front end can see: a **segmented** StuffIt 5 set is
+sniffed as a split and walked by whatever the joined stream turns out
+to be, so the format the CLI knows about is not the one that read the
+name. `derived-Sniffles_2.0.sit.1` is exactly that file. The field
+costs 0 B of stack anywhere — `-Os -fstack-usage` on the three deepest
+frames is unchanged to the byte, because the struct's existing
+alignment padding absorbed it.
+
+**The oracle was the hard half, and it is one word.** `-e macintosh`
+forces MacRoman on every format, which is why the corpus was byte-exact
+against its own mistake. `make_manifests.py` now picks per format
+(`ORACLE_ENCODING`), and because the format decides the encoding and
+the encoding decides the names, the first `lsar` is trusted only for
+the format — which no encoding changes — and a format with its own
+encoding costs one more call. **31 manifests rebuilt, 35 names changed
+across 4 fixtures, 0 hashes changed anywhere**, and `run_diff.py` is
+31/31 on StuffIt 5.
+
+**Two independent checks say the names are now right, and neither is
+ours.** `lsar -nr` unforced — auto-detection, not our pin — prints
+`Cool Tools ƒ`. And deark reads those names as UTF-8 itself, so
+`tools/sweep_deark.py` could not match a single one of those entries
+while the manifests held the mojibake: over the whole corpus it goes
+from **4,502 graded forks and 37 entries it could not compare** to
+**4,556 and 10**, DIFFER 0 either way.
+
+**What those 54 forks are is not what it would be nice to report.**
+Every one of them is `declined` — StuffIt 5's Arsenic and method 13,
+which deark does not implement — so agreements stay at **2,151** and
+the declines go 2,342 → 2,396. The sweep gained no new adjudication
+here: what it gained is that 27 entries it was counting as its own
+naming blind spot are now counted as the oracle saying *I do not
+implement this method*, which is the same correction as
+*the decline that read as a naming gap*, earlier the same day, arriving
+by a different route. Checked rather than assumed — the first draft of
+this entry said the 54 agreed, on the strength of a per-format run
+whose agreements were there before.
+
+**And the 28 was 27.** One of them — `.typeAttributes.dict` in
+`derived-PuzzleGetter_0.8.sit` — was never about encoding: both its
+forks are empty, and deark writes no file for a member with nothing in
+either fork (`do_pre_decompress_fork`, `if(frk->unc_len==0 &&
+frk->cmpr_len==0)`), so `deark_forks` cannot see a member it named
+perfectly well. That is the same shape as the naming gap fixed earlier
+the same day, one size smaller, and it is now a named row in the
+sweep's *what it cannot see* table rather than a number attached to the
+wrong cause. The encoding case was **27 entries across 4 fixtures**.
+
+**What the Macintosh does with a name it cannot write.** An HFS name is
+MacRoman bytes, so something has to fold, and `Utf8ToMacRoman` does it
+once at the door of `sink_begin`, on the whole path, in place. Two
+properties make that safe and they are why it is not done component by
+component: UTF-8 never puts a `0x2F` byte inside a multi-byte sequence,
+so the engine's separators survive, and the fold only shortens, so the
+output never overtakes the input. Everything downstream — the folder
+walk, the folder hash, the 31-character cut, `BumpName`, every line of
+the report — then sees one name, of one length, in one encoding. The
+31-character cut acting on the FOLDED name is not a detail: 16 `é` are
+32 bytes of UTF-8 and 16 of MacRoman, and before the fold that name was
+cut, through the middle of a sequence.
+
+A code point MacRoman has no byte for becomes `_`, and the report says
+so in a line of its own — *"`<name>` was named in characters this
+Macintosh cannot write"* — which names what IS on the disk. It has to:
+printing what the archive asked for would print the row of substitutes
+twice and call it a rename. One bit per path component says which
+component lost something, so a folder of Japanese names says it once
+and not once per file in it.
+
+**The price, on the five axes, measured on the object before and
+after:**
+
+| | |
+|---|---|
+| code | **+580 B** — `Utf8ToMacRoman` inlined into `sink_begin` (.text 1,114 → 1,596 B) plus `RepLostChars`; ceiling 152,596 → 153,176 |
+| A5 | **+316 B** — MacRoman's 128-entry high half (.rodata 11 → 268 B) and the one report line (.rodata.str1.1 1,862 → 1,915 B); ceiling 37,660 → 37,976 |
+| peak heap | **0 B** — the fold is in place, in the shell's own copy of the entry |
+| stack | **+12 B** — `sink_begin` 400 → 412 B; `ExtractOne`, the largest frame in the shell, unchanged at 1,484 B |
+| engine ticks | **0** — the fold does not run at all unless the format set the flag, and then it is one pass over ≤255 bytes per entry |
+
+**896 B off every extraction's budget on a 1 MB Mac Plus, and it was
+worth taking**: that is 0.14 % of 648,100 B, against 5,988 B for the
+overlay that was judged not worth it, and nothing in the corpus has
+been out of that machine's reach since 2026-09-18. What it buys is that
+the application — which is what a user actually runs — writes names
+instead of mojibake for a convention as ordinary as a folder called
+`Cool Tools ƒ`: 4 of the 31 StuffIt 5 archives here.
+
+**What the table is not.** Retro68 has no Unicode converter that
+reaches System 3.0 — the Script Manager's is System 7.1 and the Unicode
+Converter is Mac OS 8.5 — so a table is the only route, and putting it
+in a resource to save 256 B of A5 would cost code to load it and is the
+kind of mechanism the overlay decision already declined at twenty times
+the prize.
+
+**One rule has no specimen and says so.** A byte that does not begin a
+valid UTF-8 sequence is passed through as itself: the name is then not
+UTF-8, the only other encoding this shell knows is MacRoman, and
+passing it on is what happened before the fold existed. All 525 entries
+of the 31 StuffIt 5 fixtures here are valid UTF-8, so that rule is
+stated rather than measured.
+
+**How the two halves are graded, and they are graded differently.** The
+ENGINE setting the flag is graded by `run_diff.py` over the corpus's own
+StuffIt 5 archives — names included, which is the one thing an
+aggregate never fails on. The SHELL's fold is graded by
+`mac_sink_test.c --utf8` through `tools/run_macnames.py`, driven
+straight through `sink_begin` the way `--cancel` is, because nothing in
+this tree writes a StuffIt 5 archive and inventing one to test the
+shell would have been the wrong file to write. That one case runs on
+**big-endian m68k under qemu** as well as natively — a 16-bit table and
+a shift-and-or decode being the shape that reads differently on the
+target. Both halves are in `ci.sh`.
+The case was made to fail first: with the fold disabled it reports the
+mojibake on disk, no report lines, and the 32-byte name cut at 31.

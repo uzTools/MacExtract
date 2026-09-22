@@ -105,14 +105,23 @@ pre-fix binary and fails there. DECISIONS.md, 2026-08-08.
 ### Exact oracle invocation
 
 ```
-lsar -j -nr -e macintosh <fixture>     # format name + metadata (JSON)
-unar -nr -D -f -q -k hidden -e macintosh -o <tmpdir> <fixture>
+lsar -j -nr -e <enc> <fixture>         # format name + metadata (JSON)
+unar -nr -D -f -q -k hidden -e <enc> -o <tmpdir> <fixture>
 ```
 
 - `-nr`: no recursion — each manifest describes exactly one container
   layer (see DECISIONS.md; nesting is tested by chaining layers).
-- `-e macintosh`: pin filename decoding to MacRoman rather than
-  auto-detection, so manifests are deterministic.
+- `-e <enc>`: pin filename decoding rather than leaving it to
+  auto-detection, so manifests are deterministic. **`macintosh` for
+  every format but StuffIt 5, whose names are the archive's own UTF-8**
+  and which gets `utf-8` (`make_manifests.py`, `ORACLE_ENCODING`). One
+  encoding for every format was the same assumption this engine made,
+  so the corpus agreed with the oracle about 27 mojibake names and
+  proved nothing (DECISIONS.md 2026-09-22, *a name an HFS volume can
+  hold*). The format decides the encoding and the encoding decides the
+  names, so the first `lsar` is trusted only for the FORMAT, which no
+  encoding changes; a format with its own encoding costs one more.
+  Each manifest records the invocation it was built with, in `oracle`.
 - `-D`: no wrapper directory.
 
 ### Manifest format
@@ -384,8 +393,8 @@ at, not a manifest edit.
     sh tools/build_deark.sh        # ./ci.sh's `make clean` deletes it
     tools/sweep_deark.py [--fixture NAME ...] [-v]
 
-**2026-09-22: 4,502 graded forks across 728 of the 932 fixtures, 2,151
-agree, 0 disagree.** The other 2,351 are three shapes that are not
+**2026-09-22: 4,556 graded forks across 728 of the 932 fixtures, 2,151
+agree, 0 disagree.** The other 2,405 are three shapes that are not
 disagreements, each of which the sweep names rather than counting as
 agreement:
 
@@ -393,7 +402,7 @@ agreement:
 |---|---|
 | `padded` | deark does not fail on a damaged file, it pads. A fork longer than the graded one, whose prefix hashes to it and whose tail is all zeros, is padding (`DEARK_METHODS`, above). **6** — and they are worth more than the label suggests: they are the six resource forks graded from the container's own arithmetic, so a second implementation reads the same bytes at the same offsets, stops where the file stops, and only then invents a tail. The arithmetic and deark agree byte for byte about what is present |
 | `wrapped` | deark does not unwrap MacLHA's MacBinary payload: it writes the 128-byte header and both padded forks as one file where `unar` and this engine split them. Reported only after the container's own data fork is checked byte for byte against the graded one. **3** |
-| `declined` | deark said it could not read this fork. **2,342**, nearly all of them StuffIt method 13 and StuffIt 5's Arsenic, which deark does not implement; 8 are the blanket for an error deark named a member but not a fork in (`synth-arc-mixed.arc`) |
+| `declined` | deark said it could not read this fork. **2,396**, nearly all of them StuffIt method 13 and StuffIt 5's Arsenic, which deark does not implement; 8 are the blanket for an error deark named a member but not a fork in (`synth-arc-mixed.arc`) |
 
 That `declined` number was **18** until 2026-09-22 and the difference is
 not a change of behaviour: 2,324 of those forks were being counted as
@@ -403,16 +412,21 @@ so a member it named in an error and nowhere else was invisible — and
 "invisible" was reported as the sweep's blind spot rather than as the
 oracle saying *I do not implement this method*. Fixed where it belongs,
 in `deark_forks`, so `make_manifests.py` sees the same thing (*A third
-oracle*).
+oracle*). It went up another **54** later the same day, for the same
+reason one layer further out: the 27 StuffIt 5 entries below could not
+be MATCHED at all while the manifests held a mojibake name, and once
+the oracle was asked in the encoding those names are in, every one of
+their forks turned out to be a decline too (DECISIONS.md 2026-09-22,
+*a name an HFS volume can hold*).
 
-**What it cannot see, and it prints this every run.** **37** entries
+**What it cannot see, and it prints this every run.** **10** entries
 deark neither named nor declined are not compared at all, and each of
-the four shapes is now named:
+the four shapes is named:
 
 | | |
 |---|---|
-| **28** StuffIt 5 | a disagreement about the entry's NAME and not about any fork: those names are UTF-8, deark reads them as UTF-8, and the oracle is invoked in the one way that does not (OPEN_ITEMS.md, *StuffIt 5 entry names are UTF-8*) |
 | **7** Gzip and Compress | deark goes one layer FURTHER than the manifest describes: it decompresses the `.gz`/`.Z` and reads the tar inside it, so it writes `manual.txt` where the manifest — built with `unar -nr`, one container layer — records `synth-exo-gz-named` |
+| **1** StuffIt 5 | `.typeAttributes.dict` in `derived-PuzzleGetter_0.8.sit`, whose forks are BOTH empty. deark names it and writes no file for it — `do_pre_decompress_fork` in `reference/deark/modules/stuffit.c` leaves both `fork_exists` clear when a fork's compressed and uncompressed lengths are zero — and `deark_forks` is built from output files. The only entry of that shape in the corpus |
 | **1** uuencode | `synth-uu-mac.uu` stores its name with the quotes around it; `unar` strips them and deark keeps them, where its own sanitiser turns each into `_` |
 | **1** ARC | `synth-arc-mixed.arc`'s method 7, declined in an error that names the member and not a fork — the over-cautious blanket, which costs 8 more forks in the same file on purpose |
 
@@ -429,11 +443,21 @@ belongs to this sweep and not to `make_manifests.py`: the manifest
 builder offers deark a fork only to FILL a gap, and tar has none —
 `unar` grades every one of those entries.
 
+**That 10 was 37 until the oracle was asked in the right encoding**, and
+27 of the 28 StuffIt 5 entries counted here were a disagreement about
+the NAME and not about any fork: those names are UTF-8 and the oracle
+was pinned to MacRoman for every format alike (*Exact oracle
+invocation*; DECISIONS.md 2026-09-22, *a name an HFS volume can hold*).
+The 28th is the empty-fork entry above and was never about encoding —
+a count attached to the wrong cause is what a shape-by-shape table is
+for.
+
 **A sweep is worth what its denominator is**, so the denominator is
 printed per format, along with the entries whose mangled name another
 entry claims — **0** today, and counted rather than silently skipped,
 because a category that leaves no trace is a denominator nobody can
-check.
+check. **4** forks nobody has graded are printed beside it: entries the
+oracle failed on that no second implementation filled.
 
 Not in `ci.sh`: it needs the fixtures, and it is an audit rather than a
 test. It skips cleanly without them.
@@ -1635,6 +1659,27 @@ files (DECISIONS.md, *a folder is a name too*):
   make numbering worse than merging, and the reason the table never
   evicts.
 
+One more since 2026-09-22, when StuffIt 5's UTF-8 names started being
+folded into the MacRoman bytes an HFS name holds (DECISIONS.md,
+*a name an HFS volume can hold*):
+
+- **a UTF-8 name**, driven straight through `sink_begin` by
+  `mac_sink_test.c --utf8` rather than out of an archive — nothing in
+  this tree writes a StuffIt 5 file, and the subject is the SHELL.
+  Seven names: one that folds and loses nothing, one with no MacRoman
+  spelling at all, a folder that loses characters holding a file that
+  does not (one report line, about the folder), a 32-byte UTF-8 name
+  that is 16 MacRoman characters and must therefore NOT be cut, two
+  different unwritable names that fold to one disk name and must be
+  numbered apart, and the same bytes with the flag clear, which are not
+  folded at all. The ENGINE's half — that `fmt_sit5.c` sets the flag —
+  is graded by `run_diff.py` over the corpus instead. **This one case
+  also runs on big-endian m68k under qemu** (`--sink "qemu-m68k
+  build/mac_sink_m68k" --case utf8`), because a 16-bit table and a
+  shift-and-or decode are exactly the shape that reads differently on
+  the target; the other twelve are file-system work qemu only makes
+  slower.
+
 **Established that it can fail**: against five one-line breakages of the
 shell — the cap raised to 63 fails five assertions, the numbering removed
 fails six (and loses a file, and stops the run), the empty-name
@@ -1659,6 +1704,14 @@ out of the leaf, so the create fails there for a reason the real File
 Manager does not have. Nor the BOX those lines are drawn in: whether it
 is legible, scrolls and saves is `interactive.py --report` on an emulated
 Mac (`tools/vmac/README.md`).
+
+**And a warning for whoever adds a fixture.** Since the fold, the Mac
+shell and the Linux CLI deliberately write DIFFERENT names for a StuffIt
+5 entry whose name is not ASCII — MacRoman bytes against UTF-8 — so the
+two harnesses that grade Mac output against the oracle manifests
+(`tools/check_mac_sink.py` and `tools/vmac/run.py`) would read that as a
+defect. No fixture in either list has such a name today. Putting one
+there means teaching that harness the fold, not changing the shell.
 
 ## A cut archive is NOTICED (`tools/run_truncation.py`, in `ci.sh`)
 

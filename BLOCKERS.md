@@ -1335,14 +1335,29 @@ a harness can click is not the same list.
   is every name anybody checked it against. DECISIONS.md 2026-09-22,
   *the decline that read as a naming gap*.
 
+- **"28 entries across 5 fixtures come out of this engine with mojibake
+  names."** Written 2026-09-22 when StuffIt 5's names were found to be
+  UTF-8, corrected the same day. **27 across 4** is the encoding case;
+  the 28th is `.typeAttributes.dict` in `derived-PuzzleGetter_0.8.sit`,
+  whose forks are both empty and which deark therefore writes no file
+  for at all (`do_pre_decompress_fork` leaves both `fork_exists`
+  clear). **Cost:** nothing, because the fix was the same either way —
+  but the figure had reached three files as though one cause explained
+  all 28, which is how a shape nobody has looked at hides inside a
+  number somebody has. DECISIONS.md 2026-09-22, *a name an HFS volume
+  can hold*.
+
 - **"283 entries deark names in a way no mangling of ours reproduces."**
   `sweep_deark.py`'s own printed summary of what it cannot see, written
   2026-09-22, withdrawn the same day. **225 of the 283 were entries
   deark named and DECLINED** — StuffIt method 13 and StuffIt 5's
   Arsenic, neither of which it implements — and they were invisible
   only because a member deark declines every fork of writes no output
-  file. The sweep now cross-checks **4,502** graded forks rather than
-  2,080, agreeing on **2,151** with `DIFFER` still 0. **Cost:**
+  file. The sweep now cross-checks **4,556** graded forks rather than
+  2,080, agreeing on **2,151** with `DIFFER` still 0 — 4,502 that
+  morning, and 54 more once the oracle stopped being asked about
+  StuffIt 5 in the wrong encoding, every one of which turned out to be
+  a decline too. **Cost:**
   no wrong byte anywhere, and a real one all the same — the number was
   quoted three times as evidence that deark is a weak oracle for
   StuffIt, when it meant "deark does not implement method 13", a fact

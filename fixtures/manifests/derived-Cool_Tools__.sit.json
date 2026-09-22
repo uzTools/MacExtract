@@ -2,13 +2,13 @@
  "entries": [
   {
    "is_dir": true,
-   "name": "Cool Tools ∆í"
+   "name": "Cool Tools ƒ"
   },
   {
    "creator": "eSRD",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/Cool Tools doc",
+   "name": "Cool Tools ƒ/Cool Tools doc",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -20,7 +20,7 @@
    "creator": "aplt",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/Liberate Desktops 2.0",
+   "name": "Cool Tools ƒ/Liberate Desktops 2.0",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -32,7 +32,7 @@
    "creator": "aplt",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/Quote UnQuote 2.0",
+   "name": "Cool Tools ƒ/Quote UnQuote 2.0",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -44,7 +44,7 @@
    "creator": "dplt",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/Selector 2.0.1",
+   "name": "Cool Tools ƒ/Selector 2.0.1",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -56,7 +56,7 @@
    "creator": "ToyS",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/Show Document 2.0",
+   "name": "Cool Tools ƒ/Show Document 2.0",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -68,7 +68,7 @@
    "creator": "dplt",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/SuperAlias 2.0",
+   "name": "Cool Tools ƒ/SuperAlias 2.0",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -80,7 +80,7 @@
    "creator": "aplt",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/UltraClip 2.0",
+   "name": "Cool Tools ƒ/UltraClip 2.0",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -90,13 +90,13 @@
   },
   {
    "is_dir": true,
-   "name": "Cool Tools ∆í/UltraClip Folder"
+   "name": "Cool Tools ƒ/UltraClip Folder"
   },
   {
    "creator": "drag",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "Cool Tools ∆í/UltraClip Folder/Editing clips",
+   "name": "Cool Tools ƒ/UltraClip Folder/Editing clips",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -107,7 +107,7 @@
  ],
  "fixture": "derived-Cool_Tools__.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "868faea3776b84abddc51660032f179238b673f8b6be4722d088543a5563f5fc",
  "size": 217507
 }

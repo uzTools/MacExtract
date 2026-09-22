@@ -228,7 +228,15 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # instrument's resolution. A one-loop zeroing of the two arrays was
 # tried and is worth nothing: +4 B of code for −4 B of A5.
 # DECISIONS.md 2026-09-21, *the table that was twenty-six bytes*.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152596}
+# Raised 2026-09-22 from 152,596 to 153,176 for the UTF-8 fold: +580 B,
+# measured on the one object before and after — `Utf8ToMacRoman` inlined
+# into sink_begin (1,114 -> 1,596 B of .text) plus RepLostChars. Its
+# table is A5 and is in the ceiling below, +316 B, so the fold costs
+# **896 B off every extraction's budget on a 1 MB Mac Plus**, and what
+# it buys is that StuffIt 5's names reach an HFS volume as names rather
+# than as mojibake (DECISIONS.md 2026-09-22, *a name an HFS volume can
+# hold*). Stack: sink_begin 400 -> 412 B, ExtractOne unchanged.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153176}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -286,7 +294,11 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-152596}
 # the object alone, `m68k-apple-macos-size`: text 0, data 8, rodata
 # 1,028) and is now 26 bytes plus a builder that costs 408 B of code.
 # A ratchet is set at the size on the day and that cuts both ways.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-37660}
+# Raised 2026-09-22 from 37,660 to 37,976 with the UTF-8 fold above:
+# +316 B, and it IS a new table — measured on that one object before and
+# after, `.rodata` 11 -> 268 B for MacRoman's 128-entry high half, and
+# `.rodata.str1.1` 1,862 -> 1,915 B for the one report line it adds.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-37976}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes

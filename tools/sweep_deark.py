@@ -28,7 +28,9 @@ declined every fork of writes none. deark names those members perfectly
 well — in its errors — and 225 of the 283 entries this sweep said it
 could not compare were StuffIt method 13 or StuffIt 5's Arsenic, methods
 deark does not implement. They are `declined` now, and the number left
-is the naming gap this line was always supposed to be reporting.
+is the naming gap this line was always supposed to be reporting — 10,
+since the oracle stopped being asked about StuffIt 5 in MacRoman
+(TESTING.md, *Exact oracle invocation*).
 
 **Two guards, and both are agreements that do not look like one.**
 

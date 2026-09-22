@@ -387,7 +387,7 @@
  ],
  "fixture": "derived-Library_ISBN_Barcoder.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "47f997a4015e4dd7e1ff4f5cf21fcfacb23c1f64fb55d95f296e368746c406b3",
  "size": 202454
 }

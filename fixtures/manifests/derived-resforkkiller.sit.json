@@ -190,7 +190,7 @@
  ],
  "fixture": "derived-resforkkiller.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "452c74b5d1291dc0dedec7a45211ddb0d19d458bb6fd9d8881f7416db62924d0",
  "size": 39781
 }

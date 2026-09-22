@@ -263,42 +263,6 @@ writing a partial fork would be inventing the layout. An uncompressed
 DART written by whatever produced them — an earlier version of the
 application, per the same note — would settle it.
 
-## StuffIt 5 entry names are UTF-8, and this reads them as MacRoman
-
-**Measured 2026-09-22**, by asking the third oracle about the entries it
-had never been compared on (TESTING.md, *Asking the third oracle about
-everything*). 28 entries across 5 corpus fixtures come out of this
-engine with mojibake names.
-
-- The archive holds `C6 92` for the folder `Cool Tools ƒ` — UTF-8 for
-  U+0192. The CLI converts it as if it were MacRoman and writes
-  `Cool Tools ∆í`. `800-SAY-WHAT 3.0.1J/読んで下さい.rtf` is the same
-  thing in Japanese, and reading the same bytes as MacRoman gives 25
-  characters of nothing.
-- **deark reads StuffIt 5 names as UTF-8 and StuffIt classic's as
-  MacRoman** — `reference/deark/modules/stuffit.c`, `d->input_encoding`
-  under `file_fmt==2`. So does `unar`, unforced: `lsar -nr` on
-  `derived-Cool_Tools__.sit` prints `Cool Tools ƒ`.
-- **The oracle is invoked in the one way that hides it.** `-e macintosh`
-  (TESTING.md, *Exact oracle invocation*) forces MacRoman on every
-  format, so the manifests record the mojibake and the diff suite is
-  byte-exact against it. The corpus agreeing proves nothing here: both
-  sides make the same assumption.
-
-**This is not a StuffIt 5 bug specifically.** The engine emits raw
-archive-encoding names by design and the frontend picks the encoding per
-FORMAT — "Mac containers → MacRoman, zip/tar/gzip → pass-through"
-(DECISIONS.md, the M0 design list). StuffIt 5 is the first format found
-to be a Mac container whose names are not MacRoman.
-
-**What would close it:** a decision on three things that have to move
-together, because fixing one alone makes the suite disagree with itself —
-(1) the frontend's encoding for StuffIt 5, (2) the oracle invocation and
-the 5 manifests built with it, and (3) what the MACINTOSH shell should
-write, where HFS names are MacRoman bytes and converting means a
-UTF-8 → MacRoman table on a 1 MB machine. Nothing here is blocked on a
-file or a reference: both are in `reference/`.
-
 ## Waiting on a file this machine does not have
 
 **Not scope decisions, and not effort.** Everything here is written or

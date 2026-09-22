@@ -118,6 +118,13 @@ if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/n
         tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_sb68
     verify "qemu-m68k build/mac_sink_sb68" "" "$BOTHFORK_FIXTURES"
     echo "mac-sink: m68k both write paths OK (both forks byte-exact)"
+    # The UTF-8 fold on a BIG-ENDIAN 32-bit machine. It is byte
+    # arithmetic over a 16-bit table and a shift-and-or decode, which is
+    # exactly the shape that reads differently on the target, and the
+    # native run above is little-endian 64-bit. One case, because the
+    # other twelve are file-system work qemu only makes slower.
+    python3 tools/run_macnames.py --sink "qemu-m68k build/mac_sink_m68k" \
+        --case utf8 || { echo "mac-sink: m68k macnames FAILED"; exit 1; }
     # And the unit tests, for the one part of the engine no fixture
     # reaches on this machine: the ciphers. Their vectors come from
     # openssl and python (tools/check_crypt.py), they are full of 32-bit
