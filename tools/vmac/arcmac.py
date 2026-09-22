@@ -171,10 +171,22 @@ def crc16(b):
 
 def macbinary(name, ftype, creator, data=b"", rsrc=b"", flags=0):
     """MacBinary II. `flags` is the 16-bit Finder flags word, split across
-    the two bytes MacBinary keeps it in — and left at 0 here on purpose:
-    the ArcMac header's own Finder info has bit 0x40 of the high byte set,
-    which is `invisible`, so copying it across put the application on the
-    volume where the Finder would not show it."""
+    the two bytes MacBinary keeps it in, and left at 0 here on purpose:
+    copying the ArcMac header's own Finder info across put the application
+    on the volume in a state the Finder did not show properly.
+
+    **The bit is NOT `invisible`, and this docstring said it was until
+    2026-09-22.** `macunpack/arc.h` puts `FINFO` at offset 42 of the
+    88-byte header, 8 bytes — `fdFlags`, `fdLocation`, `fdFldr` — so the
+    flags word is `h[42:44]`, and across every ArcMac file reachable here
+    (the two in the wild and the three this harness wrote: 5 files, 11
+    entries) it is **0x2100 on the application and 0x0100 on every
+    document**. 0x2100 is `fHasBundle | fHasBeenInited`; `fInvisible` is
+    0x4000 and is set nowhere. Copying `fHasBeenInited` onto a file the
+    Finder has never seen is enough to stop it doing that file's
+    first-time bundle processing, which is the likelier reading of what
+    was seen — and is NOT established, where the invisibility was stated
+    as fact. Withdrawn in BLOCKERS.md with what it cost."""
     n = name.encode("mac-roman")[:63]
     h = bytearray(128)
     h[1] = len(n)
@@ -221,18 +233,57 @@ def make_volume(path, volname, macbins, size_kb=1400):
         shutil.rmtree(env["HOME"], ignore_errors=True)
 
 
-def read_volume(img, out):
-    """Every file on the volume, as (type, creator, data fork, rsrc fork)."""
+# What the Finder puts on a volume of its own accord, so that a listing
+# that can see invisible files does not report it as something the
+# application wrote. Measured on this harness's OWN volume rather than
+# assumed: on the `Arc` volume a System 6 boot leaves behind, `hls -a -1`
+# adds exactly one name to the four `hls -1` gives — `Desktop`, FNDR/ERIK,
+# with the invisible bit set. The other two are what a later system writes
+# in its place, and are listed for the same reason os9.py lists them.
+FINDER_OWN = {"Desktop", "Desktop DB", "Desktop DF"}
+
+
+def read_volume(img, out, invisible=True):
+    """Every file at the volume ROOT, as (type, creator, data fork, rsrc fork).
+
+    Root only, deliberately: every volume this reads is one `make_volume`
+    built flat and one guest application wrote to, and nothing here has ever
+    made a folder. `walkprobe.py` states that as a column rather than
+    leaving it to be discovered.
+
+    `-a`, since 2026-09-22, because **`hls` hides a file whose Finder
+    INVISIBLE bit is set**, and a walk that grades what an application
+    wrote should not depend on the application's taste in Finder flags.
+    **Not** because this format's files carry that bit: they do not — see
+    `macbinary()` below, where the claim that they do was withdrawn the
+    same day, measured over all 11 entries of all 5 ArcMac files here.
+    The flag costs nothing and the blindness was real either way
+    (DECISIONS.md 2026-09-22, *the right flag with the wrong reason*).
+
+    The flag brings the Finder's own bookkeeping with it, which `FINDER_OWN`
+    drops; pass `invisible=False` for the listing as it was.
+
+    Names go to `hcopy` as the RAW BYTES `hls` printed, not as re-encoded
+    text — the rule `superdisk.read_forks` records, and the reason a folder
+    called "Terrainman 2.0 ƒ" was once silently skipped.
+    """
     os.makedirs(out, exist_ok=True)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     got = {}
     try:
         hfs(env, "hmount", img)
-        listing = subprocess.run(["hls", "-1"], capture_output=True,
-                                 env=env).stdout.decode("mac-roman", "replace")
-        for name in [n for n in listing.split("\n") if n.strip()]:
+        argv = [b"hls"] + ([b"-a"] if invisible else []) + [b"-1"]
+        listing = subprocess.run(argv, capture_output=True,
+                                 env=env).stdout
+        # split on b"\n", not rstrip(): a carriage return is a legal HFS
+        # filename character and it is the last one of `Icon\r`.
+        for raw in [n for n in listing.split(b"\n") if n.strip()]:
+            name = raw.decode("mac-roman", "replace")
+            if invisible and name in FINDER_OWN:
+                continue
             mb = os.path.join(out, name.replace("/", "_") + ".bin")
-            if subprocess.run(["hcopy", "-m", name, mb], capture_output=True,
+            if subprocess.run([b"hcopy", b"-m", b":" + raw, mb.encode()],
+                              capture_output=True,
                               env=env).returncode != 0:
                 continue
             blob = open(mb, "rb").read()

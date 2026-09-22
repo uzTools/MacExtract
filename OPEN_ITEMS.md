@@ -244,41 +244,58 @@ code written from it, replaced the last of the transcription in
 
 **Measured, not suspected.** `tools/vmac/walkprobe.py` builds one HFS
 volume holding a plain file, an INVISIBLE one, a dotted one with the
-invisible bit clear and `Icon\r`, runs every volume walk in the tree
-against it and prints what each came back with. Of four subjects, on
-2026-09-22:
+invisible bit clear and `Icon\r`, at the root and again inside a folder,
+runs every volume walk in the tree against it and prints what each came
+back with. Of **eight** subjects, on 2026-09-22:
 
-| walk | sees | graded by it |
+| walk | sees an invisible file | descends into a folder |
 |---|---|---|
-| `checkdisk.walk` | 4/4 | every Mini vMac tier's names |
-| `os9._walk_volume` | 4/4 | the Mac OS 9 tier's output |
-| `arcmac.read_volume` | **2/4** | what ArcMac wrote |
-| `nowcompress.read_volume` | **2/4** | what Now Compress wrote |
-| `diskdoubler.volume_files` | **2/4** | what DiskDoubler wrote, and `--wild` |
-| `superdisk.read_forks` | **2/4** | what nine harnesses' applications wrote |
+| `checkdisk.walk` | 4/4 | yes |
+| `os9._walk_volume` | 4/4 | yes |
+| `arcmac.read_volume` | **4/4 since 2026-09-22** | no |
+| `nowcompress.read_volume` | **2/4** | no |
+| `diskdoubler.volume_files` | **2/4** | yes |
+| `superdisk.read_forks` | **2/4** | yes |
+| `cptsegment.read_volume` | **2/4** | no |
+| `cptcrypt.read_volume` | **2/4** | no |
 
-The four miss the same two entries for the same reason: `hls` hides a
-file whose Finder INVISIBLE bit is set unless given `-a`. `os9.py` was
-in that list until the same day, when a file it reported MISSING turned
-out to be sitting on the volume with 51,781 bytes of resource fork
-(DECISIONS.md 2026-09-22, *the fold, on a Macintosh*).
+The five short ones miss the same two entries for the same reason: `hls`
+hides a file whose Finder INVISIBLE bit is set unless given `-a`, and
+`hdir` — which the last two list with — does exactly the same thing.
+`os9.py` was in that list until the same day, when a file it reported
+MISSING turned out to be sitting on the volume with 51,781 bytes of
+resource fork (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*).
 
-**One of the four is a known risk rather than a theoretical one**, and it
-is written down one function away from the walk:
-`arcmac.macbinary`'s docstring records that "the ArcMac header's own
-Finder info has bit 0x40 of the high byte set, which is `invisible`".
-So that format's own files carry the bit, and the walk that reads them
-back cannot see one.
+**Two of those eight rows are new and no walk was added to the tree.**
+The `hdir` pair was missing from the survey because it was built by
+grepping for `hls`, and the second column did not exist at all: the
+probe's volume has carried the same four subjects inside a folder since
+it was written, but its verdict compared leaf NAMES and the folder holds
+the same four names as the root. Root-only is not itself a defect —
+all four read volumes that are built flat — but it was a property the
+probe claimed to test and could not see (DECISIONS.md 2026-09-22, *the
+column that was already on the volume*).
 
-**What would close it, and why it is not one flag.**
+**Whether a blind walk has ever LOST anything is a separate question,
+and it is the one worth asking of each.** The probe cannot answer it: it
+depends on whether the application a walk grades ever writes an
+invisible file. For `arcmac` the answer turned out to be **no** — the
+docstring that called it "a known-real risk" was wrong about the bit,
+measured over all 5 ArcMac files and 11 entries here (BLOCKERS.md,
+*Withdrawn claims*). The walk was blind anyway and the flag cost
+nothing, so the fix stands; the premise that ordered the work does not.
+
+**What would close the rest, and why it is not one flag.**
 `superdisk.read_forks` has about thirty callers across nine harnesses,
 and `-a` also surfaces the Finder's own invisible bookkeeping —
 `Desktop`, `Desktop DB`, `Desktop DF` — on any volume a booted Mac has
 touched. A caller that compares fork SETS would start failing on files
 the Finder made, so each needs the kind of filter `os9.py` already has
 (`NOT_OUTPUT`) and an emulator run to re-verify. That is one harness at
-a time, priced and re-run, not a sweep. `walkprobe.py --check` is what
-says when one is done: its `EXPECT_BLIND` fails in both directions.
+a time, priced and re-run, not a sweep — `arcmac.read_volume` is the one
+that has been done, and what it cost is in DECISIONS.md rather than
+here. `walkprobe.py --check` is what says when one is done: its
+`EXPECT_BLIND` and `EXPECT_FLAT` both fail in both directions.
 
 ## A DART's checksums, which this writes no fork to carry
 

@@ -696,10 +696,14 @@ Four things to know before re-running it:
   empty data fork. That entry is decoded with our own CLI and re-wrapped as
   MacBinary, so no self-extractor has to run inside the guest.
 - **Do not copy a Mac header's Finder info into MacBinary unexamined.** The
-  ArcMac header's has bit 0x40 of the high byte set — `invisible` — so the
-  first attempt put the application on the volume where the Finder would not
-  show it. The disk read "112K in disk, 1 item", which looks like a failed
-  copy and is not.
+  first attempt put the application on the volume where the Finder did not
+  show it; the disk read "112K in disk, 1 item", which looks like a failed
+  copy and is not. `arcmac.macbinary` passes 0. **Why is NOT
+  `invisible`, which this said until 2026-09-22**: `fdFlags` is `h[42:44]`
+  per `macunpack/arc.h`, and across all 5 ArcMac files and 11 entries here
+  it is 0x2100 on the application and 0x0100 on every document —
+  `fHasBundle | fHasBeenInited`, with `fInvisible` (0x4000) set nowhere
+  (BLOCKERS.md, *Withdrawn claims*).
 - **ArcMac 1.3c is a command shell, not a dialog.** It opens "Martian
   Operating System"; the verb is `arc a<modifiers> archive files`, documented
   under *ArcMac Command Summary* in the `ARCMAC.DOC` that ships with it. Pass
@@ -1811,34 +1815,61 @@ error, nothing to debug. Cloning a known-good head worked first time.
 
 ## What every walk can see — `walkprobe.py`
 
-Nine harnesses here read a Macintosh volume back with `hls` and grade
-what the application under test wrote onto it, and they did not agree
-about what a listing contains. This builds one volume holding the four
-shapes that tell them apart — a plain file, an INVISIBLE one, a dotted
-one with the invisible bit CLEAR, and `Icon\r` — runs every walk in the
-tree against it, and says which came back short. No emulator, no ROM, no
-X server; seconds.
+Harnesses here read a Macintosh volume back — with `hls`, and two of
+them with `hdir` — and grade what the application under test wrote onto
+it, and they did not agree about what a listing contains. This builds
+one volume holding the four shapes that tell them apart — a plain file,
+an INVISIBLE one, a dotted one with the invisible bit CLEAR, and
+`Icon\r` — at the root and again inside a folder, runs every walk in
+the tree against it, and says which came back short. No emulator, no
+ROM, no X server; seconds.
 
     tools/vmac/walkprobe.py            # the table
     tools/vmac/walkprobe.py --check    # and assert it against EXPECT_BLIND
 
-As of **2026-09-22**, of four subjects:
+As of **2026-09-22**, of four subjects at the root and the same four
+inside a folder — **eight** walks, and two columns, both of which grew
+that day:
 
-| walk | sees |
-|---|---|
-| `checkdisk.walk` | 4/4 |
-| `os9._walk_volume` | 4/4 |
-| `arcmac.read_volume` | 2/4 |
-| `nowcompress.read_volume` | 2/4 |
-| `diskdoubler.volume_files` | 2/4 |
-| `superdisk.read_forks` | 2/4 |
+| walk | invisible | descends |
+|---|---|---|
+| `checkdisk.walk` | 4/4 | yes |
+| `os9._walk_volume` | 4/4 | yes |
+| `arcmac.read_volume` | **4/4** | no |
+| `nowcompress.read_volume` | 2/4 | no |
+| `diskdoubler.volume_files` | 2/4 | yes |
+| `superdisk.read_forks` | 2/4 | yes |
+| `cptsegment.read_volume` | 2/4 | no |
+| `cptcrypt.read_volume` | 2/4 | no |
 
-The four short ones all miss the same two, and for the same reason: no
-`-a`. **`--check` can fail** — taking `-a` back out of `os9.py` reports
-it as newly blind — and a walk that gets fixed fails it too, which is
-what `EXPECT_BLIND` is for.
+The short ones all miss the same two, and for the same reason: no `-a`.
+**`--check` can fail** — taking `-a` back out of `os9.py` reports it as
+newly blind — and a walk that gets fixed fails it too, which is what
+`EXPECT_BLIND` is for. It was established both ways again when
+`arcmac.read_volume` was fixed: with the flag taken back out the probe
+reports it newly blind, and with `EXPECT_FLAT` claiming it descends the
+probe says so.
 
-**Why the four are not fixed by adding a flag.** `superdisk.read_forks`
+**The table grew twice on the day it was written, and neither growth
+was a new walk being added to the tree.**
+
+- **Two walks were missing from it.** `cptsegment.read_volume` and
+  `cptcrypt.read_volume` list with `hdir` rather than `hls`, so the
+  survey that built this table — a grep for `hls` — did not find them.
+  `hdir` hides the invisible bit exactly as `hls` does and takes the
+  same `-a`: 3 lines against 5 on the probe volume, re-derived on every
+  run. DECISIONS.md already said this about `hdir` and no probe had
+  ever asked it.
+- **The second column did not exist**, and the volume it measures has
+  been there since the probe was written: the same four subjects are
+  copied into `Folder`, and the verdict compared leaf NAMES. The folder
+  holds the same four names as the root, so a walk that returned two
+  entries and one that returned eight both scored 4/4. **Four of the
+  eight never descend.** That is not automatically a defect — all four
+  read volumes built flat, which `EXPECT_FLAT` records — but it was a
+  property the probe's own docstring claimed to test and could not see.
+
+**Why the rest are not fixed by adding a flag.** `superdisk.read_forks`
 alone has about thirty callers across nine harnesses, and `-a` surfaces
 the Finder's own invisible bookkeeping — `Desktop`, `Desktop DB`,
 `Desktop DF` — on any volume a booted Mac has touched. A caller that
@@ -1846,6 +1877,15 @@ compares fork SETS would start failing on files the Finder made, so each
 needs the filter `os9.py` already has (`NOT_OUTPUT`) and an emulator run
 to re-verify. Scoped in OPEN_ITEMS.md, *Volume walks that cannot see an
 invisible file*.
+
+**`arcmac.read_volume` is the one that has been taken**, and what it
+cost is the shape of the rest: the flag, a three-name `FINDER_OWN`
+filter measured on that harness's OWN volume rather than assumed —
+`hls -a -1` there adds exactly `Desktop`, FNDR/ERIK, invisible, to the
+four `hls -1` gives — the raw-bytes rule for `hcopy`, and one Mini vMac
+run of `arcmac.py --make` to re-verify. Its two callers
+(`arcmac.make`, `maclha.make`) select by file TYPE and extension, so
+neither compares fork sets and neither needed changing.
 
 **Two things outside the walks were fixed the same day.**
 `os9.wrapper_names` is a NEGATIVE — the verdict is that none of the output
@@ -1858,13 +1898,16 @@ now pass `-a`; `ls()` takes it as a parameter rather than a default,
 because `strip_system_folder` deletes what `ls` returns and the Finder's
 `Desktop` is invisible and kept on purpose. `run.py` on one fixture, 1/1.
 
-**What it cannot see:** whether any of the four has ever actually lost
-something. That depends on whether the application each one grades
+**What it cannot see:** whether any of the blind walks has ever actually
+lost something. That depends on whether the application each one grades
 writes an invisible file, which is a question about those applications
-and not about the walks. One of them is already known to be a real risk
-and it is written down one function away: `arcmac.macbinary`'s docstring
-records that "the ArcMac header's own Finder info has bit 0x40 of the
-high byte set, which is `invisible`".
+and not about the walks — and it is worth asking of each, because the
+one case this file called "already known to be a real risk" turned out
+not to be one. `arcmac.macbinary`'s docstring said the ArcMac header's
+Finder info carries the invisible bit; measured over all 5 ArcMac files
+and 11 entries here, none does (BLOCKERS.md, *Withdrawn claims*). The
+walk was blind either way, and the flag cost nothing, so it was still
+worth taking — but the risk that ordered the work was not there.
 
 ## Mac OS 9 with the pointer — `os9mouse.py`
 
@@ -2286,6 +2329,33 @@ archive stores `ザ` decomposed. The outcome line is the CLEAN one,
 *"Extraction complete."*: nothing failed, every entry came out, and the
 box is up only because the shell has something to say about the names.
 
+**Why the report goes to a floppy, and the control that says so**
+
+    tools/vmac/interactive.py --report-utf8 --utf8-to-boot --emu mv-4M \
+        -o shots fixtures/derived-800saywhat301j.sit
+
+Extract this archive onto the BOOT volume instead and the saved report
+cannot be read off the image afterwards, though the Macintosh plainly
+has it. `--utf8-to-boot` is that run: it drops the one click that
+switches volumes, keeps the image, and reads it twice —
+
+    the extraction's output is in the catalog   : YES
+    the report is in the catalog                : NO
+    the report's TEXT is in the image's blocks  : YES
+
+so **the bytes land and the directory record does not**, which is why a
+30 s flush wait, Control-Q, SIGTERM and the shell's own `FlushVol` all
+changed nothing: they were aimed at a write that had already happened.
+The exit code is 1, because the phase's own assertion still fails —
+that is the point of a control. DECISIONS.md 2026-09-22, *the file that
+was on the disk and not in the catalog*.
+
+**It does not search for the report's NAME**, and neither should
+anything else here: `Extraction Report` is the name `SFPutFile` offers,
+so it is in the application's resources on the same volume and a raw
+search for it says YES in every run, saved or not. The blocks are
+searched for a string only the saved document can hold.
+
 ### Driving the real UI
 
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
@@ -2294,6 +2364,11 @@ box is up only because the shell has something to say about the names.
                                     # volume navigation, an extracted APPL launching
     interactive.py --report         # the end-of-run report box: renames,
                                     # failures, scrolling, Save as Text
+    interactive.py --report-utf8    # the '_' line only a StuffIt 5 name reaches
+    interactive.py --report-utf8 --utf8-to-boot
+                                    # ...onto the BOOT volume: the control that
+                                    # says the bytes land and the catalog entry
+                                    # does not. Exits 1 by design
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
     interactive.py --named split    # a plain .NNN split, likewise

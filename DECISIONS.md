@@ -254,6 +254,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
 - 2026-09-22 (the right flag with the wrong reason) — what `hls -a` is actually for, and the four walks that believed the explanation
 - 2026-09-22 (the header that was a length) — a DiskDoubler file neither reader could open, for 64 bytes
+- 2026-09-22 (the column that was already on the volume) — two walks the survey never found, and a dimension the verdict threw away
+- 2026-09-22 (the file that was on the disk and not in the catalog) — a hypothesis about flushing, reduced to a reproduction
 
 ---
 
@@ -3838,8 +3840,12 @@ Three smaller things this cost, all worth keeping:
   implementation are one file.**
 - **The Finder flags in a Mac header are not a blob to copy across.** Passing
   the ArcMac header's Finder info straight into MacBinary put the application
-  on the volume with bit 0x40 of the high byte set — `invisible`. The disk
-  showed 112K used and one item, which reads as "the copy failed" and is not.
+  on the volume in a state the Finder did not show: the disk showed 112K used
+  and one item, which reads as "the copy failed" and is not. **The bit named
+  here was `invisible`, and that is withdrawn** — measured over all 5 ArcMac
+  files and 11 entries, `fdFlags` is 0x2100 on the application and 0x0100 on
+  every document, and `fInvisible` is set nowhere (BLOCKERS.md, *Withdrawn
+  claims*; 2026-09-22, *the column that was already on the volume*).
 - **Mini vMac only flushes a volume when the guest ejects it.** The Finder
   displayed the freshly written `Test.ARC` while the host's copy of the image
   did not have it, because the emulator buffers sector writes and the harness
@@ -15588,16 +15594,19 @@ which is the defect an NFC fold would have.
 **One thing had to be worked around rather than explained.** Extracting this
 archive onto the BOOT volume leaves the saved report unreadable on the host:
 the Macintosh has the file — frame 4 photographs it in Standard File's own
-listing — and the 24 MB image does not hold the string anywhere outside the
-application's own resources. Four things did not help: a 30 s flush wait,
-Mini vMac's Control-Q, SIGTERM instead of the SIGKILL `Mac.close()` sends,
-and the shell's `FlushVol` (already called). Sending the output to a floppy
-instead makes the report readable, and the phase does that. *Hypothesis, not
-measured:* 300 KB across a seven-deep tree grows the catalog and what is
-written after that does not reach the image — `--report`'s few hundred bytes
-never provoke it. **It is a limitation of this harness and not of the
-application**: the same fold, on the same fixture, is graded off the Out
-volume by `checkdisk.py` on every one of the five sweeps.
+listing — and `hcopy` off the image cannot find it. Four things did not help:
+a 30 s flush wait, Mini vMac's Control-Q, SIGTERM instead of the SIGKILL
+`Mac.close()` sends, and the shell's `FlushVol` (already called). Sending the
+output to a floppy instead makes the report readable, and the phase does
+that. **The hypothesis recorded here — that 300 KB across a seven-deep tree
+grows the catalog and what is written after that does not reach the image —
+was reduced to a reproduction the same day and is wrong in its load-bearing
+half: the report's BYTES are on the image and its CATALOG ENTRY is not**
+(*the file that was on the disk and not in the catalog*, below;
+`interactive.py --report-utf8 --utf8-to-boot`). **It is a limitation of this
+harness and not of the application**: the same fold, on the same fixture, is
+graded off the Out volume by `checkdisk.py` on every one of the seven
+sweeps.
 
 **And one harness bug, found by it costing a sweep.** `sys30.py` called
 `_origin()` whether or not the emulator window had appeared, so a window
@@ -15808,6 +15817,12 @@ subjects: `checkdisk.walk` 4/4, `os9._walk_volume` 4/4 (since today), and
 out of `os9.py` reports it newly blind, and fixing one of the four
 reports it as no longer blind. Established, both ways.
 
+**Corrected the same day: it is five of EIGHT, not four of six, and
+`arcmac.read_volume` is no longer one of them.** Two walks list with
+`hdir` and no search for `hls` found them — see *the column that was
+already on the volume*, below, which also adds the depth column this
+table could not express.
+
 **Two `os9.py` listings were fixed on the spot because the change cannot
 cost anything.** `wrapper_names` is a NEGATIVE — the verdict is that none
 of the output is on the plain-HFS wrapper, so it was being read off the
@@ -15825,11 +15840,15 @@ failing on files the Finder made, so each needs the filter `os9.py`
 already has and an emulator run to re-verify: one harness at a time,
 priced and re-run. Scoped in OPEN_ITEMS.md rather than swept.
 
-**One of the four is a live risk and says so one function away.**
-`arcmac.macbinary`'s docstring records that "the ArcMac header's own
-Finder info has bit 0x40 of the high byte set, which is `invisible`" —
-the project met this bit, worked around it in the WRITER, and never asked
-whether the READER beside it could see one.
+**One of the four looked like a live risk and said so one function
+away.** `arcmac.macbinary`'s docstring records that "the ArcMac header's
+own Finder info has bit 0x40 of the high byte set, which is `invisible`"
+— the project met this bit, worked around it in the WRITER, and never
+asked whether the READER beside it could see one. **Withdrawn the same
+day**: no ArcMac header here has that bit, over 5 files and 11 entries.
+The walk was blind independently of it and was fixed anyway; what the
+claim actually did was order the work (*the column that was already on
+the volume*, below).
 
 **The same fact had been observed FOUR times and generalised none.** That is
 what makes this worth an entry rather than a one-line fix:
@@ -15837,7 +15856,8 @@ what makes this worth an entry rather than a one-line fix:
 1. `checkdisk.py` passes `-a` and explains it as dotfiles;
 2. `arcmac.macbinary` refuses to copy a Mac header's Finder info because
    "the ArcMac header's has bit 0x40 of the high byte set — `invisible`",
-   and fixes the WRITER;
+   and fixes the WRITER — a sighting of the bit that turns out to be
+   a sighting of `fHasBundle`, withdrawn below;
 3. the yardstick's Standard File row was taken on the wrong file for three
    weeks because the Finder's `Desktop` "is invisible to `hdir` and VISIBLE
    in our dialog, which filters nothing";
@@ -15960,3 +15980,149 @@ which is the same lesson as *the fold, on a Macintosh*, arriving from the
 other direction. `run_tiers.py` reproduces all three tallies unchanged at
 the new figures (71/71, 67/71, 64/71), and the Macintosh agrees: **71/71 at
 4 MB and 71/71 at the 1 MB floor** on System 6.0.8 with this build.
+
+
+## 2026-09-22 (the column that was already on the volume) — two walks the survey never found, and a dimension the verdict threw away
+
+**Claim.** `walkprobe.py` was measuring six of the eight volume walks in
+this tree, along one of the two dimensions its own fixture carries.
+Both gaps are closed; the count "four blind walks", which three files
+carried and which scoped the work, was **five of eight**.
+`arcmac.read_volume` is the first of them taken, and is 4/4.
+
+**The two walks it never found were found by asking for the capability
+rather than the name.** The inventory was built by grepping for `hls`.
+`cptsegment.read_volume` and `cptcrypt.read_volume` list with **`hdir`**,
+so no search for `hls` will ever return them — and `hdir` hides a file
+whose Finder INVISIBLE bit is set exactly as `hls` does, and takes the
+same `-a`: 3 lines against 5 on the probe volume, re-derived on every
+run now. *This project had already written that down*, in the entry one
+above this one — "`hdir` behaves exactly as `hls` does, measured here" —
+and then built the survey that would act on it out of the other
+spelling.
+
+**The second dimension was on the disk from the first day.** `build()`
+has always copied the same four subjects into a folder, with a docstring
+saying "so a walk is tested at depth as well". It was not: `leaves()`
+reduced every result to leaf NAMES, and the folder holds the same four
+names as the root, so a walk that returned two entries scored exactly
+what one returning eight did. **Four of the eight never descend** —
+`arcmac`, `nowcompress`, `cptsegment`, `cptcrypt`. The fixture was
+right and the reading was lossy, which is the harder half to notice,
+because nothing is missing and nothing fails.
+
+**Root-only is recorded, not fixed, and the distinction is the point.**
+All four read volumes that `make_volume` builds flat and that one guest
+application writes to; none has ever had a folder to descend into. So
+this is not four defects, it is four properties that were being carried
+as assumptions. `EXPECT_FLAT` is what turns an assumption into a line
+that fails the day one of those harnesses grows a folder — which is the
+same service `EXPECT_BLIND` does, and it fails in both directions:
+established by taking `-a` back out of the walk just fixed (reported
+newly blind) and by claiming that walk descends (reported newly
+root-only).
+
+**What `arcmac.read_volume` cost, since it is the template for the
+other four.** The flag, a `FINDER_OWN` filter, the raw-bytes rule for
+`hcopy`, and one emulator run:
+
+- **the filter was measured on that harness's own volume, not assumed.**
+  On the `Arc` volume a System 6 boot leaves behind, `hls -a -1` adds
+  exactly one name to the four `hls -1` gives — `Desktop`, FNDR/ERIK,
+  invisible. Three names are filtered rather than one, because the two
+  `Desktop DB`/`Desktop DF` are what a later system writes in its place;
+- **its two callers needed nothing.** `arcmac.make` selects on the file
+  TYPE `mArc` and `maclha.make` on the `.lzh` extension, so neither
+  compares fork SETS — which is the thing that makes the other four
+  expensive;
+- **names go to `hcopy` as the bytes `hls` printed.** The old code
+  decoded to `str` and handed that back, which re-encodes as UTF-8 and
+  is a file that does not exist for any 8-bit name. It read `Icon\r`
+  correctly on the first try once both were in — 4/4, both forks.
+
+**And the risk that made this walk FIRST is not there.** The reason
+`arcmac.read_volume` was taken before the other four is one sentence:
+`arcmac.macbinary`'s docstring has recorded since M13 that "the ArcMac
+header's own Finder info has bit 0x40 of the high byte set, which is
+`invisible`", so this format's own files were the one blind walk with a
+known-real subject. **Measured, and withdrawn.** `macunpack/arc.h` puts
+`FINFO` at offset 42 of the 88-byte header — `fdFlags`, `fdLocation`,
+`fdFldr` — so the flags word is `h[42:44]`; across every ArcMac file
+reachable here, **5 files and 11 entries**, it is **0x2100 on the
+application and 0x0100 on every document**. 0x2100 is `fHasBundle |
+fHasBeenInited`. `fInvisible` is 0x4000 and is set nowhere, including in
+the two archives found in the wild and in the outer MacBinary of the
+download itself.
+
+**The symptom was real and the reason was reconstructed from it.** The
+volume did show one item where two had been written; that is recorded in
+M13 and nothing here contradicts it. But the code that produced it was
+never committed — the fix is in `arcmac.py`'s first commit — so what it
+actually passed cannot be recovered, and `fHasBeenInited` copied onto a
+file the Finder has never seen is enough to stop that file's first-time
+bundle processing, which would also look like "the Finder did not show
+it". **A reason inferred from a symptom, written down as a property of
+the format, and then quoted for three years of harness decisions as
+though it were one.** Same shape as *the right flag with the wrong
+reason*, above, and found by the same habit: the fix stayed right the
+whole time, which is exactly why nobody re-read it.
+
+What that costs here is nothing and what it changes is the ORDER. The
+walk was blind whether or not any ArcMac file is invisible, the flag
+cost nothing, and 4/4 is 4/4. Whether a blind walk has ever LOST
+anything is still the right question to ask of each of the remaining
+four — this is the answer for one of them, and it is *no*.
+
+
+## 2026-09-22 (the file that was on the disk and not in the catalog) — a hypothesis about flushing, reduced to a reproduction
+
+**Claim.** `interactive.py --report-utf8` sends its saved report to a
+floppy because the report written onto the BOOT volume cannot be read
+off the image afterwards. That was carried as *"hypothesis, not
+measured: 300 KB across a seven-deep tree grows the catalog, and what is
+written after that does not reach the image"*. **It is measured now, and
+the hypothesis is wrong in its load-bearing half: the bytes reach the
+image. The catalog entry does not.**
+
+**One run says it, and `--utf8-to-boot` is that run.** It is this phase
+with the one click that switches volumes removed, so the output lands
+beside the archive the way it did before the workaround, and it keeps
+the image and reads it twice:
+
+| reading | answer |
+|---|---|
+| the extraction's 300 KB of output, in the volume's catalog | **YES** — `800-SAY-WHAT 3.0.1J`, five entries, `Icon\r` included |
+| the report, in the volume's catalog | **NO** |
+| the report's TEXT, in the image's blocks | **YES** — the three `_` lines and `Extraction complete.`, in order, complete |
+
+**So nothing is lost "after a point".** The File Manager lays a data
+fork's blocks down and then records the entry, and this run ends between
+the two. That is why the four remedies did nothing: a 30 s flush wait,
+Control-Q, SIGTERM and the shell's own `FlushVol` were all aimed at a
+write that had already happened. It also explains the asymmetry the
+hypothesis was invented for — `--report`'s few hundred bytes never
+provoke it because they are not the LAST thing that volume is asked to
+record; they are written to a volume whose catalog is about to be
+touched again.
+
+**The needle is the finding's own trap, and this is the second time
+today.** `Extraction Report` is the name `SFPutFile` offers, so it is in
+the application's resources, on the same volume, in every run — a raw
+search for it answers YES whether or not any report was ever saved, and
+the first version of this probe did exactly that and reported a pass.
+The reading that works searches the blocks for a string only the SAVED
+document can hold (`_______ was named in characters`, one hit) and the
+CATALOG for the name. **A search for a name is a search for every copy
+of that name**, and an application that offers a default filename has
+one.
+
+**What the workaround is worth, now that it is known.** Sending the
+report to another volume gets its entry written on a volume whose
+catalog is not in that state. That is a sidestep and stays — but it is
+a sidestep of a known thing, and the run that demonstrates it is one
+command. What remains unexplained is one level down and does not block
+anything: whether the lost sector is sitting in Mini vMac's buffered
+stdio or in the guest's own volume cache. The application is not
+implicated either way — the same fold on the same fixture is graded off
+the Out volume by `checkdisk.py` on every one of the seven sweeps.
+

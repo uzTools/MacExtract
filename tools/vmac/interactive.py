@@ -625,6 +625,71 @@ def volume_text(img, name):
         shutil.rmtree(home, ignore_errors=True)
 
 
+def report_reached_image(img):
+    """Where the report actually is, when the host cannot read it.
+
+    The control for the floppy workaround `phase_report_utf8` carries.
+    That workaround rested on a HYPOTHESIS — that 300 KB across a
+    seven-deep tree grows the catalog and what is written after that
+    does not reach the image — and a hypothesis nothing can read is not
+    one this repository keeps (CLAUDE.md, the reproduction rule).
+
+    **Measured 2026-09-22, and it replaces the hypothesis.** Run with
+    `--utf8-to-boot`, the report is unreadable off the boot volume by
+    any HFS tool, and its bytes are in the image all the same: the three
+    `_` lines and `Extraction complete.` are there, in order, complete.
+    The extraction's own output — 300 KB written to the same volume
+    minutes earlier — is both in the image AND in the catalog, five
+    entries deep, `Icon\r` included. So what is lost is **the catalog
+    update for the last file written**, not the file, and not "what the
+    guest wrote after a point": the File Manager lays a data fork's
+    blocks down before it records the entry, and the run ends between
+    the two.
+
+    That is why no flush helped: four remedies were tried against a
+    write that had already happened. It also says what the workaround
+    is worth — sending the report to another volume gets a catalog
+    entry written on a volume whose catalog is not in that state, which
+    is a sidestep and is still the right one.
+
+    Two readings, printed whatever they say:
+
+      - the CATALOG, which is what every harness here reads — `hls -a`
+        at the volume root, so an invisible file counts as present;
+      - the BLOCKS, a raw search for a string only the saved document
+        can contain. Not its NAME: `Extraction Report` is the default
+        `SFPutFile` offers, so it is in the application's own resources
+        on the same volume, and searching for it answers YES either way.
+        That is the shape of the error this reading is built to avoid.
+    """
+    # The three-`_` line as the DOCUMENT spells it. The application's
+    # resources hold the template without the name, so this matches the
+    # saved file and nothing else — verified at one hit.
+    SAVED = "_______ was named in characters".encode("mac_roman")
+    raw = open(img, "rb").read()
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        listed = []
+        if CD.hfs(env, "hmount", img).returncode == 0:
+            out = CD.hfs(env, "hls", "-a", "-1").stdout
+            listed = [x.decode("mac_roman") for x in out.split(b"\n") if x]
+            CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    print("interactive: the volume's CATALOG holds: "
+          + (", ".join(repr(x) for x in listed) or "<nothing; it did not mount>"))
+    print("interactive: the report is in the catalog       : %s"
+          % ("YES" if REPORT_FILE in listed else "NO"))
+    print("interactive: the extraction's output is in it   : %s"
+          % ("YES" if any(x.startswith("800-SAY-WHAT") for x in listed) else "NO"))
+    print("interactive: the report's TEXT is in the image  : %s"
+          % ("YES" if SAVED in raw else "NO"))
+    if SAVED in raw and REPORT_FILE not in listed:
+        print("interactive: so the bytes landed and the catalog entry did "
+              "not — the reproduction, not the hypothesis")
+
+
 def phase_report(args, appbin, workdir, shot):
     """The end-of-run report: what was renamed, what failed, and the
     outcome last. It replaces the "Extraction complete." alert on any
@@ -759,6 +824,12 @@ def phase_report(args, appbin, workdir, shot):
 # phase_report_utf8 for what it is for and what it cost to find.
 FLUSH_WAIT = 30.0
 
+# What Save as Text offers as the document's name, and what the volume is
+# therefore searched for. It is ALSO in the application's own resources,
+# which is why report_reached_image() searches the blocks for the
+# document's CONTENT and the catalog for this.
+REPORT_FILE = "Extraction Report"
+
 UTF8_REPORT_FIXTURE = "derived-800saywhat301j.sit"
 UTF8_REPORT_LINES = [
     "_______ was named in characters this Macintosh cannot write",
@@ -797,17 +868,24 @@ def phase_report_utf8(args, appbin, workdir, shot):
     the one way this phase differs from `--report` and it is not
     cosmetic. Extracting this archive onto the BOOT volume leaves the
     saved report unreadable on the host: the Macintosh has the file —
-    frame 4 photographs it in Standard File's own listing — and the
-    image does not, the string appearing nowhere in its 24 MB but inside
-    the application's own resources. Measured 2026-09-22, four ways: a
-    30 s flush wait, Mini vMac's Control-Q, SIGTERM instead of SIGKILL,
-    and the shell's own `FlushVol` already being called at
-    `macextract_mac.c`'s Save-as-Text. *Hypothesis, not measured:* 300 KB
-    across a seven-deep tree grows the catalog, and what is written after
-    that does not reach the image; `--report`'s few hundred bytes never
-    provoke it. Sending the output elsewhere sidesteps it rather than
-    explaining it, and the report is then read off whichever volume it
-    landed on.
+    frame 4 photographs it in Standard File's own listing — and `hcopy`
+    off the image cannot find it. Four things did not help: a 30 s flush
+    wait, Mini vMac's Control-Q, SIGTERM instead of SIGKILL, and the
+    shell's own `FlushVol`, already called at `macextract_mac.c`'s
+    Save-as-Text.
+
+    **What it is, measured rather than guessed, is `--utf8-to-boot`'s
+    doing**: the report's BYTES are on the image — the three `_` lines
+    and `Extraction complete.`, in order, complete — and its **catalog
+    entry is not**, while the 300 KB the extraction wrote to the same
+    volume minutes earlier is in both. So nothing is lost after a point;
+    what is lost is the directory record for the last file written, and
+    no flush could have helped because the write had already happened.
+    `report_reached_image` reads both, and DECISIONS.md 2026-09-22, *the
+    file that was on the disk and not in the catalog*, has the rest.
+    Sending the report to another volume gets its entry written on a
+    volume whose catalog is not in that state: a sidestep, and the right
+    one.
     """
     fixture = os.path.join(R.REPO, "fixtures", UTF8_REPORT_FIXTURE)
     if not os.path.exists(fixture):
@@ -833,8 +911,9 @@ def phase_report_utf8(args, appbin, workdir, shot):
         mac.click(*SF_FIRST_ROW)
         mac.key("Return")
         time.sleep(3.0)
-        mac.click(*SFPUT_DRIVE)                # ...and away to the floppy
-        time.sleep(1.5)
+        if not getattr(args, "utf8_to_boot", False):
+            mac.click(*SFPUT_DRIVE)            # ...and away to the floppy
+            time.sleep(1.5)
         accept_destination(mac, pause=1.0)
         mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                    timeout=args.complete_timeout)
@@ -855,6 +934,12 @@ def phase_report_utf8(args, appbin, workdir, shot):
             os.remove(scratch)
 
     written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    if getattr(args, "utf8_to_boot", False):
+        keep = os.path.join(args.outdir, "utf8-boot.hfv")
+        shutil.copyfile(written, keep)
+        print("interactive: the boot volume this run wrote is kept at "
+              + keep)
+        report_reached_image(keep)
     lines = (volume_text(destdsk, "Extraction Report")
              or volume_text(written, "Extraction Report"))
     if lines is None:
@@ -1999,6 +2084,13 @@ def main():
                          "shell writes '_' and says so per component. Uses "
                          "fixtures/" + UTF8_REPORT_FIXTURE + " and ignores "
                          "the fixture argument.")
+    ap.add_argument("--utf8-to-boot", action="store_true",
+                    help="the CONTROL for --report-utf8's floppy: extract "
+                         "onto the BOOT volume, the way that phase did "
+                         "before the workaround, keep the image and say "
+                         "which of this run's writes reached it. Settles "
+                         "whether the report alone is lost or nothing the "
+                         "guest wrote arrives at all.")
     ap.add_argument("--drop-type", default="SIT!",
                     help="the four-character TYPE to give the archive in the "
                          "--drop phase. The Finder matches this against the "
@@ -2020,6 +2112,9 @@ def main():
                          "then double-click the application that was "
                          "extracted. Needs a fixture containing an APPL.")
     args = ap.parse_args()
+    if args.utf8_to_boot and not args.report_utf8:
+        ap.error("--utf8-to-boot is the control for --report-utf8 and means "
+                 "nothing without it")
 
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
