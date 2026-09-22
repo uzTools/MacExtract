@@ -1818,40 +1818,62 @@ error, nothing to debug. Cloning a known-good head worked first time.
 Harnesses here read a Macintosh volume back — with `hls`, and two of
 them with `hdir` — and grade what the application under test wrote onto
 it, and they did not agree about what a listing contains. This builds
-one volume holding the four shapes that tell them apart — a plain file,
-an INVISIBLE one, a dotted one with the invisible bit CLEAR, and
-`Icon\r` — at the root and again inside a folder, runs every walk in
-the tree against it, and says which came back short. No emulator, no
-ROM, no X server; seconds.
+one volume holding every shape that tells them apart — a plain file, an
+INVISIBLE one, a dotted one with the invisible bit CLEAR, and `Icon\r`,
+at the root, inside a folder and inside an INVISIBLE folder, plus one
+LOCKED file — runs every walk in the tree against it, and says which
+came back short. No emulator, no ROM, no X server; seconds.
 
     tools/vmac/walkprobe.py            # the table
-    tools/vmac/walkprobe.py --check    # and assert it against EXPECT_BLIND
+    tools/vmac/walkprobe.py --check    # and assert it against the EXPECT_* sets
 
-As of **2026-09-22**, of four subjects at the root and the same four
-inside a folder — **eight** walks, and two columns, both of which grew
-that day:
+As of **2026-09-22**, **eight** walks and **four** columns:
 
-| walk | invisible | descends |
-|---|---|---|
-| `checkdisk.walk` | 4/4 | yes |
-| `os9._walk_volume` | 4/4 | yes |
-| `arcmac.read_volume` | **4/4** | no |
-| `nowcompress.read_volume` | 2/4 | no |
-| `diskdoubler.volume_files` | 2/4 | yes |
-| `superdisk.read_forks` | 2/4 | yes |
-| `cptsegment.read_volume` | 2/4 | no |
-| `cptcrypt.read_volume` | 2/4 | no |
+| walk | invisible file | descends | invisible folder | locked file |
+|---|---|---|---|---|
+| `checkdisk.walk` | 4/4 | yes | 4/4 | yes |
+| `os9._walk_volume` | 4/4 | yes | 4/4 | yes |
+| `arcmac.read_volume` | **4/4** | no | — | yes |
+| `nowcompress.read_volume` | **4/4** | no | — | yes |
+| `diskdoubler.volume_files` | **4/4** | yes | **4/4** | yes |
+| `cptsegment.read_volume` | **4/4** | no | — | **yes** |
+| `cptcrypt.read_volume` | **4/4** | no | — | **yes** |
+| `superdisk.read_forks` | 2/4 | yes | 0/4 | yes |
 
-The short ones all miss the same two, and for the same reason: no `-a`.
-**`--check` can fail** — taking `-a` back out of `os9.py` reports it as
-newly blind — and a walk that gets fixed fails it too, which is what
-`EXPECT_BLIND` is for. It was established both ways again when
-`arcmac.read_volume` was fixed: with the flag taken back out the probe
-reports it newly blind, and with `EXPECT_FLAT` claiming it descends the
-probe says so.
+**One walk is left**, and it is last on purpose: `superdisk.read_forks`
+has about thirty callers across nine harnesses, and some of them compare
+fork SETS, which is the thing that makes the same flag expensive.
 
-**The table grew twice on the day it was written, and neither growth
-was a new walk being added to the tree.**
+**Two of the four columns are new, and both came off a real volume
+rather than out of a list of things that could go wrong.** The cache in
+`~/.cache/macextract/vmac` holds 84 mountable images; listing every one
+twice, with `-a` and without, says what the flag is actually worth here:
+
+- **an invisible FOLDER** is the cell where the first two columns cross,
+  and passing either does not imply passing it. Now QuickFiler creates
+  `[Now QuickFiler Folder]` on the volume it is compressing on and puts a
+  `NCdb`/`NCex` database inside it — the FOLDER invisible, the database
+  not — on six of the kept `specimens/now/*` work volumes.
+  `diskdoubler.volume_files` was the walk that earned this column: it
+  descends, and it used to walk straight past a folder it could not see;
+- **a LOCKED file** has nothing to do with `-a` at all. `hdir` prints one
+  with a leading `F`, so `cptsegment.read_volume` and
+  `cptcrypt.read_volume`, which kept a listing line on
+  `line.startswith("f")`, threw every locked file away along with the
+  directories that test was aimed at. `mkboot.Hfs.ls` had the same
+  character set and the same hole. One locked item exists across all 84
+  images — `[DiskExpress Activity Log]` on the Norton DiskDoubler Pro
+  floppy, invisible AND locked.
+
+**`--check` can fail, and every column has been made to.** Taking `-a`
+back out of a walk reports it newly blind; claiming a walk descends when
+it does not reports that; the hidden-folder column was failed both ways
+against `diskdoubler.volume_files` on the day it was written, and the
+locked column named the two Compact Pro walks before they were fixed and
+named them again, as gains, after.
+
+**The table grew twice on the day it was written, and neither growth was
+a new walk being added to the tree.**
 
 - **Two walks were missing from it.** `cptsegment.read_volume` and
   `cptcrypt.read_volume` list with `hdir` rather than `hls`, so the
@@ -1869,23 +1891,28 @@ was a new walk being added to the tree.**
   read volumes built flat, which `EXPECT_FLAT` records — but it was a
   property the probe's own docstring claimed to test and could not see.
 
-**Why the rest are not fixed by adding a flag.** `superdisk.read_forks`
-alone has about thirty callers across nine harnesses, and `-a` surfaces
-the Finder's own invisible bookkeeping — `Desktop`, `Desktop DB`,
-`Desktop DF` — on any volume a booted Mac has touched. A caller that
-compares fork SETS would start failing on files the Finder made, so each
-needs the filter `os9.py` already has (`NOT_OUTPUT`) and an emulator run
-to re-verify. Scoped in OPEN_ITEMS.md, *Volume walks that cannot see an
-invisible file*.
+**What each fix cost, and what `-a` is NOT free of.** The template is
+`arcmac.read_volume`: the flag, a three-name `FINDER_OWN` filter
+measured on that harness's OWN volume rather than assumed — `hls -a -1`
+there adds exactly `Desktop`, FNDR/ERIK, invisible, to the four `hls -1`
+gives — the raw-bytes rule for `hcopy`, and one Mini vMac run to
+re-verify. Its two callers (`arcmac.make`, `maclha.make`) select by file
+TYPE and extension, so neither compares fork sets. Every walk fixed
+since **prints what its filter dropped, on every run**, so the filter is
+a measurement rather than a constant somebody trusted:
 
-**`arcmac.read_volume` is the one that has been taken**, and what it
-cost is the shape of the rest: the flag, a three-name `FINDER_OWN`
-filter measured on that harness's OWN volume rather than assumed —
-`hls -a -1` there adds exactly `Desktop`, FNDR/ERIK, invisible, to the
-four `hls -1` gives — the raw-bytes rule for `hcopy`, and one Mini vMac
-run of `arcmac.py --make` to re-verify. Its two callers
-(`arcmac.make`, `maclha.make`) select by file TYPE and extension, so
-neither compares fork sets and neither needed changing.
+- `cptsegment` and `cptcrypt`: `Desktop`, and nothing else.
+- `nowcompress`: `Desktop` and `[Now QuickFiler Folder]`, which is the
+  application's own bookkeeping and the thing this walk used to miss.
+- `diskdoubler --wild` on the 3.7 disk: `Desktop`, and the figure it
+  reports is unchanged at 10 compressed files.
+
+And `-a` cost one real defect on the way in, which is why the rule is to
+re-run the harness: it made `Icon\r` reachable for the first time, and
+the two Compact Pro walks read their listing with `text=True`, which
+applies **universal newlines** — the carriage return inside the HFS name
+becomes a line break, so `hcopy` was handed `Icon` and a file that does
+not exist. `hdir` prints the CR verbatim; the listing is bytes now.
 
 **Two things outside the walks were fixed the same day.**
 `os9.wrapper_names` is a NEGATIVE — the verdict is that none of the output
@@ -2356,6 +2383,23 @@ so it is in the application's resources on the same volume and a raw
 search for it says YES in every run, saved or not. The blocks are
 searched for a string only the saved document can hold.
 
+**And one level below that — `--utf8-second`, the discriminator**
+
+    tools/vmac/interactive.py --report-utf8 --utf8-to-boot --utf8-second \
+        --emu mv-4M -o shots fixtures/derived-800saywhat301j.sit
+
+Whether the missing entry is destroyed or merely unwritten is answered
+by doing the save a SECOND time, under the name `Second`, so one more
+catalog update follows the lost one. Both land:
+
+    the report is in the catalog       : YES
+    the SECOND report is in the catalog: YES
+
+So the first entry was **unflushed, not lost**, and a fixed tail of
+Mini vMac's buffered stdio is ruled out — both entries live in the same
+catalog leaf, so a lost tail would have taken them both. This phase
+exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
+
 ### Driving the real UI
 
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
@@ -2369,6 +2413,9 @@ searched for a string only the saved document can hold.
                                     # ...onto the BOOT volume: the control that
                                     # says the bytes land and the catalog entry
                                     # does not. Exits 1 by design
+    interactive.py --report-utf8 --utf8-to-boot --utf8-second
+                                    # ...and save it TWICE: both entries land,
+                                    # so the first was unflushed, not lost
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
     interactive.py --named split    # a plain .NNN split, likewise

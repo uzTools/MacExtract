@@ -100,6 +100,13 @@ python3 tools/run_only.py --macextract build/san/macextract \
 # fail before they were believed (TESTING.md).
 python3 tools/run_walk.py --probe build/san/walk_probe \
     --macextract build/san/macextract || fail "walk-agreement tests"
+# The other kind of walk: the HOST-side ones that read a Macintosh volume
+# back and grade what an application wrote onto it. Eight of them, four
+# columns, no emulator and no ROM — seconds. Its four EXPECT_* sets fail
+# in both directions, so a walk that regresses and a walk that is fixed
+# both say so. Skips cleanly without hfsutils.
+python3 tools/vmac/walkprobe.py --check > /dev/null \
+    || fail "volume-walk probe (tools/vmac/walkprobe.py --check)"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same

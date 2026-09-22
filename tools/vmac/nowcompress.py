@@ -70,6 +70,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                     # noqa: E402
 from interactive import Mac                         # noqa: E402
+from arcmac import FINDER_OWN                       # noqa: E402
 
 # Now Utilities 5.0.1, from Macintosh Garden. Commercial software, kept
 # out of the repository exactly like the ROM: fetched by URL, checked by
@@ -377,21 +378,57 @@ def make_volume(path, volname, files, folders=(), macbinary=(), size=1400):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def read_volume(img, out):
-    """Pull every file off the volume as MacBinary, then split out the
+# What Now QuickFiler leaves on the volume that is NOT output, and the
+# answer to the question `walkprobe.py` cannot ask: this walk HAS lost
+# something. QuickFiler creates `[Now QuickFiler Folder]` on the volume it
+# is compressing on and puts a `NCdb`/`NCex` database inside it, and the
+# FOLDER is invisible while the database is not — so `hls` without `-a`
+# never mentioned it. It is on six of the kept `specimens/now/*` work
+# volumes, and on the Now Utilities 5.0.1 installer floppy with a second
+# database beside it. Named and excluded rather than unseen.
+NOW_OWN = {"[Now QuickFiler Folder]"}
+
+
+def read_volume(img, out, invisible=True):
+    """Pull every file off the volume ROOT as MacBinary, then split out the
     data fork — which is where a Now Compress archive lives, in a
-    compressed file and in a self-extracting one alike."""
+    compressed file and in a self-extracting one alike.
+
+    **`-a`, since 2026-09-22**, because `hls` hides a file whose Finder
+    INVISIBLE bit is set, and so a walk that grades what an application
+    wrote must not depend on the application's taste in Finder flags. What
+    it surfaces here is measured rather than assumed: the Finder's
+    `FINDER_OWN` bookkeeping, and QuickFiler's own `NOW_OWN` folder, which
+    is why that constant exists. Pass `invisible=False` for the listing as
+    it was.
+
+    Root-only, deliberately, and `walkprobe.py`'s `EXPECT_FLAT` records it:
+    every volume this reads is one `make_volume` built flat. The one
+    directory that ever appears on it is QuickFiler's, and its contents are
+    bookkeeping, not output.
+
+    Names reach `hcopy` as the bytes `hls` printed — the rule
+    `superdisk.read_forks` records; decoding to `str` and handing that back
+    re-encodes as UTF-8, which is a file that does not exist for any 8-bit
+    name.
+    """
     os.makedirs(out, exist_ok=True)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    got = {}
+    got, dropped = {}, []
     try:
         subprocess.run(["hmount", img], check=True, capture_output=True, env=env)
-        listing = subprocess.run(["hls", "-1"], capture_output=True,
-                                 env=env).stdout.decode("mac-roman", "replace")
-        for name in [n for n in listing.split("\n") if n.strip()]:
+        argv = [b"hls"] + ([b"-a"] if invisible else []) + [b"-1"]
+        listing = subprocess.run(argv, capture_output=True, env=env).stdout
+        # split on b"\n", not strip(): a carriage return is a legal HFS
+        # filename character and it is the last one of `Icon\r`.
+        for raw in [n for n in listing.split(b"\n") if n.strip()]:
+            name = raw.decode("mac-roman", "replace")
+            if invisible and (name in FINDER_OWN or name in NOW_OWN):
+                dropped.append(name)
+                continue
             mb = os.path.join(out, name + ".bin")
-            r = subprocess.run(["hcopy", "-m", name, mb], capture_output=True,
-                               env=env)
+            r = subprocess.run([b"hcopy", b"-m", raw, mb.encode()],
+                               capture_output=True, env=env)
             if r.returncode != 0 or not os.path.exists(mb):
                 continue
             blob = open(mb, "rb").read()
@@ -404,6 +441,12 @@ def read_volume(img, out):
         subprocess.run(["humount"], capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    # What `-a` cost on this harness's own volume, printed rather than
+    # assumed. `[Now QuickFiler Folder]` appearing here is the application
+    # writing an invisible folder onto the volume under test — the thing
+    # this walk used to miss.
+    print("nowcompress: -a surfaced and the filters dropped: %s"
+          % (", ".join(sorted(dropped)) or "nothing"))
     return got
 
 

@@ -1495,8 +1495,9 @@ a harness can click is not the same list.
   figure's comparability rests on — read its listing without `-a`, so
   the files the strip cannot delete were exactly the ones it could not
   see; an invisible `Ghost INIT` planted in a stripped System Folder
-  passed it. Four volume walks still cannot see an invisible entry
-  (OPEN_ITEMS.md, *Volume walks that cannot see an invisible file*).
+  passed it. Of the eight volume walks in the tree, seven see an
+  invisible entry since 2026-09-22 and `superdisk.read_forks` does not
+  (OPEN_ITEMS.md, *One volume walk that cannot see an invisible file*).
   **The fact had been observed four separate times** — in `checkdisk.py`,
   `arcmac.py`, the yardstick's Standard File row and `mkboot.py`, the
   last of which states it correctly one function above a comment blaming

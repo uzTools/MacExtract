@@ -64,7 +64,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                      # noqa: E402
 from interactive import Mac                          # noqa: E402
-from arcmac import macbinary                         # noqa: E402
+from arcmac import macbinary, FINDER_OWN             # noqa: E402
 
 # DiskDoubler 3.7, commercial, fetched by URL and checked by hash exactly
 # like the ROM and the System images; nothing from it is committed. The
@@ -160,7 +160,7 @@ def fetch():
     return RAW
 
 
-def volume_files(img):
+def volume_files(img, invisible=True):
     """path tuple -> (type, creator, data, rsrc) for a whole volume.
 
     Names are carried as BYTES all the way to `hcopy`. An HFS name is
@@ -169,14 +169,34 @@ def volume_files(img):
     ™ or an ƒ in it then fails to open. On this disk that is most of the
     interesting files, and the failure is silent: the walk simply returns
     fewer of them.
+
+    **`-a`, since 2026-09-22.** `hls` hides a file whose Finder INVISIBLE
+    bit is set, and this walk descends, so the flag buys two things: an
+    invisible FILE anywhere on the volume, and an invisible FOLDER, whose
+    whole subtree it used to walk straight past (`walkprobe.py`, the
+    hidden-folder column). Pass `invisible=False` for the listing as it
+    was.
+
+    **What the flag costs here is nothing, and that was checked rather
+    than assumed.** It surfaces the Finder's own bookkeeping, which
+    `FINDER_OWN` drops, and all six callers select by DiskDoubler header,
+    by exact name, or by a magic number — not one of them compares fork
+    SETS, which is the thing that makes the same flag expensive for
+    `superdisk.read_forks` (OPEN_ITEMS.md, *Volume walks that cannot see
+    an invisible file*).
     """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    out = {}
+    out, dropped = {}, []
 
     def walk(prefix):
-        listing = subprocess.run([b"hls", b"-1F"], capture_output=True,
+        listing = subprocess.run([b"hls"] + ([b"-a"] if invisible else [])
+                                 + [b"-1F"], capture_output=True,
                                  env=env).stdout
         for name in [n for n in listing.split(b"\n") if n.strip()]:
+            if (invisible and not prefix
+                    and name.decode("mac-roman", "replace") in FINDER_OWN):
+                dropped.append(name.decode("mac-roman", "replace"))
+                continue
             if name.endswith(b":"):
                 name = name[:-1]
                 subprocess.run([b"hcd", name], capture_output=True, env=env)
@@ -202,6 +222,10 @@ def volume_files(img):
         subprocess.run(["humount"], capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    # What `-a` cost on this harness's own volumes, printed rather than
+    # assumed.
+    print("diskdoubler: -a surfaced and FINDER_OWN dropped: %s"
+          % (", ".join(sorted(dropped)) or "nothing"))
     return out
 
 

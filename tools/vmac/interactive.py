@@ -625,7 +625,7 @@ def volume_text(img, name):
         shutil.rmtree(home, ignore_errors=True)
 
 
-def report_reached_image(img):
+def report_reached_image(img, second=False):
     """Where the report actually is, when the host cannot read it.
 
     The control for the floppy workaround `phase_report_utf8` carries.
@@ -661,6 +661,21 @@ def report_reached_image(img):
         `SFPutFile` offers, so it is in the application's own resources
         on the same volume, and searching for it answers YES either way.
         That is the shape of the error this reading is built to avoid.
+
+    **`second=True` is the discriminator**, and it is the one level below
+    this that was left open: whether the lost catalog update is sitting in
+    Mini vMac's buffered stdio or in the guest's own volume cache. With
+    `--utf8-second` the report is saved TWICE, the second time under
+    `Second`, so one more file and one more catalog update follow the
+    first. The three outcomes read differently:
+
+      - `Second` in the catalog and the report NOT: the first entry was
+        overwritten or reordered, not merely unflushed — a property of
+        the ORDER the File Manager records in;
+      - NEITHER in it: whatever holds the tail holds both, which is a
+        buffer with more than one update in it;
+      - the report in it and `Second` NOT: the tail simply MOVED, which
+        is the buffer reading with the blame on whichever write is last.
     """
     # The three-`_` line as the DOCUMENT spells it. The application's
     # resources hold the template without the name, so this matches the
@@ -688,6 +703,24 @@ def report_reached_image(img):
     if SAVED in raw and REPORT_FILE not in listed:
         print("interactive: so the bytes landed and the catalog entry did "
               "not — the reproduction, not the hypothesis")
+    if second:
+        got1 = REPORT_FILE in listed
+        got2 = UTF8_SECOND_FILE in listed
+        print("interactive: the SECOND report is in the catalog: %s"
+              % ("YES" if got2 else "NO"))
+        if got2 and not got1:
+            verdict = ("the later entry landed and the earlier did not — "
+                       "ORDERING, not an unflushed tail")
+        elif not got2 and not got1:
+            verdict = ("neither entry landed — whatever holds the tail "
+                       "holds more than one update")
+        elif got1 and not got2:
+            verdict = ("the tail simply MOVED to the last write — the "
+                       "buffer reading")
+        else:
+            verdict = ("both landed, so a second write is enough to place "
+                       "the first — the first was unflushed, not lost")
+        print("interactive: discriminator says: " + verdict)
 
 
 def phase_report(args, appbin, workdir, shot):
@@ -829,6 +862,9 @@ FLUSH_WAIT = 30.0
 # which is why report_reached_image() searches the blocks for the
 # document's CONTENT and the catalog for this.
 REPORT_FILE = "Extraction Report"
+# The second report, saved under a name of its own by `--utf8-second`.
+# Its only job is to be the NEXT catalog update after the first one's.
+UTF8_SECOND_FILE = "Second"
 
 UTF8_REPORT_FIXTURE = "derived-800saywhat301j.sit"
 UTF8_REPORT_LINES = [
@@ -886,6 +922,14 @@ def phase_report_utf8(args, appbin, workdir, shot):
     Sending the report to another volume gets its entry written on a
     volume whose catalog is not in that state: a sidestep, and the right
     one.
+
+    **`--utf8-second` is the level below that, and it is settled too.**
+    Saving the report a second time under its own name puts one more
+    catalog update after the lost one, and BOTH entries then land — so
+    the first was unflushed rather than lost, and a fixed tail of Mini
+    vMac's buffered stdio is ruled out, since both entries live in the
+    same catalog leaf (DECISIONS.md 2026-09-22, *the entry a second
+    write placed*).
     """
     fixture = os.path.join(R.REPO, "fixtures", UTF8_REPORT_FIXTURE)
     if not os.path.exists(fixture):
@@ -924,6 +968,20 @@ def phase_report_utf8(args, appbin, workdir, shot):
         mac.key("Return")
         time.sleep(5.0)
         shot(mac, "utf8-3-saved.png")
+        if getattr(args, "utf8_second", False):
+            # The DISCRIMINATOR. Save the report a SECOND time, under a
+            # name of its own, so one more small file and one more catalog
+            # update land on this volume after the first report's. Which
+            # of the two entries survives is the whole reading; see
+            # `report_reached_image`.
+            mac.click(*REPORT_SAVE)
+            time.sleep(4.0)
+            mac._xdo("type", "--delay", "120", UTF8_SECOND_FILE)
+            time.sleep(1.0)
+            shot(mac, "utf8-3b-second-named.png")
+            mac.key("Return")
+            time.sleep(5.0)
+            shot(mac, "utf8-3c-second-saved.png")
         mac.click(*REPORT_OK)
         time.sleep(3.0)
         shot(mac, "utf8-4-back.png")
@@ -939,7 +997,7 @@ def phase_report_utf8(args, appbin, workdir, shot):
         shutil.copyfile(written, keep)
         print("interactive: the boot volume this run wrote is kept at "
               + keep)
-        report_reached_image(keep)
+        report_reached_image(keep, second=getattr(args, "utf8_second", False))
     lines = (volume_text(destdsk, "Extraction Report")
              or volume_text(written, "Extraction Report"))
     if lines is None:
@@ -2091,6 +2149,13 @@ def main():
                          "which of this run's writes reached it. Settles "
                          "whether the report alone is lost or nothing the "
                          "guest wrote arrives at all.")
+    ap.add_argument("--utf8-second", action="store_true",
+                    help="the DISCRIMINATOR for --utf8-to-boot: save the "
+                         "report a second time under its own name, so one "
+                         "more catalog update follows the lost one, and say "
+                         "which of the two entries reached the image. Tells "
+                         "an ordering problem from an unflushed buffer "
+                         "tail.")
     ap.add_argument("--drop-type", default="SIT!",
                     help="the four-character TYPE to give the archive in the "
                          "--drop phase. The Finder matches this against the "
@@ -2115,6 +2180,9 @@ def main():
     if args.utf8_to_boot and not args.report_utf8:
         ap.error("--utf8-to-boot is the control for --report-utf8 and means "
                  "nothing without it")
+    if args.utf8_second and not args.utf8_to_boot:
+        ap.error("--utf8-second discriminates between two readings of what "
+                 "--utf8-to-boot measures, and needs it")
 
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)

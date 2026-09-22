@@ -256,6 +256,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the header that was a length) — a DiskDoubler file neither reader could open, for 64 bytes
 - 2026-09-22 (the column that was already on the volume) — two walks the survey never found, and a dimension the verdict threw away
 - 2026-09-22 (the file that was on the disk and not in the catalog) — a hypothesis about flushing, reduced to a reproduction
+- 2026-09-22 (the folder the application wrote and no walk could see) — four blind walks taken, and two columns the probe was missing
+- 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
 
 ---
 
@@ -16120,9 +16122,130 @@ one.
 report to another volume gets its entry written on a volume whose
 catalog is not in that state. That is a sidestep and stays — but it is
 a sidestep of a known thing, and the run that demonstrates it is one
-command. What remains unexplained is one level down and does not block
-anything: whether the lost sector is sitting in Mini vMac's buffered
-stdio or in the guest's own volume cache. The application is not
-implicated either way — the same fold on the same fixture is graded off
-the Out volume by `checkdisk.py` on every one of the seven sweeps.
+command. The application is not implicated either way — the same fold
+on the same fixture is graded off the Out volume by `checkdisk.py` on
+every one of the seven sweeps. The level below this one — whether the
+lost sector sits in Mini vMac's buffered stdio or in the guest's own
+volume cache — was open here until the same day: *the entry a second
+write placed*, below.
 
+
+## 2026-09-22 (the folder the application wrote and no walk could see) — four blind walks taken, and two columns the probe was missing
+
+**Claim.** Four of the five walks `walkprobe.py` listed as blind take
+`-a` and are 4/4; the fifth, `superdisk.read_forks`, is left for its
+thirty callers. On the way in, the probe gained **two more columns**,
+both of them shapes that already exist on volumes in this cache, and
+`-a` cost one real defect that only a harness re-run could have found.
+
+**The question the probe cannot ask, answered off files already here.**
+"Has a blind walk ever LOST anything" depends on what the application it
+grades writes, so it is a question about each application. Two readings
+settle it without booting anything:
+
+- **the archives.** `lsar -j` prints `XADFinderFlags`, so every fixture
+  in the corpus can be asked whether any entry is invisible. Across
+  **897 Compact Pro entries, 236 DiskDoubler, 26 PackIt, 5 Now Compress
+  and 3 LZH — not one**, and not a single `Icon\r` among them. So in the
+  EXPANDING direction none of these applications has ever been handed an
+  invisible file to write. (StuffIt and BinHex are the other story: 337
+  and 354, almost all of them `Icon\r`.)
+- **the volumes.** All **84 mountable images** in
+  `~/.cache/macextract/vmac`, listed twice, with `-a` and without. That
+  is where the answer is YES.
+
+**`nowcompress.read_volume` has lost something, and it is a folder.**
+Now QuickFiler creates `[Now QuickFiler Folder]` on the volume it is
+compressing on and puts an `NCdb`/`NCex` database inside it. **The
+folder is invisible; the database is not.** It is on six of the kept
+`specimens/now/*` work volumes and on the Now Utilities 5.0.1 installer
+floppy, and no run ever mentioned it. `superdisk.read_forks` has lost
+two: `ndd.harvest` reads the Norton DiskDoubler Pro floppy through it,
+and that floppy carries `[DiskExpress Activity Log]` — invisible AND
+locked — and `Norton DiskDoubler Pro/Icon`.
+
+**That is the cell where the probe's two columns crossed, and it had
+none.** An invisible FOLDER is hidden without `-a` exactly as a file is
+— measured, both listers — and passing either existing column does not
+imply passing it: `diskdoubler.volume_files` descended and was blind, so
+it walked past a whole subtree it could not see. The probe's fixture now
+carries the same four subjects inside an invisible folder.
+
+**And a second column that has nothing to do with `-a`.** `hdir` prints
+a LOCKED file with a leading `F`. `cptsegment.read_volume` and
+`cptcrypt.read_volume` kept a listing line on `line.startswith("f")` —
+a directory test — and so threw away every locked file as well.
+`mkboot.Hfs.ls` had the same character set and the same hole, and
+`verify_stripped` is built on it. One locked item exists across all 84
+images, which is what a lister has to be measured against rather than
+reasoned about: **a test aimed at one property was silently deciding a
+second**.
+
+**What `-a` cost, which is why the rule is to re-run the HARNESS.**
+Making `Icon\r` reachable for the first time broke both Compact Pro
+walks outright: they read the listing with `text=True`, which applies
+**universal newlines**, so the carriage return inside the name became a
+line break and `hcopy` was handed `Icon`. `hdir` prints the CR verbatim
+— checked both ways — so the defect was Python's, in a line nobody had
+reason to look at. This is the same rule `arcmac` and `superdisk`
+already state as "names go to `hcopy` as raw bytes", arriving through a
+door neither of them names.
+
+**Each filter is now a measurement rather than a constant.** Every walk
+fixed prints what `-a` surfaced and what it dropped, on every run. On
+their own volumes: `cptsegment` and `cptcrypt` drop `Desktop` and
+nothing else (one Mini vMac run each, 4 segments and 3/3 decrypted, both
+unchanged); `nowcompress` drops `Desktop` and `[Now QuickFiler Folder]`;
+`diskdoubler --wild` drops `Desktop` and still reports 10 compressed
+files on the 3.7 disk. A three-name `FINDER_OWN` that every harness
+imports from one place beats four copies that drift.
+
+**Why `diskdoubler.volume_files` was cheap and `superdisk.read_forks`
+is not, stated as a property of the CALLERS.** All six of the
+DiskDoubler walk's callers select by DiskDoubler header, by exact name,
+or by a magic number; not one compares fork SETS. That is the test to
+run before adding the flag anywhere, and it is the only reason the two
+walks with the same shape cost different amounts.
+
+
+## 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
+
+**Claim.** The catalog entry `--utf8-to-boot` showed missing is not
+destroyed and is not the victim of a fixed tail. **One more write to the
+same volume places it.** `--utf8-second` saves the report a second time,
+under the name `Second`, and both entries are in the catalog:
+
+    the report is in the catalog       : YES
+    the SECOND report is in the catalog: YES
+
+where the identical run without that one extra save reads NO for the
+first. Two frames, `utf8-3b` and `utf8-3c`, photograph the second save
+box with `Extraction Report` already in Standard File's own listing
+behind it.
+
+**What that rules out.** A fixed tail — the last N bytes of Mini vMac's
+buffered stdio going down with a killed emulator — predicts that
+whatever is written LAST is lost. Both entries live in the same catalog
+leaf, so under that reading the second save rewrites the very block that
+is about to be dropped, and both should be missing. Both are present.
+The observation is also not about elapsed time: a 30 s flush wait is one
+of the four remedies already measured as useless (*the file that was on
+the disk and not in the catalog*, above), and this run's `FLUSH_WAIT` is
+the same 30 s.
+
+**What is left, and it is labelled as what it is.** MEASURED: a second
+B*-tree operation on the volume is sufficient to place the first entry.
+HYPOTHESIS, and now a narrow one: the File Manager holds the dirty
+catalog block in the guest's own volume cache, and the next operation on
+that tree is what writes it out — so the run ends with one update
+pending, not with one sector stranded in the emulator. Nothing here
+depends on which: the workaround is a sidestep either way, and
+`--utf8-second` is the run that would notice if the answer changed.
+
+**The general shape, which is why this was worth one run.** "The last
+thing is lost" and "the last thing is not yet written" look identical
+from outside and are fixed by opposite things — the first by flushing
+harder, the second by doing one more ordinary write. Four remedies were
+aimed at the first reading before anybody asked the second. The
+discriminator is always the same: do the thing again and see whether the
+earlier one appears.

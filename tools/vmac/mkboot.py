@@ -104,7 +104,11 @@ class HFS:
         out = self.run("hdir", *(["-a"] if invisible else [])).stdout
         items = []
         for line in out.splitlines():
-            if not line or line[0] not in "fd":
+            # `F` as well as `f`: `hdir` prints a LOCKED file with a capital,
+            # so the obvious directory test silently drops one. A locked
+            # DIRECTORY still prints `d` — measured, both, 2026-09-22
+            # (walkprobe.py, the locked column).
+            if not line or line[0] not in "fFd":
                 continue
             # "f  TYPE/CREA  dlen  rlen  Mon dd  yyyy  name"
             # "d  n items               Mon dd hh:mm  name"
