@@ -1110,7 +1110,7 @@ The peaks are the Linux figures plus the Mac allocator's per-block
 overhead (33,733 and 25,056). The LZH row read 40,321 B until it was
 re-run on 2026-09-20, because the `-lh1-` coder was rebuilt the day
 before (*Peak RAM*, above); the RLE row is 2026-09-09's and that change
-does not reach it. Neither archive is in the 69-fixture tier sample and
+does not reach it. Neither archive is in the 71-fixture tier sample and
 neither has an oracle manifest, so these are `--expect` runs and are not
 part of any suite; TESTING.md, *DART*, has the commands and says what has
 NOT been run.
@@ -2394,6 +2394,18 @@ wants:
 | Linux CLI | passes the bytes through, as it already did for zip and tar. `Cool Tools ƒ` instead of `Cool Tools ∆í`, and 35 names across 4 of the corpus's 31 StuffIt 5 fixtures change with it |
 | Macintosh shell | folds UTF-8 into MacRoman, once, on the whole path, before anything else reads the name (`Utf8ToMacRoman`), because an HFS name is MacRoman bytes. A code point MacRoman has no byte for becomes `_` and the end-of-run report says so per component; the 31-character cut then acts on the FOLDED name, which is how 16 `é` — 32 bytes of UTF-8, 16 of MacRoman — stop being cut at all |
 
+**It runs on a Macintosh, and since 2026-09-22 it is graded there.** The
+sample carries two StuffIt 5 fixtures whose names are not MacRoman —
+`derived-Cool_Tools__.sit` for a character MacRoman HAS and
+`derived-800saywhat301j.sit` for three it has not — and `checkdisk.py` reads
+the folded names back off the Out volume (TESTING.md, *The Macintosh shell's
+names*). The report line is photographed and its saved document asserted by
+`interactive.py --report-utf8`. **The archive's names are DECOMPOSED**, which
+is the one thing the Linux side could not see: `ユーザーライセンスの購入.rtf`
+is thirteen code points and the Macintosh writes thirteen `_`, where the
+oracle manifests hold the composed spelling and `run_diff.py` normalizes both
+sides before comparing.
+
 **What the fold costs a 1 MB Mac Plus: 896 B**, measured on the object
 before and after — 580 B of `CODE` (the fold inlined into `sink_begin`,
 `.text` 1,114 → 1,596 B, plus one report line's function) and 316 B of
@@ -2777,15 +2789,21 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 648,100 B** — measured
-**2026-08-31** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **668,580 B** and the shell's reserve at a flat 20 KB.
+**What a 1 MB Mac Plus actually leaves the engine is 648,282 B** — measured
+**2026-09-22** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
+`FreeMem()` at **668,762 B** and the shell's reserve at a flat 20 KB.
 
-**Arithmetic, not measured: 647,204 B since 2026-09-22.** The UTF-8 fold
-(*Name limits*) put 580 B into `CODE` and 316 B into the A5 world, and the
-formula above — itself measured — takes both off the budget one for one. No
-Mac has been asked since; the tiers' pass/fail figures stand on the runs
-recorded below, which predate it.
+**"647,204 B, arithmetic" is withdrawn, and it was wrong in the direction
+arithmetic cannot be.** For half a day this section carried 648,100 B less
+the UTF-8 fold's 896 B (*Name limits*), which is the right sum on the right
+formula — applied to a base measured on **2026-08-31**, three weeks and six
+rewritten formats earlier. The machine says the budget went UP by 182 B over
+that period, not down by 896: the decoder work took more off the application
+than the fold put on. **A constant derived from a measurement is only as
+current as the measurement**, and subtracting from a stale one moves away
+from the answer rather than towards it. The 512 KB budgets below had drifted
+the same way and were re-taken the same day (BLOCKERS.md, *Withdrawn
+claims*).
 
 **It has moved three times in two days, every time by re-pricing a constant
 nobody had measured, and none of them cost a millisecond:** 566,164 →
@@ -2887,7 +2905,7 @@ measured on the roomy one says nothing about the tight one:
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,580 B | 20 KB | **648,100 B** (measured) |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,762 B | 20 KB | **648,282 B** (measured 2026-09-22; 668,580/648,100 on 2026-08-31) |
 | System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 20 KB | **191,480 B** (derived) |
 
 Both are `FreeMem()` less the reserve, taken when extraction begins. The
@@ -3741,7 +3759,7 @@ forks are methods 2 and 3, which is what its profile has always shown
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 69-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 71-fixture sample spanning all
 seventeen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -3749,7 +3767,12 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**69/69 byte-exact PASS** (**2026-08-26**, re-run for M37's disk-image
+**71/71 byte-exact PASS** (**2026-09-22**, the sweep that put the UTF-8
+fold on a Macintosh for the first time: the sample gained
+`derived-Cool_Tools__.sit` and `derived-800saywhat301j.sit`, the only
+two fixtures in it whose names are not MacRoman — *A name in the wrong
+encoding is not a name*. 69/69 on **2026-09-20**, the first sweep since
+the decoder work of 2026-09-18/19/20; 69/69 on **2026-08-26**, re-run for M37's disk-image
 probe, and the first run to cover the whole sample: M33 and M34 added
 `arc2pak1.pak` and `derived-ARCDOS.arc` on 2026-08-25 and no tier had
 been re-run since, so every "67/67" below was a sample two fixtures
@@ -3844,6 +3867,14 @@ read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
 so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
 here; every one passed, 5.1 s a fixture, one boot each:
 
+**This tier's sample is two fixtures behind the others since 2026-09-22.**
+`sample.txt` gained the two StuffIt 5 archives whose names are UTF-8 that
+day and the four sweeps that were re-run cover 71; System 7.0.1 was not
+among them, so the figure above is 69 of the 69 that existed when it was
+taken, and nothing about it is stale except its coverage. What it would
+add is the fold under the Process Manager, where the memory arrangement
+differs and the fold does not.
+
 **Re-run 2026-08-31 at the 20 KB stack: 69/69 again**, which is the tier
 that closes the stack change — System 7 is where the Process Manager honours
 the `SIZE` partition, so it exercises a different memory arrangement from the
@@ -3936,12 +3967,18 @@ DiskDoubler rows above differ by 16 B for the same reason: one block.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 69-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 71-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**69/69 byte-exact PASS** (**2026-08-26**, re-run for M37's disk-image probe
+**71/71 byte-exact PASS** (**2026-09-22**, the sweep that added the two
+StuffIt 5 fixtures whose names are UTF-8 — `derived-Cool_Tools__.sit` peaks
+at **535,199 B** as the Mac itself reports it — 44 bytes under what
+`--budget` predicts on Linux, the same order of agreement as every other
+cross-check here — so it clears the floor budget by ~112 KB and is refused
+on a 512 KB machine; 69/69 on **2026-09-20**;
+69/69 on **2026-08-26**, re-run for M37's disk-image probe
 and the first run to cover the whole sample — see the System 6.0.8 4 MB tier
 for the two fixtures every earlier figure here was missing; 67/67 on
 **2026-08-23**, with M28's five `.lzh` fixtures
@@ -4046,10 +4083,14 @@ and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for t
 ## System 3.0 tier (Mini vMac — System 3.0 / Finder 5.1, Mac Plus, 68000)
 
 The oldest system a Macintosh Plus can boot, and the one it shipped with in
-January 1986: System Tools 1.0, an 800K HFS floppy. **69/69 byte-exact PASS at
-4 MB and 69/69 at 1 MB** (**2026-08-30**), the same committed sample and the
-same on-Mac CRC-32 read-back as every row above, replayed by
-`tools/vmac/sys30.py`.
+January 1986: System Tools 1.0, an 800K HFS floppy. **71/71 byte-exact PASS
+at 1 MB** (**2026-09-22**, the sweep that added the two UTF-8-named StuffIt 5
+fixtures) and **69/69 at 4 MB** (**2026-08-30**) — the same committed sample
+and the same on-Mac CRC-32 read-back as every row above, replayed by
+`tools/vmac/sys30.py`. **The 4 MB figure is two fixtures behind**: the five
+sweeps re-run on 2026-09-22 were the two System 6.0.8 tiers, this one at
+1 MB, and both 512 KB machines. Nothing about it is stale except its
+coverage — the 1 MB machine is the harder of the two and passes.
 
 **The application is launched the way a user launches it, by double-click.**
 System 3.0 ignores the boot blocks' shell name, so it cannot replace the
@@ -4086,50 +4127,52 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 
 ### 512 KB machines: the RAM is enough, the ROM is not
 
-**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 66/69 under
-System 3.0** (**2026-08-31**, `sys30.py --emu mv-512Ke`; 65/69 before the
-reserve went flat, 64/69 before the LZW bound below recovered
-`popper-1.7.tar.Z`). The three that do not pass fail as the design says they
-must, per entry and not per archive: `derived-Library_ISBN_Barcoder.sit`
-writes 33 of its 34 entries with one entry errored, and
+**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 67/71 under
+System 3.0** (**2026-09-22**, `sys30.py --emu mv-512Ke`; 66/69 on 2026-08-31
+and on 2026-09-20, 65/69 before the reserve went flat, 64/69 before the LZW
+bound below recovered `popper-1.7.tar.Z`). The four that do not pass fail as
+the design says they must, per entry and not per archive:
+`derived-Library_ISBN_Barcoder.sit`
+writes 33 of its 34 entries with one entry errored,
+`derived-Cool_Tools__.sit` writes 7 of its 8, and
 `derived-a2basic.dmg.sit` and `synth-dd-m5.dd` are single-entry archives whose
-one entry is refused. Cutting the stack to 20 KB the same day added another
-12,272 B and moved none of the three, which is what their requirements
-predict — 247,687 B, 405,520 B and one ISBN entry, against a budget that
-1:1 arithmetic puts at 198,716 B (**derived**; the 186,444 B above is the
-measured one, taken before the stack changed). **The budget is 197,728 B**:
-a 218,208 B free heap measured on the machine (`sys30.py --emu mv-512Ke
--D UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
-20,480 B reserve, and the figure `tools/run_tiers.py` asserts this tier at.
-Under the quarter rule it was **163,656 B**, and what the difference
-recovered is below.
+one entry is refused. **The fourth is new to the SAMPLE and not to the
+engine**: `derived-Cool_Tools__.sit` joined the Mac list on 2026-09-22 for
+its UTF-8 names and needs 242,464 B.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
 
-**66/69 is the ceiling, and it is a property of the three archives.**
-Measured 2026-09-01 with `tools/run_tiers.py`, which applies the same rule on
-Linux and reproduces this tier fixture for fixture. The minimum budget each
-one needs, bisected:
+**The budget is 219,394 B**, measured **2026-09-22**: a 239,874 B free heap
+read off the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
+swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve, and the
+figure `tools/run_tiers.py` asserts this tier at. **It was carried as
+197,728 B**, taken 2026-08-31 and never re-taken across the stack cut and a
+month of decoder work; under the quarter rule before that it was 163,656 B.
 
-| fixture | needs | of which | against 197,728 B |
+**67/71 is the ceiling, and it is a property of the four archives.**
+`tools/run_tiers.py` applies the same rule on Linux and reproduces this tier
+fixture for fixture. The minimum budget each one needs, bisected with the
+shipping binary on 2026-09-22:
+
+| fixture | needs | of which | against 219,394 B |
 |---|---|---|---|
-| `derived-a2basic.dmg.sit` | **246,734 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus 37,356 B of walk state | 1.25x |
-| `derived-Library_ISBN_Barcoder.sit` | **393,869 B** | one 352,161 B block, same shape | 2.0x |
-| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 2.0x |
+| `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.10x |
+| `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.11x |
+| `derived-Library_ISBN_Barcoder.sit` | **388,033 B** | one 352,161 B block, same shape | 1.77x |
+| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 1.83x |
 
-Two of the three ask for more in a SINGLE allocation than the machine has for
+Three of the four ask for more in a SINGLE allocation than the machine has for
 the whole job, and a block a BWT inverts has to be resident, so no allocation
-strategy reaches them; the third's 256 splay trees are adaptive state that
+strategy reaches them; the fourth's 256 splay trees are adaptive state that
 cannot be discarded and rebuilt. What would move this tier is a smaller
 archive, not a smaller engine.
 
-**Two of the three are StuffIt 5, and the other four StuffIt 5 fixtures in
-the sample pass** — at 141,400 B, 161,725 B, 162,567 B and 184,590 B, the last
-of them hard against the budget. So the line is the archive's BLOCK SIZE,
-which its compressor chose, and not the format:
-`derived-Troi-ClipSave-Plug-in1.1.sit` needs 168,878 B, which the quarter
-rule's 163,656 B missed by **5,222 bytes** with `gRefusedWhy` = 1 naming the
-budget rather than a fragmented heap, and which the flat reserve covers.
+**Three of the four are StuffIt 5, and the sample's other five StuffIt 5
+fixtures pass.** So the line is the archive's BLOCK SIZE, which its
+compressor chose, and not the format:
+`derived-Troi-ClipSave-Plug-in1.1.sit` needs 162,618 B, which the quarter
+rule's 163,656 B cleared by a thousand bytes and the flat reserve clears
+comfortably.
 
 **What is refused is one entry's working set, and never the archive.**
 `derived-XferIt_1.5b4.sea` writes 948,175 B across 10 files on this machine at
@@ -4144,40 +4187,44 @@ refused having reached 37,372 B, because renegotiating has a floor and that
 archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
-**The same machine under System 6.0.8 manages 63/69**
-(`run.py --emu mv-512Ke --system System6.hfv`, re-measured 2026-09-04; 58/69
-before the stack was cut to 12 KB, which this tier's "unchanged" note had not
-accounted for — the reserve going flat could not help it, and the stack did),
+**The same machine under System 6.0.8 manages 64/71**
+(`run.py --emu mv-512Ke --system System6.hfv`, **2026-09-22**; 63/69 on
+2026-09-04, 58/69 before the stack was cut to 12 KB, which this tier's
+"unchanged" note had not accounted for — the reserve going flat could not
+help it, and the stack did),
 and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
-nothing else: free heap when extraction starts is **218,208 B** under System
-3.0 against **122,808 B** under System 6.0.8, a gap of 95,400 B, against
+nothing else: free heap when extraction starts is **239,874 B** under System
+3.0 against **144,474 B** under System 6.0.8 (both 2026-09-22), a gap of
+95,400 B — the same gap to the byte as when the pair was last taken, against
 System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System
-6.0.8 boot-shell launch (122,808 B free) and a double-click launch from a
-booted Finder (122,796 B).
+6.0.8 boot-shell launch and a double-click launch from a booted Finder.
 
 The reserve explains the rest, and it is now a flat 20 KB on every tier:
-`budget = FreeMem() - 20,480`. **Measured 2026-08-31** on the 512Ke under
-System 3.0 with `-D UNC_AT_BUDGET`, while the reserve was still 32 KB:
-`FreeMem()` **219,212 B**, budget **186,444 B**, exactly 32,768 apart; the
-same machine gains 8,192 B and another 20,464 B from the stack. Under the quarter rule that budget was
-163,656 B, and the 22,788 B difference is what recovered
-`derived-Troi-ClipSave-Plug-in1.1.sit` — it had missed by 5,222 bytes and now
-writes all 13 entries at a 184,590 B peak, taking this tier from 65/69 to
-**66/69**. Under System 6.0.8 the same machine has 122,808 B free, where the
-quarter always fell under the 32 KB floor, so the RESERVE going flat did
-nothing there — and this sentence read "so that tier is unchanged at 58/69"
-until 2026-09-04, which was a claim about the tier drawn from an argument
-about one of the two changes. The stack cut lands on every machine: that
-tier is **63/69** (above, and BLOCKERS.md, *Withdrawn claims*).
+`budget = FreeMem() - 20,480`, which the three 2026-09-22 probes reproduce to
+the byte on all three machines. It was first measured on 2026-08-31 on the
+512Ke under System 3.0 while the reserve was still 32 KB — `FreeMem()`
+219,212 B, budget 186,444 B, exactly 32,768 apart — and the quarter rule
+before that gave 163,656 B, whose 22,788 B difference is what recovered
+`derived-Troi-ClipSave-Plug-in1.1.sit` and took this tier from 65/69 to
+66/69. Under System 6.0.8 the quarter always fell under the 32 KB floor, so
+the RESERVE going flat did nothing there — and this sentence read "so that
+tier is unchanged at 58/69" until 2026-09-04, which was a claim about the
+tier drawn from an argument about one of the two changes. The stack cut lands
+on every machine (BLOCKERS.md, *Withdrawn claims*).
 **A kilobyte of application costs the engine a kilobyte here too**, now that
 the reserve is a constant rather than a fraction. The
-three extra are `popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea` and
-`derived-Troi-ClipSave-Plug-in1.1.sit` (2026-09-04; it was six before the
-stack cut). On `derived-Troi-ClipSave-Plug-in1.1.sit` the
-two systems are 11 entries at 163,332 B against 6 entries at 89,613 B: the
-1986 system leaves the engine ~74 KB more than System 6 does, while also
-keeping a Finder that System 6 had to give up.
+three fixtures System 6 refuses and System 3.0 does not are
+`popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea` and
+`derived-Troi-ClipSave-Plug-in1.1.sit` — the same three since 2026-09-04,
+when the stack cut took it down from six. On
+`derived-Troi-ClipSave-Plug-in1.1.sit` the
+two systems are 11 entries at 163,332 B against 6 entries at 89,613 B. The
+1986 system leaves the engine **95,400 B** more than System 6 does — the
+free-heap gap above, and the budget gap too, since the reserve is the same
+constant on both — while also keeping a Finder that System 6 had to give up.
+(This read "~74 KB" until 2026-09-22, which is the difference between the two
+PEAKS on that one fixture and not what either system leaves.)
 
 ### A true Macintosh 512K: the machine boots, the application bombs
 

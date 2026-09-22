@@ -20,10 +20,14 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
-64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
-is 63/69 (re-measured 2026-09-04; 58/69 before the stack was cut)
-(FORMATS.md, *512 KB machines*).
+mv-512Ke` is **67/71** (2026-09-22; 66/69 before the sample grew, 65/69
+before the reserve went flat, 64/69 before the LZW bound), `run.py --emu
+mv-512Ke --system System6.hfv` is **64/71** (2026-09-22; 63/69 on
+2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB
+machines*). The budgets are **219,394 B** and **123,994 B**, both re-taken
+on the machine that day; `tools/run_tiers.py` now reproduces both tiers on
+Linux fixture for fixture, and the one that never matched was the budget
+and not the model.
 
 **A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
 application bombs on it.** It cannot read HFS, which is the whole of the
@@ -1829,6 +1833,20 @@ forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, and a
 copy named `archive.sit` — the name the Mac saw — because gzip and .Z derive
 their output name from the archive's filename.
 
+**It has to know what the Mac does to a name, and since 2026-09-22 that is
+two rules rather than one** (`tools/vmac_check.py`, `mac_component`): every
+component is fitted to 31 characters with its extension KEPT, and a StuffIt
+5 name — UTF-8, where every other format states MacRoman — is folded into
+the bytes an HFS name holds first, so a Japanese name arrives as a row of
+`_`. The fold is applied only where the engine says the names are UTF-8
+(`macextract sniff`), because folding a zip name that MacRoman cannot spell
+would invent an agreement the Mac does not make. **Fold before normalizing**:
+the shell folds the archive's own bytes and `ユーザーライセンスの購入.rtf`
+is DECOMPOSED in the archive, thirteen code points where the composed
+spelling is twelve, so an NFC fold predicts one `_` too few. The oracle
+manifests hold the composed spelling, which `run_diff.py` normalizes away
+and this cannot.
+
 Two hfsutils traps it hit, both worth knowing before writing anything similar:
 `hls` **hides names beginning with a dot** unless given `-a`, and every path
 argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
@@ -2123,6 +2141,26 @@ The box's three click targets are constants measured off `DLOG 133` in
 `mac/macextract.r` (`REPORT_OK`, `REPORT_SAVE`, `REPORT_DOWN`). **Re-measure
 them if that resource moves** — this is the harness that clicks fixed
 coordinates.
+
+### The one line a generated archive cannot make — `interactive.py --report-utf8`
+
+    tools/vmac/interactive.py --report-utf8 --emu mv-4M -o shots fixtures/anything.sit
+
+*"`<name>` was named in characters this Macintosh cannot write"* is the
+report's only line that no DiskDoubler archive can reach: the fold runs where
+the ENGINE says a name is UTF-8, and `fmt_sit5.c` alone says so. So this phase
+ignores the fixture the other way round — it uses one real corpus archive,
+`derived-800saywhat301j.sit`, whose three Japanese names MacRoman has a byte
+for none of. Four frames (the box, Standard File after **Save as Text**, the
+box redrawn, SFGetFile) and the same assertion `--report` makes: the saved
+DOCUMENT, plus the names on the volume. A photograph of a box full of `_`
+cannot fail.
+
+The counts in that assertion are not the ones a reader would guess —
+`ユーザーライセンスの購入` is thirteen `_` and not twelve, because the
+archive stores `ザ` decomposed. The outcome line is the CLEAN one,
+*"Extraction complete."*: nothing failed, every entry came out, and the
+box is up only because the shell has something to say about the names.
 
 ### Driving the real UI
 

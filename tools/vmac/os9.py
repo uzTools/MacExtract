@@ -56,6 +56,8 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+sys.path.insert(0, os.path.join(R.REPO, "tools"))
+from vmac_check import mac_component, names_are_utf8         # noqa: E402
 
 
 def _die_cleanly(signum, frame):
@@ -1001,8 +1003,9 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
     # and one unexpected one. The HFS+ path has done this since M12.
     mac_of = {}
     collided = {}
+    utf8 = names_are_utf8(fixture)
     for e in sorted(expected):
-        m = "/".join(mac_leaf(c) for c in e.split("/"))
+        m = "/".join(mac_leaf(c, utf8) for c in e.split("/"))
         if m in mac_of:
             collided[m] = [mac_of[m], e]
         mac_of[m] = e
@@ -1178,15 +1181,28 @@ def read_report(path):
     return vals, recs
 
 
-def mac_leaf(name):
+def mac_leaf(name, utf8=False):
     """A CLI output filename as the Mac shell would write it.
 
     ComponentToStr63() in mac/macextract_mac.c: undo the engine's '/'->':'
     swap and cap at 31 characters. That cap is the whole reason this run
     exists — HFS+ permits 255-character names, but a 68k application reaching
     it through the classic File Manager is still limited to 31, and whether
-    that holds on HFS+ had never been checked."""
-    return name.replace(":", "/")[:31] or "_"
+    that holds on HFS+ had never been checked.
+
+    `utf8` folds a StuffIt 5 name into MacRoman first (Utf8ToMacRoman),
+    which the shell does on HFS+ exactly as it does on HFS — the limit it
+    is written for is the classic File Manager's, not the volume's.
+    tools/vmac_check.py has both rules.
+
+    **Both callers here normalize to NFC before folding, and the shell
+    does not** — it folds the archive's own bytes, so a DECOMPOSED name
+    folds to one '_' per code point and this would predict one fewer
+    (`checkdisk.py` learned that on 2026-09-22). Latent, not wrong
+    today: no fixture in `os9sample.txt` has a non-ASCII StuffIt 5 name,
+    so the fold never runs on this tier at all. Adding one means moving
+    the normalization after the fold, as checkdisk.py did."""
+    return mac_component(name, utf8)
 
 
 def report_present(xfer, workdir):
@@ -1417,7 +1433,7 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
 
     # Names, which no aggregate can carry — and the point of an HFS+ run.
     got_names = sorted(n for _d, n in recs)
-    exp_names = sorted(mac_leaf(n) for n in want_names)
+    exp_names = sorted(mac_leaf(n, names_are_utf8(fixture)) for n in want_names)
     if got_names == exp_names:
         lines.append(f"  {len(got_names)} name(s) on HFS+ exactly as the "
                      f"31-character rule predicts")
@@ -1647,10 +1663,12 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
             expected.add(os.path.relpath(os.path.join(root, f), ref))
     expected = {unicodedata.normalize("NFC", e) for e in expected}
     # Compare in the Mac's spelling, as verify_output() does: the shell writes
-    # each component through ComponentToStr63().
+    # each component through ComponentToStr63(), and a StuffIt 5 name through
+    # Utf8ToMacRoman before that.
     mac_of = {}
+    utf8 = names_are_utf8(fixture)
     for e in sorted(expected):
-        mac_of["/".join(mac_leaf(c) for c in e.split("/"))] = e
+        mac_of["/".join(mac_leaf(c, utf8) for c in e.split("/"))] = e
     expected = set(mac_of)
 
     lines.append(f"{len(names)} file(s) on the "

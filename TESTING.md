@@ -1469,7 +1469,7 @@ instead is graded in the next section.
 **A small Macintosh's memory result, measured on Linux in five seconds.**
 The Mac shell's allocator is a running total against a cap and refuses
 per entry; `macextract --budget N` is the same rule, so the whole
-69-fixture sample can be swept at a tier's measured budget without an
+71-fixture sample can be swept at a tier's measured budget without an
 emulator, a ROM or an X server.
 
     tools/run_tiers.py --check                 # what ci.sh runs
@@ -1481,32 +1481,35 @@ pair: that one sweeps the whole CORPUS at a single cap and reports per
 format (layer 5 above). This one sweeps the Mac SAMPLE at each tier's
 own budget and asserts the tallies.
 
-`--check` asserts two tallies, and only the two Mini vMac has agreed
-with independently: **69/69 at the 1 MB floor target** (648,100 B) and
-**66/69 on a 512 KB Macintosh under System 3.0** (197,728 B) — the same
-three fixtures, by name, that the machine refuses. A tally that moves is
+`--check` asserts every tally Mini vMac has agreed with independently,
+which since 2026-09-22 is all three: **71/71 at the 1 MB floor target**
+(648,282 B), **67/71 on a 512 KB Macintosh under System 3.0**
+(219,394 B) and **64/71 on the same machine under System 6.0.8**
+(123,994 B) — the same four and seven fixtures, by name, that the
+machines refuse. The fourth arrived 2026-09-22 with
+`derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
+assertable the same day, when its budget was re-taken. A tally that moves is
 a memory regression or a memory win; either way the number in `EXPECT`
 is meant to be changed deliberately.
 
 **What it cannot see** (and why the emulator tiers stay):
 
+- **The budget's own currency, which is the limit that has actually
+  bitten.** Each figure is `FreeMem() - 20,480` measured on the machine
+  (FORMATS.md, *Budget*), so it moves when the application's size does,
+  and this file cannot notice. **All three were stale on 2026-09-22** —
+  the two 512 KB constants by 21,666 B each — and re-taking them is what
+  made this file reproduce every tier.
 - **Fragmentation.** A budget is one number; the Memory Manager also has
   to find one PIECE that big, which the shell reports separately
-  ("Memory is too broken up"). This is the likeliest reason the
-  System 6.0.8 / 512 KB tier comes out 59/69 here against the machine's
-  58/69 — which is why that tier is a diagnostic and is not asserted.
-  **That comparison is stale as of 2026-09-04**: the machine now does
-  **63/69** (FORMATS.md, *512 KB machines*), so the gap is four fixtures
-  and not one. *Hypothesis, not measured:* this tier's budget constant
-  predates the 20,464 B the stack cut returned to the engine, since the
-  System 3.0 / 512 KB constant beside it was re-taken and still
-  reproduces that machine exactly. **What would settle it:** one
-  `-D UNC_AT_BUDGET` boot of the 512Ke under System 6.0.8
-  (`tools/vmac/README.md`, *Why an entry is refused*).
-- **The budget's own currency.** Each figure is `FreeMem() - 20,480`
-  measured on the machine (FORMATS.md, *Budget*), so it moves when the
-  application's size does. This file cannot notice that it has gone
-  stale.
+  ("Memory is too broken up"). Nothing here models it. **No disagreement
+  currently rests on it.** The System 6.0.8 / 512 KB gap that was filed
+  here as "the likeliest reason" — 59/69 against the machine's 58, then
+  61/71 against 63 — was the stale budget above, entirely: with the
+  budget re-taken this file puts that tier at 64/71 and names the same
+  seven fixtures the machine refuses. The hypothesis that replaced it —
+  *this tier's constant predates the stack cut* — was the right one, and
+  one `-D UNC_AT_BUDGET` boot settled it.
 - **68000 struct sizes.** `derived-a2basic.dmg.sit` holds 37,356 B
   before its block here and 37,372 B there. Tens of bytes — but a
   fixture that missed by twenty would not be decided by this.
@@ -1715,15 +1718,32 @@ reaches the shell as ':' for it to swap back: the mock builds a Linux path
 out of the leaf, so the create fails there for a reason the real File
 Manager does not have. Nor the BOX those lines are drawn in: whether it
 is legible, scrolls and saves is `interactive.py --report` on an emulated
-Mac (`tools/vmac/README.md`).
+Mac (`tools/vmac/README.md`) — and, for the fold's own line,
+`--report-utf8`, which drives `derived-800saywhat301j.sit` there and reads
+the saved document back: three *"was named in characters this Macintosh
+cannot write"* lines under *"Extraction complete."*. A control run
+expecting the COMPOSED spelling's twelve `_` fails it, which is the defect
+an NFC fold would have.
 
 **And a warning for whoever adds a fixture.** Since the fold, the Mac
 shell and the Linux CLI deliberately write DIFFERENT names for a StuffIt
-5 entry whose name is not ASCII — MacRoman bytes against UTF-8 — so the
-two harnesses that grade Mac output against the oracle manifests
-(`tools/check_mac_sink.py` and `tools/vmac/run.py`) would read that as a
-defect. No fixture in either list has such a name today. Putting one
-there means teaching that harness the fold, not changing the shell.
+5 entry MacRoman cannot spell — a row of `_` against the characters the
+archive asked for — so a harness that grades Mac output NAMES against
+the oracle reads a correct fold as a defect until it is taught the fold.
+Two do: `tools/check_mac_sink.py`, whose list has no such fixture and
+which is therefore still untaught, and `tools/vmac/checkdisk.py`, which
+was taught on 2026-09-22 when the Mac sample gained two
+(`tools/vmac_check.py`, `mac_component`). **`tools/vmac/run.py` is not
+one of them and this paragraph named it until that day**: its verdict is
+the on-screen grid, which is a file count and two summed CRCs, and a
+summed CRC cannot carry a name — so a fold that went entirely wrong
+would pass it, which is the same blind spot that let the gzip/.Z
+fallback name survive (*Checking a run off the disk*, `tools/vmac/README.md`).
+A name that MacRoman CAN spell needs no teaching anywhere: both sides
+end up with the same character, which is why
+`derived-Cool_Tools__.sit` cannot fail `checkdisk.py` with the fold
+disabled, and `derived-800saywhat301j.sit` fails it with three names
+missing and three unexpected.
 
 ## A cut archive is NOTICED (`tools/run_truncation.py`, in `ci.sh`)
 
@@ -3169,7 +3189,13 @@ character that was touched three times*).
    then `tools/vmac/checkdisk.py /tmp/vmacrun-*/`): the same comparison
    layer 8 does, on the System 6/7 tier — both forks byte for byte,
    plus names and folder structure, read off the floppy image after the
-   run. **53/53 on the committed sample.**
+   run. **73/73 on 2026-09-22**, the 71-fixture sample and two fixtures
+   run on their own. It is the layer that grades the UTF-8 fold's
+   NAMES: since that day it maps each CLI name through the fold and the
+   31-character cut before comparing (`tools/vmac_check.py`,
+   `mac_component`), and with the fold disabled
+   `derived-800saywhat301j.sit` fails it with three names missing and three
+   unexpected.
 
 10. **Driving the real UI** (`tools/vmac/interactive.py`): the
     interactive application, clicked the way a person clicks it. Its

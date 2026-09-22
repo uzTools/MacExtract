@@ -32,7 +32,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import os9                                                   # noqa: E402
-from vmac_check import mask_reserved, aggregate_dir           # noqa: E402
+from vmac_check import (mask_reserved, aggregate_dir,         # noqa: E402
+                        mac_component, names_are_utf8)
 
 CLI = os.path.join(REPO, "build", "rel", "macextract")
 
@@ -137,10 +138,14 @@ def check(rundir):
     want_names = []
     enf, _sdc, _sdl, _src, _srl = aggregate_dir(ref, want_names)
 
-    # Mac path tuple -> the components the CLI actually wrote on Linux. Two
-    # differences make that mapping necessary: the CLI writes a Mac name's
-    # '/' as ':', and the Mac shell caps each component at 31 characters
-    # (ComponentToStr63).
+    # Mac path tuple -> the components the CLI actually wrote on Linux.
+    # Three differences make that mapping necessary, and all three live in
+    # vmac_check.mac_component(): the CLI writes a Mac name's '/' as ':',
+    # the Mac shell caps each component at 31 characters with its extension
+    # kept (ComponentToStr63), and a StuffIt 5 name is UTF-8 on this side
+    # and MacRoman on that one (Utf8ToMacRoman) — so `Cool Tools ƒ` is one
+    # byte there and two here, and a Japanese name is a row of '_'.
+    utf8 = names_are_utf8(fixture, CLI)
     expected = {}
     # The two hosts save an archive COMMENT under different names — the
     # CLI derives one from the archive's filename, the Mac shell writes
@@ -158,11 +163,26 @@ def check(rundir):
             if f.startswith("._"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
-            comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
-            if comps == [comment_file]:
+            # The VALUE is the components as they are on the Linux disk,
+            # unnormalized, because that is what has to be opened below.
+            # Normalizing them was wrong and survived until a fixture with
+            # an NFD name arrived: this engine writes the archive's own
+            # bytes, and `ユーザーライセンスの購入.rtf` is DECOMPOSED in
+            # every StuffIt 5 archive that has one, where the oracle
+            # manifests hold NFC (run_diff.py normalizes both sides). An
+            # NFC key opened a file that does not exist and the fork
+            # compared against zero bytes.
+            comps = rel.split(os.sep)
+            if [unicodedata.normalize("NFC", c) for c in comps] == [comment_file]:
                 expected[("Comments",)] = comps
                 continue
-            expected[tuple(c.replace(":", "/")[:31] for c in comps)] = comps
+            # The KEY is what the Mac wrote, and the fold reads the
+            # archive's own bytes — so it goes before the normalization and
+            # not after it. On an NFD name that is the whole difference:
+            # the shell folds 13 code points to 13 '_' where NFC would
+            # predict 12 (vmac_check.fold_macroman).
+            expected[tuple(unicodedata.normalize("NFC", mac_component(c, utf8))
+                           for c in comps)] = comps
 
     problems = []
     names = set(names)

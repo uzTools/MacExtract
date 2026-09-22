@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """run_tiers.py — predict a Macintosh tier's memory refusals on Linux.
 
-Every "N/69" in FORMATS.md's small-machine tables costs an emulator run:
+Every "N/71" in FORMATS.md's small-machine tables costs an emulator run:
 one boot per fixture, minutes of host clock, an X server and a ROM. What
 decides those numbers is not the Macintosh — it is the engine's
 allocation profile against a budget, and the CLI's `--budget` applies
@@ -15,24 +15,31 @@ SAMPLE at the tiers' own budgets and asserts the tallies.
 So a whole tier can be swept here in five seconds:
 
     tools/run_tiers.py --tier sys3-512K
-    tools/run_tiers.py --budget 102328 --list tools/vmac/sample.txt
+    tools/run_tiers.py --budget 123994 --list tools/vmac/sample.txt
     tools/run_tiers.py --tier floor-1M --macextract build/rel/macextract
 
 It prints one line per refusal with the shortfall, and the tally. On
-2026-09-01 it reproduced the System 3.0 / 512 KB tier exactly — 66/69,
-the same three fixtures the emulator refuses — and put System 6.0.8 /
-512 KB at 59/69 against the emulator's 58/69.
+2026-09-22, with all three budgets re-taken on the machine the same day,
+it reproduced ALL THREE tiers exactly — 71/71, 67/71 and 64/71, the same
+four and seven fixtures by name that the emulators refuse. It had never
+matched the third before, and what was wrong was the budget and not the
+model.
 
 What it CANNOT see, and why the emulator stays
 ----------------------------------------------
+- **The budget itself, which is the one that has actually bitten.** It
+  is `FreeMem() - 20,480` measured on the machine (FORMATS.md,
+  *Budget*), so every constant here goes stale the moment the
+  application's size does, and this file cannot notice. All three were
+  stale on 2026-09-22 — two by 21,666 B — and the one-fixture
+  System 6.0.8 / 512 KB disagreement that had been filed under
+  fragmentation below was this, entirely.
 - **Fragmentation.** The budget is one number; the Memory Manager also
   has to find ONE piece that big. The Mac shell reports that case
   separately (`gShortPiece`, "Memory is too broken up"), and nothing
-  here models it. That is the likeliest reason for the one-fixture
-  disagreement above.
-- **The budget itself.** It is `FreeMem() - 20,480` measured on the
-  machine (FORMATS.md, *Budget*), so it moves when the application's
-  own size does. A figure here is only as current as that measurement.
+  here models it. **No disagreement currently rests on it** — the one
+  that did was the stale budget above — so this is a limit of the model
+  with nothing yet standing on it.
 - **Struct sizes.** A 68000 build packs differently: `derived-a2basic`
   peaks at 37,356 B before its block here and 37,372 B there. Tens of
   bytes, not thousands — but a fixture that misses by 20 bytes is not
@@ -58,25 +65,38 @@ REPO = os.path.dirname(HERE)
 # FORMATS.md (*Budget*, *512 KB machines*) is where they come from and
 # the only place they should be corrected.
 TIERS = {
-    "sys3-512K": (197728, "System 3.0, Macintosh 512Ke (218,208 B free)"),
-    "sys6-512K": (102328, "System 6.0.8, Macintosh 512Ke (122,808 B free)"),
-    "floor-1M":  (648100, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (219394, "System 3.0, Macintosh 512Ke (239,874 B free)"),
+    "sys6-512K": (123994, "System 6.0.8, Macintosh 512Ke (144,474 B free)"),
+    "floor-1M":  (648282, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+
+# All three re-taken on the machine on 2026-09-22 with `-D UNC_AT_BUDGET`,
+# and all three had drifted the same way: 197728, 102328 and 648100 were
+# 21,666, 21,666 and 182 bytes low. A budget is `FreeMem() - 20,480` on a
+# binary, so every one of these goes stale whenever the application's size
+# does — and none of them had been re-taken since 2026-08-31, across the
+# stack cut and a month of decoder work. The floor figure had been made
+# WORSE by arithmetic in the meantime: 896 B was subtracted from it for the
+# UTF-8 fold, which is the right sum applied to a stale base, and it moved
+# away from the machine rather than towards it.
 
 SHORT = re.compile(r"at least (\d+) bytes more memory")
 
-# What --check asserts. Only the two tiers an emulator has independently
-# agreed with are here: `sys3-512K` matches the Mini vMac run fixture for
-# fixture (66/69, the same three), and `floor-1M` is the floor target's
-# 69/69. `sys6-512K` is a diagnostic and NOT asserted — this file puts it
-# at 59/69 where the machine said 58, and one fixture of disagreement was
-# exactly the fragmentation this cannot model. The machine says 63/69 since
-# 2026-09-04, so the gap is four; the budget above is probably pre-stack-cut
-# and wants one -D UNC_AT_BUDGET boot to re-take (TESTING.md, *The tiers a
-# budget predicts*). Still a diagnostic, still not asserted. A tally that moves here is
-# either a memory regression or a memory WIN; both want the number below
-# changed deliberately, which is the point of pinning it.
-EXPECT = {"floor-1M": 69, "sys3-512K": 66}
+# What --check asserts: every tier an emulator has independently agreed
+# with, which since 2026-09-22 is all three. Each matches the machine
+# fixture for fixture — `floor-1M` 71/71, `sys3-512K` 67/71 (the same
+# four names), `sys6-512K` 64/71 (the same seven). `sys6-512K` was a
+# diagnostic until that day because it read 59/69 where the machine said
+# 58 and later 63; it is asserted now, because the disagreement was the
+# stale budget above and not the model.
+#
+# A tally that moves here is either a memory regression or a memory WIN;
+# both want the number below changed deliberately, which is the point of
+# pinning it. 69 -> 71 on 2026-09-22: the sample gained the two StuffIt 5
+# fixtures whose names are UTF-8, and `derived-Cool_Tools__.sit` needs
+# 242,464 B, so it is a 512 KB refusal on both systems. Nothing that was
+# passing stopped.
+EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 
 
 def names(listfile):

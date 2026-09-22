@@ -86,6 +86,105 @@ def mask_reserved(rsrc):
     return bytes(b)
 
 
+# ---- the name a Macintosh writes, given the name the CLI wrote -----------
+#
+# Three harnesses compare a NAME off a Mac volume against the CLI's output
+# (vmac/checkdisk.py, vmac/interactive.py, vmac/os9.py) and all three need
+# the same mapping, so it lives here with the other arithmetic the tiers
+# have to agree on. Two things happen to a name between the two hosts, both
+# in mac/macextract_mac.c:
+#
+#   Utf8ToMacRoman      a StuffIt 5 name is UTF-8 (UncEntryInfo.name_utf8)
+#                       and an HFS name is MacRoman bytes, so the shell
+#                       folds the whole path once, at the door of
+#                       sink_begin, and a code point MacRoman has no byte
+#                       for becomes '_'. Every other format states MacRoman
+#                       already and is not folded at all — which is why
+#                       this is not applied unconditionally: a zip name
+#                       holding a character MacRoman lacks reaches the disk
+#                       as its own bytes, and folding it here would invent
+#                       an agreement.
+#   ComponentToStr63    each component is then fitted to HFS's 31
+#                       characters WITH ITS EXTENSION KEPT, and an empty
+#                       one becomes '_'.
+#
+# Until 2026-09-22 the three sites did `c.replace(":", "/")[:31]`, which is
+# neither of those: it cut the extension off and knew nothing of the fold.
+
+
+def ext_start(name):
+    """Offset of the last '.' introducing a 1..4 character alphanumeric
+    extension, or -1. ExtStart() in mac/macextract_mac.c."""
+    for i in range(len(name) - 1, 0, -1):
+        if name[i] != ".":
+            continue
+        tail = name[i + 1:]
+        if not 1 <= len(tail) <= 4:
+            return -1
+        return i if all(c.isascii() and c.isalnum() for c in tail) else -1
+    return -1
+
+
+def fold_macroman(s):
+    """UTF-8 -> the characters a MacRoman byte can spell, '_' for the rest.
+
+    Python's `mac_roman` codec is Apple's table and agrees with the shell's
+    kMacRomanHigh[] at all 128 high bytes (checked).
+
+    **Operate on the name BEFORE any Unicode normalization**, because the
+    shell folds the archive's own bytes and those are DECOMPOSED. Measured
+    2026-09-22 on `derived-800saywhat301j.sit`, whose
+    `ユーザーライセンスの購入.rtf` is 13 code points and not 12: `ザ` is
+    stored as `サ` + U+3099, both of which MacRoman lacks, so the Macintosh
+    writes 13 '_' and an NFC fold would predict 12. The oracle manifests
+    hold NFC — `lsar` composes — which is invisible to `run_diff.py`
+    because it normalizes both sides, and was invisible here until a
+    fixture with such a name reached a Mac.
+    """
+    out = []
+    for ch in s:
+        try:
+            ch.encode("mac_roman")
+        except UnicodeEncodeError:
+            out.append("_")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def mac_component(c, utf8=False):
+    """One CLI path component as the Macintosh shell writes it.
+
+    `utf8` says the format states its names in UTF-8 — i.e. the engine set
+    `name_utf8` and the shell folded. `names_are_utf8()` below answers it
+    for a fixture.
+    """
+    if utf8:
+        c = fold_macroman(c)
+    c = c.replace(":", "/")             # the engine's reversible swap, undone
+    if len(c) > 31:
+        ext = ext_start(c)
+        if ext > 0 and 31 - (len(c) - ext) >= 1:
+            c = c[:31 - (len(c) - ext)] + c[ext:]
+        else:
+            c = c[:31]
+    return c or "_"
+
+
+def names_are_utf8(fixture, cli=None):
+    """Does this fixture's format state its names in UTF-8?
+
+    Asked of the engine rather than kept as a list here, so the two cannot
+    drift: `fmt_sit5.c` is the only file that sets the flag. The format is
+    the OUTER one, which is what the autotest build walks — it calls
+    RunExtract once and unwraps no envelope. A segmented StuffIt 5 set
+    sniffs as a split and is not covered; none is in any Mac list.
+    """
+    cli = cli or CLI
+    r = subprocess.run([cli, "sniff", fixture], capture_output=True, text=True)
+    return r.stdout.strip() == "StuffIt 5"
+
+
 def aggregate_dir(root_dir, names=None):
     """(nfiles, sumDataCRC, totalDataLen, sumRsrcCRC, totalRsrcLen) for a tree
     of CLI output, extracted with `--forks hidden`.

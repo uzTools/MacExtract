@@ -249,6 +249,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
 - 2026-09-22 (a name an HFS volume can hold) — StuffIt 5's UTF-8 names, on both hosts, and what the fold costs a Mac Plus
 - 2026-09-22 (the page that was never written) — DiskDoubler's three containers, measured, and the field that is checked from both sides
+- 2026-09-22 (the version that could not have written it) — the DiskDoubler the `0x20` row was waiting for does not exist
+- 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
 
 ---
 
@@ -15436,3 +15438,166 @@ reading under which those five end exactly at their last byte. And
 the entry's own metadata comes from the header behind it. That is why
 the search pins type and creator inside the file header and finds
 nothing for them in the record.
+
+## 2026-09-22 (the version that could not have written it) — the DiskDoubler the `0x20` row was waiting for does not exist
+
+**Claim.** The last open row of `fmt_dd.c` — the `DDAR` record's `0x20`
+flag, which says the two forks follow raw — has been waiting for the
+wrong file. It was recorded as closable by "a 1.x or 2.x DiskDoubler,
+neither of which is reachable from here" (OPEN_ITEMS.md and
+`docs/formats/diskdoubler-container.md`, both written earlier the same
+day). **A 2.x DiskDoubler could not have written a `DDAR` record of any
+flags**, so finding one would have settled nothing. Withdrawn in
+BLOCKERS.md.
+
+**What the search actually returned.** Macintosh Garden — where
+`diskdoubler.py --setup` fetches 3.7, so it is the search this project
+already trusts for this format — has two DiskDoubler application pages,
+3.7 and 4.0, and one collection page, `apps/disk-doubler`. Its five
+downloads are four EXPANDERS and one INIT. No 1.x or 2.x compressor is
+on the site, and the request thread that asks for exactly those two was
+posted in 2010 by **balrog, XADMaster's own author** — "DiskDoubler 1.x
+(I have 1.0) DiskDoubler 2.x", stated there to be "to generate test
+cases in order to add support for more formats to The Unarchiver". The
+rule this row cites is that lineage's, and the lineage did not have the
+file either.
+
+**The disproof is in the expander, and it took no emulator.** A
+Macintosh application declares the file types it opens in its `BNDL`,
+and the two expanders are on the same page:
+
+| | declares |
+|---|---|
+| DDExpand 2.03a, 1990 | `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` |
+| DDExpand 3.1 | those five, plus `DDAR`, `DDTD`, `DDCR` and `DDF0`–`DDF5` |
+
+`DDAR` does not occur anywhere in 2.03a's 65,212-byte resource fork;
+3.1 holds the literal nine times, six of them as the immediate of a
+`cmpi.l`. **A version's own expander not knowing the type is that
+version not writing it** — which is one inference and is labelled as
+one, but it is the only reading under which Salient shipped an expander
+that cannot open its own archives. So the flag can only come from a
+version that writes `DDAR` at all, and those — 3.x, 4.0, Pro 4.1 — all
+run here already, and the five shapes offered to 3.7 did not provoke it
+(*the page that was never written*, above).
+
+**What the search found instead is worth keeping.** `DiskDoublerExpand3.sit`
+carries **DiskDoubler ß05, "Copyright 1990 Salient"** — the oldest
+DiskDoubler reachable anywhere, four versions older than the 3.1.2 this
+project had called the oldest, and the first COMPRESSOR older than 3.7
+to turn up. It cannot write an archive either, and its own resource
+fork says so in one string: its Finder menu is
+`Compress Selection;Expand Selection;(-;About DiskDoubler`. No Combine,
+no Split, and no `DDAR` in the file. It compresses single files, which
+is what DiskDoubler was in 1990.
+
+**Why the wrong specimen was named, and it is a mechanism already on the
+list.** *A search that names the wrong tool* (BLOCKERS.md, added
+2026-08-25 for PKARC) is this exactly, one format over: the row named a
+VERSION rather than a shape, on the strength of which version XADMaster's
+author happened to own. Neither document had asked what a 2.x file looks
+like — and the answer was two downloads and one `BNDL` away, on the page
+this repository already fetches from.
+
+**Cost: nothing yet, which is the only cheap time to find one.** No
+emulator boot was spent on the wrong specimen, because none was
+available to spend it on. What it would have cost is the next session's:
+a search for a 2.x compressor that, had it succeeded, would have
+produced a file with no `DDAR` record in it.
+
+## 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
+
+**Claim.** The fold shipped that morning (*a name an HFS volume can hold*)
+had never run on a Macintosh: no fixture in `tools/vmac/sample.txt` had a
+non-ASCII StuffIt 5 name, so it was graded only through the qemu mock. Two
+fixtures put it on the machine, and the first run found a property of the
+archives that the Linux side is structurally unable to see.
+
+**Two fixtures, because the fold has two halves and only one of them can
+fail a harness.** `derived-Cool_Tools__.sit` is `Cool Tools ƒ` — two UTF-8
+bytes folding to the one MacRoman byte `0xC4`, nothing lost.
+`derived-800saywhat301j.sit` is three Japanese names, which MacRoman has a
+byte for none of, so each code point becomes `_`.
+
+**And the first of those cannot fail the harness, which is worth knowing
+before trusting it.** `checkdisk.py` compares CHARACTERS: the Mac's name
+decodes from MacRoman and the CLI's is already UTF-8, so a name MacRoman can
+spell is the same character on both sides whether the harness folds or not.
+Run with the fold disabled, `derived-Cool_Tools__.sit` passes; only
+`derived-800saywhat301j.sit` fails, three MISSING and three UNEXPECTED. A
+fixture chosen for a feature is not automatically a test of it.
+
+**`run.py` was never going to catch this, and TESTING.md said it would.**
+That file warned that the two harnesses grading Mac output against the
+manifests — `check_mac_sink.py` and `run.py` — would read a correct fold as
+a defect. `run.py`'s verdict is the on-screen grid: a file count, two summed
+CRC-32s and two summed lengths. **A summed CRC cannot carry a name**, which
+is the blind spot `checkdisk.py` was written for in the first place, one
+section away in the same file. Withdrawn in BLOCKERS.md; the harness that
+needed teaching is `checkdisk.py`, and it was taught
+(`tools/vmac_check.py`, `mac_component`).
+
+**The name the archive states is DECOMPOSED.** `ユーザーライセンスの購入.rtf`
+is thirteen code points, not twelve: `ザ` is stored as `サ` + U+3099, and
+MacRoman has neither, so the Macintosh writes **thirteen** `_`. The oracle
+manifests hold the composed spelling, because `lsar` composes; `run_diff.py`
+normalizes both sides to NFC before comparing, so it cannot see the
+difference and never could. `checkdisk.py` was normalizing too — and
+normalizing the wrong thing, the reference PATH, so it opened a file that
+does not exist and compared a fork against zero bytes. It folds before it
+normalizes now. **The engine is right, both harnesses were reading it
+through a filter that removed the evidence**, and the filter was there to
+make two spellings compare equal.
+
+**What the five sweeps say.** 71/71 on System 6.0.8 at 4 MB and at 1 MB,
+71/71 on System 3.0 at 1 MB, 67/71 and 64/71 on a 512 KB 512Ke under
+System 3.0 and System 6.0.8. **No refusal moved**: the two 512 KB tiers each
+gained exactly one, `derived-Cool_Tools__.sit`, whose StuffIt 5 block needs
+242,464 B — a fixture the sample gained, not a demand the engine grew.
+`checkdisk.py` then read all 73 kept Out volumes byte-exact with names.
+
+**Every budget constant in the repository was stale, and the freshest one
+was the worst.** The three tiers' budgets are `FreeMem() - 20,480` measured
+on the machine, and none had been re-taken since 2026-08-31. Re-taken:
+**648,282 B** at the 1 MB floor (668,762 free), **219,394 B** on the 512Ke
+under System 3.0 (239,874), **123,994 B** under System 6.0.8 (144,474). The
+two small ones had drifted 21,666 B each; the floor had drifted 182 B — and
+had been made worse by arithmetic, because 896 B for the fold had been
+subtracted from a base three weeks old, moving it away from the machine
+rather than towards it. **A constant derived from a measurement is only as
+current as the measurement, and subtracting from a stale one looks like
+maintenance.**
+
+**What that bought, beyond three numbers.** With all three re-taken,
+`tools/run_tiers.py` reproduces **all three tiers fixture for fixture** —
+including System 6.0.8 / 512 KB, which had never matched and was carried as
+a diagnostic because of it. TESTING.md had filed the disagreement under
+fragmentation ("the likeliest reason"), and it was the budget: that tier is
+asserted now.
+
+**The report line is photographed, and its document asserted**
+(`interactive.py --report-utf8`): *"`_______` was named in characters this
+Macintosh cannot write"*, three of them, with *"Extraction complete."* under
+them — the clean outcome, because nothing failed. The counts are the
+assertion, and a control run expecting the composed twelve `_` fails it,
+which is the defect an NFC fold would have.
+
+**One thing had to be worked around rather than explained.** Extracting this
+archive onto the BOOT volume leaves the saved report unreadable on the host:
+the Macintosh has the file — frame 4 photographs it in Standard File's own
+listing — and the 24 MB image does not hold the string anywhere outside the
+application's own resources. Four things did not help: a 30 s flush wait,
+Mini vMac's Control-Q, SIGTERM instead of the SIGKILL `Mac.close()` sends,
+and the shell's `FlushVol` (already called). Sending the output to a floppy
+instead makes the report readable, and the phase does that. *Hypothesis, not
+measured:* 300 KB across a seven-deep tree grows the catalog and what is
+written after that does not reach the image — `--report`'s few hundred bytes
+never provoke it. **It is a limitation of this harness and not of the
+application**: the same fold, on the same fixture, is graded off the Out
+volume by `checkdisk.py` on every one of the five sweeps.
+
+**And one harness bug, found by it costing a sweep.** `sys30.py` called
+`_origin()` whether or not the emulator window had appeared, so a window
+that never came up died with a `TypeError` — at fixture 70 of 71, taking
+the tally of the sixty-nine that had already passed with it. One fixture
+that cannot be started is one fixture's failure, and it says NOGRID now.

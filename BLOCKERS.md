@@ -10,23 +10,35 @@ DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and Linux
 CLI were never affected by anything in this file. The Retro68 Mac shell runs
 and extracts byte-exact on every system the project claims:
 
+The sample is **71 fixtures** since 2026-09-22, when the two StuffIt 5
+archives whose names are UTF-8 joined it.
+
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures. System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
-| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **69/69**; the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
-| System 3.0, **512 KB** Macintosh 512Ke | **66/69**; the three shortfalls are per-entry memory refusals, not failures — the budget there is 197,728 B. The same machine under System 6.0.8, with no Finder at all, does 63/69 (re-measured 2026-09-04; 58/69 before the stack cut), and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
-| System 6.0.8, **1 MB** — the RAM floor | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **69/69** |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** of the 69 that existed when it was last run (2026-08-30). System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **71/71** (2026-09-22); the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
+| System 3.0, **512 KB** Macintosh 512Ke | **67/71** (2026-09-22); the four shortfalls are per-entry memory refusals, not failures — the budget there is 219,394 B. The same machine under System 6.0.8, with no Finder at all, does **64/71**, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22) |
+| System 6.0.8, **1 MB** — the RAM floor | **71/71** (2026-09-22); no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 7.0.1, 4 MB | **69/69** of the 69 that existed when it was last run (2026-08-26) |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **21/21** — re-run 2026-09-04 on the build that zeroes `UncOptions`, the sample one larger for Now Compress, the third folder-walking format; that morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
 
-**Every Mini vMac tier was re-run 2026-09-20**, the first time any had
-been since the decoder work of 2026-09-18/19/20 changed six formats and
-took 360 B net off the budget. **Five sweeps of the 69-fixture sample,
-and every one reproduced its recorded figure**: System 6.0.8 at 4 MB
-69/69 and at 1 MB 69/69, System 3.0 at 1 MB 69/69, and at 512 KB
-System 3.0 66/69 against System 6.0.8's 63/69 — the same three and six
-per-entry memory refusals as before. No refusal moved anywhere.
+**Five sweeps were re-run 2026-09-22**, on the sample grown to 71 by the
+two StuffIt 5 archives whose names are UTF-8 — the first time the fold had
+run on a Macintosh at all. **Every tier reproduced its recorded figure and
+no refusal moved**: System 6.0.8 at 4 MB 71/71 and at 1 MB 71/71, System 3.0
+at 1 MB 71/71, and at 512 KB System 3.0 67/71 against System 6.0.8's 64/71 —
+the same three and six per-entry refusals as before, plus
+`derived-Cool_Tools__.sit` on both 512 KB machines, which is a fixture the
+sample gained and not a refusal the engine grew. **All three budget
+constants were re-taken the same day** with `-D UNC_AT_BUDGET` and all three
+had drifted (below, and FORMATS.md, *Budget*). `checkdisk.py` then read all
+**73 kept Out volumes byte-exact, names included**.
+
+**Every Mini vMac tier was re-run 2026-09-20** before that, the first time
+any had been since the decoder work of 2026-09-18/19/20 changed six formats
+and took 360 B net off the budget: five sweeps of the 69-fixture sample,
+every one reproducing its figure — 69/69, 69/69, 69/69, 66/69 and 63/69.
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4
@@ -295,6 +307,9 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **The 1 MB Mac Plus budget is 647,204 B** — FORMATS.md, *Budget*, stated as arithmetic: 648,100 B measured on 2026-08-31, less the 896 B the UTF-8 fold added to `CODE` and A5 | **The machine says 648,282 B**, so the arithmetic moved AWAY from the answer. The formula and the subtraction were both right; the base was three weeks and six rewritten formats old, and the decoder work had taken more off the application than the fold put on. The two 512 KB constants beside it had drifted **21,666 B** each, in the same direction and for the same reason, and with all three re-taken `run_tiers.py` reproduces **all three tiers fixture for fixture** — including System 6.0.8 / 512 KB, which had never matched and whose one-fixture disagreement TESTING.md had filed under fragmentation. **Cost: a stale predictor that was wrong about four fixtures on the tier it could not check**, and half a day in which the floor figure was less accurate than the one it replaced. *A constant derived from a measurement is only as current as the measurement* — and subtracting from a stale one looks like maintenance (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |
+| **What would close the `DDAR` `0x20` row is a 1.x or 2.x DiskDoubler, neither of which is reachable from here** — OPEN_ITEMS.md's `fmt_dd.c` row and `docs/formats/diskdoubler-container.md`, *What would close it* | **A 2.x DiskDoubler could not have written a `DDAR` record of any flags, so finding one would have settled nothing.** `DDExpand 2.03a`'s `BNDL` declares the DiskDoubler file types it opens — `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` — and `DDAR` is not among them, nor does the string occur anywhere in its 65,212-byte resource fork; DDExpand 3.1 declares those five plus `DDAR`, `DDTD`, `DDCR` and `DDF0`–`DDF5`, and holds the literal nine times. Both are on the Macintosh Garden page this project already fetches 3.7 from, and so is **DiskDoubler ß05, 1990**, the oldest DiskDoubler anywhere reachable — whose Finder menu is `Compress Selection;Expand Selection` and which cannot write an archive either. *A search that names the wrong tool*, one format over: the row named a VERSION rather than a shape, on the strength of which version XADMaster's author owned. **Cost: nothing yet, and only because no 2.x was available to spend a boot on** (DECISIONS.md 2026-09-22, *the version that could not have written it*) | 2026-09-22 |
+| **The two harnesses that grade Mac output against the oracle manifests are `check_mac_sink.py` and `tools/vmac/run.py`, so a StuffIt 5 fixture with a non-ASCII name would read a correct fold as a defect in both** — TESTING.md, *The Macintosh shell's names*, written with the fold on 2026-09-22 | **`run.py` cannot see a name at all.** Its verdict is the on-screen grid — a file count, two summed CRC-32s and two summed lengths — and a summed CRC carries no name, which is the blind spot `checkdisk.py` was written for in the first place. The harness that would have failed is `checkdisk.py`, which the sentence did not name: with the fold disabled it reports three MISSING and three UNEXPECTED on `derived-800saywhat301j.sit`, and run.py passes it either way. **Cost: nothing, by one day** — the sentence would have sent whoever added the fixture to teach the harness that cannot see the problem and leave the one that can (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |
 | **A member deark wrote at all has both forks, so a fork with no file on disk is one deark read as EMPTY** — which is the assertion `make_manifests.py` lets the third oracle make on its own, and the comment stating it (TESTING.md, *A third oracle*) | **deark writes a member's resource-fork sidecar, declines its data fork, and writes no data file.** `derived-BitMap11.sit`'s `BitMapHelp.index` is StuffIt method 8, which deark does not implement: it prints `Unsupported compression method: 8 (MW)` and the absence read as a 0-byte fork. **Cost: nothing yet, which is the only cheap time to find one** — no manifest records a false empty, because the gap-filling path had never been offered such a fork. Found 2026-09-22 by `tools/sweep_deark.py`, whose whole purpose is asking the oracle where nothing was open (DECISIONS.md 2026-09-22, *the oracle asked about everything else*) | 2026-09-22 |
 | **deark's output is matched by name** — `make_manifests.py` and TESTING.md both, as the rule that replaced matching by position on 2026-09-21 | **By the name deark WRITES, which is not the name the archive holds.** deark writes each member to a real file, so a member inside a folder arrives with its separators mangled to `_`; matching raw names skipped **every entry in a folder, 500 of them**, and reported success on the subset it could match. **Cost: the third oracle's coverage, 1,641 forks where 2,075 were available** — a quarter of the cross-check, for one unmodelled sanitiser (`de_char_to_valid_fn_char`, one function in `reference/deark/src/deark-util.c`). Same shape as a check positioned where nothing can contradict it, one layer down | 2026-09-22 |
 | **Eight forks in damaged nested archives cannot be adjudicated: `unar` declines them, deark PADS them, and our own output cannot grade our own output** (TESTING.md, *A third oracle*; FORMATS.md, *Hardening*) | **The container states its own layout.** All eight are MacBinary, whose forks are STORED at offsets the header gives, so what is physically present is arithmetic: all eight match what the engine writes, byte for byte, and `oracle-unadjudicated` falls **15 across 11 → 8 across 4** (7, and the eighth back the same day for an unrelated reason — the declined-fork row above). The claim was true about implementations and was read as true about evidence. **Cost: eight forks carried as ungradeable since 2026-08-08**, and the reasoning that would have settled them was the MacBinary header this project already parses (DECISIONS.md 2026-09-22, *the container is the oracle*) | 2026-09-22 |

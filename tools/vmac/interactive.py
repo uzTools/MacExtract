@@ -541,17 +541,19 @@ def expected_names(fixture, workdir):
     subprocess.run([CD.CLI, "x", "--forks", "hidden", asmac, "-o", ref],
                    capture_output=True)
     comment_file = os.path.basename(asmac) + ".comment.txt"
+    utf8 = CD.names_are_utf8(fixture, CD.CLI)
     want = set()
     for root, _dirs, files in os.walk(ref):
         for f in files:
             if f.startswith("._"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
-            comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
-            if comps == [comment_file]:
+            raw = rel.split(os.sep)
+            if [unicodedata.normalize("NFC", c) for c in raw] == [comment_file]:
                 want.add(("Comments",))
                 continue
-            want.add(tuple(c.replace(":", "/")[:31] for c in comps))
+            want.add(tuple(unicodedata.normalize("NFC", CD.mac_component(c, utf8))
+                           for c in raw))
     if not want:
         print(f"interactive: the CLI extracted nothing from {fixture} — "
               f"there is no output to look for")
@@ -737,6 +739,139 @@ def phase_report(args, appbin, workdir, shot):
             print(f"interactive: the report names {n}, the volume does not")
     ok = not missing
     print("interactive: report " + ("COMPLETE" if ok else "WRONG"))
+    return ok
+
+
+# The one archive in the corpus whose names a Macintosh cannot write, and
+# the lines it must put in the report. `derived-800saywhat301j.sit` is a
+# StuffIt 5 archive from a Japanese publisher: three of its entries are
+# named in kana and kanji, MacRoman has a byte for none of those, and the
+# shell writes one '_' per code point (FORMATS.md, *A name in the wrong
+# encoding is not a name*).
+#
+# The counts are the whole point of the assertion and they are NOT the
+# character counts a reader would guess: `ユーザーライセンスの購入` is
+# thirteen code points and not twelve, because the archive stores `ザ`
+# DECOMPOSED — `サ` plus U+3099 — and the fold replaces each of them.
+# The oracle manifests hold the composed spelling, which is why nothing
+# noticed until this ran on a Macintosh.
+# How long to let Mini vMac flush before Mac.close() SIGKILLs it. See
+# phase_report_utf8 for what it is for and what it cost to find.
+FLUSH_WAIT = 30.0
+
+UTF8_REPORT_FIXTURE = "derived-800saywhat301j.sit"
+UTF8_REPORT_LINES = [
+    "_______ was named in characters this Macintosh cannot write",
+    "_______.rtf was named in characters this Macintosh cannot write",
+    "_____________.rtf was named in characters this Macintosh cannot write",
+]
+# The names those lines are ABOUT — `800-SAY-WHAT 3.0.1J:_______` and the
+# two `.rtf`s — are not checked here, and deliberately: `run.py
+# --keep-disks` then `checkdisk.py` already compares them off the Out
+# volume for this very fixture, with both forks, as part of a 71-fixture
+# sweep. This phase would be a second, weaker copy of that check, and it
+# cannot even make it — hfsutils will not list the ROOT of a volume the
+# interactive build leaves behind ("Current HFS directory 'Dest::' no
+# longer exists"), though `hcopy` still fetches a file from it by name,
+# which is why the document below can be read and a listing cannot.
+
+
+def phase_report_utf8(args, appbin, workdir, shot):
+    """The report line no generated archive can make it say.
+
+    `--report` builds its own DiskDoubler archive, and no DiskDoubler
+    archive can reach this line: the fold runs only where the ENGINE says
+    the names are UTF-8, which `fmt_sit5.c` alone does. So this phase
+    ignores the fixture argument the other way round — it uses one real
+    corpus archive, named above.
+
+    Four frames and one assertion. The frames are the box, Standard File
+    over it after **Save as Text**, the box redrawn once that is
+    dismissed, and SFGetFile afterwards; there is no scrolled frame
+    because four lines do not fill the box, and `--report` is where the
+    live scroll bar is photographed. The assertion is the saved DOCUMENT,
+    for the reason `--report` asserts one: a photograph of a box full of
+    '_' cannot fail, and a missing line in that file can.
+
+    **The output goes to a floppy and not beside the archive**, which is
+    the one way this phase differs from `--report` and it is not
+    cosmetic. Extracting this archive onto the BOOT volume leaves the
+    saved report unreadable on the host: the Macintosh has the file —
+    frame 4 photographs it in Standard File's own listing — and the
+    image does not, the string appearing nowhere in its 24 MB but inside
+    the application's own resources. Measured 2026-09-22, four ways: a
+    30 s flush wait, Mini vMac's Control-Q, SIGTERM instead of SIGKILL,
+    and the shell's own `FlushVol` already being called at
+    `macextract_mac.c`'s Save-as-Text. *Hypothesis, not measured:* 300 KB
+    across a seven-deep tree grows the catalog, and what is written after
+    that does not reach the image; `--report`'s few hundred bytes never
+    provoke it. Sending the output elsewhere sidesteps it rather than
+    explaining it, and the report is then read off whichever volume it
+    landed on.
+    """
+    fixture = os.path.join(R.REPO, "fixtures", UTF8_REPORT_FIXTURE)
+    if not os.path.exists(fixture):
+        print(f"interactive: no {UTF8_REPORT_FIXTURE} in fixtures/ — this "
+              f"phase has no subject (fixtures/SOURCES.md)")
+        return False
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-utf8.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+         bootimg, "--data", f"{fixture}:archive.sit")
+    destdsk = os.path.join(workdir, "dest.dsk")
+    R.make_floppy(destdsk, "Dest", size_kb=1440)
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir, extra=(destdsk,))
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        # Standard File opens on the last-inserted volume, the empty
+        # floppy; drive back to the boot volume for the archive.
+        mac.click(*SF_DRIVE)
+        time.sleep(2.0)
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        time.sleep(3.0)
+        mac.click(*SFPUT_DRIVE)                # ...and away to the floppy
+        time.sleep(1.5)
+        accept_destination(mac, pause=1.0)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "utf8-1-box.png")            # the three lines, outcome last
+        mac.click(*REPORT_SAVE)
+        time.sleep(4.0)
+        shot(mac, "utf8-2-save.png")
+        mac.key("Return")
+        time.sleep(5.0)
+        shot(mac, "utf8-3-saved.png")
+        mac.click(*REPORT_OK)
+        time.sleep(3.0)
+        shot(mac, "utf8-4-back.png")
+        time.sleep(FLUSH_WAIT)
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    lines = (volume_text(destdsk, "Extraction Report")
+             or volume_text(written, "Extraction Report"))
+    if lines is None:
+        print("interactive: NO saved report on either volume")
+        return False
+    for l in lines:
+        print("interactive: report | " + l)
+    missing = [w for w in UTF8_REPORT_LINES if w not in lines]
+    # Nothing FAILED here — every entry came out, under a name the disk
+    # can hold — so the outcome is the clean one even though the box is
+    # up. That is the difference between this phase and --report.
+    if not lines or "Extraction complete." not in lines[-1]:
+        missing.append("<'Extraction complete.', on the last line>")
+    for m in missing:
+        print("interactive: NOT in the saved report: " + m)
+    ok = not missing
+    print("interactive: utf8 report " + ("COMPLETE" if ok else "WRONG"))
     return ok
 
 
@@ -1857,6 +1992,13 @@ def main():
                          "photograph the report box, scroll it, save it as "
                          "a document, and read that document back off the "
                          "volume. Ignores the fixture argument.")
+    ap.add_argument("--report-utf8", action="store_true",
+                    help="the report line a generated archive cannot make: "
+                         "a StuffIt 5 archive whose names are UTF-8 and "
+                         "hold characters MacRoman has no byte for, so the "
+                         "shell writes '_' and says so per component. Uses "
+                         "fixtures/" + UTF8_REPORT_FIXTURE + " and ignores "
+                         "the fixture argument.")
     ap.add_argument("--drop-type", default="SIT!",
                     help="the four-character TYPE to give the archive in the "
                          "--drop phase. The Finder matches this against the "
@@ -1906,6 +2048,14 @@ def main():
     if args.report:
         try:
             ok = phase_report(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.report_utf8:
+        try:
+            ok = phase_report_utf8(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
