@@ -2812,9 +2812,11 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 648,282 B** — measured
+**What a 1 MB Mac Plus actually leaves the engine is 648,250 B** — measured
 **2026-09-22** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **668,762 B** and the shell's reserve at a flat 20 KB.
+`FreeMem()` at **668,730 B** and the shell's reserve at a flat 20 KB.
+
+**All three tier budgets fell by exactly 32 B on 2026-09-22** when the 1990 DiskDoubler header went in — 648,282 → 648,250 here, 219,394 → 219,362 and 123,994 → 123,962 on the 512Ke. **The arithmetic predicted 64**: that change is +48 B of code and +16 B of A5, and both are supposed to come off the budget one for one. Half of it did not arrive, and the gap is recorded rather than explained — a `CODE` resource is a handle of its own size and the A5 world is rounded, so tens of bytes of growth can land in slack already paid for. The measurement is the number; the arithmetic is what says when to go and take one (DECISIONS.md 2026-09-22, *the header that was a length*).
 
 **"647,204 B, arithmetic" is withdrawn, and it was wrong in the direction
 arithmetic cannot be.** For half a day this section carried 648,100 B less
@@ -2928,7 +2930,7 @@ measured on the roomy one says nothing about the tight one:
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,762 B | 20 KB | **648,282 B** (measured 2026-09-22; 668,580/648,100 on 2026-08-31) |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,730 B | 20 KB | **648,250 B** (measured 2026-09-22 with the 1990 DiskDoubler header in; 668,762/648,282 earlier the same day, 668,580/648,100 on 2026-08-31) |
 | System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 20 KB | **191,480 B** (derived) |
 
 Both are `FreeMem()` less the reserve, taken when extraction begins. The
@@ -4156,7 +4158,7 @@ its UTF-8 names and needs 242,464 B.
 `synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
 405,520 B block on every tier, and here it cannot have it.
 
-**The budget is 219,394 B**, measured **2026-09-22**: a 239,874 B free heap
+**The budget is 219,362 B**, measured **2026-09-22**: a 239,842 B free heap
 read off the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
 swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve, and the
 figure `tools/run_tiers.py` asserts this tier at. **It was carried as
@@ -4168,7 +4170,7 @@ month of decoder work; under the quarter rule before that it was 163,656 B.
 fixture for fixture. The minimum budget each one needs, bisected with the
 shipping binary on 2026-09-22:
 
-| fixture | needs | of which | against 219,394 B |
+| fixture | needs | of which | against 219,362 B |
 |---|---|---|---|
 | `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.10x |
 | `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.11x |
@@ -4207,8 +4209,8 @@ it asks for.
 "unchanged" note had not accounted for — the reserve going flat could not
 help it, and the stack did),
 and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
-nothing else: free heap when extraction starts is **239,874 B** under System
-3.0 against **144,474 B** under System 6.0.8 (both 2026-09-22), a gap of
+nothing else: free heap when extraction starts is **239,842 B** under System
+3.0 against **144,442 B** under System 6.0.8 (both 2026-09-22), a gap of
 95,400 B — the same gap to the byte as when the pair was last taken, against
 System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System

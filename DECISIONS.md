@@ -15945,3 +15945,18 @@ the floor ß05 enforces, and size 60, a value ß05 would accept and for
 which nothing here knows the layout. Both must sniff UNKNOWN.
 **Established that it can fail**: the new test fails 7 of its checks
 against the unchanged engine.
+
+**And the budget moved 32 B, not 64.** All three tier budgets were re-taken
+on the machine with `-D UNC_AT_BUDGET` immediately afterwards — because a
+budget is `FreeMem() - 20,480` on a BINARY and goes stale the moment the
+application's size does — and every one of them fell by **exactly 32 B**:
+648,282 → 648,250 at the 1 MB floor, 219,394 → 219,362 and 123,994 →
+123,962 on the 512Ke. The arithmetic said 64. Half of it did not arrive,
+and this records the gap rather than explaining it: a `CODE` resource is a
+handle of its own size and the A5 world is rounded, so tens of bytes of
+growth can land inside slack that was already paid for. **The measurement
+is the number; the arithmetic is only what says when to go and take one** —
+which is the same lesson as *the fold, on a Macintosh*, arriving from the
+other direction. `run_tiers.py` reproduces all three tallies unchanged at
+the new figures (71/71, 67/71, 64/71), and the Macintosh agrees: **71/71 at
+4 MB and 71/71 at the 1 MB floor** on System 6.0.8 with this build.

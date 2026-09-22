@@ -1497,9 +1497,9 @@ own budget and asserts the tallies.
 
 `--check` asserts every tally Mini vMac has agreed with independently,
 which since 2026-09-22 is all three: **71/71 at the 1 MB floor target**
-(648,282 B), **67/71 on a 512 KB Macintosh under System 3.0**
-(219,394 B) and **64/71 on the same machine under System 6.0.8**
-(123,994 B) — the same four and seven fixtures, by name, that the
+(648,250 B), **67/71 on a 512 KB Macintosh under System 3.0**
+(219,362 B) and **64/71 on the same machine under System 6.0.8**
+(123,962 B) — the same four and seven fixtures, by name, that the
 machines refuse. The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
 assertable the same day, when its budget was re-taken. A tally that moves is

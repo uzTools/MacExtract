@@ -24,7 +24,7 @@ mv-512Ke` is **67/71** (2026-09-22; 66/69 before the sample grew, 65/69
 before the reserve went flat, 64/69 before the LZW bound), `run.py --emu
 mv-512Ke --system System6.hfv` is **64/71** (2026-09-22; 63/69 on
 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB
-machines*). The budgets are **219,394 B** and **123,994 B**, both re-taken
+machines*). The budgets are **219,362 B** and **123,962 B**, both re-taken
 on the machine that day; `tools/run_tiers.py` now reproduces both tiers on
 Linux fixture for fixture, and the one that never matched was the budget
 and not the model.

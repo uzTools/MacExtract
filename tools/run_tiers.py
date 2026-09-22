@@ -15,7 +15,7 @@ SAMPLE at the tiers' own budgets and asserts the tallies.
 So a whole tier can be swept here in five seconds:
 
     tools/run_tiers.py --tier sys3-512K
-    tools/run_tiers.py --budget 123994 --list tools/vmac/sample.txt
+    tools/run_tiers.py --budget 123962 --list tools/vmac/sample.txt
     tools/run_tiers.py --tier floor-1M --macextract build/rel/macextract
 
 It prints one line per refusal with the shortfall, and the tally. On
@@ -65,10 +65,20 @@ REPO = os.path.dirname(HERE)
 # FORMATS.md (*Budget*, *512 KB machines*) is where they come from and
 # the only place they should be corrected.
 TIERS = {
-    "sys3-512K": (219394, "System 3.0, Macintosh 512Ke (239,874 B free)"),
-    "sys6-512K": (123994, "System 6.0.8, Macintosh 512Ke (144,474 B free)"),
-    "floor-1M":  (648282, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (219362, "System 3.0, Macintosh 512Ke (239,842 B free)"),
+    "sys6-512K": (123962, "System 6.0.8, Macintosh 512Ke (144,442 B free)"),
+    "floor-1M":  (648250, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+
+# Re-taken 2026-09-22 with the 1990 DiskDoubler header in, and **all three
+# fell by exactly 32 B**: 219,394 -> 219,362, 123,994 -> 123,962 and
+# 648,282 -> 648,250. The arithmetic predicted 64 — the change is +48 B of
+# code and +16 B of A5, and both are supposed to come off the budget one
+# for one — so half of it did not arrive. That gap is recorded rather than
+# explained: a CODE resource is a handle of its own size and the A5 world
+# is rounded, so a few tens of bytes of growth can land inside slack that
+# was already paid for. **The measurement is the number**; the arithmetic
+# is what says when to go and take one.
 
 # All three re-taken on the machine on 2026-09-22 with `-D UNC_AT_BUDGET`,
 # and all three had drifted the same way: 197728, 102328 and 648100 were

@@ -17,7 +17,7 @@ archives whose names are UTF-8 joined it.
 |---|---|
 | System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22). System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **71/71** (2026-09-22); the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
-| System 3.0, **512 KB** Macintosh 512Ke | **67/71** (2026-09-22); the four shortfalls are per-entry memory refusals, not failures — the budget there is 219,394 B. The same machine under System 6.0.8, with no Finder at all, does **64/71**, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
+| System 3.0, **512 KB** Macintosh 512Ke | **67/71** (2026-09-22); the four shortfalls are per-entry memory refusals, not failures — the budget there is 219,362 B. The same machine under System 6.0.8, with no Finder at all, does **64/71**, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22) |
 | System 6.0.8, **1 MB** — the RAM floor | **71/71** (2026-09-22); no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **71/71** (2026-09-22), the first run of the fold under the Process Manager |
@@ -36,6 +36,12 @@ sample gained and not a refusal the engine grew. **All three budget
 constants were re-taken the same day** with `-D UNC_AT_BUDGET` and all three
 had drifted (below, and FORMATS.md, *Budget*). `checkdisk.py` then read all
 **73 kept Out volumes byte-exact, names included**.
+
+**The two System 6.0.8 sweeps were run a third time the same day**, on the
+build that reads the 1990 DiskDoubler header: **71/71 at 4 MB and 71/71 at
+the 1 MB floor**. All three budgets were re-taken again after it and each
+had fallen exactly 32 B where the arithmetic predicted 64 (FORMATS.md,
+*Budget*); no tally moved.
 
 **Every Mini vMac tier was re-run 2026-09-20** before that, the first time
 any had been since the decoder work of 2026-09-18/19/20 changed six formats
