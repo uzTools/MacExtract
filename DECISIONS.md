@@ -15011,11 +15011,13 @@ UTF-8 for `file_fmt==2` and MacRoman otherwise,
 invocation — prints `Cool Tools ∆í`, which is what this CLI writes to
 disk. In Japanese the same archive family gives
 `800-SAY-WHAT 3.0.1J/読んで下さい.rtf` against 25 characters of
-nothing. 28 entries across 5 fixtures.
+nothing. 28 entries across 5 fixtures — **corrected the same day to 27
+across 4**; the 28th was an entry with two empty forks and nothing to do
+with encoding (BLOCKERS.md; *a name an HFS volume can hold*, below).
 
 **Consequence.** Filed in OPEN_ITEMS.md (*StuffIt 5 entry names are
 UTF-8*) and nothing is changed here: the frontend's per-format encoding,
-the oracle invocation with the five manifests built from it, and what
+the oracle invocation with the four manifests built from it, and what
 the Macintosh shell should write to an HFS name have to move together,
 and the last of those wants a UTF-8 → MacRoman table on a 1 MB machine.
 
