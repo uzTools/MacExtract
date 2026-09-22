@@ -783,10 +783,14 @@ Four things that are different from every other run in this file:
   Selection` and that is the whole application, so there is one thing to
   write and `--make`'s four-item popup has no counterpart.
 - **`--beta-verify` grades it against the bytes DiskDoubler was given**,
-  because nothing reads a 48-byte header: it sets the size word to 84,
-  computes each fork's checksum from the INPUT, and hands the result to
-  this engine. Both forks come back byte-exact and both sums are the
-  ones DiskDoubler 3.7 stored for the same forks.
+  because `unar` answers "format not recognized" for one of these and no
+  other reader exists. Two passes since 2026-09-22, when the engine
+  learned the shape: the specimen **as it is**, which grades the code
+  that ships, and the specimen **rewritten with an 84-byte header** and
+  the two forks' checksums written where one keeps them — the stronger
+  statement, because those sums are computed from the INPUT and are the
+  two DiskDoubler 3.7 itself stored for the same forks. Both forks
+  byte-exact both ways.
 
 ### The two `DDAR` record shapes no corpus fixture has — `--combine`
 

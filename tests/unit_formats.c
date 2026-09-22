@@ -2767,6 +2767,67 @@ static void test_diskdoubler(void)
         CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
     }
 
+    /* The same file with the 1990 header: **48**, not 84. That long is
+     * the magic word 0xABCD and the header's own SIZE, so a header can
+     * be shorter than the one every corpus file has — it ends before
+     * the checksums at +48 — and the forks begin where it says they do.
+     * Stored forks, so this tests the container and no codec; what
+     * grades the BYTES is a file DiskDoubler ß05 wrote under emulation,
+     * against the bytes it was given (`diskdoubler.py --beta-verify`).
+     * Source: docs/formats/diskdoubler-container.md, "The header size,
+     * and the 1990 header". */
+    {
+        UncOptions opt;
+        static const uint8_t hint[] = "Subject";
+        uint8_t one[512];
+        uint32_t n;
+        for (n = 0; n < 48; n++) one[n] = 0;
+        one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x30;
+        put32(one + 4, 5);           /* datasize   */
+        put32(one + 8, 5);           /* datacomp   */
+        put32(one + 12, 3);          /* rsrcsize   */
+        put32(one + 16, 3);          /* rsrccomp   */
+        one[20] = 0; one[21] = 0;    /* both methods: stored */
+        one[22] = 0x1F;              /* info1, the 1990 version byte */
+        memcpy(one + 32, "TEXT", 4);
+        memcpy(one + 36, "ttxt", 4);
+        n = 48;
+        memcpy(one + n, "plain", 5); n += 5;
+        memcpy(one + n, "RSC", 3);   n += 3;
+        memset(&opt, 0, sizeof opt);
+        opt.name_hint = hint;
+        opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+        test_make_memio(&io, &m, one, n);
+        /* There is no header CRC below +82 to check, so the sniffer's
+         * test is the two length pairs — the rule ß05's own validator
+         * applies. A fork claiming to compress to more than it started
+         * as is not one of these files. */
+        CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                             &opt) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        /* No ".dd" to strip: that version compresses in place. */
+        CHECK(cap.info[0].name_len == 7 &&
+              memcmp(cap.info[0].name, "Subject", 7) == 0);
+        CHECK(cap.dlen[0] == 5 && memcmp(cap.data[0], "plain", 5) == 0);
+        CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
+        CHECK(cap.info[0].type == 0x54455854u);   /* 'TEXT' */
+
+        /* Two values, not a range, and these are the controls that say
+         * so. 47 is below the floor that version's own validator
+         * enforces; 60 is a size it WOULD accept and for which no
+         * specimen exists, so nothing here guesses what would sit in
+         * the twelve bytes between. Both are UNKNOWN. */
+        one[3] = 0x2F;
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+        one[3] = 0x3C;
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+        one[3] = 0x30;
+    }
+
     /* A corrupt header CRC is not a DiskDoubler archive at all. */
     arc[76] ^= 0xFF;
     test_make_memio(&io, &m, arc, len);

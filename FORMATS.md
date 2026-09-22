@@ -84,7 +84,8 @@ it.
 
 **In scope since 2026-08-15** (M12), where every status file
 here used to call it detect-only. Three containers — a single compressed file
-(`0xABCD0054`), `DDAR`, `DDA2` — and four methods, which is every method the
+(`0xABCD` and the header's own SIZE, 84 or 48 — see *The 1990 header*
+below), `DDAR`, `DDA2` — and four methods, which is every method the
 corpus uses: 0 stored, 6/9 (an 8 KB-block LZSS), 8 (Compact Pro compression in
 a DiskDoubler container: the same two stages as `.cpt`, at a 0xfff0 Huffman
 block instead of 0x1fff0), 10 (DDn: a 64 KB-window LZSS whose literals, offsets
@@ -107,6 +108,28 @@ allocation this engine has ever asked a Mac Plus for. Methods 3 and 4 are
 8,208 B and 9,508 B there, the cheapest in the format. The **400 KB budget**
 column is about the corpus and stays true of it: that one fork is the only
 thing in this format that would not fit that budget.
+
+#### The 1990 header
+
+**`0xABCD0054` is not one magic number.** It is the word `0xABCD` and a
+16-bit header SIZE: 84 in all 195 file headers in the corpus, and **48**
+in a file DiskDoubler ß05 of 1990 wrote here — the oldest DiskDoubler
+that exists anywhere reachable, an INIT with no application
+(DECISIONS.md 2026-09-22, *the header that was a length*). The first 48
+bytes are the same fields; a short header ends before the checksums at
++48, `info2` at +52 and the delta distances at +54, and it is followed by
+the two forks and **no header trailer**, which is 3.x's and not the
+format's.
+
+**Read since 2026-09-22**, for **64 B** on a 1 MB Mac Plus — 48 of code
+and 16 of A5, both ratchets raised with the attribution. `unar` answers
+"format not recognized" for one of these, so there is no second reader;
+the grade is the bytes DiskDoubler was given
+(`tools/vmac/diskdoubler.py --beta-verify`, both forks byte-exact), and
+`ci.sh` carries the container shape as a unit test with stored forks and
+two negative controls. **No corpus fixture has one** — the only specimen
+in existence here is the one the harness made, which is also why nothing
+in the differential suite covers it.
 
 **Methods 1 and 7 joined them on 2026-08-20**, when running DiskDoubler
 itself showed that both are reachable after all (BLOCKERS.md, *Withdrawn

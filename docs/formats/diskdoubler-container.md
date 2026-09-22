@@ -51,7 +51,7 @@ DiskDoubler ß05 wrote states 48 and stops after +47.
 | offset | size | field | how it is pinned |
 |---|---|---|---|
 | 0 | 2 | magic `0xABCD` | the sniffer's, and 66 files begin with it |
-| 2 | 2 | **the header's own size**, 84 here | **measured 2026-09-22**: the 1990 build writes 48 and lays the 48 bytes out identically, and its own expander accepts any value ≥ 48 |
+| 2 | 2 | **the header's own size**, 84 here | **measured 2026-09-22**: the 1990 build writes 48 and lays the 48 bytes out identically, and its own expander accepts any value ≥ 48. `src/fmt_dd.c` reads both |
 | 4 | 4 | data fork length | **pinned**: one offset survives over 66 compressed files, and one over all 195 file headers wherever they sit — 66 files, 36 inside `DDAR`, 93 inside `DDA2` |
 | 8 | 4 | data fork compressed length | the walk: the resource fork's bytes begin here past the header, in every archive that has a next entry to arrive at |
 | 12 | 4 | resource fork length | **pinned**, same two searches |
@@ -147,15 +147,32 @@ every specimen here read `0x2a`, so the un-garbled branch of the rule in
 *The XOR garbling* had never been seen at all.
 
 **Graded against the bytes DiskDoubler was given**, which is the oracle
-`--verify-combine` and `nowcompress.py` use, because neither this engine
-nor `unar` reads a 48-byte header — both answer "format not recognized".
-`diskdoubler.py --beta-verify` sets the size word to 84, writes the two
-forks' checksums where an 84-byte header keeps them, and hands the
-result to this engine: **both forks come back byte-exact**, and the
-checksums it computes from the INPUT — `0xd766` and `0x116a` — are the
-two DiskDoubler 3.7 itself stored for the same forks. The two
-compressors also agree on length to the byte, 1,697 and 97 from the same
-input, which is the LZW behaving identically either side of the XOR.
+`--verify-combine` and `nowcompress.py` use, because `unar` answers
+"format not recognized" for one of these and no other reader exists.
+`diskdoubler.py --beta-verify` decodes the specimen twice:
+
+- **as it is.** Since 2026-09-22 `src/fmt_dd.c` reads the size word, so
+  a 48-byte header is a shape this engine knows and the file goes in
+  untouched — sniffed, listed as `TEXT`/`ttxt` with both fork lengths,
+  and both forks byte-exact.
+- **rewritten with an 84-byte header**, the two forks' checksums written
+  where an 84-byte header keeps them. This is what established the claim
+  before any of it was implemented, and it is the stronger statement:
+  the forks come back byte-exact THROUGH a checksum this file did not
+  compute — the sums are taken from the INPUT, and `0xd766` and `0x116a`
+  are the two DiskDoubler 3.7 itself stored for the same forks.
+
+The two compressors also agree on length to the byte, 1,697 and 97 from
+the same input, which is the LZW behaving identically either side of the
+XOR.
+
+**What this engine accepts is the two sizes that have a specimen**, 48
+and 84, each as a whole 32-bit constant. ß05's validator accepts any
+size from 48 up, which is the evidence that the field IS a size; a
+reader that acted on the whole range would be guessing what a third
+value puts in the bytes between, and there is nothing to guess from.
+Cost on a 1 MB Mac Plus: **64 B**, 48 of code and 16 of A5
+(DECISIONS.md 2026-09-22, *the header that was a length*).
 
 ### Which forks use method 10's second form, and how that is known
 
@@ -386,10 +403,6 @@ inside one 46-byte window, and `src/fmt_dd.c` says so where it matters
 - **`DDAR`'s `0x20` raw-fork records**, for want of a specimen: see
   above. The folder records are no longer on this list — they were
   measured on 2026-09-22 against an archive DiskDoubler wrote here.
-- **A 48-byte header, read by this engine.** The 1990 layout is
-  measured above and graded, and neither this engine nor `unar` opens
-  one (OPEN_ITEMS.md, *A DiskDoubler header this engine does not
-  read*).
 - **Methods 2, 3, 4 and 5's own headers.** `src/fmt_dd.c` decodes 3, 4
   and 5 against forks DiskDoubler's own expander reads back
   (DECISIONS.md 2026-08-21) and the three specimens here are this

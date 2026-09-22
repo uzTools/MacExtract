@@ -52,7 +52,25 @@ UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
 }
 
 /* DiskDoubler: 0xABCD0054 magic + XMODEM CRC of the 82-byte header
- * (or 0 in very old files), or the 'DDAR' archive variant.
+ * (or 0 in very old files), 0xABCD0030 for the 1990 shape, or the
+ * 'DDAR' archive variant.
+ *
+ * **That long is a word and a length**, measured 2026-09-22 by running
+ * DiskDoubler ß05 (1990), which writes 48 where every one of the 195
+ * headers in the corpus writes 84 (docs/formats/diskdoubler-container.md,
+ * "The header size, and the 1990 header"). A short header ends before
+ * `C_HDRCRC 82`, so there is no header CRC to check — and none of its
+ * fill is one either: 0x00 through all six bytes at +42, where the two
+ * forks' own sums are 0xd766 and 0x116a. So the second shape is matched
+ * as a whole 32-bit constant exactly as the first is, and the size makes
+ * the magic MORE specific rather than less. Only two values have a
+ * specimen; that version's validator accepts any size from 48 up, which
+ * is why the field is read as a size at all, but nothing here guesses
+ * what a third would put where. Both references know only the 84-byte
+ * shape — macutils states `MAGIC2 "\253\315\000\124"` as four bytes
+ * and XADMaster compares `0xabcd0054` as a long — so the first path
+ * below is byte-for-byte what it was and no corpus file reaches the new
+ * one.
  *
  * Source for the first two: reference/macutils/macunpack/dd.h, which
  * states both magics and both header shapes — MAGIC2 "\253\315\000\124"
@@ -71,6 +89,8 @@ UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
         uint16_t crc = unc_get_u16be(head + 82);
         if (crc == 0 || crc == unc_crc16_xmodem(0, head, 82)) return UNC_FORMAT_DISKDOUBLER;
     }
+    if (len >= 48 && unc_get_u32be(head) == 0xABCD0030u)
+        return UNC_FORMAT_DISKDOUBLER;
     if (len >= 78 && unc_get_u32be(head) == 0x44444152u &&    /* 'DDAR' */
         unc_get_u16be(head + 76) == unc_crc16_xmodem(0, head, 76)) return UNC_FORMAT_DISKDOUBLER;
     if (len >= 62 && unc_get_u32be(head) == 0x44444132u &&    /* 'DDA2' */

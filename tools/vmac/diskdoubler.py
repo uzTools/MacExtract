@@ -914,13 +914,21 @@ def beta_verify():
     """Grade the 1990 specimen against the bytes DiskDoubler was given.
 
     The oracle is the ENCODER's input, the same bargain `--verify-combine`
-    and `nowcompress.py` make. Nothing reads a 48-byte header — not this
-    engine and not `unar` — so what is decoded is the specimen with its
-    header size word set to 84 and the checksums of those same forks
-    written where an 84-byte header keeps them. If the forks come back
-    byte-exact THROUGH a checksum this file did not compute, the two
-    headers share their first 48 bytes field for field and the codec is
-    the same one.
+    and `nowcompress.py` make; `unar` cannot open one of these at all.
+
+    Two passes, answering different questions:
+
+    * **the file as it is.** Since 2026-09-22 the engine reads the size
+      word at +2, so a 48-byte header is a shape it knows and the
+      specimen goes in untouched. That grades the code that ships.
+    * **the file rewritten with an 84-byte header**, the checksums of
+      those same forks written where an 84-byte header keeps them. This
+      is what ESTABLISHED the claim before any of it was implemented,
+      and it is kept because it is the stronger statement: the forks
+      come back byte-exact THROUGH a checksum this file did not compute
+      — 0xd766 and 0x116a are the two DiskDoubler 3.7 itself stored for
+      the same forks — so the two headers share their first 48 bytes
+      field for field and the codec is the same one.
     """
     spec = os.path.join(SPECIMENS, "beta-Subject.dd")
     if not os.path.exists(spec):
@@ -941,37 +949,48 @@ def beta_verify():
 
     def ck(b):
         return (sum(b) + adj) & 0xFFFF
-    h = bytearray(blob[:48]) + bytearray(36)
-    h[2:4] = struct.pack(">H", 84)
-    struct.pack_into(">HH", h, 48, ck(want_d), ck(want_r))
-    work = tempfile.mkdtemp(prefix="ddbetaverify-")
-    try:
-        p = os.path.join(work, "as84.dd")
-        open(p, "wb").write(bytes(h) + blob[hsize:])
-        out = os.path.join(work, "out")
-        os.makedirs(out)
-        r = subprocess.run([cli(), "x", "--forks", "hidden", p, "-o", out],
-                           capture_output=True)
-        got_d = open(os.path.join(out, "as84"), "rb").read() \
-            if os.path.exists(os.path.join(out, "as84")) else b""
-        got_r = open(os.path.join(out, "._as84"), "rb").read() \
-            if os.path.exists(os.path.join(out, "._as84")) else b""
-    finally:
-        shutil.rmtree(work, ignore_errors=True)
+    h84 = bytearray(blob[:48]) + bytearray(36)
+    h84[2:4] = struct.pack(">H", 84)
+    struct.pack_into(">HH", h84, 48, ck(want_d), ck(want_r))
+
+    def decode(name, payload):
+        work = tempfile.mkdtemp(prefix="ddbetaverify-")
+        try:
+            path = os.path.join(work, name)
+            open(path, "wb").write(payload)
+            out = os.path.join(work, "out")
+            os.makedirs(out)
+            r = subprocess.run([cli(), "x", "--forks", "hidden", path,
+                                "-o", out], capture_output=True)
+            d, rs = os.path.join(out, name), os.path.join(out, "._" + name)
+            return (r.returncode,
+                    open(d, "rb").read() if os.path.exists(d) else b"",
+                    open(rs, "rb").read() if os.path.exists(rs) else b"")
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
     bad = 0
-    for label, got, want, sumv in (("data", got_d, want_d, ck(want_d)),
-                                   ("rsrc", got_r, want_r, ck(want_r))):
-        if got == want:
-            print("  %s fork: %d B byte-exact, sum 0x%04x verified"
-                  % (label, len(got), sumv))
-        else:
-            bad += 1
-            print("  %s fork: MISMATCH — %d B out, %d B in"
-                  % (label, len(got), len(want)))
-    print("diskdoubler: the 1990 header's first 48 bytes are the 84-byte "
-          "header's, %d disagreement(s)" % bad)
-    if r.returncode != 0:
-        print("  (the engine returned %d)" % r.returncode)
+    for tag, name, payload in (
+            ("as written, a 48-byte header", "Subject", blob),
+            ("rewritten with an 84-byte header", "as84",
+             bytes(h84) + blob[hsize:])):
+        ret, got_d, got_r = decode(name, payload)
+        print("  %s:" % tag)
+        if ret != 0:
+            print("    the engine returned %d" % ret)
+        for label, got, want in (("data", got_d, want_d),
+                                 ("rsrc", got_r, want_r)):
+            if got == want:
+                print("    %s fork: %d B byte-exact" % (label, len(got)))
+            else:
+                bad += 1
+                print("    %s fork: MISMATCH - %d B out, %d B in"
+                      % (label, len(got), len(want)))
+    print("  the sums written into the 84-byte rewrite came from the INPUT: "
+          "0x%04x and 0x%04x, and DiskDoubler 3.7 stored those two for the "
+          "same forks" % (ck(want_d), ck(want_r)))
+    print("diskdoubler: the 1990 file decodes as it is, and its first 48 "
+          "bytes are the 84-byte header's, %d disagreement(s)" % bad)
     return 1 if bad else 0
 
 

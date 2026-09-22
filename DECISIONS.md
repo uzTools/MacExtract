@@ -253,6 +253,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
 - 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
 - 2026-09-22 (the right flag with the wrong reason) — what `hls -a` is actually for, and the four walks that believed the explanation
+- 2026-09-22 (the header that was a length) — a DiskDoubler file neither reader could open, for 64 bytes
 
 ---
 
@@ -15871,3 +15872,76 @@ purpose on some runs (`drop_desktop`, five runs both ways, BLOCKERS.md) — so
 a default `-a` would have deleted it and broken the password phase. The flag
 is a parameter: a verification wants it, a deletion wants the explicit list.
 Verified end to end, `run.py` on one fixture: 1/1 PASS.
+
+## 2026-09-22 (the header that was a length) — a DiskDoubler file neither reader could open, for 64 bytes
+
+**Claim.** The engine reads a 1990 DiskDoubler file. `0xABCD0054` is the
+magic word `0xABCD` and the header's own SIZE, so the parser takes the
+size off +2 instead of matching a 32-bit constant, and the fields past
+the stated size are read as absent rather than assumed. Graded against
+the bytes DiskDoubler was given: **both forks byte-exact**, sniffed,
+listed as `TEXT`/`ttxt` with both fork lengths right.
+
+**Why it was worth doing at all.** It is the same format, one generation
+older, and until today this engine answered *"format not recognized"* for
+a file DiskDoubler itself wrote. `unar` still does — there is no second
+reader anywhere — so the alternative was leaving a hole that only this
+machine can even demonstrate. The measurement that opened it is
+*the magic that was a length*, above.
+
+**What the fields past +47 do.** Nothing, and that is the whole
+implementation: a short header is zero-filled to the 84-byte struct after
+the read, and every consumer already had the right behaviour for zero.
+A zero checksum is the *"very old file"* case the sniffer has accepted
+since M12 — which turns out to be literally this case, and `macutils`'
+own comment says so. Zero delta distances mean no delta. `info1` `0x1f`
+with `info2` 0 leaves `dd_xorval()` at 0, which is correct: the 1990
+file is not garbled, and its data fork begins with `compress(1)`'s own
+`1f 9d 90` in clear. **No branch anywhere else in the format changed.**
+
+**Two sizes, not a range, and the reason is both honesty and bytes.**
+ß05's own validator accepts any size from 48 up — that is the evidence
+the field IS a size, and it is quoted as such. But only 48 and 84 have a
+specimen, and a reader that acted on the whole range would be guessing
+what a third value puts in the bytes between. Taking exactly the two
+makes each one a **whole 32-bit constant**, which is as specific a magic
+as the one this had before.
+
+**And it is 96 bytes cheaper, which was not the reason but is the
+lesson.** The first draft matched the word plus a range, and needed
+something to stand in for the header CRC a short header does not have:
+the two length pairs, `compressed <= uncompressed`, which is the rule
+ß05's validator applies. That cost **+144 B of code**. Constraining the
+size to two values instead cost **+48 B**:
+
+| | code | A5 | budget |
+|---|---|---|---|
+| word + range + length pairs | +144 B | +16 B | 160 B |
+| two 32-bit magics | **+48 B** | +16 B | **64 B** |
+
+Per object, `m68k-apple-macos-size` before and after: `fmt_dd.c` 8,888 →
+8,918 text, `fmt_stubs.c` 1,057 → 1,073, and **zero data in either, both
+times**. So the 16 B of A5 is rodata alignment shifting under 46 B of new
+text — the same effect measured on 2026-09-19 and 2026-09-20 — and not a
+table. Both ratchets raised deliberately in `tools/build_mac.sh` with
+that attribution.
+
+**Third time a constant has been cheaper composed or constrained than
+stored on this target** (2026-09-01 *two byte reads*, 2026-09-09 DART's
+type table, this). The pattern is worth naming: on a 68000 an immediate
+is free and a comparison against one is a single instruction, so
+*narrowing* what you accept often costs less than *generalising* it —
+which is the opposite of the instinct, and it agrees with the honest
+answer here rather than fighting it.
+
+**What grades it, and what cannot.** No corpus fixture has a 48-byte
+header and none can: the only specimen in existence here is the one
+`diskdoubler.py --beta` made, and fixture archives are not committed. So
+the differential suite does not cover this at all, and
+`--beta-verify` — the encoder's input as oracle — is the whole of the
+byte-level grade. What `ci.sh` carries instead is the CONTAINER, as a
+unit test with stored forks and two negative controls: size 47, below
+the floor ß05 enforces, and size 60, a value ß05 would accept and for
+which nothing here knows the layout. Both must sniff UNKNOWN.
+**Established that it can fail**: the new test fails 7 of its checks
+against the unchanged engine.

@@ -38,7 +38,8 @@
  */
 #include "unc_internal.h"
 
-#define DD_MAGIC   0xABCD0054u
+#define DD_MAGIC   0xABCD0054u    /* the magic word AND an 84-byte header */
+#define DD_MAGIC48 0xABCD0030u    /* the same word, and 1990's 48-byte one */
 #define DD_DDAR    0x44444152u    /* 'DDAR' */
 #define DD_DDA2    0x44444132u    /* 'DDA2' */
 
@@ -1495,7 +1496,7 @@ static int dd_archive2(UncCtx *c)
 int unc_dd_extract(UncCtx *c)
 {
     uint8_t hdr[DD_FILEHDR];
-    uint32_t magic;
+    uint32_t magic, hsize, want, i;
 
     if (c->io->seek(c->io->ctx, 0) < 0) return UNC_ERR_IO;
     if (unc_read_full(c->io, hdr, 4) != UNC_OK) return UNC_ERR_FORMAT;
@@ -1503,14 +1504,47 @@ int unc_dd_extract(UncCtx *c)
 
     if (magic == DD_DDAR) return dd_archive(c);
     if (magic == DD_DDA2) return dd_archive2(c);
-    if (magic != DD_MAGIC) return UNC_ERR_FORMAT;
+    if (magic != DD_MAGIC && magic != DD_MAGIC48) return UNC_ERR_FORMAT;
+
+    /* The low word of what every other reader treats as a 32-bit magic is
+     * the HEADER'S OWN SIZE. 84 in every file DiskDoubler 3.x and later
+     * wrote — all 195 headers in the corpus — and **48** in one
+     * DiskDoubler ß05 of 1990 wrote here. The first 48 bytes are the same
+     * fields either way; a short header simply ends before the checksums
+     * at +48, info2 at +52 and the delta distances at +54, and the forks
+     * begin at the size the header states.
+     *
+     * Fields past the stated size are read as ZERO, which is what makes
+     * this one branch rather than two readers: a zero checksum is already
+     * the "very old file" case the sniffer has always accepted, zero
+     * delta distances mean no delta, and info1 0x1f with info2 0 leaves
+     * dd_xorval() at 0 — the 1990 file is not garbled, and its data fork
+     * begins with compress(1)'s own 1f 9d 90 in clear.
+     *
+     * **Two values, not a range.** That version's own validator, read
+     * out of its 'CCOD' resource, refuses a word other than 0xABCD and
+     * then accepts any size from 48 up — so the field is a size and the
+     * format expected it to grow. Only 48 and 84 have a specimen, and
+     * this reader takes those two rather than guessing what a third
+     * would put where; it also makes each one a whole 32-bit constant,
+     * which is as strong a magic as the one this had before.
+     *
+     * Source: docs/formats/diskdoubler-container.md, "The header size,
+     * and the 1990 header" — this project's own, measured, because no
+     * published description of this container exists anywhere. */
+    hsize = magic & 0xFFFFu;
+    want = hsize - 4u;
 
     /* A single compressed file carries no name of its own: DiskDoubler
      * appended ".dd" to the original, so the host's name (minus that
      * suffix) is the name. The container says nothing about it
      * (docs/formats/diskdoubler-container.md, "A compressed file") and
-     * the oracle agrees on all 66 of them, which is what grades this. */
-    if (unc_read_full(c->io, hdr, DD_FILEHDR) != UNC_OK) return UNC_ERR_TRUNCATED;
+     * the oracle agrees on all 66 of them, which is what grades this.
+     * A 1990 file has no suffix either — that version compresses in
+     * place — and the stripping is conditional, so both arrive named. */
+    if (unc_read_full(c->io, hdr, (int32_t)want) != UNC_OK)
+        return UNC_ERR_TRUNCATED;
+    for (i = want; i < DD_FILEHDR; i++) hdr[i] = 0;   /* absent, not zero-filled */
     {
         DdFile f;
         UncEntryInfo e;
@@ -1527,6 +1561,6 @@ int unc_dd_extract(UncCtx *c)
             unc_entry_set_name(&e, (const uint8_t *)"diskdoubler", 11);
         }
         dd_entry_from(&e, &f);
-        return dd_emit(c, &e, &f, 84);
+        return dd_emit(c, &e, &f, hsize);
     }
 }
