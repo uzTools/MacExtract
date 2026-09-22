@@ -3,6 +3,20 @@
 Fixtures are not committed (copyrighted historical software).
 Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 
+**Not every fixture is an archive.** `ddtf-ddpro411ad1.dd.ad` and
+`ddtf-ddpro411ad1.sea.ad` are AppleDouble sidecars holding the RESOURCE
+FORK of the two DiskDoubler files that were cut into `.1`/`.2` parts;
+`run_segments.py` (DDSEG_SPECIMENS) is what reads them, as the thing a
+joined set is graded against. They have no manifest and are not meant to
+have one — `make_manifests.py`'s NOT_ARCHIVES says so where a rebuild
+would otherwise make two, and DECISIONS.md 2026-09-22 (*the sidecar is
+not an archive*) says why. They are the only two that need saying:
+twelve other fixtures have no manifest — the six `.1`/`.2` parts, the
+two `.dart` files, `derived-SD__Utilities.x` and the three
+`synth-os9-*` — and none of them needs a declaration, because `unar`
+cannot produce a manifest for any of them anyway. Each is graded by the
+suite that owns it (TESTING.md).
+
 | name | sha256 | size | url |
 |---|---|---|---|
 | 12x24fkey.bin | c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836 | 562 | http://www.nic.funet.fi/pub/mac/fkey/12x24fkey.bin |

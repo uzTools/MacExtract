@@ -21,6 +21,15 @@ rest.
     sh tools/build_deark.sh        # ./ci.sh's `make clean` deletes it
     tools/sweep_deark.py [--fixture NAME ...] [-v]
 
+**An entry deark DECLINED is not an entry deark could not name.** This
+counted both as "not compared" until 2026-09-22, because
+`deark_forks` was built from deark's output FILES and a member it
+declined every fork of writes none. deark names those members perfectly
+well — in its errors — and 225 of the 283 entries this sweep said it
+could not compare were StuffIt method 13 or StuffIt 5's Arsenic, methods
+deark does not implement. They are `declined` now, and the number left
+is the naming gap this line was always supposed to be reporting.
+
 **Two guards, and both are agreements that do not look like one.**
 
 deark does not fail on a damaged file, it pads:
@@ -96,6 +105,37 @@ def classify(blob, size, want, wrapped=None):
     return "differ"
 
 
+def keys(mm, name):
+    """Every mangled name deark might have written this entry under.
+
+    Two, and the second is `unar`'s doing rather than deark's: a tar
+    member is normally stored as `./NAME`, `unar` reports it without
+    the `./` and deark keeps it — where its own sanitiser turns the
+    slash into `_`, so `./READ_ME` reaches the disk as `._READ_ME`.
+    That looks exactly like an AppleDouble sidecar and is not one:
+    none of the 49 files deark writes for `derived-PCCTS.tar` begins
+    with the AppleDouble magic, and each holds its member's own data
+    (measured 2026-09-22). It was read as the sidecar convention and
+    filed as "a merge rule" for a day.
+    """
+    out = [mm.deark_name(name)]
+    alt = mm.deark_name("./" + name)
+    if alt != out[0]:
+        out.append(alt)
+    return out
+
+
+def pick(mm, name, got, seen):
+    """The key this entry was actually written under, preferring the
+    plain one: an archive that really holds both `X` and `./X` is two
+    members, and the ambiguous one is refused by the count in `seen`
+    like any other."""
+    for k in keys(mm, name):
+        if k in got:
+            return k
+    return keys(mm, name)[0]
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -117,7 +157,7 @@ def main():
         return 0
 
     tot = dict(fixtures=0, read=0, forks=0, agree=0, padded=0, wrapped=0,
-               declined=0, differ=0, unnamed=0, ungraded=0)
+               declined=0, differ=0, unnamed=0, ungraded=0, ambiguous=0)
     # What this sweep CANNOT see, tallied rather than described: an
     # entry deark gives a name no mangling of ours reproduces is not
     # compared at all, and a format where that is most of the entries
@@ -144,11 +184,16 @@ def main():
             # `make_manifests.py` already use for their own matching.
             seen = {}
             for e in man["entries"]:
-                seen[mm.deark_name(e["name"])] = \
-                    seen.get(mm.deark_name(e["name"]), 0) + 1
+                for k in keys(mm, e["name"]):
+                    seen[k] = seen.get(k, 0) + 1
             for e in man["entries"]:
-                key = mm.deark_name(e["name"])
-                if e.get("is_dir") or seen[key] != 1:
+                key = pick(mm, e["name"], got, seen)
+                if e.get("is_dir"):
+                    continue
+                if seen.get(key, 0) != 1:
+                    # Counted, not just skipped: a category that leaves
+                    # no trace is a denominator nobody can check.
+                    tot["ambiguous"] += 1
                     continue
                 if key not in got:
                     tot["unnamed"] += 1
@@ -180,8 +225,9 @@ def main():
     print(f"             agree {tot['agree']}, padded {tot['padded']}, "
           f"wrapped {tot['wrapped']}, declined {tot['declined']}, "
           f"DIFFER {tot['differ']}")
-    print(f"             {tot['unnamed']} entries deark did not name, "
-          f"{tot['ungraded']} forks nobody has graded")
+    print(f"             {tot['unnamed']} entries deark neither named nor "
+          f"declined, {tot['ambiguous']} whose mangled name another entry "
+          f"claims, {tot['ungraded']} forks nobody has graded")
     if unnamed_by_fmt:
         print("             not compared, by format — "
               + ", ".join(f"{k} {v}" for k, v in unnamed_by_fmt.most_common()))

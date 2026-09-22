@@ -241,6 +241,12 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the oracle asked about everything else) — deark over the whole corpus, and two things it does that nothing here had written down
 - 2026-09-22 (the container is the oracle) — eight forks in damaged MacBinary graded by the file's own arithmetic
 - 2026-09-22 (the premise that stopped being true) — Implode has an implementation and an oracle on this disk, and the scope decision is not taken
+- 2026-09-22 (the download nothing looked at) — the one artefact this project ships, compared with the build for the first time
+- 2026-09-22 (the decline that read as a naming gap) — 2,324 forks the sweep was counting as its own blind spot
+- 2026-09-22 (the name that was never a fork) — StuffIt 5's names are UTF-8, and the oracle was asked in the one way that hides it
+- 2026-09-22 (the sidecar is not an archive) — two fixtures that are inputs, and the declaration that says so
+- 2026-09-22 (the document that came with the decoder) — fmt_lzh.c's header walk, from LHa's own header.doc
+- 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
 
 ---
 
@@ -14853,3 +14859,312 @@ is gone is the second half, "and we could not check it anyway".
 `DEARK_METHODS` would record those entries' forks as ground truth
 without implementing anything, so that a decoder landing later starts
 compared rather than unadjudicated. It belongs to the same decision.
+
+## 2026-09-22 (the download nothing looked at) — the one artefact this project ships, compared with the build for the first time
+
+**Claim.** `dist/` is the only download this project offers, CLAUDE.md
+has a rule about rebuilding it, and nothing enforced the rule. It was
+stale, and it had been since `0aa9101`.
+
+**Evidence, measured.** Building `0aa9101`'s own tree in a worktree and
+reading the two MacBinary headers: the committed `dist/MacExtract.bin`
+declared **188,154 B** of resource fork against the build's **187,563 B**
+— 591 B behind, with different bytes. The build that catches it was
+already running: `ci.sh` variant 4 compiles the Mac shell on every run
+and had never been asked what it produced.
+
+**Consequence.** One command in variant 4 — SHA-256 from offset 128 on,
+both files — fails the run and names `sh tools/make_dist.sh` as the fix.
+
+Three things decided its shape, and each is the reason it is not
+somewhere simpler:
+
+- **Not size, and not a timestamp.** Changing `unc_strerror`'s `"ok"` to
+  `"oK"` produces a `MacExtract.bin` of **exactly the same 187,776
+  bytes** as the shipped one. A stale-by-mtime or stale-by-length test
+  passes that; the content hash is what fails it.
+- **Not the whole file.** MacBinary stores the file's creation and
+  modification dates, so byte 94 differs between two runs over identical
+  code. `make_dist.sh` has said so since it was written; what was
+  missing was anything that ASSERTED it. It now does, three separate
+  builds of the same source agreeing on the payload.
+- **The generated prose could not go in `ci.sh` at all.** A docs-only
+  change does not run it (CLAUDE.md, Rules), and `dist/README.txt` is
+  the release notes verbatim — generated from a heredoc in
+  `make_dist.sh` that expands exactly one thing, `$VERSION`. So that
+  half is `check_docs.py`'s check 7, which re-renders the heredoc and
+  reports the first line that differs. The two halves of one artefact
+  are checked in two places because they go stale for two different
+  reasons.
+
+**The general shape, which this project keeps re-learning.** A rule in
+CLAUDE.md is not a check. This one was written down, followed most of
+the time, and silently broken by the commit before last — and the
+evidence to catch it was being rebuilt from source on every CI run and
+thrown away.
+
+## 2026-09-22 (the decline that read as a naming gap) — 2,324 forks the sweep was counting as its own blind spot
+
+**Claim.** `sweep_deark.py` reported **283** entries it could not
+compare because deark "names them in a way no mangling of ours
+reproduces". For 225 of them that sentence was false in both halves:
+deark named them perfectly well, and what stopped the comparison was
+deark declining the method.
+
+**Evidence, measured.** `deark_forks` was built from deark's output
+FILES. A member deark declines every fork of writes none — for
+`derived-seasons_greetings.sit` it writes 2 files for 8 members and
+prints `Unsupported compression method: 13 (LZ+Huffman)` for the other
+6, naming each member and each fork. Every one of the 75 StuffIt
+entries in that 283 is method 13, and 122 of the 150 StuffIt 5 ones are
+Arsenic (method 15). Carrying those members gives **declined 2,342, up
+from 18**, with `agree` and `DIFFER` untouched.
+
+**Consequence.** The fix is in `deark_forks`, not in the sweep, so
+`make_manifests.py` sees the same thing — and that it changes nothing
+there is measured, not assumed: all **12** deark-touched manifests
+rebuild byte-identically under it, in memory, with nothing written.
+(The first attempt at that check said 9 of 12 had CHANGED. `ci.sh` had
+run `make clean` in between and `build/macunpack` was gone, so the
+rebuild was one oracle short — the trap in TESTING.md, caught by a
+comparison rather than by a manifest.) What is left is the naming gap
+the line was always supposed to report: **37**, and every one of the
+four shapes in it is now named in TESTING.md rather than totalled.
+
+**The 49 Tar entries were not what three files said either, and this is
+the better lesson.** They were filed as "deark writing an AppleDouble
+member as a literal `._NAME` file where `unar` merges it" — a merge
+rule, and a plausible one, because `unar` really does merge Netatalk
+sidecars. What actually happens is that a tar member is stored as
+`./NAME`, `unar` reports it without the `./`, deark keeps it, and
+**deark's own sanitiser turns that slash into `_`** — so `./READ_ME`
+reaches the disk as `._READ_ME`. None of the 49 files deark writes for
+`derived-PCCTS.tar` begins with the AppleDouble magic and each holds
+its member's own data. Matching the alternative name recovers all 49
+entries and **98 forks, every one of which agrees**: the sweep now
+compares **4,502** forks and agrees on **2,151**.
+
+**A coincidence that corroborates a wrong story is worse than no
+evidence at all.** `._X` is exactly the filename the AppleDouble
+convention would have produced, so the explanation looked confirmed by
+the data every time anybody glanced at it. What settled it was opening
+one of the files, which is four bytes of reading and was never done.
+
+**A member with no file at all asserts nothing about the fork the
+errors did not name.** The rule one layer up is "a fork with no file is
+empty, unless deark said it could not read it" — an assertion of
+absence. That rule is right for a member deark DID write a file for and
+wrong for one it gave up on, which it may have given up on before the
+second fork was ever considered. Those are unknown, which costs
+coverage and cannot record a falsehood.
+
+**And the name in an error is not the member's raw name**, which the
+comment above `_DEARK_ERR` asserted. deark prints it
+MAKE_PRINTABLE (`reference/deark/src/deark-ucstring.c`,
+`ucstring_to_sz`), so `Icon\r` — the commonest filename on a Macintosh
+volume — arrives as `Icon<\r>` and our sanitiser model turns that into
+`Icon__r_` where the file on disk is `Icon_`. **382 declined forks
+across 35 fixtures are mis-keyed that way**, and on the day it was
+found **none was live**: in every one, deark had written no file for
+that member, so nothing consulted the wrong key. It is a latent
+false-empty — the exact defect the declined-fork rule exists to
+prevent — and `deark_err_name()` reverses the escapes before
+sanitising. A byte deark could not decode is `DE_CODEPOINT_BYTE00 + b`
+= 0x10000000 + b, past the 0x10ffff `de_char_to_valid_fn_char` keeps,
+so in a filename it is `_` and that is what it maps to.
+
+**The general shape.** A harness that prints what it cannot see is
+worth having; a harness that prints the WRONG reason for what it cannot
+see is worse than one that prints nothing, because the number looks
+audited. 283 had been read three times as "deark is a weak oracle for
+StuffIt" when it meant "deark does not implement method 13" — which is
+the same fact about the format the project already knew and had written
+down twice.
+
+## 2026-09-22 (the name that was never a fork) — StuffIt 5's names are UTF-8, and the oracle was asked in the one way that hides it
+
+**Claim.** This engine writes StuffIt 5 entry names as mojibake, on
+Linux and on the Macintosh, and the 932-fixture corpus is byte-exact
+against an oracle that makes the same mistake.
+
+**Evidence, measured.** `derived-Cool_Tools__.sit` holds `C6 92` for a
+folder name. That is UTF-8 for U+0192, `ƒ` — the character a Mac user
+types for a folder. deark decodes it as UTF-8 (`d->input_encoding` is
+UTF-8 for `file_fmt==2` and MacRoman otherwise,
+`reference/deark/modules/stuffit.c`), `lsar -nr` unforced prints
+`Cool Tools ƒ`, and `lsar -nr -e macintosh` — the project's own oracle
+invocation — prints `Cool Tools ∆í`, which is what this CLI writes to
+disk. In Japanese the same archive family gives
+`800-SAY-WHAT 3.0.1J/読んで下さい.rtf` against 25 characters of
+nothing. 28 entries across 5 fixtures.
+
+**Consequence.** Filed in OPEN_ITEMS.md (*StuffIt 5 entry names are
+UTF-8*) and nothing is changed here: the frontend's per-format encoding,
+the oracle invocation with the five manifests built from it, and what
+the Macintosh shell should write to an HFS name have to move together,
+and the last of those wants a UTF-8 → MacRoman table on a 1 MB machine.
+
+**Why it survived 932 fixtures and five oracles.** The corpus agrees
+because both sides assume the same thing: `-e macintosh` forces MacRoman
+on every format, so unar produced the mojibake and the manifest recorded
+it as ground truth. This is the tolerance-with-no-independent-evidence
+smell from CLAUDE.md, in the one place nobody looks for it — not in a
+decoder, in the harness's own command line. The thing that found it was
+the only check in this project that compares names with an oracle
+invoked differently.
+
+## 2026-09-22 (the sidecar is not an archive) — two fixtures that are inputs, and the declaration that says so
+
+**Claim.** `ddtf-ddpro411ad1.dd.ad` and `.sea.ad` are not archives to be
+graded. They are inputs, and the open question about what their entry
+should be CALLED does not have to be answered.
+
+**Evidence.** `run_segments.py`'s `DDSEG_SPECIMENS` reads both, in
+`ci.sh`, on every run: they carry the resource fork of the two
+DiskDoubler files that were cut into `.1`/`.2` parts, and they are what
+a joined set is compared against. `run_ddtf.py` registered them saying
+exactly that — "like the parts themselves they get no manifest" — and
+the parts have none to this day.
+
+**Consequence.** `make_manifests.py` gains `NOT_ARCHIVES`, which is
+where the statement has to live: that tool builds a manifest for any
+fixture that lacks one, and these two are the only two in the corpus
+that `unar` can read but nothing should grade. Twelve other fixtures
+have no manifest and need no declaration, because `unar` cannot produce
+one for any of them.
+
+**Why not the other answer.** Committing the two manifests would mean
+recording `ddtf-ddpro411ad1.dd.ad` as the entry's name — `unar` keeps
+the extension — and this CLI would have to stop stripping it. That
+strip is not an AppleDouble rule: it is the general one that names a
+name-less format's single entry after the file without its extension,
+and it is what makes `x.txt.gz` come out as `x.txt`. Two fixtures are
+not worth a special case in it, and the bytes they would add are
+already asserted from the other side by `run_segments.py`.
+
+## 2026-09-22 (the document that came with the decoder) — fmt_lzh.c's header walk, from LHa's own header.doc
+
+**Claim.** The last of `fmt_lzh.c` that was XADMaster's — "the header
+walk and the CRC contract from `XADLZHParser.m`" — is described by the
+format's own publication, and that file has been in this tree since the
+first reference fetch.
+
+**Evidence, measured.** `reference/lha/header.doc.euc` is Masaru Oki's
+`header.doc`, shipped with LHa for UNIX and dated 2 March 1992: levels
+0, 1 and 2 as a column of field widths, the extended-header types
+(`0x00`, `0x01`, `0x02`, `0x3f`, `0x50`–`0x54`), the OS IDs — including
+`'m'`, Mac — and the method IDs. `tools/derive_lzh.py` is a reader
+written from it, plus lhasa for the four things it does not cover, and
+it walks **156 archives and 191 entries with 0 disagreements** against
+lhasa's listing of the same files: this project's 7 fixtures, lhasa's
+collection from 20 writers, and LHa for UNIX's own.
+
+**The price, on the five axes the previous rows were priced on:**
+
+| | |
+|---|---|
+| code | **0 B** — 152,596, the ceiling |
+| A5 | **0 B** — 37,660, the ceiling |
+| peak heap | **0 B** |
+| engine ticks | **0** |
+| extractions lost | **none** |
+
+Zero because nothing executable changed: `git diff src/` is 36 comment
+lines. The Macintosh binary's payload hashes the same before and after,
+which is the whole claim in one line — and it was `ci.sh`'s new
+stale-`dist/` check, written this morning for another reason, that made
+that a one-command measurement.
+
+**What the document settles that a reading of somebody's parser cannot.**
+Level 1's compressed-size field is called **"skip size"** in the table,
+which is the published statement of the quirk this file had carried as
+"XADLZHParser.m, level 1 branch": the size counts the extended headers
+too. A fact stated by the people who defined the field beats the same
+fact inferred from a program that reads it.
+
+**Four things it does not cover**, all lhasa's (ISC) and all already
+cited elsewhere in the file: level 3; LHA for OS-9/68k 2.01 writing its
+level 2 header size two bytes short; `-lhd-` meaning a directory; and
+LHArk 0.4d writing `-lh7-` over an algorithm of its own.
+
+**One rule is still XADMaster's and it has no specimen.** A NUL inside a
+level 0/1 name field ends the name, the rest being the entry's comment.
+The document does not mention it; lhasa takes the whole field. **0 of
+the 140 level 0/1 name fields in the 156 archives here contains a NUL**,
+so no file this project can reach makes the two readings differ, and
+nothing could grade a change. Kept, measured, and marked at the line —
+the alternative is to delete a rule on the strength of a corpus that
+cannot exercise it either way.
+
+**And the file's own header comment said `-lh2-` and `-lh3-` were
+declined per entry**, listing them under "What is NOT here, and why"
+with a reason — no archive in reach uses them — that had been answered
+by patching LHa for UNIX to WRITE one (`tools/run_lzh.py`, TESTING.md).
+The code twenty lines below decodes both. A source comment contradicting
+the code beside it is the same cheapest-smell as two files disagreeing,
+and it survived because nobody reads a file's masthead while working in
+its middle.
+
+## 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
+
+**Claim.** `fmt_sit5.c`'s container parser was XADMaster's, and the
+inventory said a second description was already here: "Russotto's
+write-up describes the SIT5 container too". **That was false**, and the
+description that does exist was one link from a file this project had
+read twice before.
+
+**Evidence, measured.** `reference/notes/arsenic_russotto.md` is method
+15 from its first line to its last — the coder, the models, the block
+sort — and the only "header" in it is the Arsenic stream's own; nothing
+in it mentions an archive, an entry or a fork. Meanwhile
+`reference/notes/StuffIt.md`, the wiki page **StuffIt method 13 was read
+out of on 2026-09-20**, lists `StuffIt5Format` in its *Sources*. That
+page is on the same wiki as the eight `tools/fetch_references.sh`
+already fetches, and it describes the archive header, both entry
+headers, the second file header with its version-dependent offsets, the
+flag bits, the folder marker, the fork order and the CRC.
+
+`tools/derive_sit5.py`, written from that page alone, reads **all 31
+StuffIt 5 fixtures — 525 entries** — and agrees with the oracle
+manifests on every entry's PATH and both fork lengths: **0
+disagreements**.
+
+**The price, on the five axes:**
+
+| | |
+|---|---|
+| code | **0 B** — 152,596, the ceiling |
+| A5 | **0 B** — 37,660, the ceiling |
+| peak heap | **0 B** |
+| engine ticks | **0** |
+| extractions lost | **none** |
+
+`git diff src/fmt_sit5.c` is comments. The engine's reading and the
+page's agree field for field, which is what a re-derivation is for.
+
+**One correction, and it is the kind that only a reader finds.** The
+page's archive-header table gives offset **84 twice** — "Total size of
+archive" and "Offset of first entry header" — and then jumps to 86. Two
+fields cannot share an offset; the count is a `u16` at 92 and the offset
+a `u32` at 94, which reads all 31 archives, and which the other
+published copy of the same table (Maconv's, linked from the same
+*Sources* list) gives. A transcription that had been read by nobody in
+the middle of a page everybody cites.
+
+**Paths are the check worth building.** Nothing in a SIT5 container
+stores a path: an entry carries the OFFSET of its parent folder, so a
+path is the tree those offsets make. The first version of the
+derivation keyed entries on their leaf names and reported four
+mismatched lengths — two corpus archives hold `.nib` bundles with three
+identically-named files each, and the dictionary had been quietly
+collapsing them. **A comparison that loses rows is worse than one that
+fails**: it reported four wrong lengths for entries whose lengths are
+right.
+
+**What is left is the encrypted archive, and it has no specimen.** Where
+the password hash sits behind two optionally-present blocks, and the
+MD5-of-MD5 that grades a password, are `XADStuffIt5Parser.m`'s; the page
+says only "Encrypted (algorithm used is unknown)". **All 31 corpus
+archives read `0x10` in that flags byte and none is encrypted**, so the
+only archives that exercise the path are ones `tools/run_crypt.py`
+synthesises here — from the same reading, so they cannot grade it.

@@ -264,4 +264,22 @@ python3 tools/run_sizelimits.py --macextract build/off32/macextract \
 echo "=== variant 4: Retro68 Mac shell (compile-only, optional) ==="
 sh tools/build_mac.sh || fail "mac build"
 
+# dist/ is a committed binary and the only download this project offers, and
+# nothing compared it with anything until 2026-09-22 — it had gone stale by
+# 591 B of resource fork. The build above has just written the application
+# this tree produces, so the comparison is free. MacBinary stores the file's
+# dates, so the first 128 bytes differ between two runs over identical code
+# and the PAYLOAD does not (tools/make_dist.sh says so at the top, and it is
+# what this asserts every run).
+if [ -f build/mac/MacExtract.bin ]; then
+    [ -f dist/MacExtract.bin ] || fail "dist/MacExtract.bin is missing — run: sh tools/make_dist.sh"
+    built=$(tail -c +129 build/mac/MacExtract.bin | sha256sum | cut -d' ' -f1)
+    shipped=$(tail -c +129 dist/MacExtract.bin | sha256sum | cut -d' ' -f1)
+    [ "$built" = "$shipped" ] || fail "dist/MacExtract.bin is STALE: it is not the application this tree builds.
+       Fix: run \`sh tools/make_dist.sh\` and commit dist/ in the SAME commit
+       as the change to mac/ or src/ (CLAUDE.md, Rules). Re-read dist/README.txt
+       while you are there."
+    echo "dist: MacExtract.bin matches the build ($built)"
+fi
+
 echo "CI: all green"

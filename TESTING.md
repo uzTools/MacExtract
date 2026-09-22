@@ -287,6 +287,27 @@ recorded a false empty: the gap-filling path had not been offered such
 a fork (DECISIONS.md 2026-09-22, *the oracle asked about everything
 else*).
 
+Two things about those errors were wrong the same day, and both are
+fixed in `deark_forks` so that the manifest builder and the sweep see
+one answer:
+
+- **A member deark declined EVERY fork of writes no output file**, and
+  was therefore absent from `deark_forks` entirely — so it read as a
+  member deark could not name. It is carried now, with the forks the
+  errors name as declined and the forks they do not as **unknown**, not
+  as empty: a member deark gave up on may have been given up on before
+  the second fork was ever considered. 2,324 forks across the corpus.
+- **The name in an error is not the member's raw name.** deark prints
+  it MAKE_PRINTABLE, so `Icon\r` — the commonest filename on a Mac
+  volume — arrives as `Icon<\r>`, which our sanitiser model turns into
+  `Icon__r_` where the file on disk is `Icon_`. `deark_err_name()`
+  reverses deark's escapes first (`reference/deark/src/deark-ucstring.c`,
+  `ucstring_to_sz`). **382 declined forks across 35 fixtures were
+  mis-keyed**, and none of them was live: in every one deark had written
+  no file for that member, so nothing consulted the wrong key. What it
+  would have cost with one live is the exact defect the rule above
+  exists to prevent — a declined fork recorded as an empty one.
+
 **And it does not fail on a damaged file — it PADS.** `sitdoc.sit` is a
 MacBinary declaring a 286-byte resource fork in a file that ends 52 bytes
 short: this engine writes the 234 bytes that are there and reports the file
@@ -307,9 +328,12 @@ documentation** for method 6 and uses none of its code
 independent implementations but not independent readings — a transcription
 error in either shows up, a misreading of the format shared with macunpack
 does not. (The same caveat applies to `unar`, which is the primary
-reference for everything else.) It reads neither Gzip, tar nor DiskDoubler,
-and it fails whole-archive far more often than `unar` does, which is why it
-is the third oracle and not the first.
+reference for everything else.) It does not read DiskDoubler, and it
+fails whole-archive far more often than `unar` does, which is why it is the
+third oracle and not the first. It DOES read Gzip, Compress and tar, which
+this paragraph denied until 2026-09-22 — the sweep compares 164 forks of the
+three tar fixtures alone — and given a `.gz` or a `.Z` it carries on into
+whatever it finds inside.
 
 **What this layer cannot see:**
 
@@ -360,8 +384,8 @@ at, not a manifest edit.
     sh tools/build_deark.sh        # ./ci.sh's `make clean` deletes it
     tools/sweep_deark.py [--fixture NAME ...] [-v]
 
-**2026-09-22: 2,080 graded forks across 593 of the 932 fixtures, 2,053
-agree, 0 disagree.** The other 27 are three shapes that are not
+**2026-09-22: 4,502 graded forks across 728 of the 932 fixtures, 2,151
+agree, 0 disagree.** The other 2,351 are three shapes that are not
 disagreements, each of which the sweep names rather than counting as
 agreement:
 
@@ -369,15 +393,47 @@ agreement:
 |---|---|
 | `padded` | deark does not fail on a damaged file, it pads. A fork longer than the graded one, whose prefix hashes to it and whose tail is all zeros, is padding (`DEARK_METHODS`, above). **6** — and they are worth more than the label suggests: they are the six resource forks graded from the container's own arithmetic, so a second implementation reads the same bytes at the same offsets, stops where the file stops, and only then invents a tail. The arithmetic and deark agree byte for byte about what is present |
 | `wrapped` | deark does not unwrap MacLHA's MacBinary payload: it writes the 128-byte header and both padded forks as one file where `unar` and this engine split them. Reported only after the container's own data fork is checked byte for byte against the graded one. **3** |
-| `declined` | deark said it could not read this fork. **18** — of which 8 are the blanket for an error deark named a member but not a fork in (`synth-arc-mixed.arc`) |
+| `declined` | deark said it could not read this fork. **2,342**, nearly all of them StuffIt method 13 and StuffIt 5's Arsenic, which deark does not implement; 8 are the blanket for an error deark named a member but not a fork in (`synth-arc-mixed.arc`) |
 
-**What it cannot see, and it prints this every run.** **283** entries
-deark names in a way no mangling of ours reproduces are not compared at
-all — 150 StuffIt 5, 75 StuffIt, 49 Tar, 9 others. Tar is deark writing
-AppleDouble members as literal `._NAME` files where `unar` merges them;
-the StuffIt 5 majority is Arsenic, which deark does not implement, so
-there is nothing to compare. **A sweep is worth what its denominator
-is**, so the denominator is printed per format.
+That `declined` number was **18** until 2026-09-22 and the difference is
+not a change of behaviour: 2,324 of those forks were being counted as
+entries deark could not NAME. A member deark declines every fork of
+writes no output file, `deark_forks` was built from output files alone,
+so a member it named in an error and nowhere else was invisible — and
+"invisible" was reported as the sweep's blind spot rather than as the
+oracle saying *I do not implement this method*. Fixed where it belongs,
+in `deark_forks`, so `make_manifests.py` sees the same thing (*A third
+oracle*).
+
+**What it cannot see, and it prints this every run.** **37** entries
+deark neither named nor declined are not compared at all, and each of
+the four shapes is now named:
+
+| | |
+|---|---|
+| **28** StuffIt 5 | a disagreement about the entry's NAME and not about any fork: those names are UTF-8, deark reads them as UTF-8, and the oracle is invoked in the one way that does not (OPEN_ITEMS.md, *StuffIt 5 entry names are UTF-8*) |
+| **7** Gzip and Compress | deark goes one layer FURTHER than the manifest describes: it decompresses the `.gz`/`.Z` and reads the tar inside it, so it writes `manual.txt` where the manifest — built with `unar -nr`, one container layer — records `synth-exo-gz-named` |
+| **1** uuencode | `synth-uu-mac.uu` stores its name with the quotes around it; `unar` strips them and deark keeps them, where its own sanitiser turns each into `_` |
+| **1** ARC | `synth-arc-mixed.arc`'s method 7, declined in an error that names the member and not a fork — the over-cautious blanket, which costs 8 more forks in the same file on purpose |
+
+**It was 49 higher until the Tar entries were looked at**, and what they
+are is not what this file said. deark writes no AppleDouble sidecar
+there: a tar member is stored as `./NAME`, `unar` reports it without the
+`./`, deark keeps it, and deark's own sanitiser turns that slash into
+`_` — so `./READ_ME` reaches the disk as `._READ_ME`, which looks
+exactly like a Netatalk sidecar and is not one. None of the 49 files
+deark writes for `derived-PCCTS.tar` carries the AppleDouble magic, and
+each holds its own member's data. Matching the alternative name recovers
+all 49 entries and **98 forks, every one of which agrees**. That alias
+belongs to this sweep and not to `make_manifests.py`: the manifest
+builder offers deark a fork only to FILL a gap, and tar has none —
+`unar` grades every one of those entries.
+
+**A sweep is worth what its denominator is**, so the denominator is
+printed per format, along with the entries whose mangled name another
+entry claims — **0** today, and counted rather than silently skipped,
+because a category that leaves no trace is a denominator nobody can
+check.
 
 Not in `ci.sh`: it needs the fixtures, and it is an audit rather than a
 test. It skips cleanly without them.
@@ -1989,6 +2045,52 @@ built and doing nothing useful — an assertion that never runs, a sweep
 over zero files. Every suite prints its case count for that reason, and a
 count that drops is the only signal there is.
 
+## dist/ is compared with the build (`ci.sh` variant 4, added 2026-09-22)
+
+**`dist/` is a committed binary, it is the only download this project
+offers, and until 2026-09-22 nothing compared it with anything.** Measured
+at `0aa9101`, which changed `src/` without rebuilding it: the committed
+`dist/MacExtract.bin` declared **188,154 B** of resource fork where that
+tree's own build writes **187,563 B** — the download was **591 B** of
+resource fork behind, and different bytes besides.
+
+`ci.sh` variant 4 already builds `build/mac/MacExtract.bin`, so the
+comparison is one command after it: the SHA-256 of everything from offset
+128 on, against `dist/MacExtract.bin`'s. That payload IS the resource fork
+— the application's data fork is 0 bytes. The first 128 bytes are not
+compared because MacBinary stores the file's dates, so they differ between
+two runs over identical code and the payload does not — asserted by this
+check every run, on top of `make_dist.sh`'s statement of it.
+
+The failure names the fix — `sh tools/make_dist.sh`, in the same commit as
+the change to `mac/` or `src/`.
+
+**Made to fail before it was believed.** `unc_strerror`'s `"ok"` was
+changed to `"oK"` and the Mac app rebuilt: the check fails on a
+`build/mac/MacExtract.bin` that is **exactly the same 187,776 bytes** as
+the shipped one, so a size or a timestamp comparison would have passed.
+Reverted and rebuilt, it passes, and three separate builds of the same
+source produced the same payload hash.
+
+**What it cannot see:**
+
+- **`dist/MacExtract.dsk`.** `make_dist.sh` copies both files in one run, so
+  a current `.bin` implies a current `.dsk` unless somebody edits one by
+  hand. The `.dsk` is an HFS volume carrying its own dates and cannot be
+  compared byte for byte without mounting it.
+- **Anything, without a Retro68 toolchain.** No `build/mac/MacExtract.bin`,
+  no comparison; the whole variant already skips there.
+- **A docs-only change**, which does not run `ci.sh` (CLAUDE.md, Rules).
+  That is why the other half — `dist/README.txt`, which is generated and
+  is the release notes verbatim — is `tools/check_docs.py`'s check 7
+  instead: it re-renders `make_dist.sh`'s heredoc with the current
+  `UNC_VERSION` and reports the first line that differs. Prose edited in
+  the script reaches the download page only when somebody re-runs it. Made
+  to fail three ways: a word changed in the heredoc, a line deleted from
+  `dist/README.txt`, and the file truncated.
+- **Whether the application is CORRECT.** This says the download is the
+  tree's own build; that build is graded by everything above it.
+
 ## DART (`tools/run_dart.py`, in `ci.sh`)
 
 **The oracle is the encoder's input, not a second reader.** There is no
@@ -2760,6 +2862,8 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_sit6.py` | StuffIt method 6: its framing, its fixed code book and its PackBits tail | all 11 method-6 forks in the corpus — 27 blocks, 13 Huffman and 14 stored. It parses the 26 bytes out of deark's source rather than holding a copy, so it cannot agree with the engine by sharing a typo with it; and it measures the one thing the two references disagree about, whether the stop code follows the declared length (13 of 13) |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read |
 | `derive_packit.py` | PackIt's container, stored and Huffman-coded | 38 forks of 4 archives; it checks no CRC, so nothing here confirms the polynomial |
+| `derive_sit5.py` | the StuffIt 5 container: the archive header, both entry headers, the second file header and the tree | **all 31 StuffIt 5 fixtures, 525 entries**, against the oracle manifests — every entry's PATH and both forks' lengths, 0 disagreements. The path is the part worth having: nothing in the container stores one, so it is the tree the parent-offset chain makes, and two `.nib` bundles in the corpus hold three identically-named files each, which is what caught the first version keying on leaf names |
+| `derive_lzh.py` | the LZH/LHA header, all four levels and the extended-header chain | **156 archives and 191 entries** — this project's 7 fixtures, lhasa's collection from 20 writers, LHa for UNIX's own — with **0 disagreements** against lhasa's listing of the same files. The only derivation here that grades HEADERS rather than forks, so it is also the only one whose check is structural: an entry's data must end exactly where the next header begins, and a field read wrong derails the walk at once. The three things lhasa does to a name that the document does not ask for — lower-casing an all-caps one, collapsing `..`, replacing an unprintable byte — are named and counted (41 names), not adopted; `unar` does none of them and neither does the engine. It refuses `regression/truncated.lzh`, which is truncated |
 | `derive_now.py` | Now Compress: all four coders, the block table, and the container a compressed file and an archive share | the specimens `nowcompress.py` makes, byte for byte — 139 archive blocks of 139 and 144 specimens across sixteen cases — plus **both corpus archives**: `--expect DIR` grades an archive against a directory of extracted forks (`--forks visible`, so a member's resource fork is `NAME.rsrc`), and it reads the 1993 one's 3 blocks of 3 and the 1995 one's 306 of 306. **Nothing is searched for**: a block table is one layout at one offset width, a shape-3 block's header says where its stream starts and ends, a shape-2 block's stream starts a fixed distance past its table, and three checksums — per block, per block table and per member record — are checked as it goes. Given an archive and no `--expect`, it decodes every block anyway, the member records' fork lengths saying how long each fork is. **`--prefixes`** censuses the two bytes an LZSS stream opens with — which blocks carry one, how many are a member's first, and, per shape-2 block, the symbols its table codes against the symbols its stream uses. **It cannot see anything about a version of Now Compress that is not installed**: the specimens are 5.0.1's and 6.0's (`nowcompress.py --setup6 --case6`), and a constant over two encoders is a fact about those two |
 
 Each writes its corrections into `docs/formats/`, which is what the

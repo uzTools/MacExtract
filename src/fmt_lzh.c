@@ -24,21 +24,17 @@
  *       XADMaster's XADLZHDynamicHandle.m) — -lh1-, which is also
  *       StuffIt classic's method 5; the decoder is shared and lives in
  *       src/unc_lzah.c.
- *   reference/XADMaster/XADLZHParser.m        — the header walk, all
- *       four header levels, the extended-header types, which method
- *       maps to which window size, and the CRC contract (CRC-16/ARC
- *       over the DECODED bytes, unconditioned). The decoders below no
- *       longer owe it anything (DECISIONS.md 2026-09-19); the header
- *       walk still does, and lhasa's reading of it is beside every
- *       field it disagrees about.
+ *   reference/lha/header.doc.euc              — Masaru Oki's
+ *       header.doc, LHa for UNIX, 2 March 1992: the base header at all
+ *       three levels it covers, the extended-header types, the OS IDs
+ *       and the method IDs. The header walk is written from it, and
+ *       from lhasa for the four things it does not cover — level 3,
+ *       OS-9/68k's short level 2 size, -lhd-, and LHArk. Read as a
+ *       table, with the evidence: docs/formats/lzh-header.md.
+ *       **Nothing in this file is XADMaster's since 2026-09-22**, bar
+ *       one rule with no specimen, marked where it is.
  *
  * What is NOT here, and why:
- *   -lh2-, -lh3-  Declined per entry. Both are implementable from
- *       XADLZHOldHandles.m, but no archive that uses either is
- *       reachable here — not in the corpus, not in lhasa's collection
- *       of fourteen writers, and nothing in reach writes one. Code no
- *       oracle can grade is the bargain this project declines
- *       everywhere else (OPEN_ITEMS.md).
  *   -lhx-, PMarc (-pm0-/-pm1-/-pm2-)  A different container family
  *       sharing this one's shape; out of scope (OPEN_ITEMS.md, part 1).
  *
@@ -87,9 +83,10 @@ typedef struct LzhEnt {
 /* taken over everything and only the routing to the sink cares where   */
 /* the forks are.                                                       */
 /*                                                                     */
-/* The unwrap happens for OS byte 'm' and no other, which is what the   */
-/* oracle does (XADLZHParser.m sets XADMightBeMacBinaryKey there, and    */
-/* only there): a level 0 header has no OS byte at all, and unar reads  */
+/* The unwrap happens for OS byte 'm' and no other. 'm' is Mac in the   */
+/* document's OS ID list (header.doc, section A.c); that a MacLHA entry */
+/* is a MacBinary stream is in no document and is what the oracle does  */
+/* too. A level 0 header has no OS byte at all, and unar reads          */
 /* MacLHA's own level 0 archives as one 18,304-byte file rather than    */
 /* an 18,092-byte one with a Mac header on it. Measured, not assumed.   */
 /* ------------------------------------------------------------------ */
@@ -644,9 +641,13 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, UncForkOut *o, uint8_t *iobuf,
 /* ------------------------------------------------------------------ */
 
 /* Append one path component, mapping the format's separators. LZH
- * names arrive with 0xff between directory components (the extended
- * header) or, in an old header, with a DOS backslash or a Unix slash;
- * XADLZHParser splits on exactly those. */
+ * names arrive with 0xff between directory components — the dirname
+ * extended header, 0x02 in the document's section B, whose separator
+ * is lhasa's (ext_header_path_decoder) — or, in an old header, with a
+ * DOS backslash or a Unix slash. Splitting on all of them and dropping
+ * the empty components also absorbs the two shapes lhasa needs a
+ * special case for: a dirname with a trailing separator and one
+ * without (Amiga LHA 1.22). */
 static void lzh_add_path(UncEntryInfo *e, const uint8_t *p, uint32_t len,
                          int seps_all)
 {
@@ -729,7 +730,15 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
         if (nameat + namelen + 2 > hdrsize) return UNC_ERR_CORRUPT;
         /* A NUL inside the name field ends it; what follows is this
          * entry's comment, which has no home in UncEntryInfo and is
-         * dropped (XADLZHParser puts it in XADCommentKey). */
+         * dropped. **The one rule in this file that is still
+         * XADMaster's** (XADLZHParser puts the remainder in
+         * XADCommentKey): the document does not mention it and lhasa
+         * takes the whole field. It has no specimen either — 0 of the
+         * 140 level 0/1 name fields in the 156 archives on this
+         * machine holds a NUL (tools/derive_lzh.py), so nothing can
+         * grade either reading and this cannot fire on a file this
+         * project has. docs/formats/lzh-header.md, "The one rule still
+         * nobody else's". */
         for (k = 0; k < namelen; k++)
             if (h[nameat + k] == 0) { namelen = k; break; }
         if (namelen > UNC_NAME_MAX) {
@@ -749,7 +758,10 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
             at = pos + 25u + h[LZH_H_NAMELEN];
             /* Level 1 counts its extended headers inside the COMPRESSED
              * size, so each one moves the data start along and shortens
-             * the stream. Source: XADLZHParser.m, level 1 branch. */
+             * the stream. The document names that field "skip size" for
+             * exactly this reason (header.doc, section A, the level-1
+             * column); lhasa makes the same subtraction, in
+             * read_l1_extended_headers. */
             for (i = 0; i < LZH_MAX_EXT; i++) {
                 uint8_t sz[2];
                 uint32_t extsize;
@@ -842,7 +854,9 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
 /* ------------------------------------------------------------------ */
 
 /* "-lh?-" (lzh) or "-lz?-" (larc) method id at offset 2.
- * Source: reference/XADMaster/XADLZHParser.m recognizeFileWithHandle.
+ * Source: reference/lha/header.doc.euc, section A — the method ID is
+ * the third field of every header level — and section A.b for the set
+ * of IDs it can hold.
  *
  * With one addition, measured rather than copied: XADMaster's
  * recogniser accepts -lz0-, -lz4- and -lz5- but not -lzs-, while its

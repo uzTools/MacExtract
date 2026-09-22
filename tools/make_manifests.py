@@ -389,8 +389,7 @@ def deark_name(name):
     return norm(t or "_")
 
 
-# deark names the fork in most of the errors it reports per fork, and
-# the name it uses there is the member's REAL name, before sanitising.
+# deark names the fork in most of the errors it reports per fork.
 #   Error: NAME[data fork]: Unsupported compression method: 8 (MW)
 #   Error: Decompression failed for file NAME[resource fork]: ...
 #   Error: CRC check failed for file NAME[data fork]
@@ -398,6 +397,47 @@ def deark_name(name):
 # its two `forkname` strings.
 _DEARK_ERR = re.compile(r"^Error: (?:.*? for file )?(.*)"
                         r"\[(data|resource) fork\]")
+
+# **That NAME is not the member's raw name**, which this file asserted
+# until 2026-09-22: deark prints it MAKE_PRINTABLE, so every character
+# it will not send to a terminal arrives as an escape — `Icon\r`, the
+# commonest filename on a Macintosh volume, reads `Icon<\r>`. Running
+# that through `deark_name` gives `Icon__r_` where the file on disk is
+# `Icon_`, so the decline was recorded against a member that does not
+# exist and the fork it names looked like one deark never mentioned.
+# **382 declined forks across 35 fixtures are mis-keyed this way**, and
+# on 2026-09-22 none of them was live: in every one, deark wrote no
+# file for that member at all, so nothing read the wrong key. What it
+# would cost when one IS live is the bug this rule exists to stop —
+# a fork deark declined recorded as a fork deark read as EMPTY.
+#
+# Source: reference/deark/src/deark-ucstring.c,
+# `ucstring_to_sz` under DE_CONVFLAG_MAKE_PRINTABLE: 0x0a/0x0d/0x09/0x00
+# become \n \r \t \0, a byte deark could not decode becomes its two hex
+# digits, anything else unprintable becomes U+XXXX, each wrapped in
+# `<`...`>`. A raw byte is `DE_CODEPOINT_BYTE00 + b` = 0x10000000 + b
+# (deark-private.h), which is past the 0x10ffff that
+# `de_char_to_valid_fn_char` keeps — so in a FILENAME it is "_", which
+# is what this maps it to directly.
+_DEARK_ESC = re.compile(r"<(\\[rnt0]|U\+[0-9A-Fa-f]{4}|[0-9A-Fa-f]{2})>")
+_DEARK_ESC_C = {"\\r": "\r", "\\n": "\n", "\\t": "\t", "\\0": "\0"}
+
+
+def deark_err_name(raw):
+    """The key a member named in one of deark's ERRORS writes its file
+    under. Ambiguous by construction — a member really called `Icon<\\r>`
+    is indistinguishable from one called `Icon\r` — and that is safe in
+    the direction it errs: the worst it can do is mark a fork DECLINED
+    that deark could have read, which costs coverage and never records
+    a fork's contents."""
+    def sub(m):
+        t = m.group(1)
+        if t in _DEARK_ESC_C:
+            return _DEARK_ESC_C[t]
+        if t.startswith("U+"):
+            return chr(int(t[2:], 16))
+        return "_"                      # a raw byte: past 0x10ffff, so "_"
+    return deark_name(_DEARK_ESC.sub(sub, raw))
 
 
 def deark_forks(fixture_path, tmp):
@@ -436,7 +476,7 @@ def deark_forks(fixture_path, tmp):
             continue
         m = _DEARK_ERR.match(line)
         if m:
-            declined.add((deark_name(m.group(1)),
+            declined.add((deark_err_name(m.group(1)),
                           "data" if m.group(2) == "data" else "rsrc"))
         else:
             # An error deark did not attach to a fork — a whole-member
@@ -460,16 +500,28 @@ def deark_forks(fixture_path, tmp):
         else:
             with open(path, "rb") as fh:
                 out.setdefault(rest, {})["data"] = fh.read()
+    # A member deark wrote NO file for is still a member deark SAW —
+    # its errors name it. Until 2026-09-22 such a member was simply
+    # absent here, so every caller counted it as one deark could not
+    # NAME, which is the opposite of what happened: deark named it and
+    # declined it. That is 225 of the 283 entries `sweep_deark.py`
+    # reported it could not compare, all of them StuffIt method 13 or
+    # StuffIt 5's Arsenic, neither of which deark implements.
+    from_file = set(out)
+    for name, _fork in declined:
+        out.setdefault(name, {})
     # A fork with no file is empty — an assertion of absence — UNLESS
     # deark said it could not read it, or said something about this
     # archive it did not attach to a fork, in which case nothing is
-    # known about it and it is None.
+    # known about it and it is None. For a member with no file at all
+    # NOTHING is asserted about the fork deark did not mention either:
+    # it may have given up on the member before reaching it.
     for name, v in out.items():
         for fork in ("data", "rsrc"):
             if fork in v:
                 continue
-            v[fork] = None if (unattributed or (name, fork) in declined) \
-                else b""
+            v[fork] = None if (unattributed or name not in from_file
+                               or (name, fork) in declined) else b""
     return out
 
 
@@ -875,6 +927,27 @@ def build_manifest(fixture_path, verbose=False):
     return man
 
 
+# **Two fixtures are INPUTS, not archives**, and this is where saying so
+# has to live: `make_manifests.py` with no arguments builds a manifest
+# for any fixture that lacks one, which is how these two — read by
+# `unar`, so a manifest gets built — became two failing fixtures on
+# 2026-09-22 (OPEN_ITEMS.md had them as an open question until
+# DECISIONS.md 2026-09-22, *the sidecar is not an archive*).
+#
+# They are the AppleDouble sidecars carrying the RESOURCE FORK of the two
+# DiskDoubler files that were cut into `.1`/`.2` parts, and
+# `run_segments.py`'s DDSEG_SPECIMENS is what reads them: they are what a
+# joined set is graded AGAINST, in `ci.sh`, every run. The parts
+# themselves get no manifest for the same reason and always did —
+# `run_ddtf.py` says so where it registers them.
+NOT_ARCHIVES = {
+    "ddtf-ddpro411ad1.dd.ad":
+        "the resource fork of the file ddtf-ddpro411ad1.dd.[12] joins into",
+    "ddtf-ddpro411ad1.sea.ad":
+        "the resource fork of the file ddtf-ddpro411ad1.sea.[12] joins into",
+}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("files", nargs="*", help="specific fixtures (default: all)")
@@ -893,7 +966,13 @@ def main():
 
     made = skipped = failed = 0
     for fx in fixtures:
-        out = os.path.join(mandir, os.path.basename(fx) + ".json")
+        base = os.path.basename(fx)
+        if base in NOT_ARCHIVES:
+            print(f"  input, not an archive: {base} — "
+                  f"{NOT_ARCHIVES[base]}", file=sys.stderr)
+            skipped += 1
+            continue
+        out = os.path.join(mandir, base + ".json")
         if os.path.exists(out) and not args.force:
             skipped += 1
             continue

@@ -217,14 +217,14 @@ of it the GNU software license does apply").
 | `unc_huffman.c` | **none since 2026-09-20** | the canonical codes: RFC 1951 section 3.2.2 and puff.c, since 2026-09-19. The serialized tree: `docs/formats/serialized-huffman-tree.md`, this project's own, derived from the three formats' output | **both halves taken.** The canonical codes were a re-derivation (0.00 %, −4 B of code, −20 B of A5). The tree needed no rewrite at all: what it lacked was a description, and 13 forks across StuffIt 3, DiskDoubler 4 and PackIt supplied one (DECISIONS.md 2026-09-20, *the tree that could be measured instead*) |
 | `unc_lzw.c` | **none since 2026-09-19** | written from deark's `src/fmtutil-lzw.c` (MIT) and Welch's algorithm | **taken, −9.4 % on `popper-1.7.tar.Z` and −1.7 % on `derived-xmasbeeps.sit` on a Mac Plus for +140 B of code and −12 B of A5** — the walk was tight, the staging array it walked into was not (DECISIONS.md 2026-09-19, *the buffer that became a length*) |
 | `unc_lzdyn.c` | `-lh2-`/`-lh3-` from `XADLZHOldHandles.m` | LHa for UNIX only (its own licence); lhasa has neither | none — no corpus archive uses them. **What they cost is measured, 2026-09-20: 3,472 B of `CODE` and 32 B of A5**, i.e. 3,504 B of a 1 MB Mac Plus's budget, from a build with the file and its two dispatch arms removed. Set that against 5,988 B for the overlay that was judged not worth taking (*Overlays*, Part 1) — and against the fact that LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` grades us against one, so dropping them refuses a file that can still be made. **The decision is the maintainer's**; nothing here will take it |
-| `fmt_lzh.c` | the header walk and the CRC contract from `XADLZHParser.m` — the DECODERS are lhasa's since 2026-09-19 | **lhasa (ISC)** implements all of them | **taken, −17.8 to −46.4 % of the 68000's instructions for +140 B** (DECISIONS.md 2026-09-19, *the match that was walked twice*). What is left is a header walk, and lhasa's reading of it is already beside every field the two disagree about |
+| `fmt_lzh.c` | **none since 2026-09-22**, bar one rule with no specimen: a NUL inside a level 0/1 name field ends the name, which is `XADLZHParser.m`'s and which **0 of the 140 such fields in the 156 archives here** contains. The DECODERS left on 2026-09-19 | **the format's own published description** — `reference/lha/header.doc.euc`, Masaru Oki's `header.doc` of 2 March 1992, levels 0/1/2 field by field with the extended-header types, the OS IDs and the method IDs; **lhasa (ISC)** for the four things it does not cover | **taken, whole file, at zero cost on every axis** — the walk needed no change, only a description: a reader written from the document plus lhasa reads 191 entries of 156 archives with no disagreement (`tools/derive_lzh.py`, `docs/formats/lzh-header.md`). The decoders were taken earlier for **−17.8 to −46.4 % of the 68000's instructions for +140 B** (DECISIONS.md 2026-09-19, *the match that was walked twice*) |
 | `fmt_cpt.c` | **none since 2026-09-20** | `docs/formats/compact-pro.md` — the format's own published description (three wiki pages, all three fetched since that day) plus the six corrections it needs, each established by decoding whole forks | **both halves taken.** Speed: −31.7 % on a Mac Plus for +76 B, the two stages fused 2026-09-19 (DECISIONS.md, *the byte that went to two places at once*). Licence: the claim that "no non-copyleft description of the format exists" was **false** — the description was one hyperlink from a file already in `reference/notes/`, and a reader written from it alone reproduces 536 forks of 68 archives (DECISIONS.md 2026-09-20, *the description that was one link away*) |
 | `fmt_packit.c` | **the two CRCs' polynomial, the resync rule and both ciphers, and nothing else, since 2026-09-21.** The container left this row that day, and the Huffman tree and the header-inside-the-stream fact on 2026-09-20 | **the format's own published description** — `reference/notes/packit_unpackit.txt`, appendices B and C of a 1986 freeware manual, named all along by `reference/notes/PackIt.md`, which this project fetched with its first batch of references and never read past | **taken: 38 of 38 forks** of the corpus's four archives read from the appendices plus the four corrections they need (`docs/formats/packit.md`, `tools/derive_packit.py`). "The app is not here" was the wrong question (DECISIONS.md 2026-09-21, *the manual for the other machine*) |
 | `fmt_sit.c` | **none since 2026-09-22.** Method 6's framing was the last of it and left that day; the RLE90 filter and method 6's code book left on 2026-09-21, the container, method 13 and its tables, method 3's tree and method 8's coder on 2026-09-20 — bar three rules of method 8 no specimen reaches | `docs/formats/stuffit-method-6.md`, written against `reference/deark/modules/stuffit.c` (MIT); the rest is the format's own published description (The Unarchiver's wiki, fetched). StuffIt Deluxe 3.5.1 also runs here (`sitcrypt.py`) | **taken, whole file.** "No other reader anywhere" was false for method 13 — 897 forks across 103 archives read from the published description alone (DECISIONS.md 2026-09-20, *forty pages nobody had listed*) — and false for method 6, which deark implements under MIT. The code book was taken 2026-09-21 and priced: **code +408 B, A5 −1,000 B, net −592 B** (FORMATS.md, *StuffIt classic: method 6*). The **framing** followed on 2026-09-22 and cost nothing on any axis, because nothing executable had to change: a reader written from deark and the container page alone reads all 11 method-6 forks (`tools/derive_sit6.py`), and the three places this engine is stricter than both references are measured rather than transcribed (DECISIONS.md 2026-09-22, *the framing that needed no rewrite*) |
-| `fmt_sit5.c` | the container parser only — `sit_arsenic.c` was rewritten from Russotto's write-up on 2026-09-19, −36.7 % of a2basic's engine ticks (DECISIONS.md, *the rank that was walked a byte at a time*) | **Russotto's write-up** describes the SIT5 container too | none: a parser |
+| `fmt_sit5.c` | **the ENCRYPTED archive only, since 2026-09-22** — where the password hash sits behind two optionally-present blocks, and the MD5-of-MD5 that grades a password. No corpus archive sets the bit. `sit_arsenic.c` was rewritten from Russotto's write-up on 2026-09-19, −36.7 % of a2basic's engine ticks (DECISIONS.md, *the rank that was walked a byte at a time*) | **the format's own published description** — `reference/notes/sit5_specs_theunarchiver.md`, the wiki page `reference/notes/StuffIt.md` has named in its *Sources* list all along. **Not Russotto's write-up**, which is method 15 start to finish and describes no container at all | **taken, at zero cost on every axis**: a reader written from that page alone reads all 31 StuffIt 5 fixtures, **525 entries**, agreeing with the oracle on every path and both fork lengths (`tools/derive_sit5.py`, `docs/formats/stuffit5-container.md`). The page needs one correction — its archive-header table gives offset 84 twice |
 | `fmt_dd.c` | **the containers, and nothing else, since 2026-09-21** — the wiki punts them to the source by name, and they are also what says which forks use method 10's second form. Methods 2/5 (splay) are published; 6/9 `ADn` and 10 `DDn` left this row that day, and method 4's tree on 2026-09-20 for `docs/formats/serialized-huffman-tree.md` | **the format's own published description** for `ADn` and `DDn` (`dd_ad_theunarchiver.md`, `dd_dd_theunarchiver.md`) — "documented nowhere else" was false; DiskDoubler 3.7, 4.0 and Pro 4.1 also run here | **taken: 39 of 39 forks** read from the pages plus the six corrections they need (`docs/formats/diskdoubler-dd.md`, `tools/derive_dd.py`). The last two needed a form the page names and does not describe — the coder's output is the fork's first difference (DECISIONS.md 2026-09-21, *the two forks that were never about their literals*) |
 | `fmt_now.c` | **none since 2026-09-21**, when the coders and the two block-table functions were rewritten from the note and the last two facts that rested on the reference were measured against Now Compress itself | `docs/formats/now-compress.md` — this project's own, measured off Now Compress 5.0.1 under emulation, because no published description exists anywhere. `tools/derive_now.py` reads **every block of both corpus archives** from it — the 1993 one's 3 and the 1995 one's 306, 9.9 MB — plus every specimen the harness has made | **taken.** The description came first (2026-09-21); the code followed the same day — one Huffman-region reader serving all three of its consumers, the two tables read straight out of a shape-3 header rather than staged through a 346-byte array, and the block table read in the one framing that needs no special case. **Byte-exact on all 124 Now files here and on `run_now.py`'s 42 archives, −204 B of `CODE`, −616 B of the frames its deepest chain uses (m68k `-Os -fstack-usage`, 2,264 → 1,648 B: a shape-3 block's 346-byte table staging moved into the per-archive allocation the code tables already live in), and engine 790 → 792 ticks on `derived-Expand_Now_1.0.1.sea` at 7 MHz, which is that instrument's own resolution.** The first draft of the rewrite was 21 ticks slower for reading better, and x86 instruction counts called it faster: FORMATS.md, *Decode cost*. The two rows that had pointed at the reference went with it: the **offset-delta search** is the format's (an archive rebased by 100 comes out of its own self-extractor byte for byte, and out of this engine not at all with the search disabled) and the **code-length escape past 15** is real (a block re-coded here with six symbols at 16–20 bits comes back out of Decompress intact). `tools/mutate_now.py` is the instrument for both |
-| `fmt_arc.c` | **Crunch 5/6/7 and Crush (PAK's LZW)**; the method numbers and the CRC contract. The member header, RLE90, Squeeze (4), Crunch (8) and Squash (9) left this row 2026-09-20 for `docs/formats/arc-container-and-coders.md` | **deark (MIT)** for Distilled and Trimmed, already followed; **ARC 5.21q itself** (`tools/get_arc.sh`) writes methods 4, 8 and 9 to order, which is how the note was derived; nothing reachable writes 5/6/7, and PAK's Crushed did not fall to an LZW parameter search | small |
+| `fmt_arc.c` | **Crunch 5/6/7 and Crush (PAK's LZW)**; the method numbers and the CRC contract. The member header, RLE90, Squeeze (4), Crunch (8) and Squash (9) left this row 2026-09-20 for `docs/formats/arc-container-and-coders.md` | **deark (MIT)** for Distilled and Trimmed, already followed — **and for 5 and 6, which was not looked at until 2026-09-22**: `reference/deark/modules/arc.c`'s method table implements `crunched5 (static LZW)` and `crunched6 (RLE + static LZW)`, and leaves 7 and Crushed NULL exactly as this row does. **ARC 5.21q itself** (`tools/get_arc.sh`) writes methods 4, 8 and 9 to order, which is how the note was derived; nothing reachable writes 5/6/7, and PAK's Crushed did not fall to an LZW parameter search | small, and **not taken**: two of the three have an MIT implementation to be written from, but the row would not close (7 and Crush have none) so the licence would not move, and **nothing can grade a rewrite** — no corpus or reference archive uses 5/6/7. The route that would exist: write an ENCODER for 5/6 from the same description, have DEARK decode what it writes, and compare with this engine — two implementations agreeing on a stream neither wrote, which would be the first oracle these methods have ever had here |
 | `unc_crypt.c` | `Crypto/des.c`, `md5.c`, `sha.c`, `aeskey.c` (public-domain or permissive in XADMaster's own tree); and from `XADStuffItDESHandle.m` the **nibble key schedule and the key derivation, which is all that is left**: the round folded onto standard DES's on 2026-09-19 | FIPS 46-3, RFC 1321, FIPS 180, FIPS 197, RFC 2898 | **taken, −416 B of code** (DECISIONS.md 2026-09-19, *the DES that was only wearing a disguise*). The rest cannot follow: the schedule reads all 64 key bits where PC-1 drops eight, so it is not the standard schedule of any permuted key |
 | `fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_sitseg.c`, `fmt_stubs.c` | what the 2026-09-19 re-citation could not move (DECISIONS.md, *the facts that were somebody else's to state*): three tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback, its nonzero-date test, the byte-swapped AppleSingle header — and the StuffIt split header. **Now Compress's detect-only probe left this row on 2026-09-21**: every field it tests — the 24-byte file header, the entry record and the byte-sum checksum at +106 of it — is measured in `docs/formats/now-compress.md` off nine archives | none found for any of them; `fmt_binhex.c`, `fmt_exo.c` and `fmt_zipseg.c` left this row for their own specifications, and `fmt_stubs.c`'s other two probes for deark (StuffIt X) and macutils' `dd.h` (DiskDoubler) | none — the rest is facts, not code, so the licence never rested on it |
 
@@ -263,35 +263,41 @@ writing a partial fork would be inventing the layout. An uncompressed
 DART written by whatever produced them — an earlier version of the
 application, per the same note — would settle it.
 
-## Two AppleDouble header files that would be two more fixtures
+## StuffIt 5 entry names are UTF-8, and this reads them as MacRoman
 
-**Found 2026-09-22 by rebuilding every manifest**, which is the only
-thing that looks at a fixture with no manifest.
-`fixtures/ddtf-ddpro411ad1.dd.ad` and `.sea.ad` are in
-`fixtures/SOURCES.md` — they came down with the DiskDoubler corpus as
-Netatalk `._`-style AppleDouble headers — and neither has ever had a
-manifest. `unar` reads both, so `make_manifests.py` now builds one for
-each, and the engine then fails the fixture.
+**Measured 2026-09-22**, by asking the third oracle about the entries it
+had never been compared on (TESTING.md, *Asking the third oracle about
+everything*). 28 entries across 5 corpus fixtures come out of this
+engine with mojibake names.
 
-**The disagreement is the entry's NAME and nothing else.** Given a bare
-AppleDouble header, `unar` keeps the archive's own filename including
-the `.ad` — one entry called `ddtf-ddpro411ad1.dd.ad`, empty data fork,
-the input passed through verbatim as the sidecar — and this engine
-strips it, calling the entry `ddtf-ddpro411ad1.dd`. The resource fork
-is the same bytes either way. Stripping recovers the name of the file
-the header belongs to, which is what the Netatalk convention means by
-it; keeping it is what the archive is called. Nothing here says which a
-user wants.
+- The archive holds `C6 92` for the folder `Cool Tools ƒ` — UTF-8 for
+  U+0192. The CLI converts it as if it were MacRoman and writes
+  `Cool Tools ∆í`. `800-SAY-WHAT 3.0.1J/読んで下さい.rtf` is the same
+  thing in Japanese, and reading the same bytes as MacRoman gives 25
+  characters of nothing.
+- **deark reads StuffIt 5 names as UTF-8 and StuffIt classic's as
+  MacRoman** — `reference/deark/modules/stuffit.c`, `d->input_encoding`
+  under `file_fmt==2`. So does `unar`, unforced: `lsar -nr` on
+  `derived-Cool_Tools__.sit` prints `Cool Tools ƒ`.
+- **The oracle is invoked in the one way that hides it.** `-e macintosh`
+  (TESTING.md, *Exact oracle invocation*) forces MacRoman on every
+  format, so the manifests record the mojibake and the diff suite is
+  byte-exact against it. The corpus agreeing proves nothing here: both
+  sides make the same assumption.
 
-**The two manifests are deliberately not committed**, so the corpus
-stays at 932 and nothing is graded against a name nobody has decided
-on. They will reappear the next time `make_manifests.py` runs over the
-whole fixture directory, and the suite will fail loudly with these two
-names — which is this entry's other purpose.
+**This is not a StuffIt 5 bug specifically.** The engine emits raw
+archive-encoding names by design and the frontend picks the encoding per
+FORMAT — "Mac containers → MacRoman, zip/tar/gzip → pass-through"
+(DECISIONS.md, the M0 design list). StuffIt 5 is the first format found
+to be a Mac container whose names are not MacRoman.
 
-**What would close it:** a decision about the name, and then either two
-manifests or two lines in `SOURCES.md` saying these are inputs to
-`tools/run_ddtf.py` rather than archives to extract.
+**What would close it:** a decision on three things that have to move
+together, because fixing one alone makes the suite disagree with itself —
+(1) the frontend's encoding for StuffIt 5, (2) the oracle invocation and
+the 5 manifests built with it, and (3) what the MACINTOSH shell should
+write, where HFS names are MacRoman bytes and converting means a
+UTF-8 → MacRoman table on a 1 MB machine. Nothing here is blocked on a
+file or a reference: both are in `reference/`.
 
 ## Waiting on a file this machine does not have
 

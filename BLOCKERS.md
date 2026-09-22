@@ -1319,6 +1319,83 @@ a harness can click is not the same list.
   values, two eras, and nothing else to compare them with until the
   compressed FILES were read as archives of one entry.
 
+- **"The name deark uses in the errors it attaches to a fork is the
+  member's REAL name, before sanitising."** Written 2026-09-22 above
+  `_DEARK_ERR` in `make_manifests.py`, withdrawn the same day. deark
+  prints it MAKE_PRINTABLE, so `Icon\r` — the commonest filename on a
+  Macintosh volume — arrives as `Icon<\r>` and the sanitiser model
+  turns that into `Icon__r_` where the file on disk is `Icon_`. **382
+  declined forks across 35 fixtures were keyed to a member that does
+  not exist. Cost: nothing, measured** — in every one of the 382 deark
+  had written no file for that member, so nothing ever read the wrong
+  key. What it would have cost with one live is a fork deark DECLINED
+  recorded as a fork deark read as EMPTY, which is the exact defect the
+  declined-fork rule had been written hours earlier to prevent.
+  **Why it survived:** the claim is true of every printable name, which
+  is every name anybody checked it against. DECISIONS.md 2026-09-22,
+  *the decline that read as a naming gap*.
+
+- **"283 entries deark names in a way no mangling of ours reproduces."**
+  `sweep_deark.py`'s own printed summary of what it cannot see, written
+  2026-09-22, withdrawn the same day. **225 of the 283 were entries
+  deark named and DECLINED** — StuffIt method 13 and StuffIt 5's
+  Arsenic, neither of which it implements — and they were invisible
+  only because a member deark declines every fork of writes no output
+  file. The sweep now cross-checks **4,502** graded forks rather than
+  2,080, agreeing on **2,151** with `DIFFER` still 0. **Cost:**
+  no wrong byte anywhere, and a real one all the same — the number was
+  quoted three times as evidence that deark is a weak oracle for
+  StuffIt, when it meant "deark does not implement method 13", a fact
+  about the format this repository had already written down twice.
+  **Why it survived:** it was printed every run, in the section headed
+  *what this cannot see*, which reads as an audited number rather than
+  as a claim needing evidence. **A harness that prints the wrong reason
+  for its blind spot is worse than one that prints none.**
+
+- **"`-lh2-`, `-lh3-`: declined per entry ... no archive that uses
+  either is reachable here."** `src/fmt_lzh.c`'s own header comment,
+  under *What is NOT here, and why*, withdrawn 2026-09-22. Both are
+  decoded, twenty lines below the comment, and the reason it gave was
+  answered by patching LHa for UNIX to WRITE a specimen
+  (`tools/run_lzh.py`, TESTING.md, *LZH's -lh2-*). **Cost:** nothing to
+  any output — but it is a source comment contradicting the code beside
+  it, which is the cheapest smell this repository names, sitting in the
+  one place nobody looks while working in a file: its masthead.
+  **Why it survived:** it was true when it was written, and closing the
+  item updated the status files rather than the file the claim lived in.
+
+- **"The 49 Tar entries the deark sweep cannot compare are deark
+  writing an AppleDouble member as a literal `._NAME` file where `unar`
+  merges it."** Written 2026-09-22 in TESTING.md and repeated in two
+  other places, withdrawn the same day. A tar member is stored as
+  `./NAME`; `unar` reports it without the `./`, deark keeps it, and
+  **deark's own filename sanitiser turns that slash into `_`** — so
+  `./READ_ME` reaches the disk as `._READ_ME`. None of the 49 files
+  deark writes for `derived-PCCTS.tar` carries the AppleDouble magic
+  and each holds its own member's data. **Cost: 98 forks of
+  cross-check**, which matching the alternative name recovers — every
+  one of them agreeing, taking the sweep to 2,151 agreements of 4,502.
+  **Why it survived:** `._X` is precisely the filename the AppleDouble
+  convention produces, and `unar` really does merge those, so the wrong
+  explanation was corroborated by the evidence every time anybody
+  looked at the list. What disproved it was opening one of the files —
+  four bytes of reading.
+
+- **"Russotto's write-up describes the SIT5 container too."**
+  OPEN_ITEMS.md's XADMaster inventory and `src/fmt_sit5.c`'s own source
+  line, withdrawn 2026-09-22. `reference/notes/arsenic_russotto.md` is
+  method 15 from its first line to its last; nothing in it mentions an
+  archive, an entry or a fork. **Cost: the row sat as "none: a parser"
+  — nothing to be done — while the real description was one link from
+  `reference/notes/StuffIt.md`**, the page StuffIt method 13 had been
+  read out of two days earlier, in a *Sources* list. Fetched, the
+  container came out at zero cost: 525 entries of 31 archives read from
+  it alone (DECISIONS.md 2026-09-22, *the page the sources list
+  named*). **Why it survived:** a citation to a document nobody opens
+  is indistinguishable from a citation to one that says what it is
+  claimed to say, and this one was plausible — the write-up IS about
+  StuffIt 5, just not about its container.
+
 ### Corrected figures and superseded write-ups
 
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45

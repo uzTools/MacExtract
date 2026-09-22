@@ -1,9 +1,19 @@
 /*
  * fmt_sit5.c — StuffIt 5+ container (.sit).
  *
- * Source: reference/XADMaster/XADStuffIt5Parser.m — LGPL, see NOTICE.
- * Also documented in Matthew T. Russotto's SIT5 write-up
- * (reference/notes/arsenic_russotto.md).
+ * Source: reference/notes/sit5_specs_theunarchiver.md — the format's
+ * own published description (The Unarchiver's wiki, StuffIt5Format),
+ * plus the one correction it needs and the one thing it does not say:
+ * docs/formats/stuffit5-container.md. A reader written from that page
+ * alone reads all 31 StuffIt 5 fixtures — 525 entries, every path and
+ * both fork lengths (tools/derive_sit5.py).
+ *
+ * NOT Russotto's write-up, which this file claimed until 2026-09-22:
+ * reference/notes/arsenic_russotto.md is method 15 and nothing else.
+ * What is still XADStuffIt5Parser.m's is the ENCRYPTED archive: where
+ * the password hash sits and how a password is graded against it, both
+ * marked where they are. The page says only "Encrypted (algorithm used
+ * is unknown)", and no corpus archive sets the bit.
  *
  * Archive header: an 80-byte banner ("StuffIt (c)1997-....") with 4
  * wildcard bytes, then u8 version (= 5), u8 flags, u32 total size,
@@ -49,7 +59,8 @@
 #define SIT5_ARCH_CRYPTED 0x80
 
 /* The banner match string; \xFF bytes match anything (the four
- * digits of the second year vary). XADStuffIt5Parser.m. */
+ * digits of the second year vary), which is how the published table
+ * states it too: "characters marked ? can vary". */
 static const char sit5_banner[] =
     "StuffIt (c)1997-\xFF\xFF\xFF\xFF"
     " Aladdin Systems, Inc., http://www.aladdinsys.com/StuffIt/\x0d\x0a";
@@ -111,7 +122,9 @@ static void sit5_dir_add(Sit5Dirs *d, uint32_t offs,
 /* StuffIt 5's archive key is MD5(password) cut to five bytes, and the
  * header carries MD5 of THAT, also cut to five: a password is graded
  * before anything is decoded. Asks the host until one verifies.
- * Source: XADStuffIt5Parser.m keyForEntryWithDictionary. */
+ * Source: XADStuffIt5Parser.m keyForEntryWithDictionary — the other
+ * half of the encrypted-archive path no published description covers
+ * (docs/formats/stuffit5-container.md, "What is still nobody else's"). */
 static int sit5_archive_key(UncCtx *c, const uint8_t hash[UNC_SIT5_KEYLEN],
                             uint8_t key[UNC_SIT5_KEYLEN])
 {
@@ -159,14 +172,26 @@ int unc_sit5_extract(UncCtx *c)
     if (!unc_sit5_probe(hdr, 100, NULL)) return UNC_ERR_FORMAT;
     if (hdr[82] != 5) return UNC_ERR_FORMAT;      /* archive version */
     /* 80-byte banner, u8 version, u8 flags, u32 totalsize @84,
-     * u32 ? @88, u16 numfiles @92, u32 firstoffs @94, u16 crc @98. */
+     * u32 ? @88, u16 numfiles @92, u32 firstoffs @94, u16 crc @98.
+     * The published table gives offset 84 TWICE and then jumps to 86;
+     * 92 and 94 are what reads all 31 archives here, and what the
+     * other published copy of the same table says
+     * (docs/formats/stuffit5-container.md, "The correction it needs"). */
     numentries = unc_get_u16be(hdr + 92);
     firstoffs = unc_get_u32be(hdr + 94);
 
     /* Optional blocks follow the fixed header, and one of them is the
      * five-byte hash that says whether a password is the right one.
      * Their order is fixed; only their presence is flagged.
-     * Source: XADStuffIt5Parser.m parse. */
+     *
+     * **The one reading in this file that is still XADMaster's**
+     * (XADStuffIt5Parser.m, parse): the published description says of
+     * this byte's bit 7 only "Encrypted (algorithm used is unknown)",
+     * and nothing anywhere describes bits 4 and 5. It has no specimen
+     * either — all 31 corpus archives read 0x10 here and none is
+     * encrypted, so the only archives that exercise it are the ones
+     * tools/run_crypt.py synthesises, which cannot grade it.
+     * docs/formats/stuffit5-container.md. */
     if (hdr[83] & SIT5_ARCH_CRYPTED) {
         uint32_t hp = 100;
         uint8_t hb[8];
@@ -231,8 +256,12 @@ int unc_sit5_extract(UncCtx *c)
             dirfiles = unc_get_u16be(hdr);
             hpos += 2;
             if (datalen == SIT5_DATALEN_NONE) {
-                /* Mystery entry after each directory: skip, does not
-                 * count (XADStuffIt5Parser.m). */
+                /* The marker entry after each directory: skip, and
+                 * do not count it. Published — "if the Data fork
+                 * uncompressed length field is set to 0xffffffff for
+                 * a folder entry, this entry is a special marker
+                 * whose meaning is unknown. It should be ignored when
+                 * reading" (sit5_specs_theunarchiver.md). */
                 numentries++;
                 pos = headerend;
                 continue;

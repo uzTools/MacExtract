@@ -163,6 +163,7 @@ for page_name in \
     "StuffItFormat:sit_format" \
     "StuffIt5Format:sit5_format" \
     "StuffItArsenicAlgorithm:sit_arsenic" \
+    "StuffIt5Format:sit5_specs" \
     "DiskDoublerSpecs:dd_specs" \
     "DiskDoublerAdAlgorithm:dd_ad" \
     "DiskDoublerDdAlgorithm:dd_dd" \
