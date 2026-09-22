@@ -236,7 +236,14 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # it buys is that StuffIt 5's names reach an HFS volume as names rather
 # than as mojibake (DECISIONS.md 2026-09-22, *a name an HFS volume can
 # hold*). Stack: sink_begin 400 -> 412 B, ExtractOne unchanged.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153176}
+# Raised 2026-09-22 from 153,176 to 153,192 with the DiskDoubler DDAR
+# walk: +16 B, and a TRADE — it steps by the record's own span and
+# checks that against the file header's arithmetic, where it used to
+# step by the header alone and skip what looked like a stray header.
+# The A5 ceiling below came down 16 B in the same change, so the budget
+# is unmoved (DECISIONS.md 2026-09-22, *the page that was never
+# written*).
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153192}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -298,7 +305,9 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153176}
 # +316 B, and it IS a new table — measured on that one object before and
 # after, `.rodata` 11 -> 268 B for MacRoman's 128-entry high half, and
 # `.rodata.str1.1` 1,862 -> 1,915 B for the one report line it adds.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-37976}
+# LOWERED 2026-09-22 from 37,976 to 37,960 with the DDAR walk above:
+# -16 B. A ratchet is set at the size on the day and that cuts both ways.
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-37960}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes

@@ -1432,6 +1432,18 @@ above the leaf lands on EXACTLY 255: the folder is then the longest path
 that fits, the leaf under it is cut onto the folder's own path, and what
 saves the file is the `~1` numbering.
 
+**And what these archives were NOT, until 2026-09-22.** A `DDAR`
+record's `+74` is the entry's whole span — the field a walk steps by —
+and `synth_dd.py` was writing the uncompressed data fork's length
+there, with the resource fork's length at `+78` where DiskDoubler
+writes 0. Nothing read either, because the walk stepped by the file
+header's own arithmetic instead, so both were free to be wrong. What
+found it was an archive **DiskDoubler's own Combine command** wrote
+(`tools/vmac/diskdoubler.py --combine`), and what proved it mattered
+was this suite: the engine changed to step by the span and these
+eighteen assertions failed at once. They say what the encoder says
+now.
+
 **Established that it can fail**: against the engine and CLI of two
 commits earlier, nineteen assertions fail; the nested-path case fails
 three ways against the commit before it, including a reported length of
@@ -2914,7 +2926,7 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_sit6.py` | StuffIt method 6: its framing, its fixed code book and its PackBits tail | all 11 method-6 forks in the corpus — 27 blocks, 13 Huffman and 14 stored. It parses the 26 bytes out of deark's source rather than holding a copy, so it cannot agree with the engine by sharing a typo with it; and it measures the one thing the two references disagree about, whether the stop code follows the declared length (13 of 13) |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read — and since 2026-09-22 it NAMES those two rather than counting them, so the list can be held against the one `derive_ddc.py` reads out of the container |
-| `derive_ddc.py` | DiskDoubler's three containers: a compressed file, `DDAR`, `DDA2` | **all 91 DiskDoubler fixtures, 244 entries — 643 assertions, 0 disagreements** against the oracle manifests: every entry's path, both fork lengths, and type and creator wherever the oracle recorded them. `--grid` re-derives the layout instead of assuming it, reporting for each field every offset that agrees with the oracle EVERYWHERE — and saying which fields this corpus cannot pin, of which the most instructive is `DDA2`'s stored-record resource-fork length: 27 offsets survive because the value is 0 in all 30, which is what DiskDoubler Pro only writing that record for a fork-less file looks like from the outside. Nothing locates a record except the format's own magic or the walk the assertions already grade |
+| `derive_ddc.py` | DiskDoubler's three containers: a compressed file, `DDAR`, `DDA2` | **all 91 DiskDoubler fixtures, 244 entries — 643 assertions, 0 disagreements** against the oracle manifests: every entry's path, both fork lengths, and type and creator wherever the oracle recorded them. `--grid` re-derives the layout instead of assuming it, reporting for each field every offset that agrees with the oracle EVERYWHERE — and saying which fields this corpus cannot pin, of which the most instructive is `DDA2`'s stored-record resource-fork length: 27 offsets survive because the value is 0 in all 30, which is what DiskDoubler Pro only writing that record for a fork-less file looks like from the outside. Nothing locates a record except the format's own magic or the walk the assertions already grade. Two of the shapes it reads are not in the corpus at all: `tools/vmac/diskdoubler.py --combine` drives DiskDoubler 3.7's own Combine command over a known tree, and `--verify-combine` grades what this engine makes of the result against the bytes DiskDoubler was given — **7 entries, 0 disagreements**, a folder tree and a two-fork file included |
 | `derive_packit.py` | PackIt's container, stored and Huffman-coded | 38 forks of 4 archives; it checks no CRC, so nothing here confirms the polynomial |
 | `derive_sit5.py` | the StuffIt 5 container: the archive header, both entry headers, the second file header and the tree | **all 31 StuffIt 5 fixtures, 525 entries**, against the oracle manifests — every entry's PATH and both forks' lengths, 0 disagreements. The path is the part worth having: nothing in the container stores one, so it is the tree the parent-offset chain makes, and two `.nib` bundles in the corpus hold three identically-named files each, which is what caught the first version keying on leaf names |
 | `derive_lzh.py` | the LZH/LHA header, all four levels and the extended-header chain | **156 archives and 191 entries** — this project's 7 fixtures, lhasa's collection from 20 writers, LHa for UNIX's own — with **0 disagreements** against lhasa's listing of the same files. The only derivation here that grades HEADERS rather than forks, so it is also the only one whose check is structural: an entry's data must end exactly where the next header begins, and a field read wrong derails the walk at once. The three things lhasa does to a name that the document does not ask for — lower-casing an all-caps one, collapsing `..`, replacing an unprintable byte — are named and counted (41 names), not adopted; `unar` does none of them and neither does the engine. It refuses `regression/truncated.lzh`, which is truncated |

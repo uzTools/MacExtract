@@ -26,7 +26,13 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
-          derived-MUSFMT10.ZIP"
+          derived-MUSFMT10.ZIP ddtf-dd377ad.dd"
+
+# `ddtf-dd377ad.dd` was added 2026-09-22 with the DDAR walk: this list had
+# no DiskDoubler archive in it at all, so the one container walk that steps
+# by a length the record states — and which changed that day — had never run
+# big-endian. Seven entries, both forks each, and the header trailer shape
+# (docs/formats/diskdoubler-container.md).
 
 # Two-fork files (non-empty data AND resource fork) — the case where the
 # data and resource paths can disagree, so every write variant is proven

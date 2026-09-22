@@ -716,6 +716,9 @@ reachable, and are now implemented (BLOCKERS.md).
     tools/vmac/diskdoubler.py --probe      # photograph the menus and dialogs
     tools/vmac/diskdoubler.py --make A     # compress the subject with Method A
     tools/vmac/diskdoubler.py --verify     # decode the specimens, check against the input
+    tools/vmac/diskdoubler.py --combine tree   # a DDAR archive with a FOLDER in it
+    tools/vmac/diskdoubler.py --combine raw    # the shapes that might skip the file header
+    tools/vmac/diskdoubler.py --verify-combine # grade those against what went in
 
 `--make` takes `A`, `B`, `guess` or `both` — the four items of the "How To
 Compress" popup. What each one writes is FORMATS.md ✦; why it matters is
@@ -744,6 +747,37 @@ Four things to know before re-running it:
 - **The run ends with Put Away, and must**, for the reason `arcmac.py`
   documents below: Mini vMac flushes the guest's writes when the volume is
   ejected, so a run killed with it still mounted reads back an unchanged disk.
+
+### The two `DDAR` record shapes no corpus fixture has — `--combine`
+
+All 36 entries of the corpus's 7 `DDAR` archives are files at the top
+level, so the folder records and the `0x20` raw-fork shape were read by
+nothing here and `docs/formats/diskdoubler-container.md` could not
+measure them. `--combine` builds a volume with a known tree on it and
+drives **Combine**, DiskDoubler's own archive command, from the same DD
+menu `--make` uses.
+
+    Payload/Nest/One, Payload/Nest/Two     text
+    Payload/Raw                            24 KB nothing compresses
+    Payload/Forked                         data plus a 340-byte resource fork
+    Payload/Empty                          zero bytes
+    Payload/Already.dd                     a file DiskDoubler had compressed
+
+`--verify-combine` runs offline, on the saved specimens, and grades this
+engine's extraction against **the bytes DiskDoubler was given** — 7
+entries, 0 disagreements. Three things to know:
+
+- **the items are selected by typing, not by clicking an icon.** The
+  Finder selects by name, so `p` picks `Payload` and Cmd-O opens it;
+  Cmd-A inside it is what enables Combine, which is greyed out until
+  something is selected.
+- **`--combine raw` needs `--make A` to have run**, because one of its
+  subjects is the `.dd` that produced. Combine turns out to EXPAND an
+  already-compressed file and archive what was inside, so that entry is
+  graded on the original's bytes.
+- **It did not produce the `0x20` flag**, and five shapes were offered
+  to it on purpose. That is a measured negative about DiskDoubler 3.7,
+  not about the format; 1.x and 2.x are not reachable from here.
 
 ### The forks neither oracle can decode — `--adjudicate`
 

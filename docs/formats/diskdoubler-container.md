@@ -63,6 +63,25 @@ and the resource fork's, in that order.
 | 54 | 2 | data fork delta distance | **held against the coder**, below |
 | 56 | 2 | resource fork delta distance | as +54 |
 | 84 | | the data fork's bytes, then the resource fork's | |
+| 84 + both | 84 | a byte-identical COPY of the header above | **63 of the corpus's 66 compressed files**, and the three without it are this project's own (below) |
+
+### The header is written twice
+
+**A file DiskDoubler compressed ends with a byte-for-byte copy of its
+own 84-byte header.** 63 of the 66 compressed files here carry one, and
+the three that do not are `synth-dd-m3.dd`, `synth-dd-m4.dd` and
+`synth-dd-m5.dd` — written by `tools/vmac/ddencode.py`, in this tree,
+rather than by DiskDoubler. So every real specimen has it and no
+synthetic one does, which is the shape of a fact about the FORMAT and
+also the shape of a thing our own fixtures would never have taught us.
+
+It matters because it is what a `DDAR` record's span is measured in:
+an entry whose file was compressed BEFORE it was archived carries the
+whole `.dd` file, trailer and all, and one Combine compressed itself
+carries no trailer. 31 entries of the corpus's `DDAR` archives have it
+and 5 do not. Reading the trailer as a stray header of its own — which
+is what it looks like from a walk that steps by the fork lengths —
+happens to work, and is not what the archive says.
 
 **The compressed file carries no name.** It is the host's file that has
 one — DiskDoubler appended `.dd` to it — so nothing in this document
@@ -114,10 +133,10 @@ past byte 4 is at exactly that offset.
 |---|---|---|---|
 | 0 | 4 | `DDAR` | every record has it, and the walk lands on one every time |
 | 8 | 64 | the name, a Str63 | **pinned**: one offset agrees over 36 entries — the length byte at +8, the bytes at +9 |
-| 72 | 1 | starts a folder | **no specimen** — see below |
-| 73 | 1 | ends a folder | **no specimen** |
-| 74 | 4 | data fork length | **no specimen**: only a record that carries the forks itself states them, and no `DDAR` fixture here does |
-| 78 | 4 | resource fork length | **no specimen** |
+| 72 | 1 | starts a folder | **measured 2026-09-22** on an archive DiskDoubler 3.7's Combine command wrote here from a known tree (below) |
+| 73 | 1 | ends a folder | as +72. The closing record is a COPY of the record before it with this byte set, name and all, so a reader must test it BEFORE it treats the record as an entry |
+| 74 | 4 | **the entry's whole span**, not the data fork's length | **measured**: stepping `record + 124 + this` walks all 7 corpus archives and both Combine specimens from the first record to the last byte, exactly. It is the length of the compressed FILE the record points at — so 84 + both compressed forks, plus 84 again where that file carries its header trailer |
+| 78 | 4 | (a resource fork length, by two other readers) | **0 in all 44 records here**, including a two-fork entry whose resource fork is 340 bytes. This corpus cannot tell it from a constant, and the span above is what the walk uses |
 | 82 | 4 | creation date | no manifest records a date |
 | 86 | 4 | modification date | as +82 |
 | 90 | 4 | type | **not the entry's** — see below |
@@ -134,35 +153,70 @@ the file header at +124. That is why the `--grid` search pins type and
 creator inside the file header and finds nothing for them in the
 record.
 
-**An archive ends where the FILE ends.** There is no end marker. Five
-of the seven archives here end with a stray compressed-file header
-belonging to no entry, 84 bytes long; stepping over it is the only
-reading under which those five end exactly at their last byte, which is
-what `derive_ddc.py` asserts.
+**An archive ends where the FILE ends.** There is no end marker. What
+looks like a stray 84-byte header before some records is the previous
+entry's header trailer, inside its span rather than beside it (*The
+header is written twice*); walking by the span at +74 lands on a record
+or on the last byte, and on nothing else, in all nine archives here.
 
-**What no `DDAR` fixture here reaches, and whose statement those rows
-are.** All 36 entries in the 7 archives are files with a full file
-header. **None is a folder, and none has the `0x20` flag** that says
-the forks follow the record raw. So the folder pair at +72 and +73, the
-record's own fork lengths at +74 and +78, its checksums at +118 and
-+120 and the `0x20` flag itself are read by **no specimen in this
-corpus**, and nothing in this document measures them.
+### The folder records, measured
 
-They are not one program's opinion either, which is worth separating
-from being measured: **two independent readings state them and agree**
-— XADMaster's `XADDiskDoublerParser.m`, which `src/fmt_dd.c` is
-transcribed from, and macutils' `macunpack/dd.h`, whose `D_ISDIR 72`,
-`D_ENDDIR 73`, `D_DATALENGTH 74`, `D_RSRCLENGTH 78`, `D_FNDRFLAGS 98`,
-`D_DATACRC 118` and `D_RSRCCRC 120` are the same offsets under their
-own names. Agreement between two readers is evidence about the
-readers; it is not a specimen, and this document does not present it as
-one.
+**No corpus fixture has one.** All 36 entries in the corpus's 7 `DDAR`
+archives are files, at the top level. So on 2026-09-22 two archives
+were made: `tools/vmac/diskdoubler.py --combine` builds a volume with a
+known tree on it, drives **DiskDoubler 3.7's own Combine command**
+under Mini vMac, and reads the archive back.
 
-**What would close it:** an archive with a folder in it, and one
-holding a file the application refuses to compress. DiskDoubler 3.7
-runs here — `tools/vmac/diskdoubler.py` drives it — and its Combine
-command is what writes a `DDAR`; two specimens would turn these six
-rows into measured ones the same afternoon.
+    Payload/Nest/One      800 B of text
+    Payload/Nest/Two      800 B of text
+    Payload/Raw        24,576 B nothing compresses
+    Payload/Forked         18 B of data and a 340-byte resource fork
+    Payload/Empty           0 B
+    Payload/Already.dd   a file DiskDoubler had already compressed
+
+`--verify-combine` then grades what comes back out of this engine
+against **the bytes DiskDoubler was given** — the oracle is the
+encoder's input, the same bargain `nowcompress.py` and `run_dart.py`
+make: **7 entries, 0 disagreements**, the folder tree and the two-fork
+file included. `unar` reads both archives and agrees.
+
+Two things that reading measures beyond the folder pair itself:
+
+- **the closing record is a copy of the one before it**, name and all,
+  with +73 set. A reader that looks at the name first sees the previous
+  entry twice.
+- **Combine expands a file that was already compressed.** `Already.dd`
+  went in as an 1,878-byte `.dd`; the record's file header states the
+  ORIGINAL's 11,428-byte data fork and 340-byte resource fork, so
+  Combine unpacked it and archived what was inside. It is graded on the
+  original's bytes for that reason, not on the `.dd`'s.
+
+### The `0x20` flag, which nothing here has ever set
+
+The Finder-flags word at +98 is said — by both readers below — to mean
+"the forks follow this record raw, with no file header" when `0x20` is
+set. **It reads 0x0000 in all 44 records on this disk**, the corpus's
+36 and the eight Combine wrote, and five shapes were offered to
+DiskDoubler 3.7 specifically to provoke it: a file nothing compresses,
+an empty file, a file with a resource fork, an already-compressed file
+and ordinary text. Every one came back with a full compressed-file
+header behind its record.
+
+So that rule, and the record's own fork lengths and checksums that only
+it would use, are read by **no specimen anywhere here**, and nothing in
+this document measures them. They are not one program's opinion either,
+which is worth separating from being measured: **two independent
+readings state them and agree** — XADMaster's
+`XADDiskDoublerParser.m`, which `src/fmt_dd.c` is transcribed from, and
+macutils' `macunpack/dd.h`, whose `D_ISDIR 72`, `D_ENDDIR 73`,
+`D_DATALENGTH 74`, `D_RSRCLENGTH 78`, `D_FNDRFLAGS 98`, `D_DATACRC 118`
+and `D_RSRCCRC 120` are the same offsets under their own names.
+Agreement between two readers is evidence about the readers; it is not
+a specimen, and this document does not present it as one.
+
+**What would close it:** an archive from a DiskDoubler that writes
+it — 1.x or 2.x, neither of which is reachable from here — or a shape
+of file 3.7 declines that has not been tried.
 
 ## `DDA2` — DiskDoubler Pro
 
@@ -233,8 +287,9 @@ inside one 46-byte window, and `src/fmt_dd.c` says so where it matters
   date, so the only evidence for the two offsets is `ndd.py --dates`,
   on `DDA2`.
 - **Finder flags**, except `DDAR`'s `0x20`, which no fixture sets.
-- **The `DDAR` folder records and its raw-fork records**, for want of a
-  specimen: see the table above.
+- **`DDAR`'s `0x20` raw-fork records**, for want of a specimen: see
+  above. The folder records are no longer on this list — they were
+  measured on 2026-09-22 against an archive DiskDoubler wrote here.
 - **Methods 2, 3, 4 and 5's own headers.** `src/fmt_dd.c` decodes 3, 4
   and 5 against forks DiskDoubler's own expander reads back
   (DECISIONS.md 2026-08-21) and the three specimens here are this

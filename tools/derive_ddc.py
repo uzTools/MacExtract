@@ -124,7 +124,7 @@ def read_filehdr(b, at):
 
 R_BODY = 78                    # where the first record is
 R_NAME, R_ISDIR, R_ENDDIR = 8, 72, 73
-R_DATALEN, R_RSRCLEN = 74, 78
+R_SPAN, R_RSRCLEN = 74, 78     # +74 is the whole entry, not the data fork
 R_CTIME, R_MTIME, R_TYPE, R_CREATOR, R_FLAGS = 82, 86, 90, 94, 98
 R_DATACRC, R_RSRCCRC, R_HDRCRC = 118, 120, 122
 R_SIZE = 124
@@ -133,25 +133,18 @@ R_FLAG_NOHDR = 0x20            # the forks follow raw, with no file header
 
 
 def read_ddar(b):
+    """Walk by the record's own +74, which is the ENTRY's whole span."""
     out, path, at = [], [], R_BODY
     while True:
         if at == len(b):
             return out                     # the archive ends where the FILE does
-        if at + 4 > len(b):
-            raise ValueError("DDAR: %d bytes left over" % (len(b) - at))
-        # A compressed file header where a record was expected. One
-        # stands at the END of five of the seven DDAR archives here and
-        # belongs to no entry — it is stepped over, which is the only
-        # reading under which those five end exactly at their last byte.
-        if u32(b, at) == DD_MAGIC:
-            at += F_SIZE
-            continue
         if at + R_SIZE > len(b):
             raise ValueError("DDAR: %d bytes left over" % (len(b) - at))
         if b[at:at + 4] != DDAR:
             raise ValueError("DDAR: no record magic at %d" % at)
         name = pstr(b, at + R_NAME, 63)
         start = at + R_SIZE
+        span = u32(b, at + R_SPAN)
         if b[at + R_ENDDIR]:
             path.pop()
             at = start
@@ -163,19 +156,27 @@ def read_ddar(b):
             continue
         e = dict(path=path + [name], is_dir=False, rec_at=at)
         if u16(b, at + R_FLAGS) & R_FLAG_NOHDR:
-            e.update(data_size=u32(b, at + R_DATALEN),
+            e.update(data_size=u32(b, at + R_SPAN),
                      rsrc_size=u32(b, at + R_RSRCLEN),
                      type=fcc(u32(b, at + R_TYPE)),
                      creator=fcc(u32(b, at + R_CREATOR)),
                      data_method=0, rsrc_method=0, stored=True)
-            at = start + e["data_size"] + e["rsrc_size"]
         else:
             f = read_filehdr(b, start)
             if f is None:
                 raise ValueError("DDAR: no file header at %d" % start)
             e.update(f)
             e["stored"] = False
-            at = f["payload"] + f["data_comp"] + f["rsrc_comp"]
+            # What the entry holds is a compressed FILE, so its span is
+            # that file's own length — its header, both forks, and the
+            # byte-identical copy of the header a real DiskDoubler
+            # writes at the end of one. Either shape, and nothing else.
+            inner = F_SIZE + f["data_comp"] + f["rsrc_comp"]
+            if span not in (inner, inner + F_SIZE):
+                raise ValueError("DDAR: record at %d spans %d, its file is "
+                                 "%d or %d" % (at, span, inner, inner + F_SIZE))
+            e["trailer"] = (span == inner + F_SIZE)
+        at = start + span
         out.append(e)
 
 
@@ -260,6 +261,19 @@ def read_container(b, fixture):
     # host's question and not the container's.
     f = dict(f)
     f.update(path=[None], is_dir=False, stored=False)
+    # A compressed file ends with a byte-identical copy of its own
+    # 84-byte header — 63 of the corpus's 66, and the three without it
+    # are this project's own synthetic specimens rather than files
+    # DiskDoubler wrote. docs/formats/diskdoubler-container.md, "The
+    # header is written twice".
+    inner = F_SIZE + f["data_comp"] + f["rsrc_comp"]
+    if len(b) == inner + F_SIZE and b[inner:inner + F_SIZE] == b[:F_SIZE]:
+        f["trailer"] = True
+    elif len(b) == inner:
+        f["trailer"] = False
+    else:
+        raise ValueError("single: %d bytes, its forks say %d or %d"
+                         % (len(b), inner, inner + F_SIZE))
     return "single", [f]
 
 
@@ -475,6 +489,7 @@ def main():
     problems, n, checked = [], 0, 0
     shapes = collections.Counter()
     methods = collections.Counter()
+    trailer = collections.Counter()
     deltas = []
     for man, b in fixtures(a.fixture):
         if a.verbose:
@@ -493,6 +508,8 @@ def main():
             if e.get("is_dir"):
                 continue
             methods[(e.get("data_method"), e.get("rsrc_method"))] += 1
+            if "trailer" in e:
+                trailer[(kind, e["trailer"])] += 1
             for fork in ("data", "rsrc"):
                 if e.get(fork + "_delta"):
                     deltas.append((man["fixture"],
@@ -513,6 +530,10 @@ def main():
     print("            methods (data/rsrc): " + ", ".join(
         "%s/%s x%d" % (d, r, c) for (d, r), c in sorted(methods.items(),
                                                         key=lambda kv: -kv[1])))
+    print("            a compressed file ends with a copy of its own "
+          "header: " + ", ".join(
+              "%s %s %d" % (k, "yes" if t else "NO", v)
+              for (k, t), v in sorted(trailer.items())))
     print("            the second form of method 10, per the container — "
           "hold this against `derive_dd.py`, which has no container and "
           "finds out by decoding:")

@@ -113,9 +113,17 @@ def expected(tree):
 def _ddar_record(name, isdir=0, enddir=0, datasize=0, rsrcsize=0,
                  typ=b"TEXT", creator=b"UNCL", finderflags=0x0100,
                  datacrc=0, rsrccrc=0):
-    """One 124-byte record. Offsets are the reads parseArchive makes in
-    order: 4 unused bytes after the magic, then the Pascal-style name in
-    a fixed 63-byte field."""
+    """One 124-byte record: a Pascal-style name in a fixed 63-byte
+    field at +8, and at +74 the ENTRY's whole span.
+
+    `datasize` was the uncompressed data fork's length here until
+    2026-09-22, which is not what DiskDoubler writes and which nothing
+    read — the walk stepped by the file header's own arithmetic
+    instead. An archive DiskDoubler 3.7's Combine command wrote here
+    settled it: +74 is what a walk steps by, and +78 is 0 in all 44
+    records on this disk (docs/formats/diskdoubler-container.md,
+    "DDAR"). These archives say so now, so they can be fed to a reader
+    that believes the field."""
     r = bytearray(DDAR_REC)
     r[0:4] = b"DDAR"
     n = name[:63]
@@ -193,8 +201,13 @@ def build_ddar(tree):
             out.extend(data)
             out.extend(rsrc)
             return
-        out.extend(_ddar_record(name, datasize=len(data),
-                                rsrcsize=len(rsrc), typ=node["typ"],
+        # The span of a record with a file header behind it: that
+        # header, then both compressed forks. A real DiskDoubler file
+        # may carry a copy of its header at the end and then the span
+        # is 84 bytes more; an archive Combine wrote itself carries
+        # none, and neither do these.
+        out.extend(_ddar_record(name, datasize=FILEHDR + 4 + len(data) + len(rsrc),
+                                rsrcsize=0, typ=node["typ"],
                                 creator=node["creator"]))
         out.extend(_file_header(data, rsrc, node["typ"], node["creator"]))
         out.extend(data)

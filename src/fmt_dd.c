@@ -1219,11 +1219,19 @@ static int dd_archive(UncCtx *c)
             break;                                /* end of archive */
         }
         magic = unc_get_u32be(hdr);
-        if (magic == DD_MAGIC) { at += 84; continue; }  /* stray header */
-        /* Four bytes read from inside the file that are not a header:
+        /* Four bytes read from inside the file that are not a record:
          * every entry position in a DDAR archive is one, so this is a
          * cut or a corrupted archive rather than its end — the end is
-         * where the FILE ends, and is taken above. */
+         * where the FILE ends, and is taken above.
+         *
+         * There is no skip for a compressed-file header here any more.
+         * What used to look like a stray one is the PREVIOUS entry's
+         * header trailer, which lives inside that entry's stated span:
+         * a compressed file ends with a byte-identical copy of its own
+         * 84-byte header, in 63 of the corpus's 66 (the three without
+         * it are this tree's own synthetic specimens).
+         * Source: docs/formats/diskdoubler-container.md, "The header is
+         * written twice". */
         if (magic != DD_DDAR) return UNC_ERR_TRUNCATED;
 
         /* 120 bytes: the entry header is 124 including its magic, and
@@ -1315,10 +1323,21 @@ static int dd_archive(UncCtx *c)
             return UNC_ERR_TRUNCATED;
         {
             DdFile f;
+            uint32_t inner;
             dd_parse_filehdr(hdr, &f);
+            /* The record's own +74 is the whole ENTRY's span, and it is
+             * what walks the archive: `record + 124 + span` lands on
+             * the next record, or on the last byte, in all nine DDAR
+             * archives reachable here. What it spans is a compressed
+             * FILE, so it is that file's length — with or without the
+             * header trailer, and nothing else.
+             * Source: docs/formats/diskdoubler-container.md, "DDAR". */
+            inner = 84 + f.datacomp + f.rsrccomp;
+            if (datasize != inner && datasize != inner + 84)
+                return UNC_ERR_CORRUPT;
             dd_entry_from(&e, &f);
             if ((err = dd_emit(c, &e, &f, start + 84)) != UNC_OK) return err;
-            at = start + 84 + f.datacomp + f.rsrccomp;
+            at = start + datasize;
         }
     }
     return UNC_OK;

@@ -466,9 +466,22 @@ def incompressible(nbytes, seed=7):
 
 
 COMBINE_TREE = [
-    (("Payload", "Nest"), "One", b"one one one one one\r" * 40),
-    (("Payload", "Nest"), "Two", b"two two two two two\r" * 40),
-    (("Payload",), "Raw", incompressible(24 * 1024)),
+    (("Payload", "Nest"), "One", b"one one one one one\r" * 40, None),
+    (("Payload", "Nest"), "Two", b"two two two two two\r" * 40, None),
+    (("Payload",), "Raw", incompressible(24 * 1024), None),
+]
+
+# The second tree exists for the 0x20 flag alone, which the first one
+# did not produce: every entry it wrote has a full compressed-file
+# header behind it, method 0 included. So this one offers the shapes a
+# record might plausibly be written raw for — a file DiskDoubler has
+# ALREADY compressed, a file with a resource fork, and an empty one.
+COMBINE_TREE_RAW = [
+    (("Payload", "Nest"), "One", b"one one one one one\r" * 40, None),
+    (("Payload",), "Raw", incompressible(24 * 1024), None),
+    (("Payload",), "Forked", b"a short data fork\r", "rsrc"),
+    (("Payload",), "Empty", b"", None),
+    (("Payload",), "Already.dd", "already", "dd"),
 ]
 
 
@@ -497,13 +510,22 @@ def make_volume_tree(path, volname, items, size_kb=4096):
         shutil.rmtree(env["HOME"], ignore_errors=True)
 
 
-def session_with_tree(tag):
+def session_with_tree(tag, tree):
     work = tempfile.mkdtemp(prefix="ddwork-")
     apps = extract_app(work)
     items = [((), a) for a in apps]
-    for i, (folder, name, data) in enumerate(COMBINE_TREE):
+    for i, (folder, name, data, extra) in enumerate(tree):
         p = os.path.join(work, "t%d.bin" % i)
-        open(p, "wb").write(macbinary(name, "TEXT", "ttxt", data, b""))
+        if data == "already":
+            src = os.path.join(SPECIMENS, "subject-A.dd")
+            if not os.path.exists(src):
+                raise SystemExit("diskdoubler: --combine raw wants "
+                                 "%s — run --make A first" % src)
+            data = open(src, "rb").read()
+        rsrc = make_rsrc() if extra == "rsrc" else b""
+        ftype, creator = (("DDF3", "DDAP") if extra == "dd"
+                          else ("TEXT", "ttxt"))
+        open(p, "wb").write(macbinary(name, ftype, creator, data, rsrc))
         items.append((folder, p))
     img = os.path.join(work, "ddwork.img")
     make_volume_tree(img, "DDwork", items)
@@ -513,9 +535,10 @@ def session_with_tree(tag):
     return s, work, img
 
 
-def combine(keep=False):
+def combine(which="tree", keep=False):
     """Make a 'DDAR' archive holding a folder and an incompressible file."""
-    s, work, img = session_with_tree("combine")
+    tree = COMBINE_TREE if which == "tree" else COMBINE_TREE_RAW
+    s, work, img = session_with_tree("combine-" + which, tree)
     try:
         s.boot()
         s.shot("desktop", wait=5.0)
@@ -556,7 +579,7 @@ def combine(keep=False):
         if not data[:4] == b"DDAR":
             continue
         name = show(path)
-        out = os.path.join(SPECIMENS, "combine.dd")
+        out = os.path.join(SPECIMENS, "combine-%s.dd" % which)
         open(out, "wb").write(data)
         print("  %s  %s/%s  %d B -> %s" % (name, ftype, creator, len(data), out))
         kept += 1
@@ -565,6 +588,60 @@ def combine(keep=False):
     if not keep:
         shutil.rmtree(work, ignore_errors=True)
     return 0 if kept else 1
+
+
+def verify_combine():
+    """Grade the Combine specimens against the files that were fed in.
+
+    The oracle here is the ENCODER's input, the same bargain
+    `nowcompress.py` and `run_dart.py` make: DiskDoubler was handed
+    these bytes and these folders, so what comes back out of this
+    engine either is them or is not. `unar` is asked as well, with
+    `-k hidden` — `-k visible` has a GNUstep path bug and answers 422
+    bytes where the fork is 340, which looks exactly like an oracle
+    disagreement and is not one (TESTING.md, *Resource forks on Linux*).
+    """
+    trees = {"tree": COMBINE_TREE, "raw": COMBINE_TREE_RAW}
+    total = bad = 0
+    for which, tree in sorted(trees.items()):
+        spec = os.path.join(SPECIMENS, "combine-%s.dd" % which)
+        if not os.path.exists(spec):
+            print("diskdoubler: no %s — run --combine %s" % (spec, which))
+            continue
+        want = {}
+        for folder, name, data, extra in tree:
+            if data == "already":
+                continue            # Combine expands it; see the note
+            path = "/".join(list(folder[1:]) + [name])
+            want[path] = (data, make_rsrc() if extra == "rsrc" else b"")
+        out = tempfile.mkdtemp(prefix="ddcomb-")
+        try:
+            subprocess.run([cli(), "x", "--forks", "hidden", "-o", out, spec],
+                           capture_output=True)
+            for path, (data, rsrc) in sorted(want.items()):
+                total += 1
+                p = os.path.join(out, path)
+                got = open(p, "rb").read() if os.path.exists(p) else None
+                side = os.path.join(os.path.dirname(p),
+                                    "._" + os.path.basename(p))
+                gotr = open(side, "rb").read() if os.path.exists(side) else b""
+                if got != data:
+                    bad += 1
+                    print("  %s :: %s data %s, wanted %d B"
+                          % (which, path,
+                             "absent" if got is None else "%d B" % len(got),
+                             len(data)))
+                elif rsrc and rsrc not in gotr:
+                    bad += 1
+                    print("  %s :: %s resource fork differs" % (which, path))
+                else:
+                    print("  %s :: %-14s %6d B data, %4d B rsrc — as fed in"
+                          % (which, path, len(data), len(rsrc)))
+        finally:
+            shutil.rmtree(out, ignore_errors=True)
+    print("diskdoubler: %d Combine entr(y/ies) graded against the bytes "
+          "DiskDoubler was given, %d disagreement(s)" % (total, bad))
+    return 1 if bad else 0
 
 
 def session_with_subject(tag):
@@ -1113,10 +1190,14 @@ def main():
                     help="boot the application and photograph each step")
     ap.add_argument("--probe-split", action="store_true",
                     help="photograph what the Split command asks for")
-    ap.add_argument("--combine", action="store_true",
-                    help="a DDAR archive holding a folder and an "
-                         "incompressible file — the two record shapes no "
-                         "corpus fixture has")
+    ap.add_argument("--combine", nargs="?", const="tree",
+                    choices=("tree", "raw"),
+                    help="a DDAR archive: `tree` holds a folder, `raw` "
+                         "offers the shapes that might be written with no "
+                         "file header — the two record shapes no corpus "
+                         "fixture has")
+    ap.add_argument("--verify-combine", action="store_true",
+                    help="grade the Combine specimens against their inputs")
     ap.add_argument("--make", metavar="METHOD", nargs="?", const="A",
                     help="compress the subject with A, B, guess or both")
     ap.add_argument("--verify", action="store_true",
@@ -1143,7 +1224,9 @@ def main():
     if args.make:
         make(args.make, args.keep)
     if args.combine:
-        return combine(args.keep)
+        return combine(args.combine, args.keep)
+    if args.verify_combine:
+        return verify_combine()
     if args.adjudicate:
         return adjudicate(args.adjudicate, args.keep,
                           args.write_manifest)
@@ -1151,7 +1234,7 @@ def main():
         return verify()
     if not (args.setup or args.install or args.wild or args.probe
             or args.probe_split or args.make or args.verify
-            or args.combine or args.adjudicate):
+            or args.combine or args.verify_combine or args.adjudicate):
         ap.print_help()
     return 0
 

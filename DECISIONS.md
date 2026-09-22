@@ -15363,16 +15363,60 @@ for a file with no resource fork" — measured on the application on
 from a constant is a field the document must not claim, and this is the
 peak-RAM-matrix smell from CLAUDE.md arriving in a header table.
 
-**What is left has no specimen rather than no description.** All 36
-entries of the 7 `DDAR` archives here are files with a full file
-header: **not one folder, and not one record with the `0x20` flag**
-that says the forks follow raw. Six offsets are therefore read by
-nothing, and they stay attributed — to XADMaster, and to macutils'
-`macunpack/dd.h`, which states the same seven offsets under its own
-field names. **Two readers agreeing is evidence about the readers, not
-a specimen**, and the note says so in those words rather than letting a
-table imply otherwise. DiskDoubler 3.7 runs here and its Combine
-command writes a `DDAR`; two archives would settle all six.
+**What was left had no specimen rather than no description, so two
+were made.** All 36 entries of the 7 `DDAR` archives here are files
+with a full file header: not one folder, and not one record with the
+`0x20` flag that says the forks follow raw. `tools/vmac/diskdoubler.py
+--combine` builds a volume with a known tree on it and drives
+**DiskDoubler 3.7's own Combine command** under Mini vMac.
+
+**The folder records are measured now.** The archive comes back holding
+`Nest/One`, `Nest/Two` and `Raw`, and `--verify-combine` grades what
+this engine makes of it against **the bytes DiskDoubler was given** —
+the oracle is the encoder's input, the bargain `nowcompress.py` and
+`run_dart.py` already make. **7 entries, 0 disagreements**, across both
+specimens, the folder tree and a two-fork file included. The closing
+record turns out to be a copy of the record before it with one byte
+set, name and all — a reader that looks at the name first sees the
+previous entry twice.
+
+**And `0x20` is still not measured, which is now a measurement of its
+own.** Five shapes were offered to 3.7 specifically to provoke it — a
+file nothing compresses, an empty file, a file with a resource fork, an
+already-compressed file, ordinary text — and every one came back with a
+full compressed-file header behind its record. The flags word reads
+`0x0000` in all 44 records on this disk. So that rule stays attributed,
+to XADMaster and to macutils' `macunpack/dd.h`, which states the same
+seven offsets under its own field names. **Two readers agreeing is
+evidence about the readers, not a specimen**, and the note says so in
+those words rather than letting a table imply otherwise.
+
+**The specimen corrected the description twice, which is what a
+specimen is for.** The record's `+74` is not the data fork's length —
+it is the **entry's whole span**, and stepping by it walks all nine
+`DDAR` archives here from the first record to the last byte with no
+special case at all. What it spans is a compressed FILE, which is why
+the arithmetic looked like it was 84 bytes out: **a file DiskDoubler
+compressed ends with a byte-identical copy of its own 84-byte header**
+— 63 of the corpus's 66, and the three without it are
+`synth-dd-m3/m4/m5.dd`, written in this tree rather than by
+DiskDoubler. So the "stray header" this project's walk had been
+stepping over since M12 was never stray: it is the previous entry's
+trailer, inside that entry's stated span. `src/fmt_dd.c` walks by the
+span now and checks it against the header's own arithmetic, which is
+one rule fewer and one check more — **+16 B of code and −16 B of A5**,
+so the budget does not move and both ratchets did.
+
+**And the change immediately failed eighteen assertions, which is the
+best thing that happened to it.** `tools/synth_dd.py` writes the `DDAR`
+archives `run_names.py` and `run_macnames.py` walk, and it had been
+putting the uncompressed data fork's length at `+74` and the resource
+fork's at `+78` — neither of which DiskDoubler writes, and neither of
+which anything read while the walk stepped by the file header. A
+generator free to be wrong in a field nobody reads is the same shape as
+a tolerance with no independent evidence; the suite that caught it is
+the one that feeds those archives to the engine. They say what the
+encoder says now.
 
 **Established that the reader can fail**, because a reader that agrees
 with an oracle 643 times is exactly the shape that might be agreeing
