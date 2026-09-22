@@ -1805,6 +1805,63 @@ from the format documentation — correct-looking DDR, correct-looking entries,
 status word copied off a real disk — was silently ignored: no volume, no
 error, nothing to debug. Cloning a known-good head worked first time.
 
+## What every walk can see — `walkprobe.py`
+
+Nine harnesses here read a Macintosh volume back with `hls` and grade
+what the application under test wrote onto it, and they did not agree
+about what a listing contains. This builds one volume holding the four
+shapes that tell them apart — a plain file, an INVISIBLE one, a dotted
+one with the invisible bit CLEAR, and `Icon\r` — runs every walk in the
+tree against it, and says which came back short. No emulator, no ROM, no
+X server; seconds.
+
+    tools/vmac/walkprobe.py            # the table
+    tools/vmac/walkprobe.py --check    # and assert it against EXPECT_BLIND
+
+As of **2026-09-22**, of four subjects:
+
+| walk | sees |
+|---|---|
+| `checkdisk.walk` | 4/4 |
+| `os9._walk_volume` | 4/4 |
+| `arcmac.read_volume` | 2/4 |
+| `nowcompress.read_volume` | 2/4 |
+| `diskdoubler.volume_files` | 2/4 |
+| `superdisk.read_forks` | 2/4 |
+
+The four short ones all miss the same two, and for the same reason: no
+`-a`. **`--check` can fail** — taking `-a` back out of `os9.py` reports
+it as newly blind — and a walk that gets fixed fails it too, which is
+what `EXPECT_BLIND` is for.
+
+**Why the four are not fixed by adding a flag.** `superdisk.read_forks`
+alone has about thirty callers across nine harnesses, and `-a` surfaces
+the Finder's own invisible bookkeeping — `Desktop`, `Desktop DB`,
+`Desktop DF` — on any volume a booted Mac has touched. A caller that
+compares fork SETS would start failing on files the Finder made, so each
+needs the filter `os9.py` already has (`NOT_OUTPUT`) and an emulator run
+to re-verify. Scoped in OPEN_ITEMS.md, *Volume walks that cannot see an
+invisible file*.
+
+**Two things outside the walks were fixed the same day.**
+`os9.wrapper_names` is a NEGATIVE — the verdict is that none of the output
+is on the plain-HFS wrapper — and it was reading the listing that makes a
+negative EASIEST to satisfy. And `mkboot.verify_stripped`, which asserts
+that the boot image's System Folder holds only System and Finder, **could
+not fail on the files the strip is unable to delete**: an invisible
+`Ghost INIT` copied into a freshly stripped System Folder passed it. Both
+now pass `-a`; `ls()` takes it as a parameter rather than a default,
+because `strip_system_folder` deletes what `ls` returns and the Finder's
+`Desktop` is invisible and kept on purpose. `run.py` on one fixture, 1/1.
+
+**What it cannot see:** whether any of the four has ever actually lost
+something. That depends on whether the application each one grades
+writes an invisible file, which is a question about those applications
+and not about the walks. One of them is already known to be a real risk
+and it is written down one function away: `arcmac.macbinary`'s docstring
+records that "the ArcMac header's own Finder info has bit 0x40 of the
+high byte set, which is `invisible`".
+
 ## Mac OS 9 with the pointer — `os9mouse.py`
 
 What `os9.py`'s keyboard route cannot do is operate an application: click a
@@ -1886,12 +1943,17 @@ and this cannot.
 Three hfsutils traps it hit, all worth knowing before writing anything
 similar:
 
-- **`hls` shows neither a dotted name nor an INVISIBLE file** unless given
-  `-a`. The dot half is why `.DS_Store` needed it; the invisible half was
-  measured on 2026-09-22, on a Mac OS 9 volume where `hls -F -1` listed
-  four entries and `hls -a -F -1` listed five. The fifth was `Icon\r`,
-  51,781 bytes of resource fork, which the application had written
-  correctly and the harness reported MISSING.
+- **`hls` hides a file whose Finder INVISIBLE bit is set** unless given
+  `-a`, and **the leading dot has nothing to do with it** — which is what
+  this file and `checkdisk.py` both said until 2026-09-22. Measured as a
+  2x2 by `walkprobe.py`, all four cells: a dotted name with the bit clear
+  is listed without `-a`, and a name with the bit set is hidden whether it
+  starts with a dot or not. `.DS_Store` needed the flag because a
+  Macintosh writes it invisible. The defect that found this was on a Mac
+  OS 9 volume where `hls -F -1` listed four entries and `hls -a -F -1`
+  listed five; the fifth was `Icon\r`, 51,781 bytes of resource fork,
+  which the application had written correctly and the harness reported
+  MISSING.
 - **`rstrip()` is not how you take the newline off `hls -1`'s output.** A
   carriage return is a legal HFS filename character and it is the last
   one of `Icon\r`, the name every custom folder icon on a Macintosh has.
@@ -1911,12 +1973,9 @@ that day an invisible entry was invisible to this tier's COMPARISON as
 well as to the Finder. All three were already right in `checkdisk.py`,
 which is the shape of the lesson: a harness written twice learns once.
 
-The same `-a` question was asked of `diskdoubler.py --wild`, which walks
-the 3.7 distribution disk looking for every DiskDoubler container on it,
-and the answer is that nothing is hidden there: **18 files without `-a`,
-19 with, and the nineteenth is the `Desktop` file**, which carries no
-`0xABCD` header. So that walk misses no specimen, and this paragraph is
-the measurement rather than an assumption.
+The same question was then asked of **every** volume walk in this tree,
+because the wrong explanation above is exactly what made the flag look
+like somebody else's problem — see *What every walk can see*, below.
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 

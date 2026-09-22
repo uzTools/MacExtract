@@ -252,6 +252,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the version that could not have written it) — the DiskDoubler the `0x20` row was waiting for does not exist
 - 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
 - 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
+- 2026-09-22 (the right flag with the wrong reason) — what `hls -a` is actually for, and the four walks that believed the explanation
 
 ---
 
@@ -15758,3 +15759,115 @@ the code that claims to implement it.
 menu bar, because an INIT's menu sits wherever the Finder's own leave
 room and `BETA_MENU_X` had to be measured rather than guessed; one to
 compress.
+
+## 2026-09-22 (the right flag with the wrong reason) — what `hls -a` is actually for, and the four walks that believed the explanation
+
+**Claim.** `hls` hides a file whose Finder **INVISIBLE** bit is set unless
+it is given `-a`. It does not hide names beginning with a dot, which is
+what `checkdisk.py`'s comment and `tools/vmac/README.md` had both said
+since the flag was added. Withdrawn in BLOCKERS.md, with what it cost.
+
+**Measured as a 2×2, because one cell is not a cause.** Four MacBinary
+files onto one volume, and both listings:
+
+| | leading dot | invisible bit | `hls -1` | `hls -a -1` |
+|---|---|---|---|---|
+| `.quiet` | yes | no | shown | shown |
+| `.loud` | yes | **yes** | **HIDDEN** | shown |
+| `Open` | no | no | shown | shown |
+| `Shut` | no | **yes** | **HIDDEN** | shown |
+
+The dot column does nothing; the bit column does all of it. `.DS_Store`
+needed `-a` because a Macintosh writes it invisible — so the original
+OBSERVATION was right, the flag was right, and only the reason was
+wrong.
+
+**And the reason is what propagates.** A wrong explanation bolted to a
+working fix fails nothing, so nothing re-tests it; what it does is tell
+the next author whether the fix applies to them. "hfsutils hides
+dotfiles" reads as *irrelevant unless your archive has a `.DS_Store`* —
+and four later volume walks whose subjects had no dotfiles skipped the
+flag on exactly that reasoning. `os9.py` was the fifth, and it is the one
+that finally failed: `Icon\r` reported MISSING off a volume holding it
+with 51,781 bytes of resource fork (*the fold, on a Macintosh*).
+
+**So the smell goes on the list**: *a correct workaround with the wrong
+reason attached*. It is a worse one than a plain wrong claim, because
+every symptom of it is somewhere else — the bug is in the harnesses that
+read the comment and decided it did not apply to them.
+
+**`tools/vmac/walkprobe.py` makes it executable.** One volume holding the
+four shapes that tell the walks apart — plain, invisible, dotted with the
+bit CLEAR, and `Icon\r` — every walk in the tree run against it, and the
+table printed. No emulator, no ROM, no X server; seconds. Of four
+subjects: `checkdisk.walk` 4/4, `os9._walk_volume` 4/4 (since today), and
+`arcmac.read_volume`, `nowcompress.read_volume`,
+`diskdoubler.volume_files` and `superdisk.read_forks` **2/4 each**.
+`--check` asserts that set and fails in both directions: taking `-a` back
+out of `os9.py` reports it newly blind, and fixing one of the four
+reports it as no longer blind. Established, both ways.
+
+**Two `os9.py` listings were fixed on the spot because the change cannot
+cost anything.** `wrapper_names` is a NEGATIVE — the verdict is that none
+of the output is on the plain-HFS wrapper, so it was being read off the
+listing that makes the negative EASIEST to satisfy; `-a` can only
+lengthen the list and can only make it harder to pass. `report_present`
+polls for a file, where a miss is a timeout rather than a wrong answer,
+and a timeout here would have been read as the application hanging.
+
+**The other four are NOT fixed, and that is a measurement rather than
+laziness.** `superdisk.read_forks` alone has about thirty callers across
+nine harnesses, and `-a` also surfaces the Finder's own invisible
+bookkeeping — `Desktop`, `Desktop DB`, `Desktop DF` — on any volume a
+booted Mac has touched. A caller that compares fork SETS would begin
+failing on files the Finder made, so each needs the filter `os9.py`
+already has and an emulator run to re-verify: one harness at a time,
+priced and re-run. Scoped in OPEN_ITEMS.md rather than swept.
+
+**One of the four is a live risk and says so one function away.**
+`arcmac.macbinary`'s docstring records that "the ArcMac header's own
+Finder info has bit 0x40 of the high byte set, which is `invisible`" —
+the project met this bit, worked around it in the WRITER, and never asked
+whether the READER beside it could see one.
+
+**The same fact had been observed FOUR times and generalised none.** That is
+what makes this worth an entry rather than a one-line fix:
+
+1. `checkdisk.py` passes `-a` and explains it as dotfiles;
+2. `arcmac.macbinary` refuses to copy a Mac header's Finder info because
+   "the ArcMac header's has bit 0x40 of the high byte set — `invisible`",
+   and fixes the WRITER;
+3. the yardstick's Standard File row was taken on the wrong file for three
+   weeks because the Finder's `Desktop` "is invisible to `hdir` and VISIBLE
+   in our dialog, which filters nothing";
+4. `mkboot.strip_system_folder` deletes `Desktop` by name with the reason
+   stated exactly right — "`hdir` hides invisible files unless given -a, and
+   the Desktop file is invisible" — **one function above** a comment
+   blaming the leftover folders on "at least one directory whose valence
+   disagrees with what hdir enumerates". It is the same bit, and the two
+   files that survive the strip are `Icon\r`.
+
+Four sightings, four local workarounds, one correct statement, and no rule.
+`hdir` behaves exactly as `hls` does, measured here: both hide the invisible
+bit, both take `-a`.
+
+**And the check that guards the boot image could not fail.**
+`verify_stripped()` asserts that the System Folder holds only System and
+Finder — the property every peak-heap figure's comparability rests on, since
+System 6 loads INITs, cdevs and drivers from the files sitting there. It read
+that listing WITHOUT `-a`, so **the files the strip is unable to delete are
+exactly the ones it could not see**. Demonstrated: an invisible `Ghost INIT`
+copied into the System Folder of a freshly stripped image leaves
+`ls(invisible=False)` returning `['Finder', 'System']` and the check passing;
+with `-a` it returns `['Finder', 'Ghost INIT', 'System']` and the check
+raises. Measured on all four boot images here, no System Folder holds an
+invisible file, so this is a check that GAINED the ability to fail rather
+than a failure that was being hidden — but it had no way of telling anyone
+that, which is the whole point.
+
+**`ls()` did not simply get the flag.** `strip_system_folder` deletes what
+`ls` returns, and the Finder's `Desktop` file is invisible and is kept on
+purpose on some runs (`drop_desktop`, five runs both ways, BLOCKERS.md) — so
+a default `-a` would have deleted it and broken the password phase. The flag
+is a parameter: a verification wants it, a deletion wants the explicit list.
+Verified end to end, `run.py` on one fixture: 1/1 PASS.

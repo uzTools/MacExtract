@@ -1243,7 +1243,13 @@ def report_present(xfer, workdir):
     if subprocess.run(["hmount", hfs], capture_output=True,
                       env=env).returncode != 0:
         return False
-    out = subprocess.run(["hls", "-1"], capture_output=True, env=env).stdout
+    # -a for the reason _walk_volume gives: `hls` hides a file whose Finder
+    # INVISIBLE bit is set. A report the shell had marked invisible would
+    # never be seen here, and the symptom is a poll that never fires — a
+    # timeout, not a wrong answer, but a timeout that would be read as the
+    # application having hung.
+    out = subprocess.run(["hls", "-a", "-1"], capture_output=True,
+                         env=env).stdout
     subprocess.run(["humount"], capture_output=True, env=env)
     return b"report" in out
 
@@ -1261,7 +1267,14 @@ def wrapper_names(boot, workdir):
     classic File Manager reports 'BD' for an HFS+ volume for compatibility, so
     a negative there would mean nothing. This test has no such ambiguity, and
     misreading a signature at a fixed offset is precisely how the "the boot
-    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md)."""
+    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md).
+
+    **`-a`, because this is a NEGATIVE.** The verdict is that none of the
+    output is here, and `hls` without `-a` hides any file whose Finder
+    invisible bit is set — so the listing this is read against was the
+    one that makes the negative EASIEST to satisfy. Adding it can only
+    lengthen the list and can only make the assertion harder to pass,
+    which is the direction a negative wants (2026-09-22)."""
     home = os.path.join(workdir, "wraphome")
     os.makedirs(home, exist_ok=True)
     env = dict(os.environ, HOME=home)
@@ -1269,7 +1282,7 @@ def wrapper_names(boot, workdir):
     if subprocess.run(["hmount", boot, "1"], capture_output=True,
                       env=env).returncode != 0:
         return None
-    out = subprocess.run(["hls", "-1"], capture_output=True, env=env)
+    out = subprocess.run(["hls", "-a", "-1"], capture_output=True, env=env)
     subprocess.run(["humount"], capture_output=True, env=env)
     return [l.decode("mac_roman") for l in out.stdout.split(b"\n") if l.strip()]
 

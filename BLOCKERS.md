@@ -175,6 +175,17 @@ keep finding the next one, and two of them need no insight at all:
   wrote down, not about what is reachable — the algorithm was in the
   application all along, in a binary already in `fixtures/` and already
   being driven under emulation for something else.
+- **a correct WORKAROUND with the wrong reason attached.** Added
+  2026-09-22: `checkdisk.py` passed `hls -a` and said in a comment that
+  hfsutils hides names beginning with a dot. The flag was right and the
+  reason was false — `-a` is about the Finder INVISIBLE bit, and a dotted
+  name with the bit clear is listed without it. Because the stated reason
+  was "dotfiles", four later walks whose subjects had no dotfiles skipped
+  the flag and looked safe, and one of them reported a file MISSING that
+  was on the volume (below). **A wrong reason attached to a right fix
+  does not fail anything, so nothing ever re-tests it — and it is what
+  the next person copies instead of the fix.** Look for the explanation
+  beside a flag, not just the flag.
 - **a check that only runs where the others are silent.** Added
   2026-09-21: the third oracle was offered a fork only when `unar` AND
   `macunpack` had both left it open, so on every method the others could
@@ -1430,6 +1441,26 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"hfsutils hides names beginning with a dot without `-a`"** — withdrawn
+  2026-09-22. It hides a file whose Finder INVISIBLE bit is set, and the
+  dot is irrelevant. Measured as a 2x2, all four cells
+  (`tools/vmac/walkprobe.py`): dotted and visible is listed without the
+  flag, dotted and invisible is hidden, undotted and invisible is hidden.
+  `.DS_Store` needed `-a` because a Macintosh writes it invisible.
+  **Cost: one harness failure, one check that could not fail, and four
+  walks still blind.** `os9.py` reported `Icon\r` MISSING off a volume
+  that held it with 51,781 bytes of resource fork.
+  `mkboot.verify_stripped` — which asserts the property every peak-heap
+  figure's comparability rests on — read its listing without `-a`, so
+  the files the strip cannot delete were exactly the ones it could not
+  see; an invisible `Ghost INIT` planted in a stripped System Folder
+  passed it. Four volume walks still cannot see an invisible entry
+  (OPEN_ITEMS.md, *Volume walks that cannot see an invisible file*).
+  **The fact had been observed four separate times** — in `checkdisk.py`,
+  `arcmac.py`, the yardstick's Standard File row and `mkboot.py`, the
+  last of which states it correctly one function above a comment blaming
+  the disk — and generalised none of them. The fix was right and the
+  explanation is what got copied.
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45
   minutes". An idle host settles the desktop in **~110 s**; both earlier
   figures were host load written down as a property of the guest.

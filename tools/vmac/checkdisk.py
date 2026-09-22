@@ -54,8 +54,14 @@ def walk(env, mac_dir=(), depth=0):
     if depth > 8:
         return []
     out = []
-    # -a because hfsutils HIDES names beginning with a dot without it, and
-    # archives contain .DS_Store; the path goes out as MacRoman bytes because
+    # -a because hfsutils hides a file whose Finder INVISIBLE bit is set —
+    # NOT, as this comment said until 2026-09-22, names beginning with a dot.
+    # Measured as a 2x2 (`walkprobe.py`): a dotted name with the bit clear is
+    # listed without -a and one with the bit set is hidden, dot or no dot.
+    # `.DS_Store` needed the flag because a Macintosh writes it invisible.
+    # The wrong reason mattered: four later walks whose subjects had no
+    # dotfiles skipped the flag and looked safe (OPEN_ITEMS.md).
+    # The path goes out as MacRoman bytes because
     # that is what the names on the volume are — passing a Python str makes
     # subprocess encode UTF-8 and any 8-bit name (`spinning brain ƒ`) becomes
     # a directory that does not exist.

@@ -90,10 +90,18 @@ class HFS:
         the only way to be positional."""
         return self.vol + ":" + ":".join(parts)
 
-    def ls(self, path):
-        """Names in <path> (absolute), plus a flag for directory-ness."""
+    def ls(self, path, invisible=False):
+        """Names in <path> (absolute), plus a flag for directory-ness.
+
+        `invisible=True` passes `-a`, which is the only way to see a file
+        whose Finder invisible bit is set. It is NOT the default, and the
+        reason is one line rather than an oversight: `strip_system()`
+        deletes what this returns, and the Finder's `Desktop` file is
+        invisible and is kept on purpose on some runs (`drop_desktop`).
+        A verification wants `-a`; a deletion wants the explicit list.
+        """
         self.run("hcd", path)
-        out = self.run("hdir").stdout
+        out = self.run("hdir", *(["-a"] if invisible else [])).stdout
         items = []
         for line in out.splitlines():
             if not line or line[0] not in "fd":
@@ -171,12 +179,18 @@ def rmtree(hfs, path):
                 hfs.run("hdel", child)
     hfs.run("hcd", hfs.path())           # hrmdir refuses to delete our own cwd
     for d in reversed(dirs):             # deepest first
-        # Best-effort: this stock image has at least one directory whose
-        # valence disagrees with what hdir enumerates ("8 items", 7 listed),
-        # so hrmdir reports "directory not empty" on a directory nothing can
-        # list the contents of. An empty-looking leftover folder costs
-        # nothing at boot — only files IN THE SYSTEM FOLDER load — and
-        # verify_stripped() below checks the property that actually matters.
+        # Best-effort, and the reason is the invisible bit rather than the
+        # image: a directory's valence counts files `hdir` will not list,
+        # so hrmdir reports "directory not empty" on one that looks empty.
+        # This said "at least one directory whose valence disagrees with
+        # what hdir enumerates" until 2026-09-22, which blamed the stock
+        # disk for what the LISTING was doing. Measured on the image this
+        # produces: 6 files, 3 of them invisible, and the two that survive
+        # the strip are `Icon\r` — a custom folder icon, which is exactly
+        # the file that is always invisible and always in somebody's way.
+        # An empty-looking leftover folder costs nothing at boot — only
+        # files IN THE SYSTEM FOLDER load — and verify_stripped() below
+        # checks that property, with `-a`, so it can actually fail.
         hfs.run("hrmdir", d, check=False)
 
 
@@ -185,7 +199,13 @@ def verify_stripped(hfs, expect):
     INITs, cdevs and drivers from the FILES sitting directly in the System
     Folder. Assert that only the OS — plus the application, when it is the
     boot shell and so has to live in the blessed folder — remains there."""
-    files = {name for isdir, name in hfs.ls(hfs.path(SYS_FOLDER)) if not isdir}
+    # `invisible=True`: without it this could not have failed on a file the
+    # strip left behind, because the files the strip MISSES are exactly the
+    # ones `hdir` does not list (2026-09-22). Measured on the four boot
+    # images here, no System Folder holds an invisible file, so this is a
+    # check that gains the ability to fail rather than a new failure.
+    files = {name for isdir, name in
+             hfs.ls(hfs.path(SYS_FOLDER), invisible=True) if not isdir}
     if files != expect:
         raise SystemExit(f"mkboot: System Folder holds {sorted(files)}, "
                          f"expected {sorted(expect)}")

@@ -240,6 +240,46 @@ SpaceSaver were done — and on 2026-09-21 that description, and then the
 code written from it, replaced the last of the transcription in
 `fmt_now.c`.
 
+## Volume walks that cannot see an invisible file
+
+**Measured, not suspected.** `tools/vmac/walkprobe.py` builds one HFS
+volume holding a plain file, an INVISIBLE one, a dotted one with the
+invisible bit clear and `Icon\r`, runs every volume walk in the tree
+against it and prints what each came back with. Of four subjects, on
+2026-09-22:
+
+| walk | sees | graded by it |
+|---|---|---|
+| `checkdisk.walk` | 4/4 | every Mini vMac tier's names |
+| `os9._walk_volume` | 4/4 | the Mac OS 9 tier's output |
+| `arcmac.read_volume` | **2/4** | what ArcMac wrote |
+| `nowcompress.read_volume` | **2/4** | what Now Compress wrote |
+| `diskdoubler.volume_files` | **2/4** | what DiskDoubler wrote, and `--wild` |
+| `superdisk.read_forks` | **2/4** | what nine harnesses' applications wrote |
+
+The four miss the same two entries for the same reason: `hls` hides a
+file whose Finder INVISIBLE bit is set unless given `-a`. `os9.py` was
+in that list until the same day, when a file it reported MISSING turned
+out to be sitting on the volume with 51,781 bytes of resource fork
+(DECISIONS.md 2026-09-22, *the fold, on a Macintosh*).
+
+**One of the four is a known risk rather than a theoretical one**, and it
+is written down one function away from the walk:
+`arcmac.macbinary`'s docstring records that "the ArcMac header's own
+Finder info has bit 0x40 of the high byte set, which is `invisible`".
+So that format's own files carry the bit, and the walk that reads them
+back cannot see one.
+
+**What would close it, and why it is not one flag.**
+`superdisk.read_forks` has about thirty callers across nine harnesses,
+and `-a` also surfaces the Finder's own invisible bookkeeping —
+`Desktop`, `Desktop DB`, `Desktop DF` — on any volume a booted Mac has
+touched. A caller that compares fork SETS would start failing on files
+the Finder made, so each needs the kind of filter `os9.py` already has
+(`NOT_OUTPUT`) and an emulator run to re-verify. That is one harness at
+a time, priced and re-run, not a sweep. `walkprobe.py --check` is what
+says when one is done: its `EXPECT_BLIND` fails in both directions.
+
 ## A DiskDoubler header this engine does not read
 
 **Not a missing specimen and not a missing reference: it is a decision
