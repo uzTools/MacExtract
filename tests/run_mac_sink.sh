@@ -26,8 +26,16 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
-          derived-MUSFMT10.ZIP ddtf-dd377ad.dd"
+          derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit"
 
+# `derived-800saywhat301j.sit` was added 2026-09-22 with the UTF-8 fold. Its
+# three Japanese names have no MacRoman spelling at all, so the shell writes a
+# row of '_' for each; until it joined this list no ARCHIVE exercised the fold
+# anywhere but on an emulator, and `mac_sink_test.c --utf8` drives the shell
+# through sink_begin without an engine in front of it. Two of its names are
+# stored DECOMPOSED, which is what makes the count of '_' an assertion rather
+# than a formality (tools/check_mac_sink.py, macpath()).
+#
 # `ddtf-dd377ad.dd` was added 2026-09-22 with the DDAR walk: this list had
 # no DiskDoubler archive in it at all, so the one container walk that steps
 # by a length the record states — and which changed that day — had never run
@@ -50,8 +58,8 @@ verify() {  # <runner...> [mode] [fixture-list] ; defaults to $FIXTURES
         out="$(mktemp -d)"
         $runner "fixtures/$fx" "$out" $mode >/dev/null 2>&1 || {
             echo "mac-sink: FAILED extracting $fx"; rm -rf "$out"; return 1; }
-        python3 tools/check_mac_sink.py "fixtures/manifests/$fx.json" "$out" || {
-            rm -rf "$out"; return 1; }
+        python3 tools/check_mac_sink.py "fixtures/manifests/$fx.json" "$out" \
+                "fixtures/$fx" || { rm -rf "$out"; return 1; }
         rm -rf "$out"
     done
 }

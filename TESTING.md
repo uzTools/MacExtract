@@ -1674,9 +1674,13 @@ files (DECISIONS.md, *a folder is a name too*):
   make numbering worse than merging, and the reason the table never
   evicts.
 
-One more since 2026-09-22, when StuffIt 5's UTF-8 names started being
+Two more since 2026-09-22, when StuffIt 5's UTF-8 names started being
 folded into the MacRoman bytes an HFS name holds (DECISIONS.md,
-*a name an HFS volume can hold*):
+*a name an HFS volume can hold*). The first is generated, because
+nothing in this tree writes a StuffIt 5 file; the second is an archive
+and lives in `tests/run_mac_sink.sh`'s own fixture list rather than
+here, graded by `tools/check_mac_sink.py` (*And a warning for whoever
+adds a fixture*, below):
 
 - **a UTF-8 name**, driven straight through `sink_begin` by
   `mac_sink_test.c --utf8` rather than out of an archive — nothing in
@@ -1730,10 +1734,16 @@ shell and the Linux CLI deliberately write DIFFERENT names for a StuffIt
 5 entry MacRoman cannot spell — a row of `_` against the characters the
 archive asked for — so a harness that grades Mac output NAMES against
 the oracle reads a correct fold as a defect until it is taught the fold.
-Two do: `tools/check_mac_sink.py`, whose list has no such fixture and
-which is therefore still untaught, and `tools/vmac/checkdisk.py`, which
-was taught on 2026-09-22 when the Mac sample gained two
-(`tools/vmac_check.py`, `mac_component`). **`tools/vmac/run.py` is not
+Three did, and all three were taught on 2026-09-22
+(`tools/vmac_check.py`, `mac_component`):
+`tools/vmac/checkdisk.py` when the Mac sample gained two such fixtures;
+`tools/check_mac_sink.py`, when `tests/run_mac_sink.sh`'s list gained
+`derived-800saywhat301j.sit` — the layer in `ci.sh`, which is also what
+runs the fold **big-endian under `qemu-m68k` over a real archive**
+rather than through `sink_begin`; and `tools/vmac/os9.py`, whose
+`mac_leaf` had the fold and ran it on the NFC spelling, which is
+`checkdisk.py`'s own bug and was labelled as latent in its docstring
+until `os9sample.txt` gained a fixture that bites it. **`tools/vmac/run.py` is not
 one of them and this paragraph named it until that day**: its verdict is
 the on-screen grid, which is a file count and two summed CRCs, and a
 summed CRC cannot carry a name — so a fold that went entirely wrong
