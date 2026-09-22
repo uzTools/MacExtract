@@ -3856,7 +3856,9 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**69/69 byte-exact PASS at 4 MB** (**2026-08-26**, re-run for M37's
+**71/71 byte-exact PASS at 4 MB** (**2026-09-22**, the sweep that added the
+two UTF-8-named StuffIt 5 fixtures, so the fold has now run under the
+Process Manager too; 69/69 on **2026-08-26**, re-run for M37's
 disk-image probe and the first run to cover the whole sample — see the
 System 6.0.8 4 MB tier for the two fixtures every earlier figure here
 was missing; 67/67 on **2026-08-23**, with M28's five `.lzh`
@@ -3866,14 +3868,6 @@ before the sample grew) — the same committed sample, the same on-Mac CRC-32
 read-back. The 2026-08-21 run is the first on this tier since M12, M13 and M14,
 so it is the first that includes DiskDoubler, Now Compress, ARC and uuencode
 here; every one passed, 5.1 s a fixture, one boot each:
-
-**This tier's sample is two fixtures behind the others since 2026-09-22.**
-`sample.txt` gained the two StuffIt 5 archives whose names are UTF-8 that
-day and the four sweeps that were re-run cover 71; System 7.0.1 was not
-among them, so the figure above is 69 of the 69 that existed when it was
-taken, and nothing about it is stale except its coverage. What it would
-add is the fold under the Process Manager, where the memory arrangement
-differs and the fold does not.
 
 **Re-run 2026-08-31 at the 20 KB stack: 69/69 again**, which is the tier
 that closes the stack change — System 7 is where the Process Manager honours
@@ -4084,13 +4078,10 @@ and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for t
 
 The oldest system a Macintosh Plus can boot, and the one it shipped with in
 January 1986: System Tools 1.0, an 800K HFS floppy. **71/71 byte-exact PASS
-at 1 MB** (**2026-09-22**, the sweep that added the two UTF-8-named StuffIt 5
-fixtures) and **69/69 at 4 MB** (**2026-08-30**) — the same committed sample
-and the same on-Mac CRC-32 read-back as every row above, replayed by
-`tools/vmac/sys30.py`. **The 4 MB figure is two fixtures behind**: the five
-sweeps re-run on 2026-09-22 were the two System 6.0.8 tiers, this one at
-1 MB, and both 512 KB machines. Nothing about it is stale except its
-coverage — the 1 MB machine is the harder of the two and passes.
+at 1 MB and 71/71 at 4 MB** (both **2026-09-22**; the 4 MB figure was 69/69
+on 2026-08-30, two fixtures behind until that sweep) — the same committed
+sample and the same on-Mac CRC-32 read-back as every row above, replayed by
+`tools/vmac/sys30.py`.
 
 **The application is launched the way a user launches it, by double-click.**
 System 3.0 ignores the boot blocks' shell name, so it cannot replace the
@@ -4442,6 +4433,7 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
+**22/22**, the twenty-second added 2026-09-22 (the table below).
 **21/21 as of 2026-09-04**, re-run on the build that zeroes `UncOptions` —
 a fix that costs the smallest machine nothing: **147,548 B of code before,
 147,544 B after**, with 4 B moving to the A5 world (measured against a
@@ -4487,10 +4479,25 @@ master image:
 | `synth-os9-btoa.btoa` | btoa | 1 | 504 | 0 | ✅ byte-exact |
 | `synth-os9-mime.mim` | multipart/appledouble | 1 | 320 | 176 | ✅ byte-exact, both forks and the type |
 | `synth-now-mixed.now` | Now Compress | 1 | 15,096 | 0 | ✅ byte-exact — added 2026-09-04, the third folder-walking format |
+| `derived-800saywhat301j.sit` | StuffIt 5, UTF-8 names | 19 | 141,510 | 103,343 | ✅ byte-exact — added **2026-09-22**, the fold's first run on this tier; three names MacRoman cannot spell come out as 7, 7 and 13 `_`, and `Icon\r` comes out invisible with its 51,781-byte resource fork |
 | `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
 
-**21/21**, 52 files, 800,246 data bytes and 349,253 resource-fork bytes
-compared (2026-09-04; 20/20 and 51 files before Now Compress joined). The eight formats that postdate the previous sweep — ARC, uuencode,
+**22/22**, 71 files, 941,756 data bytes and 452,596 resource-fork bytes
+compared — 21 of them on 2026-09-04 and
+`derived-800saywhat301j.sit` on **2026-09-22**, not in one sweep
+(20/20 and 51 files before Now Compress joined).
+
+**That fixture found two things in the HARNESS and nothing in the
+application** (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*). The
+first is the fold itself, which `mac_leaf` ran on the composed spelling
+and which its own docstring had labelled as latent. The second is what
+`_walk_volume` could not SEE: `hls` without `-a` lists neither a dotted
+name nor a file whose Finder invisible bit is set, and `rstrip()` took
+the carriage return off the end of `Icon\r` — so an invisible entry was
+invisible to the comparison as well as to the Finder, on every fixture
+this tier has ever run. Both rules were already in `checkdisk.py`.
+
+The eight formats that postdate the 2026-08-27 sweep — ARC, uuencode,
 SuperDisk!, btoa, LZH, base64/MIME and the named-but-declined family, plus
 DiskDoubler's promotion from refusal to extraction — all passed first time;
 the two failures in that sweep were both in the HARNESS and are written up in

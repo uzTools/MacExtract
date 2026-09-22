@@ -723,6 +723,9 @@ reachable, and are now implemented (BLOCKERS.md).
     tools/vmac/diskdoubler.py --combine tree   # a DDAR archive with a FOLDER in it
     tools/vmac/diskdoubler.py --combine raw    # the shapes that might skip the file header
     tools/vmac/diskdoubler.py --verify-combine # grade those against what went in
+    tools/vmac/diskdoubler.py --beta-probe     # boot the 1990 INIT, photograph its menu
+    tools/vmac/diskdoubler.py --beta           # compress with DiskDoubler ß05, 1990
+    tools/vmac/diskdoubler.py --beta-verify    # grade what ß05 wrote
 
 `--make` takes `A`, `B`, `guess` or `both` — the four items of the "How To
 Compress" popup. What each one writes is FORMATS.md ✦; why it matters is
@@ -751,6 +754,39 @@ Four things to know before re-running it:
 - **The run ends with Put Away, and must**, for the reason `arcmac.py`
   documents below: Mini vMac flushes the guest's writes when the volume is
   ejected, so a run killed with it still mounted reads back an unchanged disk.
+
+### The oldest DiskDoubler there is — `--beta`
+
+**DiskDoubler ß05, Copyright 1990 Salient**, which is four versions older
+than anything this project had run and the reason the 84-byte header
+turned out not to be the format's (`docs/formats/diskdoubler-container.md`,
+*The header size, and the 1990 header*). It rides in
+`DiskDoublerExpand3.sit` on the same Macintosh Garden page `--setup`
+already fetches from, and `--beta` fetches it by URL and sha256 like
+everything else here.
+
+Four things that are different from every other run in this file:
+
+- **It is an INIT with no application at all**, so `--install`'s System 7
+  image is no use: `install_beta()` puts it in a **System 6.0.8** System
+  Folder and the work is done from the Finder's own **DD** menu, which
+  that INIT adds. System 6 because the INIT is two years older than
+  System 7, and because 6.0.8 is the tier every other figure here is
+  quoted on.
+- **The menu's x is measured, not assumed.** `--beta-probe` boots and
+  photographs the menu bar without clicking anything; the Finder's own
+  five titles leave **DD at 221–234**, which is where `BETA_MENU_X`
+  comes from. Re-measure it if the boot image changes — an INIT's menu
+  sits wherever the Finder's leave room, and a miss here reads as a run
+  that compressed nothing.
+- **There are no settings.** The menu is `Compress Selection;Expand
+  Selection` and that is the whole application, so there is one thing to
+  write and `--make`'s four-item popup has no counterpart.
+- **`--beta-verify` grades it against the bytes DiskDoubler was given**,
+  because nothing reads a 48-byte header: it sets the size word to 84,
+  computes each fork's checksum from the INPUT, and hands the result to
+  this engine. Both forks come back byte-exact and both sums are the
+  ones DiskDoubler 3.7 stored for the same forks.
 
 ### The two `DDAR` record shapes no corpus fixture has — `--combine`
 
@@ -1847,15 +1883,40 @@ spelling is twelve, so an NFC fold predicts one `_` too few. The oracle
 manifests hold the composed spelling, which `run_diff.py` normalizes away
 and this cannot.
 
-Two hfsutils traps it hit, both worth knowing before writing anything similar:
-`hls` **hides names beginning with a dot** unless given `-a`, and every path
-argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
-file that does not exist. `os9.py` had learned the second one for `hcopy`
+Three hfsutils traps it hit, all worth knowing before writing anything
+similar:
+
+- **`hls` shows neither a dotted name nor an INVISIBLE file** unless given
+  `-a`. The dot half is why `.DS_Store` needed it; the invisible half was
+  measured on 2026-09-22, on a Mac OS 9 volume where `hls -F -1` listed
+  four entries and `hls -a -F -1` listed five. The fifth was `Icon\r`,
+  51,781 bytes of resource fork, which the application had written
+  correctly and the harness reported MISSING.
+- **`rstrip()` is not how you take the newline off `hls -1`'s output.** A
+  carriage return is a legal HFS filename character and it is the last
+  one of `Icon\r`, the name every custom folder icon on a Macintosh has.
+  Splitting on `\n` has already removed everything that is not name.
+- **Every path argument must be encoded as MacRoman**, not UTF-8, or any
+  8-bit name is a file that does not exist.
+
+`os9.py` had learned the third one for `hcopy`
 and not for the `hls` its folder walk runs: a FILE with an 8-bit name at
 the root had been checked since 2026-08-28, and the first FOLDER with one
 — `Terrainman 2.0 ƒ`, on 2026-09-04 — listed as empty, so the harness
 failed a run the application had completed and the volume held whole.
-Fixed the same day (`_walk_volume`).
+Fixed the same day (`_walk_volume`). It learned the first two on
+**2026-09-22**, when `derived-800saywhat301j.sit` joined `os9sample.txt`
+and its `Icon\r` came back MISSING from a volume that held it — so until
+that day an invisible entry was invisible to this tier's COMPARISON as
+well as to the Finder. All three were already right in `checkdisk.py`,
+which is the shape of the lesson: a harness written twice learns once.
+
+The same `-a` question was asked of `diskdoubler.py --wild`, which walks
+the 3.7 distribution disk looking for every DiskDoubler container on it,
+and the answer is that nothing is hidden there: **18 files without `-a`,
+19 with, and the nineteenth is the `Desktop` file**, which carries no
+`0xABCD` header. So that walk misses no specimen, and this paragraph is
+the measurement rather than an assumption.
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 

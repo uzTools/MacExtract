@@ -240,6 +240,36 @@ SpaceSaver were done — and on 2026-09-21 that description, and then the
 code written from it, replaced the last of the transcription in
 `fmt_now.c`.
 
+## A DiskDoubler header this engine does not read
+
+**Not a missing specimen and not a missing reference: it is a decision
+nobody has taken.** `0xABCD0054` is not one magic number — it is the
+word `0xABCD` and a 16-bit HEADER SIZE, and DiskDoubler ß05 of 1990
+writes **48** where every one of the 195 file headers in this corpus
+writes 84 (`docs/formats/diskdoubler-container.md`, *The header size,
+and the 1990 header*). The first 48 bytes are the same fields; the
+short header simply stops before the checksums, `info2` and the delta
+distances, and the file ends with the two forks and no header trailer.
+
+**This engine answers "format not recognized" for one, and so does
+`unar`** — measured 2026-09-22 on a file DiskDoubler ß05 wrote here.
+
+**There is a gradeable specimen and a working grade.**
+`tools/vmac/diskdoubler.py --beta` makes one under Mini vMac and
+`--beta-verify` decodes it through this engine with the size word set
+to 84: both forks byte-exact, through the two checksums DiskDoubler 3.7
+itself stored for the same forks. So the codec and the layout are
+settled; what is not settled is whether to spend code on it.
+
+**What would close it:** matching on the word and the size instead of
+the long, in `fmt_dd.c` and `fmt_stubs.c`'s probe, with the fields past
+the stated size read as zero — and the answer priced on the three axes
+this project prices everything on, because a 1 MB Mac Plus pays for it
+whether or not anybody has a 1990 file. **Nobody has one but this
+machine**: no corpus fixture, nothing on the 3.7 distribution disk, and
+the only specimen in existence here is the one the harness made. That is
+the argument against, and it is the maintainer's to weigh.
+
 ## A DART's checksums, which this writes no fork to carry
 
 **Not a scope decision and not a missing specimen: it is a missing

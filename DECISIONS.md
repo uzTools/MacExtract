@@ -251,6 +251,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the page that was never written) — DiskDoubler's three containers, measured, and the field that is checked from both sides
 - 2026-09-22 (the version that could not have written it) — the DiskDoubler the `0x20` row was waiting for does not exist
 - 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
+- 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
 
 ---
 
@@ -15601,3 +15602,159 @@ volume by `checkdisk.py` on every one of the five sweeps.
 that never came up died with a `TypeError` — at fixture 70 of 71, taking
 the tally of the sixty-nine that had already passed with it. One fixture
 that cannot be started is one fixture's failure, and it says NOGRID now.
+
+**The other two harnesses that predict a Mac name were taught the same
+day, and the ORDER is the whole of it.** `checkdisk.py` was the one that
+had a fixture; the other two had the same code and no subject.
+
+- **`tools/check_mac_sink.py`, which is the layer in `ci.sh`.** It knew
+  nothing of the fold at all, and `tests/run_mac_sink.sh`'s list held no
+  UTF-8 fixture, so over a real archive the fold was exercised only by
+  an emulator — `mac_sink_test.c --utf8` drives the shell through
+  `sink_begin` with no engine in front of it.
+  `derived-800saywhat301j.sit` joins that list, which runs it
+  **big-endian under `qemu-m68k`** as well as native, and the checker
+  puts the manifest's name through `vmac_check.mac_component`. The
+  manifest is where the normalization bites here rather than a
+  directory: it holds `unar -e utf-8`'s COMPOSED spelling, so the fold
+  has to run on the decomposition. That is measured rather than assumed
+  — over all 31 StuffIt 5 fixtures, 27 non-ASCII entry names, and both
+  of the two where NFC and NFD differ are stored decomposed — and a
+  composed one would fail rather than pass quietly. Established that it
+  can fail: with the fold off, three MISSING; with NFC instead of NFD,
+  exactly the two decomposed names, 12 `_` against 13 and 6 against 7.
+- **`tools/vmac/os9.py`, where it was labelled and left.** `mac_leaf`'s
+  docstring said the two callers normalized before folding and that it
+  was latent because no fixture in `os9sample.txt` had a non-ASCII
+  StuffIt 5 name. Adding one bites it: run against the names the shell
+  actually writes, the old order predicts `____________.rtf` where the
+  Mac writes `_____________.rtf`, and — the half that matters more —
+  the two reference paths it keeps are the NFC spelling, which does not
+  exist on disk, so the forks would have been compared against zero
+  bytes. That is `checkdisk.py`'s bug exactly, and the same fix: fold,
+  then normalize the KEY, and keep the VALUE unnormalized because it
+  has to be opened. The fixture is in `os9sample.txt` now, and the tier
+  passes with it: **19 files, 23 forks byte-exact, `Icon\r` included**.
+
+**And running it found two things the Mac OS 9 walk could not SEE, which
+is the half a fold fix would never have reached.** The first run came
+back FAIL with `800-SAY-WHAT 3.0.1J/Icon\r` MISSING — and the file was
+on the volume the whole time, 51,781 bytes of resource fork, type
+`icon`, creator `MACS`, invisible. `hls` lists neither a dotted name nor
+a file whose Finder invisible bit is set unless it is given **`-a`**
+(measured on that volume: four entries without it, five with), and
+`_walk_volume` then ran `rstrip()` over each line, which takes the
+carriage return off the end of `Icon\r` — the name every custom folder
+icon on a Macintosh has. So on this tier **an invisible entry was
+invisible to the comparison as well as to the Finder**, on every fixture
+it has ever run, and a name ending in a control character was compared
+under a different name.
+
+`checkdisk.py` has had both rules since it was written, the `Icon\r` one
+with a comment saying exactly this. Three defects in one file, all three
+already solved one directory away: **the cost of a harness that is
+written twice is that only one copy learns anything**, and the way that
+surfaces is a fixture that reaches the copy nobody has been exercising.
+
+**A label is not a fix, and the interval is the evidence.** `mac_leaf`'s
+docstring named this defect precisely, said what would bite it and said
+how to fix it — and the fix was one line either side of a call. What
+kept it open was that nothing on that tier could fail, which is the same
+reason the fold had never run on a Macintosh at all.
+
+## 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
+
+**Claim.** `0xABCD0054` is not a magic number. It is the word `0xABCD`
+and a 16-bit **header size**, and the reason nobody here knew that is
+that every one of the 195 file headers in this corpus states 84.
+`DiskDoubler ß05, Copyright 1990 Salient` states **48**, and lays those
+48 bytes out field for field like the first 48 of the 84. Measured by
+running it: `tools/vmac/diskdoubler.py --beta`.
+
+**Why this file was worth a boot at all.** Everything
+`docs/formats/diskdoubler-container.md` measures was measured on 3.7,
+4.0 and Pro 4.1 — three releases of one generation, all of them 1992 and
+later. The document said so and nobody had read it as a limit. ß05 is
+four versions older than the 3.1.2 this project had been calling the
+oldest, and it turned up in the search that withdrew the `0x20` row's
+premise the same day (*the version that could not have written it*),
+sitting inside `DiskDoublerExpand3.sit` as an INIT whose Finder menu is
+`Compress Selection;Expand Selection` and nothing else.
+
+**What it wrote**, over a subject with an 11,428-byte data fork and a
+340-byte resource fork, against what 3.7 writes from the same subject:
+
+| | ß05, 1990 | 3.7, 1992 |
+|---|---|---|
+| first long | `ab cd 00 30` | `ab cd 00 54` |
+| lengths | 11,428 → 1,697, 340 → 97 | the same four numbers |
+| `info1` at +22 | `0x1f` | `0x2a` |
+| checksums at +48 | **the header has ended** | `d766` / `116a` |
+| the data fork begins | `1f 9d 90` | `45 c7 ca` |
+| after the two forks | nothing | a byte-identical copy of the header |
+| the file is stamped | `ZIVM`/`LZIV` | `DD01`/`DDAP` |
+
+Four answers in one file, three of them to questions this document had
+written down:
+
+- **The header trailer is 3.x's, not the format's.** 63 of the corpus's
+  66 compressed files end with a copy of their own header and the three
+  that do not are this project's own synthetics — which is the shape of
+  a fact about the format and was read as one. 1990 writes none:
+  `48 + 1697 + 97 = 1842`, and the file is 1842 bytes.
+- **`DD01` is not what ß05 stamps.** The open question was whether
+  `DD01`/`DD02` — DiskDoubler file types neither this engine nor
+  XADMaster recognises — are a different container or older type codes
+  on the same stream. They are neither, on this evidence: 1990 stamps
+  `ZIVM`/`LZIV`, and its `BNDL` declares no file types beyond its own
+  `INIT`. `DD01` is 3.x's, which is where `DDExpand 2.03a` and 3.1 both
+  list it.
+- **`info1` is a version byte, and the XOR garbling is gated on it.**
+  The rule transcribed from XADMaster — garble when `info1` has reached
+  `0x2a` and `info2`'s high bit is clear — had every specimen on one
+  side of it. Here is the other: `0x1f`, and `compress(1)`'s own
+  `1f 9d 90` in clear where 3.7's is that XORed with `0x5a`. The `>=`
+  is still not distinguished from `==`, because `0x1f` fails both.
+- **The 1990 expander's validator reads the size as a size.** Out of its
+  `CCOD` resource: refuse a word other than `0xABCD`, then require the
+  value at +2 to be **≥ 48**, then `info1` to be **≤ 31**. A
+  forward-compatible test on one field and a version ceiling on the
+  other — which is a program that expected its header to grow, written
+  two years before it did.
+
+**Graded against the bytes DiskDoubler was given**, the bargain
+`--verify-combine` and `nowcompress.py` make, and here it was the only
+one available: **neither this engine nor `unar` opens a 48-byte
+header** — both answer "format not recognized". So `--beta-verify` sets
+the size word to 84, computes each fork's checksum **from the input**
+and writes it where an 84-byte header keeps one, and hands that to this
+engine. Both forks come back byte-exact, and the two sums it computed —
+`0xd766` and `0x116a` — are the two DiskDoubler 3.7 itself stored for
+the same forks, which is a check neither this decoder nor that
+arithmetic could have arranged between them. Established that it can
+fail: one flipped payload byte and a header read as 84 bytes both come
+back as a failed entry.
+
+**What is NOT done, and it is a decision rather than a gap.** The engine
+still refuses a 1990 file. Reading one is matching on the word and the
+size instead of the long, with the fields past the stated size read as
+zero — small, and priced against a 1 MB Mac Plus that pays for it
+whether or not a 1990 file ever reaches it. Nobody has one but this
+machine: no corpus fixture, nothing on the 3.7 distribution disk, and
+the only specimen in existence here is the one the harness made.
+OPEN_ITEMS.md, *A DiskDoubler header this engine does not read*.
+
+**And the cross-check found a doc defect on the way.** The `DDAR`
+record table gave the Finder flags at **+94** and listed no creator;
+`src/fmt_dd.c` reads them at +98 and the creator at +94, `derive_ddc.py`
+has `R_CREATOR, R_FLAGS = 94, 98`, and macutils' `dd.h` says
+`D_FNDRFLAGS 98`. Three readers against one table row, in a row marked
+"no specimen" — so nothing had ever executed the table's version of it.
+Corrected in place. **A field nothing reads is where a document rots**,
+and the cheapest way to find it is still to hold the document against
+the code that claims to implement it.
+
+**Cost: two emulator boots and no source change.** One to photograph the
+menu bar, because an INIT's menu sits wherever the Finder's own leave
+room and `BETA_MENU_X` had to be measured rather than guessed; one to
+compress.

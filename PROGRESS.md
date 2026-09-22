@@ -69,10 +69,10 @@ fails, `macunpack`; 9,320 robustness variants clean. DART is graded
 outside that corpus, against the disks DART itself was fed, because
 neither oracle can read one (TESTING.md, *DART*). The Mac shell replays a
 **71-fixture** sample byte-exact at 4 MB and at the 1 MB floor on System
-6.0.8, at the 1 MB floor on System 3.0, and on System 7.0.1 — the five
-Mini vMac sweeps re-run 2026-09-22 with the two UTF-8-named StuffIt 5
-fixtures added, which is the first time the Macintosh ran the fold at all
-(BLOCKERS.md, the tier table). The **Mac OS 9.2 tier is 21/21**, re-run
+6.0.8, at 4 MB and at the 1 MB floor on System 3.0, and on System 7.0.1 —
+the seven Mini vMac sweeps re-run 2026-09-22 with the two UTF-8-named
+StuffIt 5 fixtures added, which is the first time the Macintosh ran the
+fold at all (BLOCKERS.md, the tier table). The **Mac OS 9.2 tier is 21/21**, re-run
 2026-09-04 after M51 with Now Compress added to the sample, and every
 DiskDoubler archive in the corpus extracts there, 6/6. Nothing is open.
 Current figures and per-tier tables: FORMATS.md.

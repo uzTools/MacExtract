@@ -15,18 +15,20 @@ archives whose names are UTF-8 joined it.
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** of the 69 that existed when it was last run (2026-08-30). System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22). System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **71/71** (2026-09-22); the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
 | System 3.0, **512 KB** Macintosh 512Ke | **67/71** (2026-09-22); the four shortfalls are per-entry memory refusals, not failures — the budget there is 219,394 B. The same machine under System 6.0.8, with no Finder at all, does **64/71**, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
 | System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22) |
 | System 6.0.8, **1 MB** — the RAM floor | **71/71** (2026-09-22); no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **69/69** of the 69 that existed when it was last run (2026-08-26) |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **21/21** — re-run 2026-09-04 on the build that zeroes `UncOptions`, the sample one larger for Now Compress, the third folder-walking format; that morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
+| System 7.0.1, 4 MB | **71/71** (2026-09-22), the first run of the fold under the Process Manager |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22**, not in one sweep: `derived-800saywhat301j.sit` on 2026-09-22, the fold's first run here, which found two blind spots in the harness and none in the application (FORMATS.md, *Mac OS 9 tier*); the other 21 re-run 2026-09-04 on the build that zeroes `UncOptions`, that sample one larger for Now Compress, the third folder-walking format; that morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
 
-**Five sweeps were re-run 2026-09-22**, on the sample grown to 71 by the
+**Seven sweeps were re-run 2026-09-22**, on the sample grown to 71 by the
 two StuffIt 5 archives whose names are UTF-8 — the first time the fold had
-run on a Macintosh at all. **Every tier reproduced its recorded figure and
-no refusal moved**: System 6.0.8 at 4 MB 71/71 and at 1 MB 71/71, System 3.0
+run on a Macintosh at all. Five went first; **System 7.0.1 at 4 MB and
+System 3.0 at 4 MB followed the same day, 71/71 each**, which is the two
+tiers that had been left a sample behind. **Every tier reproduced its
+recorded figure and no refusal moved**: System 6.0.8 at 4 MB 71/71 and at 1 MB 71/71, System 3.0
 at 1 MB 71/71, and at 512 KB System 3.0 67/71 against System 6.0.8's 64/71 —
 the same three and six per-entry refusals as before, plus
 `derived-Cool_Tools__.sit` on both 512 KB machines, which is a fixture the
