@@ -214,9 +214,25 @@ and `D_RSRCCRC 120` are the same offsets under their own names.
 Agreement between two readers is evidence about the readers; it is not
 a specimen, and this document does not present it as one.
 
-**What would close it:** an archive from a DiskDoubler that writes
-it — 1.x or 2.x, neither of which is reachable from here — or a shape
-of file 3.7 declines that has not been tried.
+**What would close it:** a `DDAR` archive with the flag set, from any
+version that writes one — or a shape of file 3.7 declines that has not
+been tried.
+
+**It is not 1.x or 2.x, which is what this said until 2026-09-22.**
+A 2.x DiskDoubler cannot have written a `DDAR` record of any flags:
+`DDExpand 2.03a`'s `BNDL` declares the DiskDoubler file types it opens
+— `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` — and `DDAR` is not among
+them, nor does the string occur anywhere in its 65,212-byte resource
+fork, where DDExpand 3.1 declares those five plus `DDAR`, `DDTD`,
+`DDCR` and `DDF0`–`DDF5` and holds the literal nine times. A version's
+own expander not knowing the type is the version not writing it. Both
+applications are on Macintosh Garden's `apps/disk-doubler` page
+(`DiskDoubler2.03.sit`, md5 `6e7f2f7ff30d65d0b94efbb17f5716df`;
+`DiskDoublerExpand3.sit`, md5 `e03d87b317f7ee638057c3315f715dea`),
+which is also where **DiskDoubler ß05, Copyright 1990 Salient** is —
+the oldest DiskDoubler reachable, an INIT whose Finder menu reads
+`Compress Selection;Expand Selection;(-;About DiskDoubler`, with no
+Combine and no `DDAR` in it either.
 
 ## `DDA2` — DiskDoubler Pro
 
