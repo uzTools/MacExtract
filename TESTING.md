@@ -211,6 +211,24 @@ different reason — the two fixtures that were being skipped whole started
 being graded, and a skipped fixture's unadjudicated forks had been counted
 nowhere. See "When our engine declines an entry", below.
 
+**`make_manifests.py --force` erases what other tools wrote.** Three
+tools put adjudications into manifests that `unar` cannot produce —
+`tools/run_ddforks.py --write` (the DDn off-by-one), `tools/vmac/
+diskdoubler.py --adjudicate --write-manifest` (an emulated Mac) and
+`tools/run_ddtf.py --register` — and a forced rebuild replaces them
+with `unadjudicated`. The `--register` ones are safe: the loop keeps
+any manifest whose `oracle` is not `unar`. **The other two are not**,
+because their fixtures' manifests ARE unar's; a forced rebuild of the
+whole corpus silently cost 11 adjudicated forks across
+`derived-LHA_Expander_1.0.3.sea` and `derived-Terrainman_2.0__.sea` on
+2026-09-22. Worse, they cannot simply be re-run in either order:
+`run_ddforks.py` pairs a manifest entry to a file header **by the data
+fork's hash**, and on those two fixtures the data fork is one the
+emulator graded — so the emulator has to go first, or the pairing
+finds nothing and writes nothing. Rebuild the whole corpus and those
+two manifests are the thing to check, and `git checkout` is the cheap
+answer when nothing about them has changed.
+
 ### A third oracle (`tools/build_deark.sh`)
 
 Since 2026-08-25 the forks `unar` AND `macunpack` leave open are offered to
@@ -242,11 +260,32 @@ the claim excluded was the only one that method occurs in. It also reads
 **Zip**, which the same paragraph denied; it decodes the Implode entries
 `unar` fails on.
 
-Matching is **by name**, with a name two entries share refused outright, the
-same rule the `macunpack` path uses. It was by position and name until
-2026-09-21, and the position is deark's OUTPUT-FILE counter rather than a
-member ordinal — which is the same number only while no member has two
-forks, i.e. only for the one format the third oracle was ever asked about.
+Matching is **by the name deark WRITES**, with a name two entries share
+refused outright, the same rule the `macunpack` path uses. It was by
+position and name until 2026-09-21, and the position is deark's
+OUTPUT-FILE counter rather than a member ordinal — which is the same
+number only while no member has two forks, i.e. only for the one format
+the third oracle was ever asked about. And it was by the RAW name until
+2026-09-22: deark writes each member to a real file, so a member inside
+a folder arrives with its path separators mangled to `_`, and matching
+raw names skipped **every entry in a folder** — 500 of them across the
+corpus. `deark_name()` models deark's own sanitiser
+(`de_char_to_valid_fn_char` in `reference/deark/src/deark-util.c`), and
+the mapping being many-to-one is why a mangled name two entries share is
+refused.
+
+**A fork deark DECLINED is not a fork it read as empty**, and this
+section's "an empty fork is an assertion of absence" rests on telling
+them apart. It could not until 2026-09-22: given a StuffIt method-8
+entry deark writes the resource fork's sidecar, prints `Unsupported
+compression method: 8 (MW)` for the data fork, and writes no data file
+— which read as a 0-byte data fork. `deark_forks` now parses the errors
+deark attaches to a fork and returns **None** for those; an error it
+cannot attach to a fork makes every absent fork of that archive unknown
+rather than empty, which is over-cautious on purpose. No manifest ever
+recorded a false empty: the gap-filling path had not been offered such
+a fork (DECISIONS.md 2026-09-22, *the oracle asked about everything
+else*).
 
 **And it does not fail on a damaged file — it PADS.** `sitdoc.sit` is a
 MacBinary declaring a 286-byte resource fork in a file that ends 52 bytes
@@ -289,22 +328,94 @@ is the third oracle and not the first.
   change to the harness. Until 2026-08-08 the whole FIXTURE was skipped
   instead, on the strength of our own error message; see "When our engine
   declines an entry".
-- Do not read "unadjudicated: 15 forks" as 15 defects. It is **15 forks
-  across 11 fixtures**, measured 2026-09-21, where two implementations
-  cannot be compared: 8 in damaged nested archives where the engine says
-  "file is truncated" and unar says "Error on decrunching" — deark
-  produces a fork for those, and it is a PADDED one, which is why it is
-  not taken; 3 in the PKZIP 1.x zips and `arcplus712.zip`, where unar
-  failed the entry and Implode is outside v1 scope for us, so **both
-  sides decline**; and 4 in the 1995 Now Compress archive, which the
-  archive's own extractor has graded under emulation instead
+- Do not read "unadjudicated: 8 forks" as 8 defects. It is **8 forks
+  across 4 fixtures**, measured 2026-09-22, where two implementations
+  cannot be compared: 4 in the PKZIP 1.x zips and `arcplus712.zip`,
+  where unar failed the entry and Implode is outside v1 scope for us,
+  so **both sides decline**; and 4 in the 1995 Now Compress archive,
+  which the archive's own extractor has graded under emulation instead
   (`nowcompress.py --adjudicate`). It was **23 across 12** until deark
   was offered resource forks and the 6 empty ones of
-  `derived-INTRECHO.pak` closed. Three files had recorded three
+  `derived-INTRECHO.pak` closed, **15 across 11** until the 8 in damaged
+  MacBinary were graded from the container itself (*The container's own
+  arithmetic*, below) — which took it to 7, and the eighth came back the
+  same day when deark stopped asserting a resource fork is empty on an
+  entry it reported a CRC failure for (*A third oracle*). Three files had recorded three
   different values for this tally — 16/10, 23/11 and the suite's own
   23/12 — which is the cross-file contradiction BLOCKERS.md names as the
   cheapest smell there is; the number `run_diff.py` prints is the one
   that is measured.
+
+### Asking the third oracle about everything (`tools/sweep_deark.py`)
+
+**`make_manifests.py` offers deark only what the others left open.** A
+check positioned where nothing can contradict it cannot contradict
+anything, and that is precisely how deark sat here for four weeks
+without being asked about StuffIt method 6. This sweep asks it about
+**every fixture that has a manifest**, and compares everything it
+produces against every hash the manifest holds, from whatever oracle
+put it there. It writes nothing: a disagreement is a finding to look
+at, not a manifest edit.
+
+    sh tools/build_deark.sh        # ./ci.sh's `make clean` deletes it
+    tools/sweep_deark.py [--fixture NAME ...] [-v]
+
+**2026-09-22: 2,080 graded forks across 593 of the 932 fixtures, 2,053
+agree, 0 disagree.** The other 27 are three shapes that are not
+disagreements, each of which the sweep names rather than counting as
+agreement:
+
+| verdict | what it is |
+|---|---|
+| `padded` | deark does not fail on a damaged file, it pads. A fork longer than the graded one, whose prefix hashes to it and whose tail is all zeros, is padding (`DEARK_METHODS`, above). **6** — and they are worth more than the label suggests: they are the six resource forks graded from the container's own arithmetic, so a second implementation reads the same bytes at the same offsets, stops where the file stops, and only then invents a tail. The arithmetic and deark agree byte for byte about what is present |
+| `wrapped` | deark does not unwrap MacLHA's MacBinary payload: it writes the 128-byte header and both padded forks as one file where `unar` and this engine split them. Reported only after the container's own data fork is checked byte for byte against the graded one. **3** |
+| `declined` | deark said it could not read this fork. **18** — of which 8 are the blanket for an error deark named a member but not a fork in (`synth-arc-mixed.arc`) |
+
+**What it cannot see, and it prints this every run.** **283** entries
+deark names in a way no mangling of ours reproduces are not compared at
+all — 150 StuffIt 5, 75 StuffIt, 49 Tar, 9 others. Tar is deark writing
+AppleDouble members as literal `._NAME` files where `unar` merges them;
+the StuffIt 5 majority is Arsenic, which deark does not implement, so
+there is nothing to compare. **A sweep is worth what its denominator
+is**, so the denominator is printed per format.
+
+Not in `ci.sh`: it needs the fixtures, and it is an audit rather than a
+test. It skips cleanly without them.
+
+### The container's own arithmetic — not an oracle, the file itself
+
+**A fourth adjudicator, and it is not an implementation.** Eight forks
+in seven damaged MacBinary fixtures had nothing to be wrong against:
+`unar` declines them, deark pads them, and our own output cannot grade
+our own output. A MacBinary is a 128-byte header, the data fork padded
+to a multiple of 128, then the resource fork, all of it stored — so
+where a fork starts is arithmetic and what is in it is the file's own
+bytes, and a file that ends early holds exactly as much as is
+physically there.
+
+`make_manifests.py`'s `adjudicate_from_macbinary` runs **last**, after
+all three oracles, and records those forks as
+`"MacBinary container arithmetic"`.
+
+**It refuses to grade anything unless the arithmetic is confirmed on
+the file it is applied to**, because the engine reads the same header
+and would be wrong the same way. One of two confirmations is required:
+the header's own **CRC-16/CCITT** over its first 124 bytes matching the
+value at +124 (MacBinary II, so the lengths are checksummed — this is
+`guysmaccontacts.sea`, where neither fork had an oracle), or the
+entry's **other fork already adjudicated** and reproduced byte for byte
+by the same arithmetic (the six MacBinary I fixtures). Where an oracle
+and the arithmetic disagree on a file it grades nothing there and says
+so.
+
+**What this cannot see.** It says how much of a fork is present and
+what those bytes are; it says nothing about the bytes that are missing,
+and nothing at all about a compressed fork — every MacBinary fork is
+stored, which is the whole reason this works and the reason it
+generalises to no other format here. The layout itself is not assumed:
+the same arithmetic reproduces both forks of **174 undamaged MacBinary
+fixtures** with no mismatch. DECISIONS.md 2026-09-22, *the container is
+the oracle*.
 
 ### When our engine declines an entry
 

@@ -5,10 +5,10 @@
    "data_sha256": "8fd96d72fad3f599710b187834dd57fcd24fcc103491a47119d07556198603f2",
    "data_size": 18509,
    "name": "SystemIdle.Sit",
-   "type": "SIT!",
-   "unadjudicated": {
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "f519e1da6ac0edbeab4c299f6871601caee2879969822ec824358a34c0987d49",
+   "rsrc_size": 235,
+   "type": "SIT!"
   }
  ],
  "fixture": "systemidle.sit",

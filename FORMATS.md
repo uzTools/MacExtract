@@ -2267,9 +2267,13 @@ no more than that, and matches on all 26 identity bytes anyway.
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
   the number it actually ran, plus two figures that must be read with it:
-  **15 forks across 11 fixtures are oracle-unadjudicated** (2026-09-21;
-  this said 16 across 10 while the suite printed 23 across 12, which is
-  what a stale figure looks like) — both implementations decline every
+  **8 forks across 4 fixtures are oracle-unadjudicated** (2026-09-22,
+  when the 8 in damaged MacBinary were graded from the container's own
+  arithmetic and one came back, deark having stopped asserting an empty
+  resource fork on an entry it failed the CRC of;
+  15 across 11 before that, and this said 16 across 10
+  while the suite printed 23 across 12, which is what a stale figure
+  looks like) — both implementations decline every
   one of them, so the engine's own CRC-16
   is the only byte-exact check; 8 more were compared
   with DiskDoubler's own expander on an emulated Mac and agree with the

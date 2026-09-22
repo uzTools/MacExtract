@@ -238,6 +238,9 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
 - 2026-09-21 (the table that was twenty-six bytes) — StuffIt method 6's fixed code book, priced on both axes
 - 2026-09-22 (the framing that needed no rewrite) — StuffIt method 6's last macutils row, closed for nothing, and the three places this engine is stricter than both references
+- 2026-09-22 (the oracle asked about everything else) — deark over the whole corpus, and two things it does that nothing here had written down
+- 2026-09-22 (the container is the oracle) — eight forks in damaged MacBinary graded by the file's own arithmetic
+- 2026-09-22 (the premise that stopped being true) — Implode has an implementation and an oracle on this disk, and the scope decision is not taken
 
 ---
 
@@ -14696,3 +14699,157 @@ adds to eleven — ten in `synth-sit-fixhuf.sit`, one in
 first thing `derive_sit6.py` does. A number and its own enumeration
 disagreeing in one sentence is the cheapest smell there is, and it
 survived three files for a day.
+
+## 2026-09-22 (the oracle asked about everything else) — deark over the whole corpus, and two things it does that nothing here had written down
+
+**Claim.** The third oracle was still only ever asked where the others
+were silent. `tools/sweep_deark.py` asks it about **everything**:
+**2,080 graded forks across 593 of the 932 fixtures, and 2,053 agree.
+Zero disagreements.** The remaining 27 are three shapes that are not
+disagreements, and two of those three were discovered by running it.
+
+**Evidence.** Nothing is written and nothing is adjudicated — the
+sweep compares deark's output against every hash the manifests already
+hold, from whatever oracle put them there. A cross-check that changes
+nothing is the point: **either it finds nothing, which is cheap and
+worth knowing, or it finds something.** It found nothing wrong and two
+facts about the oracle itself.
+
+**The first: deark declining a fork is not deark reading an empty
+one.** `make_manifests.py` asserted the opposite in a comment — "a
+member deark wrote at all has both forks" — and it is false. Given
+`derived-BitMap11.sit`, a StuffIt archive with one method-8 (MW) data
+fork, deark writes that member's resource-fork sidecar, prints
+`Unsupported compression method: 8 (MW)` for the data fork, and writes
+no data file. The absence read as "this fork is 0 bytes", which is the
+one thing deark is trusted to assert on its own (*an empty fork is an
+assertion of absence*, TESTING.md). **Nothing had gone wrong yet** —
+no manifest records a false empty — because the gap-filling path had
+never been offered such a fork. It is a hazard found before it fired,
+which is the only cheap time to find one. `deark_forks` now parses the
+errors deark attaches to a fork and returns **None** for those, which
+every caller has to tell from `b""`; an error it cannot attach to a
+fork makes every absent fork of that archive unknown, which costs 9
+forks of coverage in two fixtures and cannot turn an error into an
+assertion.
+
+**The second: half the corpus was not being compared, for the same
+reason as always.** deark writes each member to a real FILE, so a
+member inside a folder arrives on disk with its path separators
+mangled to `_` — and both the sweep and `make_manifests.py` matched
+raw names, so **every entry in a folder was skipped**: 500 of them.
+Modelling deark's own sanitiser (`de_char_to_valid_fn_char`, one
+function) took the sweep from 1,641 forks to 2,075 and closed the same
+hole in the manifest builder. **A matcher that silently drops what it
+cannot match reports success on the subset it can** — the same shape
+as a check positioned where nothing can contradict it, one layer down.
+
+**The third shape was already known and is not a defect:** deark does
+not unwrap MacLHA's MacBinary payload, writing the header and both
+padded forks as one file where `unar` and this engine split them. The
+sweep reports those as `wrapped` after checking that the container's
+own data fork is byte-identical to the graded one. Agreement one layer
+down is agreement.
+
+**What this sweep CANNOT see, and it prints it every run.** 283
+entries deark names in a way no mangling of ours reproduces — 150
+StuffIt 5, 75 StuffIt, 49 Tar, 9 others — are not compared at all. Tar
+is deark writing AppleDouble members as literal `._NAME` files where
+`unar` merges them; the StuffIt 5 majority is Arsenic, which deark does
+not implement, so there would be nothing to compare anyway. The tally
+is printed per format rather than described, because a sweep is worth
+what its denominator is worth.
+
+## 2026-09-22 (the container is the oracle) — eight forks in damaged MacBinary graded by the file's own arithmetic
+
+**Claim.** Eight forks in seven damaged MacBinary fixtures had no
+second implementation to be wrong against: `unar` declines them, deark
+PADS them, and our own output cannot grade our own output. **They did
+not need one.** A MacBinary is a 128-byte header, the data fork padded
+to a multiple of 128, then the resource fork, all of it stored — so
+where a fork starts is arithmetic and what is in it is the file's own
+bytes. A file that ends early holds exactly as much as is physically
+there, and that number is forced rather than decoded.
+`oracle-unadjudicated` falls from **15 forks across 11 fixtures to 7
+across 4** — and back to 8 the same day, when the third oracle stopped
+asserting that `arcplus712.zip`'s entry has an empty resource fork on
+the strength of a run where it failed that entry's CRC (*the oracle
+asked about everything else*, above).
+
+**Evidence.** All eight match, byte for byte, what
+`macextract` already writes — `sitdoc.sit`'s 234 bytes of a declared
+286, `systemidle.sit`'s 235, `sigmaedit.sit`'s 348, `ddarchive.sit`'s
+238, `appledraw51.cpt`'s 13,036 of 13,121, `pcal296.cpt`'s 12,899, and
+`guysmaccontacts.sea`'s data fork at 114,644 of a declared 137,726
+with its resource fork not present at all.
+
+**The part that took the thinking, because it is what makes this
+legitimate rather than circular.** The engine reads the same header,
+so it would be wrong the same way, so "the layout says so" is not
+evidence. The rule therefore **refuses to grade anything unless the
+arithmetic is confirmed on the file it is being applied to**, and two
+confirmations exist:
+
+- the header's **own CRC-16/CCITT** over its first 124 bytes matches
+  the value at +124 — MacBinary II, so the lengths are checksummed.
+  That is `guysmaccontacts.sea`, the one file where neither fork had
+  an oracle;
+- or the entry's **other fork is already adjudicated** and the same
+  arithmetic reproduces it byte for byte, which pins both offsets on
+  that file. That is the six MacBinary I fixtures, where `unar` grades
+  the data fork and the resource fork is the remainder.
+
+And where an oracle and the arithmetic disagree on a file, it grades
+**nothing** there and says so: a rule that adjudicates where it has
+just been shown wrong is worse than no rule. Shown failing before it
+was believed passing — six cases, including a broken CRC and a
+falsified oracle hash, each refusing correctly.
+
+The layout is not assumed either: the same arithmetic reproduces both
+forks of **174 undamaged MacBinary fixtures**, every one in the corpus
+with a single entry and two adjudicated forks, with no mismatch.
+
+**And a second implementation turned out to corroborate it after all.**
+Once those forks carried hashes, `sweep_deark.py` compared deark's
+output against them and returned `padded` on all six resource forks:
+deark reads the same bytes at the same offsets, stops where the file
+stops, and only THEN invents a tail. What made it useless as an oracle
+— that it always produces something — hid the fact that its prefix is
+right. The padding guard, written to keep invented zeros out of a
+manifest, is what makes that readable.
+
+**The transferable part.** *Ask what would settle this if no second
+implementation existed at all.* Three implementations had been asked
+and the answer was "nobody can adjudicate these", which is true and was
+read as the end of it. The container states its own layout, and a
+length that is forced by arithmetic is a different KIND of ground
+truth from a length another decoder agrees with — not weaker, and in
+this case stronger, because there is nothing in it for a second bug to
+agree with.
+
+## 2026-09-22 (the premise that stopped being true) — Implode has an implementation and an oracle on this disk, and the scope decision is not taken
+
+**Claim.** PKZIP 1.x's Implode (zip method 6) was declined with no
+implementation to write it from and nothing to grade it against. Both
+are now here. **Nothing has been done about it** — the scope is the
+maintainer's, and this entry exists so the decision is re-made
+knowingly rather than inherited (OPEN_ITEMS.md, *Implode: what
+changed, and what has not*).
+
+**Evidence, measured 2026-09-22.** `reference/deark/src/fmtutil-lzh.c`
+implements it under MIT, in `src/` and not in the `foreign/` tree its
+licence carves out. And it is right: deark decodes all **7** Implode
+entries of `4acalc.zip` and `4alnch11.zip`, and every one matches the
+**CRC-32 PKZIP itself stored** — a check no decoder here can
+influence. `CALC.TXT` comes out at 5,284 bytes.
+
+**What has not changed.** Implode is not a Macintosh method, it
+predates deflate, and the two archives are PC software that entered
+the corpus to exercise the per-entry refusal path. That is still the
+whole of the case for declining it, and it is a reasonable one; what
+is gone is the second half, "and we could not check it anyway".
+
+**Left undone on purpose, and it is one line.** Adding `"Implode"` to
+`DEARK_METHODS` would record those entries' forks as ground truth
+without implementing anything, so that a decoder landing later starts
+compared rather than unadjudicated. It belongs to the same decision.

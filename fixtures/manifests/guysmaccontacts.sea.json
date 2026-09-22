@@ -2,12 +2,14 @@
  "entries": [
   {
    "creator": "EXTR",
+   "data_oracle": "MacBinary container arithmetic",
+   "data_sha256": "3fec00293b342e732b5daa67b4617b69042dc71c1241b5f80916d304ae99a7c3",
+   "data_size": 114644,
    "name": "Guy's Mac Contacts.cpt",
-   "type": "APPL",
-   "unadjudicated": {
-    "data": "Error on decrunching",
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "APPL"
   }
  ],
  "fixture": "guysmaccontacts.sea",

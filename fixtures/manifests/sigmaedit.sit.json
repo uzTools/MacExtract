@@ -5,10 +5,10 @@
    "data_sha256": "5671df6f7bcb47c522678811bf2e0ff5f4b842ce5290b3e4aa549be68c67f709",
    "data_size": 50187,
    "name": "SigmaEdit.sit",
-   "type": "SIT!",
-   "unadjudicated": {
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "ca229ce865a4eb7dfd236cccf3c983a301eff47e663b837d1568997ede3e28c1",
+   "rsrc_size": 348,
+   "type": "SIT!"
   }
  ],
  "fixture": "sigmaedit.sit",

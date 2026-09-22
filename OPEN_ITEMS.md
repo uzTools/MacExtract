@@ -42,6 +42,7 @@ answer and not a refusal — the brief has grown before, on request.
 | Compression | not implemented | this is an extractor |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there (Inside Macintosh II-30) and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has no idea about. Apple's own software HFS for those machines — the `Hard Disk 20` startup disk — boots on a 128K ROM here and hangs on a 64K one, so even that route is untested (FORMATS.md, *A true Macintosh 512K*). Since 2026-09-01 the branch `rom64k` guards `MaxApplZone` with `Has128KROM()`, so its build starts there and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies on exactly the machines where an unarchiver earns its keep. **Nobody has run it on one** — Mini vMac has no HD20, so this stays out of scope until hardware says otherwise (MANUAL_TESTS.md §7). A Macintosh **128K** is out for a second reason and that one is measured: its largest single block is 63,744 B against 142,152 B of `CODE`, so the guarded build bombs `ID = 03` on launch there (FORMATS.md, *A Macintosh 128K*) |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
+| PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software that arrived in the corpus for the per-entry refusal path rather than for their contents. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on their names and entry counts alone (FORMATS.md, *Hardening*). **The premise is weaker than it was and the decision is the maintainer's** — see below |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART is the one exception, since 2026-09-09**, and it is an exception to the first clause only: a compressed DART expands to an UNCOMPRESSED DART, which is a codec with no volume anywhere in it, and no file on the disk is ever looked at. FORMATS.md, *DART* |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
@@ -49,6 +50,36 @@ answer and not a refusal — the brief has grown before, on request.
 | RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. NAMING them is in scope (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
 | Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and REFUSES to decompress — `_Debugger` at its own 0xd4 — so no Alysis expander in reach can read what it writes, and nor can this engine or any other module in the library. Streams can be made here at will and there is nothing whatever to grade one against. It is reachable from Alysis's own compress path (level 11 of INIT 32's table at +0xf2e), so a file COULD exist; reading one would mean inverting that compressor with no second reader anywhere, for a codec no archive in the corpus uses (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29, *the specimen that would have settled nothing*) |
 | Zip64 addressing past 4 GB | **the counts and the per-ENTRY escape are read; over-4-GB fields are refused** — `UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry — and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | zip's own shape is what keeps it out: the directory fields are 32-bit and the Zip64 escape is read as `uint32` halves, so reading past 4 GB properly is a format change rather than a type change. The type is not the obstacle — `UncIO` carries `unc_off_t`, 64-bit in the CLI, for +0.51 % of text and 0 bytes of heap (DECISIONS.md 2026-08-28, *what a width costs*). Reading the halves is what makes a 70,000-entry archive extract, and a 3.4 GB one (FORMATS.md, *Size limits*); tar, whose positions are a running sum, reaches past 4 GB today |
+
+### Implode: what changed, and what has not
+
+**Not a recommendation, and nothing has been done about it.** Recorded
+because the reason for the decision is not what it was, and a scope
+decision resting on a stale premise should at least be re-made
+knowingly.
+
+When Implode was declined there was no implementation here to write it
+from and nothing to grade it against. Both are now on this disk and
+were verified on 2026-09-22:
+
+- **an implementation**, MIT — `reference/deark/src/fmtutil-lzh.c`,
+  section *"Implode (ZIP method #6)"*, which is deark's own code and
+  not one of the `foreign/` files its licence carves out;
+- **an oracle that cannot be argued with** — deark decodes all **7**
+  Implode entries of the two archives and every one matches the
+  **CRC-32 PKZIP itself stored**: `CALC.TXT` to 5,284 B, and six more.
+  A check no decoder here can influence.
+
+What has NOT changed: Implode is still not a Macintosh method, and the
+two archives are still PC software. Implementing it would cost code on
+a 1 MB machine for a format a Macintosh never wrote.
+
+**Deliberately not done, and it is one line either way.** Adding
+`"Implode"` to `make_manifests.py`'s `DEARK_METHODS` would record those
+7 entries' 10 forks as ground truth without implementing anything, and
+`run_diff.py` would start comparing them the day a decoder lands
+(TESTING.md, *When our engine declines an entry*). That is part of the
+same decision and is left with it.
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
 the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
@@ -231,6 +262,36 @@ one shape this program produces is a shape no reference describes, and
 writing a partial fork would be inventing the layout. An uncompressed
 DART written by whatever produced them — an earlier version of the
 application, per the same note — would settle it.
+
+## Two AppleDouble header files that would be two more fixtures
+
+**Found 2026-09-22 by rebuilding every manifest**, which is the only
+thing that looks at a fixture with no manifest.
+`fixtures/ddtf-ddpro411ad1.dd.ad` and `.sea.ad` are in
+`fixtures/SOURCES.md` — they came down with the DiskDoubler corpus as
+Netatalk `._`-style AppleDouble headers — and neither has ever had a
+manifest. `unar` reads both, so `make_manifests.py` now builds one for
+each, and the engine then fails the fixture.
+
+**The disagreement is the entry's NAME and nothing else.** Given a bare
+AppleDouble header, `unar` keeps the archive's own filename including
+the `.ad` — one entry called `ddtf-ddpro411ad1.dd.ad`, empty data fork,
+the input passed through verbatim as the sidecar — and this engine
+strips it, calling the entry `ddtf-ddpro411ad1.dd`. The resource fork
+is the same bytes either way. Stripping recovers the name of the file
+the header belongs to, which is what the Netatalk convention means by
+it; keeping it is what the archive is called. Nothing here says which a
+user wants.
+
+**The two manifests are deliberately not committed**, so the corpus
+stays at 932 and nothing is graded against a name nobody has decided
+on. They will reappear the next time `make_manifests.py` runs over the
+whole fixture directory, and the suite will fail loudly with these two
+names — which is this entry's other purpose.
+
+**What would close it:** a decision about the name, and then either two
+manifests or two lines in `SOURCES.md` saying these are inputs to
+`tools/run_ddtf.py` rather than archives to extract.
 
 ## Waiting on a file this machine does not have
 

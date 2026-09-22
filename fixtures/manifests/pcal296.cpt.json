@@ -5,10 +5,10 @@
    "data_sha256": "20e08ee085f778607c689dd78a72e0769361cf7b3362baffa0f6148a1d615d0d",
    "data_size": 29506,
    "name": "Pcal2.96.cpt",
-   "type": "APPL",
-   "unadjudicated": {
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "12911b89cbf33d61caa6d2e0fedc447988328bc6b8b62c04309febf8aaa1e8c5",
+   "rsrc_size": 12899,
+   "type": "APPL"
   }
  ],
  "fixture": "pcal296.cpt",
