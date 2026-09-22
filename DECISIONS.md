@@ -14714,6 +14714,12 @@ were silent. `tools/sweep_deark.py` asks it about **everything**:
 Zero disagreements.** The remaining 27 are three shapes that are not
 disagreements, and two of those three were discovered by running it.
 
+*(Those are the day's first figures. Both of the things below that the
+sweep "cannot see" turned out to be mis-read, and correcting them took
+it to **4,502 forks and 2,151 agreements**, still with zero
+disagreements — see 2026-09-22, "the decline that read as a naming
+gap".)*
+
 **Evidence.** Nothing is written and nothing is adjudicated — the
 sweep compares deark's output against every hash the manifests already
 hold, from whatever oracle put them there. A cross-check that changes
@@ -14759,12 +14765,18 @@ down is agreement.
 
 **What this sweep CANNOT see, and it prints it every run.** 283
 entries deark names in a way no mangling of ours reproduces — 150
-StuffIt 5, 75 StuffIt, 49 Tar, 9 others — are not compared at all. Tar
-is deark writing AppleDouble members as literal `._NAME` files where
-`unar` merges them; the StuffIt 5 majority is Arsenic, which deark does
-not implement, so there would be nothing to compare anyway. The tally
-is printed per format rather than described, because a sweep is worth
-what its denominator is worth.
+StuffIt 5, 75 StuffIt, 49 Tar, 9 others — are not compared at all. The
+tally is printed per format rather than described, because a sweep is
+worth what its denominator is worth.
+
+**Both halves of that sentence were wrong, and the same day.** 225 of
+the 283 are entries deark NAMED and declined, and the 49 Tar ones are
+not the AppleDouble merge this entry said they were. **37** is the
+number, in four shapes that TESTING.md names one by one; the two
+disproofs are the entry cited above and BLOCKERS.md's withdrawn
+claims. What survives here is the method: a check positioned where
+nothing can contradict it, and a denominator printed per format so the
+blind spot is a number somebody can pull on.
 
 ## 2026-09-22 (the container is the oracle) — eight forks in damaged MacBinary graded by the file's own arithmetic
 
