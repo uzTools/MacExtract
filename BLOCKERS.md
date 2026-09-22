@@ -37,11 +37,16 @@ constants were re-taken the same day** with `-D UNC_AT_BUDGET` and all three
 had drifted (below, and FORMATS.md, *Budget*). `checkdisk.py` then read all
 **73 kept Out volumes byte-exact, names included**.
 
-**The two System 6.0.8 sweeps were run a third time the same day**, on the
-build that reads the 1990 DiskDoubler header: **71/71 at 4 MB and 71/71 at
-the 1 MB floor**. All three budgets were re-taken again after it and each
-had fallen exactly 32 B where the arithmetic predicted 64 (FORMATS.md,
-*Budget*); no tally moved.
+**All seven Mini vMac sweeps were then re-run on the build that reads the
+1990 DiskDoubler header**, which is the binary that ships: System 6.0.8
+71/71 at 4 MB and 71/71 at 1 MB, System 3.0 71/71 at 4 MB and 71/71 at
+1 MB, System 7.0.1 71/71 at 4 MB, and at 512 KB System 3.0 67/71 against
+System 6.0.8's 64/71. **Every tier reproduced its figure and the refused
+fixtures are the same ones by name** — the four and the seven
+`run_tiers.py` asserts. All three budgets were re-taken between the two
+rounds and each had fallen exactly 32 B where the arithmetic predicted 64
+(FORMATS.md, *Budget*); no tally moved. So no figure in the table above
+rests on a binary older than the one in `dist/`.
 
 **Every Mini vMac tier was re-run 2026-09-20** before that, the first time
 any had been since the decoder work of 2026-09-18/19/20 changed six formats
