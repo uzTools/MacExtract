@@ -2,8 +2,19 @@
  * fmt_dd.c — DiskDoubler: single compressed files (0xABCD0054) and the
  * two archive containers, 'DDAR' and 'DDA2'.
  *
- * The containers and every method number below are transcribed from
- *   Source: reference/XADMaster/XADDiskDoublerParser.m       (containers)
+ * The CONTAINERS are this project's own description, measured here,
+ * since 2026-09-22 — the wiki names three pages for them and none of
+ * the three exists:
+ *   Source: docs/formats/diskdoubler-container.md
+ * `tools/derive_ddc.py` is a reader written from that document alone
+ * and makes 643 assertions against the oracle over all 91 DiskDoubler
+ * fixtures, 0 disagreements. What it does NOT cover is the 'DDAR'
+ * folder records and the 0x20 raw-fork shape, which no fixture here
+ * has; those rows are still
+ *   Source: reference/XADMaster/XADDiskDoublerParser.m
+ * and the note says what would settle them.
+ *
+ * Method 7 is transcribed:
  *   Source: reference/XADMaster/XADStacLZSHandle.m           (method 7)
  * — LGPL, see NOTICE.
  *
@@ -47,8 +58,10 @@ typedef struct DdFork {
      * checksum, which is why the sum is taken before the transform.
      * The transform: docs/formats/diskdoubler-dd.md, "The second form",
      * measured here. WHICH forks use it is the container's to say, and
-     * the container is still XADMaster's: Source: XADDiskDoublerParser.m
-     * (delta wraps the checksum handle). */
+     * the two fields that say it are measured from both sides:
+     * Source: docs/formats/diskdoubler-container.md, "Which forks use
+     * method 10's second form" — the container names two forks, and the
+     * coder, which never reads a container, finds the same two. */
     uint32_t dist;
     uint32_t dpos;
     uint8_t  dbuf[256];
@@ -1093,7 +1106,10 @@ typedef struct DdFile {
 } DdFile;
 
 /* The 80 bytes after 0xABCD0054.
- * Source: XADDiskDoublerParser.m parseFileHeaderWithHandle. */
+ * Source: docs/formats/diskdoubler-container.md, "A compressed file".
+ * The same 84 bytes appear three times — as a file, and inside both
+ * archive containers — which is itself measured: the fork lengths pin
+ * at one offset across all 195 of them. */
 static void dd_parse_filehdr(const uint8_t *h, DdFile *f)
 {
     f->datasize     = unc_get_u32be(h + 0);
@@ -1133,8 +1149,9 @@ static void dd_entry_from(UncEntryInfo *e, const DdFile *f)
 
 /* The obfuscation methods 1..5 apply to their three header bytes and to
  * the bytes they decode. It is on when info1 has reached 0x2a and info2's
- * high bit is clear; every specimen seen has info1 == 0x2a exactly.
- * Source: XADDiskDoublerParser.m handleForEntryWithDictionary. */
+ * high bit is clear; every specimen seen has info1 == 0x2a exactly, so
+ * no fixture here tells the >= from an ==.
+ * Source: docs/formats/diskdoubler-container.md, "The XOR garbling". */
 static int dd_xorval(const DdFile *f)
 {
     return (f->info1 >= 0x2a && (f->info2 & 0x80) == 0) ? 0x5a : 0;
@@ -1231,7 +1248,17 @@ static int dd_archive(UncCtx *c)
 
         unc_entry_clear(&e);
         if (isdir) {
-            /* The folder's own path is the leaf of the path it is being
+            /* NO SPECIMEN. All 36 entries in the corpus's 7 DDAR
+             * archives are files with a full file header, so neither
+             * this branch nor the 0x20 one below is read by anything
+             * here. Both rows are still
+             * Source: XADDiskDoublerParser.m parseArchive (macutils'
+             * macunpack/dd.h states the same offsets under its own
+             * names, which is agreement between two readers and not a
+             * specimen). docs/formats/diskdoubler-container.md, "What
+             * no DDAR fixture here reaches", says what would settle it.
+             *
+             * The folder's own path is the leaf of the path it is being
              * pushed onto, which is where the whole name is reported
              * from; taking it out of path.buf afterwards would report a
              * name already cut to UNC_NAME_MAX. */
@@ -1254,7 +1281,8 @@ static int dd_archive(UncCtx *c)
         unc_path_leaf(&path, &e, hdr + 5, nlen);
 
         if (unc_get_u16be(hdr + 94) & 0x20) {
-            /* Stored in the archive with no file header of its own. */
+            /* Stored in the archive with no file header of its own.
+             * NO SPECIMEN either — see the folder branch above. */
             DdFile f;
             uint8_t *fp = (uint8_t *)&f;
             uint32_t fi;
@@ -1349,8 +1377,10 @@ static int dd_archive2(UncCtx *c)
         if (entrytype & 0x8000) {
             /* A folder: it deepens the path but does NOT deepen the
              * level counter, which is what the level arithmetic above
-             * is written against. Source: XADDiskDoublerParser.m
-             * parseArchive2 (currdir=name, lastdirlevel untouched). */
+             * is written against — read the other way the tree inverts
+             * on the first nested folder, and the 19 folders here are
+             * what says which.
+             * Source: docs/formats/diskdoubler-container.md, "DDA2". */
             if (unc_read_full(c->io, hdr + 46, 16) != UNC_OK) break;
             unc_path_leaf(&path, &e, hdr + 7, nlen);   /* before the push */
             if ((err = unc_path_push(&path, hdr + 7, nlen)) != UNC_OK) return err;
@@ -1458,8 +1488,9 @@ int unc_dd_extract(UncCtx *c)
 
     /* A single compressed file carries no name of its own: DiskDoubler
      * appended ".dd" to the original, so the host's name (minus that
-     * suffix) is the name — exactly what the reference does.
-     * Source: XADDiskDoublerParser.m parse. */
+     * suffix) is the name. The container says nothing about it
+     * (docs/formats/diskdoubler-container.md, "A compressed file") and
+     * the oracle agrees on all 66 of them, which is what grades this. */
     if (unc_read_full(c->io, hdr, DD_FILEHDR) != UNC_OK) return UNC_ERR_TRUNCATED;
     {
         DdFile f;

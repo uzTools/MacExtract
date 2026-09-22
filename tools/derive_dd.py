@@ -342,6 +342,12 @@ def check(path, SEL, delta):
                     hit = True
                     if dl:
                         delta[0] += 1
+                        # NAMED, not just counted, since 2026-09-22: the
+                        # container states which forks these are, and a
+                        # count cannot be held against a list
+                        # (tools/derive_ddc.py).
+                        delta.append("%s :: %s %s"
+                                     % (os.path.basename(path), name, kind))
                     break
             if hit:
                 break
@@ -398,6 +404,8 @@ def main():
     print(f"derive-dd: {tok} DD/AD forks of {narch} archive(s) read from the "
           f"published description, {tbad} not"
           + (f" ({delta[0]} by the delta form)" if delta[0] else ""))
+    for d in delta[1:]:
+        print("  delta form: " + d)
     return 0
 
 

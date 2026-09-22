@@ -248,6 +248,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the document that came with the decoder) — fmt_lzh.c's header walk, from LHa's own header.doc
 - 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
 - 2026-09-22 (a name an HFS volume can hold) — StuffIt 5's UTF-8 names, on both hosts, and what the fold costs a Mac Plus
+- 2026-09-22 (the page that was never written) — DiskDoubler's three containers, measured, and the field that is checked from both sides
 
 ---
 
@@ -15311,3 +15312,81 @@ a shift-and-or decode being the shape that reads differently on the
 target. Both halves are in `ci.sh`.
 The case was made to fail first: with the fold disabled it reports the
 mojibake on disk, no report lines, and the 32-byte name cut at 31.
+
+## 2026-09-22 (the page that was never written) — DiskDoubler's three containers, measured, and the field that is checked from both sides
+
+**Claim.** `fmt_dd.c`'s containers — the last XADMaster row with a
+route — are described by a document this project measured, and a
+reader written from that document alone reads **all 91 DiskDoubler
+fixtures**: 244 entries, **643 assertions against the oracle, 0
+disagreements** (`docs/formats/diskdoubler-container.md`,
+`tools/derive_ddc.py`).
+
+**The first thing checked was the excuse.** The inventory said the wiki
+"punts them to `XADDiskDoublerParser.m` by name", and it does — it
+lists `DiskDoublerSingleFormat`, `DiskDoublerArchiveFormat1` and
+`DiskDoublerArchiveFormat2` as pages. **Those three pages do not
+exist.** That wiki's own index, `wikis.json`, has 40 pages and none of
+them is one. This was worth one `curl`, because the same list on the
+same wiki is what produced `StuffIt5Format` earlier the same day, where
+the named page WAS there. A name in a list is not a page, and the only
+way to tell is to look.
+
+**So the description is measured, and the offsets are derived rather
+than asserted.** `derive_ddc.py --grid` throws the layout away and
+searches: for each field, every offset whose value agrees with the
+oracle in *every* fixture that states one. The data fork's length
+survives at one offset over 66 compressed files and over all 195 file
+headers; type and creator at one each over the 87 entries the oracle
+records them for; `DDAR`'s name at one over 36 entries and `DDA2`'s
+over 142; each archive's body offset over all of them. **Nothing
+locates a record except something the format supplies** — a magic, or
+the walk those 643 assertions already grade.
+
+**The field the row existed for, checked from both sides.** The
+container is what says which method 10 forks are in the delta form, and
+nothing in the stream says it. `derive_ddc.py` reads the two fields and
+names two forks; `derive_dd.py` has no container parser at all — it
+finds blocks by the checksum a block header carries — tries both forms
+and reports which reproduced the oracle's hash, and names **the same
+two forks out of 39**. A field read without decoding, and a decoding
+done without reading the field. `derive_dd.py` was counting those two
+rather than naming them, which is a count that cannot be held against a
+list; it names them now.
+
+**What `--grid` cannot pin is the most useful thing it prints.**
+`DDA2`'s stored-record resource-fork length survives at **27
+offsets**, because the value is 0 in all 30 such records. That is not a
+gap in the search, it is what "DiskDoubler Pro writes this record only
+for a file with no resource fork" — measured on the application on
+2026-08-21 — looks like from the outside. A field a corpus cannot tell
+from a constant is a field the document must not claim, and this is the
+peak-RAM-matrix smell from CLAUDE.md arriving in a header table.
+
+**What is left has no specimen rather than no description.** All 36
+entries of the 7 `DDAR` archives here are files with a full file
+header: **not one folder, and not one record with the `0x20` flag**
+that says the forks follow raw. Six offsets are therefore read by
+nothing, and they stay attributed — to XADMaster, and to macutils'
+`macunpack/dd.h`, which states the same seven offsets under its own
+field names. **Two readers agreeing is evidence about the readers, not
+a specimen**, and the note says so in those words rather than letting a
+table imply otherwise. DiskDoubler 3.7 runs here and its Combine
+command writes a `DDAR`; two archives would settle all six.
+
+**Established that the reader can fail**, because a reader that agrees
+with an oracle 643 times is exactly the shape that might be agreeing
+with itself: swapping type and creator in the file header gives 130
+disagreements, and moving `DDA2`'s folder-depth field by four bytes
+gives 82. The unmodified reader gives 0.
+
+**Two smaller things the census found, both written into the note.**
+Five of the seven `DDAR` archives end with a stray 84-byte compressed
+file header belonging to no entry — stepping over it is the only
+reading under which those five end exactly at their last byte. And
+`DDAR`'s record carries a type and creator that are **not the entry's**:
+`derived-MAZv143.sea` reads `DDF1`/`DDAP` there where the oracle says
+`cdev`/`NaOH`, so what the record describes is the compressed file and
+the entry's own metadata comes from the header behind it. That is why
+the search pins type and creator inside the file header and finds
+nothing for them in the record.

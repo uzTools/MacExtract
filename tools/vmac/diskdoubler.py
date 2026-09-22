@@ -13,6 +13,7 @@ look at what it produces.
     diskdoubler.py --install         a System 7 image with the DD INIT loaded
     diskdoubler.py --probe           photograph the menus and dialogs
     diskdoubler.py --make A          compress the subject with one method
+    diskdoubler.py --combine         a DDAR archive with a folder in it
     diskdoubler.py --verify          decode every specimen and grade it
 
 **The answer, measured 2026-08-20.** The Settings dialog's "How To
@@ -430,6 +431,140 @@ def pick_method(s, which):
     s.shot("chosen-%s" % which, wait=1.0)
     s.mac.click(*SETTINGS_OK)
     time.sleep(2.0)
+
+
+# ------------------------------------------------------------------
+# The Combine command — the two 'DDAR' record shapes no fixture has
+# ------------------------------------------------------------------
+#
+# All 36 entries in the corpus's 7 'DDAR' archives are files with a full
+# compressed-file header behind them. **Not one is a folder, and not one
+# sets the 0x20 flag** that says the forks follow the record raw — so
+# six offsets of that record are read by nothing here, and
+# docs/formats/diskdoubler-container.md has to say they are XADMaster's
+# and macutils' statement rather than a measurement.
+#
+# Combine is what writes a 'DDAR', and one archive can carry both
+# shapes: a FOLDER holding two files, beside a file of bytes nothing
+# compresses.
+
+DD_COMBINE_Y = 59        # measured off probe/04-dd-menu.png, like the rest
+
+COMBINE_NAME = "Nested"
+
+
+def incompressible(nbytes, seed=7):
+    """Bytes with no structure for DiskDoubler to find — the same LCG
+    `split_subject` uses, which is what made Split have something to
+    cut."""
+    out = bytearray()
+    x = seed & 0xFFFFFFFF
+    while len(out) < nbytes:
+        x = (1103515245 * x + 12345) & 0xFFFFFFFF
+        out += x.to_bytes(4, "big")
+    return bytes(out[:nbytes])
+
+
+COMBINE_TREE = [
+    (("Payload", "Nest"), "One", b"one one one one one\r" * 40),
+    (("Payload", "Nest"), "Two", b"two two two two two\r" * 40),
+    (("Payload",), "Raw", incompressible(24 * 1024)),
+]
+
+
+def make_volume_tree(path, volname, items, size_kb=4096):
+    """`make_volume`, with folders. items: [(folder tuple, macbin path)]."""
+    open(path, "wb").truncate(size_kb * 1024)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        subprocess.run(["hformat", "-l", volname, path], check=True,
+                       capture_output=True, env=env)
+        subprocess.run(["hmount", path], check=True, capture_output=True, env=env)
+        made = set()
+        for folder, mb in items:
+            for i in range(len(folder)):
+                d = folder[:i + 1]
+                if d in made:
+                    continue
+                subprocess.run(["hmkdir", volname + ":" + ":".join(d)],
+                               capture_output=True, env=env)
+                made.add(d)
+            dest = volname + ":" + (":".join(folder) + ":" if folder else "")
+            subprocess.run(["hcopy", "-m", os.path.abspath(mb), dest],
+                           check=True, capture_output=True, env=env)
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+
+
+def session_with_tree(tag):
+    work = tempfile.mkdtemp(prefix="ddwork-")
+    apps = extract_app(work)
+    items = [((), a) for a in apps]
+    for i, (folder, name, data) in enumerate(COMBINE_TREE):
+        p = os.path.join(work, "t%d.bin" % i)
+        open(p, "wb").write(macbinary(name, "TEXT", "ttxt", data, b""))
+        items.append((folder, p))
+    img = os.path.join(work, "ddwork.img")
+    make_volume_tree(img, "DDwork", items)
+    if not os.path.exists(BOOT):
+        install()
+    s = Session(BOOT, [img], os.path.join(SPECIMENS, tag))
+    return s, work, img
+
+
+def combine(keep=False):
+    """Make a 'DDAR' archive holding a folder and an incompressible file."""
+    s, work, img = session_with_tree("combine")
+    try:
+        s.boot()
+        s.shot("desktop", wait=5.0)
+        s.mac.click(*VOLUME_ICON, double=True)
+        s.shot("volume", wait=10.0)
+        s.menu(DD_MENU_X, DD_SETTINGS_Y, "pick-settings")
+        personalize(s)
+        s.shot("settings", wait=15.0)
+        s.mac.click(*SETTINGS_OK)
+        time.sleep(2.0)
+        # Selected by TYPING, not by clicking an icon whose position
+        # nothing here knows: the Finder selects by name.
+        s.mac.key("p")                                  # "Payload"
+        s.shot("payload-selected", wait=3.0)
+        s.mac.command_key("o")                          # Open
+        s.shot("payload-open", wait=8.0)
+        s.mac.command_key("a")                          # Select All
+        s.shot("all-selected", wait=3.0)
+        s.peek(DD_MENU_X, "dd-menu")                    # is Combine enabled?
+        s.menu(DD_MENU_X, DD_COMBINE_Y, "pick-combine")
+        s.shot("combine-dialog", wait=10.0)
+        s.mac._xdo("type", "--delay", "120", COMBINE_NAME)
+        s.shot("combine-named", wait=3.0)
+        s.mac.key("Return")
+        s.shot("combining", wait=45.0)
+        s.mac.key("Return")                             # any report
+        s.shot("done", wait=20.0)
+        s.mac.click(*VOLUME_ICON)
+        s.mac.command_key("y")                          # Put Away, to flush
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+
+    os.makedirs(SPECIMENS, exist_ok=True)
+    kept = 0
+    for path, (ftype, creator, data, rsrc) in sorted(volume_files(img).items()):
+        if not data[:4] == b"DDAR":
+            continue
+        name = show(path)
+        out = os.path.join(SPECIMENS, "combine.dd")
+        open(out, "wb").write(data)
+        print("  %s  %s/%s  %d B -> %s" % (name, ftype, creator, len(data), out))
+        kept += 1
+    if not kept:
+        print("diskdoubler: no DDAR came back — see %s" % s.shots)
+    if not keep:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0 if kept else 1
 
 
 def session_with_subject(tag):
@@ -978,6 +1113,10 @@ def main():
                     help="boot the application and photograph each step")
     ap.add_argument("--probe-split", action="store_true",
                     help="photograph what the Split command asks for")
+    ap.add_argument("--combine", action="store_true",
+                    help="a DDAR archive holding a folder and an "
+                         "incompressible file — the two record shapes no "
+                         "corpus fixture has")
     ap.add_argument("--make", metavar="METHOD", nargs="?", const="A",
                     help="compress the subject with A, B, guess or both")
     ap.add_argument("--verify", action="store_true",
@@ -1003,6 +1142,8 @@ def main():
         probe_split(args.keep)
     if args.make:
         make(args.make, args.keep)
+    if args.combine:
+        return combine(args.keep)
     if args.adjudicate:
         return adjudicate(args.adjudicate, args.keep,
                           args.write_manifest)
@@ -1010,7 +1151,7 @@ def main():
         return verify()
     if not (args.setup or args.install or args.wild or args.probe
             or args.probe_split or args.make or args.verify
-            or args.adjudicate):
+            or args.combine or args.adjudicate):
         ap.print_help()
     return 0
 
