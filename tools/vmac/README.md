@@ -1833,16 +1833,33 @@ As of **2026-09-22**, **eight** walks and **four** columns:
 |---|---|---|---|---|
 | `checkdisk.walk` | 4/4 | yes | 4/4 | yes |
 | `os9._walk_volume` | 4/4 | yes | 4/4 | yes |
-| `arcmac.read_volume` | **4/4** | no | — | yes |
-| `nowcompress.read_volume` | **4/4** | no | — | yes |
-| `diskdoubler.volume_files` | **4/4** | yes | **4/4** | yes |
-| `cptsegment.read_volume` | **4/4** | no | — | **yes** |
-| `cptcrypt.read_volume` | **4/4** | no | — | **yes** |
-| `superdisk.read_forks` | 2/4 | yes | 0/4 | yes |
+| `arcmac.read_volume` | 4/4 | no | — | yes |
+| `nowcompress.read_volume` | 4/4 | no | — | yes |
+| `diskdoubler.volume_files` | 4/4 | yes | 4/4 | yes |
+| `cptsegment.read_volume` | 4/4 | no | — | yes |
+| `cptcrypt.read_volume` | 4/4 | no | — | yes |
+| `superdisk.read_forks` | 4/4 | yes | 4/4 | yes |
 
-**One walk is left**, and it is last on purpose: `superdisk.read_forks`
-has about thirty callers across nine harnesses, and some of them compare
-fork SETS, which is the thing that makes the same flag expensive.
+**All eight, since 2026-09-22.** `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
+are empty sets and are kept, because they fail in the other direction:
+take `-a` back out of any walk and the probe names it. The four that show
+`—` never descend at all, which `EXPECT_FLAT` records as a property —
+each reads a volume built flat by `make_volume`, or a boot volume whose
+`System Folder` is not output.
+
+**`superdisk.read_forks` went last, and what made it last was the
+CALLERS, not the walk.** It has **38 call sites** across nine harnesses.
+Thirty-four select — by leaf name, by creator (`SMKR`, `SITe`), by type,
+or by a DiskDoubler header — and the flag cannot reach those. **Four do
+not**: `--adjudicate` in `superdisk.py`, `nowcompress.py` and
+`diskdoubler.py`, and `superdisk.py --nest`, each of which holds EVERY
+entry on the guest volume against our own extraction, so an entry with
+no counterpart in our output is a difference. That is why the filter
+lives inside `read_forks` rather than in each caller. Both adjudicate
+harnesses were re-run and the filter dropped exactly `Desktop DB` and
+`Desktop DF` — the two files that would otherwise have been compared
+against nothing: `superdisk --adjudicate` 2/2 forks identical,
+`diskdoubler --adjudicate` 10/10.
 
 **Two of the four columns are new, and both came off a real volume
 rather than out of a list of things that could go wrong.** The cache in
@@ -1906,6 +1923,7 @@ a measurement rather than a constant somebody trusted:
   application's own bookkeeping and the thing this walk used to miss.
 - `diskdoubler --wild` on the 3.7 disk: `Desktop`, and the figure it
   reports is unchanged at 10 compressed files.
+- `superdisk` on a System 7 work volume: `Desktop DB` and `Desktop DF`.
 
 And `-a` cost one real defect on the way in, which is why the rule is to
 re-run the harness: it made `Icon\r` reachable for the first time, and

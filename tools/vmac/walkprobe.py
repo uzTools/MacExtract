@@ -138,13 +138,12 @@ LOCKED = "Locked"
 # Which walks cannot see an INVISIBLE file today. A walk that leaves this
 # list has been fixed; one that joins it has regressed. Either way the set
 # here is meant to be changed deliberately.
-# `arcmac.read_volume` left it on 2026-09-22, and `nowcompress`, the two
-# Compact Pro walks and `diskdoubler.volume_files` the same day.
-# `superdisk.read_forks` is last on purpose: ~30 callers across nine
-# harnesses, several of which compare fork SETS.
-EXPECT_BLIND = {
-    "superdisk.read_forks",
-}
+# EMPTY since 2026-09-22, when all eight took `-a` — `arcmac` first,
+# then `nowcompress`, the two Compact Pro walks, `diskdoubler` and last
+# `superdisk.read_forks`, whose 38 call sites across nine harnesses are
+# why it went last. Kept, and load-bearing, because it fails in the other
+# direction: take the flag back out of any walk and this names it.
+EXPECT_BLIND = set()
 
 # And which never descend into a folder. This is a SECOND blindness and it
 # was not being measured at all: the volume has carried the same four
@@ -171,16 +170,16 @@ EXPECT_FLAT = {
 EXPECT_NO_HIDDEN_DIR = {
     "arcmac.read_volume",
     "nowcompress.read_volume",
-    "superdisk.read_forks",
     "cptsegment.read_volume",
     "cptcrypt.read_volume",
 }
-# Four of those five are in it because they never descend at all, which is
-# a recorded property and not a defect. `superdisk.read_forks` is the one
-# that is there on its own merits: it descends, and walks straight past a
-# folder it cannot see. `diskdoubler.volume_files` was the second until it
-# took `-a` on 2026-09-22, which is what makes this column worth having —
-# passing the first two does not imply passing this one.
+# All four are in it because they never descend at all, which is a
+# recorded property and not a defect — see EXPECT_FLAT, which holds
+# exactly the same four. No walk is in this set on its own merits any
+# more: `diskdoubler.volume_files` and `superdisk.read_forks` both
+# descended and were blind, and both took `-a` on 2026-09-22. That is
+# what the column was for, and it is why it stays — the day a descending
+# walk loses the flag, this says so and EXPECT_FLAT cannot.
 
 # And which drop a LOCKED file. This is not `-a`: `hdir` lists it, with a
 # leading `F`, and the two walks that keep a line on `line.startswith("f")`

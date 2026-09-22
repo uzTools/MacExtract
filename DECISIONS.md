@@ -258,6 +258,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the file that was on the disk and not in the catalog) — a hypothesis about flushing, reduced to a reproduction
 - 2026-09-22 (the folder the application wrote and no walk could see) — four blind walks taken, and two columns the probe was missing
 - 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
+- 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
 
 ---
 
@@ -16249,3 +16250,54 @@ harder, the second by doing one more ordinary write. Four remedies were
 aimed at the first reading before anybody asked the second. The
 discriminator is always the same: do the thing again and see whether the
 earlier one appears.
+
+
+## 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
+
+**Claim.** `superdisk.read_forks` takes `-a`, so **all eight** volume
+walks in the tree see an invisible file, an invisible folder and a
+locked one. `EXPECT_BLIND` and `EXPECT_NO_LOCKED` are empty sets and are
+kept, because they still fail the other way.
+
+**The recorded reason it was expensive was half right, and the half that
+was wrong nearly made it cheap.** Three files said the blocker was that
+"a caller compares fork SETS". No caller does, literally — a first pass
+over all the call sites found every one selecting by leaf name, by
+creator, by type or by a DiskDoubler header, which looked like grounds
+to call the whole cost estimate stale. **Reading the unclassified ones
+settled it the other way.** There are **38** call sites, not the "about
+thirty" three files carried, and **four** of them — `--adjudicate` in
+`superdisk.py`, `nowcompress.py` and `diskdoubler.py`, and
+`superdisk.py --nest` — hold EVERY entry on the guest volume against our
+own extraction. An entry with no counterpart in our output is a
+difference, so a `Desktop` file would have failed all four. Not a fork
+SET comparison; an ENTRY set comparison, which is the same hazard under
+a name that made it unfindable by reading for the words.
+
+**So the filter belongs in the walk, not the callers.** `FINDER_OWN` at
+the ROOT only — where the Finder puts its bookkeeping — and everything
+else kept, including an invisible file an application deliberately
+wrote, which is the entire point of the flag. One change serves 38 call
+sites; four separate filters would have drifted.
+
+**Measured, on the two harnesses that could have failed.** Both were
+re-run: the filter dropped exactly `Desktop DB` and `Desktop DF`, and
+nothing else. `superdisk --adjudicate` 2/2 forks identical,
+`diskdoubler --adjudicate` 10/10 — the same verdicts as before.
+
+**And the re-run found something the flag had nothing to do with.**
+`superdisk --adjudicate` has **always exited 1**, including on a clean
+run: its last line printed `shots`, a local of `run_selfextractor`, so
+it raised `NameError` immediately after printing the verdict. The
+comparison was right and the exit code was useless, for as long as the
+phase has existed. Nothing caught it because `ci.sh` replays this
+verdict by CONTENT (`tools/run_superdisk.py`) and never runs the
+harness, and a human reading the output sees "all identical" on the line
+above the traceback. **An exit code nobody consumes is not a result**,
+and the way it surfaced is the ordinary one: run the thing rather than
+the thing that stands in for it.
+
+**The transferable part.** Two of today's four findings came from the
+same move — re-running a harness rather than the probe that models it.
+The probe cannot see a `text=True` newline translation, and it cannot
+see an exit code.

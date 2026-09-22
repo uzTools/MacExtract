@@ -1635,9 +1635,11 @@ every two entries would pass.
 **A different kind of walk, in the same layer since 2026-09-22.**
 `tools/vmac/walkprobe.py --check` grades the eight HOST-side walks that
 read a Macintosh volume back — whether each can see an invisible file, an
-invisible folder, a locked file, and anything below the root. Four
-columns, no emulator and no ROM, seconds, and it skips cleanly where
-hfsutils is absent. What it measures and what it cannot see:
+invisible folder, a locked file, and anything below the root. All eight
+see all three since 2026-09-22, so two of the four `EXPECT_*` sets are
+EMPTY and kept: they fail in the other direction, which is the only
+direction left. Four columns, no emulator and no ROM, seconds, and it
+skips cleanly where hfsutils is absent. What it measures and what it cannot see:
 `tools/vmac/README.md`, *What every walk can see*.
 
 ## The Macintosh shell's names (`tools/run_macnames.py`, in `ci.sh`)

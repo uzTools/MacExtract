@@ -240,38 +240,6 @@ SpaceSaver were done — and on 2026-09-21 that description, and then the
 code written from it, replaced the last of the transcription in
 `fmt_now.c`.
 
-## One volume walk that cannot see an invisible file
-
-**Measured, not suspected.** `tools/vmac/walkprobe.py` builds one HFS
-volume holding every shape that tells the walks apart and runs all eight
-of them against it. Of those eight, on 2026-09-22, **seven see an
-invisible file and one does not**: `superdisk.read_forks`. The table,
-all four columns and how to re-run it: `tools/vmac/README.md`, *What
-every walk can see*.
-
-**It is last on purpose, and the reason is the callers rather than the
-walk.** `superdisk.read_forks` has about thirty callers across nine
-harnesses, and `-a` also surfaces the Finder's own invisible bookkeeping
-— `Desktop`, `Desktop DB`, `Desktop DF` — on any volume a booted Mac has
-touched. A caller that compares fork SETS would start failing on files
-the Finder made, so this one needs the filter measured against nine
-harnesses rather than one, and an emulator run for each. The four taken
-on 2026-09-22 each needed a single harness re-run, and each now prints
-what its filter dropped (DECISIONS.md 2026-09-22, *the folder the
-application wrote and no walk could see*).
-
-**What it has already lost**, which is the question `walkprobe.py`
-cannot ask of any walk: `ndd.harvest` reads the Norton DiskDoubler Pro
-floppy through this walk, and that floppy carries two invisible items —
-`[DiskExpress Activity Log]`, which is invisible and locked, and
-`Norton DiskDoubler Pro/Icon`. Neither is DiskDoubler output, so nothing
-graded wrongly; both were unreported.
-
-**What would close it:** the flag, a filter measured on each of the nine
-harnesses' own volumes, and a re-run of each. `walkprobe.py --check` is
-what says when it is done: all four of its `EXPECT_*` sets fail in both
-directions.
-
 ## A DART's checksums, which this writes no fork to carry
 
 **Not a scope decision and not a missing specimen: it is a missing

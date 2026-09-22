@@ -1482,6 +1482,27 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"`superdisk.read_forks` has about thirty callers, several of which
+  compare fork SETS"** — corrected 2026-09-22. It has **38** call sites
+  across nine harnesses, and **no** caller compares fork sets. Four
+  compare ENTRY sets, which is the same hazard: `--adjudicate` in
+  `superdisk.py`, `nowcompress.py` and `diskdoubler.py`, and
+  `superdisk.py --nest` hold every entry on the guest volume against our
+  own extraction. **Cost: nothing, and it nearly cost the opposite** —
+  reading for the phrase "fork SETS" found no caller matching it, which
+  looked like grounds to call the whole estimate stale and the work
+  cheap. The estimate was right about the risk and wrong about its name.
+  The fix was one root filter inside the walk serving all 38 sites
+  (DECISIONS.md 2026-09-22, *the last walk, and the exit code nobody
+  could get*).
+- **`superdisk.py --adjudicate` has always exited 1**, including on runs
+  where every fork was identical: its final line referenced `shots`, a
+  local of another function, and raised `NameError` after the verdict had
+  printed. Found 2026-09-22, by running the harness instead of
+  `tools/run_superdisk.py`, which is what `ci.sh` calls and which replays
+  the verdict by content. **Cost: an exit code that could never say
+  success, for the life of the phase.**
+
 - **"hfsutils hides names beginning with a dot without `-a`"** — withdrawn
   2026-09-22. It hides a file whose Finder INVISIBLE bit is set, and the
   dot is irrelevant. Measured as a 2x2, all four cells
@@ -1495,9 +1516,8 @@ a harness can click is not the same list.
   figure's comparability rests on — read its listing without `-a`, so
   the files the strip cannot delete were exactly the ones it could not
   see; an invisible `Ghost INIT` planted in a stripped System Folder
-  passed it. Of the eight volume walks in the tree, seven see an
-  invisible entry since 2026-09-22 and `superdisk.read_forks` does not
-  (OPEN_ITEMS.md, *One volume walk that cannot see an invisible file*).
+  passed it. **All eight volume walks see an invisible entry since
+  2026-09-22** (`tools/vmac/README.md`, *What every walk can see*).
   **The fact had been observed four separate times** — in `checkdisk.py`,
   `arcmac.py`, the yardstick's Standard File row and `mkboot.py`, the
   last of which states it correctly one function above a comment blaming
