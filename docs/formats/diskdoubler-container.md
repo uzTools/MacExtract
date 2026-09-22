@@ -42,9 +42,16 @@ the walk that those 643 assertions already grade put it.
 `0xABCD0054`, then 80 more bytes, then the data fork's compressed bytes
 and the resource fork's, in that order.
 
+**That long is not one magic number.** It is the word `0xABCD` and then
+a 16-bit HEADER SIZE, measured 2026-09-22 — see *The header size, and
+the 1990 header* below. Every specimen in this corpus states 84, so
+everything in the table is offsets into an 84-byte header; a file
+DiskDoubler ß05 wrote states 48 and stops after +47.
+
 | offset | size | field | how it is pinned |
 |---|---|---|---|
-| 0 | 4 | magic `0xABCD0054` | the sniffer's, and 66 files begin with it |
+| 0 | 2 | magic `0xABCD` | the sniffer's, and 66 files begin with it |
+| 2 | 2 | **the header's own size**, 84 here | **measured 2026-09-22**: the 1990 build writes 48 and lays the 48 bytes out identically, and its own expander accepts any value ≥ 48 |
 | 4 | 4 | data fork length | **pinned**: one offset survives over 66 compressed files, and one over all 195 file headers wherever they sit — 66 files, 36 inside `DDAR`, 93 inside `DDA2` |
 | 8 | 4 | data fork compressed length | the walk: the resource fork's bytes begin here past the header, in every archive that has a next entry to arrive at |
 | 12 | 4 | resource fork length | **pinned**, same two searches |
@@ -68,7 +75,9 @@ and the resource fork's, in that order.
 ### The header is written twice
 
 **A file DiskDoubler compressed ends with a byte-for-byte copy of its
-own 84-byte header.** 63 of the 66 compressed files here carry one, and
+own 84-byte header.** True of 3.x and 4.x, and **not of the format** —
+the 1990 build writes no trailer at all (*The header size, and the 1990
+header*). 63 of the 66 compressed files here carry one, and
 the three that do not are `synth-dd-m3.dd`, `synth-dd-m4.dd` and
 `synth-dd-m5.dd` — written by `tools/vmac/ddencode.py`, in this tree,
 rather than by DiskDoubler. So every real specimen has it and no
@@ -87,6 +96,66 @@ happens to work, and is not what the archive says.
 one — DiskDoubler appended `.dd` to it — so nothing in this document
 says what an entry is called, and `derive_ddc.py` grades a compressed
 file on everything else.
+
+### The header size, and the 1990 header
+
+**Measured 2026-09-22 by running the oldest DiskDoubler there is.**
+`DiskDoubler ß05, Copyright 1990 Salient` is an INIT with no
+application: it adds a `DD` menu to the Finder reading
+`Compress Selection;Expand Selection`, and nothing else. It is four
+versions older than the 3.1.2 this project had been calling the oldest
+(DECISIONS.md 2026-09-22, *the version that could not have written it*),
+and `tools/vmac/diskdoubler.py --beta` installs it under System 6.0.8
+and drives that menu.
+
+What it writes, over a subject with an 11,428-byte data fork and a
+340-byte resource fork:
+
+    ab cd 00 30  00 00 2c a4  00 00 06 a1  00 00 01 54
+    00 00 00 61  01 01 1f 00  00 00 00 00  00 00 00 00
+    54 45 58 54  74 74 78 74  00 00 00 00  00 00 00 00
+
+Field for field that is the table above: `0xABCD`, then **48** where
+every corpus file says 84, then 11,428 → 1,697 and 340 → 97, methods
+1/1, `info1` `0x1f`, the ORIGINAL file's `TEXT`/`ttxt` at +32 and +36,
+and Finder flags 0. The header then **stops**: there is no room for the
+checksums at +48, `info2` at +52 or the delta distances at +54, and the
+file is `48 + 1697 + 97 = 1842` bytes exactly.
+
+Three things follow, and each was an open question this document asked:
+
+- **The magic long is a magic word and a length.** `0xABCD0054` is
+  `0xABCD` and 84. The 1990 expander's own validator, read out of its
+  `CCOD` resource, refuses a word other than `0xABCD` and then requires
+  the size at +2 to be **≥ 48** — a forward-compatible test, which is
+  what a version that expected the header to grow would write.
+- **The header trailer is 3.x's, not the format's.** Nothing follows
+  the two forks: the 1990 file has no copy of its own header. So the
+  63-of-66 count above is a fact about the generation this corpus is
+  made of.
+- **The file is stamped `ZIVM`/`LZIV`.** Not `DD01`, which is what a
+  search for the meaning of that type code would have hoped for; `DD01`
+  and `DD02` stay unexplained, and the 1990 INIT's own `BNDL` declares
+  no file types at all beyond its own `INIT`.
+
+And one that was not asked. **`info1` is a version byte and the XOR
+garbling is gated on it.** The 1990 file reads `0x1f` and its data fork
+begins `1f 9d 90` — `compress(1)`'s own magic, in clear. The same
+subject through DiskDoubler 3.7 reads `info1 == 0x2a` and begins
+`45 c7 ca`, which is those three bytes XORed with `0x5a`. Until now
+every specimen here read `0x2a`, so the un-garbled branch of the rule in
+*The XOR garbling* had never been seen at all.
+
+**Graded against the bytes DiskDoubler was given**, which is the oracle
+`--verify-combine` and `nowcompress.py` use, because neither this engine
+nor `unar` reads a 48-byte header — both answer "format not recognized".
+`diskdoubler.py --beta-verify` sets the size word to 84, writes the two
+forks' checksums where an 84-byte header keeps them, and hands the
+result to this engine: **both forks come back byte-exact**, and the
+checksums it computes from the INPUT — `0xd766` and `0x116a` — are the
+two DiskDoubler 3.7 itself stored for the same forks. The two
+compressors also agree on length to the byte, 1,697 and 97 from the same
+input, which is the LZW behaving identically either side of the XOR.
 
 ### Which forks use method 10's second form, and how that is known
 
@@ -115,10 +184,16 @@ done without reading the field.
 
 Methods 1 to 5 may be written with every byte XORed by `0x5a` — the
 three header bytes at +20, +21 and +22 included. It is on when `info1`
-has reached `0x2a` and `info2`'s high bit is clear. **Every specimen
-here reads `info1 == 0x2a` exactly**, so the `>=` is a rule no fixture
-distinguishes from `==`, and this document says so rather than
-choosing.
+has reached `0x2a` and `info2`'s high bit is clear.
+
+**Both branches now have a specimen, since 2026-09-22.** Every file in
+this corpus reads `info1 == 0x2a` and is garbled; the one DiskDoubler
+ß05 wrote reads `0x1f` and is not, and its data fork begins with
+`compress(1)`'s `1f 9d 90` in clear where 3.7's begins `45 c7 ca`
+(*The header size, and the 1990 header*). So `info1` is a version byte
+that varies, which is what the threshold is testing. The `>=` is still
+a rule no fixture distinguishes from `==` — 0x1f fails both — and this
+document says so rather than choosing.
 
 ## `DDAR` — DiskDoubler 3.x and 4.x
 
@@ -140,7 +215,8 @@ past byte 4 is at exactly that offset.
 | 82 | 4 | creation date | no manifest records a date |
 | 86 | 4 | modification date | as +82 |
 | 90 | 4 | type | **not the entry's** — see below |
-| 94 | 2 | Finder flags, whose `0x20` says the forks follow raw | **no specimen** |
+| 94 | 4 | creator | as +90, and not the entry's either |
+| 98 | 2 | Finder flags, whose `0x20` says the forks follow raw | **no specimen** |
 | 118 | 2 | data fork checksum | **no specimen** |
 | 120 | 2 | resource fork checksum | **no specimen** |
 | 124 | | a compressed file header, or the raw forks | |
@@ -232,7 +308,11 @@ applications are on Macintosh Garden's `apps/disk-doubler` page
 which is also where **DiskDoubler ß05, Copyright 1990 Salient** is —
 the oldest DiskDoubler reachable, an INIT whose Finder menu reads
 `Compress Selection;Expand Selection;(-;About DiskDoubler`, with no
-Combine and no `DDAR` in it either.
+Combine and no `DDAR` in it either. **It has since been run**
+(*The header size, and the 1990 header*): the menu is those three items
+on the screen as well as in the resource fork, so it writes single
+compressed files and nothing else, and this row cannot be closed by
+anything older than the 3.x it already has.
 
 ## `DDA2` — DiskDoubler Pro
 
@@ -306,6 +386,10 @@ inside one 46-byte window, and `src/fmt_dd.c` says so where it matters
 - **`DDAR`'s `0x20` raw-fork records**, for want of a specimen: see
   above. The folder records are no longer on this list — they were
   measured on 2026-09-22 against an archive DiskDoubler wrote here.
+- **A 48-byte header, read by this engine.** The 1990 layout is
+  measured above and graded, and neither this engine nor `unar` opens
+  one (OPEN_ITEMS.md, *A DiskDoubler header this engine does not
+  read*).
 - **Methods 2, 3, 4 and 5's own headers.** `src/fmt_dd.c` decodes 3, 4
   and 5 against forks DiskDoubler's own expander reads back
   (DECISIONS.md 2026-08-21) and the three specimens here are this
