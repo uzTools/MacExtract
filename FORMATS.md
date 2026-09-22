@@ -2690,10 +2690,12 @@ DURING extraction — File Manager buffers, and a dialog that opens mid-run. On
 a heavy 1 MB extraction (`derived-Troi-ClipSave-Plug-in1.1.sit`, engine peak
 472,137 B) the shell's share at the tightest moment measured **−33 B**:
 nothing beyond the engine, to within the skew between the two samples. The
-13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers — 69/69 at
-1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 21/21 on Mac OS 9.2 — and the
-password and report dialog phases driven end to end, the password one on the
-512 KB machine where the heap is tightest.
+13,242 B worst case comes from a lighter run where a dialog was up. Verified byte-exact at that size on all four tiers **as the samples then
+stood** — 69/69 at 1 MB, 66/69 at 512 KB, 69/69 on System 7.0.1, 21/21 on
+Mac OS 9.2 — and the password and report dialog phases driven end to end,
+the password one on the 512 KB machine where the heap is tightest. Both
+samples have grown since and every tier has been re-run on them: 71/71,
+67/71 and 22/22 (BLOCKERS.md, the tier table).
 
 **What is still not proven, and it is no longer contiguity:** every figure
 above comes from an emulator with a stripped System Folder, no INITs and a
@@ -4458,7 +4460,12 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**22/22**, the twenty-second added 2026-09-22 (the table below).
+**22/22 in ONE sweep on the binary that ships**, 2026-09-22 — every
+fixture of `os9sample.txt` in one run, each in its own boot, on the
+source `dist/` was last built from. Until that run the figure was 22
+across two builds and two days, which is why it was taken: 21 fixtures
+on 2026-09-04 and `derived-800saywhat301j.sit` on 2026-09-22, the latter
+also predating the 1990 DiskDoubler header. No fixture moved.
 **21/21 as of 2026-09-04**, re-run on the build that zeroes `UncOptions` —
 a fix that costs the smallest machine nothing: **147,548 B of code before,
 147,544 B after**, with 4 B moving to the A5 world (measured against a
@@ -4508,9 +4515,11 @@ master image:
 | `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
 
 **22/22**, 71 files, 941,756 data bytes and 452,596 resource-fork bytes
-compared — 21 of them on 2026-09-04 and
-`derived-800saywhat301j.sit` on **2026-09-22**, not in one sweep
-(20/20 and 51 files before Now Compress joined).
+compared, **all of it in one sweep on 2026-09-22** (20/20 and 51 files
+before Now Compress joined). The run before it was 21 fixtures on
+2026-09-04 plus one on 2026-09-22, two builds — so this is the first
+time the tier's figure has come from a single binary, and that binary is
+the one in `dist/`.
 
 **That fixture found two things in the HARNESS and nothing in the
 application** (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*). The
