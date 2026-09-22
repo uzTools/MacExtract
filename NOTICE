@@ -70,16 +70,23 @@ This project's decoders are transcriptions/ports of algorithms from:
     needs — 897 forks across 103 archives read from the page alone
     (`tools/derive_sit13.py`), and the tables compared array by array
     against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
-    pointed at the page instead. What that file still owes XADMaster
-    and macutils is **method 6's framing** — its segment header, its
-    stored-segment rule and its PackBits tail — and that is the whole
-    of it since 2026-09-21. **Method 6's fixed code book is not
-    macutils' any more**: `src/sit6_tables.h` carried 1,028 bytes of
-    tables derived from `code6[258]` and `sit_dosplit`, and it is now
-    the thirteen (count, length) pairs and the assignment rule
+    pointed at the page instead. **Since 2026-09-22 `src/fmt_sit.c`
+    owes XADStuffItParser.m, XADCompressHandle.m and
+    `macunpack/sit.c` nothing at all.** Method 6 was the last of it.
+    Its fixed code book stopped being macutils' on 2026-09-21 —
+    `src/sit6_tables.h` carried 1,028 bytes of tables derived from
+    `code6[258]` and `sit_dosplit`, and it is now the thirteen
+    (count, length) pairs and the assignment rule
     `reference/deark/modules/stuffit.c` states (MIT), which reproduce
     macunpack's tree over every one of the 8,192 bit paths of depth 13
-    (`tools/check_sit6_tree.py`). And the RLE90 filter is
+    (`tools/check_sit6_tree.py`). Its **framing** — the segment
+    header, the stored-segment rule and the PackBits tail — followed
+    on 2026-09-22: `docs/formats/stuffit-method-6.md` describes all
+    three against that same MIT file and `fmtutil-rle.c`'s PackBits
+    codec, with the three places this engine is stricter than either
+    reference measured rather than transcribed, and a reader written
+    from the note alone reads all 11 method-6 forks in the corpus
+    (`tools/derive_sit6.py`). And the RLE90 filter is
     `reference/notes/rle90_theunarchiver.md`, the format's own
     published description, which states every rule
     `unc_internal.h`'s shared filter implements — including the
@@ -119,10 +126,13 @@ This project's decoders are transcriptions/ports of algorithms from:
     allowed, and that "for some parts of it the GNU software license
     does apply"; the files here that cite it say "LGPL, see NOTICE",
     and this is what that points at.
-    Used as a secondary reference for the oldest formats, and as the
-    ONLY reference for StuffIt method 6, "fixed Huffman", which
-    XADMaster recognizes but does not implement: `src/fmt_sit.c` and
-    the generated `src/sit6_tables.h` transcribe `macunpack/sit.c`.
+    Used as a secondary reference for the oldest formats. **Not
+    `src/fmt_sit.c` since 2026-09-22**: that file's method 6, "fixed
+    Huffman", was transcribed from `macunpack/sit.c` because XADMaster
+    recognizes the method and refuses it, and it is
+    `docs/formats/stuffit-method-6.md`'s now — deark implements the
+    method under MIT, which the claim that macutils was the only
+    reference for it had missed for four weeks (BLOCKERS.md).
     **Not `src/fmt_packit.c`'s container since 2026-09-21**: PackIt is
     published too, in appendices B and C of R. Scott McGinnis's 1986
     unPACKIT manual, and `docs/formats/packit.md` carries the four

@@ -640,14 +640,33 @@ the longest and shortest runs, a one-byte alphabet, twelve segments in a fork �
 are covered by `synth-sit-fixhuf.sit` (`tools/synth_sit6.py`), also
 oracle-adjudicated, 10 forks over 5 entries.
 
+**And the framing is the note's since 2026-09-22**, which cost **0 B of
+code, 0 B of A5, 0 B of heap and 0 ticks**: nothing executable changed,
+because what the engine already did is what
+`docs/formats/stuffit-method-6.md` describes. Across the 11 forks the
+corpus has: **27 segments — 13 Huffman and 14 stored**; the largest
+PackBits stream a segment declares is **31,806 B**, which is what sizes
+the buffer above; code counts of 1, 10, 11, 17, 129, 191, 254, 255 and
+256; and **97 distinct PackBits control bytes**, from a one-byte literal
+run to a 128-byte one, repeats of 2 and of 128, and the `0x80` no-op.
+The one thing the two references disagree about is measured rather than
+chosen: deark stops Huffman decoding at the declared length and never
+reads the stop code, macunpack ignores the length and reads until it,
+and **in 13 Huffman segments of 13 the symbol after the declared length
+is the stop code** — so `fmt_sit.c` requiring both refuses a segment
+they would disagree about (DECISIONS.md 2026-09-22).
+
 **The oracle was `macunpack` alone, and since 2026-09-21 it is macunpack
 AND deark:** XADMaster recognizes the method and refuses it
 (`//case 6: fixed huffman`, `reference/XADMaster/XADStuffItParser.m`), which
 is where the name comes from; macunpack has decoded it since 1991 and is the
 reference the decoder is transcribed from. **deark implements it too** —
 MIT, in `reference/` since 2026-08-25 and compiled by `ci.sh` for another
-format the whole time — and agrees on all 12 method-6 forks here, the
-34,818-byte resource fork included. So the manifests record two
+format the whole time — and agrees on all **11** method-6 forks here, the
+34,818-byte resource fork included (this section, BLOCKERS.md and
+DECISIONS.md all said 12 until 2026-09-22, while enumerating eleven in
+the same sentence: ten in `synth-sit-fixhuf.sit` and one in
+`derived-INITLoader.sit`). So the manifests record two
 implementations where they recorded a transcription and its own source.
 TESTING.md, "A third oracle", for what that does and does not prove — deark
 credits macunpack as DOCUMENTATION, so the two are independent code and not

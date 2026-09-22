@@ -10,12 +10,15 @@ segment boundary falling inside a run. This generates an archive that
 does, so those paths are checked against a reference implementation
 rather than against our own unit tests.
 
-The oracle for this fixture is macunpack, not unar: The Unarchiver does
-not implement method 6 (see TESTING.md, "A second oracle").
+The oracle for this fixture is macunpack AND deark, not unar: The
+Unarchiver recognizes method 6 and refuses it (TESTING.md, "A second
+oracle" and "A third oracle").
 
 Container layout and the method byte come from the same sources as the
 parser in src/fmt_sit.c. The segment framing and the PackBits semantics
-come from reference/macutils/macunpack/sit.c (sit_fixhuf); the code tree
+come from docs/formats/stuffit-method-6.md, this project's own note,
+written against reference/deark/modules/stuffit.c (MIT) — they came
+from reference/macutils/macunpack/sit.c until 2026-09-22; the code tree
 is built from the 26 bytes in src/sit6_tables.h the same way
 src/fmt_sit.c's sit6_build builds it — the header stopped carrying the
 expanded tree on 2026-09-21. It used to be derived
@@ -90,7 +93,8 @@ CODES = build_tree()
 
 
 # --- PackBits ---------------------------------------------------------
-# Source: the tail of sit_fixhuf. n < 0x80 introduces n + 1 literals,
+# Source: docs/formats/stuffit-method-6.md, *PackBits, once per
+# block*. n < 0x80 introduces n + 1 literals,
 # n == 0x80 is a no-op, and n > 0x80 repeats the next byte 0x101 - n
 # times. The generator emits these shapes explicitly rather than running
 # a compressor, because the point is to cover the control bytes the real

@@ -9,11 +9,13 @@
  * the oracle recorded (tools/derive_sit13.py). Method 3's tree is
  * docs/formats/serialized-huffman-tree.md, method 8's coder is
  * docs/formats/stuffit-method-8-mw.md, method 13's is the first note
- * above. What is left of XADStuffItParser.m, XADCompressHandle.m and
- * reference/macutils/macunpack/sit.c here is **method 6** — LGPL, see
- * NOTICE. The RLE90 filter left that list on 2026-09-21 for the
- * format's own published description, reference/notes/
- * rle90_theunarchiver.md, which states every rule it implements.
+ * above, and method 6's code book and framing are
+ * docs/formats/stuffit-method-6.md. **Nothing in this file is
+ * XADStuffItParser.m's, XADCompressHandle.m's or macunpack/sit.c's
+ * any more**, since 2026-09-21: method 6's framing was the last of
+ * it, and the RLE90 filter left the same day for the format's own
+ * published description, reference/notes/rle90_theunarchiver.md,
+ * which states every rule it implements.
  *
  * Archive header (22 bytes): u32 magic ('SIT!' or installer 'ST..'
  * variants), u16 numfiles, u32 totalsize, u32 magic2 'rLau', u8
@@ -413,16 +415,16 @@ out:
 /* .h); only the leaf bytes change per segment, which is what "fixed" */
 /* means here.                                                        */
 /*                                                                    */
-/* Source: reference/macutils/macunpack/sit.c (sit_fixhuf, code6,     */
-/* sit_dosplit) — LGPL, see NOTICE. XADMaster recognizes the method   */
-/* and refuses it (XADStuffItParser.m), which is where the name comes */
-/* from; this file called macunpack "the ONLY reference implementation*/
-/* the project has for method 6" until 2026-09-21, and that was false.*/
-/* reference/deark/modules/stuffit.c implements it too, under MIT,    */
-/* crediting macunpack as documentation and using none of its code —  */
-/* and it states the fixed code book as THIRTEEN (count, length)      */
-/* pairs plus an assignment rule, which reproduces every code in      */
-/* sit6_tables.h (OPEN_ITEMS.md, *What is still XADMaster's*).        */
+/* Source: docs/formats/stuffit-method-6.md, which describes the code */
+/* book, this framing and its three corrections, and which is written */
+/* against reference/deark/modules/stuffit.c (MIT — deark credits     */
+/* macunpack as documentation and uses none of its code). A reader    */
+/* written from that note alone reads all 11 method-6 forks in the    */
+/* corpus, byte for byte (tools/derive_sit6.py). XADMaster recognizes */
+/* the method and refuses it (XADStuffItParser.m), which is where the */
+/* name comes from; this file called macunpack "the ONLY reference    */
+/* implementation the project has for method 6" until 2026-09-21, and */
+/* that was false.                                                    */
 /* ------------------------------------------------------------------ */
 
 #include "sit6_tables.h"
@@ -546,9 +548,11 @@ static int sit6_u32(UncBufIn *in, uint32_t *out)
 }
 
 /* Expand one PackBits stream into the fork, stopping at *left bytes.
- * Source: sit_fixhuf's tail loop. A control byte below 0x80 introduces
+ * Standard Macintosh PackBits: a control byte below 0x80 introduces
  * n + 1 literals, 0x80 is a no-op, and above that it repeats the next
- * byte 0x101 - n times. */
+ * byte 0x101 - n times. The remaining fork length is a maximum and
+ * not an expectation. Source: docs/formats/stuffit-method-6.md,
+ * *PackBits, once per block*. */
 static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
                          uint32_t *left)
 {
@@ -599,9 +603,12 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
         } while (++depth <= SIT6_DEPTH);
         if (child > SIT6_LEAVES) return UNC_ERR_CORRUPT; /* not a tree */
         if (child >= SIT6_LEAVES - 1) break;             /* terminator */
-        /* A code for a leaf the segment never named stands for nothing;
-         * macunpack hands back a byte left over from an earlier segment,
-         * which is a wrong fork rather than a refused one. */
+        /* A code for a leaf the segment never named stands for nothing.
+         * Both references index their translation array with it and
+         * bound it against nothing, handing back a byte an earlier
+         * segment left there — a wrong fork rather than a refused one.
+         * No segment in the corpus does it (correction 2 of
+         * docs/formats/stuffit-method-6.md). */
         if (child > codes) return UNC_ERR_CORRUPT;
         if (got == explen) return UNC_ERR_CORRUPT;
         seg[got++] = leaf[child - 1];
@@ -609,6 +616,13 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
          * never terminates cannot read on into the next fork. */
         if (unc_bitin_bytepos(&bi) - start > segbytes) return UNC_ERR_CORRUPT;
     }
+    /* The terminator is REQUIRED, and it is where the declared length
+     * says it is: across the corpus's 13 Huffman segments the symbol
+     * after the declared length is the terminator in 13 of 13
+     * (correction 1 of docs/formats/stuffit-method-6.md). deark stops
+     * at the length without reading it and macunpack ignores the
+     * length and reads until it; requiring both refuses a segment the
+     * two would disagree about. */
     if (got != explen) return UNC_ERR_CORRUPT;
     *used = unc_bitin_bytepos(&bi) - start;
     return *used <= segbytes ? UNC_OK : UNC_ERR_CORRUPT;

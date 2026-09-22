@@ -237,6 +237,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
 - 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
 - 2026-09-21 (the table that was twenty-six bytes) — StuffIt method 6's fixed code book, priced on both axes
+- 2026-09-22 (the framing that needed no rewrite) — StuffIt method 6's last macutils row, closed for nothing, and the three places this engine is stricter than both references
 
 ---
 
@@ -14487,7 +14488,7 @@ instrument outside the encoder's own code is left to ask.
 ## 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
 
 **Claim.** deark implements StuffIt method 6 and agrees with this engine
-on all 12 method-6 forks here. It is MIT, it has been in `reference/`
+on all 11 method-6 forks here. It is MIT, it has been in `reference/`
 since 2026-08-25, and `ci.sh` compiles it on every run. The claim it
 disproves — *"this is the ONLY reference implementation the project has
 for method 6"* — was written in `src/fmt_sit.c`, repeated in FORMATS.md
@@ -14607,3 +14608,91 @@ shown to fail on two different corruptions of the 26 bytes. What
 `fmt_sit.c` still owes macutils is method 6's **framing**: the segment
 header, the stored-segment rule and the PackBits tail. deark implements
 those too, so the row is not closed, it is smaller.
+
+## 2026-09-22 (the framing that needed no rewrite) — StuffIt method 6's last macutils row, closed for nothing, and the three places this engine is stricter than both references
+
+**Claim.** Method 6's **framing** — the segment header, the
+stored-segment rule and the PackBits tail, the last of `macunpack/sit.c`
+in `src/fmt_sit.c` — is stated in full by
+`reference/deark/modules/stuffit.c` and `reference/deark/src/fmtutil-rle.c`,
+both MIT. `docs/formats/stuffit-method-6.md` is that description plus the
+three corrections it needs, and `tools/derive_sit6.py`, written from it
+and from the container page alone, reads **all 11 method-6 forks in the
+corpus** byte for byte against the sha256 two oracles recorded. The row
+in OPEN_ITEMS.md closes: **nothing in `fmt_sit.c` is XADMaster's or
+macutils' any more.**
+
+**Evidence, and the price.** Priced on all five axes the previous row
+was, and it is a row of zeros:
+
+| | |
+|---|---|
+| code | **0 B** — 152,596, the ceiling |
+| A5 | **0 B** — 37,660, the ceiling |
+| peak heap | **0 B** |
+| engine ticks | **0** |
+| extractions lost | **none** |
+
+Zero because **nothing executable changed**. Every line this touched in
+`src/fmt_sit.c` is a comment; `git diff src/` has no other kind. That is
+not a disappointment, it is the result: the engine's framing and deark's
+agree field for field, which is what a re-derivation is for. The RLE90
+row closed the same way on 2026-09-21 and PackIt's did not — there the
+appendices needed four corrections and a derivation tool to find them.
+
+**What the derivation found that the citation would not have.** The two
+references **disagree about where a Huffman segment ends**, and the
+engine had quietly taken a third position:
+
+- deark stops decoding the instant the segment's declared length is
+  reached and never reads the stop code;
+- macunpack ignores the declared length and decodes until the stop code;
+- `fmt_sit.c` does both — it reads on after the declared length and
+  **requires** the next symbol to be the stop code.
+
+Nothing in either reference says which is right, so it was measured:
+across the corpus's **13 Huffman segments the symbol after the declared
+length is the stop code in 13 of 13** — never a byte, never the
+segment's end. So all three readings agree on every file here, and the
+strictest of them refuses a segment they would disagree about instead of
+picking a winner. `tools/derive_sit6.py` implements deark's rule and
+reports the measurement beside it, so the day a segment disagrees the
+tool says so rather than the engine failing a fixture.
+
+The other two corrections are the same shape and smaller: **both**
+references index their translation array with a decoded symbol and bound
+it against nothing, so a segment naming 12 bytes and coding a thirteenth
+hands back what the previous segment left there — a wrong fork rather
+than a refused one, and no segment here does it; and deark treats a
+segment header below 10 bytes as a clean stop where this engine reports
+the fork corrupt, the fork being short either way and the difference
+being whether the caller is told.
+
+**The transferable part.** *The code book was worth 592 bytes and the
+framing is worth nothing, and both were worth doing.* The size win was
+the reason the previous row got taken, and reading it as the reason
+would have left this one undone — a licence row is closed by the
+description existing, not by the description saving anything. What the
+zero buys is that `NOTICE`'s macutils paragraph no longer names
+`fmt_sit.c`, and that the framing is now written down somewhere other
+than in a decoder.
+
+**And `dist/` was stale, which is the same day's other cost.** Rebuilding
+it for this commit produced a resource fork **591 B smaller** than the
+committed one: `0aa9101` changed `src/fmt_sit.c` and `src/sit6_tables.h`
+— the −592 B the code book was taken FOR — and did not rebuild the only
+download this project offers, so the download did not have the saving in
+it. Nothing tells you: the ratchets read the working tree, `ci.sh` builds
+`build/mac/` and not `dist/`, and a stale binary is the right size and
+the wrong bytes. Found by rebuilding `dist/` and diffing, and confirmed
+against a **fresh `git worktree`** of `HEAD` — whose build has the same
+resource fork as this one, which is what says the staleness predates
+this change rather than being caused by it.
+
+**One figure corrected on the way.** "All 12 method-6 forks" was written
+in three files on 2026-09-21, each time next to the enumeration that
+adds to eleven — ten in `synth-sit-fixhuf.sit`, one in
+`derived-INITLoader.sit`. The corpus has **11**; counting them is the
+first thing `derive_sit6.py` does. A number and its own enumeration
+disagreeing in one sentence is the cheapest smell there is, and it
+survived three files for a day.
