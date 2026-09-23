@@ -259,12 +259,21 @@ This project's decoders are transcriptions/ports of algorithms from:
     (fixtures/SOURCES.md).
 
   * The cryptographic primitives five of the encryption schemes need —
-    DES, MD5, RC4, SHA-1 and AES — are transcribed from XADMaster's
-    own `Crypto/` directory (md5.c, sha.c, hmac_sha1.c, the Gladman AES
-    tables) and from the handles that use them; the tables are
-    precomputed by `tools/gen_crypt_tables.py` because this engine may
-    not have global mutable state, and the generator checks the AES S
-    box against its own definition rather than trusting the copy.
+    DES, MD5, RC4, SHA-1 and AES — cite the documents that define them,
+    since 2026-09-23: RFC 3174 sections 5 and 6.1 for SHA-1, RFC 2104
+    for HMAC's 0x36/0x5C pads, RFC 2898 section 5.2 for PBKDF2,
+    `reference/notes/arcfour_draft.txt` for RC4's key schedule, and
+    APPNOTE.TXT section 6.1 for the traditional zip cipher, whose three
+    key constants, `update_keys` and `decrypt_byte` it writes out in
+    full. WinZip's AES parameters — 1,000 iterations, a salt half the
+    key's length, the last two bytes as the verifier — are its own
+    published AE-1/AE-2 specification; only the CTR counter's
+    endianness and start value are not in it, and those rest on the
+    fixtures that decrypt. Gladman's `Crypto/aeskey.c` and `aescrypt.c`
+    remain named for the AES key expansion. The tables are precomputed
+    by `tools/gen_crypt_tables.py` because this engine may not have
+    global mutable state, and the generator checks the AES S box against
+    its own definition rather than trusting any copy.
     **Nothing in `src/crypt_tables.h` is derived from XADMaster since
     2026-09-23.** DES's tables — IP, IP^-1, PC-1, PC-2, the shift
     schedule, the eight selection functions and P — are read out of FIPS

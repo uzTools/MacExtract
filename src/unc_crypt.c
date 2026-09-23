@@ -45,9 +45,14 @@
  * ciphers here — StuffIt's variant is that round function and no other
  * (see *StuffItDES* below); reference/XADMaster/XADStuffItDESHandle.m
  * for what remains format knowledge, the nibble key schedule and the
- * derivation the three real archives grade; XADStuffIt5Parser.m +
- * XADRC4Handle.m, XADPackItParser.m (both PackIt handles), XADZipCryptHandle.m,
- * XADXORHandle.m. The TABLES in src/crypt_tables.h are nobody's
+ * derivation the three real archives grade; XADStuffIt5Parser.m,
+ * XADPackItParser.m (both PackIt handles) and XADXORHandle.m (ARC's
+ * garble). The other four handles left on 2026-09-23 for the documents
+ * that state what they do: RFC 3174, RFC 2104 and RFC 2898 for SHA-1,
+ * HMAC and PBKDF2, reference/notes/winzip_aes.txt for AE-1/AE-2's
+ * parameters, zip_appnote.txt section 6.1 for the traditional zip
+ * cipher, and arcfour_draft.txt for RC4's schedule.
+ * The TABLES in src/crypt_tables.h are nobody's
  * implementation since 2026-09-23: standard DES's are FIPS 46-3's own
  * (reference/notes/fips46-3.pdf), MD5's are RFC 1321's
  * (reference/notes/rfc1321.txt), and the AES S box is built from the
@@ -396,9 +401,13 @@ static void crypt_clear(UncCrypt *cr, int kind, uint32_t blocksize);
 
 /* ------------------------------------------------------------------ */
 /* SHA-1, HMAC-SHA1 and PBKDF2 (WinZip's AES, and nothing else)        */
-/* Source: reference/XADMaster/Crypto/sha.c and hmac_sha1.c, and the    */
-/* key derivation in XADWinZipAESHandle.m (DeriveKey), which is         */
-/* PBKDF2 with 1000 iterations. LGPL / public domain — see NOTICE.      */
+/* Source: the standards, since 2026-09-23. RFC 3174 sections 5 and 6.1 */
+/* for SHA-1's K constants, its five initial words and the round;       */
+/* RFC 2104 for HMAC's 0x36/0x5C pads over a 64-byte block; RFC 2898    */
+/* section 5.2 for PBKDF2's U_1 xor ... xor U_c over a four-octet       */
+/* big-endian INT(i). The PARAMETERS are WinZip's published AES spec    */
+/* (reference/notes/winzip_aes.txt): 1,000 iterations, a salt half the  */
+/* key's length, and the last two bytes as the verifier. See NOTICE.    */
 /* ------------------------------------------------------------------ */
 
 static void sha1_block(uint32_t h[5], const uint8_t *p)
@@ -628,8 +637,12 @@ void unc_aes_encrypt_test(UncCrypt *cr, const uint8_t *key, int keybytes,
 /* WinZip's AES: PBKDF2 over the salt gives an encryption key, an
  * authentication key and a two-byte verifier, and the data is a counter
  * mode stream with the counter LITTLE-endian and starting at 1.
- * Source: XADWinZipAESHandle.m. `keybytes` is 16, 24 or 32; `salt` is
- * keybytes/2 long. Returns UNC_ERR_PASSWORD if the verifier disagrees. */
+ * Source: reference/notes/winzip_aes.txt, WinZip's own AE-1/AE-2
+ * specification, for everything but the counter's endianness and start
+ * value, which it leaves to Gladman's library and which are therefore
+ * the one thing here graded only by the fixtures that decrypt.
+ * `keybytes` is 16, 24 or 32; `salt` is keybytes/2 long. Returns
+ * UNC_ERR_PASSWORD if the verifier disagrees. */
 int unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                          const uint8_t *salt, int keybytes,
                          const uint8_t verifier[2])
@@ -712,6 +725,9 @@ int unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
     return UNC_OK;
 }
 
+/* The traditional zip cipher. Source: reference/notes/zip_appnote.txt,
+ * section 6.1 — the three key constants, `update_keys` and
+ * `decrypt_byte`, all of it written out there. */
 int unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 {
     uint16_t i;
@@ -765,6 +781,9 @@ int unc_crypt_cpt(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
     return UNC_OK;
 }
 
+/* RC4's key schedule. Source: reference/notes/arcfour_draft.txt section
+ * 3.1 (draft-kaukonen-cipher-arcfour-03), whose S2 is the key repeated to
+ * 256 bytes — which is what indexing by i % keylen does. */
 void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen)
 {
     int i;

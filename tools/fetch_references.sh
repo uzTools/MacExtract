@@ -473,6 +473,24 @@ fi
     curl -sL -o reference/notes/rfc1321.txt \
         "https://www.rfc-editor.org/rfc/rfc1321.txt"
 
+# The other three primitives' own documents, cited by src/unc_crypt.c
+# since 2026-09-23 in place of XADMaster's implementations of them:
+# RFC 3174 for SHA-1 (sections 5 and 6.1 give the K constants, the five
+# initial words and the round), RFC 2104 for HMAC's 0x36/0x5C pads over a
+# 64-byte block, and RFC 2898 section 5.2 for PBKDF2.
+for _rfc in 3174 2104 2898; do
+    [ -f "reference/notes/rfc$_rfc.txt" ] || \
+        curl -sL -o "reference/notes/rfc$_rfc.txt" \
+            "https://www.rfc-editor.org/rfc/rfc$_rfc.txt"
+done
+
+# RC4's key schedule and stream, as draft-kaukonen-cipher-arcfour-03
+# ("Arcfour", July 1999) states them. Its S2 array is the key repeated to
+# 256 bytes, which is what src/unc_crypt.c's i % keylen indexing does.
+[ -f reference/notes/arcfour_draft.txt ] || \
+    curl -sL -o reference/notes/arcfour_draft.txt \
+        "https://www.ietf.org/archive/id/draft-kaukonen-cipher-arcfour-03.txt"
+
 # ustar — POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
 # pax utility page, whose "ustar Interchange Format" section carries the
 # 512-octet header block table src/fmt_exo.c reads, the two zero records
