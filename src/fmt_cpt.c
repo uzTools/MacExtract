@@ -98,11 +98,13 @@ UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io)
 
 /* ------------------------------------------------------------------ */
 /* RLE stage (the final stage of both methods).                       */
-/* Transcribed from macutils cpt.c cpt_outch: escape byte 0x81;       */
+/* Source: docs/formats/compact-pro.md, from the format's own          */
+/* published description reference/notes/rle8182_theunarchiver.md:     */
+/* escape byte 0x81;                                                   */
 /*   0x81 0x82 n>0  -> n-1 more copies of the previous byte           */
 /*   0x81 0x82 0    -> literal 0x81 0x82                              */
 /*   0x81 0x81      -> literal 0x81, and the second 0x81 starts a new */
-/*                     escape ("halfescaped" in XADCompactProRLE)     */
+/*                     escape                                          */
 /*   0x81 X         -> literal 0x81 X                                 */
 /* Quirk: an 0x81 that would be the LAST output byte is emitted as a  */
 /* literal (the `cpt_outlength != 1` tests below).                    */
@@ -354,7 +356,8 @@ static UNC_HOT int cpt_rle_match(CptRle *r, uint8_t *window, uint32_t *wposp,
 
 /* One code: u8 n, then n bytes of two 4-bit code lengths each
  * (high nibble first). n*2 must not exceed nsyms; missing trailing
- * lengths are zero. (XADCompactProLZHHandle allocAndParseCodeOfSize.) */
+ * lengths are zero. Source: docs/formats/compact-pro.md, from
+ * reference/notes/cpt_lzh_theunarchiver.md. */
 static int cpt_read_code(UncCanon *c, UncBufIn *in, int32_t nsyms)
 {
     uint8_t lengths[256];

@@ -242,7 +242,8 @@ static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
  * numbers, derived from matches planted at a chosen length and
  * distance and compared with these arrays afterwards, disagreeing on
  * none of them (DECISIONS.md 2026-09-21, *the pair that never
- * repeats*). The arrays themselves came from UnpackNewLZSS. */
+ * repeats*). The values are the format's own, re-derived that way and
+ * matched entry for entry; docs/formats/now-compress.md records them. */
 static const uint8_t now_len_extra[0x22] = {
     0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
     1,1,2,2,2,2,2,3, 3,3,4,4,4,4,5,5, 5,5
