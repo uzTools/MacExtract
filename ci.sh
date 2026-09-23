@@ -289,4 +289,12 @@ if [ -f build/mac/MacExtract.bin ]; then
     echo "dist: MacExtract.bin matches the build ($built)"
 fi
 
+# Nothing watched the application's SIZE until 2026-09-23, and it moved
+# 10,112 B in a month without a status file noticing. Every byte is
+# resident on the target, so it is heap the Macintosh no longer has, and
+# at the sys6-512K tier the narrowest passing fixture has 6,952 B of
+# headroom (DECISIONS.md 2026-09-23, *the ten kilobytes nothing watched*).
+python3 tools/check_app_size.py build/mac/MacExtract.code.bin \
+    || fail "application size moved without acknowledgement"
+
 echo "CI: all green"

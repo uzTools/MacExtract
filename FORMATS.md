@@ -2574,6 +2574,22 @@ halves are resident for the whole session: the link line produces a single
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —
 the A5 global world, allocated once and never purgeable.
 
+**What a month of growth cost the tiers: nothing, and the margin is now
+6,952 B** (2026-09-23). The shipped binary went 178,560 B on 2026-08-28
+to 188,672 B, +10,112 B, and since every byte is resident that is heap a
+Macintosh no longer has. Whether it cost a fixture is not arithmetic but
+a measurement, and `tools/run_tiers.py` takes it in seconds by moving the
+budget instead of the binary. At budgets 10,112 B LARGER — what the
+smaller application left — the tallies are identical: **71, 67 and 64**.
+At budgets 10,112 B smaller, the floor and the System 3.0 tier hold but
+**System 6.0.8 / 512 KB drops to 63**. Bisecting that: the narrowest
+passing fixture is `derived-LHA_Expander_1.0.3.sea`, which needs a budget
+between 116,694 and 117,010 against that tier's 123,962 — **6,952 B of
+headroom**, which is why `tools/check_app_size.py` fails CI on a 2 KB
+move. The per-entry profile did not grow with the code: the formats added
+in that month peak at 5 KB (base64), 8 KB (MIME) and 24.6–34.1 KB (DART),
+against this table's existing maximum of 396 KB.
+
 The five largest objects (2026-09-23) are `macextract_mac.c`
 (17,066 + 2,183), `fmt_spacesaver.c` (6,292 + 9,712, its rodata almost all
 `ss_dict.h`), `fmt_sit.c` (5,804 + 3,473), `fmt_dd.c` (8,672 + 12) and

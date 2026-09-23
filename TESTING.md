@@ -603,6 +603,16 @@ anything about the suite.**
    part of StuffIt 5/Arsenic; since the sampled inverse BWT landed
    (2026-08-07) that is **23 of 31** fixtures rather than 11, the rest
    giving a clean per-entry "out of memory". Results in FORMATS.md.
+5b. **Application size** (`tools/check_app_size.py`, in `ci.sh` since
+   2026-09-23): fails when the linked `MacExtract.code.bin` moves more
+   than 2,048 B from a committed figure. Every byte is resident on the
+   target, so a byte of code is a byte of heap a Macintosh does not have.
+   **What it cannot see**: whether the move MATTERS. It compares one
+   number and knows nothing about tiers — only `tools/run_tiers.py` can
+   say whether a fixture flipped, which is why the failure message sends
+   you there before raising the figure. It also cannot see A5 growth, or
+   growth in a build without the Retro68 toolchain, where it skips.
+
 6. **Fuzzing** (`tools/fuzz.py`): seeded, reproducible
    mutation/splice/magic-garbage cases through `macextract t` under the
    sanitizer build, plus a fourth generator (**2026-09-23**) that flips

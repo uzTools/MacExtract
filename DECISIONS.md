@@ -268,6 +268,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
 - 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
 - 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
+- 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
 
 ---
 
@@ -16793,3 +16794,51 @@ read, and now a password prompt that kept every mutant out of the
 ciphers. What they share is a GUARD in front of the code under test,
 and the cure is always the same: get past the guard deliberately, then
 prove you did.
+
+## 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
+
+**The observation.** Re-measuring FORMATS.md's size table showed the
+engine's per-object code at 116,432 B against a documented 92,580. Most
+of that gap is real growth and some of it is the instrument: summing per
+object overstates what links, because `--gc-sections` drops what nothing
+calls. The figure that matters is the SHIPPED binary, and it went
+178,560 B on 2026-08-28 to 188,672 B — **+10,112 B, +5.7 %**.
+
+**Where it went, by rebuilding the 2026-08-24 tree on the same flags.**
+Six files that did not exist then are 16,926 B of it: `fmt_mime` 7,128,
+`unc_lzdyn` 3,216, `fmt_b64` 2,040, `fmt_dart` 2,006, `fmt_mimeseg`
+1,344, `fmt_foreign` 1,192. The rest is existing decoders gaining
+methods — `fmt_spacesaver` +3,906, `fmt_arc` +3,092, `unc_util` +1,904,
+`fmt_exo` +1,190. It is capability, not drift, and no dead code survives
+the link.
+
+**Whether it cost anything is a measurement, not arithmetic.** Every
+byte is resident — one CODE resource read at launch, an A5 world never
+purged — so 10,112 B is 10,112 B of heap a Macintosh no longer has, and
+a tier's budget is `FreeMem()` minus the binary. `run_tiers.py` answers
+it by moving the BUDGET rather than the binary. At budgets 10,112 B
+larger, which is what the smaller application left, the tallies are
+unchanged: 71, 67, 64. **So the month cost no fixture at any tier.**
+
+**But the margin is now under 7 KB.** At budgets 10,112 B smaller — a
+next month like the last one — the floor target and the System 3.0 tier
+still pass 71 and 67, and System 6.0.8 / 512 KB drops 64 to 63.
+Bisecting, `derived-LHA_Expander_1.0.3.sea` flips between 116,694 and
+117,010 against that tier's 123,962: **6,952 B of headroom**. That is
+where `tools/check_app_size.py`'s 2,048 B tolerance comes from — three
+deliberate acknowledgements before a tier loses a fixture, rather than a
+round number chosen for looking like one.
+
+**The heap did not grow with the code**, which is the other half of the
+question and a different axis: peak heap is per ENTRY and depends on the
+archive being extracted, not on how many formats are compiled in. The
+formats added in that month peak at 5 KB (base64), 8 KB (MIME) and
+24.6–34.1 KB (DART), against an existing maximum of 396 KB.
+
+**The transferable part.** *A budget that is derived from the binary
+goes stale every time the binary does, and nothing says so out loud.*
+The tier budgets are re-taken by hand on the machine — they were last
+re-taken 2026-09-22, and all three had drifted. What was missing was not
+a measurement but a TRIPWIRE: the growth was invisible because no check
+failed, and the documentation's own figure had been wrong for four days
+in the same way. A number nothing compares is a number nothing defends.
