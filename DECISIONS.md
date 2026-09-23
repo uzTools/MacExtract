@@ -16909,3 +16909,25 @@ to say what changed since the decision was last taken.** Here nothing
 had. The row quoted the corpus — "no corpus archive uses them" — and
 never quoted `ci.sh`, where 21 entries of the two methods pass every
 run, which is both the evidence and the date it was settled.
+
+**Swept the other rows with that test the same day: one repeat, and the
+test discriminates.** The repeat is *What WinZip's AES costs a Macintosh
+Plus*, which cited this row as its precedent and reproduced its mistake
+— a 2,150 B price attached to "the maintainer's call ... nothing here
+will take it", naming nothing changed since WinZip AES was settled on
+2026-08-23 by the commit that added it (*"so no encryption a zip can
+carry is refused"*). Its reachability argument is weaker than this one's:
+`ci.sh` grades four AES configurations every run on fixtures **7-Zip**
+writes, where `-lh2-` needs a fork this project patched itself. Fixed in
+place.
+
+The other three PASS, which is what makes the test worth having rather
+than a licence to rewrite every row. **PKZIP Implode is the model**: it
+also says "the decision is the maintainer's", and it earns it by naming
+exactly what changed — an MIT implementation and a stored-CRC oracle for
+all 7 entries arrived on this disk on 2026-09-22, leaving only "not a
+Macintosh method" carrying the decision. `fmt_arc.c`'s Crunch 5/6/7 row
+is a decision **taken and dated** (2026-09-22, not taken, with reasons),
+not one parked. The `selective-extract` branch is a genuinely open
+decision because nothing was ever settled — the feature has never
+shipped, so there is no prior decision for it to re-open.

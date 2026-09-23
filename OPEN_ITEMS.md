@@ -243,11 +243,24 @@ PBKDF2 and 846 for AES, out of `unc_crypt.c`'s 7,158 (FORMATS.md,
 *Resident memory*). Nothing else in the engine uses any of it — the four
 other hashes and ciphers are 996 B of DES, 546 of MD5 and 812 for the
 five small ones — so it is the clearest single-capability price in the
-file, for a zip feature from 2003 that a System 6 machine will rarely
-meet. **Not a recommendation**: dropping a format the engine already
-extracts is the maintainer's call, exactly as with `-lh2-`/`-lh3-`
-above — which was asked and answered *keep* on 2026-09-23. Nothing here
-will take this one either.
+file.
+
+**And that is all this is: a price, not an open question.** WinZip AES
+was settled on **2026-08-23**, in the commit that added it — *"so no
+encryption a zip can carry is refused"* — and `ci.sh` has graded it
+every run since at four configurations (AES-128/192/256 and a stored
+AES-256), on fixtures **7-Zip writes**, with a flipped ciphertext byte
+the authentication code must catch (`tools/run_crypt.py`). This section
+carried "dropping a format the engine already extracts is the
+maintainer's call ... nothing here will take it" until 2026-09-23, which
+re-opened that decision on the byte axis and named nothing that had
+changed since it was taken — the same failure as the `unc_lzdyn.c` row
+above, which this text cited as its precedent (DECISIONS.md 2026-09-23,
+*the 3,504 bytes that stay*). The reachability argument is in fact
+WEAKER here than there: "a System 6 machine will rarely meet" a 2003 zip
+feature is a claim about what is in reach, and any copy of 7-Zip or
+WinZip writes one, where `-lh2-` needed a fork this project patched
+itself.
 
 ## A DART's checksums, which this writes no fork to carry
 
