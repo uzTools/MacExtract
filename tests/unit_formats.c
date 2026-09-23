@@ -452,9 +452,10 @@ static void test_canon(void)
      * block matched entirely out of the member before it codes one
      * match symbol and no literal at all (docs/formats/now-compress.md,
      * *The main table*). No fixture comes near it — the smallest main
-     * alphabet in the two real Now archives is 47 symbols — so the two
-     * bytes here are what covers the shape. Enough of them to fill the
-     * fast table's ten bits, because that is the path at risk: half of
+     * alphabet in the two real Now archives is 47 symbols, measured by
+     * tools/derive_now.py over both — so the two bytes here are what
+     * covers the shape. Enough of them to fill the fast table's ten
+     * bits, because that is the path at risk: half of
      * fastlen[] names the symbol and the other half must fall through
      * to the walk and be refused. */
     lens[0] = 0; lens[1] = 0; lens[2] = 1; lens[3] = 0;
