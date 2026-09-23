@@ -106,10 +106,17 @@ This project's decoders are transcriptions/ports of algorithms from:
     need — including method 10's second form, which the page names and
     does not describe — so a reader written from those pages alone
     reads all 39 DD and AD forks in the corpus
-    (`tools/derive_dd.py`). `src/fmt_dd.c`'s CONTAINERS are still
-    XADDiskDoublerParser.m's, which is also what says which forks use
-    that second form; the wiki punts DiskDoubler's containers to that
-    file by name.
+    (`tools/derive_dd.py`). `src/fmt_dd.c`'s CONTAINERS left this row on
+    2026-09-22 for `docs/formats/diskdoubler-container.md`, this
+    project's own measured description — the wiki names three container
+    pages and none of the three exists, so DiskDoubler 3.7, 4.0 and
+    Pro 4.1 were run here and `tools/derive_ddc.py` makes 643 assertions
+    against the oracle over 91 fixtures with 0 disagreements, the folder
+    records among them (measured against archives 3.7's Combine command
+    wrote). What is still XADDiskDoublerParser.m's, and macutils'
+    `macunpack/dd.h` beside it, is the `DDAR` `0x20` raw-fork shape,
+    which no specimen here reaches — it is also what names which forks
+    use method 10's second form.
     And **the StuffIt 5 container** since 2026-09-22:
     `reference/notes/sit5_specs_theunarchiver.md` is that same wiki's
     `StuffIt5Format` page, which this project's own
@@ -278,8 +285,10 @@ This project's decoders are transcriptions/ports of algorithms from:
     both the encrypt and decrypt loops, each cited by address in that
     file. No code was copied; every routine named there is an offset in
     a binary this project does not redistribute (the container and its
-    two compression methods are transcribed from XADMaster and
-    macutils, as above).
+    two compression methods left XADMaster and macutils on 2026-09-20
+    for `docs/formats/compact-pro.md`, the format's own published
+    description, as above — only this ENCRYPTION is read off the
+    application, because no publication describes it).
 
   * btoa 5.2.1, by Paul Rutter, Joe Orost and Stefan Parmark (1996) —
     and this one is a REFERENCE ONLY, deliberately, because its terms

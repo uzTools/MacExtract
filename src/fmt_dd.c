@@ -8,11 +8,14 @@
  *   Source: docs/formats/diskdoubler-container.md
  * `tools/derive_ddc.py` is a reader written from that document alone
  * and makes 643 assertions against the oracle over all 91 DiskDoubler
- * fixtures, 0 disagreements. What it does NOT cover is the 'DDAR'
- * folder records and the 0x20 raw-fork shape, which no fixture here
- * has; those rows are still
+ * fixtures, 0 disagreements. The folder records are the note's too,
+ * measured 2026-09-22 against archives DiskDoubler 3.7's own Combine
+ * command wrote from a known tree (7 entries, 0 disagreements;
+ * docs/formats/diskdoubler-container.md, "The folder records,
+ * measured"). What no specimen here reaches is the 0x20 raw-fork shape,
+ * still
  *   Source: reference/XADMaster/XADDiskDoublerParser.m
- * and the note says what would settle them.
+ * and the note says what would settle it.
  *
  * Method 7 is transcribed:
  *   Source: reference/XADMaster/XADStacLZSHandle.m           (method 7)
@@ -1257,15 +1260,13 @@ static int dd_archive(UncCtx *c)
 
         unc_entry_clear(&e);
         if (isdir) {
-            /* NO SPECIMEN. All 36 entries in the corpus's 7 DDAR
-             * archives are files with a full file header, so neither
-             * this branch nor the 0x20 one below is read by anything
-             * here. Both rows are still
-             * Source: XADDiskDoublerParser.m parseArchive (macutils'
-             * macunpack/dd.h states the same offsets under its own
-             * names, which is agreement between two readers and not a
-             * specimen). docs/formats/diskdoubler-container.md, "What
-             * no DDAR fixture here reaches", says what would settle it.
+            /* Measured 2026-09-22: no corpus DDAR archive has a folder,
+             * so a volume with a known tree was built and run through
+             * DiskDoubler 3.7's own Combine command, and this branch
+             * graded against the bytes it was given (7 entries, 0
+             * disagreements). Source: docs/formats/diskdoubler-container.md,
+             * "The folder records, measured". The 0x20 branch below is
+             * the one that still has no specimen.
              *
              * The folder's own path is the leaf of the path it is being
              * pushed onto, which is where the whole name is reported
@@ -1291,7 +1292,15 @@ static int dd_archive(UncCtx *c)
 
         if (unc_get_u16be(hdr + 94) & 0x20) {
             /* Stored in the archive with no file header of its own.
-             * NO SPECIMEN either — see the folder branch above. */
+             * NO SPECIMEN: five shapes were offered to DiskDoubler 3.7
+             * to provoke this flag and every one came back with a full
+             * file header (the flags word 0x0000 in all 44 records on
+             * that disk), so it stays attributed. Source:
+             * XADDiskDoublerParser.m parseArchive, with macutils'
+             * macunpack/dd.h stating the same offsets under its own
+             * names — two readers agreeing, not a specimen.
+             * docs/formats/diskdoubler-container.md, "The 0x20 flag,
+             * which nothing here has ever set", says what would settle it. */
             DdFile f;
             uint8_t *fp = (uint8_t *)&f;
             uint32_t fi;

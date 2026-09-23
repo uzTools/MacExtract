@@ -247,22 +247,23 @@ def main():
         if not man:
             continue
         # The manifest holds one entry per FILE, with the full path and
-        # both fork lengths. Names are compared as the archive's own
-        # bytes: the oracle reports them decoded as MacRoman, which is
-        # what `run_diff.py` reverses too.
+        # both fork lengths. StuffIt 5 states its names in UTF-8 — that
+        # is the archive's own encoding, and since 2026-09-22 the oracle
+        # is asked with `-e utf-8`, so the manifest name and the bytes
+        # this reader pulls out of the archive are the same UTF-8. Both
+        # sides are normalised to NFC before matching, because unar's
+        # reporting and the archive's storage need not agree on form.
         want = {}
         for e in man["entries"]:
             if e.get("is_dir"):
                 continue
-            try:
-                key = norm(e["name"]).encode("mac_roman")
-            except UnicodeEncodeError:
-                key = norm(e["name"]).encode("utf-8")
+            key = norm(e["name"]).encode("utf-8")
             want[matchkey(key)] = e
         mine = {}
         for e in got:
             if not e["folder"]:
-                mine[matchkey(fullpath(got, e))] = e
+                raw = fullpath(got, e).decode("utf-8", "surrogateescape")
+                mine[matchkey(norm(raw).encode("utf-8"))] = e
         if len(mine) != len(want):
             bad += 1
             print("  DIFFER %s: %d files, the manifest has %d"
