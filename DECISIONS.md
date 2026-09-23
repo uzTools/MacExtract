@@ -16852,9 +16852,14 @@ XADMaster's*) had priced its removal and then declined to take it,
 because dropping a format the engine already extracts is not a call this
 machine makes. The answer is keep.
 
-**What it costs, measured 2026-09-20 and unchanged:** 3,472 B of `CODE`
-and 32 B of A5 — 3,504 B of a 1 MB Mac Plus's budget — from a build with
-the file and its two dispatch arms removed. Set against the 6,952 B of
+**What it costs, re-measured 2026-09-23:** 3,476 B of `CODE` and 28 B of
+A5 — **3,504 B** of a 1 MB Mac Plus's budget — from a build with the file
+and its two dispatch arms removed (153,256/37,960 against 149,780/37,932,
+`m68k-apple-macos-size` on the linked image, the instrument
+`tools/build_mac.sh`'s ratchets use). The total is what 2026-09-20
+measured to the byte; the split has moved 4 B, which is the rodata
+alignment shifting under changed text that this file has recorded four
+times, and not a new table. Set against the 6,952 B of
 headroom the tightest tier has (*the ten kilobytes nothing watched*,
 above), that is half the margin, which is why the row was worth asking.
 
