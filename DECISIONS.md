@@ -260,6 +260,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
 - 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
 - 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
+- 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
 
 ---
 
@@ -16363,3 +16364,62 @@ file, compares an entry set — and search for that. The two `hdir` walks,
 this ninth one, and the "compares fork SETS" phrase that described a real
 hazard under a name that made it unfindable, are the same mistake three
 times in two days.
+
+
+## 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
+
+**Claim.** All **thirty** functions in `tools/` that list an HFS volume
+pass `-a`. Nine are graded by `walkprobe.py`; the other nine were taken
+one flag each and are not gradeable by it, because none takes an
+arbitrary image and returns an entry set.
+
+**Three of the nine were not the low-stakes lookups the previous day's
+table called them.** `interactive.phase_wrapped`, `phase_chain` and
+`phase_named` build the volume's entry SET and compare it with what the
+application should have written, which is the same hazard as the four
+`--adjudicate` callers. `phase_chain` was already filtering `Desktop` by
+hand — the fact, spelled once, in a set nobody had named. They now use
+`FINDER_OWN`, which also covers the `Desktop DB`/`Desktop DF` a later
+System writes instead. `macmime.HFS.ls` is a fourth, and it carried the
+`text=True` universal-newline bug as well.
+
+The other five are diagnostics or one-name lookups, and `-a` is still
+right in each: `interactive.read_joined`'s listing prints only when the
+file was NOT found, `rescomp.report`'s listing IS the report,
+`sitcrypt.list_folder` is *"the only way to see what DropConvert called
+its output"*, and a name search (`expander.app_from_image`,
+`spacesaver.lift_installer`) cannot find a file the lister hides.
+
+**`FINDER_OWN` moved to `mkboot.py`.** It was in `arcmac.py`, which
+imports `Mac` from `interactive`, so the moment `interactive.py` needed
+it the import was a cycle. `mkboot.py` has no imports of its own, which
+is what makes it the right floor for a fact every walk needs.
+
+**spacesaver was closed by measuring, not by booting.** Its ~20 call
+sites are the bulk of `superdisk.read_forks`'s, and re-running its
+thirty-five emulator phases would have been hours. Instead: run the walk
+BOTH ways over the **42 cached spacesaver volumes** and diff. `-a` adds
+**630 entries** — fifteen per volume, the `Icon\r` files inside StuffIt
+Deluxe's folders — and **not one of them matches any selector those call
+sites use** (`SMKR`, `SITe`, `PKG Expand Translator`, `SpaceSaver
+Pref*`, `OutA..OutD`, the `SUBJECTS` names). Two host-only phases,
+`--layout` and `--pkg`, were run as the control and pick their targets
+correctly. A question about 20 call sites answered in seconds, over real
+volumes, because the thing to vary was the FLAG and not the emulator.
+
+**The re-survey is one command**, and it is in `tools/vmac/README.md`
+rather than here: an `ast` walk for any function running `hls` or
+`hdir`, printing the ones without `-a`. That is what makes "all thirty"
+a claim the next session can re-test instead of inherit.
+
+**Two harness facts found on the way, both of which cost a run.**
+Two `interactive.py` phases started together fight over the shared
+`build/mac-interactive` CMake directory and one dies in `cmake --build`
+— the file's own README already said "run them one at a time" for a
+different reason. And `--named zip` needs a fixture **over 64 KB**:
+`zip -s 64k` marks an archive split whatever its size, so a smaller
+payload makes one `Aset.zip` and no `Aset.z01`, and the application
+answers *"This archive has more parts. Find them and try again."* —
+correctly. That was diagnosed the right way round: the same failure
+reproduced on the unmodified file, which is what said it was not the
+`-a` change, and then the SHOT said what it actually was.

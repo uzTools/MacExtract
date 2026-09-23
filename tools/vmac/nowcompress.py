@@ -70,7 +70,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                     # noqa: E402
 from interactive import Mac                         # noqa: E402
-from arcmac import FINDER_OWN                       # noqa: E402
+from mkboot import FINDER_OWN                       # noqa: E402
 
 # Now Utilities 5.0.1, from Macintosh Garden. Commercial software, kept
 # out of the repository exactly like the ROM: fetched by URL, checked by

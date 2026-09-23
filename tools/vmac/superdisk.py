@@ -37,7 +37,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                       # noqa: E402
-from arcmac import macbinary, FINDER_OWN              # noqa: E402
+from arcmac import macbinary              # noqa: E402
+from mkboot import FINDER_OWN              # noqa: E402
 from nowcompress import Session                       # noqa: E402
 import synth_sd                                       # noqa: E402
 

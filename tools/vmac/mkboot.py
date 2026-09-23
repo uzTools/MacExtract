@@ -49,6 +49,19 @@ import os, re, shutil, subprocess, sys, tempfile
 # 12 characters, always followed by one space and then the item's name.
 LISTING_DATE = re.compile(r"[A-Z][a-z]{2} [ \d]\d (?: \d{4}|\d\d:\d\d) (.+)$")
 
+# The Finder's own invisible bookkeeping, which `-a` surfaces on any
+# volume a booted Macintosh has touched and which no walk here should
+# report as output. `Desktop` is System 6's; `Desktop DB`/`Desktop DF`
+# are what System 7 and later write instead. Measured on each harness's
+# own volume before it was trusted — every walk that uses this prints
+# what it dropped, on every run.
+#
+# It lives HERE, in the module with no imports of its own, because every
+# walk in the tree needs it and `arcmac.py` — where it was first written
+# — imports `interactive`, which made it a circular import the moment
+# `interactive.py` needed it too (2026-09-23).
+FINDER_OWN = {"Desktop", "Desktop DB", "Desktop DF"}
+
 DEFAULT_APP = "MacExtract"       # also the boot-block shell name, below
 SYS_FOLDER = "System Folder"
 KEEP = {"System", "Finder"}     # everything else in the System Folder goes

@@ -187,7 +187,10 @@ def app_from_image(img):
         found, stack = None, [hfs.vol + ":"]
         while stack:
             d = stack.pop()
-            for isdir, name in hfs.ls(d):
+            # `invisible=True`: the walk looks for the ONE APPL on the
+            # volume, and a listing that hides an invisible file would
+            # report "no application" for one that is there (2026-09-23).
+            for isdir, name in hfs.ls(d, invisible=True):
                 child = d.rstrip(":") + ":" + name
                 if isdir:
                     stack.append(child)

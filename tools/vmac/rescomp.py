@@ -266,7 +266,10 @@ def report(vol, before):
                           env=env).returncode:
             print("rescomp: the volume will not mount")
             return 1
-        print(subprocess.run(["hls", "-l", ":"], capture_output=True,
+        # `-a`: this listing IS the report of what the volume holds, and
+        # one that hides an invisible file reports it as absent
+        # (2026-09-23).
+        print(subprocess.run(["hls", "-a", "-l", ":"], capture_output=True,
                              env=env).stdout.decode("mac_roman", "replace"))
         if subprocess.run(["hcopy", "-m", ":Subject", out], capture_output=True,
                           env=env).returncode:

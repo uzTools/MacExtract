@@ -67,6 +67,7 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
+from mkboot import FINDER_OWN                                # noqa: E402
 
 
 def build_interactive_app(defines=()):
@@ -1408,7 +1409,10 @@ def read_joined(image, name, workdir):
             return None
         got = CD.hfs(env, "hcopy", "-r", b":" + name, out.encode())
         if got.returncode != 0:
-            listing = CD.hfs(env, "hls", "-l").stdout.decode("mac_roman")
+            # `-a`: this line runs only when the file was NOT found, so a
+            # listing that hides an invisible file is misleading exactly
+            # when it is read (2026-09-23).
+            listing = CD.hfs(env, "hls", "-a", "-l").stdout.decode("mac_roman")
             print("interactive: not on the volume, which holds:\n" + listing)
         CD.hfs(env, "humount")
         return open(out, "rb").read() if got.returncode == 0 else None
@@ -1420,7 +1424,17 @@ def build_named_set(kind, workdir, fixture):
     """A set whose parts are placed by NAME, and the one file it must
     produce. Both schemes are given ONE payload on purpose: the check at
     the end is a byte comparison, and one file can be compared without
-    walking a tree off an HFS volume."""
+    walking a tree off an HFS volume.
+
+    **`zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks the
+    archive as split whatever its size, so a smaller payload produces one
+    `Aset.zip` and no `Aset.z01` at all — a one-part set the application
+    correctly refuses with *"This archive has more parts. Find them and
+    try again."* That photographs as an application bug and is an
+    invocation error; it cost a run on 2026-09-23.
+    `fixtures/derived-xmasbeeps.sit` (286 KB) is what this is driven with.
+    `split` has no such floor: it cuts any payload into three.
+    """
     d = os.path.join(workdir, "namedset")
     os.makedirs(d, exist_ok=True)
     blob = open(fixture, "rb").read()
@@ -1511,7 +1525,11 @@ def phase_wrapped(args, appbin, workdir, shot):
     env = dict(os.environ, HOME=home)
     try:
         CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
+        # `-a`, 2026-09-23: this builds an entry SET and compares it
+        # with what the application should have written, so an invisible
+        # output file read as one that was never made. FINDER_OWN below
+        # drops what the flag brings with it.
+        listing = CD.hfs(env, "hdir", "-a", ":").stdout.decode("mac_roman")
         CD.hfs(env, "humount")
     finally:
         shutil.rmtree(home, ignore_errors=True)
@@ -1521,7 +1539,7 @@ def phase_wrapped(args, appbin, workdir, shot):
         if not m:
             continue
         nm = m.group(1)
-        if nm in ("System Folder", "Desktop", "MacExtract") or \
+        if nm in ("System Folder", "MacExtract") or nm in FINDER_OWN or \
                 nm.startswith("StuffIt Expander") or nm in onvol:
             continue
         got.add(nm)
@@ -1588,12 +1606,19 @@ def phase_chain(args, appbin, workdir, shot):
     env = dict(os.environ, HOME=home)
     try:
         CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
+        # `-a`, 2026-09-23: this builds an entry SET and compares it
+        # with what the application should have written, so an invisible
+        # output file read as one that was never made. FINDER_OWN below
+        # drops what the flag brings with it.
+        listing = CD.hfs(env, "hdir", "-a", ":").stdout.decode("mac_roman")
         CD.hfs(env, "humount")
     finally:
         shutil.rmtree(home, ignore_errors=True)
-    ignore = {"System Folder", "StuffIt Expander\u2122 4.0.1 Folder", "Desktop",
-              "MacExtract", onmac}
+    # `Desktop` was in this set by hand; `FINDER_OWN` is the same fact in
+    # one place, and covers the `Desktop DB`/`Desktop DF` a later System
+    # writes instead (2026-09-23).
+    ignore = {"System Folder", "StuffIt Expander\u2122 4.0.1 Folder",
+              "MacExtract", onmac} | FINDER_OWN
     got = set()
     for line in listing.splitlines():
         m = LISTING_DATE.search(line)
@@ -1679,7 +1704,11 @@ def phase_named(args, appbin, workdir, shot):
     env = dict(os.environ, HOME=home)
     try:
         CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
+        # `-a`, 2026-09-23: this builds an entry SET and compares it
+        # with what the application should have written, so an invisible
+        # output file read as one that was never made. FINDER_OWN below
+        # drops what the flag brings with it.
+        listing = CD.hfs(env, "hdir", "-a", ":").stdout.decode("mac_roman")
         CD.hfs(env, "humount")
     finally:
         shutil.rmtree(home, ignore_errors=True)
@@ -1690,7 +1719,7 @@ def phase_named(args, appbin, workdir, shot):
         if not m:
             continue
         nm = m.group(1)
-        if nm in ("System Folder", "Desktop", "MacExtract") or \
+        if nm in ("System Folder", "MacExtract") or nm in FINDER_OWN or \
                 nm.startswith("StuffIt Expander") or nm in onvol:
             continue
         got.add(nm)

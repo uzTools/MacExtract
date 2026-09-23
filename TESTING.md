@@ -1638,7 +1638,10 @@ read a Macintosh volume back — whether each can see an invisible file, an
 invisible folder, a locked file, and anything below the root. All nine
 see all three since 2026-09-23, so two of the four `EXPECT_*` sets are
 EMPTY and kept: they fail in the other direction, which is the only
-direction left. Four columns, no emulator and no ROM, seconds, and it
+direction left. **Nine more functions in `tools/` list a volume without
+returning an entry set**, so nothing grades them; all nine pass `-a` as
+well, and `tools/vmac/README.md` carries the one-command `ast` re-survey
+that says so. Four columns, no emulator and no ROM, seconds, and it
 skips cleanly where hfsutils is absent. What it measures and what it cannot see:
 `tools/vmac/README.md`, *What every walk can see*.
 

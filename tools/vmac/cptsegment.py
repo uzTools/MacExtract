@@ -38,7 +38,7 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                     # noqa: E402
 from interactive import Mac                         # noqa: E402
 from mkboot import LISTING_DATE                     # noqa: E402
-from arcmac import FINDER_OWN                       # noqa: E402
+from mkboot import FINDER_OWN                       # noqa: E402
 
 # `hdir`'s name column, on a BYTES listing. The str twin in mkboot.py is
 # unusable here: reading the listing as text applies universal newlines,

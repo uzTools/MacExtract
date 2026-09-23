@@ -530,7 +530,10 @@ def list_folder(image):
         if subprocess.run(["hmount", image], capture_output=True,
                           env=env).returncode != 0:
             return ""
-        out = subprocess.run(["hls", "-l",
+        # `-a`: this is "the only way to see what DropConvert decided to
+        # call its output", and without the flag an invisible output is
+        # not seen at all (2026-09-23).
+        out = subprocess.run([b"hls", b"-a", b"-l",
                               (":" + APP_FOLDER + ":").encode("mac_roman")],
                              capture_output=True, env=env).stdout
         subprocess.run(["humount"], capture_output=True, env=env)

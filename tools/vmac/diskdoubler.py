@@ -64,7 +64,8 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                      # noqa: E402
 from interactive import Mac                          # noqa: E402
-from arcmac import macbinary, FINDER_OWN             # noqa: E402
+from arcmac import macbinary             # noqa: E402
+from mkboot import FINDER_OWN             # noqa: E402
 
 # DiskDoubler 3.7, commercial, fetched by URL and checked by hash exactly
 # like the ROM and the System images; nothing from it is committed. The

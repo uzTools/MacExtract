@@ -50,6 +50,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                     # noqa: E402
 from interactive import Mac                         # noqa: E402
+from mkboot import FINDER_OWN                       # noqa: E402,F401
 
 # ArcMac 1.2a, shareware, as a MacBinary self-extracting archive. The wiki
 # page that named it is justsolve.archiveteam.org/wiki/ArcMac; the site
@@ -233,16 +234,12 @@ def make_volume(path, volname, macbins, size_kb=1400):
         shutil.rmtree(env["HOME"], ignore_errors=True)
 
 
-# What the Finder puts on a volume of its own accord, so that a listing
-# that can see invisible files does not report it as something the
-# application wrote. Measured on this harness's OWN volume rather than
-# assumed: on the `Arc` volume a System 6 boot leaves behind, `hls -a -1`
-# adds exactly one name to the four `hls -1` gives — `Desktop`, FNDR/ERIK,
-# with the invisible bit set. The other two are what a later system writes
-# in its place, and are listed for the same reason os9.py lists them.
-FINDER_OWN = {"Desktop", "Desktop DB", "Desktop DF"}
-
-
+# `FINDER_OWN` moved to mkboot.py on 2026-09-23, when interactive.py
+# needed it too and could not import this file — arcmac imports `Mac`
+# from interactive, so the arrow already pointed the other way. What it
+# is measured against HERE: on the `Arc` volume a System 6 boot leaves
+# behind, `hls -a -1` adds exactly one name to the four `hls -1` gives —
+# `Desktop`, FNDR/ERIK, with the invisible bit set.
 def read_volume(img, out, invisible=True):
     """Every file at the volume ROOT, as (type, creator, data fork, rsrc fork).
 

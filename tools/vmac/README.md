@@ -1879,26 +1879,45 @@ grepping for the NAME `read_forks` and every hit was credited to
 to prove the filter safe passed with a blind walk and printed no filter
 line at all. The missing line is what gave it away.
 
-**The population is thirty, not nine.** Asking for the CAPABILITY — an
-`ast` walk over `tools/` for any function that runs `hls` or `hdir` —
-finds 30, of which nine are graded above (plus their nested `walk`
-helpers and this probe's own measurement functions). **Nine more list a
-volume with no `-a` and are not graded by anything**:
+**The population is thirty, not nine, and all thirty pass `-a` since
+2026-09-23.** Asking for the CAPABILITY — an `ast` walk over `tools/`
+for any function that runs `hls` or `hdir` — finds 30. Nine are graded
+in the table above (plus their nested `walk` helpers and this probe's
+own measurement functions); the other nine are not gradeable by
+`walkprobe.py`, because none of them takes an arbitrary image and
+returns an entry set. They were taken anyway, one flag each:
 
-| function | what it reads | why it has not been taken |
+| function | what it reads | what `-a` was worth |
 |---|---|---|
-| `interactive.read_joined` | the joined output of a segmented set | asserts on names it put there |
-| `interactive.phase_wrapped` / `phase_chain` / `phase_named` | one expected output file per phase | each looks for one name it chose |
-| `expander.app_from_image` | StuffIt Expander off its own disk | picks one application by name |
-| `macmime.ls` | a MIME phase's output volume | compares against names it wrote |
-| `rescomp.report` | one subject file | one name |
-| `sitcrypt.list_folder` | a folder's contents, for a screenshot | diagnostic, not a verdict |
-| `spacesaver.lift_installer` | the installer off a CD | one name, `®` in it |
+| `interactive.phase_wrapped` / `phase_chain` / `phase_named` | the volume's entry SET, against what the application should have written | **real**: an invisible output would read as one never made. `phase_chain` already hand-filtered `Desktop`, which is the same fact spelled once |
+| `macmime.HFS.ls` | a MIME phase's output volume, compared with what it wrote | **real**, and it had the `text=True` universal-newline bug too |
+| `interactive.read_joined` | a diagnostic listing — *"not on the volume, which holds:"* | printed only when the file was NOT found, so a listing that hides one misleads exactly when it is read |
+| `rescomp.report` | the report of what the work volume holds | same: the listing IS the finding |
+| `sitcrypt.list_folder` | *"the only way to see what DropConvert called its output"* | an invisible output was not seeable at all |
+| `expander.app_from_image` | the one `APPL` on a 400K image | an invisible application would read as "no application" |
+| `spacesaver.lift_installer` | the installer, found by searching the listing | a name search cannot find a hidden file |
 
-Every one of those selects by a name it chose itself, which is exactly
-the argument that was made for `nowcompress.read_forks` before it turned
-out to be one of the four that compare whole entry sets. **Treat this
-table as unverified**: it is a reading of the call sites, not a run.
+The re-survey is one command and is how this stays true:
+
+    python3 - <<'EOF'   # any function in tools/ that lists a volume
+    import ast, os
+    for r, d, fs in os.walk("tools"):
+        d[:] = [x for x in d if x != "__pycache__"]
+        for f in fs:
+            if not f.endswith(".py"): continue
+            p = os.path.join(r, f); src = open(p).read()
+            for n in ast.walk(ast.parse(src)):
+                if not isinstance(n, ast.FunctionDef): continue
+                seg = "\n".join(src.splitlines()[n.lineno-1:n.end_lineno])
+                if any(t in seg for t in ('"hls"', 'b"hls"', '"hdir"', 'b"hdir"')):
+                    ok = '"-a"' in seg or 'b"-a"' in seg or "invisible=True" in seg
+                    if not ok: print("BLIND", p, n.lineno, n.name)
+    EOF
+
+**`FINDER_OWN` lives in `mkboot.py`**, the module with no imports of its
+own. It was in `arcmac.py` until `interactive.py` needed it and could
+not import that file — arcmac imports `Mac` from interactive, so the
+arrow already pointed the other way.
 
 **Two of the four columns are new, and both came off a real volume
 rather than out of a list of things that could go wrong.** The cache in
@@ -2475,6 +2494,7 @@ exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
                                     # so the first was unflushed, not lost
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
+                                    # — needs a fixture OVER 64 KB, below
     interactive.py --named split    # a plain .NNN split, likewise
     interactive.py --chain          # .sit.hqx: do ALL the envelope layers come off?
     interactive.py --wrapped        # a set whose parts are each in an envelope
@@ -2484,7 +2504,18 @@ exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
     interactive.py --drop           # drag an archive onto the application's
                                     # icon: what does the FINDER do?
 
-Run them one at a time (see "This box has one core", above).
+Run them one at a time (see "This box has one core", above). **One at a
+time is not only about the core**: every phase builds the application
+into the same `build/mac-interactive`, so two `interactive.py` runs
+started together fight over it and one dies in `cmake --build`.
+
+**`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks
+an archive split whatever its size, so a smaller payload makes one
+`Aset.zip` and no `Aset.z01`, and the application correctly answers
+*"This archive has more parts. Find them and try again."* — a harness
+invocation error that photographs exactly like an application bug, which
+is the shape this directory keeps meeting. Drive it with
+`fixtures/derived-xmasbeeps.sit`.
 
 **On System 7 the dialog is not the same dialog, and the clicks know it
 since 2026-08-25.** System 7 draws its own Standard File — a directory
