@@ -1827,7 +1827,7 @@ came back short. No emulator, no ROM, no X server; seconds.
     tools/vmac/walkprobe.py            # the table
     tools/vmac/walkprobe.py --check    # and assert it against the EXPECT_* sets
 
-As of **2026-09-22**, **eight** walks and **four** columns:
+As of **2026-09-22**, **nine** walks and **four** columns:
 
 | walk | invisible file | descends | invisible folder | locked file |
 |---|---|---|---|---|
@@ -1835,12 +1835,13 @@ As of **2026-09-22**, **eight** walks and **four** columns:
 | `os9._walk_volume` | 4/4 | yes | 4/4 | yes |
 | `arcmac.read_volume` | 4/4 | no | — | yes |
 | `nowcompress.read_volume` | 4/4 | no | — | yes |
+| `nowcompress.read_forks` | 4/4 | yes | 4/4 | yes |
 | `diskdoubler.volume_files` | 4/4 | yes | 4/4 | yes |
 | `cptsegment.read_volume` | 4/4 | no | — | yes |
 | `cptcrypt.read_volume` | 4/4 | no | — | yes |
 | `superdisk.read_forks` | 4/4 | yes | 4/4 | yes |
 
-**All eight, since 2026-09-22.** `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
+**All nine, since 2026-09-22.** `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
 are empty sets and are kept, because they fail in the other direction:
 take `-a` back out of any walk and the probe names it. The four that show
 `—` never descend at all, which `EXPECT_FLAT` records as a property —
@@ -1857,16 +1858,47 @@ entry on the guest volume against our own extraction, so an entry with
 no counterpart in our output is a difference. That is why the filter
 lives inside `read_forks` rather than in each caller.
 
-**Two of those four were re-run, and two were not.** `superdisk
---adjudicate` came back 2/2 forks identical and `diskdoubler
---adjudicate` 10/10, with the filter dropping exactly `Desktop DB` and
-`Desktop DF` — the two files that would otherwise have been compared
-against nothing. **`nowcompress --adjudicate` and `superdisk --nest`
-have NOT been re-run since the flag went in**, and neither has any
-`spacesaver.py` phase, which holds 20 of the 38 call sites. All of those
-select by name or creator, so the expectation is that they are
-unaffected — but that is an expectation, not a measurement, and this
-file does not get to call it one.
+**All four were re-run**, and in each the filter dropped exactly
+`Desktop DB` and `Desktop DF` — the files that would otherwise have been
+compared against nothing: `superdisk --adjudicate` 2/2 forks identical,
+`diskdoubler --adjudicate` 10/10, `superdisk --nest` 11 files with the
+Macintosh agreeing, `nowcompress --adjudicate` every fork identical
+including one of 9,949,696 B. `spacesaver --layout` and `--pkg` were run
+too, and select correctly on a volume where `-a` now surfaces seventeen
+invisible `Icon` files. **The rest of `spacesaver.py` is still
+unexercised**, and selects by name or creator — an expectation, not a
+measurement.
+
+**The inventory was wrong twice in one day, and both times because the
+search was for a SPELLING.** It listed six of eight while claiming
+"every walk in the tree" — built by grepping for `hls`, and two walks
+use `hdir`. Then it listed eight of nine, because it was extended by
+grepping for the NAME `read_forks` and every hit was credited to
+`superdisk.read_forks`: `nowcompress.py` defines its own, and
+`--adjudicate` calls THAT one, so the harness re-run that was supposed
+to prove the filter safe passed with a blind walk and printed no filter
+line at all. The missing line is what gave it away.
+
+**The population is thirty, not nine.** Asking for the CAPABILITY — an
+`ast` walk over `tools/` for any function that runs `hls` or `hdir` —
+finds 30, of which nine are graded above (plus their nested `walk`
+helpers and this probe's own measurement functions). **Nine more list a
+volume with no `-a` and are not graded by anything**:
+
+| function | what it reads | why it has not been taken |
+|---|---|---|
+| `interactive.read_joined` | the joined output of a segmented set | asserts on names it put there |
+| `interactive.phase_wrapped` / `phase_chain` / `phase_named` | one expected output file per phase | each looks for one name it chose |
+| `expander.app_from_image` | StuffIt Expander off its own disk | picks one application by name |
+| `macmime.ls` | a MIME phase's output volume | compares against names it wrote |
+| `rescomp.report` | one subject file | one name |
+| `sitcrypt.list_folder` | a folder's contents, for a screenshot | diagnostic, not a verdict |
+| `spacesaver.lift_installer` | the installer off a CD | one name, `®` in it |
+
+Every one of those selects by a name it chose itself, which is exactly
+the argument that was made for `nowcompress.read_forks` before it turned
+out to be one of the four that compare whole entry sets. **Treat this
+table as unverified**: it is a reading of the call sites, not a run.
 
 **Two of the four columns are new, and both came off a real volume
 rather than out of a list of things that could go wrong.** The cache in

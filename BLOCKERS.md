@@ -1482,6 +1482,17 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"walkprobe.py grades every volume walk in the tree"** — corrected
+  twice, 2026-09-22 and 2026-09-23. It graded six of eight, then eight of
+  nine. The missing ninth is `nowcompress.read_forks`, a different
+  function sharing a name with `superdisk.read_forks`, and
+  `nowcompress --adjudicate` calls it. **Cost: one harness re-run that
+  proved nothing** — it was run to verify the `superdisk.read_forks`
+  filter and exercised a blind walk instead, coming back green. It gave
+  itself away by printing no filter line. Both errors came from searching
+  for a spelling (`hls`, then the name `read_forks`); searching for the
+  capability finds **thirty** volume listers in `tools/`, nine graded
+  (DECISIONS.md 2026-09-23, *the ninth walk, found by the missing line*).
 - **"`superdisk.read_forks` has about thirty callers, several of which
   compare fork SETS"** — corrected 2026-09-22. It has **38** call sites
   across nine harnesses, and **no** caller compares fork sets. Four

@@ -27,7 +27,7 @@ Until 2026-09-22 this probe could only report the first: the volume has
 always carried the same four subjects inside `Folder`, but the verdict
 compared leaf NAMES and the folder holds the same four names as the
 root, so a walk returning two entries scored what a walk returning
-eight did. Four of the eight never descend. That is not automatically a
+eight did. Four of the nine never descend. That is not automatically a
 defect — see `EXPECT_FLAT` — but it was not being stated either.
 
 **The third and fourth columns are here because the volumes in
@@ -46,7 +46,7 @@ That second line is the one that bites: `cptsegment.read_volume` and
 `cptcrypt.read_volume` keep a listing line with `line.startswith("f")`,
 which is a directory test that also throws away every locked file.
 
-**And two of the eight were not here at all**, because they list with
+**And two of the nine were not here at all**, because they list with
 `hdir` rather than `hls` and a grep for `hls` does not find them.
 `hdir` hides the invisible bit exactly as `hls` does and takes the same
 `-a`, which this re-derives on every run.
@@ -87,10 +87,16 @@ see what `-a` BREAKS: making `Icon\r` reachable is what exposed a
 harness finds that. OPEN_ITEMS.md, *One volume walk that cannot see an
 invisible file*.
 
-Nor can it see a walk it does not know about. Its own inventory is the
-thing most likely to be wrong here, and it has been wrong once: for the
-first day of its life this file said it ran "every walk in the tree"
-while listing six of eight.
+Nor can it see a walk it does not know about. **Its own inventory is the
+thing most likely to be wrong here, and it has been wrong twice in one
+day** — six of eight while claiming "every walk in the tree", because it
+was built by grepping for `hls` and two walks use `hdir`; then eight of
+nine, because it was extended by grepping for a NAME and
+`nowcompress.read_forks` is a different function that happens to share
+one with `superdisk.read_forks`. Both times the search was for a
+spelling. The search that finds them is for the CAPABILITY — a function
+that runs `hls` or `hdir` — and `tools/` holds THIRTY. Nine are graded
+here; `tools/vmac/README.md` lists the rest and says which matter.
 """
 import argparse
 import os
@@ -138,10 +144,11 @@ LOCKED = "Locked"
 # Which walks cannot see an INVISIBLE file today. A walk that leaves this
 # list has been fixed; one that joins it has regressed. Either way the set
 # here is meant to be changed deliberately.
-# EMPTY since 2026-09-22, when all eight took `-a` — `arcmac` first,
+# EMPTY since 2026-09-22, when all nine took `-a` — `arcmac` first,
 # then `nowcompress`, the two Compact Pro walks, `diskdoubler` and last
-# `superdisk.read_forks`, whose 38 call sites across nine harnesses are
-# why it went last. Kept, and load-bearing, because it fails in the other
+# `superdisk.read_forks`, whose call sites across nine harnesses are why
+# it went last, and `nowcompress.read_forks`, which the inventory had
+# never listed at all. Kept, and load-bearing, because it fails in the other
 # direction: take the flag back out of any walk and this names it.
 EXPECT_BLIND = set()
 
@@ -292,11 +299,11 @@ def listing_shapes(img):
 def paths(x):
     """Whatever a walk returned, as a set of '/'-joined paths.
 
-    The eight walks state their results four ways — a dict of leaf names, a
+    The nine walks state their results four ways — a dict of leaf names, a
     dict of '/'-joined strings, a set of tuples of str, a set of tuples of
     BYTES — so this is where they are made comparable. Keeping the path
     rather than the leaf is what lets the two depth columns exist: four of
-    the eight never descend, and a leaf-only comparison scores them the
+    the nine never descend, and a leaf-only comparison scores them the
     same as the four that do, because both folders hold the same four
     names as the root.
     """
@@ -322,6 +329,17 @@ def walks(img):
 
     Imported rather than reimplemented, so this measures the code the
     harnesses actually run.
+
+    **This inventory is the thing here most likely to be wrong, and it has
+    been wrong twice.** It listed six of eight while claiming "every
+    walk", because it was built by grepping for `hls` and two walks use
+    `hdir`; then eight of nine, because it was extended by grepping for a
+    NAME and `nowcompress.read_forks` is a different function with the
+    same name as `superdisk.read_forks`. The search that finds them is for
+    the CAPABILITY — a function that runs `hls` or `hdir` — and there are
+    THIRTY of those in `tools/`. Nine are graded here; the rest are
+    listed in `tools/vmac/README.md`, *What every walk can see*, with what
+    each one is and whether it matters.
     """
     got = []
 
@@ -335,6 +353,13 @@ def walks(img):
     got.append(("nowcompress.read_volume",
                 paths(nowcompress.read_volume(img, d))))
     shutil.rmtree(d, ignore_errors=True)
+
+    # The NINTH walk, added 2026-09-22. `nowcompress.py` defines its own
+    # `read_forks`, which is not `superdisk.read_forks`, and the survey
+    # that built this inventory searched for the NAME and credited every
+    # call to superdisk's. `--adjudicate` calls this one.
+    got.append(("nowcompress.read_forks",
+                paths(nowcompress.read_forks(img))))
 
     import diskdoubler
     got.append(("diskdoubler.volume_files",

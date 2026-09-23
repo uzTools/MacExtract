@@ -259,6 +259,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the folder the application wrote and no walk could see) — four blind walks taken, and two columns the probe was missing
 - 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
 - 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
+- 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
 
 ---
 
@@ -16284,13 +16285,16 @@ sites; four separate filters would have drifted.
 `superdisk --adjudicate` and `diskdoubler --adjudicate` were re-run: the
 filter dropped exactly `Desktop DB` and `Desktop DF`, nothing else, and
 the verdicts were unchanged at 2/2 and 10/10 forks identical.
-`nowcompress --adjudicate` and `superdisk --nest` were NOT re-run, and
-nor was any `spacesaver.py` phase, which holds 20 of the 38 call sites.
-`ci.sh` reaches exactly one more of them — `run_ssmodule.py`, which is
-green. So **4 of 38 call sites are exercised since the change**; the
-other 34 select by name, creator or type and are expected to be
-indifferent to the flag. Expected, not measured, and written down that
-way so the next session knows which it is.
+`nowcompress --adjudicate` and `superdisk --nest` were re-run on
+2026-09-23 and are green too — `--nest` 11 files with the Macintosh
+agreeing, `--adjudicate` every fork identical — as are `spacesaver
+--layout` and `--pkg`, which select correctly on a volume where `-a` now
+surfaces seventeen invisible `Icon` files. **Two of those runs were not
+testing this walk at all**: `nowcompress --adjudicate` calls
+`nowcompress.read_forks`, a ninth walk nobody had listed (*the ninth
+walk, found by the missing line*, below). The remaining `spacesaver.py`
+phases — most of its call sites — are still unexercised, and select by
+name or creator.
 
 **And the re-run found something the flag had nothing to do with.**
 `superdisk --adjudicate` has **always exited 1**, including on a clean
@@ -16308,3 +16312,54 @@ the thing that stands in for it.
 same move — re-running a harness rather than the probe that models it.
 The probe cannot see a `text=True` newline translation, and it cannot
 see an exit code.
+
+
+## 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
+
+**Claim.** There is a NINTH volume walk. `nowcompress.py` defines its own
+`read_forks`, which is not `superdisk.read_forks`, and `--adjudicate`
+calls that one. It was blind, it descends, and it passed names as `str`.
+Fixed, graded, and the probe now covers nine.
+
+**How it surfaced, which is the only interesting part.** The previous
+day's change made every fixed walk print what its filter dropped. Running
+`nowcompress --adjudicate` to verify the `superdisk.read_forks` change,
+the run came back green — **and printed no filter line**. A verdict
+without its instrument's line is not the instrument passing; it is the
+instrument not being there. The harness had been re-run to prove a filter
+safe and had exercised a different function entirely, still blind.
+
+**The inventory was wrong twice in one day, and both times the search was
+for a SPELLING.**
+
+- six of eight, because it was built by grepping for `hls` and two walks
+  list with `hdir` (*the column that was already on the volume*);
+- eight of nine, because it was extended by grepping for the NAME
+  `read_forks` and every hit was credited to `superdisk`'s. Two functions
+  in two files share a name; one grep, one wrong population, and a "38
+  call sites" count that silently included two belonging to the other.
+
+**The search that works asks for the capability.** An `ast` walk over
+`tools/` for any function that runs `hls` or `hdir` finds **thirty**.
+Nine are graded; nine more list a volume with no `-a` and nothing grades
+them — `interactive.read_joined`, `phase_wrapped`, `phase_chain`,
+`phase_named`, `expander.app_from_image`, `macmime.ls`, `rescomp.report`,
+`sitcrypt.list_folder`, `spacesaver.lift_installer`. Every one of them
+selects by a name it chose itself, **which is exactly the argument that
+was made for `nowcompress.read_forks` the day before it turned out to be
+one of the four that compare whole entry sets.** So the table in
+`tools/vmac/README.md` says *unverified* against it, rather than
+*harmless*.
+
+**What the fix cost.** `-a`, the shared `FINDER_OWN`, and names to `hcd`
+and `hcopy` as bytes. Re-run: the filter dropped exactly `Desktop DB` and
+`Desktop DF`, and the adjudication is unchanged — every fork identical,
+including one of 9,949,696 B, exit 0.
+
+**The transferable rule, and it now has three instances.** An inventory
+built by searching for how something is SPELLED will find what is spelled
+that way. Ask what the thing DOES — lists a volume, hides an invisible
+file, compares an entry set — and search for that. The two `hdir` walks,
+this ninth one, and the "compares fork SETS" phrase that described a real
+hazard under a name that made it unfindable, are the same mistake three
+times in two days.

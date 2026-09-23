@@ -1123,22 +1123,47 @@ def adjudicate(macbinary, archive):
     return bad
 
 
-def read_forks(img):
-    """path -> (data, rsrc) for every file on a volume, folders included."""
+def read_forks(img, invisible=True):
+    """path -> (data, rsrc) for every file on a volume, folders included.
+
+    **The NINTH walk, and it was missing from `walkprobe.py` until
+    2026-09-22** — because the survey that built that inventory searched
+    for the NAME `read_forks` and attributed every hit to
+    `superdisk.read_forks`, which is a different function in a different
+    file. `--adjudicate` calls THIS one. The same mistake, twice: the two
+    Compact Pro walks were missed by a grep for `hls`, and this one by a
+    grep for a name. Search for the CAPABILITY — a function that lists an
+    HFS volume — and there are thirty of them.
+
+    `-a` and the `FINDER_OWN` filter for the reasons
+    `superdisk.read_forks` states in full; this walk is one of the four
+    that hold EVERY entry on the guest volume against our own extraction,
+    so a Finder file with no counterpart would be a difference, and an
+    invisible file the extractor wrote was simply never compared.
+
+    Names reach `hcd` and `hcopy` as the bytes `hls` printed. The keys
+    stay `str`, because that is what the caller joins onto a host path.
+    """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    out = {}
+    out, dropped = {}, []
 
     def walk(prefix):
-        listing = subprocess.run(["hls", "-1"], capture_output=True,
-                                 env=env).stdout.decode("mac-roman", "replace")
-        for name in [n for n in listing.split("\n") if n.strip()]:
-            if subprocess.run(["hcd", name], capture_output=True,
+        listing = subprocess.run([b"hls"] + ([b"-a"] if invisible else [])
+                                 + [b"-1"], capture_output=True,
+                                 env=env).stdout
+        for raw in [n for n in listing.split(b"\n") if n.strip()]:
+            name = raw.decode("mac-roman", "replace")
+            if invisible and not prefix and name in FINDER_OWN:
+                dropped.append(name)
+                continue
+            if subprocess.run([b"hcd", raw], capture_output=True,
                               env=env).returncode == 0:
                 walk(prefix + name + "/")
                 subprocess.run(["hcd", "::"], capture_output=True, env=env)
                 continue
             tmp = tempfile.mktemp(suffix=".bin")
-            if subprocess.run(["hcopy", "-m", name, tmp], capture_output=True,
+            if subprocess.run([b"hcopy", b"-m", raw, tmp.encode()],
+                              capture_output=True,
                               env=env).returncode != 0:
                 continue
             blob = open(tmp, "rb").read()
@@ -1155,6 +1180,8 @@ def read_forks(img):
         subprocess.run(["humount"], capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    print("nowcompress: -a surfaced and FINDER_OWN dropped: %s"
+          % (", ".join(sorted(dropped)) or "nothing"))
     return out
 
 
