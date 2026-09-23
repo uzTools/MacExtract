@@ -168,6 +168,9 @@ EXPECT_FLAT = {
     "nowcompress.read_volume",
     "cptsegment.read_volume",
     "cptcrypt.read_volume",
+    "interactive.volume_entries",
+    "macmime.HFS.ls",
+    "mkboot.HFS.ls",
 }
 
 # Which never reach a subject inside an INVISIBLE folder. Failing this is
@@ -179,6 +182,9 @@ EXPECT_NO_HIDDEN_DIR = {
     "nowcompress.read_volume",
     "cptsegment.read_volume",
     "cptcrypt.read_volume",
+    "interactive.volume_entries",
+    "macmime.HFS.ls",
+    "mkboot.HFS.ls",
 }
 # All four are in it because they never descend at all, which is a
 # recorded property and not a defect — see EXPECT_FLAT, which holds
@@ -385,6 +391,31 @@ def walks(img):
     got.append(("cptcrypt.read_volume",
                 paths(cptcrypt.read_volume(img, d, set()))))
     shutil.rmtree(d, ignore_errors=True)
+
+    # Three listers that are NOT "walks" a harness calls to grade output,
+    # but do take an arbitrary image and return an entry set — so there is
+    # no reason they should not be graded. Added 2026-09-23, when "none of
+    # the other nine is gradeable" turned out to be true of four of them
+    # and not of these.
+    import interactive
+    got.append(("interactive.volume_entries",
+                paths(interactive.volume_entries(img))))
+
+    import macmime
+    h = macmime.HFS(img)
+    try:
+        got.append(("macmime.HFS.ls", paths(h.ls())))
+    finally:
+        h.close()
+
+    import mkboot
+    mb = mkboot.HFS(img)
+    try:
+        got.append(("mkboot.HFS.ls",
+                    paths(n for _isdir, n in mb.ls(mb.vol + ":",
+                                                   invisible=True))))
+    finally:
+        mb.close()
 
     import checkdisk
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))

@@ -59,7 +59,7 @@ the application extracted:
 Mini vMac maps the host Alt key to the Mac Command key; see command_key() for
 why the chord is sent as an explicit hold rather than an xdotool chord.
 """
-import argparse, glob, os, shutil, signal, subprocess, sys, tempfile, time
+import argparse, glob, os, re, shutil, signal, subprocess, sys, tempfile, time
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +68,10 @@ import run as R                                              # noqa: E402
 from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
 from mkboot import FINDER_OWN                                # noqa: E402
+
+# `hdir`'s name column on a BYTES listing — a text listing cannot carry the
+# carriage return inside `Icon\r`.
+LISTING_DATE_B = re.compile(LISTING_DATE.pattern.encode("ascii"))
 
 
 def build_interactive_app(defines=()):
@@ -1462,6 +1466,49 @@ def build_named_set(kind, workdir, fixture):
     return parts, b"Ablob", blob
 
 
+def volume_entries(image, ignore=()):
+    """Every NAME at the root of <image>, minus the Finder's own and
+    <ignore>. The entry set three phases compare against what the
+    application should have written.
+
+    Extracted 2026-09-23 from `phase_wrapped`, `phase_chain` and
+    `phase_named`, which held three copies of it. Two things follow from
+    having one:
+
+    - **`walkprobe.py` can grade it.** The copies could not be graded by
+      anything: each was inline in a phase that drives an emulator, so
+      "these select by a name they chose themselves, so `-a` is
+      harmless" was a reading of the code rather than a measurement.
+      Three of the nine ungraded listers become one graded walk.
+    - **the `Icon\r` bug is fixed once.** All three called
+      `splitlines()`, which splits on a carriage return as well — and a
+      CR is a legal HFS filename character, the last one of `Icon\r`.
+      `hdir` prints it verbatim, so a custom folder icon arrived as a
+      name cut in half. The same defect the two Compact Pro walks had,
+      in a different spelling.
+    """
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        if CD.hfs(env, "hmount", image).returncode != 0:
+            return set()
+        listing = CD.hfs(env, "hdir", "-a", ":").stdout
+        CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    drop = set(ignore) | FINDER_OWN
+    got = set()
+    # split on b"\n" alone: splitlines() would cut `Icon\r` in two.
+    for raw in listing.split(b"\n"):
+        m = LISTING_DATE_B.search(raw)
+        if not m:
+            continue
+        nm = m.group(1).decode("mac_roman", "replace")
+        if nm not in drop:
+            got.add(nm)
+    return got
+
+
 def phase_wrapped(args, appbin, workdir, shot):
     """A set whose parts are each in their own envelope — Archive.sit.1.hqx,
     which is how one was actually downloaded.
@@ -1521,28 +1568,10 @@ def phase_wrapped(args, appbin, workdir, shot):
         if os.path.exists(scratch):
             os.remove(scratch)
 
-    home = tempfile.mkdtemp(prefix="hfs-")
-    env = dict(os.environ, HOME=home)
-    try:
-        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        # `-a`, 2026-09-23: this builds an entry SET and compares it
-        # with what the application should have written, so an invisible
-        # output file read as one that was never made. FINDER_OWN below
-        # drops what the flag brings with it.
-        listing = CD.hfs(env, "hdir", "-a", ":").stdout.decode("mac_roman")
-        CD.hfs(env, "humount")
-    finally:
-        shutil.rmtree(home, ignore_errors=True)
-    got = set()
-    for line in listing.splitlines():
-        m = LISTING_DATE.search(line)
-        if not m:
-            continue
-        nm = m.group(1)
-        if nm in ("System Folder", "MacExtract") or nm in FINDER_OWN or \
-                nm.startswith("StuffIt Expander") or nm in onvol:
-            continue
-        got.add(nm)
+    got = {n for n in volume_entries(os.path.join(workdir, "boot.hfv"),
+                                     ignore={"System Folder", "MacExtract"}
+                                     | set(onvol))
+           if not n.startswith("StuffIt Expander")}
 
     # The reference CLI, same binary and same guard as phase_chain: this
     # named `build/dev` until 2026-09-03, which nothing builds and which
@@ -1602,29 +1631,14 @@ def phase_chain(args, appbin, workdir, shot):
             os.remove(scratch)
 
     # What the Mac ended up with, at the root of the volume it wrote to.
-    home = tempfile.mkdtemp(prefix="hfs-")
-    env = dict(os.environ, HOME=home)
-    try:
-        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        # `-a`, 2026-09-23: this builds an entry SET and compares it
-        # with what the application should have written, so an invisible
-        # output file read as one that was never made. FINDER_OWN below
-        # drops what the flag brings with it.
-        listing = CD.hfs(env, "hdir", "-a", ":").stdout.decode("mac_roman")
-        CD.hfs(env, "humount")
-    finally:
-        shutil.rmtree(home, ignore_errors=True)
-    # `Desktop` was in this set by hand; `FINDER_OWN` is the same fact in
-    # one place, and covers the `Desktop DB`/`Desktop DF` a later System
-    # writes instead (2026-09-23).
-    ignore = {"System Folder", "StuffIt Expander\u2122 4.0.1 Folder",
-              "MacExtract", onmac} | FINDER_OWN
-    got = set()
-    for line in listing.splitlines():
-        m = LISTING_DATE.search(line)
-        if m and m.group(1) not in ignore and \
-                not m.group(1).startswith("StuffIt Expander"):
-            got.add(m.group(1))
+    # `Desktop` was in this ignore set by hand until 2026-09-23;
+    # `volume_entries` drops the whole of FINDER_OWN, which also covers
+    # the `Desktop DB`/`Desktop DF` a later System writes instead.
+    got = {n for n in volume_entries(
+               os.path.join(workdir, "boot.hfv"),
+               ignore={"System Folder", "StuffIt Expander\u2122 4.0.1 Folder",
+                       "MacExtract", onmac})
+           if not n.startswith("StuffIt Expander")}
 
     # What the Linux CLI makes of the same file, recursion and all. The
     # same binary every other reference in this file uses: this named
@@ -1700,29 +1714,11 @@ def phase_named(args, appbin, workdir, shot):
     # behind and deletes the archive. This phase checked for the file and
     # failed the day the loop landed; the application was right and the
     # expectation was a day old.
-    home = tempfile.mkdtemp(prefix="hfs-")
-    env = dict(os.environ, HOME=home)
-    try:
-        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        # `-a`, 2026-09-23: this builds an entry SET and compares it
-        # with what the application should have written, so an invisible
-        # output file read as one that was never made. FINDER_OWN below
-        # drops what the flag brings with it.
-        listing = CD.hfs(env, "hdir", "-a", ":").stdout.decode("mac_roman")
-        CD.hfs(env, "humount")
-    finally:
-        shutil.rmtree(home, ignore_errors=True)
     onvol = {os.path.basename(p) for p in parts}
-    got = set()
-    for line in listing.splitlines():
-        m = LISTING_DATE.search(line)
-        if not m:
-            continue
-        nm = m.group(1)
-        if nm in ("System Folder", "MacExtract") or nm in FINDER_OWN or \
-                nm.startswith("StuffIt Expander") or nm in onvol:
-            continue
-        got.add(nm)
+    got = {n for n in volume_entries(os.path.join(workdir, "boot.hfv"),
+                                     ignore={"System Folder", "MacExtract"}
+                                     | set(onvol))
+           if not n.startswith("StuffIt Expander")}
 
     # The reference CLI, same binary and same guard as phase_chain — see
     # phase_wrapped for what the old `build/dev` path cost.

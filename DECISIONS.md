@@ -261,6 +261,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
 - 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
 - 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
+- 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
 
 ---
 
@@ -16423,3 +16424,49 @@ answers *"This archive has more parts. Find them and try again."* —
 correctly. That was diagnosed the right way round: the same failure
 reproduced on the unmodified file, which is what said it was not the
 `-a` change, and then the SHOT said what it actually was.
+
+
+## 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
+
+**Claim.** *"None of the other nine listers takes an arbitrary image and
+returns an entry set, so `walkprobe.py` cannot grade them"* was wrong
+for three of them, and was a reading of the code rather than an attempt.
+The probe now has **twelve** subjects. Grading the third one found a
+live defect that the reading had passed over.
+
+**`mkboot.HFS.ls` came back 3/4, missing `Icon\r`.** It read its listing
+with `text=True`, whose universal-newline translation cuts a name at a
+carriage return — the same defect as the two Compact Pro walks, in a
+function nobody had connected to them. It is load-bearing: `mkboot.py`'s
+own `rmtree` carries a comment saying the files that survive a strip
+**are** `Icon\r`, and `verify_stripped` — the assertion every peak-heap
+figure's comparability rests on — reads through this listing. The
+argument for not grading it was that it "picks one application by name";
+the name it could not pick was the one the file already knew about.
+
+**`interactive.volume_entries` is new, and the reason it can be graded is
+the reason it should exist.** `phase_wrapped`, `phase_chain` and
+`phase_named` held three copies of the same mount-list-parse block, each
+inline in a phase that drives an emulator, which is exactly what made
+them ungradeable. One function serves all three, `walkprobe.py` grades
+it, and the `splitlines()` bug all three shared is fixed once.
+`macmime.HFS.ls` needed nothing but to be called.
+
+**Two mistakes made while doing it, both caught by running.** Taking
+`mkboot.HFS.ls` to bytes, the first draft decoded with **MacRoman** —
+correct about what an HFS name IS, wrong about what happens next: these
+names go straight back to hfsutils as arguments, and `subprocess`
+encodes a str with `os.fsencode`. `Résumé` on the System 6 disk decoded
+to `é` and went back out as UTF-8's two bytes, and `hdel` failed, and
+every boot image stopped building. **The decode has to match the ENCODE
+that follows it**, which `run()`'s own comment says two lines above.
+Then `onvol` turned out to be a list in one phase and a set in the
+other, so `| onvol` raised. Neither would have been found by reading;
+both took one run each.
+
+**The four that really are not gradeable**, and now for a stated reason
+rather than a guess: `interactive.read_joined`, `rescomp.report` and
+`sitcrypt.list_folder` do not return an entry set at all — two print
+their listing and one returns it as text for a screenshot — and
+`spacesaver.lift_installer` takes no image, reading a fixed CD path. All
+four still pass `-a`, and the `ast` re-survey is what keeps that true.

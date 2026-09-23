@@ -1827,7 +1827,7 @@ came back short. No emulator, no ROM, no X server; seconds.
     tools/vmac/walkprobe.py            # the table
     tools/vmac/walkprobe.py --check    # and assert it against the EXPECT_* sets
 
-As of **2026-09-22**, **nine** walks and **four** columns:
+As of **2026-09-23**, **twelve** subjects and **four** columns:
 
 | walk | invisible file | descends | invisible folder | locked file |
 |---|---|---|---|---|
@@ -1840,8 +1840,28 @@ As of **2026-09-22**, **nine** walks and **four** columns:
 | `cptsegment.read_volume` | 4/4 | no | — | yes |
 | `cptcrypt.read_volume` | 4/4 | no | — | yes |
 | `superdisk.read_forks` | 4/4 | yes | 4/4 | yes |
+| `interactive.volume_entries` | 4/4 | no | — | yes |
+| `macmime.HFS.ls` | 4/4 | no | — | yes |
+| `mkboot.HFS.ls` | **4/4** | no | — | yes |
 
-**All nine, since 2026-09-22.** `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
+**All twelve.** The last three joined on 2026-09-23, when *"none of the
+other nine listers is gradeable"* turned out to be true of four of them
+and not of these — each takes an arbitrary image and returns an entry
+set, so there was never a reason not to grade them. **Grading
+`mkboot.HFS.ls` found a defect the reading had missed**: it came back
+**3/4, missing `Icon\r`**, because it read its listing with `text=True`
+and universal newlines cut the name at the carriage return — and
+`mkboot.py`'s own `rmtree` says in a comment that the files surviving a
+strip *are* `Icon\r`. `verify_stripped` is built on that listing. Fixed
+the same way as the Compact Pro walks: bytes, split on b"\n".
+
+`interactive.volume_entries` is itself new — the entry-set listing that
+`phase_wrapped`, `phase_chain` and `phase_named` held three copies of.
+Collapsing them fixed the same `splitlines()` bug once and turned three
+ungradeable inline blocks into one graded function.
+
+The three are root-only by design, not by oversight: each lists ONE
+directory, and the callers that need depth walk it themselves. `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
 are empty sets and are kept, because they fail in the other direction:
 take `-a` back out of any walk and the probe names it. The four that show
 `—` never descend at all, which `EXPECT_FLAT` records as a property —

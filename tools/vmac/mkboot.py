@@ -114,9 +114,28 @@ class HFS:
         A verification wants `-a`; a deletion wants the explicit list.
         """
         self.run("hcd", path)
-        out = self.run("hdir", *(["-a"] if invisible else [])).stdout
+        # BYTES, and split on b"\n" alone. `text=True` applies universal
+        # newlines, so the carriage return inside `Icon\r` — a legal HFS
+        # name, and the one this very file's `rmtree` says survives a
+        # strip — arrived as a line break and the name as `Icon`.
+        # Measured 2026-09-23, the moment `walkprobe.py` graded this
+        # function instead of reasoning about it: 3/4, missing exactly
+        # that name.
+        out = subprocess.run(
+            [b"hdir"] + ([b"-a"] if invisible else []),
+            env=self.env, capture_output=True).stdout
         items = []
-        for line in out.splitlines():
+        # Decoded with the FILESYSTEM encoding, not MacRoman — because
+        # these names go straight back to hfsutils as arguments, and
+        # `subprocess` encodes a str argument with `os.fsencode`. UTF-8
+        # plus surrogateescape round-trips every byte; MacRoman does not,
+        # and the first draft of this broke `hdel` on
+        # `Macintosh:Microsoft Word:Sample Documents:Résumé` — MacRoman
+        # 0x8E decoded to 'é' and went back out as UTF-8's two bytes.
+        # The decode has to match the ENCODE that follows it, which is
+        # what `run()` above says and what this line briefly forgot.
+        for line in [x.decode(sys.getfilesystemencoding(), "surrogateescape")
+                     for x in out.split(b"\n")]:
             # `F` as well as `f`: `hdir` prints a LOCKED file with a capital,
             # so the obvious directory test silently drops one. A locked
             # DIRECTORY still prints `d` — measured, both, 2026-09-22
