@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """fuzz.py — randomized robustness pass across all formats.
 
-Three generators, seeded and reproducible:
+Four generators, seeded and reproducible:
   1. mutation: take a random corpus fixture, apply 1..64 random byte
      mutations / truncations / duplications;
   2. splice: concatenate random slices of two fixtures;
-  3. garbage: pure random bytes with a real format magic prefix.
+  3. garbage: pure random bytes with a real format magic prefix;
+  4. crypt: an archive tools/synth_crypt.py wrote under a known password,
+     flipped in one to four bits — a quarter of the run, because the
+     ciphers are unreachable without both a password and a container that
+     survives (TESTING.md, *What the fuzzer cannot see*).
 
-Every case runs `macextract t --budget 4M` (the sanitizer build) with a
-timeout. Any nonzero-but-clean exit is fine; crashes (signals),
+Every case runs `macextract t --budget 4M -p <password>` (the sanitizer
+build) with a timeout. Any nonzero-but-clean exit is fine; crashes (signals),
 sanitizer aborts, or timeouts fail the run.
 """
-import argparse, os, random, subprocess, sys, tempfile
+import argparse, os, random, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 FIXDIR = os.path.join(ROOT, "fixtures")
@@ -24,6 +28,46 @@ MAGICS = [
     b"PMag", b"PMa4", b"\x01\x01\x00\x00", b"\x1f\x8b\x08", b"\x1f\x9d\x90",
     b"PK\x03\x04", b"(This file must be converted with BinHex 4.0)\r:",
 ]
+
+
+# Encrypted seeds, and a password on every case. Without them the ciphers
+# are not fuzzed AT ALL: an encrypted entry is refused at unc_password,
+# which is before any key schedule runs, so no mutation of an ordinary
+# fixture can reach src/unc_crypt.c. tools/synth_crypt.py writes the four
+# shapes the engine can decrypt from scratch, so nothing copyrighted is
+# needed. TESTING.md, *What the fuzzer cannot see*.
+CRYPT_KINDS = ["sit-des", "sit5-rc4", "packit-xor", "packit-des"]
+CRYPT_PW = "swordfish"
+
+
+def crypt_mutate(data, rng):
+    """One to four single-bit flips, which is what the CIPHERS need: an
+    encrypted archive mutated the ordinary way (1..64 edits, truncations,
+    duplications) dies in its container long before any key is derived.
+    Measured 2026-09-23 over 80 cases per setting, counting those that
+    reach key setup — 1..2 flips: 25, 1..4: 35, 1..8: 24, 1..64: 9."""
+    buf = bytearray(data)
+    for _ in range(rng.randrange(1, 5)):
+        buf[rng.randrange(len(buf))] ^= 1 << rng.randrange(8)
+    return bytes(buf)
+
+
+def crypt_seeds(tmp):
+    out = []
+    for kind in CRYPT_KINDS:
+        p = os.path.join(tmp, "seed-%s.bin" % kind)
+        try:
+            subprocess.run([sys.executable,
+                            os.path.join(ROOT, "tools", "synth_crypt.py"),
+                            "--kind", kind, "-o", p,
+                            "--password", CRYPT_PW],
+                           check=True, capture_output=True)
+        except (OSError, subprocess.CalledProcessError) as e:
+            print("fuzz: no encrypted seeds (%s: %s)" % (kind, e),
+                  file=sys.stderr)
+            return []
+        out.append(p)
+    return out
 
 
 def corpus():
@@ -71,17 +115,26 @@ def main():
         return 1
 
     rng = random.Random(args.seed)
-    seeds = corpus()
-    if not seeds:
-        print("fuzz: no corpus fixtures present", file=sys.stderr)
-        return 1
     cache = {}
     bad = 0
 
     with tempfile.TemporaryDirectory() as tmp:
+        seeds = corpus()
+        if not seeds:
+            print("fuzz: no corpus fixtures present", file=sys.stderr)
+            return 1
+        encrypted = crypt_seeds(tmp)
         for i in range(args.iterations):
-            kind = rng.randrange(3)
-            if kind == 0:
+            # A quarter of the run is the ciphers, because they are a
+            # quarter of nothing otherwise: four encrypted seeds among
+            # ~950 fixtures would be drawn about half a time in 150.
+            kind = 3 if encrypted and rng.randrange(4) == 3 \
+                else rng.randrange(3)
+            if kind == 3:
+                src = rng.choice(encrypted)
+                data = cache.setdefault(src, open(src, "rb").read())
+                blob = crypt_mutate(data, rng)
+            elif kind == 0:
                 src = rng.choice(seeds)
                 data = cache.setdefault(src, open(src, "rb").read())
                 blob = mutate(data, rng)
@@ -100,10 +153,22 @@ def main():
             path = os.path.join(tmp, "case")
             with open(path, "wb") as f:
                 f.write(blob)
+            # The crypt cases EXTRACT rather than test: `t` does not
+            # descend into the MacBinary a StuffIt archive arrives in, so
+            # it never reaches that cipher at all — measured with a
+            # planted fault, 2026-09-23 (TESTING.md).
+            outdir = os.path.join(tmp, "out")
+            shutil.rmtree(outdir, ignore_errors=True)
+            if kind == 3:
+                os.mkdir(outdir)
+                cmd = [args.macextract, "x", "-o", outdir,
+                       "--budget", str(4 << 20), "-p", CRYPT_PW, path]
+            else:
+                cmd = [args.macextract, "t", "--budget", str(4 << 20),
+                       "-p", CRYPT_PW, path]
             try:
-                r = subprocess.run(
-                    [args.macextract, "t", "--budget", str(4 << 20), path],
-                    capture_output=True, timeout=args.timeout)
+                r = subprocess.run(cmd, capture_output=True,
+                                   timeout=args.timeout)
             except subprocess.TimeoutExpired:
                 bad += 1
                 keep = os.path.join(ROOT, f"fuzz-hang-{args.seed}-{i}.bin")

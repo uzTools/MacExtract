@@ -605,9 +605,30 @@ anything about the suite.**
    giving a clean per-entry "out of memory". Results in FORMATS.md.
 6. **Fuzzing** (`tools/fuzz.py`): seeded, reproducible
    mutation/splice/magic-garbage cases through `macextract t` under the
-   sanitizer build; nonzero exits are fine, signals/sanitizer
-   aborts/hangs fail. 4,000 cases at M9; every CI run does a 150-case
-   smoke.
+   sanitizer build, plus a fourth generator (**2026-09-23**) that flips
+   one to four bits in an encrypted archive `tools/synth_crypt.py` wrote
+   and runs `macextract x -p` on it. Nonzero exits are fine,
+   signals/sanitizer aborts/hangs fail. 4,000 cases at M9; every CI run
+   does a 150-case smoke, a quarter of it the ciphers, in ~2 s.
+
+   **What that fourth generator reaches, and what it cannot** — measured
+   by PLANTING a fault in each cipher's key setup and counting the
+   mutants that trip it, because two cheaper instruments both lied.
+   `macextract`'s exit code says nothing: a `t` run over an encrypted
+   archive exits 0 having decrypted nothing, so "exit 0 or the word
+   password in stderr" scored `sit-des` 31/40 when the truth was **0**.
+   And `t` never descends into the MacBinary a StuffIt archive arrives
+   in, which is why the crypt cases EXTRACT instead.
+   Under `x`, out of 30 mutants each: **StuffIt classic's DES 19,
+   StuffIt 5's RC4 21, PackIt's XOR and DES 0.** PackIt's are zero
+   because a flipped bit fails its header CRC before any key is derived
+   — the same shape as the Now Compress stored-block hole, where a
+   checksum kept every mutant out of the code that had the bug. Compact
+   Pro's cipher, the traditional zip one and WinZip's AES have no
+   encrypted seed at all: `synth_crypt.py` writes four shapes and those
+   are not among them. So three of the eight ciphers this engine has are
+   still unfuzzed, and two more are reached only by construction
+   (OPEN_ITEMS.md).
 
 ## DiskDoubler and Now Compress joined the graded set (2026-08-15)
 

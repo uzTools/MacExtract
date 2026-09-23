@@ -267,6 +267,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
 - 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
 - 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
+- 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
 
 ---
 
@@ -16750,3 +16751,45 @@ reveal it: the assertion was green precisely because the two agreed.
 What found it was not a test but reading the function to answer a
 different question — which is the same route by which `des.c` was found
 to carry no licence.
+
+## 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
+
+**The gap.** `tools/fuzz.py` ran every case as `macextract t` with no
+password. An encrypted entry is refused at `unc_password`, which is
+before any key schedule runs, so **no mutation of any fixture could
+reach `src/unc_crypt.c` at all** — 9,320 robustness variants and 4,000
+fuzz cases had never executed a line of the eight ciphers.
+
+**Two cheap instruments said otherwise, and both were wrong.** Scoring a
+case as "reached the cipher" when the run exits 0 or prints the word
+password gave `sit-des` 31 out of 40; the truth is 0, because `t` on
+that archive exits 0 having decrypted nothing. Ground truth came from
+PLANTING a fault — a four-byte stack array written at index 4 — in each
+key setup and counting the mutants that trip UBSan. The first planted
+fault was itself a no-op (`fault[pwlen & 7]` with a nine-character
+password writes index 1), which is the same lesson one level down: *a
+fault injection is a test too, and has to be shown to fire.*
+
+**What the fault found.** `t` never descends into the MacBinary a
+StuffIt archive arrives in, so the crypt cases had to EXTRACT. Under
+`x`, out of 30 mutants each: StuffIt classic's DES 19, StuffIt 5's RC4
+21, PackIt's XOR and DES 0 — the PackIt zeroes because a flipped bit
+fails its header CRC before a key is derived.
+
+**Why one to four bit flips.** The existing mutator (1..64 edits,
+truncations, duplications) destroys the container long before the
+cipher: measured over 80 cases per setting, cases reaching key setup
+were 9 at 1..64, 24 at 1..8, **35 at 1..4** and 25 at 1..2. The crypt
+generator is therefore its own mutator, and takes a quarter of the run
+because four encrypted seeds among ~950 fixtures would otherwise be
+drawn about half a time in 150 cases.
+
+**The transferable part.** *A coverage claim needs an instrument that
+can distinguish "ran and passed" from "never ran".* Exit codes cannot:
+both are zero. This is the third time the same shape has cost this
+project something — the on-screen result grid that could not fail on a
+name, the Now Compress checksum that kept every mutant out of the buggy
+read, and now a password prompt that kept every mutant out of the
+ciphers. What they share is a GUARD in front of the code under test,
+and the cure is always the same: get past the guard deliberately, then
+prove you did.
