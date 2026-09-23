@@ -269,6 +269,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
 - 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
 - 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
+- 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` are kept, and the shedding row that asked cannot close
 
 ---
 
@@ -16842,3 +16843,44 @@ re-taken 2026-09-22, and all three had drifted. What was missing was not
 a measurement but a TRIPWIRE: the growth was invisible because no check
 failed, and the documentation's own figure had been wrong for four days
 in the same way. A number nothing compares is a number nothing defends.
+
+## 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` are kept, and the shedding row that asked cannot close
+
+**The decision, the maintainer's and taken today.** `src/unc_lzdyn.c`
+stays. The XADMaster-shedding inventory (OPEN_ITEMS.md, *What is still
+XADMaster's*) had priced its removal and then declined to take it,
+because dropping a format the engine already extracts is not a call this
+machine makes. The answer is keep.
+
+**What it costs, measured 2026-09-20 and unchanged:** 3,472 B of `CODE`
+and 32 B of A5 — 3,504 B of a 1 MB Mac Plus's budget — from a build with
+the file and its two dispatch arms removed. Set against the 6,952 B of
+headroom the tightest tier has (*the ten kilobytes nothing watched*,
+above), that is half the margin, which is why the row was worth asking.
+
+**What buys it back is that the file is reachable.** The shedding case
+rested on "no corpus archive uses them", which is true and is not the
+same claim as "nobody can hand you one": LHa for UNIX writes `-lh2-`
+today once `tools/build_lha_lh2.sh` patches it, `tools/run_lzh.py`
+writes `-lh3-` itself, and `ci.sh` grades 15 and 6 entries of them every
+run. A method this project can MAKE a file in is a method a user can be
+handed a file in. The format is also contemporaneous with the whole
+target range end to end — LHarc predates System 6 and LHA outlived Mac
+OS 9 — and the Macintosh corpus holding no `.lzh` says where these files
+come FROM, not that they never arrive: a `.lzh` on a classic Mac is
+something that travelled from a PC, an Amiga or a Japanese desktop,
+which is the case an unarchiver exists for rather than an argument
+against covering it.
+
+**The consequence to book honestly.** That row can now never close on
+its own terms. Its other reference is LHa for UNIX under its own
+licence, and lhasa implements neither method, so there is nothing to
+rewrite `unc_lzdyn.c` FROM — the LGPL stays for this file whatever
+happens to the rest of the inventory. Keeping the code is therefore also
+a decision to stop treating the licence as reachable by shedding alone.
+
+**The transferable part.** *"Nothing we hold uses it" and "nobody can
+produce one" are different claims, and a suite that generates its own
+specimens has already disproved the second.* The grading rig built to
+make these two methods testable is the same fact that makes them worth
+keeping; the inventory row quoted the corpus and never quoted `ci.sh`.
