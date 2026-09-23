@@ -47,12 +47,12 @@
  * for what remains format knowledge, the nibble key schedule and the
  * derivation the three real archives grade; XADStuffIt5Parser.m +
  * XADRC4Handle.m, XADPackItParser.m (both PackIt handles), XADZipCryptHandle.m,
- * XADXORHandle.m, and reference/XADMaster/Crypto/md5.c for the MD5
- * tables. The standard-DES tables come from FIPS 46-3 itself
- * (reference/notes/fips46-3.pdf) and not from anyone's implementation of
- * it, since 2026-09-23; src/crypt_tables.h carries both precomputed,
- * because this engine may not have global mutable state. LGPL — see
- * NOTICE.
+ * XADXORHandle.m. The TABLES in src/crypt_tables.h are nobody's
+ * implementation since 2026-09-23: standard DES's are FIPS 46-3's own
+ * (reference/notes/fips46-3.pdf), MD5's are RFC 1321's
+ * (reference/notes/rfc1321.txt), and the AES S box is built from the
+ * definition in FIPS-197. They are precomputed because this engine may
+ * not have global mutable state. LGPL — see NOTICE.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -320,8 +320,10 @@ static void sitdes_crypt(uint8_t data[8], uint8_t ks[16][8], int enc,
 
 /* ------------------------------------------------------------------ */
 /* MD5 (StuffIt 5's key derivation, and nothing else)                  */
-/* Source: reference/XADMaster/Crypto/md5.c — its unrolled STEP list is */
-/* src/crypt_tables.h's three tables. Public domain; see NOTICE.        */
+/* Source: RFC 1321 (reference/notes/rfc1321.txt) — sections 3.4's four  */
+/* round functions, and the 64 round calls of its reference             */
+/* implementation, which are src/crypt_tables.h's three tables. See      */
+/* NOTICE.                                                              */
 /* ------------------------------------------------------------------ */
 
 static void md5_block(uint32_t abcd[4], const uint8_t *p)

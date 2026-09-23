@@ -463,6 +463,16 @@ fi
     curl -sL -o reference/notes/fips46-3.pdf \
         "https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf"
 
+# RFC 1321, the MD5 Message-Digest Algorithm — and since 2026-09-23 the
+# source of MD5's three tables in src/crypt_tables.h: the per-step
+# message-word index, rotation and constant, read out of the 64 round
+# calls of the RFC's own reference implementation, with section 3.4's
+# definition of the constants (the integer part of 4294967296*abs(sin(i)))
+# asserted to reproduce the literals beside them.
+[ -f reference/notes/rfc1321.txt ] || \
+    curl -sL -o reference/notes/rfc1321.txt \
+        "https://www.rfc-editor.org/rfc/rfc1321.txt"
+
 # ustar — POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
 # pax utility page, whose "ustar Interchange Format" section carries the
 # 512-octet header block table src/fmt_exo.c reads, the two zero records

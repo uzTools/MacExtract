@@ -13,14 +13,21 @@ Every table below is read out of a named source, never from memory:
     (DECISIONS.md 2026-09-23, *the tables that were the standard's*).
 
   * The MD5 tables are the per-step constants, rotation counts and
-    message-word indices of reference/XADMaster/Crypto/md5.c, pulled out
-    of its unrolled STEP() list so the loop here can be a loop.
+    message-word indices of RFC 1321 (reference/notes/rfc1321.txt), read
+    out of the 64 round calls of the RFC's own reference implementation
+    so the loop here can be a loop.  The RFC states its constants twice —
+    as literals and as the integer part of 4294967296*abs(sin(i)) — and
+    both are used, the second asserted to reproduce the first.  They came
+    from reference/XADMaster/Crypto/md5.c until 2026-09-23, which is now
+    read only to agree (DECISIONS.md 2026-09-23, *the third statement of
+    the same constants*).
 
-  * `unc_aes_sbox` is the AES substitution box, taken from
-    reference/XADMaster/Crypto/aestab.c's `sb_data` — the same 256
-    bytes FIPS-197 tabulates, and the generator checks them against the
-    standard construction (inverse in GF(2^8), then the affine map)
-    rather than trusting the extraction.
+  * `unc_aes_sbox` is the AES substitution box, BUILT here the way
+    FIPS-197 defines it (inverse in GF(2^8), then the affine map) and
+    checked against reference/XADMaster/Crypto/aestab.c's `sb_data`,
+    which it had been taken from until 2026-09-23.  Emitting the
+    construction rather than the extraction changes no byte and leaves
+    the check exactly where it was.
 
   * `unc_cpt_crc64` is the byte table of the 64-bit CRC Compact Pro
     keys its cipher with. There is no reference implementation and no
@@ -38,6 +45,7 @@ Every table below is read out of a named source, never from memory:
 
 Run: python3 tools/gen_crypt_tables.py > src/crypt_tables.h
 """
+import math
 import re
 
 SITREF = "reference/XADMaster/XADStuffItDESHandle.m"
@@ -257,7 +265,7 @@ def aes_sbox():
             r ^= v
         built.append(r ^ 0x63)
     assert built == box, "the AES S box does not match its own definition"
-    return box
+    return built
 
 
 AES_SBOX = aes_sbox()
@@ -296,19 +304,42 @@ CPTCRC = cpt_crc64_table()
 # Not emitted either since 2026-09-19: src/unc_crypt.c builds it at key
 # setup with the same eight-step loop, in two 32-bit halves.
 
-# ---- MD5, from reference/XADMaster/Crypto/md5.c ------------------------
-MD5REF = "reference/XADMaster/Crypto/md5.c"
+# ---- MD5, from RFC 1321 -------------------------------------------------
+# reference/notes/rfc1321.txt.  The RFC's own reference implementation
+# states each of the 64 steps as FF/GG/HH/II(a, b, c, d, x[k], Sxx, T) —
+# message-word index, shift macro and constant — and defines the shift
+# macros above them.  Two statements of the constants are in the document
+# and both are used: the literals, and section 3.4's "integer part of
+# 4294967296 times abs(sin(i))", which is asserted to reproduce them.
+MD5REF = "reference/notes/rfc1321.txt"
+_rfc = open(MD5REF).read()
+_shifts = {m[0]: int(m[1]) for m in re.findall(r"#define (S\d\d) (\d+)", _rfc)}
+_calls = re.findall(r"\b(FF|GG|HH|II)\s*\(\s*\w+,\s*\w+,\s*\w+,\s*\w+,"
+                    r"\s*x\[\s*(\d+)\s*\],\s*(S\d\d),\s*(0x[0-9a-fA-F]+)\s*\)",
+                    _rfc, re.S)
+assert len(_shifts) == 16 and len(_calls) == 64, (len(_shifts), len(_calls))
+assert [c[0] for c in _calls] == ["FF"] * 16 + ["GG"] * 16 + ["HH"] * 16 + \
+    ["II"] * 16
+MD5_X = [int(c[1]) for c in _calls]
+MD5_S = [_shifts[c[2]] for c in _calls]
+MD5_T = [int(c[3], 16) for c in _calls]
+assert MD5_T == [int(abs(math.sin(i + 1)) * 2 ** 32) & 0xFFFFFFFF
+                 for i in range(64)], "RFC 1321's constants are not its sines"
+
+# And a third statement, from an implementation that is not the RFC's:
+# XADMaster's Crypto/md5.c (Solar Designer, public domain), whose unrolled
+# STEP list this generator read until 2026-09-23.  Nothing is emitted from
+# it; it only has to agree.
 _steps = re.findall(
     r"STEP\((\w+), (\w), (\w), (\w), (\w), (?:SET|GET)\((\d+)\), "
-    r"(0x[0-9a-f]+), (\d+)\)", open(MD5REF).read())
+    r"(0x[0-9a-f]+), (\d+)\)",
+    open("reference/XADMaster/Crypto/md5.c").read())
 assert len(_steps) == 64, len(_steps)
-MD5_X = [int(s[5]) for s in _steps]
-MD5_S = [int(s[7]) for s in _steps]
-MD5_T = [int(s[6], 16) for s in _steps]
-# The four rounds use F, G, H, I in that order, sixteen steps each, and
-# the (a,b,c,d) rotation is the same in every step: assert both, because
-# the loop that replaces this list assumes them.
-assert [s[0] for s in _steps] == ["F"] * 16 + ["G"] * 16 + ["H"] * 16 + ["I"] * 16
+assert MD5_X == [int(s[5]) for s in _steps]
+assert MD5_S == [int(s[7]) for s in _steps]
+assert MD5_T == [int(s[6], 16) for s in _steps]
+# The (a,b,c,d) rotation is the same in every step, which is what lets the
+# loop in unc_crypt.c replace this list.
 assert all(tuple(_steps[i][1:5]) == ("adcb"[i % 4], "badc"[i % 4],
                                      "cbad"[i % 4], "dcba"[i % 4])
            for i in range(64))
@@ -346,12 +377,14 @@ def main():
     print(" * crypt_tables.h — GENERATED by tools/gen_crypt_tables.py.")
     print(" * Do not edit.")
     print(" *")
-    print(" * Source: FIPS 46-3 itself (reference/notes/fips46-3.pdf) for IP,")
-    print(" * IP^-1, PC-1, PC-2, the shift schedule, S and P; and")
-    print(" * reference/XADMaster/XADStuffItDESHandle.m (DES_SPtrans, which")
-    print(" * the generator checks its derivation against, and which nothing")
-    print(" * here is emitted from) and Crypto/md5.c (the STEP list) and")
-    print(" * Crypto/aestab.c (sb_data).")
+    print(" * Source: the standards themselves. FIPS 46-3")
+    print(" * (reference/notes/fips46-3.pdf) for IP, IP^-1, PC-1, PC-2, the")
+    print(" * shift schedule, S and P; RFC 1321 (reference/notes/rfc1321.txt)")
+    print(" * for MD5's three; FIPS-197's own definition, constructed here,")
+    print(" * for the AES S box. Nothing below is derived from XADMaster:")
+    print(" * its XADStuffItDESHandle.m (DES_SPtrans), Crypto/md5.c (the")
+    print(" * STEP list) and Crypto/aestab.c (sb_data) are read only to")
+    print(" * agree with what the standards give.")
     print(" * LGPL / public domain — see NOTICE.")
     print(" */")
     print("#ifndef UNC_CRYPT_TABLES_H")

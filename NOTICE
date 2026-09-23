@@ -265,14 +265,23 @@ This project's decoders are transcriptions/ports of algorithms from:
     precomputed by `tools/gen_crypt_tables.py` because this engine may
     not have global mutable state, and the generator checks the AES S
     box against its own definition rather than trusting the copy.
-    **Not `Crypto/des.c` since 2026-09-23**: IP, IP^-1, PC-1, PC-2, the
-    shift schedule, the eight selection functions and P are read out of
-    FIPS 46-3 itself (`reference/notes/fips46-3.pdf`), which is also the
-    only one of those five files that states no licence of its own. The
-    swap left `src/crypt_tables.h` byte for byte identical, and added
-    two checks the old route had no way to make: the published IP^-1
-    against the one derived from IP, and the published IP against the
-    prose reconstruction that file's comment had supplied.
+    **Nothing in `src/crypt_tables.h` is derived from XADMaster since
+    2026-09-23.** DES's tables — IP, IP^-1, PC-1, PC-2, the shift
+    schedule, the eight selection functions and P — are read out of FIPS
+    46-3 itself (`reference/notes/fips46-3.pdf`); `Crypto/des.c`, which
+    had supplied them, is also the only one of those files that states
+    no licence of its own. MD5's three are RFC 1321's, out of the 64
+    round calls of the RFC's own reference implementation
+    (`reference/notes/rfc1321.txt`), with the RFC's literal constants
+    asserted to equal its definition of them as the integer part of
+    4294967296*abs(sin(i)). The AES S box is BUILT from the FIPS-197
+    definition rather than extracted from `Crypto/aestab.c`. Those two
+    files and `XADStuffItDESHandle.m` are still read by the generator,
+    but only to agree: nothing is emitted from them. Each swap left the
+    header byte for byte identical, and the first added two checks the
+    old route had no way to make — the published IP^-1 against the one
+    derived from IP, and the published IP against the prose
+    reconstruction `des.c`'s comment had supplied.
     Each is graded in `tests/unit_formats.c` against an implementation
     that is not ours — python's hashlib and hmac, and `openssl enc`.
     Since 2026-09-19 StuffIt's "StuffItDES" is not a second cipher: it

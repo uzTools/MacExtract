@@ -1904,9 +1904,10 @@ schedule could not follow. Neither it nor `tools/gen_crypt_tables.py` —
 which asserts the same relabelling whenever `src/crypt_tables.h` is
 regenerated, and since 2026-09-23 also asserts that its reading of each
 of FIPS 46-3's tables out of `reference/notes/fips46-3.pdf` is the only
-one possible — runs in `ci.sh`; both are proofs about how the code was
-arrived at, and what `ci.sh` grades is the result. Regenerating the
-header therefore needs `reference/`, that PDF included
+one possible, and that RFC 1321's literal constants are the sines it
+defines them as — runs in `ci.sh`; both are proofs about how the code
+was arrived at, and what `ci.sh` grades is the result. Regenerating the
+header therefore needs `reference/`, those two documents included
 (`tools/fetch_references.sh`), which is also why `ci.sh` cannot check
 that the committed header still matches its generator. DECISIONS.md
 2026-09-19, *the DES that was only wearing a disguise*.

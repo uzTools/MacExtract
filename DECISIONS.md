@@ -266,6 +266,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
 - 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
 - 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
+- 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
 
 ---
 
@@ -16704,3 +16705,48 @@ published document states, and PackIt's keytr1. `XADStuffItDESHandle.m`
 is still read by the generator — but only to CHECK that `DES_SPtrans`
 is the standard SP table relabelled. Nothing emitted is derived from it
 any more.
+
+## 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
+
+**The same move as the DES tables, and cheaper.** `gen_crypt_tables.py`
+pulled MD5's per-step message-word index, rotation and constant out of
+the unrolled `STEP()` list in XADMaster's `Crypto/md5.c`. Every one of
+those 192 numbers is stated in RFC 1321 — in the 64 `FF/GG/HH/II` calls
+of the RFC's own reference implementation, with the sixteen `#define
+S11 7`-style macros above them. RFC 1321 is plain text, so unlike FIPS
+46-3 there is no PDF extraction and no re-segmentation: the whole change
+is +24 lines, and `src/crypt_tables.h` came out byte for byte identical.
+
+**The RFC states its constants twice, and both are used.** Section 3.4
+defines T[i] as the integer part of 4294967296 × abs(sin(i)); the code
+below it writes the 64 literals. The generator reads the literals and
+asserts they reproduce the sines, so a mis-parse of the RFC's own text
+fails at generation. XADMaster's `md5.c` is still read — and still has
+to agree — but nothing is emitted from it.
+
+**The AES S box needed no source at all, and had one.** `aes_sbox()`
+extracted `sb_data` from `Crypto/aestab.c`, then BUILT the same 256
+bytes from FIPS-197's definition — the multiplicative inverse in
+GF(2^8), then the affine map — asserted the two were equal, and
+returned the extracted copy. The construction was already load-bearing
+and the extraction was already a check; the code just named the wrong
+one as the answer. Returning `built` changes no byte and leaves the
+assertion exactly where it was.
+
+**What the two together buy.** `src/crypt_tables.h` now contains
+**nothing derived from XADMaster**: DES's tables are FIPS 46-3's, MD5's
+are RFC 1321's, the AES S box is FIPS-197's definition evaluated here,
+and Compact Pro's CRC-64 is read out of the application (2026-08-23).
+`Crypto/md5.c`, `Crypto/aestab.c` and `XADStuffItDESHandle.m` are read
+only to agree with what the standards give. The LICENCE does not move —
+`src/unc_crypt.c` still names ten XADMaster files, the StuffItDES key
+schedule and PackIt's keytr1 among them, and the engine is LGPL through
+the rest of the tree regardless.
+
+**The transferable part.** *A check that has been promoted to a source
+is invisible, because it passes.* The AES extraction had been redundant
+since the construction was written, and nothing could have failed to
+reveal it: the assertion was green precisely because the two agreed.
+What found it was not a test but reading the function to answer a
+different question — which is the same route by which `des.c` was found
+to carry no licence.
