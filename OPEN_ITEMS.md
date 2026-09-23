@@ -43,7 +43,7 @@ answer and not a refusal — the brief has grown before, on request.
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, and there is nothing measured for one to do** | every codec here is integer bit work, and the only FP-shaped operation in the engine — Arsenic's two 32÷32 divides per symbol — is **0.72 % of the run** against 9.9 % for the linear symbol search beside it (FORMATS.md, *What is still hot*). An FPU is also available only where it is not needed: a 68881 implies a 68020 and up, which already has a native 32-bit `DIVU.L`, while the 68000 that pays for `__udivsi3` has none; and the fastest tier reaches no FPU at all, running this binary through the **68LC040** emulator (FORMATS.md, *Mac OS 9 tier*). No tier here could execute such a path, let alone fail on one. The formats' own answer to differing CPUs is a compressor chosen by CPU mask with a **decompress-only twin that accepts every CPU** (FORMATS.md, the SpaceSaver module table) — the decoders are CPU-neutral by design, and all of those modules are implemented. A second `-mcpu=68020` build is the adjacent trade and is also out: ~4 % named in `sit_arsenic.c`, against a second binary the floor machine cannot run and no way to price it here (DECISIONS.md 2026-09-23, *hardware decoding*) |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there (Inside Macintosh II-30) and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has no idea about. Apple's own software HFS for those machines — the `Hard Disk 20` startup disk — boots on a 128K ROM here and hangs on a 64K one, so even that route is untested (FORMATS.md, *A true Macintosh 512K*). Since 2026-09-01 the branch `rom64k` guards `MaxApplZone` with `Has128KROM()`, so its build starts there and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies on exactly the machines where an unarchiver earns its keep. **Nobody has run it on one** — Mini vMac has no HD20, so this stays out of scope until hardware says otherwise (MANUAL_TESTS.md §7). A Macintosh **128K** is out for a second reason and that one is measured: its largest single block is 63,744 B against 142,152 B of `CODE`, so the guarded build bombs `ID = 03` on launch there (FORMATS.md, *A Macintosh 128K*) |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software that arrived in the corpus for the per-entry refusal path rather than for their contents. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on their names and entry counts alone (FORMATS.md, *Hardening*). **The premise is weaker than it was and the decision is the maintainer's** — see below |
+| PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software that arrived in the corpus for the per-entry refusal path rather than for their contents. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on their names and entry counts alone (FORMATS.md, *Hardening*). **Half the premise is gone and the decision is the maintainer's**: an MIT implementation and a stored-CRC oracle for all 7 entries are both on this disk as of 2026-09-22, so only "not a Macintosh method" still carries the decision (DECISIONS.md 2026-09-22, *the premise that stopped being true*) |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART is the one exception, since 2026-09-09**, and it is an exception to the first clause only: a compressed DART expands to an UNCOMPRESSED DART, which is a codec with no volume anywhere in it, and no file on the disk is ever looked at. FORMATS.md, *DART* |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
@@ -51,36 +51,6 @@ answer and not a refusal — the brief has grown before, on request.
 | RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. NAMING them is in scope (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
 | Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and REFUSES to decompress — `_Debugger` at its own 0xd4 — so no Alysis expander in reach can read what it writes, and nor can this engine or any other module in the library. Streams can be made here at will and there is nothing whatever to grade one against. It is reachable from Alysis's own compress path (level 11 of INIT 32's table at +0xf2e), so a file COULD exist; reading one would mean inverting that compressor with no second reader anywhere, for a codec no archive in the corpus uses (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29, *the specimen that would have settled nothing*) |
 | Zip64 addressing past 4 GB | **the counts and the per-ENTRY escape are read; over-4-GB fields are refused** — `UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry — and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | zip's own shape is what keeps it out: the directory fields are 32-bit and the Zip64 escape is read as `uint32` halves, so reading past 4 GB properly is a format change rather than a type change. The type is not the obstacle — `UncIO` carries `unc_off_t`, 64-bit in the CLI, for +0.51 % of text and 0 bytes of heap (DECISIONS.md 2026-08-28, *what a width costs*). Reading the halves is what makes a 70,000-entry archive extract, and a 3.4 GB one (FORMATS.md, *Size limits*); tar, whose positions are a running sum, reaches past 4 GB today |
-
-### Implode: what changed, and what has not
-
-**Not a recommendation, and nothing has been done about it.** Recorded
-because the reason for the decision is not what it was, and a scope
-decision resting on a stale premise should at least be re-made
-knowingly.
-
-When Implode was declined there was no implementation here to write it
-from and nothing to grade it against. Both are now on this disk and
-were verified on 2026-09-22:
-
-- **an implementation**, MIT — `reference/deark/src/fmtutil-lzh.c`,
-  section *"Implode (ZIP method #6)"*, which is deark's own code and
-  not one of the `foreign/` files its licence carves out;
-- **an oracle that cannot be argued with** — deark decodes all **7**
-  Implode entries of the two archives and every one matches the
-  **CRC-32 PKZIP itself stored**: `CALC.TXT` to 5,284 B, and six more.
-  A check no decoder here can influence.
-
-What has NOT changed: Implode is still not a Macintosh method, and the
-two archives are still PC software. Implementing it would cost code on
-a 1 MB machine for a format a Macintosh never wrote.
-
-**Deliberately not done, and it is one line either way.** Adding
-`"Implode"` to `make_manifests.py`'s `DEARK_METHODS` would record those
-7 entries' 10 forks as ground truth without implementing anything, and
-`run_diff.py` would start comparing them the day a decoder lands
-(TESTING.md, *When our engine declines an entry*). That is part of the
-same decision and is left with it.
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
 the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and

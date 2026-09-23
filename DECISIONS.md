@@ -14878,8 +14878,8 @@ agree with.
 implementation to write it from and nothing to grade it against. Both
 are now here. **Nothing has been done about it** — the scope is the
 maintainer's, and this entry exists so the decision is re-made
-knowingly rather than inherited (OPEN_ITEMS.md, *Implode: what
-changed, and what has not*).
+knowingly rather than inherited (OPEN_ITEMS.md, *Out by the brief*,
+the Implode row).
 
 **Evidence, measured 2026-09-22.** `reference/deark/src/fmtutil-lzh.c`
 implements it under MIT, in `src/` and not in the `foreign/` tree its
