@@ -325,6 +325,37 @@ def check_refusals(tmp, macextract, problems):
     finally:
         shutil.rmtree(out, ignore_errors=True)
 
+    # 3. A stored block whose length dwarfs the fork its entry declares.
+    #    A block's COMPRESSED length is bounded only by the input buffer
+    #    (32 KB); the room it decodes into is sized from the declared
+    #    fork. A crafted stored block of 20,000 bytes behind a 40-byte
+    #    fork must be refused, not written past the output buffer. Same
+    #    for the Huffman-then-LZSS shape, which stages its raw input in
+    #    the same buffer. Under the ASan build (ci.sh variant 1) this is
+    #    the regression test for that overflow; with a valid checksum a
+    #    byte-flip could never reach the read (DECISIONS.md, the block
+    #    that was bigger than its fork).
+    for tag, flags in (("stored", 0x0000), ("hufflzss", 0x0021)):
+        blocks = [(flags, b"A" * 20000)]
+        table_off = 24 + 110
+        table, payload = synth_now.build_table(blocks, table_off)
+        rec = synth_now.entry_record(tag[:8], False, 0, 40, 0, table_off,
+                                     table_off + len(table) + len(payload))
+        buf = bytearray(24)
+        buf[0:2] = b"\x00\x02"
+        buf[8:12] = synth_now.u32(1)
+        buf += rec + table + payload
+        bad = os.path.join(tmp, "toobig-%s.now" % tag)
+        open(bad, "wb").write(bytes(buf))
+        out = tempfile.mkdtemp()
+        try:
+            r = run([macextract, "x", "-o", out, bad])
+            if r.returncode == 0:
+                problems.append("toobig-%s.now: a block larger than its "
+                                "fork was accepted" % tag)
+        finally:
+            shutil.rmtree(out, ignore_errors=True)
+
 
 def check_empty_stream(tmp, macextract, problems):
     """A zero-length file in the middle of an archive: the one shape

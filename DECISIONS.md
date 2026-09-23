@@ -264,6 +264,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
 - 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
 - 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
+- 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
 
 ---
 
@@ -16569,3 +16570,55 @@ Macintosh 128K row in OPEN_ITEMS.md Part 1 turns on exactly that number),
 and **this machine cannot price it** — the tick probe is an emulated Mac
 Plus, so a 68020 build has no timing model here, and instruction counts
 rank rather than price.
+
+## 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
+
+**Claim.** A crafted Now Compress archive overran the heap in
+`now_next_block` (`src/fmt_now.c`). Found while reviewing the
+XADMaster-shedding work, not introduced by it — the same read overflows
+at the commit before that work began.
+
+**Evidence, under AddressSanitizer.** A 20,158-byte file — one entry
+declaring a 40-byte data fork, one stored block of 20,000 bytes, the
+block-table checksum computed to match — gives `heap-buffer-overflow ...
+WRITE of size 20000` at the `unc_read_full` in the stored path. The
+build: `make CFLAGS="-O1 -g -fsanitize=address,undefined,alignment
+-fno-sanitize-recover=all ..."`; the file is built from
+`tools/synth_now.py`'s own `build_table` and `entry_record`.
+
+**The root cause.** A block's COMPRESSED length is checked only against
+`incap` (`NOW_INBLOCK`, 32 KB), because three of the five block shapes
+stage their input in `st->inblock`, which is that size. But the STORED
+shape and the Huffman-then-LZSS shape (flags `0x20|0x1f`) stage their
+raw input in `outstart` instead, whose room is `blkcap` — and `blkcap`
+is sized from the DECLARED fork size (`min(maxout, 0x8000)`). So a fork
+that declares 40 bytes but carries a 20,000-byte stored block writes
+19,960 bytes past the single per-archive allocation. The other three
+shapes read into `inblock` and were always safe.
+
+**The fix is one clause per path:** `if (length > st->blkcap) return
+UNC_ERR_CORRUPT;` before each read into `outstart`. A valid stored
+block's output IS its length, so it cannot exceed `blkcap` — the bound
+every decoder already writes to — and no valid file is refused: the 946
+fixtures extract byte-identically before and after, and the three real
+Now archives pass under ASan.
+
+**Why the fuzzer never found it, and where the test now lives.** The
+block table carries a byte-sum checksum (`now_check_table`), so a
+byte-flip of a valid fixture — which is all the robustness suite does —
+breaks the checksum and is refused before the read is reached. Only a
+file crafted from scratch, with a matching checksum, gets there. The
+regression test is therefore a CONSTRUCTED archive, not a mutated one:
+`run_now.py`'s `check_refusals` now builds a stored and a hufflzss block
+larger than their fork and asserts refusal, and it runs under the ASan
+build in `ci.sh` variant 1, which is what would fail on a regression.
+
+**The transferable part.** *A bound that is right for most callers is
+not a bound.* `length &lt;= incap` was correct for the three paths that
+read into the incap-sized buffer and silently wrong for the two that
+read into the blkcap-sized one; the single shared check read as
+sufficient because it was sufficient three times out of five. The smell
+is the one this repository already names — a tolerance whose evidence is
+"our own output": every fixture and every fuzzer variant has a valid
+checksum, so none could reach the read, and "the robustness suite is
+green" measured the checksum guard rather than the buffer bound.

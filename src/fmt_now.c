@@ -605,9 +605,18 @@ static int now_next_block(NowStream *st)
 
     if (c->io->seek(c->io->ctx, offset) < 0) return UNC_ERR_IO;
 
+    /* The stored path and the Huffman-then-LZSS path stage their raw
+     * input in `outstart` itself, and the room there is `blkcap` — the
+     * bound every decoder below writes to. `length` is a block's
+     * COMPRESSED length, checked only against `incap` above, so a
+     * crafted block can name a length far larger than the fork it
+     * belongs to declared; without this a stored or shape-2 block of up
+     * to `incap` bytes overruns `outstart`. The three paths that read
+     * into `st->inblock` (incap) are already covered by that check. */
     if (flags & 0x20) {
         if (flags & 0x1F) {                       /* Huffman, then LZSS */
             int32_t mid;
+            if (length > st->blkcap) return UNC_ERR_CORRUPT;
             if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             mid = now_huffman(outstart, length, st->inblock, st->incap,
@@ -633,6 +642,7 @@ static int now_next_block(NowStream *st)
         out = now_lzss(st->inblock, length, outstart,
                        st->blkcap, &err);
     } else {                                      /* stored */
+        if (length > st->blkcap) return UNC_ERR_CORRUPT;
         if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = (int32_t)length;

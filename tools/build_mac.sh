@@ -255,7 +255,13 @@ ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.d
 # that have specimens makes each one a whole 32-bit magic, which is
 # stronger per byte and 96 B cheaper. Third time composing or
 # constraining a constant has beaten storing one on this target.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153240}
+# Raised 2026-09-23 from 153,240 to 153,256: +16 B for two bounds checks
+# in fmt_now.c that refuse a stored or Huffman-then-LZSS block whose
+# length exceeds its fork's output buffer — a heap overflow on crafted
+# input, pre-existing, confirmed under ASan (DECISIONS.md 2026-09-23,
+# the block that was bigger than its fork). Memory safety, so bought on
+# any terms; A5 fell 16 B the same commit.
+UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153256}
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -325,7 +331,11 @@ UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-153240}
 # rodata alignment shifting under 46 B of new text, the same effect
 # measured on 2026-09-19 and 2026-09-20. Total cost on a 1 MB Mac Plus:
 # 64 B, code and A5 together, both coming off the budget one for one.
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-37976}
+# LOWERED 2026-09-23 from 37,976 to 37,960 with the fmt_now.c bounds
+# checks above: -16 B of rodata alignment shifting under the +16 B of
+# new text, the same one-for-one effect (DECISIONS.md 2026-09-23, the
+# block that was bigger than its fork).
+UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-37960}
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
 GDB=build/mac/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes
