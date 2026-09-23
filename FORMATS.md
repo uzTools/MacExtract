@@ -2542,14 +2542,24 @@ since 2026-08-27.
 ## Resident memory, stack and launch (Mac target)
 
 Everything here is measured on the Retro68 target's own flags
-(`-mcpu=68000 -Os -ffunction-sections`), summed per object, on 2026-08-24.
+(`-mcpu=68000 -Os -ffunction-sections`, zlib with the `Z_TESTW=0` and
+`NO_GZIP` its CMake sets), summed per object, **re-measured 2026-09-23**.
 
 | | code | rodata |
 |---|---|---|
-| engine (`src/*.c`) | 92,580 | 25,437 |
-| zlib | 11,682 | 4,369 |
-| Mac shell | 11,784 | 732 |
-| **total** | **116,046** | **30,538** |
+| engine (`src/*.c`) | 116,432 | 20,977 |
+| zlib | 8,882 | 4,301 |
+| Mac shell | 17,066 | 2,183 |
+| **total** | **142,380** | **27,461** |
+
+These figures stood at 116,046 and 30,538 from 2026-08-24 until then, and
+the rodata half was wrong for four days rather than merely old: **5,600 B
+of it was `unc_crypt.c`'s three 2,048-byte tables**, which stopped being
+emitted on 2026-09-19 when the SP tables and the Compact Pro CRC-64 moved
+to key setup, and nothing re-measured. What replaced them is the 544 B
+this table's successor rows quote. Summing per object also overstates
+what SHIPS, because `--gc-sections` drops what nothing calls: the linked
+figure is `tools/code_map.py`'s, below.
 
 The application ships as **178,432 B** of MacBinary (`dist/MacExtract.bin`,
 rebuilt 2026-08-27; 1,280 B of that is the same day's Zip64 extra-field walk
@@ -2564,10 +2574,19 @@ halves are resident for the whole session: the link line produces a single
 `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —
 the A5 global world, allocated once and never purgeable.
 
-The five largest objects are `unc_crypt.c` (7,654 + 7,032),
-`macextract_mac.c` (11,784 + 732), `fmt_spacesaver.c` (2,528 + 9,694, almost
-all of it `ss_dict.h`), `inflate.c` (7,824 + 2,675) and `fmt_dd.c`
-(10,194 + 12).
+The five largest objects (2026-09-23) are `macextract_mac.c`
+(17,066 + 2,183), `fmt_spacesaver.c` (6,292 + 9,712, its rodata almost all
+`ss_dict.h`), `fmt_sit.c` (5,804 + 3,473), `fmt_dd.c` (8,672 + 12) and
+`unc_crypt.c` (7,158 + 1,432). `unc_crypt.c` led this list on rodata until
+2026-09-19 and is now fifth on the sum; `inflate.c` (5,392 + 2,607) left
+it the same day the zlib defines were counted.
+
+The whole application, as the LINKER places it (`tools/code_map.py`
+/tmp/mac.map, 2026-09-23): 153,180 B of CODE, of which the decoders are
+91,730 (59.9 %) across 24 files, the shell 17,956, the shared codec
+machinery 13,118, engine core and util 9,846, the ciphers 7,666, deflate
+7,442 and the Retro68 runtime 5,422 — plus 25,962 B of read-only tables
+placed in the A5 world, outside CODE.
 
 ### Size flags, priced in both currencies (2026-08-30)
 
