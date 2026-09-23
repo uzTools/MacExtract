@@ -1855,11 +1855,18 @@ not**: `--adjudicate` in `superdisk.py`, `nowcompress.py` and
 `diskdoubler.py`, and `superdisk.py --nest`, each of which holds EVERY
 entry on the guest volume against our own extraction, so an entry with
 no counterpart in our output is a difference. That is why the filter
-lives inside `read_forks` rather than in each caller. Both adjudicate
-harnesses were re-run and the filter dropped exactly `Desktop DB` and
+lives inside `read_forks` rather than in each caller.
+
+**Two of those four were re-run, and two were not.** `superdisk
+--adjudicate` came back 2/2 forks identical and `diskdoubler
+--adjudicate` 10/10, with the filter dropping exactly `Desktop DB` and
 `Desktop DF` — the two files that would otherwise have been compared
-against nothing: `superdisk --adjudicate` 2/2 forks identical,
-`diskdoubler --adjudicate` 10/10.
+against nothing. **`nowcompress --adjudicate` and `superdisk --nest`
+have NOT been re-run since the flag went in**, and neither has any
+`spacesaver.py` phase, which holds 20 of the 38 call sites. All of those
+select by name or creator, so the expectation is that they are
+unaffected — but that is an expectation, not a measurement, and this
+file does not get to call it one.
 
 **Two of the four columns are new, and both came off a real volume
 rather than out of a list of things that could go wrong.** The cache in

@@ -16280,10 +16280,17 @@ else kept, including an invisible file an application deliberately
 wrote, which is the entire point of the flag. One change serves 38 call
 sites; four separate filters would have drifted.
 
-**Measured, on the two harnesses that could have failed.** Both were
-re-run: the filter dropped exactly `Desktop DB` and `Desktop DF`, and
-nothing else. `superdisk --adjudicate` 2/2 forks identical,
-`diskdoubler --adjudicate` 10/10 — the same verdicts as before.
+**Measured on two of the four, and the other two are not measured.**
+`superdisk --adjudicate` and `diskdoubler --adjudicate` were re-run: the
+filter dropped exactly `Desktop DB` and `Desktop DF`, nothing else, and
+the verdicts were unchanged at 2/2 and 10/10 forks identical.
+`nowcompress --adjudicate` and `superdisk --nest` were NOT re-run, and
+nor was any `spacesaver.py` phase, which holds 20 of the 38 call sites.
+`ci.sh` reaches exactly one more of them — `run_ssmodule.py`, which is
+green. So **4 of 38 call sites are exercised since the change**; the
+other 34 select by name, creator or type and are expected to be
+indifferent to the flag. Expected, not measured, and written down that
+way so the next session knows which it is.
 
 **And the re-run found something the flag had nothing to do with.**
 `superdisk --adjudicate` has **always exited 1**, including on a clean
