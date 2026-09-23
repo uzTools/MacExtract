@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """Generate src/crypt_tables.h — the constant tables the ciphers need.
 
-Both are transcriptions, not derivations from memory:
+Every table below is read out of a named source, never from memory:
 
-  * The standard-DES tables (PC-1, PC-2, the shift schedule, the S boxes
-    and P) are the ones in reference/XADMaster/Crypto/des.c, which builds
-    equivalent lookup tables at RUNTIME into file-scope arrays.  This
-    engine may not have global mutable state, so the same tables are
-    precomputed here and emitted as const data.  The initial and final
-    permutations are the ones that file's comment spells out in prose
-    ("L = I7,1 I6,1 I5,1 ... I0,1  I7,3 ...") rather than tabulates;
-    that formula is reproduced below and checked against the published
-    IP by the DES known-answer test in tests/unit_formats.c.
+  * The standard-DES tables (IP, IP^-1, PC-1, PC-2, the shift schedule,
+    the S boxes and P) are read out of the STANDARD, reference/notes/
+    fips46-3.pdf, rather than out of anyone's implementation of it.  Each
+    is re-segmented under its own permutation constraint, because PDF
+    text loses kerning and splits some entries; see below.  They were
+    taken from reference/XADMaster/Crypto/des.c until 2026-09-23, and
+    the swap left src/crypt_tables.h byte for byte identical
+    (DECISIONS.md 2026-09-23, *the tables that were the standard's*).
 
   * The MD5 tables are the per-step constants, rotation counts and
     message-word indices of reference/XADMaster/Crypto/md5.c, pulled out
@@ -40,49 +39,111 @@ Both are transcriptions, not derivations from memory:
 Run: python3 tools/gen_crypt_tables.py > src/crypt_tables.h
 """
 import re
-import sys
 
-REF = "reference/XADMaster/Crypto/des.c"
 SITREF = "reference/XADMaster/XADStuffItDESHandle.m"
 
 
-def grab_table(path, name, count):
-    """Pull `static ... name[...] = { ... };` out of a C file."""
-    src = open(path).read()
-    i = src.index(name)
-    j = src.index("{", i)
-    k = src.index("};", j)
-    nums = [int(x) for x in re.findall(r"\d+", src[j + 1:k])]
-    assert len(nums) == count, (name, len(nums), count)
-    return nums
+# ---- standard DES, from the published FIPS 46-3 -------------------------
+# reference/notes/fips46-3.pdf, the 1999-10-25 reaffirmation.  Its text
+# streams are Flate; PDF text carries no inter-glyph kerning, so some
+# multi-digit entries arrive split ("43" -> "4 3").  Every table below is
+# a permutation of a known set over a known span — the whole table for the
+# permutations, each row of sixteen for the S boxes — so the split is
+# repaired by re-segmenting under that constraint, and the reading is
+# asserted UNIQUE.  The shift schedule is the one table that is not a
+# permutation; it is read as pairs, below.
+FIPS = "reference/notes/fips46-3.pdf"
 
 
-# ---- standard DES, from reference/XADMaster/Crypto/des.c ----------------
-PC1_C = grab_table(REF, "bK_C[28]", 28)      # permuted choice 1, C half
-PC1_D = grab_table(REF, "bK_D[28]", 28)      # ... and D half
-SHIFTS = grab_table(REF, "preshift[16]", 16)
-PC2 = grab_table(REF, "bCD_KS[48]", 48)      # permuted choice 2
-P = grab_table(REF, "uint8_t P[32]", 32)
-S = grab_table(REF, "uint8_t S[8][64]", 8 * 64)
-S = [S[i * 64:(i + 1) * 64] for i in range(8)]
+def fips_text(path):
+    import zlib
+    lits = []
+    for s in re.findall(rb"stream\r?\n(.*?)endstream", open(path, "rb").read(),
+                        re.S):
+        try:
+            u = zlib.decompress(s)
+        except Exception:
+            continue
+        lits += [l[1:-1] for l in re.findall(rb"\((?:[^()\\]|\\.)*\)", u)]
+    return b" ".join(lits).decode("latin-1")
 
-# The initial permutation, from that file's own description of it:
-#   L = I7,1 I6,1 ... I0,1  I7,3 ... I0,3  I7,5 ... I0,5  I7,7 ... I0,7
-#   R = I7,0 I6,0 ... I0,0  I7,2 ... I0,2  I7,4 ... I0,4  I7,6 ... I0,6
-# where Ii,j is bit j (0 = most significant) of input byte i, i.e. the
-# 1-based DES bit number 8*i + j + 1.
-IP = []
-for j in (1, 3, 5, 7):
-    for i in range(7, -1, -1):
-        IP.append(8 * i + j + 1)
-for j in (0, 2, 4, 6):
-    for i in range(7, -1, -1):
-        IP.append(8 * i + j + 1)
+
+FIPSTXT = fips_text(FIPS)
+
+
+def fips_tokens(anchor, start=0):
+    """The digit run following `anchor`, one token per printed group."""
+    toks = []
+    for m in re.finditer(r"\S+", FIPSTXT[FIPSTXT.index(anchor, start) +
+                                         len(anchor):]):
+        if m.group().isdigit():
+            toks.append(m.group())
+        elif toks:
+            break
+    return toks
+
+
+def fips_table(anchor, n, values, span=0, start=0):
+    """`n` numbers from `values`, distinct within each `span` of them."""
+    toks, sols, span = fips_tokens(anchor, start), [], span or n
+
+    def rec(k, acc, used):
+        if len(acc) == n:
+            sols.append((acc, k))
+            return
+        if k >= len(toks) or len(sols) > 1:
+            return
+        if len(acc) % span == 0:
+            used = set()
+        s = ""
+        for j in range(k, min(k + 2, len(toks))):
+            s += toks[j]
+            if len(s) > 2:
+                break
+            v = int(s)
+            if v in values and v not in used:
+                rec(j + 1, acc + [v], used | {v})
+
+    rec(0, [], set())
+    assert len(sols) == 1, ("not a unique reading of " + anchor, len(sols))
+    # What the table does not use must not look like an entry of it: the
+    # runs carry the odd page number (S4's is 18), never a stray value.
+    assert not [t for t in toks[sols[0][1]:] if int(t) in values], anchor
+    return sols[0][0]
+
+
+IP = fips_table("called the initial permutation  IP : IP", 64, range(1, 65))
+FP_PUB = fips_table("inverse of the initial permutation: IP -1", 64,
+                    range(1, 65))
+PC1 = fips_table("Permuted choice 1 is determined by the following table: "
+                 "PC -1", 56, range(1, 65))
+PC1_C, PC1_D = PC1[:28], PC1[28:]
+PC2 = fips_table("Permuted choice 2 is determined by the following table: "
+                 "PC -2", 48, range(1, 57))
+P = fips_table("defined by the following table: P", 32, range(1, 33))
+
+# Appendix 1, eight selection functions of four rows each.
+S, _at = [], FIPSTXT.index("S 1 14 4 13")
+for _b in range(8):
+    _at = FIPSTXT.index("S %d " % (_b + 1), _at)
+    S.append(fips_table("S %d " % (_b + 1), 64, range(0, 16), span=16,
+                        start=_at))
+    _at += 4
+
+# The schedule prints as sixteen (iteration, shift) pairs, and is the one
+# table a permutation cannot check: assert the iteration column instead.
+_pairs = [int(t) for t in fips_tokens("Iteration        Number of Number "
+                                      "        Left Shifts")[:32]]
+assert _pairs[0::2] == list(range(1, 17)), _pairs[0::2]
+SHIFTS = _pairs[1::2]
+assert set(SHIFTS) == {1, 2}, SHIFTS
+
 assert sorted(IP) == list(range(1, 65))
 
 FP = [0] * 64
 for k, src_bit in enumerate(IP):
     FP[src_bit - 1] = k + 1
+assert FP == FP_PUB, "the derived IP^-1 is not the published one"
 
 # S merged with P, indexed by the raw 6-bit E-expansion value, so the
 # round function is eight lookups and seven XORs. Bit 1 of the 32-bit
@@ -285,11 +346,12 @@ def main():
     print(" * crypt_tables.h — GENERATED by tools/gen_crypt_tables.py.")
     print(" * Do not edit.")
     print(" *")
-    print(" * Source: reference/XADMaster/Crypto/des.c (PC-1 as bK_C/bK_D, PC-2")
-    print(" * as bCD_KS, preshift, S, P, and the prose description of the")
-    print(" * initial permutation) and reference/XADMaster/XADStuffItDESHandle.m")
-    print(" * (DES_SPtrans, which the generator checks its derivation against)")
-    print(" * and Crypto/md5.c (the STEP list).")
+    print(" * Source: FIPS 46-3 itself (reference/notes/fips46-3.pdf) for IP,")
+    print(" * IP^-1, PC-1, PC-2, the shift schedule, S and P; and")
+    print(" * reference/XADMaster/XADStuffItDESHandle.m (DES_SPtrans, which")
+    print(" * the generator checks its derivation against, and which nothing")
+    print(" * here is emitted from) and Crypto/md5.c (the STEP list) and")
+    print(" * Crypto/aestab.c (sb_data).")
     print(" * LGPL / public domain — see NOTICE.")
     print(" */")
     print("#ifndef UNC_CRYPT_TABLES_H")

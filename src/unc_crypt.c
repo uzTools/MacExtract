@@ -47,10 +47,12 @@
  * for what remains format knowledge, the nibble key schedule and the
  * derivation the three real archives grade; XADStuffIt5Parser.m +
  * XADRC4Handle.m, XADPackItParser.m (both PackIt handles), XADZipCryptHandle.m,
- * XADXORHandle.m, and reference/XADMaster/Crypto/des.c + md5.c for the
- * standard DES and MD5 tables, which src/crypt_tables.h carries
- * precomputed (this engine may not have global mutable state, and that
- * DES builds its tables at runtime). LGPL — see NOTICE.
+ * XADXORHandle.m, and reference/XADMaster/Crypto/md5.c for the MD5
+ * tables. The standard-DES tables come from FIPS 46-3 itself
+ * (reference/notes/fips46-3.pdf) and not from anyone's implementation of
+ * it, since 2026-09-23; src/crypt_tables.h carries both precomputed,
+ * because this engine may not have global mutable state. LGPL — see
+ * NOTICE.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -686,7 +688,8 @@ void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     crypt_clear(cr, UNC_CRYPT_PIT_XOR, 1);
     for (i = 0; i < 8; i++) passbuf[i] = i < pwlen ? pw[i] : 0;
     for (i = 0; i < 56; i++) {
-        /* keytr1 is PC-1: bK_C then bK_D, which is how des.c holds it. */
+        /* keytr1 is PC-1: its C half then its D half, which is how the
+         * standard's own table divides at 28. */
         int bitindex = (i < 28 ? unc_des_pc1c[i] : unc_des_pc1d[i - 28]) - 1;
         cr->key[i / 8] = (uint8_t)(cr->key[i / 8] |
             (((passbuf[bitindex / 8] << (bitindex % 8)) & 0x80) >> (i % 8)));

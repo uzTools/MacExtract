@@ -1902,8 +1902,13 @@ standard table relabelled, A/Bs the old and new formulations over 20,000
 random key/block pairs and every single-bit case, and shows why the KEY
 schedule could not follow. Neither it nor `tools/gen_crypt_tables.py` —
 which asserts the same relabelling whenever `src/crypt_tables.h` is
-regenerated — runs in `ci.sh`; both are proofs about how the code was
-arrived at, and what `ci.sh` grades is the result. DECISIONS.md
+regenerated, and since 2026-09-23 also asserts that its reading of each
+of FIPS 46-3's tables out of `reference/notes/fips46-3.pdf` is the only
+one possible — runs in `ci.sh`; both are proofs about how the code was
+arrived at, and what `ci.sh` grades is the result. Regenerating the
+header therefore needs `reference/`, that PDF included
+(`tools/fetch_references.sh`), which is also why `ci.sh` cannot check
+that the committed header still matches its generator. DECISIONS.md
 2026-09-19, *the DES that was only wearing a disguise*.
 
 **The ciphers run on a big-endian 68000 too.** `tests/run_mac_sink.sh`

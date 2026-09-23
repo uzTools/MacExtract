@@ -451,6 +451,18 @@ if [ ! -f reference/notes/winzip_aes.txt ]; then
     rm -f /tmp/winzip_aes.html
 fi
 
+# FIPS 46-3, the Data Encryption Standard as reaffirmed 1999-10-25 — the
+# standard itself, and the source of every standard-DES table in
+# src/crypt_tables.h since 2026-09-23: IP and IP^-1, PC-1, PC-2, the
+# shift schedule, the eight selection functions of Appendix 1, and P.
+# tools/gen_crypt_tables.py reads them out of the PDF's own text streams;
+# it needs no PDF tool, only zlib. A PDF and not a text file because NIST
+# publishes no text of it, and this machine has no extractor to convert
+# one at fetch time.
+[ -f reference/notes/fips46-3.pdf ] || \
+    curl -sL -o reference/notes/fips46-3.pdf \
+        "https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf"
+
 # ustar — POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
 # pax utility page, whose "ustar Interchange Format" section carries the
 # 512-octet header block table src/fmt_exo.c reads, the two zero records

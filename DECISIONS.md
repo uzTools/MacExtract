@@ -265,6 +265,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
 - 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
 - 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
+- 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
 
 ---
 
@@ -16622,3 +16623,84 @@ is the one this repository already names — a tolerance whose evidence is
 "our own output": every fixture and every fuzzer variant has a valid
 checksum, so none could reach the read, and "the robustness suite is
 green" measured the checksum guard rather than the buffer bound.
+
+## 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
+
+**The claim that failed.** OPEN_ITEMS.md's `unc_crypt.c` row called the
+five `Crypto/` files it names "public-domain or permissive in XADMaster's
+own tree". Four are: `md5.c` is Solar Designer's, placed in the public
+domain; `sha.c` and `hmac_sha1.c` are Aaron Gifford's under BSD-3;
+`aeskey.c` is Gladman's. **`des.c` states nothing at all** — 482 lines
+with no copyright, no licence and no grant, only "Stuart Levy, Minnesota
+Supercomputer Center, April 1988" — and a file with no terms of its own
+inside an LGPL tree takes the tree's. So the one file in that list whose
+terms nobody had checked was the one carrying no terms.
+
+**What was actually taken from it was not code.** `gen_crypt_tables.py`
+parsed six tables out of it — PC-1 as `bK_C`/`bK_D`, PC-2 as `bCD_KS`,
+`preshift`, `S`, `P` — plus IP, reconstructed from the prose in that
+file's comment. Every one of those is a published constant of FIPS 46-3.
+They came from somebody's implementation because nobody had looked for
+the standard.
+
+**The standard is one fetch.** `csrc.nist.gov` still serves FIPS 46-3,
+the 1999-10-25 reaffirmation, as a 468 KB PDF. This machine has no
+`pdftotext` and no `pypdf`, and needs neither: the content streams are
+Flate, so `zlib` plus a regex over the string literals yields the text,
+and all thirteen tables are in it — IP, IP^-1, PC-1, PC-2, the shift
+schedule, P and the eight selection functions of Appendix 1.
+
+**The one real obstacle, and the method worth keeping.** PDF text
+carries no inter-glyph kerning, so some multi-digit entries arrive
+split: PC-1's `43` reads as `4 3`, IP's `17` as `1 7`. The repair is not
+a heuristic — **each table is a permutation of a known set over a known
+span**, the whole table for the permutations and each row of sixteen for
+the S boxes, so re-segmenting the digit run under that constraint has
+exactly one solution, and the generator asserts it is unique rather than
+taking the first. Two edges are worth recording because they are where
+the method's limits are:
+
+- **The shift schedule is the table a permutation cannot check** — its
+  counts repeat, so there is no constraint to re-segment under. It
+  prints as sixteen (iteration, shift) pairs, and the check is the
+  ITERATION column: 1..16 in order, with the shift column asserted
+  inside {1, 2}.
+- **A table must be allowed to stop before its digit run does.** S4's
+  run ends with a stray `18` — a page number. Demanding that a reading
+  consume the whole run fails there and nowhere else. What replaces it
+  is stronger than what it removed: leftovers are allowed, but **no
+  leftover may be a legal value of the table**, which is what makes the
+  page number admissible and a dropped entry not.
+
+**The price, measured rather than argued.** The regenerated
+`src/crypt_tables.h` is **byte for byte identical** — all 1,712 values —
+so the compiler sees the same input and `CODE`, A5, peak RAM and ticks
+cannot move; that is identity, not a measurement, and no m68k build or
+tick probe was run or needed. The cost is `tools/gen_crypt_tables.py`:
+325 → 388 lines (+63, twelve of which came back by deleting the
+`grab_table` helper that only des.c needed) and 0.035 s → 0.060 s. The
+committed header changes by six lines of provenance comment.
+
+**Two checks exist now that could not before.** The published IP^-1 is
+asserted equal to the FP the generator derives by inverting IP; and the
+published IP equals the one reconstructed from des.c's prose, which
+until now rested only on the DES known-answer test in
+`tests/unit_formats.c` — a test that would have caught a wrong table but
+could not have told anyone the reconstruction was sound.
+
+**The first cut was 50 % bigger and made fewer checks.** It was 115
+lines and 0.172 s, with a duplicated helper and a widening-retry loop
+around the S boxes. Scoping the distinctness constraint per row of
+sixteen instead of per table deleted the loop; allowing a prefix reading
+deleted the last special case. *A special case that exists to absorb
+junk is usually a missing constraint* — and the version with the
+constraint is both smaller and stricter, which is the general shape of
+that trade.
+
+**What it does not buy, stated plainly.** The licence does not move.
+`src/unc_crypt.c` named twelve XADMaster files; eleven remain, among
+them the StuffItDES nibble key schedule and key derivation, which no
+published document states, and PackIt's keytr1. `XADStuffItDESHandle.m`
+is still read by the generator — but only to CHECK that `DES_SPtrans`
+is the standard SP table relabelled. Nothing emitted is derived from it
+any more.

@@ -260,11 +260,19 @@ This project's decoders are transcriptions/ports of algorithms from:
 
   * The cryptographic primitives five of the encryption schemes need —
     DES, MD5, RC4, SHA-1 and AES — are transcribed from XADMaster's
-    own `Crypto/` directory (des.c, md5.c, sha.c, hmac_sha1.c, the
-    Gladman AES tables) and from the handles that use them; the tables
-    are precomputed by `tools/gen_crypt_tables.py` because this engine
-    may not have global mutable state, and the generator checks the AES
-    S box against its own definition rather than trusting the copy.
+    own `Crypto/` directory (md5.c, sha.c, hmac_sha1.c, the Gladman AES
+    tables) and from the handles that use them; the tables are
+    precomputed by `tools/gen_crypt_tables.py` because this engine may
+    not have global mutable state, and the generator checks the AES S
+    box against its own definition rather than trusting the copy.
+    **Not `Crypto/des.c` since 2026-09-23**: IP, IP^-1, PC-1, PC-2, the
+    shift schedule, the eight selection functions and P are read out of
+    FIPS 46-3 itself (`reference/notes/fips46-3.pdf`), which is also the
+    only one of those five files that states no licence of its own. The
+    swap left `src/crypt_tables.h` byte for byte identical, and added
+    two checks the old route had no way to make: the published IP^-1
+    against the one derived from IP, and the published IP against the
+    prose reconstruction that file's comment had supplied.
     Each is graded in `tests/unit_formats.c` against an implementation
     that is not ours — python's hashlib and hmac, and `openssl enc`.
     Since 2026-09-19 StuffIt's "StuffItDES" is not a second cipher: it
