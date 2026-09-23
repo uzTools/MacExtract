@@ -447,6 +447,25 @@ static void test_canon(void)
     unc_bitin_init(&bi, &in);
     CHECK(unc_canon_decode(&cn, &bi) == -1);
 
+    /* ONE symbol, written with a length of 1 -> Kraft 0.5, the most
+     * incomplete a code can be. Now Compress writes exactly this: a
+     * block matched entirely out of the member before it codes one
+     * match symbol and no literal at all (docs/formats/now-compress.md,
+     * *The main table*). No fixture comes near it — the smallest main
+     * alphabet in the two real Now archives is 47 symbols — so the two
+     * bytes here are what covers the shape. Enough of them to fill the
+     * fast table's ten bits, because that is the path at risk: half of
+     * fastlen[] names the symbol and the other half must fall through
+     * to the walk and be refused. */
+    lens[0] = 0; lens[1] = 0; lens[2] = 1; lens[3] = 0;
+    CHECK(unc_canon_build(&cn, lens, 4) == UNC_OK);
+    buf[0] = 0x40; buf[1] = 0x00;   /* bits 0, then 1: the code, then not */
+    test_make_memio(&io, &m, buf, 2);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == 2);
+    CHECK(unc_canon_decode(&cn, &bi) == -1);
+
     /* Over-subscribed code -> rejected at build time. */
     lens[0] = 1; lens[1] = 1; lens[2] = 1;
     CHECK(unc_canon_build(&cn, lens, 3) == UNC_ERR_CORRUPT);

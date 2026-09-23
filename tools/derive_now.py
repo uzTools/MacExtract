@@ -665,10 +665,11 @@ def archive_kind(mode):
 # bytes in sits a complete prefix code — which is what makes the rest
 # of the header readable without knowing what bytes 1..4 mean.
 SHAPE3_MAGIC = 0x2F
-CLC_AT = 5              # 16 code lengths, four bits each
-TABLE_AT_BIT = 128      # the main table, after 24 bits this reader
-                        # cannot account for and that are zero in all
-                        # eight specimens
+CLC_AT = 5              # twenty code lengths, four bits each
+TABLE_AT_BIT = 128      # the main table, at byte 16: those twenty end
+                        # at bit 120, and byte 15's count of extra
+                        # length entries — 0 in every block here —
+                        # follows them
 
 
 def shape3_clc(b):

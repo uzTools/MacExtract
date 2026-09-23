@@ -263,6 +263,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
 - 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
 - 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
+- 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
 
 ---
 
@@ -16509,3 +16510,62 @@ says which one is measuring.
 project's habit is to ask what evidence a tolerance rests on; the same
 question applies to a fix that makes a red harness green. Ask what the
 number was before, and whether it still means the same thing.
+
+
+## 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
+
+**Claim.** Hardware acceleration — an FPU, a coprocessor, a NuBus codec
+card — is out of scope, and not for want of ambition: there is no
+measured work here for one to take. Recorded in OPEN_ITEMS.md Part 1.
+
+**The one place an FPU is even arguable is priced at 0.72 %.** No float
+appears in `src/`; every codec is integer bit work. The single
+FP-shaped operation in the engine is Arsenic's range coder, two 32÷32
+divides per symbol (`sit_arsenic.c`). FORMATS.md, *What is still hot*,
+measured both divisions at **0.72 %** of the ISBN run against **9.9 %**
+for the linear symbol search sitting beside them. A divide that cost
+nothing at all would buy under one percent of the slowest format in the
+corpus.
+
+**Ask whether the hardware offering the shortcut is the hardware that
+needs it.** That is the transferable half. A 68881 implies a 68020 or
+better, which already has a native 32-bit `DIVU.L` and emits no
+`__udivsi3` call; the 68000, where the software divide is a real cost,
+has no FPU and never had one. The accelerator is available only on the
+machines where the slow path is already fast. The same shape disqualifies
+it at the top of the range: PowerPC Macs run this binary through the
+**68LC040** emulator (FORMATS.md, *Mac OS 9 tier*), and the LC is the
+missing FPU — the fastest tier cannot reach one either.
+
+**It would also be code no tier here can fail.** Mini vMac is a 68000
+Mac Plus and the Mac OS 9 tier's emulated CPU has no FPU, so an FPU path
+would ship inside the one binary that must run unchanged from System 3.0
+to Mac OS 9 with no suite able to execute it.
+
+**The formats already solved the CPU-dispatch problem, in the direction
+that leaves a decoder alone.** SpaceSaver and DiskDoubler gate their
+compressors on the CPU — a `CMod` mask at +0x24, index 4 for 68000–68020,
+index 3 for 68030 and up, index 15 for PowerPC — and give each one a
+**decompress-only twin that accepts every CPU**, so any Mac reads any
+file (FORMATS.md, the SpaceSaver module table). The encoder dispatches;
+every decoder is CPU-neutral. Implementing all of those modules, which is
+done, is the whole of what a dispatch would have bought.
+
+**Unverified, from memory, and not load-bearing:** classic-Mac "hardware
+codec" appears to have meant *media* codecs — the C-Cube CL550 on NuBus
+cards, surfaced as a fast `'jpeg'` component through QuickTime's Image
+Compression Manager — and nothing in the corpus is JPEG; the AV Quadras'
+DSP3210 is a floating-point signal processor, the worst fit there is for
+serial Huffman decoding, and would mean shipping a second object format.
+None of this was checked against a reference, and it does not need to be:
+the two measured paragraphs above decide the question without it.
+
+**One adjacent trade, so it is not confused with this one.** A second
+`-mcpu=68020` build would delete libgcc's `__mulsi3`/`__divsi3` calls,
+one of which `sit_arsenic.c` names at ~4 % of an Arsenic run. It is not
+recommended and not open: it is a second binary the floor machine cannot
+run, against a `CODE` size that is already load-bearing at 142,152 B (the
+Macintosh 128K row in OPEN_ITEMS.md Part 1 turns on exactly that number),
+and **this machine cannot price it** — the tick probe is an emulated Mac
+Plus, so a 68020 build has no timing model here, and instruction counts
+rank rather than price.
