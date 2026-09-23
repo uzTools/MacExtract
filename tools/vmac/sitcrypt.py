@@ -479,13 +479,28 @@ def grade_btoa(outdir, ascii_path):
 
     work = tempfile.mkdtemp(prefix="btoa-grade-")
     try:
-        name, payload = decode_layer(cli, ascii_path, work)
+        # **`-nr` on both peels, since 2026-09-23.** This phase wants the
+        # layers ONE AT A TIME — the docstring above says so, and the
+        # grade is which layer was read — but the CLI auto-unwraps an
+        # envelope chain, so a plain `x` of the btoa stream came back
+        # with the subject already out of its MacBinary. Asking it to
+        # decode THAT again answers "format not recognized", which is the
+        # CLI being right and this harness asserting an envelope depth it
+        # never meant to test. `-nr` is the flag that turns auto-unwrap
+        # off, and it keeps the reference comparison below exact as well:
+        # btoa 5.2.1 must encode the MacBinary, which is what the
+        # Macintosh encoded, not the payload inside it.
+        #
+        # Nothing about the specimen changed: the stream the Macintosh
+        # wrote is byte-identical to the one kept on 2026-08-26, md5
+        # 5add97f23be195fd25b99b8eb1b8fa84.
+        name, payload = decode_layer(cli, ascii_path, work, extra=["-nr"])
         if payload is None:
             return False
         print("sitcrypt: btoa layer -> %r, %d bytes" % (name, len(payload)))
         inner = os.path.join(outdir, "payload.bin")
         open(inner, "wb").write(payload)
-        name2, back = decode_layer(cli, inner, work)
+        name2, back = decode_layer(cli, inner, work, extra=["-nr"])
         if back is None:
             return False
         ok = back == BTOA_DATA

@@ -262,6 +262,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
 - 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
 - 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
+- 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
 
 ---
 
@@ -16470,3 +16471,41 @@ rather than a guess: `interactive.read_joined`, `rescomp.report` and
 their listing and one returns it as text for a screenshot — and
 `spacesaver.lift_installer` takes no image, reading a fixed CD path. All
 four still pass `-a`, and the `ast` re-survey is what keeps that true.
+
+
+## 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
+
+**Claim.** `sitcrypt.py --btoa-send` failed with *"payload.bin: format
+not recognized"*, and neither the Macintosh nor the engine was wrong.
+The phase peels the specimen a layer at a time on purpose — its own
+docstring says *"`macextract` takes them one at a time here rather than
+being trusted to chain them, so the grade says which layer was read"* —
+and the CLI's envelope auto-unwrap now takes btoa AND the MacBinary
+inside it off in one pass. The first peel therefore returned the
+subject, and asking the CLI to decode 465 bytes of ramp again answered,
+correctly, that it is not an archive. **`-nr` is the flag that says
+what the harness meant**, and `decode_layer` already took an `extra`
+argument to pass it.
+
+**What said it was not a regression, before anything was changed.** The
+stream the Macintosh wrote is **byte-identical** to the one kept on
+2026-08-26 — md5 `5add97f23be195fd25b99b8eb1b8fa84`, 732 bytes — and
+`made.json` is identical too. So the guest, the translator and the
+specimen were all constant and the difference was entirely on this side.
+That is a two-command check and it is the one worth doing first: a
+harness failure that names OUR file is still, more often than not, ours.
+
+**The first fix was worse than the failure, and the check that caught it
+was one command.** Accepting "one peel or two" made the phase pass —
+and quietly destroyed the measurement underneath it. The reference half
+encodes the payload with btoa 5.2.1 and diffs it against the stream the
+Macintosh wrote, so it must encode **what the Macintosh encoded**, which
+is the MacBinary. With the accept-either fix it encoded the unwrapped
+subject instead: **11 of 12 lines differing where the right input gives
+1 of 12**, the trailer alone. Both spellings "passed". Only the figure
+says which one is measuring.
+
+**The lesson is the file's own rule, from the other side.** This
+project's habit is to ask what evidence a tolerance rests on; the same
+question applies to a fix that makes a red harness green. Ask what the
+number was before, and whether it still means the same thing.
