@@ -269,7 +269,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
 - 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
 - 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
-- 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` are kept, and the shedding row that asked cannot close
+- 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
 
 ---
 
@@ -16844,13 +16844,21 @@ a measurement but a TRIPWIRE: the growth was invisible because no check
 failed, and the documentation's own figure had been wrong for four days
 in the same way. A number nothing compares is a number nothing defends.
 
-## 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` are kept, and the shedding row that asked cannot close
+## 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
 
-**The decision, the maintainer's and taken today.** `src/unc_lzdyn.c`
-stays. The XADMaster-shedding inventory (OPEN_ITEMS.md, *What is still
-XADMaster's*) had priced its removal and then declined to take it,
-because dropping a format the engine already extracts is not a call this
-machine makes. The answer is keep.
+**This was not an open decision, and treating it as one is the finding.**
+`-lh2-` and `-lh3-` were settled on **2026-08-25**, the day they were
+implemented: the case for them was made by BUILDING the thing that
+grades them — an LHa patched to write `-lh2-`, an encoder for `-lh3-`,
+and 21 entries of the two in `ci.sh` every run since. `src/unc_lzdyn.c`
+stays, which is what it has been doing for a month.
+
+What happened on 2026-09-20 is that the XADMaster-shedding inventory
+(OPEN_ITEMS.md, *What is still XADMaster's*) priced the file's removal
+at 3,504 B, wrote **"the decision is the maintainer's; nothing here will
+take it"**, and so re-opened a settled question — on the one axis that
+inventory looks at. Confirmed keep on 2026-09-23; the entry is worth
+keeping for HOW it came back, not for the answer.
 
 **What it costs, re-measured 2026-09-23:** 3,476 B of `CODE` and 28 B of
 A5 — **3,504 B** of a 1 MB Mac Plus's budget — from a build with the file
@@ -16884,8 +16892,20 @@ rewrite `unc_lzdyn.c` FROM — the LGPL stays for this file whatever
 happens to the rest of the inventory. Keeping the code is therefore also
 a decision to stop treating the licence as reachable by shedding alone.
 
-**The transferable part.** *"Nothing we hold uses it" and "nobody can
-produce one" are different claims, and a suite that generates its own
-specimens has already disproved the second.* The grading rig built to
-make these two methods testable is the same fact that makes them worth
-keeping; the inventory row quoted the corpus and never quoted `ci.sh`.
+**The transferable part, and it is about inventories rather than LZH.**
+*An inventory built for one axis will re-open decisions that were
+settled on another, and it will not know it is doing so.* This one asks
+"what is still XADMaster's, and what would it take to replace it" — a
+licence question — and it prices each row in bytes. Both are fair. But a
+row whose honest answer is "nothing to rewrite it from, so this cannot
+close" then carried a SCOPE question it had no standing to re-ask, and
+parked it as the maintainer's. Nothing in the row was false; what was
+wrong was the status.
+
+The smell is specific enough to reuse: **a row that reports a price and
+names no decision-maker's question is fine; one that ends "the decision
+is X's" has converted a measurement into an open item, and should have
+to say what changed since the decision was last taken.** Here nothing
+had. The row quoted the corpus — "no corpus archive uses them" — and
+never quoted `ci.sh`, where 21 entries of the two methods pass every
+run, which is both the evidence and the date it was settled.
