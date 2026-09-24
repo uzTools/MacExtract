@@ -72,6 +72,27 @@ budget to the byte, checked on `overlay-eager` where the same probe was run
 with a second fixture as the control.
 
 
+**And at 512 KB the budget rose too, and bought nothing** — measured
+2026-09-24, `sys30.py --emu mv-512Ke -D UNC_AT_OVERLAY -D UNC_AT_BUDGET`:
+**316,464 B** for StuffIt 5, 318,682 B for Compact Pro, 324,898 B for LZH,
+against the **219,362 B** `main`'s shipping build gets on the same tier
+(FORMATS.md, *512 KB machines*). That ~97-105 KB is what recovers
+`derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`, which need
+240,898 B and 242,464 B.
+
+The two that still fail need **388,033 B** and **401,408 B** — short by
+71,569 B and 82,726 B. Nothing in the corpus needs anything between 242,464 B
+and 388,033 B, so the ~34 KB this tier gained since the six-overlay
+measurement lands in a 145 KB hole and moves no tally.
+
+**Shedding resident code is finished at this tier, and that is arithmetic
+rather than judgement.** The whole resident set is 52,536 B of code and
+19,288 B of A5, 71,824 B together, against a 71,569 B shortfall on the
+nearest remaining archive: deleting the ENTIRE application would clear it by
+255 B and still miss `synth-dd-m5.dd` by 13,120 B. What is left is the shape
+of those two archives — one 352,161 B BWT block, and 1,536 B per distinct
+context byte for all 256 of them — and no amount of overlay work reaches it.
+
 **Re-run on the machine, 2026-09-24**, because `ci.sh` variant 4b only
 COMPILES this configuration and the Linux suites do not exercise the overlay
 mechanism at all. All with `-D UNC_AT_OVERLAY` over `tools/vmac/sample.txt`:
