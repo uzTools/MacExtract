@@ -6,11 +6,11 @@ needs when it needs it; this reads **all six as a single resource while the
 boot disk is certainly still in**, and releases everything the archive cannot
 want as soon as the sniff says what the archive is.
 
-**Status, 2026-09-02: measured on an emulated Mac Plus at 1 MB.** A bare
-StuffIt 5 archive is granted **693,168 B** with the bundle released and only
-the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
-4/4 fixtures extract byte-exact across the formats that keep one image, two
-images, and none.
+**Status, 2026-09-24: measured on an emulated Mac Plus at 1 MB.** A bare
+StuffIt 5 archive is granted **734,656 B** with the bundle released and only
+the ciphers kept; an LZH gets **752,898 B**, keeping only its own decoder,
+against 650,692 B with no overlays at all. 71/71 fixtures extract byte-exact
+at 4 MB and at 1 MB, and 69/71 on a 512 KB machine (*Merged main*, below).
 
 
 ## Merged main — 2026-09-24
@@ -299,32 +299,50 @@ question, and not one this repository can answer for them.
 
 ## The three methods, and what each leaves the decoder
 
-**Measured 2026-09-02 at 1 MB on System 6.0.8, all three built and run in one
+**Re-taken 2026-09-24 at 1 MB on System 6.0.8, all three built and run in one
 session, same fixtures, same instrument.** The number is what the engine is
 GRANTED — `mal_take_budget` at its first allocation, so every overlay the run
-is going to load has already loaded.
+is going to load has already loaded. The 2026-09-02 figures this replaces are
+in the column beside each one; nothing had re-taken them across four more
+overlays and two merges from `main`.
 
 | the archive | A: no overlays | B: `selective-loading` | C: this branch |
 |---|---|---|---|
-| StuffIt 5, bare | 650,548 B | **708,916 B** | 693,168 B |
-| LZH, bare | 650,548 B | **702,104 B** | 701,688 B |
-| Compact Pro, bare | 650,548 B | 694,172 B | **692,988 B** |
-| MacBinary → StuffIt, through the real UI | 647,114 B | **705,780 B** | 689,108 B |
+| StuffIt 5, bare | 650,692 B *(650,548)* | **745,358 B** *(708,916)* | 734,656 B *(693,168)* |
+| LZH, bare | 650,692 B *(650,548)* | **753,792 B** *(702,104)* | 752,898 B *(701,688)* |
+| Compact Pro, bare | 650,692 B *(650,548)* | **747,576 B** *(694,172)* | 746,682 B *(692,988)* |
+| MacBinary → StuffIt, through the real UI | *not re-taken* | *(705,780)* | *(689,108)* |
 | disk access after the archive is chosen | none | **one, per format** | **none** |
 
 **Column A does not move with the archive**, and that is the control: with
-every decoder resident the engine gets the same heap whatever it decodes.
-Both overlay methods beat it by 44–58 KB.
+every decoder resident the engine gets the same heap whatever it decodes. It
+also barely moved in three weeks — 650,548 to 650,692 B — which is what says
+the 36–54 KB the other two columns gained is THEIRS and not something `main`
+handed the whole application. Both overlay methods now beat A by 84–103 KB,
+against 44–58 KB when this was first measured.
+
+The last row was driven through the real UI by `interactive.py` and is **not
+re-taken here**; the three above it are `run.py --mem 1M -D UNC_AT_OVERLAY
+-D UNC_AT_BUDGET`. Two different StuffIt 5 fixtures were run as a control and
+report the same budget to the byte, which is what says the figure is a
+property of the FORMAT — of which images are kept — and not of the file.
 
 **Where B and C differ is the ciphers.** A format that MAY carry an encrypted
 entry forces this branch to keep the cipher image, because it must decide what
 to throw away before it knows whether any entry is encrypted;
-`selective-loading` never loads the ciphers unless an entry asks. That is
-15,748 B, and **two of the five formats no longer pay it**: Compact Pro and
+`selective-loading` never loads the ciphers unless an entry asks. That was
+15,748 B and is now **10,702 B** (2026-09-24), because the cipher image
+itself shrank from 15,324 B to **9,800 B** when `main` stopped carrying the
+two DES SP tables and Compact Pro's CRC-64 as const data and built them at
+key setup instead (DECISIONS.md 2026-09-19, the transient tables). Both
+figures are measured — `mkoverlay.sh` prints the image size. And **two of
+the five formats no longer pay it**: Compact Pro and
 zip keep a per-entry flag in a directory that can be walked before anything is
 decoded, so `unc_archive_encrypted()` answers for the whole archive and the
-ciphers are kept only when one is actually encrypted. The Compact Pro row
-closed to within **1,184 B** of B, which is the query's own code. StuffIt,
+ciphers are kept only when one is actually encrypted. The Compact Pro row is
+within **894 B** of B, which is the query's own code, and LZH — which never
+keeps the ciphers — is the same 894 B, so that is the floor of the method
+rather than anything about either format. StuffIt,
 StuffIt 5, PackIt and ARC still pay: the first three flag encryption per entry
 with no directory to consult, and ARC does not flag it at all.
 
@@ -344,8 +362,10 @@ the guard makes that suite fail, which was checked before it was trusted.
 overlay after the archive has been chosen, and on a Mac Plus with one drive
 the application's floppy may have been ejected by then. This branch reads
 once, at launch, while the boot disk is certainly in. **That is the trade,
-priced: about 16 KB of budget against a disk access at an unpredictable
-moment.**
+priced: about 10.7 KB of budget against a disk access at an unpredictable
+moment** for a format that must keep the ciphers, and 894 B for one that need
+not. It was about 16 KB when this was written; the cipher image shrinking is
+what moved it.
 
 ## The second release site: multi-part sets
 
