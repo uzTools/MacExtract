@@ -1,9 +1,10 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: thirteen overlays, four tiers run, and one archive recovered.**
-69/69 at 4 MB, 69/69 at 1 MB, 69/69 on System 3.0 at 1 MB, and **67/69 at
-512 KB against `main`'s 66/69** — `derived-a2basic.dmg.sit` extracts on a
-Macintosh 512Ke for the first time.
+**Status: thirteen overlays, four tiers run, and two archives recovered.**
+71/71 at 4 MB, 71/71 at 1 MB, 71/71 on System 3.0 at 1 MB, and **69/71 at
+512 KB against `main`'s 67/71** — `derived-a2basic.dmg.sit` and
+`derived-Cool_Tools__.sit` extract on a Macintosh 512Ke, which `main` cannot.
+All four re-run 2026-09-24 after merging main (*Merged main*, below).
 Resident code is **52,536 B against 153,804 B** and the A5 world **19,288 B
 against 37,956 B**, both measured after merging main on 2026-09-24. The
 decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC and Now Compress
@@ -50,9 +51,33 @@ it.** Main's fused Compact Pro LZH and RLE stages zero a window with a plain
 loop is emitted as written and runs once per fork. `unc_fork_write`, which
 main's LZH rewrite added, is a forward.
 
-**Not re-run on the machine.** The figures above are the linker's. The tier
-tallies in the status block and the emulator results below are from before
-the merge and are not re-claimed for after it.
+**Re-run on the machine, 2026-09-24**, because `ci.sh` variant 4b only
+COMPILES this configuration and the Linux suites do not exercise the overlay
+mechanism at all. All with `-D UNC_AT_OVERLAY` over `tools/vmac/sample.txt`:
+
+| tier | | |
+|---|---|---|
+| `run.py --emu mv-4M` | **71/71** | |
+| `run.py --mem 1M` | **71/71** | |
+| `sys30.py --mem 1M` | **71/71** | |
+| `sys30.py --emu mv-512Ke` | **69/71** | `synth-dd-m5.dd` and `derived-Library_ISBN_Barcoder.sit`, both per entry |
+
+The two that do not pass are the two FORMATS.md (*512 KB machines*) says
+cannot: the Barcoder writes 33 of its 34 entries with one errored, and
+`synth-dd-m5.dd` is a single-entry archive whose 405,520 B block is refused.
+`derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit` both PASS, which
+`main` does not manage on this tier — so the advantage this branch recorded
+as one archive is two.
+
+**The cipher path was driven separately**, because `run.py` has no password
+and `crypt-04.hqx` never reaches a key setup:
+`interactive.py --password -D UNC_AT_OVERLAY` extracts a StuffIt classic DES
+archive, refusing one password and taking the next — so `unc_crypt_sit`
+through the new `OvlArgs.al`, the DES table built on the heap, `MKey` out of
+the resource fork and `unc_crypt_free` through `OVL_CRYPT_FREE` all ran on
+the machine. Worth running on both branches rather than one: here the crypt
+overlay is its own resource, loaded on demand, and on `overlay-eager` it
+comes out of the bundle.
 
 ## DART, overlaid — 2026-09-09
 
