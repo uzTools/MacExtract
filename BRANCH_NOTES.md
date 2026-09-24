@@ -51,6 +51,27 @@ it.** Main's fused Compact Pro LZH and RLE stages zero a window with a plain
 loop is emitted as written and runs once per fork. `unc_fork_write`, which
 main's LZH rewrite added, is a forward.
 
+**The budget, re-taken 2026-09-24** — `run.py --mem 1M -D UNC_AT_OVERLAY
+-D UNC_AT_BUDGET`, the budget read out of the `peak heap` slot, every figure
+from one session:
+
+| bare archive | no overlays | this branch |
+|---|---|---|
+| StuffIt 5 | 650,692 B | **745,358 B** |
+| LZH | 650,692 B | **753,792 B** |
+| Compact Pro | 650,692 B | **747,576 B** |
+
+The control still holds: the first column does not move with the archive,
+650,692 B for all three, against the 650,548 B it read on 2026-09-02. So the
++36 to +53 KB in the second column is not something `main` handed the whole
+application — it is that the figures it replaces were taken when this branch
+had six overlays and a 105,640 B resident set, against fifteen images and
+52,536 B now. The number is a property of the FORMAT — of which images are
+kept — and not of the file: two different StuffIt 5 fixtures report the same
+budget to the byte, checked on `overlay-eager` where the same probe was run
+with a second fixture as the control.
+
+
 **Re-run on the machine, 2026-09-24**, because `ci.sh` variant 4b only
 COMPILES this configuration and the Linux suites do not exercise the overlay
 mechanism at all. All with `-D UNC_AT_OVERLAY` over `tools/vmac/sample.txt`:
@@ -441,8 +462,9 @@ not by taste.
 
 **On the machine, 6/6 at 1 MB on System 6.0.8**: a `.sit`, a `.hqx`, a `.cpt`,
 a `.lzh`, a SpaceSaver method-4 stream and `derived-Domino_v1.4.sit`, all
-byte-exact. The budget a StuffIt 5 archive is granted is **727,802 B** and an
-LZH **739,386 B**, against 650,548 B with no overlays — and Domino's own peak
+byte-exact. The budget a StuffIt 5 archive was granted that day was
+**727,802 B** and an LZH **739,386 B**, against 650,548 B with no overlays
+— superseded by the 2026-09-24 re-take in *Merged main*, above — and Domino's own peak
 rose to 725,324 B, so the engine spends what it is given.
 
 ### What the probe splits cost, and what they taught
