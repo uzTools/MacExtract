@@ -48,9 +48,32 @@ it.** Main's fused Compact Pro LZH and RLE stages zero a window with a plain
 loop is emitted as written and runs once per fork. `unc_fork_write`, which
 main's LZH rewrite added, is a forward.
 
-**Not re-run on the machine.** The figures above are the linker's; the 2/2
-and 4/4 emulator results below are from before the merge and are not
-re-claimed for after it.
+**Re-run on the machine, 2026-09-24**, because `ci.sh` variant 4b only
+COMPILES this configuration and the Linux suites do not exercise the overlay
+mechanism at all. All with `-D UNC_AT_OVERLAY` over `tools/vmac/sample.txt`:
+
+| tier | | |
+|---|---|---|
+| `run.py --emu mv-4M` | **71/71** | |
+| `run.py --mem 1M` | **71/71** | |
+| `sys30.py --emu mv-512Ke` | **69/71** | `synth-dd-m5.dd` and `derived-Library_ISBN_Barcoder.sit`, both per entry |
+
+The two that do not pass are the two FORMATS.md (*512 KB machines*) says
+cannot: the Barcoder writes 33 of its 34 entries with one errored, and
+`synth-dd-m5.dd` is a single-entry archive whose 405,520 B block is refused.
+`derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit` both PASS, which
+`main` does not manage on this tier — and `Cool_Tools` peaks at 300,834 B
+here against `selective-loading`'s 315,317 B, which is this branch's release
+doing what it is for.
+
+**The cipher path was driven separately**, because `run.py` has no password
+and `crypt-04.hqx` never reaches a key setup:
+`interactive.py --password -D UNC_AT_OVERLAY` extracts a StuffIt classic DES
+archive, refusing one password and taking the next — so `unc_crypt_sit`
+through the new `OvlArgs.al`, the DES table built on the heap, `MKey` out of
+the resource fork and `unc_crypt_free` through `OVL_CRYPT_FREE` all ran on
+the machine, with the crypt image still resident at free time. That last
+part was the hypothesis this entry started with; it is now measured.
 
 ## DART, overlaid — 2026-09-09
 
