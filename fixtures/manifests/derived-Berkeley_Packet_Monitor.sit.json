@@ -349,7 +349,7 @@
  ],
  "fixture": "derived-Berkeley_Packet_Monitor.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "f1e2a31287fe93be113eacd220f3ceb93a33e4a1b952b9e783820885ad176a8c",
  "size": 131923
 }

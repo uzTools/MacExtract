@@ -116,6 +116,17 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll):
             if dpy.window():
                 break
             time.sleep(0.5)
+        # A window that never came up used to reach _origin anyway and die
+        # there with a TypeError, which took the WHOLE SWEEP down: it
+        # happened at fixture 70 of 71 on 2026-09-22 and cost the tally of
+        # the sixty-nine that had already passed. One fixture that cannot
+        # be started is one fixture's failure — the same NOGRID verdict a
+        # run that starts and paints nothing gets — so say so and go on.
+        if not dpy.window():
+            print(f"sys30: the emulator window never appeared for "
+                  f"{os.path.basename(fixture)} — reported as NOGRID",
+                  flush=True)
+            return None, time.time() - started
         ox, oy = _origin(dpy, env)
         time.sleep(DESKTOP_WAIT)
         _dclick(env, ox, oy, *VOL_ICON)     # open the boot volume

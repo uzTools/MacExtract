@@ -46,6 +46,7 @@ sys.path.insert(0, HERE)
 import run as R                                      # noqa: E402
 from interactive import Mac                          # noqa: E402
 from arcmac import macbinary                         # noqa: E402
+from mkboot import FINDER_OWN                        # noqa: E402
 
 SRC = os.path.join(REPO, "tools", "macmime")
 BUILD = os.path.join(REPO, "build", "macmime")
@@ -104,11 +105,26 @@ class HFS:
                               capture_output=True, text=True,
                               errors="surrogateescape")
 
-    def ls(self, folder=""):
-        # splitlines(), not split(): "System Folder" has a space in it and
-        # splitting on whitespace turns every Mac name into confetti.
-        return [n for n in self.run("hls", "-1", f"{self.vol}:{folder}")
-                .stdout.splitlines() if n]
+    def ls(self, folder="", invisible=True):
+        """Names in <folder>, one per line.
+
+        `-a` since 2026-09-23: `hls` hides a file whose Finder INVISIBLE
+        bit is set, and this list is compared with what the encoder was
+        supposed to write, so an invisible output read as one that was
+        never made. `FINDER_OWN` drops what the flag brings with it.
+
+        Read as BYTES and split on b"\n" — not `text=True` + splitlines().
+        That decode applies universal newlines, so a carriage return
+        INSIDE an HFS name becomes a line break and one name arrives as
+        two (measured on `cptsegment.read_volume`, where it broke
+        `Icon\r` outright).
+        """
+        argv = [b"hls"] + ([b"-a"] if invisible else []) + [b"-1"]
+        out = subprocess.run(argv + [f"{self.vol}:{folder}".encode("mac_roman")],
+                             env=self.env, capture_output=True).stdout
+        names = [n.decode("mac_roman", "replace")
+                 for n in out.split(b"\n") if n.strip()]
+        return [n for n in names if not (invisible and n in FINDER_OWN)]
 
     def get(self, path, dest):
         self.run("hcopy", "-r", f"{self.vol}:{path}", dest)

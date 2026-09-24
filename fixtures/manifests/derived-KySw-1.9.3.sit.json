@@ -38,7 +38,7 @@
   },
   {
    "creator": "msnk",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "bee66b70e4505aeb3be13a8c2870d96f40233aa96e5ae61525d86dddc413cb09",
    "data_size": 1091,
    "name": "Keyboard Switcher read-me",

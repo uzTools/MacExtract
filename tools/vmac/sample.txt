@@ -103,6 +103,33 @@ derived-BitMap11.sit                       # 125096 B THINK C, see below
 derived-EmpireBuilderDemo.sit              # 278294 B
 
 # StuffIt 5
+#
+# Two were added 2026-09-22, and they are the only fixtures in this list
+# whose names are not MacRoman: StuffIt 5 states its names in UTF-8 and the
+# Mac shell folds them into the bytes an HFS name holds (FORMATS.md, *A name
+# in the wrong encoding is not a name*). Until that day the fold had never
+# run on a Macintosh at all — nothing here reached it. They are a pair on
+# purpose, because the fold has two halves:
+#
+#   derived-Cool_Tools__.sit      `Cool Tools ƒ`, a name MacRoman CAN
+#                                 spell: two UTF-8 bytes become the one
+#                                 byte 0xC4 and nothing is lost. It is
+#                                 REFUSED on a 512 KB machine — it needs
+#                                 242,464 B against that tier's 197,728 B,
+#                                 the same StuffIt 5 block shape as
+#                                 derived-a2basic and derived-Library_ISBN
+#                                 (FORMATS.md, *512 KB machines*) — so it
+#                                 is the fourth refusal of that tier and no
+#                                 tier above it moves.
+#   derived-800saywhat301j.sit    Japanese names, which MacRoman cannot
+#                                 spell at all: each becomes '_' and the
+#                                 end-of-run report says so per component.
+#                                 It fits every tier, 512 KB included.
+#
+# The names are read off the Out volume by checkdisk.py, not off the grid:
+# a summed CRC cannot carry a name.
+derived-Cool_Tools__.sit                   # 217507 B, `Cool Tools ƒ`
+derived-800saywhat301j.sit                 # 91648 B, Japanese names
 derived-KeyGraphics.sit                    # 4611 B
 derived-RWAsm_Folder.sit                   # 66069 B
 derived-PuzzleGetter_0.8.sit               # 92510 B

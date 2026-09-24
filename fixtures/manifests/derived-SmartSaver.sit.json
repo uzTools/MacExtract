@@ -31,7 +31,7 @@
  ],
  "fixture": "derived-SmartSaver.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "66d8aec00e94922aa3ffeb956a9c4eea2fee38d88d0f96d1484ab30cc932458c",
  "size": 102438
 }

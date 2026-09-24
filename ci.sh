@@ -100,6 +100,13 @@ python3 tools/run_only.py --macextract build/san/macextract \
 # fail before they were believed (TESTING.md).
 python3 tools/run_walk.py --probe build/san/walk_probe \
     --macextract build/san/macextract || fail "walk-agreement tests"
+# The other kind of walk: the HOST-side ones that read a Macintosh volume
+# back and grade what an application wrote onto it. Eight of them, four
+# columns, no emulator and no ROM — seconds. Its four EXPECT_* sets fail
+# in both directions, so a walk that regresses and a walk that is fixed
+# both say so. Skips cleanly without hfsutils.
+python3 tools/vmac/walkprobe.py --check > /dev/null \
+    || fail "volume-walk probe (tools/vmac/walkprobe.py --check)"
 # Now Compress has exactly one REAL fixture, and it reaches two of the
 # five shapes a block can have. The rest — and the offset-delta search,
 # and folders, and several files in one archive — are generated the same
@@ -210,6 +217,21 @@ make BUILD=build/ars1 \
 python3 tools/run_diff.py --macextract build/ars1/macextract \
     --format "StuffIt 5" --max-size 100000 || fail "StuffIt 5 diff at target=1"
 
+echo "=== variant 1c: the LZW length escape (forced) ==="
+# unc_lzw.c keeps each string's length in one byte and walks up the
+# parents when it saturates. The longest string in the corpus is 223
+# bytes, so no fixture reaches that walk: move the saturation point to 4
+# and nearly every string does. Byte-exactness is the whole test, and it
+# is a test — with the walk broken by one token this build differs on
+# 112 of the 113 LZW fixtures and the default build on none
+# (TESTING.md, *The LZW string length*).
+make BUILD=build/lzwlen CFLAGS="-O1 -g -fsanitize=address,undefined,alignment \
+     -fno-sanitize-recover=all -DUNC_LZW_LEN_MAX=4" all >/dev/null \
+     || fail "LZW length-escape build"
+./build/lzwlen/unit_tests || fail "unit tests (LZW length escape)"
+MACEXTRACT=build/lzwlen/macextract sh tests/run_diff.sh \
+    || fail "diff tests (LZW length escape)"
+
 echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 
@@ -248,6 +270,32 @@ python3 tools/run_sizelimits.py --macextract build/off32/macextract \
 
 echo "=== variant 4: Retro68 Mac shell (compile-only, optional) ==="
 sh tools/build_mac.sh || fail "mac build"
+
+# dist/ is a committed binary and the only download this project offers, and
+# nothing compared it with anything until 2026-09-22 — it had gone stale by
+# 591 B of resource fork. The build above has just written the application
+# this tree produces, so the comparison is free. MacBinary stores the file's
+# dates, so the first 128 bytes differ between two runs over identical code
+# and the PAYLOAD does not (tools/make_dist.sh says so at the top, and it is
+# what this asserts every run).
+if [ -f build/mac/MacExtract.bin ]; then
+    [ -f dist/MacExtract.bin ] || fail "dist/MacExtract.bin is missing — run: sh tools/make_dist.sh"
+    built=$(tail -c +129 build/mac/MacExtract.bin | sha256sum | cut -d' ' -f1)
+    shipped=$(tail -c +129 dist/MacExtract.bin | sha256sum | cut -d' ' -f1)
+    [ "$built" = "$shipped" ] || fail "dist/MacExtract.bin is STALE: it is not the application this tree builds.
+       Fix: run \`sh tools/make_dist.sh\` and commit dist/ in the SAME commit
+       as the change to mac/ or src/ (CLAUDE.md, Rules). Re-read dist/README.txt
+       while you are there."
+    echo "dist: MacExtract.bin matches the build ($built)"
+fi
+
+# Nothing watched the application's SIZE until 2026-09-23, and it moved
+# 10,112 B in a month without a status file noticing. Every byte is
+# resident on the target, so it is heap the Macintosh no longer has, and
+# at the sys6-512K tier the narrowest passing fixture has 6,952 B of
+# headroom (DECISIONS.md 2026-09-23, *the ten kilobytes nothing watched*).
+python3 tools/check_app_size.py build/mac/MacExtract.code.bin \
+    || fail "application size moved without acknowledgement"
 
 # variant 4b, added 2026-09-09 on this branch: the OVERLAY configuration,
 # which is the whole point of the branch and which nothing here built until

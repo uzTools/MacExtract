@@ -366,11 +366,37 @@ void fn(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)                  \
     g.obj = cr; g.in = pw; g.len = pwlen;                                 \
     OVL_CALL(code, &g);                                                   \
 }
-VOID_KEYED(unc_crypt_cpt,        OVL_CRYPT_CPT)
-VOID_KEYED(unc_crypt_packit_des, OVL_CRYPT_PACKIT_DES)
 VOID_KEYED(unc_crypt_packit_xor, OVL_CRYPT_PACKIT_XOR)
 VOID_KEYED(unc_crypt_rc4,        OVL_CRYPT_RC4)
 VOID_KEYED(unc_crypt_xor,        OVL_CRYPT_XOR)
+
+/* The two key setups that build their table on the heap. They take the
+ * allocator and return UNC_ERR_MEM when it says no, so — unlike the
+ * keyed shims above — a missing overlay is reported rather than absorbed
+ * into UNC_CRYPT_NONE (DECISIONS.md 2026-09-19, the transient tables). */
+#define INT_KEYED_AL(fn, code)                                            \
+int fn(UncCrypt *cr, UncAlloc *al, const uint8_t *pw, uint16_t pwlen)     \
+{                                                                         \
+    OverlayEntry e = ovl_entry(); OvlArgs g;                              \
+    if (!e) return UNC_ERR_MEM;                                           \
+    g.obj = cr; g.al = al; g.in = pw; g.len = pwlen;                      \
+    return (int)OVL_CALL(code, &g);                                       \
+}
+INT_KEYED_AL(unc_crypt_cpt,        OVL_CRYPT_CPT)
+INT_KEYED_AL(unc_crypt_packit_des, OVL_CRYPT_PACKIT_DES)
+
+/* Giving the table back goes through the overlay too, because the block
+ * belongs to unc_crypt.c's own accounting. It is reachable whenever there
+ * is anything to free: cr->tab is non-NULL only if a key setup ran, which
+ * needed this image, and ovl_release_if_unwanted runs once after the sniff
+ * and never during an extraction. */
+void unc_crypt_free(UncCrypt *cr, UncAlloc *al)
+{
+    OverlayEntry e = ovl_entry(); OvlArgs g;
+    if (!e) return;
+    g.obj = cr; g.al = al;
+    OVL_CALL(OVL_CRYPT_FREE, &g);
+}
 
 int unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 {
@@ -380,13 +406,14 @@ int unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     return (int)OVL_CALL(OVL_CRYPT_ZIP, &g);
 }
 
-int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                  uint16_t pwlen,
                   const uint8_t entrykey[16], const uint8_t mkey[8])
 {
     OverlayEntry e = ovl_entry(); OvlArgs g; const uint8_t *pair[2];
     if (!e) return UNC_ERR_MEM;
     pair[0] = entrykey; pair[1] = mkey;
-    g.obj = cr; g.in = pw; g.len = pwlen; g.out = (void *)pair;
+    g.obj = cr; g.al = al; g.in = pw; g.len = pwlen; g.out = (void *)pair;
     return (int)OVL_CALL(OVL_CRYPT_SIT, &g);
 }
 

@@ -59,6 +59,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_HMAC_FINAL        20
 #define OVL_PASSWORD          21
 #define OVL_RESFORK_FIND      22
+#define OVL_CRYPT_FREE        23  /* give the key-setup table back */
 
 /* The SpaceSaver overlay — a DECODER rather than a cipher, and the first
  * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
@@ -136,6 +137,11 @@ typedef struct OvlArgs {
     uint32_t    extra;    /* whatever one entry needs and the rest do not */
     uint32_t   *off_out;  /* unc_resfork_find's two outputs */
     uint32_t   *len_out;
+    /* UncAlloc*, for the three key setups that build their table on the
+     * heap instead of carrying it as const data (DECISIONS.md 2026-09-19,
+     * the transient tables). void* for the reason OverlayHost is: an
+     * engine type here would make the blob depend on its layout. */
+    void       *al;
 } OvlArgs;
 
 #endif

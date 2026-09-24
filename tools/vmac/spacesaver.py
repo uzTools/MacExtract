@@ -84,7 +84,10 @@ def lift_installer():
     try:
         subprocess.run(["hmount", ISO], check=True, capture_output=True,
                        env=env)
-        names = subprocess.run(["hls", "-1"], capture_output=True,
+        # `-a`, 2026-09-23: the installer is found by searching the
+        # listing for its name, so a listing that hides a file cannot
+        # find one that is invisible.
+        names = subprocess.run([b"hls", b"-a", b"-1"], capture_output=True,
                                env=env).stdout.split(b"\n")
         for x in names:
             if b"SpaceSaver" in x and b"Installer" in x:

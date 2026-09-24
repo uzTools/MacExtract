@@ -18,10 +18,16 @@ demo; no serial number is invented). Nothing from it is committed.
 
     nowcompress.py --setup      fetch + convert the image, install QuickFiler
     nowcompress.py --case all   run every case, write the specimens
+    nowcompress.py --setup6     the SECOND encoder: Now Utilities 6.0
+    nowcompress.py --case6 NAME the same case, compressed by 6.0
     nowcompress.py --verify     decode each specimen and report its blocks
 
 Specimens land in `$UNC_VMAC_HOME/specimens/now/`, beside the emulator
-rather than under `build/`, which `make clean` removes.
+rather than under `build/`, which `make clean` removes; 6.0's land in
+`specimens/now6/`, because comparing the two is the point of having it.
+A field constant across everything ONE program writes is a fact about
+that program, and 6.0 is what tells the two apart
+(docs/formats/now-compress.md, *Two encoders*).
 
 **What the encoder writes, measured 2026-08-16** (`--verify` prints it):
 
@@ -31,11 +37,13 @@ rather than under `build/`, which `make clean` removes.
 | Compress ▸ Smaller, text      | 0x1f        | LZSS only         |
 | Compress ▸ Smaller, mixed     | 0x3f        | Huffman then LZSS |
 | Compress ▸ Smaller, random    | 0x00        | stored            |
-| Archive ▸ Smaller (a .sea)    | 0x100/0x140 | stored / new LZSS |
+| Archive ▸ Smaller (a .sea)    | 0x100/0x140 | stored / shape 3  |
 
 so every shape but Huffman-only — which the corpus's 1993 fixture has —
 now exists as real bytes, and our decoder returns the input byte for byte
-on all of them. `unar` agrees on every specimen here, which is what makes
+on all of them. "Shape 3" is this project's name for the one an archive
+uses; `docs/formats/now-compress.md` describes its header and table and
+not its stream. `unar` agrees on every specimen here, which is what makes
 them worth keeping: the reading is confirmed against the ENCODER and the
 reference at once.
 
@@ -62,6 +70,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                     # noqa: E402
 from interactive import Mac                         # noqa: E402
+from mkboot import FINDER_OWN                       # noqa: E402
 
 # Now Utilities 5.0.1, from Macintosh Garden. Commercial software, kept
 # out of the repository exactly like the ROM: fetched by URL, checked by
@@ -85,6 +94,39 @@ ITEM_COMPRESS_Y = 285
 SUB_X = 225
 SUB_FASTER_Y = {"archive": 225, "compress": 291}
 SUB_SMALLER_Y = {"archive": 239, "compress": 305}
+# The two items that EXPAND, both of them plain items with no submenu.
+# Read off this harness's own menu screenshot by row profile: the item
+# text bands sit at 231..239 and 295..305 (Dearchive is 14 px under
+# Archive, Decompress 15 under Compress).
+ITEM_DEARCHIVE_Y = 235
+ITEM_DECOMPRESS_Y = 300
+
+# ------------------------------------------------------------------
+# And the SECOND encoder, which is the only instrument that can say
+# whether something this format does is the format's or one program's
+# (OPEN_ITEMS.md, *A second Now Compress*).
+#
+# Now Utilities **6.0**, March 1996, against 5.0.1's 1994. Its installer
+# is a StuffIt archive of finished files rather than an application, so
+# `--setup6` places them instead of running one: the extension and its
+# toolbox into System Folder:Extensions, the droplets at the root. The
+# LEADING SPACES in those two names are the load order — extensions load
+# alphabetically and the Toolbox must precede the extension that needs
+# it — so they are kept, not stripped.
+#
+# Its menu is 6.0's own, read off this harness's screenshots and not
+# inherited: the QuickFiler menu sits mid-bar rather than against the
+# screen edge, so its submenus open to the RIGHT where 5.0.1's open left.
+NU6_URL = "https://old.mac.gdn/apps/Now_Utilities_6.0.sit"
+NU6_MD5 = "8cfbed2b75a39422b87d712ddd6b910a"
+BOOT6 = os.path.join(WORK, "nu6boot.hfv")      # System 7 + QuickFiler 6.0
+NU6_ITEM_Y = {"compress": 249, "archive": 187}
+NU6_SUB_X = 450
+NU6_SUB_Y = {("compress", "faster"): 253, ("compress", "smaller"): 267,
+             ("archive", "faster"): 191, ("archive", "smaller"): 205}
+NU6_DEMO = (264, 306)                          # 5.0.1's Demo button is at 237
+NU6_EXT = ("  Now Toolbox", " Now QuickFiler Extension")
+NU6_APPS = ("Compress Now", "Archive Now", "Expand Now")
 
 
 def keystream(n, seed=b"macextract-now"):
@@ -281,18 +323,41 @@ class Session:
         x("mouseup", "1")
         time.sleep(2.0)
 
+    def item(self, item_y, tag):
+        """The same, releasing on an item that has NO submenu — which is
+        what Decompress and Dearchive are, and the reason this harness
+        can drive the expanding half of Now Compress at all: Mini vMac
+        cannot select a submenu item with the mouse (tools/vmac/README.md,
+        *hierarchical menus*), and these two need no submenu."""
+        ox, oy = self.mac.origin()
+        x = self.mac._xdo
+        x("mousemove", str(ox + QF_MENU_X), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.0)
+        x("mousemove", str(ox + 330), str(oy + item_y))
+        time.sleep(1.4)
+        self.shot(tag)
+        x("mouseup", "1")
+        time.sleep(2.0)
+
     def close(self):
         self.mac.close()
 
 
-def make_volume(path, volname, files, folders=()):
-    open(path, "wb").truncate(1400 * 1024)
+def make_volume(path, volname, files, folders=(), macbinary=(), size=1400):
+    open(path, "wb").truncate(size * 1024)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     tmp = tempfile.mkdtemp(prefix="nowvol-")
     try:
         subprocess.run(["hformat", "-l", volname, path], check=True,
                        capture_output=True, env=env)
         subprocess.run(["hmount", path], check=True, capture_output=True, env=env)
+        for mb in macbinary:
+            # -m keeps the TYPE and CREATOR, which is what makes a file
+            # Now Compress recognises as one of its own.
+            subprocess.run(["hcopy", "-m", os.path.abspath(mb), "%s:" % volname],
+                           check=True, capture_output=True, env=env)
         for name, blob in files.items():
             p = os.path.join(tmp, name)
             open(p, "wb").write(blob)
@@ -313,21 +378,57 @@ def make_volume(path, volname, files, folders=()):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def read_volume(img, out):
-    """Pull every file off the volume as MacBinary, then split out the
+# What Now QuickFiler leaves on the volume that is NOT output, and the
+# answer to the question `walkprobe.py` cannot ask: this walk HAS lost
+# something. QuickFiler creates `[Now QuickFiler Folder]` on the volume it
+# is compressing on and puts a `NCdb`/`NCex` database inside it, and the
+# FOLDER is invisible while the database is not — so `hls` without `-a`
+# never mentioned it. It is on six of the kept `specimens/now/*` work
+# volumes, and on the Now Utilities 5.0.1 installer floppy with a second
+# database beside it. Named and excluded rather than unseen.
+NOW_OWN = {"[Now QuickFiler Folder]"}
+
+
+def read_volume(img, out, invisible=True):
+    """Pull every file off the volume ROOT as MacBinary, then split out the
     data fork — which is where a Now Compress archive lives, in a
-    compressed file and in a self-extracting one alike."""
+    compressed file and in a self-extracting one alike.
+
+    **`-a`, since 2026-09-22**, because `hls` hides a file whose Finder
+    INVISIBLE bit is set, and so a walk that grades what an application
+    wrote must not depend on the application's taste in Finder flags. What
+    it surfaces here is measured rather than assumed: the Finder's
+    `FINDER_OWN` bookkeeping, and QuickFiler's own `NOW_OWN` folder, which
+    is why that constant exists. Pass `invisible=False` for the listing as
+    it was.
+
+    Root-only, deliberately, and `walkprobe.py`'s `EXPECT_FLAT` records it:
+    every volume this reads is one `make_volume` built flat. The one
+    directory that ever appears on it is QuickFiler's, and its contents are
+    bookkeeping, not output.
+
+    Names reach `hcopy` as the bytes `hls` printed — the rule
+    `superdisk.read_forks` records; decoding to `str` and handing that back
+    re-encodes as UTF-8, which is a file that does not exist for any 8-bit
+    name.
+    """
     os.makedirs(out, exist_ok=True)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    got = {}
+    got, dropped = {}, []
     try:
         subprocess.run(["hmount", img], check=True, capture_output=True, env=env)
-        listing = subprocess.run(["hls", "-1"], capture_output=True,
-                                 env=env).stdout.decode("mac-roman", "replace")
-        for name in [n for n in listing.split("\n") if n.strip()]:
+        argv = [b"hls"] + ([b"-a"] if invisible else []) + [b"-1"]
+        listing = subprocess.run(argv, capture_output=True, env=env).stdout
+        # split on b"\n", not strip(): a carriage return is a legal HFS
+        # filename character and it is the last one of `Icon\r`.
+        for raw in [n for n in listing.split(b"\n") if n.strip()]:
+            name = raw.decode("mac-roman", "replace")
+            if invisible and (name in FINDER_OWN or name in NOW_OWN):
+                dropped.append(name)
+                continue
             mb = os.path.join(out, name + ".bin")
-            r = subprocess.run(["hcopy", "-m", name, mb], capture_output=True,
-                               env=env)
+            r = subprocess.run([b"hcopy", b"-m", raw, mb.encode()],
+                               capture_output=True, env=env)
             if r.returncode != 0 or not os.path.exists(mb):
                 continue
             blob = open(mb, "rb").read()
@@ -340,7 +441,278 @@ def read_volume(img, out):
         subprocess.run(["humount"], capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    # What `-a` cost on this harness's own volume, printed rather than
+    # assumed. `[Now QuickFiler Folder]` appearing here is the application
+    # writing an invisible folder onto the volume under test — the thing
+    # this walk used to miss.
+    print("nowcompress: -a surfaced and the filters dropped: %s"
+          % (", ".join(sorted(dropped)) or "nothing"))
     return got
+
+
+def alphabet(n, syms, weights, seed=b"macextract-now-probe"):
+    """A deterministic pseudo-random sequence over a SMALL alphabet.
+
+    What this is for: a block whose literals can only be two or four
+    known bytes makes a code table findable by what it MUST contain
+    rather than by where it might be. The archive shape's table could
+    not be located in `Archive.sea` any other way — its members are
+    prose and keystream, whose tables look like every other table.
+    """
+    pool = b"".join(bytes([s]) * w for s, w in zip(syms, weights))
+    return bytes(pool[b % len(pool)] for b in keystream(n, seed))
+
+
+def debruijn(n=65536):
+    """A sequence in which no pair of bytes ever repeats.
+
+    A de Bruijn sequence of order 2 over 256 symbols holds every two-byte
+    combination exactly once, so an LZ encoder can find NO match in it at
+    all — which is what makes a PLANTED match the only one in the file,
+    and its length and distance therefore known. Disjoint slices of it
+    share no pair either, so members cannot match each other.
+    """
+    k, m = 256, 2
+    a = [0] * (k * m)
+    seq = []
+
+    def db(t, p):
+        if t > m:
+            if m % p == 0:
+                seq.extend(a[1:p + 1])
+        else:
+            a[t] = a[t - p]
+            db(t + 1, p)
+            for j in range(a[t - p] + 1, k):
+                a[t] = j
+                db(t + 1, t)
+
+    db(1, 1)
+    return bytes(seq[:n])
+
+
+# What the two token cases plant. Each member is a slice of the de Bruijn
+# sequence, then a copy of that slice's own first bytes — one match, at a
+# distance and a length chosen here — then a compressible tail, because
+# Now Compress refuses a file it cannot compress.
+TOK_DISTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 24, 28, 32, 40,
+             48, 56, 64, 80, 96, 128, 160, 192, 224, 256, 320, 384, 448,
+             512, 640, 768, 1024, 1536, 2048, 3072, 4096, 8192, 16384]
+TOK_LENS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32,
+            40, 48, 64, 96, 128, 192, 255]
+
+
+def fibonacci_file(nsyms, seed=b"deep"):
+    """Bytes whose histogram is Fibonacci, which is what makes a Huffman
+    code as deep as it can be: 18 symbols reach 17 bits, 21 reach 20.
+
+    What it is for: the 128-byte code table gives each symbol four bits,
+    so a length past 15 needs the escape `src/fmt_now.c` reads after
+    the nibbles — a count of "extra length" entries and their symbols,
+    each gaining 16. **No specimen here has ever needed it** (the
+    deepest code in any is 12), so this asks the encoder for one.
+    """
+    fib = [1, 1]
+    while len(fib) < nsyms:
+        fib.append(fib[-1] + fib[-2])
+    pool = bytearray()
+    for i, n in enumerate(fib[:nsyms]):
+        pool += bytes([65 + i]) * n
+    ks = keystream(len(pool) * 2, seed)
+    order = sorted(range(len(pool)), key=lambda i: (ks[2 * i], ks[2 * i + 1], i))
+    return bytes(pool[i] for i in order)
+
+
+def window_files():
+    """Members sized so that block starts land at chosen offsets inside
+    the encoder's 64 KB window.
+
+    **The one dimension no byte-2 experiment has varied.** Byte 2 of a
+    shape-3 header is not a property of its block — ten hypotheses failed
+    on 391 blocks — and the only thing it has ever been seen to track is
+    which half of a 65,536-byte window its block starts in, 41 of the 43
+    values above 200 in the 1995 archive (docs/formats/now-compress.md,
+    *The header*). That is a correlation read off one file whose blocks
+    happen to alternate; nothing has ever CHOSEN a block's offset.
+
+    This does. Four members of 65,536 bytes each produce two full
+    32,768-byte blocks apiece and advance the window by exactly one turn,
+    so a spacer of 16,384 in front of each one moves that member's pair
+    of blocks a quarter of the window along:
+
+        spacer   position of the member's two blocks
+        —        0 and 32,768
+        16,384   16,384 and 49,152
+        16,384   32,768 and 0
+        16,384   49,152 and 16,384
+
+    Eight full blocks, two at each quarter, and **every one of them the
+    same content to within its seed** — so a byte 2 that depends on where
+    in the window a block starts has to show it, and one that does not
+    has nowhere left to hide.
+    """
+    # A member table is a pre-order flattening in NAME order, not the
+    # order the files were copied, so the names have to sort into the
+    # sequence the arithmetic above assumes: p0 member, p1 spacer, p2
+    # member, and so on. `probe`'s four members came back alphabetical
+    # from an insertion order that was not, which is how that was found.
+    out, k = {}, 0
+    for i in range(4):
+        if i:
+            out["p%d.bin" % k] = alphabet(16384, b"ABCD", (4, 2, 1, 1),
+                                          b"wpos-spacer-%d" % i)
+            k += 1
+        out["p%d.bin" % k] = alphabet(65536, b"ABCD", (4, 2, 1, 1),
+                                      b"wpos-member-%d" % i)
+        k += 1
+    return out
+
+
+MATCH_SHARE = (0, 32, 64, 125, 250, 375, 500, 625, 750, 1000)
+
+
+def match_files():
+    """Members that differ in **how much of them can be matched** and in
+    nothing else.
+
+    Byte 2 of a shape-3 header is not a property of its block — eleven
+    hypotheses failed on 391 blocks, and where in the window the block
+    starts was disproved on 2026-09-21. What is left is a shape: it
+    climbs toward 255 by `((255 - b2) >> 1) + 1` over `tokdist`'s forty
+    members, none of which can be matched against another, and it is 0
+    over `reach`'s five near-identical ones and over all eight of
+    `wpos`'s. Rising when nothing matches and collapsing when everything
+    does is a reading about the encoder's matching, and **every case
+    that produced it varied matchability by accident** — as a
+    consequence of what the case was really for.
+
+    This varies it on purpose and holds the rest. Eleven members of
+    **2,000 bytes each**, 22,000 bytes in all, so the first is still
+    inside the 32,768-byte window when the last is compressed. Each is
+    1,000 bytes off the **de Bruijn** stream, whose substrings are
+    unique and so match nothing, followed by 1,000 copies of one letter
+    — a letter of its own, so that tail matches nothing earlier either
+    while costing every member the same to code:
+
+        n00.bin   the pool
+        n01..n10  the same shape, with the first 0, 32, 64, 125, 250,
+                  375, 500, 625, 750 or 1,000 bytes of the de Bruijn
+                  half copied from the pool instead
+
+    Same length, same alphabet, same self-similarity, same block count
+    — one apiece — and the same distance back to what they match. The
+    only thing that moves is how many of a member's bytes the encoder
+    can code as a match.
+
+    **The content has to be compressible or the question is not asked.**
+    The first build of this case used a keystream, which is
+    incompressible: seven of the eleven members came out as STORED
+    blocks, which have no header and so no byte 2, and the ladder had
+    four rungs instead of eleven (2026-09-21).
+    """
+    seq = debruijn()
+    out, at = {}, 0
+    segs = []
+    for i in range(len(MATCH_SHARE) + 1):
+        segs.append(seq[at:at + 1000])
+        at += 1000
+    for i, seg in enumerate(segs):
+        share = 0 if i == 0 else MATCH_SHARE[i - 1]
+        half = segs[0][:share] + seg[share:]
+        out["n%02d.bin" % i] = half + bytes([0x41 + i]) * 1000
+    return out
+
+
+MATCHV_SHARE = (0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600,
+                540, 480, 420, 360, 300, 240, 180, 120, 60, 0)
+
+
+def matchv_files():
+    """The same ladder as `match_files`, walked **up and back down** —
+    the experiment that tells a running state from a per-block quantity.
+
+    `match` establishes that byte 2 of a shape-3 header falls as a
+    member's matchable fraction rises: 255, 255, 127, 127, 127, 127,
+    63, 63, 31, 31, 8 over eleven members that differ in nothing else.
+    What that cannot say is WHICH of the two it is, because matchability
+    only ever increased in it: a value computed from the block and a
+    value carried between blocks both fall down a monotone ladder.
+
+    Twenty-one members of **1,200 bytes** — 600 de Bruijn bytes and 600
+    copies of a letter of their own, 25,200 bytes in all so the first is
+    still inside the window at the last — whose shared prefix rises from
+    0 to 600 and then falls back to 0. The two readings predict
+    different second halves:
+
+    - **per-block**: byte 2 retraces the first half, symmetrically;
+    - **carried**: it climbs back by `b2 + ((255 - b2) >> 1) + 1`, the
+      law 101 transitions already take (docs/formats/now-compress.md,
+      *The header*), and lags the ladder.
+    """
+    seq = debruijn()
+    out, at = {}, 0
+    segs = []
+    for _ in range(len(MATCHV_SHARE)):
+        segs.append(seq[at:at + 600])
+        at += 600
+    for i, seg in enumerate(segs):
+        share = MATCHV_SHARE[i]
+        out["n%02d.bin" % i] = (segs[0][:share] + seg[share:]
+                                + bytes([0x41 + i]) * 600)
+    return out
+
+
+def fork_files():
+    """Files with a RESOURCE fork, which nothing this harness made has had.
+
+    What they are for: every member Now Compress has written here came
+    off a volume built with `hcopy -r`, so its resource fork is empty
+    and its block table's one empty record sits at the head. The two
+    real archives are the only specimens whose forks fall any other way
+    — one member with both forks, one with an empty DATA fork — and one
+    specimen cannot tell a rule from a coincidence
+    (docs/formats/now-compress.md, *A member's blocks*).
+
+    Four members, each predicting where the empty record lands:
+
+    | member | data | resource | the empty record should be |
+    |---|---|---|---|
+    | `dataonly.bin` | 40,000 | none | first, as in every file here |
+    | `rsrconly.bin` | 0 | 40,000 | **last**, as in the 1993 archive |
+    | `bothsmall.bin` | 574 | 332 | **between**, as in `SynRef2.0 INFO` |
+    | `bothbig.bin` | 40,000 | 70,000 | **after the resource fork's THREE blocks** — index 3, which is what tells a fork boundary from a leading record |
+
+    Returned as (name, type, creator, data, resource); `run_case` writes
+    them as MacBinary so `hcopy -m` keeps both forks.
+    """
+    from arcmac import make_rsrc
+    d40 = keystream(20000) + FOX * 1000
+    r40 = keystream(20000) + PROSE * 3
+    r70 = keystream(35000) + PROSE * 6
+    return [
+        ("dataonly.bin", "TEXT", "ttxt", d40, b""),
+        ("rsrconly.bin", "TEXT", "ttxt", b"", make_rsrc(r40)),
+        ("bothsmall.bin", "TEXT", "ttxt", FOX * 29, make_rsrc(b"\x14a small fork")),
+        ("bothbig.bin", "TEXT", "ttxt", d40, make_rsrc(r70)),
+    ]
+
+
+def token_files(kind):
+    """`dist`: one match of 64 bytes at each distance in TOK_DISTS.
+    `len`: one match of each length in TOK_LENS, all at distance 400."""
+    seq = debruijn()
+    files, at = {}, 0
+    if kind == "dist":
+        for dist in TOK_DISTS:
+            seg = seq[at:at + dist]
+            at += dist
+            files["d%05d.bin" % dist] = seg + seg[:min(64, dist)] + FOX * 50
+    else:
+        for ln in TOK_LENS:
+            seg = seq[at:at + 400]
+            at += 400
+            files["l%05d.bin" % ln] = seg + seg[:ln] + FOX * 50
+    return files
 
 
 CASES = {
@@ -352,9 +724,92 @@ CASES = {
                 "compress", "smaller"),
     "stored": (lambda: {"mixed.bin": keystream(33000) + FOX * 800},
                "compress", "smaller"),
+    # Ten files of mixed content, each meant to come out as one Huffman
+    # block over an LZSS stream (mode 0x3f). What is wanted is the GAP
+    # between such a block's 128-byte table and its bit stream, which is
+    # 23 bits in one specimen and 18 in another and which two specimens
+    # cannot explain (docs/formats/now-compress.md, *What this note does
+    # NOT describe*). The contents vary on purpose: symbol counts from
+    # two to 256 and code depths from 2 to 15, so that anything the gap
+    # is a function of has room to move.
+    "huffgap": (lambda: {
+        "g01.bin": keystream(6000) + b"A" * 6000,
+        "g02.bin": keystream(3000) + FOX * 300,
+        "g03.bin": keystream(9000) + PROSE,
+        "g04.bin": alphabet(6000, b"AB", (1, 1), b"gap-4") + b"B" * 4000,
+        "g05.bin": alphabet(8000, b"ABCD", (4, 2, 1, 1), b"gap-5") + FOX * 200,
+        "g06.bin": keystream(1500) + b"z" * 1500,
+        "g07.bin": PROSE + keystream(2000) + PROSE,
+        "g08.bin": keystream(12000) + FOX * 600,
+        "g09.bin": alphabet(4000, bytes(range(32, 96)), (1,) * 64, b"gap-9")
+                   + FOX * 100,
+        "g10.bin": keystream(500) + b"Q" * 9500,
+    }, "compress", "smaller"),
     "archive": (lambda: {"mixed.bin": keystream(33000) + FOX * 800,
                          "one.txt": b"first file, compressible\n" * 300},
                 "archive", "smaller"),
+    # Four inputs chosen to make the archive shape's code table legible:
+    # one symbol, two, four with known frequencies, and one file that is
+    # its own first half repeated so a single match reaches 3,000 back.
+    # The window question: the offset table reaches 65,791 bytes and the
+    # history this engine keeps is 32,768, so an archive that has
+    # produced more than 32 KB and then matches further back than that
+    # would be refused. Five 16 KB members, the last a copy of the
+    # first, put the only useful match 64 KB back and ask the encoder
+    # what it does about it (DECISIONS.md 2026-09-21, the window that
+    # stopped at the fork).
+    "reach": (lambda: {"a.bin": alphabet(16000, b"AB", (1, 1), b"reach-a"),
+                       "b.bin": alphabet(16000, b"AB", (1, 1), b"reach-b"),
+                       "c.bin": alphabet(16000, b"AB", (1, 1), b"reach-c"),
+                       "d.bin": alphabet(16000, b"AB", (1, 1), b"reach-d"),
+                       "e.bin": alphabet(16000, b"AB", (1, 1), b"reach-a")},
+              "archive", "smaller"),
+    # The stream the archive shape uses spells a length and a distance and
+    # nothing here says how. These two cases plant matches whose length and
+    # distance are known, so the token's bits can be read off against them.
+    "tokdist": (lambda: token_files("dist"), "archive", "smaller"),
+    "toklen": (lambda: token_files("len"), "archive", "smaller"),
+    # An archive with FOLDERS in it, to check how the entry table nests
+    # them: the 1995 fixture is the only specimen here that has one, and
+    # one specimen cannot tell a rule from a coincidence.
+    "tree": (lambda: {"r1.bin": FOX * 100 + keystream(400),
+                      "r2.bin": PROSE[:3000] + keystream(300)},
+             "archive", "smaller",
+             lambda: (("Alpha", {"a1.bin": FOX * 60 + keystream(200),
+                                 "a2.bin": PROSE[:2000] + keystream(200)}),
+                      ("Beta", {"b1.bin": FOX * 80 + keystream(250)}))),
+    # Four skews, to find where a code stops fitting in four bits.
+    "deep": (lambda: {"d16.bin": fibonacci_file(16),
+                      "d18.bin": fibonacci_file(18),
+                      "d20.bin": fibonacci_file(20),
+                      "d21.bin": fibonacci_file(21)},
+             "compress", "smaller"),
+    # The same four skews, ARCHIVED: the Compress path put an LZSS
+    # layer under the Huffman and flattened them (deepest code 11), and
+    # Huffman-ONLY blocks have only ever come out of the archive path.
+    "deeparc": (lambda: {"d16.bin": fibonacci_file(16),
+                         "d18.bin": fibonacci_file(18),
+                         "d20.bin": fibonacci_file(20),
+                         "d21.bin": fibonacci_file(21)},
+                "archive", "smaller"),
+    # Members with a RESOURCE fork, which is where the one empty record
+    # in a block table is claimed to sit. `fork_files` says what each
+    # member predicts.
+    "forks": (lambda: {}, "archive", "smaller", None, fork_files),
+    # Block starts placed at each quarter of the 64 KB window, twice
+    # over, with the content held constant: `window_files` says why.
+    "wpos": (window_files, "archive", "smaller"),
+    # Members varying only in how much of them can be MATCHED, which is
+    # the dimension every byte-2 case so far varied by accident.
+    "match": (match_files, "archive", "smaller"),
+    # The same ladder up and back down, which says whether byte 2 is
+    # computed from the block or carried between blocks.
+    "matchv": (matchv_files, "archive", "smaller"),
+    "probe": (lambda: {"runa.bin": b"A" * 4000,
+                       "two.bin": alphabet(6000, b"AB", (1, 1)),
+                       "skew.bin": alphabet(6000, b"ABCD", (4, 2, 1, 1)),
+                       "far.bin": alphabet(3000, b"AB", (1, 1)) * 2},
+              "archive", "smaller"),
 }
 PROSE = (b"Now Compress was Now Software's, and it shipped with Now "
          b"Utilities. It compresses a fork at a time, in blocks.\n" * 60)
@@ -363,15 +818,37 @@ FOX = b"the quick brown fox\n"
 
 
 def run_case(name):
-    files, action, mode = CASES[name]
+    spec = CASES[name]
+    files, action, mode = spec[0], spec[1], spec[2]
+    folders = spec[3]() if len(spec) > 3 and spec[3] else ()
+    # Members with two forks go on as MacBinary, which is the only way
+    # `hcopy` carries a resource fork; `hcopy -r` is what everything
+    # else here uses and it writes the data fork alone.
+    twofork = spec[4]() if len(spec) > 4 and spec[4] else ()
     files = files()
     dest = os.path.join(SPECIMENS, name)
     shutil.rmtree(dest, ignore_errors=True)
     os.makedirs(dest)
     img = os.path.join(dest, "volume.img")
-    make_volume(img, "Now", files)
+    mbs = []
+    if twofork:
+        from arcmac import macbinary
+    for n, typ, crt, data, rsrc in twofork:
+        mb = os.path.join(dest, "mb-" + n)
+        open(mb, "wb").write(macbinary(n, typ, crt, data, rsrc))
+        mbs.append(mb)
+        open(os.path.join(dest, "in-" + n), "wb").write(data)
+        if rsrc:
+            open(os.path.join(dest, "in-" + n + ".rsrc"), "wb").write(rsrc)
+    make_volume(img, "Now", files, folders, macbinary=mbs)
+    nbytes = sum(len(b) for b in files.values())
+    nbytes += sum(len(d) + len(r) for _, _, _, d, r in twofork)
+    nbytes += sum(len(b) for _, inner in folders for b in inner.values())
     for n, blob in files.items():
         open(os.path.join(dest, "in-" + n), "wb").write(blob)
+    for _, inner in folders:
+        for n, blob in inner.items():
+            open(os.path.join(dest, "in-" + n), "wb").write(blob)
     s = Session(BOOT, [img], os.path.join(dest, "shots"))
     try:
         s.boot()
@@ -385,7 +862,10 @@ def run_case(name):
         s.menu(item, sub, "pick-%s-%s" % (action, mode))
         s.shot("working", wait=40.0)
         s.mac.key("Return")                          # the save box, or a report
-        s.shot("done", wait=60.0)
+        # 60 s was enough for every case up to `forks`'s 196 KB; `wpos`
+        # is 311 KB, and a run that ejects while QuickFiler is still
+        # working reads a volume that looks like a refusal.
+        s.shot("done", wait=max(60.0, nbytes / 2000.0))
         s.mac.key("Return")
         time.sleep(5)
         s.mac.command_key("w")
@@ -440,6 +920,130 @@ def verify():
                       % (case, f, x.returncode, ", ".join(names)))
             finally:
                 shutil.rmtree(out, ignore_errors=True)
+
+
+def expand(outdir, macbinaries):
+    """Run Now Compress's own **Decompress** over compressed files, and
+    keep what comes out.
+
+    This is the other half of `--case`: that one asks the encoder what it
+    writes, this one asks the DECODER what it reads. It is the only
+    instrument here that can settle whether a field the encoder writes is
+    a field anybody reads — `tools/mutate_now.py` changes one, fixes
+    every checksum over it, and this hands the result back to the program
+    that wrote it (docs/formats/now-compress.md, *What this note does NOT
+    describe*).
+
+    The files go on the volume as MacBinary so they keep the type and
+    creator that make QuickFiler offer Decompress at all; what lands in
+    `outdir` is whatever is on the volume afterwards, under the names the
+    Mac gave it.
+    """
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(outdir, "volume.img")
+    total = sum(os.path.getsize(p) for p in macbinaries)
+    make_volume(img, "Now", {}, macbinary=macbinaries,
+                size=max(1400, (total * 6) // 1024 + 800))
+    s = Session(BOOT, [img], os.path.join(outdir, "shots"))
+    try:
+        s.boot()
+        s.demo()
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(8)
+        s.mac.command_key("a")
+        s.shot("selected", wait=3.0)
+        s.item(ITEM_DECOMPRESS_Y, "pick-decompress")
+        s.shot("working", wait=40.0)
+        # One alert per file it refuses, so the number of Returns scales
+        # with the volume rather than being a constant: a ladder of
+        # mutations is put on one volume BECAUSE some rungs are expected
+        # to be refused, and an alert nobody dismisses stops every file
+        # after it. On a volume where nothing is refused the spare
+        # Returns land on the Finder, which opens and closes a name.
+        for _ in range(len(macbinaries) + 1):
+            s.mac.key("Return")
+            time.sleep(10)
+        # And the wait AFTER the alerts scales too. A run that ejects
+        # while QuickFiler is still working reads a volume where the
+        # files it had not reached yet look exactly like the ones it
+        # refused, which is how a seven-file volume came back with four
+        # unexpanded of which only two had been declined (2026-09-21).
+        s.shot("done", wait=30.0 + 15.0 * len(macbinaries))
+        s.mac.key("Return")
+        time.sleep(5)
+        s.mac.command_key("w")
+        time.sleep(3)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                       # Put Away: flush + eject
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = read_volume(img, outdir)
+    for name, (typ, crt, dlen, dat) in sorted(got.items()):
+        print("  %-20s %s/%s %8d B  %s" % (name, typ, crt, dlen,
+                                           os.path.basename(dat)))
+    return got
+
+
+def dearchive(outdir, macbinaries):
+    """Run Now Compress's own **Dearchive** over ARCHIVES, and keep what
+    comes out.
+
+    `--expand` is the same instrument one layer down: that one asks
+    Decompress about a compressed FILE, this one asks QuickFiler about an
+    archive, which is the shape `tools/synth_now.py` writes and which
+    nothing but `unar` had ever graded (`synth_now.py --ladder`).
+
+    The files go on as MacBinary typed `NCar`/`NCdc`, which is what makes
+    QuickFiler offer the item at all — the type is one of the four Expand
+    Now's own `FREF` resources claim, not a guess (`synth_now.py`,
+    *ARCHIVE_TYPE*).
+    """
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(outdir, "volume.img")
+    total = sum(os.path.getsize(p) for p in macbinaries)
+    make_volume(img, "Now", {}, macbinary=macbinaries,
+                size=max(1400, (total * 8) // 1024 + 800))
+    s = Session(BOOT, [img], os.path.join(outdir, "shots"))
+    try:
+        s.boot()
+        s.demo()
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(8)
+        s.mac.command_key("a")
+        s.shot("selected", wait=3.0)
+        s.item(ITEM_DEARCHIVE_Y, "pick-dearchive")
+        s.shot("working", wait=40.0)
+        # One alert per archive it refuses, and a rung that IS refused is
+        # the point of the ladder, so the Returns scale with the volume
+        # exactly as they do in `expand`.
+        for _ in range(len(macbinaries) + 1):
+            s.mac.key("Return")
+            time.sleep(10)
+        s.shot("done", wait=30.0 + 15.0 * len(macbinaries))
+        s.mac.key("Return")
+        time.sleep(5)
+        s.mac.command_key("w")
+        time.sleep(3)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                       # Put Away: flush + eject
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    got = read_forks(img)
+    for path, (data, rsrc) in sorted(got.items()):
+        print("  %-44s %8d B data, %6d B rsrc" % (path[-44:], len(data),
+                                                  len(rsrc)))
+    # The archives themselves are still there, so "some files" is not a
+    # result: what says an archive was read is a file that was not on
+    # the volume before.
+    new_ = [p for p in got if os.path.basename(p) not in
+            {os.path.basename(m).rsplit(".bin", 1)[0] for m in macbinaries}]
+    print("dearchive: %d file(s) on the volume afterwards, %d of them NEW"
+          % (len(got), len(new_)))
+    return got
 
 
 def adjudicate(macbinary, archive):
@@ -506,27 +1110,60 @@ def adjudicate(macbinary, archive):
             print("  %-34s %-4s %9d B  %s" % (path[-34:], fork, len(a),
                                               "IDENTICAL" if same else "DIFFERS"))
     shutil.rmtree(out, ignore_errors=True)
+    # A volume with nothing on it compares nothing and so "agrees" —
+    # which is how an archive the extractor REFUSED read as a pass on
+    # 2026-09-21, twice, before anyone looked at the fork count. An
+    # adjudication that graded no forks has measured nothing.
+    if not theirs:
+        print("adjudication: the extractor produced NOTHING — it refused the "
+              "archive, or the run did not reach it. Nothing was compared.")
+        return 1
     print("adjudication: %s" % ("the original extractor agrees with us on every "
                                 "fork" if not bad else "%d fork(s) DIFFER" % bad))
     return bad
 
 
-def read_forks(img):
-    """path -> (data, rsrc) for every file on a volume, folders included."""
+def read_forks(img, invisible=True):
+    """path -> (data, rsrc) for every file on a volume, folders included.
+
+    **The NINTH walk, and it was missing from `walkprobe.py` until
+    2026-09-22** — because the survey that built that inventory searched
+    for the NAME `read_forks` and attributed every hit to
+    `superdisk.read_forks`, which is a different function in a different
+    file. `--adjudicate` calls THIS one. The same mistake, twice: the two
+    Compact Pro walks were missed by a grep for `hls`, and this one by a
+    grep for a name. Search for the CAPABILITY — a function that lists an
+    HFS volume — and there are thirty of them.
+
+    `-a` and the `FINDER_OWN` filter for the reasons
+    `superdisk.read_forks` states in full; this walk is one of the four
+    that hold EVERY entry on the guest volume against our own extraction,
+    so a Finder file with no counterpart would be a difference, and an
+    invisible file the extractor wrote was simply never compared.
+
+    Names reach `hcd` and `hcopy` as the bytes `hls` printed. The keys
+    stay `str`, because that is what the caller joins onto a host path.
+    """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    out = {}
+    out, dropped = {}, []
 
     def walk(prefix):
-        listing = subprocess.run(["hls", "-1"], capture_output=True,
-                                 env=env).stdout.decode("mac-roman", "replace")
-        for name in [n for n in listing.split("\n") if n.strip()]:
-            if subprocess.run(["hcd", name], capture_output=True,
+        listing = subprocess.run([b"hls"] + ([b"-a"] if invisible else [])
+                                 + [b"-1"], capture_output=True,
+                                 env=env).stdout
+        for raw in [n for n in listing.split(b"\n") if n.strip()]:
+            name = raw.decode("mac-roman", "replace")
+            if invisible and not prefix and name in FINDER_OWN:
+                dropped.append(name)
+                continue
+            if subprocess.run([b"hcd", raw], capture_output=True,
                               env=env).returncode == 0:
                 walk(prefix + name + "/")
                 subprocess.run(["hcd", "::"], capture_output=True, env=env)
                 continue
             tmp = tempfile.mktemp(suffix=".bin")
-            if subprocess.run(["hcopy", "-m", name, tmp], capture_output=True,
+            if subprocess.run([b"hcopy", b"-m", raw, tmp.encode()],
+                              capture_output=True,
                               env=env).returncode != 0:
                 continue
             blob = open(tmp, "rb").read()
@@ -543,6 +1180,8 @@ def read_forks(img):
         subprocess.run(["humount"], capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    print("nowcompress: -a surfaced and FINDER_OWN dropped: %s"
+          % (", ".join(sorted(dropped)) or "nothing"))
     return out
 
 
@@ -553,15 +1192,26 @@ def main():
                     help="fetch the installer image and convert it to raw HFS")
     ap.add_argument("--install", action="store_true",
                     help="install Now QuickFiler onto a System 7 boot image")
+    ap.add_argument("--setup6", action="store_true",
+                    help="fetch Now Utilities 6.0 and build its boot image")
     ap.add_argument("--case", help="one of %s, or 'all'" % ", ".join(sorted(CASES)))
+    ap.add_argument("--dearchive", nargs="+", metavar=("OUTDIR", "FILE.bin"),
+                    help="run Now Compress's own Dearchive over ARCHIVES")
+    ap.add_argument("--case6", metavar="NAME",
+                    help="the same case, compressed by 6.0 instead of 5.0.1")
     ap.add_argument("--verify", action="store_true",
                     help="decode the specimens and check them against the input")
     ap.add_argument("--adjudicate", nargs=2, metavar=("SEA.bin", "ARCHIVE"),
                     help="run a self-extracting archive under the emulator and "
                          "compare its output with ours")
+    ap.add_argument("--expand", nargs="+", metavar=("OUTDIR", "FILE.bin"),
+                    help="run Now Compress's own Decompress over compressed "
+                         "files and keep what comes out")
     args = ap.parse_args()
     if args.setup:
         fetch_installer()
+    if args.setup6:
+        setup6()
     if args.install:
         install()
     if args.case:
@@ -569,14 +1219,174 @@ def main():
         for c in cases:
             print("case %s:" % c)
             run_case(c)
+    if args.case6:
+        cases = sorted(CASES) if args.case6 == "all" else [args.case6]
+        for c in cases:
+            print("case %s (Now Compress 6.0):" % c)
+            run_case6(c)
     if args.verify:
         verify()
     if args.adjudicate:
         return 1 if adjudicate(*args.adjudicate) else 0
-    if not any((args.setup, args.install, args.case, args.verify,
-                args.adjudicate)):
+    if args.expand:
+        if len(args.expand) < 2:
+            raise SystemExit("nowcompress: --expand OUTDIR FILE.bin ...")
+        expand(args.expand[0], args.expand[1:])
+    if args.dearchive:
+        if len(args.dearchive) < 2:
+            raise SystemExit("nowcompress: --dearchive OUTDIR FILE.bin ...")
+        dearchive(args.dearchive[0], args.dearchive[1:])
+    if not any((args.setup, args.setup6, args.install, args.case, args.case6,
+                args.verify, args.adjudicate, args.expand, args.dearchive)):
         ap.print_help()
     return 0
+
+
+def appledouble(path):
+    """(type, creator, Finder flags, resource fork) out of an AppleDouble
+    file — what `unar -k visible` writes beside each extracted file."""
+    d = open(path, "rb").read()
+    if d[:4] != b"\x00\x05\x16\x07":
+        raise SystemExit("nowcompress: %s is not AppleDouble" % path)
+    typ, crt, flags, rsrc = b"????", b"????", 0, b""
+    for i in range(struct.unpack_from(">H", d, 24)[0]):
+        eid, off, ln = struct.unpack_from(">III", d, 26 + i * 12)
+        if eid == 9:
+            typ, crt = d[off:off + 4], d[off + 4:off + 8]
+            flags = struct.unpack_from(">H", d, off + 8)[0]
+        elif eid == 2:
+            rsrc = d[off:off + ln]
+    return (typ.decode("mac-roman"), crt.decode("mac-roman"), flags, rsrc)
+
+
+def setup6():
+    """Fetch Now Utilities 6.0 and build a System 7 boot image with its
+    QuickFiler in it.
+
+    Unlike 5.0.1 there is no installer to drive: what the `.sit` holds is
+    a StuffIt archive of the finished files, so this places them. That is
+    also why it needs `unar` — the outer archive is StuffIt 5, which this
+    project does not read (OPEN_ITEMS.md, *Out of scope for v1*).
+
+    The result is `nu6boot.hfv`, and the check that it worked is the
+    welcome dialog: Now Utilities asks for a serial number on first boot
+    and offers a week's demo, exactly as 5.0.1 does.
+    """
+    from arcmac import macbinary
+    os.makedirs(WORK, exist_ok=True)
+    sit = os.path.join(WORK, "nu60.sit")
+    if not os.path.exists(sit):
+        subprocess.run(["curl", "-sL", "-A", "Mozilla/5.0 (Macintosh)",
+                        "-o", sit, NU6_URL], check=True)
+    got = hashlib.md5(open(sit, "rb").read()).hexdigest()
+    if got != NU6_MD5:
+        raise SystemExit("nowcompress: %s has md5 %s, expected %s"
+                         % (sit, got, NU6_MD5))
+    out = os.path.join(WORK, "nu60")
+    shutil.rmtree(out, ignore_errors=True)
+    subprocess.run(["unar", "-q", "-k", "visible", "-o", out, sit], check=True)
+    inner = None
+    for root, _, files in os.walk(out):
+        if "Now Utilities 6.0 Installer" in files:
+            inner = os.path.join(root, "Now Utilities 6.0 Installer")
+    if not inner:
+        raise SystemExit("nowcompress: no 6.0 installer in %s" % sit)
+    apps = os.path.join(WORK, "nu60apps")
+    shutil.rmtree(apps, ignore_errors=True)
+    subprocess.run(["unar", "-q", "-k", "visible", "-o", apps, inner], check=True)
+    src = None
+    for root, dirs, files in os.walk(apps):
+        if "Compress Now.rsrc" in files:
+            src = root
+    if not src:
+        raise SystemExit("nowcompress: no Compress Now in the 6.0 installer")
+
+    shutil.copyfile(os.path.join(HOME, "Sys7.img"), BOOT6)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs6-"))
+    tmp = tempfile.mkdtemp(prefix="nu6-")
+    try:
+        subprocess.run(["hmount", BOOT6], check=True, capture_output=True,
+                       env=env)
+        vol = subprocess.run(["hvol"], capture_output=True, env=env
+                             ).stdout.decode().split('"')[1]
+        for name in NU6_EXT + NU6_APPS:
+            ad = os.path.join(src, name + ".rsrc")
+            typ, crt, flags, rsrc = appledouble(ad)
+            data = os.path.join(src, name)
+            blob = macbinary(name, typ, crt,
+                             open(data, "rb").read() if os.path.exists(data)
+                             else b"", rsrc,
+                             flags & ~0x4000)      # not invisible on our volume
+            p = os.path.join(tmp, name.strip() + ".bin")
+            open(p, "wb").write(blob)
+            dst = ("%s:System Folder:Extensions:" % vol if name in NU6_EXT
+                   else "%s:" % vol)
+            subprocess.run(["hcopy", "-m", p, dst], check=True,
+                           capture_output=True, env=env)
+            print("  %-28s %s/%s -> %s" % (name.strip(), typ, crt, dst))
+        subprocess.run(["humount"], check=True, capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("nowcompress: boot image with QuickFiler 6.0 at %s" % BOOT6)
+
+
+def run_case6(name):
+    """The same case, compressed by the OTHER encoder.
+
+    Specimens land in `specimens/now6/<case>/` so that nothing overwrites
+    5.0.1's, which is the whole point: the two directories are compared.
+    """
+    spec = CASES[name]
+    files, action, mode = spec[0](), spec[1], spec[2]
+    dest = os.path.join(HOME, "specimens", "now6", name)
+    shutil.rmtree(dest, ignore_errors=True)
+    os.makedirs(dest)
+    img = os.path.join(dest, "volume.img")
+    make_volume(img, "Now", files)
+    for n, blob in files.items():
+        open(os.path.join(dest, "in-" + n), "wb").write(blob)
+    s = Session(BOOT6, [img], os.path.join(dest, "shots"))
+    try:
+        s.boot()
+        s.mac.click(*NU6_DEMO)
+        time.sleep(15)
+        s.mac.key("Return")
+        s.shot("desktop", wait=10.0)
+        s.mac.click(470, 110, double=True)          # open the volume
+        time.sleep(8)
+        s.mac.command_key("a")
+        s.shot("selected", wait=3.0)
+        ox, oy = s.mac.origin()
+        x = s.mac._xdo
+        x("mousemove", str(ox + QF_MENU_X), str(oy + 8))
+        time.sleep(0.4)
+        x("mousedown", "1")
+        time.sleep(1.2)
+        x("mousemove", str(ox + 330), str(oy + NU6_ITEM_Y[action]))
+        time.sleep(2.0)
+        s.shot("hover-%s" % action)
+        x("mousemove", str(ox + NU6_SUB_X), str(oy + NU6_SUB_Y[(action, mode)]))
+        time.sleep(1.5)
+        s.shot("pick-%s-%s" % (action, mode))
+        x("mouseup", "1")
+        s.shot("working", wait=40.0)
+        s.mac.key("Return")
+        s.shot("done", wait=60.0)
+        s.mac.key("Return")
+        time.sleep(5)
+        s.mac.command_key("w")
+        time.sleep(3)
+        s.mac.click(470, 110)
+        s.mac.command_key("y")                      # Put Away: flush + eject
+        s.shot("ejected", wait=15.0)
+    finally:
+        time.sleep(5)
+        s.close()
+    for n, (typ, crt, dlen, dat) in sorted(read_volume(img, dest).items()):
+        print("  %-16s %s/%s %7d B  %s" % (n, typ, crt, dlen,
+                                           os.path.basename(dat)))
+    return dest
 
 
 def install():

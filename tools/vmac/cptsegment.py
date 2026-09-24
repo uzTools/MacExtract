@@ -29,7 +29,7 @@ Output lands in `$UNC_VMAC_HOME/specimens/<case>/`: every segment as raw
 data-fork bytes, plus a `case.json` recording what made it. That is beside
 the emulator rather than under `build/`, which `make clean` removes.
 """
-import argparse, glob, json, os, shutil, struct, subprocess, sys, tempfile, time
+import argparse, glob, json, os, re, shutil, struct, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -38,6 +38,12 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                     # noqa: E402
 from interactive import Mac                         # noqa: E402
 from mkboot import LISTING_DATE                     # noqa: E402
+from mkboot import FINDER_OWN                       # noqa: E402
+
+# `hdir`'s name column, on a BYTES listing. The str twin in mkboot.py is
+# unusable here: reading the listing as text applies universal newlines,
+# which turns the carriage return inside `Icon\r` into a line break.
+LISTING_DATE_B = re.compile(LISTING_DATE.pattern.encode("ascii"))
 import synth_wrapped as W                           # noqa: E402
 
 # Compact Pro's own type/creator, measured across 65 corpus entries: an
@@ -279,15 +285,42 @@ def save_each_segment(mac, shot, args):
     return saved - 1          # the last shot was the static screen after
 
 
-def read_volume(image, outdir, skip):
-    """Copy every data fork off the boot volume, except the ones we put there.
+def read_volume(image, outdir, skip, invisible=True):
+    """Copy every data fork off the boot volume ROOT, except the ones we
+    put there.
 
     Read from the emulator's OWN copy of the image: Mac() boots a private
     copy, and reading the one that was handed to it reports an empty volume
     for a run that worked (tools/vmac/README.md).
+
+    **`hdir -a`, since 2026-09-22.** `hdir` hides a file whose Finder
+    INVISIBLE bit is set exactly as `hls` does, so without the flag a
+    segment Compact Pro had marked invisible would read as a segment it
+    never wrote. The flag brings the Finder's own bookkeeping with it,
+    which `FINDER_OWN` drops; pass `invisible=False` for the listing as it
+    was. `walkprobe.py` is what says this walk is no longer blind.
+
+    **And the line test keeps `F` as well as `f`**, which is the other
+    thing that was wrong with it: `hdir` prints a LOCKED file with a
+    leading `F`, so `line.startswith("f")` was a directory test that also
+    threw away every locked file. Measured, both characters, on
+    `walkprobe.py`'s own volume.
+
+    Root-only, deliberately: this reads the BOOT volume, whose `System
+    Folder` is a directory full of files no run of this harness wrote.
+    Descending would drag System and Finder into every specimen set.
+    `walkprobe.py`'s `EXPECT_FLAT` records that as a property.
+
+    **Names reach `hcopy` as the bytes `hdir` printed**, which is the
+    arcmac rule arriving by a different door. This read the listing with
+    `text=True`, and that applies UNIVERSAL NEWLINES: a carriage return
+    inside an HFS name is rewritten as a line break, so `Icon\r` came back
+    as `Icon` and `hcopy` was asked for a file that does not exist. `hdir`
+    itself prints the CR verbatim — measured both ways. The listing is
+    bytes now, split on b"\n" alone, and only the dict KEY is decoded.
     """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    got = {}
+    got, dropped = {}, []
     try:
         # The emulator was SIGKILLed a moment ago and can still have the
         # image open; hmount then fails outright. Seen once in four runs,
@@ -303,25 +336,36 @@ def read_volume(image, outdir, skip):
             raise SystemExit(f"cptsegment: cannot mount {image}: {r.stderr}")
         out = r.stdout
         vol = out.split('Volume name is "', 1)[1].split('"', 1)[0]
-        listing = subprocess.run(["hdir", vol + ":"], check=True, env=env,
-                                 capture_output=True, text=True,
-                                 errors="surrogateescape").stdout
-        for line in listing.splitlines():
-            if not line.startswith("f"):
+        listing = subprocess.run([b"hdir"] + ([b"-a"] if invisible else [])
+                                 + [vol.encode("mac-roman") + b":"],
+                                 check=True, env=env,
+                                 capture_output=True).stdout
+        for line in listing.split(b"\n"):
+            if line[:1] not in (b"f", b"F"):   # a directory, or a blank line
                 continue
-            m = LISTING_DATE.search(line)
+            m = LISTING_DATE_B.search(line)
             if not m:
                 continue
-            name = m.group(1)
+            raw = m.group(1)
+            name = raw.decode("mac-roman", "replace")
+            if invisible and name in FINDER_OWN:
+                dropped.append(name)
+                continue
             if name in skip:
                 continue
             dest = os.path.join(outdir, name.replace("/", "_"))
-            subprocess.run(["hcopy", "-r", f"{vol}:{name}", dest],
+            subprocess.run([b"hcopy", b"-r",
+                            vol.encode("mac-roman") + b":" + raw,
+                            dest.encode()],
                            check=True, env=env, capture_output=True)
             got[name] = dest
         subprocess.run(["humount"], env=env, capture_output=True)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    # What `-a` cost on THIS harness's own volume, printed rather than
+    # assumed: the filter is only right if what it drops is the Finder's.
+    print("%s: -a surfaced and FINDER_OWN dropped: %s"
+          % ('cptsegment', ", ".join(sorted(dropped)) or "nothing"))
     return got
 
 

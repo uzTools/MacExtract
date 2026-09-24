@@ -15,7 +15,7 @@
  ],
  "fixture": "derived-Sabine_Doscbthm.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "744aceae203bcf195d88d73d3774e44d5113bc96abf6b8c354f8c59bc8aec68f",
  "size": 14571
 }

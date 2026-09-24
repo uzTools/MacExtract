@@ -10,15 +10,48 @@ DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and Linux
 CLI were never affected by anything in this file. The Retro68 Mac shell runs
 and extracts byte-exact on every system the project claims:
 
+The sample is **71 fixtures** since 2026-09-22, when the two StuffIt 5
+archives whose names are UTF-8 joined it.
+
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures. System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
-| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **69/69**; the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
-| System 3.0, **512 KB** Macintosh 512Ke | **66/69**; the three shortfalls are per-entry memory refusals, not failures — the budget there is 197,728 B. The same machine under System 6.0.8, with no Finder at all, does 63/69 (re-measured 2026-09-04; 58/69 before the stack cut), and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **69/69** sampled fixtures |
-| System 6.0.8, **1 MB** — the RAM floor | **69/69**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **69/69** |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **21/21** — re-run 2026-09-04 on the build that zeroes `UncOptions`, the sample one larger for Now Compress, the third folder-walking format; that morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22). System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **71/71** (2026-09-22); the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
+| System 3.0, **512 KB** Macintosh 512Ke | **67/71** (2026-09-22); the four shortfalls are per-entry memory refusals, not failures — the budget there is 219,362 B. The same machine under System 6.0.8, with no Finder at all, does **64/71**, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
+| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22) |
+| System 6.0.8, **1 MB** — the RAM floor | **71/71** (2026-09-22); no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 7.0.1, 4 MB | **71/71** (2026-09-22), the first run of the fold under the Process Manager |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep** (2026-09-22), on the binary that ships — the whole of `os9sample.txt`, one boot per fixture. Until that run the figure was 22 across two builds and two days: `derived-800saywhat301j.sit` on 2026-09-22, the fold's first run here, which found two blind spots in the harness and none in the application (FORMATS.md, *Mac OS 9 tier*), and the other 21 on 2026-09-04 on the build that zeroes `UncOptions`, that sample one larger for Now Compress, the third folder-walking format. No fixture moved. That earlier morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
+
+**Seven sweeps were re-run 2026-09-22**, on the sample grown to 71 by the
+two StuffIt 5 archives whose names are UTF-8 — the first time the fold had
+run on a Macintosh at all. Five went first; **System 7.0.1 at 4 MB and
+System 3.0 at 4 MB followed the same day, 71/71 each**, which is the two
+tiers that had been left a sample behind. **Every tier reproduced its
+recorded figure and no refusal moved**: System 6.0.8 at 4 MB 71/71 and at 1 MB 71/71, System 3.0
+at 1 MB 71/71, and at 512 KB System 3.0 67/71 against System 6.0.8's 64/71 —
+the same three and six per-entry refusals as before, plus
+`derived-Cool_Tools__.sit` on both 512 KB machines, which is a fixture the
+sample gained and not a refusal the engine grew. **All three budget
+constants were re-taken the same day** with `-D UNC_AT_BUDGET` and all three
+had drifted (below, and FORMATS.md, *Budget*). `checkdisk.py` then read all
+**73 kept Out volumes byte-exact, names included**.
+
+**All seven Mini vMac sweeps were then re-run on the build that reads the
+1990 DiskDoubler header**, which is the binary that ships: System 6.0.8
+71/71 at 4 MB and 71/71 at 1 MB, System 3.0 71/71 at 4 MB and 71/71 at
+1 MB, System 7.0.1 71/71 at 4 MB, and at 512 KB System 3.0 67/71 against
+System 6.0.8's 64/71. **Every tier reproduced its figure and the refused
+fixtures are the same ones by name** — the four and the seven
+`run_tiers.py` asserts. All three budgets were re-taken between the two
+rounds and each had fallen exactly 32 B where the arithmetic predicted 64
+(FORMATS.md, *Budget*); no tally moved. So no figure in the table above
+rests on a binary older than the one in `dist/`.
+
+**Every Mini vMac tier was re-run 2026-09-20** before that, the first time
+any had been since the decoder work of 2026-09-18/19/20 changed six formats
+and took 360 B net off the budget: five sweeps of the 69-fixture sample,
+every one reproducing its figure — 69/69, 69/69, 69/69, 66/69 and 63/69.
 
 All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
 and three fixtures added to the sample for them — DiskDoubler methods 3, 4
@@ -153,6 +186,61 @@ keep finding the next one, and two of them need no insight at all:
   wrote down, not about what is reachable — the algorithm was in the
   application all along, in a binary already in `fixtures/` and already
   being driven under emulation for something else.
+- **a correct WORKAROUND with the wrong reason attached.** Added
+  2026-09-22: `checkdisk.py` passed `hls -a` and said in a comment that
+  hfsutils hides names beginning with a dot. The flag was right and the
+  reason was false — `-a` is about the Finder INVISIBLE bit, and a dotted
+  name with the bit clear is listed without it. Because the stated reason
+  was "dotfiles", four later walks whose subjects had no dotfiles skipped
+  the flag and looked safe, and one of them reported a file MISSING that
+  was on the volume (below). **A wrong reason attached to a right fix
+  does not fail anything, so nothing ever re-tests it — and it is what
+  the next person copies instead of the fix.** Look for the explanation
+  beside a flag, not just the flag.
+- **a probe whose fixture carries a dimension its verdict throws away.**
+  Added 2026-09-22: `walkprobe.py` built its volume with the four
+  subjects at the root AND the same four inside a folder, and its
+  docstring said "so a walk is tested at depth as well" — while the
+  comparison reduced every result to leaf NAMES, and the folder holds
+  the same four names as the root. A walk returning two entries and one
+  returning eight both scored 4/4, and **four of eight never descend**.
+  The fixture was right and the reading was lossy, which is the harder
+  half to notice: the evidence was on the disk the whole time. Ask what
+  the subject varies that the verdict cannot express.
+- **a remedy aimed at a step that had already happened.** Added
+  2026-09-22: a file the Macintosh had saved could not be read off the
+  image, and four flush remedies were tried — a 30 s wait, Control-Q,
+  SIGTERM, the shell's own `FlushVol`. All four were about getting a
+  write out; the write was already out. What was missing was the
+  CATALOG entry that follows it, and one reading of the raw image said
+  so. **When a remedy that should work does not, check that it is
+  aimed at the step that actually failed** — four failed remedies are
+  evidence about the diagnosis, not about the remedies.
+- **a survey built by grepping for one spelling.** Added 2026-09-22 and
+  found by the same run: the inventory of "every volume walk in this
+  tree" was assembled by searching for `hls`, and two walks list with
+  `hdir`. So the table that scoped the work — and the count "four
+  walks" in three files — was six of eight. `hdir` hides the invisible
+  bit exactly as `hls` does, which DECISIONS.md already stated and no
+  probe had ever asked. **An inventory is a claim like any other**, and
+  the cheapest disproof is to search for the CAPABILITY rather than for
+  the name one implementation gave it.
+- **a check that only runs where the others are silent.** Added
+  2026-09-21: the third oracle was offered a fork only when `unar` AND
+  `macunpack` had both left it open, so on every method the others could
+  read it was never asked — and deark had been in `reference/`, compiled
+  by `ci.sh` and running for another format, for four weeks while this
+  file said no second implementation of StuffIt method 6 existed. **A
+  check positioned where nothing can contradict it cannot contradict
+  anything.** Ask what a check is not run ON, not what it covers.
+- **an oracle that never fails.** Added 2026-09-21: deark writes output
+  for a truncated file by PADDING it to the length its header declares —
+  286 bytes for a resource fork with 234 in the file, the last 52 zeros
+  it made up. An implementation that always produces something is not
+  ground truth about a file that does not contain it, and taking its
+  word wrote those zeros into a manifest and then failed seven fixtures
+  against them. Ask what the oracle does when the input is damaged
+  before believing it where the others declined.
 - **every input a suite grades against, made by one program.** Added
   2026-08-23: `run_btoa.py` grades the decoder against btoa 5.2.1 itself,
   which is the right oracle and is also a Unix program that has only ever
@@ -271,6 +359,19 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **The 1 MB Mac Plus budget is 647,204 B** — FORMATS.md, *Budget*, stated as arithmetic: 648,100 B measured on 2026-08-31, less the 896 B the UTF-8 fold added to `CODE` and A5 | **The machine says 648,282 B**, so the arithmetic moved AWAY from the answer. The formula and the subtraction were both right; the base was three weeks and six rewritten formats old, and the decoder work had taken more off the application than the fold put on. The two 512 KB constants beside it had drifted **21,666 B** each, in the same direction and for the same reason, and with all three re-taken `run_tiers.py` reproduces **all three tiers fixture for fixture** — including System 6.0.8 / 512 KB, which had never matched and whose one-fixture disagreement TESTING.md had filed under fragmentation. **Cost: a stale predictor that was wrong about four fixtures on the tier it could not check**, and half a day in which the floor figure was less accurate than the one it replaced. *A constant derived from a measurement is only as current as the measurement* — and subtracting from a stale one looks like maintenance (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |
+| **What would close the `DDAR` `0x20` row is a 1.x or 2.x DiskDoubler, neither of which is reachable from here** — OPEN_ITEMS.md's `fmt_dd.c` row and `docs/formats/diskdoubler-container.md`, *What would close it* | **A 2.x DiskDoubler could not have written a `DDAR` record of any flags, so finding one would have settled nothing.** `DDExpand 2.03a`'s `BNDL` declares the DiskDoubler file types it opens — `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` — and `DDAR` is not among them, nor does the string occur anywhere in its 65,212-byte resource fork; DDExpand 3.1 declares those five plus `DDAR`, `DDTD`, `DDCR` and `DDF0`–`DDF5`, and holds the literal nine times. Both are on the Macintosh Garden page this project already fetches 3.7 from, and so is **DiskDoubler ß05, 1990**, the oldest DiskDoubler anywhere reachable — whose Finder menu is `Compress Selection;Expand Selection` and which cannot write an archive either. *A search that names the wrong tool*, one format over: the row named a VERSION rather than a shape, on the strength of which version XADMaster's author owned. **Cost: nothing yet, and only because no 2.x was available to spend a boot on** (DECISIONS.md 2026-09-22, *the version that could not have written it*) | 2026-09-22 |
+| **The two harnesses that grade Mac output against the oracle manifests are `check_mac_sink.py` and `tools/vmac/run.py`, so a StuffIt 5 fixture with a non-ASCII name would read a correct fold as a defect in both** — TESTING.md, *The Macintosh shell's names*, written with the fold on 2026-09-22 | **`run.py` cannot see a name at all.** Its verdict is the on-screen grid — a file count, two summed CRC-32s and two summed lengths — and a summed CRC carries no name, which is the blind spot `checkdisk.py` was written for in the first place. The harness that would have failed is `checkdisk.py`, which the sentence did not name: with the fold disabled it reports three MISSING and three UNEXPECTED on `derived-800saywhat301j.sit`, and run.py passes it either way. **Cost: nothing, by one day** — the sentence would have sent whoever added the fixture to teach the harness that cannot see the problem and leave the one that can (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |
+| **A member deark wrote at all has both forks, so a fork with no file on disk is one deark read as EMPTY** — which is the assertion `make_manifests.py` lets the third oracle make on its own, and the comment stating it (TESTING.md, *A third oracle*) | **deark writes a member's resource-fork sidecar, declines its data fork, and writes no data file.** `derived-BitMap11.sit`'s `BitMapHelp.index` is StuffIt method 8, which deark does not implement: it prints `Unsupported compression method: 8 (MW)` and the absence read as a 0-byte fork. **Cost: nothing yet, which is the only cheap time to find one** — no manifest records a false empty, because the gap-filling path had never been offered such a fork. Found 2026-09-22 by `tools/sweep_deark.py`, whose whole purpose is asking the oracle where nothing was open (DECISIONS.md 2026-09-22, *the oracle asked about everything else*) | 2026-09-22 |
+| **deark's output is matched by name** — `make_manifests.py` and TESTING.md both, as the rule that replaced matching by position on 2026-09-21 | **By the name deark WRITES, which is not the name the archive holds.** deark writes each member to a real file, so a member inside a folder arrives with its separators mangled to `_`; matching raw names skipped **every entry in a folder, 500 of them**, and reported success on the subset it could match. **Cost: the third oracle's coverage, 1,641 forks where 2,075 were available** — a quarter of the cross-check, for one unmodelled sanitiser (`de_char_to_valid_fn_char`, one function in `reference/deark/src/deark-util.c`). Same shape as a check positioned where nothing can contradict it, one layer down | 2026-09-22 |
+| **What is written onto the boot volume after a 300 KB extraction does not reach the image** — `interactive.py`'s `phase_report_utf8` and DECISIONS.md 2026-09-22 (*the fold, on a Macintosh*), both labelled *hypothesis, not measured*, as the reason the report is saved to a floppy | **The bytes reach the image; the CATALOG ENTRY does not.** `--utf8-to-boot` runs that phase onto the boot volume and reads the kept image twice: the report's text is there — the three `_` lines and `Extraction complete.`, in order, complete — and `hls -a` at the root does not list the file, while the extraction's own 300 KB is in BOTH, five entries deep. The File Manager writes a data fork's blocks and then records the entry, and the run ends between the two, which is why four remedies aimed at flushing changed nothing: **they were aimed at a write that had already happened.** Cost: nothing — the workaround was right and is kept — but it was the only unreduced hypothesis in the tree, and CLAUDE.md's rule says an unreduced root cause is not a finding (DECISIONS.md 2026-09-22, *the file that was on the disk and not in the catalog*) | 2026-09-22 |
+| **The ArcMac header's own Finder info has bit 0x40 of the high byte set, which is `invisible`** — `arcmac.macbinary`'s docstring since M13, DECISIONS.md 2026-08-16, and quoted in OPEN_ITEMS.md and `tools/vmac/README.md` on 2026-09-22 as the reason `arcmac.read_volume` was "a known risk rather than a theoretical one" and the first of the blind walks to take | **No ArcMac header reachable here has that bit.** `macunpack/arc.h` puts `FINFO` at offset 42 of the 88-byte header — `fdFlags`, `fdLocation`, `fdFldr` — so the flags word is `h[42:44]`, and across **5 ArcMac files and 11 entries** (the two in the wild and the three this harness wrote) it is **0x2100 on the application and 0x0100 on every document**. 0x2100 is `fHasBundle | fHasBeenInited`; `fInvisible` is 0x4000 and is set nowhere. The SYMPTOM was real and is still recorded — the volume showed one item where two were written — but the code that produced it was never committed, so what it actually passed cannot be recovered. **A reason reconstructed from a symptom, written down as a property of the format.** Cost: nothing in the engine and nothing in the harness — the walk was blind independently of it and the flag costs nothing — but it is what ordered the work, and "one of the four is a known-real risk" is the sentence that made this walk first of four instead of one of five (DECISIONS.md 2026-09-22, *the column that was already on the volume*) | 2026-09-22 |
+| **Eight forks in damaged nested archives cannot be adjudicated: `unar` declines them, deark PADS them, and our own output cannot grade our own output** (TESTING.md, *A third oracle*; FORMATS.md, *Hardening*) | **The container states its own layout.** All eight are MacBinary, whose forks are STORED at offsets the header gives, so what is physically present is arithmetic: all eight match what the engine writes, byte for byte, and `oracle-unadjudicated` falls **15 across 11 → 8 across 4** (7, and the eighth back the same day for an unrelated reason — the declined-fork row above). The claim was true about implementations and was read as true about evidence. **Cost: eight forks carried as ungradeable since 2026-08-08**, and the reasoning that would have settled them was the MacBinary header this project already parses (DECISIONS.md 2026-09-22, *the container is the oracle*) | 2026-09-22 |
+| **What a shape-3 header's byte 2 tracks is where the encoder is in its window** — 41 of the 43 values above 200 in the 1995 archive are in blocks that start in the low half of a 65,536-byte window (`docs/formats/now-compress.md`, *The header*) | **Where a block starts in the window changes it by nothing.** `nowcompress.py --case wpos` archives four members of 65,536 bytes each, the same content to within a seed: each produces two full 32,768-byte blocks and advances the window by exactly one turn, so a 16,384-byte spacer in front of each moves its pair a quarter along. **Eight full blocks, two at each quarter of the window, byte 2 = 0 in all eight**; only the archive's first block differs, at 236. The 1995 archive's blocks alternate low/high half BECAUSE they are all full blocks in one member, so its correlation is with position in that file and not with position in the window. **Cost: none to any output — nothing reads this field — but it was the note's one surviving lead on it, and it stood for a day as the thing a probe should be built around.** The correlation was read off ONE file and labelled a correlation; what made it testable was noticing that no experiment had ever CHOSEN a block's offset, only observed one (DECISIONS.md 2026-09-21, *the quarter that changed nothing*) | 2026-09-21 |
+| **`reference/macutils/macunpack/sit.c` is the only reference implementation the project has for StuffIt method 6** — XADMaster recognizes the method and refuses it, so the second oracle adjudicates a transcription against its own source (`src/fmt_sit.c`, FORMATS.md, TESTING.md) | **deark implements it, under MIT, and had been on this disk for four weeks.** `reference/deark/modules/stuffit.c` has a *"Fixed Huffman (type 6) decompression"* section; it credits macunpack as DOCUMENTATION and uses none of its code, and it agrees with this engine on **all 11 method-6 forks here** — the ten of `synth-sit-fixhuf.sit` and the 34,818-byte resource fork of `derived-INITLoader.sit`, which is the corpus's only real one. (Written "12" on the day, next to the enumeration that adds to eleven; corrected 2026-09-22 when `tools/derive_sit6.py` counted them.) It also disproves two claims made about the oracle itself: that it is a data-fork oracle only (it writes AppleDouble `.adf` sidecars, and the fork it was said not to see is the only fork method 6 occurs in) and that it reads no Zip. **Cost: four weeks of a documented blind spot** — deark arrived 2026-08-25 for ARC Distilled and is compiled by `ci.sh` on every run, and was never put to method 6 because the code path offers it only forks the others left OPEN. And a licence: method 6 and its 1,028-byte table are the reason `fmt_sit.c` still carries macutils, and deark states the same code book in 26 bytes (OPEN_ITEMS.md; DECISIONS.md 2026-09-21, *the oracle that was never asked*) | 2026-09-21 |
+| **A shape-3 header's byte 2 is carried ACROSS blocks** — it climbs toward 255 by `((255 - b2) >> 1) + 1` when nothing matches and drops to 0 when everything does, which the note read as a running state the encoder keeps (`docs/formats/now-compress.md`, *The header*) | **It is computed from its own block and retraces with no lag.** `nowcompress.py --case matchv` archives 21 members of 1,200 bytes that differ only in how much of them can be MATCHED, up a ladder and back down: byte 2 runs 255, 127, 127, 63, 63, 63, 31, 31, 15, 15, 8 and then **the same eleven values in reverse**, every mirrored pair equal. A carried value updated by half the distance to a target lags; there is no hysteresis anywhere in the V, and not one of the ten transitions on the way back up takes the `((255 - b2) >> 1) + 1` step. So the 101 transitions that DO take it are a description of ladders whose parameter moved one way, not of a state machine — the same shape of error as the window correlation in the row above, found the same day and in the same field. **Cost: none to any output, and the probe cost three emulator runs — one of them wasted on a keystream, which is incompressible, so seven of eleven members came out STORED and had no header to read.** (DECISIONS.md 2026-09-21, *the ladder that was walked back down*) | 2026-09-21 |
+| **Now Compress's `0d4c 0037` record is a LEADING record 5.0.1 writes in front of every block table**, and the 1993 archive's only member and the 1995 archive's first member are exceptions with none — leaving *what selects it* as the format's best open question (`docs/formats/now-compress.md`, *A member's blocks*) | **There is no leading record. There is one fork-boundary record per member, and its position is fixed by the two fork lengths**: between the forks, at the head when the resource fork is empty, at the tail when the data fork is. **153 of 153 members Now Compress wrote here.** Both "exceptions" are the rule seen from the other two positions. What hid it is in this file's own list of mechanisms — *every input a suite grades against, made by one program*: every member here came off an HFS volume built with `hcopy -r`, which writes the data fork alone, so 105 of 107 had an empty resource fork and the boundary at the head. `nowcompress.py --case forks` puts four members on the volume as MacBinary — data-only, resource-only, both-small, both-big — and each lands where the rule says. **Cost: one open question carried as the most valuable one in the format, and a version difference entertained as its cause; and `synth_now.py`'s `build_archive` still writes no boundary record at its two-fork member, which is a sixth way the archives this project grades itself on differ from the encoder's, where TESTING.md lists five.** The instrument was one emulator run, and the thing it varied was the one thing the harness had never varied (DECISIONS.md 2026-09-21, *the record that was never leading*) | 2026-09-21 |
+| **The window is carried across a stream restart unchanged and the bytes come out right, so nothing here needs a reload** — `docs/formats/now-compress.md`, written 2026-09-21 | **A restart reloads the dictionary cache: the last 32,768 bytes ending where the previous stream's FIRST block ended, which is not the running window once a stream runs past one block.** `--case forks`'s `bothbig.bin` has a three-block resource fork, and its data fork's first block decodes byte-exact against the resource fork's first 32,768 bytes and comes out with **19,909 wrong bytes** against the running window. The sentence was true of every specimen that existed when it was written — `SynRef2.0 INFO`'s resource fork is 332 bytes, one block, where the cache and the window are the same bytes. **Cost: nothing to any output — `src/fmt_now.c` has always reloaded, and no file in the corpus would have broken — but the note is the description `fmt_now.c` now cites instead of XADMaster, so a reader written from it alone gets that file wrong, and `tools/derive_now.py` IS such a reader: 8 of 11 blocks before the fix.** A tolerance whose evidence is a corpus in which the two readings coincide cannot fail; ask which specimen would tell them apart, and make it | 2026-09-21 |
 | **The Mac OS 9.2 tier is 20/20** — carried in BLOCKERS.md's status table and FORMATS.md since 2026-08-27 | **It is 18/20, and the two failures BOMB the application.** The tier was not run once between 2026-08-27 and 2026-09-04 while thirty-five commits touched `src/` and `mac/`, so the number described a binary nobody had run for a week. **Cost: `dist/` has shipped a build that bombs on Mac OS 9 since at least v0.29.0** — the released download, not a working copy — and the defect was found only because a tier re-run was asked for. The status table is the file read at session start, so the false number was the first thing every session saw. What the two failures were is the next row | 2026-09-04 |
 | The 12 KB stack is **"verified byte-exact at exactly that size on every tier: 69/69 at 1 MB, 512 KB, System 7 and Mac OS 9"** (FORMATS.md, *Stack*, and the `kStackBump` comment in `mac/macextract_mac.c`) | **Mac OS 9 was not run at that stack size, or at any size, on the day the stack changed** — 2026-08-31 — nor for four days either side. Three tiers were verified and a fourth was named. The 12 KB stack is not the Mac OS 9 defect (the old 24 KB bump bombs there too), so this cost nothing directly; what it cost was the four hours spent today treating the stack as a suspect it had been declared innocent of by a sentence that had never been run. **A tier named in a verification list is a claim like any other** | 2026-09-04 |
 | The System 6.0.8 / 512Ke tier is **"unchanged at 58/69"** after M46, because the flat reserve could not help a machine whose quarter-rule reserve was already under the 32 KB floor | **63/69.** The reasoning was sound and covered only the RESERVE; M46's other change, 20,464 B recovered from the STACK, lands on every machine and was never applied to this tier. Five fixtures had been coming back for four days with nobody looking. **Cost: nothing lost — the number was pessimistic — but a correct-sounding argument for why a tier could not have moved is exactly the shape that stops it being re-measured** | 2026-09-04 |
@@ -284,7 +385,8 @@ line is what makes the next one worth re-testing.
 | The 32 KB stack can be cut to 20 KB for 12,272 B of budget, at a 1.9x margin over a 10,842 B watermark | **The watermark was not one.** `-D UNC_AT_STACK` painted the region between ApplLimit and the stack base and read back what was overwritten — but a frame is made by MOVING the stack pointer, and a frame holding an uninitialised buffer never writes most of itself. The same password-dialog run reported **10,842 B on a 16 KB stack and 16,266 B on a 20 KB one**, so the cut was REVERTED the same hour. Then a second instrument was built — sampling the stack POINTER in the progress pump, the sink, the allocator and inside the Dialog Manager's filter procs — and swept across four stack sizes: **5,200 B, constant**, while the paint figure ran 9,288 → 25,392 with the size of the region. The cut was RE-MADE on that evidence and then taken FURTHER by sweeping downward, which is the more useful direction: PAINT converges on SAMPLE as the room runs out (9,288 → 6,828 → 5,604 at 16, 12 and 10 KB), squeezing out whatever was helping itself to the spare room and leaving the real requirement, ~5,600 B. Final: a 12 KB stack, **20,464 B** to the engine, byte-exact on all four tiers. **Cost: about two hours of emulator time and a margin figure that stood in FORMATS.md for twenty minutes** — and the paint metric was wrong three different ways before it was abandoned (FORMATS.md, *Stack*). What caught it each time was **changing the size of the thing being measured**: a requirement does not move when its container does, and nothing in the first three measurements ever varied the container | 2026-08-31 |
 | Joining a segmented set costs far more memory than the same archive whole — `derived-Troi-ClipSave-Plug-in1.1.sit` is 472,137 B straight and asks 64 KB beyond budget joined; `derived-Library_ISBN_Barcoder.sit` asks over a megabyte more | **The join was never the variable.** Driven through the same UI with NO segments at all, `Troi-ClipSave` extracts COMPLETELY on a 1 MB Mac Plus and still says *"Needs 48K more memory"*. The two figures had different instruments: 472,137 B is a peak-heap measurement from the autotest replay — what was USED — and the refusal is an alert message reporting `gShortBy` — what was ASKED for and declined. On Linux the join costs **8,192 B** and the inner extraction is then **661,173 B**, byte-identical to the whole file. The sizes even name their own source: ISBN's unconstrained peak is 1,683,101 B, and 1,683,101 − 615,348 is the "over a megabyte". **Cost: a user-facing failure filed in OPEN_ITEMS.md that did not exist, and — far worse — it concealed a real defect for as long as it stood.** `mal_alloc` records `gShortBy` on EVERY over-budget request, and StuffIt 5's inverse BWT asks for `numbytes*4` fully expecting to be refused, falling back to a sampled occurrence index that is slower and byte-identical. So every StuffIt 5 archive big enough to decline the fast path — most of them on a small Mac — reported a memory failure after extracting perfectly. The withdrawn claim pointed at joining, which almost nobody does; the defect it hid was on the main path. Gated on an errored entry since 2026-08-31 (DECISIONS.md 2026-08-31, *the message that failed a successful extraction*) | 2026-08-31 |
 | Everything builds at `-Os`, and that was TESTED rather than assumed | tested on ONE file. `-O2` on `sit_arsenic.c` really is slower, and that result was applied to the other ~40 files, none of them measured. On the four a StuffIt run lives in, `-O3` is **−25.4 %** on a 7 MHz Mac Plus — 70.4 s → 52.5 s — and per-function `UNC_HOT` gets the same time for +1,024 B instead of +8,320 B. **Cost: a fifth of every StuffIt, DiskDoubler and PackIt extraction for as long as those files have existed**, and the note beside the rule said the question could not be re-asked "without a harness that resolves better than 20 s on a 22-minute run" — which was true of the screenshot clock and not of the tick probe that was one afternoon away (FORMATS.md, *What -O3 is worth, and where*) | 2026-08-30 |
-| Every archive in the 922-fixture corpus fits on a 1 MB Mac Plus again (after 780 B of code came back) | Verified under a LINUX `--budget` cap, never on the machine. On the Mac two of the three still failed, and one needed **16 KB** more than the cap predicted while another needed **33 KB** more — the Mac allocator charges 16 bytes a block. Cutting the reserve later fixed two of the three; `derived-EasyFind.dmg.sit` still does not extract there. **Cost: a capability claim published in a commit message and in FORMATS.md on the strength of a proxy**, when the on-Mac replay that would have disproved it is one command and was used elsewhere in the same session. The proxy's error is not a constant, so no correction factor rescues it (FORMATS.md, *The Linux budget check under-reads the Mac*) | 2026-08-30 |
+| Every archive in the 922-fixture corpus fits on a 1 MB Mac Plus again (after 780 B of code came back) | Verified under a LINUX `--budget` cap, never on the machine. On the Mac two of the three still failed, and one needed **16 KB** more than the cap predicted while another needed **33 KB** more — the Mac allocator charges 16 bytes a block. Cutting the reserve later fixed two of the three; `derived-EasyFind.dmg.sit` still does not extract there. *(The 16 KB, the 33 KB and EasyFind's refusal were themselves withdrawn on 2026-09-18 — next row but one — and the claim in this row's first column is TRUE, measured on the machine.)* **Cost: a capability claim published in a commit message and in FORMATS.md on the strength of a proxy**, when the on-Mac replay that would have disproved it is one command and was used elsewhere in the same session. The proxy's error is not a constant, so no correction factor rescues it (FORMATS.md, *The Linux budget check under-reads the Mac*) | 2026-08-30 |
+| The Linux `--budget` cap under-reads the Mac by 16 KB on one fixture, 33 KB and then 62 KB on another, "the gap is not a constant", and `derived-EasyFind.dmg.sit` does not extract on a 1 MB Mac Plus | Capped on the machine at **562,000 B**, 559 B above the bisected Linux minimum, both fixtures extract byte-exact with peaks **40 B** above Linux's — 561,922 against 561,882 and 561,919 against 561,879 — and the same 40 B at the shipped budget. The `gRefusedWhy = 1` the figures cited was the run's FIRST refusal, the transform vector a StuffIt 5 entry expects to have refused (the instrument error M46 found a day later, in the other message that read it). EasyFind's refusal was **`UNC_ERR_SINK` in twenty seconds**: its one entry is 1,851,907 B and the harness's Out volume has been a 1,440 KB floppy since M10, so it could never have completed there, and nobody read the `ret` slot, which said −9 and not −3. **Cost: three fixtures declared out of a 1 MB Mac Plus's reach for 18 days, a caveat printed against every `--budget` figure in FORMATS.md, and a review that ranked "close the gap" above every code change on the table.** The run that settled it was two commands, one of them `--out-kb 2400`, which the same file documents (FORMATS.md, *The Linux budget check reads the Mac to 40 bytes*; DECISIONS.md 2026-09-18, *the floppy that was full*) | 2026-09-18 |
 | The compiler size flags cost no speed — "no capability lost, no speed traded" | They cost **+49 ticks, 1.55 %**, deterministic over three runs per build. Priced per flag afterwards: one of the four (`-freorder-blocks-algorithm=simple`) carried 26 of the 49 ticks, and one (`-fno-early-inlining`) was **worse on both axes** — 8 bytes bigger AND 2 ticks slower — and had been shipped. **Cost: a false claim in a pushed commit message and in `mac/CMakeLists.txt`, and a harmful flag in the shipping build for one commit.** The reasoning was available at the time and was applied selectively: `-fno-inline-small-functions` was rejected *because nothing had timed it*, while four flags reaching the same `UNC_HOT` code were taken without timing. `mac/CMakeLists.txt` had already said, of an earlier attempt, "do not re-try it without a harness that resolves better than 20 s on a 22-minute run" | 2026-08-30 |
 | The application's RESIDENT SIZE — code plus data plus bss — is what costs the engine its budget, so moving big tables (`ss_dict0`, the DES S-boxes, the report pool) out of the A5 world would buy it back | Only CODE costs anything. Ballast, verified present in the binary that ran: +11,308 B of code moved FreeMem 647,096 -> 635,768, one for one; +6,132 B of `.data` moved it not at all. `CODE` resources are handles inside the heap `FreeMem()` reports and the A5 world is outside it (FORMATS.md, *What the application costs the engine*). **Cost: a whole line of proposed work aimed at the wrong bytes** — three candidate tables costing 23,887 B between them, every one of them free already — and one shipped-code change (the report pool allocated on first use) written, measured at ZERO gain, and reverted. The formula was fitted to ONE data point and generalised; the first thing that would have disproved it was the second point. **Three of the four ballast runs measured nothing**, twice because `--gc-sections` dropped the ballast and once because it was referenced only from the other `main()`, so a null result here means "check the symbol is in the binary" before it means anything about memory | 2026-08-30 |
 | **Only `CODE` costs the engine; data, globals and resources are free** — measured by ballast 2026-08-30, and the reason `tools/build_mac.sh` watched code alone | **Data costs one for one.** A ballast of 16,384 B of `.data`, verified present with `nm` in the binary that ran and read from BOTH `main()`s through a volatile, takes the budget from **647,802 B to 631,384 B** — 16,418 B for 16,384 B. The A5 world sits above `ApplLimit`, so it lowers the heap's ceiling by its own size. The 2026-08-30 null result obeyed neither half of its own warning: three of its four runs had measured nothing already, and the fourth was believed. **Cost: it displaced a correct claim** — *resident size, code plus data plus bss, is what costs the budget* was withdrawn on the strength of it and was right; and it made *put material in tables rather than in C* the standing advice for two weeks, which is advice to spend budget. 32,644 B of A5 world grew unwatched in that window. An A5 ratchet now sits beside the code one (FORMATS.md, *What the application costs the engine*) | 2026-09-02 |
@@ -357,6 +459,65 @@ line is what makes the next one worth re-testing.
 | Widening the end-of-central-directory scan window is what makes sniffing cheaper | it is worth ~6 % of the instructions and the rest is the byte scan. A POINTER walk over the same window is -30 % of an envelope open, and moving `unc_macbinary_probe` ahead of the scan is -78 % — the scan was never run for 234 of 929 fixtures' worth of work | 2026-08-24 |
 | `spacesaver.py` and `sitcrypt.py` end their runs with Special ▸ Shut Down | 123 is **Restart** on System 7. Forty-three of their own `*-special-menu.png` highlight the band y=116..131, and the screenshot taken with 139 highlights Shut Down; `rescomp.py` had already been bitten by the same borrowed coordinate and says so in `tools/vmac/README.md`. **Cost: nothing measurable** — Restart ejects the volumes too, so the flush every one of those runs depends on did happen; what it cost `rescomp.py` once was a torn resource fork that read as a format finding | 2026-09-01 |
 | The shortfall the Macintosh reports is "round enough to type and never short" | it is ONE request's shortfall, not the entry's demand. `synth-dd-m5.dd` at the 512 KB budget reports **928 B** and needs **203,680** — the entry takes 1,536 B per distinct context byte and is refused at the first one that crosses the line, so the figure is an artefact of granularity. Both front ends now say **at least**. **Cost: the advice sent a user to Get Info for 8K on an entry that wanted 200K**, and this is the SECOND defect in the same sentence — M46 fixed it firing after a successful extraction | 2026-09-01 |
+| The eight-byte record at 144 of `derived-Expand_Now_1.0.1.sea` resembles a Now Compress block table by chance, and the next attempt should not trust it | it is a block table — the SECOND block's record, shape 2, with its 128-byte code table one byte past the offset it names, exactly where that shape puts one. Nothing was wrong with the record; two things around it were, and both were assumed rather than checked: it is not the first block, so its output starts at 32,768 and its matches reach back into a block nobody had decoded. **Cost: one day, and the advice would have cost the next attempt more** — it was written as guidance ("recorded so nobody follows it twice") and pointed away from the answer. The smell is a general one: **a structure that matches in two independent ways is evidence, and "probably coincidence" is a claim that needs its own test** | 2026-09-21 |
+
+**"The DD reader's structure is right; it is literal VALUES that are wrong."**
+Written 2026-09-20 about the two forks of `derived-Terrainman_2.0__.sea`
+`tools/derive_dd.py` could not read, and supported by three real
+measurements: the decode consumed exactly the literal and offset counts the
+block header states, the literals landed at the output offsets the correct
+file has them at, and two literals sharing one code wanted different bytes.
+Every one of those observations holds. The conclusion drawn from them does
+not: **nothing was wrong with the literals.** Method 10 has a second form in
+which the coder's whole output is the fork's first difference, matches
+included, and the fork is the running sum of it. Both forks read with it, so
+the corpus is 39 of 39 (docs/formats/diskdoubler-dd.md, *The second form*).
+
+**Cost: method 10's citation of `XADDiskDoublerDDnHandle.m`, for as long as
+the two forks stood** — the row was explicitly held open on them ("94 % of a
+format is not a description of it"), so one undescribed transform kept a
+licence row open. The smell is a new one, and it is worth keeping: **a
+diagnosis that explains the failures and not the successes.** The reading
+under test accounted for the 11 literals that were wrong and never asked why
+the other 19 were right — and under the true reading all 5,443 of them are
+right, which is the kind of number a correct rule produces and a patch never
+does. When the substitution trace was re-run with the match sources checked
+as well, 3,213 of 3,380 matches were wrong: the defect was never in the
+literals at all, and the instrument that would have said so — checking the
+part of the decode that was ASSUMED good — cost one extra line.
+
+**"A Now Compress back-reference cannot reach further back than the fork has
+produced."** Written into `src/fmt_now.c` as the justification for sizing the
+sliding history from the archive's LARGEST FORK rather than the format's
+32 KB, which is what lets a small archive open in a 400 KB partition. The
+same file says the opposite seventy lines earlier — "a block that starts a
+stream reaches back into the history the PREVIOUS stream left behind. The
+reference calls this absurd and does it anyway; so do we, because the bytes
+require it" — so the window spans MEMBERS, and a match in the third member
+can name an offset longer than any one fork in the file. Disproved by an
+archive Now Compress itself wrote, four members of 4 to 6 KB: two of them
+name offsets of **6,228 and 13,000 bytes against a 6,000-byte window** and
+came back *archive structure is corrupt*. The bound is now the SUM of every
+fork, still capped at 32 KB, and all four extract byte-exact; **no fixture's
+peak heap changes**, because every Now archive in the corpus already has a
+fork over 32 KB. The cap itself was then measured rather than assumed: an
+archive whose fifth member is a copy of its first, 64 KB back, takes a
+largest offset of **32,766** (`--case reach`), so 32,768 is the encoder's
+window and the offset table's reach to 65,791 is capacity nothing writes.
+
+**Cost: nothing yet, and only because no archive in the corpus has a match
+that crosses a member.** Two of the corpus's Now archives are real, thirteen
+are this project's own synthetic ones, and eight came from the encoder —
+and the eight were single files or two dissimilar members, so none of them
+could produce one. The smell is two this file already names, together: **a
+limitation inherited as a premise rather than measured** (the sentence is
+an assertion about the format, in a comment, with no specimen behind it),
+and **inputs from outside the corpus** (`nowcompress.py --case probe`, four
+members chosen to be similar to each other, found it on the first run). The
+new one worth keeping is narrower: **an optimisation justified by a sentence
+that another comment in the same file contradicts.** A cross-file
+contradiction is this project's cheapest disproof; an intra-FILE one is
+cheaper still, and nothing had ever read the two paragraphs together.
 
 **DiskDoubler methods 1–5 and 7 "cannot be graded".** Declined per entry
 since M12 on the grounds that no corpus fixture uses one and nothing reachable
@@ -1134,8 +1295,245 @@ a harness can click is not the same list.
   `mac/macextract_mac.c`; a Linux run exercises only the CLI's copy and can
   never see a Mac-side naming fault.
 
+- **"Now Compress's shape-3 main table ends where the code is
+  complete: nothing states its length and the trailing absent symbols
+  are not sent."** Written 2026-09-21 in `docs/formats/now-compress.md`
+  and withdrawn the same day. The table is a **fixed 290 entries** —
+  256 literals and 33 match symbols — and the entries past the point
+  where the code completes are written as **zeros**. The code often
+  does complete early, which is what made the wrong rule look right:
+  the reader stopped, got a table that decoded literals correctly, and
+  put the NEXT table at the wrong bit. **Cost:** four of the eight
+  harness specimens were recorded as having 271-, 274-, 275- or
+  349-symbol alphabets — a figure written into the note as an
+  observation — and the distance table read out of the wrong bits
+  behind them produced distance classes reaching 131,072 in a
+  16,000-byte member. That reading, and the contradiction it created
+  with a 32 KB window, is most of why shape 3's stream looked
+  undecodable for a day. **Why it survived:** the rule was TRUE of the
+  blocks it was derived from (the first four all complete at exactly
+  290) and it is the rule the format uses one layer down, for the
+  DISTANCE table, which does stop where its code completes. A rule
+  that holds on every specimen you have and on the neighbouring
+  structure reads as the format's rule rather than as a coincidence of
+  both — and what settled it was not an argument but the only test
+  that can fail: decoding the block and comparing the bytes.
+
+- **"A Now Compress shape-1 match is `length - 2` then the distance,
+  one byte each, so it reaches at most 255 back."** Written 2026-09-21
+  in `docs/formats/now-compress.md`, withdrawn the same day. The two
+  bytes hold a **3-bit length and a 13-bit distance** — the same rule
+  the shape above it uses on symbols — so a match reaches 8,191 back,
+  not 255. **Cost:** nothing yet, and that is the point: every shape-1
+  block in the corpus and the harness decodes under either reading,
+  because the two agree whenever the distance is under 256 and not one
+  match token in six blocks has a first byte of 8 or more. A reader
+  written from the note would have refused the first fork that reached
+  further, and nothing here would have caught it. **Why it survived:**
+  it was derived from specimens that cannot tell the two apart, and
+  read as measured because it decoded everything it was shown. What
+  disproved it was the neighbouring shape: shape 2 is this stream
+  Huffman-coded, its rule was already written the other way in this
+  same note, and 1,340 of its 2,162 match tokens sit in the range where
+  the readings differ. **A description that fits every specimen is not
+  thereby the format's**, and two descriptions in one note that
+  disagree about the same layer are a contradiction even when both
+  decode — this project's cheapest smell, found this time inside a
+  single file.
+
+- **"A shape-3 block's bytes 13..15 are 24 bits this note cannot
+  account for, zero in every specimen."** Written 2026-09-21 in
+  `docs/formats/now-compress.md`, withdrawn the same day. They are
+  **four more code lengths and a count byte** — the code-length
+  alphabet is twenty symbols, not sixteen, because a distance table
+  entry is stored as its length plus two — and the count is of the
+  "extra length" entries that let a code run past 15. **Cost:** none
+  measured; every block here has zeros there, so the short reading
+  gave the right codes, and a table needing the escape would have been
+  refused rather than misread. **Why it survived:** the sixteen-symbol
+  reading is the obvious one (the values ARE code lengths 0..15), it
+  satisfies Kraft exactly, and the leftover bits were zero — three
+  reasons to stop looking. The tell was in the same header: a constant
+  of 85 that nothing could source, which is `4 − 0x59` once bytes 0..1
+  are read as one size field. **An unexplained gap in a header is
+  usually a field you have not finished reading**, and an unexplained
+  CONSTANT beside it is the pointer.
+
+- **"The block table sits at one of two places and the header says
+  which", and "an archive over 64 KB widens the record."** Both written
+  2026-09-21 in `docs/formats/now-compress.md`, both withdrawn the same
+  day. The eight-byte records are `[u16 mode][u16 padding][u32 END
+  offset]` from +4 of a member's data area, always, with a u32 in front
+  saying where the first block begins and therefore where the table
+  stops; the two readings pick out the same blocks on every file here,
+  and the simpler one needs no special case for the 1993 archive or for
+  the 1995 one's 2.9 MB. **Cost:** none to any output — but it left
+  `0d4c 0037` in the note as "two words this reader cannot name" for a
+  day, and they are the mode and padding of a leading record that
+  produces no bytes. **Why it survived:** reading the offset FIRST is
+  natural when a table's job is to say where blocks start, it decoded
+  every specimen, and each special case it needed looked like a fact
+  about the file that needed it. **A reading that grows a case per
+  specimen is a reading with the fields in the wrong order.**
+
+- **"The word at +2 of a Now Compress file header is a version."**
+  Written 2026-09-21, withdrawn the same day. It is the compression
+  SETTING, in the same layer bits a block's mode word uses: `0x0010`
+  Faster, `0x003f` Smaller, `0x0060`/`0x0160` an archive. What settles
+  it is four bare forks that asked for Smaller and came out as shape-1
+  blocks — `0x001f` — while their headers still say `0x003f`, so the
+  word is what the user picked and not what the coder did. **Cost:**
+  none; the 1993 archive is still told from a 5.0.1 one by that word,
+  which is all anything here used it for. **Why it survived:** two
+  values, two eras, and nothing else to compare them with until the
+  compressed FILES were read as archives of one entry.
+
+- **"The name deark uses in the errors it attaches to a fork is the
+  member's REAL name, before sanitising."** Written 2026-09-22 above
+  `_DEARK_ERR` in `make_manifests.py`, withdrawn the same day. deark
+  prints it MAKE_PRINTABLE, so `Icon\r` — the commonest filename on a
+  Macintosh volume — arrives as `Icon<\r>` and the sanitiser model
+  turns that into `Icon__r_` where the file on disk is `Icon_`. **382
+  declined forks across 35 fixtures were keyed to a member that does
+  not exist. Cost: nothing, measured** — in every one of the 382 deark
+  had written no file for that member, so nothing ever read the wrong
+  key. What it would have cost with one live is a fork deark DECLINED
+  recorded as a fork deark read as EMPTY, which is the exact defect the
+  declined-fork rule had been written hours earlier to prevent.
+  **Why it survived:** the claim is true of every printable name, which
+  is every name anybody checked it against. DECISIONS.md 2026-09-22,
+  *the decline that read as a naming gap*.
+
+- **"28 entries across 5 fixtures come out of this engine with mojibake
+  names."** Written 2026-09-22 when StuffIt 5's names were found to be
+  UTF-8, corrected the same day. **27 across 4** is the encoding case;
+  the 28th is `.typeAttributes.dict` in `derived-PuzzleGetter_0.8.sit`,
+  whose forks are both empty and which deark therefore writes no file
+  for at all (`do_pre_decompress_fork` leaves both `fork_exists`
+  clear). **Cost:** nothing, because the fix was the same either way —
+  but the figure had reached three files as though one cause explained
+  all 28, which is how a shape nobody has looked at hides inside a
+  number somebody has. DECISIONS.md 2026-09-22, *a name an HFS volume
+  can hold*.
+
+- **"283 entries deark names in a way no mangling of ours reproduces."**
+  `sweep_deark.py`'s own printed summary of what it cannot see, written
+  2026-09-22, withdrawn the same day. **225 of the 283 were entries
+  deark named and DECLINED** — StuffIt method 13 and StuffIt 5's
+  Arsenic, neither of which it implements — and they were invisible
+  only because a member deark declines every fork of writes no output
+  file. The sweep now cross-checks **4,556** graded forks rather than
+  2,080, agreeing on **2,151** with `DIFFER` still 0 — 4,502 that
+  morning, and 54 more once the oracle stopped being asked about
+  StuffIt 5 in the wrong encoding, every one of which turned out to be
+  a decline too. **Cost:**
+  no wrong byte anywhere, and a real one all the same — the number was
+  quoted three times as evidence that deark is a weak oracle for
+  StuffIt, when it meant "deark does not implement method 13", a fact
+  about the format this repository had already written down twice.
+  **Why it survived:** it was printed every run, in the section headed
+  *what this cannot see*, which reads as an audited number rather than
+  as a claim needing evidence. **A harness that prints the wrong reason
+  for its blind spot is worse than one that prints none.**
+
+- **"`-lh2-`, `-lh3-`: declined per entry ... no archive that uses
+  either is reachable here."** `src/fmt_lzh.c`'s own header comment,
+  under *What is NOT here, and why*, withdrawn 2026-09-22. Both are
+  decoded, twenty lines below the comment, and the reason it gave was
+  answered by patching LHa for UNIX to WRITE a specimen
+  (`tools/run_lzh.py`, TESTING.md, *LZH's -lh2-*). **Cost:** nothing to
+  any output — but it is a source comment contradicting the code beside
+  it, which is the cheapest smell this repository names, sitting in the
+  one place nobody looks while working in a file: its masthead.
+  **Why it survived:** it was true when it was written, and closing the
+  item updated the status files rather than the file the claim lived in.
+
+- **"The 49 Tar entries the deark sweep cannot compare are deark
+  writing an AppleDouble member as a literal `._NAME` file where `unar`
+  merges it."** Written 2026-09-22 in TESTING.md and repeated in two
+  other places, withdrawn the same day. A tar member is stored as
+  `./NAME`; `unar` reports it without the `./`, deark keeps it, and
+  **deark's own filename sanitiser turns that slash into `_`** — so
+  `./READ_ME` reaches the disk as `._READ_ME`. None of the 49 files
+  deark writes for `derived-PCCTS.tar` carries the AppleDouble magic
+  and each holds its own member's data. **Cost: 98 forks of
+  cross-check**, which matching the alternative name recovers — every
+  one of them agreeing, taking the sweep to 2,151 agreements of 4,502.
+  **Why it survived:** `._X` is precisely the filename the AppleDouble
+  convention produces, and `unar` really does merge those, so the wrong
+  explanation was corroborated by the evidence every time anybody
+  looked at the list. What disproved it was opening one of the files —
+  four bytes of reading.
+
+- **"Russotto's write-up describes the SIT5 container too."**
+  OPEN_ITEMS.md's XADMaster inventory and `src/fmt_sit5.c`'s own source
+  line, withdrawn 2026-09-22. `reference/notes/arsenic_russotto.md` is
+  method 15 from its first line to its last; nothing in it mentions an
+  archive, an entry or a fork. **Cost: the row sat as "none: a parser"
+  — nothing to be done — while the real description was one link from
+  `reference/notes/StuffIt.md`**, the page StuffIt method 13 had been
+  read out of two days earlier, in a *Sources* list. Fetched, the
+  container came out at zero cost: 525 entries of 31 archives read from
+  it alone (DECISIONS.md 2026-09-22, *the page the sources list
+  named*). **Why it survived:** a citation to a document nobody opens
+  is indistinguishable from a citation to one that says what it is
+  claimed to say, and this one was plausible — the write-up IS about
+  StuffIt 5, just not about its container.
+
 ### Corrected figures and superseded write-ups
 
+- **"walkprobe.py grades every volume walk in the tree"** — corrected
+  twice, 2026-09-22 and 2026-09-23. It graded six of eight, then eight of
+  nine. The missing ninth is `nowcompress.read_forks`, a different
+  function sharing a name with `superdisk.read_forks`, and
+  `nowcompress --adjudicate` calls it. **Cost: one harness re-run that
+  proved nothing** — it was run to verify the `superdisk.read_forks`
+  filter and exercised a blind walk instead, coming back green. It gave
+  itself away by printing no filter line. Both errors came from searching
+  for a spelling (`hls`, then the name `read_forks`); searching for the
+  capability finds **thirty** volume listers in `tools/`, nine graded
+  (DECISIONS.md 2026-09-23, *the ninth walk, found by the missing line*).
+- **"`superdisk.read_forks` has about thirty callers, several of which
+  compare fork SETS"** — corrected 2026-09-22. It has **38** call sites
+  across nine harnesses, and **no** caller compares fork sets. Four
+  compare ENTRY sets, which is the same hazard: `--adjudicate` in
+  `superdisk.py`, `nowcompress.py` and `diskdoubler.py`, and
+  `superdisk.py --nest` hold every entry on the guest volume against our
+  own extraction. **Cost: nothing, and it nearly cost the opposite** —
+  reading for the phrase "fork SETS" found no caller matching it, which
+  looked like grounds to call the whole estimate stale and the work
+  cheap. The estimate was right about the risk and wrong about its name.
+  The fix was one root filter inside the walk serving all 38 sites
+  (DECISIONS.md 2026-09-22, *the last walk, and the exit code nobody
+  could get*).
+- **`superdisk.py --adjudicate` has always exited 1**, including on runs
+  where every fork was identical: its final line referenced `shots`, a
+  local of another function, and raised `NameError` after the verdict had
+  printed. Found 2026-09-22, by running the harness instead of
+  `tools/run_superdisk.py`, which is what `ci.sh` calls and which replays
+  the verdict by content. **Cost: an exit code that could never say
+  success, for the life of the phase.**
+
+- **"hfsutils hides names beginning with a dot without `-a`"** — withdrawn
+  2026-09-22. It hides a file whose Finder INVISIBLE bit is set, and the
+  dot is irrelevant. Measured as a 2x2, all four cells
+  (`tools/vmac/walkprobe.py`): dotted and visible is listed without the
+  flag, dotted and invisible is hidden, undotted and invisible is hidden.
+  `.DS_Store` needed `-a` because a Macintosh writes it invisible.
+  **Cost: one harness failure, one check that could not fail, and four
+  walks still blind.** `os9.py` reported `Icon\r` MISSING off a volume
+  that held it with 51,781 bytes of resource fork.
+  `mkboot.verify_stripped` — which asserts the property every peak-heap
+  figure's comparability rests on — read its listing without `-a`, so
+  the files the strip cannot delete were exactly the ones it could not
+  see; an invisible `Ghost INIT` planted in a stripped System Folder
+  passed it. **All eight volume walks see an invisible entry since
+  2026-09-22** (`tools/vmac/README.md`, *What every walk can see*).
+  **The fact had been observed four separate times** — in `checkdisk.py`,
+  `arcmac.py`, the yardstick's Standard File row and `mkboot.py`, the
+  last of which states it correctly one function above a comment blaming
+  the disk — and generalised none of them. The fix was right and the
+  explanation is what got copied.
 - **The OS 9 boot time** was recorded as "about four minutes", then "20-45
   minutes". An idle host settles the desktop in **~110 s**; both earlier
   figures were host load written down as a property of the guest.

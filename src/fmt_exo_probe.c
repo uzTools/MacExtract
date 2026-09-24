@@ -15,6 +15,10 @@
  */
 #include "fmt_exo_priv.h"
 
+/* Parse an octal field (space/NUL padded). Returns value or -1.
+ * Source: posix_ustar.txt, "ustar Interchange Format" — every numeric
+ * field in the header block is an octal representation in ISO/IEC
+ * 646:1991, terminated by one or more <space> or NUL characters. */
 int64_t tar_octal(const uint8_t *p, int32_t n)
 {
     int64_t v = 0;
@@ -35,6 +39,9 @@ int tar_field_ok(const uint8_t *p, int32_t n)
     return i == n;
 }
 
+/* Source: posix_ustar.txt — "the simple sum of all octets in the header
+ * logical record ... each octet ... treated as an unsigned value ...
+ * the chksum field is treated as if it were all <space> characters". */
 int tar_checksum_ok(const uint8_t *h)
 {
     int64_t stored = tar_octal(h + 148, 8);
@@ -55,6 +62,12 @@ UncFormat unc_gzip_probe(const uint8_t *head, int32_t len, UncIO *io)
            ? UNC_FORMAT_GZIP : UNC_FORMAT_UNKNOWN;
 }
 
+/* The three-byte header: 1F 9D, then a mode byte whose low five bits
+ * are the maximum code width and whose bit 7 says the stream has a
+ * clear code in it. Source: deark's `delzw_process_unixcompress_-
+ * 3byteheader` (MIT, see NOTICE) — the same file `src/unc_lzw.c` is
+ * written from, and the forward reference the LZW row left for this
+ * one (DECISIONS.md 2026-09-19, *the buffer that became a length*). */
 UncFormat unc_compressz_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;
@@ -69,18 +82,25 @@ UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io)
     if (len < 512) return UNC_FORMAT_UNKNOWN;
     if (!tar_checksum_ok(head)) return UNC_FORMAT_UNKNOWN;
 
-    /* POSIX/old-GNU: "ustar" magic at 257 plus the checksum. */
+    /* POSIX/old-GNU: "ustar" magic at 257 plus the checksum. This
+     * offset and every other one below is the ustar Header Block table
+     * in posix_ustar.txt, where the magic field is "the five characters
+     * ... shown followed by NUL". Only the five are compared, and that
+     * is what lets the older GNU spelling of the field through. */
     if (head[257] == 'u' && head[258] == 's' && head[259] == 't' &&
         head[260] == 'a' && head[261] == 'r')
         return UNC_FORMAT_TAR;
 
-    /* Pre-POSIX v7 tar has NO magic. XADTarParser falls back to the
+    /* Pre-POSIX v7 tar has NO magic, and no specification either — it
+     * predates the one above. XADTarParser falls back to the
      * *filename* for these, which our content-only rule forbids, so
      * we demand structure instead: a valid checksum plus well-formed
      * v7 fields (see DECISIONS.md M9/M10 follow-up).
      *   - name: NUL-terminated printable, non-empty
      *   - mode/uid/gid/size/mtime: octal fields
-     *   - typeflag: NUL or '0'..'7' */
+     *   - typeflag: NUL or '0'..'7' — POSIX defines both, saying a
+     *     binary zero "should be recognized as meaning a regular
+     *     file" for backwards-compatibility with exactly this. */
     if (head[0] == 0) return UNC_FORMAT_UNKNOWN;
     for (i = 0; i < 100 && head[i]; i++)
         if (head[i] < 0x20 || head[i] == 0x7F) return UNC_FORMAT_UNKNOWN;
@@ -104,12 +124,14 @@ UncFormat unc_zip_probe(const uint8_t *head, int32_t len, UncIO *io)
          (head[2] == 5 && head[3] == 6)))    /* empty archive */
         return UNC_FORMAT_ZIP;
     /* A local header displaced to offset 4: what a splitting zip writes
-     * when it puts a marker in front. That archive may be a set of one,
-     * in which case it is an ordinary zip and reads as one — the four
-     * bytes are simply part of every offset it records.
-     * Source: reference/XADMaster/XADZipParser.m
-     * +recognizeFileWithHandle:, `bytes[4..7] == PK\3\4`. Segmented
-     * sets are caught before this by unc_zipseg_probe. */
+     * when it puts a marker in front (APPNOTE.TXT 8.5.3 — "a special
+     * spanning signature as the first 4 bytes of the first segment ...
+     * followed immediately by the local header signature for the first
+     * file"). That archive may be a set of one, in which case it is an
+     * ordinary zip and reads as one — the four bytes are simply part of
+     * every offset it records. What is tested is the displacement and
+     * not the marker, for the reason fmt_zipseg.c gives. Segmented sets
+     * are caught before this by unc_zipseg_probe. */
     return (len >= 8 && head[4] == 'P' && head[5] == 'K' &&
            head[6] == 3 && head[7] == 4)
            ? UNC_FORMAT_ZIP : UNC_FORMAT_UNKNOWN;

@@ -26,7 +26,21 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
-          derived-MUSFMT10.ZIP"
+          derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit"
+
+# `derived-800saywhat301j.sit` was added 2026-09-22 with the UTF-8 fold. Its
+# three Japanese names have no MacRoman spelling at all, so the shell writes a
+# row of '_' for each; until it joined this list no ARCHIVE exercised the fold
+# anywhere but on an emulator, and `mac_sink_test.c --utf8` drives the shell
+# through sink_begin without an engine in front of it. Two of its names are
+# stored DECOMPOSED, which is what makes the count of '_' an assertion rather
+# than a formality (tools/check_mac_sink.py, macpath()).
+#
+# `ddtf-dd377ad.dd` was added 2026-09-22 with the DDAR walk: this list had
+# no DiskDoubler archive in it at all, so the one container walk that steps
+# by a length the record states — and which changed that day — had never run
+# big-endian. Seven entries, both forks each, and the header trailer shape
+# (docs/formats/diskdoubler-container.md).
 
 # Two-fork files (non-empty data AND resource fork) — the case where the
 # data and resource paths can disagree, so every write variant is proven
@@ -44,8 +58,8 @@ verify() {  # <runner...> [mode] [fixture-list] ; defaults to $FIXTURES
         out="$(mktemp -d)"
         $runner "fixtures/$fx" "$out" $mode >/dev/null 2>&1 || {
             echo "mac-sink: FAILED extracting $fx"; rm -rf "$out"; return 1; }
-        python3 tools/check_mac_sink.py "fixtures/manifests/$fx.json" "$out" || {
-            rm -rf "$out"; return 1; }
+        python3 tools/check_mac_sink.py "fixtures/manifests/$fx.json" "$out" \
+                "fixtures/$fx" || { rm -rf "$out"; return 1; }
         rm -rf "$out"
     done
 }
@@ -118,6 +132,13 @@ if command -v m68k-linux-gnu-gcc >/dev/null 2>&1 && command -v qemu-m68k >/dev/n
         tests/mac_sink_test.c src/*.c third_party/zlib/*.c -o build/mac_sink_sb68
     verify "qemu-m68k build/mac_sink_sb68" "" "$BOTHFORK_FIXTURES"
     echo "mac-sink: m68k both write paths OK (both forks byte-exact)"
+    # The UTF-8 fold on a BIG-ENDIAN 32-bit machine. It is byte
+    # arithmetic over a 16-bit table and a shift-and-or decode, which is
+    # exactly the shape that reads differently on the target, and the
+    # native run above is little-endian 64-bit. One case, because the
+    # other twelve are file-system work qemu only makes slower.
+    python3 tools/run_macnames.py --sink "qemu-m68k build/mac_sink_m68k" \
+        --case utf8 || { echo "mac-sink: m68k macnames FAILED"; exit 1; }
     # And the unit tests, for the one part of the engine no fixture
     # reaches on this machine: the ciphers. Their vectors come from
     # openssl and python (tools/check_crypt.py), they are full of 32-bit

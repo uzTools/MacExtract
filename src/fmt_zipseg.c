@@ -8,13 +8,12 @@
  * to know where the cuts fell — it only needs the SIZE of every part
  * before it.
  *
- *   Source: reference/XADMaster/XADZipParser.m, -offsetForVolume:offset:
- *   ("for(i=0;i<count && i<disk;i++) offset+=sizes[i]") — LGPL, see
- *   NOTICE. The pairs live in the central directory ("disk number
- *   start", offset 34) and in the end-of-central-directory record
- *   ("number of this disk" at 4, "disk where the central directory
- *   starts" at 6). unc_zip_extract does the translation; this file
- *   only works out how many parts there are.
+ *   Source: reference/notes/zip_appnote.txt (PKWARE APPNOTE.TXT 6.3.10),
+ *   sections 4.3.12 and 4.3.16. The pairs live in the central directory
+ *   ("disk number start", offset 34) and in the end-of-central-directory
+ *   record ("number of this disk" at 4, "number of the disk with the
+ *   start of the central directory" at 6). unc_zip_extract does the
+ *   translation; this file only works out how many parts there are.
  *
  * Which is the whole difficulty. A spanned zip records the part count
  * in exactly one place, the end-of-central-directory record, which is
@@ -26,11 +25,13 @@
  *   - the last part is recognized by its EOCD, and it is the only part
  *     this file can describe;
  *   - the first part is recognized because a local file header sits at
- *     offset 4 rather than 0 (source: XADZipParser.m
- *     +recognizeFileWithHandle:, `bytes[4..7] == PK\3\4`). The four
- *     bytes it is displaced by measure 50 4B 07 08 in Info-ZIP 3.0's
- *     `zip -s` output (MEASURED here, 2026-08-09; no reference in this
- *     repository documents them, so the probe does not require them);
+ *     offset 4 rather than 0. The four bytes it is displaced by measure
+ *     50 4B 07 08 in Info-ZIP 3.0's `zip -s` output (MEASURED here,
+ *     2026-08-09), which is the 0x08074b50 of APPNOTE.TXT 8.5.3: "a
+ *     special spanning signature as the first 4 bytes of the first
+ *     segment of the archive ... followed immediately by the local
+ *     header signature for the first file". The probe still does not
+ *     require it, for the reason below;
  *   - everything in between is invisible, and `unar` refuses such a
  *     part too (MEASURED: `unar split.z03` exits 1 while `unar
  *     split.z01` and `unar split.zip` both read the whole set).
@@ -42,6 +43,17 @@
  * and nothing needs joining. Reading the marker as "this is a segment"
  * would refuse a file that extracts perfectly well. The EOCD is the
  * authority; the marker is not (MEASURED, 2026-08-09).
+ *
+ * APPNOTE.TXT 8.5.4 says that case is written with a DIFFERENT marker,
+ * 0x30304b50, "if the spanning or splitting process starts but only
+ * requires one segment" — and the measurement above is Info-ZIP not
+ * doing that. Which is the argument for ignoring the marker rather
+ * than against it: two implementations already disagree about what the
+ * four bytes mean, and 8.5.5 adds that 0x08074b50 "is also used by some
+ * ZIP implementations as a marker for the Data Descriptor record". A
+ * signature that three things can mean is not evidence. Nothing here
+ * reads either value; the displacement is all that is tested, so both
+ * markers and any third one behave identically.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -148,8 +160,8 @@ static int zs_read_eocd(UncIO *io, uint32_t at, uint32_t *disknum,
 }
 
 /* Nonzero if a local file header sits at offset 4 — the shape `zip -s`
- * gives the first part of a set. Source: XADZipParser.m
- * +recognizeFileWithHandle:. */
+ * gives the first part of a set (APPNOTE.TXT 8.5.3; see file comment
+ * for why the four bytes in front of it are not examined). */
 static int zs_head_is_first_part(const uint8_t *head, int32_t len)
 {
     return len >= 8 && head[4] == 'P' && head[5] == 'K' &&

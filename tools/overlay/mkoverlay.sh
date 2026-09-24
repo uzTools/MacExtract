@@ -25,8 +25,18 @@ TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 OBJS=""
 for src in "$@"; do
     o="$TMP/$(basename "$src" .c).o"
+    # -fno-tree-loop-distribute-patterns, because an overlay links no libc.
+    # -fno-builtin does not cover this: the pattern pass rewrites a plain
+    # `for (i = 0; i < n; i++) p[i] = 0;` into a CALL to memset, and the
+    # engine has several. Resident they resolve against Retro68's libc; in
+    # an image there is nothing to resolve against, and the link fails with
+    # an undefined reference — which is how main's fused Compact Pro LZH
+    # and RLE stages arrived here (DECISIONS.md 2026-09-19, *the byte that
+    # went to two places at once*). The loop is then emitted as written,
+    # and every one of them zeroes a window once per fork.
     "$T/m68k-apple-macos-gcc" -c -Os -mcpu=68000 -mpcrel \
         -ffunction-sections -fdata-sections -fno-builtin \
+        -fno-tree-loop-distribute-patterns \
         -Itools/overlay -Iinclude -Isrc ${OVL_INC:+-I$OVL_INC} \
         "$src" -o "$o"
     OBJS="$OBJS $o"

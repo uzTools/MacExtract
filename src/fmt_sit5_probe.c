@@ -10,6 +10,9 @@
  */
 #include "fmt_sit5_priv.h"
 
+/* The banner match string; \xFF bytes match anything (the four
+ * digits of the second year vary), which is how the published table
+ * states it too: "characters marked ? can vary". */
 const char sit5_banner[] =
     "StuffIt (c)1997-\xFF\xFF\xFF\xFF"
     " Aladdin Systems, Inc., http://www.aladdinsys.com/StuffIt/\x0d\x0a";

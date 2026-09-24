@@ -202,6 +202,35 @@ static const UncProbe unc_sniff_order[] = {
      * ARC, tar and Disk Copy all have a non-zero byte 0). 932 fixtures
      * and 9,320 robustness variants are what actually grade that. */
     unc_macbinary_probe,
+    /* Four more magic numbers, and the two Compact Pro probes, AHEAD of
+     * the zip pair rather than behind it (2026-09-18). The spanned-zip
+     * probe below scans the last 64 KB of the file backwards in 1 KB
+     * reads, so every file that reached it paid up to 65 reads before
+     * its own probe ran — on a Mac Plus reading a floppy, that is the
+     * open latency. None of these six can take a zip or a part of one:
+     * every zip head starts 'P' 'K', where LZH wants '-' at byte 2,
+     * Now Compress 0x00 0x02 at byte 0, DiskDoubler one of three
+     * four-byte magics, AppleSingle its own, and both Compact Pro
+     * probes a first byte of 1. The reverse — a Compact Pro archive
+     * carrying a stored zip part in its last 64 KB — used to be claimed
+     * as a zip segment, and is now the archive it is. SuperDisk! stays
+     * behind the zip pair, being weak on its own (below). Compact Pro
+     * now also precedes DART; its probe CRC-walks the whole index, so a
+     * DART "best" image, whose first byte is 1, would have to pass a
+     * 32-bit check by accident. */
+    unc_lzh_probe,
+    unc_nowcompress_probe,
+    unc_diskdoubler_probe,
+    /* One probe, two formats: they share a magic and differ in it. */
+    unc_applesingle_probe,
+    /* Before the plain Compact Pro probe, and for the same reason the
+     * spanned-zip probe precedes the zip one: the FINAL segment of a set
+     * carries a valid index and would be claimed as a whole archive,
+     * which would then read every entry at an offset belonging to some
+     * other volume. What separates them is the volume byte and the index
+     * offset, and only this probe looks at those. */
+    unc_cptseg_probe,
+    unc_cpt_probe,
     /* Before the plain zip probe, and not after: the two parts of a
      * spanned set that are recognizable at all both look enough like a
      * zip for that probe to claim them, and it would then be reported
@@ -211,15 +240,10 @@ static const UncProbe unc_sniff_order[] = {
      * in its last 512 bytes, so it pays a single read. */
     unc_zipseg_probe,
     unc_zip_probe,
-    unc_lzh_probe,
-    unc_nowcompress_probe,
-    unc_diskdoubler_probe,
     /* SuperDisk!'s own mark is a module signature or a record tag at
      * byte 8, either way confirmed by the 0x27 record that must end
      * the file — weak on its own, so it sits after the magics. */
     unc_superdisk_probe,
-    /* One probe, two formats: they share a magic and differ in it. */
-    unc_applesingle_probe,
 
     /* Weaker/structural probes. */
     /* DART has no signature at all: three plausible bytes, then a table
@@ -231,14 +255,6 @@ static const UncProbe unc_sniff_order[] = {
      * nothing, and above the text formats because it costs one size
      * call on a buffer already read. */
     unc_dart_probe,
-    /* Before the plain Compact Pro probe, and for the same reason the
-     * spanned-zip probe precedes the zip one: the FINAL segment of a set
-     * carries a valid index and would be claimed as a whole archive,
-     * which would then read every entry at an offset belonging to some
-     * other volume. What separates them is the volume byte and the index
-     * offset, and only this probe looks at those. */
-    unc_cptseg_probe,
-    unc_cpt_probe,
     unc_tar_probe,
     /* ARC's magic is one byte (0x1a), so the probe leans on the whole
      * header: a printable 13-byte name, a known method, and sizes that

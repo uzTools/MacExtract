@@ -37,13 +37,21 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
     case OVL_CRYPT_APPLY:
         unc_crypt_apply((UncCrypt *)g->obj, (uint8_t *)g->out, g->len, g->pos);
         return 0;
+    /* The three key setups that build their table on the heap take the
+     * allocator and can fail with UNC_ERR_MEM, which is why these two
+     * return what they used to discard (DECISIONS.md 2026-09-19, the
+     * transient tables). */
     case OVL_CRYPT_CPT:
-        unc_crypt_cpt((UncCrypt *)g->obj, (const uint8_t *)g->in,
-                      (uint16_t)g->len);
-        return 0;
+        return (int32_t)unc_crypt_cpt((UncCrypt *)g->obj, (UncAlloc *)g->al,
+                                      (const uint8_t *)g->in,
+                                      (uint16_t)g->len);
     case OVL_CRYPT_PACKIT_DES:
-        unc_crypt_packit_des((UncCrypt *)g->obj, (const uint8_t *)g->in,
-                             (uint16_t)g->len);
+        return (int32_t)unc_crypt_packit_des((UncCrypt *)g->obj,
+                                             (UncAlloc *)g->al,
+                                             (const uint8_t *)g->in,
+                                             (uint16_t)g->len);
+    case OVL_CRYPT_FREE:
+        unc_crypt_free((UncCrypt *)g->obj, (UncAlloc *)g->al);
         return 0;
     case OVL_CRYPT_PACKIT_XOR:
         unc_crypt_packit_xor((UncCrypt *)g->obj, (const uint8_t *)g->in,
@@ -63,7 +71,7 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
     case OVL_CRYPT_SIT:
         /* entrykey[16] and mkey[8] both arrive: `in` is the password,
          * `out` points at a two-pointer array so one struct carries both. */
-        return (int32_t)unc_crypt_sit((UncCrypt *)g->obj,
+        return (int32_t)unc_crypt_sit((UncCrypt *)g->obj, (UncAlloc *)g->al,
                                       (const uint8_t *)g->in, (uint16_t)g->len,
                                       ((const uint8_t **)g->out)[0],
                                       ((const uint8_t **)g->out)[1]);

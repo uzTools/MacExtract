@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Five of them, all cheap enough to run first in ci.sh:
+Seven of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
    in order. An index nobody regenerates is worse than no index, because it
@@ -32,6 +32,11 @@ Five of them, all cheap enough to run first in ci.sh:
    capping a name at UNC_NAME_MAX, and it read 296 for a week while the
    struct was 298: it had been measured hours before the struct's last
    field was added (DECISIONS.md 2026-09-03).
+6. No figure is left as an unfilled `@PO@` placeholder.
+7. dist/README.txt is what make_dist.sh's heredoc currently writes. It is
+   the release notes verbatim and it is generated, so prose edited in the
+   script reaches the download page only when somebody re-runs it. The
+   BINARY beside it is ci.sh's job, which a docs-only change does not run.
 """
 
 import hashlib
@@ -152,6 +157,57 @@ def check_citations():
     return out
 
 
+PLACEHOLDER = re.compile(r"@[A-Z][A-Z0-9]{1,7}@")
+
+
+DIST_HEREDOC = re.compile(r"cat > dist/README\.txt <<TXT\n(.*?)\nTXT\n", re.S)
+
+
+def check_dist_readme():
+    """dist/README.txt is the release notes verbatim (CLAUDE.md, *Cutting a
+    release*) and is GENERATED, so an edit to the prose inside make_dist.sh
+    reaches it only when somebody re-runs the script. The heredoc expands
+    exactly one thing, $VERSION, and nothing else — so re-rendering it here
+    is the whole check. ci.sh's stale-dist check covers the BINARY and does
+    not run on a docs-only change; this one does."""
+    dist = ROOT / "dist" / "README.txt"
+    if not dist.exists():
+        return []
+    script = (ROOT / "tools" / "make_dist.sh").read_text()
+    m = DIST_HEREDOC.search(script)
+    if not m:
+        return ["tools/check_docs.py: cannot find make_dist.sh's "
+                "dist/README.txt heredoc — this check has stopped checking"]
+    ver = VERSION_RE.search((ROOT / "include" / "macextract.h").read_text())
+    if not ver:
+        return []                       # check_version() reports this
+    want = m.group(1).replace("$VERSION", ver.group(1)).split("\n")
+    have = dist.read_text().rstrip("\n").split("\n")
+    if want == have:
+        return []
+    for n, (a, b) in enumerate(zip(want, have), 1):
+        if a != b:
+            return [f"dist/README.txt line {n} is {b!r}, make_dist.sh says "
+                    f"{a!r} — run: sh tools/make_dist.sh"]
+    return [f"dist/README.txt has {len(have)} lines, make_dist.sh writes "
+            f"{len(want)} — run: sh tools/make_dist.sh"]
+
+
+def check_placeholders():
+    """A figure left as `@PO@` reads as a typo and not as a hole, and one
+    sat in FORMATS.md's decode-cost list from 2026-09-19 to 2026-09-20
+    with the numbers it wanted already written out in DECISIONS.md. Six
+    of them in one sentence, and nothing in this file looked."""
+    out = []
+    for path in sorted(ROOT.glob("*.md")) + sorted(ROOT.glob("tools/**/*.md")):
+        for n, line in enumerate(path.read_text().split("\n"), 1):
+            for hit in PLACEHOLDER.findall(line):
+                out.append(f"{path.relative_to(ROOT)}:{n}: {hit} is an "
+                           "unfilled placeholder; write the number or "
+                           "delete the claim")
+    return out
+
+
 SYNTH_RE = re.compile(r"^\|\s*(\S+)\s*\|\s*([0-9a-f]{64})\s*\|\s*(\d+)\s*\|"
                       r"\s*synthetic:(.+?)\s*\|")
 
@@ -264,7 +320,8 @@ def check_target_struct():
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
-                check_synthetic() + check_target_struct())
+                check_synthetic() + check_target_struct() +
+                check_placeholders() + check_dist_readme())
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

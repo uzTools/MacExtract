@@ -1,8 +1,14 @@
 /*
  * fmt_cpt.c — Compact Pro (.cpt) decoder.
  *
- * Layout (sources: reference/XADMaster/XADCompactProParser.m and
- * reference/macutils/macunpack/cpt.c — LGPL, see NOTICE):
+ * Layout. Source since 2026-09-20: docs/formats/compact-pro.md and
+ * the three pages of the format's own published description it
+ * corrects (reference/notes/cpt_specs_theunarchiver.md and the two
+ * beside it). A reader written from those alone reproduces every
+ * Compact Pro fork in the corpus — 536 of them across 68 archives —
+ * byte for byte (tools/derive_cpt.py). XADCompactProParser.m and
+ * macutils' cpt.c were the source of this layout until then; what
+ * they remain the source of is nothing here, and NOTICE says so:
  *
  *   File header (8 bytes): u8 signature (= 1), u8 volume, u16 xmagic,
  *   u32 offset of the index.
@@ -46,7 +52,6 @@
 #define CPT_BLOCK    0x1fff0u   /* cost units per Huffman-tree block */
 #define CPT_ESC1     0x81
 #define CPT_ESC2     0x82
-
 /* ------------------------------------------------------------------ */
 /* Probe: signature byte + full index CRC walk, as XADMaster's        */
 /* recognizeFileWithHandle does. A 1-byte magic is far too weak on    */
@@ -56,11 +61,13 @@
 
 /* ------------------------------------------------------------------ */
 /* RLE stage (the final stage of both methods).                       */
-/* Transcribed from macutils cpt.c cpt_outch: escape byte 0x81;       */
+/* Source: docs/formats/compact-pro.md, from the format's own          */
+/* published description reference/notes/rle8182_theunarchiver.md:     */
+/* escape byte 0x81;                                                   */
 /*   0x81 0x82 n>0  -> n-1 more copies of the previous byte           */
 /*   0x81 0x82 0    -> literal 0x81 0x82                              */
 /*   0x81 0x81      -> literal 0x81, and the second 0x81 starts a new */
-/*                     escape ("halfescaped" in XADCompactProRLE)     */
+/*                     escape                                          */
 /*   0x81 X         -> literal 0x81 X                                 */
 /* Quirk: an 0x81 that would be the LAST output byte is emitted as a  */
 /* literal (the `cpt_outlength != 1` tests below).                    */
@@ -93,11 +100,63 @@ static int cpt_rle_emit(CptRle *r, uint8_t b)
 {
     int e = unc_fork_put(&r->out, b);
     r->remaining--;
+    /* Sticky, because cpt_rle_push's escape arms answer `return r->err`
+     * on a failed write and that field held UNC_OK, so those two arms
+     * reported a failed write as success. NOT a defect that was ever
+     * reachable, and it is not claimed as one: a swallowed failure
+     * leaves the buffer empty and at least one more byte follows it, so
+     * the entry's closing flush writes again and fails again — unless
+     * the sink's failure was transient, which nothing here can produce.
+     * What this buys is that the field says what every reader of it
+     * already assumes. Free: −8 B of code for +8 B of A5, measured. */
+    if (e != UNC_OK) r->err = e;
     return e;
 }
 
-/* Feed one post-LZ byte through the RLE state machine. */
-static int cpt_rle_push(CptRle *r, uint8_t ch)
+/* A run of the previous byte, straight into the staging buffer. Its own
+ * function, and out of line: with it inside cpt_rle_push that function
+ * stopped being inlined into the LZ loop, which cost more on an archive
+ * with few runs than the copy saves on one made of them (m68kprof over
+ * derived-XferIt_1.5b4.sea and derived-Guy_s_Mac_Consultants.cpt,
+ * 2026-09-19). */
+static UNC_HOT int cpt_rle_fill(CptRle *r, uint32_t n)
+{
+    UncForkOut *o = &r->out;
+    uint8_t v = r->saved;
+
+    r->remaining -= n;
+    while (n > 0) {
+        uint32_t room = o->cap - o->len;
+        uint32_t k = (n < room) ? n : room;
+        uint8_t *d = o->buf + o->len;
+        o->len += k;
+        n -= k;
+        while (k-- > 0) *d++ = v;
+        if (o->len == o->cap) {
+            int e = unc_fork_flush(o);
+            if (e != UNC_OK) { r->err = e; return e; }
+        }
+    }
+    return UNC_OK;
+}
+
+/* Feed one post-LZ byte through the RLE state machine: an escape byte,
+ * or any byte while an escape is in flight. Every OTHER byte is the
+ * identity and never arrives here — cpt_rle_byte and cpt_rle_match
+ * below write it straight to the fork.
+ *
+ * UNC_HOT, with unc_cpt_lzh_fork below: at -O3 inside the -Os build, a
+ * Compact Pro extraction lives in those two and in the run-length
+ * expansion here (FORMATS.md, *What -O3 is worth, and where*). At -Os
+ * this one is 196 B smaller and 2.9 % slower on the Plus, measured.
+ *
+ * UNC_NOINLINE because the caller it would be inlined into is the LZ
+ * loop, and that loop has no register to spare: grown by as little as
+ * this function's escape arm, it spills its output cursor and pays two
+ * instructions on every byte of every match — +4.1 % of the whole run,
+ * met twice by accident before it was measured on purpose. Out of line,
+ * nothing written here can perturb it. */
+static UNC_NOINLINE UNC_HOT int cpt_rle_push(CptRle *r, uint8_t ch)
 {
     if (r->err != UNC_OK) return r->err;
     switch (r->state) {
@@ -127,10 +186,20 @@ static int cpt_rle_push(CptRle *r, uint8_t ch)
         r->state = CPT_RLE_NONE;
         if (ch != 0) {
             /* ch-1 further copies of the previous byte, clamped to the
-             * output budget (macutils stops when outlength hits 0). */
+             * output budget (macutils stops when outlength hits 0).
+             * Written straight into the staging buffer: this is where
+             * the run-length half of the format actually produces its
+             * bytes, and on `derived-Guy_s_Mac_Consultants.cpt` it is
+             * 57.8 % of the output. */
             uint32_t n = (uint32_t)ch - 1;
-            while (n-- > 0 && r->remaining > 0)
-                if (cpt_rle_emit(r, r->saved) != UNC_OK) return r->err;
+            int e;
+            if (n > r->remaining) n = r->remaining;
+            /* Short runs through the byte loop instead, with the cross-
+             * over where the copy's setup stops costing more, was written
+             * and priced: 0.1 % either way on both timing fixtures and
+             * 244 B of code, so it is not here (DECISIONS.md 2026-09-19,
+             * the byte that went to two places at once). */
+            if ((e = cpt_rle_fill(r, n)) != UNC_OK) return e;
         } else {
             if (cpt_rle_emit(r, CPT_ESC1) != UNC_OK) return r->err;
             if (r->remaining == 0) return UNC_OK;
@@ -141,18 +210,117 @@ static int cpt_rle_push(CptRle *r, uint8_t ch)
     return UNC_OK;
 }
 
+/* One byte in the state the stream is in nearly all the time: nothing
+ * pending, and this byte starting nothing, so the RLE stage is the
+ * identity and the byte goes straight to the writer. Inlined at the
+ * sites that produce post-LZ bytes — on a 68000 the CALL to
+ * cpt_rle_push was 6.7 % of a Compact Pro run by itself, and its
+ * sticky-error test and switch another 7 % (m68kprof, 2026-09-19). */
+static int cpt_rle_byte(CptRle *r, uint8_t b)
+{
+    if (r->state == CPT_RLE_NONE && b != CPT_ESC1) {
+        r->saved = b;
+        r->remaining--;
+        return unc_fork_put(&r->out, b);
+    }
+    return cpt_rle_push(r, b);
+}
+
+/* One LZ match, copied out of the window and fed through the RLE stage
+ * in the SAME pass: the byte reaches the window and the writer's staging
+ * buffer from one register, and neither the state machine's call nor a
+ * second walk of the run happens at all. The RLE is the identity for
+ * every byte that is not the escape and does not follow one, which is
+ * what makes a stretch of a match a straight copy; an escape byte goes
+ * to cpt_rle_push, and so does every byte while one is in flight.
+ *
+ * A piece is as long as the match, the two ends of the circular window,
+ * the output still owed and the staging buffer allow, so no test for any
+ * of those is left inside the loop. Stopping at the output still owed is
+ * the format's: a match may legally overshoot the entry's declared
+ * length, and macutils stops writing there. */
+static UNC_HOT int cpt_rle_match(CptRle *r, uint8_t *window, uint32_t *wposp,
+                                 uint32_t moff, uint32_t mlen)
+{
+    UncForkOut *o = &r->out;
+    uint32_t wpos = *wposp;
+    uint32_t from = wpos - moff;
+    int err = UNC_OK;
+
+    while (mlen > 0 && r->remaining > 0) {
+        uint32_t at  = wpos & (CPT_WINDOW - 1);
+        uint32_t sat = from & (CPT_WINDOW - 1);
+        uint32_t k, adv, em;
+
+        if (r->state != CPT_RLE_NONE) {     /* an escape is in flight */
+            uint8_t b = window[sat];
+            window[at] = b;
+            wpos++; from++; mlen--;
+            if ((err = cpt_rle_push(r, b)) != UNC_OK) break;
+            continue;
+        }
+
+        k = mlen;
+        if (k > CPT_WINDOW - at)  k = CPT_WINDOW - at;
+        if (k > CPT_WINDOW - sat) k = CPT_WINDOW - sat;
+        if (k > r->remaining)     k = r->remaining;
+        if (k > o->cap - o->len)  k = o->cap - o->len;   /* >= 1: the put
+                                                          * flushes at cap */
+        /* Three cursors rather than one index: a 68000 reads and writes
+         * through (An)+ in 8 cycles where it indexes in 14, and the
+         * escape byte is exactly the case where the window advances and
+         * the output does not. */
+        {
+            const uint8_t *s = window + sat, *send = s + k;
+            uint8_t *w = window + at;
+            uint8_t *d = o->buf + o->len;
+            do {
+                uint8_t b = *s++;
+                *w++ = b;                   /* the window first: a match
+                                             * may read what it just wrote */
+                if (b == CPT_ESC1) break;
+                *d++ = b;
+            } while (s < send);
+            adv = k - (uint32_t)(send - s);
+            em  = (uint32_t)(d - (o->buf + o->len));
+        }
+        wpos += adv; from += adv; mlen -= adv;
+        if (em > 0) {
+            r->saved = o->buf[o->len + em - 1];
+            o->len += em;
+            r->remaining -= em;
+            if (o->len == o->cap && (err = unc_fork_flush(o)) != UNC_OK)
+                break;
+        }
+        if (em != adv) {                    /* stopped on an escape byte */
+            if ((err = cpt_rle_push(r, CPT_ESC1)) != UNC_OK) break;
+        }
+    }
+    *wposp = wpos;
+    return err;
+}
+
 /* ------------------------------------------------------------------ */
 /* LZH stage: LZSS over an 8 KB window + three canonical Huffman      */
 /* codes (literals 256, match lengths 64, match offsets 128), with a  */
 /* fresh set of codes every CPT_BLOCK cost units (2 per literal, 3    */
-/* per match). Sources: XADCompactProLZHHandle.m and macutils cpt.c   */
-/* cpt_rle_lzh.                                                       */
+/* per match).                                                        */
+/*                                                                    */
+/* Source since 2026-09-20: docs/formats/compact-pro.md, which is the */
+/* format's own published description of this coder plus the five     */
+/* corrections it needs — the count byte in front of each code list,  */
+/* no Reverse16, the offset taken exactly (and 0 legal), no length    */
+/* base, and the header's length measuring what the RLE produces      */
+/* rather than what this stage does. Each was established by decoding */
+/* whole forks, not by reading XADCompactProLZHHandle.m or macutils'  */
+/* cpt_rle_lzh, which were the source until then.                     */
 /* ------------------------------------------------------------------ */
 
 
 /* One code: u8 n, then n bytes of two 4-bit code lengths each
  * (high nibble first). n*2 must not exceed nsyms; missing trailing
- * lengths are zero. (XADCompactProLZHHandle allocAndParseCodeOfSize.) */
+ * lengths are zero. Source: docs/formats/compact-pro.md, from
+ * reference/notes/cpt_lzh_theunarchiver.md. */
 static int cpt_read_code(UncCanon *c, UncBufIn *in, int32_t nsyms)
 {
     uint8_t lengths[256];
@@ -172,7 +340,7 @@ static int cpt_read_code(UncCanon *c, UncBufIn *in, int32_t nsyms)
 }
 
 /* Decode one LZH-compressed fork, feeding bytes through `rle`. */
-int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
+UNC_HOT int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
                      uint8_t *window, uint32_t blocksize)
 {
     UncBitIn bi;
@@ -220,12 +388,11 @@ int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
                 if (sym < 0)
                     return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
                 window[wpos++ & (CPT_WINDOW - 1)] = (uint8_t)sym;
-                if ((err = cpt_rle_push(rle, (uint8_t)sym)) != UNC_OK)
+                if ((err = cpt_rle_byte(rle, (uint8_t)sym)) != UNC_OK)
                     return err;
                 blockcost += 2;
             } else {
                 int32_t mlen, moff, low;
-                uint32_t from;
                 mlen = unc_canon_decode(&hz->len, &bi);
                 if (mlen < 0)
                     return bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
@@ -235,16 +402,12 @@ int unc_cpt_lzh_fork(CptRle *rle, UncBufIn *in, CptLzh *hz,
                 low = unc_bitin_bits(&bi, 6);
                 if (low < 0) return bi.err;
                 moff = (moff << 6) | low;
-                /* Copy from the window; overlap (and even offset 0,
-                 * reading bytes as they are written) is legal. The
-                 * copy may overshoot rle->remaining; macutils stops
-                 * writing when the output budget is exhausted. */
-                from = wpos - (uint32_t)moff;
-                while (mlen-- > 0 && rle->remaining > 0) {
-                    uint8_t b = window[from++ & (CPT_WINDOW - 1)];
-                    window[wpos++ & (CPT_WINDOW - 1)] = b;
-                    if ((err = cpt_rle_push(rle, b)) != UNC_OK) return err;
-                }
+                /* The copy out of the window and the RLE stage over what
+                 * it wrote are one pass; overlap (and even offset 0,
+                 * reading bytes as they are written) is legal there. */
+                err = cpt_rle_match(rle, window, &wpos, (uint32_t)moff,
+                                    (uint32_t)mlen);
+                if (err != UNC_OK) return err;
                 blockcost += 3;
             }
         }
@@ -448,7 +611,8 @@ static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
         est = unc_password(c, attempt > 0);
         if (est != UNC_OK) return est;      /* nothing (more) to try */
         crc = UNC_CRC32_INIT;
-        unc_crypt_cpt(cr, c->pw, c->pwlen);
+        est = unc_crypt_cpt(cr, c->al, c->pw, c->pwlen);
+        if (est != UNC_OK) return est;      /* no room for the cipher */
         est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
                               flags, &crc, iobuf, iocap, obuf, ocap,
                               hz, window, cr, 1);
@@ -461,7 +625,8 @@ static int cpt_encrypted_entry(UncCtx *c, uint32_t vol,
     if (c->opt.test_only) return UNC_OK;    /* that pass WAS the test */
 
     crc = UNC_CRC32_INIT;
-    unc_crypt_cpt(cr, c->pw, c->pwlen);
+    est = unc_crypt_cpt(cr, c->al, c->pw, c->pwlen);
+    if (est != UNC_OK) return est;
     est = cpt_entry_forks(c, vol, at, rcomp, dcomp, rsrclen, datalen,
                           flags, &crc, iobuf, iocap, obuf, ocap,
                           hz, window, cr, 0);
@@ -521,6 +686,7 @@ int unc_cpt_extract(UncCtx *c)
     obuf = iobuf + iocap;
     window = obuf + ocap;
     cr = (UncCrypt *)(void *)(window + CPT_WINDOW);
+    unc_crypt_init(cr);
     hz = (CptLzh *)unc_alloc(c->al, (uint32_t)sizeof *hz);
     if (!hz) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
 
@@ -719,6 +885,7 @@ int unc_cpt_extract(UncCtx *c)
 out:
     if (ix.buf) unc_free(c->al, ix.buf);
     unc_free(c->al, hz);
+    unc_crypt_free(cr, c->al);
     unc_free(c->al, iobuf);
     return err;
 }

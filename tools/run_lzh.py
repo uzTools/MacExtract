@@ -11,12 +11,19 @@ engine implements and all four header levels.
 
 Three graders, and they are NOT interchangeable:
 
-  1. `unar` — XADMaster, which fmt_lzh.c is transcribed from. It catches
-     a transcription error and nothing else: where we and it agree we
-     have only established that the copy was faithful.
-  2. `lhasa` (built from reference/lhasa) — an INDEPENDENT reading of
-     the format, by Simon Howard, from the specifications rather than
-     from XADMaster. This is the one that can disagree with our source.
+Since 2026-09-19 the first two swap roles depending on the method:
+fmt_lzh.c's HEADER WALK is XADMaster's, its DECODERS for -lh4- .. -lh7-
+and LArc's -lz5-/-lzs- are lhasa's (DECISIONS.md, the match that was
+walked twice). So:
+
+  1. `unar` — XADMaster. On the header walk it catches a transcription
+     error and nothing else; on the static and LArc methods it is now
+     the independent reader, and can disagree with our source.
+  2. `lhasa` (built from reference/lhasa) — Simon Howard's reading of
+     the format, from the specifications rather than from XADMaster.
+     On the header walk it is the independent one; on the decoders it
+     is what they were written from, so agreement there says the
+     reading was faithful and no more.
   3. LHa for UNIX 1.14i (built from reference/lha) — the original
      program, used here as an ENCODER: it writes archives whose plain
      text we already know, which is the only check in this file that

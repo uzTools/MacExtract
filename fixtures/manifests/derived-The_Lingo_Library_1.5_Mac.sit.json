@@ -200,7 +200,7 @@
  ],
  "fixture": "derived-The_Lingo_Library_1.5_Mac.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "7e3f04e8fcf9fff4c0353ef69167b77894e30449d69a4e21b7401a211d85c58e",
  "size": 152120
 }

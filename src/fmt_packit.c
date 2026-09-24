@@ -15,15 +15,27 @@
  *   u32 type @64, u32 creator @68, u16 finderflags @72, u16 "lock" @74,
  *   u32 datasize @76, u32 rsrcsize @80, u32 createdate @84,
  *   u32 moddate @88, u16 header CRC @92 (CRC-16/XMODEM over bytes 0..91)
- *   (offsets per macutils pit.h H_*OFF)
+ *   (the layout is appendix C of reference/notes/packit_unpackit.txt)
  * then the data fork, the resource fork, and a u16 CRC-16/XMODEM over
  * both decoded forks. For PMa4 the container resumes at the next byte
  * boundary after the compressed stream.
  *
- * Sources: reference/XADMaster/XADPackItParser.m and
- * reference/macutils/macunpack/pit.c — LGPL, see NOTICE.
- * (XADMaster ignores the header CRC; macutils checks it (pit.c
- * pit_filehdr) — we check it.)
+ * Source: reference/notes/packit_unpackit.txt, appendices B and C —
+ * the format's own published description, with the corrections it
+ * needs in docs/formats/packit.md, where a reader written from those
+ * appendices alone reads all 38 forks of the corpus's four PackIt
+ * archives (tools/derive_packit.py). The Huffman tree's serialisation,
+ * which that document names and does not describe, is
+ * docs/formats/serialized-huffman-tree.md; that a PMa4 entry codes its
+ * 94-byte HEADER into the same stream as the two forks was measured
+ * here on 2026-09-20 and is appendix C's closing note as well.
+ *
+ * What is still somebody else's, and says so where it is used: that
+ * the two CRCs are CRC-16/XMODEM (the appendix names them and not
+ * their polynomial; macutils' pit.c checks the header one, XADMaster
+ * ignores it, and we check it), and everything about the two
+ * encrypted forms.
+ *
  * PMa5 and PMa6 are decrypted where a password is available; without
  * one the entry is reported and the reader resyncs by scanning for the
  * next magic, which is macutils' strategy (pit.c "trying to sync") and
@@ -31,7 +43,9 @@
  * where it ends. XADMaster's two handles are the reference for both
  * ciphers, and for the rule that the next block begins at the next
  * EIGHT-byte boundary after an encrypted one rather than the next
- * byte.
+ * byte. Appendix B lists "PMa5" twice, for both ciphers, so the
+ * document cannot name the fourth word and XADMaster is where 'PMa6'
+ * comes from.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -153,6 +167,7 @@ int unc_packit_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
     huff = (UncHuff *)unc_alloc(c->al, (uint32_t)sizeof *huff);
     if (!huff) { unc_free(c->al, iobuf); return UNC_ERR_MEM; }
 
@@ -205,10 +220,15 @@ resynced:
             /* The cipher starts at the entry, so the reader has to as
              * well. PMa5 is the XOR, PMa6 is DES. */
             int perr = unc_password(c, attempt > 0);
+            /* PMa6's DES builds its table on first use, and that is an
+             * allocation: refused, the entry fails like any other. */
+            if (perr == UNC_OK && magic[3] != '5')
+                perr = unc_crypt_packit_des(cr, c->al, c->pw, c->pwlen);
             if (perr != UNC_OK) {
-                /* No password to try. Report the entry — nameless,
-                 * because its name is inside the ciphertext — and
-                 * resync: nothing here can say where it ends. */
+                /* No password to try, or no room for the cipher. Report
+                 * the entry — nameless, because its name is inside the
+                 * ciphertext — and resync: nothing here can say where
+                 * it ends. */
                 if (pit_reopen(c, &in, iobuf, iocap, start, NULL) != UNC_OK) {
                     err = UNC_ERR_IO;
                     goto out;
@@ -228,7 +248,6 @@ resynced:
                 goto resynced;
             }
             if (magic[3] == '5') unc_crypt_packit_xor(cr, c->pw, c->pwlen);
-            else                 unc_crypt_packit_des(cr, c->pw, c->pwlen);
             if (pit_reopen(c, &in, iobuf, iocap, start, cr) != UNC_OK) {
                 err = UNC_ERR_IO;
                 goto out;
@@ -263,7 +282,8 @@ resynced:
             goto out;
         }
 
-        /* Header CRC over the first 92 bytes (source: macutils pit.c).
+        /* Header CRC over the first 92 bytes. Appendix C names the
+         * field; that it is CRC-16/XMODEM is macutils' pit.c.
          * PackIt stores nothing that verifies a password, so for an
          * encrypted entry this IS the verification: a wrong key makes
          * a header that does not check, and the host is asked again. */
@@ -353,6 +373,7 @@ resynced:
 
 out:
     unc_free(c->al, huff);
+    unc_crypt_free(cr, c->al);
     unc_free(c->al, iobuf);
     return err;
 }

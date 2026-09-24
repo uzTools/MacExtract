@@ -13,6 +13,45 @@ the ciphers kept; an LZH gets **701,688 B**, keeping only its own decoder.
 images, and none.
 
 
+## Merged main — 2026-09-24
+
+**126 commits of main, and three of them crossed the overlay boundary.** The
+default build is unchanged in shape; the overlay build needed five files
+changed, and `ci.sh`'s variant 4b is what caught all three, which is what it
+was added for.
+
+| resident | 2026-09-09 | after the merge |
+|---|---|---|
+| default build, `CODE` | 150,296 B | **153,804 B** |
+| default build, A5 | 44,264 B | **37,956 B** |
+| overlay build, resident `CODE` | 53,004 B | **53,780 B** |
+| overlay build, resident A5 | 18,804 B | **19,148 B** |
+
+The A5 world FELL 6,308 B, and that is main's doing rather than this
+branch's: the DES SP tables and Compact Pro's CRC-64 table stopped being
+const data and are built at key setup instead (DECISIONS.md 2026-09-19, the
+transient tables). It is also what made the merge work rather than compile —
+those three key setups now take an allocator and can fail, so `OvlArgs`
+carries a `void *al`, `unc_crypt_cpt` and `unc_crypt_packit_des` return what
+they used to discard, and `unc_crypt_free` is entry point `OVL_CRYPT_FREE`
+and a forward. Freeing goes through the image because the block is
+`unc_crypt.c`'s own; it is always reachable when there is anything to free,
+since `cr->tab` is non-NULL only if a key setup ran and
+`ovl_release_if_unwanted` runs once after the sniff and never during an
+extraction.
+
+**An overlay links no libc, and `-fno-builtin` does not stop gcc calling
+it.** Main's fused Compact Pro LZH and RLE stages zero a window with a plain
+`for` loop, and the loop-distribution pass rewrote that into a call to
+`memset` — undefined in an image, so `ovl_cptdd.r` would not link.
+`mkoverlay.sh` now compiles with `-fno-tree-loop-distribute-patterns`; the
+loop is emitted as written and runs once per fork. `unc_fork_write`, which
+main's LZH rewrite added, is a forward.
+
+**Not re-run on the machine.** The figures above are the linker's; the 2/2
+and 4/4 emulator results below are from before the merge and are not
+re-claimed for after it.
+
 ## DART, overlaid — 2026-09-09
 
 `main` gained DART (M52) and it came in **resident**. It is now

@@ -38,9 +38,13 @@ second oracle with tools/build_macunpack.sh. TESTING.md, "A second
 oracle"; DECISIONS.md, 2026-08-08.
 
 Oracle invocation (see TESTING.md for rationale):
-    lsar -j -nr -e macintosh <fixture>          # format + metadata
-    unar -nr -D -f -q -k hidden -e macintosh -o <tmp> <fixture>
+    lsar -j -nr -e <enc> <fixture>              # format + metadata
+    unar -nr -D -f -q -k hidden -e <enc> -o <tmp> <fixture>
     macunpack -f <fixture>                      # second oracle, in <tmp>
+
+<enc> is "macintosh" for every format but StuffIt 5, whose names are
+the archive's own UTF-8 (ORACLE_ENCODING, below); the manifest records
+the invocation it was built with.
 """
 import argparse, hashlib, json, os, plistlib, re, struct, subprocess, sys
 import tempfile, unicodedata
@@ -143,7 +147,24 @@ def parse_oracle_failures(text):
     return failures, trailer
 
 
-def lsar_metadata(fixture):
+# --- which encoding to ask the oracle for --------------------------
+# `-e macintosh` forces MacRoman on every format, which is right for
+# every Mac archive family here EXCEPT StuffIt 5: its names are the
+# archive's own UTF-8, and forcing MacRoman makes the oracle produce
+# exactly the mojibake this engine used to produce, so the manifests
+# recorded it as ground truth and the diff suite was byte-exact against
+# a shared mistake (DECISIONS.md 2026-09-22, *the name that was never a
+# fork*). Keyed on lsar's own format name, because that is what a
+# fixture is identified by before anything else is read.
+ORACLE_ENCODING = {"StuffIt 5": "utf-8"}
+ORACLE_ENCODING_DEFAULT = "macintosh"
+
+
+def oracle_encoding(fmt):
+    return ORACLE_ENCODING.get(fmt, ORACLE_ENCODING_DEFAULT)
+
+
+def lsar_metadata(fixture, encoding=ORACLE_ENCODING_DEFAULT):
     """Return (formatname, {name: (type, creator)}, {name: [method, ...]},
     archive comment or None).
 
@@ -156,7 +177,7 @@ def lsar_metadata(fixture):
     """
     try:
         out = subprocess.run(
-            ["lsar", "-j", "-nr", "-e", "macintosh", fixture],
+            ["lsar", "-j", "-nr", "-e", encoding, fixture],
             capture_output=True, timeout=60)
         # strict=False: lsar's JSON may contain raw control characters
         # (e.g. binary XADNextSolidEntry keys in PackIt archives).
@@ -319,10 +340,31 @@ def adjudicate_with_macunpack(fixture_path, entries):
 # deark implements that method independently and agrees with the CRC PAK
 # itself stored, so it is offered the forks the others left open.
 #
-# It is a DATA-fork oracle only: deark has no notion of a resource fork
-# for these formats, and an entry that needs one stays unadjudicated.
+# **It reads BOTH forks**, which this file asserted the opposite of until
+# 2026-09-21: deark writes an AppleDouble `.adf` sidecar beside each
+# member that has a resource fork, and the corpus's only real StuffIt
+# method-6 entry is one whose data fork is EMPTY and whose resource fork
+# is 34,818 bytes. A premise that the third oracle could not see a
+# resource fork is why it was never offered one (BLOCKERS.md).
 DEARK = os.path.join(ROOT, "build", "deark", "deark")
 DEARK_ID = "deark"
+
+# **deark does not fail on a damaged file — it PADS.** Measured
+# 2026-09-21 on `sitdoc.sit`, a MacBinary whose header declares a
+# 286-byte resource fork and which physically ends 52 bytes short:
+# this engine writes the 234 bytes that are there and reports the file
+# truncated, `unar` says "Attempted to read more data than was
+# available", and deark writes 286 bytes whose last 52 are zeros it
+# made up. An oracle that always produces something is not ground
+# truth about a file that does not contain it.
+#
+# So deark fills a fork the others left open only where it cannot
+# invent one: when the fork is EMPTY — an assertion of absence — or
+# when the entry's methods are all ones deark is the designated oracle
+# for. Everything else it is offered is a CROSS-CHECK against a fork
+# another implementation already graded, where agreement is the whole
+# point and disagreement is reported rather than written down.
+DEARK_METHODS = {"Distilled"}
 
 
 def deark_id():
@@ -335,53 +377,380 @@ def deark_id():
         return DEARK_ID
 
 
+# deark writes every member to a real file, so a member's name reaches
+# the disk only after deark's own sanitiser has been over it: a path
+# separator, a Windows-reserved character or anything below U+00A0
+# becomes "_". Matching raw names misses every entry inside a folder.
+#
+# Source: reference/deark/src/deark-util.c — `de_char_to_valid_fn_char`
+# (32..126 minus / \ : * ? " < > |, or >= 160, else "_"),
+# `de_finfo_set_name_internal` (strip trailing spaces) and
+# `sanitize_filename1` ("." and ".."). `allow_subdirs` is off because
+# `deark_forks` passes no `-allowsubdirs`, so "/" is mangled too.
+# The mapping is many-to-one, so every caller refuses a mangled name
+# two entries share.
+_DEARK_BAD = set('/\\:*?"<>|')
+
+
+def deark_name(name):
+    out = []
+    for ch in name:
+        o = ord(ch)
+        if 32 <= o <= 126 and ch not in _DEARK_BAD:
+            out.append(ch)
+        elif o >= 160:
+            out.append(ch)
+        else:
+            out.append("_")
+    t = "".join(out).rstrip(" ")
+    if t == ".":
+        t = "_"
+    elif t == "..":
+        t = "_."
+    return norm(t or "_")
+
+
+# deark names the fork in most of the errors it reports per fork.
+#   Error: NAME[data fork]: Unsupported compression method: 8 (MW)
+#   Error: Decompression failed for file NAME[resource fork]: ...
+#   Error: CRC check failed for file NAME[data fork]
+# Source: reference/deark/modules/stuffit.c, and "data"/"resource" are
+# its two `forkname` strings.
+_DEARK_ERR = re.compile(r"^Error: (?:.*? for file )?(.*)"
+                        r"\[(data|resource) fork\]")
+
+# **That NAME is not the member's raw name**, which this file asserted
+# until 2026-09-22: deark prints it MAKE_PRINTABLE, so every character
+# it will not send to a terminal arrives as an escape — `Icon\r`, the
+# commonest filename on a Macintosh volume, reads `Icon<\r>`. Running
+# that through `deark_name` gives `Icon__r_` where the file on disk is
+# `Icon_`, so the decline was recorded against a member that does not
+# exist and the fork it names looked like one deark never mentioned.
+# **382 declined forks across 35 fixtures are mis-keyed this way**, and
+# on 2026-09-22 none of them was live: in every one, deark wrote no
+# file for that member at all, so nothing read the wrong key. What it
+# would cost when one IS live is the bug this rule exists to stop —
+# a fork deark declined recorded as a fork deark read as EMPTY.
+#
+# Source: reference/deark/src/deark-ucstring.c,
+# `ucstring_to_sz` under DE_CONVFLAG_MAKE_PRINTABLE: 0x0a/0x0d/0x09/0x00
+# become \n \r \t \0, a byte deark could not decode becomes its two hex
+# digits, anything else unprintable becomes U+XXXX, each wrapped in
+# `<`...`>`. A raw byte is `DE_CODEPOINT_BYTE00 + b` = 0x10000000 + b
+# (deark-private.h), which is past the 0x10ffff that
+# `de_char_to_valid_fn_char` keeps — so in a FILENAME it is "_", which
+# is what this maps it to directly.
+_DEARK_ESC = re.compile(r"<(\\[rnt0]|U\+[0-9A-Fa-f]{4}|[0-9A-Fa-f]{2})>")
+_DEARK_ESC_C = {"\\r": "\r", "\\n": "\n", "\\t": "\t", "\\0": "\0"}
+
+
+def deark_err_name(raw):
+    """The key a member named in one of deark's ERRORS writes its file
+    under. Ambiguous by construction — a member really called `Icon<\\r>`
+    is indistinguishable from one called `Icon\r` — and that is safe in
+    the direction it errs: the worst it can do is mark a fork DECLINED
+    that deark could have read, which costs coverage and never records
+    a fork's contents."""
+    def sub(m):
+        t = m.group(1)
+        if t in _DEARK_ESC_C:
+            return _DEARK_ESC_C[t]
+        if t.startswith("U+"):
+            return chr(int(t[2:], 16))
+        return "_"                      # a raw byte: past 0x10ffff, so "_"
+    return deark_name(_DEARK_ESC.sub(sub, raw))
+
+
+def deark_forks(fixture_path, tmp):
+    """member name -> {"data": bytes, "rsrc": bytes}, as deark reads it.
+
+    deark names its output `<prefix>.<index>.<member name>`, and a
+    member with a resource fork gets a second file with `.adf` on the
+    end — an AppleDouble sidecar. **The index counts output FILES, not
+    members**, so it is not a member ordinal as soon as any member has
+    two forks: this matched on it until 2026-09-21, which worked only
+    because the one format the third oracle was ever asked about has no
+    resource forks at all. Matching is by name, and a name that appears
+    twice in an archive is refused by the caller.
+    """
+    try:
+        r = subprocess.run([DEARK, "-od", tmp, "-o", "m",
+                            os.path.abspath(fixture_path)],
+                           capture_output=True, timeout=600)
+    except subprocess.TimeoutExpired:
+        return None
+    if r.returncode != 0:
+        return None
+    # **A fork deark DECLINED looks exactly like a fork it read as
+    # empty**, and this file used to assert the opposite ("a member
+    # deark wrote at all has both forks"). It does not: given a
+    # StuffIt method-8 entry it writes the resource fork's sidecar,
+    # reports `Unsupported compression method: 8 (MW)` for the data
+    # fork, and writes no data file — so treating the absence as an
+    # empty fork would record "this fork is 0 bytes" as ground truth
+    # about a fork deark never read. Found 2026-09-22 by
+    # `tools/sweep_deark.py` on `derived-BitMap11.sit`. A declined
+    # fork is None here, and every caller must tell that from b"".
+    declined, unattributed = set(), False
+    for line in (r.stdout + r.stderr).decode("utf-8", "replace").splitlines():
+        if not line.startswith("Error: "):
+            continue
+        m = _DEARK_ERR.match(line)
+        if m:
+            declined.add((deark_err_name(m.group(1)),
+                          "data" if m.group(2) == "data" else "rsrc"))
+        else:
+            # An error deark did not attach to a fork — a whole-member
+            # or whole-archive one — makes every absent fork of this
+            # archive UNKNOWN rather than empty. Deliberately
+            # over-cautious: it costs coverage (9 forks of
+            # `synth-arc-mixed.arc` and `arcplus712.zip`, where the
+            # error names a member and no fork) and it cannot turn an
+            # error into an assertion of absence.
+            unattributed = True
+    out = {}
+    for fn in os.listdir(tmp):
+        parts = fn.split(".", 2)
+        if len(parts) < 3:
+            continue
+        rest, path = parts[2], os.path.join(tmp, fn)
+        if rest.endswith(".adf"):
+            rsrc = parse_appledouble(path)[0]
+            if rsrc is not None:
+                out.setdefault(rest[:-4], {})["rsrc"] = rsrc
+        else:
+            with open(path, "rb") as fh:
+                out.setdefault(rest, {})["data"] = fh.read()
+    # A member deark wrote NO file for is still a member deark SAW —
+    # its errors name it. Until 2026-09-22 such a member was simply
+    # absent here, so every caller counted it as one deark could not
+    # NAME, which is the opposite of what happened: deark named it and
+    # declined it. That is 225 of the 283 entries `sweep_deark.py`
+    # reported it could not compare, all of them StuffIt method 13 or
+    # StuffIt 5's Arsenic, neither of which deark implements.
+    from_file = set(out)
+    for name, _fork in declined:
+        out.setdefault(name, {})
+    # A fork with no file is empty — an assertion of absence — UNLESS
+    # deark said it could not read it, or said something about this
+    # archive it did not attach to a fork, in which case nothing is
+    # known about it and it is None. For a member with no file at all
+    # NOTHING is asserted about the fork deark did not mention either:
+    # it may have given up on the member before reaching it.
+    for name, v in out.items():
+        for fork in ("data", "rsrc"):
+            if fork in v:
+                continue
+            v[fork] = None if (unattributed or name not in from_file
+                               or (name, fork) in declined) else b""
+    return out
+
+
 def adjudicate_with_deark(fixture_path, entries):
-    if not any("unadjudicated" in e for e in entries):
+    """Fill what the others left open, and CHECK what only macunpack saw.
+
+    Two jobs, and the second is the one that was missing. `macunpack`
+    is where this project's StuffIt method-6 decoder was transcribed
+    from, so a fork it alone grades is a transcription checked against
+    its own source. deark implements that method independently — it
+    credits macunpack as DOCUMENTATION and uses none of its code — so
+    offering it those forks is worth doing even though nothing is open.
+    **A third oracle asked only where the others are silent can never
+    contradict them**, which is why this one sat in `reference/`,
+    compiled by `ci.sh` and running for another format, without ever
+    being put to the 23 forks macunpack alone had graded (BLOCKERS.md).
+
+    On agreement the fork records both oracles. On DISAGREEMENT nothing
+    is rewritten: two implementations differing is a finding, and it is
+    reported rather than resolved here.
+    """
+    wanted = [e for e in entries
+              if "unadjudicated" in e
+              or any("macunpack" in (e.get(k) or "")
+                     for k in ("data_oracle", "rsrc_oracle"))]
+    if not wanted:
         return 0
     if not os.path.exists(DEARK):
         MISSING_ORACLE.add(os.path.basename(fixture_path))
         return 0
 
-    # deark names its output <prefix>.<index>.<member name>, and the
-    # index is the member's position in the archive. Matching on the
-    # name alone would be ambiguous in an archive holding the same name
-    # twice, so both must agree, and a name that appears twice is
-    # refused outright.
+    # Match on the name deark WRITES, not the name the archive holds:
+    # a member inside a folder reaches the disk with its separators
+    # mangled, so matching raw names silently skipped every one of
+    # them — 500 entries across the corpus, found 2026-09-22 by
+    # `tools/sweep_deark.py`. Many-to-one, so a mangled name two
+    # entries share is refused, the same rule as everywhere else here.
     seen = {}
     for e in entries:
-        seen[e["name"]] = seen.get(e["name"], 0) + 1
+        k = deark_name(e["name"])
+        seen[k] = seen.get(k, 0) + 1
 
     with tempfile.TemporaryDirectory() as tmp:
-        try:
-            r = subprocess.run([DEARK, "-od", tmp, "-o", "m",
-                                os.path.abspath(fixture_path)],
-                               capture_output=True, timeout=600)
-        except subprocess.TimeoutExpired:
-            return 0
-        if r.returncode != 0:
+        got = deark_forks(fixture_path, tmp)
+        if not got:
             return 0
         filled = 0
-        for i, e in enumerate(entries):
-            un = e.get("unadjudicated")
-            if not un or "data" not in un or seen.get(e["name"], 0) != 1:
+        for e in wanted:
+            key = deark_name(e["name"])
+            if seen.get(key, 0) != 1 or key not in got:
                 continue
-            p = os.path.join(tmp, "m.%03d.%s" % (i, e["name"]))
-            if not os.path.exists(p):
-                continue
-            blob = open(p, "rb").read()
-            e["data_size"] = len(blob)
-            e["data_sha256"] = hashlib.sha256(blob).hexdigest()
-            e["data_oracle"] = deark_id()
-            del un["data"]
-            if not un:
-                del e["unadjudicated"]
-            filled += 1
+            for fork in ("data", "rsrc"):
+                blob = got[key][fork]
+                if blob is None:
+                    continue            # deark declined this fork
+                un = e.get("unadjudicated") or {}
+                if fork in un:
+                    m = e.get("oracle_methods")
+                    if blob and not (m and all(x in DEARK_METHODS for x in m)):
+                        continue        # it may be padding — see DEARK_METHODS
+                    e[fork + "_size"] = len(blob)
+                    e[fork + "_sha256"] = hashlib.sha256(blob).hexdigest()
+                    e[fork + "_oracle"] = deark_id()
+                    del un[fork]
+                    if not un:
+                        e.pop("unadjudicated", None)
+                    filled += 1
+                    continue
+                who = e.get(fork + "_oracle") or ""
+                if "macunpack" not in who or DEARK_ID in who:
+                    continue
+                if (hashlib.sha256(blob).hexdigest() == e.get(fork + "_sha256")
+                        and len(blob) == e.get(fork + "_size")):
+                    e[fork + "_oracle"] = "%s + %s" % (who, deark_id())
+                    filled += 1
+                else:
+                    print("  DEARK DISAGREES with macunpack on %s %s of %s "
+                          "(deark %d B) — two implementations differ, which "
+                          "is a finding, not a manifest edit"
+                          % (e["name"], fork, os.path.basename(fixture_path),
+                             len(blob)), file=sys.stderr)
         return filled
+
+
+# --- the container's own arithmetic ------------------------------------
+# **Not an oracle: the file itself.** Eight forks in seven damaged
+# MacBinary fixtures had no second implementation to be wrong against —
+# `unar` declines them, deark PADS them (DEARK_METHODS, above), and our
+# own output cannot grade our own output. It does not need one. A
+# MacBinary is a 128-byte header, the data fork padded to a multiple of
+# 128, then the resource fork, all of it STORED; so where a fork starts
+# is arithmetic and what is in it is the file's own bytes. A file that
+# ends early holds exactly as much of a fork as is physically there,
+# and that number is forced rather than decoded.
+#
+# **This is only ground truth where the arithmetic is confirmed on the
+# file it is applied to**, never on the strength of the layout in
+# general, because the engine reads the same header and would be wrong
+# the same way. Two confirmations exist and one of them is required:
+#
+#   - the header's own CRC-16/CCITT over its first 124 bytes matches
+#     the value at +124, i.e. it is MacBinary II and its LENGTHS are
+#     checksummed (guysmaccontacts.sea, whose data fork overruns the
+#     file by 36,045 B and whose resource fork is therefore not present
+#     at all); or
+#   - the entry's OTHER fork is already adjudicated by an oracle and
+#     the same arithmetic reproduces it byte for byte, which pins both
+#     offsets on that file (the six MacBinary I fixtures, where the
+#     data fork is unar's and the resource fork is the remainder).
+#
+# The layout itself is not assumed either: it reproduces both forks of
+# **174 undamaged MacBinary fixtures**, every one in the corpus with a
+# single entry and two adjudicated forks, with no mismatch.
+MACBINARY_ID = "MacBinary container arithmetic"
+
+
+def _crc16_ccitt(data):
+    crc = 0
+    for b in data:
+        crc ^= b << 8
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF if crc & 0x8000 \
+                else (crc << 1) & 0xFFFF
+    return crc
+
+
+def macbinary_slices(path):
+    """`macbinary_slices_bytes` for a file on disk."""
+    try:
+        with open(path, "rb") as fh:
+            return macbinary_slices_bytes(fh.read())
+    except OSError:
+        return None
+
+
+def macbinary_slices_bytes(d):
+    """(data_bytes, rsrc_bytes, crc_ok) as the container places them,
+    clipped to where the bytes actually end; None if the header is not
+    a MacBinary one."""
+    if len(d) < 128 or d[0] != 0 or d[74] != 0 or d[82] != 0:
+        return None
+    if not 1 <= d[1] <= 63:
+        return None
+    dlen = int.from_bytes(d[83:87], "big")
+    rlen = int.from_bytes(d[87:91], "big")
+    rstart = 128 + (dlen + 127) // 128 * 128
+    crc = int.from_bytes(d[124:126], "big")
+    return (d[128:min(len(d), 128 + dlen)],
+            d[min(len(d), rstart):min(len(d), rstart + rlen)],
+            crc != 0 and crc == _crc16_ccitt(d[0:124]))
+
+
+def adjudicate_from_macbinary(fixture_path, fmt, entries):
+    """Grade a damaged MacBinary's forks against the container itself."""
+    if fmt != "MacBinary":
+        return 0
+    live = [e for e in entries if not e.get("is_dir")]
+    if len(live) != 1 or "unadjudicated" not in live[0]:
+        return 0
+    e = live[0]
+    got = macbinary_slices(fixture_path)
+    if got is None:
+        return 0
+    blobs = {"data": got[0], "rsrc": got[1]}
+    confirmed = got[2]
+    for fork in ("data", "rsrc"):
+        want = e.get(fork + "_sha256")
+        if want is None:
+            continue            # nobody has graded this fork
+        if hashlib.sha256(blobs[fork]).hexdigest() == want:
+            confirmed = True
+        else:
+            # The arithmetic disagrees with an oracle on this very file,
+            # so it is not describing this file. Say so and grade
+            # nothing: a rule that adjudicates where it has just been
+            # shown wrong is worse than no rule.
+            print("  MACBINARY ARITHMETIC DISAGREES with %s on %s of %s "
+                  "— grading nothing from the container here"
+                  % (e.get(fork + "_oracle") or "the oracle", fork,
+                     os.path.basename(fixture_path)), file=sys.stderr)
+            return 0
+    if not confirmed:
+        return 0
+    filled = 0
+    un = e["unadjudicated"]
+    for fork in ("data", "rsrc"):
+        if fork not in un:
+            continue
+        e[fork + "_size"] = len(blobs[fork])
+        e[fork + "_sha256"] = hashlib.sha256(blobs[fork]).hexdigest()
+        e[fork + "_oracle"] = MACBINARY_ID
+        del un[fork]
+        filled += 1
+    if not un:
+        del e["unadjudicated"]
+    return filled
 
 
 def build_manifest(fixture_path, verbose=False):
     name = os.path.basename(fixture_path)
     fmt, meta, methods, comment = lsar_metadata(fixture_path)
+    # The format decides the encoding and the encoding decides the
+    # names, so the first call is only ever trusted for the format —
+    # which no encoding changes. One extra lsar for the formats that
+    # want another one, and none at all for the rest.
+    encoding = oracle_encoding(fmt)
+    if encoding != ORACLE_ENCODING_DEFAULT:
+        fmt, meta, methods, comment = lsar_metadata(fixture_path, encoding)
     # The "._" sidecar namespace is disjoint from real archive names in
     # every fixture harvested so far, which is why forks are taken from
     # `-k hidden` — but an entry literally named "._X" would collide
@@ -397,7 +766,7 @@ def build_manifest(fixture_path, verbose=False):
     with tempfile.TemporaryDirectory() as tmp:
         r = subprocess.run(
             ["unar", "-nr", "-D", "-f", "-q", "-k", "hidden",
-             "-e", "macintosh", "-o", tmp, fixture_path],
+             "-e", encoding, "-o", tmp, fixture_path],
             capture_output=True, timeout=300)
         # A non-zero exit is per-ENTRY failure or container failure, and
         # the difference is worth the whole manifest. Accept it as
@@ -546,11 +915,26 @@ def build_manifest(fixture_path, verbose=False):
     if filled:
         print(f"  deark adjudicated {filled} fork(s) of {name}",
               file=sys.stderr)
+    # Last, because it is not an oracle and should only see what three
+    # implementations could not settle between them.
+    filled = adjudicate_from_macbinary(fixture_path, fmt, entries)
+    if filled:
+        print(f"  the container's own arithmetic adjudicated {filled} "
+              f"fork(s) of {name}", file=sys.stderr)
     # The warning about a missing second oracle is about forks that are
     # STILL open. A fixture the third oracle finished is not one of
     # them, and saying so would send the next reader to build a tool
-    # that had nothing left to decide.
-    if not any("unadjudicated" in e for e in entries):
+    # that had nothing left to decide — **unless the tool that is
+    # missing is macunpack**, which since 2026-09-21 deark can stand in
+    # for on the forks macunpack alone used to grade. Discarding the
+    # warning there would undo the thing this file was written to
+    # prevent: a rebuild without the second oracle writing WEAKER
+    # manifests than the committed ones and looking like success. It
+    # was measured the hard way on 2026-08-08 and then reproduced on
+    # 2026-09-21, one layer up, by the change that let deark close
+    # those gaps (BLOCKERS.md).
+    if (not any("unadjudicated" in e for e in entries)
+            and os.path.exists(MACUNPACK)):
         MISSING_ORACLE.discard(name)
     # Canonical order, so a rebuild on another machine produces the same
     # file. Every consumer looks entries up by name; none depends on the
@@ -561,7 +945,7 @@ def build_manifest(fixture_path, verbose=False):
         "sha256": sha256_file(fixture_path),
         "size": os.path.getsize(fixture_path),
         "format": fmt,
-        "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+        "oracle": "unar -nr -D -f -q -k hidden -e %s (v1.10.8)" % encoding,
         "entries": entries,
     }
     # Absent unless the archive carries one, so a manifest without the
@@ -569,6 +953,27 @@ def build_manifest(fixture_path, verbose=False):
     if comment:
         man["comment"] = comment
     return man
+
+
+# **Two fixtures are INPUTS, not archives**, and this is where saying so
+# has to live: `make_manifests.py` with no arguments builds a manifest
+# for any fixture that lacks one, which is how these two — read by
+# `unar`, so a manifest gets built — became two failing fixtures on
+# 2026-09-22 (OPEN_ITEMS.md had them as an open question until
+# DECISIONS.md 2026-09-22, *the sidecar is not an archive*).
+#
+# They are the AppleDouble sidecars carrying the RESOURCE FORK of the two
+# DiskDoubler files that were cut into `.1`/`.2` parts, and
+# `run_segments.py`'s DDSEG_SPECIMENS is what reads them: they are what a
+# joined set is graded AGAINST, in `ci.sh`, every run. The parts
+# themselves get no manifest for the same reason and always did —
+# `run_ddtf.py` says so where it registers them.
+NOT_ARCHIVES = {
+    "ddtf-ddpro411ad1.dd.ad":
+        "the resource fork of the file ddtf-ddpro411ad1.dd.[12] joins into",
+    "ddtf-ddpro411ad1.sea.ad":
+        "the resource fork of the file ddtf-ddpro411ad1.sea.[12] joins into",
+}
 
 
 def main():
@@ -589,7 +994,13 @@ def main():
 
     made = skipped = failed = 0
     for fx in fixtures:
-        out = os.path.join(mandir, os.path.basename(fx) + ".json")
+        base = os.path.basename(fx)
+        if base in NOT_ARCHIVES:
+            print(f"  input, not an archive: {base} — "
+                  f"{NOT_ARCHIVES[base]}", file=sys.stderr)
+            skipped += 1
+            continue
+        out = os.path.join(mandir, base + ".json")
         if os.path.exists(out) and not args.force:
             skipped += 1
             continue

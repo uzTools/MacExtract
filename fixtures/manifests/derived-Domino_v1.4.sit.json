@@ -28,7 +28,7 @@
  ],
  "fixture": "derived-Domino_v1.4.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "ce98273f691d383e8eede9945d74c7be05f4c2ffc68f1df64bdf0c4181b4e660",
  "size": 161906
 }

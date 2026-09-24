@@ -1193,6 +1193,20 @@ static void RepRenamed(const char *what, const uint8_t *orig, int olen,
     RepRenamedAt(0, what, orig, olen, now, verb);
 }
 
+/* A name the archive states in characters MacRoman has no byte for.
+ * The line names what IS on the disk and not what was asked for,
+ * because what was asked for cannot be drawn on this Macintosh at all:
+ * a report that printed it would print a row of substitutes twice and
+ * call it a rename. */
+static void RepLostChars(const char *what, const unsigned char *now)
+{
+    if (!RepNew(0)) return;
+    RepCat(what);
+    RepCatP(now);
+    RepMarkBreak();
+    RepCat(" was named in characters this Macintosh cannot write");
+}
+
 /* djb2 over one path component, raw engine bytes. Raw because a
  * component cannot hold a '/' — that is the engine's separator — so its
  * bytes and the name this shell writes are one to one, and any
@@ -1310,6 +1324,102 @@ static int ExtStart(const unsigned char *b, int len)
         return i;
     }
     return -1;
+}
+
+/* ------------------------------------------------------------------ */
+/* UTF-8 names, folded into the bytes an HFS name holds               */
+/* ------------------------------------------------------------------ */
+
+/* MacRoman 0x80..0xFF as Unicode: the standard Apple layout, the same
+ * table the Linux CLI carries (cli/main.c). */
+static const unsigned short kMacRomanHigh[128] = {
+    0x00C4,0x00C5,0x00C7,0x00C9,0x00D1,0x00D6,0x00DC,0x00E1,
+    0x00E0,0x00E2,0x00E4,0x00E3,0x00E5,0x00E7,0x00E9,0x00E8,
+    0x00EA,0x00EB,0x00ED,0x00EC,0x00EE,0x00EF,0x00F1,0x00F3,
+    0x00F2,0x00F4,0x00F6,0x00F5,0x00FA,0x00F9,0x00FB,0x00FC,
+    0x2020,0x00B0,0x00A2,0x00A3,0x00A7,0x2022,0x00B6,0x00DF,
+    0x00AE,0x00A9,0x2122,0x00B4,0x00A8,0x2260,0x00C6,0x00D8,
+    0x221E,0x00B1,0x2264,0x2265,0x00A5,0x00B5,0x2202,0x2211,
+    0x220F,0x03C0,0x222B,0x00AA,0x00BA,0x03A9,0x00E6,0x00F8,
+    0x00BF,0x00A1,0x00AC,0x221A,0x0192,0x2248,0x2206,0x00AB,
+    0x00BB,0x2026,0x00A0,0x00C0,0x00C3,0x00D5,0x0152,0x0153,
+    0x2013,0x2014,0x201C,0x201D,0x2018,0x2019,0x00F7,0x25CA,
+    0x00FF,0x0178,0x2044,0x20AC,0x2039,0x203A,0xFB01,0xFB02,
+    0x2021,0x00B7,0x201A,0x201E,0x2030,0x00C2,0x00CA,0x00C1,
+    0x00CB,0x00C8,0x00CD,0x00CE,0x00CF,0x00CC,0x00D3,0x00D4,
+    0xF8FF,0x00D2,0x00DA,0x00DB,0x00D9,0x0131,0x02C6,0x02DC,
+    0x00AF,0x02D8,0x02D9,0x02DA,0x00B8,0x02DD,0x02DB,0x02C7
+};
+
+/* One engine path, UTF-8 -> MacRoman, IN PLACE. Returns the new length
+ * and sets one bit of *lost per path component that lost a character.
+ *
+ * An HFS name is MacRoman bytes and StuffIt 5 states its names in UTF-8
+ * (macextract.h, `name_utf8`), so without this the Macintosh writes the
+ * same mojibake the Linux CLI wrote until 2026-09-22. The whole path is
+ * folded at the door rather than component by component, so that the
+ * folder walk, the folder hash, the 31-character cut and every line of
+ * the report go on seeing one name, of one length, in one encoding.
+ * Two properties make that safe: UTF-8 never puts a 0x2F byte inside a
+ * multi-byte sequence, so the engine's '/' separators survive, and the
+ * fold only ever shortens, so the output never overtakes the input.
+ *
+ * A code point MacRoman has no byte for becomes '_' — every Japanese
+ * name in the corpus is one, and no System that boots on a 68000 Mac
+ * Plus can draw it. A byte that does not begin a valid sequence is
+ * passed through as itself: the name is then not UTF-8, the only other
+ * encoding this shell knows is MacRoman, and passing it on is what
+ * happened before this function existed. That rule is stated rather
+ * than measured — all 525 entries of the 31 StuffIt 5 fixtures here
+ * are valid UTF-8.
+ *
+ * 68000: one pass, byte-wise, no recursion, no allocation. */
+static int Utf8ToMacRoman(uint8_t *p, int len, uint32_t *lost)
+{
+    int i = 0, o = 0, comp = 0;
+
+    *lost = 0;
+    while (i < len) {
+        uint8_t b = p[i];
+        uint32_t cp;
+        int n, k, ok;
+
+        if (b < 0x80) {                       /* ASCII, separators and all */
+            if (b == '/' && comp < 31) comp++;
+            p[o++] = b;
+            i++;
+            continue;
+        }
+        if      ((b & 0xE0) == 0xC0) { cp = (uint32_t)(b & 0x1F); n = 1; }
+        else if ((b & 0xF0) == 0xE0) { cp = (uint32_t)(b & 0x0F); n = 2; }
+        else if ((b & 0xF8) == 0xF0) { cp = (uint32_t)(b & 0x07); n = 3; }
+        else                         { p[o++] = b; i++; continue; }
+        ok = (i + n < len);
+        for (k = 1; ok && k <= n; k++)
+            if ((p[i + k] & 0xC0) != 0x80) ok = 0;
+        if (!ok) { p[o++] = b; i++; continue; }
+        for (k = 1; k <= n; k++)
+            cp = (cp << 6) | (uint32_t)(p[i + k] & 0x3F);
+        i += n + 1;
+        /* A sequence that codes a value below 0x80 is overlong, and an
+         * overlong '/' would put a separator inside a component. It is
+         * not a character this can write either way. */
+        ok = 0;
+        if (cp >= 0x80) {
+            for (k = 0; k < 128; k++)
+                if ((uint32_t)kMacRomanHigh[k] == cp) {
+                    p[o++] = (uint8_t)(0x80 + k);
+                    ok = 1;
+                    break;
+                }
+        }
+        if (!ok) {
+            p[o++] = '_';
+            *lost |= (uint32_t)1 << comp;
+        }
+    }
+    p[o] = 0;
+    return o;
 }
 
 /* One engine path component -> Pascal Str63: undo the '/'->':' swap,
@@ -1557,11 +1667,24 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
     MacSink *s = (MacSink *)ctx;
     long dir = s->rootDirID;
     int start = 0, i, attempt;
-    int leafStart = 0, leafLen = 0, leafChanged = 0;
+    int leafStart = 0, leafLen = 0, leafChanged = 0, leafLost = 0;
+    const uint8_t *nm;
+    int nlen, comp_i = 0;
+    uint32_t lost = 0;
     OSErr err;
 
     s->cur = *info;
     s->entries++;
+    /* StuffIt 5's names are UTF-8; an HFS name is MacRoman bytes. The
+     * fold happens once, here, and everything below sees one encoding
+     * (Utf8ToMacRoman). It shortens in place, so `s->cur` — this
+     * shell's own copy — is where it lands, and the report, the failure
+     * lines and the folder hashes all read the folded bytes. */
+    if (info->name_utf8)
+        s->cur.name_len = (uint16_t)Utf8ToMacRoman(s->cur.name,
+                                                   (int)info->name_len, &lost);
+    nm = s->cur.name;
+    nlen = (int)s->cur.name_len;
 #ifndef UNC_MAC_STAGE_WRITES
     s->openRef = 0;
     s->openIsRsrc = 0;
@@ -1575,24 +1698,27 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 #endif
 
     /* Walk the '/'-separated engine path, creating directories. */
-    for (i = 0; i <= info->name_len; i++) {
-        if (i == info->name_len || info->name[i] == '/') {
+    for (i = 0; i <= nlen; i++) {
+        if (i == nlen || nm[i] == '/') {
             Str63 comp;
-            int changed = ComponentToStr63(info->name + start, i - start, comp);
-            if (i == info->name_len && !info->is_dir) {
+            int changed = ComponentToStr63(nm + start, i - start, comp);
+            int compLost = (lost >> (comp_i < 31 ? comp_i : 31)) & 1;
+            comp_i++;
+            if (i == nlen && !info->is_dir) {
                 BlockMoveData(comp, s->curName, comp[0] + 1);
                 s->curDirID = dir;
                 leafStart = start;
                 leafLen = i - start;
                 leafChanged = changed;
+                leafLost = compLost;
             } else {
                 int isNew = 0, merged = 0, numbered = 0;
-                uint32_t h = DirHash(info->name + start, i - start);
+                uint32_t h = DirHash(nm + start, i - start);
                 OSErr derr = EnsureDir(s->vRefNum, dir, comp, h, &dir,
                                        &isNew, &merged, &numbered);
                 if (derr != noErr) {
                     if (derr == dskFulErr) return -1;   /* the run is over */
-                    RepEntryFailed(info->name + start, i - start,
+                    RepEntryFailed(nm + start, i - start,
                                    " could not be made on the disk");
                     s->errors++;
                     return 1;                           /* this entry only */
@@ -1607,15 +1733,17 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                  * different: nothing is lost, but two folders are now
                  * one. */
                 if (isNew) {
-                    if (changed || numbered)
-                        RepRenamed("Folder ", info->name + start, i - start,
+                    if (compLost)
+                        RepLostChars("Folder ", comp);
+                    else if (changed || numbered)
+                        RepRenamed("Folder ", nm + start, i - start,
                                    comp, " renamed to ");
                     RepDirMemo(dir, h);
                 } else if (merged) {
-                    RepRenamedAt(1, "Folder ", info->name + start, i - start,
+                    RepRenamedAt(1, "Folder ", nm + start, i - start,
                                  comp, " combined with ");
                 }
-                if (i == info->name_len) return 1;   /* dir entry done */
+                if (i == nlen) return 1;             /* dir entry done */
             }
             start = i + 1;
         }
@@ -1635,7 +1763,7 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                  * "abort", so the eleventh file whose name shortened
                  * alike ended the extraction and everything after it was
                  * never written (BLOCKERS.md). */
-                RepEntryFailed(info->name + leafStart, leafLen,
+                RepEntryFailed(nm + leafStart, leafLen,
                                err == dupFNErr
                                ? " could not be given a name of its own"
                                : " could not be created on the disk");
@@ -1652,8 +1780,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
      * ENGINE's own cut — a path that summed past its 255-byte cap — and
      * it is reported even where this shell then left the leaf alone,
      * because the file is not where the archive said it was. */
-    if (leafChanged)
-        RepRenamed("", info->name + leafStart, leafLen, s->curName,
+    if (leafLost)
+        RepLostChars("", s->curName);
+    else if (leafChanged)
+        RepRenamed("", nm + leafStart, leafLen, s->curName,
                    " renamed to ");
     else if (info->name_truncated && RepNew(0)) {
         RepCatP(s->curName);
