@@ -205,6 +205,28 @@ def out_of_scope(entry):
     return bool(m) and all(x in ORACLE_OUT_OF_SCOPE for x in m)
 
 
+def said_truncated(msg):
+    """True when our binary declined an entry because the file ran out.
+
+    Same rule as `said_unsupported`: match the ENDING, not the whole
+    sentence."""
+    return msg.endswith("file is truncated")
+
+
+# A fork the manifest grades from the container rather than from an
+# implementation. `make_manifests.py` writes this only for a MacBinary
+# whose file ends before its own header says it should, and only where
+# the arithmetic is confirmed on that very file — so the string is an
+# assertion that the fixture IS truncated (TESTING.md, *The container's
+# own arithmetic*).
+MACBINARY_ARITHMETIC = "MacBinary container arithmetic"
+
+
+def graded_from_container(entry):
+    return any(entry.get(f + "_oracle") == MACBINARY_ARITHMETIC
+               for f in ("data", "rsrc"))
+
+
 # Archives that do NOT fit on a 1 MB Mac Plus as the application stands.
 #
 # Empty, and kept because it was not: on 2026-08-30 three StuffIt 5 archives
@@ -237,10 +259,27 @@ def check_fixture(macextract, man, verbose, budget=0):
         # that would let a regression in the method dispatch grade itself.
         outofscope = {normpath(e["name"]) for e in man["entries"]
                       if out_of_scope(e)}
+        # And a third case, which is an ASSERTION rather than an excuse.
+        # An entry whose forks the manifest graded from the container's
+        # own arithmetic is one the manifest says is CUT: the hashes are
+        # of the bytes physically present. So our engine must report
+        # that entry truncated — reporting success on it is the M42
+        # defect, and reporting nothing is a missing entry. The excuse
+        # is the manifest's word; `said_truncated` only says which of
+        # our messages is eligible for it.
+        cut = {normpath(e["name"]) for e in man["entries"]
+               if graded_from_container(e)}
+        for n in sorted(cut):
+            if not said_truncated(un_errs.get(n, "")):
+                problems.append(
+                    f"{n!r}: the container's arithmetic grades this entry "
+                    f"as cut and our engine did not report it truncated "
+                    f"({un_errs.get(n, 'no per-entry error at all')!r})")
         if r.returncode != 0:
             unexplained = {n: er for n, er in un_errs.items()
                            if n not in excused
-                           and not (said_unsupported(er) and n in outofscope)}
+                           and not (said_unsupported(er) and n in outofscope)
+                           and not (said_truncated(er) and n in cut)}
             if unexplained or not un_errs:
                 problems.append(
                     f"exit {r.returncode}: {r.stderr.decode()[:300]}")

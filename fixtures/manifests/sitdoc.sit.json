@@ -5,10 +5,10 @@
    "data_sha256": "3e797f5f6f04f1b951d29cfb0bc77a96d81516aa2448859a04bce293caefd504",
    "data_size": 33612,
    "name": "SITdoc.sit",
-   "type": "SIT!",
-   "unadjudicated": {
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "3127f56036e0141c5d655ba8ad59d22a52e4f471632ff409a3d7bae611154d5c",
+   "rsrc_size": 234,
+   "type": "SIT!"
   }
  ],
  "fixture": "sitdoc.sit",

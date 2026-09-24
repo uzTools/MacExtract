@@ -13,7 +13,7 @@
  ],
  "fixture": "derived-Polyglot.dmg.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "9ef80d0f5e21287a6c07d13b9229c12025a81e86b697356144c0512aa52bc3c6",
  "size": 80382
 }

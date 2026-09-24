@@ -2,70 +2,70 @@
  "entries": [
   {
    "creator": "ttxt",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "f7d304252836f7ad54269f3ef3741fa412758fb914b301815b91d1a15ad98b97",
    "data_size": 1024,
    "name": "Alphabet edges",
    "oracle_methods": [
     "Fixed Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "335ae7912b8001bd7fa198fffd710d92e10fda46a00adf2042c90b4e138c141c",
    "rsrc_size": 254,
    "type": "TEXT"
   },
   {
    "creator": "ttxt",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "0e277f70f75c305024ccc0d957417c77678afcbc7ff36eb80f477fcae7ab7886",
    "data_size": 387,
    "name": "Control bytes",
    "oracle_methods": [
     "Fixed Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "b32b52bd43db7c67def069ff283373407ce26dfa0f28bdcac8a0b66231ce91ff",
    "rsrc_size": 258,
    "type": "TEXT"
   },
   {
    "creator": "ttxt",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "6a6aeb5133b70648b3fe5fdd7e8ccd6dc5856ae2da53daf67cefac98dc71e63e",
    "data_size": 222,
    "name": "Many segments",
    "oracle_methods": [
     "Fixed Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
    "rsrc_size": 1,
    "type": "TEXT"
   },
   {
    "creator": "ttxt",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "e09e04d2c057b2882f9eeaf2e6eefc2accdf4f92c4108cd2235f38238485db3e",
    "data_size": 91,
    "name": "Mixed segments",
    "oracle_methods": [
     "Fixed Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "a1a053f8121c352fc2e4feb0a24d038665f5ec5f6402c34b62f274e2c940c16c",
    "rsrc_size": 232,
    "type": "TEXT"
   },
   {
    "creator": "ttxt",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "138c8edbe3580ca61a04472709958f9d2f2fd4e0c8a0b89bf03d0715c5b8fd1f",
    "data_size": 164,
    "name": "Stored only",
    "oracle_methods": [
     "Fixed Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "14d1042e2a852e2d7d432891c3ebedc54c573316d4ef5b20eba54e3d734785b7",
    "rsrc_size": 65,
    "type": "TEXT"

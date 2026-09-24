@@ -56,6 +56,8 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+sys.path.insert(0, os.path.join(R.REPO, "tools"))
+from vmac_check import mac_component, names_are_utf8         # noqa: E402
 
 
 def _die_cleanly(signum, frame):
@@ -887,12 +889,25 @@ def _walk_volume(env, mac_dir="", depth=0):
     # since 2026-08-28; a FOLDER with one was first walked on 2026-09-04
     # (`Terrainman 2.0 \xc4` — DiskDoubler's `derived-Terrainman_2.0__.sea`),
     # and the harness failed a run the application had completed.
-    listing = subprocess.run(["hls", "-F", "-1"]
+    # -a, because without it `hls` shows neither a name beginning with a dot
+    # nor a file whose Finder INVISIBLE bit is set — and an archive holds
+    # both: `.DS_Store`, and the `Icon\r` every custom folder icon on a Mac
+    # is called, which comes out invisible because that is what the archive
+    # says. Measured 2026-09-22 on the volume this tier wrote: `hls -F -1`
+    # lists four of the five entries and `hls -a -F -1` lists five. Until
+    # then a file the Mac had written correctly was reported MISSING, and an
+    # invisible entry was invisible to the COMPARISON as well as the Finder.
+    # checkdisk.py has had both rules since it was written.
+    listing = subprocess.run(["hls", "-a", "-F", "-1"]
                              + ([mac_dir.encode("mac_roman", "replace")]
                                 if mac_dir else []),
                              capture_output=True, env=env)
     for raw in listing.stdout.split(b"\n"):
-        entry = raw.rstrip().decode("mac_roman")
+        # NOT rstrip(): a carriage return is a legal HFS filename character,
+        # and it is the LAST character of `Icon\r`. `hls -1` ends each line
+        # with \n and adds nothing else, so splitting on \n has already
+        # removed everything that is not name.
+        entry = raw.decode("mac_roman")
         if not entry:
             continue
         isdir = entry.endswith(":")
@@ -988,7 +1003,6 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
             expected.add(rel)
-    expected = {unicodedata.normalize("NFC", e) for e in expected}
 
     # The Mac writes each COMPONENT the way ComponentToStr63() does — the
     # engine's ':' back to '/', cut at 31 characters — so the two sides
@@ -999,10 +1013,18 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
     # `SD! Utilities : MacWrite`: a colon on Linux and a slash on the
     # Mac, which the set comparison would otherwise call one missing file
     # and one unexpected one. The HFS+ path has done this since M12.
+    # The KEY is what the Mac wrote and is NFC, because _walk_volume()
+    # normalizes what it reads off the volume; the VALUE is the path on the
+    # Linux disk, UNNORMALIZED, because that is the one that has to be
+    # opened below. Both matter, and the order does: the fold reads the
+    # archive's own bytes, so it runs BEFORE the normalization and not
+    # after it (mac_leaf, and checkdisk.py, which learned it first).
     mac_of = {}
     collided = {}
+    utf8 = names_are_utf8(fixture)
     for e in sorted(expected):
-        m = "/".join(mac_leaf(c) for c in e.split("/"))
+        m = "/".join(unicodedata.normalize("NFC", mac_leaf(c, utf8))
+                     for c in e.split("/"))
         if m in mac_of:
             collided[m] = [mac_of[m], e]
         mac_of[m] = e
@@ -1178,15 +1200,30 @@ def read_report(path):
     return vals, recs
 
 
-def mac_leaf(name):
+def mac_leaf(name, utf8=False):
     """A CLI output filename as the Mac shell would write it.
 
     ComponentToStr63() in mac/macextract_mac.c: undo the engine's '/'->':'
     swap and cap at 31 characters. That cap is the whole reason this run
     exists — HFS+ permits 255-character names, but a 68k application reaching
     it through the classic File Manager is still limited to 31, and whether
-    that holds on HFS+ had never been checked."""
-    return name.replace(":", "/")[:31] or "_"
+    that holds on HFS+ had never been checked.
+
+    `utf8` folds a StuffIt 5 name into MacRoman first (Utf8ToMacRoman),
+    which the shell does on HFS+ exactly as it does on HFS — the limit it
+    is written for is the classic File Manager's, not the volume's.
+    tools/vmac_check.py has both rules.
+
+    **This runs on the archive's own spelling, before any Unicode
+    normalization**, because that is what the shell folds: a DECOMPOSED
+    name folds to one '_' per code point, so an NFC fold predicts one
+    too few. Both callers normalized first until 2026-09-22, which was
+    latent while no fixture on this tier had a non-ASCII StuffIt 5 name;
+    `derived-800saywhat301j.sit` is the one that bites it, and they fold
+    first and normalize the KEY afterwards now, as checkdisk.py does.
+    The reference path stays unnormalized because it has to be
+    opened."""
+    return mac_component(name, utf8)
 
 
 def report_present(xfer, workdir):
@@ -1206,7 +1243,13 @@ def report_present(xfer, workdir):
     if subprocess.run(["hmount", hfs], capture_output=True,
                       env=env).returncode != 0:
         return False
-    out = subprocess.run(["hls", "-1"], capture_output=True, env=env).stdout
+    # -a for the reason _walk_volume gives: `hls` hides a file whose Finder
+    # INVISIBLE bit is set. A report the shell had marked invisible would
+    # never be seen here, and the symptom is a poll that never fires — a
+    # timeout, not a wrong answer, but a timeout that would be read as the
+    # application having hung.
+    out = subprocess.run(["hls", "-a", "-1"], capture_output=True,
+                         env=env).stdout
     subprocess.run(["humount"], capture_output=True, env=env)
     return b"report" in out
 
@@ -1224,7 +1267,14 @@ def wrapper_names(boot, workdir):
     classic File Manager reports 'BD' for an HFS+ volume for compatibility, so
     a negative there would mean nothing. This test has no such ambiguity, and
     misreading a signature at a fixed offset is precisely how the "the boot
-    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md)."""
+    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md).
+
+    **`-a`, because this is a NEGATIVE.** The verdict is that none of the
+    output is here, and `hls` without `-a` hides any file whose Finder
+    invisible bit is set — so the listing this is read against was the
+    one that makes the negative EASIEST to satisfy. Adding it can only
+    lengthen the list and can only make the assertion harder to pass,
+    which is the direction a negative wants (2026-09-22)."""
     home = os.path.join(workdir, "wraphome")
     os.makedirs(home, exist_ok=True)
     env = dict(os.environ, HOME=home)
@@ -1232,7 +1282,7 @@ def wrapper_names(boot, workdir):
     if subprocess.run(["hmount", boot, "1"], capture_output=True,
                       env=env).returncode != 0:
         return None
-    out = subprocess.run(["hls", "-1"], capture_output=True, env=env)
+    out = subprocess.run(["hls", "-a", "-1"], capture_output=True, env=env)
     subprocess.run(["humount"], capture_output=True, env=env)
     return [l.decode("mac_roman") for l in out.stdout.split(b"\n") if l.strip()]
 
@@ -1417,7 +1467,7 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
 
     # Names, which no aggregate can carry — and the point of an HFS+ run.
     got_names = sorted(n for _d, n in recs)
-    exp_names = sorted(mac_leaf(n) for n in want_names)
+    exp_names = sorted(mac_leaf(n, names_are_utf8(fixture)) for n in want_names)
     if got_names == exp_names:
         lines.append(f"  {len(got_names)} name(s) on HFS+ exactly as the "
                      f"31-character rule predicts")
@@ -1645,12 +1695,15 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
             if f.startswith("._"):
                 continue                  # sidecar; it travels with its data
             expected.add(os.path.relpath(os.path.join(root, f), ref))
-    expected = {unicodedata.normalize("NFC", e) for e in expected}
     # Compare in the Mac's spelling, as verify_output() does: the shell writes
-    # each component through ComponentToStr63().
+    # each component through ComponentToStr63(), and a StuffIt 5 name through
+    # Utf8ToMacRoman before that — the fold first, then the normalization,
+    # and the reference path kept unnormalized so it can be opened.
     mac_of = {}
+    utf8 = names_are_utf8(fixture)
     for e in sorted(expected):
-        mac_of["/".join(mac_leaf(c) for c in e.split("/"))] = e
+        mac_of["/".join(unicodedata.normalize("NFC", mac_leaf(c, utf8))
+                        for c in e.split("/"))] = e
     expected = set(mac_of)
 
     lines.append(f"{len(names)} file(s) on the "

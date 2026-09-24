@@ -181,20 +181,47 @@ typedef struct UncCrypt {
     int      aesrounds;
     uint8_t  ctr[16], ctrbuf[16], ctrpos;
     UncHmac  hmac;
+    /* The one 2 KB table the two DES variants and Compact Pro's CRC-64
+     * read a round or a byte through — built at key setup into a heap
+     * block the caller frees with unc_crypt_free, from 544 B of S boxes
+     * and P. Resident as three const tables it was 6 KB of A5 world on
+     * every extraction, for entries nothing in the corpus has
+     * (DECISIONS.md 2026-09-19). Preserved across crypt_clear; the
+     * ciphers that need none leave it NULL. */
+    uint32_t *tab;
+    int      tabkind;
 } UncCrypt;
+
+/* Before the first key: no cipher, no table. Every host of a UncCrypt
+ * calls this once, because the struct usually sits inside a buffer that
+ * was never zeroed. */
+static inline void unc_crypt_init(UncCrypt *cr)
+{
+    cr->kind = UNC_CRYPT_NONE;
+    cr->tab = NULL;
+    cr->tabkind = 0;
+}
+
+/* Give the table back. Safe on a UncCrypt that never needed one. */
+void unc_crypt_free(UncCrypt *cr, UncAlloc *al);
 
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
 void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
-void unc_crypt_packit_des(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+/* The three that build a table take the allocator and can fail with
+ * UNC_ERR_MEM — per entry, like any other allocation. */
+int  unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                          uint16_t pwlen);
 int  unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
-void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+int  unc_crypt_cpt(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                   uint16_t pwlen);
 void unc_crypt_zip_update(UncCrypt *cr, uint8_t plain);
 void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen);
 int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                         const uint8_t hash[UNC_SIT5_KEYLEN],
                         uint8_t out[UNC_SIT5_KEYLEN]);
-int  unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
-                   const uint8_t entrykey[16], const uint8_t mkey[8]);
+int  unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                   uint16_t pwlen, const uint8_t entrykey[16],
+                   const uint8_t mkey[8]);
 int  unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                           const uint8_t *salt, int keybytes,
                           const uint8_t verifier[2]);
@@ -260,6 +287,23 @@ static inline int unc_bufin_next(UncBufIn *b)
 {
     if (b->pos < b->len) return b->buf[b->pos++];
     return unc_bufin_next_slow(b);
+}
+
+/* The bytes that are already in the buffer: *p is set to the first of
+ * them and their count returned, which is 0 when the buffer is spent —
+ * the caller's cue to go through unc_bufin_next, refill and ask again.
+ * unc_bufin_drop consumes n of them. Only fmt_binhex.c uses this, to
+ * take a whole 64-character line in one pass rather than pay the bounds
+ * test and the cursor store once per character. */
+static inline uint32_t unc_bufin_span(const UncBufIn *b, const uint8_t **p)
+{
+    *p = b->buf + b->pos;
+    return b->len - b->pos;
+}
+
+static inline void unc_bufin_drop(UncBufIn *b, uint32_t n)
+{
+    b->pos += n;
 }
 
 /* The next byte WITHOUT consuming it, or -1 at EOF (which sets the
@@ -502,7 +546,7 @@ typedef struct UncLzw {
     uint8_t  *mem;          /* single allocation, see unc_lzw_init */
     uint16_t *parent;       /* [capsymbols] */
     uint8_t  *chr;          /* [capsymbols] */
-    uint8_t  *chain;        /* [capsymbols] reversed-chain staging */
+    uint8_t  *len;          /* [capsymbols] string length, 255 = "or more" */
     uint32_t  bitbuf;       /* LSB-first bit accumulator */
     int32_t   nbits;
     /* maxsymbols is the DECLARED ceiling (1 << maxbits) and governs
@@ -513,7 +557,12 @@ typedef struct UncLzw {
     int32_t   prevsymbol;
     int32_t   symbolsize;   /* current code width in bits */
     uint32_t  symbolcounter;
-    int32_t   chainlen, chainpos;
+    /* A string longer than the caller's buffer is handed over in
+     * pieces: pendsym/pendn/pende say which one and how far in. */
+    int32_t   pendsym, pendn, pende;
+    int32_t   pendtop;      /* the string ends with topbyte (see unc_lzw.c) */
+    uint8_t   topbyte;
+    uint8_t   lastfirst;    /* first byte of the string last handed over */
     int       blockmode;
 } UncLzw;
 
@@ -755,7 +804,15 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
 /* say whether it was a decision or a slip (DECISIONS.md 2026-08-27,   */
 /* the fork writer and the filter).                                   */
 /*                                                                    */
-/* Source: reference/XADMaster/XADRLE90Handle.m.                       */
+/* Source: reference/notes/rle90_theunarchiver.md — the format's own   */
+/* published description, which states all four rules this implements: */
+/* `0x90 N` for N nonzero is N-1 repeats of the last byte, `0x90 0x00` */
+/* is a literal 0x90, anything else is a literal, and `0x90 0x01`      */
+/* "seems to either be a no-op or illegal" — which is the `strict`     */
+/* flag above, named as an open question by the description and        */
+/* settled here by measuring five implementations. Re-cited from       */
+/* XADRLE90Handle.m on 2026-09-21: the page was in reference/notes/    */
+/* the whole time (OPEN_ITEMS.md, *What is still XADMaster's*).        */
 /* ------------------------------------------------------------------ */
 
 #define UNC_RLE90_ESC  0x90
@@ -856,7 +913,11 @@ enum {
 #define UNC_IOBUF 4096u
 
 /* UNC_HOT — compile this ONE function for speed, whatever the rest of the
- * translation unit is built at.
+ * translation unit is built at. Carried by StuffIt's two hot method
+ * decoders, the LZW and Huffman primitives, unc_crc16_arc, and since
+ * 2026-09-19 Compact Pro's unc_cpt_lzh_fork, cpt_rle_push and the two
+ * functions its stages were fused into (-14.8 % of that format's engine
+ * time for +1,028 B when the marks went on, tick probe).
  *
  * The Macintosh application builds at -Os because the application is
  * resident and the floor target is a 1 MB machine. That is right for the
@@ -878,6 +939,16 @@ enum {
 #define UNC_HOT __attribute__((optimize("O3")))
 #else
 #define UNC_HOT
+#endif
+
+/* UNC_NOINLINE — keep this function out of its caller. Used where a cold
+ * branch's body would otherwise make its CALLER too big to inline into a
+ * hot loop, which measured worse than the branch itself ever cost
+ * (fmt_cpt.c, cpt_rle_fill). */
+#if defined(__GNUC__)
+#define UNC_NOINLINE __attribute__((noinline))
+#else
+#define UNC_NOINLINE
 #endif
 
 typedef struct UncForkOut {
@@ -930,11 +1001,29 @@ static inline int unc_fork_put(UncForkOut *o, uint8_t b)
     return UNC_OK;
 }
 
+/* A run of decoded bytes: staged in pieces the buffer can hold, and
+ * flushed as each fills. The shape the run-callback decoders below
+ * hand their output over in. */
+int unc_fork_write(UncForkOut *o, const uint8_t *p, uint32_t n);
+
+/* How the LZ decoders below hand their output back: a RUN at a time,
+ * straight out of the decoder's own window, rather than one byte at a
+ * time through a pointer. A per-byte callback was 6 % of a DART or
+ * -lh1- run on Linux (callgrind, 2026-09-18) and an indirect call is
+ * dearer still on a 68000; the window is already the staging, so a run
+ * costs no memory. Returns UNC_OK or a per-entry error, which stops
+ * the decoder. */
+typedef int (*UncPutRun)(void *ctx, const uint8_t *p, uint32_t n);
+
 /* ------------------------------------------------------------------ */
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
 /* which is Compact Pro compression inside a DiskDoubler container      */
 /* (Source: XADDiskDoublerParser.m case 8). The only difference is the  */
-/* Huffman block size: 0x1fff0 there, 0xfff0 here.                      */
+/* Huffman block size: 0x1fff0 for Compact Pro (fmt_cpt.c, CPT_BLOCK,   */
+/* and the published description agrees) and 0xfff0 for DiskDoubler     */
+/* (fmt_dd.c, at the call). This comment had the two the WRONG WAY      */
+/* ROUND until 2026-09-20, when a fetched specification disagreed with  */
+/* it and the code turned out to be right.                              */
 /* ------------------------------------------------------------------ */
 
 typedef struct CptRle {
@@ -1039,15 +1128,16 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
  * by StuffIt classic's method 5 and LZH's -lh1-, which are the same
  * scheme — XADMaster instantiates one handle for both. `bi` is an
  * MSB-first reader the caller has already positioned; `put` receives
- * every decoded byte and returns UNC_OK or a per-entry error. */
+ * the decoded bytes in runs (UncPutRun) and returns UNC_OK or a
+ * per-entry error. */
 /* LHarc's -lh2-: both codes adaptive, and the position tree grows with
  * the output. src/unc_lzdyn.c. */
 int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx);
+                     UncPutRun put, void *pctx);
 
 /* LHarc's -lh3-: a static code rebuilt per block. src/unc_lzdyn.c. */
 int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx);
+                     UncPutRun put, void *pctx);
 
 /* Adaptive-Huffman LZSS, in three dialects that share a tree of 314
  * leaves and differ only in what the codes above 0xff mean and in what
@@ -1080,11 +1170,15 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
 #define UNC_LZAH_DART     2
 
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
-                    int (*put)(void *ctx, uint8_t b), void *pctx);
+                    UncPutRun put, void *pctx);
 
-/* Arsenic (method 15) core, in sit_arsenic.c. */
+/* Arsenic (method 15) core, in sit_arsenic.c. Writes into the fork
+ * writer directly, and has it keep the CRC-32 the stream ends with:
+ * `f` comes back set to UNC_CK_CRC32, flushed, and checked. It used to
+ * take a per-byte callback and CRC each byte through unc_crc32, and the
+ * two calls were 10 % of a fast-path run (callgrind, 2026-09-18). */
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
-                       int (*put)(void *ctx, uint8_t b), void *pctx);
+                       UncForkOut *f);
 
 /* Raw-deflate decode via vendored zlib (unc_inflate.c). Decodes one
  * complete deflate stream from `in`, leaving the reader positioned on

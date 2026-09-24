@@ -2,13 +2,13 @@
  "entries": [
   {
    "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í"
+   "name": "FloatingNotes Carbon ƒ"
   },
   {
    "creator": "SPFL",
    "data_sha256": "8fc2027a0a37de3c999a0d81da138981ac4c41c8fb213c4eb039e30111c90c05",
    "data_size": 402495,
-   "name": "FloatingNotes Carbon ∆í/FloatingNotes Carbon 1.1",
+   "name": "FloatingNotes Carbon ƒ/FloatingNotes Carbon 1.1",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -20,7 +20,7 @@
    "creator": "\u0000\u0000\u0000\u0000",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "FloatingNotes Carbon ∆í/Icon\r",
+   "name": "FloatingNotes Carbon ƒ/Icon\r",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -32,7 +32,7 @@
    "creator": "ttxt",
    "data_sha256": "5a1297549ba5b5dfe44086d75a4b96031c7893d557b886da2d42df028ad15c72",
    "data_size": 286,
-   "name": "FloatingNotes Carbon ∆í/New for v1.1",
+   "name": "FloatingNotes Carbon ƒ/New for v1.1",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -44,7 +44,7 @@
    "creator": "ttxt",
    "data_sha256": "074f5f82512544d9646ad3ee4279fc7f773c153beefff220763f2fe827f15882",
    "data_size": 953,
-   "name": "FloatingNotes Carbon ∆í/Read Me First",
+   "name": "FloatingNotes Carbon ƒ/Read Me First",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -54,13 +54,13 @@
   },
   {
    "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes"
+   "name": "FloatingNotes Carbon ƒ/Register FloatingNotes"
   },
   {
    "creator": "ttxt",
    "data_sha256": "21a168a97c94e77c2ef2dfffb7ca81e11666b82bb966959197a287b9fa8d40a5",
    "data_size": 215,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/How to register",
+   "name": "FloatingNotes Carbon ƒ/Register FloatingNotes/How to register",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -70,13 +70,13 @@
   },
   {
    "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax"
+   "name": "FloatingNotes Carbon ƒ/Register FloatingNotes/Mail or Fax"
   },
   {
    "creator": "Regi",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/Mail or Fax/Register",
+   "name": "FloatingNotes Carbon ƒ/Register FloatingNotes/Mail or Fax/Register",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -86,13 +86,13 @@
   },
   {
    "is_dir": true,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet"
+   "name": "FloatingNotes Carbon ƒ/Register FloatingNotes/On the internet"
   },
   {
    "creator": "????",
    "data_sha256": "15090aa77b82e8ca22ce0f619028f8f4ec4655053c9f323a198fd604c985d14e",
    "data_size": 14620,
-   "name": "FloatingNotes Carbon ∆í/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
+   "name": "FloatingNotes Carbon ƒ/Register FloatingNotes/On the internet/Open to Register FloatingNotes",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -103,7 +103,7 @@
  ],
  "fixture": "derived-FloatingNotes.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "2ee48248b5e16ee6706bb9847ab7c6ce23aca5160802ee868138304cbf122a1d",
  "size": 205334
 }

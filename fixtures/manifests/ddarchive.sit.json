@@ -5,10 +5,10 @@
    "data_sha256": "fa729630c531798ce278849ea72aefb7a3d2ad57e4602e221a489103721e8ade",
    "data_size": 35408,
    "name": "DDArchive.sit",
-   "type": "SIT!",
-   "unadjudicated": {
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "1b263c5578c3ba0e6ee2d48babfc9916f4229ab00b2006c4804273c2d6bce0f9",
+   "rsrc_size": 238,
+   "type": "SIT!"
   }
  ],
  "fixture": "ddarchive.sit",

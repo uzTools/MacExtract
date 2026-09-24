@@ -13,7 +13,7 @@
  ],
  "fixture": "derived-XMenu.dmg.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "a6b0f57d15c449044254bb40067227fb8caa4a623c767fa9c42e4f1a175d77f3",
  "size": 110807
 }

@@ -18,9 +18,9 @@
    "oracle_methods": [
     "Distilled"
    ],
-   "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_oracle": "deark (Deark version: 1.7.3-1)",
@@ -30,9 +30,9 @@
    "oracle_methods": [
     "Distilled"
    ],
-   "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_oracle": "deark (Deark version: 1.7.3-1)",
@@ -42,9 +42,9 @@
    "oracle_methods": [
     "Distilled"
    ],
-   "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_sha256": "d811ccd14c52e44c79406a79d60bfb87f724c3b264a566f886e254f8ab65e46a",
@@ -84,9 +84,9 @@
    "oracle_methods": [
     "Distilled"
    ],
-   "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_oracle": "deark (Deark version: 1.7.3-1)",
@@ -96,9 +96,9 @@
    "oracle_methods": [
     "Distilled"
    ],
-   "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_oracle": "deark (Deark version: 1.7.3-1)",
@@ -108,9 +108,9 @@
    "oracle_methods": [
     "Distilled"
    ],
-   "unadjudicated": {
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   }
  ],
  "fixture": "derived-INTRECHO.pak",

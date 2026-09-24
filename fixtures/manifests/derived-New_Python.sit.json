@@ -15,7 +15,7 @@
   },
   {
    "creator": "SFX!",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "4c72a1154b02d0c8c2889fadf9c6de5d3dc3c9effd6923df322a6c4412619008",
    "data_size": 23987,
    "name": "It's A Bit Runny Sir",

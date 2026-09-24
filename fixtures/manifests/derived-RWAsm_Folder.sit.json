@@ -471,7 +471,7 @@
  ],
  "fixture": "derived-RWAsm_Folder.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "c16ddfc403361bbb27d9aa0281f4d328bfdcd0a88b878e54ab9e2a424352923d",
  "size": 66069
 }

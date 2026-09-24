@@ -5,10 +5,10 @@
    "data_sha256": "b593cc349f0bb4094369c577da2bf6f174e7ea6bdcfb45bed9be945737d99968",
    "data_size": 78123,
    "name": "•Draw 5.1.cpt",
-   "type": "APPL",
-   "unadjudicated": {
-    "rsrc": "Error on decrunching"
-   }
+   "rsrc_oracle": "MacBinary container arithmetic",
+   "rsrc_sha256": "f909cf97f5526adff90789db217279477799ec75b78fd9f2463b071460172f05",
+   "rsrc_size": 13036,
+   "type": "APPL"
   }
  ],
  "fixture": "appledraw51.cpt",

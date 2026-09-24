@@ -5,8 +5,145 @@ This project's decoders are transcriptions/ports of algorithms from:
 
   * XADMaster — the engine of The Unarchiver, by Dag Ågren (MacPaw).
     https://github.com/MacPaw/XADMaster — LGPL-2.1.
-    StuffIt (classic + SIT5 + Arsenic), Compact Pro, PackIt, BinHex,
-    MacBinary and related handles were used as the primary reference.
+    StuffIt (classic + SIT5), Compact Pro, PackIt and related handles
+    were used as the primary reference.
+    NOT BinHex, MacBinary, AppleSingle/AppleDouble, zip, tar or gzip:
+    since 2026-09-19 each of those container parsers cites the public
+    document its facts are written in instead (the "CONTAINER FORMAT
+    SPECIFICATIONS" section below). Four things that no public
+    document supports are marked as XADMaster's at the line that makes
+    them, and stay — the MacBinary CRC-16/0xA001 fallback for files
+    written with the wrong table, the nonzero-date test that stands in
+    for a MacBinary I header's missing checksum, the byte-swapped
+    AppleSingle header, and the whole StuffIt split header in
+    `src/fmt_sitseg.c`, which Aladdin never published and which nothing
+    else in `reference/` reads (deark and macutils were both looked
+    at). Of the three detect-only probes in `src/fmt_stubs.c`, **none
+    is XADMaster's any longer**: StuffIt X's magic is deark's,
+    DiskDoubler's two older headers are in macutils' `macunpack/dd.h`
+    — magic, offsets, CRC position and all — and since 2026-09-21 the
+    Now Compress probe cites `docs/formats/now-compress.md`, where the
+    file header, the entry record and the byte-sum checksum it tests
+    are measured off nine archives.
+    Arsenic (StuffIt method 15) no longer: since 2026-09-19
+    `src/sit_arsenic.c` is written from Matthew T. Russotto's public
+    description of the format (reference/notes/arsenic_russotto.md),
+    with a move-to-front in the two-level shape of bzip2's (Julian
+    Seward, BSD-style licence), written from the idea. Nor LZH's
+    static methods: since 2026-09-19 `src/fmt_lzh.c`'s decoders for
+    -lh4- .. -lh7- and for LArc's -lz5-/-lzs- are written from lhasa
+    (below). **Nor that file's header walk, since 2026-09-22**: it is
+    `reference/lha/header.doc.euc` — Masaru Oki's `header.doc`, LHa for
+    UNIX, 2 March 1992, which gives levels 0, 1 and 2 field by field
+    with the extended-header types, the OS IDs and the method IDs —
+    plus lhasa for the four things it does not cover, and
+    `docs/formats/lzh-header.md` says which came from which. A reader
+    written from those alone walks 156 archives and 191 entries with no
+    disagreement (`tools/derive_lzh.py`). One rule is still
+    XADLZHParser.m's and has no specimen anywhere on this machine: that
+    a NUL inside a level 0/1 name field ends the name. Nor the LZW decoder: since 2026-09-19
+    `src/unc_lzw.c` is written from deark's `src/fmtutil-lzw.c` (below)
+    and Welch's algorithm, and neither `LZW.c` nor
+    `XADCompressHandle.m` is a source of it. Nor the canonical
+    code-length Huffman codes in `src/unc_huffman.c`, which follow
+    RFC 1951 section 3.2.2 and puff.c (below) rather than
+    XADPrefixCode.m. Nor, since 2026-09-20, the bit-serialized TREE in
+    that same file, nor the fact that DiskDoubler method 4 and PackIt
+    write the same one: those are
+    `docs/formats/serialized-huffman-tree.md`, this project's own
+    description, derived from the three formats' output by experiment
+    and reproducible with `tools/derive_huffman_tree.py`. StuffIt
+    method 8 went the same way that day —
+    `docs/formats/stuffit-method-8-mw.md`, Miller and Wegman's
+    dictionary rule with the parameters measured off all four method-8
+    forks in the corpus (`tools/derive_stuffit8.py`) — **except for
+    three rules no specimen reaches**: the table restart, the
+    end-of-stream code and the 14-bit ceiling, which are still
+    XADStuffItOldHandles.m's and say so where they are used. And ARC's
+    member header, its RLE90 filter and its methods 4, 8 and 9 are
+    `docs/formats/arc-container-and-coders.md` since the same day,
+    derived from archives ARC 5.21q wrote to order
+    (`tools/derive_arc.py`); XADARCCrunchHandle.m still has methods
+    5/6/7 and XADARCCrushHandle.m method 10. And **Compact Pro** is
+    `docs/formats/compact-pro.md` since the same day — the format's
+    own published description, three pages of The Unarchiver's format
+    wiki, plus the six corrections it needs; a reader written from
+    those alone reads every Compact Pro fork in the corpus, 536 of
+    them (`tools/derive_cpt.py`), so neither XADCompactProParser.m nor
+    XADCompactProLZHHandle.m nor macutils' cpt.c is a source of
+    `src/fmt_cpt.c` any longer. Nor of `src/fmt_sit.c`'s container,
+    its method 13 or `src/sit13_tables.h`: that wiki documents method
+    13 in full, tables included, and
+    `docs/formats/stuffit-method-13.md` carries the two corrections it
+    needs — 897 forks across 103 archives read from the page alone
+    (`tools/derive_sit13.py`), and the tables compared array by array
+    against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
+    pointed at the page instead. **Since 2026-09-22 `src/fmt_sit.c`
+    owes XADStuffItParser.m, XADCompressHandle.m and
+    `macunpack/sit.c` nothing at all.** Method 6 was the last of it.
+    Its fixed code book stopped being macutils' on 2026-09-21 —
+    `src/sit6_tables.h` carried 1,028 bytes of tables derived from
+    `code6[258]` and `sit_dosplit`, and it is now the thirteen
+    (count, length) pairs and the assignment rule
+    `reference/deark/modules/stuffit.c` states (MIT), which reproduce
+    macunpack's tree over every one of the 8,192 bit paths of depth 13
+    (`tools/check_sit6_tree.py`). Its **framing** — the segment
+    header, the stored-segment rule and the PackBits tail — followed
+    on 2026-09-22: `docs/formats/stuffit-method-6.md` describes all
+    three against that same MIT file and `fmtutil-rle.c`'s PackBits
+    codec, with the three places this engine is stricter than either
+    reference measured rather than transcribed, and a reader written
+    from the note alone reads all 11 method-6 forks in the corpus
+    (`tools/derive_sit6.py`). And the RLE90 filter is
+    `reference/notes/rle90_theunarchiver.md`, the format's own
+    published description, which states every rule
+    `unc_internal.h`'s shared filter implements — including the
+    `0x90 0x01` case it calls open and this project settled by
+    measurement. And **DiskDoubler's
+    coders** since 2026-09-21: the same wiki documents methods 6 and 9
+    (`ADn`) and method 10 (`DDn`), and
+    `docs/formats/diskdoubler-dd.md` carries the six corrections they
+    need — including method 10's second form, which the page names and
+    does not describe — so a reader written from those pages alone
+    reads all 39 DD and AD forks in the corpus
+    (`tools/derive_dd.py`). `src/fmt_dd.c`'s CONTAINERS left this row on
+    2026-09-22 for `docs/formats/diskdoubler-container.md`, this
+    project's own measured description — the wiki names three container
+    pages and none of the three exists, so DiskDoubler 3.7, 4.0 and
+    Pro 4.1 were run here and `tools/derive_ddc.py` makes 643 assertions
+    against the oracle over 91 fixtures with 0 disagreements, the folder
+    records among them (measured against archives 3.7's Combine command
+    wrote). What is still XADDiskDoublerParser.m's, and macutils'
+    `macunpack/dd.h` beside it, is the `DDAR` `0x20` raw-fork shape,
+    which no specimen here reaches — it is also what names which forks
+    use method 10's second form.
+    And **the StuffIt 5 container** since 2026-09-22:
+    `reference/notes/sit5_specs_theunarchiver.md` is that same wiki's
+    `StuffIt5Format` page, which this project's own
+    `reference/notes/StuffIt.md` had named in its *Sources* list all
+    along, and `docs/formats/stuffit5-container.md` carries the one
+    correction it needs — its archive-header table gives offset 84
+    twice. A reader written from the page alone reads all 31 StuffIt 5
+    fixtures, 525 entries, agreeing with the oracle on every path and
+    both fork lengths (`tools/derive_sit5.py`). What is still
+    XADStuffIt5Parser.m's in `src/fmt_sit5.c` is the ENCRYPTED archive
+    — where the password hash sits and the MD5-of-MD5 that grades a
+    password — which that page does not describe and which no corpus
+    archive exercises.
+    **Now Compress is a different case.** The FORMAT is described by
+    this project — `docs/formats/now-compress.md`, measured off Now
+    Compress 5.0.1 under emulation, with a reader written from that
+    note alone decoding every block of both corpus archives
+    (`tools/derive_now.py`) — because no published description of it
+    exists anywhere. Its coders in `src/fmt_now.c` were **rewritten
+    from that note on 2026-09-21**, the M12 transcription of
+    XADNowCompressParser.m and XADNowCompressHandle.m having stood
+    until then. **Nothing in that file rests on the reference any
+    more**: the last two things that did — the offset-delta search and
+    the code-length escape past 15, neither of which the encoder will
+    produce on request — were measured against the format's own decoder
+    the same day, by changing the field and handing the file back to
+    Now Compress (`tools/mutate_now.py`).
     Files that transcribe XADMaster code carry a
     "Source: reference/XADMaster/<file>" comment.
 
@@ -17,13 +154,40 @@ This project's decoders are transcriptions/ports of algorithms from:
     allowed, and that "for some parts of it the GNU software license
     does apply"; the files here that cite it say "LGPL, see NOTICE",
     and this is what that points at.
-    Used as a secondary reference for the oldest formats, and as the
-    ONLY reference for StuffIt method 6, "fixed Huffman", which
-    XADMaster recognizes but does not implement: `src/fmt_sit.c` and
-    the generated `src/sit6_tables.h` transcribe `macunpack/sit.c`.
+    Used as a secondary reference for the oldest formats. **Not
+    `src/fmt_sit.c` since 2026-09-22**: that file's method 6, "fixed
+    Huffman", was transcribed from `macunpack/sit.c` because XADMaster
+    recognizes the method and refuses it, and it is
+    `docs/formats/stuffit-method-6.md`'s now — deark implements the
+    method under MIT, which the claim that macutils was the only
+    reference for it had missed for four weeks (BLOCKERS.md).
+    **Not `src/fmt_packit.c`'s container since 2026-09-21**: PackIt is
+    published too, in appendices B and C of R. Scott McGinnis's 1986
+    unPACKIT manual, and `docs/formats/packit.md` carries the four
+    corrections they need — a reader written from those appendices
+    alone reads all 38 forks of the corpus's PackIt archives
+    (`tools/derive_packit.py`). What that file still owes macutils is
+    that the two CRCs the appendix names are CRC-16/XMODEM and the
+    resync strategy for an entry it cannot decode; the two ciphers are
+    XADMaster's.
     A build of `macunpack` is also the second oracle for the
     differential test suite (TESTING.md) — test-time only, not linked
     into anything shipped.
+
+  * LZHUF, by Haruyasu Yoshizaki (1988) with comments by Haruhiko
+    Okumura (1989) — the published program, LZHUF.C, as distributed in
+    http://cd.textfiles.com/rbbsv3n1/pac4/okumura.zip. It carries no
+    copyright notice and no licence text; its terms of use are
+    reconstructed (Russell Marks, 2001, via deark's readme-lzhuf.txt)
+    as "use, distribute, and modify this program freely". Since
+    2026-09-19 `src/unc_lzah.c` — the -lh1- coder shared by StuffIt
+    method 5, LZH -lh1-, ARC 7.x Trimmed and DART's "best" — follows
+    that program's tree machinery (freq/son/prnt, reconst, update,
+    the 256-entry distance lookup derived from the 64 code lengths)
+    rather than XADMaster's transcription of it; the modes, the window
+    preloads and everything around the tree are this project's. The
+    change was made for speed and heap, not licence: this engine
+    remains LGPL through its other XADMaster transcriptions.
 
   * deark, by Jason Summers — https://github.com/jsummers/deark, MIT.
     Two ARC methods in `src/fmt_arc.c` follow deark rather than
@@ -39,9 +203,25 @@ This project's decoders are transcriptions/ports of algorithms from:
     states the facts it took and cites them — and deark's own
     documentation of the format (entropymine.wordpress.com,
     "ARC/PAK's Distilled compression scheme") is cited alongside it.
+    Since 2026-09-19 deark is also the source of `src/unc_lzw.c`, the
+    Unix compress(1) LZW decoder: `src/fmtutil-lzw.c` documents the
+    stream — the clear code, where the code width grows, and the rule
+    that codes are written eight at a time at one width, so a width
+    change mid-group leaves padding to discard. The algorithm is
+    Welch's. Again no code was copied, and `LZW.c` and
+    `XADCompressHandle.m` are no longer sources of that file. The
+    same file's `delzw_process_unixcompress_3byteheader` is what
+    `src/fmt_exo.c` cites for the `.Z` header the decoder sits behind
+    — the magic, the maximum code width in the mode byte's low five
+    bits, and bit 7 for the clear code.
     A build of deark is also the oracle for that method in the test
     suite (TESTING.md, tools/build_deark.sh): test-time only, never
     linked into anything shipped.
+    Since 2026-09-19 it is also what `unc_sitx_probe` in
+    `src/fmt_stubs.c` cites for the StuffIt X magic — an eight-byte
+    signature Aladdin never published, which
+    `modules/unsupported.c` reads exactly as this does, so the probe
+    no longer needs XADMaster's reading of it.
 
   * mpack/munpack 1.6, by John G. Myers — Copyright (c) 1993, 1994
     Carnegie Mellon University. Permissive: "Permission to use, copy,
@@ -79,14 +259,48 @@ This project's decoders are transcriptions/ports of algorithms from:
     (fixtures/SOURCES.md).
 
   * The cryptographic primitives five of the encryption schemes need —
-    DES, MD5, RC4, SHA-1 and AES — are transcribed from XADMaster's
-    own `Crypto/` directory (des.c, md5.c, sha.c, hmac_sha1.c, the
-    Gladman AES tables) and from the handles that use them; the tables
-    are precomputed by `tools/gen_crypt_tables.py` because this engine
-    may not have global mutable state, and the generator checks the AES
-    S box against its own definition rather than trusting the copy.
+    DES, MD5, RC4, SHA-1 and AES — cite the documents that define them,
+    since 2026-09-23: RFC 3174 sections 5 and 6.1 for SHA-1, RFC 2104
+    for HMAC's 0x36/0x5C pads, RFC 2898 section 5.2 for PBKDF2,
+    `reference/notes/arcfour_draft.txt` for RC4's key schedule, and
+    APPNOTE.TXT section 6.1 for the traditional zip cipher, whose three
+    key constants, `update_keys` and `decrypt_byte` it writes out in
+    full. WinZip's AES parameters — 1,000 iterations, a salt half the
+    key's length, the last two bytes as the verifier — are its own
+    published AE-1/AE-2 specification; only the CTR counter's
+    endianness and start value are not in it, and those rest on the
+    fixtures that decrypt. Gladman's `Crypto/aeskey.c` and `aescrypt.c`
+    remain named for the AES key expansion. The tables are precomputed
+    by `tools/gen_crypt_tables.py` because this engine may not have
+    global mutable state, and the generator checks the AES S box against
+    its own definition rather than trusting any copy.
+    **Nothing in `src/crypt_tables.h` is derived from XADMaster since
+    2026-09-23.** DES's tables — IP, IP^-1, PC-1, PC-2, the shift
+    schedule, the eight selection functions and P — are read out of FIPS
+    46-3 itself (`reference/notes/fips46-3.pdf`); `Crypto/des.c`, which
+    had supplied them, is also the only one of those files that states
+    no licence of its own. MD5's three are RFC 1321's, out of the 64
+    round calls of the RFC's own reference implementation
+    (`reference/notes/rfc1321.txt`), with the RFC's literal constants
+    asserted to equal its definition of them as the integer part of
+    4294967296*abs(sin(i)). The AES S box is BUILT from the FIPS-197
+    definition rather than extracted from `Crypto/aestab.c`. Those two
+    files and `XADStuffItDESHandle.m` are still read by the generator,
+    but only to agree: nothing is emitted from them. Each swap left the
+    header byte for byte identical, and the first added two checks the
+    old route had no way to make — the published IP^-1 against the one
+    derived from IP, and the published IP against the prose
+    reconstruction `des.c`'s comment had supplied.
     Each is graded in `tests/unit_formats.c` against an implementation
     that is not ours — python's hashlib and hmac, and `openssl enc`.
+    Since 2026-09-19 StuffIt's "StuffItDES" is not a second cipher: it
+    is standard DES's round function (FIPS 46-3) with no initial or
+    final permutation, so the second S-box table and the second round
+    function are gone. What `XADStuffItDESHandle.m` remains the source
+    of is the nibble KEY SCHEDULE — which reads all 64 key bits where
+    PC-1 drops eight, and so is not the standard schedule of any
+    permuted key — and the derivation of the per-file key.
+    `tools/fit_sitdes.py` proves both halves of that statement.
 
   * Compact Pro (Bill Goodman, 1990-1995). Its ENCRYPTION is the one
     scheme in this project that no reference implementation reads and
@@ -97,8 +311,10 @@ This project's decoders are transcriptions/ports of algorithms from:
     both the encrypt and decrypt loops, each cited by address in that
     file. No code was copied; every routine named there is an offset in
     a binary this project does not redistribute (the container and its
-    two compression methods are transcribed from XADMaster and
-    macutils, as above).
+    two compression methods left XADMaster and macutils on 2026-09-20
+    for `docs/formats/compact-pro.md`, the format's own published
+    description, as above — only this ENCRYPTION is read off the
+    application, because no publication describes it).
 
   * btoa 5.2.1, by Paul Rutter, Joe Orost and Stefan Parmark (1996) —
     and this one is a REFERENCE ONLY, deliberately, because its terms
@@ -123,26 +339,64 @@ This project's decoders are transcriptions/ports of algorithms from:
     compiles it and decodes what it encodes). The names are mentioned,
     here and in the source. DECISIONS.md 2026-08-23 (btoa's licence).
 
+  * lhasa 0.4.0, by Simon Howard — https://github.com/fragglet/lhasa,
+    ISC licence. Since 2026-09-19 `src/fmt_lzh.c`'s decoders follow it
+    rather than XADMaster: `lh_new_decoder.c` and `tree_decode.c` for
+    -lh4- .. -lh7- (the block structure, the three code tables and the
+    offset encoding), `lh5_decoder.c` and `lh7_decoder.c` for the
+    alphabet and field widths, `lz5_decoder.c` and `lzs_decoder.c` for
+    LArc's two methods with their window preloads. The canonical-code
+    table and the bit reader those feed are this project's own, as is
+    the window sizing and MacLHA's MacBinary split. The change was made
+    for speed: this engine remains LGPL through its other XADMaster
+    transcriptions, of which `src/fmt_lzh.c` is no longer one — its
+    header walk left on 2026-09-22 for LHa's own `header.doc` and for
+    lhasa.
+    lhasa is also read for the header levels and used at test time as a
+    second decoder (`tools/run_lzh.py`); it is not committed
+    (`tools/fetch_references.sh` fetches it) and not linked into
+    anything shipped. Its ~160 test archives are the specimens that put
+    the format in scope; seven are fixtures, fetched by URL and never
+    committed, like every other fixture (fixtures/SOURCES.md).
+
   * LHa for UNIX 1.14i (Yoshizaki, Tagawa, Oki, Watazaki, Okamoto,
-    1989-2000) and lhasa 0.4.0 (Simon Howard, ISC licence) — both
-    REFERENCES ONLY for `src/fmt_lzh.c` and `src/unc_lzah.c`, which are
-    transcribed from XADMaster's LZH handles as above. LHa is read as
-    the original statement of the header levels and of LArc's two
-    methods, and lhasa as an independent reading of both; the file
-    comments say which fact came from which, and three of them were
-    settled by neither but by an archive (DECISIONS.md 2026-08-23,
-    LZH). Neither is committed — `tools/fetch_references.sh` fetches
-    them — and neither is linked into anything shipped: LHa is
-    compiled at test time as an ENCODER and lhasa as a second decoder
-    (`tools/run_lzh.py`). lhasa's ~160 test archives are the specimens
-    that put the format in scope; seven are fixtures, fetched by URL
-    and never committed, like every other fixture
-    (fixtures/SOURCES.md).
+    1989-2000) — a REFERENCE ONLY for `src/fmt_lzh.c` and
+    `src/unc_lzah.c`, read as the original statement of the header
+    levels, of LArc's two methods and of the static Huffman stage; the
+    file comments say which fact came from which, and three of them
+    were settled by neither reference but by an archive (DECISIONS.md
+    2026-08-23, LZH). Not committed, and compiled at test time as an
+    ENCODER only.
 
   * "Stuffit Method 15 compression format" by Matthew T. Russotto —
     the only public specification of the StuffIt 5 "Arsenic"
-    (BWT + MTF + arithmetic coding) method.
+    (BWT + MTF + arithmetic coding) method, and of that method ONLY:
+    it describes no part of the SIT5 container, which OPEN_ITEMS.md and
+    `src/fmt_sit5.c` both claimed it did until 2026-09-22
+    (BLOCKERS.md, withdrawn claims).
     http://www.russotto.net/arseniccomp.html
+
+  * "StuffIt5Format", The Unarchiver's format wiki — the published
+    description of the StuffIt 5 CONTAINER, which `src/fmt_sit5.c`
+    follows since 2026-09-22 (`docs/formats/stuffit5-container.md` has
+    the one correction it needs). Fetched by
+    `tools/fetch_references.sh` into
+    `reference/notes/sit5_specs_theunarchiver.md`, alongside the other
+    pages of the same wiki this project reads.
+
+  * RFC 1951 (DEFLATE, L. Peter Deutsch, 1996) and puff.c (Mark Adler,
+    zlib licence) — REFERENCES ONLY, for the canonical code-length
+    Huffman codes in `src/unc_huffman.c`. Section 3.2.2 defines the
+    code shape and gives the assignment; puff.c's `construct()` and
+    `decode()` are the build and the walk, and its contract that an
+    INCOMPLETE code set is a legal outcome rather than an error is what
+    Compact Pro relies on. No code was copied, neither is committed
+    (`tools/fetch_references.sh` fetches them) and neither is linked
+    into anything shipped. The bit-serialized Huffman TREE in the same
+    file is a different thing, and has had no PUBLIC description at any
+    point; what it has since 2026-09-20 is one of this project's own,
+    `docs/formats/serialized-huffman-tree.md`, measured from the
+    formats rather than read out of anybody's program.
 
   * CiderPress2, by Andy McFadden (Apache-2.0), and Apple's own
     `DartIntf.h`, by Ken McLeod (© 1987-1994 Apple Computer, Inc.) —
@@ -164,7 +418,58 @@ This project's decoders are transcriptions/ports of algorithms from:
     anything shipped. CiderPress2's `TestData/dart/` is the test-time
     oracle (`tools/run_dart.py`): two disks DART 1.5.3 compressed, with
     the images it was fed. Its README notes that DART itself is
-    copyright Apple Computer, Inc.
+    copyright Apple Computer, Inc. Two more oracles are archives Apple
+    shipped — the A/UX 3.0.1 *Read Me* and *Installation Boot Disk*
+    floppies, © Apple Computer, Inc., fetched from the Macintosh Garden
+    FTP by `tools/get_dart_specimen.py` and, like every other archive in
+    the corpus, never committed. What grades our output is what DART
+    wrote into their resource forks in 1993.
+
+CONTAINER FORMAT SPECIFICATIONS
+
+These are REFERENCES ONLY and none of them is a licence obligation. Each
+documents a container — a header, an entry table, a directory — rather
+than a compression method, and each replaced a citation of XADMaster's
+reading of the same fact (DECISIONS.md 2026-09-19, *the facts that were
+somebody else's to state*). None is committed;
+`tools/fetch_references.sh` fetches them into `reference/notes/`, and
+the file that uses one names the section a fact is in.
+
+  * "BinHex 4.0 Definition", Peter N Lewis, August 1991, and RFC 1741
+    (Faltstrom, Crocker & Fair, 1994), Appendix A — for
+    `src/fmt_binhex.c`. Both are needed. The RFC's rendering of the
+    64-character alphabet carries a stray space and is 65 characters
+    long, so it cannot on its own say what the alphabet is; Lewis's
+    document is also the only one that states the CRC and the rule
+    that a run count of zero means a literal 0x90.
+
+  * The MacBinary II Standard (revised 7/24/87) and the MacBinary III
+    Standard Proposal (December 1996) — for `src/fmt_macbinary.c`: the
+    128-byte header, the fork padding, the CRC over bytes 0..123, the
+    'mBIN' signature, and the tests a reader is told to apply when
+    there is no checksum to lean on.
+
+  * RFC 1740 (Faltstrom, Crocker & Fair, 1994), appendices A and B —
+    for `src/fmt_applesingle.c`: the magic numbers, the version, the
+    filler, the entry descriptors, the predefined entry ids, and the
+    epoch entry 8's dates are counted from.
+
+  * RFC 1952 (Deutsch, 1996) — gzip, for `src/fmt_exo.c`.
+
+  * PKWARE's APPNOTE.TXT 6.3.10, the .ZIP File Format Specification —
+    for `src/fmt_exo.c` and `src/fmt_zipseg.c`: the central directory
+    and end-of-central-directory records, the Zip64 records and extra
+    field, the general purpose bit flag, method 99, and section 8's
+    account of splitting and spanning. WinZip's AES specification,
+    which APPENDIX E of that document names as the published layout of
+    the 0x9901 extra field, is fetched beside it.
+
+  * POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
+    `pax` utility page, "ustar Interchange Format" — for
+    `src/fmt_exo.c`: the 512-octet header block, the octal fields, the
+    checksum rule and the typeflag values. Pre-POSIX v7 tar predates
+    it and has no specification at all; how that is recognised here is
+    this project's own and says so at the line.
 
 DATA THAT IS NOT OURS AND IS SHIPPED ANYWAY
 

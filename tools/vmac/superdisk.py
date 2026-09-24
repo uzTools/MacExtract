@@ -37,7 +37,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                       # noqa: E402
-from arcmac import macbinary                          # noqa: E402
+from arcmac import macbinary              # noqa: E402
+from mkboot import FINDER_OWN              # noqa: E402
 from nowcompress import Session                       # noqa: E402
 import synth_sd                                       # noqa: E402
 
@@ -75,10 +76,34 @@ def unwrap(fixture, work):
     return name, tc[:4], tc[5:], data, rsrc
 
 
-def read_forks(img):
-    """path -> (type, creator, data, rsrc) for every file on a volume."""
+def read_forks(img, invisible=True):
+    """path -> (type, creator, data, rsrc) for every file on a volume.
+
+    **`-a`, since 2026-09-22, and this was the last of the eight walks.**
+    `hls` hides a file whose Finder INVISIBLE bit is set, so without the
+    flag this reported an application's invisible output as nothing at
+    all — and it descends, so the flag also buys an invisible FOLDER,
+    whose whole subtree it used to walk past (`walkprobe.py`).
+
+    **Why this one was left until last, stated as a property of the
+    CALLERS.** There are 38 call sites across nine harnesses. Thirty-four
+    select — by leaf name, by creator (`SMKR`, `SITe`), by type, or by a
+    DiskDoubler header — and `-a` cannot touch those. **Four do not**:
+    `--adjudicate` in this file, in `nowcompress.py` and in
+    `diskdoubler.py`, plus `--nest` below, hold EVERY entry the guest
+    volume carries against our own extraction, so an entry with no
+    counterpart in our output is a difference. A `Desktop` file the
+    Finder wrote would have failed all four.
+
+    So the filter lives HERE rather than in each caller: `FINDER_OWN` at
+    the ROOT only, which is where the Finder puts its bookkeeping, and
+    everything else — including an invisible file an application
+    deliberately wrote, which is the whole point — is kept and returned.
+    What it dropped is printed on every run, so the filter is a
+    measurement rather than a constant.
+    """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    out = {}
+    out, dropped = {}, []
 
     def walk(prefix):
         """`prefix` is a TUPLE of components: an HFS name may contain a
@@ -93,10 +118,14 @@ def read_forks(img):
         (measured 2026-08-21, on a run whose screenshot showed the
         folder sitting on the volume).
         """
-        listing = subprocess.run(["hls", "-1"], capture_output=True,
+        listing = subprocess.run([b"hls"] + ([b"-a"] if invisible else [])
+                                 + [b"-1"], capture_output=True,
                                  env=env).stdout
         for raw in [n for n in listing.split(b"\n") if n.strip()]:
             name = raw.decode("mac-roman", "replace")
+            if invisible and not prefix and name in FINDER_OWN:
+                dropped.append(name)
+                continue
             if subprocess.run([b"hcd", raw], capture_output=True,
                               env=env).returncode == 0:
                 walk(prefix + (name,))
@@ -120,6 +149,11 @@ def read_forks(img):
         subprocess.run(["humount"], capture_output=True, env=env)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    # What `-a` cost on this volume, printed rather than assumed — the four
+    # callers that compare the whole entry set are only safe if what this
+    # drops is the Finder's and nothing else.
+    print("superdisk: -a surfaced and FINDER_OWN dropped: %s"
+          % (", ".join(sorted(dropped)) or "nothing"))
     return out
 
 
@@ -211,7 +245,14 @@ def adjudicate(fixture, keep=False):
         shutil.rmtree(work, ignore_errors=True)
     print("superdisk: %d fork(s) compared, %s"
           % (seen, "all identical" if not bad and seen else "%d DIFFER" % bad))
-    print("superdisk: screenshots in %s" % shots)
+    # `os.path.join(SHOTS, tag)`, the way every other phase spells it, and
+    # not the bare `shots`: that is a local of `run_selfextractor`, so this
+    # line raised NameError on every CLEAN run — after the verdict had been
+    # printed, so the comparison was right and the exit code was 1 anyway.
+    # Nothing caught it because `ci.sh` replays this verdict by content
+    # (`tools/run_superdisk.py`) and never runs the harness. Found
+    # 2026-09-22 by re-running it for the `-a` change.
+    print("superdisk: screenshots in %s" % os.path.join(SHOTS, tag))
     return bad or not seen
 
 

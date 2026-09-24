@@ -38,6 +38,7 @@ round trip is the test), and a truncation sweep, since DART is not in
 the fixture corpus and `tools/run_truncation.py` never sees one.
 """
 import argparse
+import hashlib
 import os
 import shutil
 import struct
@@ -47,9 +48,27 @@ import tempfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 REF = os.path.join(ROOT, "reference", "ciderpress2")
+FIX = os.path.join(ROOT, "fixtures")
 
 CHUNK_DATA = 40 * 512
 CHUNK_BYTES = 40 * 524
+
+# The two A/UX 3.0.1 floppies Apple compressed in 1993, and what DART
+# recorded about each: name, the SHA-256 fixtures/SOURCES.md pins, the
+# srcType and srcSize its header states, and the two checksums.
+#
+# Source: the member's OWN resource fork inside the StuffIt they travel
+# in — 'CKSM' 1 (tags), 'CKSM' 2 (data), and a 'DART' 0 Pascal string
+# that spells both out. Re-read them in one command:
+# `tools/get_dart_specimen.py --show readme`.
+GARDEN = (
+    ("AUX301_ReadMe_MacSE.dart",
+     "a6207871a1d795622bd4b2a9c8b7f710e0dd893cda9a1885b5d01a1bba10dff3",
+     1, 800, 0xE257EF53, 0xAC4AA5C3),
+    ("AUX301_BootDisk_Quadra.dart",
+     "45c2af73cd0c33eeddd09a73e0171aea11e6455ce9ef1e8294f235cbd0df64be",
+     16, 1440, 0x3DF12BA6, 0x00000000),
+)
 
 
 # ------------------------------------------------------------------ #
@@ -349,6 +368,95 @@ def synthetic(macextract, tmp):
     return problems
 
 
+def garden(macextract, tmp):
+    """The two A/UX 3.0.1 disks, graded against the checksums DART wrote
+    into them — the only archives here that Apple's tool compressed over
+    a disk nobody in this project chose, and the only 72-slot one of any
+    kind. Returns (cases, problems); says so and grades nothing when the
+    specimens are not present.
+
+    Every other DART assertion in this file is about an 800K disk, so
+    `Installation Boot Disk Qua.dart` is the whole of the evidence that
+    the 72-entry block table is read where it is written.
+    """
+    problems, ran = [], 0
+    present = [g for g in GARDEN if os.path.exists(os.path.join(FIX, g[0]))]
+    if not present:
+        print("run_dart: the A/UX specimens are not in fixtures/ "
+              "(tools/get_dart_specimen.py readme -o fixtures/...) "
+              "— skipping the two of them")
+        return 0, problems
+
+    for name, pin, typ, kb, data_cksm, tag_cksm in present:
+        src = os.path.join(FIX, name)
+        blob = open(src, "rb").read()
+        ran += 1
+        got = hashlib.sha256(blob).hexdigest()
+        if got != pin:
+            problems.append("%s: is %d B / %s, SOURCES.md pins %s"
+                            % (name, len(blob), got, pin))
+            continue
+
+        # The header, read here rather than by the engine: srcSize picks
+        # the table's length, and a table of the wrong length puts the
+        # payload 64 bytes out. Both readings are tried, and exactly the
+        # one srcSize calls for may add up to the file.
+        #
+        # Source: reference/ciderpress2/DART-notes.md, *File Structure* —
+        # 40 entries up to 800K and 72 for 1440K, a "best" length in
+        # bytes, 0xFFFF for a chunk stored whole (20,960 B).
+        ran += 1
+        if (blob[0], blob[1], struct.unpack_from(">H", blob, 2)[0]) != \
+                (1, typ, kb):
+            problems.append("%s: header is %02x %02x %04x, wanted 01 %02x "
+                            "%04x" % (name, blob[0], blob[1],
+                                      struct.unpack_from(">H", blob, 2)[0],
+                                      typ, kb))
+            continue
+        slots = 40 if kb <= 800 else 72
+        for n in (40, 72):
+            blen = struct.unpack_from(">%dH" % n, blob, 4)
+            total = 4 + 2 * n + sum(20960 if x == 0xFFFF else x
+                                    for x in blen)
+            if (total == len(blob)) != (n == slots):
+                problems.append("%s: a %d-entry table %s up to the file's "
+                                "%d bytes" % (name, n,
+                                              "adds" if total == len(blob)
+                                              else "does not add",
+                                              len(blob)))
+            ran += 1
+
+        outdir = os.path.join(tmp, "out-" + name)
+        got_path, why = expand(macextract, src, outdir)
+        ran += 1
+        if not got_path:
+            problems.append("%s: %s" % (name, why))
+            continue
+        try:
+            gtyp, gdata, gtags = split_stored(got_path)
+        except ValueError as ex:
+            problems.append("%s: output is not a stored DART: %s"
+                            % (name, ex))
+            continue
+        ran += 1
+        if gtyp != typ or len(gdata) != kb * 1024:
+            problems.append("%s: expanded to type %d, %d B, wanted %d, %d"
+                            % (name, gtyp, len(gdata), typ, kb * 1024))
+            continue
+
+        # What DART itself said the disk checksums to, which is the only
+        # oracle these two have: no source image was ever published for
+        # them and no second reader on this machine can open a DART.
+        for what, blk, want in (("data", gdata, data_cksm),
+                                ("tags", gtags, tag_cksm)):
+            ran += 1
+            if dc42_checksum(blk) != want:
+                problems.append("%s: the %s came out %08X, and DART "
+                                "recorded %08X"
+                                % (name, what, dc42_checksum(blk), want))
+    return ran, problems
+
+
 def expand(macextract, src, outdir):
     """Extract one DART and return the path of what came out."""
     os.makedirs(outdir, exist_ok=True)
@@ -379,137 +487,142 @@ def main():
         subjects = specimens(tmp)
         if not subjects:
             print("run_dart: reference/ciderpress2 not present "
-                  "(tools/fetch_references.sh) — skipping")
-            return 0
-        if len(subjects) < 4:
-            print("run_dart: hfsutils not installed — grading %d of the 4 "
-                  "specimens (the other three are inside HFS images)"
-                  % len(subjects))
+                  "(tools/fetch_references.sh) — skipping its four "
+                  "specimens and everything read out of them")
+        else:
+            if len(subjects) < 4:
+                print("run_dart: hfsutils not installed — grading %d of the 4 "
+                      "specimens (the other three are inside HFS images)"
+                      % len(subjects))
 
-        written = {}
-        for label, src, data, tags in subjects:
-            outdir = os.path.join(tmp, "out-" + label)
-            got, why = expand(macextract, src, outdir)
-            ran += 1
-            if not got:
-                problems.append("%s: %s" % (label, why))
-                continue
-            if not got.endswith(".dart"):
-                problems.append("%s: wrote %s, wanted a .dart name"
-                                % (label, os.path.basename(got)))
-            try:
-                _, gdata, gtags = split_stored(got)
-            except ValueError as ex:
-                problems.append("%s: output is not a stored DART: %s"
-                                % (label, ex))
-                continue
-            written[label] = (gdata, gtags)
-            if gdata != data:
-                problems.append("%s: data differs from the source image"
-                                % label)
-            ran += 1
-            if tags is None:
-                if any(gtags):
-                    problems.append("%s: tags are not zero" % label)
-            elif gtags[:len(tags)] != tags:
-                problems.append("%s: tags differ from the source image"
-                                % label)
-            ran += 1
-
-        # The two methods over one disk have to agree. Nothing else here
-        # compares two DECODERS; every other assertion compares one
-        # decoder with an encoder's input.
-        for a, b in (("test1-fast", "test1-best"),
-                     ("random_t-fast", "random_t-best")):
-            if a in written and b in written:
-                if written[a] != written[b]:
-                    problems.append("%s and %s disagree over the same disk"
-                                    % (a, b))
+            written = {}
+            for label, src, data, tags in subjects:
+                outdir = os.path.join(tmp, "out-" + label)
+                got, why = expand(macextract, src, outdir)
                 ran += 1
-
-        # DART's own checksums, written by the application in 1993.
-        ad = os.path.join(REF, "__MACOSX", "._test1-best")
-        if "test1-best" in written and os.path.exists(ad):
-            fork = appledouble_rsrc(ad)
-            res = resources(fork) if fork else {}
-            gdata, gtags = written["test1-best"]
-            for rid, name, got in ((2, "data", gdata), (1, "tag", gtags)):
-                want = res.get(("CKSM", rid))
-                if want is None:
-                    problems.append("test1-best: no 'CKSM' %d resource" % rid)
+                if not got:
+                    problems.append("%s: %s" % (label, why))
                     continue
-                if struct.unpack(">I", want)[0] != dc42_checksum(got):
-                    problems.append("test1-best: %s checksum is not the one "
-                                    "DART recorded" % name)
+                if not got.endswith(".dart"):
+                    problems.append("%s: wrote %s, wanted a .dart name"
+                                    % (label, os.path.basename(got)))
+                try:
+                    _, gdata, gtags = split_stored(got)
+                except ValueError as ex:
+                    problems.append("%s: output is not a stored DART: %s"
+                                    % (label, ex))
+                    continue
+                written[label] = (gdata, gtags)
+                if gdata != data:
+                    problems.append("%s: data differs from the source image"
+                                    % label)
+                ran += 1
+                if tags is None:
+                    if any(gtags):
+                        problems.append("%s: tags are not zero" % label)
+                elif gtags[:len(tags)] != tags:
+                    problems.append("%s: tags differ from the source image"
+                                    % label)
                 ran += 1
 
-        # The round trip, which is the refusal: what we write is exactly
-        # the file this engine declines to work on.
-        for label in list(written)[:1]:
-            done = os.path.join(tmp, "out-" + label)
-            already = os.path.join(done, os.listdir(done)[0])
-            r = subprocess.run([macextract, "x", already, "-o",
-                                os.path.join(tmp, "again")],
-                               capture_output=True)
-            msg = r.stderr.decode("utf-8", "replace")
-            if r.returncode == 0:
-                problems.append("an uncompressed DART was extracted rather "
-                                "than refused")
-            elif "already uncompressed" not in msg:
-                problems.append("the refusal does not say what is wrong: %r"
-                                % msg.strip())
-            ran += 1
-            # ...and it is still recognized AS a DART, which is what
-            # makes the message possible at all.
-            r = subprocess.run([macextract, "sniff", already],
-                               capture_output=True)
-            if b"DART" not in r.stdout:
-                problems.append("an uncompressed DART is not recognized")
-            ran += 1
+            # The two methods over one disk have to agree. Nothing else here
+            # compares two DECODERS; every other assertion compares one
+            # decoder with an encoder's input.
+            for a, b in (("test1-fast", "test1-best"),
+                         ("random_t-fast", "random_t-best")):
+                if a in written and b in written:
+                    if written[a] != written[b]:
+                        problems.append("%s and %s disagree over the same disk"
+                                        % (a, b))
+                    ran += 1
 
-        # A cut archive. DART is not in the fixture corpus, so this is
-        # the only place it meets one. The table has to add up to the
-        # file, so a cut one is not a DART at all — but it must not be
-        # extracted, and it must not be claimed and then half-written.
-        label, src = subjects[0][0], subjects[0][1]
-        whole = open(src, "rb").read()
-        for frac in (2, 5, 10):
-            cut = os.path.join(tmp, "cut.dart")
-            open(cut, "wb").write(whole[:len(whole) // frac])
-            outdir = os.path.join(tmp, "cutout%d" % frac)
-            os.makedirs(outdir, exist_ok=True)
-            r = subprocess.run([macextract, "x", cut, "-o", outdir],
-                               capture_output=True)
-            if r.returncode == 0:
-                problems.append("%s cut to 1/%d extracted anyway"
-                                % (label, frac))
-            ran += 1
+            # DART's own checksums, written by the application in 1993.
+            ad = os.path.join(REF, "__MACOSX", "._test1-best")
+            if "test1-best" in written and os.path.exists(ad):
+                fork = appledouble_rsrc(ad)
+                res = resources(fork) if fork else {}
+                gdata, gtags = written["test1-best"]
+                for rid, name, got in ((2, "data", gdata), (1, "tag", gtags)):
+                    want = res.get(("CKSM", rid))
+                    if want is None:
+                        problems.append("test1-best: no 'CKSM' %d resource" % rid)
+                        continue
+                    if struct.unpack(">I", want)[0] != dc42_checksum(got):
+                        problems.append("test1-best: %s checksum is not the one "
+                                        "DART recorded" % name)
+                    ran += 1
 
-        # Near-misses. Each changes ONE thing about a header that is
-        # otherwise a real DART's, and none of them may still be claimed.
-        # An 800K disk fills all forty of its slots, so the rule about
-        # slots past the end of the disk is not reachable from these —
-        # that one needs a 400K table, which is synthetic below.
-        for name, mangle in (
-                ("a used slot set to zero",
-                 lambda b: b[:4] + b"\x00\x00" + b[6:]),
-                ("a slot length changed",
-                 lambda b: b[:82] + b"\x01\x00" + b[84:]),
-                ("a byte added to the file", lambda b: b + b"\x00"),
-                ("a byte taken off the end", lambda b: b[:-1]),
-                ("an unknown compression id", lambda b: b"\x03" + b[1:]),
-                ("an unknown disk type", lambda b: b[:1] + b"\x09" + b[2:]),
-                ("a size no DART disk has",
-                 lambda b: b[:2] + b"\x02\x00" + b[4:])):
-            bad = os.path.join(tmp, "bad.dart")
-            open(bad, "wb").write(mangle(whole))
-            r = subprocess.run([macextract, "sniff", bad], capture_output=True)
-            if b"DART" in r.stdout:
-                problems.append("claimed a DART with %s" % name)
-            ran += 1
+            # The round trip, which is the refusal: what we write is exactly
+            # the file this engine declines to work on.
+            for label in list(written)[:1]:
+                done = os.path.join(tmp, "out-" + label)
+                already = os.path.join(done, os.listdir(done)[0])
+                r = subprocess.run([macextract, "x", already, "-o",
+                                    os.path.join(tmp, "again")],
+                                   capture_output=True)
+                msg = r.stderr.decode("utf-8", "replace")
+                if r.returncode == 0:
+                    problems.append("an uncompressed DART was extracted rather "
+                                    "than refused")
+                elif "already uncompressed" not in msg:
+                    problems.append("the refusal does not say what is wrong: %r"
+                                    % msg.strip())
+                ran += 1
+                # ...and it is still recognized AS a DART, which is what
+                # makes the message possible at all.
+                r = subprocess.run([macextract, "sniff", already],
+                                   capture_output=True)
+                if b"DART" not in r.stdout:
+                    problems.append("an uncompressed DART is not recognized")
+                ran += 1
+
+            # A cut archive. DART is not in the fixture corpus, so this is
+            # the only place it meets one. The table has to add up to the
+            # file, so a cut one is not a DART at all — but it must not be
+            # extracted, and it must not be claimed and then half-written.
+            label, src = subjects[0][0], subjects[0][1]
+            whole = open(src, "rb").read()
+            for frac in (2, 5, 10):
+                cut = os.path.join(tmp, "cut.dart")
+                open(cut, "wb").write(whole[:len(whole) // frac])
+                outdir = os.path.join(tmp, "cutout%d" % frac)
+                os.makedirs(outdir, exist_ok=True)
+                r = subprocess.run([macextract, "x", cut, "-o", outdir],
+                                   capture_output=True)
+                if r.returncode == 0:
+                    problems.append("%s cut to 1/%d extracted anyway"
+                                    % (label, frac))
+                ran += 1
+
+            # Near-misses. Each changes ONE thing about a header that is
+            # otherwise a real DART's, and none of them may still be claimed.
+            # An 800K disk fills all forty of its slots, so the rule about
+            # slots past the end of the disk is not reachable from these —
+            # that one needs a 400K table, which is synthetic below.
+            for name, mangle in (
+                    ("a used slot set to zero",
+                     lambda b: b[:4] + b"\x00\x00" + b[6:]),
+                    ("a slot length changed",
+                     lambda b: b[:82] + b"\x01\x00" + b[84:]),
+                    ("a byte added to the file", lambda b: b + b"\x00"),
+                    ("a byte taken off the end", lambda b: b[:-1]),
+                    ("an unknown compression id", lambda b: b"\x03" + b[1:]),
+                    ("an unknown disk type", lambda b: b[:1] + b"\x09" + b[2:]),
+                    ("a size no DART disk has",
+                     lambda b: b[:2] + b"\x02\x00" + b[4:])):
+                bad = os.path.join(tmp, "bad.dart")
+                open(bad, "wb").write(mangle(whole))
+                r = subprocess.run([macextract, "sniff", bad], capture_output=True)
+                if b"DART" in r.stdout:
+                    problems.append("claimed a DART with %s" % name)
+                ran += 1
 
         problems += synthetic(macextract, tmp)
         ran += 9
+
+        n, bad = garden(macextract, tmp)
+        ran += n
+        problems += bad
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

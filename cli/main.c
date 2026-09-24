@@ -239,6 +239,15 @@ static char *name_to_text(const uint8_t *name, size_t len, int mac_encoding,
     return out;
 }
 
+/* Is this entry's name MacRoman, and so ours to decode? A Mac format's
+ * names are — except StuffIt 5's, which are the archive's own UTF-8 and
+ * already the encoding this side writes (macextract.h, name_utf8). The
+ * engine says which per ENTRY rather than per format, because the
+ * format the CLI sniffed is not always the one that read the name: a
+ * segmented set is sniffed as a split and walked by whatever the joined
+ * stream turns out to be. */
+#define NAME_IS_MACROMAN(s, i) ((s)->mac_encoding && !(i)->name_utf8)
+
 /* The largest name a format here can state: zip and tar count theirs in
  * 16 bits. Only ever displayed, so this is not a filesystem question. */
 #define UNC_LONGNAME_CAP 65536u
@@ -510,7 +519,7 @@ static char *sink_orig_name(DiskSink *s, const UncEntryInfo *info)
 {
     if (info->name_truncated != 2 || !s->long_name) return NULL;
     return name_to_text(s->long_name, strlen((const char *)s->long_name),
-                        s->mac_encoding, s->raw_names);
+                        NAME_IS_MACROMAN(s, info), s->raw_names);
 }
 
 /* --only: did the user name this entry? It matches a selector exactly,
@@ -542,8 +551,8 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     DiskSink *s = (DiskSink *)ctx;
     char name[FS_NAME_MAX];
 
-    name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
-               name, sizeof name);
+    name_to_fs(info->name, info->name_len, NAME_IS_MACROMAN(s, info),
+               s->raw_names, name, sizeof name);
 
     /* Not asked for: skipped before it counts, so the tallies at the end
      * describe the SELECTION rather than the archive. */
@@ -802,8 +811,8 @@ static int sink_end(void *ctx, int status)
         if (s->rsrc_f) { fclose(s->rsrc_f); s->rsrc_f = NULL; }
     }
 
-    name_to_fs(s->cur.name, s->cur.name_len, s->mac_encoding, s->raw_names,
-               name, sizeof name);
+    name_to_fs(s->cur.name, s->cur.name_len, NAME_IS_MACROMAN(s, &s->cur),
+               s->raw_names, name, sizeof name);
 
     if (status != UNC_OK) {
         s->errors++;

@@ -20,10 +20,14 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **66/69** (2026-08-31; 65/69 before the reserve went flat,
-64/69 before the LZW bound), `run.py --emu mv-512Ke --system System6.hfv`
-is 63/69 (re-measured 2026-09-04; 58/69 before the stack was cut)
-(FORMATS.md, *512 KB machines*).
+mv-512Ke` is **67/71** (2026-09-22; 66/69 before the sample grew, 65/69
+before the reserve went flat, 64/69 before the LZW bound), `run.py --emu
+mv-512Ke --system System6.hfv` is **64/71** (2026-09-22; 63/69 on
+2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB
+machines*). The budgets are **219,362 B** and **123,962 B**, both re-taken
+on the machine that day; `tools/run_tiers.py` now reproduces both tiers on
+Linux fixture for fixture, and the one that never matched was the budget
+and not the model.
 
 **A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
 application bombs on it.** It cannot read HFS, which is the whole of the
@@ -417,14 +421,38 @@ Pro: by running the original application.
     tools/vmac/nowcompress.py --setup     # fetch Now Utilities 5.0.1, convert
     tools/vmac/nowcompress.py --install   # install Now QuickFiler on System 7
     tools/vmac/nowcompress.py --case all  # write the specimens
+    tools/vmac/nowcompress.py --case probe   # four inputs chosen to be read
+    tools/vmac/nowcompress.py --case reach   # how far back a match may point
+    tools/vmac/nowcompress.py --case forks   # members with a RESOURCE fork
+    tools/vmac/nowcompress.py --case wpos    # block starts at each quarter of the window
+    tools/vmac/nowcompress.py --case match   # members varying only in how much MATCHES
+    tools/vmac/nowcompress.py --case matchv  # the same ladder up and back down
+    tools/vmac/nowcompress.py --setup6    # fetch Now Utilities 6.0, build its boot image
+    tools/vmac/nowcompress.py --case6 faster # the same case, the OTHER encoder
     tools/vmac/nowcompress.py --verify    # decode them, check against the input
     tools/vmac/nowcompress.py --adjudicate SEA.bin ARCHIVE   # see below
+    tools/vmac/nowcompress.py --expand OUTDIR FILE.bin ...   # and below
+    tools/vmac/nowcompress.py --dearchive OUTDIR FILE.bin ...  # the same, for ARCHIVES
 
 The compressor is **Now QuickFiler**, whose menu has Compress ▸ Faster/Smaller
-and Archive ▸ Faster/Smaller. Specimens land in
+and Archive ▸ Faster/Smaller. Files go on the volume with `hcopy -r`, which
+writes the **data fork alone** — so until `--case forks` every member the
+harness had ever made had an empty resource fork, and a rule written in terms
+of the two forks looked like a rule about tables (BLOCKERS.md, *Withdrawn
+claims*). That case passes its members through `make_volume(macbinary=...)`
+instead, which is `hcopy -m` and carries both forks. Specimens land in
 `$UNC_VMAC_HOME/specimens/now/<case>/` with the inputs beside them and a
 screenshot per step; `tools/run_now.py` picks them up if they are there and
 skips them with a message if they are not.
+
+**A case that varies one property of a COMPRESSED block has to keep the
+content compressible.** The first build of `--case match` used a keystream,
+which is incompressible: the encoder stored seven of its eleven members, and a
+stored block has no header and so no byte 2 to read. The rebuild gives each
+member 1,000 de Bruijn bytes — unique substrings, so nothing matches them —
+followed by 1,000 copies of a letter of its own, which compresses, matches
+nothing earlier, and costs every member the same (DECISIONS.md 2026-09-21,
+*the ladder that was walked back down*).
 
 Three things to know before re-running it:
 
@@ -438,6 +466,108 @@ Three things to know before re-running it:
   result will not mount, which is the check.
 - **The installer's checkbox list is read back off the screen** after every
   click. Clicking it blind is how the first attempt turned QuickFiler off.
+
+**`--setup6` and `--case6` are the SECOND encoder**, Now Utilities 6.0
+of March 1996, and they exist because a field constant across
+everything one program writes is a fact about that program
+(docs/formats/now-compress.md, *Two encoders*). Four differences from
+the 5.0.1 path, each of which cost a run to find:
+
+- **there is no installer to drive.** 6.0's `.sit` holds a StuffIt
+  archive of finished files, so `--setup6` places them instead: the
+  extension and its toolbox into `System Folder:Extensions` of a copy
+  of `Sys7.img`, the droplets at the root. It needs `unar`, the outer
+  archive being StuffIt 5;
+- **the leading spaces in `  Now Toolbox` and ` Now QuickFiler
+  Extension` are the load order** — extensions load alphabetically and
+  the Toolbox must come first — so they are kept, not stripped;
+- **6.0's QuickFiler menu sits mid-bar**, not against the screen edge,
+  so its submenus open to the RIGHT and its item rows are 36 px higher
+  than 5.0.1's. Its Demo button is at (264, 306) rather than (237, 306);
+- specimens land in `specimens/now6/` so that nothing overwrites
+  5.0.1's — comparing the two directories is the experiment.
+
+**Now Utilities 3.0.2 and 4.0.2 are not worth fetching**: they have no
+compressor at all. Their two disks each are Super Boomerang, NowMenus,
+WYSIWYG Menus, Startup Manager and the rest; QuickFiler arrives in 5.
+
+**QuickFiler also compresses by itself, and both versions do.** Its
+menu's *Don't Compress* and *Compress When Idle* items belong to a
+background compressor: it keeps queues (`ToBeCompressedDB`,
+`ToBeRecompressedDB`, `ToBeDecompressedDB`) and an exclusion list
+(`DoNotCompressFileDBNV`), compresses files that have been unmodified
+for a set time once the system has been idle for one, and expands them
+again on open. *Don't Compress* excludes the selection — by item,
+creator, type or Finder label — and the System Folder is excluded
+always. Its own balloon help is the source, and 5.0.1's extension
+carries the same strings as 6.0's, so this is not new in 6.
+**It has never fired in a run here**: a case's volume comes back with
+only the files the menu was released on changed — the `archive` case
+leaves `mixed.bin` and `one.txt` at 49,000 and 7,500 bytes beside the
+`.sea` — and the mis-clicked first 6.0 run came back with nothing
+compressed at all. A specimen is still worth attributing to the menu
+pick the screenshot shows rather than to the run, which is why every
+case keeps that screenshot.
+
+**The `probe` case exists to make a code table legible**, and it is the
+technique worth reusing: its four members are a 4,000-byte run of one byte,
+6,000 bytes over `{A, B}`, 6,000 over `{A, B, C, D}` with known frequencies,
+and 6,000 whose second half repeats its first. A block whose literals can
+only be two known bytes is found by what its table MUST contain rather than
+by where the table might be — which is how the archive coder's header was
+read at all, the harness's other members being prose and keystream whose
+tables look like every other table (docs/formats/now-compress.md, *Shape 3*).
+
+**`--case reach` answers a question about a bound, and that is the other
+thing a made-to-order archive is good for.** Five 16 KB members whose
+fifth is a byte-for-byte copy of the first put a perfect match 64 KB back;
+the encoder does not take it, and the archive's largest offset is 32,766
+against a 32,768-byte window. That is what says `NOW_HISTORY` is right and
+the offset table's reach to 65,791 is capacity nothing writes
+(DECISIONS.md 2026-09-21, *the window that stopped at the fork*).
+
+**`--case tokdist` and `--case toklen` plant a match whose length and
+distance are known**, which is what turned the archive coder's tokens from
+a bit pattern into two tables. Each member is a slice of a **de Bruijn
+sequence of order 2 over 256 symbols** — every pair of bytes occurs
+exactly once in it, so an LZ encoder can find no match in it at all —
+followed by a copy of that member's own first bytes and a compressible
+tail, because Now Compress refuses a file it cannot compress. The one
+match in the member is therefore at a distance this file chose (40 of
+them, 2 to 16,384) or of a length this file chose (24, from 2 to 255),
+and `tools/derive_now.py` reads the token's bits off against it
+(DECISIONS.md 2026-09-21, *the pair that never repeats*).
+
+Both cases are one emulator run each, ~4 minutes, and they leave 64 members
+of real encoder output behind; two of `tokdist`'s came back as a Huffman-only
+block INSIDE an archive, a combination no other specimen has.
+
+**`--case huffgap` was for the gap that turned out not to exist.** Ten files
+of mixed content, compressed rather than archived, to multiply the one
+shape this project had two specimens of — where a Huffman-over-LZSS block's
+bit stream begins was down as unknown, "23 bits after the table in one and 18
+in the other". Eight of the ten came back as that shape, and all eight start
+where the two did: one zero byte after the table, then the `00 03` that opens
+any LZSS stream, coded through the block's own table. The case is kept
+because ten blocks is what makes the rule a measurement rather than a
+coincidence, and because its byte-0 values (4, 6, 7, 8, 10, 14) are what
+showed that byte to be a flush count.
+
+**`--case deep` and `--case deeparc` asked for a code past 15 bits and were
+refused.** Their four files have Fibonacci byte histograms — the distribution
+that makes a Huffman code as deep as it can be, 20 bits at 21 symbols — and
+are compressed in one case and archived in the other, because a Huffman-only
+block had only ever come out of the archive path. Every table that came back
+is 10 to 13 deep with an escape count of zero: each shape puts an LZ coder
+under the Huffman one, and it eats the skew that would have made the code
+deep. The cases are kept as the evidence for a negative
+(docs/formats/now-compress.md, *What this note does NOT describe*).
+
+**`--case tree` puts folders in an archive**, which only the corpus's 1995
+fixture had: two folders and two loose files, so that how the entry table
+nests them is read off more than one specimen. It is a pre-order
+flattening — a folder record, then exactly the number of entries its +80
+field states (docs/formats/now-compress.md, *The archive layer*).
 
 What the encoder writes per mode is FORMATS.md ✧; why any of it matters is
 DECISIONS.md, "Now Compress, written by Now Compress".
@@ -456,6 +586,71 @@ bytes 16..127 masked, the `vmac_check.py` convention, because the Resource
 Manager stamps that region whenever it touches a file. That is what settled
 the corpus's 1995 archive, which `unar` cannot decode at all. It works for any
 `.sea` in the corpus, not just this one.
+
+**And it takes any archive at all, by splicing.** `tools/mutate_now.py`'s
+`splice` puts a different data fork into a `.sea`'s MacBinary, so the
+extractor Now Software shipped can be pointed at an archive this project
+wrote — which is how `synth_now.py --ladder` asks the encoder about the
+thirteen synthetic archives (TESTING.md). **The control that route needs
+is a length change**: `probe`'s 3,830-byte archive inside `tree`'s
+self-extractor, which was built around one 1,894 bytes long, extracts all
+four members byte-exact.
+
+**What `--adjudicate` could not see until 2026-09-21**: an extractor that
+refuses an archive leaves an empty volume, an empty volume compares zero
+forks, and zero forks all agree — so it printed *"agrees with us on every
+fork"* for two archives it had refused. It now fails when it graded
+nothing. Read the fork COUNT, not the verdict.
+
+**`--expand` runs the DECOMPRESSING half**, which is what turns "nothing here
+reads this field" into a statement about the format:
+
+    tools/mutate_now.py --byte2 0x5a --splice IN.bin OUT.bin IN.dat OUT.dat
+    tools/vmac/nowcompress.py --expand /tmp/out OUT.bin ...
+
+`--expand` puts MacBinary files on a volume — MacBinary because the type and
+creator are what make QuickFiler offer the item at all — selects them all and
+releases the menu on **Decompress**, then reads the volume back into `OUTDIR`.
+`tools/mutate_now.py` is the other half: it changes ONE field, recomputes
+every checksum over it (a block's four-byte trailer, an entry record's, the
+block table's, the file header's) and can splice the result back into a
+MacBinary or a `.sea`, so what reaches the Mac is a file no correct reader can
+tell from the original. Between them they settled four fields on 2026-09-21
+(docs/formats/now-compress.md).
+
+Five things to know:
+
+- **Decompress and Dearchive are plain menu items** at y 300 and 235, not
+  submenus, which is the only reason this can be driven at all: Mini vMac
+  cannot select a submenu item however the mouse is moved (*hierarchical
+  menus*, above).
+- **Put a control on the volume.** Every run here carries one unmutated file
+  spliced through the same path; without it a failure cannot be told from a
+  harness fault, and the splice rewrites the MacBinary length and CRC.
+- **QuickFiler names what it expands after the entry record's name**, not the
+  file's, so `--rename` changes both when several mutations of one specimen
+  have to share a volume. Give a rung a name **as long as the one it
+  replaces**: the encoder leaves 23 catalogue-shaped bytes after a short
+  Pascal name, and a longer name walks over them.
+- **A file it refuses puts up an alert and waits**, so `--expand` presses
+  Return once per file on the volume rather than twice per run, and waits
+  fifteen seconds per file after them. That is what makes a whole ladder
+  of mutations one run instead of one run each: before 2026-09-21 the
+  first refusal would have stopped every file behind it, and a ladder is
+  put on one volume precisely because some rungs are expected to be
+  refused. **A file it has not REACHED looks exactly like one it
+  refused** — same type, same creator, same bytes — which is how a
+  five-rung ladder first came back with three refusals of which only one
+  was real. Read the last screenshot before believing a refusal: an icon
+  still highlighted is one still in the selection, and one replaced by
+  its expansion is not.
+- **Two refusals, two different alerts, and the difference is the
+  measurement.** *"A part of the file X is damaged. Do you want to continue
+  decompressing…"* is a BLOCK the decoder could not accept — it offers
+  Continue and goes on to the next file. *"…is damaged and cannot be
+  repaired"* is the file being rejected outright, which is what a file
+  written here from scratch gets. Photograph the alert: which one it is
+  says which layer noticed.
 
 ## Making ArcMac archives with ArcMac — `arcmac.py`
 
@@ -501,10 +696,14 @@ Four things to know before re-running it:
   empty data fork. That entry is decoded with our own CLI and re-wrapped as
   MacBinary, so no self-extractor has to run inside the guest.
 - **Do not copy a Mac header's Finder info into MacBinary unexamined.** The
-  ArcMac header's has bit 0x40 of the high byte set — `invisible` — so the
-  first attempt put the application on the volume where the Finder would not
-  show it. The disk read "112K in disk, 1 item", which looks like a failed
-  copy and is not.
+  first attempt put the application on the volume where the Finder did not
+  show it; the disk read "112K in disk, 1 item", which looks like a failed
+  copy and is not. `arcmac.macbinary` passes 0. **Why is NOT
+  `invisible`, which this said until 2026-09-22**: `fdFlags` is `h[42:44]`
+  per `macunpack/arc.h`, and across all 5 ArcMac files and 11 entries here
+  it is 0x2100 on the application and 0x0100 on every document —
+  `fHasBundle | fHasBeenInited`, with `fInvisible` (0x4000) set nowhere
+  (BLOCKERS.md, *Withdrawn claims*).
 - **ArcMac 1.3c is a command shell, not a dialog.** It opens "Martian
   Operating System"; the verb is `arc a<modifiers> archive files`, documented
   under *ArcMac Command Summary* in the `ARCMAC.DOC` that ships with it. Pass
@@ -525,6 +724,12 @@ reachable, and are now implemented (BLOCKERS.md).
     tools/vmac/diskdoubler.py --probe      # photograph the menus and dialogs
     tools/vmac/diskdoubler.py --make A     # compress the subject with Method A
     tools/vmac/diskdoubler.py --verify     # decode the specimens, check against the input
+    tools/vmac/diskdoubler.py --combine tree   # a DDAR archive with a FOLDER in it
+    tools/vmac/diskdoubler.py --combine raw    # the shapes that might skip the file header
+    tools/vmac/diskdoubler.py --verify-combine # grade those against what went in
+    tools/vmac/diskdoubler.py --beta-probe     # boot the 1990 INIT, photograph its menu
+    tools/vmac/diskdoubler.py --beta           # compress with DiskDoubler ß05, 1990
+    tools/vmac/diskdoubler.py --beta-verify    # grade what ß05 wrote
 
 `--make` takes `A`, `B`, `guess` or `both` — the four items of the "How To
 Compress" popup. What each one writes is FORMATS.md ✦; why it matters is
@@ -553,6 +758,74 @@ Four things to know before re-running it:
 - **The run ends with Put Away, and must**, for the reason `arcmac.py`
   documents below: Mini vMac flushes the guest's writes when the volume is
   ejected, so a run killed with it still mounted reads back an unchanged disk.
+
+### The oldest DiskDoubler there is — `--beta`
+
+**DiskDoubler ß05, Copyright 1990 Salient**, which is four versions older
+than anything this project had run and the reason the 84-byte header
+turned out not to be the format's (`docs/formats/diskdoubler-container.md`,
+*The header size, and the 1990 header*). It rides in
+`DiskDoublerExpand3.sit` on the same Macintosh Garden page `--setup`
+already fetches from, and `--beta` fetches it by URL and sha256 like
+everything else here.
+
+Four things that are different from every other run in this file:
+
+- **It is an INIT with no application at all**, so `--install`'s System 7
+  image is no use: `install_beta()` puts it in a **System 6.0.8** System
+  Folder and the work is done from the Finder's own **DD** menu, which
+  that INIT adds. System 6 because the INIT is two years older than
+  System 7, and because 6.0.8 is the tier every other figure here is
+  quoted on.
+- **The menu's x is measured, not assumed.** `--beta-probe` boots and
+  photographs the menu bar without clicking anything; the Finder's own
+  five titles leave **DD at 221–234**, which is where `BETA_MENU_X`
+  comes from. Re-measure it if the boot image changes — an INIT's menu
+  sits wherever the Finder's leave room, and a miss here reads as a run
+  that compressed nothing.
+- **There are no settings.** The menu is `Compress Selection;Expand
+  Selection` and that is the whole application, so there is one thing to
+  write and `--make`'s four-item popup has no counterpart.
+- **`--beta-verify` grades it against the bytes DiskDoubler was given**,
+  because `unar` answers "format not recognized" for one of these and no
+  other reader exists. Two passes since 2026-09-22, when the engine
+  learned the shape: the specimen **as it is**, which grades the code
+  that ships, and the specimen **rewritten with an 84-byte header** and
+  the two forks' checksums written where one keeps them — the stronger
+  statement, because those sums are computed from the INPUT and are the
+  two DiskDoubler 3.7 itself stored for the same forks. Both forks
+  byte-exact both ways.
+
+### The two `DDAR` record shapes no corpus fixture has — `--combine`
+
+All 36 entries of the corpus's 7 `DDAR` archives are files at the top
+level, so the folder records and the `0x20` raw-fork shape were read by
+nothing here and `docs/formats/diskdoubler-container.md` could not
+measure them. `--combine` builds a volume with a known tree on it and
+drives **Combine**, DiskDoubler's own archive command, from the same DD
+menu `--make` uses.
+
+    Payload/Nest/One, Payload/Nest/Two     text
+    Payload/Raw                            24 KB nothing compresses
+    Payload/Forked                         data plus a 340-byte resource fork
+    Payload/Empty                          zero bytes
+    Payload/Already.dd                     a file DiskDoubler had compressed
+
+`--verify-combine` runs offline, on the saved specimens, and grades this
+engine's extraction against **the bytes DiskDoubler was given** — 7
+entries, 0 disagreements. Three things to know:
+
+- **the items are selected by typing, not by clicking an icon.** The
+  Finder selects by name, so `p` picks `Payload` and Cmd-O opens it;
+  Cmd-A inside it is what enables Combine, which is greyed out until
+  something is selected.
+- **`--combine raw` needs `--make A` to have run**, because one of its
+  subjects is the `.dd` that produced. Combine turns out to EXPAND an
+  already-compressed file and archive what was inside, so that entry is
+  graded on the original's bytes.
+- **It did not produce the `0x20` flag**, and five shapes were offered
+  to it on purpose. That is a measured negative about DiskDoubler 3.7,
+  not about the format; 1.x and 2.x are not reachable from here.
 
 ### The forks neither oracle can decode — `--adjudicate`
 
@@ -1200,7 +1473,23 @@ pay the same quantisation and the same ~50 ms per poll of stolen CPU, and
 **the ratio is the durable part of the result**. Do not quote the seconds as
 Mac Plus times — `run.py --emu mv-4M-1x` is what those come from.
 
-**Three things cost a run each, and not one of them failed loudly:**
+**Four things cost a run each, and not one of them failed loudly:**
+
+- **The first row is not the archive.** Our side clicked the first row of
+  Standard File and pressed Return, on the assumption that the archive is
+  the only thing on the volume worth opening. `mkboot.py` stopped deleting
+  the Finder's **`Desktop` file** on 2026-08-30, one day after the yardstick
+  rows were published, because the password phase needs it kept — and that
+  file is invisible to `hdir` and VISIBLE in our dialog, which filters
+  nothing. Every fixture whose name sorts after `Desktop` therefore had
+  `Desktop` extracted instead: `macburger-helper.hqx` and `unshar-111.hqx`
+  both reported *"This file could not be extracted"* three seconds in,
+  photographed, on builds either side of 2026-09-20.
+  `derived-FirstClass_Demo.cpt` and `derived-Export.sit` sort BEFORE it
+  ("der" < "Des"), which is why the published rows were taken cleanly and
+  nobody saw this for three weeks. The file is named by type-ahead now
+  (`select_by_name`), and `ours-2-selected.png` photographs the highlighted
+  row before Return is pressed.
 
 - **Expander's dialog is not the stock one.** Aladdin's DLOG puts the file
   list ~48 px higher, so the row `interactive.py` measured lands below the last
@@ -1524,6 +1813,225 @@ from the format documentation — correct-looking DDR, correct-looking entries,
 status word copied off a real disk — was silently ignored: no volume, no
 error, nothing to debug. Cloning a known-good head worked first time.
 
+## What every walk can see — `walkprobe.py`
+
+Harnesses here read a Macintosh volume back — with `hls`, and two of
+them with `hdir` — and grade what the application under test wrote onto
+it, and they did not agree about what a listing contains. This builds
+one volume holding every shape that tells them apart — a plain file, an
+INVISIBLE one, a dotted one with the invisible bit CLEAR, and `Icon\r`,
+at the root, inside a folder and inside an INVISIBLE folder, plus one
+LOCKED file — runs every walk in the tree against it, and says which
+came back short. No emulator, no ROM, no X server; seconds.
+
+    tools/vmac/walkprobe.py            # the table
+    tools/vmac/walkprobe.py --check    # and assert it against the EXPECT_* sets
+
+As of **2026-09-23**, **twelve** subjects and **four** columns:
+
+| walk | invisible file | descends | invisible folder | locked file |
+|---|---|---|---|---|
+| `checkdisk.walk` | 4/4 | yes | 4/4 | yes |
+| `os9._walk_volume` | 4/4 | yes | 4/4 | yes |
+| `arcmac.read_volume` | 4/4 | no | — | yes |
+| `nowcompress.read_volume` | 4/4 | no | — | yes |
+| `nowcompress.read_forks` | 4/4 | yes | 4/4 | yes |
+| `diskdoubler.volume_files` | 4/4 | yes | 4/4 | yes |
+| `cptsegment.read_volume` | 4/4 | no | — | yes |
+| `cptcrypt.read_volume` | 4/4 | no | — | yes |
+| `superdisk.read_forks` | 4/4 | yes | 4/4 | yes |
+| `interactive.volume_entries` | 4/4 | no | — | yes |
+| `macmime.HFS.ls` | 4/4 | no | — | yes |
+| `mkboot.HFS.ls` | **4/4** | no | — | yes |
+
+**All twelve.** The last three joined on 2026-09-23, when *"none of the
+other nine listers is gradeable"* turned out to be true of four of them
+and not of these — each takes an arbitrary image and returns an entry
+set, so there was never a reason not to grade them. **Grading
+`mkboot.HFS.ls` found a defect the reading had missed**: it came back
+**3/4, missing `Icon\r`**, because it read its listing with `text=True`
+and universal newlines cut the name at the carriage return — and
+`mkboot.py`'s own `rmtree` says in a comment that the files surviving a
+strip *are* `Icon\r`. `verify_stripped` is built on that listing. Fixed
+the same way as the Compact Pro walks: bytes, split on b"\n".
+
+`interactive.volume_entries` is itself new — the entry-set listing that
+`phase_wrapped`, `phase_chain` and `phase_named` held three copies of.
+Collapsing them fixed the same `splitlines()` bug once and turned three
+ungradeable inline blocks into one graded function.
+
+The three are root-only by design, not by oversight: each lists ONE
+directory, and the callers that need depth walk it themselves. `EXPECT_BLIND` and `EXPECT_NO_LOCKED`
+are empty sets and are kept, because they fail in the other direction:
+take `-a` back out of any walk and the probe names it. The four that show
+`—` never descend at all, which `EXPECT_FLAT` records as a property —
+each reads a volume built flat by `make_volume`, or a boot volume whose
+`System Folder` is not output.
+
+**`superdisk.read_forks` went last, and what made it last was the
+CALLERS, not the walk.** It has **38 call sites** across nine harnesses.
+Thirty-four select — by leaf name, by creator (`SMKR`, `SITe`), by type,
+or by a DiskDoubler header — and the flag cannot reach those. **Four do
+not**: `--adjudicate` in `superdisk.py`, `nowcompress.py` and
+`diskdoubler.py`, and `superdisk.py --nest`, each of which holds EVERY
+entry on the guest volume against our own extraction, so an entry with
+no counterpart in our output is a difference. That is why the filter
+lives inside `read_forks` rather than in each caller.
+
+**All four were re-run**, and in each the filter dropped exactly
+`Desktop DB` and `Desktop DF` — the files that would otherwise have been
+compared against nothing: `superdisk --adjudicate` 2/2 forks identical,
+`diskdoubler --adjudicate` 10/10, `superdisk --nest` 11 files with the
+Macintosh agreeing, `nowcompress --adjudicate` every fork identical
+including one of 9,949,696 B. `spacesaver --layout` and `--pkg` were run
+too, and select correctly on a volume where `-a` now surfaces seventeen
+invisible `Icon` files. **The rest of `spacesaver.py` is still
+unexercised**, and selects by name or creator — an expectation, not a
+measurement.
+
+**The inventory was wrong twice in one day, and both times because the
+search was for a SPELLING.** It listed six of eight while claiming
+"every walk in the tree" — built by grepping for `hls`, and two walks
+use `hdir`. Then it listed eight of nine, because it was extended by
+grepping for the NAME `read_forks` and every hit was credited to
+`superdisk.read_forks`: `nowcompress.py` defines its own, and
+`--adjudicate` calls THAT one, so the harness re-run that was supposed
+to prove the filter safe passed with a blind walk and printed no filter
+line at all. The missing line is what gave it away.
+
+**The population is thirty, not nine, and all thirty pass `-a` since
+2026-09-23.** Asking for the CAPABILITY — an `ast` walk over `tools/`
+for any function that runs `hls` or `hdir` — finds 30. Nine are graded
+in the table above (plus their nested `walk` helpers and this probe's
+own measurement functions); the other nine are not gradeable by
+`walkprobe.py`, because none of them takes an arbitrary image and
+returns an entry set. They were taken anyway, one flag each:
+
+| function | what it reads | what `-a` was worth |
+|---|---|---|
+| `interactive.phase_wrapped` / `phase_chain` / `phase_named` | the volume's entry SET, against what the application should have written | **real**: an invisible output would read as one never made. `phase_chain` already hand-filtered `Desktop`, which is the same fact spelled once |
+| `macmime.HFS.ls` | a MIME phase's output volume, compared with what it wrote | **real**, and it had the `text=True` universal-newline bug too |
+| `interactive.read_joined` | a diagnostic listing — *"not on the volume, which holds:"* | printed only when the file was NOT found, so a listing that hides one misleads exactly when it is read |
+| `rescomp.report` | the report of what the work volume holds | same: the listing IS the finding |
+| `sitcrypt.list_folder` | *"the only way to see what DropConvert called its output"* | an invisible output was not seeable at all |
+| `expander.app_from_image` | the one `APPL` on a 400K image | an invisible application would read as "no application" |
+| `spacesaver.lift_installer` | the installer, found by searching the listing | a name search cannot find a hidden file |
+
+The re-survey is one command and is how this stays true:
+
+    python3 - <<'EOF'   # any function in tools/ that lists a volume
+    import ast, os
+    for r, d, fs in os.walk("tools"):
+        d[:] = [x for x in d if x != "__pycache__"]
+        for f in fs:
+            if not f.endswith(".py"): continue
+            p = os.path.join(r, f); src = open(p).read()
+            for n in ast.walk(ast.parse(src)):
+                if not isinstance(n, ast.FunctionDef): continue
+                seg = "\n".join(src.splitlines()[n.lineno-1:n.end_lineno])
+                if any(t in seg for t in ('"hls"', 'b"hls"', '"hdir"', 'b"hdir"')):
+                    ok = '"-a"' in seg or 'b"-a"' in seg or "invisible=True" in seg
+                    if not ok: print("BLIND", p, n.lineno, n.name)
+    EOF
+
+**`FINDER_OWN` lives in `mkboot.py`**, the module with no imports of its
+own. It was in `arcmac.py` until `interactive.py` needed it and could
+not import that file — arcmac imports `Mac` from interactive, so the
+arrow already pointed the other way.
+
+**Two of the four columns are new, and both came off a real volume
+rather than out of a list of things that could go wrong.** The cache in
+`~/.cache/macextract/vmac` holds 84 mountable images; listing every one
+twice, with `-a` and without, says what the flag is actually worth here:
+
+- **an invisible FOLDER** is the cell where the first two columns cross,
+  and passing either does not imply passing it. Now QuickFiler creates
+  `[Now QuickFiler Folder]` on the volume it is compressing on and puts a
+  `NCdb`/`NCex` database inside it — the FOLDER invisible, the database
+  not — on six of the kept `specimens/now/*` work volumes.
+  `diskdoubler.volume_files` was the walk that earned this column: it
+  descends, and it used to walk straight past a folder it could not see;
+- **a LOCKED file** has nothing to do with `-a` at all. `hdir` prints one
+  with a leading `F`, so `cptsegment.read_volume` and
+  `cptcrypt.read_volume`, which kept a listing line on
+  `line.startswith("f")`, threw every locked file away along with the
+  directories that test was aimed at. `mkboot.Hfs.ls` had the same
+  character set and the same hole. One locked item exists across all 84
+  images — `[DiskExpress Activity Log]` on the Norton DiskDoubler Pro
+  floppy, invisible AND locked.
+
+**`--check` can fail, and every column has been made to.** Taking `-a`
+back out of a walk reports it newly blind; claiming a walk descends when
+it does not reports that; the hidden-folder column was failed both ways
+against `diskdoubler.volume_files` on the day it was written, and the
+locked column named the two Compact Pro walks before they were fixed and
+named them again, as gains, after.
+
+**The table grew twice on the day it was written, and neither growth was
+a new walk being added to the tree.**
+
+- **Two walks were missing from it.** `cptsegment.read_volume` and
+  `cptcrypt.read_volume` list with `hdir` rather than `hls`, so the
+  survey that built this table — a grep for `hls` — did not find them.
+  `hdir` hides the invisible bit exactly as `hls` does and takes the
+  same `-a`: 3 lines against 5 on the probe volume, re-derived on every
+  run. DECISIONS.md already said this about `hdir` and no probe had
+  ever asked it.
+- **The second column did not exist**, and the volume it measures has
+  been there since the probe was written: the same four subjects are
+  copied into `Folder`, and the verdict compared leaf NAMES. The folder
+  holds the same four names as the root, so a walk that returned two
+  entries and one that returned eight both scored 4/4. **Four of the
+  eight never descend.** That is not automatically a defect — all four
+  read volumes built flat, which `EXPECT_FLAT` records — but it was a
+  property the probe's own docstring claimed to test and could not see.
+
+**What each fix cost, and what `-a` is NOT free of.** The template is
+`arcmac.read_volume`: the flag, a three-name `FINDER_OWN` filter
+measured on that harness's OWN volume rather than assumed — `hls -a -1`
+there adds exactly `Desktop`, FNDR/ERIK, invisible, to the four `hls -1`
+gives — the raw-bytes rule for `hcopy`, and one Mini vMac run to
+re-verify. Its two callers (`arcmac.make`, `maclha.make`) select by file
+TYPE and extension, so neither compares fork sets. Every walk fixed
+since **prints what its filter dropped, on every run**, so the filter is
+a measurement rather than a constant somebody trusted:
+
+- `cptsegment` and `cptcrypt`: `Desktop`, and nothing else.
+- `nowcompress`: `Desktop` and `[Now QuickFiler Folder]`, which is the
+  application's own bookkeeping and the thing this walk used to miss.
+- `diskdoubler --wild` on the 3.7 disk: `Desktop`, and the figure it
+  reports is unchanged at 10 compressed files.
+- `superdisk` on a System 7 work volume: `Desktop DB` and `Desktop DF`.
+
+And `-a` cost one real defect on the way in, which is why the rule is to
+re-run the harness: it made `Icon\r` reachable for the first time, and
+the two Compact Pro walks read their listing with `text=True`, which
+applies **universal newlines** — the carriage return inside the HFS name
+becomes a line break, so `hcopy` was handed `Icon` and a file that does
+not exist. `hdir` prints the CR verbatim; the listing is bytes now.
+
+**Two things outside the walks were fixed the same day.**
+`os9.wrapper_names` is a NEGATIVE — the verdict is that none of the output
+is on the plain-HFS wrapper — and it was reading the listing that makes a
+negative EASIEST to satisfy. And `mkboot.verify_stripped`, which asserts
+that the boot image's System Folder holds only System and Finder, **could
+not fail on the files the strip is unable to delete**: an invisible
+`Ghost INIT` copied into a freshly stripped System Folder passed it. Both
+now pass `-a`; `ls()` takes it as a parameter rather than a default,
+because `strip_system_folder` deletes what `ls` returns and the Finder's
+`Desktop` is invisible and kept on purpose. `run.py` on one fixture, 1/1.
+
+**What it cannot see:** whether any of the blind walks has ever actually
+lost something. That depends on whether the application each one grades
+writes an invisible file, which is a question about those applications
+and not about the walks — and it is worth asking of each, because the
+one case this file called "already known to be a real risk" turned out
+not to be one. `arcmac.macbinary`'s docstring said the ArcMac header's
+Finder info carries the invisible bit; measured over all 5 ArcMac files
+and 11 entries here, none does (BLOCKERS.md, *Withdrawn claims*). The
+walk was blind either way, and the flag cost nothing, so it was still
+worth taking — but the risk that ordered the work was not there.
+
 ## Mac OS 9 with the pointer — `os9mouse.py`
 
 What `os9.py`'s keyboard route cannot do is operate an application: click a
@@ -1588,15 +2096,56 @@ forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, and a
 copy named `archive.sit` — the name the Mac saw — because gzip and .Z derive
 their output name from the archive's filename.
 
-Two hfsutils traps it hit, both worth knowing before writing anything similar:
-`hls` **hides names beginning with a dot** unless given `-a`, and every path
-argument must be encoded as **MacRoman**, not UTF-8, or any 8-bit name is a
-file that does not exist. `os9.py` had learned the second one for `hcopy`
+**It has to know what the Mac does to a name, and since 2026-09-22 that is
+two rules rather than one** (`tools/vmac_check.py`, `mac_component`): every
+component is fitted to 31 characters with its extension KEPT, and a StuffIt
+5 name — UTF-8, where every other format states MacRoman — is folded into
+the bytes an HFS name holds first, so a Japanese name arrives as a row of
+`_`. The fold is applied only where the engine says the names are UTF-8
+(`macextract sniff`), because folding a zip name that MacRoman cannot spell
+would invent an agreement the Mac does not make. **Fold before normalizing**:
+the shell folds the archive's own bytes and `ユーザーライセンスの購入.rtf`
+is DECOMPOSED in the archive, thirteen code points where the composed
+spelling is twelve, so an NFC fold predicts one `_` too few. The oracle
+manifests hold the composed spelling, which `run_diff.py` normalizes away
+and this cannot.
+
+Three hfsutils traps it hit, all worth knowing before writing anything
+similar:
+
+- **`hls` hides a file whose Finder INVISIBLE bit is set** unless given
+  `-a`, and **the leading dot has nothing to do with it** — which is what
+  this file and `checkdisk.py` both said until 2026-09-22. Measured as a
+  2x2 by `walkprobe.py`, all four cells: a dotted name with the bit clear
+  is listed without `-a`, and a name with the bit set is hidden whether it
+  starts with a dot or not. `.DS_Store` needed the flag because a
+  Macintosh writes it invisible. The defect that found this was on a Mac
+  OS 9 volume where `hls -F -1` listed four entries and `hls -a -F -1`
+  listed five; the fifth was `Icon\r`, 51,781 bytes of resource fork,
+  which the application had written correctly and the harness reported
+  MISSING.
+- **`rstrip()` is not how you take the newline off `hls -1`'s output.** A
+  carriage return is a legal HFS filename character and it is the last
+  one of `Icon\r`, the name every custom folder icon on a Macintosh has.
+  Splitting on `\n` has already removed everything that is not name.
+- **Every path argument must be encoded as MacRoman**, not UTF-8, or any
+  8-bit name is a file that does not exist.
+
+`os9.py` had learned the third one for `hcopy`
 and not for the `hls` its folder walk runs: a FILE with an 8-bit name at
 the root had been checked since 2026-08-28, and the first FOLDER with one
 — `Terrainman 2.0 ƒ`, on 2026-09-04 — listed as empty, so the harness
 failed a run the application had completed and the volume held whole.
-Fixed the same day (`_walk_volume`).
+Fixed the same day (`_walk_volume`). It learned the first two on
+**2026-09-22**, when `derived-800saywhat301j.sit` joined `os9sample.txt`
+and its `Icon\r` came back MISSING from a volume that held it — so until
+that day an invisible entry was invisible to this tier's COMPARISON as
+well as to the Finder. All three were already right in `checkdisk.py`,
+which is the shape of the lesson: a harness written twice learns once.
+
+The same question was then asked of **every** volume walk in this tree,
+because the wrong explanation above is exactly what made the flag look
+like somebody else's problem — see *What every walk can see*, below.
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
@@ -1641,6 +2190,18 @@ remaining entries never attempted. That is the check behind the withdrawn
 claim in BLOCKERS.md that a full disk produces one error per remaining
 entry; it does not, because every extractor ends the archive on a sink
 failure.
+
+**The default is a 1,440 KB floppy, and that is a limit in the OTHER
+direction too.** A single entry larger than the volume fails at `SetEOF`
+about twenty seconds in, `ret` −9, and reads exactly like a per-entry memory
+refusal unless the `ret` slot is read: `derived-EasyFind.dmg.sit`, one entry
+of 1,851,907 B, was carried as "still refused on a 1 MB Mac Plus" for 18 days
+on runs that had never had room to write it (BLOCKERS.md, *Withdrawn
+claims*, 2026-09-18). `--out-kb 2400` is what that fixture needs. And a
+fixture capped near its memory minimum sits on a low rung of Arsenic's
+sampled index, where the walk is long even all-out — XMenu 704 s, EasyFind
+1,427 s at 562,000 B — so `--timeout 1700` rather than the default, or a
+timeout reads as a refusal as well.
 
 **What it cannot see:** the alert the user is shown. That lives in the
 interactive build, which this harness does not run — `interactive.py` does.
@@ -1871,6 +2432,70 @@ The box's three click targets are constants measured off `DLOG 133` in
 them if that resource moves** — this is the harness that clicks fixed
 coordinates.
 
+### The one line a generated archive cannot make — `interactive.py --report-utf8`
+
+    tools/vmac/interactive.py --report-utf8 --emu mv-4M -o shots fixtures/anything.sit
+
+*"`<name>` was named in characters this Macintosh cannot write"* is the
+report's only line that no DiskDoubler archive can reach: the fold runs where
+the ENGINE says a name is UTF-8, and `fmt_sit5.c` alone says so. So this phase
+ignores the fixture the other way round — it uses one real corpus archive,
+`derived-800saywhat301j.sit`, whose three Japanese names MacRoman has a byte
+for none of. Four frames (the box, Standard File after **Save as Text**, the
+box redrawn, SFGetFile) and the same assertion `--report` makes: the saved
+DOCUMENT, plus the names on the volume. A photograph of a box full of `_`
+cannot fail.
+
+The counts in that assertion are not the ones a reader would guess —
+`ユーザーライセンスの購入` is thirteen `_` and not twelve, because the
+archive stores `ザ` decomposed. The outcome line is the CLEAN one,
+*"Extraction complete."*: nothing failed, every entry came out, and the
+box is up only because the shell has something to say about the names.
+
+**Why the report goes to a floppy, and the control that says so**
+
+    tools/vmac/interactive.py --report-utf8 --utf8-to-boot --emu mv-4M \
+        -o shots fixtures/derived-800saywhat301j.sit
+
+Extract this archive onto the BOOT volume instead and the saved report
+cannot be read off the image afterwards, though the Macintosh plainly
+has it. `--utf8-to-boot` is that run: it drops the one click that
+switches volumes, keeps the image, and reads it twice —
+
+    the extraction's output is in the catalog   : YES
+    the report is in the catalog                : NO
+    the report's TEXT is in the image's blocks  : YES
+
+so **the bytes land and the directory record does not**, which is why a
+30 s flush wait, Control-Q, SIGTERM and the shell's own `FlushVol` all
+changed nothing: they were aimed at a write that had already happened.
+The exit code is 1, because the phase's own assertion still fails —
+that is the point of a control. DECISIONS.md 2026-09-22, *the file that
+was on the disk and not in the catalog*.
+
+**It does not search for the report's NAME**, and neither should
+anything else here: `Extraction Report` is the name `SFPutFile` offers,
+so it is in the application's resources on the same volume and a raw
+search for it says YES in every run, saved or not. The blocks are
+searched for a string only the saved document can hold.
+
+**And one level below that — `--utf8-second`, the discriminator**
+
+    tools/vmac/interactive.py --report-utf8 --utf8-to-boot --utf8-second \
+        --emu mv-4M -o shots fixtures/derived-800saywhat301j.sit
+
+Whether the missing entry is destroyed or merely unwritten is answered
+by doing the save a SECOND time, under the name `Second`, so one more
+catalog update follows the lost one. Both land:
+
+    the report is in the catalog       : YES
+    the SECOND report is in the catalog: YES
+
+So the first entry was **unflushed, not lost**, and a fixed tail of
+Mini vMac's buffered stdio is ruled out — both entries live in the same
+catalog leaf, so a lost tail would have taken them both. This phase
+exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
+
 ### Driving the real UI
 
     interactive.py                  # progress dialog, Cancel, Cmd-., at 1x
@@ -1879,8 +2504,17 @@ coordinates.
                                     # volume navigation, an extracted APPL launching
     interactive.py --report         # the end-of-run report box: renames,
                                     # failures, scrolling, Save as Text
+    interactive.py --report-utf8    # the '_' line only a StuffIt 5 name reaches
+    interactive.py --report-utf8 --utf8-to-boot
+                                    # ...onto the BOOT volume: the control that
+                                    # says the bytes land and the catalog entry
+                                    # does not. Exits 1 by design
+    interactive.py --report-utf8 --utf8-to-boot --utf8-second
+                                    # ...and save it TWICE: both entries land,
+                                    # so the first was unflushed, not lost
     interactive.py --segments       # the "locate part N" alert for a split archive
     interactive.py --named zip      # a spanned zip set, opened through Standard File
+                                    # — needs a fixture OVER 64 KB, below
     interactive.py --named split    # a plain .NNN split, likewise
     interactive.py --chain          # .sit.hqx: do ALL the envelope layers come off?
     interactive.py --wrapped        # a set whose parts are each in an envelope
@@ -1890,7 +2524,18 @@ coordinates.
     interactive.py --drop           # drag an archive onto the application's
                                     # icon: what does the FINDER do?
 
-Run them one at a time (see "This box has one core", above).
+Run them one at a time (see "This box has one core", above). **One at a
+time is not only about the core**: every phase builds the application
+into the same `build/mac-interactive`, so two `interactive.py` runs
+started together fight over it and one dies in `cmake --build`.
+
+**`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks
+an archive split whatever its size, so a smaller payload makes one
+`Aset.zip` and no `Aset.z01`, and the application correctly answers
+*"This archive has more parts. Find them and try again."* — a harness
+invocation error that photographs exactly like an application bug, which
+is the shape this directory keeps meeting. Drive it with
+`fixtures/derived-xmasbeeps.sit`.
 
 **On System 7 the dialog is not the same dialog, and the clicks know it
 since 2026-08-25.** System 7 draws its own Standard File — a directory

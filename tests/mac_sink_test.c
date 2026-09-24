@@ -325,6 +325,66 @@ int main(int argc, char **argv)
         }
         return ok ? 0 : 1;
     }
+    if (argc >= 2 && strcmp(argv[1], "--utf8") == 0) {
+        /* The fold a UTF-8 name goes through before it can be an HFS
+         * name (Utf8ToMacRoman in mac/macextract_mac.c).
+         *
+         * Driven through sink_begin directly, the way --cancel is,
+         * because the only format that sets `name_utf8` is StuffIt 5
+         * and nothing here writes one: a synthetic archive would have
+         * to be invented, and what is under test is the SHELL. That
+         * the engine sets the flag at all is what the differential
+         * suite grades, over the corpus's own StuffIt 5 archives.
+         *
+         * Every name is written as escapes so this file stays ASCII.
+         * What each one is: see tools/run_macnames.py, which asserts
+         * on the files and on the report lines printed below. */
+        static const struct { const char *name; int utf8; } cases[] = {
+            /* U+0192 'f with hook' — MacRoman 0xC4, the folder mark a
+             * Mac user types. Folds, and loses nothing. */
+            { "Cool Tools \xc6\x92/Cool Tools doc",              1 },
+            /* Three Japanese characters MacRoman has no byte for. */
+            { "\xe8\xaa\xad\xe3\x82\x93\xe3\x81\xa7.rtf", 1 },
+            /* A folder that loses characters, holding a file that does
+             * not: one line, about the folder. */
+            { "\xe3\x81\x82\xe3\x81\x84/plain",              1 },
+            /* 16 x U+00E9: 32 bytes of UTF-8, 16 of MacRoman, so the
+             * 31-character cut must happen AFTER the fold. */
+            { "\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9"
+              "\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9"
+              "\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9",          1 },
+            /* Another unwritable character: same disk name as case 2's
+             * sibling below, so the collision numbering acts. */
+            { "\xe3\x81\x82.txt",                               1 },
+            { "\xe3\x81\x84.txt",                               1 },
+            /* The same bytes with the flag CLEAR — StuffIt classic —
+             * pass through untouched. */
+            { "\xc6\x92 classic",                                0 }
+        };
+        size_t c;
+        snprintf(gOutDir, sizeof gOutDir, "%s",
+                 argc >= 3 ? argv[2] : "/tmp/utf8_out");
+        mkdir(gOutDir, 0755);
+        snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+        RepReset();
+        for (c = 0; c < sizeof cases / sizeof cases[0]; c++) {
+            MacSink s; UncEntryInfo info;
+            memset(&s, 0, sizeof s); s.vRefNum = 1; s.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            info.name_len = (uint16_t)strlen(cases[c].name);
+            memcpy(info.name, cases[c].name, info.name_len);
+            info.name_utf8 = (uint8_t)cases[c].utf8;
+            info.data_size = 0; info.rsrc_size = 0; info.is_dir = 0;
+            if (sink_begin(&s, &info) == 0) sink_end(&s, UNC_OK);
+        }
+        {
+            short i;
+            for (i = 0; i < gRepN; i++)
+                fprintf(stderr, "report: %.*s\n", (int)gRepLen[i],
+                        gRepBuf + gRepStart[i]);
+        }
+        return 0;
+    }
     if (argc >= 2 && strcmp(argv[1], "--shortfall") == 0) {
         /* The number the low-memory alert quotes.
          *

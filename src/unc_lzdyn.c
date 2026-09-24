@@ -230,6 +230,30 @@ static void lzd_start(Lzdyn *h)
     h->count = 0;
 }
 
+/* Output leaves through the window, a run at a time, for both coders
+ * in this file: `done` counts every byte written and `loc` is that
+ * count masked, so [flushed, done) is what has not been handed over
+ * yet. Flushing every LZD_FLUSH bytes keeps that span, plus the longest
+ * match that can land on top of it (LZD_MAXMATCH), inside the 8 KB
+ * window. Same arrangement, and the same one-call-site shape, as
+ * unc_lzah.c. */
+#define LZD_FLUSH 4096u
+
+static int lzd_flush(const uint8_t *window, uint32_t *flushed, uint32_t done,
+                     UncPutRun put, void *pctx)
+{
+    while (*flushed < done) {
+        uint32_t at = *flushed & (LZD_DICSIZ - 1);
+        uint32_t n = done - *flushed;
+        int err;
+        if (n > LZD_DICSIZ - at) n = LZD_DICSIZ - at;
+        *flushed += n;
+        err = put(pctx, window + at, n);
+        if (err != UNC_OK) return err;
+    }
+    return UNC_OK;
+}
+
 static int lzd_walk(Lzdyn *h, UncBitIn *bi, int32_t root, int32_t *out)
 {
     int32_t c = h->child[root];
@@ -282,10 +306,10 @@ static int lzd_decode_p(Lzdyn *h, UncBitIn *bi, int32_t *out)
 }
 
 int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx)
+                     UncPutRun put, void *pctx)
 {
     Lzdyn *h;
-    uint32_t loc = 0, done = 0;
+    uint32_t loc = 0, done = 0, flushed = 0;
     int err = UNC_OK;
 
     h = (Lzdyn *)unc_alloc(al, (uint32_t)sizeof *h);
@@ -311,15 +335,18 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
     h->total_p = 0;
     lzd_start(h);
 
-    while (done < outlen) {
+    for (;;) {
         int32_t c = 0;
+        if (done >= outlen || done - flushed >= LZD_FLUSH) {
+            err = lzd_flush(h->window, &flushed, done, put, pctx);
+            if (err != UNC_OK || done >= outlen) goto out;
+        }
         if ((err = lzd_decode_c(h, bi, &c)) != UNC_OK) goto out;
         if (c <= 255) {
             h->window[loc++ & (LZD_DICSIZ - 1)] = (uint8_t)c;
             loc &= LZD_DICSIZ - 1;
             h->count++;
             done++;
-            if ((err = put(pctx, (uint8_t)c)) != UNC_OK) goto out;
         } else {
             int32_t len = c - (0x100 - LZD_THRESHOLD);
             int32_t pos = 0;
@@ -333,7 +360,6 @@ int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                 h->window[loc++ & (LZD_DICSIZ - 1)] = b;
                 loc &= LZD_DICSIZ - 1;
                 done++;
-                if ((err = put(pctx, b)) != UNC_OK) goto out;
             }
         }
     }
@@ -490,10 +516,10 @@ static int lzs_decode_p(Lzst0 *h, UncBitIn *bi, int32_t *out)
 }
 
 int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx)
+                     UncPutRun put, void *pctx)
 {
     Lzst0 *h;
-    uint32_t loc = 0, done = 0;
+    uint32_t loc = 0, done = 0, flushed = 0;
     uint32_t i;
     int err = UNC_OK;
 
@@ -505,14 +531,17 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
     h->c_single = h->p_single = -1;
     h->blocksize = 0;
 
-    while (done < outlen) {
+    for (;;) {
         int32_t c = 0;
+        if (done >= outlen || done - flushed >= LZD_FLUSH) {
+            err = lzd_flush(h->window, &flushed, done, put, pctx);
+            if (err != UNC_OK || done >= outlen) goto out;
+        }
         if ((err = lzs_decode_c(h, bi, &c)) != UNC_OK) goto out;
         if (c <= 255) {
             h->window[loc++ & (LZD_DICSIZ - 1)] = (uint8_t)c;
             loc &= LZD_DICSIZ - 1;
             done++;
-            if ((err = put(pctx, (uint8_t)c)) != UNC_OK) goto out;
         } else {
             int32_t len = c - (0x100 - LZD_THRESHOLD);
             int32_t pos = 0;
@@ -525,7 +554,6 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
                 h->window[loc++ & (LZD_DICSIZ - 1)] = b;
                 loc &= LZD_DICSIZ - 1;
                 done++;
-                if ((err = put(pctx, b)) != UNC_OK) goto out;
             }
         }
     }

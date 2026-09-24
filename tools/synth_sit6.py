@@ -10,13 +10,18 @@ segment boundary falling inside a run. This generates an archive that
 does, so those paths are checked against a reference implementation
 rather than against our own unit tests.
 
-The oracle for this fixture is macunpack, not unar: The Unarchiver does
-not implement method 6 (see TESTING.md, "A second oracle").
+The oracle for this fixture is macunpack AND deark, not unar: The
+Unarchiver recognizes method 6 and refuses it (TESTING.md, "A second
+oracle" and "A third oracle").
 
 Container layout and the method byte come from the same sources as the
 parser in src/fmt_sit.c. The segment framing and the PackBits semantics
-come from reference/macutils/macunpack/sit.c (sit_fixhuf); the code tree
-is read out of src/sit6_tables.h, which tools/gen_sit6_tables.py derives
+come from docs/formats/stuffit-method-6.md, this project's own note,
+written against reference/deark/modules/stuffit.c (MIT) — they came
+from reference/macutils/macunpack/sit.c until 2026-09-22; the code tree
+is built from the 26 bytes in src/sit6_tables.h the same way
+src/fmt_sit.c's sit6_build builds it — the header stopped carrying the
+expanded tree on 2026-09-21. It used to be derived
 from that same file, so this script does not need reference/ present.
 
 Deterministic: no randomness, no timestamps. Provenance in SOURCES.md as
@@ -42,33 +47,54 @@ def crc16_arc(data, crc=0):
     return crc & 0xFFFF
 
 
-def load_tree():
-    """Read sit6_zero/sit6_one out of the generated header and return
-    {leaf ordinal: bit string}."""
+def runlengths():
+    """The 13 (count, bits) pairs `src/sit6_tables.h` states the fixed
+    code book as, so the 26 bytes are written down once and this reads
+    the same copy the engine compiles."""
     text = open(TABLES).read()
-    arrays = {}
-    for m in re.finditer(r"static const uint16_t (\w+)\[SIT6_INTERNAL\]"
+    out = {}
+    for m in re.finditer(r"static const uint8_t (\w+)\[SIT6_RUNS\]"
                          r"\s*=\s*\{(.*?)\};", text, re.S):
-        arrays[m.group(1)] = [int(v) for v in re.findall(r"\d+", m.group(2))]
-    zero, one = arrays["sit6_zero"], arrays["sit6_one"]
-    codes, stack = {}, [(0, "")]
-    while stack:
-        row, prefix = stack.pop()
-        for bit, table in ((0, zero), (1, one)):
-            child = table[row]
-            if child <= LEAVES:
-                codes[child] = prefix + str(bit)
-            else:
-                stack.append((child - LEAVES, prefix + str(bit)))
+        out[m.group(1)] = [int(v) for v in re.findall(r"\d+", m.group(2))]
+    return list(zip(out["sit6_runlen"], out["sit6_runbits"]))
+
+
+def build_tree():
+    """{leaf ordinal: bit string}, built the way `sit6_build` builds it.
+
+    Expand the run-lengths to 257 code lengths, then give each symbol in
+    turn the code that follows the one before it — shift left when
+    longer, shift right and add one when shorter, add one when equal.
+    The leaf ordinal is the symbol plus one, and the terminator gets the
+    thirteenth bit macunpack's tree spends on it, reaching ordinal 257
+    or 258 (docs: src/sit6_tables.h).
+    """
+    lens = []
+    for count, bits in runlengths():
+        lens += [bits] * count
+    codes, prev, prevlen = {}, 0, 0
+    for sym, ln in enumerate(lens):
+        if prevlen == 0:
+            cur = 0
+        elif ln < prevlen:
+            cur = (prev >> (prevlen - ln)) + 1
+        else:
+            cur = (prev + 1) << (ln - prevlen)
+        prev, prevlen = cur, ln
+        codes[sym + 1] = format(cur, "0%db" % ln)
+    term = codes.pop(LEAVES - 1)          # symbol 256: the terminator
+    codes[LEAVES - 1] = term + "0"
+    codes[LEAVES] = term + "1"
     assert len(codes) == LEAVES, len(codes)
     return codes
 
 
-CODES = load_tree()
+CODES = build_tree()
 
 
 # --- PackBits ---------------------------------------------------------
-# Source: the tail of sit_fixhuf. n < 0x80 introduces n + 1 literals,
+# Source: docs/formats/stuffit-method-6.md, *PackBits, once per
+# block*. n < 0x80 introduces n + 1 literals,
 # n == 0x80 is a no-op, and n > 0x80 repeats the next byte 0x101 - n
 # times. The generator emits these shapes explicitly rather than running
 # a compressor, because the point is to cover the control bytes the real

@@ -2,14 +2,14 @@
  "entries": [
   {
    "creator": "ttxt",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "344b2ff96a9b6913fc6d68907c56924f2578e6ad6ce8611ae6584282954bb1e0",
    "data_size": 1017,
    "name": "Works 2.00e Patch README",
    "oracle_methods": [
     "Huffman"
    ],
-   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "rsrc_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "rsrc_size": 0,
    "type": "ttro"

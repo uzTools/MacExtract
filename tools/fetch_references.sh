@@ -134,6 +134,50 @@ fi
     curl -sL -o reference/notes/cpt_specs_theunarchiver.md \
     "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/CompactProSpecs.wiki"
 
+# The two pages that page's LAST LINE links to, and which nothing here
+# fetched until 2026-09-20 — so the project had a full description of
+# Compact Pro's coders one hop away from a file in reference/notes and
+# did not have it. Together they document the whole format; what they
+# get wrong is written up in docs/formats/compact-pro.md, which is
+# what src/fmt_cpt.c cites.
+[ -f reference/notes/cpt_lzh_theunarchiver.md ] || \
+    curl -sL -o reference/notes/cpt_lzh_theunarchiver.md \
+    "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/CompactProLzhAlgorithm.wiki"
+[ -f reference/notes/rle8182_theunarchiver.md ] || \
+    curl -sL -o reference/notes/rle8182_theunarchiver.md \
+    "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/Rle8182Algorithm.wiki"
+
+# And the rest of that wiki, which turned out to describe most of the
+# Macintosh formats this project had recorded as undocumented. Its
+# index is a JSON file — 40 pages, listed at
+# .../theunarchiver/wikis.json — and reading it on 2026-09-20 is what
+# turned "no description exists" into a fetch for StuffIt method 13,
+# DiskDoubler's AD and DD, and the rest below. These are FACTS pages,
+# not code; what each one gets wrong is written up in docs/formats/
+# where this project has held it against the corpus, and a row that
+# has not been held against the corpus says so.
+for page_name in \
+    "StuffItAlgorithm13:sit13" \
+    "StuffItAlgorithm3:sit3" \
+    "StuffItSpecs:sit_specs" \
+    "StuffItFormat:sit_format" \
+    "StuffIt5Format:sit5_format" \
+    "StuffItArsenicAlgorithm:sit_arsenic" \
+    "StuffIt5Format:sit5_specs" \
+    "DiskDoublerSpecs:dd_specs" \
+    "DiskDoublerAdAlgorithm:dd_ad" \
+    "DiskDoublerDdAlgorithm:dd_dd" \
+    "DiskDoublerAlgorithm2:dd_method2" \
+    "Rle90Algorithm:rle90" \
+    "LzwAlgorithm:lzw" \
+    "MacBinarySpecs:macbinary_specs" ; do
+    page=${page_name%%:*}
+    name=${page_name##*:}
+    [ -f "reference/notes/${name}_theunarchiver.md" ] || \
+        curl -sL -o "reference/notes/${name}_theunarchiver.md" \
+        "https://storage.googleapis.com/google-code-archive/v2/code.google.com/theunarchiver/wiki/${page}.wiki"
+done
+
 if [ ! -f reference/notes/cpt_users_guide.txt ]; then
     curl -sL -o /tmp/cpt_guide.pdf \
         "http://www.applefool.com/se30/files/Compact%20Pro%20User's%20Guide.pdf"
@@ -170,6 +214,24 @@ fi
 [ -f reference/notes/zstd_rfc8878.txt ] || \
     curl -sL -o reference/notes/zstd_rfc8878.txt \
         "https://www.rfc-editor.org/rfc/rfc8878.txt"
+
+# DEFLATE — RFC 1951. Section 3.2.2 is the definition of a canonical
+# code-length Huffman code and the algorithm that assigns the codes, which
+# is what src/unc_huffman.c's unc_canon_build_ext follows. Nothing here
+# reads a deflate stream with it — zlib does that — it is the SPEC for a
+# code shape five of the Macintosh formats happen to use.
+[ -f reference/notes/rfc1951.txt ] || \
+    curl -sL -o reference/notes/rfc1951.txt \
+        "https://www.rfc-editor.org/rfc/rfc1951.txt"
+
+# puff.c (Mark Adler, zlib licence) — the reference deflate decoder that
+# ships in zlib's contrib/. construct() and decode() are the counts-and-
+# offsets build and the length walk in src/unc_huffman.c, and construct()
+# is also where "an incomplete code is legal, not an error" is written
+# down as a contract rather than as a remark about one encoder.
+[ -f reference/notes/puff.c ] || \
+    curl -sL -o reference/notes/puff.c \
+        "https://raw.githubusercontent.com/madler/zlib/v1.3.1/contrib/puff/puff.c"
 
 # brotli — RFC 7932, kept for what it does NOT contain. Section 9.1 is the
 # whole stream header: 1 to 7 bits of WBITS and nothing else. There is no
@@ -242,6 +304,22 @@ if [ ! -d reference/ciderpress2 ]; then
     done
 fi
 
+# The wrapper the two A/UX 3.0.1 floppies travel in. They are the only
+# DART archives here that Apple's tool wrote over a disk nobody in this
+# project chose, and the 1.4 MB one is the only 72-slot archive of any
+# kind the corpus holds — the one place a disk's SIZE changes a DART's
+# layout. Macintosh Garden's own FTP repository is the only place either
+# has ever been found; tools/get_dart_specimen.py takes the members out
+# of this with the engine's own CLI and fixtures/SOURCES.md pins both,
+# so the archive itself is kept here rather than in the corpus.
+# Be sparing with that host: public credentials, one volunteer's bandwidth.
+AUX301=APPLE_AUX_3-0-1_RETAIL_FLOPPY_IMAGES_DART.sit
+if [ ! -f "reference/macgarden/$AUX301" ]; then
+    mkdir -p reference/macgarden
+    curl -sSL -f -o "reference/macgarden/$AUX301" \
+        "ftp://mirror:mirror@ftp.macintosh.garden/apps/$AUX301"
+fi
+
 # Apple's own DartIntf.h, version 1.5.3, Ken McLeod, 1987-1994. DART was
 # never an Apple product and its format was never published; this header
 # is the whole of the documentation there is, and it says so ("The format
@@ -274,5 +352,168 @@ fi
 [ -f reference/notes/Apple_Archive.md ] || \
     curl -sL "http://fileformats.archiveteam.org/wiki/Apple_Archive?action=raw" \
         -o reference/notes/Apple_Archive.md
+
+# ------------------------------------------------------------------
+# The container formats' own specifications.
+#
+# Everything below documents a CONTAINER — a header, an entry table, a
+# directory — rather than a compression method, and every one of them is
+# public. They were fetched on 2026-09-19 so that src/fmt_binhex.c,
+# fmt_macbinary.c, fmt_applesingle.c, fmt_exo.c, fmt_zipseg.c and
+# fmt_sitseg.c could cite the document a fact is written in instead of
+# citing XADMaster's reading of it (DECISIONS.md 2026-09-19, *the facts
+# that were somebody else's to state*). None of them is a licence
+# obligation and none is linked into anything shipped.
+# ------------------------------------------------------------------
+
+# An HTML page reduced to its text. Three of the documents below survive
+# only as web pages; the rest are plain text and are taken as they are.
+html_to_text() {
+    python3 -c "
+import html, re, sys
+s = open(sys.argv[1], encoding='utf-8', errors='replace').read()
+s = re.sub(r'(?is)<(script|style).*?</\1>', '', s)
+s = re.sub(r'(?is)<br\s*/?>|</(p|div|tr|h[1-6]|pre|li)>', '\n', s)
+s = re.sub(r'(?is)<[^>]+>', ' ', s)
+s = html.unescape(s)
+s = re.sub(r'[ \t]+', ' ', s)
+s = re.sub(r'\n[ \t]+', '\n', s)
+s = re.sub(r'\n{3,}', '\n\n', s)
+open(sys.argv[2], 'w').write(s)
+" "$1" "$2"
+}
+
+# BinHex 4.0 — RFC 1741 for the MIME type and its Appendix A, and Peter
+# N Lewis's "BinHex 4.0 Definition" (Aug 1991) for everything Appendix A
+# leaves vague. BOTH are needed and the reason is worth knowing: the
+# RFC's rendering of the 64-character alphabet contains a stray space
+# and is 65 characters long, so the RFC alone cannot say what the
+# alphabet is. Lewis's document has it right, and is also the only one
+# that states the CRC (0x1021, initial register zero) and the rule that
+# a run count of zero means a literal 0x90.
+[ -f reference/notes/rfc1741.txt ] || \
+    curl -sL -o reference/notes/rfc1741.txt \
+        "https://www.rfc-editor.org/rfc/rfc1741.txt"
+[ -f reference/notes/binhex40_lewis.txt ] || \
+    curl -sL -o reference/notes/binhex40_lewis.txt \
+        "http://files.stairways.com/other/binhex-40-specs-info.txt"
+
+# MacBinary II (the 7/24/87 revision) and MacBinary III (December 1996).
+# Between them they give the whole 128-byte header, the 128-byte fork
+# padding, the CRC over bytes 0..123, the 'mBIN' signature at 102, and —
+# this is the part nothing else writes down — the ORDER a reader is
+# meant to decide the version in, along with the stricter tests that
+# distinguish a MacBinary I header from noise. MacBinary III survives
+# only as an archived web page.
+[ -f reference/notes/macbinary_ii.txt ] || \
+    curl -sL -o reference/notes/macbinary_ii.txt \
+        "http://files.stairways.com/other/macbinaryii-standard-info.txt"
+if [ ! -f reference/notes/macbinary_iii.txt ]; then
+    curl -sL -o /tmp/mb3.html \
+        "https://web.archive.org/web/20050305044255/http://www.lazerware.com:80/formats/macbinary/macbinary_iii.html"
+    html_to_text /tmp/mb3.html reference/notes/macbinary_iii.txt
+    rm -f /tmp/mb3.html
+fi
+
+# AppleSingle / AppleDouble — RFC 1740, appendices A and B. The magic
+# numbers, the version, the 16 filler bytes, the entry count and the
+# (id, offset, length) descriptors, the predefined entry ids, and the
+# 2000-01-01 GMT epoch that entry 8's dates are counted from.
+[ -f reference/notes/rfc1740.txt ] || \
+    curl -sL -o reference/notes/rfc1740.txt \
+        "https://www.rfc-editor.org/rfc/rfc1740.txt"
+
+# gzip — RFC 1952, for the header src/fmt_exo.c walks.
+[ -f reference/notes/rfc1952.txt ] || \
+    curl -sL -o reference/notes/rfc1952.txt \
+        "https://www.rfc-editor.org/rfc/rfc1952.txt"
+
+# zip — PKWARE's APPNOTE.TXT 6.3.10, the format's own specification.
+# Sections this engine reads: 4.3.12 and 4.3.16 (central directory and
+# end-of-central-directory records), 4.3.14 and 4.3.15 (the Zip64
+# records and their signatures), 4.4.4 (the general purpose bit flag),
+# 4.5.3 (the Zip64 extra field, whose fields appear only for the
+# central-directory values that carry the escape, in a fixed order),
+# APPENDIX E (method 99 and the 0x9901 extra field), and section 8
+# (splitting and spanning, including the 0x08074b50 marker at the front
+# of a first segment).
+[ -f reference/notes/zip_appnote.txt ] || \
+    curl -sL -o reference/notes/zip_appnote.txt \
+        "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT"
+
+# WinZip's AES specification, which APPENDIX E of APPNOTE.TXT names as
+# the published layout of the 0x9901 extra field: the vendor version,
+# the two-character vendor ID "AE", the strength byte (1, 2, 3 for 128,
+# 192, 256 bits) and the real compression method behind method 99.
+if [ ! -f reference/notes/winzip_aes.txt ]; then
+    curl -sL -o /tmp/winzip_aes.html "https://www.winzip.com/en/support/aes-encryption/"
+    html_to_text /tmp/winzip_aes.html reference/notes/winzip_aes.txt
+    rm -f /tmp/winzip_aes.html
+fi
+
+# FIPS 46-3, the Data Encryption Standard as reaffirmed 1999-10-25 — the
+# standard itself, and the source of every standard-DES table in
+# src/crypt_tables.h since 2026-09-23: IP and IP^-1, PC-1, PC-2, the
+# shift schedule, the eight selection functions of Appendix 1, and P.
+# tools/gen_crypt_tables.py reads them out of the PDF's own text streams;
+# it needs no PDF tool, only zlib. A PDF and not a text file because NIST
+# publishes no text of it, and this machine has no extractor to convert
+# one at fetch time.
+[ -f reference/notes/fips46-3.pdf ] || \
+    curl -sL -o reference/notes/fips46-3.pdf \
+        "https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf"
+
+# RFC 1321, the MD5 Message-Digest Algorithm — and since 2026-09-23 the
+# source of MD5's three tables in src/crypt_tables.h: the per-step
+# message-word index, rotation and constant, read out of the 64 round
+# calls of the RFC's own reference implementation, with section 3.4's
+# definition of the constants (the integer part of 4294967296*abs(sin(i)))
+# asserted to reproduce the literals beside them.
+[ -f reference/notes/rfc1321.txt ] || \
+    curl -sL -o reference/notes/rfc1321.txt \
+        "https://www.rfc-editor.org/rfc/rfc1321.txt"
+
+# The other three primitives' own documents, cited by src/unc_crypt.c
+# since 2026-09-23 in place of XADMaster's implementations of them:
+# RFC 3174 for SHA-1 (sections 5 and 6.1 give the K constants, the five
+# initial words and the round), RFC 2104 for HMAC's 0x36/0x5C pads over a
+# 64-byte block, and RFC 2898 section 5.2 for PBKDF2.
+for _rfc in 3174 2104 2898; do
+    [ -f "reference/notes/rfc$_rfc.txt" ] || \
+        curl -sL -o "reference/notes/rfc$_rfc.txt" \
+            "https://www.rfc-editor.org/rfc/rfc$_rfc.txt"
+done
+
+# RC4's key schedule and stream, as draft-kaukonen-cipher-arcfour-03
+# ("Arcfour", July 1999) states them. Its S2 array is the key repeated to
+# 256 bytes, which is what src/unc_crypt.c's i % keylen indexing does.
+[ -f reference/notes/arcfour_draft.txt ] || \
+    curl -sL -o reference/notes/arcfour_draft.txt \
+        "https://www.ietf.org/archive/id/draft-kaukonen-cipher-arcfour-03.txt"
+
+# ustar — POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
+# pax utility page, whose "ustar Interchange Format" section carries the
+# 512-octet header block table src/fmt_exo.c reads, the two zero records
+# that end an archive, and the typeflag values.
+if [ ! -f reference/notes/posix_ustar.txt ]; then
+    curl -sL -o /tmp/pax.html \
+        "https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html"
+    html_to_text /tmp/pax.html reference/notes/posix_ustar.txt
+    rm -f /tmp/pax.html
+fi
+
+# PackIt — R. Scott McGinnis's unPACKIT 1.0 manual (1986, freeware), whose
+# appendices B and C are the only published description of the format this
+# project has found: the four subfile type words, the 94-byte entry header
+# field by field, and the note that a compressed entry codes that header
+# into the same stream as its forks. `reference/notes/PackIt.md` names it,
+# and that page had been here since the first fetch. Text, CR line endings.
+if [ ! -f reference/notes/packit_unpackit.txt ]; then
+    curl -sL -o /tmp/unpakit.zip \
+        "http://cd.textfiles.com/simtel/simtel9510/disk1/DISC1/MAC/UNPAKIT.ZIP"
+    unzip -p /tmp/unpakit.zip UNPACKIT.DOC | tr -d '\r' \
+        > reference/notes/packit_unpackit.txt
+    rm -f /tmp/unpakit.zip
+fi
 
 echo "references ready"

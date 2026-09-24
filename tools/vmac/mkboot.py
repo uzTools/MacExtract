@@ -49,6 +49,19 @@ import os, re, shutil, subprocess, sys, tempfile
 # 12 characters, always followed by one space and then the item's name.
 LISTING_DATE = re.compile(r"[A-Z][a-z]{2} [ \d]\d (?: \d{4}|\d\d:\d\d) (.+)$")
 
+# The Finder's own invisible bookkeeping, which `-a` surfaces on any
+# volume a booted Macintosh has touched and which no walk here should
+# report as output. `Desktop` is System 6's; `Desktop DB`/`Desktop DF`
+# are what System 7 and later write instead. Measured on each harness's
+# own volume before it was trusted — every walk that uses this prints
+# what it dropped, on every run.
+#
+# It lives HERE, in the module with no imports of its own, because every
+# walk in the tree needs it and `arcmac.py` — where it was first written
+# — imports `interactive`, which made it a circular import the moment
+# `interactive.py` needed it too (2026-09-23).
+FINDER_OWN = {"Desktop", "Desktop DB", "Desktop DF"}
+
 DEFAULT_APP = "MacExtract"       # also the boot-block shell name, below
 SYS_FOLDER = "System Folder"
 KEEP = {"System", "Finder"}     # everything else in the System Folder goes
@@ -90,13 +103,44 @@ class HFS:
         the only way to be positional."""
         return self.vol + ":" + ":".join(parts)
 
-    def ls(self, path):
-        """Names in <path> (absolute), plus a flag for directory-ness."""
+    def ls(self, path, invisible=False):
+        """Names in <path> (absolute), plus a flag for directory-ness.
+
+        `invisible=True` passes `-a`, which is the only way to see a file
+        whose Finder invisible bit is set. It is NOT the default, and the
+        reason is one line rather than an oversight: `strip_system()`
+        deletes what this returns, and the Finder's `Desktop` file is
+        invisible and is kept on purpose on some runs (`drop_desktop`).
+        A verification wants `-a`; a deletion wants the explicit list.
+        """
         self.run("hcd", path)
-        out = self.run("hdir").stdout
+        # BYTES, and split on b"\n" alone. `text=True` applies universal
+        # newlines, so the carriage return inside `Icon\r` — a legal HFS
+        # name, and the one this very file's `rmtree` says survives a
+        # strip — arrived as a line break and the name as `Icon`.
+        # Measured 2026-09-23, the moment `walkprobe.py` graded this
+        # function instead of reasoning about it: 3/4, missing exactly
+        # that name.
+        out = subprocess.run(
+            [b"hdir"] + ([b"-a"] if invisible else []),
+            env=self.env, capture_output=True).stdout
         items = []
-        for line in out.splitlines():
-            if not line or line[0] not in "fd":
+        # Decoded with the FILESYSTEM encoding, not MacRoman — because
+        # these names go straight back to hfsutils as arguments, and
+        # `subprocess` encodes a str argument with `os.fsencode`. UTF-8
+        # plus surrogateescape round-trips every byte; MacRoman does not,
+        # and the first draft of this broke `hdel` on
+        # `Macintosh:Microsoft Word:Sample Documents:Résumé` — MacRoman
+        # 0x8E decoded to 'é' and went back out as UTF-8's two bytes.
+        # The decode has to match the ENCODE that follows it, which is
+        # what `run()` above says and what this line briefly forgot.
+        for line in [x.decode(sys.getfilesystemencoding(), "surrogateescape")
+                     for x in out.split(b"\n")]:
+            # `F` as well as `f`: `hdir` prints a LOCKED file with a capital,
+            # so the obvious directory test silently drops one. A locked
+            # DIRECTORY still prints `d` — measured, both, 2026-09-22
+            # (walkprobe.py, the locked column).
+            if not line or line[0] not in "fFd":
                 continue
             # "f  TYPE/CREA  dlen  rlen  Mon dd  yyyy  name"
             # "d  n items               Mon dd hh:mm  name"
@@ -171,12 +215,18 @@ def rmtree(hfs, path):
                 hfs.run("hdel", child)
     hfs.run("hcd", hfs.path())           # hrmdir refuses to delete our own cwd
     for d in reversed(dirs):             # deepest first
-        # Best-effort: this stock image has at least one directory whose
-        # valence disagrees with what hdir enumerates ("8 items", 7 listed),
-        # so hrmdir reports "directory not empty" on a directory nothing can
-        # list the contents of. An empty-looking leftover folder costs
-        # nothing at boot — only files IN THE SYSTEM FOLDER load — and
-        # verify_stripped() below checks the property that actually matters.
+        # Best-effort, and the reason is the invisible bit rather than the
+        # image: a directory's valence counts files `hdir` will not list,
+        # so hrmdir reports "directory not empty" on one that looks empty.
+        # This said "at least one directory whose valence disagrees with
+        # what hdir enumerates" until 2026-09-22, which blamed the stock
+        # disk for what the LISTING was doing. Measured on the image this
+        # produces: 6 files, 3 of them invisible, and the two that survive
+        # the strip are `Icon\r` — a custom folder icon, which is exactly
+        # the file that is always invisible and always in somebody's way.
+        # An empty-looking leftover folder costs nothing at boot — only
+        # files IN THE SYSTEM FOLDER load — and verify_stripped() below
+        # checks that property, with `-a`, so it can actually fail.
         hfs.run("hrmdir", d, check=False)
 
 
@@ -185,7 +235,13 @@ def verify_stripped(hfs, expect):
     INITs, cdevs and drivers from the FILES sitting directly in the System
     Folder. Assert that only the OS — plus the application, when it is the
     boot shell and so has to live in the blessed folder — remains there."""
-    files = {name for isdir, name in hfs.ls(hfs.path(SYS_FOLDER)) if not isdir}
+    # `invisible=True`: without it this could not have failed on a file the
+    # strip left behind, because the files the strip MISSES are exactly the
+    # ones `hdir` does not list (2026-09-22). Measured on the four boot
+    # images here, no System Folder holds an invisible file, so this is a
+    # check that gains the ability to fail rather than a new failure.
+    files = {name for isdir, name in
+             hfs.ls(hfs.path(SYS_FOLDER), invisible=True) if not isdir}
     if files != expect:
         raise SystemExit(f"mkboot: System Folder holds {sorted(files)}, "
                          f"expected {sorted(expect)}")

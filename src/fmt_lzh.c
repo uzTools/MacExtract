@@ -11,29 +11,30 @@
  * fork in it could be MADE (tools/vmac/maclha.py).
  *
  * Sources (transcribed, never guessed):
- *   reference/XADMaster/XADLZHParser.m        — the header walk, all
- *       four header levels, the extended-header types, which method
- *       maps to which window size, and the CRC contract (CRC-16/ARC
- *       over the DECODED bytes, unconditioned).
- *   reference/XADMaster/XADLZHStaticHandle.m  — -lh4- .. -lh7-.
- *   reference/XADMaster/XADLZHDynamicHandle.m — -lh1-, which is also
- *       StuffIt classic's method 5; the decoder is shared and lives in
- *       src/unc_lzah.c.
- *   reference/XADMaster/XADLArcHandles.m      — LArc's -lzs- and -lz5-.
+ *   reference/lhasa/lib/                      — Simon Howard's lhasa,
+ *       under the ISC licence: lh_new_decoder.c and tree_decode.c for
+ *       -lh4- .. -lh7-, lz5_decoder.c and lzs_decoder.c for LArc's
+ *       -lz5- and -lzs-, lha_file_header.c for the header levels,
+ *       lha_reader.c for LHArk's collision on "-lh7-". Its test
+ *       archives are the specimens too.
  *   reference/lha/src/                        — LHa for UNIX 1.14i, the
  *       original: header.c, huf.c, dhuf.c, larc.c, slide.c. A second
  *       reading of every one of the above.
- *   reference/lhasa/lib/                      — Simon Howard's lhasa,
- *       an independent implementation: lha_file_header.c for the
- *       header levels, and its test archives as specimens.
+ *   the published LZHUF (src/unc_lzah.c, since 2026-09-19 no longer
+ *       XADMaster's XADLZHDynamicHandle.m) — -lh1-, which is also
+ *       StuffIt classic's method 5; the decoder is shared and lives in
+ *       src/unc_lzah.c.
+ *   reference/lha/header.doc.euc              — Masaru Oki's
+ *       header.doc, LHa for UNIX, 2 March 1992: the base header at all
+ *       three levels it covers, the extended-header types, the OS IDs
+ *       and the method IDs. The header walk is written from it, and
+ *       from lhasa for the four things it does not cover — level 3,
+ *       OS-9/68k's short level 2 size, -lhd-, and LHArk. Read as a
+ *       table, with the evidence: docs/formats/lzh-header.md.
+ *       **Nothing in this file is XADMaster's since 2026-09-22**, bar
+ *       one rule with no specimen, marked where it is.
  *
  * What is NOT here, and why:
- *   -lh2-, -lh3-  Declined per entry. Both are implementable from
- *       XADLZHOldHandles.m, but no archive that uses either is
- *       reachable here — not in the corpus, not in lhasa's collection
- *       of fourteen writers, and nothing in reach writes one. Code no
- *       oracle can grade is the bargain this project declines
- *       everywhere else (OPEN_ITEMS.md).
  *   -lhx-, PMarc (-pm0-/-pm1-/-pm2-)  A different container family
  *       sharing this one's shape; out of scope (OPEN_ITEMS.md, part 1).
  *
@@ -61,13 +62,6 @@
 #define LZH_MAX_EXT     64    /* extended headers per entry, a bound    */
 #define LZH_MAX_L3    (1u << 20)  /* lhasa's LEVEL_3_MAX_HEADER_LEN     */
 
-/* Static Huffman (-lh4- .. -lh7-). Alphabet sizes are LHa's own:
- * NC = UCHAR_MAX + MAXMATCH + 2 - THRESHOLD = 510 literals-and-lengths,
- * NT = 19 code-length symbols. Source: reference/lha/src/lha.h. */
-#define LZH_NC   510
-#define LZH_NT    19
-#define LZH_NP    32          /* offset symbols: 4- or 5-bit count      */
-
 typedef struct LzhEnt {
     uint8_t  method[5];
     uint32_t compsize;      /* bytes of compressed data                */
@@ -89,9 +83,10 @@ typedef struct LzhEnt {
 /* taken over everything and only the routing to the sink cares where   */
 /* the forks are.                                                       */
 /*                                                                     */
-/* The unwrap happens for OS byte 'm' and no other, which is what the   */
-/* oracle does (XADLZHParser.m sets XADMightBeMacBinaryKey there, and    */
-/* only there): a level 0 header has no OS byte at all, and unar reads  */
+/* The unwrap happens for OS byte 'm' and no other. 'm' is Mac in the   */
+/* document's OS ID list (header.doc, section A.c); that a MacLHA entry */
+/* is a MacBinary stream is in no document and is what the oracle does  */
+/* too. A level 0 header has no OS byte at all, and unar reads          */
 /* MacLHA's own level 0 archives as one 18,304-byte file rather than    */
 /* an 18,092-byte one with a Mac header on it. Measured, not assumed.   */
 /* ------------------------------------------------------------------ */
@@ -109,6 +104,12 @@ static void lzh_out_start(UncForkOut *o, UncCtx *c, uint8_t *buf, int write)
 static int lzh_put(void *ctx, uint8_t b)
 {
     return unc_fork_put((UncForkOut *)ctx, b);
+}
+
+/* The three coders in unc_lzah.c and unc_lzdyn.c hand back runs. */
+static int lzh_put_run(void *ctx, const uint8_t *p, uint32_t n)
+{
+    return unc_fork_write((UncForkOut *)ctx, p, n);
 }
 
 /* ------------------------------------------------------------------ */
@@ -129,30 +130,92 @@ static int lzh_store(UncForkOut *o, UncBufIn *in, uint32_t outlen)
 }
 
 /* ------------------------------------------------------------------ */
-/* LArc: -lzs- (2 KB window) and -lz5- (4 KB, preloaded)               */
-/* Source: reference/XADMaster/XADLArcHandles.m, cross-read against    */
-/* reference/lha/src/larc.c (decode_c_lzs / decode_c_lz5).             */
+/* The sliding window, and how a match leaves it                      */
+/*                                                                    */
+/* Both coders below decode into a circular window. The window index   */
+/* is the output position plus a fixed skew: zero for -lh4- .. -lh7-,  */
+/* and LArc's START_OFFSET for -lz5- and -lzs-, whose first byte is    */
+/* written 18 (or 17) bytes into a preloaded window                    */
+/* (reference/lhasa/lib/lz5_decoder.c, lzs_decoder.c).                 */
 /* ------------------------------------------------------------------ */
 
-/* The preload LArc and LHarc share: 13 copies of each byte value, then
- * 0..255, then 255..0, then zeros, then spaces. Source: larc.c
- * decode_start_lz5 and XADLArcLZ5Handle resetLZSSHandle, which agree
- * byte for byte.
+/* One match, out of the window and into the window AND the writer's
+ * staging buffer in the same pass: the byte reaches both from one
+ * register, and nothing is called per byte at all. A piece is as long
+ * as the match, the two ends of the circular window, the output still
+ * owed and the staging buffer allow, so none of those tests is left
+ * inside the loop. The shape Compact Pro's match was fused into on
+ * 2026-09-19 (DECISIONS.md, *the byte that went to two places at
+ * once*), which is where the reasoning for it lives.
  *
- * What is underneath it — the 18 bytes the pattern does not cover —
- * is the one place the three references disagree, and LArc 3.33's own
- * `initial.lzs` (an archive whose contents ARE the initial window)
- * settles it: ZEROS. See DECISIONS.md, 2026-08-23. */
+ * The window is written before the next byte is read out of it, which
+ * is what makes a match overlapping its own source — the format's
+ * run-length idiom — come out right. */
+static int lzh_copy(UncForkOut *o, uint8_t *w, uint32_t mask, uint32_t wskew,
+                    uint32_t from, uint32_t mlen, uint32_t *posp,
+                    uint32_t outlen)
+{
+    uint32_t pos = *posp;
+    int err = UNC_OK;
+
+    while (mlen > 0 && pos < outlen) {
+        uint32_t at  = (pos + wskew) & mask;
+        uint32_t sat = from & mask;
+        uint32_t k = mlen;
+
+        if (k > mask + 1u - at)   k = mask + 1u - at;
+        if (k > mask + 1u - sat)  k = mask + 1u - sat;
+        if (k > outlen - pos)     k = outlen - pos;
+        if (k > o->cap - o->len)  k = o->cap - o->len;  /* >= 1: the put
+                                                         * flushes at cap */
+        /* Three cursors rather than three indices: a 68000 reads and
+         * writes through (An)+ in 8 cycles where it indexes in 14. */
+        {
+            const uint8_t *s = w + sat;
+            uint8_t *d = w + at;
+            uint8_t *p = o->buf + o->len;
+            uint32_t n = k;
+            do { uint8_t b = *s++; *d++ = b; *p++ = b; } while (--n);
+        }
+        o->len += k;
+        pos += k;
+        from += k;
+        mlen -= k;
+        if (o->len == o->cap && (err = unc_fork_flush(o)) != UNC_OK) break;
+    }
+    *posp = pos;
+    return err;
+}
+
+/* ------------------------------------------------------------------ */
+/* LArc: -lzs- (2 KB window) and -lz5- (4 KB, preloaded)               */
+/*                                                                    */
+/* Source: reference/lhasa/lib/lz5_decoder.c and lzs_decoder.c (ISC),  */
+/* cross-read against reference/lha/src/larc.c (decode_c_lzs and       */
+/* decode_start_lz5). Both commands address a window POSITION rather   */
+/* than a distance, which is why `from` below is an index and not an   */
+/* offset.                                                            */
+/* ------------------------------------------------------------------ */
+
+/* The preload -lz5- starts from: 13 copies of each byte value, then
+ * 0..255, then 255..0, then 128 zeros, then 110 spaces, then the 18
+ * bytes the first output byte is written after. lz5_decoder.c's
+ * fill_initial, which LHa's decode_start_lz5 agrees with byte for byte.
+ *
+ * Those last 18 bytes are the one place the references disagree, and
+ * LArc 3.33's own `initial.lzs` — an archive whose contents ARE the
+ * initial window — settles it: ZEROS. See DECISIONS.md, 2026-08-23. */
 static void lzh_preload(uint8_t *w)
 {
     int32_t i, j;
-    for (i = 0; i < 4096; i++) w[i] = 0;
+    uint8_t *p = w;
     for (i = 0; i < 256; i++)
-        for (j = 0; j < 13; j++) w[i * 13 + 18 + j] = (uint8_t)i;
-    for (i = 0; i < 256; i++) w[256 * 13 + 18 + i] = (uint8_t)i;
-    for (i = 0; i < 256; i++) w[256 * 13 + 256 + 18 + i] = (uint8_t)(255 - i);
-    for (i = 0; i < 128; i++) w[256 * 13 + 512 + 18 + i] = 0;
-    for (i = 0; i < 128 - 18; i++) w[256 * 13 + 512 + 128 + 18 + i] = ' ';
+        for (j = 0; j < 13; j++) *p++ = (uint8_t)i;
+    for (i = 0; i < 256; i++) *p++ = (uint8_t)i;
+    for (i = 0; i < 256; i++) *p++ = (uint8_t)(255 - i);
+    for (i = 0; i < 128; i++) *p++ = 0;
+    for (i = 0; i < 110; i++) *p++ = ' ';
+    for (i = 0; i < 18;  i++) *p++ = 0;
 }
 
 static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
@@ -160,6 +223,9 @@ static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
 {
     uint32_t wsize = lz5 ? 4096u : 2048u;
     uint32_t mask = wsize - 1;
+    /* START_OFFSET: where the first output byte lands in the preloaded
+     * window. lz5_decoder.c 18, lzs_decoder.c 17. */
+    uint32_t wskew = wsize - (lz5 ? 18u : 17u);
     uint8_t *w = (uint8_t *)unc_alloc(al, wsize);
     uint32_t pos = 0;
     int flags = 0, flagbit = 7;
@@ -169,17 +235,19 @@ static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
     if (!w) return UNC_ERR_MEM;
     if (lz5) lzh_preload(w);
     /* -lzs- has no preload, and its window starts full of SPACES, not
-     * zeros: LHa 1.14i and lhasa both say so, XADMaster's LZSS base
+     * zeros: lhasa and LHa 1.14i both say so, XADMaster's LZSS base
      * class zero-fills, and lhasa's `lzs.lzs` fails its stored CRC
      * either way but one. Measured, 2026-08-23 (DECISIONS.md). */
     else { uint32_t i; for (i = 0; i < wsize; i++) w[i] = ' '; }
     unc_bitin_init(&bi, in);
 
     while (pos < outlen) {
-        int32_t mlen, moff;
-        uint32_t from;
+        uint32_t mlen, from;
+        int32_t lit = -1;              /* >= 0: a literal byte value */
 
         if (lz5) {
+            /* A run of eight commands under one bitmap byte, LSB first:
+             * a set bit is a literal, a clear one a two-byte copy. */
             int byte, byte2;
             if (++flagbit > 7) {
                 flagbit = 0;
@@ -188,50 +256,36 @@ static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
             }
             byte = unc_bufin_next(in);
             if (byte < 0) { err = in->err; break; }
-            if (flags & (1 << flagbit)) {
-                w[pos++ & mask] = (uint8_t)byte;
-                err = lzh_put(o, (uint8_t)byte);
-                if (err != UNC_OK) break;
-                continue;
+            if (flags & (1 << flagbit)) lit = byte;
+            else {
+                byte2 = unc_bufin_next(in);
+                if (byte2 < 0) { err = in->err; break; }
+                from = (uint32_t)byte | (((uint32_t)byte2 & 0xf0u) << 4);
+                mlen = ((uint32_t)byte2 & 0x0fu) + 3u;   /* THRESHOLD 3 */
             }
-            byte2 = unc_bufin_next(in);
-            if (byte2 < 0) { err = in->err; break; }
-            /* The pair addresses a window POSITION, not a distance:
-             * LHa computes `(loc - decode_p() - 1) & mask` around
-             * `decode_p_lz5`, which comes to (matchpos + 18) & mask,
-             * and XADLArcLZ5Handle's `pos - byte - ((byte2&0xf0)<<4)
-             * - 18` reaches the same index through the base class's
-             * `matchoffset = pos - offset`. */
-            moff = byte + ((byte2 & 0xf0) << 4) + 18;
-            mlen = (byte2 & 0x0f) + 3;
         } else {
             int bit = unc_bitin_bit(&bi);
             if (bit < 0) { err = bi.err; break; }
             if (bit) {
-                int32_t lit = unc_bitin_bits(&bi, 8);
+                lit = unc_bitin_bits(&bi, 8);
                 if (lit < 0) { err = bi.err; break; }
-                w[pos++ & mask] = (uint8_t)lit;
-                err = lzh_put(o, (uint8_t)lit);
-                if (err != UNC_OK) break;
-                continue;
-            }
-            {
+            } else {
                 int32_t p = unc_bitin_bits(&bi, 11);
                 int32_t l = unc_bitin_bits(&bi, 4);
                 if (p < 0 || l < 0) { err = bi.err; break; }
-                /* As -lz5-, with LArc's other magic: (matchpos + 17). */
-                moff = p + 17;
-                mlen = l + 2;
+                from = (uint32_t)p;
+                mlen = (uint32_t)l + 2u;                 /* THRESHOLD 2 */
             }
         }
 
-        from = (uint32_t)moff;
-        while (mlen-- > 0 && pos < outlen) {
-            uint8_t b = w[from++ & mask];
-            w[pos++ & mask] = b;
-            err = lzh_put(o, b);
-            if (err != UNC_OK) break;
+        if (lit >= 0) {
+            w[(pos + wskew) & mask] = (uint8_t)lit;
+            o->buf[o->len++] = (uint8_t)lit;
+            pos++;
+            if (o->len == o->cap && (err = unc_fork_flush(o)) != UNC_OK) break;
+            continue;
         }
+        err = lzh_copy(o, w, mask, wskew, from, mlen, &pos, outlen);
         if (err != UNC_OK) break;
     }
 
@@ -240,10 +294,39 @@ static int lzh_larc(UncForkOut *o, UncBufIn *in, uint32_t outlen, UncAlloc *al,
 }
 
 /* ------------------------------------------------------------------ */
-/* -lh4- .. -lh7-: block-wise static Huffman over an LZSS              */
-/* Source: reference/XADMaster/XADLZHStaticHandle.m; second reading    */
-/* reference/lha/src/huf.c (read_pt_len / read_c_len / decode_c_st1).  */
+/* -lh4- .. -lh7-: LHA v2's "new" algorithm — LZSS over a sliding      */
+/* window, with three canonical Huffman codes rebuilt per block        */
+/*                                                                    */
+/* Source: reference/lhasa/lib/lh_new_decoder.c (ISC), the template    */
+/* lhasa generates its -lh4-, -lh5-, -lh6- and -lh7- decoders from,    */
+/* with tree_decode.c for the code tables and lh5_decoder.c /          */
+/* lh7_decoder.c for the two alphabet widths. Cross-read against       */
+/* reference/lha/src/huf.c (read_pt_len, read_c_len, decode_c_st1),    */
+/* LHa for UNIX 1.14i, the original.                                   */
+/*                                                                    */
+/* lhasa decodes a symbol by walking a binary tree held in an array    */
+/* (tree_decode.c, build_tree), which assigns codes in order of length */
+/* and, within a length, in symbol order: a canonical code, which is   */
+/* what UncCanon builds with a 10-bit lookup in front of it. That      */
+/* table is ours and measured (DECISIONS.md 2026-08-24); what comes    */
+/* from lhasa is everything that decides which lengths go into it.     */
+/*                                                                    */
+/* The window here is the format's dictionary — 4/8/32/64 KB — where   */
+/* lhasa's ring is twice that, because in lhasa the ring is also the   */
+/* output buffer. Ours stages output separately, so the smaller one is */
+/* enough and a -lh7- entry costs 64 KB instead of 128 KB on a Mac.    */
 /* ------------------------------------------------------------------ */
+
+/* The command alphabet: 256 literal byte values and 254 copy lengths,
+ * 3 (COPY_THRESHOLD) to 256. Source: lh_new_decoder.c NUM_CODES. */
+#define LZH_NUM_CODES   510
+/* Each of the other two tables is counted in a field of its own width,
+ * and lhasa bounds the alphabet by what that field can say: five bits
+ * for the temporary table, OFFSET_BITS (4 for -lh4-/-lh5-, 5 for
+ * -lh6-/-lh7-) for the offset table. */
+#define LZH_TEMP_BITS    5
+#define LZH_MAX_TEMP    ((1 << LZH_TEMP_BITS) - 1)
+#define LZH_MAX_OFFSET  31
 
 typedef struct LzhCode {
     UncCanon c;
@@ -251,10 +334,10 @@ typedef struct LzhCode {
 } LzhCode;
 
 typedef struct LzhStatic {
-    LzhCode  lit, dist, meta;
-    int16_t  litsyms[LZH_NC];   /* 510 > UNC_CANON_MAX_SYMS            */
-    uint8_t  lengths[LZH_NC];
-    int32_t  blocksize, blockpos;
+    LzhCode  code, offset, temp;
+    int16_t  codesyms[LZH_NUM_CODES];   /* 510 > UNC_CANON_MAX_SYMS    */
+    uint8_t  lengths[LZH_NUM_CODES];
+    uint32_t block_remaining;           /* commands left in this block */
 } LzhStatic;
 
 static int32_t lzh_code_decode(const LzhCode *k, UncBitIn *bi)
@@ -263,97 +346,158 @@ static int32_t lzh_code_decode(const LzhCode *k, UncBitIn *bi)
     return unc_canon_decode(&k->c, bi);
 }
 
-/* One code-length table: `bits`-wide count, then 3-bit lengths with a
- * unary tail, and — for the meta code only — a 2-bit run of zeros
- * after the fourth entry. XADLZHStaticHandle allocAndParseCodeOfWidth. */
-static int lzh_read_code(LzhCode *k, UncBitIn *bi, uint8_t *lengths,
-                         int bits, int32_t maxsyms, int32_t specialindex,
-                         int16_t *symbuf, int32_t symcap)
+/* A code length: three bits, and if that says 7 a unary tail extends it.
+ * lh_new_decoder.c read_length_value. The ceiling is ours — the tail is
+ * unbounded in the format, and a garbage stream must not be able to
+ * spin in it. */
+static int32_t lzh_read_length_value(UncBitIn *bi)
 {
-    int32_t num = unc_bitin_bits(bi, bits);
-    int32_t n = 0, i;
+    int32_t len = unc_bitin_bits(bi, 3);
 
-    if (num < 0) return bi->err;
-    k->single = -1;
-    if (num == 0) {
-        int32_t val = unc_bitin_bits(bi, bits);
-        if (val < 0) return bi->err;
-        k->single = val;
-        return UNC_OK;
-    }
-    if (num > maxsyms) return UNC_ERR_CORRUPT;
-
-    for (i = 0; i < num; i++) lengths[i] = 0;
-    while (n < num) {
-        int32_t len = unc_bitin_bits(bi, 3);
-        if (len < 0) return bi->err;
-        if (len == 7) {
-            for (;;) {
-                int bit = unc_bitin_bit(bi);
-                if (bit < 0) return bi->err;
-                if (!bit) break;
-                if (++len > UNC_CANON_MAX_BITS) return UNC_ERR_CORRUPT;
-            }
-        }
-        lengths[n++] = (uint8_t)len;
-        if (n == specialindex) {
-            int32_t zeros = unc_bitin_bits(bi, 2);
-            if (zeros < 0) return bi->err;
-            if (n + zeros > num) return UNC_ERR_CORRUPT;
-            for (i = 0; i < zeros; i++) lengths[n++] = 0;
+    if (len < 0) return -1;
+    if (len == 7) {
+        for (;;) {
+            int bit = unc_bitin_bit(bi);
+            if (bit < 0) return -1;
+            if (!bit) break;
+            if (++len > UNC_CANON_MAX_BITS) return -1;
         }
     }
-    return unc_canon_build_ext(&k->c, lengths, num, symbuf, symcap);
+    return len;
 }
 
-/* The literal code, whose lengths are themselves coded with the meta
- * code: 0/1/2 are runs of zero lengths, anything else is length - 2.
- * XADLZHStaticHandle allocAndParseLiteralCode. */
-static int lzh_read_literal_code(LzhStatic *s, UncBitIn *bi)
+/* The temporary table and the offset table, which are read the same way
+ * but for two things: their count field's width, and a 2-bit run of
+ * skipped lengths after the third entry of the temporary one.
+ * lh_new_decoder.c read_temp_table and read_offset_table, folded.
+ *
+ * A count of zero means one code of zero length, which every input
+ * decodes to and which consumes no bits at all. */
+static int lzh_read_table(LzhCode *k, UncBitIn *bi, uint8_t *lengths,
+                          int bits, int32_t maxcodes, int skipafter,
+                          int16_t *symbuf, int32_t symcap)
 {
-    int32_t num, n = 0, i;
-    int err;
+    int32_t n = unc_bitin_bits(bi, bits);
+    int32_t i;
 
-    err = lzh_read_code(&s->meta, bi, s->lengths, 5, LZH_NT, 3,
-                        s->meta.c.symstore, UNC_CANON_MAX_SYMS);
-    if (err != UNC_OK) return err;
-
-    num = unc_bitin_bits(bi, 9);
-    if (num < 0) return bi->err;
-    s->lit.single = -1;
-    if (num == 0) {
-        int32_t val = unc_bitin_bits(bi, 9);
-        if (val < 0) return bi->err;
-        s->lit.single = val;
+    if (n < 0) return bi->err;
+    k->single = -1;
+    if (n == 0) {
+        int32_t code = unc_bitin_bits(bi, bits);
+        if (code < 0) return bi->err;
+        k->single = code;
         return UNC_OK;
     }
-    if (num > LZH_NC) return UNC_ERR_CORRUPT;
+    if (n > maxcodes) n = maxcodes;       /* what the field can say is
+                                           * more than the code has */
 
-    for (i = 0; i < num; i++) s->lengths[i] = 0;
-    while (n < num) {
-        int32_t c = lzh_code_decode(&s->meta, bi);
-        if (c < 0) return bi->err != UNC_OK ? bi->err : UNC_ERR_CORRUPT;
-        if (c <= 2) {
-            int32_t zeros;
-            if (c == 0) zeros = 1;
-            else if (c == 1) {
-                zeros = unc_bitin_bits(bi, 4);
-                if (zeros < 0) return bi->err;
-                zeros += 3;
-            } else {
-                zeros = unc_bitin_bits(bi, 9);
-                if (zeros < 0) return bi->err;
-                zeros += 20;
-            }
-            if (n + zeros > num) return UNC_ERR_CORRUPT;
-            for (i = 0; i < zeros; i++) s->lengths[n++] = 0;
-        } else {
-            if (c - 2 > UNC_CANON_MAX_BITS) return UNC_ERR_CORRUPT;
-            s->lengths[n++] = (uint8_t)(c - 2);
+    for (i = 0; i < n; i++) lengths[i] = 0;
+    for (i = 0; i < n; i++) {
+        int32_t len = lzh_read_length_value(bi);
+        if (len < 0) return bi->err != UNC_OK ? bi->err : UNC_ERR_CORRUPT;
+        lengths[i] = (uint8_t)len;
+        if (i == skipafter) {
+            /* "After the first three lengths, there is a 2-bit field to
+             * allow skipping over up to a further three lengths"
+             * (lh_new_decoder.c). The skip may run past the count, and
+             * lhasa lets it: the lengths beyond n are never read. */
+            int32_t skip = unc_bitin_bits(bi, 2);
+            if (skip < 0) return bi->err;
+            while (skip-- > 0) lengths[++i] = 0;
         }
     }
-    return unc_canon_build_ext(&s->lit.c, s->lengths, num, s->litsyms,
-                               LZH_NC);
+    return unc_canon_build_ext(&k->c, lengths, n, symbuf, symcap);
+}
+
+/* How many codes a 0/1/2 from the temporary table skips over.
+ * lh_new_decoder.c read_skip_count. */
+static int32_t lzh_read_skip_count(UncBitIn *bi, int32_t skiprange)
+{
+    int32_t result;
+
+    if (skiprange == 0) return 1;
+    result = unc_bitin_bits(bi, skiprange == 1 ? 4 : 9);
+    if (result < 0) return -1;
+    return result + (skiprange == 1 ? 3 : 20);
+}
+
+/* The code table, whose lengths are themselves coded with the temporary
+ * table: 0, 1 and 2 skip a run of unused codes, anything else is the
+ * length plus two. lh_new_decoder.c read_code_table. */
+static int lzh_read_code_table(LzhStatic *s, UncBitIn *bi)
+{
+    int32_t n, i = 0;
+    int err;
+
+    err = lzh_read_table(&s->temp, bi, s->lengths, LZH_TEMP_BITS,
+                         LZH_MAX_TEMP, 2, s->temp.c.symstore,
+                         UNC_CANON_MAX_SYMS);
+    if (err != UNC_OK) return err;
+
+    n = unc_bitin_bits(bi, 9);
+    if (n < 0) return bi->err;
+    s->code.single = -1;
+    if (n == 0) {
+        int32_t code = unc_bitin_bits(bi, 9);
+        if (code < 0) return bi->err;
+        s->code.single = code;
+        return UNC_OK;
+    }
+    if (n > LZH_NUM_CODES) n = LZH_NUM_CODES;
+
+    for (i = 0; i < n; i++) s->lengths[i] = 0;
+    i = 0;
+    while (i < n) {
+        int32_t code = lzh_code_decode(&s->temp, bi);
+        if (code < 0) return bi->err != UNC_OK ? bi->err : UNC_ERR_CORRUPT;
+        if (code <= 2) {
+            int32_t skip = lzh_read_skip_count(bi, code);
+            if (skip < 0) return bi->err != UNC_OK ? bi->err : UNC_ERR_CORRUPT;
+            while (skip-- > 0 && i < n) s->lengths[i++] = 0;
+        } else {
+            /* No ceiling test: the temporary table's alphabet is 31
+             * symbols wide at most, so a length from it is at most 29
+             * and UncCanon carries 31. */
+            s->lengths[i++] = (uint8_t)(code - 2);
+        }
+    }
+    return unc_canon_build_ext(&s->code.c, s->lengths, n, s->codesyms,
+                               LZH_NUM_CODES);
+}
+
+/* A new block: its length in commands, then the three tables.
+ * lh_new_decoder.c start_new_block. */
+static int lzh_start_new_block(LzhStatic *s, UncBitIn *bi, int offbits)
+{
+    int32_t len = unc_bitin_bits(bi, 16);
+    int err;
+
+    if (len < 0) return bi->err;
+    s->block_remaining = (uint32_t)len;
+    err = lzh_read_code_table(s, bi);
+    if (err != UNC_OK) return err;
+    return lzh_read_table(&s->offset, bi, s->lengths, offbits,
+                          LZH_MAX_OFFSET, -1, s->offset.c.symstore,
+                          UNC_CANON_MAX_SYMS);
+}
+
+/* The distance back to a match. The offset table codes the LENGTH IN
+ * BITS of the distance, whose top bit is then implicit:
+ *   bits = 0 -> 0,  1 -> 1,  2 -> 1x,  3 -> 1xx, ...
+ * lh_new_decoder.c read_offset_code. Returned one higher than lhasa's,
+ * because lhasa counts back from the byte before the cursor. */
+static int32_t lzh_read_offset(LzhStatic *s, UncBitIn *bi)
+{
+    int32_t bits = lzh_code_decode(&s->offset, bi);
+    int32_t extra;
+
+    if (bits < 0) return -1;
+    if (bits == 0) return 1;
+    if (bits == 1) return 2;
+    if (bits > 24) return -1;       /* unc_bitin_bits reads at most 24 */
+    extra = unc_bitin_bits(bi, bits - 1);
+    if (extra < 0) return -1;
+    return extra + (1 << (bits - 1)) + 1;
 }
 
 static int lzh_static(UncForkOut *o, UncBufIn *in, uint32_t outlen, int wbits,
@@ -363,6 +507,9 @@ static int lzh_static(UncForkOut *o, UncBufIn *in, uint32_t outlen, int wbits,
     UncBitIn bi;
     uint8_t *w;
     uint32_t wsize = 1u << wbits, mask, pos = 0;
+    /* OFFSET_BITS: four for the 4 and 8 KB dictionaries, five for the
+     * 32 and 64 KB ones (lh5_decoder.c, lh6_decoder.c). */
+    int offbits = wbits < 15 ? 4 : 5;
     int err = UNC_OK;
 
     /* The window never has to be bigger than the output rounded up to a
@@ -377,58 +524,39 @@ static int lzh_static(UncForkOut *o, UncBufIn *in, uint32_t outlen, int wbits,
     if (!s) return UNC_ERR_MEM;
     w = (uint8_t *)unc_alloc(al, wsize);
     if (!w) { unc_free(al, s); return UNC_ERR_MEM; }
-    { uint32_t i; for (i = 0; i < wsize; i++) w[i] = 0; }
+    /* lhasa fills the ring with SPACES and XADMaster with zeros; only a
+     * stream that reads back further than it has written can tell, and
+     * none in the corpus does (measured 2026-09-19, DECISIONS.md). The
+     * two references that describe the format agree on spaces. */
+    { uint32_t i; for (i = 0; i < wsize; i++) w[i] = ' '; }
 
-    s->blocksize = s->blockpos = 0;
-    s->lit.single = s->dist.single = s->meta.single = -1;
+    s->block_remaining = 0;
+    s->code.single = s->offset.single = s->temp.single = -1;
     unc_bitin_init(&bi, in);
 
     while (pos < outlen) {
-        int32_t lit;
+        int32_t code;
 
-        if (s->blockpos >= s->blocksize) {
-            int32_t bs = unc_bitin_bits(&bi, 16);
-            if (bs < 0) { err = bi.err; break; }
-            s->blocksize = bs;
-            s->blockpos = 0;
-            err = lzh_read_literal_code(s, &bi);
+        if (s->block_remaining == 0) {
+            err = lzh_start_new_block(s, &bi, offbits);
             if (err != UNC_OK) break;
-            err = lzh_read_code(&s->dist, &bi, s->lengths,
-                                wbits < 15 ? 4 : 5, LZH_NP, -1,
-                                s->dist.c.symstore, UNC_CANON_MAX_SYMS);
-            if (err != UNC_OK) break;
+            if (s->block_remaining == 0) continue;   /* an empty block */
         }
-        s->blockpos++;
+        s->block_remaining--;
 
-        lit = lzh_code_decode(&s->lit, &bi);
-        if (lit < 0) { err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT; break; }
+        code = lzh_code_decode(&s->code, &bi);
+        if (code < 0) { err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT; break; }
 
-        if (lit < 0x100) {
-            w[pos++ & mask] = (uint8_t)lit;
-            err = lzh_put(o, (uint8_t)lit);
-            if (err != UNC_OK) break;
+        if (code < 0x100) {
+            w[pos & mask] = (uint8_t)code;
+            o->buf[o->len++] = (uint8_t)code;
+            pos++;
+            if (o->len == o->cap && (err = unc_fork_flush(o)) != UNC_OK) break;
         } else {
-            int32_t mlen = lit - 0x100 + 3;
-            int32_t bits = lzh_code_decode(&s->dist, &bi);
-            int32_t moff;
-            uint32_t from;
-
-            if (bits < 0) { err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT; break; }
-            if (bits > 24) { err = UNC_ERR_CORRUPT; break; }
-            if (bits == 0) moff = 1;
-            else if (bits == 1) moff = 2;
-            else {
-                int32_t extra = unc_bitin_bits(&bi, bits - 1);
-                if (extra < 0) { err = bi.err; break; }
-                moff = (1 << (bits - 1)) + extra + 1;
-            }
-            from = pos - (uint32_t)moff;
-            while (mlen-- > 0 && pos < outlen) {
-                uint8_t b = w[from++ & mask];
-                w[pos++ & mask] = b;
-                err = lzh_put(o, b);
-                if (err != UNC_OK) break;
-            }
+            int32_t moff = lzh_read_offset(s, &bi);
+            if (moff < 0) { err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT; break; }
+            err = lzh_copy(o, w, mask, 0, pos - (uint32_t)moff,
+                           (uint32_t)(code - 0x100 + 3), &pos, outlen);
             if (err != UNC_OK) break;
         }
     }
@@ -473,17 +601,18 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, UncForkOut *o, uint8_t *iobuf,
     else if (lzh_is(e->method, "-lh2-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzdyn_decode(c->al, &bi, e->origsize, lzh_put, o);
+        err = unc_lzdyn_decode(c->al, &bi, e->origsize, lzh_put_run, o);
     }
     else if (lzh_is(e->method, "-lh3-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzst0_decode(c->al, &bi, e->origsize, lzh_put, o);
+        err = unc_lzst0_decode(c->al, &bi, e->origsize, lzh_put_run, o);
     }
     else if (lzh_is(e->method, "-lh1-")) {
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, e->origsize, UNC_LZAH_LH1, lzh_put, o);
+        err = unc_lzah_decode(c->al, &bi, e->origsize, UNC_LZAH_LH1,
+                              lzh_put_run, o);
     }
     else if (lzh_is(e->method, "-lh4-"))
         err = lzh_static(o, &in, e->origsize, 12, c->al);
@@ -512,9 +641,13 @@ static int lzh_decode(UncCtx *c, const LzhEnt *e, UncForkOut *o, uint8_t *iobuf,
 /* ------------------------------------------------------------------ */
 
 /* Append one path component, mapping the format's separators. LZH
- * names arrive with 0xff between directory components (the extended
- * header) or, in an old header, with a DOS backslash or a Unix slash;
- * XADLZHParser splits on exactly those. */
+ * names arrive with 0xff between directory components — the dirname
+ * extended header, 0x02 in the document's section B, whose separator
+ * is lhasa's (ext_header_path_decoder) — or, in an old header, with a
+ * DOS backslash or a Unix slash. Splitting on all of them and dropping
+ * the empty components also absorbs the two shapes lhasa needs a
+ * special case for: a dirname with a trailing separator and one
+ * without (Amiga LHA 1.22). */
 static void lzh_add_path(UncEntryInfo *e, const uint8_t *p, uint32_t len,
                          int seps_all)
 {
@@ -597,7 +730,15 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
         if (nameat + namelen + 2 > hdrsize) return UNC_ERR_CORRUPT;
         /* A NUL inside the name field ends it; what follows is this
          * entry's comment, which has no home in UncEntryInfo and is
-         * dropped (XADLZHParser puts it in XADCommentKey). */
+         * dropped. **The one rule in this file that is still
+         * XADMaster's** (XADLZHParser puts the remainder in
+         * XADCommentKey): the document does not mention it and lhasa
+         * takes the whole field. It has no specimen either — 0 of the
+         * 140 level 0/1 name fields in the 156 archives on this
+         * machine holds a NUL (tools/derive_lzh.py), so nothing can
+         * grade either reading and this cannot fire on a file this
+         * project has. docs/formats/lzh-header.md, "The one rule still
+         * nobody else's". */
         for (k = 0; k < namelen; k++)
             if (h[nameat + k] == 0) { namelen = k; break; }
         if (namelen > UNC_NAME_MAX) {
@@ -617,7 +758,10 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
             at = pos + 25u + h[LZH_H_NAMELEN];
             /* Level 1 counts its extended headers inside the COMPRESSED
              * size, so each one moves the data start along and shortens
-             * the stream. Source: XADLZHParser.m, level 1 branch. */
+             * the stream. The document names that field "skip size" for
+             * exactly this reason (header.doc, section A, the level-1
+             * column); lhasa makes the same subtraction, in
+             * read_l1_extended_headers. */
             for (i = 0; i < LZH_MAX_EXT; i++) {
                 uint8_t sz[2];
                 uint32_t extsize;
@@ -691,10 +835,11 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
      * (0xff-separated) then the name. Without a directory header the
      * name itself may carry separators — 0xff, a DOS backslash or a
      * Unix slash. Built here rather than into a local, because an
-     * UncEntryInfo is 298 bytes on the 68000 target (measured
-     * 2026-09-03 with the Retro68 compiler; the 280 that stood here was
-     * never right, and the 296 that replaced it was measured hours
-     * before the struct's last field landed) and this call chain has a
+     * UncEntryInfo is 300 bytes on the 68000 target (measured
+     * 2026-09-22 with the Retro68 compiler; the 280 that stood here was
+     * never right, the 296 that replaced it was measured hours
+     * before the struct's next field landed, and 298 held until
+     * `name_utf8`) and this call chain has a
      * 4 KB budget (CLAUDE.md, 68000 discipline). */
     if (extdirlen) {
         lzh_add_path(info, extdir, extdirlen, 0);
@@ -710,7 +855,9 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
 /* ------------------------------------------------------------------ */
 
 /* "-lh?-" (lzh) or "-lz?-" (larc) method id at offset 2.
- * Source: reference/XADMaster/XADLZHParser.m recognizeFileWithHandle.
+ * Source: reference/lha/header.doc.euc, section A — the method ID is
+ * the third field of every header level — and section A.b for the set
+ * of IDs it can hold.
  *
  * With one addition, measured rather than copied: XADMaster's
  * recogniser accepts -lz0-, -lz4- and -lz5- but not -lzs-, while its

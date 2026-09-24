@@ -11,8 +11,16 @@
 
 #include "unc_internal.h"
 
+/* How far into the file we are willing to look for the banner when
+ * sniffing. No specification bounds this — Lewis says only that a hqx
+ * file "begins with a description which should be ignored" — so 8 KB is
+ * a choice, and it is the same one XADMaster makes. */
 #define BH_SNIFF_LIMIT 8192
 
+/* The banner, truncated exactly where the spec says to stop comparing:
+ * "when decoding, you should only check the string up to 'with
+ * BinHex'". Source: binhex40_lewis.txt. What follows is the version
+ * number, which is why it is not compared. */
 extern const char bh_banner[40] ;
 
 #endif

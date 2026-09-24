@@ -4,18 +4,55 @@
 69/69 at 4 MB, 69/69 at 1 MB, 69/69 on System 3.0 at 1 MB, and **67/69 at
 512 KB against `main`'s 66/69** — `derived-a2basic.dmg.sit` extracts on a
 Macintosh 512Ke for the first time.
-Resident code is 50,932 B against 147,772 B, the A5 world 18,828 B against
-44,116 B, and the largest single `CODE` resource — the thing a small machine
-has to find room for in one piece — is **45,480 B** against 142,152 B. The decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC
-and Now Compress are loaded only when an archive turns out to be one, and the
-ciphers as before. Resident code 147,772 → 105,640 B, A5 world 44,116 →
-27,128 B, and a StuffIt archive is granted **58,304 B more budget**.
+Resident code is **52,536 B against 153,804 B** and the A5 world **19,288 B
+against 37,956 B**, both measured after merging main on 2026-09-24. The
+decoders for SpaceSaver, Compact Pro, DiskDoubler, LZH, ARC and Now Compress
+are loaded only when an archive turns out to be one, and the ciphers as
+before. What each pass of that shedding cost and bought, and the largest
+single `CODE` resource with it, is in the tables below.
 
 The hard part — getting code that is not resident to run on a 68000 and call
 back into the application — has worked since 2026-08-30; what was missing was
 the belief that a decoder could go in one, and that came from a wrong comment
 (*What the prize is NOT*, below).
 
+
+## Merged main — 2026-09-24
+
+**126 commits of main, and three of them crossed the overlay boundary.** The
+default build is unchanged in shape; the overlay build needed five files
+changed, and `ci.sh`'s variant 4b is what caught all three, which is what it
+was added for.
+
+| resident | 2026-09-09 | after the merge |
+|---|---|---|
+| default build, `CODE` | 150,296 B | **153,804 B** |
+| default build, A5 | 44,264 B | **37,956 B** |
+| overlay build, resident `CODE` | 51,756 B | **52,536 B** |
+| overlay build, resident A5 | 18,948 B | **19,288 B** |
+
+The A5 world FELL 6,308 B, and that is main's doing rather than this
+branch's: the DES SP tables and Compact Pro's CRC-64 table stopped being
+const data and are built at key setup instead (DECISIONS.md 2026-09-19, the
+transient tables). It is also what made the merge work rather than compile —
+those three key setups now take an allocator and can fail, so `OvlArgs`
+carries a `void *al`, `unc_crypt_cpt` and `unc_crypt_packit_des` return what
+they used to discard, and `unc_crypt_free` is entry point `OVL_CRYPT_FREE`
+and a forward. Freeing goes through the overlay because the block is
+`unc_crypt.c`'s own, and it is reachable whenever there is anything to free:
+`cr->tab` is non-NULL only if a key setup ran, and that needed this overlay.
+
+**An overlay links no libc, and `-fno-builtin` does not stop gcc calling
+it.** Main's fused Compact Pro LZH and RLE stages zero a window with a plain
+`for` loop, and the loop-distribution pass rewrote that into a call to
+`memset` — undefined in an overlay, so `ovl_cptdd.r` would not link.
+`mkoverlay.sh` now compiles with `-fno-tree-loop-distribute-patterns`; the
+loop is emitted as written and runs once per fork. `unc_fork_write`, which
+main's LZH rewrite added, is a forward.
+
+**Not re-run on the machine.** The figures above are the linker's. The tier
+tallies in the status block and the emulator results below are from before
+the merge and are not re-claimed for after it.
 
 ## DART, overlaid — 2026-09-09
 

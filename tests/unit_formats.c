@@ -447,9 +447,46 @@ static void test_canon(void)
     unc_bitin_init(&bi, &in);
     CHECK(unc_canon_decode(&cn, &bi) == -1);
 
+    /* ONE symbol, written with a length of 1 -> Kraft 0.5, the most
+     * incomplete a code can be. Now Compress writes exactly this: a
+     * block matched entirely out of the member before it codes one
+     * match symbol and no literal at all (docs/formats/now-compress.md,
+     * *The main table*). No fixture comes near it — the smallest main
+     * alphabet in the two real Now archives is 47 symbols, measured by
+     * tools/derive_now.py over both — so the two bytes here are what
+     * covers the shape. Enough of them to fill the fast table's ten
+     * bits, because that is the path at risk: half of
+     * fastlen[] names the symbol and the other half must fall through
+     * to the walk and be refused. */
+    lens[0] = 0; lens[1] = 0; lens[2] = 1; lens[3] = 0;
+    CHECK(unc_canon_build(&cn, lens, 4) == UNC_OK);
+    buf[0] = 0x40; buf[1] = 0x00;   /* bits 0, then 1: the code, then not */
+    test_make_memio(&io, &m, buf, 2);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == 2);
+    CHECK(unc_canon_decode(&cn, &bi) == -1);
+
     /* Over-subscribed code -> rejected at build time. */
     lens[0] = 1; lens[1] = 1; lens[2] = 1;
     CHECK(unc_canon_build(&cn, lens, 3) == UNC_ERR_CORRUPT);
+
+    /* The deepest length the type allows. UNC_CANON_MAX_BITS is 31, so
+     * the code space reaches 1 << 31 here — which is not an int32_t, and
+     * carrying it signed the way puff.c does at 15 bits is undefined
+     * behaviour the sanitizer build catches. Two symbols at 31 bits are
+     * a legal (very incomplete) code; 1 << 31 of them would not be, and
+     * nothing can declare that many, so the check being made BEFORE the
+     * subtraction is what keeps the arithmetic in range. */
+    {
+        uint8_t deep[2];
+        deep[0] = UNC_CANON_MAX_BITS; deep[1] = UNC_CANON_MAX_BITS;
+        CHECK(unc_canon_build(&cn, deep, 2) == UNC_OK);
+        CHECK(cn.maxlen == UNC_CANON_MAX_BITS);
+        /* One length past it is refused rather than truncated. */
+        deep[0] = UNC_CANON_MAX_BITS + 1;
+        CHECK(unc_canon_build(&cn, deep, 2) == UNC_ERR_CORRUPT);
+    }
 }
 
 /* Build a one-entry RLE-only Compact Pro archive around `comp`, with
@@ -2750,6 +2787,67 @@ static void test_diskdoubler(void)
         CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
     }
 
+    /* The same file with the 1990 header: **48**, not 84. That long is
+     * the magic word 0xABCD and the header's own SIZE, so a header can
+     * be shorter than the one every corpus file has — it ends before
+     * the checksums at +48 — and the forks begin where it says they do.
+     * Stored forks, so this tests the container and no codec; what
+     * grades the BYTES is a file DiskDoubler ß05 wrote under emulation,
+     * against the bytes it was given (`diskdoubler.py --beta-verify`).
+     * Source: docs/formats/diskdoubler-container.md, "The header size,
+     * and the 1990 header". */
+    {
+        UncOptions opt;
+        static const uint8_t hint[] = "Subject";
+        uint8_t one[512];
+        uint32_t n;
+        for (n = 0; n < 48; n++) one[n] = 0;
+        one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x30;
+        put32(one + 4, 5);           /* datasize   */
+        put32(one + 8, 5);           /* datacomp   */
+        put32(one + 12, 3);          /* rsrcsize   */
+        put32(one + 16, 3);          /* rsrccomp   */
+        one[20] = 0; one[21] = 0;    /* both methods: stored */
+        one[22] = 0x1F;              /* info1, the 1990 version byte */
+        memcpy(one + 32, "TEXT", 4);
+        memcpy(one + 36, "ttxt", 4);
+        n = 48;
+        memcpy(one + n, "plain", 5); n += 5;
+        memcpy(one + n, "RSC", 3);   n += 3;
+        memset(&opt, 0, sizeof opt);
+        opt.name_hint = hint;
+        opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+        test_make_memio(&io, &m, one, n);
+        /* There is no header CRC below +82 to check, so the sniffer's
+         * test is the two length pairs — the rule ß05's own validator
+         * applies. A fork claiming to compress to more than it started
+         * as is not one of these files. */
+        CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                             &opt) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        /* No ".dd" to strip: that version compresses in place. */
+        CHECK(cap.info[0].name_len == 7 &&
+              memcmp(cap.info[0].name, "Subject", 7) == 0);
+        CHECK(cap.dlen[0] == 5 && memcmp(cap.data[0], "plain", 5) == 0);
+        CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
+        CHECK(cap.info[0].type == 0x54455854u);   /* 'TEXT' */
+
+        /* Two values, not a range, and these are the controls that say
+         * so. 47 is below the floor that version's own validator
+         * enforces; 60 is a size it WOULD accept and for which no
+         * specimen exists, so nothing here guesses what would sit in
+         * the twelve bytes between. Both are UNKNOWN. */
+        one[3] = 0x2F;
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+        one[3] = 0x3C;
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+        one[3] = 0x30;
+    }
+
     /* A corrupt header CRC is not a DiskDoubler archive at all. */
     arc[76] ^= 0xFF;
     test_make_memio(&io, &m, arc, len);
@@ -4046,6 +4144,7 @@ static void test_arc(void)
 static void test_des(void)
 {
     UncCrypt cr;
+    UncAlloc al;
     /* Key 0123456789abcdef over "Now is t": the FIPS example, and what
      * `openssl enc -des-ecb -K 0123456789abcdef -nopad` produces. */
     static const uint8_t key[8] = { 0x01,0x23,0x45,0x67,0x89,0xab,0xcd,0xef };
@@ -4057,16 +4156,19 @@ static void test_des(void)
     /* PackIt decodes by DES-DECRYPTING, which is the operation
      * unc_crypt_apply performs, so the ciphertext must come back as
      * the plaintext of the same key pair. */
-    unc_crypt_packit_des(&cr, key, 8);
+    test_make_alloc(&al);
+    unc_crypt_init(&cr);
+    CHECK(unc_crypt_packit_des(&cr, &al, key, 8) == UNC_OK);
     memcpy(buf, cipher, 8);
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, plain, 8) == 0);
 
     /* And a second block runs on the same schedule (ECB: no state). */
-    unc_crypt_packit_des(&cr, key, 8);
+    CHECK(unc_crypt_packit_des(&cr, &al, key, 8) == UNC_OK);
     for (i = 0; i < 8; i++) buf[i] = cipher[i];
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, plain, 8) == 0);
+    unc_crypt_free(&cr, &al);
 }
 
 static void test_md5(void)
@@ -4130,11 +4232,14 @@ static void test_cpt_cipher(void)
     static const uint8_t wantlong[8] = {
         0x67,0xe9,0x32,0x46,0xc6,0x8f,0x59,0x6a };
     UncCrypt cr;
+    UncAlloc al;
     uint8_t buf[16];
     int i;
 
+    test_make_alloc(&al);
+    unc_crypt_init(&cr);
     for (i = 0; i < 16; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"ohsecret", 8) == UNC_OK);
     unc_crypt_apply(&cr, buf, 16, 0);
     CHECK(memcmp(buf, want, 16) == 0);
 
@@ -4143,15 +4248,16 @@ static void test_cpt_cipher(void)
      * the register steps on the PLAINTEXT byte, so encrypting and
      * decrypting are different walks; tools/synth_cpt.py has both.) */
     for (i = 0; i < 16; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"ohsecret", 8) == UNC_OK);
     unc_crypt_apply(&cr, buf, 5, 0);
     unc_crypt_apply(&cr, buf + 5, 11, 5);
     CHECK(memcmp(buf, want, 16) == 0);
 
     for (i = 0; i < 8; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"a-very-long-password-indeed", 27);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"a-very-long-password-indeed", 27) == UNC_OK);
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, wantlong, 8) == 0);
+    unc_crypt_free(&cr, &al);
 }
 
 /* SHA-1, HMAC-SHA1, PBKDF2 and AES: the four WinZip's AES is built

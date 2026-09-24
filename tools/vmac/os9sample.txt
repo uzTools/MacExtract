@@ -97,6 +97,19 @@ synth-now-mixed.now                        # Now Compress, 7803 B. Added
                                            #   never run — the other two are
                                            #   the ones that bombed here
                                            #   (DECISIONS.md 2026-09-04)
+derived-800saywhat301j.sit                 # StuffIt 5 with UTF-8 names, 91648 B.
+                                           #   Added 2026-09-22: the fold that
+                                           #   turns a StuffIt 5 name into the
+                                           #   MacRoman bytes an HFS name holds
+                                           #   had never run on this tier, so
+                                           #   mac_leaf()'s prediction of it was
+                                           #   untested here and wrong (it
+                                           #   normalized before folding). Three
+                                           #   Japanese names MacRoman cannot
+                                           #   spell at all, two of them stored
+                                           #   DECOMPOSED, so the count of '_'
+                                           #   is the assertion
+
 synth-os9-rar.rar                          # NOT extracted: the alert reading
                                            #   "MacExtract cannot open RAR
                                            #   files." (M38). Both sides

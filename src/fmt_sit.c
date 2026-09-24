@@ -2,10 +2,20 @@
  * fmt_sit.c — StuffIt classic (1.5.1–4.x) container, methods 0/1/2/3
  * in M5; further methods land with M6.
  *
- * Sources: reference/XADMaster/XADStuffItParser.m (header layout,
- * SITFH_* offsets, folder markers), XADRLE90Handle.m,
- * XADCompressHandle.m, XADStuffItHuffmanHandle.m, and
- * reference/macutils/macunpack/sit.c — LGPL, see NOTICE.
+ * Sources. The CONTAINER is the format's own published description
+ * since 2026-09-20 — docs/formats/stuffit-method-13.md and
+ * reference/notes/sit_format_theunarchiver.md, which a reader written
+ * from it alone walks 103 archives with, every entry matching the name
+ * the oracle recorded (tools/derive_sit13.py). Method 3's tree is
+ * docs/formats/serialized-huffman-tree.md, method 8's coder is
+ * docs/formats/stuffit-method-8-mw.md, method 13's is the first note
+ * above, and method 6's code book and framing are
+ * docs/formats/stuffit-method-6.md. **Nothing in this file is
+ * XADStuffItParser.m's, XADCompressHandle.m's or macunpack/sit.c's
+ * any more**, since 2026-09-21: method 6's framing was the last of
+ * it, and the RLE90 filter left the same day for the format's own
+ * published description, reference/notes/rle90_theunarchiver.md,
+ * which states every rule it implements.
  *
  * Archive header (22 bytes): u32 magic ('SIT!' or installer 'ST..'
  * variants), u16 numfiles, u32 totalsize, u32 magic2 'rLau', u8
@@ -61,7 +71,7 @@ static int sit_store(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 
 /* Method 1: RLE90 — 0x90 0x00 is a literal 0x90; 0x90 n>=2 repeats
  * the previous byte n-1 more times; 0x90 0x01 is illegal.
- * Source: XADRLE90Handle.m. */
+ * Source: reference/notes/rle90_theunarchiver.md (unc_internal.h). */
 static int sit_rle90(UncForkOut *f, UncBufIn *in, uint32_t outlen)
 {
     UncRle90 r;
@@ -107,8 +117,11 @@ out:
     return err;
 }
 
-/* Method 3: Huffman with the bit-serialized tree (shared with
- * PackIt; source XADStuffItHuffmanHandle.m). */
+/* Method 3: Huffman with the bit-serialized tree, which PackIt and
+ * DiskDoubler method 4 write too. Source:
+ * docs/formats/serialized-huffman-tree.md, derived from this format's
+ * own output — nine method-3 forks across eight archives read by the
+ * rule it states, byte-exact against the oracle. */
 static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                        UncAlloc *al)
 {
@@ -141,7 +154,15 @@ static UNC_HOT int sit_huffman(UncForkOut *f, UncBufIn *in, uint32_t outlen,
 /* after a literal the "first" code is used, after a match the        */
 /* "second") and an offset code. A leading byte selects one of five   */
 /* fixed code sets or a dynamic set serialized via a fixed meta code. */
-/* Source: reference/XADMaster/XADStuffIt13Handle.m — LGPL, NOTICE.   */
+/*                                                                    */
+/* Source: docs/formats/stuffit-method-13.md — the format's own       */
+/* published description plus the two corrections it needs (the       */
+/* meta-code's "in addition" rule, and a match offset one further     */
+/* back than it says). A reader written from that page alone          */
+/* reproduces 897 method-13 forks across 103 archives, meeting all six */
+/* code selectors (tools/derive_sit13.py). sit13_tables.h is the      */
+/* page's too, and identical to what XADStuffIt13Handle.m carries —   */
+/* compared array by array before the generator was pointed at it.    */
 /* ------------------------------------------------------------------ */
 
 #include "sit13_tables.h"
@@ -231,6 +252,33 @@ static int sit13_parse_code(UncCanon *cn, UncBitIn *bi, uint8_t *lengths,
     return unc_canon_build(cn, lengths, nsyms);
 }
 
+/* Hand over what the window has taken since the last flush.
+ *
+ * The decoder writes every byte into its own window anyway, so the
+ * window IS the staging buffer and a run costs no memory to keep. The
+ * alternative is what this file did until 2026-09-20: one
+ * `unc_fork_put` per output byte, which is a CALL — the function is
+ * `static inline` but carries a call to the flush, so gcc leaves it
+ * out of line at `-Os`, and a 68000 profile put the jsr, the ten
+ * instructions and the rts at 13.6 % of a method-13 run.
+ *
+ * `to - from` is never more than the window: the loop head below
+ * flushes at a quarter of it, and one iteration adds at most 32,832
+ * bytes (the 0x13f escape's 15 bits plus 65). */
+static int sit13_flush(UncForkOut *f, const uint8_t *window, uint32_t win,
+                       uint32_t from, uint32_t to)
+{
+    uint32_t n = to - from, a = from & (win - 1);
+    if (n == 0) return UNC_OK;
+    if (a + n > win) {                      /* the run wraps the window */
+        int err = unc_fork_write(f, window + a, win - a);
+        if (err != UNC_OK) return err;
+        n -= win - a;
+        a = 0;
+    }
+    return unc_fork_write(f, window + a, n);
+}
+
 static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
                       UncAlloc *al)
 {
@@ -238,8 +286,8 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
     uint8_t *window;
     UncBitIn bi;
     UncCanon *curr, *second;
-    uint32_t pos = 0;
-    uint32_t win = sit13_winsize(outlen);
+    uint32_t pos = 0, flushed = 0;
+    uint32_t win = sit13_winsize(outlen), thresh;
     int err = UNC_OK;
     int val, sel;
 
@@ -286,8 +334,15 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
     if (err != UNC_OK) goto out;
 
     curr = &hz->first;
+    thresh = win >> 2;
     while (pos < outlen) {
-        int sym = unc_canon_decode(curr, &bi);
+        int sym;
+        if (pos - flushed >= thresh) {
+            err = sit13_flush(f, window, win, flushed, pos);
+            if (err != UNC_OK) goto out;
+            flushed = pos;
+        }
+        sym = unc_canon_decode(curr, &bi);
         if (sym < 0) {
             err = bi.err != UNC_OK ? bi.err : UNC_ERR_CORRUPT;
             goto out;
@@ -295,7 +350,6 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
         if (sym < 0x100) {
             curr = &hz->first;
             window[pos++ & (win - 1)] = (uint8_t)sym;
-            if (unc_fork_put(f, (uint8_t)sym) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
         } else {
             int32_t mlen, moff, bl;
             curr = second;
@@ -318,13 +372,12 @@ static int sit13_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen,
             {
                 uint32_t from = pos - (uint32_t)moff;
                 while (mlen-- > 0 && pos < outlen) {
-                    uint8_t b = window[from++ & (win - 1)];
-                    window[pos++ & (win - 1)] = b;
-                    if (unc_fork_put(f, b) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
+                    window[pos++ & (win - 1)] = window[from++ & (win - 1)];
                 }
             }
         }
     }
+    err = sit13_flush(f, window, win, flushed, pos);
 
 out:
     unc_free(al, window);
@@ -347,13 +400,99 @@ out:
 /* .h); only the leaf bytes change per segment, which is what "fixed" */
 /* means here.                                                        */
 /*                                                                    */
-/* Source: reference/macutils/macunpack/sit.c (sit_fixhuf, code6,     */
-/* sit_dosplit) — LGPL, see NOTICE. This is the ONLY reference        */
-/* implementation the project has for method 6: XADMaster recognizes  */
-/* the method and refuses it (XADStuffItParser.m).                    */
+/* Source: docs/formats/stuffit-method-6.md, which describes the code */
+/* book, this framing and its three corrections, and which is written */
+/* against reference/deark/modules/stuffit.c (MIT — deark credits     */
+/* macunpack as documentation and uses none of its code). A reader    */
+/* written from that note alone reads all 11 method-6 forks in the    */
+/* corpus, byte for byte (tools/derive_sit6.py). XADMaster recognizes */
+/* the method and refuses it (XADStuffItParser.m), which is where the */
+/* name comes from; this file called macunpack "the ONLY reference    */
+/* implementation the project has for method 6" until 2026-09-21, and */
+/* that was false.                                                    */
 /* ------------------------------------------------------------------ */
 
 #include "sit6_tables.h"
+
+/* Build the fixed tree from `sit6_runlen`/`sit6_runbits` into two
+ * 257-entry arrays the decoder walks. 26 bytes and this function stand
+ * in for the 1,028-byte table that used to be compiled in; the arrays
+ * are allocated per FORK, so what was permanent code is transient heap
+ * and only while a method-6 fork is being read.
+ *
+ * Source: reference/deark/modules/stuffit.c (MIT). A child <= 258 is a
+ * leaf whose value is the ordinal of a byte the segment declares, and
+ * 257/258 are the terminator; a larger value is the internal node at
+ * `value - 258`. **The terminator gets macunpack's extra level on
+ * purpose**: its code is 12 bits and the tree spends 13, accepting
+ * either final bit, and a tree that stopped at 12 would consume one
+ * bit fewer than every stream here was written for. Checked over all
+ * 8,192 bit paths of depth 13 against the table this replaces
+ * (sit6_tables.h). */
+static void sit6_build(uint16_t *zero, uint16_t *one)
+{
+    uint32_t code = 0, prev = 0, sym = 0, nodes = 1;
+    uint32_t run, k, i;
+    int len = 0, prevlen = 0;
+
+    for (i = 0; i < SIT6_INTERNAL; i++) {
+        zero[i] = 0;
+        one[i] = 0;
+    }
+    for (run = 0; run < SIT6_RUNS; run++) {
+        for (k = 0; k < sit6_runlen[run]; k++, sym++) {
+            uint32_t node = 0;
+            int b;
+
+            len = sit6_runbits[run];
+            if (prevlen == 0)              code = 0;
+            else if (len < prevlen)        code = (prev >> (prevlen - len)) + 1;
+            else                           code = (prev + 1) << (len - prevlen);
+            prev = code;
+            prevlen = len;
+
+            for (b = len - 1; b >= 0; b--) {
+                uint32_t bit = (code >> b) & 1u;
+                uint16_t child;
+
+                if (b == 0) {
+                    if (bit) one[node] = (uint16_t)(sym + 1);
+                    else     zero[node] = (uint16_t)(sym + 1);
+                    break;
+                }
+                child = bit ? one[node] : zero[node];
+                if (child == 0) {
+                    child = (uint16_t)(SIT6_LEAVES + nodes);
+                    if (bit) one[node] = child;
+                    else     zero[node] = child;
+                    nodes++;
+                }
+                node = (uint32_t)(child - SIT6_LEAVES);
+            }
+        }
+    }
+    /* Symbol 256 is the terminator, and macunpack's tree spends a
+     * thirteenth bit on it: its 12-bit code leads to an internal node
+     * whose two children are BOTH terminators. There is exactly one
+     * leaf 257 to replace, so this stops at the first — a scan that ran
+     * on would find the terminator it had just written and split that
+     * too, which is the whole of what went wrong the first time. */
+    if (nodes < SIT6_INTERNAL) {
+        for (i = 0; i < nodes; i++) {
+            if (zero[i] == SIT6_CODES) {
+                zero[i] = (uint16_t)(SIT6_LEAVES + nodes);
+            } else if (one[i] == SIT6_CODES) {
+                one[i] = (uint16_t)(SIT6_LEAVES + nodes);
+            } else {
+                continue;
+            }
+            zero[nodes] = SIT6_CODES;
+            one[nodes] = SIT6_LEAVES;
+            nodes++;
+            break;
+        }
+    }
+}
 
 /* Largest segment buffer we will allocate. macunpack decodes into a
  * fixed char[32768], so the format does not exceed that; the cap is
@@ -394,9 +533,11 @@ static int sit6_u32(UncBufIn *in, uint32_t *out)
 }
 
 /* Expand one PackBits stream into the fork, stopping at *left bytes.
- * Source: sit_fixhuf's tail loop. A control byte below 0x80 introduces
+ * Standard Macintosh PackBits: a control byte below 0x80 introduces
  * n + 1 literals, 0x80 is a no-op, and above that it repeats the next
- * byte 0x101 - n times. */
+ * byte 0x101 - n times. The remaining fork length is a maximum and
+ * not an expectation. Source: docs/formats/stuffit-method-6.md,
+ * *PackBits, once per block*. */
 static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
                          uint32_t *left)
 {
@@ -427,7 +568,8 @@ static int sit6_packbits(UncForkOut *f, const uint8_t *seg, uint32_t seglen,
 /* Decode one Huffman-coded segment into seg[0..explen). */
 static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
                         const uint8_t *leaf, uint32_t codes,
-                        uint32_t segbytes, uint32_t *used)
+                        uint32_t segbytes, uint32_t *used,
+                        const uint16_t *sit6_zero, const uint16_t *sit6_one)
 {
     UncBitIn bi;
     uint32_t start, got = 0;
@@ -446,9 +588,12 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
         } while (++depth <= SIT6_DEPTH);
         if (child > SIT6_LEAVES) return UNC_ERR_CORRUPT; /* not a tree */
         if (child >= SIT6_LEAVES - 1) break;             /* terminator */
-        /* A code for a leaf the segment never named stands for nothing;
-         * macunpack hands back a byte left over from an earlier segment,
-         * which is a wrong fork rather than a refused one. */
+        /* A code for a leaf the segment never named stands for nothing.
+         * Both references index their translation array with it and
+         * bound it against nothing, handing back a byte an earlier
+         * segment left there — a wrong fork rather than a refused one.
+         * No segment in the corpus does it (correction 2 of
+         * docs/formats/stuffit-method-6.md). */
         if (child > codes) return UNC_ERR_CORRUPT;
         if (got == explen) return UNC_ERR_CORRUPT;
         seg[got++] = leaf[child - 1];
@@ -456,6 +601,13 @@ static int sit6_huffseg(UncBufIn *in, uint8_t *seg, uint32_t explen,
          * never terminates cannot read on into the next fork. */
         if (unc_bitin_bytepos(&bi) - start > segbytes) return UNC_ERR_CORRUPT;
     }
+    /* The terminator is REQUIRED, and it is where the declared length
+     * says it is: across the corpus's 13 Huffman segments the symbol
+     * after the declared length is the terminator in 13 of 13
+     * (correction 1 of docs/formats/stuffit-method-6.md). deark stops
+     * at the length without reading it and macunpack ignores the
+     * length and reads until it; requiring both refuses a segment the
+     * two would disagree about. */
     if (got != explen) return UNC_ERR_CORRUPT;
     *used = unc_bitin_bytepos(&bi) - start;
     return *used <= segbytes ? UNC_OK : UNC_ERR_CORRUPT;
@@ -467,7 +619,14 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
     uint32_t segcap = 0;
     uint32_t left = outlen;
     uint8_t leaf[256];
+    uint16_t *tree;
     int err = UNC_OK;
+
+    /* The fixed tree, built once per fork from 26 bytes (sit6_build).
+     * Per-entry on failure, like every other allocation here. */
+    tree = (uint16_t *)unc_alloc(al, 2u * SIT6_INTERNAL * sizeof(uint16_t));
+    if (!tree) return UNC_ERR_MEM;
+    sit6_build(tree, tree + SIT6_INTERNAL);
 
     /* Driven by the fork length rather than by the compressed length:
      * every iteration consumes at least the 4-byte segment header, and
@@ -518,7 +677,8 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
             size -= codes;
             if ((err = sit6_need(al, &seg, &segcap, explen)) != UNC_OK) goto out;
             if ((err = sit6_huffseg(in, seg, explen, leaf, codes, size,
-                                    &used)) != UNC_OK) goto out;
+                                    &used, tree, tree + SIT6_INTERNAL))
+                    != UNC_OK) goto out;
             /* The bitstream may end before the segment does. */
             for (i = used; i < size; i++) {
                 if (unc_bufin_next(in) < 0) { err = in->err; goto out; }
@@ -530,14 +690,29 @@ static int sit6_fork(UncForkOut *f, UncBufIn *in, uint32_t outlen, UncAlloc *al)
 
 out:
     unc_free(al, seg);
+    unc_free(al, tree);
     return err;
 }
 
 /* ------------------------------------------------------------------ */
-/* Method 8: "MW" — an LZW variant with parent-only dictionary and    */
-/* explicit table restarts, LSB-first bits.                           */
-/* Source: reference/XADMaster/XADStuffItOldHandles.m (SIT_mw,        */
-/* SITMW_out; libxad heritage) — LGPL, see NOTICE.                    */
+/* Method 8: "MW" — Miller and Wegman's variation on Ziv-Lempel, in    */
+/* which a dictionary entry is the concatenation of two earlier ones   */
+/* rather than an entry plus a byte. LSB-first codes, 9 bits growing   */
+/* as the dictionary fills.                                           */
+/*                                                                    */
+/* Source: docs/formats/stuffit-method-8-mw.md, derived from this     */
+/* format's own output — all four method-8 forks the corpus has,       */
+/* reproduced byte for byte against the oracle                        */
+/* (tools/derive_stuffit8.py).                                        */
+/*                                                                    */
+/* TWO RULES BELOW ARE NOT IN THAT NOTE and remain                    */
+/* reference/XADMaster/XADStuffItOldHandles.m's (SIT_mw, SITMW_out;   */
+/* libxad heritage) — LGPL, see NOTICE: the table RESTART (a code      */
+/* equal to the next free one) and the END of the stream (a code       */
+/* greater than it), with the 14-bit ceiling that goes with them. No   */
+/* specimen reaches any of the three — the largest fork in the corpus  */
+/* stops at 7,347 entries and 13 bits — so they are the part of this   */
+/* row a derivation could not take.                                   */
 /* ------------------------------------------------------------------ */
 
 #define MW_DICT  16385
@@ -608,14 +783,11 @@ out:
     return err;
 }
 
-/* Method 15 put callback: one byte into the fork writer. */
-/* Byte-at-a-time output adapter, for the two decoders that live
- * outside this file: Arsenic (sit_arsenic.c) and the -lh1- coder
- * shared with LZH (unc_lzah.c). */
-static int sit_put_cb(void *ctx, uint8_t b)
+/* Output adapter for the -lh1- coder shared with LZH (unc_lzah.c),
+ * which hands its output back in runs out of its own window. */
+static int sit_put_run(void *ctx, const uint8_t *p, uint32_t n)
 {
-    UncForkOut *f = (UncForkOut *)ctx;
-    return unc_fork_put(f, b);
+    return unc_fork_write((UncForkOut *)ctx, p, n);
 }
 
 /* Decode one fork (shared with the SIT5 container). Returns a
@@ -652,14 +824,13 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
          * function. */
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, outlen, UNC_LZAH_LH1, sit_put_cb, &f);
+        err = unc_lzah_decode(c->al, &bi, outlen, UNC_LZAH_LH1, sit_put_run, &f);
         break;
     }
     case 6:  err = sit6_fork(&f, &in, outlen, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;
     case 13: err = sit13_fork(&f, &in, outlen, c->al); break;
-    case 15: err = unc_arsenic_decode(&in, c->al, outlen,
-                                      sit_put_cb, &f); break;
+    case 15: err = unc_arsenic_decode(&in, c->al, outlen, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     if (err == UNC_OK) err = unc_fork_flush(&f);
@@ -700,7 +871,7 @@ static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
     for (;;) {
         int err = unc_password(c, attempt > 0);
         if (err != UNC_OK) return err;
-        err = unc_crypt_sit(cr, c->pw, c->pwlen, entrykey, c->opt.mkey);
+        err = unc_crypt_sit(cr, c->al, c->pw, c->pwlen, entrykey, c->opt.mkey);
         if (err == UNC_OK) return UNC_OK;
         attempt++;              /* the archive rejected it; ask again */
     }
@@ -746,6 +917,7 @@ int unc_sit_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     while (pos + SIT_FILEHDRSIZE <= totalsize) {
         uint32_t namelen, rmeth, dmeth, rlen, dlen, rcomp, dcomp, start;
@@ -877,6 +1049,7 @@ int unc_sit_extract(UncCtx *c)
     }
 
 out:
+    unc_crypt_free(cr, c->al);
     unc_free(c->al, iobuf);
     /* A walk that finished tidily over a file shorter than the archive
      * says it is finished over half an archive. What was decoded stands

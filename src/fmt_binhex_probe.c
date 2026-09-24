@@ -15,9 +15,8 @@ const char bh_banner[40] = "(This file must be converted with BinHex";
 UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     /* The banner can sit deep inside mail headers/digests, so scan up
-     * to BH_SNIFF_LIMIT bytes (XADMaster inspects 8 KB too): first the
-     * sniff head we were given, then onward from the io handle with a
-     * rolling 40-byte window. */
+     * to BH_SNIFF_LIMIT bytes: first the sniff head we were given, then
+     * onward from the io handle with a rolling 40-byte window. */
     uint8_t window[40];
     uint8_t chunk[256];
     int32_t have = 0, w = 0, scanned = 0, pos = 0, clen = 0, cpos = 0;

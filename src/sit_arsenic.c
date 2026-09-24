@@ -1,82 +1,74 @@
 /*
- * sit_arsenic.c — StuffIt method 15 "Arsenic":
- * arithmetic coder over an MTF-coded, optionally randomized BWT block,
- * with a final RLE stage and an internal CRC-32.
+ * sit_arsenic.c — StuffIt method 15, "Arsenic": a Burrows-Wheeler block
+ * sort, move-to-front coded with zero-run suppression, arithmetic-coded
+ * under nine adaptive models, then randomisation, a byte-stuffing RLE and
+ * a CRC-32 over the whole output.
  *
- * Sources: reference/XADMaster/XADStuffItArsenicHandle.m (arithmetic
- * decoder, models, block/RLE logic, randomization table) and
- * reference/XADMaster/BWT.c (DecodeMTF, CalculateInverseBWT) — LGPL,
- * see NOTICE. The format is documented publicly only by Matthew T.
- * Russotto's write-up (reference/notes/arsenic_russotto.md).
+ * WRITTEN FROM THE DESCRIPTION, 2026-09-19: Matthew T. Russotto's
+ * write-up of the format, reference/notes/arsenic_russotto.md — the
+ * coder's pseudocode, the nine models' parameters, the block header, the
+ * selector alphabet and its zero counting, the randomisation table and
+ * schedule, the final RLE and the CRC. Until this date the file
+ * transcribed reference/XADMaster/XADStuffItArsenicHandle.m and BWT.c;
+ * what remains from that version is what was never XADMaster's — the
+ * sampled inverse-BWT index and its target dial (2026-08-07), the block
+ * buffer's growth policy (2026-08-06), the three-byte transform vector
+ * (2026-09-19) and progress by output. The author of this version had
+ * read the transcription; the structures below are not its.
  *
- * Memory per fork: block + 4*block for the inverse-BWT transform
- * vector, block = 1 << (9..24) bits as encoded in the stream. Real
- * StuffIt 5 archives in the corpus use 16-bit blocks (64 KB -> ~320 KB
- * peak); the caller's allocator budget decides what is acceptable.
- * When 4 bytes per block byte is not affordable the decoder falls back
- * to a sampled occurrence index costing a fraction of that, trading
- * time for memory — see "Inverse BWT" below.
+ * WHAT THE FORMAT FIXES AND WHAT IT LEAVES FREE. The arithmetic is
+ * bit-exact and is the write-up's, rounding included:
+ *
+ *     renorm    = range / total                 (integer division)
+ *     frequency = code / renorm
+ *     code     -= renorm * low
+ *     range     = (high == total) ? range - renorm * low
+ *                                 : renorm * (high - low)
+ *     while (range <= HALF) { range <<= 1; code = (code << 1) | bit; }
+ *
+ * The models' increments and limits, the MTF, the selector's meaning,
+ * the randomisation schedule and the RLE-of-four are all fixed too. What
+ * a decoder may choose is how it STORES things, and two of those choices
+ * are where a 68000 spends this format's time (measured 2026-09-19 with
+ * qemu-m68k on the shipped flags, derived-a2basic.dmg.sit):
+ *
+ *   - the MTF. A byte-at-a-time shift of a 256-entry table costs the
+ *     symbol's rank in moves, and on data that barely compresses the
+ *     ranks are large: 34.5 % of every instruction the Plus executed.
+ *     The table here is bzip2's two-level shape — sixteen lists of
+ *     sixteen inside a 4 KB array that is re-spaced when it runs out —
+ *     which bounds a move at about thirty steps and is byte for byte the
+ *     same permutation, because a move-to-front is a move-to-front
+ *     however the front is kept.
+ *   - the symbol search. Finding which symbol's cumulative range holds
+ *     `frequency` was a linear walk, 27 % of the instructions. The
+ *     models keep a sum per group of sixteen symbols beside the
+ *     frequencies, so the walk is over groups and then inside one.
+ *
+ * Both are invisible to a Linux profile, which inlines the byte shift
+ * into a `rep movs` and runs the walk at a fraction of the cost per step.
+ *
+ * MEMORY PER FORK: ~28 KB of state (the MTF table is 2 KB of it), the
+ * block at its fill, and either the 3-bytes-per-byte transform vector or
+ * the sampled index — see "Inverse BWT" below, which is unchanged.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
 
 /* ------------------------------------------------------------------ */
-/* Arithmetic decoder (26-bit, MSB-first bits)                        */
+/* The arithmetic decoder                                             */
 /* ------------------------------------------------------------------ */
 
 #define ARS_NUMBITS 26
 #define ARS_ONE  (1 << (ARS_NUMBITS - 1))
 #define ARS_HALF (1 << (ARS_NUMBITS - 2))
 
-typedef struct ArsSym {
-    int32_t symbol, frequency;
-} ArsSym;
-
-typedef struct ArsModel {
-    int32_t increment, frequencylimit;
-    int32_t numsymbols, totalfrequency;
-    ArsSym  symbols[128];
-} ArsModel;
-
 typedef struct ArsDecoder {
     UncBitIn *bi;
     int32_t   range, code;
     int       err;
 } ArsDecoder;
-
-static void ars_model_reset(ArsModel *m)
-{
-    int32_t i;
-    m->totalfrequency = m->increment * m->numsymbols;
-    for (i = 0; i < m->numsymbols; i++) m->symbols[i].frequency = m->increment;
-}
-
-static void ars_model_init(ArsModel *m, int32_t first, int32_t last,
-                           int32_t increment, int32_t limit)
-{
-    int32_t i;
-    m->increment = increment;
-    m->frequencylimit = limit;
-    m->numsymbols = last - first + 1;
-    for (i = 0; i < m->numsymbols; i++) m->symbols[i].symbol = i + first;
-    ars_model_reset(m);
-}
-
-static void ars_model_bump(ArsModel *m, int32_t n)
-{
-    int32_t i;
-    m->symbols[n].frequency += m->increment;
-    m->totalfrequency += m->increment;
-    if (m->totalfrequency > m->frequencylimit) {
-        m->totalfrequency = 0;
-        for (i = 0; i < m->numsymbols; i++) {
-            m->symbols[i].frequency++;
-            m->symbols[i].frequency >>= 1;
-            m->totalfrequency += m->symbols[i].frequency;
-        }
-    }
-}
 
 static void ars_dec_init(ArsDecoder *d, UncBitIn *bi)
 {
@@ -90,100 +82,253 @@ static void ars_dec_init(ArsDecoder *d, UncBitIn *bi)
     d->code = (hi << 13) | lo;
 }
 
-/* `renorm` is range/symtot, which the caller has ALREADY computed to find
- * the symbol. It is passed in rather than recomputed: gcc cannot common
- * the two, because it cannot prove `d` and `m` do not alias across the
- * symbol-search loop, so it reloaded both fields and divided again. On a
- * 68000 that is a second call to a libgcc helper per decoded symbol, on
- * a machine with no divide instruction. */
-static void ars_dec_advance(ArsDecoder *d, int32_t symlow, int32_t symsize,
-                            int32_t symtot, int32_t renorm)
+/* ------------------------------------------------------------------ */
+/* The models                                                         */
+/*                                                                    */
+/* A model is `nsyms` consecutive symbol values from `first`, each with */
+/* a frequency that starts at `increment`, grows by it when the symbol */
+/* is decoded, and is halved (rounding up) across the model when the   */
+/* total passes `limit`. The frequencies are kept per symbol, and the  */
+/* SUM of each group of sixteen beside them, so the search below walks */
+/* at most eight groups and sixteen symbols instead of 128.            */
+/* ------------------------------------------------------------------ */
+
+#define ARS_GROUP     16
+#define ARS_GROUPS    8                 /* 128 symbols at most */
+/* Symbols across the nine models: 2 + 11 + 2 + 4 + 8 + 16 + 32 + 64 + 128.
+ * The frequencies live in one pool of exactly that many, carved up at
+ * init, rather than 128 per model: 1,068 B instead of 4,608. */
+#define ARS_POOL      267
+
+typedef struct ArsModel {
+    int32_t  increment, limit;
+    int32_t  nsyms, total;
+    int32_t  first;
+    int32_t *freq;                  /* [nsyms], into the decoder's pool */
+    int32_t  gsum[ARS_GROUPS];
+} ArsModel;
+
+static void ars_model_reset(ArsModel *m)
 {
-    int32_t lowincr = renorm * symlow;
+    int32_t i;
+    for (i = 0; i < m->nsyms; i++) m->freq[i] = m->increment;
+    for (i = 0; i < ARS_GROUPS; i++) m->gsum[i] = 0;
+    for (i = 0; i < m->nsyms; i++) m->gsum[i / ARS_GROUP] += m->increment;
+    m->total = m->increment * m->nsyms;
+}
 
-    d->code -= lowincr;
-    if (symlow + symsize == symtot) d->range -= lowincr;
-    else d->range = symsize * renorm;
+static void ars_model_init(ArsModel *m, int32_t *freq, int32_t first,
+                           int32_t last, int32_t increment, int32_t limit)
+{
+    m->increment = increment;
+    m->limit = limit;
+    m->nsyms = last - first + 1;
+    m->first = first;
+    m->freq = freq;
+    ars_model_reset(m);
+}
 
-    while (d->range <= ARS_HALF) {
-        int bit = unc_bitin_bit(d->bi);
-        if (bit < 0) { d->err = d->bi->err; return; }
-        d->range <<= 1;
-        d->code = (d->code << 1) | bit;
+/* Symbol n was decoded: count it, and halve the model when the total
+ * passes its limit — "dividing all the frequencies by 2 (with
+ * rounding) and recalculating symtot". */
+static void ars_model_bump(ArsModel *m, int32_t n)
+{
+    m->freq[n] += m->increment;
+    m->gsum[n / ARS_GROUP] += m->increment;
+    m->total += m->increment;
+    if (m->total > m->limit) {
+        int32_t i, t = 0;
+        for (i = 0; i < ARS_GROUPS; i++) m->gsum[i] = 0;
+        for (i = 0; i < m->nsyms; i++) {
+            int32_t f = (m->freq[i] + 1) >> 1;
+            m->freq[i] = f;
+            m->gsum[i / ARS_GROUP] += f;
+            t += f;
+        }
+        m->total = t;
     }
 }
 
-static int32_t ars_next_symbol(ArsDecoder *d, ArsModel *m)
+/* renorm * x, where x is a frequency and renorm is not.
+ *
+ * The 68000 has no 32x32 multiply, so `renorm * low` and
+ * `renorm * freq[n]` both went through libgcc's __mulsi3 — 4 % of an
+ * Arsenic run by instruction count, and more than that by cycles,
+ * since a helper call is a jsr and a shift-add loop. But a model's
+ * total never passes its limit by more than one increment (1032 for
+ * the 1024 models, 257 for the initial one; ars_model_bump), and both
+ * `low` and `freq[n]` are bounded by the total — so x is an 11-bit
+ * number, and only renorm needs 32 bits (range is ARS_NUMBITS wide).
+ *
+ * Two 16x16 products is the identity that follows. Each is a `mulu.w`,
+ * which the 68000 has: verified in the disassembly of the object, not
+ * assumed of the pattern. The high half is shifted past the top of the
+ * word and those bits are discarded, which is exact here because the
+ * true product is bounded by `range`: renorm is range/total rounded
+ * down and x <= total, so renorm * x <= range < 2^25. Unsigned
+ * throughout, so the discarded bits are defined rather than overflow. */
+static uint32_t ars_mulw(uint32_t renorm, uint32_t x)
 {
-    int32_t frequency, cumulative, n, renorm;
-    if (d->err != UNC_OK) return -1;
+    uint32_t lo = (uint32_t)(uint16_t)renorm * (uint32_t)(uint16_t)x;
+    uint32_t hi = (uint32_t)(uint16_t)(renorm >> 16) * (uint32_t)(uint16_t)x;
+    return lo + (hi << 16);
+}
 
-    /* All three operands are provably non-negative in a valid stream:
-     * `range` is renormalised to (ARS_HALF, 2^25], `code` lies in
-     * [0, range) by the decoder's own invariant, and every model is
-     * initialised with a positive total. Stating that as a guard is what
-     * lets the two divisions below be done UNSIGNED — __divsi3 is a sign
-     * wrapper that then calls the unsigned helper, and a 68000 has no
-     * divide instruction to make either of them free. The guard replaces
-     * the narrower `totalfrequency == 0` test and cannot fire on a valid
-     * stream; on a corrupt one it is the same UNC_ERR_CORRUPT, sooner. */
-    if (d->range <= 0 || m->totalfrequency <= 0 || d->code < 0) {
+/* Decode one symbol under `m`: the write-up's "decode a frequency" and
+ * "remove symbol", with the search over the group sums first.
+ *
+ * Every operand is provably non-negative in a valid stream — `range` is
+ * renormalised into (HALF, ONE], `code` lies in [0, range), totals are
+ * positive — so the two divisions are UNSIGNED: on a 68000 __divsi3 is a
+ * sign wrapper around the unsigned helper. The guard replaces the
+ * narrower `total == 0` test and cannot fire on a valid stream; on a
+ * corrupt one it is the same UNC_ERR_CORRUPT, sooner. */
+static int32_t ars_decode(ArsDecoder *d, ArsModel *m)
+{
+    int32_t renorm, frequency, low, n, g, hi;
+    const int32_t *freq = m->freq;
+
+    if (d->err != UNC_OK) return -1;
+    if (d->range <= 0 || m->total <= 0 || d->code < 0) {
         d->err = UNC_ERR_CORRUPT;
         return -1;
     }
-    renorm = (int32_t)((uint32_t)d->range / (uint32_t)m->totalfrequency);
+    renorm = (int32_t)((uint32_t)d->range / (uint32_t)m->total);
     if (renorm == 0) { d->err = UNC_ERR_CORRUPT; return -1; }
-
     frequency = (int32_t)((uint32_t)d->code / (uint32_t)renorm);
-    cumulative = 0;
-    for (n = 0; n < m->numsymbols - 1; n++) {
-        if (cumulative + m->symbols[n].frequency > frequency) break;
-        cumulative += m->symbols[n].frequency;
+
+    /* Which group, then which symbol in it. `frequency` can be equal to
+     * or a little above the total — renorm is rounded down, so code can
+     * sit in [renorm * total, range) — and the format's answer is the
+     * LAST symbol: both walks stop at the last group and the last symbol
+     * rather than running off the end. */
+    low = 0;
+    g = 0;
+    hi = (m->nsyms - 1) / ARS_GROUP;                /* last non-empty group */
+    while (g < hi && low + m->gsum[g] <= frequency) {
+        low += m->gsum[g];
+        g++;
     }
-    ars_dec_advance(d, cumulative, m->symbols[n].frequency, m->totalfrequency,
-                    renorm);
-    if (d->err != UNC_OK) return -1;
+    n = g * ARS_GROUP;
+    hi = n + ARS_GROUP < m->nsyms ? n + ARS_GROUP : m->nsyms;
+    while (n < hi - 1 && low + freq[n] <= frequency) {
+        low += freq[n];
+        n++;
+    }
+
+    /* Remove the symbol and renormalise. */
+    {
+        int32_t lowincr = (int32_t)ars_mulw((uint32_t)renorm, (uint32_t)low);
+        d->code -= lowincr;
+        if (low + freq[n] == m->total) d->range -= lowincr;
+        else d->range = (int32_t)ars_mulw((uint32_t)renorm,
+                                          (uint32_t)freq[n]);
+        while (d->range <= ARS_HALF) {
+            int bit = unc_bitin_bit(d->bi);
+            if (bit < 0) { d->err = d->bi->err; return -1; }
+            d->range <<= 1;
+            d->code = (d->code << 1) | bit;
+        }
+    }
     ars_model_bump(m, n);
-    return m->symbols[n].symbol;
+    return m->first + n;
 }
 
-/* n-bit string, first symbol = bit 0 (NextArithmeticBitString). */
-static int32_t ars_next_bits(ArsDecoder *d, ArsModel *m, int32_t n)
+/* n bits as a number, least significant first, each under `m`. */
+static int32_t ars_bits(ArsDecoder *d, ArsModel *m, int32_t n)
 {
-    int32_t res = 0, i;
+    int32_t v = 0, i;
     for (i = 0; i < n; i++) {
-        int32_t b = ars_next_symbol(d, m);
+        int32_t b = ars_decode(d, m);
         if (b < 0) return -1;
-        if (b) res |= 1 << i;
+        if (b) v |= 1 << i;
     }
-    return res;
+    return v;
 }
 
 /* ------------------------------------------------------------------ */
-/* MTF decoder (BWT.c)                                                */
+/* Move-to-front, two levels                                          */
+/*                                                                    */
+/* The 256 byte values in rank order, kept as sixteen lists of sixteen */
+/* inside a 4 KB array that grows DOWNWARD: list `l` starts at         */
+/* base[l]. Fetching rank r takes the byte at base[r/16] + r%16,       */
+/* shifts the entries before it in that list down by one, then rotates */
+/* the last entry of each earlier list into the first slot of the next */
+/* — sixteen moves at most plus one per list — and puts the byte at    */
+/* the new front, one slot below where list 0 began. When list 0       */
+/* reaches the bottom of the array, everything is re-spaced to the top */
+/* — once per ~3,800 symbols. This is bzip2's arrangement (Julian       */
+/* Seward's decompress.c, BSD-style licence), written here from the    */
+/* idea; it computes the same permutation a flat table does.           */
 /* ------------------------------------------------------------------ */
+
+#define ARS_MTFA 2048                   /* re-spaced every ~1,800 symbols;
+                                         * 4 KB was one fixture off the 400 KB
+                                         * budget (measured 2026-09-19) */
+#define ARS_MTFL 16
 
 typedef struct ArsMtf {
-    uint8_t table[256];
+    int32_t base[256 / ARS_MTFL];
+    uint8_t a[ARS_MTFA];
 } ArsMtf;
 
 static void ars_mtf_reset(ArsMtf *m)
 {
-    int32_t i;
-    for (i = 0; i < 256; i++) m->table[i] = (uint8_t)i;
+    int32_t k = ARS_MTFA - 1, i, j;
+    for (i = 256 / ARS_MTFL - 1; i >= 0; i--) {
+        for (j = ARS_MTFL - 1; j >= 0; j--) {
+            m->a[k] = (uint8_t)(i * ARS_MTFL + j);
+            k--;
+        }
+        m->base[i] = k + 1;
+    }
 }
 
-static uint8_t ars_mtf_decode(ArsMtf *m, int32_t symbol)
+static uint8_t ars_mtf_decode(ArsMtf *m, int32_t rank)
 {
-    uint8_t res = m->table[symbol];
-    int32_t i;
-    for (i = symbol; i > 0; i--) m->table[i] = m->table[i - 1];
-    m->table[0] = res;
-    return res;
+    uint8_t *a = m->a;
+    int32_t l, p, at;
+    uint8_t v;
+
+    if (rank == 0) return a[m->base[0]];
+
+    if (rank < ARS_MTFL) {
+        p = m->base[0];
+        v = a[p + rank];
+        while (rank > 0) { a[p + rank] = a[p + rank - 1]; rank--; }
+        a[p] = v;
+        return v;
+    }
+
+    l = rank / ARS_MTFL;
+    at = m->base[l] + (rank & (ARS_MTFL - 1));
+    v = a[at];
+    while (at > m->base[l]) { a[at] = a[at - 1]; at--; }
+    m->base[l]++;
+    while (l > 0) {
+        m->base[l]--;
+        a[m->base[l]] = a[m->base[l - 1] + ARS_MTFL - 1];
+        l--;
+    }
+    m->base[0]--;
+    a[m->base[0]] = v;
+
+    if (m->base[0] == 0) {
+        /* Re-space: copy every list back to the top of the array. */
+        int32_t k = ARS_MTFA - 1, i, j;
+        for (i = 256 / ARS_MTFL - 1; i >= 0; i--) {
+            for (j = ARS_MTFL - 1; j >= 0; j--) {
+                a[k] = a[m->base[i] + j];
+                k--;
+            }
+            m->base[i] = k + 1;
+        }
+    }
+    return v;
 }
 
 /* ------------------------------------------------------------------ */
-/* Randomization table (XADStuffItArsenicHandle.m)                    */
+/* Randomisation table (the write-up's Appendix A)                     */
 /* ------------------------------------------------------------------ */
 
 static const uint16_t ars_randtable[256] = {
@@ -268,13 +413,14 @@ typedef struct ArsIndex {
 
 typedef struct Arsenic {
     ArsDecoder dec;
-    ArsModel   initialmodel, selectormodel;
+    ArsModel   initial, selector;
     ArsModel   mtfmodel[7];
+    int32_t    pool[ARS_POOL];
     ArsMtf     mtf;
     UncBitIn   bi;
 
-    uint8_t   *block;       /* [blockcap], grown on demand up to blocksize */
-    uint32_t  *transform;   /* [transform_cap] inverse-BWT vector, or NULL */
+    uint8_t   *block;       /* [blockcap + 1], grown on demand up to blocksize */
+    uint8_t   *transform;   /* [transform_cap * 3] inverse-BWT vector, or NULL */
     ArsIndex  *index;       /* set instead of transform when memory is tight */
     uint32_t   blocksize;   /* the DECLARED block size, 1 << blockbits */
     uint32_t   blockcap;    /* what is actually allocated right now */
@@ -287,7 +433,8 @@ typedef struct Arsenic {
     int32_t    randindex, randcount;
     int32_t    count, repeat;
     uint8_t    last;
-    uint32_t   crc, compcrc;
+    uint32_t   compcrc;     /* the CRC-32 the stream ends with; the
+                             * running one is the fork writer's */
     int        has_compcrc;
 } Arsenic;
 
@@ -299,11 +446,11 @@ typedef struct Arsenic {
 /* (r+1)-th occurrence of the byte value c that owns k, where         */
 /* c is the value whose sorted range contains k and r = k - cum[c].   */
 /*                                                                    */
-/* ars_inverse_bwt() answers it in O(1) from a table costing 4 bytes  */
+/* ars_inverse_bwt() answers it in O(1) from a table costing 3 bytes  */
 /* per block byte. That table is the largest allocation the decoder   */
 /* makes and on a 1 MB Mac it is what puts large blocks out of reach: */
-/* a 323,384-byte block wants 1,293,536 bytes for it, against a       */
-/* ~678 KB heap budget.                                               */
+/* a 323,384-byte block wants 970,152 bytes for it, against a         */
+/* ~648 KB heap budget.                                               */
 /*                                                                    */
 /* ars_index_build() answers the same question from SAMPLES: the      */
 /* position of every (1 << shift[c])-th occurrence of each value,     */
@@ -311,7 +458,7 @@ typedef struct Arsenic {
 /* A query then scans the block forward from the nearest sample,      */
 /* counting occurrences of c. Cost:                                   */
 /*                                                                    */
-/*   memory  ~ 4 * sum over c of min(counts[c], target)               */
+/*   memory  ~ 3 * sum over c of min(counts[c], target)               */
 /*   time    ~ blocklen/target positions scanned per output byte      */
 /*                                                                    */
 /* so `target` is a pure time-for-memory dial, and it is chosen by    */
@@ -325,11 +472,31 @@ typedef struct Arsenic {
 /* afford the table pays nothing for any of this.                     */
 /* ------------------------------------------------------------------ */
 
+/* THREE bytes per entry, not four. An entry is a position inside the
+ * block, and blockbits is four stream bits plus nine, so a position is
+ * at most (1 << 24) - 1 and three bytes hold it exactly — the argument
+ * the sampled index's pos[] makes above. Written and read through
+ * these two so the width lives in one place. */
+static inline uint32_t ars_transform_get(const uint8_t *t, uint32_t k)
+{
+    const uint8_t *p = t + k * 3u;
+    return ((uint32_t)p[0] << 16) | ((uint32_t)p[1] << 8) | (uint32_t)p[2];
+}
+
+static inline void ars_transform_put(uint8_t *t, uint32_t k, uint32_t v)
+{
+    uint8_t *p = t + k * 3u;
+    p[0] = (uint8_t)(v >> 16);
+    p[1] = (uint8_t)(v >> 8);
+    p[2] = (uint8_t)v;
+}
+
 #ifndef UNC_ARS_FORCE_SAMPLED
-/* CalculateInverseBWT (BWT.c): transform[] such that repeatedly
- * following transformindex=transform[transformindex] walks the
- * original byte order. Iterative, no recursion. */
-static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
+/* The standard inverse: count each value, turn the counts into the
+ * first sorted index of each value, then a second pass places every
+ * block position at its sorted index. Following transform[] from the
+ * header's index walks the original byte order. */
+static void ars_inverse_bwt(uint8_t *transform, const uint8_t *block,
                             uint32_t blocklen)
 {
     uint32_t counts[256], cumulative[256];
@@ -342,7 +509,7 @@ static void ars_inverse_bwt(uint32_t *transform, const uint8_t *block,
         counts[i] = 0;
     }
     for (i = 0; i < blocklen; i++) {
-        transform[cumulative[block[i]] + counts[block[i]]] = i;
+        ars_transform_put(transform, cumulative[block[i]] + counts[block[i]], i);
         counts[block[i]]++;
     }
 }
@@ -449,19 +616,18 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
 }
 
 /* One step of the walk, from the sampled index. Equivalent to
- * transform[k], and provably in range: the binary search lands on the
- * value c whose sorted range holds k, so r < counts[c] and the r-th
- * occurrence of c exists at or after the sample it starts from.
+ * transform[k], and provably in range: the lookup lands on the value c
+ * whose sorted range holds k, so r < counts[c] and the r-th occurrence
+ * of c exists at or after the sample it starts from.
  *
- * The scan below is the hottest line in the engine: callgrind puts
- * 77.4 % of a budgeted derived-Library_ISBN_Barcoder.sit run and 62.6 %
- * of derived-a2basic.dmg.sit on it. It used to test two things per byte,
- * `i < n` and the byte itself. A SENTINEL removes the first: block[n]
- * holds a copy of the value being searched for, so every scan stops at n
- * at the latest and the bound is checked once per scan instead of once
- * per byte. ars_block_reserve allocates blockcap + 1 for exactly this,
- * and the corrupt case still cannot walk out of the buffer — a scan that
- * reaches the sentinel ends the walk and returns 0, as it did before. */
+ * The scan below is the hottest line under the sampled index: it used
+ * to test two things per byte, `i < n` and the byte itself. A SENTINEL
+ * removes the first: block[n] holds a copy of the value being searched
+ * for, so every scan stops at n at the latest and the bound is checked
+ * once per scan instead of once per byte. ars_block_reserve allocates
+ * blockcap + 1 for exactly this, and the corrupt case still cannot walk
+ * out of the buffer — a scan that reaches the sentinel ends the walk
+ * and returns 0, as it did before. */
 static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
 {
     const ArsIndex *ix = a->index;
@@ -487,7 +653,7 @@ static uint32_t ars_index_next(const Arsenic *a, uint32_t k)
     return i < n ? i : 0;
 }
 
-/* Choose how this block's BWT will be inverted: the 4-bytes-per-byte table
+/* Choose how this block's BWT will be inverted: the 3-bytes-per-byte table
  * when the allocator affords it, the sampled index when it does not.
  *
  * The choice is made per block, and the table is kept across blocks while it
@@ -498,11 +664,11 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
 {
 #ifndef UNC_ARS_FORCE_SAMPLED
     if (a->numbytes > a->transform_cap) {
-        uint32_t *nt;
+        uint8_t *nt;
         unc_free(al, a->transform);
         a->transform = NULL;
         a->transform_cap = 0;
-        nt = (uint32_t *)unc_alloc(al, a->numbytes * 4u);
+        nt = (uint8_t *)unc_alloc(al, a->numbytes * 3u);
         if (nt) { a->transform = nt; a->transform_cap = a->numbytes; }
     }
     if (a->transform) {
@@ -532,14 +698,15 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
  * therefore spent half a megabyte to store nothing, and on the floor target
  * that was the difference between an entry being affordable and being refused:
  * the budget saw 35 KB parser + 512 KB block + 4 bytes per byte actually
- * decoded, so only ~37 KB of real data fit in a ~700 KB heap.
+ * decoded (3 since 2026-09-19), so only ~37 KB of real data fit in a
+ * ~700 KB heap.
  *
- * Growing instead makes the cost proportional to the data: ~35 KB + capacity +
- * 4x fill. The transform vector has been sized to the fill since M9 for the
+ * Growing instead makes the cost proportional to the data: ~30 KB + capacity +
+ * 3x fill. The transform vector has been sized to the fill since M9 for the
  * same reason; this is the other half of it.
  *
  * The transient during a growth is old + new = 1.5x the new capacity, which is
- * below the later peak of capacity + 4x fill, so growing never sets the high
+ * below the later peak of capacity + 3x fill, so growing never sets the high
  * water mark. There is no realloc in the allocator API by design (see
  * DECISIONS.md), hence alloc-copy-free.
  *
@@ -591,30 +758,44 @@ static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
     return UNC_OK;
 }
 
+/* ------------------------------------------------------------------ */
+/* One block                                                          */
+/*                                                                    */
+/* Header under the initial model: the randomisation bit, then         */
+/* blockbits bits of the index the walk starts from. (The end-of-file  */
+/* bit that precedes each header is read by the caller, because it is  */
+/* what decides whether there IS a block.) Then, under the selector    */
+/* model: 0 and 1 count zeros (the write-up's zero_state/zero_count),  */
+/* 2 is the MTF rank 1, 3..9 name the model the rank is read under,    */
+/* and 10 ends the block. After the block: the models the block used   */
+/* are re-initialised, and the next end-of-file bit is read — set, it  */
+/* is followed by the 32-bit CRC, sixteen bits at a time.              */
+/* ------------------------------------------------------------------ */
+
 static int ars_read_block(Arsenic *a, UncAlloc *al)
 {
-    int32_t sel, symbol;
+    int32_t sel, rank;
 
     ars_mtf_reset(&a->mtf);
 
-    a->randomized = (int)ars_next_symbol(&a->dec, &a->initialmodel);
-    a->transformindex =
-        (uint32_t)ars_next_bits(&a->dec, &a->initialmodel, a->blockbits);
+    a->randomized = (int)ars_decode(&a->dec, &a->initial);
+    a->transformindex = (uint32_t)ars_bits(&a->dec, &a->initial, a->blockbits);
     if (a->dec.err != UNC_OK) return a->dec.err;
     a->numbytes = 0;
 
     for (;;) {
-        sel = ars_next_symbol(&a->dec, &a->selectormodel);
+        sel = ars_decode(&a->dec, &a->selector);
         if (sel < 0) return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
 
         if (sel == 0 || sel == 1) {
-            /* Zero-run counting (bzip2-style RUNA/RUNB). */
+            /* Zero counting: each 0 adds the state, each 1 twice the
+             * state, and the state doubles every time. */
             uint32_t zerostate = 1, zerocount = 0;
             while (sel < 2) {
                 if (sel == 0) zerocount += zerostate;
                 else zerocount += 2 * zerostate;
                 zerostate *= 2;
-                sel = ars_next_symbol(&a->dec, &a->selectormodel);
+                sel = ars_decode(&a->dec, &a->selector);
                 if (sel < 0)
                     return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
                 if (zerocount > a->blocksize) return UNC_ERR_CORRUPT;
@@ -633,10 +814,10 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
         }
 
         if (sel == 10) break;
-        else if (sel == 2) symbol = 1;
+        else if (sel == 2) rank = 1;
         else {
-            symbol = ars_next_symbol(&a->dec, &a->mtfmodel[sel - 3]);
-            if (symbol < 0)
+            rank = ars_decode(&a->dec, &a->mtfmodel[sel - 3]);
+            if (rank < 0)
                 return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
         }
 
@@ -645,23 +826,23 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
             int rerr = ars_block_reserve(a, al, a->numbytes + 1);
             if (rerr != UNC_OK) return rerr;
         }
-        a->block[a->numbytes++] = ars_mtf_decode(&a->mtf, symbol);
+        a->block[a->numbytes++] = ars_mtf_decode(&a->mtf, rank);
     }
 
     if (a->transformindex >= a->numbytes) return UNC_ERR_CORRUPT;
 
-    ars_model_reset(&a->selectormodel);
+    ars_model_reset(&a->selector);
     {
         int32_t i;
         for (i = 0; i < 7; i++) ars_model_reset(&a->mtfmodel[i]);
     }
 
     {
-        int32_t end = ars_next_symbol(&a->dec, &a->initialmodel);
+        int32_t end = ars_decode(&a->dec, &a->initial);
         if (end < 0) return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
         if (end) {
-            int32_t lo = ars_next_bits(&a->dec, &a->initialmodel, 16);
-            int32_t hi = ars_next_bits(&a->dec, &a->initialmodel, 16);
+            int32_t lo = ars_bits(&a->dec, &a->initial, 16);
+            int32_t hi = ars_bits(&a->dec, &a->initial, 16);
             if (lo < 0 || hi < 0)
                 return a->dec.err != UNC_OK ? a->dec.err : UNC_ERR_CORRUPT;
             a->compcrc = (uint32_t)lo | ((uint32_t)hi << 16);
@@ -672,9 +853,8 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
 
     /* Size the inverse-BWT structure to the actual block fill, not the
      * declared block size: real archives use 512 KB blocks even for
-     * tiny files, and the transform is the dominant allocation
-     * (XADStuffItArsenicHandle reallocs per block the same way).
-     * This is what lets small Arsenic files fit a small budget. */
+     * tiny files, and the transform is the dominant allocation. This is
+     * what lets small Arsenic files fit a small budget. */
     return ars_bwt_prepare(a, al);
 }
 
@@ -691,8 +871,12 @@ static uint32_t ars_scale(uint32_t span, uint32_t num, uint32_t den)
     return span * num / den;
 }
 
+/* ------------------------------------------------------------------ */
+/* The fork                                                           */
+/* ------------------------------------------------------------------ */
+
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
-                       int (*put)(void *ctx, uint8_t b), void *pctx)
+                       UncForkOut *f)
 {
     Arsenic *a;
     uint32_t produced = 0;
@@ -710,6 +894,13 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
 
     if (in->ps) in->ps->hold = 1;
 
+    /* The stream's own check is a CRC-32 over the output, and the fork
+     * writer keeps one over what it stages: seeded here, read back
+     * after the final flush. The container's CRC-16 means nothing for
+     * this method and the caller does not ask for it. */
+    f->ck = UNC_CK_CRC32;
+    f->crc32 = UNC_CRC32_INIT;
+
     a = (Arsenic *)unc_alloc(al, (uint32_t)sizeof *a);
     if (!a) { if (in->ps) in->ps->hold = phold; return UNC_ERR_MEM; }
     a->block = NULL;
@@ -719,22 +910,27 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     unc_bitin_init(&a->bi, in);
     ars_dec_init(&a->dec, &a->bi);
 
-    ars_model_init(&a->initialmodel, 0, 1, 1, 256);
-    ars_model_init(&a->selectormodel, 0, 10, 8, 1024);
-    ars_model_init(&a->mtfmodel[0], 2, 3, 8, 1024);
-    ars_model_init(&a->mtfmodel[1], 4, 7, 4, 1024);
-    ars_model_init(&a->mtfmodel[2], 8, 15, 4, 1024);
-    ars_model_init(&a->mtfmodel[3], 16, 31, 4, 1024);
-    ars_model_init(&a->mtfmodel[4], 32, 63, 2, 1024);
-    ars_model_init(&a->mtfmodel[5], 64, 127, 2, 1024);
-    ars_model_init(&a->mtfmodel[6], 128, 255, 1, 1024);
+    /* The nine models, as the write-up tabulates them: symbols, increment,
+     * limit. The selector's 88 = 11 * 8 and the rest follow. */
+    {
+        int32_t *pool = a->pool;
+        ars_model_init(&a->initial,     pool,        0,   1,   1,  256);
+        ars_model_init(&a->selector,    pool + 2,    0,  10,   8, 1024);
+        ars_model_init(&a->mtfmodel[0], pool + 13,   2,   3,   8, 1024);
+        ars_model_init(&a->mtfmodel[1], pool + 15,   4,   7,   4, 1024);
+        ars_model_init(&a->mtfmodel[2], pool + 19,   8,  15,   4, 1024);
+        ars_model_init(&a->mtfmodel[3], pool + 27,  16,  31,   4, 1024);
+        ars_model_init(&a->mtfmodel[4], pool + 43,  32,  63,   2, 1024);
+        ars_model_init(&a->mtfmodel[5], pool + 75,  64, 127,   2, 1024);
+        ars_model_init(&a->mtfmodel[6], pool + 139, 128, 255,  1, 1024);
+    }
 
-    v = ars_next_bits(&a->dec, &a->initialmodel, 8);
+    /* "As", then the block size code. */
+    v = ars_bits(&a->dec, &a->initial, 8);
     if (v != 'A') { err = v < 0 ? a->dec.err : UNC_ERR_CORRUPT; goto out; }
-    v = ars_next_bits(&a->dec, &a->initialmodel, 8);
+    v = ars_bits(&a->dec, &a->initial, 8);
     if (v != 's') { err = v < 0 ? a->dec.err : UNC_ERR_CORRUPT; goto out; }
-
-    v = ars_next_bits(&a->dec, &a->initialmodel, 4);
+    v = ars_bits(&a->dec, &a->initial, 4);
     if (v < 0) { err = a->dec.err; goto out; }
     a->blockbits = v + 9;
     a->blocksize = 1u << a->blockbits;
@@ -752,13 +948,12 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->repeat = 0;
     a->count = 0;
     a->last = 0;
-    a->crc = UNC_CRC32_INIT;
     a->compcrc = 0;
     a->has_compcrc = 0;
     a->randomized = 0;
     a->transformindex = 0;
 
-    v = ars_next_symbol(&a->dec, &a->initialmodel);   /* first end marker */
+    v = ars_decode(&a->dec, &a->initial);            /* first end-of-file bit */
     if (v < 0) { err = a->dec.err; goto out; }
     a->endofblocks = v;
 
@@ -797,9 +992,11 @@ retry:
 
             a->transformindex = a->index
                 ? ars_index_next(a, a->transformindex)
-                : a->transform[a->transformindex];
+                : ars_transform_get(a->transform, a->transformindex);
             byte = a->block[a->transformindex];
 
+            /* Randomisation: flip bit 0 of the byte at each position the
+             * table names, cumulatively. */
             if (a->randomized && (uint32_t)a->randcount == a->bytecount) {
                 byte ^= 1;
                 a->randindex = (a->randindex + 1) & 255;
@@ -808,6 +1005,8 @@ retry:
 
             a->bytecount++;
 
+            /* The byte-stuffing RLE: after four equal bytes, the next
+             * byte is how many more of them there are. */
             if (a->count == 4) {
                 a->count = 0;
                 if (byte == 0) goto retry;
@@ -820,12 +1019,13 @@ retry:
             }
         }
 
-        a->crc = unc_crc32(a->crc, &outbyte, 1);
-        if (put(pctx, outbyte) != UNC_OK) { err = UNC_ERR_SINK; goto out; }
+        if ((err = unc_fork_put(f, outbyte)) != UNC_OK) goto out;
         produced++;
     }
 
-    if (a->has_compcrc && a->compcrc != ~a->crc) err = UNC_ERR_CRC;
+    err = unc_fork_flush(f);
+    if (err == UNC_OK && a->has_compcrc && a->compcrc != ~f->crc32)
+        err = UNC_ERR_CRC;
 
 out:
     unc_free(al, a->index);

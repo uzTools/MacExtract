@@ -2,12 +2,22 @@
  * fmt_exo.c — the exogenous formats: gzip (.gz), Unix compress (.Z),
  * tar, and zip (store + deflate).
  *
- * These are byte-oriented Unix/PC formats with public specs:
- *   gzip: RFC 1952. zip: PKWARE APPNOTE (EOCD + central directory).
- *   tar: POSIX ustar. .Z: compress(1) LZW (see unc_lzw.c).
- * Cross-checked against reference/XADMaster (XADGzipParser.m,
- * XADZipParser.m, XADTarParser.m, XADCompressParser.m) — LGPL, see
- * NOTICE. Deflate decoding uses vendored zlib (third_party/zlib).
+ * These are byte-oriented Unix/PC formats, and every one of them has a
+ * specification of its own. Those are what is cited, here and at each
+ * field below:
+ *   gzip  reference/notes/rfc1952.txt
+ *   zip   reference/notes/zip_appnote.txt (PKWARE APPNOTE.TXT 6.3.10),
+ *         with reference/notes/winzip_aes.txt for the one extra field
+ *         APPNOTE names but does not lay out
+ *   tar   reference/notes/posix_ustar.txt (POSIX.1-2017, the pax page,
+ *         "ustar Interchange Format")
+ *   .Z    reference/deark/src/fmtutil-lzw.c for the three-byte header
+ *         (the codec itself is unc_lzw.c, which cites the same file)
+ *
+ * One thing is in none of them: pre-POSIX v7 tar predates the standard
+ * above and has no magic at all, so recognising one is this project's
+ * own problem and its answer says so at the line that makes it.
+ * Deflate decoding uses vendored zlib (third_party/zlib).
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -67,7 +77,9 @@ int unc_gzip_extract(UncCtx *c)
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     if (c->io->seek(c->io->ctx, 10) < 0) { err = UNC_ERR_IO; goto out; }
 
-    /* Optional header fields, in order: FEXTRA, FNAME, FCOMMENT, FHCRC. */
+    /* Optional header fields, in the order RFC 1952 section 2.3's
+     * member-format diagram puts them: FEXTRA, FNAME, FCOMMENT, FHCRC
+     * — the last "immediately before the compressed data". */
     if (flg & 0x04) {   /* FEXTRA */
         int lo = unc_bufin_next(&in), hi = unc_bufin_next(&in);
         int32_t n;
@@ -481,8 +493,10 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
  * fixed order uncompressed size, compressed size, local-header offset,
  * start disk — so the record has to be walked in order, not indexed, and
  * the scan cannot stop at the first field it recognises.
- * Source: XADMaster XADZipParser.m, -parseCentralDirectoryRecord
- * (extid==1), quoting APPNOTE.TXT 4.5.3.
+ * Source: APPNOTE.TXT 4.5.3 — "the order of the fields in the zip64
+ * extended information record is fixed, but the fields MUST only appear
+ * if the corresponding Local or Central directory record field is set
+ * to 0xFFFF or 0xFFFFFFFF".
  *
  * Each Zip64 value is 64 bits and this engine addresses 32, so the low
  * half is taken and the high half must be zero — the same rule the
@@ -529,7 +543,12 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
                    (flags & 0x0001)) {
             /* WinZip's AES puts the real compression method, the key
              * length and its own version here; method 99 means "look
-             * there". Source: XADZipParser.m. */
+             * there". Source: APPNOTE.TXT APPENDIX E, which sets the
+             * compression method to 99 and names header id 0x9901, and
+             * reference/notes/winzip_aes.txt, which is the layout
+             * APPENDIX E points at: version (1 or 2), the two-character
+             * vendor id "AE" (0x4541), a strength byte of 1, 2 or 3 for
+             * a 128-, 192- or 256-bit key, then the real method. */
             uint32_t ver = unc_get_u16le(ex + 4);
             uint32_t vendor = unc_get_u16le(ex + 6);
             uint32_t strength = ex[8];
@@ -604,9 +623,9 @@ int unc_zip_extract(UncCtx *c)
      * the high half is only ever compared against zero, so no 64-bit
      * arithmetic enters the engine.
      *
-     * Source: reference/XADMaster/XADZipParser.m,
-     * -parseWithCentralDirectoryAtOffset:zip64Offset: — record layout,
-     * field order and the 0x06064b50 / 0x07064b50 signatures. */
+     * Source: APPNOTE.TXT 4.3.15 (the Zip64 end of central directory
+     * LOCATOR, signature 0x07064b50, which says which part the record
+     * is on and where) and 4.3.14 (the record itself, 0x06064b50). */
     if (eocd >= 20) {
         uint8_t lo[20];
         if (zip_seek(c, lastpart0, eocd - 20) == UNC_OK &&
@@ -666,10 +685,10 @@ int unc_zip_extract(UncCtx *c)
      * entries — the same trade both hosts already make when they
      * cannot write it out (cli/main.c, mac/macextract_mac.c).
      *
-     * Source: reference/XADMaster/XADZipParser.m,
-     * -parseWithCentralDirectoryAtOffset:zip64Offset: — the comment
-     * length is the u16 at EOCD+20 and the bytes follow the record,
-     * which is what `lsar` reports as XADComment. */
+     * Source: APPNOTE.TXT 4.3.16 — ".ZIP file comment length 2 bytes"
+     * closes the fixed part of the record, so the length is the u16 at
+     * EOCD+20 and the bytes follow it. It is what `lsar` reports as
+     * XADComment. */
     {
         uint32_t clen = unc_get_u16le(eo + 20);
 
@@ -700,6 +719,7 @@ int unc_zip_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     /* Read the whole central directory once, so that walking it does not
      * interleave with reading entry data. On one file that saves seeks;
@@ -861,9 +881,10 @@ int unc_zip_extract(UncCtx *c)
             est = UNC_OK;
             if (!c->opt.list_only) {
                 if ((flags & 0x0001) && (flags & 0x0040)) {
-                    /* PKWARE's "strong encryption": its key material is
-                     * in a record nothing here parses, and XADMaster
-                     * refuses it too. OPEN_ITEMS.md. */
+                    /* PKWARE's "strong encryption": general purpose
+                     * bit 6, which APPNOTE.TXT 4.4.4 says "MUST also
+                     * set bit 0". Its key material is in a record
+                     * nothing here parses. OPEN_ITEMS.md. */
                     est = UNC_ERR_ENCRYPTED;
                 } else if (method == 99 && (flags & 0x0001) &&
                            !aeskeybytes) {

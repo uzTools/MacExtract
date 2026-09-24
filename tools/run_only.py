@@ -106,8 +106,13 @@ def under(path, sel):
     return path == sel or path == sel + ".rsrc" or path.startswith(sel + "/")
 
 
-def selective(mac, problems, label, archive, full, sel, extra=()):
-    """Extract `archive` with --only `sel` and hold it against `full`."""
+def selective(mac, problems, label, archive, full, sel, extra=(), allow=()):
+    """Extract `archive` with --only `sel` and hold it against `full`.
+
+    `allow` names files that may appear outside the selection because
+    they are not entries at all — the archive's own comment is the only
+    one, and `comment_cases` below asserts that rule from both sides.
+    """
     out = tempfile.mkdtemp()
     try:
         run(mac, ["x", archive, "-o", out, "--only", sel] + list(extra))
@@ -121,7 +126,7 @@ def selective(mac, problems, label, archive, full, sel, extra=()):
           "%s: --only %r wrote %d of %d files — not a strict subset"
           % (label, sel, len(got), len(full)))
     for path, data in sorted(got.items()):
-        if not check(problems, under(path, sel),
+        if not check(problems, under(path, sel) or path in allow,
                      "%s: --only %r also wrote %r" % (label, sel, path)):
             continue
         if not check(problems, path in full,
@@ -134,11 +139,11 @@ def selective(mac, problems, label, archive, full, sel, extra=()):
                                     len(full[path])))
 
 
-def full_extract(mac, archive):
+def full_extract(mac, archive, extra=()):
     """(files, stderr) for a whole archive."""
     out = tempfile.mkdtemp()
     try:
-        r = run(mac, ["x", archive, "-o", out])
+        r = run(mac, ["x", archive, "-o", out] + list(extra))
         return tree(out), r.stderr.decode("utf-8", "replace")
     finally:
         shutil.rmtree(out, ignore_errors=True)
@@ -207,6 +212,57 @@ def zip_cases(mac, tmp, problems):
     r = run(mac, ["t", p, "--only", "a/x.txt"])
     check(problems, r.returncode == 0,
           "zip: `t --only a/x.txt` exited %d" % r.returncode)
+    return 1
+
+
+def comment_cases(mac, tmp, problems):
+    """The archive's own comment, which `--only` neither filters nor
+    lets itself be named by.
+
+    It is written as `<archive>.comment.txt` beside the extracted items,
+    because it belongs to the ARCHIVE and to no entry of it (cli/main.c,
+    sink_comment). So a selective extraction writes it too, and the way
+    to decline it is `--no-comment` — not a narrower selector. Asserted
+    here from both sides, because the sweep above has to permit the file
+    and a permission nothing grades is a hole.
+    """
+    p = os.path.join(tmp, "only-comment.zip")
+    note = b"a comment belonging to the archive\n"
+    with zipfile.ZipFile(p, "w") as z:
+        z.writestr("top.txt", b"the one at the top\n")
+        z.writestr("a/x.txt", b"first inside a\n")
+        z.comment = note
+
+    name = "only-comment.zip.comment.txt"
+    full, _ = full_extract(mac, p)
+    if not check(problems, sorted(full) == ["a/x.txt", name, "top.txt"],
+                 "comment: the full extraction wrote %s" % sorted(full)):
+        return 0
+    check(problems, full[name] == note,
+          "comment: the saved comment is %r" % full[name])
+
+    selective(mac, problems, "comment", p, full, "top.txt", allow=(name,))
+
+    out = os.path.join(tmp, "withcomment")
+    os.mkdir(out)
+    run(mac, ["x", p, "-o", out, "--only", "top.txt"])
+    check(problems, sorted(tree(out)) == [name, "top.txt"],
+          "comment: --only top.txt wrote %s, and the archive's comment "
+          "belongs to no entry" % sorted(tree(out)))
+
+    out = os.path.join(tmp, "nocomment")
+    os.mkdir(out)
+    run(mac, ["x", p, "-o", out, "--only", "top.txt", "--no-comment"])
+    check(problems, sorted(tree(out)) == ["top.txt"],
+          "comment: --no-comment with --only wrote %s" % sorted(tree(out)))
+
+    # And it cannot be selected: it is not an entry, so naming it is a
+    # selector that matches nothing.
+    out = os.path.join(tmp, "selcomment")
+    os.mkdir(out)
+    r = run(mac, ["x", p, "-o", out, "--only", name])
+    check(problems, r.returncode != 0,
+          "comment: --only %r exited 0" % name)
     return 1
 
 
@@ -292,15 +348,32 @@ def sweep(mac, fixdir, stride, problems):
         if "did not fit and" in err or len(full) < 3:
             skipped += 1
             continue
+        # The archive's own COMMENT is not an entry: it belongs to the
+        # archive, so it is written whatever was selected (cli/main.c,
+        # sink_comment) and cannot be selected itself. Nothing in this
+        # sweep met one until 2026-09-20, when two new fixtures moved
+        # the stride onto compact-pro-151.hqx — whose comment is named
+        # after the archive INSIDE the BinHex envelope, so guessing the
+        # name from the fixture's would have been wrong. It is asked
+        # for instead: --no-comment writes everything but that file, and
+        # what the two runs differ by is the comment, by definition.
+        cands = [p for p in full
+                 if "/" not in p and p.endswith(".comment.txt")]
+        comments = ()
+        if cands:
+            bare, _ = full_extract(mac, path, ["--no-comment"])
+            comments = tuple(p for p in cands if p not in bare)
         # Data forks only: a sidecar is not an entry of its own, it
         # rides along with the entry whose fork it is.
-        picks = [p for p in sorted(full) if not p.endswith(".rsrc")]
+        picks = [p for p in sorted(full)
+                 if not p.endswith(".rsrc") and p not in comments]
         if len(picks) < 2:
             skipped += 1
             continue
         for sel in (picks[0], picks[len(picks) // 2]):
             try:
-                selective(mac, problems, n, path, full, sel)
+                selective(mac, problems, n, path, full, sel,
+                          allow=comments)
             except subprocess.TimeoutExpired:
                 problems.append("%s: --only %r timed out" % (n, sel))
         ran += 1
@@ -324,6 +397,7 @@ def main():
     tmp = tempfile.mkdtemp()
     try:
         ran += zip_cases(args.macextract, tmp, problems)
+        ran += comment_cases(args.macextract, tmp, problems)
         ran += dd_cases(args.macextract, tmp, problems)
         ran += now_cases(args.macextract, tmp, problems)
     finally:
