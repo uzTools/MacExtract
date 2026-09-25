@@ -272,6 +272,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
 - 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
 - 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
+- 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
 
 ---
 
@@ -17047,3 +17048,64 @@ build when a function whose every `return` is a tuple is tested for
 truthiness. It found these two call sites and no third, and it carries the
 pre-fix pair as a selftest, because a lint nobody has watched fail is the
 same kind of evidence as the skip it replaces (TESTING.md, check 0b).
+
+## 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
+
+**Claim: `overlay-eager` relocated executable bytes at two sites and flushed
+no cache, and the question of whether that mattered was written down as a
+hypothesis waiting for hardware when it was waiting for a document.** Asked
+while closing the two things OPEN_ITEMS.md named as what would reopen the
+overlay decision. Both sites and both fixes are on the branch
+(`BRANCH_NOTES.md`, *The instruction cache that nothing flushed*); what
+follows is the part that transfers.
+
+**Inside Macintosh: Memory, chapter 4, *Stale Instructions* settles the rule
+in one sentence** — "you must flush the instruction cache every time you
+modify executable instructions in memory" — and names `_BlockMove`, `_Read`,
+`_LoadSeg` and `_UnloadSeg` as the traps that do it for you. `BlockMoveData`,
+which the shim used to copy an image, is the variant trap and is not among
+them. No measurement was needed to know the code was wrong; one page was.
+
+**And the toolchain's own answer was not the documented one.** Retro68's
+relocator flushes at exactly the two moments this shim needed — after applying
+relocations, after patching a jump-table entry — by calling `FlushCodeCache`
+(0xA0BD). Inside Macintosh documents `FlushInstructionCache` as `_HWPriv`
+(0xA198) selector 1, and says that on a processor with a copy-back data cache
+it flushes the DATA cache first, so that instructions copied into the
+instruction cache are not read from stale RAM. That is the 68040, and it is
+precisely what copying an image as data creates. **A working implementation in
+the toolchain you link is evidence about what compiles and runs, not about
+what the documentation requires** — the older trap is the one Retro68 needs
+for the ROMs it supports, and reading only the code would have shipped the
+narrower of the two.
+
+**The measurement that mattered was not the sweep.** Apple documents that the
+68LC040 Emulator ignores instruction-cache invalidation requests while telling
+developers to keep issuing them (Inside Macintosh: PowerPC System Software,
+*The 68LC040 Emulator*), and Mini vMac emulates a 68000, which has no cache.
+So every tier this project can run is incapable of failing for want of the
+flush: a green sweep would have been the repository's oldest trap, a test that
+cannot fail. What a run here CAN answer is whether the call was reached, so
+the probe build reports the route and the count — `fc=0 fn=0` on System 6.0.8,
+**`fc=1 fn=3` on System 7.0.1**, three being the bundle fixup plus one per
+kept image. **When the environment cannot test the effect, test the
+occurrence.**
+
+### The alarm that fired on a healthy archive
+
+**A diagnostic that fires when nothing is wrong has stopped being a
+diagnostic.** The same probe reported `wa=128` — an image wanted after the
+release, which the branch calls a thing that must never happen — on a Compact
+Pro archive that extracted completely. The cause was benign and structural:
+three format readers free the cipher table unconditionally at cleanup, the
+resident implementation is a no-op on a NULL table, and an archive whose
+directory let the release drop the ciphers therefore asks for an image that is
+correctly gone.
+
+Nothing was broken, and that is the point: `wa` is the field that found the
+preload bug that had flattered every interactive measurement for a week, and
+it had since become a light that is always on. The fix was to let the one path
+that is ALLOWED to find the image gone ask quietly, so the field means again
+what it says. **Before trusting a signal, find the healthy paths that trip
+it** — a check whose false-positive rate is unknown is a check whose silence
+is uninformative.

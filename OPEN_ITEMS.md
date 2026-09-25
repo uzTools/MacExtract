@@ -75,7 +75,7 @@ is `BRANCH_NOTES.md` on it, which is where branch state lives (BRANCHES.md):
 | budget at 1 MB against a resident build | **+84 to +103 KB**, and it varies with the format |
 | System 3.0, 512 KB | **69/71 against main's 67/71** — `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit` |
 | the 1 MB floor target | **71/71 either way** |
-| the download | **+25,216 B**, 189,312 → 214,528 B |
+| the download | **+25,344 B**, 189,312 → 214,656 B |
 | eager against lazy | **894 B–10.7 KB** of budget, bought with no disk access after the archive is chosen |
 
 **Why it stays out.** At the floor target the gain buys nothing anybody can
@@ -83,23 +83,28 @@ name: nothing in the corpus has been out of a 1 MB Mac Plus's reach since
 2026-09-18 (FORMATS.md, *The Linux budget check reads the Mac to 40 bytes*),
 so 100 KB of headroom answers archives this project does not have. What it
 does open is two archives on a **512 KB** machine, which is not the floor. It
-is also validated on a 68000 and nowhere else — **no run above one is
-recorded on either branch**, so two of the seven tiers this project claims
-have never seen the configuration; the overlay variant in the branch's `ci.sh`
-only COMPILES it, so no Linux suite exercises the loader at all; and the
-release is irreversible per archive, a failure mode that has bitten that
-branch twice in silence — once with a build where an earlier archive could
-make a later one fail, once with one that never preloaded at all. DECISIONS.md 2026-09-25, *the parked
-decision that outlived its numbers*.
+is also validated on a 68000 and nowhere else — **`overlay-eager` is
+71/71 on System 7.0.1 at 4 MB (2026-09-25), which is still a 68000**, and no
+run on a CPU with a cache is recorded on either branch; the overlay variant in
+the branch's `ci.sh` only COMPILES it, so no Linux suite exercises the loader
+at all; and the release is irreversible per archive, a failure mode that has
+bitten that branch twice in silence — once with a build where an earlier
+archive could make a later one fail, once with one that never preloaded at
+all. DECISIONS.md 2026-09-25, *the parked decision that outlived its numbers*.
 
-**What would reopen it:** a System 7.0.1 and a Mac OS 9.2 sweep with
-`-D UNC_AT_OVERLAY`, and an answer to whether relocated code executed out of a
-locked handle needs a code-cache flush on a 68020 and up and under Mac OS 9's
-68LC040 emulation — nothing in either branch's `mac/ovl_shim.c` flushes one,
-and no tier that HAS a cache has run it (*hypothesis*, never tested). That settles whether it
-CAN be the default; whether it SHOULD is a disk access against 10.7 KB, and
-is the maintainer's. The mechanism and its traps are written up in
-`BRANCH_NOTES.md` on either branch, so reopening it is a merge and not a
+**What would reopen it:** a Mac OS 9.2 sweep with `-D UNC_AT_OVERLAY`. The
+System 7.0.1 half is done, and so is the cache question: Inside Macintosh
+requires a flush wherever executable bytes are modified in memory, and
+`BlockMoveData` — what the shim copies an image with — is not one of the traps
+that flush for you, so `overlay-eager`'s tip now calls `FlushInstructionCache`
+(`_HWPriv` selector 1, falling back to `FlushCodeCache`) at both fixup sites,
+measured firing three times on System 7.0.1. What no tier here can answer is
+whether it was NEEDED: Mini vMac is a 68000 and Apple documents the 68LC040
+Emulator as ignoring the request, so only silicon can (MANUAL_TESTS.md §2, the
+68020/030/040 bullet). DECISIONS.md 2026-09-25, *the flush nobody wrote*.
+Whether the configuration SHOULD be the default is a disk access against
+10.7 KB, and is the maintainer's. The mechanism and its traps are written up
+in `BRANCH_NOTES.md` on either branch, so reopening it is a merge and not a
 rediscovery.
 
 ## Limits of the formats themselves
