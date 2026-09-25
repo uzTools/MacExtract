@@ -270,6 +270,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
 - 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
 - 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
+- 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
 
 ---
 
@@ -10177,6 +10178,13 @@ a format wants them, and `overlay-eager` loads the same overlay at launch
 instead. **Parked, neither merged**, and the branches are kept as a working
 mechanism rather than as a proposal.
 
+**Its prize figure, its "StuffIt can never be one of the formats it helps"
+and its "neither branch OPENS anything new" are superseded — 2026-09-25, *the
+parked decision that outlived its numbers*.** What follows is the reasoning of
+2026-08-31 and the cipher-only measurements it rested on, both correct for the
+overlay that existed that day. The three later entries that cite 5,988 B as a
+scale are left alone; the number is corrected here, where it lives.
+
 **The evidence, in the order it changed the answer:**
 
 - **The prize is 5,988 B**, for six formats and not for StuffIt. Against a
@@ -16931,3 +16939,70 @@ is a decision **taken and dated** (2026-09-22, not taken, with reasons),
 not one parked. The `selective-extract` branch is a genuinely open
 decision because nothing was ever settled — the feature has never
 shipped, so there is no prior decision for it to re-open.
+
+## 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
+
+**Claim: the overlay decision of 2026-08-31 still lands the same way, and not
+one of the three premises it landed on has survived.** Asked because somebody
+proposed making `overlay-eager` the default build; answered by reading the
+branch rather than main's account of it.
+
+**The evidence, each item against what the scope file has been saying:**
+
+- **The prize was 5,988 B and is 84–103 KB.** That figure was the ciphers as
+  one image; the branch has carried **fifteen** since 2026-09-24. Its own
+  measurements at 1 MB on System 6.0.8 grant the engine 734,656 B for a
+  StuffIt 5, 752,898 B for an LZH and 746,682 B for a Compact Pro, against
+  650,692 B with everything resident — and the resident column does not move
+  with the archive, which is what says the gain belongs to the mechanism and
+  not to a month of `main`.
+- **"Neither branch OPENS anything new" is withdrawn.** System 3.0 at 512 KB
+  is **69/71 against main's 67/71**: `derived-a2basic.dmg.sit` and
+  `derived-Cool_Tools__.sit`, which took `MoveHHi` and twelve more images to
+  reach and which no tier on `main` extracts.
+- **"StuffIt can never be one of the formats it helps" was a fact about the
+  CIPHER image**, read as a fact about the mechanism. A StuffIt 5 gains 84 KB
+  like everything else; what it cannot do is release the ciphers, and that is
+  **10,702 B** — down from 15,748 B when `main` stopped carrying the DES SP
+  tables and Compact Pro's CRC-64 as const data (2026-09-19, the transient
+  tables). Compact Pro and zip no longer pay even that, because their
+  directories can be asked before anything is decoded.
+- **The download grows by more than the record says.** +2,304 B was the
+  cipher bundle. Both configurations built at the branch tip on 2026-09-25:
+  `MacExtract.bin` **189,312 B against 214,528 B, +25,216 B**.
+
+**Consequence: the answer is unchanged and its reasons are now different
+ones.** At the floor target the headroom answers archives this project does
+not have — nothing in the corpus has been out of a 1 MB Mac Plus's reach since
+2026-09-18 — what it does open is on a 512 KB machine that is not the floor,
+**no tier above a 68000 has ever run the configuration**, the overlay variant
+in the branch's `ci.sh` only compiles it so no Linux suite exercises the
+loader, and it costs 13 % of the only download this project offers. Scope
+status and what would reopen it: OPEN_ITEMS.md, Part 1, *Overlays*.
+
+### The transferable part: parking a decision does not park the work it was about
+
+The 2026-08-31 entry wrote its own epitaph — *"a figure that cannot change the
+conclusion is a figure nothing checks"* — about a prize that had been wrong
+for one day. The sentence then held for three weeks against the corrected
+figure, in the other direction: the prize grew seventeenfold, the conclusion
+did not move, and so nobody re-derived it.
+
+**What kept it invisible is that a decision parks and a BRANCH does not.**
+Work continued on both branches for three weeks after "merge neither", and
+every session wrote its findings to `BRANCH_NOTES.md` on the branch — which is
+where BRANCHES.md says branch state belongs, and is correct. Nothing in that
+loop reaches `main`, so the status file on `main` went on quoting the number
+that justified parking, to readers who had no reason to check out a branch
+that was decided.
+
+**The smell that caught it is the cheapest one in BLOCKERS.md and needed no
+insight: three files, three numbers.** BRANCHES.md said 18,116 B, OPEN_ITEMS.md
+said 5,988 B, and the branch said neither. That contradiction had been
+readable on `main` since 2026-09-02.
+
+**So a parked decision needs its re-read trigger where the NUMBER lives, not
+where the decision was made.** On `main` that is BRANCHES.md, the only file
+that names a branch at all — which is why its rows now carry the figure and
+the date it was taken, and why a row that cannot be dated is a row nobody can
+tell is stale.

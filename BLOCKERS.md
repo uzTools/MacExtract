@@ -1482,6 +1482,28 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"The overlay prize is 5,988 B, it opens nothing new, and StuffIt can
+  never be one of the formats it helps"** — all three superseded or
+  withdrawn 2026-09-25. They were written 2026-08-31 about an overlay
+  holding the ciphers and nothing else. `overlay-eager` has carried
+  fifteen images since 2026-09-24: **84–103 KB** more budget at 1 MB than
+  a resident build, **69/71 at System 3.0 / 512 KB against main's 67/71**
+  — `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`, two
+  archives `main` cannot open on that machine — and StuffIt gains like
+  everything else, it merely cannot release the ciphers, which are
+  10,702 B rather than the 15,324 B they were before the DES tables went
+  transient. The download figure moved the same way: +2,304 B was the
+  cipher bundle, **+25,216 B** is this one (189,312 → 214,528 B, both
+  configurations built at the branch tip). **Cost: three weeks in which
+  the scope file priced a mechanism at a seventeenth of its measured
+  value**, and recorded "opens nothing new" of a build that opens two
+  archives at 512 KB. The decision it justifies has not moved, for
+  reasons that are now different ones (DECISIONS.md 2026-09-25, *the
+  parked decision that outlived its numbers*). Found by the cheapest
+  smell in this list — BRANCHES.md said 18,116 B, OPEN_ITEMS.md said
+  5,988 B, the branch said neither — which had been readable since
+  2026-09-02.
+
 - **"walkprobe.py grades every volume walk in the tree"** — corrected
   twice, 2026-09-22 and 2026-09-23. It graded six of eight, then eight of
   nine. The missing ninth is `nowcompress.read_forks`, a different
