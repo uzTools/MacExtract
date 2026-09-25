@@ -269,7 +269,7 @@ under Mini vMac, and reads the archive back.
 
 `--verify-combine` then grades what comes back out of this engine
 against **the bytes DiskDoubler was given** — the oracle is the
-encoder's input, the same bargain `nowcompress.py` and `run_dart.py`
+encoder's input, the same bargain `nowcompress.py` and `sdcompress.py`
 make: **7 entries, 0 disagreements**, the folder tree and the two-fork
 file included. `unar` reads both archives and agrees.
 

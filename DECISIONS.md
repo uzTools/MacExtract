@@ -274,6 +274,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
 - 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
 - 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
+- 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
 
 ---
 
@@ -17188,3 +17189,49 @@ documents the 68LC040 emulator as ignoring the request (*the flush nobody
 wrote*, above). It is now in `mac/ovl_reloc.c`, which both lifetimes call.
 **Two implementations of one mechanism do not inherit each other's fixes; one
 implementation with two behaviours does.**
+
+## 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
+
+**Claim: expanding a compressed disk image is not this program's job, and
+having done it for sixteen days does not make it one.** The maintainer's call,
+before a release. DART came in on 2026-09-09 (*the disk image that is expanded
+and not opened*); it goes out today, the `ndif-udif` branch with it —
+deleted from `origin` at **`7269acd`**, which is written here because a
+deleted ref is recoverable only by somebody who still has the object.
+
+**The argument that brought it in is the argument that takes it out.** DART
+was admitted because what comes out of one is not files but another disk
+image — a codec with no volume in it, so no filesystem was needed. That was
+true, and it is exactly why the feature belongs elsewhere: the only thing a
+user does with the expanded file is MOUNT it, and mounting is MacMount's.
+Shipping half of a workflow in the tool that cannot finish it means a user
+ends up with a file this program can no longer help with, which is the
+position they were in before, minus the disk space.
+
+**What it cost to have, and gives back**: 2,220 B of resident `CODE` and 164 B
+of A5 on the resident build; 696 B and 136 B on the shipped overlay build,
+because most of DART lived in its own image. The download falls 3,456 B. Every
+ratchet was LOWERED in the same commit, on the same terms a raise takes — at
+the measured size on the day — so what a removed format gave back cannot be
+spent later without somebody noticing.
+
+**And the engine is simpler in one place that matters.** `unc_lzah.c` had
+three modes; it has two. DART's "best" was Apple's LZHUF over a window of
+zeros, one constant away from `-lh1-`, and that constant is gone with it.
+`UNC_ERR_NOTCOMPRESSED` goes too — it existed for one sentence in one
+alert — and its number is retired rather than reused, so a caller built
+against an older header cannot read a new code as that one.
+
+### The transferable part: scope is a question about the WHOLE task, not about the file
+
+The 2026-09-09 entry asked "can this engine read the format?" and answered
+yes, correctly. The question that decides scope is a different one: **after
+this program has done its part, is the user finished?** For every archive
+format here the answer is yes — the files are on the disk. For a disk image it
+was never yes, and no amount of codec work could make it so, because the
+missing step is a filesystem this program deliberately does not have.
+
+**A sibling project is not a reason to keep a feature, it is a reason to move
+it.** MacMount already carried its own LZHUF (`src/mm_lzhuf.c`) — this
+repository benchmarked against it on 2026-09-19 and took the better tree — so
+the capability had two homes and one of them could finish the job.

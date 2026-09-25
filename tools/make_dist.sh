@@ -73,6 +73,11 @@ and its size was fixed when the archive was made. Those entries are skipped
 with a message and the rest of the archive still comes out. Every other format
 fits in 512 KB, and with 1 MB the question does not arise.
 
+v0.33.0 keeps its decoders on disk until an archive turns out to need one,
+which leaves about 85 KB more memory for decoding than v0.32.0 did. On a
+512 KB machine two more of the test archives now come out whole; on larger
+machines it changes nothing you can see.
+
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
 (.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
 StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), LZH/LHA (.lzh, .lha,
@@ -90,11 +95,11 @@ Cabinet, WIM, Zoo, ARJ, cpio, ar and Apple Archive (.aar) --
 are named rather than opened: you are told what the file is instead of
 being left with something that looks like a damaged download.
 
-Compressed DART disk images get a different answer, because a DART is not
-an archive: it holds a whole floppy rather than files. MacExtract expands
-one into an UNCOMPRESSED DART, which is the form a mounting program can
-read straight off. Hand it one that is already uncompressed and it tells
-you so rather than pretending something went wrong.
+Disk images are out of scope, and v0.33.0 is where that became true of
+DART as well: a DART, NDIF or UDIF holds a floppy rather than files, and
+what reads one is a mounting program. v0.32.0 expanded a compressed DART
+into an uncompressed one; if that is what you came for, MacMount is the
+project that finishes the job.
 
 Password-protected archives open too -- StuffIt, StuffIt 5, Compact
 Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. You are

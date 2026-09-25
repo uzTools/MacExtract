@@ -11,9 +11,8 @@ joined set is graded against. They have no manifest and are not meant to
 have one — `make_manifests.py`'s NOT_ARCHIVES says so where a rebuild
 would otherwise make two, and DECISIONS.md 2026-09-22 (*the sidecar is
 not an archive*) says why. They are the only two that need saying:
-twelve other fixtures have no manifest — the six `.1`/`.2` parts, the
-two `.dart` files, `derived-SD__Utilities.x` and the three
-`synth-os9-*` — and none of them needs a declaration, because `unar`
+ten other fixtures have no manifest — the six `.1`/`.2` parts,
+`derived-SD__Utilities.x` and the three `synth-os9-*` — and none of them needs a declaration, because `unar`
 cannot produce a manifest for any of them anyway. Each is graded by the
 suite that owns it (TESTING.md).
 
@@ -28,8 +27,6 @@ suite that owns it (TESTING.md).
 | 606updateinit.bin | 0f3c22b8216966afc30b17659b923b19076e37251371e402aba259864af2cd5d | 887 | http://www.nic.funet.fi/pub/mac/init/606updateinit.bin |
 | 800saywhat-301-jp.hqx | 00dfbc3f9405caa2fc46e4a515568c5ec5c5adc9ea0cbecb42f33ffa7bcde9b9 | 123700 | http://www.nic.funet.fi/index/info-mac/info/800saywhat-301-jp.hqx |
 | ACInfo_Comm.sit.bin | e6b0745c08f0a10c07634f70533ea6829b32fe61e694dd6eade2ea5e8e75ef8d | 159360 | http://www.nic.funet.fi/pub/mac/comm/ACInfo_Comm.sit.bin |
-| AUX301_BootDisk_Quadra.dart | 45c2af73cd0c33eeddd09a73e0171aea11e6455ce9ef1e8294f235cbd0df64be | 978283 | synthetic:tools/get_dart_specimen.py bootdisk |
-| AUX301_ReadMe_MacSE.dart | a6207871a1d795622bd4b2a9c8b7f710e0dd893cda9a1885b5d01a1bba10dff3 | 381699 | synthetic:tools/get_dart_specimen.py readme |
 | IIfxserialswitch.bin | 6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b | 3180 | http://www.nic.funet.fi/pub/mac/cdev/IIfxserialswitch.bin |
 | PCCTS.tar.gz | 7174d13afe287ff7c6f28affa70b78c3679fa5171fe5a63b051b2cf91efb184a | 63807 | http://www.nic.funet.fi/pub/unix/tools/PCCTS.tar.gz |
 | Player-Pro410.sit.bin | 27137daa4cb5984276961f3f636e7c6471945c9431b38a4d5ae41312e649a704 | 196608 | http://www.nic.funet.fi/pub/mac/sound/Player-Pro410.sit.bin |

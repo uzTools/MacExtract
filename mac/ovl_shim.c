@@ -371,16 +371,6 @@ int unc_zip_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_ZIP_EXTRACT, c, NULL);
 }
 
-/* DART. Probe resident; decoder from the bundle. Needs the codecs image,
- * which is kept unconditionally — its "best" method is LZHUF. */
-int unc_dart_extract(UncCtx *c)
-{
-    OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_DART);
-    if (!e) return UNC_ERR_MEM;
-    return (int)e(&gOvlHost, OVL_DART_EXTRACT, c, NULL);
-}
 
 /* Gzip. Probe resident; decoder from the bundle. */
 int unc_gzip_extract(UncCtx *c)

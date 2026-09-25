@@ -15,7 +15,6 @@ undated figure here is one nobody can tell is stale.
 | branch | what it explores | state |
 |---|---|---|
 | `rom64k` | one guard, `Has128KROM()`, so the application starts on a 64K-ROM Macintosh instead of bombing on `MaxApplZone` | starts and its interface works under emulation; cannot extract without HFS, and no hardware has run it (MANUAL_TESTS.md §7) |
-| `ndif-udif` | NDIF and UDIF, the two compressed Macintosh disk-image formats, expanded to raw images | built and meant to merge, not exploratory; **+8,072 B of resident `CODE`**, and 22/22 on Mac OS 9.2 (its own `BRANCH_NOTES.md`) |
 | `selective-extract` | list the archive, tick what should come out, extract only that — a `list_only` walk, a box, and the skip `begin_entry` has always had | built, graded in `ci.sh`, and driven on screen on System 6.0.8 and System 3.0; **costs 2,720 B of every 1 MB extraction's budget**, and the second walk ~10 ms an entry |
 
 **Merging `main` into `rom64k` deletes the guard, silently.** `main` carries
@@ -27,6 +26,13 @@ for existing with it. Check before committing any such merge —
 occurrences on the tip, zero in the naive merge — and restore it afterwards
 with `git show 2dbe26d -- mac/macextract_mac.c tools/make_dist.sh | git apply
 -R`. Done on 2026-09-09; DECISIONS.md that date has the general shape.
+
+**`ndif-udif` is DELETED, 2026-09-25**, at `7269acd`. NDIF and UDIF were
+built and meant to merge; expanding compressed disk images left this
+project's scope the same day DART did, because what reads one is a mounter
+(DECISIONS.md 2026-09-25, *the disk images that found another home*). The ref
+is gone from `origin`; the SHA is recorded so the work can be recovered by
+anyone who still holds the objects.
 
 **`overlay-eager` and `selective-loading` are RETIRED, merged 2026-09-25.**
 Both lifetimes live on `main` now — eager is what `dist/` ships, lazy is

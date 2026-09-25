@@ -292,13 +292,15 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +76 B on 2026-09-09 for splitting DART's probe out. DART's probe IS its
 # header reader — the format has no signature — so dart_parse, dart_kind and
 # dart_chunk_bytes stop being static and stop being inlined into the decoder.
-# What it buys is on the overlay build, where fmt_dart.c leaves the resident
+# What it buys is on the overlay build, where a decoder leaves the resident
 # set entirely.
 # Merged main 2026-09-24. The running totals these entries used to carry were
 # main's ceiling of the day plus the deltas above, and main's has moved 5,668 B
 # since; what each change cost stands, the totals do not, so the ceiling below
 # is the merged build MEASURED rather than that arithmetic.
-UNC_MAC_CODE_DEFAULT=153804
+# LOWERED 2026-09-25 from 153,804 to 151,584: DART left the engine, and on
+# this configuration it was all resident (-2,220 B).
+UNC_MAC_CODE_DEFAULT=151584
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -379,8 +381,9 @@ UNC_MAC_CODE_DEFAULT=153804
 # 4 B BELOW main's own ceiling of 37,960. The 40 B is not there to be found:
 # both entries were rodata alignment shifting under changed text, the effect
 # main's own A5 history records four times, and it has since shifted back.
-# A ratchet is set at the size on the day, so 37,956 is what is locked in.
-UNC_MAC_A5_DEFAULT=37956
+# A ratchet is set at the size on the day, so 37,956 was what was locked in.
+# LOWERED 2026-09-25 from 37,956 to 37,792 with DART's removal (-164 B).
+UNC_MAC_A5_DEFAULT=37792
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -392,10 +395,18 @@ UNC_MAC_A5_DEFAULT=37956
 # became the build. Raise one deliberately, in the commit that grows it, and
 # say what the bytes bought: on this target every byte of resident code is a
 # byte off the budget of every extraction.
-UNC_MAC_CODE_EAGER=54028
-UNC_MAC_A5_EAGER=19124
-UNC_MAC_CODE_LAZY=52600
-UNC_MAC_A5_LAZY=19240
+# LOWERED 2026-09-25 when DART left the engine: eager 54,028 -> 53,332,
+# lazy 52,600 -> 51,956, resident 153,804 -> 151,584, with the A5 figures
+# following. A ratchet is lowered on the same terms it is raised — at the
+# size on the day — so that what a format gave back cannot be spent by
+# accident later (DECISIONS.md 2026-09-25, *the disk images that found
+# another home*). Most of DART was in its own image, which is why the
+# shipped build gives back 696 B of code where the resident one gives
+# back 2,220 B.
+UNC_MAC_CODE_EAGER=53332
+UNC_MAC_A5_EAGER=18988
+UNC_MAC_CODE_LAZY=51956
+UNC_MAC_A5_LAZY=19084
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

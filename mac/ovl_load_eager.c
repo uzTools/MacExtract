@@ -163,13 +163,6 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_ARC:         want = OVL_ID_ARC;        break;
     case UNC_FORMAT_NOWCOMPRESS: want = OVL_ID_NOW;        crypt = 0; break;
     case UNC_FORMAT_SUPERDISK:   want = OVL_ID_SUPERDISK;  crypt = 0; break;
-    /* DART carries no encryption of any kind — the format has no flag for
-     * it and no reference describes one — so the ciphers go. It is also the
-     * one format here whose output is a file of its own format, which
-     * changes nothing for this table: what comes out is written by the sink
-     * like anything else. Before this line it fell to `default` and kept the
-     * whole bundle, which was safe and bought nothing. */
-    case UNC_FORMAT_DART:        want = OVL_ID_DART;       crypt = 0; break;
     case UNC_FORMAT_PACKIT:      want = OVL_ID_PACKIT;     break;
     case UNC_FORMAT_SIT:         case UNC_FORMAT_SIT5:
         want = OVL_ID_STUFFIT;   break;

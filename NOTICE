@@ -398,33 +398,6 @@ This project's decoders are transcriptions/ports of algorithms from:
     `docs/formats/serialized-huffman-tree.md`, measured from the
     formats rather than read out of anybody's program.
 
-  * CiderPress2, by Andy McFadden (Apache-2.0), and Apple's own
-    `DartIntf.h`, by Ken McLeod (© 1987-1994 Apple Computer, Inc.) —
-    both REFERENCES ONLY, for `src/fmt_dart.c`. DART was never an Apple
-    product and its format was never published; that header is the whole
-    of the documentation there is, and it says so — "The format of a
-    DART file is provided here for READ-ONLY use" — which is what it is
-    used for: the two record layouts, the disk and compression
-    identifiers, the file types, and the rule about a block length's
-    unit. CiderPress2's `DiskArc/Disk/DART.cs`, its `DART-notes.md` and
-    `DiskArc/Comp/LZHufStream.cs` are the second reading, and the source
-    of everything the Apple header leaves out: the RLE's word
-    orientation, the per-chunk 0xFFFF fallback, which type/size pairs are
-    valid, and the two changes Apple made to LZHUF. No code was copied
-    from either; `src/fmt_dart.c` cites which fact came from which, and
-    the codec itself is `src/unc_lzah.c`, transcribed from XADMaster as
-    above, with one constant changed. Neither is committed —
-    `tools/fetch_references.sh` fetches them — and neither is linked into
-    anything shipped. CiderPress2's `TestData/dart/` is the test-time
-    oracle (`tools/run_dart.py`): two disks DART 1.5.3 compressed, with
-    the images it was fed. Its README notes that DART itself is
-    copyright Apple Computer, Inc. Two more oracles are archives Apple
-    shipped — the A/UX 3.0.1 *Read Me* and *Installation Boot Disk*
-    floppies, © Apple Computer, Inc., fetched from the Macintosh Garden
-    FTP by `tools/get_dart_specimen.py` and, like every other archive in
-    the corpus, never committed. What grades our output is what DART
-    wrote into their resource forks in 1993.
-
 CONTAINER FORMAT SPECIFICATIONS
 
 These are REFERENCES ONLY and none of them is a licence obligation. Each

@@ -45,7 +45,7 @@ answer and not a refusal — the brief has grown before, on request.
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software that arrived in the corpus for the per-entry refusal path rather than for their contents. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on their names and entry counts alone (FORMATS.md, *Hardening*). **Half the premise is gone and the decision is the maintainer's**: an MIT implementation and a stored-CRC oracle for all 7 entries are both on this disk as of 2026-09-22, so only "not a Macintosh method" still carries the decision (DECISIONS.md 2026-09-22, *the premise that stopped being true*). **What it would COST was never measured, and still is not** — unlike every other priced row here, because a removal delta can be built and an addition cannot. The bracket, ESTIMATED 2026-09-23 from the comparable coders' own objects (`m68k-apple-macos-size`, this build): `unc_lzah.c` 1,478 B, `unc_lzw.c` 1,588 B, `unc_lzdyn.c` 3,382 B for TWO coders. Implode is one LZ77 window plus Shannon-Fano trees read per file, so **~1.5–2 KB of `CODE` is the expectation, not a measurement**, against 6,952 B of headroom at the tightest tier. The one part that is certainly free is the half the entry above leaves undone: adding `"Implode"` to `DEARK_METHODS` records the 7 entries as ground truth with no engine change at all |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
-| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART is the one exception, since 2026-09-09**, and it is an exception to the first clause only: a compressed DART expands to an UNCOMPRESSED DART, which is a codec with no volume anywhere in it, and no file on the disk is ever looked at. FORMATS.md, *DART* |
+| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART was the one exception between 2026-09-09 and 2026-09-25** — a compressed DART expands to an uncompressed one, a codec with no volume in it — and it is out again: what reads a DART is a mounter, and that is MacMount's, so expanding disk images is not this program's job in any form (DECISIONS.md 2026-09-25, *the disk images that found another home*). NDIF and UDIF were prototyped on a branch and never merged, for the same reason |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
 | Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
 | RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. NAMING them is in scope (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
@@ -285,29 +285,6 @@ WEAKER here than there: "a System 6 machine will rarely meet" a 2003 zip
 feature is a claim about what is in reach, and any copy of 7-Zip or
 WinZip writes one, where `-lh2-` needed a fork this project patched
 itself.
-
-## A DART's checksums, which this writes no fork to carry
-
-**Not a scope decision and not a missing specimen: it is a missing
-reference.** An expanded DART comes out with a data fork and nothing
-else. A DART written by the application keeps its integrity check in the
-RESOURCE fork — 'CKSM' 1 over the tags, 'CKSM' 2 over the data, and a
-'DART' 0 string spelling both out — and this writes none of them
-(FORMATS.md, *DART*).
-
-Nothing currently reads them: MacMount parses the data fork alone, and
-no other reader of the format is on this machine. And the bytes are
-verified even so — `tools/run_dart.py` checks what came out against the
-checksums DART recorded in 1993, which is the same assertion from the
-other side.
-
-**What would close it:** a statement of what an UNCOMPRESSED DART's
-resource fork holds. DART 1.5.3 only ever wrote compressed files
-(DART-notes.md: "Compression is always applied by DART v1.5"), so the
-one shape this program produces is a shape no reference describes, and
-writing a partial fork would be inventing the layout. An uncompressed
-DART written by whatever produced them — an earlier version of the
-application, per the same note — would settle it.
 
 ## Waiting on a file this machine does not have
 

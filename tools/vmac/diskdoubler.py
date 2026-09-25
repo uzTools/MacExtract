@@ -625,7 +625,7 @@ def verify_combine():
     """Grade the Combine specimens against the files that were fed in.
 
     The oracle here is the ENCODER's input, the same bargain
-    `nowcompress.py` and `run_dart.py` make: DiskDoubler was handed
+    `nowcompress.py` and `sdcompress.py` make: DiskDoubler was handed
     these bytes and these folders, so what comes back out of this
     engine either is them or is not. `unar` is asked as well, with
     `-k hidden` — `-k visible` has a GNUstep path bug and answers 422

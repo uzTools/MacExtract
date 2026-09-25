@@ -7,8 +7,8 @@
  * method 5 ("LZAH") and LZH's -lh1-. XADMaster runs a single handle for
  * both, which is why this is one file rather than two — the same
  * arrangement DiskDoubler method 8 has with Compact Pro's stages. ARC
- * 7.x's "Trimmed" and DART's "best" are the same coder again, each
- * differing in one constant: see the modes in unc_internal.h.
+ * 7.x's "Trimmed" is the same coder again, differing in one constant:
+ * see the modes in unc_internal.h.
  *
  * THE TREE IS YOSHIZAKI'S, NOT XADMASTER'S, since 2026-09-19. Until then
  * this file transcribed reference/XADMaster/XADLZHDynamicHandle.m, which
@@ -21,13 +21,13 @@
  * arrays — freq, son, prnt — with the leaves' order carried in the
  * array itself, and reads the offset's high bits through a 256-entry
  * byte lookup. MacMount's src/mm_lzhuf.c, written from the published
- * program for DART alone, measured against this file's XADMaster form
+ * program, measured against this file's XADMaster form
  * on Linux: 22–24 % fewer instructions, 9,024 B of state against
  * 15,568, 1,276 B of 68000 code against 1,592, and byte for byte the
  * same output on four real archives and 192 blocks (DECISIONS.md
  * 2026-09-19, *the tree that was Yoshizaki's*). So the tree machinery
  * below follows the published program's shape; what is OURS and kept
- * from the previous version is everything around it — the three modes,
+ * from the previous version is everything around it — the two modes,
  * the window preload each one wants, the run-based output and the
  * engine's own bit reader.
  *
@@ -204,16 +204,12 @@ static void lzah_update(Lzah *h, uint32_t c)
  * passes history_fill_val = 0 and its ring buffer starts zeroed
  * (reference/deark/foreign/lzhuf.h, lzhuf_Decode_init); a Trimmed
  * member whose first match reaches back past the start of the data is
- * what tells the two apart, and the entry's CRC is what says so. DART's
- * "best" takes the zeros for the same reason and on its own evidence:
- * Apple's LZHUF fills the window with 0x00 where Yoshizaki's fills 0x20
- * (reference/ciderpress2/DART-notes.md), and four archives DART 1.5.3
- * wrote decode byte-exact against their source images only this way. */
+ * what tells the two apart, and the entry's CRC is what says so. */
 static void lzah_preload(Lzah *h, int mode)
 {
     uint32_t i;
     for (i = 0; i < LZAH_WINDOW; i++) h->window[i] = 0;
-    if (mode == UNC_LZAH_TRIMMED || mode == UNC_LZAH_DART) return;
+    if (mode == UNC_LZAH_TRIMMED) return;
     for (i = 0; i < 256; i++) {
         uint32_t j;
         for (j = 0; j < 13; j++) h->window[i * 13 + 18 + j] = (uint8_t)i;

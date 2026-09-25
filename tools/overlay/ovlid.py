@@ -11,7 +11,7 @@ an id that means something else. The build says nothing either way.
 So the build takes the number from overlay.h by NAME, here, and nowhere else
 writes one down.
 
-    ovlid.py OVL_ID_DART        -> 142
+    ovlid.py OVL_ID_LZH         -> 131
 
 A number is refused rather than passed through: accepting one is how the
 second copy of the table would come back.

@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.32.0"
+#define UNC_VERSION "0.33.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -117,13 +117,6 @@ typedef enum UncFormat {
      * several FILES. Joined, never extracted on its own. */
     UNC_FORMAT_MIMESEG,
 
-    /* Brought in scope 2026-09-09; appended for the same ABI reason.
-     * The one format here whose output is a file of its OWN format: a
-     * compressed DART expands to an uncompressed DART, because what
-     * reads a DART is a mounter and not this program (DECISIONS.md
-     * 2026-09-09, the disk image that is expanded and not opened). */
-    UNC_FORMAT_DART,          /* Apple's Disk Archive/Retrieval Tool    */
-
     UNC_FORMAT__COUNT
 } UncFormat;
 
@@ -157,14 +150,12 @@ enum {
     UNC_ERR_CORRUPT     = -10,  /* internal structure inconsistency     */
     UNC_ERR_SEGMENTED   = -11,  /* multi-segment archive, parts missing */
     UNC_ERR_PASSWORD    = -12,  /* encrypted, and no usable password      */
-    UNC_ERR_TOOLARGE    = -13,  /* entry past this engine's 32-bit reach  */
-    /* Recognized, well-formed, and holding nothing there is any work to
-     * do on: an uncompressed DART already IS the file that expanding
-     * one produces. The opposite of UNC_ERR_UNSUPPORTED, which says
-     * there is something here and this engine cannot read it, and the
-     * difference is the whole of what the user needs to be told
-     * (DECISIONS.md 2026-09-09).                                       */
-    UNC_ERR_NOTCOMPRESSED = -14
+    UNC_ERR_TOOLARGE    = -13   /* entry past this engine's 32-bit reach  */
+    /* -14 was UNC_ERR_NOTCOMPRESSED, for a DART that was already
+     * uncompressed. DART left the engine on 2026-09-25 (DECISIONS.md,
+     * *the disk images that found another home*); the number is not
+     * reused, so a caller built against an older header cannot read a
+     * new code as that one.                                            */
 };
 
 /* Human-readable message for an error code. */

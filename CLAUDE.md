@@ -19,8 +19,8 @@ a copy of it. The engine passes a **932-fixture** differential suite against
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
 time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
-**22/22** there — all six re-run 2026-09-25 on the overlay build that now
-ships, which also takes the **512 KB** machine from 67/71 to **69/71**. The
+**22/22** there — all six re-run 2026-09-25 on the **v0.33.0** binary, which
+also takes the **512 KB** machine from 67/71 to **69/71**. The
 same 22/22 on 2026-09-22 was the resident build; the 21/21 before it, on 2026-09-04,
 is the run that found a `UncOptions` field the shell had never assigned,
 which had bombed three formats there, and gained Now Compress (DECISIONS.md

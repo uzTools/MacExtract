@@ -37,11 +37,12 @@ import sys
 
 # The linked CODE resource of the SHIPPED build — overlays, eager — in
 # bytes. Bump DELIBERATELY, in the commit that grows it, and say what was
-# bought. 185,472 B was this figure for the resident build until overlays
-# became the default on 2026-09-25; the same build still exists as the
+# bought. It was 65,792 B earlier on 2026-09-25 and fell 896 B when DART
+# left the engine; 185,472 B was the figure for the resident build until
+# overlays became the default the same day; the same build still exists as the
 # control (UNC_OVL_RESIDENT=1) and has its own ceiling in
 # tools/build_mac.sh, which is where a per-configuration limit belongs.
-EXPECT = 65792
+EXPECT = 64896
 TOLERANCE = 2048
 TAKEN = "2026-09-25"
 
