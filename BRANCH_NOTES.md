@@ -11,37 +11,35 @@ StuffIt 5 archive is granted **734,656 B** with the bundle released and only
 the ciphers kept; an LZH gets **752,898 B**, keeping only its own decoder,
 against 650,692 B with no overlays at all. 71/71 fixtures extract byte-exact
 at 4 MB and at 1 MB, and 69/71 on a 512 KB machine (*Merged main*, below).
-**71/71 on System 7.0.1 at 4 MB and 19/22 on Mac OS 9.2, 2026-09-25** — the
-first runs of this configuration anywhere above System 6, and both at parity
-with a resident build (*Both tiers above System 6*, below).
+**71/71 on System 7.0.1 at 4 MB and 22/22 on Mac OS 9.2, 2026-09-25** — the
+first runs of this configuration anywhere above System 6, and both equal to
+what a resident build scores (*Both tiers above System 6*, below).
 
 ## Both tiers above System 6 — 2026-09-25
 
 **Claim: the two tiers OPEN_ITEMS.md said had never seen this configuration
 have now seen it, and neither distinguishes it from a resident build.**
 
-| tier | overlays | `main`/resident |
+| tier | overlays | resident |
 |---|---|---|
 | System 7.0.1, 4 MB, `run.py --system Sys7.img` | **71/71** | 71/71 (FORMATS.md, *System 7 tier*) |
-| Mac OS 9.2, `os9.py --autotest` | **19/22** | the same three fail, control run below |
+| Mac OS 9.2, `os9.py --autotest` | **22/22**, one sweep | 22/22 (FORMATS.md, *Mac OS 9 tier*, via `--launch`) |
 
-**Mac OS 9.2 goes through `--autotest`, not `--launch`, and that costs three
-fixtures.** `-D` is a build switch for the autotest application and the
-harness refuses it otherwise — correctly, since the alternative is silently
-driving the resident build — but that route writes every input to the volume
-as `archive.sit` (`ARCHIVE_ON_VOLUME`), and `.Z` and `.gz` name their single
-entry after the archive. So the Mac writes `archive` where Linux writes
-`synth-exo-Z`, with the DATA byte-exact: `ret=0`, matching CRC, 2,200 B and
-14.7 KB of peak on both sides. `synth-os9-rar.rar` fails for the other
-harness reason — `ret=-6` and nothing written is the correct refusal for a
-detect-only format, and `--expect-refusal` exists only for `--hfsplus`.
+**Mac OS 9.2 goes through `--autotest`, not `--launch`**, because `-D` is a
+build switch for the autotest application and the harness refuses it
+otherwise — correctly, since the alternative is silently driving the resident
+build.
 
-**The control is what makes that a route property rather than a claim.** The
-same three fixtures through the same route with no overlays:
-**0/3, identical** — same `MISSING`/`UNEXPECTED` names, same `ret=-6`, same
-14.7 KB and 51.0 KB peaks as the overlay run. So 19/22 IS this route's
-score, and the configuration matches the resident build fixture for fixture
-on the tier.
+**That route scored three healthy fixtures as failures, and it took a control
+plus a second look to see it was the harness.** The first sweep read 19/22:
+`.Z` and `.gz` came back as `archive` against Linux's `synth-exo-Z` with the
+data byte-exact, and a detect-only `.rar`'s correct `ret=-6` counted as a
+failure. The same three failed identically with NO overlays — which says only
+that the defect was in neither build, and was read at first as "19/22 is this
+route's score". Both halves were harness defects and both are fixed
+(`tools/vmac/README.md`, *`--autotest` scored three healthy fixtures*;
+BLOCKERS.md for the withdrawn figure). **An A/B that agrees locates a
+difference, never a correctness.**
 
 
 ## The instruction cache that nothing flushed — 2026-09-25

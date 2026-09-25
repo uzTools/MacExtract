@@ -1422,7 +1422,13 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
     cli = os.path.join(R.REPO, "build", "rel", "macextract")
-    subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
+    # Named what the Mac saw, for the reason verify_output() gives: this route
+    # compares NAMES too (want_names, below), so gzip and .Z — which fall back
+    # to the archive's filename — need the reference to be handed the same one.
+    asmac = os.path.join(workdir, "as-the-mac-saw-it", ARCHIVE_ON_VOLUME)
+    os.makedirs(os.path.dirname(asmac), exist_ok=True)
+    shutil.copyfile(fixture, asmac)
+    subprocess.run([cli, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
                    capture_output=True)
 
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
@@ -1637,10 +1643,21 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
     cli = os.path.join(R.REPO, "build", "rel", "macextract")
+    # Against a copy named what the MAC saw, for the reason verify_output()
+    # gives at length: gzip and .Z store no name and fall back to the archive
+    # filename minus its extension, and mkapmdisk.py always writes the archive
+    # to the volume as `archive.sit`. Given the fixture's own path instead,
+    # the two sides derive different names for identical bytes and the run
+    # reads as a failure — which is how this route scored 19/22 on a healthy
+    # build until 2026-09-25. verify_output() has done this since 2026-08-08;
+    # this verifier was written later and did not inherit it.
+    asmac = os.path.join(workdir, "as-the-mac-saw-it", ARCHIVE_ON_VOLUME)
+    os.makedirs(os.path.dirname(asmac), exist_ok=True)
+    shutil.copyfile(fixture, asmac)
     # `-nr`: the AUTOTEST build calls RunExtract once and takes no envelopes
     # off, unlike the interactive build verify_output() grades.
-    subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
-                   capture_output=True)
+    cr = subprocess.run([cli, "x", "-nr", "--forks", "hidden", asmac,
+                         "-o", ref], capture_output=True)
 
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
     from vmac_check import aggregate_dir, mask_reserved        # noqa: E402
@@ -1657,7 +1674,21 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
         ok = ok and same
         lines.append(f"  {label:>13}: Mac {got}  Linux {want}"
                      f"{'' if same else '   <- MISMATCH'}")
-    if ret != 0 or errors:
+    # An archive the ENGINE refuses is not a failure of the Macintosh: this
+    # harness grades the Mac against the same engine on Linux, and a
+    # detect-only format (RAR, and every other row of FORMATS.md that is named
+    # but not extracted) is refused on both sides with nothing written. The
+    # reference exits non-zero and writes no file; the Mac must then report a
+    # refusal of its own and write no file, and agreeing is a PASS. It stays
+    # strict where it can: identical counts, a non-zero ret on the Mac, and
+    # zero files on both sides, so a Macintosh that silently wrote nothing
+    # while the engine extracted still fails.
+    both_refuse = cr.returncode != 0 and enf == 0 and nfiles == 0 and ret != 0
+    if both_refuse:
+        why = (cr.stderr or b"").decode("utf-8", "replace").strip()
+        lines.append(f"  both sides REFUSE this archive and wrote nothing "
+                     f"(Mac ret={ret}; Linux: {why.splitlines()[-1] if why else 'no output'})")
+    elif ret != 0 or errors:
         ok = False
         lines.append("  the engine did not return UNC_OK with zero per-entry "
                      "errors")
