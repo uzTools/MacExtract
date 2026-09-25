@@ -70,8 +70,17 @@ def kind_btoa():
     """btoa 5.2.1's own output. Version 5 framing (`xbtoa Begin`), which
     is the one with the `z` and `y` shorthands in it."""
     import run_btoa
-    if not run_btoa.build():
-        print("synth_os9: no reference/btoa (tools/fetch_references.sh)",
+    # build() answers (ok, why), and this tested the TUPLE, which is never
+    # falsy — so the skip below could not fire and the reference's absence
+    # arrived as a FileNotFoundError from the subprocess call instead, which
+    # check_docs reports as "cannot be restored" rather than as the clean
+    # exit-3 skip it has a case for. That also made ./ci.sh non-idempotent:
+    # its own `make clean` deletes build/btoa, so the NEXT run failed its
+    # first check on a tree nobody had touched.
+    ok, why = run_btoa.build()
+    if not ok:
+        print("synth_os9: %s" % (why or "no reference/btoa "
+                                 "(tools/fetch_references.sh)"),
               file=sys.stderr)
         raise SystemExit(3)
     import tempfile

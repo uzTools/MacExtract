@@ -271,6 +271,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
 - 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
 - 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
+- 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
 
 ---
 
@@ -17006,3 +17007,43 @@ where the decision was made.** On `main` that is BRANCHES.md, the only file
 that names a branch at all — which is why its rows now carry the figure and
 the date it was taken, and why a row that cannot be dated is a row nobody can
 tell is stale.
+
+## 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
+
+**Claim: `./ci.sh` was not idempotent, and a second run on an untouched tree
+failed its first check.** `make clean` is `rm -rf build/`, which takes
+`build/btoa` with it; `check_docs.py` then re-generates the `synth-os9-btoa`
+row of `fixtures/SOURCES.md` by running `tools/synth_os9.py --kind btoa`,
+which needs that binary. Found by running the suite twice, on a branch, for
+reasons that had nothing to do with it.
+
+**The cause is the repository's own favourite shape.** `run_btoa.build()`
+answers `(ok, why)` — a distinction added 2026-09-09 so that "the reference
+was never fetched" and "the reference is there and would not compile" stop
+being one answer. Both callers tested the TUPLE: `if not run_btoa.build():`
+in `tools/synth_os9.py` and `if RB.build():` in `tools/vmac/sitcrypt.py`. A
+2-tuple is never falsy, so the first one's skip could not fire and the
+second's guard could not stop anything. What arrived instead was a
+`FileNotFoundError` from the subprocess call, which `check_docs` reports as
+*"cannot be restored"* — a failure, where it has a case for exactly this and
+would have said *"generator unavailable here — row not checked"*.
+
+**Consequence: `build()` is now called for its first element in both
+places.** With `build/btoa` deleted, `synth_os9.py --kind btoa` recompiles the
+reference and succeeds, so a second `ci.sh` is green; with no `reference/btoa`
+at all it exits 3 and `check_docs` reports the row as unchecked, which is the
+behaviour that was written and never reachable.
+
+**The transferable part is not "unpack the tuple".** It is that the 2026-09-09
+change which SPLIT one answer into two left its callers testing the old shape,
+and nothing failed: the richer return value was added for a reason, and the
+place it was added made every existing caller silently wrong. **A return type
+that grows needs its callers re-read, because widening one is not a change the
+language will report** — no argument list moved, no name changed, and Python
+will not say a word.
+
+So `ci.sh` now makes it report one: `tools/check_tuple_truth.py` fails the
+build when a function whose every `return` is a tuple is tested for
+truthiness. It found these two call sites and no third, and it carries the
+pre-fix pair as a selftest, because a lint nobody has watched fail is the
+same kind of evidence as the skip it replaces (TESTING.md, check 0b).
