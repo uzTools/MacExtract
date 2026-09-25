@@ -512,7 +512,10 @@ def grade_btoa(outdir, ascii_path):
 
         # The reference encodes the same payload, in both framings, and
         # the comparison is with the stream the Macintosh wrote.
-        if RB.build():
+        # (ok, why), not a bool: testing the tuple is always true, which
+        # reached RB.BIN with no reference/btoa fetched and raised instead
+        # of skipping the comparison (same bug as tools/synth_os9.py).
+        if RB.build()[0]:
             mac = open(ascii_path, "rb").read()
             for label, flags in (("v5", []), ("v4", ["-o"])):
                 ref = os.path.join(outdir, "reference-%s.ascii" % label)

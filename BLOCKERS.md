@@ -1482,6 +1482,48 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"`os9.py --autotest` scores `os9sample.txt` 19/22 with a healthy
+  build"** — written and withdrawn the same day, 2026-09-25. It was
+  measured, twice, with a control: three fixtures failed on that route
+  with overlays and the same three failed without them, so the number
+  was recorded as the route's own. It was a harness defect in both
+  halves. `.Z` and `.gz` name their single entry after the archive and
+  the route renames every input to `archive.sit`, but handed the
+  REFERENCE the fixture's own path — a mismatch `verify_output()` had
+  fixed on 2026-08-08 and this verifier, written later, never inherited;
+  and a detect-only `.rar`'s correct refusal was failed for not being
+  `UNC_OK`. Both fixed, and the same three now pass 3/3 on the build
+  that failed them. **Cost: one wrong figure in four files for an
+  afternoon, and very nearly a fixture sample trimmed to fit it** — the
+  proposal on the table was to drop the three from `os9sample.txt`.
+  **Why the control did not catch it:** it compared the overlay build
+  against the resident build, and the defect was in neither — an A/B
+  that agrees says the difference is not there, never that either side
+  is right (`tools/vmac/README.md`, *`--autotest` scored three healthy
+  fixtures*).
+
+- **"The overlay prize is 5,988 B, it opens nothing new, and StuffIt can
+  never be one of the formats it helps"** — all three superseded or
+  withdrawn 2026-09-25. They were written 2026-08-31 about an overlay
+  holding the ciphers and nothing else. `overlay-eager` has carried
+  fifteen images since 2026-09-24: **84–103 KB** more budget at 1 MB than
+  a resident build, **69/71 at System 3.0 / 512 KB against main's 67/71**
+  — `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`, two
+  archives `main` cannot open on that machine — and StuffIt gains like
+  everything else, it merely cannot release the ciphers, which are
+  10,702 B rather than the 15,324 B they were before the DES tables went
+  transient. The download figure moved the same way: +2,304 B was the
+  cipher bundle, **+25,216 B** is this one (189,312 → 214,528 B, both
+  configurations built at the branch tip). **Cost: three weeks in which
+  the scope file priced a mechanism at a seventeenth of its measured
+  value**, and recorded "opens nothing new" of a build that opens two
+  archives at 512 KB. The decision it justifies has not moved, for
+  reasons that are now different ones (DECISIONS.md 2026-09-25, *the
+  parked decision that outlived its numbers*). Found by the cheapest
+  smell in this list — BRANCHES.md said 18,116 B, OPEN_ITEMS.md said
+  5,988 B, the branch said neither — which had been readable since
+  2026-09-02.
+
 - **"walkprobe.py grades every volume walk in the tree"** — corrected
   twice, 2026-09-22 and 2026-09-23. It graded six of eight, then eight of
   nine. The missing ninth is `nowcompress.read_forks`, a different

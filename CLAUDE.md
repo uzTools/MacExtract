@@ -18,9 +18,10 @@ a copy of it. The engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System 6.0.8,
 each at 4 MB and at the 1 MB RAM floor** (69/69 sampled fixtures every time),
-on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **21/21 there
-as of 2026-09-04**, when a `UncOptions` field the shell had never assigned,
-which had bombed three formats there, was found and the sample gained Now
+on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **22/22 there
+as of 2026-09-22**, one sweep on the binary `dist/` was built from; the 21/21
+before it, on 2026-09-04, is the run that found a `UncOptions` field the shell
+had never assigned, which had bombed three formats there, and gained Now
 Compress (DECISIONS.md 2026-09-04). The System 3.0 tier arrived
 2026-08-30 and needed no source change; that system ignores the boot blocks'
 shell name, so it is the only one launched by double-click (FORMATS.md,

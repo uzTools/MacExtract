@@ -53,6 +53,23 @@
    lives elsewhere — that last one is the failure mode these documents
    actually have (CLAUDE.md, *Writing things down*).
 
+0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` since
+   2026-09-25): a Python function whose every `return` carries a tuple of
+   two or more must never be tested for truthiness, because a tuple is
+   never falsy and the test therefore cannot fail. Needs no build and takes
+   about a second, so it runs beside check 0. `--selftest` alone runs the
+   case it was written for; the full run does that first and refuses to
+   report a pass it could not have failed. Pass a directory to check some
+   other checkout. **What it cannot see:** a function returning a tuple on
+   some paths and a scalar or `None` on others — truthiness may be intended
+   there, so it is not flagged, and neither is the legitimate
+   `if x: return a, b` / `else: return c, d` shape, which the "body ends in
+   a return" test drops along with the unsafe ones; any call it cannot
+   resolve to a module-level `def` in this tree (through a variable, a
+   dict, `getattr`, a method, a decorator); and truthiness reached
+   indirectly, as `x = f()` and a later `if x:` — only a call written
+   directly in the boolean position is examined.
+
 ## The oracle
 
 The oracle is The Unarchiver's CLI (`unar`/`lsar` 1.10.8, Debian

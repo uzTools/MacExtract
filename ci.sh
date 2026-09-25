@@ -16,6 +16,12 @@ fail() { echo "CI: FAILED: $*" >&2; exit 1; }
 echo "=== documentation invariants ==="
 python3 tools/check_docs.py || fail "documentation checks"
 
+# A function that always returns a tuple, tested for truthiness: the test
+# cannot fail, and Python says nothing. Cheap, so it runs beside the docs
+# check (DECISIONS.md 2026-09-25, *the skip that could not fire, again*).
+echo "=== tuple-truth lint ==="
+python3 tools/check_tuple_truth.py || fail "tuple-truth lint"
+
 echo "=== variant 1: sanitizers (ASan+UBSan+alignment) ==="
 make clean >/dev/null
 make BUILD=build/san \

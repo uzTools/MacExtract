@@ -1846,6 +1846,29 @@ def verify_disk(fatal=True):
     return False
 
 
+def filesystem_kind(path):
+    """The filesystem type `path` sits on, or "" when it cannot be told.
+
+    Walks /proc/self/mounts for the longest mount point that is a prefix of
+    the resolved path; no psutil, no findmnt, nothing this harness does not
+    already depend on."""
+    try:
+        real = os.path.realpath(path)
+        best, kind = "", ""
+        with open("/proc/self/mounts") as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
+                mnt, ty = parts[1].replace("\\040", " "), parts[2]
+                if (real == mnt or real.startswith(mnt.rstrip("/") + "/")) \
+                        and len(mnt) >= len(best):
+                    best, kind = mnt, ty
+        return kind
+    except OSError:
+        return ""
+
+
 def boot_copy(workdir):
     """A throwaway copy of the master image to actually boot.
 
@@ -1856,6 +1879,18 @@ def boot_copy(workdir):
     every run quietly damaged the one artifact it depends on, and there was no
     hash to notice."""
     dst = os.path.join(workdir, "boot.img")
+    # A 2 GB copy per fixture onto a tmpfs is 2 GB of RAM per fixture, on a
+    # host that is also running the emulator. Measured 2026-09-25 with -o
+    # under /tmp on an 8 GB machine: the host went into swap and the guest
+    # missed its settle timeout, which the harness can only report as "never
+    # reached the Finder desktop" — a boot failure's symptom for a host
+    # memory problem. Say so before spending the copy, since the fix is one
+    # argument.
+    fs = filesystem_kind(workdir)
+    if fs in ("tmpfs", "ramfs"):
+        print(f"os9: WARNING — {workdir} is on {fs}, which is RAM. Each "
+              f"fixture copies a 2 GB boot image there and the guest runs "
+              f"beside it; pass -o somewhere on disk if this host is small.")
     print(f"os9: copying the master image to {dst} (2 GB; the master is never booted)")
     shutil.copyfile(DISK, dst)
     return dst

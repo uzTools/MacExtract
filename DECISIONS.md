@@ -270,6 +270,9 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
 - 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
 - 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
+- 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
+- 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
+- 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
 
 ---
 
@@ -10177,6 +10180,13 @@ a format wants them, and `overlay-eager` loads the same overlay at launch
 instead. **Parked, neither merged**, and the branches are kept as a working
 mechanism rather than as a proposal.
 
+**Its prize figure, its "StuffIt can never be one of the formats it helps"
+and its "neither branch OPENS anything new" are superseded — 2026-09-25, *the
+parked decision that outlived its numbers*.** What follows is the reasoning of
+2026-08-31 and the cipher-only measurements it rested on, both correct for the
+overlay that existed that day. The three later entries that cite 5,988 B as a
+scale are left alone; the number is corrected here, where it lives.
+
 **The evidence, in the order it changed the answer:**
 
 - **The prize is 5,988 B**, for six formats and not for StuffIt. Against a
@@ -16931,3 +16941,171 @@ is a decision **taken and dated** (2026-09-22, not taken, with reasons),
 not one parked. The `selective-extract` branch is a genuinely open
 decision because nothing was ever settled — the feature has never
 shipped, so there is no prior decision for it to re-open.
+
+## 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
+
+**Claim: the overlay decision of 2026-08-31 still lands the same way, and not
+one of the three premises it landed on has survived.** Asked because somebody
+proposed making `overlay-eager` the default build; answered by reading the
+branch rather than main's account of it.
+
+**The evidence, each item against what the scope file has been saying:**
+
+- **The prize was 5,988 B and is 84–103 KB.** That figure was the ciphers as
+  one image; the branch has carried **fifteen** since 2026-09-24. Its own
+  measurements at 1 MB on System 6.0.8 grant the engine 734,656 B for a
+  StuffIt 5, 752,898 B for an LZH and 746,682 B for a Compact Pro, against
+  650,692 B with everything resident — and the resident column does not move
+  with the archive, which is what says the gain belongs to the mechanism and
+  not to a month of `main`.
+- **"Neither branch OPENS anything new" is withdrawn.** System 3.0 at 512 KB
+  is **69/71 against main's 67/71**: `derived-a2basic.dmg.sit` and
+  `derived-Cool_Tools__.sit`, which took `MoveHHi` and twelve more images to
+  reach and which no tier on `main` extracts.
+- **"StuffIt can never be one of the formats it helps" was a fact about the
+  CIPHER image**, read as a fact about the mechanism. A StuffIt 5 gains 84 KB
+  like everything else; what it cannot do is release the ciphers, and that is
+  **10,702 B** — down from 15,748 B when `main` stopped carrying the DES SP
+  tables and Compact Pro's CRC-64 as const data (2026-09-19, the transient
+  tables). Compact Pro and zip no longer pay even that, because their
+  directories can be asked before anything is decoded.
+- **The download grows by more than the record says.** +2,304 B was the
+  cipher bundle. Both configurations built at the branch tip on 2026-09-25:
+  `MacExtract.bin` **189,312 B against 214,528 B, +25,216 B**.
+
+**Consequence: the answer is unchanged and its reasons are now different
+ones.** At the floor target the headroom answers archives this project does
+not have — nothing in the corpus has been out of a 1 MB Mac Plus's reach since
+2026-09-18 — what it does open is on a 512 KB machine that is not the floor,
+**no tier above a 68000 has ever run the configuration**, the overlay variant
+in the branch's `ci.sh` only compiles it so no Linux suite exercises the
+loader, and it costs 13 % of the only download this project offers. Scope
+status and what would reopen it: OPEN_ITEMS.md, Part 1, *Overlays*.
+
+### The transferable part: parking a decision does not park the work it was about
+
+The 2026-08-31 entry wrote its own epitaph — *"a figure that cannot change the
+conclusion is a figure nothing checks"* — about a prize that had been wrong
+for one day. The sentence then held for three weeks against the corrected
+figure, in the other direction: the prize grew seventeenfold, the conclusion
+did not move, and so nobody re-derived it.
+
+**What kept it invisible is that a decision parks and a BRANCH does not.**
+Work continued on both branches for three weeks after "merge neither", and
+every session wrote its findings to `BRANCH_NOTES.md` on the branch — which is
+where BRANCHES.md says branch state belongs, and is correct. Nothing in that
+loop reaches `main`, so the status file on `main` went on quoting the number
+that justified parking, to readers who had no reason to check out a branch
+that was decided.
+
+**The smell that caught it is the cheapest one in BLOCKERS.md and needed no
+insight: three files, three numbers.** BRANCHES.md said 18,116 B, OPEN_ITEMS.md
+said 5,988 B, and the branch said neither. That contradiction had been
+readable on `main` since 2026-09-02.
+
+**So a parked decision needs its re-read trigger where the NUMBER lives, not
+where the decision was made.** On `main` that is BRANCHES.md, the only file
+that names a branch at all — which is why its rows now carry the figure and
+the date it was taken, and why a row that cannot be dated is a row nobody can
+tell is stale.
+
+## 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
+
+**Claim: `./ci.sh` was not idempotent, and a second run on an untouched tree
+failed its first check.** `make clean` is `rm -rf build/`, which takes
+`build/btoa` with it; `check_docs.py` then re-generates the `synth-os9-btoa`
+row of `fixtures/SOURCES.md` by running `tools/synth_os9.py --kind btoa`,
+which needs that binary. Found by running the suite twice, on a branch, for
+reasons that had nothing to do with it.
+
+**The cause is the repository's own favourite shape.** `run_btoa.build()`
+answers `(ok, why)` — a distinction added 2026-09-09 so that "the reference
+was never fetched" and "the reference is there and would not compile" stop
+being one answer. Both callers tested the TUPLE: `if not run_btoa.build():`
+in `tools/synth_os9.py` and `if RB.build():` in `tools/vmac/sitcrypt.py`. A
+2-tuple is never falsy, so the first one's skip could not fire and the
+second's guard could not stop anything. What arrived instead was a
+`FileNotFoundError` from the subprocess call, which `check_docs` reports as
+*"cannot be restored"* — a failure, where it has a case for exactly this and
+would have said *"generator unavailable here — row not checked"*.
+
+**Consequence: `build()` is now called for its first element in both
+places.** With `build/btoa` deleted, `synth_os9.py --kind btoa` recompiles the
+reference and succeeds, so a second `ci.sh` is green; with no `reference/btoa`
+at all it exits 3 and `check_docs` reports the row as unchecked, which is the
+behaviour that was written and never reachable.
+
+**The transferable part is not "unpack the tuple".** It is that the 2026-09-09
+change which SPLIT one answer into two left its callers testing the old shape,
+and nothing failed: the richer return value was added for a reason, and the
+place it was added made every existing caller silently wrong. **A return type
+that grows needs its callers re-read, because widening one is not a change the
+language will report** — no argument list moved, no name changed, and Python
+will not say a word.
+
+So `ci.sh` now makes it report one: `tools/check_tuple_truth.py` fails the
+build when a function whose every `return` is a tuple is tested for
+truthiness. It found these two call sites and no third, and it carries the
+pre-fix pair as a selftest, because a lint nobody has watched fail is the
+same kind of evidence as the skip it replaces (TESTING.md, check 0b).
+
+## 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
+
+**Claim: `overlay-eager` relocated executable bytes at two sites and flushed
+no cache, and the question of whether that mattered was written down as a
+hypothesis waiting for hardware when it was waiting for a document.** Asked
+while closing the two things OPEN_ITEMS.md named as what would reopen the
+overlay decision. Both sites and both fixes are on the branch
+(`BRANCH_NOTES.md`, *The instruction cache that nothing flushed*); what
+follows is the part that transfers.
+
+**Inside Macintosh: Memory, chapter 4, *Stale Instructions* settles the rule
+in one sentence** — "you must flush the instruction cache every time you
+modify executable instructions in memory" — and names `_BlockMove`, `_Read`,
+`_LoadSeg` and `_UnloadSeg` as the traps that do it for you. `BlockMoveData`,
+which the shim used to copy an image, is the variant trap and is not among
+them. No measurement was needed to know the code was wrong; one page was.
+
+**And the toolchain's own answer was not the documented one.** Retro68's
+relocator flushes at exactly the two moments this shim needed — after applying
+relocations, after patching a jump-table entry — by calling `FlushCodeCache`
+(0xA0BD). Inside Macintosh documents `FlushInstructionCache` as `_HWPriv`
+(0xA198) selector 1, and says that on a processor with a copy-back data cache
+it flushes the DATA cache first, so that instructions copied into the
+instruction cache are not read from stale RAM. That is the 68040, and it is
+precisely what copying an image as data creates. **A working implementation in
+the toolchain you link is evidence about what compiles and runs, not about
+what the documentation requires** — the older trap is the one Retro68 needs
+for the ROMs it supports, and reading only the code would have shipped the
+narrower of the two.
+
+**The measurement that mattered was not the sweep.** Apple documents that the
+68LC040 Emulator ignores instruction-cache invalidation requests while telling
+developers to keep issuing them (Inside Macintosh: PowerPC System Software,
+*The 68LC040 Emulator*), and Mini vMac emulates a 68000, which has no cache.
+So every tier this project can run is incapable of failing for want of the
+flush: a green sweep would have been the repository's oldest trap, a test that
+cannot fail. What a run here CAN answer is whether the call was reached, so
+the probe build reports the route and the count — `fc=0 fn=0` on System 6.0.8,
+**`fc=1 fn=3` on System 7.0.1**, three being the bundle fixup plus one per
+kept image. **When the environment cannot test the effect, test the
+occurrence.**
+
+### The alarm that fired on a healthy archive
+
+**A diagnostic that fires when nothing is wrong has stopped being a
+diagnostic.** The same probe reported `wa=128` — an image wanted after the
+release, which the branch calls a thing that must never happen — on a Compact
+Pro archive that extracted completely. The cause was benign and structural:
+three format readers free the cipher table unconditionally at cleanup, the
+resident implementation is a no-op on a NULL table, and an archive whose
+directory let the release drop the ciphers therefore asks for an image that is
+correctly gone.
+
+Nothing was broken, and that is the point: `wa` is the field that found the
+preload bug that had flattered every interactive measurement for a week, and
+it had since become a light that is always on. The fix was to let the one path
+that is ALLOWED to find the image gone ask quietly, so the field means again
+what it says. **Before trusting a signal, find the healthy paths that trip
+it** — a check whose false-positive rate is unknown is a check whose silence
+is uninformative.
