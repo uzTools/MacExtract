@@ -2241,6 +2241,27 @@ check every run, on top of `make_dist.sh`'s statement of it.
 The failure names the fix — `sh tools/make_dist.sh`, in the same commit as
 the change to `mac/` or `src/`.
 
+## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c)
+
+**The application has been three builds from one tree since 2026-09-25**, and
+`ci.sh` compiles all three because a configuration nothing builds is one that
+rots — which is not a hypothesis: the two overlay branches each grew their own
+copy of the same build-staleness fix, days apart, because neither tree
+compiled the other (DECISIONS.md 2026-09-25, *two branches that were one file
+apart*).
+
+| variant | build | what it is |
+|---|---|---|
+| 4 | `build/mac` | the SHIPPED application — fifteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
+| 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
+| — | `build/mac-res` | `UNC_OVL_RESIDENT=1` — every decoder linked in, the application as it was until 2026-09-25. Not built by `ci.sh`; it is the CONTROL for budget measurements (FORMATS.md, *Overlays*), and `tools/build_mac.sh` holds its own ceiling |
+
+**What these variants CANNOT see.** They compile. No Linux suite exercises
+the loader at all — the images only exist in a Macintosh build, so the
+932-fixture differential suite says nothing about whether an image is found,
+relocated or released. That evidence comes from the emulator tiers, by hand,
+and from nothing else.
+
 **Made to fail before it was believed.** `unc_strerror`'s `"ok"` was
 changed to `"oK"` and the Mac app rebuilt: the check fails on a
 `build/mac/MacExtract.bin` that is **exactly the same 187,776 bytes** as

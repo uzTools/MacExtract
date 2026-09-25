@@ -64,6 +64,21 @@ REPO = os.path.dirname(HERE)
 # `FreeMem() - 20,480` taken on the machine with `-D UNC_AT_BUDGET`;
 # FORMATS.md (*Budget*, *512 KB machines*) is where they come from and
 # the only place they should be corrected.
+#
+# THESE ARE THE RESIDENT BUILD'S BUDGETS, and since 2026-09-25 that is not
+# what ships. The application's decoders are 'OVLY' images now, and the
+# release keeps a different set per format, so the shipped build's budget is
+# not one number per tier — it is a number per tier PER FORMAT, 84-103 KB
+# above the figures below (FORMATS.md, *Overlays*). This model cannot express
+# that and does not try to.
+#
+# It is still worth running, and still asserted by ci.sh, because what it
+# actually grades is the ENGINE's allocation behaviour against a fixed
+# ceiling: a decoder that starts asking for more memory shows up here whatever
+# the Macintosh shell does with its resources. What it no longer is, is a
+# prediction of what a user's machine will refuse. The machine's own tallies
+# for the shipped build are in FORMATS.md — sys3-512K is 69/71 there against
+# the 67/71 this file asserts for the control.
 TIERS = {
     "sys3-512K": (219362, "System 3.0, Macintosh 512Ke (239,842 B free)"),
     "sys6-512K": (123962, "System 6.0.8, Macintosh 512Ke (144,442 B free)"),
@@ -102,7 +117,10 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 #
 # A tally that moves here is either a memory regression or a memory WIN;
 # both want the number below changed deliberately, which is the point of
-# pinning it. 69 -> 71 on 2026-09-22: the sample gained the two StuffIt 5
+# pinning it. These are the RESIDENT build's tallies (above); the shipped
+# overlay build clears two more at sys3-512K on the machine, and that
+# difference is a property of the Macintosh binary rather than of the engine
+# this model runs. 69 -> 71 on 2026-09-22: the sample gained the two StuffIt 5
 # fixtures whose names are UTF-8, and `derived-Cool_Tools__.sit` needs
 # 242,464 B, so it is a 512 KB refusal on both systems. Nothing that was
 # passing stopped.

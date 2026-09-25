@@ -13,27 +13,81 @@ set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 file(GLOB ENGINE_SRC ${ENGINE_DIR}/src/*.c)
 file(GLOB ZLIB_SRC ${ENGINE_DIR}/third_party/zlib/*.c)
 
-# UNC_AT_OVERLAY — the selective-loading experiment (branch
-# selective-loading). A flat position-independent blob carried as an 'OVLY'
-# resource and loaded only when needed, so its CODE is not resident. Empty in
-# a normal build: the shipping application carries no overlay yet.
-# BRANCH_NOTES.md has the measurement and the design.
+# OVERLAYS ARE THE BUILD. The engine's decoders and ciphers are flat
+# position-independent images carried in 'OVLY' resources, so their CODE is
+# not resident; one image per format family, so decoding the most expensive
+# archive has the least code in memory. Compact Pro and DiskDoubler share one
+# because fmt_dd calls fmt_cpt's fork readers. This is what `dist/` ships and
+# what every tier is measured on, as of 2026-09-25.
+#
+# UNC_OVL_RESIDENT — the old monolithic application, every decoder linked in.
+# NOT shipped and not the default, kept because it is the CONTROL every budget
+# figure rests on: with all fifteen images resident the engine is granted the
+# same heap whatever it decodes, and that is what says the 84-103 KB the
+# overlay build gains belongs to the mechanism rather than to a month of other
+# work (FORMATS.md, *Overlays*). An instrument, not a fallback.
+#
+# UNC_OVL_LAZY — WHEN an image is read, which is a whole loader:
+#
+#   unset (default)  EAGER: all fifteen in ONE resource, read at launch while
+#                    the boot disk is certainly in, and everything the sniffed
+#                    format cannot want released before the engine takes its
+#                    budget. mac/ovl_load_eager.c, bundle by mkbundle.py.
+#   set              LAZY: one resource per image, read when a format turns
+#                    out to want it — no launch cost, one disk access per
+#                    format AFTER the archive has been chosen, which on a
+#                    one-drive Mac Plus is when its floppy may be out.
+#                    mac/ovl_load_lazy.c, the per-image .r files linked.
+#
+# A boolean rather than a name, because every harness here passes build
+# switches as `-D NAME` and sets them to "1" (tools/vmac/run.py,
+# build_autotest_app). A lifetime spelled as a VALUE could not be driven from
+# any of them, so the loader that is not the default could never be run on a
+# Macintosh — which is the one thing a variant has to stay able to do.
+#
+# Both share every image, the relocation trailer, the instruction-cache flush
+# and all ~340 lines of dispatch in mac/ovl_shim.c; they were two branches
+# until 2026-09-25 and 21 of the 24 files under tools/overlay/ were
+# byte-identical between them. FORMATS.md, *Overlays*, prices the two.
 set(OVERLAY_R "")
 set(OVERLAY_SHIM "")
 if(DEFINED ENV{UNC_AT_OVERLAY})
-    # The ciphers move out of resident code and into an 'OVLY' resource:
-    # src/unc_crypt.c leaves the link, mac/ovl_shim.c takes its place, and the
-    # engine is unchanged. BRANCH_NOTES.md.
-    # One overlay per format family, so decoding the most expensive archive
-    # has the least code resident: the others are not loaded at all
-    # (BRANCH_NOTES.md). Compact Pro and DiskDoubler share one because
-    # fmt_dd calls fmt_cpt's fork readers.
-    # ONE resource holding all thirteen images, so a launch costs one disk read
-    # rather than thirteen (tools/overlay/mkbundle.py). The per-format .r files are
-    # still built — they are where the images come from — but only the bundle
-    # is linked in.
-    set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r)
-    set(OVERLAY_SHIM ovl_shim.c)
+    # Was the switch that turned overlays ON, until they became the build.
+    # Accepted and ignored rather than failed: every harness command line and
+    # half the write-ups in this repository pass it, and what it asked for is
+    # what it now gets.
+    message(STATUS "overlay: UNC_AT_OVERLAY is the default since 2026-09-25 "
+                   "— switch ignored")
+endif()
+set(OVL_COMPILE_DEFS "")
+if(DEFINED ENV{UNC_OVL_RESIDENT})
+    message(STATUS "overlay: RESIDENT control build — no images, "
+                   "not what dist/ ships")
+else()
+    set(OVL_COMPILE_DEFS "-DUNC_AT_OVERLAY")
+    if(DEFINED ENV{UNC_OVL_LAZY})
+        set(OVL_LIFETIME "lazy")
+    else()
+        set(OVL_LIFETIME "eager")
+    endif()
+    # Printed because the two differ by a disk access per format and by
+    # nothing a build output would otherwise show.
+    message(STATUS "overlay: fifteen images, ${OVL_LIFETIME}")
+    # The dispatch, the relocation trailer and the cache flush are shared; the
+    # loader is the lifetime.
+    set(OVERLAY_SHIM ovl_shim.c ovl_reloc.c)
+    if(OVL_LIFETIME STREQUAL "eager")
+        list(APPEND OVERLAY_SHIM ovl_load_eager.c)
+        # The per-image .r files are still built — they are where the images
+        # come from — but only the bundle is linked in.
+        set(OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r)
+    else()
+        list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
+        foreach(img crypt spacesaver cptdd lzh arc now superdisk packit text
+                    stuffit exo codecs binhex btoa dart)
+            list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
+        endforeach()
+    endif()
     # The DECODERS leave the resident link; every probe stays in it.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_crypt\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_spacesaver\\.c$")
@@ -362,7 +416,12 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # measurement that tracks the stack size is measuring
                        # the stack size. FORMATS.md, *Stack*.
                        $<$<BOOL:$ENV{UNC_STACK_BUMP_KB}>:-DUNC_STACK_BUMP_KB=$ENV{UNC_STACK_BUMP_KB}>
-                       $<$<BOOL:$ENV{UNC_AT_OVERLAY}>:-DUNC_AT_OVERLAY>
+                       # UNC_AT_OVERLAY, the C macro, means "this build has
+                       # images" and is now set by the CONFIGURATION rather
+                       # than by an environment switch: the shell's preload
+                       # and release call sites are guarded with it, and they
+                       # are in every build but the resident control one.
+                       ${OVL_COMPILE_DEFS}
                        $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).

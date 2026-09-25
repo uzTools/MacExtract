@@ -27,6 +27,7 @@ under *Table notes*.
 - Hardening
 - Size limits
 - Name limits
+- Overlays: what the application ships, and what it costs
 - Resident memory, stack and launch (Mac target)
 - Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)
 - Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
@@ -2539,6 +2540,88 @@ it. `tools/run_names.py` holds both caps from both sides in zip, tar,
 uuencode, AppleSingle and a nine-deep Now Compress tree, in `ci.sh`
 since 2026-08-27.
 
+## Overlays: what the application ships, and what it costs
+
+**Since 2026-09-25 the decoders and ciphers are not resident.** They are
+fifteen flat, position-independent images in `'OVLY'` resources; the shipped
+build reads all fifteen as ONE bundle at launch and releases everything the
+sniffed format cannot want before the engine takes its budget. The mechanism
+is `mac/ovl_load_eager.c`, the images are built by `tools/overlay/`, and why
+it is the build rather than a branch is DECISIONS.md 2026-09-25, *two
+branches that were one file apart*.
+
+### Three configurations, one tree
+
+| build | switch | resident `CODE` | A5 | `MacExtract.bin` |
+|---|---|---|---|---|
+| **eager — SHIPPED** | (default) | **54,028 B** | 19,124 B | **214,784 B** |
+| lazy | `UNC_OVL_LAZY=1` | 52,600 B | 19,240 B | 213,504 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 153,804 B | 37,956 B | 189,312 B |
+
+All three built 2026-09-25 from one tree; `ci.sh` compiles the first two every
+run (TESTING.md, *The three Macintosh configurations*). The bundle is
+**146,176 B** and is not resident while an archive is extracted, which is the
+point of the build; `tools/check_app_size.py` therefore watches the 65,792 B
+`MacExtract.code.bin` and not the download.
+
+**The launch READ is not a new cost.** A resident build's whole `CODE` is
+read at launch by the Segment Loader — 185,472 B — and the shipped build
+reads 65,792 B of `CODE` plus the 146,176 B bundle: 211,840 B against
+185,472 B, so it is the same read redistributed plus **26,368 B**, which is
+the download delta and not a second term (DECISIONS.md 2026-09-25, *the
+overlay launch read was counted as a cost twice*).
+
+### What it buys, against the control
+
+The number is what the engine is GRANTED — `mal_take_budget` at its first
+allocation, so every image the run will load has already loaded. Measured at
+1 MB on System 6.0.8:
+
+| the archive | resident | lazy | eager (shipped) |
+|---|---|---|---|
+| StuffIt 5, bare | 650,692 B | 745,358 B | 734,656 B |
+| LZH, bare | 650,692 B | 753,792 B | 752,898 B |
+| Compact Pro, bare | 650,692 B | 747,576 B | 746,682 B |
+
+**The resident column does not move with the archive, and that is the
+control**: with every decoder linked in, the engine gets the same heap
+whatever it decodes, so the 84–103 KB the other two columns gain belongs to
+the mechanism rather than to other work. That is why the resident build is
+kept — as an instrument, not a fallback. (Figures taken 2026-09-24 on the
+branch this merged from; the unified build's resident code is 248 B larger,
+so each overlay column is that much lower and the shape is unchanged.)
+
+**Eager against lazy is 894 B–10.7 KB** of budget for a format that must keep
+the ciphers, against **no disk access after the archive is chosen**. Eager
+ships because on a Mac Plus with one drive, a read after the archive has been
+chosen is a read at the moment the application's own floppy may be out.
+
+### Where the traps are written down
+
+Nobody should rediscover these; each cost a day or a silent failure on the
+branches this merged from, and each now lives in the code that embodies it:
+
+| trap | where |
+|---|---|
+| `-mpcrel` does NOT make an image position-independent — arrays of pointers in constant data hold link-time addresses, and a blob loaded elsewhere dereferences them into nowhere | `tools/overlay/mkreloctrailer.py`, and `ovl_fixup` in `mac/ovl_reloc.c` |
+| gcc emits calls to `memcpy`/`memset` that appear in no source file, and an image links no libc | `tools/overlay/ovl_rt.c`, dropped by `--gc-sections` when unused; `mkoverlay.sh` prints `runtime: memcpy` beside an image that took one |
+| an image's resource id written in three places, two of which can disagree with no build error | `tools/overlay/ovlid.py` — every id comes from `overlay.h` BY NAME, and a NUMBER is refused |
+| an image rule naming its own sources and none of the 26 headers they include, so a header edit rebuilds the application and leaves the images stale | `OVL_DEPS` plus a `CONFIGURE_DEPENDS` header glob in `mac/CMakeLists.txt` |
+| a kept image locked in the middle of the heap the released bundle just vacated | `MoveHHi` before the `HLock` in `ovl_keep` (BLOCKERS.md, *Corrected figures*) |
+| executable bytes written as data and then executed | `ovl_flush_code` in `mac/ovl_reloc.c` (DECISIONS.md 2026-09-25, *the flush nobody wrote*) |
+
+### What an archive keeps
+
+An envelope keeps everything — a `.sit.hqx` sniffs as BinHex and what is
+under it is unknown until it is unwrapped, so releasing on the outer format
+would strand the archive inside; the second layer gets the memory back when
+the unwrapped file is opened as a new layer. Everything else keeps its own
+decoder, the codecs image, and the ciphers only where an entry might be
+encrypted — which for Compact Pro and zip is decided by walking their
+directory first (`unc_archive_encrypted`), and for everything else is a YES
+by default, because encryption is discovered per entry and the release
+happens before any entry is read.
+
 ## Resident memory, stack and launch (Mac target)
 
 Everything here is measured on the Retro68 target's own flags
@@ -2968,12 +3051,22 @@ measured on the roomy one says nothing about the tight one:
 | | free | reserve | budget |
 |---|---|---|---|
 | System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,730 B | 20 KB | **648,250 B** (measured 2026-09-22 with the 1990 DiskDoubler header in; 668,762/648,282 earlier the same day, 668,580/648,100 on 2026-08-31) |
-| System 7 / MultiFinder at the declared 400 KB minimum | 211,960 B | 20 KB | **191,480 B** (derived) |
+| System 7 / MultiFinder at the declared 400 KB minimum, **shipped overlay build** | 285,812 B | 20 KB | **265,332 B** |
+| the same partition, resident control build | 202,126 B | 20 KB | **181,646 B** |
 
-Both are `FreeMem()` less the reserve, taken when extraction begins. The
-second row is **arithmetic, not a measurement**: the free figure is measured
-and the reserve is now a constant, but no run has reported that budget since
-the reserve went flat. It was **158,970 B** under the quarter rule.
+Both are `FreeMem()` less the reserve, taken when extraction begins. **The
+tight-partition rows are measurements as of 2026-09-25**, taken on System
+7.0.1 with the preferred size built down to 400 KB and `-D UNC_AT_BUDGET`
+(one run each, `derived-Export.sit`); the second row carried **191,480 B**
+as arithmetic until then, and 158,970 B under the quarter rule before that.
+
+**The tight partition is where the overlays could have been WORSE and are
+not.** The eager build holds a 146,176 B bundle from launch, which a 400 KB
+partition has to find on top of the application — so the question was whether
+the mechanism inverts on the smallest partition it declares. It does not:
+the bundle is read and released BEFORE the engine takes its budget, and the
+measured gain there is **+83,686 B**, in line with the 84–103 KB of the
+whole-machine tiers (*Overlays*).
 **What would settle it:** one `-D UNC_AT_BUDGET` run on System 7.0.1 with the
 preferred size built down to 400 KB, which is how the 212,056 B came.
 
@@ -3829,8 +3922,9 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**71/71 byte-exact PASS** (**2026-09-22**, the sweep that put the UTF-8
-fold on a Macintosh for the first time: the sample gained
+**71/71 byte-exact PASS, re-run 2026-09-25 on the shipped overlay build**
+(and 71/71 on **2026-09-22** with every decoder resident, the sweep that put
+the UTF-8 fold on a Macintosh for the first time: the sample gained
 `derived-Cool_Tools__.sit` and `derived-800saywhat301j.sit`, the only
 two fixtures in it whose names are not MacRoman — *A name in the wrong
 encoding is not a name*. 69/69 on **2026-09-20**, the first sweep since
@@ -3918,9 +4012,10 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**71/71 byte-exact PASS at 4 MB** (**2026-09-22**, the sweep that added the
-two UTF-8-named StuffIt 5 fixtures, so the fold has now run under the
-Process Manager too; 69/69 on **2026-08-26**, re-run for M37's
+**71/71 byte-exact PASS at 4 MB, re-run 2026-09-25 on the shipped overlay
+build** (and **71/71 on 2026-09-22** with every decoder resident, the sweep
+that added the two UTF-8-named StuffIt 5 fixtures, so the fold has now run
+under the Process Manager too; 69/69 on **2026-08-26**, re-run for M37's
 disk-image probe and the first run to cover the whole sample — see the
 System 6.0.8 4 MB tier for the two fixtures every earlier figure here
 was missing; 67/67 on **2026-08-23**, with M28's five `.lzh`
@@ -4028,7 +4123,8 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**71/71 byte-exact PASS** (**2026-09-22**, the sweep that added the two
+**71/71 byte-exact PASS, re-run 2026-09-25 on the shipped overlay build**
+(and 71/71 on **2026-09-22** with every decoder resident, the sweep that added the two
 StuffIt 5 fixtures whose names are UTF-8 — `derived-Cool_Tools__.sit` peaks
 at **535,199 B** as the Mac itself reports it — 44 bytes under what
 `--budget` predicts on Linux, the same order of agreement as every other
@@ -4140,7 +4236,8 @@ and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for t
 
 The oldest system a Macintosh Plus can boot, and the one it shipped with in
 January 1986: System Tools 1.0, an 800K HFS floppy. **71/71 byte-exact PASS
-at 1 MB and 71/71 at 4 MB** (both **2026-09-22**; the 4 MB figure was 69/69
+at 1 MB on the shipped overlay build, 2026-09-25** — and 71/71 at 1 MB and at
+4 MB on **2026-09-22** with every decoder resident (the 4 MB figure was 69/69
 on 2026-08-30, two fixtures behind until that sweep) — the same committed
 sample and the same on-Mac CRC-32 read-back as every row above, replayed by
 `tools/vmac/sys30.py`.
@@ -4180,20 +4277,28 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 
 ### 512 KB machines: the RAM is enough, the ROM is not
 
-**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 67/71 under
-System 3.0** (**2026-09-22**, `sys30.py --emu mv-512Ke`; 66/69 on 2026-08-31
-and on 2026-09-20, 65/69 before the reserve went flat, 64/69 before the LZW
-bound below recovered `popper-1.7.tar.Z`). The four that do not pass fail as
+**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 69/71 under
+System 3.0** (**2026-09-25**, `sys30.py --emu mv-512Ke`, the shipped overlay
+build; **67/71 on 2026-09-22 with every decoder resident**, and the two the
+overlays recover are `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`
+— this tier is the only one where the mechanism opens an archive rather than
+just granting heap, *Overlays*. Before that: 66/69 on 2026-08-31 and on
+2026-09-20, 65/69 before the reserve went flat, 64/69 before the LZW bound
+below recovered `popper-1.7.tar.Z`). The two that still do not pass fail as
 the design says they must, per entry and not per archive:
-`derived-Library_ISBN_Barcoder.sit`
-writes 33 of its 34 entries with one entry errored,
-`derived-Cool_Tools__.sit` writes 7 of its 8, and
-`derived-a2basic.dmg.sit` and `synth-dd-m5.dd` are single-entry archives whose
-one entry is refused. **The fourth is new to the SAMPLE and not to the
-engine**: `derived-Cool_Tools__.sit` joined the Mac list on 2026-09-22 for
-its UTF-8 names and needs 242,464 B.
-`synth-dd-m5.dd` is the clean illustration: DiskDoubler method 5 asks for one
-405,520 B block on every tier, and here it cannot have it.
+`derived-Library_ISBN_Barcoder.sit` writes 33 of its 34 entries with one
+entry errored, and `synth-dd-m5.dd` is a single-entry archive whose one entry
+is refused. The latter is the clean illustration: DiskDoubler method 5 asks
+for one 405,520 B block on every tier, and here it cannot have it — no
+allocation strategy reaches it on a machine this size.
+
+**The two that the overlays recovered** were failing for a reason the
+mechanism does answer: `derived-a2basic.dmg.sit` needs 240,898 B in one block
+and `derived-Cool_Tools__.sit` 242,464 B, against a resident build's
+219,362 B budget — a shortfall of ~21 KB and ~23 KB, and the shipped build
+grants 84–103 KB more (*Overlays*). `derived-Cool_Tools__.sit` was new to the
+SAMPLE rather than to the engine, joining the Mac list on 2026-09-22 for its
+UTF-8 names.
 
 **The budget is 219,362 B**, measured **2026-09-22**: a 239,842 B free heap
 read off the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
@@ -4202,10 +4307,11 @@ figure `tools/run_tiers.py` asserts this tier at. **It was carried as
 197,728 B**, taken 2026-08-31 and never re-taken across the stack cut and a
 month of decoder work; under the quarter rule before that it was 163,656 B.
 
-**67/71 is the ceiling, and it is a property of the four archives.**
-`tools/run_tiers.py` applies the same rule on Linux and reproduces this tier
-fixture for fixture. The minimum budget each one needs, bisected with the
-shipping binary on 2026-09-22:
+**67/71 was the ceiling for a RESIDENT build, and it was a property of these
+four archives against that build's 219,362 B.** `tools/run_tiers.py` applies
+the same rule on Linux and reproduces that tier fixture for fixture. The
+minimum budget each one needs, bisected on 2026-09-22 — and the first two are
+what the overlay build now clears:
 
 | fixture | needs | of which | against 219,362 B |
 |---|---|---|---|
@@ -4495,9 +4601,13 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**22/22 in ONE sweep on the binary that ships**, 2026-09-22 — every
-fixture of `os9sample.txt` in one run, each in its own boot, on the
-source `dist/` was last built from. Until that run the figure was 22
+**22/22 in ONE sweep on the binary that ships**, re-run **2026-09-25** on the
+overlay build that is now the shipped one (`os9.py --autotest`, the route a
+build switch can reach; its two scoring defects were fixed the same day —
+`tools/vmac/README.md`, *`--autotest` scored three healthy fixtures*). The
+same 22/22 was measured on 2026-09-22 with every decoder resident — every
+fixture of `os9sample.txt` in one run, each in its own boot, on the source
+`dist/` was last built from. Until that run the figure was 22
 across two builds and two days, which is why it was taken: 21 fixtures
 on 2026-09-04 and `derived-800saywhat301j.sit` on 2026-09-22, the latter
 also predating the 1990 DiskDoubler header. No fixture moved.

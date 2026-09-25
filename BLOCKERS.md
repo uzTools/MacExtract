@@ -146,6 +146,45 @@ detect-only — disk images are out of scope for v1.
 
 ---
 
+## Unexplained, reproducible, and load-bearing for whoever edits `UncEntryInfo`
+
+**Adding a field to `UncEntryInfo` makes two fixtures roughly twenty times
+slower on the Macintosh, and nothing else changes.** Found on the overlay
+branch while trying to let the release ask an archive whether it is
+encrypted; the feature turned out to be unnecessary, the field was reverted,
+and the effect is real. *Hypothesis, not root-caused.*
+
+**The reproduction**, three commands:
+
+1. add `uint8_t encrypted;` to `UncEntryInfo` in `include/macextract.h` —
+   anywhere in the struct, set by nobody;
+2. `rm -rf build/mac-autotest`
+3. `tools/vmac/run.py fixtures/derived-LHA_Expander_1.0.3.sea --mem 1M`
+
+Result: `TIMEOUT — app alive but still extracting after 300s`, against
+**5.1 s** without the field. `derived-Terrainman_2.0__.sea` does the same.
+Both are DiskDoubler self-extracting archives; every other fixture is
+unaffected, at 1 MB and at 4 MB alike.
+
+**What it is not.** Not the overlays — the resident build does it too. Not
+the stack: `UNC_STACK_BUMP_KB=48` changes nothing. Not layout — the field at
+the END of the struct behaves the same. Not the engine: the Linux CLI, the
+ASan/UBSan Mac-sink build and the big-endian m68k build under `qemu-m68k` all
+extract it correctly and quickly.
+
+**The one clue is the SIZE.** `uint8_t` and `uint16_t` both grow the struct
+by 2 bytes after padding, and both hang. `uint32_t` grows it by 4 and
+**passes**. So the sensitivity is to the struct's total size in a way that 4
+satisfies and 2 does not, which points at the Macintosh Memory Manager's
+block placement rather than at anything in this repository — a shifted
+allocation landing where every later one compacts the heap would look exactly
+like this.
+
+**Nothing is built on it, and a 4-byte field is not a fix**: an unreduced
+root cause is a hypothesis, and building on one is building on sand
+(CLAUDE.md, *Rules*). It is here because the next person to add a field to
+that struct will otherwise spend the day this cost.
+
 ## Withdrawn claims
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
@@ -1481,6 +1520,38 @@ a harness can click is not the same list.
   StuffIt 5, just not about its container.
 
 ### Corrected figures and superseded write-ups
+
+- **"`overlay-eager` costs one archive at 512 KB against `selective-loading`"**
+  — withdrawn 2026-09-03 on the branch, recorded here on 2026-09-25 when the
+  branches merged. The gap was measured at 15,748 B and attributed to the
+  cipher image the eager lifetime must keep for a format that MAY encrypt,
+  which was true and irrelevant: releasing the ciphers raised the budget to
+  317,838 B and `derived-a2basic.dmg.sit` still failed, `gRefusedWhy` = 2 —
+  `NewPtr` returning NULL for a 205 KB block against a largest free block of
+  169,298 B. **The memory was there, in two pieces.** One `MoveHHi` before
+  the `HLock` — the kept images are locked for the rest of the run, and
+  `NewHandle` had been putting them in the middle of the heap the released
+  bundle had just vacated — closed the gap entirely. **Cost: a day chasing
+  the wrong cause**, and the instrument had been saying so all along:
+  `gRefusedWhy` = 2 means the heap could not do what the budget said it
+  could, which is fragmentation and not shortage. **A number that explains a
+  gap is not the same as a cause.**
+
+- **"One disk read at launch"** — the eager branch's whole argument, and
+  untrue in the build a user would have run, for as long as the branch had a
+  bundle. `ovl_preload()` was called from the AUTOTEST `main()` and not from
+  the interactive one, so the shipping application never preloaded: the shim
+  fetched the bundle lazily on first use, which is the precise thing the
+  lifetime exists to avoid. **Found by forbidding the reload**, not by
+  review: once `ovl_image()` refused to re-read the resource fork, an
+  encrypted StuffIt archive stopped decrypting and the probe said `wa=128`.
+  **Cost: every figure taken through `interactive.py` before 2026-09-02 was
+  measured on a build that loaded nothing at launch** — the envelope row read
+  705,352 B and is 689,108 B once the preload happens. The autotest columns
+  were never wrong, because the autotest is the `main()` that had the call.
+  **"Which `main()`?" is worth asking of every launch-time call**; a ballast
+  referenced from only one of them had already cost three measurements
+  (FORMATS.md, *What the application costs the engine*).
 
 - **"`os9.py --autotest` scores `os9sample.txt` 19/22 with a healthy
   build"** — written and withdrawn the same day, 2026-09-25. It was

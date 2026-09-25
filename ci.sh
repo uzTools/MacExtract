@@ -303,13 +303,22 @@ fi
 python3 tools/check_app_size.py build/mac/MacExtract.code.bin \
     || fail "application size moved without acknowledgement"
 
-# variant 4b, added 2026-09-09 on this branch: the OVERLAY configuration,
-# which is the whole point of the branch and which nothing here built until
-# now. Merging main's DART in passed every check above and left this
-# unlinkable — a resident decoder calling unc_lzah_decode, which lives in the
-# codecs image — because ci.sh only ever built the configuration main also
-# has. A branch whose feature is a build configuration has to build it.
-echo "=== variant 4b: the overlay configuration (this branch) ==="
-UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build"
+# variant 4b, added 2026-09-09: the OVERLAY configuration, EAGER — the
+# lifetime the application ships. Merging DART in once passed every check
+# above and left this unlinkable, a resident decoder calling unc_lzah_decode
+# which lives in the codecs image, because ci.sh built only the configuration
+# without overlays. A feature that IS a build configuration has to be built.
+echo "=== variant 4b: the overlay configuration, eager ==="
+UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build (eager)"
+
+# variant 4c: the LAZY lifetime — the same fifteen images, one resource each,
+# read when a format turns out to want one. It is not shipped, and that is
+# precisely why it is built: the two lifetimes were separate branches until
+# 2026-09-25, and because neither tree compiled the other, the same
+# build-staleness fix had to be found and written twice, days apart. An
+# unbuilt variant is a variant that rots.
+echo "=== variant 4c: the overlay configuration, lazy ==="
+UNC_AT_OVERLAY=1 UNC_OVL_LAZY=1 UNC_MAC_BUILD_DIR=build/mac-lazy \
+    sh tools/build_mac.sh || fail "overlay build (lazy)"
 
 echo "CI: all green"

@@ -2180,8 +2180,9 @@ like somebody else's problem — see *What every walk can see*, below.
 
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
-Every switch below rebuilds the autotest application with an extra define and
-answers one question the normal replay cannot. None is part of any suite; each
+Every switch below rebuilds the autotest application and answers one question
+the normal replay cannot. The first two change the BUILD — which overlay
+lifetime, or none — and the rest add a probe. None is part of any suite; each
 is run by hand when the question comes up again. **A `-D` the CMakeLists does
 not know is silently ignored** — `run.py` passes it through the environment and
 CMake drops what it has no rule for, so a probe can "work" and change nothing.
@@ -2191,6 +2192,8 @@ Results are not repeated here; each line says where they live.
 
 | switch | answers | where the result is |
 |---|---|---|
+| `UNC_OVL_LAZY` | the OTHER overlay lifetime: one image per format, read when a format turns out to want it, instead of the shipped bundle-at-launch. Changes the BUILD rather than adding a probe, and every harness can pass it because it is a boolean | FORMATS.md, *Overlays* |
+| `UNC_OVL_RESIDENT` | the application as it was before 2026-09-25 — every decoder linked in, no images. The CONTROL for any budget claim about the overlays, since its budget does not move with the archive | FORMATS.md, *Overlays* |
 | `UNC_AT_BUDGET` | why an entry was refused: over budget, or `NewPtr` failed | DECISIONS.md 2026-08-06, OPEN_ITEMS.md section 5 |
 | `UNC_AT_RESERVE` | what the shell actually needs of the heap kept back from the engine — a `FreeMem()` low-water mark, printed on the completion alert. It priced `kMemReserveMax` from 80 KB down to 48 KB (13,242 B measured). **Needs a fixture that FITS and is heavy**: a small one never fires the progress pump, and one too big has its allocation refused before the heap is stressed | FORMATS.md, *Budget* |
 | `UNC_AT_STACK` | what `kStackBump` is actually worth. Paints the whole region between ApplLimit and the stack base at launch and reads back how far down anything wrote. **Read the watermark, not the first transition**: a frame is made by moving the stack pointer, so a frame holding an uninitialised buffer leaves clean longs INSIDE the region it used, and two earlier versions of this probe — scan up for the first dirty long, scan down for the first clean one — both reported the same number for a 3 KB BinHex file and a 34-entry StuffIt 5 archive. Autotest under-reads the shipped build, which has the dialogs | FORMATS.md, *Stack* |

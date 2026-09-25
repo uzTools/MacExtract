@@ -58,66 +58,6 @@ the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
 (photographed on System 6.0.8). Extraction returns cleanly unsupported either
 way.
 
-## Overlays and selective loading: built, measured, parked
-
-**Not open, and not untried.** Loading the engine's decoders and ciphers from
-a resource works and runs on a 1 MB Mac Plus. Two branches keep it —
-`selective-loading` (an image fetched when a format turns out to want it) and
-`overlay-eager` (all of them at launch as one bundle, released as soon as the
-sniff says what the archive is) — and **neither is merged**. Both carry
-**fifteen images**, not the ciphers they started with.
-
-**The figures, re-taken 2026-09-24/25.** Everything else about either branch
-is `BRANCH_NOTES.md` on it, which is where branch state lives (BRANCHES.md):
-
-| | |
-|---|---|
-| budget at 1 MB against a resident build | **+84 to +103 KB**, and it varies with the format |
-| System 3.0, 512 KB | **69/71 against main's 67/71** — `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit` |
-| the 1 MB floor target | **71/71 either way** |
-| the download | **+25,344 B**, 189,312 → 214,656 B |
-| eager against lazy | **894 B–10.7 KB** of budget, bought with no disk access after the archive is chosen |
-
-**Why it stays out.** At the floor target the gain buys nothing anybody can
-name: nothing in the corpus has been out of a 1 MB Mac Plus's reach since
-2026-09-18 (FORMATS.md, *The Linux budget check reads the Mac to 40 bytes*),
-so 100 KB of headroom answers archives this project does not have. What it
-does open is two archives on a **512 KB** machine, which is not the floor. The overlay variant in
-the branch's `ci.sh` only COMPILES it, so no Linux suite exercises the loader
-at all; and the release is irreversible per archive, a failure mode that has
-bitten that branch twice in silence — once with a build where an earlier
-archive could make a later one fail, once with one that never preloaded at
-all, and once more on 2026-09-25 as a false alarm that had made the
-diagnostic for it unreadable. DECISIONS.md 2026-09-25, *the parked decision
-that outlived its numbers*.
-
-**Nothing this machine can run would reopen it any further.** Both tiers that
-had never seen the configuration have now seen it, on `overlay-eager`,
-2026-09-25: **71/71 on System 7.0.1** at 4 MB and **22/22 on Mac OS 9.2** in
-one sweep, each equal to what a resident build scores on the same sample. The
-cache question is answered too: Inside Macintosh requires
-a flush wherever executable bytes are modified in memory and `BlockMoveData`
-is not one of the traps that flush for you, so the branch tip calls
-`FlushInstructionCache` (`_HWPriv` selector 1, falling back to
-`FlushCodeCache`) at both fixup sites, measured firing three times on System
-7.0.1. Whether it was NEEDED is silicon's to say — Mini vMac is a 68000 and
-Apple documents the 68LC040 Emulator as ignoring the request (MANUAL_TESTS.md
-§2, the 68020/030/040 bullet; DECISIONS.md 2026-09-25, *the flush nobody
-wrote*).
-
-**So what is left is not evidence but a judgement**: 25 KB of download
-against 84–103 KB of heap and two archives at 512 KB, on a mechanism whose
-release is irreversible per archive. **The launch-time read is not a second
-cost on that list**, which this section implied until it was measured
-(2026-09-25): every byte of a default build is read at launch as it is, one
-`CODE` resource of 185,472 B, and the overlay build reads 65,664 B of `CODE`
-plus a 146,176 B `OVLY` bundle — 211,840 B against 185,472 B, so the read is
-the same read redistributed and **+26,368 B**, which is the download delta
-over again rather than a new term. That is the maintainer's,
-and it is the whole of what stands between this and a default. The mechanism
-and its traps are written up in `BRANCH_NOTES.md` on either branch, so acting
-on it is a merge and not a rediscovery.
-
 ## Limits of the formats themselves
 
 - **A raw brotli stream cannot be identified, by this or any program.** RFC
@@ -207,6 +147,54 @@ merged** — what is left is the decision, because the price is now known:
 anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
 `BRANCH_NOTES.md` on that branch.
 
+## The overlay loader, which no automated suite here reaches
+
+**The application ships fifteen 'OVLY' images and the 932-fixture suite says
+nothing about any of them.** The images exist only in a Macintosh build, so
+every Linux suite — the differential corpus, the 9,320 robustness variants,
+the sanitiser and 32-bit-offset variants — exercises the engine's decoders as
+ordinary linked code. `ci.sh` compiles the three Macintosh configurations
+(TESTING.md, *The three Macintosh configurations*) and that is all it can do.
+Whether an image is found, relocated to the right address, kept, released or
+re-read is answered by the emulator tiers, by hand, at minutes per fixture.
+
+**What that has cost, three times, all in silence**: a build where the
+preload was called from one `main()` and not the other, so the shipping
+application never preloaded at all and every interactive measurement for a
+week was taken on the wrong thing; a release whose "already tried" flag was
+global, so extracting an LZH and then an encrypted `.sit` in one session lost
+the ciphers; and a diagnostic that fired on every healthy unencrypted Compact
+Pro, which made the alarm for the first two unreadable. Each was found by
+something other than a test — a forbidden reload, a probe field, a screenshot
+of an alert (DECISIONS.md 2026-09-25, *the flush nobody wrote*).
+
+**And no tier with a CPU cache has ever run it.** Mini vMac emulates a 68000
+and Apple documents the 68LC040 Emulator as ignoring instruction-cache
+invalidation, so the flush that Inside Macintosh requires at both fixup sites
+is correct by documentation and unverified by measurement anywhere this
+machine can reach. `fc=1 fn=3` on System 7.0.1 says the call fires; nothing
+here can say it was needed. MANUAL_TESTS.md §2 — a 68020/030/040 machine — is
+the only instrument for that.
+
+**And the Linux tier model no longer predicts the shipped application.**
+`tools/run_tiers.py` reproduces a tier by running the engine against ONE
+budget per tier, which is what a resident build has. The shipped build's
+budget depends on the sniffed format, because the release keeps a different
+image set for each — so the model asserts the control build's tallies (67/71
+at sys3-512K) while the machine gives 69/71 for what ships. The check is
+still worth running and still asserted: what it grades is the engine's
+allocation behaviour against a fixed ceiling, which is a real regression
+detector. It is simply no longer a prediction of what a user's Macintosh will
+refuse.
+
+**What would close it:** a Linux-side loader test is the honest answer and
+there is no obvious one — the images are m68k, position-independent, and
+relocated by a loader that only exists in the Macintosh build; `qemu-m68k`
+runs the ENGINE but not the Resource Manager. Short of that, the
+`-D UNC_AT_BUDGET` probe fields (`wa`, `kf`, `rf`, `fc`, `fn`) are what a run
+can report, and every tier sweep should be read with them rather than on the
+tally alone.
+
 ## What is still XADMaster's, and what would have to replace it
 
 **Asked for 2026-09-19**: shed as much XADMaster-transcribed code as
@@ -229,7 +217,7 @@ format's three published wiki pages, `tools/derive_cpt.py`) and
 
 | file | XADMaster code in it | other reference on this machine | gain plausible? |
 |---|---|---|---|
-| `unc_lzdyn.c` | `-lh2-`/`-lh3-` from `XADLZHOldHandles.m` | LHa for UNIX only (its own licence); lhasa has neither | none — no corpus archive uses them. **What they cost is measured, re-measured 2026-09-23: 3,476 B of `CODE` and 28 B of A5**, i.e. **3,504 B** of a 1 MB Mac Plus's budget, from a build with the file and its two dispatch arms removed. Not the weight of a replacement — there is none to build — but what DELETING the two formats would give back. The total is 2026-09-20's to the byte; the 4 B that moved between the columns is rodata alignment under changed text. Set that against the overlay that was judged not worth taking and is worth 84–103 KB (*Overlays*, Part 1) — and against the fact that LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` grades us against one, so dropping them refuses a file that can still be made. **Settled 2026-08-25 and confirmed 2026-09-23: kept** — and this row should not have re-asked it. LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` writes `-lh3-`, so `ci.sh` grades 21 entries of the two every run — a method this project can MAKE a file in is one a user can be handed a file in, and "no corpus archive uses them" was never the same claim. **So this row cannot close**: lhasa implements neither method and LHa for UNIX is under its own licence, so there is nothing to rewrite the file FROM (DECISIONS.md 2026-09-23, *the 3,504 bytes that stay*) |
+| `unc_lzdyn.c` | `-lh2-`/`-lh3-` from `XADLZHOldHandles.m` | LHa for UNIX only (its own licence); lhasa has neither | none — no corpus archive uses them. **What they cost is measured, re-measured 2026-09-23: 3,476 B of `CODE` and 28 B of A5**, i.e. **3,504 B** of a 1 MB Mac Plus's budget, from a build with the file and its two dispatch arms removed. Not the weight of a replacement — there is none to build — but what DELETING the two formats would give back. The total is 2026-09-20's to the byte; the 4 B that moved between the columns is rodata alignment under changed text. Set that against the overlays the application now ships, which are worth 84–103 KB (FORMATS.md, *Overlays*) — and against the fact that LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` grades us against one, so dropping them refuses a file that can still be made. **Settled 2026-08-25 and confirmed 2026-09-23: kept** — and this row should not have re-asked it. LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` writes `-lh3-`, so `ci.sh` grades 21 entries of the two every run — a method this project can MAKE a file in is one a user can be handed a file in, and "no corpus archive uses them" was never the same claim. **So this row cannot close**: lhasa implements neither method and LHa for UNIX is under its own licence, so there is nothing to rewrite the file FROM (DECISIONS.md 2026-09-23, *the 3,504 bytes that stay*) |
 | `fmt_lzh.c` | **none since 2026-09-22**, bar one rule with no specimen: a NUL inside a level 0/1 name field ends the name, which is `XADLZHParser.m`'s and which **0 of the 140 such fields in the 156 archives here** contains. The DECODERS left on 2026-09-19 | **the format's own published description** — `reference/lha/header.doc.euc`, Masaru Oki's `header.doc` of 2 March 1992, levels 0/1/2 field by field with the extended-header types, the OS IDs and the method IDs; **lhasa (ISC)** for the four things it does not cover | **taken, whole file, at zero cost on every axis** — the walk needed no change, only a description: a reader written from the document plus lhasa reads 191 entries of 156 archives with no disagreement (`tools/derive_lzh.py`, `docs/formats/lzh-header.md`). The decoders were taken earlier for **−17.8 to −46.4 % of the 68000's instructions for +140 B** (DECISIONS.md 2026-09-19, *the match that was walked twice*) |
 | `fmt_packit.c` | **the two CRCs' polynomial, the resync rule and both ciphers, and nothing else, since 2026-09-21.** The container left this row that day, and the Huffman tree and the header-inside-the-stream fact on 2026-09-20 | **the format's own published description** — `reference/notes/packit_unpackit.txt`, appendices B and C of a 1986 freeware manual, named all along by `reference/notes/PackIt.md`, which this project fetched with its first batch of references and never read past | **taken: 38 of 38 forks** of the corpus's four archives read from the appendices plus the four corrections they need (`docs/formats/packit.md`, `tools/derive_packit.py`). "The app is not here" was the wrong question (DECISIONS.md 2026-09-21, *the manual for the other machine*) |
 | `fmt_sit.c` | **none since 2026-09-22.** Method 6's framing was the last of it and left that day; the RLE90 filter and method 6's code book left on 2026-09-21, the container, method 13 and its tables, method 3's tree and method 8's coder on 2026-09-20 — bar three rules of method 8 no specimen reaches | `docs/formats/stuffit-method-6.md`, written against `reference/deark/modules/stuffit.c` (MIT); the rest is the format's own published description (The Unarchiver's wiki, fetched). StuffIt Deluxe 3.5.1 also runs here (`sitcrypt.py`) | **taken, whole file.** "No other reader anywhere" was false for method 13 — 897 forks across 103 archives read from the published description alone (DECISIONS.md 2026-09-20, *forty pages nobody had listed*) — and false for method 6, which deark implements under MIT. The code book was taken 2026-09-21 and priced: **code +408 B, A5 −1,000 B, net −592 B** (FORMATS.md, *StuffIt classic: method 6*). The **framing** followed on 2026-09-22 and cost nothing on any axis, because nothing executable had to change: a reader written from deark and the container page alone reads all 11 method-6 forks (`tools/derive_sit6.py`), and the three places this engine is stricter than both references are measured rather than transcribed (DECISIONS.md 2026-09-22, *the framing that needed no rewrite*) |

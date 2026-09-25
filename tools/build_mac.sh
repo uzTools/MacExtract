@@ -3,9 +3,16 @@
 #
 # Locates a Retro68 toolchain via (in order): $RETRO68, m68k-apple-macos-gcc
 # in PATH, or /opt/Retro68-build/toolchain. Skips gracefully when absent.
-# Output: build/mac/macextract.{APPL,bin,dsk}
+# Output: $UNC_MAC_BUILD_DIR/macextract.{APPL,bin,dsk}, build/mac by default.
+#
+# The build directory is settable because CMake reads UNC_AT_* and UNC_OVL_*
+# from the environment at CONFIGURE time: reusing one directory for two
+# configurations keeps the first one for ever, silently. ci.sh builds the
+# eager lifetime into build/mac and the lazy one into build/mac-lazy for
+# exactly that reason.
 set -e
 cd "$(dirname "$0")/.."
+BUILD_DIR=${UNC_MAC_BUILD_DIR:-build/mac}
 
 TOOLCHAIN=""
 if [ -n "$RETRO68" ] && [ -d "$RETRO68" ]; then
@@ -25,11 +32,11 @@ if [ -z "$TOOLCHAIN" ] || [ ! -f "$CMAKEFILE" ]; then
 fi
 
 echo "mac: using Retro68 at $TOOLCHAIN"
-cmake -B build/mac -S mac \
+cmake -B "$BUILD_DIR" -S mac \
       -DCMAKE_TOOLCHAIN_FILE="$CMAKEFILE" \
       -DCMAKE_BUILD_TYPE=Release >/dev/null
-cmake --build build/mac -- -j"$(nproc)"
-ls -la build/mac/MacExtract.APPL build/mac/MacExtract.bin build/mac/MacExtract.dsk
+cmake --build "$BUILD_DIR" -- -j"$(nproc)"
+ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/MacExtract.dsk
 
 # ---- the code ceiling -------------------------------------------------------
 #
@@ -374,15 +381,33 @@ UNC_MAC_CODE_DEFAULT=153804
 # main's own A5 history records four times, and it has since shifted back.
 # A ratchet is set at the size on the day, so 37,956 is what is locked in.
 UNC_MAC_A5_DEFAULT=37956
-# Both ceilings are for the DEFAULT build, which carries every decoder. The
-# overlay build is not measured against them and could not be: its point is
-# that six decoders are somewhere else. What it costs is in BRANCH_NOTES.md,
-# measured, and a ratchet on a configuration nobody ships would only ever
-# fire on the wrong build.
-UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
-UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}
+# A CEILING PER CONFIGURATION, because one ceiling measured on another build
+# cannot fire. The figures above are the RESIDENT control build, which carries
+# every decoder; the shipped build's resident code is a third of that, so
+# holding it to 153,804 B would let it triple before anything complained —
+# which is the "a test that passes may not be testing anything" trap in this
+# repository's own CLAUDE.md.
+#
+# Set 2026-09-25, at the size each configuration was on the day overlays
+# became the build. Raise one deliberately, in the commit that grows it, and
+# say what the bytes bought: on this target every byte of resident code is a
+# byte off the budget of every extraction.
+UNC_MAC_CODE_EAGER=54028
+UNC_MAC_A5_EAGER=19124
+UNC_MAC_CODE_LAZY=52600
+UNC_MAC_A5_LAZY=19240
+if [ -n "$UNC_OVL_RESIDENT" ]; then
+    UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
+    UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}
+elif [ -n "$UNC_OVL_LAZY" ]; then
+    UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_LAZY}
+    UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_LAZY}
+else
+    UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_EAGER}
+    UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_EAGER}
+fi
 SIZE="$TOOLCHAIN/bin/m68k-apple-macos-size"
-GDB=build/mac/MacExtract.code.bin.gdb
+GDB="$BUILD_DIR"/MacExtract.code.bin.gdb
 # A ceiling that is not a number compares as nothing and the check passes
 # on it — which a rebase placeholder did once, and ci.sh went green with
 # "ceiling RATCHET B" on its screen (2026-09-19). Refuse it.

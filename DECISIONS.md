@@ -273,6 +273,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
 - 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
 - 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
+- 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
 
 ---
 
@@ -10244,9 +10245,10 @@ session. The fix — allow the reload — concedes the branch's own argument.
 
 **So: if something later needs tens of kilobytes, the loader exists.** Nobody
 should have to rediscover `-mpcrel`, the `.bss`/`.data` distinction, the three
-dispatch tables or the `--gc-sections` correction; `BRANCH_NOTES.md` on either
-branch has them, along with the three ways to know whether an entry is
-encrypted and what each costs.
+dispatch tables or the `--gc-sections` correction; they are in the code that
+embodies them and indexed by FORMATS.md, *Where the traps are written down*.
+(Written when both were branches; they merged on 2026-09-25 and the notes
+went with them.)
 
 ## 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
 
@@ -17055,9 +17057,9 @@ same kind of evidence as the skip it replaces (TESTING.md, check 0b).
 no cache, and the question of whether that mattered was written down as a
 hypothesis waiting for hardware when it was waiting for a document.** Asked
 while closing the two things OPEN_ITEMS.md named as what would reopen the
-overlay decision. Both sites and both fixes are on the branch
-(`BRANCH_NOTES.md`, *The instruction cache that nothing flushed*); what
-follows is the part that transfers.
+overlay decision. Both sites and both fixes are in `mac/ovl_reloc.c`, which
+every configuration links (FORMATS.md, *Overlays*); what follows is the part
+that transfers.
 
 **Inside Macintosh: Memory, chapter 4, *Stale Instructions* settles the rule
 in one sentence** — "you must flush the instruction cache every time you
@@ -17109,3 +17111,80 @@ that is ALLOWED to find the image gone ask quietly, so the field means again
 what it says. **Before trusting a signal, find the healthy paths that trip
 it** — a check whose false-positive rate is unknown is a check whose silence
 is uninformative.
+
+## 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
+
+**Claim: `overlay-eager` and `selective-loading` were never two mechanisms,
+and keeping them apart cost the same fix twice.** Decided by the maintainer
+after the two tiers above System 6 came back at parity: the images ship, eager
+is the default, and the resident build stays only as the control the budget
+figures rest on.
+
+**What the measurement of "similar" actually was**, taken before touching
+anything: of the 24 files under `tools/overlay/` — the image stubs,
+`mkoverlay.sh`, `overlay.ld`, `ovl_rt.c`, `ovlid.py`, the relocation trailer,
+the forwards generator — **21 were byte-identical between the two branches**.
+The three that differed were `overlay.h` by five lines, `mkoverlay.sh` by six,
+and `mkbundle.py`, which only the eager side had. The whole of the difference
+was one half of `mac/ovl_shim.c`: ~340 lines of dispatch shims the same on
+both sides, and a loader — 60 lines lazy, 250 eager — reached through exactly
+three calls.
+
+**The cost of having kept them apart is on the record in both branch
+histories.** Each grew its own commit titled *"The image build could go stale
+three ways, and did in two"*, days apart, and each carries its own `ovl_rt.c`
+and `ovlid.py`. A fix written twice is a fix that will be forgotten once.
+
+**So the seam was already there and nothing had been built on it**:
+`mac/ovl_shim.c` is dispatch, `mac/ovl_reloc.c` is the relocation trailer and
+the instruction-cache flush, and `mac/ovl_load_eager.c` / `mac/ovl_load_lazy.c`
+are the two lifetimes behind `ovl_image()`, `ovl_preload()` and
+`ovl_release_if_unwanted()`. The no-ops are real functions rather than
+`#ifdef`s at the call sites, so `mac/macextract_mac.c` reads the same in every
+build.
+
+### Three things the merge decided, each with a reason worth keeping
+
+- **The switch is a BOOLEAN, `UNC_OVL_LAZY`, not `UNC_OVL_LIFETIME=lazy`.**
+  Every harness here passes build switches as `-D NAME` and sets them to `1`
+  (`build_autotest_app`), so a lifetime spelled as a VALUE could not be driven
+  from `run.py`, `interactive.py` or `os9.py` — and the variant that is not
+  the default would have become the variant that can never be run on a
+  Macintosh. **A configuration your instruments cannot express is a
+  configuration you cannot test.**
+- **`ci.sh` builds both lifetimes** (variants 4b and 4c). The duplicated fix
+  above is what an unbuilt variant costs; a compile is what it costs to
+  prevent.
+- **The resident build survives as an instrument.** Every budget figure this
+  project quotes for the mechanism — 84–103 KB — is a difference against a
+  build where all fifteen images are linked in, and that column not moving
+  with the archive is what says the gain belongs to the mechanism rather than
+  to a month of other work. Deleting it would have removed the control, not
+  just a build.
+
+### The ratchets had to be re-based, and one of them had stopped meaning what it said
+
+`tools/build_mac.sh` held one code ceiling, 153,804 B, measured on the
+resident build. The shipped build's resident code is **54,028 B**: holding it
+to the old ceiling would have let it TRIPLE before anything complained. There
+is now a ceiling per configuration, and each was shown to fire before it was
+trusted.
+
+`tools/check_app_size.py` opens with "Every byte of this application is
+RESIDENT on the target". That was true when it was written on 2026-09-23 and
+is not any more — the bundle is 146,176 B, read at launch and mostly released
+before the engine takes its budget, which is the entire point of the build.
+The figure it watches moved 185,472 → 65,792 B and its premise moved with it.
+**A check's rationale ages faster than its number, and it is the rationale
+that decides whether the number is worth anything.**
+
+### And the lazy lifetime had never flushed the instruction cache
+
+Unifying found it: `selective-loading`'s loader writes an image's relocations
+and then executes them, exactly as the bundle path does, and the flush added
+on the eager side that morning had no counterpart there. Nothing on any tier
+this project can run could have shown it — Mini vMac is a 68000 and Apple
+documents the 68LC040 emulator as ignoring the request (*the flush nobody
+wrote*, above). It is now in `mac/ovl_reloc.c`, which both lifetimes call.
+**Two implementations of one mechanism do not inherit each other's fixes; one
+implementation with two behaviours does.**

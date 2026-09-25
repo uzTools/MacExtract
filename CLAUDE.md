@@ -5,7 +5,7 @@
 ## Mission
 
 1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
-2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** — the system a Macintosh Plus shipped with in January 1986; it also runs in **512 KB** on a Macintosh 512Ke, where the heaviest archives are refused per entry; the same binary must run unchanged through Mac OS 9.
+2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** — the system a Macintosh Plus shipped with in January 1986; it also runs in **512 KB** on a Macintosh 512Ke, where the heaviest archives are refused per entry; the same binary must run unchanged through Mac OS 9. Its decoders ship as **fifteen `'OVLY'` images** read at launch and released as soon as the archive's format is known (FORMATS.md, *Overlays*).
 
 The engine is the product. The Mac app is a thin shell.
 
@@ -16,13 +16,15 @@ in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **932-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,320 robustness variants.
-The Macintosh application extracts byte-exact on **System 3.0 and System 6.0.8,
-each at 4 MB and at the 1 MB RAM floor** (69/69 sampled fixtures every time),
-on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ — **22/22 there
-as of 2026-09-22**, one sweep on the binary `dist/` was built from; the 21/21
-before it, on 2026-09-04, is the run that found a `UncOptions` field the shell
-had never assigned, which had bombed three formats there, and gained Now
-Compress (DECISIONS.md 2026-09-04). The System 3.0 tier arrived
+The Macintosh application extracts byte-exact on **System 3.0 and System
+6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
+time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
+**22/22** there — all six re-run 2026-09-25 on the overlay build that now
+ships, which also takes the **512 KB** machine from 67/71 to **69/71**. The
+same 22/22 on 2026-09-22 was the resident build; the 21/21 before it, on 2026-09-04,
+is the run that found a `UncOptions` field the shell had never assigned,
+which had bombed three formats there, and gained Now Compress (DECISIONS.md
+2026-09-04). The System 3.0 tier arrived
 2026-08-30 and needed no source change; that system ignores the boot blocks'
 shell name, so it is the only one launched by double-click (FORMATS.md,
 *System 3.0 tier*). The interactive UI is driven end to

@@ -86,8 +86,10 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * so the decoder calls into both and an
                                     * overlay cannot call another overlay */
 #define OVL_ID_STUFFIT       137
-#define OVL_ID_EXO           138
-#define OVL_ID_CODECS        139
+#define OVL_ID_EXO           138   /* zip, gzip, Unix compress, tar — and
+                                    * zlib, which nothing else calls      */
+#define OVL_ID_CODECS        139   /* the shared machinery, which patches
+                                    * itself into the host vector         */
 /* BinHex and btoa stand alone: only MIME calls into uu and base64, so only
  * those three have to travel together. Splitting these two out means opening
  * a .hqx loads ~3 KB rather than the 15,864 B the whole text group cost —
@@ -99,9 +101,15 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                    * stays resident and is compiled into
                                    * this image as well — the same
                                    * arrangement SpaceSaver has.        */
-#define OVL_ID_BTOA          141   /* the shared machinery, which patches
-                                    * itself into the host vector */   /* zip, gzip, Unix compress, tar — and
-                                    * zlib, which nothing else calls */
+#define OVL_ID_BTOA          141   /* btoa/atob, which nothing calls into
+                                    * and which calls nothing            */
+
+/* How many images there can be, for sizing a table rather than for numbering
+ * one: mac/ovl_load_lazy.c keeps a loaded image per slot and must not be able
+ * to overflow when an id is added above. Ids run from OVL_ID_BUNDLE and are
+ * dense; this is the count with room to spare, and ovlid.py is what keeps the
+ * numbers themselves in one place. */
+#define OVL_IMAGE_MAX         20
 
 #define OVL_SPACESAVER_EXTRACT 30
 #define OVL_CPT_EXTRACT        31
