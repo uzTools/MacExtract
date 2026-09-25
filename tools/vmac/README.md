@@ -141,7 +141,7 @@ measured on a different list:
 |---|---|---|
 | System 6.0.8, 1 MB, 55 fixtures | `run.py --mem 1M --list sample.txt` | ~5.1 s per fixture, one boot each |
 | System 7.0.1, 4 MB, 55 fixtures | `run.py --system Sys7.img --list sample.txt` | ~5.1 s per fixture, one boot each |
-| Mac OS 9.2, 20 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
+| Mac OS 9.2, 22 fixtures | `os9.py --list os9sample.txt --launch` | tens of minutes — one full PowerPC boot per fixture |
 
 **Stagger the start by a few seconds when the application has changed.** The
 display race below is fixed, but the two runs still share one CMake build
@@ -1611,9 +1611,9 @@ counts. `synth-os9-rar.rar` fails for the other reason: `ret=-6` with nothing
 written is the correct refusal for a detect-only format, and
 `--expect-refusal` is wired to `--hfsplus` only. **So `--autotest` over
 `os9sample.txt` scores 19/22 with a healthy build**, and a run down this route
-has to be read against that, not against `--launch`'s 21/21 (FORMATS.md, *Mac
-OS 9 tier*) — `--launch` drives the interactive build, which opens the file
-under its own name. Anything needing `-D` is stuck with `--autotest`, since
+has to be read against that, not against `--launch`'s **22/22** (FORMATS.md,
+*Mac OS 9 tier*) — `--launch` drives the interactive build, which opens the
+file under its own name and scores a detect-only refusal correctly. Anything needing `-D` is stuck with `--autotest`, since
 that is the only route the switch reaches.
 
 **`--hfsplus` writes to a volume the host cannot read.** The boot volume is
