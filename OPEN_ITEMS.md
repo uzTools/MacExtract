@@ -82,30 +82,37 @@ is `BRANCH_NOTES.md` on it, which is where branch state lives (BRANCHES.md):
 name: nothing in the corpus has been out of a 1 MB Mac Plus's reach since
 2026-09-18 (FORMATS.md, *The Linux budget check reads the Mac to 40 bytes*),
 so 100 KB of headroom answers archives this project does not have. What it
-does open is two archives on a **512 KB** machine, which is not the floor. It
-is also validated on a 68000 and nowhere else — **`overlay-eager` is
-71/71 on System 7.0.1 at 4 MB (2026-09-25), which is still a 68000**, and no
-run on a CPU with a cache is recorded on either branch; the overlay variant in
+does open is two archives on a **512 KB** machine, which is not the floor. The overlay variant in
 the branch's `ci.sh` only COMPILES it, so no Linux suite exercises the loader
 at all; and the release is irreversible per archive, a failure mode that has
 bitten that branch twice in silence — once with a build where an earlier
 archive could make a later one fail, once with one that never preloaded at
-all. DECISIONS.md 2026-09-25, *the parked decision that outlived its numbers*.
+all, and once more on 2026-09-25 as a false alarm that had made the
+diagnostic for it unreadable. DECISIONS.md 2026-09-25, *the parked decision
+that outlived its numbers*.
 
-**What would reopen it:** a Mac OS 9.2 sweep with `-D UNC_AT_OVERLAY`. The
-System 7.0.1 half is done, and so is the cache question: Inside Macintosh
-requires a flush wherever executable bytes are modified in memory, and
-`BlockMoveData` — what the shim copies an image with — is not one of the traps
-that flush for you, so `overlay-eager`'s tip now calls `FlushInstructionCache`
-(`_HWPriv` selector 1, falling back to `FlushCodeCache`) at both fixup sites,
-measured firing three times on System 7.0.1. What no tier here can answer is
-whether it was NEEDED: Mini vMac is a 68000 and Apple documents the 68LC040
-Emulator as ignoring the request, so only silicon can (MANUAL_TESTS.md §2, the
-68020/030/040 bullet). DECISIONS.md 2026-09-25, *the flush nobody wrote*.
-Whether the configuration SHOULD be the default is a disk access against
-10.7 KB, and is the maintainer's. The mechanism and its traps are written up
-in `BRANCH_NOTES.md` on either branch, so reopening it is a merge and not a
-rediscovery.
+**Nothing this machine can run would reopen it any further.** Both tiers that
+had never seen the configuration have now seen it, on `overlay-eager`,
+2026-09-25: **71/71 on System 7.0.1** at 4 MB, and **19/22 on Mac OS 9.2**,
+which is what that harness route scores with a healthy build — the same three
+fail without overlays, two of them named after the archive the route renames
+and one a detect-only refusal (`tools/vmac/README.md`, *What `--autotest`
+cannot score*). The cache question is answered too: Inside Macintosh requires
+a flush wherever executable bytes are modified in memory and `BlockMoveData`
+is not one of the traps that flush for you, so the branch tip calls
+`FlushInstructionCache` (`_HWPriv` selector 1, falling back to
+`FlushCodeCache`) at both fixup sites, measured firing three times on System
+7.0.1. Whether it was NEEDED is silicon's to say — Mini vMac is a 68000 and
+Apple documents the 68LC040 Emulator as ignoring the request (MANUAL_TESTS.md
+§2, the 68020/030/040 bullet; DECISIONS.md 2026-09-25, *the flush nobody
+wrote*).
+
+**So what is left is not evidence but a judgement**: 25 KB of download and a
+launch-time read against 84–103 KB of heap and two archives at 512 KB, on a
+mechanism whose release is irreversible per archive. That is the maintainer's,
+and it is the whole of what stands between this and a default. The mechanism
+and its traps are written up in `BRANCH_NOTES.md` on either branch, so acting
+on it is a merge and not a rediscovery.
 
 ## Limits of the formats themselves
 

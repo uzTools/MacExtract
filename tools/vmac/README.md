@@ -1602,6 +1602,20 @@ packet. **`os9mouse.py` positions the cursor to within 3 px and clicks**
 (BLOCKERS.md, *Withdrawn claims*), which is what made an installer and an
 encrypted specimen possible. See *Mac OS 9 with the pointer*, below.
 
+**What `--autotest` cannot score, measured 2026-09-25.** That route writes
+every input to the volume as `ARCHIVE_ON_VOLUME` — `archive.sit` — so a format
+that names its single entry after the archive comes back under the wrong name
+with the right bytes: `synth-exo-Z.Z` and `synth-exo-gz.gz` report `MISSING
+synth-exo-Z` / `UNEXPECTED archive` at `ret=0` with matching CRCs and byte
+counts. `synth-os9-rar.rar` fails for the other reason: `ret=-6` with nothing
+written is the correct refusal for a detect-only format, and
+`--expect-refusal` is wired to `--hfsplus` only. **So `--autotest` over
+`os9sample.txt` scores 19/22 with a healthy build**, and a run down this route
+has to be read against that, not against `--launch`'s 21/21 (FORMATS.md, *Mac
+OS 9 tier*) — `--launch` drives the interactive build, which opens the file
+under its own name. Anything needing `-D` is stuck with `--autotest`, since
+that is the only route the switch reaches.
+
 **`--hfsplus` writes to a volume the host cannot read.** The boot volume is
 HFS+ inside an HFS wrapper — wrapper MDB signature `0x4244 'BD'`,
 `drEmbedSigWord` `0x482B 'H+'`, embedded volume header at byte 966656 of the
