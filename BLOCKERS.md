@@ -1482,6 +1482,26 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"`os9.py --autotest` scores `os9sample.txt` 19/22 with a healthy
+  build"** — written and withdrawn the same day, 2026-09-25. It was
+  measured, twice, with a control: three fixtures failed on that route
+  with overlays and the same three failed without them, so the number
+  was recorded as the route's own. It was a harness defect in both
+  halves. `.Z` and `.gz` name their single entry after the archive and
+  the route renames every input to `archive.sit`, but handed the
+  REFERENCE the fixture's own path — a mismatch `verify_output()` had
+  fixed on 2026-08-08 and this verifier, written later, never inherited;
+  and a detect-only `.rar`'s correct refusal was failed for not being
+  `UNC_OK`. Both fixed, and the same three now pass 3/3 on the build
+  that failed them. **Cost: one wrong figure in four files for an
+  afternoon, and very nearly a fixture sample trimmed to fit it** — the
+  proposal on the table was to drop the three from `os9sample.txt`.
+  **Why the control did not catch it:** it compared the overlay build
+  against the resident build, and the defect was in neither — an A/B
+  that agrees says the difference is not there, never that either side
+  is right (`tools/vmac/README.md`, *`--autotest` scored three healthy
+  fixtures*).
+
 - **"The overlay prize is 5,988 B, it opens nothing new, and StuffIt can
   never be one of the formats it helps"** — all three superseded or
   withdrawn 2026-09-25. They were written 2026-08-31 about an overlay

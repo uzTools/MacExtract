@@ -93,11 +93,9 @@ that outlived its numbers*.
 
 **Nothing this machine can run would reopen it any further.** Both tiers that
 had never seen the configuration have now seen it, on `overlay-eager`,
-2026-09-25: **71/71 on System 7.0.1** at 4 MB, and **19/22 on Mac OS 9.2**,
-which is what that harness route scores with a healthy build — the same three
-fail without overlays, two of them named after the archive the route renames
-and one a detect-only refusal (`tools/vmac/README.md`, *What `--autotest`
-cannot score*). The cache question is answered too: Inside Macintosh requires
+2026-09-25: **71/71 on System 7.0.1** at 4 MB and **22/22 on Mac OS 9.2** in
+one sweep, each equal to what a resident build scores on the same sample. The
+cache question is answered too: Inside Macintosh requires
 a flush wherever executable bytes are modified in memory and `BlockMoveData`
 is not one of the traps that flush for you, so the branch tip calls
 `FlushInstructionCache` (`_HWPriv` selector 1, falling back to

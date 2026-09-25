@@ -1578,6 +1578,15 @@ re-fetches: the harness once booted the master in place and never hashed it,
 so the drift was invisible until the local copy stopped matching archive.org
 and the volume read back hardware-locked (BLOCKERS.md, *Corrected figures*).
 
+**Do not point `-o` at a tmpfs.** `/tmp` is one on this machine, 16 GB of an
+8 GB host's RAM, and the boot copy lands in the output directory — so a sweep
+there spends 2 GB of RAM per fixture beside a running emulator. Measured
+2026-09-25: a 22-fixture sweep aborted at the thirteenth with *"never reached
+the Finder desktop"*, which is what a host in swap looks like from inside the
+harness — the guest missed its settle timeout and nothing about the guest was
+wrong. `boot_copy()` now warns when the destination is `tmpfs` or `ramfs`.
+The same sweep with `-o` on disk is the one to trust.
+
 **`os9.py` drives the Finder from the keyboard, and it does not have to.**
 Typing selects an icon by name and Cmd-Down opens it — no coordinates, no
 double-click threshold — which is why every fixture run goes that way and
@@ -1602,19 +1611,27 @@ packet. **`os9mouse.py` positions the cursor to within 3 px and clicks**
 (BLOCKERS.md, *Withdrawn claims*), which is what made an installer and an
 encrypted specimen possible. See *Mac OS 9 with the pointer*, below.
 
-**What `--autotest` cannot score, measured 2026-09-25.** That route writes
-every input to the volume as `ARCHIVE_ON_VOLUME` — `archive.sit` — so a format
-that names its single entry after the archive comes back under the wrong name
-with the right bytes: `synth-exo-Z.Z` and `synth-exo-gz.gz` report `MISSING
-synth-exo-Z` / `UNEXPECTED archive` at `ret=0` with matching CRCs and byte
-counts. `synth-os9-rar.rar` fails for the other reason: `ret=-6` with nothing
-written is the correct refusal for a detect-only format, and
-`--expect-refusal` is wired to `--hfsplus` only. **So `--autotest` over
-`os9sample.txt` scores 19/22 with a healthy build**, and a run down this route
-has to be read against that, not against `--launch`'s **22/22** (FORMATS.md,
-*Mac OS 9 tier*) — `--launch` drives the interactive build, which opens the
-file under its own name and scores a detect-only refusal correctly. Anything needing `-D` is stuck with `--autotest`, since
-that is the only route the switch reaches.
+**`--autotest` scored three healthy fixtures as failures until 2026-09-25,
+and both causes are fixed.** That route writes every input to the volume as
+`ARCHIVE_ON_VOLUME` — `archive.sit` — and handed the REFERENCE the fixture's
+own path, so gzip and `.Z`, which name their single entry after the archive,
+came back as `archive` against Linux's `synth-exo-Z`: `ret=0`, matching CRCs
+and byte counts, a name mismatch and nothing else. `verify_output()` had
+copied the fixture to `as-the-mac-saw-it/archive.sit` for that exact reason
+since 2026-08-08; the `--autotest` and `--hfsplus` verifiers were written
+later and did not inherit it. Both do now. `synth-os9-rar.rar` failed for the
+other reason: `ret=-6` with nothing written is the CORRECT refusal for a
+detect-only format, and the route demanded `UNC_OK`. It now passes when both
+sides refuse — the reference exiting non-zero with no files, the Mac
+reporting a non-zero `ret` with no files — and prints the reference's own
+message, while staying strict everywhere else, so a Macintosh that writes
+nothing while the engine extracts still fails.
+
+**So this route scores `os9sample.txt` 22/22 on a healthy build**, as
+`--launch` does (FORMATS.md, *Mac OS 9 tier*); it read 19/22 before the fix,
+which is in BLOCKERS.md as a harness artefact rather than a result. Anything
+needing `-D` is stuck with `--autotest`, since that is the only route the
+switch reaches.
 
 **`--hfsplus` writes to a volume the host cannot read.** The boot volume is
 HFS+ inside an HFS wrapper — wrapper MDB signature `0x4244 'BD'`,
