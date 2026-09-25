@@ -16,23 +16,22 @@ const OverlayHostFns *g_ovl_fns = (const OverlayHostFns *)-1;
 
 /* An overlay links no libc, and zlib wants three primitives from it.
  *
- * memcpy is real: inflate copies its window with it on every block, so this
- * is a working implementation and not a stub. malloc and free are the other
- * kind and say so — src/unc_inflate.c installs the engine's own allocator
- * into the z_stream (unc_zalloc/unc_zfree), so zlib's zcalloc/zcfree are
- * never called. They exist because inflateInit2_ REFERENCES them whether or
- * not the path runs, and a NULL from malloc is the answer zlib is written to
- * handle: it returns Z_MEM_ERROR, which surfaces as a per-entry memory error
- * rather than as anything silent. */
-void *memcpy(void *dst, const void *src, unsigned long n);
-void *memcpy(void *dst, const void *src, unsigned long n)
-{
-    unsigned char *d = (unsigned char *)dst;
-    const unsigned char *s = (const unsigned char *)src;
-    while (n--) *d++ = *s++;
-    return dst;
-}
-
+ * memcpy used to be defined here — inflate copies its window with it on every
+ * block — and is now tools/overlay/ovl_rt.c's, which every image links and
+ * --gc-sections drops where nothing calls it. One definition rather than one
+ * per image that needs one: a second image reaching for memcpy was a link
+ * failure to be solved by hand, and the compiler can emit that call from
+ * source that never mentions it.
+ *
+ * malloc and free stay HERE, and are the other kind of primitive: stubs.
+ * src/unc_inflate.c installs the engine's own allocator into the z_stream
+ * (unc_zalloc/unc_zfree), so zlib's zcalloc/zcfree are never called. They
+ * exist because inflateInit2_ REFERENCES them whether or not the path runs,
+ * and a NULL from malloc is the answer zlib is written to handle: it returns
+ * Z_MEM_ERROR, which surfaces as a per-entry memory error rather than as
+ * anything silent. They are not in the runtime net deliberately — a stub that
+ * answers NULL is right for zlib and wrong as a default for whatever reaches
+ * for malloc next, and a link failure is how that gets noticed. */
 void *malloc(unsigned long n);
 void *malloc(unsigned long n) { (void)n; return (void *)0; }
 
