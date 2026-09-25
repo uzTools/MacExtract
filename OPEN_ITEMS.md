@@ -105,9 +105,15 @@ Apple documents the 68LC040 Emulator as ignoring the request (MANUAL_TESTS.md
 §2, the 68020/030/040 bullet; DECISIONS.md 2026-09-25, *the flush nobody
 wrote*).
 
-**So what is left is not evidence but a judgement**: 25 KB of download and a
-launch-time read against 84–103 KB of heap and two archives at 512 KB, on a
-mechanism whose release is irreversible per archive. That is the maintainer's,
+**So what is left is not evidence but a judgement**: 25 KB of download
+against 84–103 KB of heap and two archives at 512 KB, on a mechanism whose
+release is irreversible per archive. **The launch-time read is not a second
+cost on that list**, which this section implied until it was measured
+(2026-09-25): every byte of a default build is read at launch as it is, one
+`CODE` resource of 185,472 B, and the overlay build reads 65,664 B of `CODE`
+plus a 146,176 B `OVLY` bundle — 211,840 B against 185,472 B, so the read is
+the same read redistributed and **+26,368 B**, which is the download delta
+over again rather than a new term. That is the maintainer's,
 and it is the whole of what stands between this and a default. The mechanism
 and its traps are written up in `BRANCH_NOTES.md` on either branch, so acting
 on it is a merge and not a rediscovery.
