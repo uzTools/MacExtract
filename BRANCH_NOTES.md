@@ -1,6 +1,6 @@
 # Branch `selective-loading` — load only the decoder the archive needs
 
-**Status: thirteen overlays, four tiers run, and two archives recovered.**
+**Status: fifteen images, four tiers run, and two archives recovered.**
 71/71 at 4 MB, 71/71 at 1 MB, 71/71 on System 3.0 at 1 MB, and **69/71 at
 512 KB against `main`'s 67/71** — `derived-a2basic.dmg.sit` and
 `derived-Cool_Tools__.sit` extract on a Macintosh 512Ke, which `main` cannot.
@@ -17,6 +17,79 @@ back into the application — has worked since 2026-08-30; what was missing was
 the belief that a decoder could go in one, and that came from a wrong comment
 (*What the prize is NOT*, below).
 
+
+## The build could go stale, and every image was — 2026-09-25
+
+**Claim: an image rule depended on its own `.c` files and on almost none of
+the headers those files include, so a header edit rebuilt the resident
+application and left the images as they were.** Counted with `gcc -MM` over
+each rule's own sources against its `DEPENDS`: the fifteen rules between them
+name **none** of the 26 headers their sources actually include, and
+`touch tools/overlay/overlay.h` regenerated **7 of 15** images — that header
+was listed by seven rules and omitted by eight, which is what a list copied
+fifteen times does.
+
+**Why this is worse than a stale object file.** `overlay.h` is where the
+`OVL_*` entry-point ids live and `include/macextract.h` is where
+`UncEntryInfo` lives, and an image compiles against both — a decoder overlay
+compiles the decoder. Neither disagreement is a link error: the host calls an
+id the image numbers differently, or hands it a struct the image lays out
+differently, and the first symptom is on the Macintosh.
+
+**The fix is one list, and headers by glob.** `OVL_DEPS` holds what every
+image is built from — `overlay.ld`, `mkoverlay.sh`, `mkreloctrailer.py`,
+`ovl_rt.c` — and `file(GLOB OVL_HDRS CONFIGURE_DEPENDS ...)` adds every header
+under `src/`, `include/`, `third_party/zlib/` and `tools/overlay/`. Names are
+what drifted, so the fix uses no names, and `CONFIGURE_DEPENDS` re-globs at
+build time so a header added tomorrow is covered by itself. **`touch
+src/unc_internal.h` now rebuilds 15 of 15 images, in 9.4 s for the whole
+build**, and a no-op rebuild still regenerates nothing.
+
+### The runtime net: the compiler emits calls that appear in no source file
+
+**Neither `-fno-builtin` nor `-fno-tree-loop-distribute-patterns` stops gcc
+calling libc from an image.** With both, at exactly the flags `mkoverlay.sh`
+uses, a 400-byte struct assignment still emits a call to `memcpy` (measured
+2026-09-25). The flag added on 2026-09-19 covers the one idiom that bit then —
+the zeroing loop main's fused Compact Pro stages arrived with — and the
+optimiser has more idioms than this build has flags.
+
+`tools/overlay/ovl_rt.c` defines `memcpy`, `memmove`, `memset` and `memcmp`,
+is compiled into every image, and `--gc-sections` drops every one nothing
+calls. **Cost: 0 bytes, measured rather than argued** — 14 of the 15 images
+are byte-identical to what they were before the object joined the link, and
+`MacExtract.bin` is the same 213,376 B. The two that moved are
+`ovl_exo.r`, whose hand-written `memcpy` for zlib this replaces (same
+27,252 B), and the application that carries it.
+
+**It can fail, which was checked before it was trusted**: emptying
+`ovl_rt.c` fails the link with `undefined reference to memcpy` from zlib's
+`inflate`. `malloc` and `free` deliberately stay in `ovl_exo.c` — a stub that
+answers NULL is right for zlib and wrong as a default for whatever reaches for
+malloc next, and a link failure is how that gets noticed.
+
+**What the net cannot see:** these are byte-wise, and resident code calls
+Retro68's libc, so an image that pulls one onto a decoder's hot path is slower
+than the same code resident, with nothing failing to say so. `mkoverlay.sh`
+now prints `runtime: memcpy` beside the image that took one — today only
+`ovl_exo.r`.
+
+
+### The resource ids were written twice, and nothing compared them
+
+**Claim: the id an image answers to lived in `overlay.h` and `mac/CMakeLists.txt` — and two of them disagreeing
+is not a build error.** The shim asks `GetResource('OVLY', OVL_ID_LZH)`; the
+resource is numbered by whatever the build passed as `OVL_ID=131`. Renumber
+one and not the other and the build is green and the image is simply not
+found, which reaches the user as a per-entry memory error.
+
+**Every id now comes from `overlay.h`, by name** — `tools/overlay/ovlid.py`,
+called by `mkoverlay.sh` and by `mkbundle.py`. A NUMBER is refused rather
+than passed through, because accepting one is how the second copy of the table
+comes back. Renaming `OVL_ID_LZH` in `overlay.h` now fails the build with
+*"ovlid: overlay.h defines no OVL_ID_LZH"*, which was run. **Every image is
+byte-identical across the change**, which is what says no id moved while the
+table was being removed.
 
 ## Merged main — 2026-09-24
 
