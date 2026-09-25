@@ -5465,6 +5465,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
           PStrCat(tmp, " "); }
 #if defined(UNC_AT_OVERLAY)
         { extern short gWantedAfterRelease, gKeepFail, gRelFmt;
+          extern short gFlushHas, gFlushCalls;
           unsigned char w[32]; short k;
           PStrCat(tmp, "wa=");
           NumToString(gWantedAfterRelease, w);
@@ -5474,6 +5475,12 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
           for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
           PStrCat(tmp, " rf=");
           NumToString(gRelFmt, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " fc=");
+          NumToString(gFlushHas, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " fn=");
+          NumToString(gFlushCalls, w);
           for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
           PStrCat(tmp, " "); }
 #endif

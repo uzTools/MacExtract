@@ -11,6 +11,93 @@ StuffIt 5 archive is granted **734,656 B** with the bundle released and only
 the ciphers kept; an LZH gets **752,898 B**, keeping only its own decoder,
 against 650,692 B with no overlays at all. 71/71 fixtures extract byte-exact
 at 4 MB and at 1 MB, and 69/71 on a 512 KB machine (*Merged main*, below).
+**71/71 on System 7.0.1 at 4 MB, 2026-09-25** — the first run of this
+configuration anywhere above System 6, and what `main` scores on the same
+sample.
+
+
+## The instruction cache that nothing flushed — 2026-09-25
+
+**Claim: both fixup sites write executable bytes as data and then execute
+them, and neither flushed the instruction cache, which Inside Macintosh
+requires.** `ovl_bundle_fixup` rewrites longs inside the bundle at preload;
+`ovl_keep` copies an image with `BlockMoveData` and fixes it up again at the
+copy's address.
+
+**The rule is documented rather than inferred.** Inside Macintosh: Memory,
+chapter 4, *Stale Instructions*: "you must flush the instruction cache every
+time you modify executable instructions in memory", naming modified jump-table
+entries and patches installed by copying code. `_BlockMove`, `_Read`,
+`_LoadSeg` and `_UnloadSeg` flush on the application's behalf.
+**`BlockMoveData` is not among them** — it is the variant trap, 0xA22E against
+`_BlockMove`'s 0xA02E — so `ovl_keep`'s copy is exactly the case the chapter
+is about.
+
+**Two traps, and the toolchain uses the older one.** Retro68's own relocator
+flushes at these same two moments — after `Retro68ApplyRelocations` and after
+patching each jump-table entry (`libretro/relocate.c`,
+`libretro/MultiSegApp.c`) — by calling `FlushCodeCache` (0xA0BD). Inside
+Macintosh documents `FlushInstructionCache` as `_HWPriv` (0xA198) selector 1,
+which on a processor with a copy-back data cache flushes the DATA cache first,
+"to ensure that any instructions subsequently copied to the instruction cache
+are not copied from stale RAM" — the 68040 case, and precisely what a
+`BlockMoveData` copy creates. `ovl_flush_code()` therefore prefers `_HWPriv`
+and falls back to 0xA0BD, each behind a trap-availability probe, because a 64K
+ROM has neither.
+
+| | before | after |
+|---|---|---|
+| overlay build, resident `CODE` | 53,780 B | **53,920 B** |
+| overlay build, A5 | 19,148 B | **19,136 B** |
+| `MacExtract.bin` | 214,528 B | **214,656 B** |
+
+The default build is untouched: none of it compiles into one.
+
+### What no tier here can show, and what one of them did
+
+**Neither emulator has a cache to go stale.** Mini vMac is a 68000, and Apple
+documents that the 68LC040 Emulator — how the Mac OS 9 tier runs this
+application — **ignores** requests to invalidate the 68040 instruction cache,
+while telling developers to keep issuing them for 680x0 machines (Inside
+Macintosh: PowerPC System Software, *The 68LC040 Emulator*). So no sweep
+available here can fail for want of the flush, and a green one is not evidence
+that it works.
+
+`fc` — which route the machine offers, 0 none, 1 `_HWPriv`, 2
+`FlushCodeCache` — and `fn`, calls made, therefore ride the
+`-D UNC_AT_BUDGET` completion alert. `derived-BootTime.cpt` through
+`interactive.py`, same fixture both times:
+
+| tier | | |
+|---|---|---|
+| System 6.0.8, 4 MB | `fc=0 fn=0` | neither trap is live on the Plus's ROM |
+| System 7.0.1, 4 MB | **`fc=1 fn=3`** | `_HWPriv` is patched in, and fires |
+
+Three is the right number: one for the bundle fixup at preload, one for each
+of the two images an unencrypted Compact Pro keeps. Both runs extracted
+completely at `pk=23889`, so **the call executes in the right places and costs
+nothing on a machine with no cache** — which is as far as this environment can
+take it. Real 68020-and-up silicon is MANUAL_TESTS.md §2's.
+
+### The alarm that fired on a healthy archive
+
+**Claim: `wa` — an image wanted after the release, which this file calls a
+thing that must never happen — fires on every unencrypted Compact Pro.**
+Measured 2026-09-25: `derived-BootTime.cpt` reported `wa=128` with `e1=0` and
+the extraction complete.
+
+**Why.** `fmt_cpt.c`, `fmt_sit.c` and `fmt_packit.c` call `unc_crypt_free` at
+cleanup unconditionally, encrypted or not, and the resident `unc_crypt_free`
+is a no-op on a NULL table. A Compact Pro whose directory let the release drop
+the ciphers arrives there with nothing to free and no image to do it with.
+Nothing leaks: `cr->tab` is non-NULL only if a key setup ran, which would have
+kept the image.
+
+**Consequence: the free path asks quietly** — `ovl_image_q(OVL_ID_CRYPT, 1)`,
+every other caller unchanged — and the same run then reads `wa=0` with the
+same output and the same peak. **An alarm that fires when nothing is wrong
+cannot be read when something is**, and `wa` is the field that found the
+preload bug (*Withdrawn: "one disk read at launch"*).
 
 
 ## The build could go stale, and every image was — 2026-09-25

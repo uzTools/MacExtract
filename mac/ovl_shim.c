@@ -58,6 +58,12 @@ static int    gBundleTried;
  * there is no reload — `kf` says why a keep failed, and `rf` is the format
  * the release decided on. Printed on the completion alert. */
 short gWantedAfterRelease, gKeepFail, gRelFmt;
+/* `fc` is which flush route this machine offers — 0 none, 1 _HWPriv, 2
+ * FlushCodeCache — and `fn` how many times one was called. Without them the
+ * flush is a line nobody can watch fail: every tier here is either cacheless
+ * or documented to ignore the request, so a green sweep says nothing about
+ * whether the call was even reached. These two say which. */
+short gFlushHas, gFlushCalls;
 #define OVL_DIAG(stmt) do { stmt; } while (0)
 #else
 #define OVL_DIAG(stmt) ((void)0)
@@ -116,6 +122,68 @@ static void ovl_fixup(unsigned char *base, unsigned long size, long delta)
     }
 }
 
+/* Newly written instruction bytes have to reach the instruction stream, and
+ * this is a documented requirement rather than a precaution.
+ *
+ * Both fixup sites write code AS DATA and then execute it: ovl_bundle_fixup
+ * rewrites longs inside the bundle at load, and ovl_keep copies an image with
+ * BlockMoveData and fixes it up again at the copy's address.
+ *
+ * Source: Inside Macintosh: Memory, chapter 4, *Stale Instructions* — "you
+ * must flush the instruction cache every time you modify executable
+ * instructions in memory", and it names modifying jump-table entries and
+ * installing patches by copying code as the cases. _BlockMove, _Read, _LoadSeg
+ * and _UnloadSeg flush on the application's behalf; BlockMoveData is the
+ * variant trap (0xA22E against _BlockMove's 0xA02E) and is not among them, so
+ * ovl_keep's copy is exactly the case the chapter is about. Retro68's own
+ * relocator flushes at the same two moments — after Retro68ApplyRelocations
+ * and after patching each jump-table entry (libretro/relocate.c,
+ * libretro/MultiSegApp.c) — which is where the trap-availability probe below
+ * comes from.
+ *
+ * TWO traps, because the one the toolchain uses is not the documented one.
+ * Retro68 calls FlushCodeCache (0xA0BD). Inside Macintosh: Memory documents
+ * FlushInstructionCache as _HWPriv (0xA198) selector 1, and says that on a
+ * processor with a copy-back data cache it flushes the DATA cache first, "to
+ * ensure that any instructions subsequently copied to the instruction cache
+ * are not copied from stale RAM" — which is the 68040 case, and the case a
+ * BlockMoveData copy creates. So _HWPriv is preferred where it exists and
+ * 0xA0BD is the fallback for the older ROMs that have only that.
+ *
+ * WHAT NO TIER HERE CAN SHOW. Mini vMac emulates a 68000, which has no cache,
+ * and Apple documents that the 68LC040 Emulator — how the Mac OS 9 tier runs
+ * this application — IGNORES requests to invalidate the 68040 instruction
+ * cache, while telling developers to keep issuing them for 680x0 machines
+ * (Inside Macintosh: PowerPC System Software, *The 68LC040 Emulator*). So a
+ * green sweep on any tier this project can run is not evidence that the call
+ * works, and the gFlushHas/gFlushCalls diagnostics below are what a run can
+ * actually report: which route was taken, and how many times. Real 68020-and-up
+ * silicon is MANUAL_TESTS.md's. */
+static int gFlushProbed;
+static int gFlushRoute;         /* 0 none, 1 _HWPriv, 2 FlushCodeCache */
+
+static int ovl_trap_live(unsigned short trap)
+{
+    return GetOSTrapAddress(trap) != GetOSTrapAddress(_Unimplemented);
+}
+
+static void ovl_flush_code(void)
+{
+    if (!gFlushProbed) {
+        const short *rom85 = (const short *)0x028EL;   /* >0 on a 128K ROM */
+        gFlushProbed = 1;
+        if (*rom85 > 0) {                    /* a 64K ROM has neither trap */
+            if (ovl_trap_live(_HWPriv)) gFlushRoute = 1;
+            else if (ovl_trap_live(0xA0BD)) gFlushRoute = 2;
+        }
+        OVL_DIAG(gFlushHas = (short)gFlushRoute);
+    }
+    if (gFlushRoute == 1) HWPriv(1, 0);      /* FlushInstructionCache */
+    else if (gFlushRoute == 2) FlushCodeCache();
+    else return;
+    OVL_DIAG(gFlushCalls++);
+}
+
 /* Relocate every image where it sits IN THE BUNDLE, once, at load.
  *
  * An image is executed in place unless it is copied out, so its relocations
@@ -134,6 +202,7 @@ static void ovl_bundle_fixup(void)
         unsigned long off = ovl_be32(e + 4), len = ovl_be32(e + 8);
         ovl_fixup((unsigned char *)p + off, len, (long)(p + off));
     }
+    ovl_flush_code();
 }
 
 /* Called from main() while the boot disk is certainly in. */
@@ -160,7 +229,7 @@ void ovl_preload(void)
  * released without the archive's own directory saying so — see
  * ovl_release_if_unwanted, where anything short of a definite NO keeps the
  * ciphers. */
-static OverlayEntry ovl_image(short id)
+static OverlayEntry ovl_image_q(short id, int expected)
 {
     const unsigned char *p;
     unsigned long len;
@@ -168,10 +237,15 @@ static OverlayEntry ovl_image(short id)
     for (i = 0; i < 3; i++)
         if (gKept[i] != NULL && gKeptId[i] == id)
             return (OverlayEntry)(void *)*gKept[i];
-    if (gBundle == NULL) { OVL_DIAG(gWantedAfterRelease = id); return NULL; }
+    if (gBundle == NULL) {
+        if (!expected) OVL_DIAG(gWantedAfterRelease = id);
+        return NULL;
+    }
     p = ovl_find(gBundle, id, &len);
     return p ? (OverlayEntry)(void *)p : NULL;
 }
+
+static OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
 
 /* The ciphers, by their id in the bundle. Kept as a named function because
  * every cipher shim calls it and the name says which overlay is meant. */
@@ -232,6 +306,7 @@ static void ovl_keep(short id, int slot)
     ovl_fixup((unsigned char *)*h, (unsigned long)len,
               (long)*h - (long)p);   /* by the DIFFERENCE: p was relocated
                                       * for its place in the bundle */
+    ovl_flush_code();
     gKept[slot] = h;
     gKeptId[slot] = id;
 }
@@ -389,10 +464,20 @@ INT_KEYED_AL(unc_crypt_packit_des, OVL_CRYPT_PACKIT_DES)
  * belongs to unc_crypt.c's own accounting. It is reachable whenever there
  * is anything to free: cr->tab is non-NULL only if a key setup ran, which
  * needed this image, and ovl_release_if_unwanted runs once after the sniff
- * and never during an extraction. */
+ * and never during an extraction.
+ *
+ * And this is the ONE path allowed to find the image gone, which is why it
+ * asks quietly. fmt_cpt.c, fmt_sit.c and fmt_packit.c free unconditionally at
+ * cleanup, encrypted or not, and the resident unc_crypt_free is a no-op on a
+ * NULL table — so an unencrypted Compact Pro, whose directory let the release
+ * drop the ciphers, arrives here with nothing to free and no image to do it
+ * with. Recording that as `wa` made the alarm fire on every such archive
+ * (measured 2026-09-25: `wa=128` on derived-BootTime.cpt, extraction
+ * complete, e1=0), and an alarm that fires when nothing is wrong cannot be
+ * read when something is: `wa` is how the preload bug was found. */
 void unc_crypt_free(UncCrypt *cr, UncAlloc *al)
 {
-    OverlayEntry e = ovl_entry(); OvlArgs g;
+    OverlayEntry e = ovl_image_q(OVL_ID_CRYPT, 1); OvlArgs g;
     if (!e) return;
     g.obj = cr; g.al = al;
     OVL_CALL(OVL_CRYPT_FREE, &g);
