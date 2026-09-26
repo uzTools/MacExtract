@@ -109,50 +109,11 @@ detect-only — disk images are out of scope for v1.
 
 ---
 
-## Unexplained, reproducible, and load-bearing for whoever edits `UncEntryInfo`
-
-**Adding a field to `UncEntryInfo` makes two fixtures roughly twenty times
-slower on the Macintosh, and nothing else changes.** Found on the overlay
-branch while trying to let the release ask an archive whether it is
-encrypted; the feature turned out to be unnecessary, the field was reverted,
-and the effect is real. *Hypothesis, not root-caused.*
-
-**The reproduction**, three commands:
-
-1. add `uint8_t encrypted;` to `UncEntryInfo` in `include/macextract.h` —
-   anywhere in the struct, set by nobody;
-2. `rm -rf build/mac-autotest`
-3. `tools/vmac/run.py fixtures/derived-LHA_Expander_1.0.3.sea --mem 1M`
-
-Result: `TIMEOUT — app alive but still extracting after 300s`, against
-**5.1 s** without the field. `derived-Terrainman_2.0__.sea` does the same.
-Both are DiskDoubler self-extracting archives; every other fixture is
-unaffected, at 1 MB and at 4 MB alike.
-
-**What it is not.** Not the overlays — the resident build does it too. Not
-the stack: `UNC_STACK_BUMP_KB=48` changes nothing. Not layout — the field at
-the END of the struct behaves the same. Not the engine: the Linux CLI, the
-ASan/UBSan Mac-sink build and the big-endian m68k build under `qemu-m68k` all
-extract it correctly and quickly.
-
-**The one clue is the SIZE.** `uint8_t` and `uint16_t` both grow the struct
-by 2 bytes after padding, and both hang. `uint32_t` grows it by 4 and
-**passes**. So the sensitivity is to the struct's total size in a way that 4
-satisfies and 2 does not, which points at the Macintosh Memory Manager's
-block placement rather than at anything in this repository — a shifted
-allocation landing where every later one compacts the heap would look exactly
-like this.
-
-**Nothing is built on it, and a 4-byte field is not a fix**: an unreduced
-root cause is a hypothesis, and building on one is building on sand
-(CLAUDE.md, *Rules*). It is here because the next person to add a field to
-that struct will otherwise spend the day this cost.
-
 ## Withdrawn claims
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-two**
+and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-three**
 mechanisms keep finding the next one — counted 2026-09-26, when the
 sentence still said ten and the list had thirty — and two of them need no
 insight at all:
@@ -381,11 +342,22 @@ insight at all:
   the number ever gets re-measured** — when the story names a guard, go
   and look at which side of the guard the code is on.
 
+- **a reproduction whose mechanism is a number, and which does not say to
+  check the number.** Added 2026-09-26: the `UncEntryInfo` recipe said to add
+  a byte *"anywhere in the struct"* while its own next paragraph said the
+  effect was sensitive to the struct's SIZE — and one of the obvious
+  placements lands in padding and changes nothing, so following the recipe
+  exactly produces a pass that means nothing. **An unexplained effect labelled
+  *reproducible* is the claim least likely to be re-run**, because the label
+  is what stops anyone doubting it; this one stood ten days on a tree that had
+  stopped showing it (below).
+
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **Adding a field to `UncEntryInfo` makes two fixtures roughly twenty times slower on the Macintosh** — BLOCKERS.md carried it as *"unexplained, reproducible, and load-bearing for whoever edits `UncEntryInfo`"* from 2026-09-25, with a three-command reproduction and the warning that the next person to touch that struct would otherwise spend the day it cost. Labelled a hypothesis, correctly; the sensitivity was said to be to the struct's SIZE, since `uint32_t` (+4) passed where `uint8_t` and `uint16_t` (+2) hung | **The reproduction passes on v0.33.0, six runs.** With the field at the end of the struct and `sizeof(UncEntryInfo)` measured at **302** against the clean tree's 300 — the documented +2 — `derived-LHA_Expander_1.0.3.sea` and `derived-Terrainman_2.0__.sea` each extract in **5.1 s and PASS** at 1 MB and at 4 MB, and the resident control build (`UNC_OVL_RESIDENT`) does the same at 1 MB. The field was in the binary: the autotest `CODE` is 114,544 B with it against 114,428 B without. **And the recipe was defective in one measured way**: it says to add the field *"anywhere in the struct"*, but `uint8_t` placed before `method_data` lands in existing padding and `sizeof` stays **300** — two of these runs were that, and proved nothing until the size was checked. A reproduction whose whole mechanism is a size has to assert the size. What produced the original timeouts is not established and no longer happens here; the tree has since lost DART, gained the overlays and moved 8 KB of code. **Cost: a day when it was found, and a warning carried for ten days on a tree that had stopped showing it** (DECISIONS.md 2026-09-26, *the reproduction that had stopped reproducing*) | 2026-09-26 |
 | **PackIt's XOR and DES are reached by 0 of 30 fuzz mutants, because a flipped bit fails its header CRC before a key is derived** — TESTING.md (*Fuzzing*) and OPEN_ITEMS.md since 2026-09-23, where it also specified the remedy: *"for PackIt a mutation that repairs the header CRC afterwards"* | **17 of 30, mutating exactly the way that measurement did** — `tools/fuzz_reach.py --untargeted`, seed 11, which reproduces the same run's `sit-des` 19 and `sit5-rc4` 21 to the case, so the instrument is not what moved. And the stated cause is impossible in this format: PackIt encrypts the entry HEADER along with the payload, so `src/fmt_packit.c` derives the key in the PMa5/PMa6 arm and checks that CRC further down the same walk — decrypt, then check. What does stand in front of the cipher is the FIRST, unencrypted entry's header CRC: in a faulted build, one flipped bit at offset 20 or at 60 stops the walk before the encrypted entries and one at 200 does not, which is 100 bytes of 890 rather than all of them. How the 0 was obtained is not recoverable from the write-up. **Cost: a remedy specified for a problem that does not exist**, carried as one of two things that would close the item, and two ciphers recorded as unreachable while they were in fact reached at nearly the rate of the two that counted as reached (DECISIONS.md 2026-09-26, *the guard that was on the other side*) | 2026-09-26 |
 | **The 1 MB Mac Plus budget is 647,204 B** — FORMATS.md, *Budget*, stated as arithmetic: 648,100 B measured on 2026-08-31, less the 896 B the UTF-8 fold added to `CODE` and A5 | **The machine says 648,282 B**, so the arithmetic moved AWAY from the answer. The formula and the subtraction were both right; the base was three weeks and six rewritten formats old, and the decoder work had taken more off the application than the fold put on. The two 512 KB constants beside it had drifted **21,666 B** each, in the same direction and for the same reason, and with all three re-taken `run_tiers.py` reproduces **all three tiers fixture for fixture** — including System 6.0.8 / 512 KB, which had never matched and whose one-fixture disagreement TESTING.md had filed under fragmentation. **Cost: a stale predictor that was wrong about four fixtures on the tier it could not check**, and half a day in which the floor figure was less accurate than the one it replaced. *A constant derived from a measurement is only as current as the measurement* — and subtracting from a stale one looks like maintenance (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |
 | **What would close the `DDAR` `0x20` row is a 1.x or 2.x DiskDoubler, neither of which is reachable from here** — OPEN_ITEMS.md's `fmt_dd.c` row and `docs/formats/diskdoubler-container.md`, *What would close it* | **A 2.x DiskDoubler could not have written a `DDAR` record of any flags, so finding one would have settled nothing.** `DDExpand 2.03a`'s `BNDL` declares the DiskDoubler file types it opens — `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` — and `DDAR` is not among them, nor does the string occur anywhere in its 65,212-byte resource fork; DDExpand 3.1 declares those five plus `DDAR`, `DDTD`, `DDCR` and `DDF0`–`DDF5`, and holds the literal nine times. Both are on the Macintosh Garden page this project already fetches 3.7 from, and so is **DiskDoubler ß05, 1990**, the oldest DiskDoubler anywhere reachable — whose Finder menu is `Compress Selection;Expand Selection` and which cannot write an archive either. *A search that names the wrong tool*, one format over: the row named a VERSION rather than a shape, on the strength of which version XADMaster's author owned. **Cost: nothing yet, and only because no 2.x was available to spend a boot on** (DECISIONS.md 2026-09-22, *the version that could not have written it*) | 2026-09-22 |

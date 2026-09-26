@@ -280,6 +280,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
 - 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
 - 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
+- 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
 
 ---
 
@@ -17652,3 +17653,48 @@ build and the third from a different KIND of file, and the gap was exactly the
 difference between the two kinds. **A figure nothing measures is a figure
 nobody can correct** — the bundle's size is now written by the build, and the
 host loader lane reads it every run.
+
+## 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
+
+**Claim: adding a 2-byte field to `UncEntryInfo` makes two DiskDoubler
+self-extracting fixtures roughly twenty times slower on the Macintosh.** Filed
+2026-09-25 as *unexplained, reproducible and load-bearing*, with three
+commands and a warning to the next person who edits that struct. Labelled a
+hypothesis, which was right. **It does not reproduce: six runs, all PASS in
+5.1 s** (BLOCKERS.md, *Withdrawn claims*, has the grid).
+
+**What went wrong with the recipe, and it is the transferable part.** Step 1
+is *"add `uint8_t encrypted;` to `UncEntryInfo` — anywhere in the struct, set
+by nobody"*. Placement decides whether the struct grows at all: put before
+`method_data` the field lands in existing padding and `sizeof` stays **300**,
+the same as the clean tree. The first two runs here were exactly that, and
+they passed — a result that meant nothing, because the condition the whole
+effect is about had not been met.
+
+The entry itself contains the reason this matters, one paragraph below the
+recipe: *"the one clue is the SIZE"* — `uint32_t` grows the struct by 4 and
+passes, `uint8_t` and `uint16_t` grow it by 2 and hang. **A reproduction whose
+mechanism is a number has to assert that number.** Say `sizeof` must come out
+302 and how to check it (`m68k-linux-gnu-gcc -Iinclude` on a four-line probe,
+under `qemu-m68k`, two seconds), not "anywhere in the struct".
+
+**With the size actually 302**, both named fixtures extract and pass, at 1 MB
+and at 4 MB, in the shipped overlay build and in the resident control — and
+the field was in the binary, which was checked rather than assumed: the
+autotest `CODE` is 114,544 B with it and 114,428 B without.
+
+**What is NOT claimed.** Not that the original timeouts were imagined. They
+were observed twice, on two fixtures, and a size-neutral placement cannot
+produce a spurious hang — only a spurious pass. Between then and now the tree
+lost DART, gained the overlays as the default build and moved about 8 KB of
+code, and the effect pointed at Memory Manager block placement to begin with;
+a heap whose contents have all moved is no longer the heap that showed it. So
+the effect is gone from this tree and its cause was never established, which
+is the honest statement and the reason the claim leaves the live sections.
+
+**The general shape, and it is the second time this week.** An unexplained
+effect is the kind of claim most worth re-running and the least likely to be
+re-run, because the write-up says "reproducible" and nobody doubts it. This
+one cost a day when it was found and then stood for ten days as a warning
+about a tree that had stopped showing it. *A reproduction is a measurement
+with a date, not a property of the code.*
