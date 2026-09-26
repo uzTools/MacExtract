@@ -19,8 +19,10 @@
  */
 #include "unc_internal.h"
 
-/* Compact Pro. Source: the layout comment in src/fmt_cpt.c, itself from
- * reference/XADMaster/XADCompactProParser.m and macutils' cpt.c —
+/* Compact Pro. Source: the layout comment in src/fmt_cpt.c, which has
+ * been docs/formats/compact-pro.md's and the three wiki pages it
+ * corrects since 2026-09-20 — this comment still named
+ * XADCompactProParser.m and macutils' cpt.c until 2026-09-26 —
  *
  *   header: u8 signature, u8 volume, u16 xmagic, u32 index offset
  *   index:  u32 CRC, u16 nentries, u8 commentlen, comment,

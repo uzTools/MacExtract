@@ -151,9 +151,13 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
 /* CRC-32: poly 0x04C11DB7 reflected (table constant 0xEDB88320),     */
 /*   init/final-xor handled by callers. Used by Arsenic, gzip, zip.   */
 /*   Source: reference/XADMaster/CRC.m — LGPL, see NOTICE.            */
-/* Tables generated mechanically from the polynomials; check values   */
-/* xmodem("123456789")=0x31C3, crc32("123456789")=0xCBF43926 are      */
-/* asserted in tests/unit_util.c.                                     */
+/* Tables generated mechanically from the polynomials; the standard   */
+/* check values xmodem("123456789")=0x31C3 and                        */
+/* crc32("123456789")=0xCBF43926 are asserted in tests/unit_main.c    */
+/* (test_crc, with an incremental-equals-one-shot case beside them),  */
+/* and crc16_arc("123456789")=0xBB3D in tests/unit_formats.c against  */
+/* an independent bitwise implementation. This comment named          */
+/* tests/unit_util.c until 2026-09-26; no such file ever existed.     */
 /* ------------------------------------------------------------------ */
 
 static const uint16_t unc_crc16_table[256] = {
@@ -240,8 +244,11 @@ static const uint32_t unc_crc32_table[256] = {
 /* CRC-16/ARC: poly 0xA001 (reflected), init 0, no final xor.
  * Used by StuffIt classic header and fork CRCs.
  * Source: reference/XADMaster/CRC.m (XADCRCTable_a001) and
- * reference/macutils (arc_updcrc) — LGPL, see NOTICE.
- * Check value: crc16_arc("123456789") = 0xBB3D (asserted in tests). */
+ * reference/macutils (arc_updcrc) — LGPL, see NOTICE; this row is in
+ * OPEN_ITEMS.md's XADMaster inventory since 2026-09-26, with two
+ * permissive implementations that BUILD the table from the polynomial.
+ * Check value: crc16_arc("123456789") = 0xBB3D (tests/unit_formats.c,
+ * beside an independent bitwise implementation). */
 static const uint16_t unc_crc16_arc_table[256] = {
     0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241,
     0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440,

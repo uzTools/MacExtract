@@ -44,12 +44,14 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~14k tokens** (PROGRESS 4k, OPEN_ITEMS 8k,
-BLOCKERS' first two sections 2k), re-measured 2026-09-26; BLOCKERS'
-withdrawn-claims archive is another 15k and is reference, not orientation.
-**It was advertised at 7.5k from 2026-08-26 until then and had doubled
-without the figure moving** — the same way every other unwatched number in
-this project drifted, and the reason this one now says when it was taken.
+That session-start reading is **~15k tokens** (PROGRESS 4k, OPEN_ITEMS 9k,
+BLOCKERS' first two sections 2k), measured 2026-09-26; BLOCKERS'
+withdrawn-claims archive is another **~42k** and is reference, not
+orientation. **Both totals were stale until 2026-09-26** — the session-start
+figure sat at 7.5k from 2026-08-26 while the files doubled, and the archive
+at 15k while it grew two and a half times. `tools/check_docs.py` measures
+all five now, so the next drift fails `ci.sh` rather than waiting to be
+re-discovered.
 What made it grow is table cells that turned into essays: three rows of
 OPEN_ITEMS' provenance table were 2.2–3.7 KB each. A row states the claim,
 the number and the citation; the reasoning is DECISIONS.md's.
@@ -76,7 +78,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the thirty-three smells that keep finding the next one. The cheapest is a
+names the thirty-seven smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

@@ -181,11 +181,20 @@ This project's decoders are transcriptions/ports of algorithms from:
     reconstructed (Russell Marks, 2001, via deark's readme-lzhuf.txt)
     as "use, distribute, and modify this program freely". Since
     2026-09-19 `src/unc_lzah.c` — the -lh1- coder shared by StuffIt
-    method 5, LZH -lh1-, ARC 7.x Trimmed and DART's "best" — follows
+    method 5, LZH -lh1- and ARC 7.x Trimmed (and DART's "best" until
+    that format left the engine on 2026-09-25) — follows
     that program's tree machinery (freq/son/prnt, reconst, update,
     the 256-entry distance lookup derived from the 64 code lengths)
-    rather than XADMaster's transcription of it; the modes, the window
-    preloads and everything around the tree are this project's. The
+    rather than XADMaster's transcription of it; the modes and
+    everything around the tree are this project's. **The window
+    preload for -lh1- and StuffIt method 5 is not**, and this notice
+    said it was until 2026-09-26: that pattern — 13 copies of each
+    byte, then 0..255, then 255..0, then zeros, then spaces — is
+    XADLZHDynamicHandle.m's `resetLZSSHandle`. LHa for UNIX states the
+    same five steps in `larc.c`'s `decode_start_lz5`, but for LArc's
+    -lz5- and not for -lh1-, and lhasa fills the -lh1- buffer with
+    spaces instead (`lh1_decoder.c`), so neither is a second statement
+    of what this file does. The
     change was made for speed and heap, not licence: this engine
     remains LGPL through its other XADMaster transcriptions.
 

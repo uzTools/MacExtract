@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Seven of them, all cheap enough to run first in ci.sh:
+Nine of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
    in order. An index nobody regenerates is worse than no index, because it
@@ -37,6 +37,22 @@ Seven of them, all cheap enough to run first in ci.sh:
    the release notes verbatim and it is generated, so prose edited in the
    script reaches the download page only when somebody re-runs it. The
    BINARY beside it is ci.sh's job, which a docs-only change does not run.
+8. The five figures CLAUDE.md advertises for the session-start reading
+   are what those documents currently weigh. The total was "7.5k
+   tokens" from 2026-08-26 to 2026-09-26 while the files under it
+   doubled, and the pass that re-measured it left the next figure in
+   the same sentence — BLOCKERS' withdrawn-claims archive, quoted at
+   15k while it was ~42k — untouched (BLOCKERS.md, *Withdrawn claims*).
+   A reader uses these to decide what to open, so a figure a quarter of
+   the truth is worse than none.
+9. The number of smells BLOCKERS.md claims, in BLOCKERS.md and in
+   CLAUDE.md, is the number of bullets in the list. Three corrections of
+   one count is where it becomes a check: ten over a list of thirty
+   (2026-09-26), ten in CLAUDE.md before that, and thirty-three over
+   thirty-five hours after the second fix. A count written above a list
+   is the cheapest claim here to check and the least likely to be
+   checked, because the list grows one row at a time and no row is ever
+   the one that breaks the number.
 """
 
 import hashlib
@@ -317,11 +333,143 @@ def check_target_struct():
             for path, n in stated if n != size]
 
 
+# ---------------------------------------------------------------- sizes
+#
+# Tokens are not counted here — no tokenizer is installed and none is
+# wanted for this. The proxy is FOUR CHARACTERS PER TOKEN, which is what
+# reproduces the 2026-09-26 measurement of the session-start reading
+# (54,914 characters, advertised as ~14k), and the figures in CLAUDE.md
+# are held to it. The tolerance is generous on purpose: this check exists
+# to catch a figure that has DOUBLED, not to make every docs edit an
+# arithmetic exercise.
+CHARS_PER_TOKEN = 4.0
+SIZE_SLACK_K = 0.5          # absolute, for the small rounded figures
+SIZE_SLACK_FRAC = 0.25      # relative, for the big ones
+
+WITHDRAWN_HEAD = "## Withdrawn claims\n"
+
+K = r"\**~?([\d.]+)k"
+
+SIZE_CLAIMS = (
+    # regex over CLAUDE.md, what it measures, how to say it
+    # `K` allows the bolding and the tilde these figures are written with,
+    # so that emphasising one does not silently stop it being checked.
+    (r"session-start reading is " + K, "total", "the three files together"),
+    (r"\bPROGRESS " + K, "PROGRESS.md", "PROGRESS.md"),
+    (r"\bOPEN_ITEMS " + K, "OPEN_ITEMS.md", "OPEN_ITEMS.md"),
+    (r"BLOCKERS' first two sections " + K, "blockers-head",
+     "BLOCKERS.md down to *Withdrawn claims*"),
+    (r"withdrawn-claims archive is another " + K, "blockers-archive",
+     "BLOCKERS.md's withdrawn-claims archive"),
+)
+
+
+def _measured_sizes():
+    """Characters, per the five figures CLAUDE.md quotes."""
+    blockers = (ROOT / "BLOCKERS.md").read_text()
+    cut = blockers.index(WITHDRAWN_HEAD)
+    head, archive = blockers[:cut], blockers[cut:]
+    out = {
+        "PROGRESS.md": len((ROOT / "PROGRESS.md").read_text()),
+        "OPEN_ITEMS.md": len((ROOT / "OPEN_ITEMS.md").read_text()),
+        "blockers-head": len(head),
+        "blockers-archive": len(archive),
+    }
+    out["total"] = (out["PROGRESS.md"] + out["OPEN_ITEMS.md"] +
+                    out["blockers-head"])
+    return out
+
+
+def check_doc_sizes():
+    """What it cannot see: whether the reading is worth its size — only
+    what it weighs; and, being a proxy rather than a tokenizer, a drift
+    smaller than the slack above. It catches a figure that has doubled,
+    which is the only way this one has ever been wrong."""
+    text = (ROOT / "CLAUDE.md").read_text()
+    have = _measured_sizes()
+    out = []
+    for pattern, key, shown in SIZE_CLAIMS:
+        m = re.search(pattern, text)
+        if not m:
+            out.append("CLAUDE.md: no figure matching %r — this check has "
+                       "stopped checking %s" % (pattern, shown))
+            continue
+        said = float(m.group(1))
+        real = have[key] / CHARS_PER_TOKEN / 1000.0
+        if abs(said - real) > max(SIZE_SLACK_K, SIZE_SLACK_FRAC * real):
+            out.append("CLAUDE.md: says %s is %gk tokens; %s is %s "
+                       "characters, %.1fk at %g per token"
+                       % (shown, said, shown, "{:,}".format(have[key]),
+                          real, CHARS_PER_TOKEN))
+    return out
+
+
+# --------------------------------------------------------------- counts
+WORDS = {"ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
+         "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
+         "eighteen": 18, "nineteen": 19}
+TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60,
+        "seventy": 70, "eighty": 80, "ninety": 90}
+UNITS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+         "seven": 7, "eight": 8, "nine": 9}
+
+
+def _word_number(w):
+    w = w.lower()
+    if w in WORDS:
+        return WORDS[w]
+    if w in TENS:
+        return TENS[w]
+    if "-" in w:
+        a, b = w.split("-", 1)
+        if a in TENS and b in UNITS:
+            return TENS[a] + UNITS[b]
+    return None
+
+
+SMELL_CLAIMS = (
+    ("BLOCKERS.md", r"\*\*([A-Za-z-]+)\*\* mechanisms keep finding"),
+    ("CLAUDE.md", r"names the ([A-Za-z-]+) smells"),
+)
+
+
+def check_smell_count():
+    """The count above the list is the list's length. Counted from the
+    list itself: `- ` bullets between the *Withdrawn claims* heading and
+    the table of claims that follows it.
+
+    What it cannot see: a mechanism written into the body of another
+    bullet, which is a bullet's worth of content and not a bullet; and
+    two bullets that describe the same mechanism twice, which would make
+    the number right and the list wrong."""
+    blockers = (ROOT / "BLOCKERS.md").read_text()
+    cut = blockers.index(WITHDRAWN_HEAD)
+    table = blockers.index("\n| claim |", cut)
+    n = sum(1 for l in blockers[cut:table].split("\n") if l.startswith("- "))
+    out = []
+    for name, pattern in SMELL_CLAIMS:
+        text = (ROOT / name).read_text()
+        m = re.search(pattern, text.replace("\n", " "))
+        if not m:
+            out.append("%s: no smell count matching %r — this check has "
+                       "stopped checking" % (name, pattern))
+            continue
+        said = _word_number(m.group(1))
+        if said is None:
+            out.append("%s: %r is not a number this check can read"
+                       % (name, m.group(1)))
+        elif said != n:
+            out.append("%s: says %s (%d) smells; BLOCKERS.md's list has %d"
+                       % (name, m.group(1), said, n))
+    return out
+
+
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
                 check_synthetic() + check_target_struct() +
-                check_placeholders() + check_dist_readme())
+                check_placeholders() + check_dist_readme() +
+                check_doc_sizes() + check_smell_count())
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

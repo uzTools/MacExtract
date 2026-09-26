@@ -113,7 +113,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-five**
+and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-seven**
 mechanisms keep finding the next one — counted 2026-09-26, when the
 sentence still said ten and the list had thirty — and two of them need no
 insight at all:
@@ -370,6 +370,26 @@ insight at all:
   `tools/fetch_references.sh`-shaped: a document this project cites is a
   document it should be able to open, and a citation split between one it
   has and one it does not is the shape to look for (below).
+- **a citation that points at another file's comment.** Added 2026-09-26:
+  `src/unc_encinfo.c` sourced Compact Pro's index layout to *"the layout
+  comment in `src/fmt_cpt.c`, itself from `XADCompactProParser.m` and
+  macutils' `cpt.c`"* — and `fmt_cpt.c`'s comment had said the opposite
+  since 2026-09-20, naming the published pages instead. **A second-hand
+  citation is the only kind that a correction somewhere else can falsify
+  without touching it**, so it survives exactly the pass that should have
+  caught it. **The distinction is whether it RESTATES the source**: the
+  fifteen `fmt_*_probe.c` files say *"Source: unchanged from fmt_X.c,
+  whose provenance comments stand"* and name nothing, so a correction
+  over there reaches them for free; this one delegated and then repeated
+  what it was delegating to, and only the repetition went stale.
+- **two figures in one sentence, and only one of them re-measured.** Added
+  2026-09-26: CLAUDE.md's session-start reading was corrected from 7.5k to
+  14k tokens *with the date of the new measurement added*, and the next
+  three words — the withdrawn-claims archive is *"another 15k"* — were the
+  same stale month-old figure, then four times low. The correction proves
+  the sentence was read. **A pass that re-measures one number in a sentence
+  lends its credibility to every other number in it**, and the newly dated
+  one is what stops anybody asking about the rest.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -481,6 +501,12 @@ line is what makes the next one worth re-testing.
 | `spacesaver.py` and `sitcrypt.py` end their runs with Special ▸ Shut Down | 123 is **Restart** on System 7. Forty-three of their own `*-special-menu.png` highlight the band y=116..131, and the screenshot taken with 139 highlights Shut Down; `rescomp.py` had already been bitten by the same borrowed coordinate and says so in `tools/vmac/README.md`. **Cost: nothing measurable** — Restart ejects the volumes too, so the flush every one of those runs depends on did happen; what it cost `rescomp.py` once was a torn resource fork that read as a format finding | 2026-09-01 |
 | The shortfall the Macintosh reports is "round enough to type and never short" | it is ONE request's shortfall, not the entry's demand. `synth-dd-m5.dd` at the 512 KB budget reports **928 B** and needs **203,680** — the entry takes 1,536 B per distinct context byte and is refused at the first one that crosses the line, so the figure is an artefact of granularity. Both front ends now say **at least**. **Cost: the advice sent a user to Get Info for 8K on an entry that wanted 200K**, and this is the SECOND defect in the same sentence — M46 fixed it firing after a successful extraction | 2026-09-01 |
 | The eight-byte record at 144 of `derived-Expand_Now_1.0.1.sea` resembles a Now Compress block table by chance, and the next attempt should not trust it | it is a block table — the SECOND block's record, shape 2, with its 128-byte code table one byte past the offset it names, exactly where that shape puts one. Nothing was wrong with the record; two things around it were, and both were assumed rather than checked: it is not the first block, so its output starts at 32,768 and its matches reach back into a block nobody had decoded. **Cost: one day, and the advice would have cost the next attempt more** — it was written as guidance ("recorded so nobody follows it twice") and pointed away from the answer. The smell is a general one: **a structure that matches in two independent ways is evidence, and "probably coincidence" is a claim that needs its own test** | 2026-09-21 |
+| **OPEN_ITEMS.md's table is the inventory of what is still XADMaster's or macutils', and the licence changes when its last row is gone** | one grep — `Source:.*\(XAD\|macutils\)` over `src/*.[ch]` — returns 15 files and **8 of them had no row**: `unc_util.c` and `unc_internal.h` (the three CRC tables and the MSB-first bit reader), `fmt_binhex.c`, `fmt_uu.c` and `fmt_mime.c` (macutils' `hexbin`), and `fmt_foreign.c` with `fmt_sit_probe.c` and `fmt_packit_probe.c` (seven formats' signatures and two recognisers). **Two more needed a second spelling** — `unc_lzah.c`'s preload and `unc_encinfo.c`'s second-hand citation do not put `Source:` and the name on one line — so ten in all, and the grep that found this would have missed two of them. The table had been the DECODER list: every file in it is a format, and the shared primitives were never in it. **Cost: the licence question was being tracked against a count that could reach zero while the code still carried XADMaster** — and two of the files were named in NOTICE as having already left, `fmt_binhex.c` for its own specification and `unc_lzah.c`'s preloads as "this project's", so the two documents that state the position disagreed with the source for a week. The rows are in OPEN_ITEMS.md now — both greps come back with every file accounted for, and the 18 further files the broad one returns carry only "no longer XADMaster's" notes, read one at a time — and membership is grepped rather than remembered | 2026-09-26 |
+| **`src/unc_internal.h` cites XADStuffItHuffmanHandle.m for the bit-serialized tree and XADPrefixCode.m for the canonical codes** | both facts left on 2026-09-19 and 2026-09-20 — `docs/formats/serialized-huffman-tree.md` and RFC 1951 §3.2.2 with puff.c — and NOTICE, `unc_huffman.c`'s own header and the inventory all say so. The declarations' comments in the header were not touched. **Cost: nothing executable, and the two shedding passes that moved the file were recorded as complete** — the same fact was cited two ways in two files for six days, which is what the no-duplication rule exists to prevent | 2026-09-26 |
+| **CLAUDE.md: BLOCKERS' withdrawn-claims archive "is another 15k"** | it is **~42k tokens** — 169,105 characters at the four-characters-per-token proxy that makes the same sentence's other figure read 14k, and 164,442 before the rows below it were added. 15k was right when it was taken on 2026-08-26 (64,654 characters) and the archive has since grown two and a half times. **Cost: the sentence was CORRECTED on 2026-09-26 for exactly this — 7.5k had drifted to 14k — and the second number in it was carried through the correction unmeasured**, so the pass that added "re-measured 2026-09-26" left a figure from a month earlier three words later. A reader deciding whether to open the archive was told a quarter of its size | 2026-09-26 |
+| **CLAUDE.md: BLOCKERS "names the thirty-three smells that keep finding the next one"** | **the list had thirty-five**, which is what BLOCKERS.md's own sentence said: two bullets had been added on 2026-09-26 after CLAUDE.md's count was written the same day. It is thirty-seven now, with the two this session added. **Cost: none yet — it is the third time this count has been wrong** (ten over thirty on 2026-09-26, and ten in CLAUDE.md before that), so `tools/check_docs.py` now counts the list and compares both sentences to it. A count written above a list is the cheapest claim here to check and the least likely to be checked | 2026-09-26 |
+| **`src/unc_util.c`'s three CRC check values "are asserted in `tests/unit_util.c`"** | **no such file has ever existed** — `git log --all --diff-filter=A` returns nothing for it. The assertions are real and in two other files: `tests/unit_main.c`'s `test_crc` for CRC-16/XMODEM and CRC-32, `tests/unit_formats.c` for CRC-16/ARC beside an independent bitwise implementation. **Cost: none to the engine, and it was believed twice in one hour** — the sentence was quoted into an OPEN_ITEMS row and a DECISIONS entry written today, as the evidence that re-citing those tables would be free, before anybody ran `ls`. It is the same shape as the FIPS 197 citation withdrawn this morning, one directory closer: a citation to something on this machine is the cheapest in the repository to check, which is why nothing checks it | 2026-09-26 |
+| **`src/unc_crypt.c`: "Seven schemes across the five formats that can encrypt an entry"** | the list under it has **eight schemes across six formats**, which is what FORMATS.md's *Encryption* and PROGRESS.md's M25 say. FORMATS.md and TESTING.md were corrected for this same count earlier on 2026-09-26; the source file the provenance table is read against was not searched. **Cost: none measured** — but it is the file whose cipher inventory the licence rows are counted from, and "eight ciphers" is the phrase BLOCKERS.md, TESTING.md, DECISIONS.md and PROGRESS.md all use | 2026-09-26 |
 
 **"The DD reader's structure is right; it is literal VALUES that are wrong."**
 Written 2026-09-20 about the two forks of `derived-Terrainman_2.0__.sea`

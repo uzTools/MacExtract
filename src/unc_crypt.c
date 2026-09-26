@@ -2,7 +2,7 @@
  * unc_crypt.c — the ciphers the encrypting formats use, and the layer
  * that puts one underneath a decoder.
  *
- * Seven schemes across the five formats that can encrypt an entry:
+ * Eight schemes across the six formats that can encrypt an entry:
  *
  *   ARC          a plain repeating XOR of the password over the
  *                compressed bytes (XADXORHandle).

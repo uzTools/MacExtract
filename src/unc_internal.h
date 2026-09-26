@@ -435,11 +435,14 @@ uint32_t unc_bitin_bytepos(const UncBitIn *b);
 
 /* ------------------------------------------------------------------ */
 /* Bit-serialized Huffman (prefix) trees                              */
-/* Used by PackIt and StuffIt method 3: serialized depth-first, one   */
-/* bit per node — 1 = leaf followed by 8 value bits, 0 = internal     */
-/* node (zero branch first, then one branch).                         */
-/* Source: reference/XADMaster/XADStuffItHuffmanHandle.m (parseTree)  */
-/* and reference/macutils/macunpack/de_huffman.c (read_sub_tree).     */
+/* Used by PackIt, StuffIt method 3 and DiskDoubler method 4:         */
+/* serialized depth-first, one bit per node — 1 = leaf followed by 8  */
+/* value bits, 0 = internal node (zero branch first, then one).       */
+/* Source since 2026-09-20: docs/formats/serialized-huffman-tree.md,  */
+/* this project's own description, derived from the three formats'    */
+/* output by experiment (tools/derive_huffman_tree.py). NOTICE has    */
+/* said so since that day; this comment still named parseTree and     */
+/* read_sub_tree until 2026-09-26.                                    */
 /* ------------------------------------------------------------------ */
 
 /* macutils sizes its node pool at 515 "because StuffIt Classic needs
@@ -480,11 +483,14 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 /* ------------------------------------------------------------------ */
 /* Canonical (code-length) Huffman codes                              */
 /* Codes assigned in (length, symbol) order, shortest code all-zeros; */
-/* MSB-first. Compact Pro serializes 4-bit lengths and permits        */
-/* incomplete trees ("Compactor allows unused trailing codes").       */
-/* Source: reference/XADMaster/XADPrefixCode.m                        */
-/* (initWithLengths:shortestCodeIsZeros:YES) and                      */
-/* reference/macutils/macunpack/cpt.c (cpt_readHuff) — LGPL, NOTICE.  */
+/* MSB-first. Compact Pro serializes 4-bit lengths, two to a byte     */
+/* behind a count byte (docs/formats/compact-pro.md, correction 1),   */
+/* and writes trailing codes it never uses, so an incomplete set is   */
+/* legal — see unc_huffman.c, which says where that comes from.       */
+/* Source since 2026-09-19: reference/notes/rfc1951.txt section       */
+/* 3.2.2 and reference/notes/puff.c. NOTICE has said so since that    */
+/* day; this comment still named XADPrefixCode.m and cpt_readHuff     */
+/* until 2026-09-26.                                                  */
 /* ------------------------------------------------------------------ */
 
 #define UNC_CANON_MAX_SYMS 384

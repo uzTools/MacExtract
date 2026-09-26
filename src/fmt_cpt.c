@@ -42,7 +42,9 @@
  */
 #include "unc_internal.h"
 
-#define CPT_WINDOW   8192u      /* macutils CIRCSIZE */
+#define CPT_WINDOW   8192u      /* 1 << 13: the offset is 13 bits,
+                                 * docs/formats/compact-pro.md,
+                                 * correction 3 */
 /* Eight bytes in front of an encrypted entry's stream: decrypted, then
  * discarded. See cpt_entry_forks. */
 #define CPT_CRYPT_PREAMBLE 8u

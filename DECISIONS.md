@@ -283,6 +283,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
 - 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
 - 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
+- 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
 
 ---
 
@@ -17834,3 +17835,115 @@ same algorithm the file beside it attributed to Gladman. Two files
 disagreeing is this repository's cheapest disproof; this one was hours
 old rather than months, and it would still have settled nothing, because
 the document both of them name was not there to settle it with.
+
+## 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
+
+**The claim.** OPEN_ITEMS.md, *What is still XADMaster's*: a twelve-file
+table, with "the licence changes only when the last row is gone".
+
+**What disproved it, in one command.**
+
+    grep -rlE 'Source:.*(XAD|macutils)' src/*.c src/*.h
+
+Fifteen files came back and **eight had no row**: `unc_util.c` and
+`unc_internal.h` (the three CRC tables, and the MSB-first bit reader),
+`fmt_binhex.c`, `fmt_uu.c` and `fmt_mime.c` (macutils' `hexbin`), and
+`fmt_foreign.c` with `fmt_sit_probe.c` and `fmt_packit_probe.c` (seven
+formats' signatures and two recognisers). **Then two more, which that
+grep cannot see**: `unc_lzah.c`'s window preload and `unc_encinfo.c`'s
+second-hand citation put `Source:` and the name on different lines, and
+`grep` is line-based — the same false negative that hid a stale Compact
+Pro claim on 2026-08-23, in the same week's lesson. Ten files.
+Every row the table DID have is a format —
+`fmt_*.c` plus `unc_crypt.c` and `unc_lzdyn.c`, which are a format's
+ciphers and a format's coders. **It was the decoder list with a provenance
+column, and it had been read as an inventory of the repository.**
+
+**Why a grep found it and a year of shedding did not.** Each shedding
+pass took a format, so each pass asked "what does THIS decoder still
+owe?" — and the shared primitives are owed by eleven decoders and
+attributed by none of them. The two questions have different answers and
+the same shape. *An inventory assembled by walking the subjects is
+complete only for the dimension you walked.* The 2026-09-22 version of
+this — an inventory of volume walks built by grepping for `hls` when two
+walk with `hdir` — got the mechanism right and its remedy wrong: it said
+to search for the capability rather than the name, and here the
+capability search is `Source:`, which is one string and was never run.
+
+**Two documents were already contradicting the source, and neither was
+read against it.** NOTICE says BinHex left XADMaster's orbit on
+2026-09-19, and `fmt_binhex.c` still cites macutils' `hexbin` for two
+rules; NOTICE said `unc_lzah.c`'s "window preloads ... are this
+project's", and that file says in as many words that the -lh1- and
+StuffIt method 5 preload is `resetLZSSHandle`'s pattern. The second is
+the more useful of the two, because the pattern turns out to be
+published: LHa for UNIX writes the identical five steps in `larc.c`'s
+`decode_start_lz5` — **for LArc's -lz5-, not for -lh1-** — and lhasa
+fills the -lh1- buffer with spaces. So what is XADMaster's here is not
+the pattern but its application to this method, which no other
+implementation on this disk agrees with, and no corpus archive
+contradicts because none reaches back into the preload.
+
+**What was fixed rather than filed.** Four citations that name XADMaster
+for facts this project's own documents replaced, each verified against
+the document before the line moved:
+
+| line | said | says |
+|---|---|---|
+| `unc_internal.h`, the bit-serialized tree | `XADStuffItHuffmanHandle.m` (parseTree), macutils `de_huffman.c` | `docs/formats/serialized-huffman-tree.md`, which NOTICE and `unc_huffman.c` have named since 2026-09-20 |
+| `unc_internal.h`, the canonical codes | `XADPrefixCode.m`, macutils `cpt.c` | RFC 1951 §3.2.2 and `puff.c`, named since 2026-09-19 |
+| `unc_encinfo.c`, Compact Pro's index | fmt_cpt.c's comment, "itself from" XADMaster and macutils | `docs/formats/compact-pro.md`, which is what that comment says now |
+| `fmt_cpt.c`, `CPT_WINDOW` | "macutils CIRCSIZE" | `1 << 13`, the offset width in compact-pro.md's correction 3 |
+
+Comments only — no token the compiler sees has moved — so the diff is
+the argument and nothing was re-measured for it. What would notice
+otherwise is `tools/build_mac.sh`'s ratchet per configuration, which
+`ci.sh` holds all four builds to, and this tree is green on them. The
+crypt tables' re-citation three days ago was measured byte-identical for
+the same reason (2026-09-23, *the tables that were the standard's*). The rest is in the table as rows, priced or
+explicitly unpriced, because a row is closed by a graded rewrite and not
+by a better sentence.
+
+**The CRC row is the one worth taking next, and the reason is the
+precedent.** `unc_util.c`'s three tables are already described in their
+own comment as "generated mechanically from the polynomials", with all
+three published check values asserted — in `tests/unit_main.c` and
+`tests/unit_formats.c`, not in the `tests/unit_util.c` that comment
+named, which has never existed in this repository; the
+polynomials are in `reference/notes/binhex40_lewis.txt` (CRC-16/XMODEM,
+bit by bit) and `zip_appnote.txt` (CRC-32, with its `0xdebb20e3`
+residue), and deark and lhasa each BUILD the 0xA001 table from its
+polynomial rather than listing one. That is the shape that came out at
+0 B three days ago.
+
+### Two numbers in one sentence, and the pass that dated one of them
+
+CLAUDE.md's session-start reading was corrected this morning from 7.5k
+tokens to 14k, with *re-measured 2026-09-26* added to the sentence — and
+the same sentence's next figure, *"BLOCKERS' withdrawn-claims archive is
+another 15k"*, was the 2026-08-26 measurement. That archive was 164,442
+characters when this was found, **~41k tokens** at the
+four-characters-per-token proxy under the 14k, and ~16k when the figure
+was taken — two and a half times' growth with the number standing still.
+
+**The mechanism is new and is worth the bullet it got.** A pass that
+re-measures one number in a sentence leaves the sentence looking
+measured, and the freshly added date is what stops the next reader
+asking about the rest of it. The same paragraph also says what made the
+docs grow, so it was not a sentence anybody skimmed.
+
+And the smells count above that table was wrong for the third time —
+thirty-three in CLAUDE.md over a list of thirty-five, two of which had
+been added hours earlier by the entries either side of this one. Three
+corrections of one number is the point at which it stops being a
+correction and becomes a check: `tools/check_docs.py` now counts the
+list itself and holds both sentences to it, and measures the four
+document sizes CLAUDE.md advertises. **The rule this follows is
+`check_version`'s, which exists for the same reason** — `UNC_VERSION`
+sat at 0.4.0 through four releases because nothing read it.
+
+**One more of the same kind, in the source this time.**
+`src/unc_crypt.c` opened with *"Seven schemes across the five formats
+that can encrypt an entry"* over a list of eight across six. FORMATS.md
+and TESTING.md were corrected for that exact count earlier today; the
+grep that found them was over `*.md`.

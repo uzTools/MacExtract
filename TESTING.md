@@ -45,7 +45,13 @@
    Contents index must list every `## ` entry in file order, no
    document may cite another by line number, the version agrees in the
    three places it is written, and every `synthetic:` fixture in
-   SOURCES.md regenerates the bytes recorded there. Needs no build, so
+   SOURCES.md regenerates the bytes recorded there. **Two figures about
+   the documents themselves joined on 2026-09-26**, both of which had
+   gone stale three times between them: the five sizes CLAUDE.md
+   advertises as the session-start reading, at four characters per token
+   and a tolerance of 25 % or half a thousand, and the number of smells
+   BLOCKERS.md claims — counted from the list, in both files that quote
+   it. Needs no build, so
    `ci.sh` runs it first; `--fix` regenerates the index. **What it cannot
    see:**
    whether an entry is in the right file, whether a citation points at a
