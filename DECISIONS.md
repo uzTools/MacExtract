@@ -11414,8 +11414,10 @@ allocator's per-block overhead; the refusal was photographed on System
 earlier assumption that a DART could not be replayed there was about an
 800K floppy and was wrong.
 
-Numbers and per-specimen results: FORMATS.md, *DART*. How the suite
-runs: TESTING.md, *DART*.
+Numbers and per-specimen results were FORMATS.md, *DART*, and the suite
+TESTING.md, *DART*; **both left with the format on 2026-09-25** (*the disk
+images that found another home*). What this entry describes is v0.9 through
+v0.32.0 and nothing since.
 
 ---
 

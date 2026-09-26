@@ -1547,7 +1547,10 @@ own budget and asserts the tallies.
 which since 2026-09-22 is all three: **71/71 at the 1 MB floor target**
 (648,250 B), **67/71 on a 512 KB Macintosh under System 3.0**
 (219,362 B) and **64/71 on the same machine under System 6.0.8**
-(123,962 B) — the same four and seven fixtures, by name, that the
+(123,962 B). **Those are the RESIDENT build's budgets and tallies**, which
+since 2026-09-25 is not what ships: the shipped build's budget depends on the
+sniffed format, it clears two more at the 512 KB tier, and this model does
+not express that (OPEN_ITEMS.md, *The overlay loader*) — the same four and seven fixtures, by name, that the
 machines refuse. The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
 assertable the same day, when its budget was re-taken. A tally that moves is

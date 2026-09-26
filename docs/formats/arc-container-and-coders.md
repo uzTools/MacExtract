@@ -76,6 +76,27 @@ skewed byte distribution, one with long runs:
 And over `synth-arc-mixed.arc`, one member per method, against
 `unar`'s sha256: **methods 1, 2, 3, 4, 8 and 9 all reproduced**.
 
+## Methods 5 and 6, read in two implementations — 2026-09-22
+
+Neither is implemented here and neither has a specimen, but the two readings
+of the algorithm AGREE, which is worth recording because it is the only
+evidence these methods have:
+
+- `reference/deark/src/fmtutil-lzw.c`'s `DE_LZWFMT_ARC5` is a **hashed** table
+  of 4,096 entries at a fixed 12-bit code size, seeded with 256 roots under
+  parent `0xffff`, hashing `((code + value) | 0x0800) & 0xffff` then
+  `(h*h) >> 6`, and probing a collision by walking the chain, then `+101`,
+  then `+1`.
+- `src/fmt_arc.c`'s non-`fast` branch is the same arithmetic term for term,
+  and came from XADMaster.
+
+So there are **two independent statements that agree**, and deark's
+`arc5_has_stop_code` — the one parameter that would differ — is set by its
+LBR module and never by its ARC one, exactly as here. That is evidence about
+two READERS and not about a stream: what an encoder would cost is the hash
+insertion ORDER, which it must reproduce exactly for the codes to land where
+either decoder looks.
+
 ## What this note does NOT establish
 
 - **Methods 5, 6 and 7** — the older Crunch variants. ARC 5.21q will

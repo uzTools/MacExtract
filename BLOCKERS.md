@@ -11,73 +11,26 @@ CLI were never affected by anything in this file. The Retro68 Mac shell runs
 and extracts byte-exact on every system the project claims:
 
 The sample is **71 fixtures** since 2026-09-22, when the two StuffIt 5
-archives whose names are UTF-8 joined it.
+archives whose names are UTF-8 joined it. Every figure below was taken on
+**v0.33.0**, the binary in `dist/`, on 2026-09-25 — the release that made the
+decoders `'OVLY'` images and dropped DART.
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22). System 3.0 ignores the boot blocks' shell name, so the application cannot replace the Finder and is double-clicked instead — which changes how the run starts and not what it has: launching unloads the Finder, measured at 12 B (FORMATS.md, *512 KB machines*) |
-| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the same RAM floor | **71/71** (2026-09-22); the application driven end to end there too, where Cmd-. does not cancel Standard File and the Cancel button does (FORMATS.md, *System 3.0 tier*) |
-| System 3.0, **512 KB** Macintosh 512Ke | **67/71** (2026-09-22); the four shortfalls are per-entry memory refusals, not failures — the budget there is 219,362 B. The same machine under System 6.0.8, with no Finder at all, does **64/71**, and 3.0's failures are a strict subset of 6's (FORMATS.md, *512 KB machines*) |
-| System 6.0.8, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** (2026-09-22) |
-| System 6.0.8, **1 MB** — the RAM floor | **71/71** (2026-09-22); no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **71/71** (2026-09-22), the first run of the fold under the Process Manager |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep** (2026-09-22), on the binary that ships — the whole of `os9sample.txt`, one boot per fixture. Until that run the figure was 22 across two builds and two days: `derived-800saywhat301j.sit` on 2026-09-22, the fold's first run here, which found two blind spots in the harness and none in the application (FORMATS.md, *Mac OS 9 tier*), and the other 21 on 2026-09-04 on the build that zeroes `UncOptions`, that sample one larger for Now Compress, the third folder-walking format. No fixture moved. That earlier morning it read 18/20 with the two failures bombing the application, and 20/20 when last run on 2026-08-27. Off-sample the same day, **all six DiskDoubler archives in the corpus, 6/6 byte-exact**, where the morning's binary had bombed on every one; plus HFS+, the `SIZE` partition, and — since 2026-08-28 — both cancel routes, the Cmd-. chord and the Cancel BUTTON clicked with the pointer, an 8-bit name photographed, an encrypted archive decrypted through the password dialog after a wrong password was refused, and SpaceSaver replayed by path — the format no Macintosh tier had ever run, whose first run found a name defect in the shell (FORMATS.md) |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **71/71** |
+| System 3.0, **512 KB** Macintosh 512Ke | **69/71** — two per-entry memory refusals, not failures. It was 67/71 with every decoder resident: the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
+| System 6.0.8, 4 MB Mac Plus | **71/71** |
+| System 6.0.8, **1 MB** — the RAM floor | **71/71**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 7.0.1, 4 MB | **71/71** |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
 
-**Seven sweeps were re-run 2026-09-22**, on the sample grown to 71 by the
-two StuffIt 5 archives whose names are UTF-8 — the first time the fold had
-run on a Macintosh at all. Five went first; **System 7.0.1 at 4 MB and
-System 3.0 at 4 MB followed the same day, 71/71 each**, which is the two
-tiers that had been left a sample behind. **Every tier reproduced its
-recorded figure and no refusal moved**: System 6.0.8 at 4 MB 71/71 and at 1 MB 71/71, System 3.0
-at 1 MB 71/71, and at 512 KB System 3.0 67/71 against System 6.0.8's 64/71 —
-the same three and six per-entry refusals as before, plus
-`derived-Cool_Tools__.sit` on both 512 KB machines, which is a fixture the
-sample gained and not a refusal the engine grew. **All three budget
-constants were re-taken the same day** with `-D UNC_AT_BUDGET` and all three
-had drifted (below, and FORMATS.md, *Budget*). `checkdisk.py` then read all
-**73 kept Out volumes byte-exact, names included**.
-
-**All seven Mini vMac sweeps were then re-run on the build that reads the
-1990 DiskDoubler header**, which is the binary that ships: System 6.0.8
-71/71 at 4 MB and 71/71 at 1 MB, System 3.0 71/71 at 4 MB and 71/71 at
-1 MB, System 7.0.1 71/71 at 4 MB, and at 512 KB System 3.0 67/71 against
-System 6.0.8's 64/71. **Every tier reproduced its figure and the refused
-fixtures are the same ones by name** — the four and the seven
-`run_tiers.py` asserts. All three budgets were re-taken between the two
-rounds and each had fallen exactly 32 B where the arithmetic predicted 64
-(FORMATS.md, *Budget*); no tally moved. So no figure in the table above
-rests on a binary older than the one in `dist/`.
-
-**Every Mini vMac tier was re-run 2026-09-20** before that, the first time
-any had been since the decoder work of 2026-09-18/19/20 changed six formats
-and took 360 B net off the budget: five sweeps of the 69-fixture sample,
-every one reproducing its figure — 69/69, 69/69, 69/69, 66/69 and 63/69.
-
-All three Mini vMac tiers re-run **2026-08-22**, with M15–M23's codecs in
-and three fixtures added to the sample for them — DiskDoubler methods 3, 4
-and 5, which nothing in the list had exercised. The two System 6 tiers were
-run again on **2026-08-23** against the decryption build, which is 20 KB
-larger and so leaves the 1 MB machine that much less heap: **62/62 on both**,
-with the three heaviest allocations (533 KB, 471 KB and method 5's 405 KB)
-unchanged. The 1 MB tier has been run again after each addition since — WinZip's
-AES, the StuffIt key correction and btoa — and was 62/62 every time. All
-three tiers were re-run on **2026-08-23** with LZH in and five `.lzh`
-fixtures added to the sample (M28): **67/67 on each**, the new ones costing
-4,112 B of heap at the small end and 41,364 B for a `-lh7-` entry. M33's two
-PAK methods were run on **2026-08-25** at 4 MB and at the 1 MB floor —
-`arc2pak1.pak` (0x0a, 46,546 B peak, now in the sample) and
-`derived-INTRECHO.pak` (0x0b, 14,790 B, 918,631 B of output, `--out-kb 1600`)
-— **1/1 at each size, four runs**; the rest of the sample was not re-run for
-a 2,048 B binary growth, which FORMATS.md (*ARC*) states in full. All three
-Mini vMac tiers were re-run on **2026-08-26** for M37's disk-image probe and
-again the same day for M38, which changed the application as well as the
-engine (the detect-only alert): **69/69 on each, both times**. The first of
-those was also the first sweep to cover the whole sample —
-M33 and M34 had added `arc2pak1.pak` and `derived-ARCDOS.arc` on 2026-08-25
-without a full re-run, so every "67/67" above describes a sample two
-fixtures smaller than `sample.txt` already held. Per-fixture tables and how
-the sample grew: FORMATS.md. How to re-run any of
-it: `tools/vmac/README.md`. What no emulator here can settle:
+**No tally here rests on a binary older than the one in `dist/`**, which is
+the property this table exists to have: every tier is re-run on the shipping
+build, and the last four releases each moved the application's size. Per-tier
+history, the per-fixture tables and what each refusal costs are FORMATS.md's
+(*Real-hardware verification* and the tier sections after it); how to re-run
+any of it is `tools/vmac/README.md`; what no emulator here can settle is
 MANUAL_TESTS.md.
 
 ---

@@ -20,11 +20,11 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **67/71** (2026-09-22; 66/69 before the sample grew, 65/69
-before the reserve went flat, 64/69 before the LZW bound), `run.py --emu
-mv-512Ke --system System6.hfv` is **64/71** (2026-09-22; 63/69 on
-2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB
-machines*). The budgets are **219,362 B** and **123,962 B**, both re-taken
+mv-512Ke` is **69/71** on the shipped build (2026-09-25; 67/71 with every
+decoder resident, 66/69 before the sample grew, 65/69 before the reserve went
+flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
+System6.hfv` is **64/71** (2026-09-22, resident build; 63/69 on 2026-09-04,
+58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). The budgets are **219,362 B** and **123,962 B**, both re-taken
 on the machine that day; `tools/run_tiers.py` now reproduces both tiers on
 Linux fixture for fixture, and the one that never matched was the budget
 and not the model.

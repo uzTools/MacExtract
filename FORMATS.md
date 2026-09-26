@@ -2475,23 +2475,20 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **178,432 B** of MacBinary (`dist/MacExtract.bin`,
-rebuilt 2026-08-27; 1,280 B of that is the same day's Zip64 extra-field walk
-and the name-truncation reporting, and the table above predates both. The
-shell passes NULL for `UncOptions.long_name`, so none of it is heap — the
-uncut path costs the three walks 52 bytes of stack each and no heap at all).
-The figure stood at "179,328 B" for part of that day against a file that was
-178,176: it was written from a build that was never the one committed, and the
-correction is what a `stat` of the shipped file says. Both
-halves are resident for the whole session: the link line produces a single
-`MacExtract.code.bin` that the Segment Loader reads at launch, and
-`Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside the `.data` output section —
-the A5 global world, allocated once and never purgeable.
+The application ships as **211,328 B** of MacBinary (`dist/MacExtract.bin`,
+v0.33.0), and since 2026-09-25 that is no longer all resident: **64,896 B** is
+`MacExtract.code.bin`, which the Segment Loader reads at launch and never
+purges, and **143,616 B** is the `'OVLY'` bundle, which is read at launch and
+mostly given back before the engine takes its budget (*Overlays*). What stays
+costs the heap one for one: the link line produces a single
+`MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
+the `.data` output section — the A5 global world, allocated once and never
+purgeable.
 
 **What a month of growth cost the tiers: nothing, and the margin is now
-6,952 B** (2026-09-23). The shipped binary went 178,560 B on 2026-08-28
-to 188,672 B, +10,112 B, and since every byte is resident that is heap a
-Macintosh no longer has. Whether it cost a fixture is not arithmetic but
+6,952 B** (2026-09-23, when every byte still was resident). The shipped
+binary went 178,560 B on 2026-08-28 to 188,672 B, +10,112 B, all of it heap a
+Macintosh no longer had. Whether it cost a fixture is not arithmetic but
 a measurement, and `tools/run_tiers.py` takes it in seconds by moving the
 budget instead of the binary. At budgets 10,112 B LARGER — what the
 smaller application left — the tallies are identical: **71, 67 and 64**.
@@ -3828,6 +3825,11 @@ On-Mac engine peak heap (high-water mark) by format, matching the Linux
 | StuffIt 5 (Arsenic) | 0.63–2.53 MB when measured (block *fill* dependent — see †); the vector is three bytes an entry since 2026-09-19, not re-run |
 | LZH / LHA | 4–41 KB over the sample (4,112 B stored, 41,364 B for `-lh7-`); 74 KB is the format's ceiling, for an entry that fills a 64 KB window |
 | DiskDoubler / Now Compress | extracted and byte-exact on both Mini vMac tiers since 2026-08-15 (see above), and on Mac OS 9 since 2026-08-27 |
+
+**The Out volumes are read back whole, not just aggregated.** After the
+2026-09-22 round `checkdisk.py` read all **73 kept Out volumes byte-exact,
+names included** — the check the on-screen grid cannot make, since it carries
+a file count and summed CRCs and no name at all (TESTING.md).
 
 ## System 7 tier (Mini vMac — System 7.0.1, 4 MB Mac Plus, 68000)
 
