@@ -17895,12 +17895,15 @@ the document before the line moved:
 | `unc_encinfo.c`, Compact Pro's index | fmt_cpt.c's comment, "itself from" XADMaster and macutils | `docs/formats/compact-pro.md`, which is what that comment says now |
 | `fmt_cpt.c`, `CPT_WINDOW` | "macutils CIRCSIZE" | `1 << 13`, the offset width in compact-pro.md's correction 3 |
 
-Comments only — no token the compiler sees has moved — so the diff is
-the argument and nothing was re-measured for it. What would notice
-otherwise is `tools/build_mac.sh`'s ratchet per configuration, which
-`ci.sh` holds all four builds to, and this tree is green on them. The
-crypt tables' re-citation three days ago was measured byte-identical for
-the same reason (2026-09-23, *the tables that were the standard's*). The rest is in the table as rows, priced or
+Comments only, and **measured rather than argued**: the Retro68
+application this tree builds has the same payload sha256 as the one in
+`dist/` — `2f20f588…`, 211,328 B, `tail -c +129` past the MacBinary
+header whose dates differ between any two runs — which is `ci.sh`'s own
+stale-`dist` comparison and is why this commit does not rebuild `dist/`
+despite touching `src/`. The ratchets in `tools/build_mac.sh` agree
+across all four configurations, variant 4d included. The crypt tables'
+re-citation three days ago came out byte-identical for the same reason
+(2026-09-23, *the tables that were the standard's*). The rest is in the table as rows, priced or
 explicitly unpriced, because a row is closed by a graded rewrite and not
 by a better sentence.
 
