@@ -282,6 +282,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
 - 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
 - 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
+- 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
 
 ---
 
@@ -17754,3 +17755,82 @@ Every constant in the model is an order of magnitude under the margin it
 could move, so none of them decides a fixture; the day one could, the sweep
 would be deciding fixtures on a number nobody has explained, and that is the
 condition to re-read this entry on.
+
+## 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
+
+**The claim that failed.** `src/unc_crypt.c`'s AES section read "Source:
+FIPS-197 as implemented in `reference/XADMaster/Crypto/aeskey.c` and
+`aescrypt.c`", and had since the cipher was added on 2026-08-23
+(`895fb64`, the only commit that has ever touched those two functions).
+FIPS 197 was not in `reference/`, so the first half of that sentence
+named a document nobody on this machine could open and the second half
+was the only part anything could check.
+
+**The fetch is one line.** `csrc.nist.gov` serves FIPS 197 — the 26
+November 2001 standard — at the same path shape as FIPS 46-3, and
+`tools/fetch_references.sh` now takes it there. Its text streams are
+Flate like 46-3's, so the same `zlib`-and-a-regex reading works; unlike
+46-3 nothing has to be extracted from it, because no table here comes
+out of it.
+
+**The rewrite turned out to be already written.** Held against section
+5.2 and its Fig. 11, `aes_setkey` is that pseudo-code line for line: the
+first `Nk` words copied, `temp = w[i-1]`, `SubWord(RotWord(temp)) xor
+Rcon[i/Nk]` at `i mod Nk == 0`, the `Nk > 6 and i mod Nk == 4` branch,
+`w[i] = w[i-Nk] xor temp`, and the bound `Nb(Nr+1)` with `Nr = Nk + 6`
+from section 5's Fig. 4. The round is section 5.1's Fig. 5, the state
+index is section 3.4's `4c + r`, `xtime` is section 4.2.1, and folding
+SubBytes into ShiftRows is the standard's own first property in section
+5.3.5. Every line has a clause; not one of them needed changing.
+
+**What disproves the attribution is shape, not opinion.** Gladman's
+`aeskey.c` is a 32-bit word machine: one function per key size
+(`aes_encrypt_key128/192/256`), macro-unrolled through `ke4`/`ke6`/`ke8`,
+Rcon read out of a TABLE (`t_use(r,c)`), and the schedule carried as a
+running four-word `ss[]` rather than as Fig. 11's array; `aescrypt.c`
+is the same shape again, unrolled per key size and routed through
+`aesopt.h`'s configuration macros to `aestab.c`'s round tables. This
+file has no word type in the schedule, no Rcon table — it doubles in
+GF(2^8), which is the definition — one function for all three key
+sizes, and a 256-byte S box.
+A transcription does not survive that many changes of shape. What the
+code exhibits is the standard.
+
+**Priced, and it cost nothing, because nothing executable moved.**
+`unc_crypt.c` ships in the `OVLY` crypt image since 2026-09-25, and that
+image is **byte-identical** across the change at 9,800 B; the resident
+`CODE` is 53,332 B and the A5 world 18,988 B before and after, to the
+byte; the overlay bundle is byte-identical at 143,072 B; and
+`src/crypt_tables.h` regenerates byte for byte. The only bytes that move
+in `MacExtract.code.bin` are its creation date and the header checksum
+over it, which differ between two builds of the SAME source.
+
+**The tick probe was not run, and that is the stronger answer.** Its
+resolution is a tick, and it would be asked to distinguish two identical
+instruction streams. Byte equality of the image already says what the
+probe could only fail to contradict. This is the one shape of change
+where the probe is not the instrument — and it is worth saying so
+explicitly, because the rule it looks like an exception to (*settle a
+close call on the tick probe, not on instruction counts*) is about
+changes that alter the code.
+
+**Grading did not move either, and did not have to.** `ci.sh` runs four
+WinZip AES configurations — AES-128, 192 and 256, plus a stored AES-256
+entry — through `tools/run_crypt.py` on archives **7-Zip** writes, and
+`tools/synth_crypt.py` asserts appendix C's AES-128 and AES-256
+known-answer vectors at import, which are the two key sizes it writes
+seeds for. AES-192 is graded only by 7-Zip, and that is the whole of
+what covers `Nk = 6`. A byte of changed output would have failed it.
+
+**The transferable part.** *A citation to a document that is not on the
+machine cannot be held against the code, so it is not a citation — it is
+a promise.* This one stood for 34 days, through the two passes that
+re-cited everything around it — 2026-09-19 and 2026-09-23, the second
+of which took this file from twelve XADMaster citations to five —
+because both read the AES line as already sourced. And the contradiction
+was in the tree by this morning: `tools/synth_crypt.py`'s `Aes`, added
+today in `0472a81`, says "Key schedule: FIPS-197 section 5.2" about the
+same algorithm the file beside it attributed to Gladman. Two files
+disagreeing is this repository's cheapest disproof; this one was hours
+old rather than months, and it would still have settled nothing, because
+the document both of them name was not there to settle it with.

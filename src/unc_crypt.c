@@ -51,13 +51,14 @@
  * that state what they do: RFC 3174, RFC 2104 and RFC 2898 for SHA-1,
  * HMAC and PBKDF2, reference/notes/winzip_aes.txt for AE-1/AE-2's
  * parameters, zip_appnote.txt section 6.1 for the traditional zip
- * cipher, and arcfour_draft.txt for RC4's schedule.
+ * cipher, and arcfour_draft.txt for RC4's schedule. AES followed on
+ * 2026-09-26, to FIPS 197 itself (reference/notes/fips197.pdf).
  * The TABLES in src/crypt_tables.h are nobody's
  * implementation since 2026-09-23: standard DES's are FIPS 46-3's own
  * (reference/notes/fips46-3.pdf), MD5's are RFC 1321's
  * (reference/notes/rfc1321.txt), and the AES S box is built from the
- * definition in FIPS-197. They are precomputed because this engine may
- * not have global mutable state. LGPL — see NOTICE.
+ * definition in FIPS 197 section 5.1.1. They are precomputed because
+ * this engine may not have global mutable state. LGPL — see NOTICE.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -563,15 +564,37 @@ void unc_pbkdf2_test(const uint8_t *pw, uint32_t pwlen,
 /* Counter mode encrypts to decrypt, so the inverse cipher is never    */
 /* needed and neither are its tables: one 256-byte S box and the       */
 /* column mix, which costs speed and saves four kilobytes on a machine */
-/* that has one megabyte. Source: FIPS-197 as implemented in           */
-/* reference/XADMaster/Crypto/aeskey.c and aescrypt.c.                 */
+/* that has one megabyte.                                             */
+/*                                                                    */
+/* Source: FIPS 197 (reference/notes/fips197.pdf), the standard        */
+/* itself — section 5.2 and its Fig. 11 for the key expansion below,   */
+/* section 5.1 for the round, section 4.2.1 for the xtime doubling     */
+/* that Rcon and MixColumns are both built out of, and appendix C for  */
+/* the known-answer vectors two of the three key sizes are graded on   */
+/* (tools/synth_crypt.py, at import; AES-192 is 7-Zip's in ci.sh).     */
+/* It cited Gladman's Crypto/aeskey.c and aescrypt.c until 2026-09-26, */
+/* which state the same algorithm in a shape nothing here shares:      */
+/* those are 32-bit word machines, macro-unrolled, one function per    */
+/* key size, with Rcon as a table and the schedule kept as a running   */
+/* four-word state. DECISIONS.md 2026-09-26.                          */
 /* ------------------------------------------------------------------ */
 
+/* Multiplication by {02} in GF(2^8), modulo x^8+x^4+x^3+x+1: FIPS 197
+ * section 4.2.1. Both Rcon and MixColumns are built out of it. */
 static uint8_t xtime(uint8_t x)
 {
     return (uint8_t)((x << 1) ^ ((x & 0x80) ? 0x1b : 0));
 }
 
+/* The key expansion, FIPS 197 section 5.2 and its Fig. 11, written a
+ * byte at a time because the round key is XORed into the state a byte
+ * at a time: `i` is the standard's word index and cr->rk[i * 4 + j] is
+ * its w[i]. Nk is 4, 6 or 8 and Nr is Nk + 6 (section 5 and its
+ * Fig. 4), so with Nb = 4 the bound Nb * (Nr + 1) is (nk + 7) * 4
+ * words. Rcon[i / Nk] is [x^(i/Nk - 1), {00}, {00}, {00}], which is
+ * the standard's DEFINITION evaluated rather than a table of its
+ * values — the same choice tools/gen_crypt_tables.py makes for the S
+ * box. */
 static void aes_setkey(UncCrypt *cr, const uint8_t *key, int keybytes)
 {
     int nk = keybytes / 4;                 /* 4, 6 or 8 words */
@@ -600,6 +623,12 @@ static void aes_setkey(UncCrypt *cr, const uint8_t *key, int keybytes)
     }
 }
 
+/* The cipher, FIPS 197 section 5.1 and its Fig. 5. SubBytes and
+ * ShiftRows are done in one pass, which is the standard's own first
+ * property in section 5.3.5: the two transformations commute, because
+ * SubBytes is bytewise. The last round is the loop's last iteration
+ * with MixColumns skipped, which is what Fig. 5 writes out as a
+ * separate step. */
 static void aes_encrypt_block(const UncCrypt *cr, uint8_t st[16])
 {
     int round, i;
@@ -607,8 +636,9 @@ static void aes_encrypt_block(const UncCrypt *cr, uint8_t st[16])
     for (i = 0; i < 16; i++) st[i] ^= cr->rk[i];
     for (round = 1; round <= cr->aesrounds; round++) {
         uint8_t t[16];
-        /* SubBytes + ShiftRows, in the column-major order AES uses:
-         * byte (r,c) lives at 4*c + r and row r rotates left by r. */
+        /* SubBytes + ShiftRows, in the column-major order AES uses
+         * (section 3.4): byte (r,c) lives at 4*c + r, and section
+         * 5.1.2 shifts row r left by r columns. */
         for (i = 0; i < 16; i++)
             t[i] = unc_aes_sbox[st[(i + 4 * (i & 3)) & 15]];
         if (round != cr->aesrounds) {

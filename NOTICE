@@ -269,8 +269,19 @@ This project's decoders are transcriptions/ports of algorithms from:
     key's length, the last two bytes as the verifier — are its own
     published AE-1/AE-2 specification; only the CTR counter's
     endianness and start value are not in it, and those rest on the
-    fixtures that decrypt. Gladman's `Crypto/aeskey.c` and `aescrypt.c`
-    remain named for the AES key expansion. The tables are precomputed
+    fixtures that decrypt. AES itself followed on 2026-09-26, when
+    FIPS 197 was fetched (`reference/notes/fips197.pdf`): the key
+    expansion is section 5.2 and its Fig. 11, the round is section 5.1,
+    `xtime` is section 4.2.1 and the merged SubBytes/ShiftRows is the
+    standard's own property in section 5.3.5. Brian Gladman's
+    `Crypto/aeskey.c` and `aescrypt.c` had been cited for the key
+    expansion since 2026-08-23 and are cited for nothing now: **no code
+    of theirs is present here and none was copied.** They state the
+    same standard in a shape this file does not share — 32-bit words,
+    one function per key size, macro-unrolled, Rcon as a table, the
+    schedule as a running four-word state — where this one is Fig. 11's
+    array written a byte at a time (DECISIONS.md 2026-09-26, *the AES
+    that was never Gladman's*). The tables are precomputed
     by `tools/gen_crypt_tables.py` because this engine may not have
     global mutable state, and the generator checks the AES S box against
     its own definition rather than trusting any copy.
@@ -283,8 +294,9 @@ This project's decoders are transcriptions/ports of algorithms from:
     round calls of the RFC's own reference implementation
     (`reference/notes/rfc1321.txt`), with the RFC's literal constants
     asserted to equal its definition of them as the integer part of
-    4294967296*abs(sin(i)). The AES S box is BUILT from the FIPS-197
-    definition rather than extracted from `Crypto/aestab.c`. Those two
+    4294967296*abs(sin(i)). The AES S box is BUILT from FIPS 197
+    section 5.1.1's definition rather than extracted from
+    `Crypto/aestab.c`. Those two
     files and `XADStuffItDESHandle.m` are still read by the generator,
     but only to agree: nothing is emitted from them. Each swap left the
     header byte for byte identical, and the first added two checks the

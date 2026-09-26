@@ -23,8 +23,8 @@ Every table below is read out of a named source, never from memory:
     the same constants*).
 
   * `unc_aes_sbox` is the AES substitution box, BUILT here the way
-    FIPS-197 defines it (inverse in GF(2^8), then the affine map) and
-    checked against reference/XADMaster/Crypto/aestab.c's `sb_data`,
+    FIPS 197 section 5.1.1 defines it (inverse in GF(2^8), then the
+    affine map) and checked against `Crypto/aestab.c`'s `sb_data`,
     which it had been taken from until 2026-09-23.  Emitting the
     construction rather than the extraction changes no byte and leaves
     the check exactly where it was.
@@ -231,7 +231,10 @@ assert all(SITSP[b][v] ==
            for b in range(8) for v in range(64)), \
     "DES_SPtrans is not the standard SP table relabelled"
 
-# ---- AES, from reference/XADMaster/Crypto/aestab.c ---------------------
+# ---- AES, built from FIPS 197 section 5.1.1 ----------------------------
+# reference/notes/fips197.pdf, the 26 November 2001 standard, fetched
+# 2026-09-26.  Crypto/aestab.c is still read, and still has to agree,
+# but nothing is emitted from it.
 def aes_sbox():
     src = open("reference/XADMaster/Crypto/aestab.c").read()
     i = src.index("#define sb_data(w) {")
@@ -240,9 +243,10 @@ def aes_sbox():
     box = nums[:256]
     assert len(box) == 256 and len(set(box)) == 256
 
-    # The same table, built the way FIPS-197 defines it: the
-    # multiplicative inverse in GF(2^8) modulo x^8+x^4+x^3+x+1, then the
-    # affine transform. Extraction and construction have to agree.
+    # The same table, built the way FIPS 197 section 5.1.1 defines it:
+    # the multiplicative inverse in GF(2^8) modulo x^8+x^4+x^3+x+1
+    # (section 4.2), then the affine transform.  Extraction and
+    # construction have to agree.
     p = q = 1
     inv = [0] * 256
     while True:

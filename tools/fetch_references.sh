@@ -395,6 +395,20 @@ fi
     curl -sL -o reference/notes/fips46-3.pdf \
         "https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf"
 
+# FIPS 197, the Advanced Encryption Standard (26 November 2001) — the
+# document src/unc_crypt.c's AES cites since 2026-09-26, in place of
+# Gladman's Crypto/aeskey.c and aescrypt.c, which state the same
+# algorithm in a shape this engine's does not share. Section 5.2 and
+# its Fig. 11 are the key expansion, 5.1 the round, 4.2.1 the xtime
+# doubling that both Rcon and MixColumns are built from, 5.1.1 the S
+# box tools/gen_crypt_tables.py constructs, and appendix C the
+# known-answer vectors tools/synth_crypt.py asserts at import. Same
+# host and same shape as FIPS 46-3 above, answered 2026-09-26; it is a
+# PDF for the same reason, and its text streams are Flate too.
+[ -f reference/notes/fips197.pdf ] || \
+    curl -sL -o reference/notes/fips197.pdf \
+        "https://csrc.nist.gov/files/pubs/fips/197/final/docs/fips-197.pdf"
+
 # RFC 1321, the MD5 Message-Digest Algorithm — and since 2026-09-23 the
 # source of MD5's three tables in src/crypt_tables.h: the per-step
 # message-word index, rotation and constant, read out of the 64 round
