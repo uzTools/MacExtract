@@ -141,17 +141,26 @@ host lane can do is EXECUTE a Retro68 image: entered from an m68k-linux binary
 it segfaults (measured 2026-09-26). So the decoders' own behaviour in the
 shipped bytes is the tiers' evidence and nothing else's.
 
-**And `tools/run_tiers.py` no longer predicts the shipped application**: it
-models one budget per tier, which is what a resident build has, while the
-shipped build's budget depends on the sniffed format. It still grades the
-engine's allocation behaviour against a fixed ceiling, which is a real
-regression detector; it is no longer a prediction of what a user's Macintosh
-refuses.
-
-**What would close the first two:** a Macintosh with a 68020 or better, and a
+**What would close those two:** a Macintosh with a 68020 or better, and a
 copy of the shipped binary run on one (MANUAL_TESTS.md §2 and §7). Short of
 that, read every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`,
 `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
+
+**`tools/run_tiers.py --shipped` predicts the shipped application at the two
+tiers a machine has run it on, and at no others.** Since 2026-09-26 it models
+a budget per tier PER FORMAT and per envelope layer, and reproduces the
+v0.33.0 binary's 69/71 at System 3.0 / 512 KB and 71/71 at the floor target,
+refusing the same fixtures by name; the resident lane is kept beside it as the
+engine's regression detector (TESTING.md, *The tiers a budget predicts*). What
+is still open is the evidence under the model: the per-format gains rest on
+three granted budgets measured on 2026-09-24 on the branch this merged from,
+which has since lost DART, and the arithmetic reproduces them only up to a
+1,138 B residue nothing accounts for. **What would close it:** one Mini vMac
+run of the shipped binary at `sys6-512K`, where the model predicts 66/71
+against the resident build's measured 64/71 (FORMATS.md, *512 KB machines*) —
+a tier it does not assert precisely because nothing has run it — and the three
+granted budgets re-taken on the current tree. A machine that says anything
+other than 66/71 there is the finding, and BLOCKERS.md is where it goes.
 
 ## What is still XADMaster's, and what would have to replace it
 

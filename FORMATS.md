@@ -2463,6 +2463,43 @@ the ciphers, against **no disk access after the archive is chosen**. Eager
 ships because on a Mac Plus with one drive, a read after the archive has been
 chosen is a read at the moment the application's own floppy may be out.
 
+### What each format is granted, against the control
+
+The budget a tier gives the engine is therefore not one number any more. It
+is the resident build's budget for that tier — the figures under *512 KB
+machines* and *Floor target verification* — plus what the release leaves,
+which is the 117,056 B of `CODE` and A5 the shipped build does not carry,
+less the images this format keeps and 8 B of block header each, plus the
+1,138 B residue the three measurements above leave over that arithmetic and
+which nothing accounts for. Three rows ARE those measurements; the rest is
+the same sum, and `tools/run_tiers.py --shipped` is where it is applied
+(TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a
+budget per format, and one per layer*).
+
+| sniffed format | images kept | granted, against the control |
+|---|---|---|
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+83,964 B** (measured) |
+| LZH | lzh, codecs | **+102,206 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +86,182 B, and **+95,990 B** where the directory says no entry is encrypted (measured) |
+| DiskDoubler | cptdd, codecs | +95,990 B |
+| Zip, spanned zip | exo, ciphers, codecs | +74,714 B, +84,522 B unencrypted |
+| Tar | exo, codecs | +84,522 B |
+| ARC | arc, ciphers, codecs | +93,846 B |
+| PackIt | packit, ciphers, codecs | +99,318 B |
+| StuffIt SpaceSaver | spacesaver, codecs | +95,052 B |
+| SuperDisk! | superdisk, codecs | +104,718 B |
+| Now Compress | now, codecs | +106,836 B |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−24,886 B** |
+
+**The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
+a MacBinary wrapper does not know what is under it, so the bundle stays and
+that layer runs with **less** memory than a resident build would have given
+it — 143,072 B held against 117,056 B saved. It costs nothing on the tiers
+because the layer under the envelope gets its own budget a moment later
+(*What an archive keeps*), and the envelope's own decode is small: the
+heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
+clears the System 3.0 / 512 KB envelope budget of 194,476 B by 46,712 B.
+
 ### Where the traps are written down
 
 Nobody should rediscover these; each cost a day or a silent failure on the
@@ -4178,7 +4215,9 @@ month of decoder work; under the quarter rule before that it was 163,656 B.
 
 **67/71 was the ceiling for a RESIDENT build, and it was a property of these
 four archives against that build's 219,362 B.** `tools/run_tiers.py` applies
-the same rule on Linux and reproduces that tier fixture for fixture. The
+the same rule on Linux and reproduces that tier fixture for fixture — and
+with a budget per format (*What each format is granted*) it reproduces the
+shipped build's **69/71** here too, refusing the same two by name. The
 minimum budget each one needs, bisected on 2026-09-22 — and the first two are
 what the overlay build now clears:
 
@@ -4227,6 +4266,15 @@ nothing else: free heap when extraction starts is **239,842 B** under System
 System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch and a double-click launch from a booted Finder.
+
+**64/71 is the resident build's, and no machine has run the shipped one at
+this tier. Hypothesis, modelled rather than measured: 66/71**
+(`tools/run_tiers.py --tier sys6-512K --shipped`). A budget per format clears
+`derived-Troi-ClipSave-Plug-in1.1.sit` and `derived-Expand_Now_1.0.1.sea`
+here; `popper-1.7.tar.Z` stays refused and for a different reason than
+before, because a `.Z` is an envelope and keeps the whole bundle (*What each
+format is granted*). One emulator run settles it, and nothing rests on it
+until then (OPEN_ITEMS.md, *The overlay loader*).
 
 The reserve explains the rest, and it is now a flat 20 KB on every tier:
 `budget = FreeMem() - 20,480`, which the three 2026-09-22 probes reproduce to

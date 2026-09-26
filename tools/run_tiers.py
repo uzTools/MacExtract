@@ -12,18 +12,54 @@ against a cap, refused per entry).
 CORPUS at one cap and reports per format. This file sweeps the Mac
 SAMPLE at the tiers' own budgets and asserts the tallies.
 
-So a whole tier can be swept here in five seconds:
+TWO LANES, and they grade different things
+------------------------------------------
+- **resident** — one budget per tier, which is what a build with every
+  decoder linked in has. That build still exists as the control
+  (`UNC_OVL_RESIDENT=1`), and this lane is a REGRESSION DETECTOR: a
+  decoder that starts asking for more memory moves a tally here whatever
+  the Macintosh shell does with its resources.
+- **shipped** (`--shipped`) — one budget per tier PER FORMAT, which is
+  what the `'OVLY'` build has: the decoders are fourteen images read as
+  one bundle at launch, and everything the sniffed format cannot want is
+  released before the engine takes its budget (FORMATS.md, *Overlays*).
+  This is the lane that predicts what a user's Macintosh refuses.
 
-    tools/run_tiers.py --tier sys3-512K
+Both are swept in seconds:
+
+    tools/run_tiers.py --check                       # both lanes, asserted
+    tools/run_tiers.py --tier sys3-512K              # resident, one tier
+    tools/run_tiers.py --tier sys3-512K --shipped    # shipped, one tier
     tools/run_tiers.py --budget 123962 --list tools/vmac/sample.txt
     tools/run_tiers.py --tier floor-1M --macextract build/rel/macextract
 
-It prints one line per refusal with the shortfall, and the tally. On
-2026-09-22, with all three budgets re-taken on the machine the same day,
-it reproduced ALL THREE tiers exactly — 71/71, 67/71 and 64/71, the same
-four and seven fixtures by name that the emulators refuse. It had never
-matched the third before, and what was wrong was the budget and not the
-model.
+Each prints one line per refusal with the shortfall, and the tally. The
+resident lane reproduced all three tiers exactly on 2026-09-22, with the
+budgets re-taken on the machine the same day — 71/71, 67/71 and 64/71,
+the same four and seven fixtures by name that the emulators refuse. The
+shipped lane reproduces the two tiers a machine has run the v0.33.0
+binary on: 71/71 at the floor target and **69/71** at System 3.0 /
+512 KB, the same two fixtures by name (FORMATS.md, *512 KB machines*).
+
+How the shipped lane gets a budget per format
+---------------------------------------------
+Everything below is derived rather than restated: the keep set comes out
+of `mac/ovl_load_eager.c`'s own switch, the format names out of the
+engine's table, the image sizes out of the build. A second copy of any
+of them would grade something other than what the Macintosh runs.
+
+    budget(tier, format) = resident budget(tier) + OVL_SAVED + OVL_RESIDUE
+                           - sum(kept image sizes) - 8 per kept image
+
+`OVL_SAVED` is the resident `CODE` + A5 the overlay build does not carry;
+a kept image is a locked copy on the heap, and an envelope keeps the
+whole bundle instead. The arithmetic reproduces all three granted budgets
+the machine has measured (FORMATS.md, *What it buys, against the
+control*) — but each layer of a `.sit.hqx` gets its OWN budget on the
+Macintosh, because the shell re-takes one per envelope layer, so this
+lane sweeps a fixture layer by layer and a fixture passes only if every
+layer does. Why it is built this way: DECISIONS.md 2026-09-26, *a budget
+per format, and one per layer*.
 
 What it CANNOT see, and why the emulator stays
 ----------------------------------------------
@@ -34,6 +70,14 @@ What it CANNOT see, and why the emulator stays
   stale on 2026-09-22 — two by 21,666 B — and the one-fixture
   System 6.0.8 / 512 KB disagreement that had been filed under
   fragmentation below was this, entirely.
+- **Whether a Compact Pro or zip archive is encrypted.** The shell asks
+  `unc_archive_encrypted` and releases the ciphers on a definite NO;
+  that walk is not reachable from the CLI, so this lane keeps them for
+  those two formats always and grants 9,808 B LESS than the machine
+  does. Deliberately pessimistic, and it decides nothing: the narrowest
+  margin on any Compact Pro or zip layer in the sample is 143,800 B
+  (`derived-MUSFMT10.ZIP` at System 6.0.8 / 512 KB, measured
+  2026-09-26).
 - **Fragmentation.** The budget is one number; the Memory Manager also
   has to find ONE piece that big. The Mac shell reports that case
   separately (`gShortPiece`, "Memory is too broken up"), and nothing
@@ -54,8 +98,10 @@ What it CANNOT see, and why the emulator stays
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -65,20 +111,10 @@ REPO = os.path.dirname(HERE)
 # FORMATS.md (*Budget*, *512 KB machines*) is where they come from and
 # the only place they should be corrected.
 #
-# THESE ARE THE RESIDENT BUILD'S BUDGETS, and since 2026-09-25 that is not
-# what ships. The application's decoders are 'OVLY' images now, and the
-# release keeps a different set per format, so the shipped build's budget is
-# not one number per tier — it is a number per tier PER FORMAT, 84-103 KB
-# above the figures below (FORMATS.md, *Overlays*). This model cannot express
-# that and does not try to.
-#
-# It is still worth running, and still asserted by ci.sh, because what it
-# actually grades is the ENGINE's allocation behaviour against a fixed
-# ceiling: a decoder that starts asking for more memory shows up here whatever
-# the Macintosh shell does with its resources. What it no longer is, is a
-# prediction of what a user's machine will refuse. The machine's own tallies
-# for the shipped build are in FORMATS.md — sys3-512K is 69/71 there against
-# the 67/71 this file asserts for the control.
+# THESE ARE THE RESIDENT BUILD'S BUDGETS, which is what a build with every
+# decoder linked in has and not what ships. The shipped build's budget is one
+# of these PLUS what the overlay release gives back for the sniffed format,
+# which is the `--shipped` lane below.
 TIERS = {
     "sys3-512K": (219362, "System 3.0, Macintosh 512Ke (239,842 B free)"),
     "sys6-512K": (123962, "System 6.0.8, Macintosh 512Ke (144,442 B free)"),
@@ -107,24 +143,204 @@ TIERS = {
 
 SHORT = re.compile(r"at least (\d+) bytes more memory")
 
-# What --check asserts: every tier an emulator has independently agreed
-# with, which since 2026-09-22 is all three. Each matches the machine
-# fixture for fixture — `floor-1M` 71/71, `sys3-512K` 67/71 (the same
-# four names), `sys6-512K` 64/71 (the same seven). `sys6-512K` was a
-# diagnostic until that day because it read 59/69 where the machine said
-# 58 and later 63; it is asserted now, because the disagreement was the
-# stale budget above and not the model.
+# What the RESIDENT lane asserts: every tier an emulator has independently
+# agreed with for that build, which since 2026-09-22 is all three. Each
+# matches the machine fixture for fixture — `floor-1M` 71/71, `sys3-512K`
+# 67/71 (the same four names), `sys6-512K` 64/71 (the same seven).
+# `sys6-512K` was a diagnostic until that day because it read 59/69 where the
+# machine said 58 and later 63; it is asserted now, because the disagreement
+# was the stale budget above and not the model.
 #
 # A tally that moves here is either a memory regression or a memory WIN;
 # both want the number below changed deliberately, which is the point of
-# pinning it. These are the RESIDENT build's tallies (above); the shipped
-# overlay build clears two more at sys3-512K on the machine, and that
-# difference is a property of the Macintosh binary rather than of the engine
-# this model runs. 69 -> 71 on 2026-09-22: the sample gained the two StuffIt 5
+# pinning it. 69 -> 71 on 2026-09-22: the sample gained the two StuffIt 5
 # fixtures whose names are UTF-8, and `derived-Cool_Tools__.sit` needs
 # 242,464 B, so it is a 512 KB refusal on both systems. Nothing that was
 # passing stopped.
 EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
+
+# ---------------------------------------------------------------------------
+# The shipped build's model: a budget per tier PER FORMAT.
+# ---------------------------------------------------------------------------
+
+# What the overlay build does NOT carry resident, in bytes: the control's
+# `CODE` + A5 less the shipped build's, 151,588 + 37,788 - 53,332 - 18,988.
+# Both measured 2026-09-26 with `m68k-apple-macos-size` (FORMATS.md,
+# *Three configurations, one tree*), which is the only place to correct them.
+OVL_SAVED = 117056
+
+# A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
+# every kept image is one — as is the bundle an envelope holds on to.
+OVL_HANDLE = 8
+
+# The constant the three machine-measured granted budgets leave over the
+# arithmetic above (FORMATS.md, *What it buys, against the control*): with it,
+# this model reproduces 734,656 / 752,898 / 746,682 B exactly, and it is the
+# same constant for all three. What it is made of is not established — those
+# figures were taken on 2026-09-24 on the branch this merged from, and the
+# merge and DART's removal have moved the code under them. It is carried as a
+# residue and labelled as one; DROPPING IT CHANGES NO PREDICTION, because the
+# narrowest margin between a layer's demand and its budget is 46,712 B at the
+# two tiers this lane asserts and 13,028 B at any of the three (measured
+# 2026-09-26 by bisecting every layer of all 71 fixtures; DECISIONS.md
+# 2026-09-26, *a budget per format, and one per layer*).
+OVL_RESIDUE = 1138
+
+# The fourteen images and the bundle they are read as, in bytes, measured
+# 2026-09-26 off `build/mac/`. They are checked against that build whenever it
+# is present (check_images below), so this table cannot drift silently while
+# the toolchain is installed; it is stated rather than only read so that the
+# lane still runs where Retro68 is not.
+IMAGES = {
+    "OVL_ID_ARC":         8120,
+    "OVL_ID_BINHEX":      2392,
+    "OVL_ID_BTOA":        2756,
+    "OVL_ID_CODECS":      6404,
+    "OVL_ID_CPTDD":      15784,
+    "OVL_ID_CRYPT":       9800,
+    "OVL_ID_EXO":        27252,
+    "OVL_ID_LZH":         9568,
+    "OVL_ID_NOW":         4938,
+    "OVL_ID_PACKIT":      2648,
+    "OVL_ID_SPACESAVER": 16722,
+    "OVL_ID_STUFFIT":    18002,
+    "OVL_ID_SUPERDISK":   7056,
+    "OVL_ID_TEXT":       11450,
+}
+BUNDLE = 143072
+
+# What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
+# rather than a tally: a tier that refuses two different fixtures and still
+# counts 69 is exactly what a count cannot fail on. Both tiers were run on
+# the v0.33.0 binary — 2026-09-25 for `sys3-512K` (`sys30.py --emu mv-512Ke`)
+# and the same day at the 1 MB floor (FORMATS.md, *512 KB machines* and
+# *Floor target verification*).
+#
+# `sys6-512K` is NOT here: no machine has run the shipped build at that tier,
+# so this lane prints its prediction and asserts nothing. Adding it means an
+# emulator run, not a number (OPEN_ITEMS.md, *The overlay loader*).
+EXPECT_SHIPPED = {
+    "floor-1M": (),
+    "sys3-512K": ("derived-Library_ISBN_Barcoder.sit", "synth-dd-m5.dd"),
+}
+
+CCOMMENT = re.compile(r"/\*.*?\*/", re.S)
+
+
+def formats(path=os.path.join(REPO, "src", "unc_engine.c")):
+    """Every format's printed name and whether it is an envelope layer.
+
+    Parsed from the engine's own table, because `sniff` prints those names
+    and the shell unwraps exactly the rows flagged envelope: a copy here
+    would be a model of a different program.
+    """
+    text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
+    body = text.split("unc_formats[] = {", 1)
+    if len(body) != 2:
+        raise SystemExit("run_tiers: cannot find unc_formats[] in %s" % path)
+    out = {}
+    for m in re.finditer(r"\{\s*(UNC_FORMAT_\w+),\s*\"([^\"]*)\",\s*(\d)\s*,"
+                         r"\s*(\d)\s*,", body[1]):
+        out[m.group(1)] = (m.group(2), m.group(4) == "1")
+    if len(out) < 30:
+        raise SystemExit("run_tiers: parsed %d formats, expected 30+ — the "
+                         "engine's table changed shape" % len(out))
+    return out
+
+
+def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
+    """Which images each format keeps, read out of the loader that does it.
+
+    Returns {UNC_FORMAT_*: frozenset(OVL_ID_*)} plus the key "default" for
+    everything the switch does not name. An empty set means the BUNDLE is
+    kept whole, which is what an envelope does.
+    """
+    text = CCOMMENT.sub(" ", open(path, encoding="utf-8").read())
+    if "ovl_keep(OVL_ID_CODECS" not in text:
+        raise SystemExit("run_tiers: the loader no longer always keeps the "
+                         "codecs image — this model says it does")
+    if "if (crypt) ovl_keep(OVL_ID_CRYPT" not in text:
+        raise SystemExit("run_tiers: the loader's cipher keep changed shape")
+    body = text.split("switch (fmt) {", 1)
+    if len(body) != 2:
+        raise SystemExit("run_tiers: cannot find the release switch in %s"
+                         % path)
+    body = body[1]
+
+    out, pend, want, crypt = {}, [], None, True
+    for m in re.finditer(r"case\s+(UNC_FORMAT_\w+)\s*:|(default)\s*:|"
+                         r"want\s*=\s*(OVL_ID_\w+)|crypt\s*=\s*0|"
+                         r"(break)\s*;|(return)\s*;|(\n\s*\})", body):
+        case, dflt, image, brk, ret, end = m.groups()
+        if case or dflt:
+            pend.append(case or "default")
+        elif image:
+            want = image
+        elif m.group(0).startswith("crypt"):
+            crypt = False
+        elif brk or ret:
+            keep = set()
+            if ret:                      # an envelope: nothing is released
+                keep = None
+            else:
+                if want:
+                    keep.add(want)
+                if crypt:
+                    keep.add("OVL_ID_CRYPT")
+                keep.add("OVL_ID_CODECS")
+            for name in pend:
+                out[name] = frozenset(keep) if keep is not None else frozenset()
+            pend, want, crypt = [], None, True
+            if ret and "default" in out:
+                break                    # past the default: the switch is done
+        elif end:
+            break
+    if "default" not in out or out["default"]:
+        raise SystemExit("run_tiers: the release switch's default no longer "
+                         "keeps the whole bundle")
+    if len(out) < 15:
+        raise SystemExit("run_tiers: parsed %d release cases, expected 15+"
+                         % len(out))
+    for keep in out.values():
+        for image in keep:
+            if image not in IMAGES:
+                raise SystemExit("run_tiers: the loader keeps %s and this "
+                                 "file has no size for it" % image)
+    return out
+
+
+def check_images(builddir=os.path.join(REPO, "build", "mac")):
+    """Grade IMAGES against the build, where there is one. Returns a note."""
+    bundle = os.path.join(builddir, "ovl_bundle.bin")
+    if not os.path.exists(bundle):
+        return "image sizes not checked (no %s)" % builddir
+    bad = []
+    for ident, size in sorted(IMAGES.items()):
+        p = os.path.join(builddir,
+                         "ovl_" + ident[len("OVL_ID_"):].lower() + ".bin")
+        if not os.path.exists(p):
+            bad.append("%s: no %s" % (ident, os.path.basename(p)))
+        elif os.path.getsize(p) != size:
+            bad.append("%s: %d B built, %d B here"
+                       % (ident, os.path.getsize(p), size))
+    if os.path.getsize(bundle) != BUNDLE:
+        bad.append("bundle: %d B built, %d B here"
+                   % (os.path.getsize(bundle), BUNDLE))
+    if bad:
+        raise SystemExit("run_tiers: the overlay images have moved —\n    "
+                         + "\n    ".join(bad)
+                         + "\n  Re-take IMAGES/BUNDLE from build/mac and say "
+                           "so in the commit: a budget per format is made of "
+                           "these numbers.")
+    return "image sizes agree with %s" % os.path.relpath(builddir, REPO)
+
+
+def gain(keep):
+    """What the overlay release gives this format's layer, in bytes."""
+    if not keep:                          # the whole bundle stays
+        return OVL_SAVED + OVL_RESIDUE - BUNDLE - OVL_HANDLE
+    return (OVL_SAVED + OVL_RESIDUE - sum(IMAGES[i] for i in keep)
+            - OVL_HANDLE * len(keep))
 
 
 def names(listfile):
@@ -154,6 +370,97 @@ def sweep(binary, fixtures, budget, fixdir):
     return fails
 
 
+# --- the shipped lane -------------------------------------------------------
+
+def sniff(binary, path):
+    r = subprocess.run([binary, "sniff", path], capture_output=True, text=True)
+    return r.stdout.strip() or "unknown"
+
+
+def peel(binary, path, tmp, fmts):
+    """The layers the Mac shell would take this file apart in.
+
+    One (format, file) per layer, outermost first. The shell calls its
+    extractor once per envelope layer and re-takes a budget each time
+    (mac/macextract_mac.c, ExtractOne), so each layer is measured against the
+    budget the release leaves for ITS format — which is the whole reason this
+    lane cannot sweep a fixture in one call.
+    """
+    env = {name: e for name, (_, e) in fmts.items()}
+    byname = {n: ident for ident, (n, _) in fmts.items()}
+    out, cur, depth = [], path, 0
+    while True:
+        shown = sniff(binary, cur)
+        if shown == "unknown":
+            break                    # an envelope's payload, not an archive
+        ident = byname.get(shown)
+        if ident is None:
+            print("run_tiers: `sniff` said %r, which is in no format table"
+                  % shown, file=sys.stderr)
+            return None
+        out.append((ident, shown, cur))
+        if not env[ident]:
+            break
+        depth += 1
+        if depth > 4:
+            print("run_tiers: %s nests deeper than this model peels"
+                  % os.path.basename(path), file=sys.stderr)
+            return None
+        d = os.path.join(tmp, "%s.L%d" % (os.path.basename(path), depth))
+        shutil.rmtree(d, ignore_errors=True)
+        os.makedirs(d)
+        subprocess.run([binary, "x", "-nr", "-o", d, cur],
+                       capture_output=True, text=True)
+        got = [os.path.join(dp, f) for dp, _, fn in os.walk(d) for f in fn
+               if not f.endswith(".rsrc")]
+        if len(got) != 1:
+            print("run_tiers: unwrapping %s gave %d files, and an envelope "
+                  "layer is one" % (os.path.basename(cur), len(got)),
+                  file=sys.stderr)
+            return None
+        cur = got[0]
+    return out
+
+
+def sweep_shipped(binary, fixtures, base, fixdir, keep, fmts, tmp):
+    """Sweep at `base` plus what each layer's format gets back."""
+    fails = []
+    for n in fixtures:
+        p = os.path.join(fixdir, n)
+        if not os.path.exists(p):
+            print("run_tiers: missing fixture %s" % p, file=sys.stderr)
+            return None
+        layers = peel(binary, p, tmp, fmts)
+        if layers is None:
+            return None
+        if not layers:
+            # Nothing to measure is not a pass: a sweep that peeled every
+            # fixture to nothing would report the whole sample clear.
+            print("run_tiers: %s sniffs as nothing this engine reads" % n,
+                  file=sys.stderr)
+            return None
+        for ident, shown, path in layers:
+            budget = base + gain(keep.get(ident, keep["default"]))
+            r = subprocess.run([binary, "t", "-nr", "--budget", str(budget),
+                                path], capture_output=True, text=True)
+            m = SHORT.search(r.stderr)
+            if m:
+                fails.append((n, int(m.group(1)), shown, budget))
+                break
+            if r.returncode != 0:
+                fails.append((n, -1, shown, budget))
+                break
+    return fails
+
+
+def report(fails, indent):
+    for f in sorted(fails, key=lambda x: x[1]):
+        short = "{:,}".format(f[1]) if f[1] >= 0 else "(other failure)"
+        extra = "" if len(f) < 4 else "   [%s at %s B]" % (f[2],
+                                                           "{:,}".format(f[3]))
+        print("%s%-42s short by at least %s%s" % (indent, f[0], short, extra))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -164,43 +471,87 @@ def main():
     ap.add_argument("--tier", choices=sorted(TIERS))
     ap.add_argument("--budget", type=int,
                     help="an explicit cap, instead of a tier's")
+    ap.add_argument("--shipped", action="store_true",
+                    help="the 'OVLY' build: a budget per format, per layer")
     ap.add_argument("--check", action="store_true",
-                    help="sweep the asserted tiers and fail on a change")
+                    help="sweep both lanes' asserted tiers, fail on a change")
+    ap.add_argument("--check-images", action="store_true",
+                    help="grade IMAGES against build/mac and stop; `make "
+                         "clean` means --check runs before that build exists")
     a = ap.parse_args()
+    if a.check_images:
+        print("run_tiers: %s" % check_images())
+        return 0
     if not a.tier and not a.budget and not a.check:
         ap.error("give --tier, --budget or --check")
     if not os.path.exists(a.macextract):
         raise SystemExit("run_tiers: no %s — build it first" % a.macextract)
 
     fixtures = names(a.list)
-    if a.check:
-        bad = 0
-        for tier, want in sorted(EXPECT.items()):
-            fails = sweep(a.macextract, fixtures, TIERS[tier][0], a.fixtures)
+    keep = fmts = tmp = None
+    if a.shipped or a.check:
+        fmts, keep = formats(), keep_sets()
+        print("run_tiers: %s" % check_images())
+        tmp = tempfile.mkdtemp(prefix="run_tiers.")
+    try:
+        if a.check:
+            bad = 0
+            for tier, want in sorted(EXPECT.items()):
+                fails = sweep(a.macextract, fixtures, TIERS[tier][0],
+                              a.fixtures)
+                if fails is None:
+                    return 1
+                got = len(fixtures) - len(fails)
+                print("run_tiers: resident %-11s %d/%d pass at %d bytes%s"
+                      % (tier, got, len(fixtures), TIERS[tier][0],
+                         "" if got == want else "   EXPECTED %d" % want))
+                report(fails, "     ")
+                bad += got != want
+            for tier in sorted(TIERS):
+                fails = sweep_shipped(a.macextract, fixtures, TIERS[tier][0],
+                                      a.fixtures, keep, fmts, tmp)
+                if fails is None:
+                    return 1
+                got = len(fixtures) - len(fails)
+                want = EXPECT_SHIPPED.get(tier)
+                note = "   (not asserted: no machine has run this tier)"
+                if want is not None:
+                    note = ("" if sorted(f[0] for f in fails) == sorted(want)
+                            else "   EXPECTED %d, refusing %s"
+                                 % (len(fixtures) - len(want),
+                                    ", ".join(want) or "nothing"))
+                    bad += bool(note)
+                print("run_tiers: shipped  %-11s %d/%d pass, per format%s"
+                      % (tier, got, len(fixtures), note))
+                report(fails, "     ")
+            return 1 if bad else 0
+
+        budget = a.budget or TIERS[a.tier][0]
+        what = a.tier and TIERS[a.tier][1] or "an explicit budget"
+        if a.shipped:
+            fails = sweep_shipped(a.macextract, fixtures, budget, a.fixtures,
+                                  keep, fmts, tmp)
             if fails is None:
                 return 1
-            got = len(fixtures) - len(fails)
-            print("run_tiers: %-11s %d/%d pass at %d bytes%s"
-                  % (tier, got, len(fixtures), TIERS[tier][0],
-                     "" if got == want else "   EXPECTED %d" % want))
-            for n, short in sorted(fails, key=lambda x: x[1]):
-                print("     %-42s short by at least %s"
-                      % (n, "{:,}".format(short) if short >= 0
-                         else "(other failure)"))
-            bad += got != want
-        return 1 if bad else 0
+            print("run_tiers: %d of %d pass on the shipped build — %s"
+                  % (len(fixtures) - len(fails), len(fixtures), what))
+            print("   a budget per format: %d B resident, plus %s B by format"
+                  % (budget, "{:,} to {:,}".format(
+                      min(gain(k) for k in keep.values()),
+                      max(gain(k) for k in keep.values()))))
+            report(fails, "   ")
+            return 0
 
-    budget = a.budget or TIERS[a.tier][0]
-    what = a.tier and TIERS[a.tier][1] or "an explicit budget"
-    fails = sweep(a.macextract, fixtures, budget, a.fixtures)
-    if fails is None:
-        return 1
-    print("run_tiers: %d of %d pass at %d bytes — %s"
-          % (len(fixtures) - len(fails), len(fixtures), budget, what))
-    for n, short in sorted(fails, key=lambda x: x[1]):
-        print("   %-44s short by at least %s"
-              % (n, "{:,}".format(short) if short >= 0 else "(other failure)"))
-    return 0
+        fails = sweep(a.macextract, fixtures, budget, a.fixtures)
+        if fails is None:
+            return 1
+        print("run_tiers: %d of %d pass at %d bytes — %s"
+              % (len(fixtures) - len(fails), len(fixtures), budget, what))
+        report(fails, "   ")
+        return 0
+    finally:
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -1596,8 +1596,9 @@ per entry; `macextract --budget N` is the same rule, so the whole
 71-fixture sample can be swept at a tier's measured budget without an
 emulator, a ROM or an X server.
 
-    tools/run_tiers.py --check                 # what ci.sh runs
+    tools/run_tiers.py --check                 # what ci.sh runs: both lanes
     tools/run_tiers.py --tier sys3-512K        # one tier, with shortfalls
+    tools/run_tiers.py --tier sys3-512K --shipped     # the 'OVLY' build
     tools/run_tiers.py --budget 102328         # any cap
 
 Not to be confused with `tools/run_budget.py`, the older half of the
@@ -1605,19 +1606,36 @@ pair: that one sweeps the whole CORPUS at a single cap and reports per
 format (layer 5 above). This one sweeps the Mac SAMPLE at each tier's
 own budget and asserts the tallies.
 
-`--check` asserts every tally Mini vMac has agreed with independently,
-which since 2026-09-22 is all three: **71/71 at the 1 MB floor target**
-(648,250 B), **67/71 on a 512 KB Macintosh under System 3.0**
+**Two lanes, and `--check` runs both.** The RESIDENT lane sweeps one
+budget per tier, which is what the control build (`UNC_OVL_RESIDENT=1`)
+has; the SHIPPED lane sweeps one budget per tier PER FORMAT, which is
+what the `'OVLY'` build has, and per LAYER, because the shell re-takes a
+budget for every envelope layer. Neither replaces the other: the first
+grades the engine's allocation behaviour against a fixed ceiling, and
+the second predicts what a user's Macintosh refuses.
+
+The resident lane asserts every tally Mini vMac agreed with for that
+build, which since 2026-09-22 is all three: **71/71 at the 1 MB floor
+target** (648,250 B), **67/71 on a 512 KB Macintosh under System 3.0**
 (219,362 B) and **64/71 on the same machine under System 6.0.8**
-(123,962 B). **Those are the RESIDENT build's budgets and tallies**, which
-since 2026-09-25 is not what ships: the shipped build's budget depends on the
-sniffed format, it clears two more at the 512 KB tier, and this model does
-not express that (OPEN_ITEMS.md, *The overlay loader*) — the same four and seven fixtures, by name, that the
+(123,962 B) — the same four and seven fixtures, by name, that the
 machines refuse. The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
 assertable the same day, when its budget was re-taken. A tally that moves is
 a memory regression or a memory win; either way the number in `EXPECT`
 is meant to be changed deliberately.
+
+The shipped lane asserts the two tiers a machine has run the v0.33.0
+binary on — **71/71 at the floor target and 69/71 at System 3.0 /
+512 KB** — and it asserts the REFUSED FIXTURES BY NAME rather than a
+tally, because a tier that refuses two different fixtures and still
+counts 69 is exactly what a count cannot fail on. Its budgets are not
+constants: the keep set is parsed out of `mac/ovl_load_eager.c`, the
+format names and envelope flags out of the engine's table, and the image
+sizes are checked against `build/mac/` whenever Retro68 is installed
+(FORMATS.md, *What each format is granted*; DECISIONS.md 2026-09-26, *a
+budget per format, and one per layer*). `sys6-512K` is swept and printed
+there, not asserted: no machine has run the shipped build at that tier.
 
 **What it cannot see** (and why the emulator tiers stay):
 
@@ -1626,7 +1644,15 @@ is meant to be changed deliberately.
   (FORMATS.md, *Budget*), so it moves when the application's size does,
   and this file cannot notice. **All three were stale on 2026-09-22** —
   the two 512 KB constants by 21,666 B each — and re-taking them is what
-  made this file reproduce every tier.
+  made this file reproduce every tier. The shipped lane inherits every
+  one of them, since a per-format budget is one of these plus what the
+  release gives back.
+- **Whether a Compact Pro or zip archive holds an encrypted entry.** The
+  shell asks `unc_archive_encrypted` and drops the ciphers on a definite
+  NO; that walk is not reachable from the CLI, so the shipped lane keeps
+  them for those two formats always and grants 9,808 B less than the
+  machine does. It decides nothing: the narrowest margin on any Compact
+  Pro or zip layer in the sample is 143,800 B, measured 2026-09-26.
 - **Fragmentation.** A budget is one number; the Memory Manager also has
   to find one PIECE that big, which the shell reports separately
   ("Memory is too broken up"). Nothing here models it. **No disagreement

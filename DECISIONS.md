@@ -281,6 +281,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
 - 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
 - 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
+- 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
 
 ---
 
@@ -17698,3 +17699,58 @@ re-run, because the write-up says "reproducible" and nobody doubts it. This
 one cost a day when it was found and then stood for ten days as a warning
 about a tree that had stopped showing it. *A reproduction is a measurement
 with a date, not a property of the code.*
+
+## 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
+
+**Claim: `tools/run_tiers.py` modelled one budget per tier, which since
+2026-09-25 is the control's and not the shipped build's.** With a budget per
+tier PER FORMAT it reproduces the machine's shipped tallies — 69/71 at System
+3.0 / 512 KB and 71/71 at the floor target, refusing the same fixtures by name
+(FORMATS.md, *512 KB machines*). The resident lane is kept and still asserted:
+it grades the engine against a fixed ceiling, which is a different question
+from what a user's Macintosh refuses.
+
+**Nothing in the model is restated.** The keep set is parsed out of
+`mac/ovl_load_eager.c`'s own switch, the format names and envelope flags out
+of the engine's table, the image sizes out of `build/mac/` — and the sizes
+that are written down are checked against that build whenever Retro68 is
+installed. This is `tools/overlay/images.py`'s rule applied again: a second
+copy of the release table would grade a program the Macintosh does not run.
+Every guard was made to fire before it was believed — an image size moved by
+16 B, `ovl_keep(OVL_ID_CODECS)` deleted, an unknown `OVL_ID_*` kept, and the
+asserted refusal list swapped for a same-length one, which fails on the names
+while the tally still reads 69.
+
+**A budget per LAYER, not just per format**, and this is the part that is
+about the Macintosh rather than about arithmetic: `ExtractOne` calls the
+engine once per envelope layer and `mal_take_budget` runs at each layer's
+first allocation, so a `.sit.hqx` is measured twice against two different
+budgets. The model sweeps layer by layer with `t -nr` and passes a fixture
+only if every layer passes. That is what exposed the row no tally had shown —
+an envelope keeps the whole bundle, so it runs 24,886 B TIGHTER than a
+resident build would have (FORMATS.md, *What each format is granted*).
+
+**The evidence the arithmetic was checked against is not the thing it
+predicts.** The three granted budgets FORMATS.md already carried — StuffIt 5,
+LZH and Compact Pro at 1 MB, 734,656 / 752,898 / 746,682 B — are reproduced
+exactly, all three, by one expression with one unexplained constant in it
+(1,138 B). Three measurements against one free parameter is two chances to
+disagree, and they did not. Only then was the model pointed at the tallies.
+**A model first fitted to the tallies it is meant to predict cannot fail** —
+which is this repository's own rule about tolerances, applied to a predictor.
+
+**The residue is labelled and load-bearing on nothing.** Dropping it moves no
+prediction, because the narrowest margin between a layer's demand and its
+budget is **46,712 B** at the two tiers this lane asserts
+(`popper-1.7.tar.Z`'s LZW layer at System 3.0 / 512 KB) and **13,028 B** at
+any of the three (`a2ps.V4.3.tar.Z`'s, at System 6.0.8 / 512 KB) — measured
+2026-09-26 by bisecting every layer of all 71 fixtures, which is the same
+sweep run once per candidate budget. The same measurement is what makes the
+one deliberate pessimism safe: the model cannot reach
+`unc_archive_encrypted` from the CLI, so it keeps the ciphers for every
+Compact Pro and zip archive and grants 9,808 B less than the machine does —
+against a narrowest margin of **143,800 B** on the layers where that applies.
+Every constant in the model is an order of magnitude under the margin it
+could move, so none of them decides a fixture; the day one could, the sweep
+would be deciding fixtures on a number nobody has explained, and that is the
+condition to re-read this entry on.

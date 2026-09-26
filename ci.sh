@@ -84,11 +84,14 @@ python3 tools/run_names.py --macextract build/san/macextract \
     || fail "over-long name tests"
 # What a small Macintosh refuses, decided on Linux. The Mac shell's
 # allocator is a running total against a cap, and `--budget` is the same
-# rule, so a tier's memory result can be swept here in five seconds
-# instead of one emulator boot per fixture. Only the two tiers Mini vMac
-# has independently agreed with are asserted; a tally that moves is a
-# memory regression or a memory win, and either should be deliberate
-# (TESTING.md, *The tiers a budget predicts*).
+# rule, so a tier's memory result can be swept here in seconds instead of
+# one emulator boot per fixture. Two lanes: the RESIDENT one holds the
+# engine to a fixed ceiling per tier, the SHIPPED one gives each format —
+# and each envelope layer — the budget the 'OVLY' release leaves it, and
+# asserts the refused fixtures by name. Only what a machine has agreed
+# with is asserted; a tally that moves is a memory regression or a memory
+# win, and either should be deliberate (TESTING.md, *The tiers a budget
+# predicts*).
 python3 tools/run_tiers.py --check --macextract build/san/macextract \
     || fail "memory-budget tier check"
 # --only: acting on the entries the user named. `unar` has no per-file
@@ -324,6 +327,13 @@ sh tests/run_overlay_host.sh --shipped-only || fail "shipped overlay images"
 # without overlays. A feature that IS a build configuration has to be built.
 echo "=== variant 4b: the overlay configuration, eager ==="
 UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build (eager)"
+
+# The shipped lane's budgets are made OF the image sizes, one per format
+# (FORMATS.md, *What each format is granted*), and the images do not exist
+# until the build above: `make clean` runs first and the tier check runs in
+# variant 1, so this is the only point in the run where they can be graded.
+python3 tools/run_tiers.py --check-images \
+    || fail "the overlay images moved — re-take run_tiers.py's IMAGES"
 
 # variant 4c: the LAZY lifetime — the same fourteen images, one resource
 # each, read when a format turns out to want one. It is not shipped, and that
