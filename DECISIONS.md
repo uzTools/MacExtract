@@ -277,6 +277,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
 - 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
 - 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
+- 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
 
 ---
 
@@ -17483,3 +17484,43 @@ whole overlay argument is measured against.
 most likely to skip is the one that is not shipped — and that is exactly
 the one whose job is to be a fixed reference. A control earns its name by
 being rebuilt, not by being described.
+
+## 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
+
+**Decision, the maintainer's, taken 2026-09-26: the application will not
+offer a list of entries to tick.** Selective extraction stays where it
+already ships — the CLI's `--only`, M39, on `l`, `x` and `t` alike — and
+the engine keeps both halves a host needs: `UncOptions.list_only`, which
+walks and reports without decoding, and the skip a `begin_entry` returning
+>0 performs (`include/macextract.h`, *Sink*). **Nothing is removed and no
+capability is lost.** What closes is the question.
+
+**What it rests on.** Every run of the application pays for a picker,
+including the runs of a user who never opens it, and the shell is the
+thin part of this project by design (CLAUDE.md, *Mission*). A host that
+wants the behaviour has the engine's two halves; the Macintosh user's case
+— the whole archive, byte-exact, on a 1 MB machine — is the one the tiers
+verify.
+
+**What it does NOT rest on: the branch's price.** `BRANCH_NOTES.md` on
+`selective-extract` measures the feature against a build that predates the
+overlays and DART's removal, and states the cost as a share of a prize
+that was itself recorded at a seventeenth of its measured value at the
+time (2026-09-25, *the parked decision that outlived its numbers*). Those
+figures were not re-taken for this decision and this entry quotes none of
+them, deliberately: **a stale number is not evidence, and a scope answer
+that needed a byte count would be a different answer.**
+
+**The transferable part.** On 2026-09-23 this file worked out that a row
+ending *"the decision is X's"* has to name what changed since the decision
+was last taken, and exempted this one because nothing had ever been
+settled for it to re-open — correctly. But "genuinely open" was then
+carried for three days as a status, while the only number attached to it
+went stale underneath. *An open decision decays the same way a claim
+does.* The cheap move was not to re-price the branch; it was to ask what
+the decision turned on, find that it was not the price, and take it.
+
+**Consequence.** OPEN_ITEMS.md's Part 2 section is deleted and one row of
+Part 1 replaces it (*Out by the brief*). BRANCHES.md keeps the branch as
+parked-by-decision with its figures marked as pre-overlay. `ci.sh` is
+unchanged: `tools/run_only.py` grades the CLI half, which ships.

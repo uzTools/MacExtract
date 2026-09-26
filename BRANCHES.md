@@ -15,7 +15,14 @@ undated figure here is one nobody can tell is stale.
 | branch | what it explores | state |
 |---|---|---|
 | `rom64k` | one guard, `Has128KROM()`, so the application starts on a 64K-ROM Macintosh instead of bombing on `MaxApplZone` | starts and its interface works under emulation; cannot extract without HFS, and no hardware has run it (MANUAL_TESTS.md §7) |
-| `selective-extract` | list the archive, tick what should come out, extract only that — a `list_only` walk, a box, and the skip `begin_entry` has always had | built, graded in `ci.sh`, and driven on screen on System 6.0.8 and System 3.0; **costs 2,720 B of every 1 MB extraction's budget**, and the second walk ~10 ms an entry |
+
+**`selective-extract` is PARKED BY DECISION, 2026-09-26.** Choosing which
+entries come out is out of scope for the Macintosh application, and the
+branch is kept only so its history can be read (OPEN_ITEMS.md, *Out by the
+brief*; DECISIONS.md 2026-09-26, *the feature that was parked, and is now
+out*). Its `BRANCH_NOTES.md` prices the feature against a build that
+predates the overlays and DART's removal, so nothing in it is a current
+figure. Do not start work on it.
 
 **Merging `main` into `rom64k` deletes the guard, silently.** `main` carries
 the removal commit `2dbe26d` ("the 64K-ROM guard lives on rom64k") and the

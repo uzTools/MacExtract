@@ -40,6 +40,7 @@ answer and not a refusal — the brief has grown before, on request.
 | what | status | why it stays out |
 |---|---|---|
 | Compression | not implemented | this is an extractor |
+| Choosing which entries come out, in the Macintosh application | **not implemented; the CLI's `--only` ships** | decided 2026-09-26: the application extracts the whole archive, and a tick list is paid for by every run including the ones that never open it. The engine keeps both halves a host needs — `UncOptions.list_only`, and the skip a `begin_entry` returning >0 performs (`include/macextract.h`, *Sink*) — so this is a decision about the shell and not a missing capability. Built and graded on the branch `selective-extract`, which is kept only so its history can be read (BRANCHES.md; DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*) |
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, and there is nothing measured for one to do** | every codec here is integer bit work: the only FP-shaped operation in the engine is Arsenic's two divides per symbol, **0.72 % of the run** against 9.9 % for the linear symbol search beside it (FORMATS.md, *What is still hot*). An FPU is also only available where it is not needed — a 68881 implies a 68020, which already has `DIVU.L`, while the 68000 that pays for `__udivsi3` has none — and the fastest tier reaches no FPU at all, running through the 68LC040 emulator. The formats' own answer to differing CPUs is a decompress-only twin that accepts every CPU, and all of those modules are implemented. A second `-mcpu=68020` build is the adjacent trade and is also out (DECISIONS.md 2026-09-23, *hardware decoding*) |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has never heard of. The branch `rom64k` guards the trap and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies — and **nobody has run it on one**, so this stays out until hardware says otherwise (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §7). A Macintosh **128K** is out for a measured second reason: its largest single block is 63,744 B against 142,152 B of `CODE` |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
@@ -111,41 +112,6 @@ way.
 # Part 2 — Open items
 
 ---
-
-## Selective extraction: the entries the user ticked, and no others
-
-**Asked for 2026-09-03**: show what is in the archive, extract what is chosen.
-
-**The engine already has both halves.** `UncOptions.list_only` walks the
-containers and reports every entry through `begin_entry` while decoding
-nothing, and a `begin_entry` that returns >0 skips its entry — the data is
-not decoded and `end_entry` is not called (`include/macextract.h`, *Sink*).
-So this is a shell and a UI item; no format and no decoder is involved.
-
-What it costs, all of it on the Macintosh side:
-
-- **a second walk of the archive**, at no decode. The LAST layer only: a
-  chain's envelopes are unwrapped to disk either way, so `.sit.hqx` is not
-  walked twice.
-- **the list, on a 1 MB machine.** The end-of-run report holds 64 lines in a
-  6 KB pool for this reason, and a 70,000-entry zip fits in nothing. A cap,
-  and *"too many entries to choose from"* falling back to extracting
-  everything, is the shape that stays honest; the choice itself is a bit per
-  entry.
-- **the two passes have to agree entry for entry.** An ordinal alone is
-  fragile — match the name too, and extract everything rather than the wrong
-  thing if they diverge.
-- **the list is hand-drawn**, like the report box: the floor is System 3.0.
-
-**What would close it:** the shell answering >0 for what was not ticked,
-graded through the mock sink, plus the list driven on screen on System 3.0
-and System 6 (`tools/vmac/interactive.py`).
-
-**All of that is done on the branch `selective-extract`, and it is not
-merged** — what is left is the decision, because the price is now known:
-2,720 B off every 1 MB extraction's budget whether or not anybody unticks
-anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
-`BRANCH_NOTES.md` on that branch.
 
 ## The overlay loader, which no automated suite here reaches
 
