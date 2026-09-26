@@ -300,14 +300,25 @@ python3 tools/check_app_size.py build/mac/MacExtract.code.bin \
 echo "=== variant 4b: the overlay configuration, eager ==="
 UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build (eager)"
 
-# variant 4c: the LAZY lifetime — the same fifteen images, one resource each,
-# read when a format turns out to want one. It is not shipped, and that is
-# precisely why it is built: the two lifetimes were separate branches until
+# variant 4c: the LAZY lifetime — the same fourteen images, one resource
+# each, read when a format turns out to want one. It is not shipped, and that
+# is precisely why it is built: the two lifetimes were separate branches until
 # 2026-09-25, and because neither tree compiled the other, the same
 # build-staleness fix had to be found and written twice, days apart. An
 # unbuilt variant is a variant that rots.
 echo "=== variant 4c: the overlay configuration, lazy ==="
 UNC_AT_OVERLAY=1 UNC_OVL_LAZY=1 UNC_MAC_BUILD_DIR=build/mac-lazy \
     sh tools/build_mac.sh || fail "overlay build (lazy)"
+
+# variant 4d, added 2026-09-26: the RESIDENT control — every decoder linked
+# in, the instrument the overlay figures are measured against (FORMATS.md,
+# *Overlays*). It was the one configuration nothing built, and it rotted
+# exactly as 4c's comment says: a four-byte predicate in src/fmt_arc.c put it
+# 4 B over its own ratchet, green everywhere else because that file is in an
+# overlay in both shipped lifetimes (DECISIONS.md 2026-09-26). A control that
+# is not built is not a control.
+echo "=== variant 4d: the overlay configuration, resident control ==="
+UNC_AT_OVERLAY=1 UNC_OVL_RESIDENT=1 UNC_MAC_BUILD_DIR=build/mac-resident \
+    sh tools/build_mac.sh || fail "overlay build (resident control)"
 
 echo "CI: all green"

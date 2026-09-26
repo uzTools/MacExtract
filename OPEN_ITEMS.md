@@ -149,7 +149,7 @@ anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
 
 ## The overlay loader, which no automated suite here reaches
 
-**The application ships fifteen `'OVLY'` images and no Linux suite touches
+**The application ships fourteen `'OVLY'` images and no Linux suite touches
 one.** The images exist only in a Macintosh build, so the 932-fixture corpus,
 the 9,320 robustness variants and the sanitiser variants all exercise the
 decoders as ordinary linked code; `ci.sh` compiles the three Macintosh

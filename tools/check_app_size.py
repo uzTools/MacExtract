@@ -8,9 +8,9 @@ one for one, and a tier's budget is FreeMem() minus it
 (tools/run_tiers.py).
 
 "Every byte of this application is resident" was true until 2026-09-25
-and is not any more: the decoders ship as fifteen 'OVLY' images, read at
+and is not any more: the decoders ship as fourteen 'OVLY' images, read at
 launch as one bundle and mostly released as soon as the sniff says what
-the archive is (mac/ovl_load_eager.c). The bundle is 146,176 B and none
+the archive is (mac/ovl_load_eager.c). The bundle is 143,616 B and none
 of it is resident while an archive is being extracted — which is the
 whole point of the build — so it is NOT what this file watches. What it
 watches is the code that cannot go away.

@@ -300,7 +300,14 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # is the merged build MEASURED rather than that arithmetic.
 # LOWERED 2026-09-25 from 153,804 to 151,584: DART left the engine, and on
 # this configuration it was all resident (-2,220 B).
-UNC_MAC_CODE_DEFAULT=151584
+# RAISED 2026-09-26, +4 B, and here is what the 4 B bought: arc_retryable()
+# in src/fmt_arc.c, a named predicate replacing two inline comparisons, so
+# that a garbled ARC entry whose stream ran SHORT is retried with the
+# password instead of refused (DECISIONS.md 2026-09-26, *the guard that was
+# on the other side*). It costs the RESIDENT control 4 B and the shipped
+# build 0 — fmt_arc is in an overlay there — which is also how it got in:
+# nothing built this configuration. `ci.sh` builds it since the same day.
+UNC_MAC_CODE_DEFAULT=151588
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -383,7 +390,10 @@ UNC_MAC_CODE_DEFAULT=151584
 # main's own A5 history records four times, and it has since shifted back.
 # A ratchet is set at the size on the day, so 37,956 was what was locked in.
 # LOWERED 2026-09-25 from 37,956 to 37,792 with DART's removal (-164 B).
-UNC_MAC_A5_DEFAULT=37792
+# LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
+# 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
+# the terms it is raised.
+UNC_MAC_A5_DEFAULT=37788
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

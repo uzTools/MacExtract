@@ -1565,7 +1565,8 @@ a harness can click is not the same list.
   never be one of the formats it helps"** — all three superseded or
   withdrawn 2026-09-25. They were written 2026-08-31 about an overlay
   holding the ciphers and nothing else. `overlay-eager` has carried
-  fifteen images since 2026-09-24: **84–103 KB** more budget at 1 MB than
+  fourteen images since 2026-09-24 (fifteen until DART left on 2026-09-25):
+  **84–103 KB** more budget at 1 MB than
   a resident build, **69/71 at System 3.0 / 512 KB against main's 67/71**
   — `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`, two
   archives `main` cannot open on that machine — and StuffIt gains like

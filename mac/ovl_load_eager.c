@@ -1,4 +1,4 @@
-/* ovl_load_eager.c — all fifteen images as ONE resource, read at launch, and
+/* ovl_load_eager.c — all fourteen images as ONE resource, read at launch, and
  * most of it thrown away as soon as the archive says what it is.
  *
  * The lifetime this file implements is the shipped one. `mac/ovl_load_lazy.c`

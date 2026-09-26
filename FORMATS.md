@@ -2376,33 +2376,48 @@ since 2026-08-27.
 ## Overlays: what the application ships, and what it costs
 
 **Since 2026-09-25 the decoders and ciphers are not resident.** They are
-fifteen flat, position-independent images in `'OVLY'` resources; the shipped
-build reads all fifteen as ONE bundle at launch and releases everything the
+fourteen flat, position-independent images in `'OVLY'` resources; the shipped
+build reads all fourteen as ONE bundle at launch and releases everything the
 sniffed format cannot want before the engine takes its budget. The mechanism
 is `mac/ovl_load_eager.c`, the images are built by `tools/overlay/`, and why
 it is the build rather than a branch is DECISIONS.md 2026-09-25, *two
-branches that were one file apart*.
+branches that were one file apart*. There were fifteen until DART left the
+engine later the same day.
 
 ### Three configurations, one tree
 
-| build | switch | resident `CODE` | A5 | `MacExtract.bin` |
-|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,028 B** | 19,124 B | **214,784 B** |
-| lazy | `UNC_OVL_LAZY=1` | 52,600 B | 19,240 B | 213,504 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 153,804 B | 37,956 B | 189,312 B |
+| build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
+|---|---|---|---|---|---|
+| **eager — SHIPPED** | (default) | **53,332 B** | 18,988 B | **64,896 B** | **211,328 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,956 B | 19,084 B | 63,488 B | 210,048 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 151,588 B | 37,788 B | 183,552 B | 186,880 B |
 
-All three built 2026-09-25 from one tree; `ci.sh` compiles the first two every
-run (TESTING.md, *The three Macintosh configurations*). The bundle is
-**146,176 B** and is not resident while an archive is extracted, which is the
-point of the build; `tools/check_app_size.py` therefore watches the 65,792 B
-`MacExtract.code.bin` and not the download.
+**All three re-measured 2026-09-26 on one tree**, `CODE` and A5 by
+`m68k-apple-macos-size` as `tools/build_mac.sh` reads them for its
+ratchets. The figures here stood at 54,028 / 19,124 / 214,784 for the shipped
+build from 2026-09-25 until then: that set is the one from BEFORE DART left,
+which cost this section every number it has and `tools/build_mac.sh`'s
+ratchets none of them — that file was lowered in DART's own commit
+(DECISIONS.md 2026-09-26, *the numbers DART left behind*).
+
+`ci.sh` compiles all three configurations since 2026-09-26 (TESTING.md, *The
+three Macintosh configurations*); it built two until then, and the one it
+left out was the control, which duly went 4 B over its ratchet unnoticed.
+
+The bundle is **143,616 B** — the fourteen images sum to 142,892 B, so its
+index costs 724 B — and it is not resident while an archive is extracted,
+which is the point of the build. `tools/check_app_size.py` therefore watches
+the 64,896 B `MacExtract.code.bin` and not the download.
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
-read at launch by the Segment Loader — 185,472 B — and the shipped build
-reads 65,792 B of `CODE` plus the 146,176 B bundle: 211,840 B against
-185,472 B, so it is the same read redistributed plus **26,368 B**, which is
-the download delta and not a second term (DECISIONS.md 2026-09-25, *the
-overlay launch read was counted as a cost twice*).
+read at launch by the Segment Loader — 183,552 B — and the shipped build
+reads 64,896 B of `CODE` plus the 143,616 B bundle, which is 208,512 B: the
+same read redistributed plus **24,960 B** (DECISIONS.md 2026-09-25, *the
+overlay launch read was counted as a cost twice*). The download grows by
+24,448 B over the same pair, 211,328 against 186,880, so the read delta and
+the download delta are **two numbers 512 B apart** and not one number, which
+is what this paragraph claimed until 2026-09-26. Nothing here has needed to
+account for the 512 B.
 
 ### What it buys, against the control
 
@@ -2421,8 +2436,11 @@ control**: with every decoder linked in, the engine gets the same heap
 whatever it decodes, so the 84–103 KB the other two columns gain belongs to
 the mechanism rather than to other work. That is why the resident build is
 kept — as an instrument, not a fallback. (Figures taken 2026-09-24 on the
-branch this merged from; the unified build's resident code is 248 B larger,
-so each overlay column is that much lower and the shape is unchanged.)
+branch this merged from and **not re-measured since** — each one is a 1 MB
+emulator run. Two changes have moved the code they were taken on: the merge,
++248 B, and DART's removal, −696 B on the shipped build and −2,220 B on the
+control. So each budget is a few hundred bytes out and the SHAPE, which is
+the only thing this table is for, is unaffected. *Not re-measured.*)
 
 **Eager against lazy is 894 B–10.7 KB** of budget for a format that must keep
 the ciphers, against **no disk access after the archive is chosen**. Eager

@@ -276,6 +276,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
 - 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
 - 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
+- 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
 
 ---
 
@@ -17406,3 +17407,68 @@ whose whole subject is claims that stopped being true. **A count written
 above a list is the cheapest claim in the repository to check and the
 least likely to be checked**, because the list grows one row at a time
 and no row is ever the one that breaks the number.
+
+
+## 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
+
+**What was wrong.** FORMATS.md's *Overlays* section gave the shipped
+build as 54,028 B of resident `CODE`, 19,124 B of A5 and a 214,784 B
+download, over a 146,176 B bundle of fifteen images. Every one of those
+is the figure from BEFORE DART left the engine on 2026-09-25. The
+measured set is 53,332 / 18,988 / 211,328, a 143,616 B bundle and
+**fourteen** images.
+
+**And the tool was right all along.** `tools/build_mac.sh` carries a
+ratchet per configuration, and DART's own commit lowered all three of
+them — *"eager 54,028 -> 53,332, lazy 52,600 -> 51,956, resident 153,804
+-> 151,584, with the A5 figures following"* — in the file that ENFORCES
+the number. The file that merely quotes it was not touched, and could
+not complain: a ratchet fires, prose does not. **When a commit lowers a
+limit, grep for the number it lowered from** — it is the one edit whose
+own success guarantees nothing about the four other places the figure
+lives. Here it lived in FORMATS.md twice (the *Overlays* table and
+*Resident memory*, which WAS updated, so one file carried both sets 60
+lines apart), in `check_app_size.py`'s docstring, and as an image count
+in six files including CLAUDE.md.
+
+**A cross-file contradiction is a disproof nobody has collected**, and
+this one was inside a single file. What made it findable was following a
+number to the tool that produces it rather than to the prose beside it.
+
+### The launch read: two numbers that were written as one
+
+The section said the shipped build's launch read is *"the same read
+redistributed plus 26,368 B, which is the download delta and not a second
+term"*. The read delta and the download delta are not the same number.
+Measured on this tree: the control reads 183,552 B of `CODE` at launch,
+the shipped build reads 64,896 + 143,616 = 208,512 B, so the read grows
+by **24,960 B** — while the download grows by **24,448 B**, 211,328
+against 186,880. 512 B apart. The point the paragraph was making
+survives, which is why it is easy to miss: the launch read is a
+redistribution and not a new cost. *"X, which is also Y"* is two claims,
+and the second one here was never measured.
+
+### A control that is not built is not a control
+
+The other half was found by building the resident configuration by hand
+to re-measure the table: it came out **4 B over its own ratchet**, and
+`ci.sh` had gone green. The 4 B is `arc_retryable()` from the same day's
+ARC garble fix (*the guard that was on the other side*), and the reason
+every other check passed is that `src/fmt_arc.c` is in an OVERLAY in both
+shipped lifetimes — so the shipped build is +0 B and only the build with
+every decoder linked in pays. `ci.sh` compiled variants 4, 4b and 4c, and
+the control was the one it left out, while TESTING.md said all three were
+built.
+
+So the ratchet is raised by 4 B with what it bought written beside it, the
+A5 ratchet is lowered by 4 B because the same change moved 4 B the other
+way, and `ci.sh` gains **variant 4d**. The lesson is already written in
+`ci.sh`, one comment above the gap: *"An unbuilt variant is a variant that
+rots."* It was written about the two lifetimes, by somebody who had just
+paid for it twice, and the configuration it did not cover is the one the
+whole overlay argument is measured against.
+
+**The generalisable form**: of three configurations, the one a suite is
+most likely to skip is the one that is not shipped — and that is exactly
+the one whose job is to be a fixed reference. A control earns its name by
+being rebuilt, not by being described.

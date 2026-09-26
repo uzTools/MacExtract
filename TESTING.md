@@ -2331,7 +2331,7 @@ check every run, on top of `make_dist.sh`'s statement of it.
 The failure names the fix — `sh tools/make_dist.sh`, in the same commit as
 the change to `mac/` or `src/`.
 
-## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c)
+## The three Macintosh configurations (`ci.sh` variants 4, 4b, 4c, 4d)
 
 **The application has been three builds from one tree since 2026-09-25**, and
 `ci.sh` compiles all three because a configuration nothing builds is one that
@@ -2340,11 +2340,19 @@ copy of the same build-staleness fix, days apart, because neither tree
 compiled the other (DECISIONS.md 2026-09-25, *two branches that were one file
 apart*).
 
+**It compiled two of the three until 2026-09-26**, while this section said
+three, and the one left out was the control: a four-byte predicate in
+`src/fmt_arc.c` put it 4 B over its own ratchet with every other variant
+green, because that file is in an overlay in both shipped lifetimes. It was
+found by building the control by hand to re-measure FORMATS.md's figures, not
+by anything that runs. Variant 4d is that build (DECISIONS.md 2026-09-26, *the
+numbers DART left behind*).
+
 | variant | build | what it is |
 |---|---|---|
-| 4 | `build/mac` | the SHIPPED application — fifteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
+| 4 | `build/mac` | the SHIPPED application — fourteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
-| — | `build/mac-res` | `UNC_OVL_RESIDENT=1` — every decoder linked in, the application as it was until 2026-09-25. Not built by `ci.sh`; it is the CONTROL for budget measurements (FORMATS.md, *Overlays*), and `tools/build_mac.sh` holds its own ceiling |
+| 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in, the application as it was until 2026-09-25. It is the CONTROL for budget measurements (FORMATS.md, *Overlays*), it has its own ceiling in `tools/build_mac.sh`, and it is built by `ci.sh` since 2026-09-26 |
 
 **What these variants CANNOT see.** They compile. No Linux suite exercises
 the loader at all — the images only exist in a Macintosh build, so the
