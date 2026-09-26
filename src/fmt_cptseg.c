@@ -61,7 +61,11 @@
  * reason is in the format: a middle segment is a chunk of compressed
  * data with an 8-byte hat, and there is nothing else in it to check.
  * The FINAL segment is checked properly — unc_cpt_probe walks its index
- * CRC — so a set is only ever adjudicated by the part that can be. */
+ * CRC — so a set is only ever adjudicated by the part that can be.
+ *
+ * The bargain has now been paid once: `Read First.PKG`, a real AppleLink
+ * package, is byte 0 = 1 with a zero longword at 4 and sniffs as a first
+ * segment (OPEN_ITEMS.md, *AppleLink `.pkg`*). */
 UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t idx;

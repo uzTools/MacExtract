@@ -19,7 +19,7 @@ under *Table notes*.
 - btoa, the other ASCII armour
 - base64 and MIME, the armour that replaced the others
 - Encryption
-- AppleLink packages, and why they are named but not opened
+- AppleLink packages: two specimens, and a probe that names neither
 - Archives named but not extracted
 - Envelope auto-unwrap
 - Segmented archives (multi-part sets)
@@ -68,9 +68,9 @@ under *Table notes*.
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
 | uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
-| StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | no oracle and no fixture, but **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), plus 160 corrupted variants, a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
+| StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
-| AppleLink package (.pkg) | detect only | — | no specimen anywhere: the probe is Aladdin's own recogniser, at 0 false positives across 928 fixtures (*AppleLink packages*, below) | — | — |
+| AppleLink package (.pkg) | **named, and the probe misses the two real ones** | — | two specimens since 2026-09-26; neither passes the shipped probe, which is Aladdin's own recogniser (*AppleLink packages*, below) | — | — |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
@@ -1050,7 +1050,12 @@ the entry fails, the file does not. The index is the module's own byte at
 +0x20, not its resource id; the low byte there is a revision and the higher
 one wins; +0x24 is a CPU mask, bit 31 − Gestalt `cput`. **The default is the CPU's**: index 4 below a 68030,
 index 3 from a 68030 up, and the decompress-only modules accept every CPU so
-any Mac can read any file. That was also why 1, 2 and 3 were declined, and **it stopped being true on
+any Mac can read any file. **The 142 real files found on 2026-09-26 bear that
+out**: version-3 headers carry method 0 (stored), 3 or 4 and nothing else,
+and the two method-4 files are the only two of the 142 that came out of a
+hard-disk backup rather than a pressed CD-ROM — every other machine here
+picked 3. The older,
+version-2 headers carry 1 and 2, the pair the "Original" compressors write. That was also why 1, 2 and 3 were declined, and **it stopped being true on
 2026-08-25**: * `tools/ssmodule/` runs the modules themselves under
 `qemu-m68k`, compressor as well as expander, so every method the format has
 writes and reads on demand — 71 round trips through Aladdin's own code, in 3
@@ -1631,67 +1636,66 @@ The CR is why the two hosts differ in one place and only one: the saved
 file keeps it, and the line the CLI PRINTS turns it into a newline,
 because a CR sent to a terminal overwrites the line just printed.
 
-## AppleLink packages, and why they are named but not opened
+## AppleLink packages: two specimens, and a probe that names neither
 
-**Named since 2026-08-23.** Every status file here used to say `.pkg` had no
-reference implementation anywhere reachable and could not even be sniffed
-without inventing a magic number. The first half was withdrawn on 2026-08-22
-(BLOCKERS.md) — installing StuffIt Deluxe 3.5.1 to chase SpaceSaver put
-`Extensions:Aladdin:Translators:PKG Expand Translator` on the disk — and this
-is the second half.
+**Two real packages, since 2026-09-26.** `ALink.PKG` (6,900 B, 1992-02-11)
+and `Read First.PKG` (1,373 B, 1992-03-08) ship beside AppleLink 6.1 on
+fifteen Apple Developer CDs; `tools/fetch_specimens.py --only applelink`
+fetches both, with sizes and sha256 in `tools/specimens/applelink.tsv`.
+They replace every earlier statement about what a `.pkg` is.
 
-**A package is TEXT.** The translator's recogniser (`Othe` 0 @0x2952) pulls
-whitespace-delimited tokens out of the file — @0xf18, which skips space, tab
-and CR, honours double quotes and treats backslash as an escape inside them —
-and accepts the file when the first token is `Decode` and the third is `to` or
-`into`, compared with `_CmpString` and so case-insensitive. `STR# 129` is the
-rest of the vocabulary: `Decode`, `to`, `into`, `convert`, `noConvert`,
-` Folder`, `.pkg`, and the errors *"Destination not found: "* and *"No items
-matching: "*.
+**A package is a binary container, not a manifest.** Read off the two files
+and nothing more — the layout is not derived here, because rule #1 does not
+let two specimens stand in for a reference. Both begin with two bytes
+(`01 01` and `03 01`) and then a record at +0x12 holding, in this order: two
+big-endian longwords (1,175 and 198 in `Read First.PKG`, which are its whole
+length between them), four zero bytes, a four-character **type** at +0x1e, a
+four-character **creator** at +0x22, **Finder flags** at +0x26, a **Pascal
+name** at +0x2e, and two Macintosh **timestamps** at +0x50. `Read First.PKG`
+has one such record — `TEXT`/`ttxt`, *"Antipiracy-Read Me First"* — and
+`ALink.PKG` has at least five, at +0x1e, +0x74, +0xca, +0x130 and +0x18a,
+all `TEXT`/`MACA`, named *"FileMaker Import"*, *"Package Data"* and
+*"Trademark Data"*. What follows the records is not text — `strings` finds
+nothing in it — and in `Read First.PKG` it is 1,175 bytes standing in for a
+document whose uncompressed copies run 2,272 to 2,603 B, so it is
+compressed. A package therefore names its members' Finder metadata inside
+itself and carries their bytes, which is exactly what the 2026-08-23
+*transfer manifest* hypothesis said it did not (BLOCKERS.md).
 
-`macextract sniff` implements that test and nothing more, so it is exactly as
-strong as Aladdin's: a text file that happens to begin *"Decode this to that"*
-is a package as far as either program can tell. Measured against the corpus —
-**928 fixtures, 0 false positives**.
+**Both packages are gradeable.** `Read First.PKG`'s member is on the same
+discs uncompressed — `Marketing/Antipiracy Toolkit/Antipiracy-Read Me First`,
+2,272 B on the May 1992 CD and 2,603 B from October 1992 on. The package is
+dated 1992-03-08 and so predates both, which is a thing for whoever writes
+the decoder to settle rather than a reason not to write it.
 
-**It may not be an archive at all.** Three measured things point that way:
-the identify path resolves its operand with `PBGetCatInfo` (`_HFSDispatch`
-selector 9), the errors in `STR# 129` are *"No items matching: "* and
-*"Destination not found: "*, and the translator carries recognisers for eight
-other formats by extension and type. **Hypothesis:** a package is a transfer
-manifest naming files that sit beside it, which would make naming it the whole
-capability. DECISIONS.md 2026-08-23 has the evidence and what would settle it.
+**Neither passes the probe this engine ships.** `unc_applelink_probe`
+implements the recogniser in `PKG Expand Translator` (`Othe` 0 @0x2952): it
+pulls whitespace-delimited tokens, skipping space, tab and CR, honouring
+double quotes and backslash escapes, and accepts a file whose first token is
+`Decode` and whose third is `to` or `into`, compared with `_CmpString` and so
+case-insensitive; `STR# 129` is the rest of that vocabulary — `Decode`, `to`,
+`into`, `convert`, `noConvert`, ` Folder`, `.pkg`, and the errors
+*"Destination not found: "* and *"No items matching: "*. That reading is
+unchanged and cited. What is withdrawn is the conclusion drawn from it:
+`ALink.PKG` sniffs as **unknown**, and `Read First.PKG` sniffs as **Compact
+Pro segment**, because `unc_cptseg_probe` accepts any file whose byte 0 is 1
+with a zero longword at 4 and says in its own comment that it is deliberately
+weak. The "0 false positives across 928 fixtures" measurement stands and
+means less than it read: the corpus held no package. Both are open items.
 
-**Two more things the bytes say.** A package expands into a folder named
-after itself — `.pkg` stripped, `" Folder"` appended, so `Report.pkg` becomes
-`Report Folder` (@0x2e5c) — and the expansion itself is not in the translator
-at all: it opens the file and then calls `GetResource('Eng ', 2)` in
-`StuffIt Engine™` and jumps into it (@0x334c). The translator is a driver.
-
-**What Aladdin's own expander asks for is a FOLDER.** Measured 2026-09-01,
-seven boots: `Translate ▸ PKG Expand…` puts up a Standard File dialog that
-lists **only directories** — the filter proc it hands `_SFPGetFile` tests
-`ioFlAttrib` bit 4 (`Othe` 0 @0x215e) — so a package written here cannot be
-selected at all, as `TEXT/ttxt`, `PACT/EXTR`, `PACT/ttxt` or `TEXT/EXTR`, with
-or without one selected in the application's own window. `CPT Expand…` in the
-same boot lists the type-`PACT` files, which is what makes that empty list a
-fact about the command rather than about the harness. Its own `DITL 2051`
-carries a button *"Expand into selected folder"*, `DITL 2052` is a *"Name of
-new folder:"* dialog, and its `Help` resource says the translator extracts
-"files and folders from archives created by AppleLink". The other two routes
-run a translator and do nothing with a package either: StuffIt Expander 4.0.2
-lists one and expands nothing, `DropConvert™` takes one into *Items to
-Convert:* and produces nothing — each in a boot where the BinHex control
-expanded (DECISIONS.md 2026-09-01, *the package that cannot be handed over*).
-
-**Detect only, and the reason is a specimen.** What a `Decode` line refers to
-has not been read out of the expander, and no `.pkg` file has ever reached
-this project, so there is nothing to grade a reading against. `tools/vmac/
-spacesaver.py --pkg` re-derives everything above out of the translator on the
-installed image, with four witnesses that fail if a different build is ever
-put in front of it; `--pkgexpand`, `--pkgexpander` and `--pkgconvert` are the
-three routes above.
-
+**What the translator does with one is still only read, not run.** A package
+expands into a folder named after itself — `.pkg` stripped, `" Folder"`
+appended, so `Report.pkg` becomes `Report Folder` (@0x2e5c) — and the
+expansion is not in the translator at all: it opens the file and then calls
+`GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into it (@0x334c).
+The translator is a driver. Its Standard File dialog lists **only
+directories** (`ioFlAttrib` bit 4, `Othe` 0 @0x215e), which is why no package
+written here could be selected — seven boots, each with a control that
+succeeded (DECISIONS.md 2026-09-01, *the package that cannot be handed
+over*). `tools/vmac/spacesaver.py --pkg` re-derives the recogniser out of the
+installed translator, with four witnesses that fail against a different
+build; feeding it one of these two specimens is the run that would settle
+whether the translator takes two shapes of input.
 
 ## Archives named but not extracted
 
@@ -4402,7 +4406,7 @@ machine has no HFS.
 So a 64K-ROM Macintosh is now **one call short, and that call is not ours**:
 HFS is what Apple's `Hard Disk 20` file supplies, on exactly the machines that
 have a hard disk. Whether that closes it is **untested and cannot be tested
-here** — Mini vMac has no HD20 (MANUAL_TESTS.md §7). What is measured is that
+here** — Mini vMac has no HD20 (MANUAL_TESTS.md §6). What is measured is that
 the application no longer dies on arrival.
 
 **HFS in software is real, and it is the whole File Manager.** Inside
@@ -4411,7 +4415,7 @@ can be attached to a Macintosh 512K through the back of a Hard Disk 20. The
 Hard Disk 20 start-up software contains a device driver for this drive and the
 hierarchical (128K ROM) version of the File Manager." So on a 512K with an
 HD20, HFS is present — and an 800K drive is a supported medium there, through
-the HD20 — which is exactly the configuration MANUAL_TESTS.md §7 asks about.
+the HD20 — which is exactly the configuration MANUAL_TESTS.md §6 asks about.
 
 **Without that software there is no HFS at all**, measured twice: under
 Apple's 400K MFS System 3.0 (a 140,299 B System) and under the 182 KB System
@@ -4482,7 +4486,7 @@ Segment Loader cannot place the segment the engine lives in; the application's
 screen buffer, not by the System, so no smaller System moves it — and CODE is
 the one thing that costs a Macintosh anything here (*What the application
 costs the engine*). A 128K machine is short by a factor of about two before
-any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §7 is
+any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §6 is
 a question about a **512K** and not about the machine it is named after.
 
 **What would fit, measured by building it.** The sniff table, the format

@@ -19,7 +19,15 @@ real hardware in MANUAL_TESTS.md, results in FORMATS.md — and is
 cross-referenced from here rather than repeated.
 
 **Filing something here is a decision to stop looking at it, so it had
-better be true.**
+better be true.** Five questions have each emptied a row at least once: is
+there an implementation that could be **FED** (DECISIONS.md, methods 3, 4 and
+5); is *"X does not survive"* a claim about somebody's **search**
+(BLOCKERS.md, SuperDisk!'s compressor); does the search name the **right
+tool** (BLOCKERS.md 2026-08-25); **have you looked at all** (BLOCKERS.md, the
+ARC 7 row, filed and disproved the same day); and — added 2026-09-26, when
+the whole *waiting on a file* section went — **was the search by NAME?** A
+format that renames nothing is invisible to every index built on names and
+plain to one built on magic.
 
 **Only OPEN items live in part 2.** A closed one moves out rather than being
 annotated: the lesson to DECISIONS.md, the withdrawn claim to BLOCKERS.md,
@@ -31,9 +39,11 @@ the numbers to FORMATS.md. A section that empties is the point of the file.
 
 **Decided, or impossible. Not open.** Everything here is either a boundary
 somebody chose or a property of a format that no evidence can change; nothing
-here is closed by finding a file, and what is waiting for one is Part 2's
-*"Waiting on a file this machine does not have"*. "Out of scope" is today's
-answer and not a refusal — the brief has grown before, on request.
+here is closed by finding a file. **Nothing is waiting for one any more**:
+that section emptied on 2026-09-26, when both files it held out for turned up
+in somebody else's index (DECISIONS.md 2026-09-26, *the magic in somebody
+else's index*). "Out of scope" is today's answer and not a refusal — the brief
+has grown before, on request.
 
 ## Out by the brief
 
@@ -42,7 +52,7 @@ answer and not a refusal — the brief has grown before, on request.
 | Compression | not implemented | this is an extractor |
 | Choosing which entries come out, in the Macintosh application | **not implemented; the CLI's `--only` ships** | decided 2026-09-26: the application extracts the whole archive, and a tick list is paid for by every run including the ones that never open it. The engine keeps both halves a host needs — `UncOptions.list_only`, and the skip a `begin_entry` returning >0 performs (`include/macextract.h`, *Sink*) — so this is a decision about the shell and not a missing capability. Built and graded on the branch `selective-extract`, which is kept only so its history can be read (BRANCHES.md; DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*) |
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, and there is nothing measured for one to do** | every codec here is integer bit work: the only FP-shaped operation in the engine is Arsenic's two divides per symbol, **0.72 % of the run** against 9.9 % for the linear symbol search beside it (FORMATS.md, *What is still hot*). An FPU is also only available where it is not needed — a 68881 implies a 68020, which already has `DIVU.L`, while the 68000 that pays for `__udivsi3` has none — and the fastest tier reaches no FPU at all, running through the 68LC040 emulator. The formats' own answer to differing CPUs is a decompress-only twin that accepts every CPU, and all of those modules are implemented. A second `-mcpu=68020` build is the adjacent trade and is also out (DECISIONS.md 2026-09-23, *hardware decoding*) |
-| The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has never heard of. The branch `rom64k` guards the trap and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies — and **nobody has run it on one**, so this stays out until hardware says otherwise (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §7). A Macintosh **128K** is out for a measured second reason: its largest single block is 63,744 B against 142,152 B of `CODE` |
+| The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has never heard of. The branch `rom64k` guards the trap and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies — and **nobody has run it on one**, so this stays out until hardware says otherwise (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A Macintosh **128K** is out for a measured second reason: its largest single block is 63,744 B against 142,152 B of `CODE` |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on names and entry counts alone. **Half the premise is gone and the decision is the maintainer's**: an MIT implementation and a stored-CRC oracle for all 7 entries have been on this disk since 2026-09-22, so only "not a Macintosh method" still carries it (DECISIONS.md 2026-09-22, *the premise that stopped being true*). **What it would cost is still unmeasured** — a removal delta can be built and an addition cannot — but the comparable coders put it at **~1.5–2 KB of `CODE`, estimated, not measured**, against 6,952 B of headroom at the tightest tier |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
@@ -142,7 +152,7 @@ it segfaults (measured 2026-09-26). So the decoders' own behaviour in the
 shipped bytes is the tiers' evidence and nothing else's.
 
 **What would close those two:** a Macintosh with a 68020 or better, and a
-copy of the shipped binary run on one (MANUAL_TESTS.md §2 and §7). Short of
+copy of the shipped binary run on one (MANUAL_TESTS.md §2 and §6). Short of
 that, read every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`,
 `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
@@ -241,51 +251,31 @@ feature is a claim about what is in reach, and any copy of 7-Zip or
 WinZip writes one, where `-lh2-` needed a fork this project patched
 itself.
 
-## Waiting on a file this machine does not have
+## AppleLink `.pkg`: two packages, and a probe that names neither
 
-**Not scope decisions, and not effort.** Everything here is written or
-writeable; what is missing is something to grade it against. They sit together
-across formats because that is how they close — by somebody finding a file,
-and the finding usually arrives from outside the format it settles. The
-question to bring here is *what did I just find?*
+**Two real AppleLink packages arrived on 2026-09-26** — `ALink.PKG` (6,900 B)
+and `Read First.PKG` (1,373 B), both beside AppleLink 6.1 on fifteen Apple
+Developer CDs, fetched by `tools/fetch_specimens.py` (FORMATS.md, *AppleLink
+packages*). They settle what a package is and open three items:
 
-Each says which of the two is missing, because the searches are different:
+- **A package is binary, and it is a container.** Each record holds two
+  lengths, a type, a creator, Finder flags, a Pascal name and two Macintosh
+  dates, with non-text data after them; `Read First.PKG` has one record and
+  `ALink.PKG` at least five. The *transfer manifest* hypothesis is withdrawn
+  (BLOCKERS.md). The rest of the layout is not derived: rule #1 does not let
+  two specimens stand in for a reference.
+- **The shipped probe is Aladdin's recogniser and neither package passes it.**
+  `macextract sniff` implements the `Decode … to …` token test read out of
+  `PKG Expand Translator`; on a real package it says *unknown*. Whether the
+  translator takes two shapes of input or the reading was of the wrong
+  routine is unsettled, and settling it is a boot (`tools/vmac/
+  spacesaver.py --pkg`), not a download. **Closed by:** a reading of the
+  translator that accepts the two specimens.
+- **`Read First.PKG` sniffs as a Compact Pro segment.** `unc_cptseg_probe`
+  accepts any file whose byte 0 is 1 with a zero at 4..7, which its own
+  comment calls deliberately weak; a real file from another format now
+  falsifies that bargain. **Closed by:** either a check that the package
+  fails, or an AppleLink probe ahead of it that claims the file first.
 
-- a **reference** — a spec, an implementation, or a self-extracting specimen,
-  which is one; rule #1 forbids writing a format without it;
-- a **gradeable specimen** — a file written by something else, so our output
-  has something to be wrong against.
-
-None of this is impossible here: a download would do it.
-
-**Four questions before filing anything here**, each of which has emptied this
-section at least once: is there an implementation that could be **FED**
-(DECISIONS.md, methods 3, 4 and 5); is *"X does not survive"* a claim about
-somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
-name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
-all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
-
-- **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
-  Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on
-  this is the CONTAINER: the method the application picks for its CPU, the
-  data fork's length rounded up to 256 bytes, the 84-byte header, and the
-  type, creator and Finder flags it moves aside — all currently read from
-  containers this project builds itself. **Nothing here can make the
-  application compress anything**; about twenty emulator runs are accounted
-  for in BLOCKERS.md, and the request now sits in MANUAL_TESTS.md §6.
-  Missing: a **gradeable specimen** — one SpaceSaver file, with the original
-  beside it.
-
-- **AppleLink `.pkg`: one file, which would settle two questions.**
-  Named from Aladdin's own recogniser (FORMATS.md, *AppleLink packages*),
-  and detect-only because nothing here can grade a decoder. Three measured
-  things suggest there is nothing to decode — that a package is a transfer
-  manifest naming files beside it rather than a container — in which case
-  this closes as a property of the format (DECISIONS.md 2026-08-23,
-  *AppleLink `.pkg`, named at last*). Missing: a **gradeable specimen**,
-  which answers both. **Not** something to be produced here: a package
-  written on this machine was offered to all three of Aladdin's own
-  commands that run a translator, each in a boot where a control
-  succeeded, and none of them read it — seven boots, and what PKG Expand
-  asks for turns out to be a FOLDER (DECISIONS.md 2026-09-01, *the
-  package that cannot be handed over*).
+No decoder is written, and the second reader — the translator itself — is on
+the emulator image.

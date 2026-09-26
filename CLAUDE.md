@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M53 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M54 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **932-fixture** differential suite against
@@ -61,10 +61,11 @@ worth opening the source for.**
 
 **Scope is not stated in this file.** What is in, what is detect-only and what
 the formats themselves make impossible is OPEN_ITEMS.md, **Part 1 — Out of
-scope for v1**; what is missing only for want of a specimen or a reference is
-Part 2's *"Waiting on a file this machine does not have"*. Read them before
-starting work on a format: the brief has grown three times, and each time the
-answer was in that list rather than here.
+scope for v1**; what is merely missing is Part 2. Read them before starting
+work on a format: the brief has grown three times, and each time the answer
+was in that list rather than here. Part 2 no longer has a *"waiting on a
+file"* section — both of its items were downloaded on 2026-09-26, so **"this
+machine cannot get one" is a claim to re-test before it is filed.**
 
 Where these files disagree with each other, treat it as a bug to fix, not a
 fact to choose from.
@@ -78,7 +79,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the thirty-seven smells that keep finding the next one. The cheapest is a
+names the thirty-eight smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually
@@ -133,7 +134,7 @@ All of these cost real time here:
 
 - **Never invent format details.** Magic numbers, header layouts and algorithm parameters come from a reference implementation or spec, with a `/* Source: ... */` comment. Never guess from memory. `reference/` is read-only and never modified; `tools/fetch_references.sh` repopulates it.
 - **A root cause that has never been reduced to a minimal reproduction is a hypothesis, not a finding.** Label it as such in the docs, and build the repro before acting on it or reporting it upstream. This rule was learned the hard way — see the withdrawn `HOpen` attribution in `BLOCKERS.md`.
-- **Never file the upstream bug reports.** `tools/xadmaster-ddn-repro/` and `tools/retro68-hopen-repro/` are written up and ready to post; the maintainer posts them from his own account (MANUAL_TESTS.md §8). Improve a repro if you have reason to — do not submit one.
+- **Never file the upstream bug reports.** `tools/xadmaster-ddn-repro/` and `tools/retro68-hopen-repro/` are written up and ready to post; the maintainer posts them from his own account (MANUAL_TESTS.md §7). Improve a repro if you have reason to — do not submit one.
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
 - **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates: the on-screen result grid carries a file count and summed CRCs, so a real defect in the gzip/.Z fallback NAME survived in the corpus for weeks.
 - **68000 discipline** (non-negotiable — it is what made the port compile and run first try): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it**: the rule was exceeded by 66 % for months in shipping code and nothing noticed (`FORMATS.md`, *Stack*, has the one-command method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.

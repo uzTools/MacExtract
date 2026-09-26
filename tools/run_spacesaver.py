@@ -66,9 +66,21 @@ def grade(exe, path, verbose):
     """Decode one specimen and compare it with the bytes that went in."""
     orig = path + ".orig"
     if not os.path.exists(orig):
-        print("spacesaver: %s has no .orig beside it, skipped"
+        # Not gradeable, but still a file SpaceSaver wrote: decoding it
+        # must at least SUCCEED. A specimen that only ever printed
+        # "skipped" would be one nothing looked at.
+        r = subprocess.run([exe, "t"] +
+                           (["--preset", PRESET] if os.path.exists(PRESET)
+                            else []) + [path],
+                           capture_output=True, timeout=300)
+        if r.returncode != 0:
+            print("spacesaver: %s: decode FAILED (%s)"
+                  % (os.path.basename(path),
+                     r.stderr.decode("utf-8", "replace").strip()))
+            return 1, 1
+        print("spacesaver: %s: decodes, no .orig beside it — not graded"
               % os.path.basename(path))
-        return 0, 0
+        return 0, 1
     want = open(orig, "rb").read()
     args = [exe, "x", "-o", None, path]
     work = tempfile.mkdtemp(prefix="ssgrade-")
@@ -78,7 +90,11 @@ def grade(exe, path, verbose):
         if os.path.exists(PRESET):
             args[4:4] = ["--preset", PRESET]
         r = subprocess.run(args, capture_output=True, timeout=300)
-        name = os.path.basename(path)[:-3]
+        # SpaceSaver replaces a file in place and adds no extension, so
+        # the CLI keeps the WHOLE basename as the entry's name (cli/
+        # main.c) — `.ss` and all. Stripping it here looked for a file
+        # nothing writes, and no specimen had ever reached this line.
+        name = os.path.basename(path)
         got = os.path.join(work, name)
         if r.returncode != 0 or not os.path.exists(got):
             print("spacesaver: %s: FAILED (%s)"

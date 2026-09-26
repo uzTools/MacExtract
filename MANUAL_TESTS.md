@@ -6,10 +6,14 @@ Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§5, §7), a copy of the software (§6), or an account to post
-from (§8). Each item says what to do, why nothing here can answer it, and what to
-record. Nothing below is a known failure; it is unverified, which is a
-different thing.
+hardware (§1–§6) or an account to post from (§7). Each item says what to do,
+why nothing here can answer it, and what to record. Nothing below is a known
+failure; it is unverified, which is a different thing.
+
+**It is shorter than it was.** *A file that SpaceSaver itself wrote* asked a
+stranger to compress a file and send it; 48 of them turned out to be on
+CD-ROMs anybody can download (BLOCKERS.md). **Before asking somebody outside
+this machine for a file, search for it by its bytes.**
 
 Everything that *can* be automated already is, and lives elsewhere:
 
@@ -229,44 +233,7 @@ Extraction correctness
 - [ ] **The progress dialog uses `DialogSelect` without a filterProc.** Confirm
       the Cancel button highlights when clicked.
 
-## 6. A file that SpaceSaver itself wrote
-
-This one is not about the application at all — it is the last gap in a
-FORMAT, and it needs a copy of StuffIt SpaceSaver driven by a person.
-
-- [ ] **Compress one file with SpaceSaver and send the result**, along
-      with the original. Any version, any Macintosh, real or emulated.
-      A file of a few KB is enough; two, one with a resource fork, is
-      better.
-
-**Why nobody here can do it.** SpaceSaver 3.5.1 installs and runs under
-Mini vMac, its control panel opens, and *SpaceSaver Info…* reports
-correctly on a selected file — but every path that would WRITE a
-compressed file declines in silence: the `small` keyword on a file name
-or on the disk, Magic Menu's *SpaceSaver Compress*, *Idle Now* with the
-volume enrolled, and DropCompress. In the same boots, StuffIt Deluxe's
-own *Archive via Rename* fires every time, so the machine is healthy and
-the Finder events arrive. Roughly twenty emulator runs; what is
-eliminated and what is left is in `OPEN_ITEMS.md` and `BLOCKERS.md`.
-
-**What it would settle.** Every SpaceSaver CODEC is already graded
-against Aladdin's own modules, which run on Linux under `qemu-m68k`
-(`tools/ssmodule/`) — methods 0, 1, 2, 3 and 4 all decode byte-exact.
-What has never been checked against a real file is the CONTAINER: the
-method the application picks for the machine it runs on, the data fork's
-length rounded up to 256 bytes, the 84-byte header, and the type,
-creator and Finder flags it moves aside. Those are read from containers
-this project builds itself.
-
-**What to record.** The file, the original, the SpaceSaver version, and
-the Macintosh it ran on (a 68030 or better writes method 3, a 68000
-writes method 4 — so the CPU decides what the specimen exercises).
-`tools/run_spacesaver.py` grades a `.ss` against a `.orig` placed beside
-it in the emulator's specimen directory.
-
----
-
-## 7. A Macintosh 512K with a Hard Disk 20
+## 6. A Macintosh 512K with a Hard Disk 20
 
 **A Macintosh 128K cannot run this and is not what this section asks for.**
 Measured 2026-09-01: the same volume that reaches Standard File on a 512K
@@ -320,7 +287,7 @@ what it would establish is that the HFS the `Hard Disk 20` file installs is
 enough for this application — after which the tiers in BLOCKERS.md would still
 have to be re-run before the claim went into README.md.
 
-## 8. Two bug reports, written and not posted
+## 7. Two bug reports, written and not posted
 
 Neither needs a Macintosh — they need an account. Both are reduced to a
 reproduction and written up ready to send; what is missing is somebody to post

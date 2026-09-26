@@ -2752,25 +2752,35 @@ does on the Macintosh: that is one alert, photographed once
 ## StuffIt SpaceSaver (`tools/run_spacesaver.py`, in `ci.sh`)
 
 Added 2026-08-22. SpaceSaver has no oracle but itself — `unar` and
-`macunpack` do not know the format, so there is no manifest — and **it has no
-specimen yet either**: twelve emulator runs have driven every trigger the
-control panel offers and none of them compressed anything (OPEN_ITEMS.md,
-DECISIONS.md 2026-08-22, what will not compress). So today this suite runs
-its synthetic pass and skips the rest, and what is written below is what it
-does when a specimen arrives — and a specimen is worth less than it was,
-because the reading it would check has since been cross-read against
-Aladdin's encoder (below). Specimens live outside the repository, beside
-the emulator's ROM and System image, because a compressed file is what
-SpaceSaver made of a subject:
+`macunpack` do not know the format, so there is no manifest. **48 specimens
+arrived on 2026-09-26**, downloaded rather than made: files SpaceSaver
+compressed on the machines that mastered Apple Developer, MacTech,
+Apprentice, Info-Mac and HyperLib CD-ROMs, **46 of them with the
+uncompressed original** on an earlier pressing of the same title. They cover
+both header versions and methods 0, 1, 2, 3 and 4, and all 46 pairs decode
+byte-exact (DECISIONS.md 2026-09-26, *the magic in somebody else's index*).
+
+    tools/fetch_specimens.py --only spacesaver
+
+fetches them into the directory below and checks every sha256;
+`tools/specimens/spacesaver.tsv` is the table it reads. Specimens live
+outside the repository, beside the emulator's ROM and System image, because
+a compressed file is what SpaceSaver made of a subject and is no more
+committable than a fixture:
 
     ~/.cache/macextract/vmac/specimens/spacesaver/NAME.ss        the file
     ~/.cache/macextract/vmac/specimens/spacesaver/NAME.ss.orig   its input
     ~/.cache/macextract/vmac/specimens/spacesaver/PrAm-4048.bin  the preset
 
-`tools/vmac/spacesaver.py --idlespec` makes the first two (an emulator run);
-`--layout` writes the third out of the installed control panel. **With none
-of them present the suite prints what it skipped and returns 0**, so a fresh
-clone stays green and says nothing.
+`--layout` writes the preset out of the installed control panel;
+`tools/vmac/spacesaver.py --idlespec` would make a pair on the Macintosh and
+never has (BLOCKERS.md). **With none of them present the suite prints what it
+skipped and returns 0**, so a fresh clone stays green and says nothing —
+which is exactly how a grade that could never have passed went unnoticed for
+five weeks: it looked for the decoded file under the specimen's name with
+`.ss` removed, and this format's CLI keeps the whole basename because
+SpaceSaver adds no extension. A specimen without an `.orig` beside it is now
+decoded and required to succeed rather than skipped outright.
 
 **The synthetic pass, and what now stands behind it.** An Alg 4 ENCODER,
 written from the same disassembly as the decoder, round-trips 200,000 bytes
@@ -2819,9 +2829,13 @@ already use, so what it proves is that the same bytes come out of a 68000 —
 not that either side is right. 3/3 at 4 MB and 3/3 at the 1 MB floor
 (2026-08-22; figures in FORMATS.md).
 
-**What this cannot see.** It grades methods 0 and 4 because that is what the
-machine that made the specimens writes — Gestalt `cput` picks 4 below a
-68030 (FORMATS.md). Methods 1, 2 and 3 are graded off the Macintosh instead,
+**What this cannot see.** **No resource fork is graded.** The originals come
+from ISO 9660 pressings, which dropped the resource fork; the package's copy
+of it decodes to a structurally valid resource map of the declared length and
+nothing compares its bytes. **Method 4 is not graded either** — its two
+specimens are magazine production TIFFs with no published original, so they
+are only required to decode (they produce valid LZW TIFFs with a `PICT`
+preview in the fork). Methods 1, 2 and 3 are also graded off the Macintosh
 against the modules that write them (*SpaceSaver's own codecs*, below); what
 the unit test still asserts is the per-ENTRY refusal, now for method 5, which
 no version of SpaceSaver ever wrote. The unit tests also carry what no

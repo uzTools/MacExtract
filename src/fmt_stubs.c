@@ -111,12 +111,15 @@ UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io)
 /*     token 1 == "Decode"       @0x2996, _CmpString, case-insensitive */
 /*     token 3 == "to" or "into" @0x2a04 and @0x2a24                   */
 /*                                                                     */
-/*   so a package is TEXT, and this is its whole magic. There is no    */
-/*   byte signature to find and none is invented here.                 */
+/*   which is Aladdin's whole test. No byte signature is invented here.*/
 /*                                                                     */
-/* Detect only: what a `Decode` line then refers to has not been read  */
-/* out of the expander, and no `.pkg` file has ever reached this       */
-/* project to check a reading against (OPEN_ITEMS.md).                 */
+/* That transcription stands; what it does NOT do is name a real       */
+/* package. Two arrived on 2026-09-26 and both are BINARY containers   */
+/* this test rejects — one of them sniffs as a Compact Pro segment     */
+/* instead (FORMATS.md, *AppleLink packages*; BLOCKERS.md). Kept and   */
+/* not deleted, because it IS the translator's own recogniser; whether */
+/* that routine is reached for a second shape of input is a boot       */
+/* nobody has spent (OPEN_ITEMS.md).                                   */
 /* ------------------------------------------------------------------ */
 
 /* One whitespace-delimited token, lowercased, into `out` (NUL-ended).

@@ -284,6 +284,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
 - 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
 - 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
+- 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
 
 ---
 
@@ -10678,7 +10679,7 @@ and here it turned a shrug into a free change.
 Extraction needs HFS and those machines only have it with a `Hard Disk 20`,
 which Mini vMac does not emulate; what is measured is that the interface runs
 and that a non-archive is correctly refused there. The rest is
-MANUAL_TESTS.md §7, and it is now askable because the BRANCH'S DOWNLOAD does
+MANUAL_TESTS.md §6, and it is now askable because the BRANCH'S DOWNLOAD does
 it — a test that needs the tester to own Retro68 is not a test anyone will
 run, which is the whole reason the guard was built rather than left as a
 finding.
@@ -17950,3 +17951,97 @@ sat at 0.4.0 through four releases because nothing read it.
 that can encrypt an entry"* over a list of eight across six. FORMATS.md
 and TESTING.md were corrected for that exact count earlier today; the
 grep that found them was over `*.md`.
+
+
+## 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
+
+OPEN_ITEMS.md's *"Waiting on a file this machine does not have"* held two
+items and nothing else. Both are gone, and neither needed an emulator.
+
+### What the searches had all been
+
+Twenty emulator runs went on making SpaceSaver compress a file and seven on
+making Aladdin's software read a package written here — both the right shape
+of effort for the wrong question, and both written up as *nothing here can
+produce one*. What no entry records is a search of anybody else's disks, and
+the reason that never looked promising is worth stating: **neither format is
+labelled**. SpaceSaver compresses a file in place and renames nothing, so no
+archive site has ever listed one as anything; an AppleLink package is called
+`ALink.PKG`, and `.pkg` means InstallShield, Newton, OS/2, BeOS and five
+other things before it means AppleLink. Searching for either by name returns
+the software, never a file.
+
+What worked is one query against the BYTES. Discmaster indexes the contents
+of about 1.7 billion files out of archived CD-ROMs and disk images, and its
+*detections* field is full-text over what each identifier printed —
+including `file`'s own output. A SpaceSaver file begins `SIT!DFD3`, and
+`file`, matching only `SIT!`, prints **`StuffIt Archive (data) : T!DFD3`**.
+So the magic is a search term: `detection=DFD3` returned 296 files, 142 of
+them genuine after parsing the 84-byte header, across both header versions
+and methods 0, 1, 2, 3 and 4.
+
+**The lesson is a question to ask of any corpus: what is it indexed BY?** A
+format that renames nothing is invisible to every index built on names and
+plainly visible in one built on magic. That is now a smell in BLOCKERS.md.
+
+### The originals, which are what make them worth having
+
+Every SpaceSaver codec was already graded against Aladdin's own modules under
+`qemu-m68k`, so what a specimen buys is the CONTAINER, and only if the
+uncompressed file is beside it. It is, because of how these files got onto a
+CD at all: a publisher mastered a disc from a production Macintosh that had
+SpaceSaver running, and pressed the same title in earlier months from one
+that did not. So
+`MPW Script Tips 1.1.1/Sample Scripts/SmallWindow` is **1,024 bytes** and
+compressed on the Tool Chest discs from November 1993 on, and **665 bytes of
+plain text** on twelve discs from March 1992 to March 1993 — and 665 is
+exactly the uncompressed data-fork length in the compressed copy's header.
+Matching on (leaf name, decoded length) found 50 candidate pairs; 46 are
+byte-exact and the other four are provably different files that share a name
+and a length (a GPL text in CR and in LF, a `README` from an Amiga package, a
+`MAD.h` from PlayerPRO 4.3 against 4.4).
+
+**40 of the 142 leaf names contain *small***, which is not chance: that is
+SpaceSaver's *compress anything whose name begins or ends with* rule, firing
+on somebody else's Macintosh. It does not follow that it was the only trigger
+— the other 102 are named `MAD.h`, `Rates`, `cdev.π` — and it does not
+disturb what BLOCKERS.md records, which is that the rule never fired under
+Mini vMac here.
+
+### What a real package turned out to be
+
+`ALink.PKG` and `Read First.PKG` ship beside AppleLink 6.1 on fifteen Apple
+Developer CDs. That is the same lesson from the other side: **534 of the 539
+fixtures `fixtures/SOURCES.md` fetches over HTTP come from
+`www.nic.funet.fi` or `raw.githubusercontent.com`** — an FTP mirror and git
+trees, both indexed by path — and the corpus had never taken a file out of a
+CD-ROM image. A corpus drawn entirely from name-indexed sources cannot hold
+a file nobody named. The packages are **binary containers**: each record
+carries two lengths, a type, a creator, Finder flags, a Pascal name and two
+Macintosh dates at fixed offsets, and then data that is not text. The 2026-08-23 *transfer manifest* hypothesis is withdrawn,
+and so is something sharper: the shipped `.pkg` probe — Aladdin's own
+recogniser, correctly transcribed, measured at 0 false positives over 928
+fixtures — **rejects both real packages**, and one of them is claimed by the
+Compact Pro segment probe instead. *A false-positive rate measured over a
+corpus that contains no specimen of the format is a fact about the corpus.*
+The transcription stands; the conclusion drawn from it did not survive the
+first file.
+
+### Two instruments that were not instruments
+
+`tools/run_spacesaver.py` has graded specimens against their originals since
+2026-08-22 and could never have done it: it looked for the decoded file under
+the specimen's basename with `.ss` removed, where the CLI deliberately keeps
+the whole basename for this format, because SpaceSaver adds no extension.
+Forty-six of forty-six failed the first time it was given something to do.
+Fixed, and a specimen with no original beside it is now decoded and required
+to succeed rather than skipped — **a harness written for files that have not
+arrived is green because it is empty, and the emptiness is what needs the
+test.**
+
+The second is MANUAL_TESTS.md, which spent a section asking a stranger to
+compress a file and mail it. That is the second section of that file to be
+withdrawn after the machine turned out to be able to answer it (the other
+cost half a stranger's afternoon on a Macintosh 128K). **Asking somebody
+outside this machine is expensive in a currency this project cannot see, so
+it is the last resort and not the second.**
