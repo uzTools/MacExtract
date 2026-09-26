@@ -3,7 +3,7 @@
 
 The resource id of an image was written in three places: overlay.h, which is
 what the shim asks GetResource for; mac/CMakeLists.txt, which is what the
-resource is NUMBERED; and (on `overlay-eager`) the bundle's directory. Three
+resource is NUMBERED; and (in the eager lifetime) the bundle's directory. Three
 copies of one table, and a disagreement between them is not a build error —
 it is a GetResource that answers NULL at run time, or an image answering to
 an id that means something else. The build says nothing either way.

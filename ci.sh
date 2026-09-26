@@ -230,6 +230,19 @@ MACEXTRACT=build/lzwlen/macextract sh tests/run_diff.sh \
 echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 
+# The OVERLAY LOADER, which no suite here reached until 2026-09-26. The
+# application's fourteen 'OVLY' images exist only in a Retro68 build, so every
+# lane above — and the 932 fixtures, and the 9,320 robustness variants — runs
+# the decoders as ordinary linked code. This one builds the same images with
+# the m68k-linux toolchain, runs the REAL loader against them through a mock
+# Memory and Resource Manager, and extracts fixtures through them under
+# qemu-m68k. `--mutate` breaks the loader six ways and requires each break to
+# be caught, because a suite this new has not yet earned the benefit of the
+# doubt (tests/ovlbox/README.md, TESTING.md *The overlay loader, off the
+# Macintosh*). Skips cleanly without the cross-compiler or qemu-m68k.
+echo "=== variant 3c: the overlay loader, off the Macintosh ==="
+sh tests/run_overlay_host.sh --mutate || fail "overlay loader (host lane)"
+
 echo "=== variant 2: 32-bit (-m32) ==="
 if echo 'int main(void){return 0;}' | gcc -m32 -x c - -o build/m32probe 2>/dev/null; then
     rm -f build/m32probe

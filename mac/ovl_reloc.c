@@ -96,6 +96,10 @@ void ovl_fixup(unsigned char *base, unsigned long size, long delta)
  * works, and the gFlushHas/gFlushCalls diagnostics below are what a run can
  * actually report: which route was taken, and how many times. Real 68020-and-up
  * silicon is MANUAL_TESTS.md's. */
+#ifndef OVL_LOWMEM_ROM85
+#define OVL_LOWMEM_ROM85 0x028EL
+#endif
+
 static int gFlushProbed;
 static int gFlushRoute;         /* 0 none, 1 _HWPriv, 2 FlushCodeCache */
 
@@ -107,7 +111,12 @@ static int ovl_trap_live(unsigned short trap)
 void ovl_flush_code(void)
 {
     if (!gFlushProbed) {
-        const short *rom85 = (const short *)0x028EL;   /* >0 on a 128K ROM */
+        /* ROM85, the low-memory global: >0 on a 128K ROM, which is where
+         * either trap can exist at all. The ADDRESS is a macro for one
+         * reason — tests/ovlbox/ points it at a variable so this file can
+         * run off the Macintosh (tests/run_overlay_host.sh). Identical
+         * codegen in every shipped build; the default is the address. */
+        const short *rom85 = (const short *)OVL_LOWMEM_ROM85;
         gFlushProbed = 1;
         if (*rom85 > 0) {                    /* a 64K ROM has neither trap */
             if (ovl_trap_live(_HWPriv)) gFlushRoute = 1;

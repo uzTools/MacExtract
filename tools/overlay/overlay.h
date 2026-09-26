@@ -65,10 +65,10 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
  * resource from the ciphers, because an encrypted zip has no reason to load
  * a SpaceSaver decoder or the other way round. */
-/* On `overlay-eager` all six images live in ONE resource, 'OVLY' 128, read
- * once at launch (tools/overlay/mkbundle.py). The per-image ids below are
- * then indexes INTO that bundle rather than resource numbers; on
- * `selective-loading` they are the resource numbers themselves. */
+/* In the EAGER lifetime, which is what ships, all fourteen images live in ONE
+ * resource, 'OVLY' 128, read once at launch (tools/overlay/mkbundle.py). The
+ * per-image ids below are then indexes INTO that bundle rather than resource
+ * numbers; under UNC_OVL_LAZY=1 they are the resource numbers themselves. */
 #define OVL_ID_BUNDLE        128
 #define OVL_ID_CRYPT         128
 #define OVL_ID_SPACESAVER    129

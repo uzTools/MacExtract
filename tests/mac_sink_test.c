@@ -22,6 +22,19 @@
 #include "../mac/mac_mocks.h"
 #include "macextract.h"
 
+#ifdef UNC_AT_OVERLAY
+/* The overlay lane, tests/run_overlay_host.sh. The decoders are not linked in
+ * this build: they are the m68k 'OVLY' images the Retro68 build ships, built
+ * here by the same script with the m68k-linux toolchain, loaded by the REAL
+ * loader through the mock Resource Manager in tests/ovlbox/ovlbox.c, and
+ * CALLED. Everything below is unchanged, so the same fixtures and the same
+ * oracle manifests grade both configurations (OPEN_ITEMS.md, *The overlay
+ * loader*). */
+#include "ovlbox.h"
+extern void ovl_preload(void);
+extern void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
+#endif
+
 /* ------------------------------------------------------------------ */
 /* Mock Toolbox: a tiny open-file table backed by Linux fds.          */
 /* ------------------------------------------------------------------ */
@@ -423,6 +436,15 @@ int main(int argc, char **argv)
         return ok ? 0 : 1;
     }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
+#ifdef UNC_AT_OVERLAY
+    if (ovlbox_load_manifest(getenv("OVLBOX_IMAGES")) <= 0) {
+        fprintf(stderr, "overlay lane: no images registered — $OVLBOX_IMAGES "
+                        "is %s\n", getenv("OVLBOX_IMAGES") ? getenv("OVLBOX_IMAGES")
+                                                           : "unset");
+        return 2;
+    }
+    ovl_preload();
+#endif
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);
     mkdir(gOutDir, 0755);
     snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);   /* dir id 0 */
@@ -486,6 +508,18 @@ int main(int argc, char **argv)
     sk.comment = sink_comment;
 
     memset(&opt, 0, sizeof opt);
+
+#ifdef UNC_AT_OVERLAY
+    /* The two calls mac/macextract_mac.c makes, in its order: preload while
+     * the boot disk is certainly in, then release what the sniffed format
+     * cannot want, before the engine's first allocation. An overlay build that
+     * skipped the release would pass every byte-exactness test and lose the
+     * whole mechanism, which is what happened on the branch for a week
+     * (DECISIONS.md 2026-09-25, *the flush nobody wrote*). */
+    ovl_release_if_unwanted(unc_sniff(&io), &io);
+    fprintf(stderr, "overlay: %ld read(s), %ld flush(es) so far\n",
+            ovlbox_reads, ovlbox_flushes);
+#endif
 
     ret = unc_extract(&io, &sk, &al, NULL, &opt);
     fprintf(stderr, "unc_extract -> %d, entries=%d errors=%d\n",

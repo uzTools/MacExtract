@@ -84,11 +84,19 @@ it.
 **In scope since 2026-08-15** (M12), where every status file
 here used to call it detect-only. Three containers — a single compressed file
 (`0xABCD` and the header's own SIZE, 84 or 48 — see *The 1990 header*
-below), `DDAR`, `DDA2` — and four methods, which is every method the
-corpus uses: 0 stored, 6/9 (an 8 KB-block LZSS), 8 (Compact Pro compression in
-a DiskDoubler container: the same two stages as `.cpt`, at a 0xfff0 Huffman
-block instead of 0x1fff0), 10 (DDn: a 64 KB-window LZSS whose literals, offsets
-and lengths are three separately Huffman-coded streams laid out back to back).
+below), `DDAR`, `DDA2` — and **all eleven methods since 2026-08-21** (M20):
+the table row above names them and the per-method table below says what writes
+each one and how it was graded.
+
+**Four of them on the first day**, which was every method the corpus used
+then: 0 stored, 6/9 (an 8 KB-block LZSS), 8 (Compact Pro compression in a
+DiskDoubler container: the same two stages as `.cpt`, at a 0xfff0 Huffman block
+instead of 0x1fff0), 10 (DDn: a 64 KB-window LZSS whose literals, offsets and
+lengths are three separately Huffman-coded streams laid out back to back). The
+other seven came from running DiskDoubler itself (M15, M19, M20). This
+paragraph said "four methods, which is every method the corpus uses" until
+2026-09-26, two rows above a table listing eleven.
+
 Delta-1 preprocessing is applied where the header asks for it, outside the
 checksum, which is where the reference puts it.
 

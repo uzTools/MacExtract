@@ -278,6 +278,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
 - 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
 - 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
+- 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
 
 ---
 
@@ -17524,3 +17525,74 @@ the decision turned on, find that it was not the price, and take it.
 Part 1 replaces it (*Out by the brief*). BRANCHES.md keeps the branch as
 parked-by-decision with its figures marked as pre-overlay. `ci.sh` is
 unchanged: `tools/run_only.py` grades the CLI half, which ships.
+
+## 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
+
+**Claim: the reason the overlay loader had no automated test was a property
+of the Macintosh, and it was not.** OPEN_ITEMS.md had carried *"there is no
+obvious Linux-side loader test — the images are m68k, position-independent,
+and relocated by a loader that exists only in the Macintosh build, where
+`qemu-m68k` runs the engine but not the Resource Manager"* since the images
+landed. Every clause is true. The conclusion does not follow, and the cost of
+believing it was three defects found by hand (DECISIONS.md 2026-09-25, *the
+flush nobody wrote*).
+
+**What the mechanism actually needs.** An image is a flat `-mpcrel` m68k blob
+with a relocation trailer — no Toolbox in it, by construction, because it may
+not call the application. The loader needs eight Memory Manager calls
+(`NewHandle`, `DisposeHandle`, `GetHandleSize`, `HLock`, `HUnlock`, `MoveHHi`,
+`BlockMoveData`, `MemError`), two Resource Manager calls (`GetResource`,
+`ReleaseResource`) and a trap probe. **That is the whole surface**, and
+`tests/mac_sink_test.c` had been running the Mac shell's sink against a mock
+Toolbox of the same shape since 2026-08.
+
+So: `mkoverlay.sh` gained a toolchain PREFIX (default unchanged, Retro68's),
+`m68k-linux-gnu-gcc` builds the identical sources with the identical flags,
+stub headers named `Memory.h`/`Resources.h`/`OSUtils.h` let all four loader
+files compile **unmodified**, and `qemu-m68k` executes them. One seam was
+needed in shipping code and it is one macro: the low-memory global ROM85's
+ADDRESS, which a host cannot map. Identical codegen in every shipped build.
+
+**The result, first run:** 17 fixtures extracted through real m68k images,
+byte-exact against the committed oracle manifests, in both lifetimes, in
+about a second each — and the mechanism's own properties asserted for the
+first time anywhere: the eager lifetime reads one resource and never
+re-reads, the lazy one reads once per image, and **every relocation in every
+image is checked against the raw file's trailer at the address the image
+runs at**, including a kept copy relocated a second time by the difference of
+two addresses.
+
+**Two things the mock does that a Macintosh does not, and both are the
+point.** Every unlocked block moves on every allocation, where the Memory
+Manager compacts only when it must — so an image the loader forgot to lock
+fails here every time and there only on a full heap. And every block's last
+byte abuts a guard page, so a relocation offset past the image end faults at
+the write instead of corrupting a neighbour; that is the exact class the
+trailer's `off + 4 > table` guard exists for.
+
+**Made to fail, six ways, permanently.** A suite this new has earned nothing,
+so `--mutate` is part of it and `ci.sh` runs it: the delta dropped, the
+trailer table mislocated, a kept copy relocated by its own address, the
+bundle fixup not flushing, the lazy loader not locking, the codecs image not
+kept. All six are caught. **The first attempt at this lane reported a
+mutation as UNCAUGHT when it had never been applied** — the `sed` matched
+nothing and exited 0, which is the same shape as the checks this project has
+withdrawn for being unable to fail. `tests/ovlbox/mutate.py` fails on an
+absent pattern for that reason.
+
+**What is still not reachable**, and it is a short list now: no host here has
+an instruction cache, so the documented flush is counted rather than needed;
+`m68k-linux-gnu-gcc` is the same compiler family as Retro68's and not the same
+compiler, so the bytes `dist/` ships are still only the tiers' to grade; and
+there is no Resource Manager, no fragmentation model and no interface. The
+control lane's oracle is this project's own output and cannot notice a decoder
+that is wrong in both configurations — which is what the 932 fixtures are for.
+OPEN_ITEMS.md, *The overlay loader*, keeps what remains.
+
+**The transferable part, and it is not about overlays.** *A negative built out
+of true clauses is still a hypothesis.* "The Resource Manager only exists on
+the Macintosh" was true and irrelevant: nothing in the loader needs a real
+one, only ten calls' worth of behaviour, and the harness that could supply
+them had been in `tests/` for seven weeks. The question that opened it was not
+"how could this be tested?" but **"what does this code actually require?"** —
+asked of the code rather than of the platform it was written for.

@@ -21,6 +21,14 @@ set -e
 cd "$(dirname "$0")/../.."
 OUT=$1; shift
 T=${RETRO68:-/opt/Retro68-build/toolchain}/bin
+# The toolchain, as a PREFIX, so the same image can be built by a second one.
+# Default: Retro68's, which is what the application ships.
+# tests/run_overlay_host.sh passes `OVL_TOOL=m68k-linux-gnu-` to build the
+# identical sources with the identical flags for qemu-m68k, where the real
+# loader can be run against them off the Macintosh (tests/ovlbox/README.md).
+# Nothing else may differ: the whole value of that lane is that the image it
+# grades is built the way the shipped one is.
+OVL_TOOL=${OVL_TOOL:-$T/m68k-apple-macos-}
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
 # The resource id comes from overlay.h, by name. It used to be a number in
@@ -43,7 +51,7 @@ OVL_ID=$(python3 tools/overlay/ovlid.py "${OVL_ID:-OVL_ID_CRYPT}") || exit 1
 # went to two places at once*). The loop is then emitted as written,
 # and every one of them zeroes a window once per fork.
 ovl_cc() {
-    "$T/m68k-apple-macos-gcc" -c -Os -mcpu=68000 -mpcrel \
+    "${OVL_TOOL}gcc" -c -Os -mcpu=68000 -mpcrel \
         -ffunction-sections -fdata-sections -fno-builtin \
         -fno-tree-loop-distribute-patterns \
         -Itools/overlay -Iinclude -Isrc ${OVL_INC:+-I$OVL_INC} \
@@ -72,8 +80,8 @@ OBJS="$OBJS $TMP/ovl_rt.o"
 # own allocator. Dropping what nothing calls is both the fix and a size win
 # for every other image. The sources are already compiled with
 # -ffunction-sections -fdata-sections, which is what makes it work.
-"$T/m68k-apple-macos-ld" -T tools/overlay/overlay.ld ${OVL_GC:---gc-sections --entry=ovl_main} -q -o "$TMP/ovl.elf" $OBJS \
-    "$("$T/m68k-apple-macos-gcc" -print-libgcc-file-name)"
+"${OVL_TOOL}ld" -T tools/overlay/overlay.ld ${OVL_GC:---gc-sections --entry=ovl_main} -q -o "$TMP/ovl.elf" $OBJS \
+    "$("${OVL_TOOL}gcc" -print-libgcc-file-name)"
 
 # ABSOLUTE relocations, and why this is no longer a refusal.
 #
@@ -89,7 +97,7 @@ OBJS="$OBJS $TMP/ovl_rt.o"
 # offsets are offsets into DEBUG sections that objcopy never emits — feeding
 # those to the loader patches arbitrary words of the image, which is a hang
 # rather than a wrong answer, and is what the first version of this did.
-RELOCS=$("$T/m68k-apple-macos-readelf" -r "$TMP/ovl.elf" 2>/dev/null \
+RELOCS=$("${OVL_TOOL}readelf" -r "$TMP/ovl.elf" 2>/dev/null \
          | awk "/^Relocation section/ {
                     keep = (\$3 == \"'.rela.text'\" || \$3 == \"'.rela.data'\" ||
                             \$3 ~ /^.\\.rela\\.rodata/)
@@ -101,10 +109,10 @@ NREL=$(printf '%s' "$RELOCS" | grep -c . || true)
 # writable, while .bss is only a SIZE and lives past the image end — a blob
 # writing there would corrupt the heap. So an overlay's mutable state must be
 # initialised. (This check found exactly that bug on the first real overlay.)
-sz=$("$T/m68k-apple-macos-size" -A "$TMP/ovl.elf" | awk '$1==".bss"{print $2}')
+sz=$("${OVL_TOOL}size" -A "$TMP/ovl.elf" | awk '$1==".bss"{print $2}')
 [ -z "$sz" ] || [ "$sz" = 0 ] || { echo "mkoverlay: .bss is $sz B — it lives past the image end;" >&2
                                   echo "mkoverlay: initialise the static so it lands in .data" >&2; exit 1; }
-"$T/m68k-apple-macos-objcopy" -O binary "$TMP/ovl.elf" "$TMP/ovl.bin"
+"${OVL_TOOL}objcopy" -O binary "$TMP/ovl.elf" "$TMP/ovl.bin"
 # The trailer first, then the copy: the eager branch bundles the images into
 # ONE resource so a launch costs one disk read rather than thirteen, and the
 # bytes it bundles must already carry their relocations — the loader applies
@@ -125,6 +133,6 @@ n=$(wc -c < "$TMP/ovl.bin")
 # thing it can cost is speed: these are byte-wise, and the resident build
 # calls Retro68's libc. A routine appearing here on a decoder's hot path is
 # worth measuring; a routine appearing here at all is worth knowing about.
-RT=$("$T/m68k-apple-macos-nm" --defined-only "$TMP/ovl.elf" 2>/dev/null \
+RT=$("${OVL_TOOL}nm" --defined-only "$TMP/ovl.elf" 2>/dev/null \
      | awk '$3=="memcpy"||$3=="memmove"||$3=="memset"||$3=="memcmp"{printf " %s", $3}')
 echo "mkoverlay: $OUT — $n B, $NREL relocation(s) applied at load, entry at 0${RT:+, runtime:$RT}"

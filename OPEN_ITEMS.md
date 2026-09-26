@@ -113,22 +113,30 @@ way.
 
 ---
 
-## The overlay loader, which no automated suite here reaches
+## The overlay loader: what the host lane still cannot reach
 
-**The application ships fourteen `'OVLY'` images and no Linux suite touches
-one.** The images exist only in a Macintosh build, so the 932-fixture corpus,
-the 9,320 robustness variants and the sanitiser variants all exercise the
-decoders as ordinary linked code; `ci.sh` compiles the three Macintosh
-configurations (TESTING.md) and that is the whole of what it can do. Whether
-an image is found, relocated, kept, released or re-read is answered by the
-emulator tiers, by hand, at minutes per fixture — and three defects have
-lived in that gap, each found by something other than a test (DECISIONS.md
-2026-09-25, *the flush nobody wrote*).
+**The Linux-side gap CLOSED on 2026-09-26.** `tests/run_overlay_host.sh`
+builds the fourteen images with the m68k-linux toolchain from the same sources
+and the same flags, runs the real loaders unmodified against them through a
+mock Memory and Resource Manager, and extracts 17 fixtures through the images
+byte-exact under `qemu-m68k` in both lifetimes — plus one fixture per image
+against the resident build. Six deliberate breaks are caught every run
+(TESTING.md, *The overlay loader, off the Macintosh*; DECISIONS.md 2026-09-26,
+*the loader that could be run after all*). Three things are still open, and
+only the first is about the mechanism:
 
-**No tier with a CPU cache has ever run it**, so the flush at both fixup
-sites is correct by documentation and unverified by measurement: `fc=1 fn=3`
-on System 7.0.1 says the call fires, nothing here can say it was needed.
-MANUAL_TESTS.md §2 is the only instrument for that.
+**No tier with a CPU cache has ever run it.** The flush at both fixup sites is
+correct by documentation and unverified by measurement: Mini vMac is a 68000,
+the 68LC040 Emulator is documented to ignore the request, and the host lane has
+no cache either — it counts the call and proves it is reached, which is a
+different claim. `fc=1 fn=4` on System 7.0.1 says the route exists and fired.
+MANUAL_TESTS.md §2 is the only instrument for whether it is NEEDED.
+
+**The shipped bytes are still only the emulator's to grade.**
+`m68k-linux-gnu-gcc` is the same compiler family as Retro68's, not the same
+compiler, and the two do not agree on so much as the relocation count. What
+the host lane grades is the loader and the mechanism; that the images
+`dist/` ships are loaded correctly is the tiers' evidence.
 
 **And `tools/run_tiers.py` no longer predicts the shipped application**: it
 models one budget per tier, which is what a resident build has, while the
@@ -137,12 +145,10 @@ engine's allocation behaviour against a fixed ceiling, which is a real
 regression detector; it is no longer a prediction of what a user's Macintosh
 refuses.
 
-**What would close it:** a Linux-side loader test, and there is no obvious
-one — the images are m68k, position-independent, and relocated by a loader
-that exists only in the Macintosh build, where `qemu-m68k` runs the engine
-but not the Resource Manager. Short of that, read every tier sweep with the
-`-D UNC_AT_BUDGET` probe fields (`wa`, `kf`, `rf`, `fc`, `fn`) rather than on
-the tally alone.
+**What would close the first two:** a Macintosh with a 68020 or better, and a
+copy of the shipped binary run on one (MANUAL_TESTS.md §2 and §7). Short of
+that, read every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`,
+`kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
 ## What is still XADMaster's, and what would have to replace it
 

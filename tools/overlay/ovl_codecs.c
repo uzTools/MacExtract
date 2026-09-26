@@ -19,9 +19,10 @@
  * costs no relocation, while a table of the same pointers in .data would need
  * one for each, and mkoverlay.sh refuses any.
  *
- * The alternative was duplicating this code into each of the six overlays
+ * The alternative was duplicating this code into each of the decoder images
  * that call it — about 17 KB of extra download to save the same 8.5 KB of
- * RAM. This costs nothing but the mechanism.
+ * RAM, measured when there were six images rather than fourteen. This costs
+ * nothing but the mechanism.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */

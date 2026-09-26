@@ -2362,11 +2362,12 @@ numbers DART left behind*).
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
 | 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in, the application as it was until 2026-09-25. It is the CONTROL for budget measurements (FORMATS.md, *Overlays*), it has its own ceiling in `tools/build_mac.sh`, and it is built by `ci.sh` since 2026-09-26 |
 
-**What these variants CANNOT see.** They compile. No Linux suite exercises
-the loader at all — the images only exist in a Macintosh build, so the
-932-fixture differential suite says nothing about whether an image is found,
-relocated or released. That evidence comes from the emulator tiers, by hand,
-and from nothing else.
+**What these variants CANNOT see.** They compile, and that is all: a variant
+that builds says nothing about what the loader does with an image. **Since
+2026-09-26 that is no longer the end of the story** — `ci.sh` variant 3c runs
+the loader itself off the Macintosh (the next section). What stays the
+emulator tiers' alone is the Retro68 toolchain's own code generation, the real
+Resource Manager, fragmentation, and any machine with an instruction cache.
 
 **Made to fail before it was believed.** `unc_strerror`'s `"ok"` was
 changed to `"oK"` and the Mac app rebuilt: the check fails on a
@@ -2393,6 +2394,73 @@ source produced the same payload hash.
   `dist/README.txt`, and the file truncated.
 - **Whether the application is CORRECT.** This says the download is the
   tree's own build; that build is graded by everything above it.
+
+## The overlay loader, off the Macintosh (`tests/run_overlay_host.sh`, `ci.sh` variant 3c)
+
+Added 2026-09-26. **The fourteen `'OVLY'` images had no automated test of any
+kind**: they exist only in a Retro68 build, so every lane above runs the
+decoders as ordinary linked code, and whether an image is found, relocated,
+kept, released or re-read was answered by emulator tiers, by hand, at minutes
+per fixture. Three defects lived in that gap (OPEN_ITEMS.md, *The overlay
+loader*).
+
+**What makes it possible is that nothing in the mechanism is Retro68's.** The
+images are flat `-mpcrel` m68k blobs with a relocation trailer; the loader
+needs eight Memory Manager calls, two Resource Manager calls and a trap probe.
+So `mkoverlay.sh` takes a toolchain PREFIX (`OVL_TOOL`, default Retro68's) and
+builds the same sources with the same flags for `m68k-linux-gnu`; the stub
+Toolbox headers in `tests/ovlbox/toolbox/` let `mac/ovl_load_eager.c`,
+`mac/ovl_load_lazy.c`, `mac/ovl_reloc.c` and `mac/ovl_shim.c` compile
+**unmodified**; and `qemu-m68k` runs the result, images and all.
+
+Four lanes, in one script, ~65 s:
+
+| lane | what it grades |
+|---|---|
+| the images | fourteen of them, from `tools/overlay/images.py`'s inventory — which is PARSED out of `mac/CMakeLists.txt`, so a fifteenth image cannot exist in the build and be missing here |
+| the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format, the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, which is relocated a second time by the difference of two addresses |
+| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **17 fixtures, byte-exact, in both lifetimes** |
+| one per image | seventeen fixtures reaching thirteen of the fourteen images, each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME). Exit status is compared too, and neither build is required to succeed |
+
+**The mock is harsher than a Macintosh, deliberately**
+(`tests/ovlbox/ovlbox.c`): every unlocked block moves on every allocation,
+where the Memory Manager compacts only when it must; every block's last byte
+abuts a guard page, so a relocation or a `BlockMoveData` past the image end
+faults at the write; and a released resource is really gone, with the next
+`GetResource` counted as a fresh read — which is how the two lifetimes are
+told apart at all.
+
+**Made to fail before it was believed, and it stays that way.** `--mutate`
+breaks the loader six ways and requires each break to be caught: the delta
+dropped, the trailer's table mislocated, a kept copy relocated by its own
+address instead of the difference, the bundle fixup not flushing, the lazy
+loader not locking, and the codecs image not kept. All six are caught, and
+`ci.sh` runs them every time. The mutations are applied by
+`tests/ovlbox/mutate.py`, which FAILS when its pattern is absent — the first
+version used `sed`, which exits 0 having matched nothing, and duly reported an
+unapplied mutation as an uncaught defect.
+
+**What it CANNOT see** — the list is `tests/ovlbox/ovlbox.c`'s header, and the
+emulator tiers are what cover these:
+
+- **No instruction cache, on either host.** The flush is counted, never
+  needed; whether it WORKS is real 68020-and-up silicon's answer
+  (MANUAL_TESTS.md §2).
+- **Not Retro68's code generation.** `m68k-linux-gnu-gcc` is the same
+  compiler family, not the same compiler, and the two do not even produce the
+  same relocation COUNT: the StuffIt image carries 15 here. What is graded is
+  that the images this toolchain builds are loaded correctly, and that the
+  loader's arithmetic is right — not that the shipped bytes are these bytes.
+- **No Resource Manager**: no resource map, no purging, no file.
+- **No fragmentation.** The mock always finds room; "Memory is too broken up"
+  is `tools/run_tiers.py`'s blind spot too.
+- **Nothing about the interface**, and no budget: `UNC_AT_BUDGET` is defined
+  for the loader lane only, because in `mac/macextract_mac.c` it turns on a
+  heap probe built from `ApplicationZone`, `LMGetApplLimit` and `MaxBlock`.
+- **The control lane's oracle is this project's own output**, so it cannot
+  notice a decoder that is wrong in both configurations. That is what the
+  932-fixture differential suite is for; this lane grades only that the
+  mechanism is transparent.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
 
