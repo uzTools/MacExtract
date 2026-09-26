@@ -2421,6 +2421,7 @@ Four lanes, in one script, ~65 s:
 | the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format, the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, which is relocated a second time by the difference of two addresses |
 | extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **17 fixtures, byte-exact, in both lifetimes** |
 | one per image | seventeen fixtures reaching thirteen of the fourteen images, each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME). Exit status is compared too, and neither build is required to succeed |
+| the SHIPPED images (`--shipped-only`, `ci.sh` variant 3d) | the same loader against the images **Retro68** just built — the bytes `dist/` ships — in both lifetimes: found, relocated at the address they run at, kept, released. This is the only check anywhere on the bundle's own directory and on **30 relocations across six images**, which is what Retro68 emits where the m68k-linux build of the same sources emits 15 in one. They cannot be CALLED here: a Retro68 image entered from an m68k-linux host binary segfaults, measured rather than assumed, so that lane stops at the loader |
 
 **The mock is harsher than a Macintosh, deliberately**
 (`tests/ovlbox/ovlbox.c`): every unlocked block moves on every allocation,
@@ -2446,11 +2447,11 @@ emulator tiers are what cover these:
 - **No instruction cache, on either host.** The flush is counted, never
   needed; whether it WORKS is real 68020-and-up silicon's answer
   (MANUAL_TESTS.md §2).
-- **Not Retro68's code generation.** `m68k-linux-gnu-gcc` is the same
-  compiler family, not the same compiler, and the two do not even produce the
-  same relocation COUNT: the StuffIt image carries 15 here. What is graded is
-  that the images this toolchain builds are loaded correctly, and that the
-  loader's arithmetic is right — not that the shipped bytes are these bytes.
+- **Not Retro68's code generation, where an image is EXECUTED.** The two
+  toolchains do not even emit the same relocations: `m68k-linux-gnu-gcc`
+  produces 15 in one image, Retro68 30 across six. The shipped images are
+  loaded and checked by variant 3d above — what no host lane can do is RUN
+  them, because a Retro68 image entered from an m68k-linux binary segfaults.
 - **No Resource Manager**: no resource map, no purging, no file.
 - **No fragmentation.** The mock always finds room; "Memory is too broken up"
   is `tools/run_tiers.py`'s blind spot too.

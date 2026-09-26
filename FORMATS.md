@@ -2412,20 +2412,28 @@ ratchets none of them — that file was lowered in DART's own commit
 three Macintosh configurations*); it built two until then, and the one it
 left out was the control, which duly went 4 B over its ratchet unnoticed.
 
-The bundle is **143,616 B** — the fourteen images sum to 142,892 B, so its
-index costs 724 B — and it is not resident while an archive is extracted,
-which is the point of the build. `tools/check_app_size.py` therefore watches
-the 64,896 B `MacExtract.code.bin` and not the download.
+The bundle is **143,072 B** — the fourteen images sum to 142,892 B, so its
+index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
+bytes of padding to 4, which accounts for the whole difference (measured
+2026-09-26, off the raw bundle the build now writes for
+`tests/run_overlay_host.sh`). It read **143,616 B** here until then, and 724 B
+of index with it: that figure is `ovl_bundle.r.rsrc.bin`, the Rez'd RESOURCE
+FORK around the bundle rather than the bundle (DECISIONS.md 2026-09-26, *the
+fork that was mistaken for its contents*). It is not resident while an archive
+is extracted, which is the point of the build; `tools/check_app_size.py`
+therefore watches the 64,896 B `MacExtract.code.bin` and not the download.
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 183,552 B — and the shipped build
-reads 64,896 B of `CODE` plus the 143,616 B bundle, which is 208,512 B: the
-same read redistributed plus **24,960 B** (DECISIONS.md 2026-09-25, *the
+reads 64,896 B of `CODE` plus the 143,072 B bundle, which is 207,968 B: the
+same read redistributed plus **24,416 B** (DECISIONS.md 2026-09-25, *the
 overlay launch read was counted as a cost twice*). The download grows by
 24,448 B over the same pair, 211,328 against 186,880, so the read delta and
-the download delta are **two numbers 512 B apart** and not one number, which
-is what this paragraph claimed until 2026-09-26. Nothing here has needed to
-account for the 512 B.
+the download delta are two numbers **32 B apart** and not one number — and a
+MacBinary download is quantised to 128 B a fork, so a pair this close is
+inside the padding and needs no further account. Both figures read 512 B apart
+until 2026-09-26, from the bundle's resource fork standing in for the bundle
+(DECISIONS.md 2026-09-26, *the fork that was mistaken for its contents*).
 
 ### What it buys, against the control
 
@@ -2506,7 +2514,7 @@ figure is `tools/code_map.py`'s, below.
 The application ships as **211,328 B** of MacBinary (`dist/MacExtract.bin`,
 v0.33.0), and since 2026-09-25 that is no longer all resident: **64,896 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **143,616 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **143,072 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside

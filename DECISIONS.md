@@ -279,6 +279,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
 - 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
 - 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
+- 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
 
 ---
 
@@ -17461,6 +17462,12 @@ survives, which is why it is easy to miss: the launch read is a
 redistribution and not a new cost. *"X, which is also Y"* is two claims,
 and the second one here was never measured.
 
+**Corrected later the same day: the bundle is 143,072 B, not 143,616 B**, so
+the read grows by 24,416 B and the two deltas are 32 B apart rather than 512.
+The figure used here is the bundle's resource FORK (*the fork that was
+mistaken for its contents*, below). The 512 B that this entry left
+unaccounted for was the whole of the error.
+
 ### A control that is not built is not a control
 
 The other half was found by building the resident configuration by hand
@@ -17580,10 +17587,18 @@ nothing and exited 0, which is the same shape as the checks this project has
 withdrawn for being unable to fail. `tests/ovlbox/mutate.py` fails on an
 absent pattern for that reason.
 
+**And then the shipped images too.** `--shipped-only` (variant 3d, after the
+Retro68 build) hands the images `dist/` ships to the same loader: the bundle's
+directory, and **30 relocations across six images**, all correct at the
+addresses they run at — where the m68k-linux build of the same sources emits
+15 in one image, so the first lane could not have covered them. They cannot be
+CALLED here: a Retro68 image entered from an m68k-linux binary segfaults,
+measured on `synth-sit-rle90.sit` rather than assumed. That is the honest
+boundary — the shipped bytes are LOADED here and RUN only on the emulator.
+
 **What is still not reachable**, and it is a short list now: no host here has
 an instruction cache, so the documented flush is counted rather than needed;
-`m68k-linux-gnu-gcc` is the same compiler family as Retro68's and not the same
-compiler, so the bytes `dist/` ships are still only the tiers' to grade; and
+no Retro68 image is ever executed off the Macintosh; and
 there is no Resource Manager, no fragmentation model and no interface. The
 control lane's oracle is this project's own output and cannot notice a decoder
 that is wrong in both configurations — which is what the 932 fixtures are for.
@@ -17596,3 +17611,44 @@ one, only ten calls' worth of behaviour, and the harness that could supply
 them had been in `tests/` for seven weeks. The question that opened it was not
 "how could this be tested?" but **"what does this code actually require?"** —
 asked of the code rather than of the platform it was written for.
+
+## 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
+
+**Claim: the `'OVLY'` bundle is 143,616 B. It is 143,072 B.** The larger
+figure is `build/mac/ovl_bundle.r.rsrc.bin` — the Rez'd RESOURCE FORK around
+the bundle, map and header included — where every other figure in the same
+paragraph is a `.code.bin` or a `.bin`, i.e. resource DATA or the download.
+544 B of resource-fork overhead, quoted as if it were part of the bundle.
+
+**Three numbers fell with it**, all in FORMATS.md, *Overlays*:
+
+- the bundle's index cost, quoted as **724 B** — the difference between the
+  fork's size and the images' 142,892 B. The index is **180 B**, and it is
+  fully accountable: a 4-byte header, 12 bytes of directory per image
+  (`tools/overlay/mkbundle.py`'s layout), and 8 bytes of padding to 4. 172 +
+  8 = 180, exactly the difference;
+- the launch read, quoted as 208,512 B and a **+24,960 B** delta. It is
+  207,968 B and **+24,416 B**;
+- and with it the **512 B** that DECISIONS.md 2026-09-25 (*the overlay launch
+  read was counted as a cost twice*) reported as the gap between the read
+  delta and the download delta, with *"nothing here has needed to account for
+  the 512 B"* written beside it. With the bundle's real size the gap is
+  **32 B** — and a MacBinary download is quantised to 128 B a fork (both are
+  exact multiples), so a pair that close is inside the padding and needs no
+  account at all.
+
+**What made it findable.** Nothing measured the bundle: the figure was quoted
+in four places, including `tools/check_app_size.py`'s own header, and produced
+by no tool. It came out while adding `--bin` to `mkbundle.py` so that
+`tests/run_overlay_host.sh` could hand the SHIPPED bundle to the real loader
+(*the loader that could be run after all*) — the first time anything in this
+repository read the bundle's bytes as bytes.
+
+**The transferable part.** *An unexplained residue is an unread instrument.*
+This project had already written the residue down and labelled it as
+unexplained, which is the right thing to do; what it had not done was ask
+which file each of the four numbers came from. Two of them came from the same
+build and the third from a different KIND of file, and the gap was exactly the
+difference between the two kinds. **A figure nothing measures is a figure
+nobody can correct** — the bundle's size is now written by the build, and the
+host loader lane reads it every run.

@@ -661,10 +661,17 @@ add_custom_command(
             ${OVL_DEPS})
 # The bundle. Depends on the per-format .r rules only so that their .bin
 # side-products exist; mkoverlay.sh writes <out>.bin beside <out>.r.
+#
+# `--bin` writes the bundle's RAW bytes beside the Rez source, for
+# tests/run_overlay_host.sh --shipped: it hands THESE bytes to the real loader
+# off the Macintosh and checks every relocation at the address the image ends
+# up at. The Rez source is what the application links; the raw copy is read by
+# nothing else.
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r
     COMMAND python3 ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.r
+            --bin ${CMAKE_CURRENT_BINARY_DIR}/ovl_bundle.bin
             OVL_ID_CRYPT:${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.bin
             OVL_ID_SPACESAVER:${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.bin
             OVL_ID_CPTDD:${CMAKE_CURRENT_BINARY_DIR}/ovl_cptdd.bin

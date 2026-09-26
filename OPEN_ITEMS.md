@@ -132,11 +132,14 @@ no cache either — it counts the call and proves it is reached, which is a
 different claim. `fc=1 fn=4` on System 7.0.1 says the route exists and fired.
 MANUAL_TESTS.md §2 is the only instrument for whether it is NEEDED.
 
-**The shipped bytes are still only the emulator's to grade.**
-`m68k-linux-gnu-gcc` is the same compiler family as Retro68's, not the same
-compiler, and the two do not agree on so much as the relocation count. What
-the host lane grades is the loader and the mechanism; that the images
-`dist/` ships are loaded correctly is the tiers' evidence.
+**The shipped bytes RUN only on the emulator.** Since 2026-09-26 the host
+lane does load them: `--shipped-only` (`ci.sh` variant 3d) hands the Retro68
+images and bundle to the real loader and checks the bundle's directory and all
+30 relocations across its six images at the addresses they run at — which the
+m68k-linux build cannot stand in for, since it emits 15 in one image. What no
+host lane can do is EXECUTE a Retro68 image: entered from an m68k-linux binary
+it segfaults (measured 2026-09-26). So the decoders' own behaviour in the
+shipped bytes is the tiers' evidence and nothing else's.
 
 **And `tools/run_tiers.py` no longer predicts the shipped application**: it
 models one budget per tier, which is what a resident build has, while the

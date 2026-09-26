@@ -38,7 +38,13 @@
 set -e
 cd "$(dirname "$0")/.."
 
-B=build/ovlhost
+MODE=${1:-}
+# --shipped-only grades the RETRO68 images instead of building any: the ones
+# `build/mac/` holds, which are the bytes dist/ ships. They load here and their
+# relocations can be checked; they cannot be CALLED from an m68k-linux binary
+# (measured: SIGSEGV, two toolchains' conventions), so that lane stops at the
+# loader. ci.sh runs it after variant 4, which is what builds them.
+if [ "$MODE" = "--shipped-only" ]; then B=build/ovlhost-shipped; else B=build/ovlhost; fi
 GEN=$B/gen
 IMG=$B/img
 
@@ -57,6 +63,13 @@ mkdir -p $GEN $IMG
 # (tools/overlay/images.py).
 python3 tools/overlay/images.py --check || fail "the image inventory"
 python3 tools/overlay/mkforwards.py $GEN >/dev/null || fail "mkforwards"
+
+if [ "$MODE" = "--shipped-only" ]; then
+    [ -f build/mac/ovl_bundle.bin ] || {
+        echo "overlay-host: no build/mac/ovl_bundle.bin — run ci.sh variant 4"
+        echo "overlay-host: (the Retro68 build is what writes the shipped images)"
+        exit 0; }
+else
 
 echo "overlay-host: fourteen images, m68k-linux toolchain"
 python3 tools/overlay/images.py > $B/inv.txt
@@ -81,6 +94,7 @@ while read -r ident srcs; do pairs="$pairs $ident:$IMG/$ident.bin"; done < $B/in
 python3 tools/overlay/mkbundle.py $IMG/bundle.r --bin $IMG/bundle.bin $pairs \
     >/dev/null || fail "mkbundle"
 printf '128 %s/bundle.bin\n' "$IMG" > $B/manifest_eager.txt
+fi
 
 # The engine sources that are NOT resident in an overlay build — the same list
 # mac/CMakeLists.txt filters out, read from it for the same reason.
@@ -116,6 +130,25 @@ build_loadtest() {   # <out> <loader.c> <extra-defs> <cc...>
 NATIVE="gcc -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all"
 M68K="m68k-linux-gnu-gcc -O2 -static -mcpu=68000"
 
+if [ "$MODE" = "--shipped-only" ]; then
+    # The shipped images, by resource id, and the shipped bundle as resource
+    # 128. `ovlid.py` resolves each name, so a renamed image fails here rather
+    # than being quietly left out.
+    for f in build/mac/ovl_*.bin; do
+        n=$(basename "$f" .bin)
+        case $n in ovl_bundle|ovl_bundle.r.rsrc) continue;; esac
+        ident="OVL_ID_$(printf '%s' "${n#ovl_}" | tr 'a-z' 'A-Z')"
+        id=$(python3 tools/overlay/ovlid.py "$ident") || fail "no id for $n"
+        cp "$f" $IMG/$id.bin
+        printf '%s %s/%s.bin\n' "$id" "$IMG" "$id" >> $B/manifest_lazy.txt
+    done
+    [ "$(wc -l < $B/manifest_lazy.txt)" = 14 ] \
+        || fail "not fourteen shipped images"
+    cp build/mac/ovl_bundle.bin $IMG/bundle.bin
+    printf '128 %s/bundle.bin\n' "$IMG" > $B/manifest_eager.txt
+    echo "overlay-host: the SHIPPED images (Retro68), $(stat -c%s $IMG/bundle.bin) B of bundle"
+fi
+
 echo "overlay-host: the loader, native (ASan+UBSan)"
 build_loadtest $B/loadtest_eager mac/ovl_load_eager.c -DOVL_LANE_EAGER $NATIVE
 build_loadtest $B/loadtest_lazy  mac/ovl_load_lazy.c  ""                $NATIVE
@@ -142,6 +175,18 @@ OVLBOX_IMAGES=$B/manifest_eager.txt qemu-m68k $B/loadtest_eager_m68k $IMG \
     || fail "the eager loader (m68k)"
 OVLBOX_IMAGES=$B/manifest_lazy.txt qemu-m68k $B/loadtest_lazy_m68k $IMG \
     || fail "the lazy loader (m68k)"
+
+if [ "$MODE" = "--shipped-only" ]; then
+    # And no further. These images are Retro68's, and a Retro68 image called
+    # from an m68k-linux host binary segfaults — measured 2026-09-26, not
+    # assumed, on `synth-sit-rle90.sit` through the lazy sink. What this lane
+    # grades is that the SHIPPED bytes are found, relocated correctly at the
+    # address they run at, kept and released; executing them is the emulator
+    # tiers' (DECISIONS.md 2026-09-26, *the loader that could be run after
+    # all*).
+    echo "overlay-host: shipped images ok (loaded and relocated; not called)"
+    exit 0
+fi
 
 # ---------------------------------------------------------------------------
 # Extraction THROUGH the images. tests/mac_sink_test.c is the same harness the

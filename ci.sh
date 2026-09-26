@@ -305,6 +305,18 @@ fi
 python3 tools/check_app_size.py build/mac/MacExtract.code.bin \
     || fail "application size moved without acknowledgement"
 
+# The images the Retro68 build has just written are the bytes dist/ ships, and
+# variant 3c graded a SECOND toolchain's build of the same sources. This runs
+# the real loader against the shipped ones: found, relocated at the address
+# they run at, kept, released. It is the only check anywhere that the bundle's
+# own directory and the 30 relocations across its six images are right — and
+# Retro68's images carry those where the m68k-linux build of the same sources
+# carries 15 in one image, so 3c alone does not cover them. They cannot be
+# CALLED here (measured: SIGSEGV); executing them is the emulator tiers'
+# (DECISIONS.md 2026-09-26, *the loader that could be run after all*).
+echo "=== variant 3d: the SHIPPED overlay images, through the real loader ==="
+sh tests/run_overlay_host.sh --shipped-only || fail "shipped overlay images"
+
 # variant 4b, added 2026-09-09: the OVERLAY configuration, EAGER — the
 # lifetime the application ships. Merging a new format in once passed every check
 # above and left this unlinkable, a resident decoder calling unc_lzah_decode
