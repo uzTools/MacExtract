@@ -63,9 +63,16 @@
  * The FINAL segment is checked properly — unc_cpt_probe walks its index
  * CRC — so a set is only ever adjudicated by the part that can be.
  *
- * The bargain has now been paid once: `Read First.PKG`, a real AppleLink
- * package, is byte 0 = 1 with a zero longword at 4 and sniffs as a first
- * segment (OPEN_ITEMS.md, *AppleLink `.pkg`*). */
+ * That bargain was paid once — `Read First.PKG`, a real AppleLink
+ * package, is byte 0 = 1 with a zero longword at 4 and sniffed as a
+ * first segment — so a segment with NO index must now also carry a
+ * non-zero set identity. That field's whole job is to tell one set's
+ * parts from another's, and 0 identifies nothing. Measured: of the 82
+ * raw Compact Pro files reachable on this machine, carrying 75 distinct
+ * identities, none is 0; `tools/synth_cptsplit.py` already refused to
+ * draw one (`return h or 1`). The FINAL segment is unaffected — it is
+ * adjudicated by unc_cpt_probe's walk, which is strictly stronger
+ * (OPEN_ITEMS.md, *AppleLink `.pkg`*). */
 UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     uint32_t idx;
@@ -73,6 +80,8 @@ UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io)
     if (len < CPTS_HDR || head[0] != 1) return UNC_FORMAT_UNKNOWN;
     idx = unc_get_u32be(head + 4);
     if (head[1] == 0) return UNC_FORMAT_UNKNOWN;                  /* there is no volume 0 */
+    /* No index to check, so the identity has to be one (above). */
+    if (idx == 0 && unc_get_u16be(head + 2) == 0) return UNC_FORMAT_UNKNOWN;
     if (head[1] == 1) return (idx == 0)
            ? UNC_FORMAT_CPTSEG : UNC_FORMAT_UNKNOWN;           /* first of a set       */
     /* Volume 2+: a segment. If it carries an index it is the final one,
@@ -93,6 +102,8 @@ int unc_cptseg_describe(UncIO *io, UncSegmentDesc *desc)
     if (head[0] != 1 || head[1] == 0) return UNC_ERR_FORMAT;
     idx = unc_get_u32be(head + 4);
     if (head[1] == 1 && idx != 0) return UNC_ERR_FORMAT;   /* plain archive */
+    /* The same rule the probe applies, so the two walks agree. */
+    if (idx == 0 && unc_get_u16be(head + 2) == 0) return UNC_ERR_FORMAT;
 
     {
         int i;

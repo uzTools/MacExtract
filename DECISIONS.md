@@ -285,6 +285,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
 - 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
 - 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
+- 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
 
 ---
 
@@ -18045,3 +18046,42 @@ withdrawn after the machine turned out to be able to answer it (the other
 cost half a stranger's afternoon on a Macintosh 128K). **Asking somebody
 outside this machine is expensive in a currency this project cannot see, so
 it is the last resort and not the second.**
+
+## 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
+
+`unc_cptseg_probe` accepted any file whose byte 0 is 1 with a zero longword
+at 4, and its own comment had called the bargain deliberate since the format
+gave it nothing else: a middle Compact Pro segment is a chunk of compressed
+data with an eight-byte hat. `Read First.PKG`, one of the two AppleLink
+packages that arrived earlier the same day, is `01 01 00 00` with a zero
+index, and was sniffed as the first segment of a set.
+
+**There was one more field, and the probe was not using it.** Bytes 2–3 are
+the set identity, whose entire job is to tell one set's parts from another's.
+A segment carrying no index is adjudicated by nothing else, so it must now
+carry a non-zero one. Zero identifies nothing.
+
+The rule is measured rather than argued: of the **82 raw Compact Pro files
+reachable on this machine — 75 distinct identities, including the two real
+multi-part sets `edu3` (`0xab78`, four parts) and `biplane5` (`0xdac4`,
+five) — none is 0**. `tools/synth_cptsplit.py` had reached the same
+conclusion years of commits earlier and never said so out loud: its
+`identity()` ends `return h or 1`.
+
+The final segment is untouched. It carries an index, so `unc_cpt_probe`
+walks its CRC — strictly stronger than anything this rule adds — and a set
+goes on being adjudicated by the one part that can be.
+
+**The transferable part is where the check came from.** Nothing was invented
+and no reference was needed: the field was already parsed, already
+documented in the file's own header comment, and already reported as the
+segment fingerprint by `unc_cptseg_describe`. *A probe that calls itself
+weak is worth re-reading against its own format notes before it is believed
+— "there is nothing else to check" was a statement about the payload, and
+the header had a field left.* The same header comment that admitted the
+weakness listed the field two paragraphs above it.
+
+`tests/unit_formats.c` gains `test_cptseg_probe`, the first unit test this
+probe has ever had, with the package's real header as the negative control
+and both real sets' shape as the positive; it was confirmed to fail with the
+check removed before it was believed.

@@ -307,7 +307,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # on the other side*). It costs the RESIDENT control 4 B and the shipped
 # build 0 — fmt_arc is in an overlay there — which is also how it got in:
 # nothing built this configuration. `ci.sh` builds it since the same day.
-UNC_MAC_CODE_DEFAULT=151588
+UNC_MAC_CODE_DEFAULT=151612
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -393,7 +393,7 @@ UNC_MAC_CODE_DEFAULT=151588
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37788
+UNC_MAC_A5_DEFAULT=37796
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -413,10 +413,29 @@ UNC_MAC_A5_DEFAULT=37788
 # another home*). Most of DART was in its own image, which is why the
 # shipped build gives back 696 B of code where the resident one gives
 # back 2,220 B.
-UNC_MAC_CODE_EAGER=53332
-UNC_MAC_A5_EAGER=18988
-UNC_MAC_CODE_LAZY=51956
-UNC_MAC_A5_LAZY=19084
+# MOVED 2026-09-26 by the Compact Pro segment identity check, and it moved
+# both ways: code +24 B in all three configurations, A5 **-24 B** in eager
+# and lazy and +8 B in the resident control. Rodata crossing between the
+# two columns under changed text, which is why the shipped build's total
+# footprint is unchanged and its CODE ceiling still had to rise: they are
+# separate ceilings, and a byte of resident code is a byte off every
+# extraction's budget where a byte of A5 is already paid for.
+#   eager     53,332 -> 53,356   A5 18,988 -> 18,964
+#   lazy      51,956 -> 51,980   A5 19,084 -> 19,060
+#   resident 151,588 -> 151,612  A5 37,788 -> 37,796
+# Each measured against a build with src/fmt_cptseg.c reverted, so every
+# figure is this change's and nothing else's. The two A5 ceilings are
+# LOWERED on the same terms they would be raised — at the size on the day —
+# so the 24 B this gave back cannot be spent later by accident.
+# What the bytes bought: `unc_cptseg_probe` no longer claims a file from
+# another format. A real AppleLink package, `Read First.PKG`, is
+# `01 01 00 00` with a zero index and was sniffed as the first segment of a
+# Compact Pro set until this commit (DECISIONS.md 2026-09-26, *the bargain
+# that was finally paid*).
+UNC_MAC_CODE_EAGER=53356
+UNC_MAC_A5_EAGER=18964
+UNC_MAC_CODE_LAZY=51980
+UNC_MAC_A5_LAZY=19060
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

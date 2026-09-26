@@ -256,7 +256,7 @@ itself.
 **Two real AppleLink packages arrived on 2026-09-26** — `ALink.PKG` (6,900 B)
 and `Read First.PKG` (1,373 B), both beside AppleLink 6.1 on fifteen Apple
 Developer CDs, fetched by `tools/fetch_specimens.py` (FORMATS.md, *AppleLink
-packages*). They settle what a package is and open three items:
+packages*). They settle what a package is and open two items:
 
 - **A package is binary, and it is a container.** Each record holds two
   lengths, a type, a creator, Finder flags, a Pascal name and two Macintosh
@@ -271,11 +271,6 @@ packages*). They settle what a package is and open three items:
   routine is unsettled, and settling it is a boot (`tools/vmac/
   spacesaver.py --pkg`), not a download. **Closed by:** a reading of the
   translator that accepts the two specimens.
-- **`Read First.PKG` sniffs as a Compact Pro segment.** `unc_cptseg_probe`
-  accepts any file whose byte 0 is 1 with a zero at 4..7, which its own
-  comment calls deliberately weak; a real file from another format now
-  falsifies that bargain. **Closed by:** either a check that the package
-  fails, or an AppleLink probe ahead of it that claims the file first.
 
 No decoder is written, and the second reader — the translator itself — is on
 the emulator image.

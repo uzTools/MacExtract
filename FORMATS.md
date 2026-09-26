@@ -2400,13 +2400,22 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **53,332 B** | 18,988 B | **64,896 B** | **211,328 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,956 B | 19,084 B | 63,488 B | 210,048 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 151,588 B | 37,788 B | 183,552 B | 186,880 B |
+| **eager — SHIPPED** | (default) | **53,356 B** | 18,964 B | **64,896 B** | **211,328 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,980 B | 19,060 B | 63,488 B | 210,048 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 151,612 B | 37,796 B | 183,552 B | 186,880 B |
 
 **All three re-measured 2026-09-26 on one tree**, `CODE` and A5 by
 `m68k-apple-macos-size` as `tools/build_mac.sh` reads them for its
-ratchets. The figures here stood at 54,028 / 19,124 / 214,784 for the shipped
+ratchets. The `CODE` and A5 columns moved for v0.34.0's Compact Pro
+segment identity check, and they moved in OPPOSITE directions: code +24 B
+in all three, A5 −24 B in eager and lazy and +8 B in the resident
+control, each measured against a build with `src/fmt_cptseg.c` reverted.
+Rodata crossing between the two columns under changed text — so the
+shipped build's `MacExtract.code.bin` and `MacExtract.bin` are the same
+size they were, and its total footprint is unchanged, while the resident
+`CODE` ceiling still had to rise because a byte there is a byte off every
+extraction's budget (`tools/build_mac.sh`; DECISIONS.md 2026-09-26, *the
+bargain that was finally paid*). The figures here stood at 54,028 / 19,124 / 214,784 for the shipped
 build from 2026-09-25 until then: that set is the one from BEFORE DART left,
 which cost this section every number it has and `tools/build_mac.sh`'s
 ratchets none of them — that file was lowered in DART's own commit
@@ -4034,7 +4043,10 @@ RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**71/71 byte-exact PASS on the v0.33.0 binary**, 2026-09-25 (and 71/71 on
+**71/71 byte-exact PASS on the v0.34.0 binary**, 2026-09-26 — the release's
+spot check, re-run because that release adds 24 B of resident code and so
+takes 24 B off this tier's budget (71/71 on the **v0.33.0** binary,
+2026-09-25; and 71/71 on
 **2026-09-22** with every decoder resident, the sweep that added the two
 StuffIt 5 fixtures whose names are UTF-8 — `derived-Cool_Tools__.sit` peaks
 at **535,199 B** as the Mac itself reports it — 44 bytes under what

@@ -3209,6 +3209,61 @@ static void test_spacesaver_preset(void)
 }
 
 /* ------------------------------------------------------------------ */
+/* Compact Pro segments: the one field an indexless segment can be    */
+/* held to (src/fmt_cptseg.c)                                          */
+/*                                                                     */
+/* A middle segment is a chunk of compressed data with an 8-byte hat,  */
+/* so the probe is deliberately weak. It was weak enough to claim a    */
+/* file from another format: `Read First.PKG`, a real AppleLink        */
+/* package, is 01 01 00 00 with a zero index and sniffed as a first    */
+/* segment until 2026-09-26. The header below is that file's, byte for */
+/* byte; the specimen is fetched, not committed.                       */
+/* ------------------------------------------------------------------ */
+static void test_cptseg_probe(void)
+{
+    uint8_t seg[64];
+    MemIO m;
+    UncIO io;
+    UncSegmentDesc desc;
+    int i;
+
+    /* A first segment as Compact Pro writes one: volume 1, no index,
+     * and the identity edu3's real four-part set carries. */
+    for (i = 0; i < (int)sizeof seg; i++) seg[i] = (uint8_t)(i * 7 + 3);
+    seg[0] = 0x01; seg[1] = 0x01; seg[2] = 0xab; seg[3] = 0x78;
+    seg[4] = seg[5] = seg[6] = seg[7] = 0x00;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_CPTSEG);
+
+    /* A middle segment of the same set. */
+    seg[1] = 0x03;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_CPTSEG);
+
+    /* The AppleLink package. Zero identity and zero index: there is no
+     * Compact Pro fact anywhere in the file, and the probe must not
+     * invent one. */
+    seg[1] = 0x01; seg[2] = 0x00; seg[3] = 0x00;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_UNKNOWN);
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_describe(&io, &desc) == UNC_ERR_FORMAT);
+
+    /* Volume 0 does not exist, identity or no identity. */
+    seg[1] = 0x00; seg[2] = 0xab; seg[3] = 0x78;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_UNKNOWN);
+
+    /* The describe walk agrees with the probe on the file it accepts,
+     * and reports the identity as the set fingerprint. */
+    seg[1] = 0x02;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.fp[0] == 0xab && desc.fp[1] == 0x78);
+    CHECK(desc.part == 2 && desc.nparts == 0);
+}
+
+/* ------------------------------------------------------------------ */
 /* AppleLink package (`.pkg`) — detect only                           */
 /*                                                                    */
 /* The whole magic is three tokens, which is what Aladdin's own        */
@@ -4324,6 +4379,7 @@ void run_format_tests(void)
     test_zip();
     test_zip_comment();
     test_lzh_probe();
+    test_cptseg_probe();
     test_lzh_extract();
     test_sitseg();
     test_zipseg();

@@ -73,10 +73,18 @@ and its size was fixed when the archive was made. Those entries are skipped
 with a message and the rest of the archive still comes out. Every other format
 fits in 512 KB, and with 1 MB the question does not arise.
 
-v0.33.0 keeps its decoders on disk until an archive turns out to need one,
-which leaves about 85 KB more memory for decoding than v0.32.0 did. On a
-512 KB machine two more of the test archives now come out whole; on larger
-machines it changes nothing you can see.
+v0.34.0 fixes two things you could meet. A password-protected ARC archive
+whose scrambled data ran short was refused outright, with "file is
+truncated", instead of asking you for the password; it now asks. And a file
+that merely looks like one part of a split Compact Pro archive -- a real
+AppleLink package does -- was taken for one and then failed as a damaged
+archive. It is now left unrecognised, which is the honest answer: nothing
+here can open an AppleLink package.
+
+Memory is as v0.33.0 left it: the decoders stay on disk until an archive
+turns out to need one, which leaves about 85 KB more for decoding than
+v0.32.0 had. On a 512 KB machine two more of the test archives come out
+whole; on larger machines it changes nothing you can see.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
 (.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,

@@ -12,8 +12,10 @@ and extracts byte-exact on every system the project claims:
 
 The sample is **71 fixtures** since 2026-09-22, when the two StuffIt 5
 archives whose names are UTF-8 joined it. Every figure below was taken on
-**v0.33.0**, the binary in `dist/`, on 2026-09-25 — the release that made the
-decoders `'OVLY'` images and dropped DART.
+**v0.33.0** on 2026-09-25 — the release that made the decoders `'OVLY'`
+images and dropped DART — **except System 6.0.8 at the 1 MB floor, which is
+v0.34.0's**, the binary now in `dist/` (2026-09-26; what stands in for the
+other six is below the table).
 
 | tier | result |
 |---|---|
@@ -21,23 +23,26 @@ decoders `'OVLY'` images and dropped DART.
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **71/71** |
 | System 3.0, **512 KB** Macintosh 512Ke | **69/71** — two per-entry memory refusals, not failures. It was 67/71 with every decoder resident: the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
 | System 6.0.8, 4 MB Mac Plus | **71/71** |
-| System 6.0.8, **1 MB** — the RAM floor | **71/71**; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
+| System 6.0.8, **1 MB** — the RAM floor | **71/71**, re-run on **v0.34.0** 2026-09-26; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
 | System 7.0.1, 4 MB | **71/71** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
 
-**No tally here rests on a binary older than the one in `dist/`**, which is
-the property this table exists to have: every tier is re-run on the shipping
-build, and the last four releases each moved the application's size.
-
-**One exception, 2026-09-26, stated rather than re-run.** `dist/` was rebuilt
-for a one-predicate fix in `src/fmt_arc.c` — an ARC entry whose garbled stream
-ran short was refused without the password being tried — and no tier was
-re-run for it. Two measurements say it cannot have moved a tally: the resident
-application is **+0 B** (`check_app_size.py`: 64,896 B, unchanged), so no
-tier's budget moved; and the change is only reachable AFTER an ARC entry's
-decode has failed, so every entry that extracts today takes the identical
-path. The Mac sample's three ARC-family archives are not garbled and are part
-of the 71/71. *Measured, and an argument — not a re-run.* Per-tier
+**v0.34.0: one tier re-run, six carried on an argument.** The shipping binary
+has moved twice since the 2026-09-25 sweeps — a one-predicate fix in
+`src/fmt_arc.c`, where an ARC entry whose garbled stream ran short was refused
+without the password being tried, and the Compact Pro segment identity check,
+which costs **24 B of resident code** and so takes 24 B off every tier's
+budget. **System 6.0.8 at the 1 MB floor was re-run on the v0.34.0 binary:
+71/71, 2026-09-26** (FORMATS.md, *Floor target verification*). The other six
+tiers were not, and what stands in for them is measured rather than asserted:
+the ARC predicate is reachable only AFTER an entry's decode has failed, so
+every entry that extracts takes the identical path, and the sample's three
+ARC-family archives are not garbled; the segment check can only ever REFUSE a
+file, and no fixture in the sample is a Compact Pro segment; and 24 B is three
+orders of magnitude under the narrowest margin between any layer's demand and
+its budget anywhere in the sample, which is **46,712 B** (`tools/run_tiers.py`,
+whose shipped lane `ci.sh` asserts every run). *One measurement and an
+argument — not seven re-runs.* Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
 any of it is `tools/vmac/README.md`; what no emulator here can settle is
