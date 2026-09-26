@@ -32,7 +32,7 @@ explaining itself belongs in DECISIONS.md instead.
 | M22 SuperDisk!'s other container | The single-file container, derived by making five specimens with Alysis's own 1991 control panel | DECISIONS.md 2026-08-22 (later still), FORMATS.md |
 | M23 The settings sweep | The same bytes compressed once per control-panel setting, which found method 6 broken | DECISIONS.md 2026-08-22 (last), FORMATS.md |
 | M24 StuffIt SpaceSaver | The 84-byte container and methods 0 and 4, read out of Aladdin's own engine; the 9,679-byte preset dictionary ships | DECISIONS.md 2026-08-22 (the layout), FORMATS.md |
-| M25 Decryption | Seven ciphers across five formats as one filter on the shared reader; the Mac application asks when an entry turns out to need a password | FORMATS.md (*Encryption*), DECISIONS.md 2026-08-23 (decryption) |
+| M25 Decryption | Eight ciphers across six formats as one filter on the shared reader; the Mac application asks when an entry turns out to need a password | FORMATS.md (*Encryption*), DECISIONS.md 2026-08-23 (decryption) |
 | M26 btoa/atob | Both framings, graded against btoa 5.2.1 itself as encoder and reference | FORMATS.md (*btoa*), TESTING.md |
 | M27 Compact Pro comments | The archive Note saved rather than dropped, on both hosts | DECISIONS.md 2026-08-23 (Compact Pro comments), FORMATS.md |
 | M28 LZH / LHA | Every method the format has except PMarc, all four header levels, and MacLHA's MacBinary payload split back into two forks | FORMATS.md (*LZH / LHA*), DECISIONS.md 2026-08-23 (LZH) |

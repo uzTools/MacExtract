@@ -216,27 +216,6 @@ template. Of the rows once filed as having no other description, only **Now
 Compress** never had a published one, and it fell to reverse-engineering
 against the application on 2026-09-21.
 
-## Three of the eight ciphers have never been fuzzed
-
-**Measured 2026-09-23 by planting a fault in each key setup**, which is
-the only instrument that did not lie about this (TESTING.md, *Fuzzing*).
-`tools/fuzz.py` gained a generator that bit-flips encrypted archives
-`tools/synth_crypt.py` writes, and it reaches StuffIt classic's DES (19
-mutants in 30) and StuffIt 5's RC4 (21 in 30). It does **not** reach
-PackIt's XOR or DES — 0 in 30, because a flipped bit fails the header
-CRC before a key is derived — and **Compact Pro's cipher, the
-traditional zip one and WinZip's AES have no encrypted seed at all**,
-because `synth_crypt.py` writes four shapes and those are not among
-them.
-
-**What would close it**: three more shapes in `synth_crypt.py`, and for
-PackIt a mutation that repairs the header CRC afterwards — which is the
-Now Compress lesson applied, where the regression test had to be a
-CONSTRUCTED archive because every mutated one was refused at a checksum
-(DECISIONS.md 2026-09-22, *the block that was bigger than its fork*).
-Until then, those five paths are graded for correctness by
-`tools/run_crypt.py` and for robustness by nothing.
-
 ## What WinZip's AES costs a Macintosh Plus
 
 **2,150 B of `CODE`, measured 2026-09-23**: 1,304 for SHA-1, HMAC and

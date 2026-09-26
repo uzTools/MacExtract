@@ -142,8 +142,10 @@ that struct will otherwise spend the day this cost.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. Ten mechanisms
-keep finding the next one, and two of them need no insight at all:
+and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-two**
+mechanisms keep finding the next one — counted 2026-09-26, when the
+sentence still said ten and the list had thirty — and two of them need no
+insight at all:
 
 - a live claim sitting next to an already-withdrawn one;
 - **two files disagreeing** — a cross-file contradiction is a disproof nobody
@@ -345,12 +347,35 @@ keep finding the next one, and two of them need no insight at all:
   that never booted, because their image had been copied out of a KILLED
   emulator. `arcmac.py` had picked Special ▸ Shut Down for exactly that
   reason since the ARC specimens; nothing compared the two.
+- **a graded case that has never run on this machine, announcing itself
+  in every CI run.** Added 2026-09-26: `run_crypt.py` prints *"no `arc`
+  ... garbled ARC skipped"* on every `./ci.sh`, and ARC's garble is one
+  of the eight ciphers. So that cipher's only graded cases had never
+  executed here, which is how a per-entry defect in its retry condition
+  survived — `unar` reads an entry this engine refused. The skip line was
+  correct, prominent, and read as normal for five weeks, and
+  `tools/get_arc.sh` — named in the same file — **fetched the encoder on
+  the first try** when somebody finally ran it, after which those three
+  cases pass. **A skip is a hole in the suite that reports itself in
+  every run and is never read as one**; ask of a familiar skip what it is
+  the ONLY cover for, and whether its own remedy is one command away.
+- **a coverage figure with a cause attached, where the cause is in the
+  source.** Added 2026-09-26: *"PackIt's XOR and DES 0 in 30, because a
+  flipped bit fails its header CRC before a key is derived"* was a
+  measurement and an explanation of it, and the explanation was refutable
+  by reading thirty lines of `src/fmt_packit.c` — PackIt encrypts the
+  entry HEADER along with the payload, so the key is derived before that
+  CRC can be computed at all. Re-run with the same instrument the number
+  is 17 of 30 (below). **A number and a story travel together, and only
+  the number ever gets re-measured** — when the story names a guard, go
+  and look at which side of the guard the code is on.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **PackIt's XOR and DES are reached by 0 of 30 fuzz mutants, because a flipped bit fails its header CRC before a key is derived** — TESTING.md (*Fuzzing*) and OPEN_ITEMS.md since 2026-09-23, where it also specified the remedy: *"for PackIt a mutation that repairs the header CRC afterwards"* | **17 of 30, mutating exactly the way that measurement did** — `tools/fuzz_reach.py --untargeted`, seed 11, which reproduces the same run's `sit-des` 19 and `sit5-rc4` 21 to the case, so the instrument is not what moved. And the stated cause is impossible in this format: PackIt encrypts the entry HEADER along with the payload, so `src/fmt_packit.c` derives the key in the PMa5/PMa6 arm and checks that CRC further down the same walk — decrypt, then check. What does stand in front of the cipher is the FIRST, unencrypted entry's header CRC: in a faulted build, one flipped bit at offset 20 or at 60 stops the walk before the encrypted entries and one at 200 does not, which is 100 bytes of 890 rather than all of them. How the 0 was obtained is not recoverable from the write-up. **Cost: a remedy specified for a problem that does not exist**, carried as one of two things that would close the item, and two ciphers recorded as unreachable while they were in fact reached at nearly the rate of the two that counted as reached (DECISIONS.md 2026-09-26, *the guard that was on the other side*) | 2026-09-26 |
 | **The 1 MB Mac Plus budget is 647,204 B** — FORMATS.md, *Budget*, stated as arithmetic: 648,100 B measured on 2026-08-31, less the 896 B the UTF-8 fold added to `CODE` and A5 | **The machine says 648,282 B**, so the arithmetic moved AWAY from the answer. The formula and the subtraction were both right; the base was three weeks and six rewritten formats old, and the decoder work had taken more off the application than the fold put on. The two 512 KB constants beside it had drifted **21,666 B** each, in the same direction and for the same reason, and with all three re-taken `run_tiers.py` reproduces **all three tiers fixture for fixture** — including System 6.0.8 / 512 KB, which had never matched and whose one-fixture disagreement TESTING.md had filed under fragmentation. **Cost: a stale predictor that was wrong about four fixtures on the tier it could not check**, and half a day in which the floor figure was less accurate than the one it replaced. *A constant derived from a measurement is only as current as the measurement* — and subtracting from a stale one looks like maintenance (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |
 | **What would close the `DDAR` `0x20` row is a 1.x or 2.x DiskDoubler, neither of which is reachable from here** — OPEN_ITEMS.md's `fmt_dd.c` row and `docs/formats/diskdoubler-container.md`, *What would close it* | **A 2.x DiskDoubler could not have written a `DDAR` record of any flags, so finding one would have settled nothing.** `DDExpand 2.03a`'s `BNDL` declares the DiskDoubler file types it opens — `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` — and `DDAR` is not among them, nor does the string occur anywhere in its 65,212-byte resource fork; DDExpand 3.1 declares those five plus `DDAR`, `DDTD`, `DDCR` and `DDF0`–`DDF5`, and holds the literal nine times. Both are on the Macintosh Garden page this project already fetches 3.7 from, and so is **DiskDoubler ß05, 1990**, the oldest DiskDoubler anywhere reachable — whose Finder menu is `Compress Selection;Expand Selection` and which cannot write an archive either. *A search that names the wrong tool*, one format over: the row named a VERSION rather than a shape, on the strength of which version XADMaster's author owned. **Cost: nothing yet, and only because no 2.x was available to spend a boot on** (DECISIONS.md 2026-09-22, *the version that could not have written it*) | 2026-09-22 |
 | **The two harnesses that grade Mac output against the oracle manifests are `check_mac_sink.py` and `tools/vmac/run.py`, so a StuffIt 5 fixture with a non-ASCII name would read a correct fold as a defect in both** — TESTING.md, *The Macintosh shell's names*, written with the fold on 2026-09-22 | **`run.py` cannot see a name at all.** Its verdict is the on-screen grid — a file count, two summed CRC-32s and two summed lengths — and a summed CRC carries no name, which is the blind spot `checkdisk.py` was written for in the first place. The harness that would have failed is `checkdisk.py`, which the sentence did not name: with the fold disabled it reports three MISSING and three UNEXPECTED on `derived-800saywhat301j.sit`, and run.py passes it either way. **Cost: nothing, by one day** — the sentence would have sent whoever added the fixture to teach the harness that cannot see the problem and leave the one that can (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*) | 2026-09-22 |

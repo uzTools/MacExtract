@@ -636,26 +636,88 @@ anything about the suite.**
    one to four bits in an encrypted archive `tools/synth_crypt.py` wrote
    and runs `macextract x -p` on it. Nonzero exits are fine,
    signals/sanitizer aborts/hangs fail. 4,000 cases at M9; every CI run
-   does a 150-case smoke, a quarter of it the ciphers, in ~2 s.
+   does a 150-case smoke, a quarter of it the ciphers, in ~3 s.
 
-   **What that fourth generator reaches, and what it cannot** — measured
-   by PLANTING a fault in each cipher's key setup and counting the
-   mutants that trip it, because two cheaper instruments both lied.
-   `macextract`'s exit code says nothing: a `t` run over an encrypted
-   archive exits 0 having decrypted nothing, so "exit 0 or the word
-   password in stderr" scored `sit-des` 31/40 when the truth was **0**.
-   And `t` never descends into the MacBinary a StuffIt archive arrives
-   in, which is why the crypt cases EXTRACT instead.
-   Under `x`, out of 30 mutants each: **StuffIt classic's DES 19,
-   StuffIt 5's RC4 21, PackIt's XOR and DES 0.** PackIt's are zero
-   because a flipped bit fails its header CRC before any key is derived
-   — the same shape as the Now Compress stored-block hole, where a
-   checksum kept every mutant out of the code that had the bug. Compact
-   Pro's cipher, the traditional zip one and WinZip's AES have no
-   encrypted seed at all: `synth_crypt.py` writes four shapes and those
-   are not among them. So three of the eight ciphers this engine has are
-   still unfuzzed, and two more are reached only by construction
-   (OPEN_ITEMS.md).
+   **One seed per cipher since 2026-09-26, and every one of the eight is
+   reached.** `synth_crypt.py` writes nine shapes — StuffIt classic's
+   DES, StuffIt 5's RC4, PackIt's XOR and DES, Compact Pro's, ARC's
+   garble, PKWARE's zip cipher, and WinZip AES at 256 and at 128 bits,
+   which is two shapes for one cipher because the key schedules differ —
+   all of them in Python, with nothing installed. `zip -P`, `7z` and
+   Debian's `arc` write three of them for real and are the ORACLES for
+   those in `run_crypt.py`, but none can be the fuzzer's encoder: one
+   seeds its encryption header from the clock, another picks a random
+   salt, and the third is not installed here at all. A seed either of the
+   first two wrote would make a quarter of a reproducible fuzzer
+   unreproducible and its coverage conditional on what the machine has.
+   Every shape goes straight back out to somebody else's reader — `unar`,
+   `7z t`, or the application itself — which is what says they are
+   archives and not plausible bytes (*Decryption*, below), and writing
+   the ARC one found a defect in the engine's garble retry
+   (DECISIONS.md 2026-09-26).
+
+   Two things about how the cases are drawn. The seeds are taken **round
+   robin**, not at random: a quarter of 150 is 37 cases over nine shapes,
+   and drawing them would leave one shape untouched about a fifth of the
+   time. And half the flips land anywhere in the seed while half
+   land inside the bytes the reader hands to a cipher, which
+   `synth_crypt.py --ranges` reports per shape — the container of an
+   encrypted archive is worth fuzzing too, but a flip anywhere has to
+   survive everything the container checks on the way in, and targeting
+   the ciphertext raises every figure in the table below.
+
+   **What it reaches** — `tools/fuzz_reach.py`, which plants an
+   out-of-bounds store in one cipher's key setup, rebuilds, checks on the
+   UNMUTATED seed that the fault actually fires, and counts the mutants
+   that trip the sanitizer. Two cheaper instruments lied about this in
+   2026-09-23: `macextract`'s exit code says nothing — a `t` run over an
+   encrypted archive exits 0 having decrypted nothing, so "exit 0 or the
+   word password in stderr" scored `sit-des` 31/40 when the truth was
+   **0** — and `t` never descends into the MacBinary a StuffIt archive
+   arrives in, which is why the crypt cases EXTRACT. 30 mutants a shape,
+   seed 11, 2026-09-26:
+
+   | shape | the site that is reaching it | flips anywhere | as shipped |
+   |---|---|---|---|
+   | `sit-des` | `unc_crypt_sit` | 19 | **26** |
+   | `sit5-rc4` | `unc_crypt_rc4` | 21 | **27** |
+   | `packit-xor` | `unc_crypt_packit_xor` | 17 | **21** |
+   | `packit-des` | `unc_crypt_packit_des` | 17 | **21** |
+   | `cpt` | `unc_crypt_cpt` | 20 | **29** |
+   | `arc-garble` | `unc_crypt_xor` | 28 | **29** |
+   | `zip-crypt` | `unc_crypt_zip` | 27 | **29** |
+   | `zip-aes` | `unc_crypt_winzip_aes` | 27 | **30** |
+   | `zip-aes128` | `unc_crypt_winzip_aes` | 23 | **29** |
+   | `zip-aes` | `aes_encrypt_block` | 26 | **29** |
+
+   The first column of figures is `--untargeted`, which mutates the way
+   this did before the ranges existed; it is kept so that the before and
+   the after come from one instrument. It also reproduces 2026-09-23's
+   `sit-des` 19 and `sit5-rc4` 21 to the case — and **contradicts that
+   run's PackIt 0**, which is withdrawn with what it cost (BLOCKERS.md,
+   *Withdrawn claims*). The last row is a second site for the same seed:
+   `unc_crypt_winzip_aes` runs before the password verifier is checked,
+   so reaching it does not prove the cipher ran, and `aes_encrypt_block`
+   is only on the far side of that check.
+
+   **3,000 crypt-only cases and 2,000 mixed ones, clean** (seeds 101 and
+   202, 2026-09-26, all nine shapes). Four of these ciphers had never been
+   fuzzed at all and no mutant found anything in any of them — the one
+   defect this work turned up came from WRITING a seed, not from mutating
+   one (DECISIONS.md 2026-09-26).
+
+   **What none of this can see.** The reach figures are about EXECUTION,
+   not about what the mutants explore once inside: one seed per cipher,
+   none over 2.2 KB, so no keystream here runs long and no cipher's
+   buffer handling is exercised at size. Each cipher is reached through
+   ONE container — AES inside a spanned zip, or StuffIt's DES inside a
+   BinHex envelope, is not covered. The instrument's only signal is a
+   sanitizer abort, so a cipher that silently decrypts to the wrong bytes
+   is invisible to it; that is `run_crypt.py`'s job, against `unar`, 7-Zip
+   and Aladdin's and Compact Pro's own applications. And
+   `fuzz_reach.py` is not in `ci.sh` — it rebuilds the engine once per
+   site and takes minutes. What `ci.sh` carries is the result, which is
+   this table.
 
 ## DiskDoubler and Now Compress joined the graded set (2026-08-15)
 
@@ -1925,7 +1987,7 @@ corpus is encrypted** — `lsar -j` over all 903 fixtures reports
 it grades, and the whole design is about not grading a decoder against a
 generator that shares its reading.
 
-Two of the seven ciphers need no generator here: **`zip -P`** writes the
+Two of the eight ciphers need no generator here: **`zip -P`** writes the
 PKWARE-cipher fixtures (stored and deflated) and **`arc g<password>`**
 the garbled ARC ones, so those owe nothing to this project. The other
 four — StuffIt classic's StuffItDES, StuffIt 5's RC4, and PackIt's XOR
@@ -1970,6 +2032,31 @@ MD5, RC4, the zip and Compact Pro keystreams, SHA-1, HMAC-SHA1, PBKDF2
 and AES — is checked where the word order is the target's. Nothing else
 does: no fixture in the Mac sample is encrypted, and the differential
 suite is little-endian x86.
+
+**Four shapes are graded here only because the FUZZER needs them.**
+`synth_crypt.py` also writes zip's two ciphers itself — PKWARE's and
+WinZip's AES at 256 and 128 — and a garbled ARC archive, because
+`tools/fuzz.py` needs an encrypted seed per cipher that is the same bytes
+on every machine, which `zip`, `7z` and `arc` cannot give it (*Fuzzing*,
+above). A seed nobody grades might not be an archive at all, so each one
+is extracted here too and handed back out: `unar -p` reads the
+traditional-cipher one and the garbled ARC, `7z t` verifies the two AES
+ones, and all four must come back as the bytes that went in. Demonstrated
+failing 2026-09-26 on one flipped ciphertext bit per zip shape — `unar`,
+`7z` and our own CLI each refused the archive.
+
+**And the ARC one is the reason ARC's garble is graded here at all.**
+`arc g<password>` needs Debian's `arc`, which is not on this machine, so
+those cases have always skipped — every `./ci.sh` says so — and the
+cipher's only graded cases had never run here — and `tools/get_arc.sh`
+fetched that encoder on the first try when it was finally run, taking
+this suite from 45 graded cases to 48. The synthetic one garbles three of
+`synth_arc.py`'s methods, needs nothing installed, and failed two ways
+against the engine of 2026-09-26: a garbled entry whose ungarbled stream ran SHORT
+was refused without the password being tried, because the retry set was
+`{CRC, CORRUPT}` and not `TRUNCATED` (DECISIONS.md 2026-09-26, *the guard
+that was on the other side*). It also asserts that no password at all
+fails every entry rather than handing over garbled bytes.
 
 **WinZip's AES has no second reader here**, so its four cases are
 graded the other way round: **7-Zip** writes them (256, 192, 128, and

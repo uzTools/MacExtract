@@ -275,6 +275,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
 - 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
 - 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
+- 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
 
 ---
 
@@ -17237,3 +17238,171 @@ missing step is a filesystem this program deliberately does not have.
 it.** MacMount already carried its own LZHUF (`src/mm_lzhuf.c`) — this
 repository benchmarked against it on 2026-09-19 and took the better tree — so
 the capability had two homes and one of them could finish the job.
+
+
+## 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
+
+**The item.** Three of the eight ciphers had no encrypted seed, so
+`tools/fuzz.py` had never executed a line of them: Compact Pro's, the
+traditional zip one, and WinZip's AES. Two more — PackIt's XOR and DES —
+were recorded as having seeds that never reached the key, 0 mutants in
+30, *"because a flipped bit fails its header CRC before a key is
+derived"*.
+
+**Who writes the seed matters, and it is not the oracle.** Both zip
+shapes already have an encoder on this machine, and `run_crypt.py` grades
+the decoders against them: `zip -P` and `7z -pPW -mem=AES256`. Reaching
+for those here would have been the cheap answer and the wrong one. A
+fuzzer's seed has one job an external encoder cannot do — **be the same
+bytes on every machine and in every run**. Info-ZIP seeds its twelve-byte
+encryption header from the clock and 7-Zip picks a random salt, so a
+quarter of a fuzzer that advertises seeded reproducibility would have
+stopped being reproducible, and the coverage of two of the eight ciphers
+would have depended on what happened to be installed. That is the
+property the whole item was about: coverage that can vanish quietly is
+what let these ciphers go unfuzzed in the first place — and ARC's makes
+the same point without the conditional, its encoder having not been
+installed here at all (below). So all three zip seeds — the traditional
+cipher, and AES at both key lengths, which take different paths through
+the key schedule — are written in `synth_crypt.py`, in Python, and then
+handed BACK to `unar` and `7z t`, which is the arrangement that grades
+them: it caught a planted flipped bit in each.
+
+The price was an AES: no Python here has one (`cryptography` and
+`pycryptodome` are both absent; `hashlib` supplies PBKDF2 and HMAC and no
+cipher), so `synth_crypt.py` gained an encryption-only AES — about 60
+lines, S box COMPUTED from FIPS-197's definition the way
+`tools/gen_crypt_tables.py` already builds the engine's, and checked at
+import against the standard's own two known-answer vectors. 7-Zip then
+verifies every archive it ends up in, which is the check that counts.
+
+**Compact Pro cost nothing at all**: `tools/synth_cpt.py` has written
+encrypted archives since 2026-08-23, because that cipher has no second
+implementation anywhere and Compact Pro 1.51 under Mini vMac had to grade
+it. A shape the project already had, one import away from the fuzzer for
+a month. *Before building a generator, look for the one that exists.*
+
+### PackIt's zero, and the guard that was on the other side
+
+Re-measured with the same instrument as 2026-09-23 — a fault planted in
+the key setup, counting mutants that trip it — and mutating the same way,
+the figures reproduce **exactly** for `sit-des` (19) and `sit5-rc4` (21)
+and come back **17 of 30** for both PackIt schemes, where the record says
+0.
+
+The stated cause is the part worth keeping, because it was refutable
+without running anything. **PackIt encrypts the entry HEADER along with
+the payload** — `build_packit` encrypts a whole `PMa4` stream, header,
+forks and CRC together — so the reader cannot compute that header CRC
+until it has derived a key and decrypted. `src/fmt_packit.c` does exactly
+that: the PMa5/PMa6 arm keys the cipher, and the CRC comparison is
+further down the same walk. The checksum is BEHIND the cipher, and a
+checksum behind the code cannot guard it.
+
+There is a real guard, and it is a different one: the archive's first
+entry is deliberately in the clear, and *its* header CRC stops the walk
+before anything encrypted is reached. One flipped bit at offset 20 or 60
+never reaches the key; one at offset 200 does. That is 100 bytes of 890
+rather than all of them — which is why the number is 17 and not 0 or 30.
+
+**What the wrong cause cost** is not the number: it is that the number
+came with a remedy attached, *"for PackIt a mutation that repairs the
+header CRC afterwards"*, and that remedy would have been written, tested
+against a problem that does not exist, and left in the tree. A figure
+gets re-measured eventually; the story next to it is what gets
+implemented.
+
+### The ranges, which are worth having anyway
+
+`synth_crypt.py --ranges` now reports, per shape, the byte ranges the
+reader hands to a cipher, and half the flips land inside them. It was
+built for PackIt's supposed checksum wall and kept on its measurements:
+every shape improved, `cpt` 20 → 29 and `sit-des` 19 → 26, and for the
+AES shape it is what guarantees a mutant gets past the two-byte password
+verifier into the cipher proper — `aes_encrypt_block`, a second planted
+site, 26 → 29. The other half still flips anywhere, because the container
+of an encrypted archive is worth fuzzing too.
+
+### The instrument, and its control
+
+`tools/fuzz_reach.py` is the 2026-09-23 method made re-runnable: for one
+cipher at a time it writes an out-of-bounds store into that cipher's key
+setup, rebuilds, and counts the mutants that trip the sanitizer. Two
+things in it are not decoration. It runs the **unmutated** seed first and
+requires the fault to fire, because a fault injection is a test and
+2026-09-23's first one was a no-op that fired for nobody. And it keeps
+`--untargeted`, which mutates the way the fuzzer did before the ranges
+existed — so the before and the after come from ONE instrument, which is
+the only reason the PackIt contradiction is worth anything: the same run
+that disagrees about PackIt agrees to the case about StuffIt.
+
+### The ninth seed, and the entry that was refused without being tried
+
+The eight shapes were still one cipher short, and the open item's own
+arithmetic is where that shows: it said *"three of the eight ciphers are
+still unfuzzed"* and named three, with `sit-des` and `sit5-rc4` reached
+and PackIt's two *"reached only by construction"* — seven. **ARC's
+garble was in none of the three categories.** It is the least
+archive-shaped cipher here: the password is XORed over an entry's
+compressed bytes and nothing in the file records that it was done, so
+`src/fmt_arc.c` finds it by decoding an entry, failing, and trying the
+password.
+
+Writing that seed found a defect, which is the only defect this whole
+exercise found. The retry condition was `est != UNC_ERR_CRC && est !=
+UNC_ERR_CORRUPT`, written out twice, so **an entry whose ungarbled stream
+ran SHORT was refused without the password ever being tried**: garbled
+RLE90 over 200 A's, three 0x90s and 120 B's decodes to a truncation
+rather than a bad CRC, and `unar -p` reads that entry while this engine
+printed *"file is truncated"* and failed it. One archive, three entries,
+two of them fine.
+
+`src/fmt_packit.c` has asked the same question since M3, and asks it
+better: `pit_retryable()` is a named predicate, it includes
+`UNC_ERR_TRUNCATED`, and its comment says why — *"a wrong key makes the
+Huffman tree, and then the header, into nonsense; an I/O error or an
+abort is nobody's password"*. So the fix is `arc_retryable()`, the same
+predicate plus the CRC that ARC also has. **The same question answered in
+two files, once as a named predicate and once as an inline comparison
+repeated twice — and the inline one was less complete, in the format
+where the cipher is DETECTED by decode failure and so the one where the
+list of decode failures matters most.** When two formats ask one
+question, the one with a name for it is the one to copy.
+
+**Why it survived**: `run_crypt.py`'s garbled-ARC cases need Debian's
+`arc`, which is not installed here, so every `./ci.sh` has printed *"no
+`arc` ... garbled ARC skipped"* and that cipher's only graded cases have
+never run on this machine. A skip is a hole in the suite that reports
+itself in every run and is read as normal (BLOCKERS.md, *Withdrawn
+claims*, the mechanism list). The synthetic garbled archive now closes
+it: three methods, graded by `unar -p`, and it fails two ways against the
+engine of an hour ago.
+
+**And `tools/get_arc.sh` worked on the first try**, which is the other
+half of it: the encoder was one command away, named in the same file as
+the skip, and the three real garbled fixtures pass — 45 cases to 48. So
+the fix is not an accommodation of this project's own garbling: archives
+`arc g<password>` wrote agree with it. The skip had been printed on every
+`./ci.sh` for five weeks with its own remedy beside it.
+
+### What it found in the engine: nothing else
+
+3,000 crypt-only cases and 2,000 mixed, clean. Four ciphers that had
+never run under a fuzzer now do, and no MUTANT found anything in any of
+them — what the exercise found, it found while building the seeds.
+Worth saying plainly, because the temptation with a coverage result is to
+present the coverage as the finding: the finding is that the paths are
+clean, and the coverage is what makes that sentence mean something.
+
+**Two numbers, found on the way, and both were counts of a list sitting
+underneath them.** BLOCKERS.md's withdrawn-claims section opened with
+*"Ten mechanisms keep finding the next one"* over a list of **thirty**,
+and CLAUDE.md said ten as well. FORMATS.md's *Encryption* said *"Seven
+ciphers across five formats"* over a table of **eight rows across six**,
+and TESTING.md's decryption section repeated the seven. All corrected in
+place, with the date of the count this time — the same drift as the
+session-start reading figure two days ago, and in one case in the file
+whose whole subject is claims that stopped being true. **A count written
+above a list is the cheapest claim in the repository to check and the
+least likely to be checked**, because the list grows one row at a time
+and no row is ever the one that breaks the number.

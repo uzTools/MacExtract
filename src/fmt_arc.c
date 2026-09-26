@@ -1208,6 +1208,22 @@ static int arc_run(UncCtx *c, UncCrypt *cr, uint8_t *iobuf, uint32_t iocap,
                           dsplit);
 }
 
+/* Is this failure the kind the garble key might explain? A wrong key —
+ * and no key at all, on a garbled entry — makes the coder's own input
+ * into nonsense, which surfaces three ways: the entry's CRC disagrees,
+ * a coder rejects what it read, or a stream ends before its declared
+ * output is filled. The third was missing until 2026-09-26, so an entry
+ * whose garbled stream happened to run short was refused without the
+ * password ever being tried (DECISIONS.md, *the guard that was on the
+ * other side*). An I/O error or an abort is nobody's password.
+ * `pit_retryable` in src/fmt_packit.c is the same question, and has
+ * always included the third. */
+static int arc_retryable(int err)
+{
+    return err == UNC_ERR_CRC || err == UNC_ERR_CORRUPT ||
+           err == UNC_ERR_TRUNCATED;
+}
+
 static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
                              uint32_t iocap, uint32_t at, int method,
                              uint32_t compsize, uint32_t outsize,
@@ -1228,7 +1244,7 @@ static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
         return write ? arc_run(c, cr, iobuf, iocap, at, method, compsize,
                                outsize, crc16, write, dsplit, NULL, 0)
                      : UNC_OK;
-    if (est != UNC_ERR_CRC && est != UNC_ERR_CORRUPT) return est;
+    if (!arc_retryable(est)) return est;
 
     for (;;) {
         uint8_t pw[UNC_PASSWORD_MAX];
@@ -1260,7 +1276,7 @@ static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
                                        compsize, outsize, crc16, write,
                                        dsplit, pw, n)
                              : UNC_OK;
-            if (est != UNC_ERR_CRC && est != UNC_ERR_CORRUPT) return est;
+            if (!arc_retryable(est)) return est;
         }
         if (!c->opt.ask) return UNC_ERR_PASSWORD;
         attempt++;

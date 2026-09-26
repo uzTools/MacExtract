@@ -111,9 +111,11 @@ def check_one(label, archive, want, password, macextract, problems,
                     problems.append("%s: %s did not write %s"
                                     % (label, who, name))
                 elif got != content:
-                    problems.append("%s: %s wrote %d bytes for %s, wanted %d"
-                                    % (label, who, len(got), name,
-                                       len(content)))
+                    problems.append(
+                        "%s: %s wrote %d bytes for %s, wanted %d%s"
+                        % (label, who, len(got), name, len(content),
+                           " — same length, different bytes"
+                           if len(got) == len(content) else ""))
         finally:
             shutil.rmtree(out, ignore_errors=True)
 
@@ -305,6 +307,58 @@ def main():
         else:
             print("run_crypt: no `zip`, PKWARE-cipher fixtures skipped")
 
+        # ---- zip's two, as SYNTH_CRYPT writes them --------------------
+        # `zip -P` and 7-Zip are above, and they are the oracles; these
+        # are the same two ciphers written HERE, because tools/fuzz.py
+        # needs one encrypted seed per cipher that is the same bytes on
+        # every machine, and both of those encoders pick a random salt or
+        # seed from the clock (TESTING.md, *Fuzzing*). A seed nobody
+        # grades might not be an archive at all — so each one goes
+        # straight back to an outside implementation: `unar` for the
+        # traditional cipher, 7-Zip for AES, which is the only thing here
+        # that reads one at all.
+        want = {n: pl for n, _m, pl in SC.ZIP_CASES}
+        for kind in ("zip-crypt", "zip-aes", "zip-aes128"):
+            z = os.path.join(tmp, "synth-" + kind + ".zip")
+            synth(kind, z, LONG_PW)
+            check_one("synthetic " + kind, z, want, LONG_PW, macextract,
+                      problems, oracle=(kind == "zip-crypt"))
+            check_refusal("synthetic %s wrong password" % kind, z,
+                          macextract, problems, ["-p", "nope"])
+            ran += 2
+            if kind != "zip-crypt" and shutil.which("7z"):
+                # `t` on an AE-2 entry verifies the authentication code,
+                # which is the only thing in the format that grades the
+                # bytes: AE-2 stores no CRC.
+                r = run(["7z", "t", "-p" + LONG_PW, z])
+                if r.returncode != 0:
+                    problems.append("synthetic %s: 7z would not verify it "
+                                    "(%s)" % (kind, r.stdout
+                                              .decode("utf-8", "replace")
+                                              .strip()[-160:]))
+                ran += 1
+
+        # ---- ARC's garble, as SYNTH_CRYPT writes it -------------------
+        # `arc g<password>` above is the oracle-grade encoder and reaches
+        # only its own four methods; this one garbles three of
+        # synth_arc.py's, and `unar -p` reads it back. It is here because
+        # the fuzzer needs a garbled seed at all — ARC's cipher was the
+        # eighth of eight with none — and writing it found a real defect:
+        # a garbled entry whose ungarbled stream ran SHORT was refused
+        # without the password being tried, because the retry set was
+        # {CRC, CORRUPT} and not TRUNCATED (DECISIONS.md 2026-09-26).
+        want = {name: data for name, _method, data in SC.ARC_CASES}
+        g = os.path.join(tmp, "synth-arc-garble.arc")
+        synth("arc-garble", g, LONG_PW)
+        check_one("synthetic arc-garble", g, want, LONG_PW, macextract,
+                  problems)
+        # No password at all must not silently hand over the garbled
+        # bytes: every entry fails, and the archive says so.
+        r = run([macextract, "t", g])
+        if r.returncode == 0:
+            problems.append("synthetic arc-garble: accepted with no password")
+        ran += 2
+
         # ---- StuffIt classic, against archives ALADDIN wrote ----------
         # Three of them, with passwords of 8, 9 and 17 characters,
         # written by StuffIt Deluxe 3.5.1 under Mini vMac
@@ -439,7 +493,8 @@ def main():
             ran += 1
             shutil.rmtree(src, ignore_errors=True)
         else:
-            print("run_crypt: no `arc` at %s, garbled ARC skipped" % ARC_BIN)
+            print("run_crypt: no `arc` at %s — the garble is still graded, "
+                  "on the archive synth_crypt.py garbles itself" % ARC_BIN)
         check_encinfo(macextract, problems, tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
