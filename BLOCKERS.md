@@ -27,7 +27,17 @@ decoders `'OVLY'` images and dropped DART.
 
 **No tally here rests on a binary older than the one in `dist/`**, which is
 the property this table exists to have: every tier is re-run on the shipping
-build, and the last four releases each moved the application's size. Per-tier
+build, and the last four releases each moved the application's size.
+
+**One exception, 2026-09-26, stated rather than re-run.** `dist/` was rebuilt
+for a one-predicate fix in `src/fmt_arc.c` — an ARC entry whose garbled stream
+ran short was refused without the password being tried — and no tier was
+re-run for it. Two measurements say it cannot have moved a tally: the resident
+application is **+0 B** (`check_app_size.py`: 64,896 B, unchanged), so no
+tier's budget moved; and the change is only reachable AFTER an ARC entry's
+decode has failed, so every entry that extracts today takes the identical
+path. The Mac sample's three ARC-family archives are not garbled and are part
+of the 71/71. *Measured, and an argument — not a re-run.* Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
 any of it is `tools/vmac/README.md`; what no emulator here can settle is
