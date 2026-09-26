@@ -2050,9 +2050,17 @@ failing 2026-09-26 on one flipped ciphertext bit per zip shape — `unar`,
 those cases have always skipped — every `./ci.sh` says so — and the
 cipher's only graded cases had never run here — and `tools/get_arc.sh`
 fetched that encoder on the first try when it was finally run, taking
-this suite from 45 graded cases to 48. The synthetic one garbles three of
-`synth_arc.py`'s methods, needs nothing installed, and failed two ways
-against the engine of 2026-09-26: a garbled entry whose ungarbled stream ran SHORT
+this suite from 45 graded cases to 48.
+
+**Those three go back to skipping on the next run**, and this is worth
+knowing before reading a skip as a one-off: `ci.sh` opens with `make
+clean`, which is `rm -rf build`, and `build/arc` is where `get_arc.sh`
+puts the encoder. `build/deark` and `build/mpack` go the same way and come
+back, because the suites that need them rebuild them on demand; nothing
+re-fetches `arc`. So the real-encoder cases are graded when somebody
+fetches it between runs, and **the synthetic shape is what grades this
+cipher on every run**. It garbles three of `synth_arc.py`'s methods, needs
+nothing installed, and failed two ways against the engine of 2026-09-26: a garbled entry whose ungarbled stream ran SHORT
 was refused without the password being tried, because the retry set was
 `{CRC, CORRUPT}` and not `TRUNCATED` (DECISIONS.md 2026-09-26, *the guard
 that was on the other side*). It also asserts that no password at all

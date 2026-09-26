@@ -17386,6 +17386,17 @@ the fix is not an accommodation of this project's own garbling: archives
 `arc g<password>` wrote agree with it. The skip had been printed on every
 `./ci.sh` for five weeks with its own remedy beside it.
 
+**And it prints again on the next run.** `ci.sh` opens with `make clean`,
+which is `rm -rf build`, and `build/arc` is exactly where `get_arc.sh`
+installs — so every CI run destroys the oracle it then reports missing.
+`build/deark` and `build/mpack` sit in the same place and survive it,
+because the suites that need them rebuild them on demand, and nothing
+does that for `arc`. That is the argument for the SYNTHETIC shape rather
+than a note telling the next person to run a script: a seed that needs
+nothing installed is graded on every run, and one that needs a fetch is
+graded when somebody remembers. *A skip whose remedy has to be re-run
+after every clean is a permanent skip with a helpful message.*
+
 ### What it found in the engine: nothing else
 
 3,000 crypt-only cases and 2,000 mixed, clean. Four ciphers that had

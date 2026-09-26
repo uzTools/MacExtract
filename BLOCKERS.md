@@ -366,7 +366,8 @@ insight at all:
   correct, prominent, and read as normal for five weeks, and
   `tools/get_arc.sh` — named in the same file — **fetched the encoder on
   the first try** when somebody finally ran it, after which those three
-  cases pass. **A skip is a hole in the suite that reports itself in
+  cases pass — until the next `./ci.sh`, whose own `make clean` deletes
+  `build/arc` again and nothing re-fetches it. **A skip is a hole in the suite that reports itself in
   every run and is never read as one**; ask of a familiar skip what it is
   the ONLY cover for, and whether its own remedy is one command away.
 - **a coverage figure with a cause attached, where the cause is in the
