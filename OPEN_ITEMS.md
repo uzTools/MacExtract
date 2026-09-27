@@ -216,6 +216,34 @@ the rows once filed as having no other description, only Now Compress
 never had a published one, and it fell to reverse-engineering against
 the application on 2026-09-21.
 
+## The methods the fuzzer cannot reach
+
+**Measured 2026-09-27, `tools/fuzz_cover.py`**, 3,000 cases at seed 11
+over a coverage build: `src/unc_lzdyn.c` is **16 of 16 functions never
+entered** — the whole `-lh2-`/`-lh3-` decoder — and DiskDoubler's
+methods 3, 4 and 7, ARC's Crush, three of Arsenic's index helpers and
+six of Now Compress's thirteen functions are never entered either.
+
+**The cause is structural.** Three of `fuzz.py`'s four generators
+mutate a corpus fixture, so the fuzzer's reach is the corpus's
+coverage, and every method this project grades by GENERATING a file
+rather than owning a specimen is graded for correctness and fuzzed not
+at all. Now Compress is the exception that is worth its own line: its
+archives are in the corpus, and a 32-bit sum over the block table
+rejects every mutant before a coder runs — the gate the one decoder
+heap overflow sat behind (TESTING.md, *Fuzzing*; BLOCKERS.md).
+
+**What would close it:** a seed per method, deterministic and in-repo,
+the way `tools/synth_crypt.py` writes nine cipher shapes in pure
+Python. Three exist already in some form and differ in cost:
+`run_lzh.py` carries a pure-Python `-lh3-` encoder that could be a seed
+today; `-lh2-` needs the patched LHa this repo builds on demand, which
+a reproducible fuzzer cannot depend on; `ddencode.py` writes
+DiskDoubler 3, 4 and 5 but only under Mini vMac, so its output would
+have to be captured as a committed seed rather than generated per run.
+**Nothing here is known to be hiding a defect** — that is the point:
+before this was measured, it could not be said either way.
+
 ## What WinZip's AES costs a Macintosh Plus
 
 **2,150 B of `CODE`, measured 2026-09-23**: 1,304 for SHA-1, HMAC and

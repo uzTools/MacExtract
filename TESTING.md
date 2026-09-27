@@ -712,6 +712,45 @@ anything about the suite.**
    defect this work turned up came from WRITING a seed, not from mutating
    one (DECISIONS.md 2026-09-26).
 
+   **And the same question for the DECODERS, answered 2026-09-27.**
+   `tools/fuzz_reach.py` covers the ciphers a fault at a time;
+   `tools/fuzz_cover.py` covers every decoder at once, because for a
+   decoder "was this entered" is what gcov reports. 3,000 cases, seed
+   11, engine sources only:
+
+   | family | functions | never entered |
+   |---|---|---|
+   | StuffIt classic, StuffIt 5, PackIt, LZH `-lh1-`/method 5 | 23, 4, 6, 6 | **0** |
+   | Compact Pro | 13 | 1 — `cpt_has_encrypted` |
+   | Arsenic | 19 | 3 — `ars_index_*` |
+   | ARC | 33 | 4 — `arc_crush_*` |
+   | LZH container | 21 | 3 — `lzh_larc`, `lzh_preload`, `lzh_put_run` |
+   | DiskDoubler | 24 | 4 — `dd_rle` (method 3), `dd_huffman` (4), `dd_stac*` (7) |
+   | Now Compress | 13 | 6 — the coders and the block table |
+   | **LZH `-lh2-`/`-lh3-`** | 16 | **16 — the whole file, never fuzzed** |
+
+   **Every one of those is a method with no specimen in the corpus**,
+   and the cause is structural rather than bad luck: three of the four
+   generators mutate a corpus fixture, so **the fuzzer's reach is the
+   corpus's coverage.** A method this project grades by GENERATING a
+   file — `-lh2-`/`-lh3-` (`run_lzh.py`), DiskDoubler 3/4/7
+   (`ddencode.py`), ARC's Crush — is graded for CORRECTNESS and fuzzed
+   not at all. It is the cipher finding of 2026-09-23 again, in the
+   other half of the engine, and it has the same remedy: a seed per
+   method, the way `synth_crypt.py` seeds the ciphers.
+
+   Now Compress is the one with a second cause worth naming: its
+   archives ARE in the corpus, and its coders are still unreached,
+   because the block table is gated by a 32-bit sum that a random
+   mutation destroys (`now_tables`). **That is the gate that hid the
+   one heap overflow this project has found in a decoder** — a length
+   checked against `incap` where the buffer is `blkcap`, found by a
+   crafted archive under ASan and never by a mutant.
+
+   A 400-case run had far more at zero and most of it was sampling; the
+   difference between 400 and 3,000 is how the two were told apart, and
+   `fuzz_cover.py` says so rather than reporting one run as structure.
+
    **What none of this can see.** The reach figures are about EXECUTION,
    not about what the mutants explore once inside: one seed per cipher,
    none over 2.2 KB, so no keystream here runs long and no cipher's

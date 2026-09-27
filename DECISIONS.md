@@ -299,6 +299,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
 - 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
 - 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
+- 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
 
 ---
 
@@ -18767,3 +18768,54 @@ hypothesis about the cause, not a statement of it**; this one named
 the file system while being a property of the OS release. The cheapest
 disproof was available both times and cost about ninety minutes when
 it was finally run.
+
+
+## 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
+
+`tools/fuzz_reach.py` exists because in 2026-09-23 four ciphers turned
+out never to have been fuzzed at all while the suite reported clean.
+**The same question had never been asked of the decoders**, and the
+evidence that it mattered was already written down: the one heap
+overflow this project has found in a decoder — `now_next_block`
+checking a length against `incap` where the buffer is `blkcap` — came
+from a hand-crafted archive under ASan, not from a mutant.
+
+**The instrument is coverage, not planted faults**, because for a
+decoder "was this entered" is exactly what gcov reports, and one build
+answers it for every decoder at once rather than one rebuild per site.
+`tools/fuzz_cover.py`: build `--coverage`, run `fuzz.py`, report per
+family.
+
+**The result, 3,000 cases, seed 11**: `src/unc_lzdyn.c` is 16 of 16
+functions never entered — the whole `-lh2-`/`-lh3-` decoder. Also
+never entered: DiskDoubler's methods 3, 4 and 7, ARC's Crush, three of
+Arsenic's index helpers, and six of Now Compress's thirteen.
+
+**One cause covers almost all of it.** Three of the four generators
+mutate a corpus fixture, so **the fuzzer's reach is the corpus's
+coverage.** Every method this project grades by GENERATING a file —
+`-lh2-`/`-lh3-` from `run_lzh.py`, DiskDoubler 3/4/5 from
+`ddencode.py`, ARC's methods from an encoder — is graded for
+correctness and fuzzed not at all. The remedy is the one the ciphers
+got: a seed per method, deterministic and in-repo, the way
+`synth_crypt.py` writes nine shapes in pure Python.
+
+**Now Compress is the interesting exception**, because its archives ARE
+in the corpus. Its coders are unreached anyway: a 32-bit sum gates the
+block table and a random mutation destroys it, so the mutant is
+refused before any coder runs. That is the gate the overflow sat
+behind — which is why it took a crafted archive to find and why a
+checksum-repairing generator, not more cases, is what would have found
+it.
+
+**Two process notes worth keeping.** A 400-case run showed far more at
+zero and most of that was sampling; only the 3,000-case run separates
+structure from luck, and the tool says so rather than presenting one
+run as fact. And the first version of the analysis counted
+`pit_synth`, `cpt_synth` and `sit_synth` as unreached decoders — they
+are helpers in `tests/`, and in `gcov -f` output the functions are
+printed BEFORE the `File` line they belong to, so splitting the text
+on `File '` assigns every function to the wrong file. Filtering per
+gcov invocation fixes it. **An instrument's first output is a draft**,
+and the check that caught this was reading the names rather than the
+totals.
