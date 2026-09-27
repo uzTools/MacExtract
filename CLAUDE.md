@@ -44,9 +44,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~15k tokens** (PROGRESS 4k, OPEN_ITEMS 9k,
-BLOCKERS' first two sections 2k), measured 2026-09-26; BLOCKERS'
-withdrawn-claims archive is another **~42k** and is reference, not
+That session-start reading is **~12k tokens** (PROGRESS 4.6k, OPEN_ITEMS 6k,
+BLOCKERS' first two sections 2k), measured 2026-09-27; BLOCKERS'
+withdrawn-claims archive is another **~46k** and is reference, not
 orientation. **Both totals were stale until 2026-09-26** — the session-start
 figure sat at 7.5k from 2026-08-26 while the files doubled, and the archive
 at 15k while it grew two and a half times. `tools/check_docs.py` measures
@@ -54,7 +54,11 @@ all five now, so the next drift fails `ci.sh` rather than waiting to be
 re-discovered.
 What made it grow is table cells that turned into essays: three rows of
 OPEN_ITEMS' provenance table were 2.2–3.7 KB each. A row states the claim,
-the number and the citation; the reasoning is DECISIONS.md's.
+the number and the citation; the reasoning is DECISIONS.md's. **That table
+is gone as of 2026-09-27** and took 3k of the session-start reading with
+it: the per-file inventory is NOTICE's alone, checked by
+`tools/check_provenance.py`, and OPEN_ITEMS.md keeps only the items with a
+route left (DECISIONS.md 2026-09-27, *the inventory that was kept twice*).
 The rest is reference too — opening the one the task touches beats reading
 them all. **A claim you are about to rely on, contradict or re-test is always
 worth opening the source for.**

@@ -29,6 +29,13 @@ python3 tools/check_tuple_truth.py || fail "tuple-truth lint"
 echo "=== CRC tables are their polynomials ==="
 python3 tools/check_crc_tables.py --selftest || fail "CRC table check"
 
+# NOTICE is the only inventory of borrowed code since 2026-09-27. A prose
+# list goes stale the moment a file sheds its last citation, and three
+# files were recorded as shed while still carrying one. This fails both
+# ways: on a file that gains a citation, and on one that loses its last.
+echo "=== provenance inventory matches the source ==="
+python3 tools/check_provenance.py --selftest || fail "provenance inventory"
+
 echo "=== variant 1: sanitizers (ASan+UBSan+alignment) ==="
 make clean >/dev/null
 make BUILD=build/san \

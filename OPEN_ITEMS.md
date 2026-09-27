@@ -119,6 +119,32 @@ way.
 
 ---
 
+## The licence cannot move, and this is the irreducible core
+
+**Measured, not assumed, and settled.** The 2026-09-19 brief was to shed
+as much XADMaster-transcribed code as possible, for the gains where they
+exist and for the licence if it ever added up. It did not add up, and
+that is now a finding rather than an open question: **five items have no
+permissive statement anywhere on this machine or off it**, so LGPL-2.1
+stays whatever else is shed.
+
+| what | why nothing replaces it |
+|---|---|
+| `unc_lzdyn.c` — `-lh2-` and `-lh3-`, the whole file | lhasa implements neither and LHa for UNIX is under its own licence, so there is nothing to rewrite it FROM. Deleting the two methods instead would give back 3,504 B on a Mac Plus (FORMATS.md) and refuse a file LHa still writes today — **settled 2026-08-25, confirmed 2026-09-23: kept** (DECISIONS.md, *the 3,504 bytes that stay*). Both halves run: 15 `-lh2-` and 6 `-lh3-` entries reach the two decoders on every `ci.sh` run, counted 2026-09-27 |
+| `unc_crypt.c` — StuffItDES's key schedule, and PackIt's keytr1 | StuffItDES reads all 64 key bits where PC-1 drops eight, so it is no permuted-key standard schedule; keytr1 has no other statement at all — PackIt's manual names "simple encryption" and describes none. Everything else in that file went to the standards, four times (DECISIONS.md 2026-09-19, 2026-09-23 ×2, 2026-09-26) |
+| `unc_lzah.c` — the `-lh1-`/method-5 window preload | the five steps are published, for LArc's `-lz5-`; applying them to `-lh1-` is XADMaster's, and lhasa fills the buffer with spaces instead. Load-bearing: a Trimmed member takes zeros and not the pattern, which is what tells the dialects apart |
+| `fmt_arc.c` — Crunch 5/6/7 and Crush | no implementation of 7 or Crush exists anywhere, so the row could not close even if 5 and 6 were rewritten — and **nothing can grade a rewrite**: no corpus or reference archive uses any of them. **Not taken, decided 2026-09-22** |
+| four tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, the StuffIt split header | no document states any of them, and **deark was read for all four on 2026-09-27** after it disproved two other cells the same day: its MacBinary uses CRC-16/XMODEM alone and has no date test, and `de_identify_applesd` takes only the big-endian magics. A checked negative, not an unexamined one |
+
+**Do not re-price these.** Each was settled with a measurement and the
+cost of re-asking is recorded: the `unc_lzdyn.c` row re-opened its own
+settled decision on the byte axis in 2026-09-23 and named nothing that
+had changed. What is still somebody else's and still has a ROUTE is
+Part 2; the full per-file inventory is NOTICE's, checked by
+`tools/check_provenance.py` on every run.
+
+---
+
 # Part 2 — Open items
 
 ---
@@ -156,69 +182,39 @@ copy of the shipped binary run on one (MANUAL_TESTS.md §2 and §6). Short of
 that, read every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`,
 `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
-## What is still XADMaster's, and what would have to replace it
+## What is still somebody else's and could stop being
 
-**Asked for 2026-09-19**: shed as much XADMaster-transcribed code as
-possible — for the gains where they exist, and for the licence if it ever
-adds up — **with no regression taken for the licence's sake**. The
--lh1- coder went first (DECISIONS.md 2026-09-19, *the tree that was
-Yoshizaki's*): faster, smaller and lighter, so it would have been taken
-on its merits alone. This is the inventory the rest of that work runs
-against; the licence changes only when the last row is gone, and rows
-carrying `macutils` have the same question (its README: "for some parts
-of it the GNU software license does apply").
+**The per-file inventory is NOTICE's**, in *What is still somebody
+else's, in full*, and `tools/check_provenance.py` checks it on every
+`ci.sh` run: a file that gains a citation fails, and so does one that
+sheds its last — which is how a row leaves here without anybody
+noticing by hand. This section duplicated that list until 2026-09-27;
+the two disagreed, and the disagreement is what let a live citation in
+`src/fmt_sit.c` be recorded as shed in three documents at once
+(BLOCKERS.md, *Withdrawn claims*).
 
-A file leaves this table when nothing in it is XADMaster's or macutils'
-any more — the record of what that took lives in NOTICE and in
-DECISIONS.md, not here (CLAUDE.md, *closing an item means moving it*).
-Gone this way: `unc_huffman.c` and `unc_lzw.c`, `src/fmt_cpt.c` (the
-format's three published wiki pages, `tools/derive_cpt.py`) and
-`src/fmt_now.c` (this project's own measured description,
-`tools/derive_now.py`) and, on 2026-09-26, `src/unc_encinfo.c`, whose
-only citation was second-hand — to a comment in `fmt_cpt.c` that had
-stopped saying it six days earlier. And on 2026-09-27
-`src/fmt_foreign.c` with `src/fmt_sit_probe.c` and
-`src/fmt_packit_probe.c` — seven formats' detect-only signatures and
-two recognisers, re-cited to deark, to the StuffIt wiki's magic table
-and to one `bzip2 -c < /dev/null` (DECISIONS.md 2026-09-27, *the
-signatures that were already on the disk*); and the same day
-`src/unc_util.c` with `src/unc_internal.h` — the three CRC tables to
-their published polynomials, with `tools/check_crc_tables.py` in
-`ci.sh` to keep them there, and the bit reader to deark's
-`de_bitreader` (DECISIONS.md 2026-09-27, *the tables that said they
-were generated*).
+**What has no route at all is Part 1**, *The licence cannot move*.
+What is left here is the six items that could still move, and the one
+thing each is waiting for. The licence does not turn on any of them —
+that question is settled — so each is worth taking only for its own
+gain, which is the rule the brief was given under: **no regression for
+the licence's sake**.
 
-**Membership is grepped, not remembered, since 2026-09-26**:
-`grep -n 'Source:.*\(XAD\|macutils\)' src/*.c src/*.h` is what a row
-is checked against. It returned 15 files and **8 had no row**. **That
-grep finds 11 of this table's 17 files and no more** — six state the
-citation without a `Source:` line (`unc_lzah.c`, `fmt_packit.c` and the
-four-file tolerance row), so the broad `grep -li 'XAD\|macutils'` is
-the half that cannot be skipped; `unc_encinfo.c` and the three
-signature files left the table by the same second spelling. The table had been the DECODER list,
-so the shared primitives, the two probes and the detect-only signatures
-were never in it (BLOCKERS.md, *Withdrawn claims*; DECISIONS.md 2026-09-26,
-*the inventory that listed the decoders*).
+| what is left | what would move it |
+|---|---|
+| `fmt_sit.c` — the encrypted fork's key layout | **a specimen written to order.** No page here describes it, but StuffIt Deluxe 3.5.1 runs on this machine and writes encrypted archives (`sitcrypt.py`) — the route `fmt_dd.c`'s containers took to 643 assertions with 0 disagreements |
+| `fmt_sit5.c` — the encrypted archive | the same shape: DropStuff 5.0.1 runs under QEMU and wrote the three archives that grade StuffIt 5's RC4 already (FORMATS.md, *StuffIt 5's RC4*). No corpus archive sets the bit |
+| `unc_internal.h` — DiskDoubler method 8 | **probably the cheapest thing in this table.** Two facts are XADMaster's: that method 8 IS Compact Pro's two stages, and that its Huffman block is 0xfff0 where Compact Pro's is 0x1fff0. Compact Pro itself is already the published description (`docs/formats/compact-pro.md`, three wiki pages), and **both facts are measurable rather than citable** — a method-8 fork decoded with those stages at that block size either comes out or does not. `ddtf-dd377ddb.dd` is one, from Sokolow's CC0 set (FORMATS.md, *the tick probe*) |
+| `fmt_binhex.c`, `fmt_uu.c`, `fmt_mime.c`, `unc_internal.h` — macutils' rules about mailed text | **partly replaceable, checked 2026-09-27.** deark's `binhex.c` states CR-or-LF line ends, the unterminated last line and the banner skip before the first document; mpack/munpack 1.6 is on this disk under a permissive CMU licence and is a reader of mailed text. Neither covers the per-line "intermediate garbage" skip, the scan for a second document, or UUTool's MU layout — and mpack's `part_gets` breaks on `\n` only, so it does not state the CR rule. The row shrinks; it does not close |
+| `fmt_packit.c` — the resync strategy and both ciphers | a second implementation of `PMa5`/`PMa6`. deark's `packit.c` handles `PMag` and `PMa4` only and errors out where this resyncs. Appendix B lists "PMa5" twice and cannot name the fourth word, so the document is not it |
+| `fmt_lzh.c` — a NUL in a level 0/1 name field ends it | **a decision, not a search.** 0 of the 140 such fields in the 156 archives here holds a NUL, lhasa takes the whole field, and the document does not mention it. Adopting lhasa's behaviour would close this by deleting the rule — a behaviour change nothing can grade, which is why it has not been taken |
 
-| file | XADMaster code in it | other reference on this machine | gain plausible? |
-|---|---|---|---|
-| `unc_lzdyn.c` | `-lh2-`/`-lh3-` from `XADLZHOldHandles.m` | LHa for UNIX only (its own licence); lhasa has neither | none — no corpus archive uses them. **What they cost is measured, re-measured 2026-09-23: 3,476 B of `CODE` and 28 B of A5**, i.e. **3,504 B** of a 1 MB Mac Plus's budget, from a build with the file and its two dispatch arms removed. Not the weight of a replacement — there is none to build — but what DELETING the two formats would give back. The total is 2026-09-20's to the byte; the 4 B that moved between the columns is rodata alignment under changed text. Set that against the overlays the application now ships, which are worth 82–105 KB (FORMATS.md, *Overlays*) — and against the fact that LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` grades us against one, so dropping them refuses a file that can still be made. **Settled 2026-08-25 and confirmed 2026-09-23: kept** — and this row should not have re-asked it. LHa for UNIX writes `-lh2-` today and `tools/run_lzh.py` writes `-lh3-`, so `ci.sh` grades 21 entries of the two every run — a method this project can MAKE a file in is one a user can be handed a file in, and "no corpus archive uses them" was never the same claim. **So this row cannot close**: lhasa implements neither method and LHa for UNIX is under its own licence, so there is nothing to rewrite the file FROM (DECISIONS.md 2026-09-23, *the 3,504 bytes that stay*) |
-| `fmt_lzh.c` | **none since 2026-09-22**, bar one rule with no specimen: a NUL inside a level 0/1 name field ends the name, which is `XADLZHParser.m`'s and which **0 of the 140 such fields in the 156 archives here** contains. The DECODERS left on 2026-09-19 | **the format's own published description** — `reference/lha/header.doc.euc`, Masaru Oki's `header.doc` of 2 March 1992, levels 0/1/2 field by field with the extended-header types, the OS IDs and the method IDs; **lhasa (ISC)** for the four things it does not cover | **taken, whole file, at zero cost on every axis** — the walk needed no change, only a description: a reader written from the document plus lhasa reads 191 entries of 156 archives with no disagreement (`tools/derive_lzh.py`, `docs/formats/lzh-header.md`). The decoders were taken earlier for **−17.8 to −46.4 % of the 68000's instructions for +140 B** (DECISIONS.md 2026-09-19, *the match that was walked twice*) |
-| `fmt_packit.c` | **the resync rule and both ciphers, and nothing else, since 2026-09-27**, when the two CRCs' polynomial went to deark's `modules/packit.c`, which builds both with `DE_CRCOBJ_CRC16_XMODEM` and checks the header one as this does. The container left this row that day, and the Huffman tree and the header-inside-the-stream fact on 2026-09-20 | **the format's own published description** — `reference/notes/packit_unpackit.txt`, appendices B and C of a 1986 freeware manual, named all along by `reference/notes/PackIt.md`, which this project fetched with its first batch of references and never read past | **taken: 38 of 38 forks** of the corpus's four archives read from the appendices plus the four corrections they need (`docs/formats/packit.md`, `tools/derive_packit.py`). "The app is not here" was the wrong question (DECISIONS.md 2026-09-21, *the manual for the other machine*) |
-| `fmt_sit.c` | **the ENCRYPTED fork's key layout, and three rules of method 8 no specimen reaches.** The first was uninventoried until 2026-09-27, while this cell, NOTICE and the file's own header all read "none since 2026-09-22" over a live `Source: XADStuffItParser.m` line (BLOCKERS.md, *Withdrawn claims*). Everything else has left: method 6's framing on 2026-09-22, the RLE90 filter and method 6's code book on 2026-09-21, the container, method 13 and its tables, method 3's tree and method 8's coder on 2026-09-20 | `docs/formats/stuffit-method-6.md`, written against `reference/deark/modules/stuffit.c` (MIT); the rest is the format's own published description (The Unarchiver's wiki, fetched). StuffIt Deluxe 3.5.1 also runs here (`sitcrypt.py`) | **taken, whole file.** "No other reader anywhere" was false for method 13 — 897 forks across 103 archives read from the published description alone (DECISIONS.md 2026-09-20, *forty pages nobody had listed*) — and false for method 6, which deark implements under MIT. The code book was taken 2026-09-21 and priced: **code +408 B, A5 −1,000 B, net −592 B** (FORMATS.md, *StuffIt classic: method 6*). The **framing** followed on 2026-09-22 and cost nothing on any axis, because nothing executable had to change: a reader written from deark and the container page alone reads all 11 method-6 forks (`tools/derive_sit6.py`), and the three places this engine is stricter than both references are measured rather than transcribed (DECISIONS.md 2026-09-22, *the framing that needed no rewrite*). **What is left is not taken**: no page here describes the encrypted fork, but StuffIt Deluxe 3.5.1 writes one to order (`sitcrypt.py`) — `fmt_dd.c`'s containers took that route |
-| `fmt_sit5.c` | **the ENCRYPTED archive only, since 2026-09-22** — where the password hash sits behind two optionally-present blocks, and the MD5-of-MD5 that grades a password. No corpus archive sets the bit. `sit_arsenic.c` was rewritten from Russotto's write-up on 2026-09-19, −36.7 % of a2basic's engine ticks (DECISIONS.md, *the rank that was walked a byte at a time*) | **the format's own published description** — `reference/notes/sit5_specs_theunarchiver.md`, the wiki page `reference/notes/StuffIt.md` has named in its *Sources* list all along. **Not Russotto's write-up**, which is method 15 start to finish and describes no container at all | **taken, at zero cost on every axis**: a reader written from that page alone reads all 31 StuffIt 5 fixtures, **525 entries**, agreeing with the oracle on every path and both fork lengths (`tools/derive_sit5.py`, `docs/formats/stuffit5-container.md`). The page needs one correction — its archive-header table gives offset 84 twice |
-| `fmt_dd.c`, `unc_internal.h` | **the `DDAR` `0x20` raw-fork shape, and — uninventoried until 2026-09-27 — `unc_internal.h`'s `Source: XADDiskDoublerParser.m case 8`, the fact that DiskDoubler method 8 is Compact Pro's two stages with a 0xfff0 Huffman block. Nothing else since 2026-09-22** — four offsets nothing anywhere here sets. The coders, the containers and the folder records all left this row between 2026-09-20 and 2026-09-22 | **the format's own published description** for `ADn` and `DDn` — "documented nowhere else" was false. The containers have none: the wiki names three pages that do not exist on it, so the description is this project's own, measured against DiskDoubler 3.7, 4.0 and Pro 4.1, which run here | **taken twice**: 39 of 39 forks for the coders, and **643 assertions over all 91 DiskDoubler fixtures, 0 disagreements** for the containers (`docs/formats/diskdoubler-dd.md`, `docs/formats/diskdoubler-container.md`). What is left has no SPECIMEN rather than no description, and the search for one is measured: five shapes offered to 3.7 all came back with the flags word `0x0000`, and the oldest DiskDoubler reachable anywhere (ß05, Salient 1990) cannot write an archive at all. **"What would close it is a 1.x or 2.x DiskDoubler" is withdrawn** — a 2.x would not write a `DDAR` record of any flags (BLOCKERS.md, *Withdrawn claims*; DECISIONS.md 2026-09-22, *the version that could not have written it* and *the page that was never written*) |
-| `fmt_arc.c` | **Crunch 5/6/7 and Crush (PAK's LZW)**; the method numbers and the CRC contract. The member header, RLE90, Squeeze (4), Crunch (8) and Squash (9) left this row 2026-09-20 for `docs/formats/arc-container-and-coders.md` | **deark (MIT)** for Distilled and Trimmed, and — unlooked-at until 2026-09-22 — for 5 and 6 as well; it leaves 7 and Crushed NULL exactly as this row does. **ARC 5.21q itself** writes methods 4, 8 and 9 to order; nothing reachable writes 5/6/7 | small, and **not taken, decided 2026-09-22**: the row would not close (7 and Crush have no implementation anywhere), so the licence would not move, and **nothing can grade a rewrite** — no corpus or reference archive uses 5/6/7. The route that would exist is an ENCODER for 5/6 from the same description, decoded by deark: two implementations agreeing on a stream neither wrote. What the two existing readings already say, and where they agree to the term: `docs/formats/arc-container-and-coders.md`, *Methods 5 and 6, read in two implementations* |
-| `unc_crypt.c` | **Four XADMaster files, twelve until 2026-09-23 and five until 2026-09-26**, and none supplies a byte of `src/crypt_tables.h`: `XADStuffItDESHandle.m` (the nibble key schedule and the key derivation), `XADStuffIt5Parser.m`, `XADPackItParser.m` (keytr1) and `XADXORHandle.m` (ARC's garble). What has already left, and the document each went to, is `src/unc_crypt.c`'s own header; the withdrawn readings of this cell are in BLOCKERS.md, *Withdrawn claims* | the standards themselves, in `reference/notes/`: FIPS 46-3, RFC 1321, RFC 2104, RFC 2898, RFC 3174, APPNOTE.TXT §6.1, draft-kaukonen-cipher-arcfour-03, `winzip_aes.txt`, and **FIPS 197 since 2026-09-26**. FIPS 180 is not among them and is not wanted: SHA-1 came from RFC 3174. The AES-CTR counter's endianness and start value are stated nowhere here | **taken four times**: once at −416 B of code, and three times since at zero cost on every shipped axis (DECISIONS.md 2026-09-19 *the DES that was only wearing a disguise*; 2026-09-23 *the tables that were the standard's* and *the third statement of the same constants*; 2026-09-26 *the AES that was never Gladman's*, where the crypt `OVLY` image came out byte-identical at 9,800 B). **The row cannot close**: StuffItDES reads all 64 key bits where PC-1 drops eight, so it is no permuted-key standard schedule, and PackIt's keytr1 has no other statement — its manual names "simple encryption" and describes none |
-| `fmt_binhex.c`, `fmt_uu.c`, `fmt_mime.c`, `unc_internal.h` | **macutils' `hexbin`, five rules about text that has been mailed** — the sixth, `unc_internal.h`'s MIME line reader citing `readline.c`, was uninventoried until 2026-09-27 — rather than about an encoding: the line-ending rule and the unterminated last line (`readline.c`), `mu_convert()`, the uu terminator, the skip of a line with "intermediate garbage" and the scan for a second document in one input (`hqx.c`, `hexbin.c`) | none: RFC 1741 and `binhex40_lewis.txt` define the ENCODING, and neither says what a decoder does with a posting — the same shape as the four tolerances in the row below | none for the licence unless a second reader of mailed BinHex turns up; the rules themselves are graded by `tools/run_uu.py`'s gapped sets and the multi-part fixtures |
-| `unc_lzah.c`, `unc_internal.h` | **the window preload for -lh1- and StuffIt method 5** — stated in both files, the header's copy uninventoried until 2026-09-27 — `resetLZSSHandle`'s pattern, quoted with XADMaster's own TODO beside it. The tree machinery left on 2026-09-19 for LZHUF.C, and **NOTICE said the preloads had left with it** — they had not (BLOCKERS.md, *Withdrawn claims*) | **none for this method.** LHa for UNIX writes the same five steps in `larc.c`'s `decode_start_lz5` — for LArc's -lz5-, not for -lh1- — and lhasa fills the -lh1- buffer with spaces instead (`lh1_decoder.c`); so the pattern is published and its APPLICATION to -lh1- and method 5 is XADMaster's, and LHa for UNIX is under its own licence anyway — the `unc_lzdyn.c` row's position exactly | none — and the pattern is load-bearing: a Trimmed member takes zeros and not the pattern, which is what tells the two dialects apart |
-| `fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_sitseg.c`, `fmt_stubs.c` | what the 2026-09-19 re-citation could not move (DECISIONS.md, *the facts that were somebody else's to state*): three tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback, its nonzero-date test, the byte-swapped AppleSingle header — and the StuffIt split header. **Now Compress's detect-only probe left this row on 2026-09-21**: every field it tests — the 24-byte file header, the entry record and the byte-sum checksum at +106 of it — is measured in `docs/formats/now-compress.md` off nine archives | none found for any of them, and **since 2026-09-27 that is a checked negative rather than an unexamined one**: deark was read for all three after it disproved two other cells the same day, and it states none of them — its MacBinary uses CRC-16/XMODEM alone, never the 0xA001 table; its `de_identify_macbinary` has no date test at all (it corroborates with the reserved zeros at 74 and 82, the filename length and charset, and ASCII type/creator); and `de_identify_applesd` accepts only the big-endian magics `0x00051600` and `0x00051607`. What would close the date test is not a citation but a SWAP — deark's corroboration set does the same job from a different direction, and changing it is a behaviour change nothing here grades. `fmt_exo.c` and `fmt_zipseg.c` left this row for their own specifications, and `fmt_stubs.c`'s other two probes for deark (StuffIt X) and macutils' `dd.h` (DiskDoubler). **`fmt_binhex.c` was recorded as having left it too and had not** — two macutils citations were still in the file on 2026-09-26, and it has a row of its own below | none — the rest is facts, not code, so the licence never rested on it |
-
-**What would close it:** one row at a time, each priced before it is kept and
-graded by the suites that already cover the format — the `-lh1-` row is the
-template. Of the rows once filed as having no other description, only **Now
-Compress** never had a published one, and it fell to reverse-engineering
-against the application on 2026-09-21.
+**The template is the `-lh1-` coder** (DECISIONS.md 2026-09-19, *the
+tree that was Yoshizaki's*): faster, smaller and lighter, so it would
+have been taken on its merits with no licence question in sight. Of
+the rows once filed as having no other description, only Now Compress
+never had a published one, and it fell to reverse-engineering against
+the application on 2026-09-21.
 
 ## What WinZip's AES costs a Macintosh Plus
 

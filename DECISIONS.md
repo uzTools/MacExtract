@@ -291,6 +291,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
 - 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
 - 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
+- 2026-09-27 (the inventory that was kept twice) — a gaps file and a licence notice both listed what was borrowed, they disagreed, and the list is now one file and a check
 
 ---
 
@@ -18390,3 +18391,54 @@ header and fixed only the two declarations it was looking at.
 
 **Consequence: `src/unc_util.c` leaves, `src/unc_internal.h` stays**,
 and the table is 11 rows over 17 files.
+
+
+## 2026-09-27 (the inventory that was kept twice) — a gaps file and a licence notice both listed what was borrowed, they disagreed, and the list is now one file and a check
+
+Asked: do the XADMaster rows have to live in OPEN_ITEMS.md forever?
+
+**No, and two of them should never have been there.** OPEN_ITEMS.md's
+own framing says Part 1 is *"decided, or impossible — nothing here is
+closed by finding a file"* and that *"only OPEN items live in part 2,
+each says what would close it."* Five rows had a verdict cell reading
+**"the row cannot close"**, in those words. A row whose answer to
+"what would close it" is "nothing" is not an open item; it is Part 1
+material sitting in the gaps list, which is the failure mode CLAUDE.md
+names by hand — *nineteen such rows once made the file unreadable as a
+list of what is left.*
+
+**And the table was a second copy of NOTICE.** That is the part worth
+transferring. NOTICE exists to state what this project borrowed and
+from whom; the table stated the same thing per file, with more detail.
+CLAUDE.md's *one home per finding* predicts what happens next, and it
+happened: on the morning of the same day, NOTICE, `src/fmt_sit.c`'s
+own header and the table all said the file owed `XADStuffItParser.m`
+nothing, over a live `Source:` line naming it. Three statements of one
+fact, wrong in the same words.
+
+**What replaced both.** NOTICE gains *What is still somebody else's, in
+full* — seventeen files, one line each — and `tools/check_provenance.py`
+checks it on every `ci.sh` run. Every file under `src/` that mentions
+either reference must be classified as CARRYING something or as
+HISTORICAL, and every carrier must be named in NOTICE. **It fails in
+both directions**, which is the point: a file that gains a citation
+fails as unclassified, and a file that sheds its last fails as a row
+that can now leave. Nobody has to notice either by hand — which is the
+actual answer to "forever?".
+
+It earned its keep before it was wired in: it found that NOTICE named
+neither `src/fmt_uu.c` nor `src/unc_lzdyn.c`, two files that carry
+borrowed code, and `unc_lzdyn.c` is the whole of `-lh2-` and `-lh3-`.
+**A licence notice with a hole in it is the one kind of staleness that
+matters**, and the prose had been read many times without anybody
+seeing the absence — absence being what prose is worst at.
+
+**What moved where.** Part 1 gains one section, *The licence cannot
+move*, with the five unclosable items and the evidence for each.
+Part 2 keeps six items and one column: what would move it. The
+per-file detail is gone from both, to NOTICE.
+
+**Consequence: OPEN_ITEMS.md drops from 9k tokens to 6k**, and the
+session-start reading from ~15k to ~12k. The brief is not closed — six
+items still have a route — but the LICENCE question is, and stating
+that once in Part 1 costs a paragraph where tracking it cost a table.

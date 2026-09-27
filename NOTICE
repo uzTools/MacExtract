@@ -1,6 +1,79 @@
 MacExtract — a universal unarchiver for Classic Mac OS formats
 Licensed under LGPL-2.1-or-later (see LICENSE).
 
+WHAT IS STILL SOMEBODY ELSE'S, IN FULL
+-------------------------------------
+
+This list is the inventory, and since 2026-09-27 it is the only one:
+OPEN_ITEMS.md used to keep a second copy, the two disagreed, and the
+disagreement was how a live citation in `src/fmt_sit.c` came to be
+recorded as shed in three places at once (BLOCKERS.md, *Withdrawn
+claims*). OPEN_ITEMS.md now tracks only the items with a route left.
+
+`tools/check_provenance.py` keeps this honest on every `ci.sh` run: a
+file under `src/` that mentions either reference must be classified as
+carrying something or as historical, and every carrier must be named
+here. A file that gains a citation fails the check; so does one that
+sheds its last, which is how a row leaves without anybody noticing by
+hand.
+
+  src/unc_lzdyn.c      -lh2- and -lh3-, the whole file, from
+                       XADLZHOldHandles.m. No permissive implementation
+                       of either method exists: lhasa has neither and
+                       LHa for UNIX is under its own licence.
+  src/unc_lzah.c       the window preload for -lh1- and StuffIt method
+                       5 (resetLZSSHandle), restated in
+                       src/unc_internal.h. LHa for UNIX writes the same
+                       five steps for LArc's -lz5-, not for -lh1-, and
+                       lhasa fills the buffer with spaces instead, so
+                       the PATTERN is published and its application is
+                       XADMaster's.
+  src/unc_crypt.c      StuffItDES's nibble key schedule and key
+                       derivation (XADStuffItDESHandle.m), StuffIt 5's
+                       password hash (XADStuffIt5Parser.m), PackIt's
+                       keytr1 (XADPackItParser.m) and ARC's garble
+                       (XADXORHandle.m). None of the standards in
+                       reference/notes/ states the first or the third.
+  src/fmt_arc.c        Crunch 5/6/7 and Crush (PAK's LZW), the method
+                       numbers and the CRC contract —
+                       XADARCCrunchHandle.m and XADARCCrushHandle.m.
+  src/fmt_sit.c        the ENCRYPTED fork's key layout
+                       (XADStuffItParser.m,
+                       decryptHandleForEntryWithDictionary) and three
+                       rules of method 8 no specimen reaches, which are
+                       XADStuffItOldHandles.m's.
+  src/fmt_sit5.c       the ENCRYPTED archive only (XADStuffIt5Parser.m).
+  src/fmt_packit.c     the resync strategy (macutils' pit.c, "trying to
+                       sync") and both ciphers (XADPackItParser.m).
+  src/fmt_lzh.c        one rule with no specimen anywhere here: a NUL
+                       inside a level 0/1 name field ends the name
+                       (XADLZHParser.m).
+  src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
+                       nothing reachable sets.
+  src/fmt_binhex.c,    macutils' hexbin: the rules about text that has
+  src/fmt_uu.c,        been mailed rather than about an encoding — the
+  src/fmt_mime.c       line-ending rule and the unterminated last line
+                       (readline.c, restated in src/unc_internal.h for
+                       MIME), mu_convert() and UUTool's MU layout
+                       (mu.c), the uu terminator, the skip of a line
+                       with intermediate garbage and the scan for a
+                       second document in one input (hqx.c, hexbin.c).
+  src/fmt_macbinary.c, four things no specification supports: the
+  src/fmt_applesingle.c  MacBinary CRC-16/0xA001 fallback and its
+  src/fmt_sitseg.c     nonzero-date test, the byte-swapped AppleSingle
+  src/fmt_stubs.c      header, and the whole StuffIt split header —
+                       plus DiskDoubler's two older headers, which are
+                       macutils' dd.h. Checked against deark on
+                       2026-09-27: it states none of them.
+  src/unc_internal.h   the MIME line rule above, the LZAH preload
+                       above, and `Source: XADDiskDoublerParser.m case
+                       8` — that DiskDoubler method 8 is Compact Pro's
+                       two stages with a 0xfff0 Huffman block.
+
+Everything else this engine does that these references also do is
+written from a published description or measured here; the rest of
+this file is which, and when.
+
 This project's decoders are transcriptions/ports of algorithms from:
 
   * XADMaster — the engine of The Unarchiver, by Dag Ågren (MacPaw).
