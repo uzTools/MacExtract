@@ -20,9 +20,14 @@ bytes Aladdin wrote and the hashlib in the standard library:
   * **the hash is MD5(MD5(password)[:5])[:5]**, at password lengths of
     4, 9 and 17.
 
-What it CANNOT see: **bit 5**, which none of the three sets.  That
-part of the reading is still XADStuffIt5Parser.m's and still has no
-specimen — an archive carrying a comment would be one.
+What it CANNOT see: **bit 5**, which none of the three sets — nor do
+the other 44 StuffIt 5 archives on this machine, nor anything on the
+StuffIt Deluxe 5.0.1 CD.  That part of the reading is still
+XADStuffIt5Parser.m's, and that the bit marks a COMMENT is XADMaster's
+naming of the two fields it reads and discards: a hypothesis, not a
+measured fact.  The application with a comment UI is StuffIt Deluxe
+5.0.1, which will not launch on an HFS+ guest (DECISIONS.md
+2026-09-27, *the fourth one that was really blocked*).
 
     tools/derive_sit5crypt.py [-v]
 
@@ -118,8 +123,9 @@ def main():
           "later, and the hash is MD5(MD5(password)[:5])[:5] — measured at "
           "4, 9 and 17 characters, against Aladdin's own output.")
     print("            NOT graded: bit 5, which none of the three sets. "
-          "That reading is still XADStuffIt5Parser.m's; an archive with a "
-          "comment would be the specimen."
+          "That reading is still XADStuffIt5Parser.m's. No archive on "
+          "this machine sets it (47 scanned), and that it marks a COMMENT "
+          "is XADMaster's naming of the fields, not a measured fact."
           if not saw_bit5 else
           "            bit 5 seen — update this tool, it is now gradeable.")
     return 0

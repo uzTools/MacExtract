@@ -296,6 +296,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the check that tested the wrong thing) — a provenance check built to catch a shed citation missed one within the hour, because it tested for a mention and shedding leaves a mention behind
 - 2026-09-27 (the layout Aladdin's own output settled) — the specimens had been on disk since August, and the measurement was two one-line perturbations
 - 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
+- 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
 
 ---
 
@@ -18627,3 +18628,51 @@ the last search, and searches are indexed by the question that
 prompted them.** Before filing one, list what this machine has
 produced for other reasons — the cache directories are that list, and
 there are thirty-two of them.
+
+
+## 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
+
+`src/fmt_sit5.c`'s bit 5 was the item left after the other three fell,
+and it was worth attempting precisely because the day's pattern
+predicted it would fall too. It did not, and the session is written up
+because **a limit that has been tested is worth more than one that has
+been assumed** — and because three cheap wins in a row are exactly the
+conditions under which the fourth gets filed as blocked without being
+tried.
+
+**What was checked before booting anything**, which is the part that
+generalises: every StuffIt 5 archive on the machine — 47 of them —
+reads 0x10 or 0x90 at the flag byte, so none sets bit 5; and the
+StuffIt Deluxe 5.0.1 CD holds no StuffIt 5 archive at all, scanned as
+raw bytes on the host with no emulator involved. The cheap search came
+first this time.
+
+**What the session established**, in four steps and about half an hour:
+
+- **StuffIt Deluxe 5.0.1 quits at launch on this guest**, reproduced
+  independently — *"an update to this software is required for
+  compatibility with the improved Mac OS file system"*. The existing
+  claim holds, and the archive-comment UI is that application's.
+- **DropStuff runs and cannot write a comment**: its Stuff dialog
+  offers *Delete item when finished* and *Encrypt with password*, and
+  its whole File menu is `Stuff…` / `Preferences…` / `Deluxe Info…` /
+  `Quit`.
+- **`Preferences…` could not be opened**, and the two failures are
+  different. Clicking the title then the item loses to the sticky-menu
+  timeout, because `goto()` costs ~40 s. Holding the button down and
+  stepping in defeats the timeout — the menu is still open in the
+  screenshot — but **no item highlights** and the release selects
+  nothing. That is the same signature as Mini vMac's submenus, now on
+  a second emulator and on a TOP-LEVEL menu, which promotes it from a
+  hierarchical-tracking quirk to a harness limit
+  (`tools/vmac/README.md`, *what the pointer cannot select*).
+
+**So the route is not a search, it is a system image**: a guest whose
+boot volume is HFS, where Deluxe 5.0.1 will run. Filed that way.
+
+**And one claim was NOT promoted.** That bit 5 marks a comment is
+XADMaster's naming of the two fields it reads and discards — a
+*hypothesis*, and it stays labelled as one, because nothing here has
+ever seen the bit set. The temptation after a day of wins is to write
+"an archive with a comment would grade it" as though the comment part
+were established. It is not.

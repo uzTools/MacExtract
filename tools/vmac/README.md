@@ -2101,6 +2101,33 @@ it to the plain-HFS transfer volume, then unmount that volume from inside the
 guest (select it, Cmd-Y) so the guest flushes, and read the Apple_HFS
 partition with hfsutils. The boot volume is HFS+ and the host cannot read it.
 
+### What the pointer cannot select, on either emulator
+
+**A menu ITEM is not reliably selectable by this harness, and as of
+2026-09-27 that is measured on both guests rather than one.** Mini vMac's
+hierarchical submenus were the first case (`sitcrypt.py`, *the Translate
+menu*): the submenu opens, the parent stays highlighted, the item under the
+pointer never does, and the release selects nothing — three ways in were
+tried.
+
+The same symptom is now recorded on **Mac OS 9 under QEMU, on a TOP-LEVEL
+menu**, which is what makes it a harness limit rather than a quirk of
+hierarchical tracking. Driving DropStuff's `File` menu:
+
+- **clicking the title, then the item** fails for a different reason —
+  `goto()` costs ~40 s and the sticky menu has closed by the time the second
+  click lands (`shots/c_ds_prefs.png`, the menu gone and no dialog);
+- **holding the button down and stepping into the item** removes the timeout
+  — the menu is still open in `shots/c_ds_menu_held.png` — but **no item
+  highlights**, and the release selects nothing. Same signature as the
+  submenu case.
+
+So on either guest, reach a menu item by its **Command key** or not at all.
+DropStuff's `Stuff…` (⌘S) and `Quit` (⌘Q) are drivable; its `Preferences…`,
+which has no Command key, is not. *Hypothesis*, unreduced and now with two
+guests' worth of evidence: the Menu Manager wants mouse movement neither
+emulator's pointer injection produces.
+
 ## Checking a run off the disk instead of off the screen
 
 `run.py` reads its result from the framebuffer: the application paints a grid
