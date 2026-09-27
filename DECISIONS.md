@@ -294,6 +294,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the inventory that was kept twice) — a gaps file and a licence notice both listed what was borrowed, they disagreed, and the list is now one file and a check
 - 2026-09-27 (half a citation) — one of the two facts behind DiskDoubler method 8 was measured away and the other turned out to be unfalsifiable on this corpus, which is a better answer than unmeasured
 - 2026-09-27 (the check that tested the wrong thing) — a provenance check built to catch a shed citation missed one within the hour, because it tested for a mention and shedding leaves a mention behind
+- 2026-09-27 (the layout Aladdin's own output settled) — the specimens had been on disk since August, and the measurement was two one-line perturbations
+- 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
 
 ---
 
@@ -18530,3 +18532,98 @@ question to ask of a new check: **what does the source look like
 immediately before and immediately after the event, and does the
 predicate differ between those two states?** Here it did not, and one
 worked example would have shown it — which is what the selftest now is.
+
+
+## 2026-09-27 (the layout Aladdin's own output settled) — the specimens had been on disk since August, and the measurement was two one-line perturbations
+
+`src/fmt_sit.c` cited `XADStuffItParser.m` for the encrypted fork's
+key layout: sixteen bytes of key material at the fork's END, so the
+compressed length is sixteen more than the ciphertext. It was filed as
+needing **a specimen written to order** — StuffIt Deluxe 3.5.1 runs
+here, so the route was an emulator session.
+
+**No session was needed. The specimens were already on disk**, written
+on 2026-08-23 by `tools/vmac/sitcrypt.py` while settling a different
+question (which fold count the archive key uses at eight characters
+and above), under three passwords of 8, 9 and 17 characters, each with
+the plaintext of both forks recorded in `made.json`. `run_crypt.py`
+has been grading the engine against them ever since. **An item filed
+as "needs a specimen" was sitting on the same disk as the specimen** —
+the *magic in somebody else's index* shape again, one directory away
+rather than one index away.
+
+**The measurement is a perturbation, not a rewrite.** Arithmetic could
+not settle it: the compressed lengths are 72 and 104, and 56 + 16 and
+88 + 16 are both multiples of the block size either way, so "is there
+a 16-byte tail" does not show up in the numbers. What does show up is
+whether the archive decodes. Two one-line edits to `sit_fork_crypt`,
+each rebuilt and run against the three archives:
+
+| where the sixteen bytes are read from | result |
+|---|---|
+| `at + complen - 16` — the fork's end, as shipped | 45 cases, **0 problems** |
+| `at` — the fork's start | 45 cases, **24 problems** |
+| `at + complen - 24` — eight bytes earlier | 45 cases, **24 problems** |
+
+So the key material is at the end and exactly there, on the evidence
+of what Aladdin's own software wrote rather than on XADMaster's word.
+
+**The pad byte beside it was demoted rather than measured**, for the
+reason the PackIt pad byte was earlier the same day: the byte at
+header offset 104/105 states how far the last plaintext block was
+padded, and nothing here reads it, because every method stops at the
+fork's declared length. A fact the code does not act on is an
+observation, not a source.
+
+**What is left in the file cannot close**, and that was checked rather
+than assumed: the three method-8 rules no specimen reaches are
+`XADStuffItOldHandles.m`'s, and deark names method 8 "MW" with a NULL
+decoder — it identifies the method and implements nothing. So
+`fmt_sit.c` leaves Part 2 for Part 1.
+
+
+## 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
+
+Immediately after `src/fmt_sit.c`'s encrypted-fork layout turned out
+to be gradeable by specimens that had been in the cache since August,
+`src/fmt_sit5.c` was read with the same question — and said, in its
+own comment: *"It has no specimen either — all 31 corpus archives read
+0x10 here and none is encrypted, so the only archives that exercise it
+are the ones `tools/run_crypt.py` synthesises, which cannot grade
+it."*
+
+**Three encrypted StuffIt 5 archives written by DropStuff 5.0.1 had
+been in `~/.cache/macextract/sit5/specimens/` since 2026-08-26**, and
+FORMATS.md has described them by name the whole time. They exercise
+exactly that byte.
+
+What they settle, with no engine and no reference in the loop —
+`tools/derive_sit5crypt.py` is the bytes Aladdin wrote and `hashlib`:
+
+- **bit 7 means encrypted**: all three read 0x90;
+- **bit 4 shifts the password hash by 14 bytes**, and the shift is
+  load-bearing rather than merely consistent: at the shifted offset
+  the length byte reads 5, the key length the format requires, and at
+  the unshifted offset it reads 13. The tool checks that separately,
+  because *"the shifted reading works"* is not evidence when the
+  unshifted one would work too — the trap DiskDoubler method 8's block
+  size fell into the same afternoon;
+- **the stored five bytes are MD5(MD5(password)[:5])[:5]**, at
+  passwords of 4, 9 and 17 characters.
+
+What is left is **bit 5**, which none of the three sets and which
+shifts the hash four bytes further. That is still
+`XADStuffIt5Parser.m`'s, and the specimen that would grade it is an
+archive carrying a comment — DropStuff can write one, so it is the one
+remaining item that genuinely wants an emulator session.
+
+**Three for three, and the rule is now worth stating plainly.** Today
+*"none of which is on this disk"* was wrong about deark, *"needs a
+specimen written to order"* was wrong about StuffIt Deluxe, and *"has
+no specimen either"* was wrong about DropStuff. In every case the
+evidence had been produced by a PAST question and filed under that
+question's name. **A claim that no specimen exists is a claim about
+the last search, and searches are indexed by the question that
+prompted them.** Before filing one, list what this machine has
+produced for other reasons — the cache directories are that list, and
+there are thirty-two of them.

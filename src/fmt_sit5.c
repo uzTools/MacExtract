@@ -106,8 +106,13 @@ static void sit5_dir_add(Sit5Dirs *d, uint32_t offs,
 /* StuffIt 5's archive key is MD5(password) cut to five bytes, and the
  * header carries MD5 of THAT, also cut to five: a password is graded
  * before anything is decoded. Asks the host until one verifies.
- * Source: XADStuffIt5Parser.m keyForEntryWithDictionary — the other
- * half of the encrypted-archive path no published description covers
+ * MEASURED, since 2026-09-27, against the three archives DropStuff
+ * 5.0.1 wrote under Mac OS 9.2: the five bytes each stores ARE
+ * MD5(MD5(password)[:5])[:5], at passwords of 4, 9 and 17 characters
+ * (tools/derive_sit5crypt.py, which needs no engine and no reference —
+ * the bytes Aladdin wrote and hashlib). It was
+ * XADStuffIt5Parser.m keyForEntryWithDictionary's until then;
+ * no published description covers it
  * (docs/formats/stuffit5-container.md, "What is still nobody else's"). */
 static int sit5_archive_key(UncCtx *c, const uint8_t hash[UNC_SIT5_KEYLEN],
                             uint8_t key[UNC_SIT5_KEYLEN])
@@ -168,14 +173,23 @@ int unc_sit5_extract(UncCtx *c)
      * five-byte hash that says whether a password is the right one.
      * Their order is fixed; only their presence is flagged.
      *
-     * **The one reading in this file that is still XADMaster's**
-     * (XADStuffIt5Parser.m, parse): the published description says of
-     * this byte's bit 7 only "Encrypted (algorithm used is unknown)",
-     * and nothing anywhere describes bits 4 and 5. It has no specimen
-     * either — all 31 corpus archives read 0x10 here and none is
-     * encrypted, so the only archives that exercise it are the ones
-     * tools/run_crypt.py synthesises, which cannot grade it.
-     * docs/formats/stuffit5-container.md. */
+     * The published description says of this byte's bit 7 only
+     * "Encrypted (algorithm used is unknown)", and nothing anywhere
+     * describes bits 4 and 5.
+     *
+     * BITS 7 AND 4 ARE MEASURED, since 2026-09-27, against the three
+     * archives DropStuff 5.0.1 wrote: all three read 0x90, and with
+     * bit 4's 14-byte shift the length byte at the computed offset is
+     * 5, the key length, where the unshifted offset reads 13 — so the
+     * shift is load-bearing and not merely consistent
+     * (tools/derive_sit5crypt.py). This comment said the reading
+     * "has no specimen either" until that day, and three had been in
+     * the cache since 2026-08-26 (BLOCKERS.md, *Withdrawn claims*).
+     *
+     * Source: reference/XADMaster/XADStuffIt5Parser.m, parse — for
+     * BIT 5 alone, which none of the three sets and which nothing
+     * here can grade. An archive carrying a comment would be the
+     * specimen. docs/formats/stuffit5-container.md. */
     if (hdr[83] & SIT5_ARCH_CRYPTED) {
         uint32_t hp = 100;
         uint8_t hb[8];

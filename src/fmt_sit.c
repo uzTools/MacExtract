@@ -710,6 +710,10 @@ out:
 /* (tools/derive_stuffit8.py).                                        */
 /*                                                                    */
 /* TWO RULES BELOW ARE NOT IN THAT NOTE and remain                    */
+/* Source: reference/XADMaster/XADStuffItOldHandles.m (SIT_mw,        */
+/* SITMW_out) — the only thing in this file that is still anybody     */
+/* else's, and deark names method 8 "MW" with a NULL decoder, so      */
+/* there is nothing to rewrite it from.                               */
 /* reference/XADMaster/XADStuffItOldHandles.m's (SIT_mw, SITMW_out;   */
 /* libxad heritage) — LGPL, see NOTICE: the table RESTART (a code      */
 /* equal to the next free one) and the END of the stream (a code       */
@@ -854,12 +858,23 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
 /* plaintext block was padded with — which nothing here reads, because */
 /* every method stops when it has produced the fork's declared length  */
 /* and so never consumes the padding. XADMaster shortens the stream by */
-/* it instead; same result. The other half of the key is the           */
+/* it instead; same result — and since nothing here reads the byte,    */
+/* it is an observation and not a source. The other half of the key is */
+/* the                                                                 */
 /* ARCHIVE's 'MKey' resource, which is in its resource fork and not in */
 /* the stream at all: without it nothing can decrypt this, and the     */
 /* entry fails UNC_ERR_ENCRYPTED rather than asking for a password it  */
 /* could not use.                                                     */
-/* Source: XADStuffItParser.m decryptHandleForEntryWithDictionary.     */
+/* THE LAYOUT IS MEASURED, since 2026-09-27, against the three         */
+/* archives StuffIt Deluxe 3.5.1 wrote itself under Mini vMac          */
+/* (tools/vmac/sitcrypt.py, passwords of 8, 9 and 17 characters).      */
+/* Moving the sixteen bytes to the START of the fork, or eight bytes   */
+/* earlier than its end, makes all three fail to decode — 24 problems  */
+/* against 0 in tools/run_crypt.py — so the key material is at the     */
+/* END and exactly there, on the evidence of Aladdin's own output      */
+/* rather than XADStuffItParser.m's word                               */
+/* (DECISIONS.md 2026-09-27, *the layout Aladdin's own output          */
+/* settled*).                                                          */
 /* ------------------------------------------------------------------ */
 
 static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,

@@ -37,12 +37,25 @@ hand.
   src/fmt_arc.c        Crunch 5/6/7 and Crush (PAK's LZW), the method
                        numbers and the CRC contract —
                        XADARCCrunchHandle.m and XADARCCrushHandle.m.
-  src/fmt_sit.c        the ENCRYPTED fork's key layout
-                       (XADStuffItParser.m,
-                       decryptHandleForEntryWithDictionary) and three
-                       rules of method 8 no specimen reaches, which are
-                       XADStuffItOldHandles.m's.
-  src/fmt_sit5.c       the ENCRYPTED archive only (XADStuffIt5Parser.m).
+  src/fmt_sit.c        three rules of method 8 no specimen reaches —
+                       the table restart, the end of the stream and
+                       the 14-bit ceiling — which are
+                       XADStuffItOldHandles.m's. deark names method 8
+                       "MW" with a NULL decoder, so nothing else
+                       implements them. The ENCRYPTED fork's key
+                       layout left on 2026-09-27: it is measured
+                       against the three archives StuffIt Deluxe 3.5.1
+                       wrote itself, which stop decoding if the
+                       sixteen bytes are read anywhere but the fork's
+                       end.
+  src/fmt_sit5.c       one bit of the encrypted archive's flag byte —
+                       bit 5, which shifts the password hash by four
+                       more bytes and which nothing reachable sets
+                       (XADStuffIt5Parser.m, parse). Bit 7, bit 4's
+                       14-byte shift and the MD5-of-MD5 that grades a
+                       password all left on 2026-09-27, measured
+                       against the three archives DropStuff 5.0.1
+                       wrote (tools/derive_sit5crypt.py).
   src/fmt_packit.c     the resync strategy (macutils' pit.c, "trying to
                        sync") and both ciphers (XADPackItParser.m).
   src/fmt_lzh.c        one rule with no specimen anywhere here: a NUL
