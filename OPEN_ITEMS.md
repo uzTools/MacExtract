@@ -195,8 +195,12 @@ the two disagreed, and the disagreement is what let a live citation in
 (BLOCKERS.md, *Withdrawn claims*).
 
 **What has no route at all is Part 1**, *The licence cannot move*.
-What is left here is the six items that could still move, and the one
-thing each is waiting for. The licence does not turn on any of them —
+What is left here is the four items that could still move, and the one
+thing each is waiting for. **`src/fmt_lzh.c` left on 2026-09-27**: its
+last rule turned out not to be XADMaster's alone — lhasa produces the
+same filename, reaching it through C-string handling rather than
+stating it (DECISIONS.md, *the rule both references already
+followed*). The licence does not turn on any of them —
 that question is settled — so each is worth taking only for its own
 gain, which is the rule the brief was given under: **no regression for
 the licence's sake**.
@@ -207,7 +211,6 @@ the licence's sake**.
 | `unc_internal.h` — DiskDoubler method 8's Huffman block, 0xfff0 | **half taken 2026-09-27, and the half left needs a SPECIMEN, not a citation.** That method 8 is Compact Pro's stages is measured: all 7 method-8 forks in reach decode byte for byte against the oracle's sha256 with a reader written from Compact Pro's published pages alone (`tools/derive_dd8.py`). The block size is unfalsifiable here — every size at or above 0x1000 reads every fork, the largest that FAILS anywhere is 0x400, so no stream in the corpus reaches even that much cost. **What would pin it is one method-8 fork whose coder output crosses 0xfff0 cost units** — 2 per literal, 3 per match; the biggest in reach is 44,549 B and compresses to 1,230 |
 | `fmt_binhex.c`, `fmt_uu.c`, `unc_internal.h` — macutils' four remaining rules about mailed text | **two of six taken 2026-09-27, and the other four are each blocked for a DIFFERENT reason, which is why this will not close in one go.** Gone to mpack (permissive, CMU): the dispatch — any amount of preamble skipped looking for a line beginning `begin ` — and the uu terminator, `end` plus whitespace; both are `uudecode.c`'s state machine, `st_start` and `st_last`. `fmt_mime.c` carried only the terminator and has left the inventory. What is left, and what fails for each: the **CR/LF/CRLF rule and the unterminated last line** — mpack is LF-only throughout (`part_gets` breaks on `\n` alone) and deark ignores whitespace instead of reading lines, so neither states it; the **whole-line garbage skip** — deark's `binhex.c` ERRORS on a stray character and mpack's `macbhex.c` keeps the prefix it already decoded, so both differ in output rather than restating it; the **scan for a second document in one input** — mpack uses a `--- ` separator inside one part, not a rescan to EOF; and **UUTool's MU layout**, which nothing else implements. Each would need its own second reader |
 | `fmt_packit.c` — the resync strategy and both ciphers | a second implementation of `PMa5`/`PMa6`. deark's `packit.c` handles `PMag` and `PMa4` only and errors out where this resyncs. Appendix B lists "PMa5" twice and cannot name the fourth word, so the document is not it |
-| `fmt_lzh.c` — a NUL in a level 0/1 name field ends it | **a decision, not a search.** 0 of the 140 such fields in the 156 archives here holds a NUL, lhasa takes the whole field, and the document does not mention it. Adopting lhasa's behaviour would close this by deleting the rule — a behaviour change nothing can grade, which is why it has not been taken |
 
 **The template is the `-lh1-` coder** (DECISIONS.md 2026-09-19, *the
 tree that was Yoshizaki's*): faster, smaller and lighter, so it would

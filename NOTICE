@@ -58,9 +58,6 @@ hand.
                        wrote (tools/derive_sit5crypt.py).
   src/fmt_packit.c     the resync strategy (macutils' pit.c, "trying to
                        sync") and both ciphers (XADPackItParser.m).
-  src/fmt_lzh.c        one rule with no specimen anywhere here: a NUL
-                       inside a level 0/1 name field ends the name
-                       (XADLZHParser.m).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
                        nothing reachable sets.
   src/fmt_binhex.c,    macutils' hexbin: four rules about text that has

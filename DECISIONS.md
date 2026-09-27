@@ -300,6 +300,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
 - 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
 - 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
+- 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
 
 ---
 
@@ -18819,3 +18820,49 @@ on `File '` assigns every function to the wrong file. Filtering per
 gcov invocation fixes it. **An instrument's first output is a draft**,
 and the check that caught this was reading the names rather than the
 totals.
+
+
+## 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
+
+`src/fmt_lzh.c` truncates a level 0/1 name at an embedded NUL. That was
+filed as the file's last XADMaster-only rule and put to the maintainer
+as a DECISION, because *"the document does not mention it and lhasa
+takes the whole field"* — so adopting lhasa's reading would change
+behaviour with no specimen able to say which is right.
+
+**There was no decision.** Asked why the two differ, the answer is that
+they do not:
+
+- **XADMaster** stops at the NUL explicitly and keeps the remainder as
+  `XADCommentKey` (`XADLZHParser.m`).
+- **lhasa** reaches the same filename implicitly. `process_level0_path()`
+  copies the whole field and NUL-terminates it — which is what "takes
+  the whole field" was read off — but every consumer then handles it as
+  a C string: `strrchr` in `split_header_filename`, `strdup`, and
+  `strlen`/`sprintf` in `lha_file_header_full_path`. Anything after an
+  embedded NUL is unreachable.
+
+So both yield the same name, and they differ only in whether the
+trailing bytes surface as a comment. This engine has nowhere to put a
+comment and drops them, which agrees with both. The published document
+states no comment in that field at all, and lhasa's level-0 comment
+support is in the extended AREA (`process_level0_extended_area`, for
+PMarc) — a different place entirely.
+
+**Consequence: `fmt_lzh.c` leaves the provenance inventory**, cited to
+lhasa (ISC) for the behaviour. Its other citation went the same day and
+for a duller reason: the base-header table was cited to
+`XADLZHParser.m` AND the document, and section A of the document states
+every field of it, so the parser was never needed there.
+
+**The lesson is about how implementations get compared.** *"lhasa takes
+the whole field"* was read off the `memcpy`, which is what lhasa
+STORES. What an implementation yields is a different question, and for
+a C string the difference is exactly an embedded NUL. **A claim that
+two implementations disagree is a claim about their output**, and this
+one was never tested against output — no specimen has a NUL, so nothing
+forced the question until somebody asked why they differed.
+
+Worth noting what asking cost: five days of a file in the inventory
+with nothing uniquely XADMaster's in it, and a decision offered to the
+maintainer three times that was not a decision.

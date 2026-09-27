@@ -42,8 +42,13 @@
  */
 #include "unc_internal.h"
 
-/* Level 0/1 base header, before the name. Source: XADLZHParser.m and
- * reference/lha/header.doc.euc ("header level 0/1"). */
+/* Level 0/1 base header, before the name.
+ * Source: reference/lha/header.doc.euc, section A, which states every
+ * field of it — header size, header sum, method ID, packed and
+ * original size, time, date, attribute, level, name length, the name,
+ * the file CRC and level 1's OS ID and next-header size. It named
+ * XADLZHParser.m as well until 2026-09-27; the document alone covers
+ * this table. */
 #define LZH_H_SIZE       0    /* level 0/1: header size - 2            */
 #define LZH_H_SUM        1    /* level 0/1: sum of bytes 2..size-1     */
 #define LZH_H_METHOD     2    /* 5 bytes, "-lh5-" and friends          */
@@ -728,17 +733,28 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
         namelen = h[LZH_H_NAMELEN];
         nameat = 22;
         if (nameat + namelen + 2 > hdrsize) return UNC_ERR_CORRUPT;
-        /* A NUL inside the name field ends it; what follows is this
-         * entry's comment, which has no home in UncEntryInfo and is
-         * dropped. **The one rule in this file that is still
-         * XADMaster's** (XADLZHParser puts the remainder in
-         * XADCommentKey): the document does not mention it and lhasa
-         * takes the whole field. It has no specimen either — 0 of the
-         * 140 level 0/1 name fields in the 156 archives on this
-         * machine holds a NUL (tools/derive_lzh.py), so nothing can
-         * grade either reading and this cannot fire on a file this
-         * project has. docs/formats/lzh-header.md, "The one rule still
-         * nobody else's". */
+        /* A NUL inside the name field ends it.
+         *
+         * BOTH references produce this name, which this comment denied
+         * until 2026-09-27 by saying "lhasa takes the whole field".
+         * XADMaster stops at the NUL explicitly and keeps the
+         * remainder as XADCommentKey (XADLZHParser.m). lhasa reaches
+         * the same filename implicitly: process_level0_path() copies
+         * the whole field and NUL-terminates it, and every consumer
+         * then touches it as a C string — strrchr in
+         * split_header_filename, strdup, strlen and sprintf in
+         * lha_file_header_full_path — so anything after an embedded
+         * NUL is unreachable. Source: reference/lhasa/lib/
+         * lha_file_header.c (ISC).
+         *
+         * What differs is only whether the trailing bytes surface as a
+         * COMMENT, and this engine has nowhere to put one, so it drops
+         * them and agrees with both. The document states no comment in
+         * this field at all, and lhasa's level-0 comment support is in
+         * the extended AREA (process_level0_extended_area, for PMarc).
+         * No specimen either way: 0 of the 140 level 0/1 name fields in
+         * the 156 archives here holds a NUL (tools/derive_lzh.py).
+         * docs/formats/lzh-header.md. */
         for (k = 0; k < namelen; k++)
             if (h[nameat + k] == 0) { namelen = k; break; }
         if (namelen > UNC_NAME_MAX) {

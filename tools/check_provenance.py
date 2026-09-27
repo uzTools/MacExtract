@@ -47,7 +47,6 @@ NOTICE = ROOT / "NOTICE"
 # ones with a route left.
 CARRIES = {
     "unc_lzdyn.c":      "-lh2- and -lh3- (XADLZHOldHandles.m), whole file",
-    "fmt_lzh.c":        "a NUL in a level 0/1 name field ends it (XADLZHParser.m)",
     "fmt_packit.c":     "the resync strategy (macutils pit.c) and both ciphers",
     "fmt_sit.c":        "three method-8 rules no specimen reaches",
     "fmt_sit5.c":       "the encrypted header's bit 5, which nothing here sets",
@@ -70,7 +69,7 @@ HISTORICAL = {
     "fmt_exo.c", "fmt_exo_probe.c", "fmt_foreign.c", "fmt_superdisk.c",
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",
-    "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c",
+    "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c", "fmt_lzh.c",
 }
 
 MENTION = re.compile(r"XAD|macutils")

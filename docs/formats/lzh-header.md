@@ -124,13 +124,29 @@ extracts the archive's own bytes.
   file — as "0 files". `unar` lists three entries there, this engine
   lists the file. 2 archives here.
 
-## The one rule still nobody else's
+## The NUL in a level 0/1 name, which both readers stop at
 
 `fmt_lzh.c` ends a level 0/1 name at the first NUL inside the name
-field and treats what follows as the entry's comment, which it drops.
-That rule is XADMaster's (`XADLZHParser.m` puts the remainder in
-`XADCommentKey`); the document does not mention it and lhasa takes the
-whole field. **It has no specimen: 0 of the 140 level 0/1 name fields
-in the 156 archives here contains a NUL**, so nothing can grade either
-reading, and the rule cannot fire on any file this project has.
-Recorded as measured rather than removed.
+field and drops what follows. **Both references yield that same name**,
+which this section denied until 2026-09-27 by saying lhasa "takes the
+whole field":
+
+- **XADMaster** stops there explicitly and keeps the remainder as
+  `XADCommentKey` (`XADLZHParser.m`).
+- **lhasa** stops there implicitly. `process_level0_path()` copies the
+  whole field and NUL-terminates it — that `memcpy` is what the old
+  reading was taken from — but every consumer then handles it as a C
+  string: `strrchr` in `split_header_filename`, `strdup`, and
+  `strlen`/`sprintf` in `lha_file_header_full_path`. Anything past an
+  embedded NUL is unreachable.
+
+They differ only in whether the trailing bytes surface as a COMMENT,
+and this engine has nowhere to put one. The document states no comment
+in that field, and lhasa's level-0 comment support is in the extended
+AREA (`process_level0_extended_area`, for PMarc).
+
+**It has no specimen either way: 0 of the 140 level 0/1 name fields in
+the 156 archives here contains a NUL**, so nothing forces the question
+— which is why the disagreement went five days without being checked
+against what either reader actually yields (BLOCKERS.md, *Withdrawn
+claims*).
