@@ -356,4 +356,13 @@ echo "=== variant 4d: the overlay configuration, resident control ==="
 UNC_AT_OVERLAY=1 UNC_OVL_RESIDENT=1 UNC_MAC_BUILD_DIR=build/mac-resident \
     sh tools/build_mac.sh || fail "overlay build (resident control)"
 
+# Every format's granted budget is OVL_SAVED less the images it keeps, so a
+# stale OVL_SAVED is a stale budget for all of them at once — and it went 32 B
+# stale on 2026-09-26 with FORMATS.md corrected and run_tiers.py not, which
+# then read as part of the residue under the model (BLOCKERS.md, *Corrected
+# figures*). It is the difference of the two builds above, so it can be
+# graded, and this is the first point in the run where both exist.
+python3 tools/run_tiers.py --check-saved \
+    || fail "OVL_SAVED no longer matches build/mac and build/mac-resident"
+
 echo "CI: all green"

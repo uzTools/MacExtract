@@ -1622,26 +1622,31 @@ the second predicts what a user's Macintosh refuses.
 
 The resident lane asserts every tally Mini vMac agreed with for that
 build, which since 2026-09-22 is all three: **71/71 at the 1 MB floor
-target** (648,250 B), **67/71 on a 512 KB Macintosh under System 3.0**
-(219,362 B) and **64/71 on the same machine under System 6.0.8**
-(123,962 B) — the same four and seven fixtures, by name, that the
-machines refuse. The fourth arrived 2026-09-22 with
+target** (652,996 B), **67/71 on a 512 KB Macintosh under System 3.0**
+(224,108 B) and **64/71 on the same machine under System 6.0.8**
+(128,708 B) — the same four and seven fixtures, by name, that the
+machines refuse. All three budgets were re-taken 2026-09-27 and all three
+rose 4,746 B; no tally moved (FORMATS.md, *Budget*). The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
 assertable the same day, when its budget was re-taken. A tally that moves is
 a memory regression or a memory win; either way the number in `EXPECT`
 is meant to be changed deliberately.
 
-The shipped lane asserts the two tiers a machine has run the v0.33.0
-binary on — **71/71 at the floor target and 69/71 at System 3.0 /
-512 KB** — and it asserts the REFUSED FIXTURES BY NAME rather than a
+The shipped lane asserts all three tiers a machine has run — **71/71 at
+the floor target, 69/71 at System 3.0 / 512 KB and 66/71 at System 6.0.8
+/ 512 KB** — and it asserts the REFUSED FIXTURES BY NAME rather than a
 tally, because a tier that refuses two different fixtures and still
-counts 69 is exactly what a count cannot fail on. Its budgets are not
-constants: the keep set is parsed out of `mac/ovl_load_eager.c`, the
-format names and envelope flags out of the engine's table, and the image
-sizes are checked against `build/mac/` whenever Retro68 is installed
-(FORMATS.md, *What each format is granted*; DECISIONS.md 2026-09-26, *a
-budget per format, and one per layer*). `sys6-512K` is swept and printed
-there, not asserted: no machine has run the shipped build at that tier.
+counts 69 is exactly what a count cannot fail on. The third joined
+2026-09-27, and it is the one this lane PREDICTED before any machine ran
+it (FORMATS.md, *512 KB machines*). Its budgets are not constants: the
+keep set is parsed out of `mac/ovl_load_eager.c`, the format names and
+envelope flags out of the engine's table, the image sizes are checked
+against `build/mac/` whenever Retro68 is installed, and since 2026-09-27
+`OVL_SAVED` is checked against `build/mac` and `build/mac-resident` the
+same way — `--check-saved`, which `ci.sh` runs after the control build,
+because that constant had gone 32 B stale with FORMATS.md corrected and
+`run_tiers.py` not (FORMATS.md, *What each format is granted*;
+DECISIONS.md 2026-09-26, *a budget per format, and one per layer*).
 
 **What it cannot see** (and why the emulator tiers stay):
 
@@ -1658,7 +1663,7 @@ there, not asserted: no machine has run the shipped build at that tier.
   NO; that walk is not reachable from the CLI, so the shipped lane keeps
   them for those two formats always and grants 9,808 B less than the
   machine does. It decides nothing: the narrowest margin on any Compact
-  Pro or zip layer in the sample is 143,800 B, measured 2026-09-26.
+  Pro or zip layer in the sample is 146,726 B, re-measured 2026-09-27.
 - **Fragmentation.** A budget is one number; the Memory Manager also has
   to find one PIECE that big, which the shell reports separately
   ("Memory is too broken up"). Nothing here models it. **No disagreement

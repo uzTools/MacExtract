@@ -38,10 +38,11 @@ tiers were not, and what stands in for them is measured rather than asserted:
 the ARC predicate is reachable only AFTER an entry's decode has failed, so
 every entry that extracts takes the identical path, and the sample's three
 ARC-family archives are not garbled; the segment check can only ever REFUSE a
-file, and no fixture in the sample is a Compact Pro segment; and 24 B is three
-orders of magnitude under the narrowest margin between any layer's demand and
-its budget anywhere in the sample, which is **46,712 B** (`tools/run_tiers.py`,
-whose shipped lane `ci.sh` asserts every run). *One measurement and an
+file, and no fixture in the sample is a Compact Pro segment; and 24 B is two
+orders of magnitude under the narrowest margin between any passing layer's
+demand and its budget anywhere in the sample, which is **15,954 B**
+(re-measured 2026-09-27 at the re-taken budgets; `tools/run_tiers.py`, whose
+shipped lane `ci.sh` asserts every run). *One measurement and an
 argument — not seven re-runs.* Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
@@ -1552,6 +1553,34 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"The shipped model is pessimistic by 2,926 B, against a recorded 1,138 B
+  residue"** — carried as a labelled hypothesis for one day and withdrawn
+  2026-09-27, when the base and the grant were taken from one tree and one
+  probe pair. Neither number was wrong and the subtraction was not a
+  measurement: the base had been taken on another branch, and re-taken it is
+  **652,996 B** rather than 648,250 while the residue is **−714 B** rather
+  than +1,138 — **+4,746 less 1,820, the 2,926 B to the byte**. The residue
+  was never a structural constant either; it is per-build slack, and it goes
+  stale exactly when a tier budget does. **Cost: nothing, because it was
+  labelled.** Had it been corrected on the day it was seen, the 2,926 B would
+  have gone into `OVL_RESIDUE` and the model would have been wrong in both
+  terms at once — the same error this file already records for the floor
+  budget, where a correct 896 B sum was applied to a three-week-old base. The
+  attribution offered with the hypothesis was also wrong, by 200x: "this
+  tree's application is ~24 B smaller" is what the code-size table says
+  v0.34.0's segment check cost, and the base had moved 4,746 B (DECISIONS.md
+  2026-09-27, *the residue that was two numbers*).
+
+- **`OVL_SAVED` = 117,056 B** — 32 B stale from 2026-09-26 to 2026-09-27,
+  under a comment naming FORMATS.md's *Three configurations, one tree* as
+  "the only place to correct them", which had been corrected. Every format's
+  budget is that constant less the images it keeps, so it moved thirty
+  budgets at once and hid inside the residue above. **Cost: part of a
+  hypothesis that took two boots to settle.** It is graded against the two
+  builds it is the difference of from 2026-09-27 — `run_tiers.py
+  --check-saved`, in `ci.sh` after the resident control — because *a comment
+  saying where a number lives is not a check.*
+
 - **"`overlay-eager` costs one archive at 512 KB against `selective-loading`"**
   — withdrawn 2026-09-03 on the branch, recorded here on 2026-09-25 when the
   branches merged. The gap was measured at 15,748 B and attributed to the
@@ -1609,7 +1638,7 @@ a harness can click is not the same list.
   withdrawn 2026-09-25. They were written 2026-08-31 about an overlay
   holding the ciphers and nothing else. `overlay-eager` has carried
   fourteen images since 2026-09-24 (fifteen until DART left on 2026-09-25):
-  **84–103 KB** more budget at 1 MB than
+  **82–105 KB** more budget at 1 MB than
   a resident build, **69/71 at System 3.0 / 512 KB against main's 67/71**
   — `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`, two
   archives `main` cannot open on that machine — and StuffIt gains like

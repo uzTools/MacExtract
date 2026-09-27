@@ -2425,6 +2425,26 @@ ratchets none of them — that file was lowered in DART's own commit
 three Macintosh configurations*); it built two until then, and the one it
 left out was the control, which duly went 4 B over its ratchet unnoticed.
 
+**What the harness builds is none of those three, and what the probe builds is
+a fourth** — every budget figure in this file is read off a
+`UNC_MAC_AUTOTEST` build with `-D UNC_AT_BUDGET`, because that switch is the
+only way a budget reaches the screen at all (`tools/vmac/README.md`, *Why an
+entry is refused*). Measured the same way, 2026-09-27:
+
+| build | `CODE` | A5 | over the shipped column above |
+|---|---|---|---|
+| autotest, eager | 48,036 B | 21,996 B | −2,288 B |
+| autotest, eager, `-D UNC_AT_BUDGET` | 48,312 B | 22,120 B | −1,888 B |
+| autotest, resident | 146,032 B | 40,800 B | −2,576 B against the control |
+| autotest, resident, `-D UNC_AT_BUDGET` | 146,248 B | 40,904 B | −2,256 B against the control |
+
+So **the probe costs the eager configuration 400 B and the control 320 B**,
+and every budget here is that much lower than the build whose tallies it is
+quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
+why the overlay gains are measured that way (*What it buys, against the
+control*), and 368 B of the residue there is exactly this: 117,088 B saved
+between the shipped pair against 116,720 B between the probe pair.
+
 The bundle is **143,072 B** — the fourteen images sum to 142,892 B, so its
 index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
 bytes of padding to 4, which accounts for the whole difference (measured
@@ -2451,67 +2471,82 @@ until 2026-09-26, from the bundle's resource fork standing in for the bundle
 ### What it buys, against the control
 
 The number is what the engine is GRANTED — `mal_take_budget` at its first
-allocation, so every image the run will load has already loaded. Measured at
-1 MB on System 6.0.8:
+allocation, so every image the run will load has already loaded. **All of
+these were measured 2026-09-27 at 1 MB on System 6.0.8, on one tree and one
+probe pair** (`run.py --mem 1M -D UNC_AT_BUDGET`, with and without
+`-D UNC_OVL_RESIDENT`), which is what makes them subtractable:
 
-| the archive | resident | lazy | eager (shipped) |
+| the archive | sniffed as | eager (shipped) | over the control |
 |---|---|---|---|
-| StuffIt 5, bare | 650,692 B | 745,358 B | 734,656 B |
-| LZH, bare | 650,692 B | 753,792 B | 752,898 B |
-| Compact Pro, bare | 650,692 B | 747,576 B | 746,682 B |
+| `derived-Export.sit`, `derived-KeyGraphics.sit` | StuffIt, StuffIt 5 | 735,140 B | **+82,144 B** |
+| `lhasa-unix114i-h2_lh7.lzh`, `lhasa-maclha-l1_lh5.lzh`, `aminet-lha_68k.lha` | LZH | 753,382 B | **+100,386 B** |
+| `derived-keyAhead.cpt` | Compact Pro, nothing encrypted | 747,166 B | **+94,170 B** |
+| `synth-dd-m3.dd` | DiskDoubler | 747,166 B | +94,170 B |
+| `synth-exo-zip-store.zip` | Zip, nothing encrypted | 735,698 B | **+82,702 B** |
+| `synth-exo-tar.tar` | Tar | 735,698 B | +82,702 B |
+| `synth-arc-mixed.arc` | ARC | 745,022 B | **+92,026 B** |
+| `synth-packit-1.pit` | PackIt | 750,494 B | **+97,498 B** |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 758,012 B | **+105,016 B** |
+| `synth-exo-gz.gz`, `export-hc.hqx` | gzip, BinHex — an envelope | 626,290 B | **−26,706 B** |
 
-**The resident column does not move with the archive, and that is the
-control**: with every decoder linked in, the engine gets the same heap
-whatever it decodes, so the 84–103 KB the other two columns gain belongs to
-the mechanism rather than to other work. That is why the resident build is
-kept — as an instrument, not a fallback. (Figures taken 2026-09-24 on the
-branch this merged from and **not re-measured since** — each one is a 1 MB
-emulator run. Two changes have moved the code they were taken on: the merge,
-+248 B, and DART's removal, −696 B on the shipped build and −2,220 B on the
-control. So each budget is a few hundred bytes out and the SHAPE, which is
-the only thing this table is for, is unaffected. *Not re-measured.*)
+**The control is 652,996 B for every row, and does not move with the
+archive**: with every decoder linked in the engine gets the same heap whatever
+it decodes, so the 82–105 KB the eager column gains belongs to the mechanism
+rather than to other work. That is why the resident build is kept — as an
+instrument, not a fallback. It held across three LZH archives at this tier and
+across two formats at System 6.0.8 / 512 KB, where both read 128,708 B.
+
+**Ten keep sets, and the arithmetic of *What each format is granted* accounts
+for every one of them to the byte** with a single additive constant — the
+envelope row, which loses memory, included. It was three rows against one
+constant until 2026-09-27, and those three were taken on another branch:
+DECISIONS.md 2026-09-27, *the residue that was two numbers*.
 
 **Eager against lazy is 894 B–10.7 KB** of budget for a format that must keep
-the ciphers, against **no disk access after the archive is chosen**. Eager
-ships because on a Mac Plus with one drive, a read after the archive has been
-chosen is a read at the moment the application's own floppy may be out.
+the ciphers, against **no disk access after the archive is chosen**, measured
+2026-09-24 on the branch this merged from between two columns taken the same
+day (the lazy lifetime is not shipped and has not been re-measured since).
+Eager ships because on a Mac Plus with one drive, a read after the archive has
+been chosen is a read at the moment the application's own floppy may be out.
 
 ### What each format is granted, against the control
 
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 117,056 B of `CODE` and A5 the shipped build does not carry,
-less the images this format keeps and 8 B of block header each, plus the
-1,138 B residue the three measurements above leave over that arithmetic and
-which nothing accounts for. Three rows ARE those measurements; the rest is
-the same sum, and `tools/run_tiers.py --shipped` is where it is applied
+which is the 117,088 B of `CODE` and A5 the shipped build does not carry
+(*Three configurations, one tree*), less the images this format keeps and 8 B
+of block header each, less a **714 B residue**: 368 B of that is the probe
+build's own weight and 346 B is unattributed (DECISIONS.md 2026-09-27, *the
+residue that was two numbers*). Ten rows ARE measurements, taken 2026-09-27
+on one tree; the four marked otherwise are the same sum with no fixture to
+take them on. `tools/run_tiers.py --shipped` is where it is applied
 (TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a
 budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+83,964 B** (measured) |
-| LZH | lzh, codecs | **+102,206 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +86,182 B, and **+95,990 B** where the directory says no entry is encrypted (measured) |
-| DiskDoubler | cptdd, codecs | +95,990 B |
-| Zip, spanned zip | exo, ciphers, codecs | +74,714 B, +84,522 B unencrypted |
-| Tar | exo, codecs | +84,522 B |
-| ARC | arc, ciphers, codecs | +93,846 B |
-| PackIt | packit, ciphers, codecs | +99,318 B |
-| StuffIt SpaceSaver | spacesaver, codecs | +95,052 B |
-| SuperDisk! | superdisk, codecs | +104,718 B |
-| Now Compress | now, codecs | +106,836 B |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−24,886 B** |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+82,144 B** (measured) |
+| LZH | lzh, codecs | **+100,386 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +84,362 B (arithmetic), and **+94,170 B** where the directory says no entry is encrypted (measured) |
+| DiskDoubler | cptdd, codecs | **+94,170 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +72,894 B (arithmetic), **+82,702 B** unencrypted (measured) |
+| Tar | exo, codecs | **+82,702 B** (measured) |
+| ARC | arc, ciphers, codecs | **+92,026 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+97,498 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +93,232 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| SuperDisk! | superdisk, codecs | +102,898 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| Now Compress | now, codecs | **+105,016 B** (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−26,706 B** (measured) |
 
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 143,072 B held against 117,056 B saved. It costs nothing on the tiers
+it — 143,072 B held against 117,088 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
-clears the System 3.0 / 512 KB envelope budget of 194,476 B by 46,712 B.
+clears the System 3.0 / 512 KB envelope budget of 197,402 B by 49,638 B.
 
 ### Where the traps are written down
 
@@ -2571,8 +2606,9 @@ costs the heap one for one: the link line produces a single
 the `.data` output section — the A5 global world, allocated once and never
 purgeable.
 
-**What a month of growth cost the tiers: nothing, and the margin is now
-6,952 B** (2026-09-23, when every byte still was resident). The shipped
+**What a month of growth cost the tiers: nothing, and the margin is
+11,924 B** (2026-09-23, when every byte still was resident; the margin
+re-taken 2026-09-27 against that day's budgets). The shipped
 binary went 178,560 B on 2026-08-28 to 188,672 B, +10,112 B, all of it heap a
 Macintosh no longer had. Whether it cost a fixture is not arithmetic but
 a measurement, and `tools/run_tiers.py` takes it in seconds by moving the
@@ -2580,10 +2616,10 @@ budget instead of the binary. At budgets 10,112 B LARGER — what the
 smaller application left — the tallies are identical: **71, 67 and 64**.
 At budgets 10,112 B smaller, the floor and the System 3.0 tier hold but
 **System 6.0.8 / 512 KB drops to 63**. Bisecting that: the narrowest
-passing fixture is `derived-LHA_Expander_1.0.3.sea`, which needs a budget
-between 116,694 and 117,010 against that tier's 123,962 — **6,952 B of
-headroom**, which is why `tools/check_app_size.py` fails CI on a 2 KB
-move. The per-entry profile did not grow with the code: the formats added
+passing fixture is `derived-LHA_Expander_1.0.3.sea`, which needs
+**116,784 B** (bisected to the byte 2026-09-27) against that tier's
+128,708 — **11,924 B of headroom**, which is why
+`tools/check_app_size.py` fails CI on a 2 KB move. The per-entry profile did not grow with the code: the formats added
 in that month peak at 5 KB (base64) and 8 KB (MIME), against this table's
 existing maximum of 396 KB.
 
@@ -2846,9 +2882,20 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 648,250 B** — measured
-**2026-09-22** with `run.py --mem 1M -D UNC_AT_BUDGET`, which reports
-`FreeMem()` at **668,730 B** and the shell's reserve at a flat 20 KB.
+**What a 1 MB Mac Plus actually leaves the engine is 652,996 B** — measured
+**2026-09-27** with `run.py --mem 1M -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
+which reports `FreeMem()` at **673,476 B** and the shell's reserve at a flat
+20 KB. It was 648,250/668,730 B on 2026-09-22.
+
+**All three tier budgets rose by exactly 4,746 B on 2026-09-27**, re-taken on
+the three machines with the merge and DART's removal in — 648,250 → 652,996
+here, 219,362 → 224,108 and 123,962 → 128,708 on the 512Ke (*512 KB
+machines*). One application-size change landing one for one on three machines
+and two systems; the third was predicted from the first two before it was run,
+and no tally moved. **This is the pair of numbers a probe build reports**, and
+`-D UNC_AT_BUDGET` costs the control 320 B of `CODE` + A5 and the shipped
+configuration 400 B (*Three configurations, one tree*), so the build the
+tallies come from has that much more than these figures say.
 
 **All three tier budgets fell by exactly 32 B on 2026-09-22** when the 1990 DiskDoubler header went in — 648,282 → 648,250 here, 219,394 → 219,362 and 123,994 → 123,962 on the 512Ke. **The arithmetic predicted 64**: that change is +48 B of code and +16 B of A5, and both are supposed to come off the budget one for one. Half of it did not arrive, and the gap is recorded rather than explained — a `CODE` resource is a handle of its own size and the A5 world is rounded, so tens of bytes of growth can land in slack already paid for. The measurement is the number; the arithmetic is what says when to go and take one (DECISIONS.md 2026-09-22, *the header that was a length*).
 
@@ -2964,7 +3011,7 @@ measured on the roomy one says nothing about the tight one:
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 668,730 B | 20 KB | **648,250 B** (measured 2026-09-22 with the 1990 DiskDoubler header in; 668,762/648,282 earlier the same day, 668,580/648,100 on 2026-08-31) |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 673,476 B | 20 KB | **652,996 B** (measured 2026-09-27; 668,730/648,250 on 2026-09-22 with the 1990 DiskDoubler header in, 668,762/648,282 earlier the same day, 668,580/648,100 on 2026-08-31) |
 | System 7 / MultiFinder at the declared 400 KB minimum, **shipped overlay build** | 285,812 B | 20 KB | **265,332 B** |
 | the same partition, resident control build | 202,126 B | 20 KB | **181,646 B** |
 
@@ -2979,7 +3026,7 @@ not.** The eager build holds a 146,176 B bundle from launch, which a 400 KB
 partition has to find on top of the application — so the question was whether
 the mechanism inverts on the smallest partition it declares. It does not:
 the bundle is read and released BEFORE the engine takes its budget, and the
-measured gain there is **+83,686 B**, in line with the 84–103 KB of the
+measured gain there is **+83,686 B**, in line with the 82–105 KB of the
 whole-machine tiers (*Overlays*).
 **What would settle it:** one `-D UNC_AT_BUDGET` run on System 7.0.1 with the
 preferred size built down to 400 KB, which is how the 212,056 B came.
@@ -4217,32 +4264,36 @@ allocation strategy reaches it on a machine this size.
 **The two that the overlays recovered** were failing for a reason the
 mechanism does answer: `derived-a2basic.dmg.sit` needs 240,898 B in one block
 and `derived-Cool_Tools__.sit` 242,464 B, against a resident build's
-219,362 B budget — a shortfall of ~21 KB and ~23 KB, and the shipped build
-grants 84–103 KB more (*Overlays*). `derived-Cool_Tools__.sit` was new to the
+224,108 B budget — a shortfall of ~17 KB and ~18 KB, and the shipped build
+grants 82–105 KB more (*Overlays*). `derived-Cool_Tools__.sit` was new to the
 SAMPLE rather than to the engine, joining the Mac list on 2026-09-22 for its
 UTF-8 names.
 
-**The budget is 219,362 B**, measured **2026-09-22**: a 239,842 B free heap
-read off the machine (`sys30.py --emu mv-512Ke -D UNC_AT_BUDGET`, slots
-swapped per `tools/vmac/README.md`) less the flat 20,480 B reserve, and the
-figure `tools/run_tiers.py` asserts this tier at. **It was carried as
-197,728 B**, taken 2026-08-31 and never re-taken across the stack cut and a
-month of decoder work; under the quarter rule before that it was 163,656 B.
+**The budget is 224,108 B**, measured **2026-09-27**: a 244,588 B free heap
+read off the machine (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D
+UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
+20,480 B reserve, and the figure `tools/run_tiers.py` asserts this tier at. It
+was **219,362 B** from 2026-09-22, and before that **197,728 B** — taken
+2026-08-31 and never re-taken across the stack cut and a month of decoder
+work; under the quarter rule before that it was 163,656 B. This tier's figure
+was PREDICTED before the 2026-09-27 run: the floor and System 6 tiers had both
+risen 4,746 B that morning, so this one was expected at 224,108 B and is
+(*Budget*).
 
 **67/71 was the ceiling for a RESIDENT build, and it was a property of these
-four archives against that build's 219,362 B.** `tools/run_tiers.py` applies
+four archives against that build's budget.** `tools/run_tiers.py` applies
 the same rule on Linux and reproduces that tier fixture for fixture — and
 with a budget per format (*What each format is granted*) it reproduces the
 shipped build's **69/71** here too, refusing the same two by name. The
 minimum budget each one needs, bisected on 2026-09-22 — and the first two are
 what the overlay build now clears:
 
-| fixture | needs | of which | against 219,362 B |
+| fixture | needs | of which | against 224,108 B |
 |---|---|---|---|
-| `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.10x |
-| `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.11x |
-| `derived-Library_ISBN_Barcoder.sit` | **388,033 B** | one 352,161 B block, same shape | 1.77x |
-| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 1.83x |
+| `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.07x |
+| `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.08x |
+| `derived-Library_ISBN_Barcoder.sit` | **388,033 B** | one 352,161 B block, same shape | 1.73x |
+| `synth-dd-m5.dd` | **401,408 B** | 1,536 B per distinct context byte, all 256 of them | 1.79x |
 
 Three of the four ask for more in a SINGLE allocation than the machine has for
 the whole job, and a block a BWT inverts has to be resident, so no allocation
@@ -4277,10 +4328,10 @@ it asks for.
 "unchanged" note had not accounted for — the reserve going flat could not
 help it, and the stack did),
 and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
-nothing else: free heap when extraction starts is **239,842 B** under System
-3.0 against **144,442 B** under System 6.0.8 (both 2026-09-22), a gap of
-95,400 B — the same gap to the byte as when the pair was last taken, against
-System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
+nothing else: free heap when extraction starts is **244,588 B** under System
+3.0 against **149,188 B** under System 6.0.8 (both 2026-09-27), a gap of
+95,400 B — **the same gap to the byte the third time the pair has been
+taken**, against System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch and a double-click launch from a booted Finder.
 
@@ -4298,20 +4349,18 @@ refused for a different reason than before, because a `.Z` is an envelope
 and keeps the whole bundle (*What each format is granted*). `run_tiers.py`
 asserts this tier by name from that day.
 
-**One number under it did NOT reproduce, and it is labelled a hypothesis.**
-The same boot with `-D UNC_AT_BUDGET` grants an LZH archive **753,382 B** at
-the 1 MB floor where the model computes 750,456 B (648,250 resident + a
-102,206 B gain) — the model **pessimistic by 2,926 B**, where the record for
-this arithmetic is a 1,138 B residue. Two things are unattributed and both
-have to be settled before that number means anything: the 648,250 B base was
-taken on the v0.33.0 binary and this tree's is ~24 B smaller, and the
-`-D UNC_AT_BUDGET` build is not the build whose grant is being modelled.
-**What would settle it:** the same probe run on the resident autotest build
-of this tree, so base and grant come from one binary (OPEN_ITEMS.md, *The
-overlay loader*).
+**The 2,926 B that read as a discrepancy under it was the stale base**, and
+it is settled: taken on one tree and one probe pair on 2026-09-27, the base
+is 652,996 B and not 648,250, the LZH grant is 753,382 B as before, and the
+two differ by 4,746 B of base less 1,820 B of residue drift — the 2,926 B to
+the byte. The arithmetic now accounts for ten keep sets exactly (*What it
+buys, against the control*), and the residue it leaves is −714 B rather than
++1,138 (BLOCKERS.md, *Withdrawn claims*; DECISIONS.md 2026-09-27, *the
+residue that was two numbers*).
 
 The reserve explains the rest, and it is now a flat 20 KB on every tier:
-`budget = FreeMem() - 20,480`, which the three 2026-09-22 probes reproduce to
+`budget = FreeMem() - 20,480`, which the three 2026-09-22 probes and the
+three 2026-09-27 ones reproduce to
 the byte on all three machines. It was first measured on 2026-08-31 on the
 512Ke under System 3.0 while the reserve was still 32 KB — `FreeMem()`
 219,212 B, budget 186,444 B, exactly 32,768 apart — and the quarter rule

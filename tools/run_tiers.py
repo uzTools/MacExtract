@@ -30,16 +30,19 @@ Both are swept in seconds:
     tools/run_tiers.py --check                       # both lanes, asserted
     tools/run_tiers.py --tier sys3-512K              # resident, one tier
     tools/run_tiers.py --tier sys3-512K --shipped    # shipped, one tier
-    tools/run_tiers.py --budget 123962 --list tools/vmac/sample.txt
+    tools/run_tiers.py --budget 128708 --list tools/vmac/sample.txt
     tools/run_tiers.py --tier floor-1M --macextract build/rel/macextract
+    tools/run_tiers.py --check-saved     # OVL_SAVED against the two builds
 
 Each prints one line per refusal with the shortfall, and the tally. The
-resident lane reproduced all three tiers exactly on 2026-09-22, with the
-budgets re-taken on the machine the same day — 71/71, 67/71 and 64/71,
-the same four and seven fixtures by name that the emulators refuse. The
-shipped lane reproduces the two tiers a machine has run the v0.33.0
-binary on: 71/71 at the floor target and **69/71** at System 3.0 /
-512 KB, the same two fixtures by name (FORMATS.md, *512 KB machines*).
+resident lane reproduces all three tiers exactly — 71/71, 67/71 and
+64/71, the same four and seven fixtures by name that the emulators
+refuse — and held every one of them when the budgets were re-taken on
+2026-09-27. The shipped lane reproduces all three tiers a machine has
+run: 71/71 at the floor target, **69/71** at System 3.0 / 512 KB and
+**66/71** at System 6.0.8 / 512 KB, refusing the same fixtures by name;
+the last of those it PREDICTED before anything ran it (FORMATS.md,
+*512 KB machines*).
 
 How the shipped lane gets a budget per format
 ---------------------------------------------
@@ -75,9 +78,9 @@ What it CANNOT see, and why the emulator stays
   that walk is not reachable from the CLI, so this lane keeps them for
   those two formats always and grants 9,808 B LESS than the machine
   does. Deliberately pessimistic, and it decides nothing: the narrowest
-  margin on any Compact Pro or zip layer in the sample is 143,800 B
-  (`derived-MUSFMT10.ZIP` at System 6.0.8 / 512 KB, measured
-  2026-09-26).
+  margin on any Compact Pro or zip layer in the sample is 146,726 B
+  (`derived-MUSFMT10.ZIP` at System 6.0.8 / 512 KB, re-measured
+  2026-09-27).
 - **Fragmentation.** The budget is one number; the Memory Manager also
   has to find ONE piece that big. The Mac shell reports that case
   separately (`gShortPiece`, "Memory is too broken up"), and nothing
@@ -88,6 +91,15 @@ What it CANNOT see, and why the emulator stays
   peaks at 37,356 B before its block here and 37,372 B there. Tens of
   bytes, not thousands — but a fixture that misses by 20 bytes is not
   decided by this file.
+- **The probe's own weight.** Every budget here was read off a
+  `-D UNC_AT_BUDGET` build, and that switch costs the shipped
+  configuration 400 B of `CODE` + A5 and the control 320 B (measured
+  2026-09-27, `m68k-apple-macos-size`). The sweeps whose tallies these
+  assert run WITHOUT it, so every budget in TIERS is ~320 B lower than
+  the build being graded actually has, and every shipped prediction
+  ~400 B lower. Pessimistic, and it decides nothing at the margins
+  below; it is not corrected arithmetically, because that is how the
+  floor budget was once made worse.
 - **Anything that is not memory.** Names, CRCs, the File Manager, the
   interface. Those are `tools/vmac/run.py`'s.
 - **What the shortfall means.** It is a floor: the first refused
@@ -116,10 +128,18 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (219362, "System 3.0, Macintosh 512Ke (239,842 B free)"),
-    "sys6-512K": (123962, "System 6.0.8, Macintosh 512Ke (144,442 B free)"),
-    "floor-1M":  (648250, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (224108, "System 3.0, Macintosh 512Ke (244,588 B free)"),
+    "sys6-512K": (128708, "System 6.0.8, Macintosh 512Ke (149,188 B free)"),
+    "floor-1M":  (652996, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+
+# Re-taken on all three machines 2026-09-27, and **all three rose by exactly
+# 4,746 B**: 219,362 -> 224,108, 123,962 -> 128,708 and 648,250 -> 652,996.
+# One application-size change landing one for one on three different machines
+# and two different systems, which is what this target is supposed to do; the
+# third was PREDICTED from the first two before it was run. The 2026-09-22 set
+# was taken before the merge and DART's removal. No tally moved: 71/71, 67/71
+# and 64/71 with the same names (FORMATS.md, *512 KB machines*).
 
 # Re-taken 2026-09-22 with the 1990 DiskDoubler header in, and **all three
 # fell by exactly 32 B**: 219,394 -> 219,362, 123,994 -> 123,962 and
@@ -164,27 +184,45 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # ---------------------------------------------------------------------------
 
 # What the overlay build does NOT carry resident, in bytes: the control's
-# `CODE` + A5 less the shipped build's, 151,588 + 37,788 - 53,332 - 18,988.
+# `CODE` + A5 less the shipped build's, 151,612 + 37,796 - 53,356 - 18,964.
 # Both measured 2026-09-26 with `m68k-apple-macos-size` (FORMATS.md,
 # *Three configurations, one tree*), which is the only place to correct them.
-OVL_SAVED = 117056
+# It read 117,056 — that table's PREVIOUS set — until 2026-09-27: v0.34.0's
+# Compact Pro segment check moved all four figures and this line was not one
+# of the places corrected. check_saved() below now grades it against the two
+# builds whenever they and the toolchain are present, so the next 32 B fails
+# `ci.sh` instead of surfacing as a residue.
+OVL_SAVED = 117088
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
 OVL_HANDLE = 8
 
-# The constant the three machine-measured granted budgets leave over the
-# arithmetic above (FORMATS.md, *What it buys, against the control*): with it,
-# this model reproduces 734,656 / 752,898 / 746,682 B exactly, and it is the
-# same constant for all three. What it is made of is not established — those
-# figures were taken on 2026-09-24 on the branch this merged from, and the
-# merge and DART's removal have moved the code under them. It is carried as a
-# residue and labelled as one; DROPPING IT CHANGES NO PREDICTION, because the
-# narrowest margin between a layer's demand and its budget is 46,712 B at the
-# two tiers this lane asserts and 13,028 B at any of the three (measured
-# 2026-09-26 by bisecting every layer of all 71 fixtures; DECISIONS.md
-# 2026-09-26, *a budget per format, and one per layer*).
-OVL_RESIDUE = 1138
+# The constant the machine-measured granted budgets leave over the arithmetic
+# above. **Re-measured 2026-09-27 with base and grant from one tree and one
+# probe pair, over ELEVEN keep sets** — every row of FORMATS.md's *What each
+# format is granted* that the Mac sample can reach, the envelope included —
+# and all eleven leave the same constant to the byte (FORMATS.md, *What it
+# buys, against the control*).
+#
+# 368 B of it is now attributed: the probe build is not the shipped build, and
+# `-D UNC_AT_BUDGET` costs the shipped configuration 400 B of `CODE` + A5
+# against the control's 320 B. The remaining 346 B is unattributed slack, and
+# a budget is `FreeMem()` on a binary — so this moves whenever the
+# application's size does, exactly like TIERS above. It was +1,138 B on
+# 2026-09-24's branch: that is 1,852 B of drift across the merge, DART's
+# removal and v0.34.0, and NOT a structural constant (DECISIONS.md
+# 2026-09-27, *the residue that was two numbers*).
+#
+# DROPPING IT CHANGES NO PREDICTION, because the narrowest margin between a
+# passing layer's demand and its budget is **15,954 B** across the three tiers
+# this lane now asserts — `a2ps.V4.3.tar.Z`'s compress layer at System 6.0.8 /
+# 512 KB, which needs 86,048 B of 102,002 — and 49,638 B if the 512 KB System 6
+# tier is left out (re-measured 2026-09-27 by bisecting every layer of all 71
+# fixtures at the re-taken budgets; it was 13,028 B and 46,712 B at the
+# 2026-09-22 ones. DECISIONS.md 2026-09-26, *a budget per format, and one per
+# layer*).
+OVL_RESIDUE = -714
 
 # The fourteen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/`. They are checked against that build whenever it
@@ -342,6 +380,51 @@ def check_images(builddir=os.path.join(REPO, "build", "mac")):
     return "image sizes agree with %s" % os.path.relpath(builddir, REPO)
 
 
+def code_and_a5(builddir):
+    """`CODE` + A5 for one build, the way tools/build_mac.sh reads them.
+
+    Returns None where the build or the m68k size tool is absent, which is
+    every machine without Retro68 installed — this lane still runs there.
+    """
+    toolchain = os.environ.get("RETRO68", "/opt/Retro68-build/toolchain")
+    size = os.path.join(toolchain, "bin", "m68k-apple-macos-size")
+    gdb = os.path.join(builddir, "MacExtract.code.bin.gdb")
+    if not os.access(size, os.X_OK) or not os.path.exists(gdb):
+        return None
+    out = subprocess.run([size, gdb], capture_output=True, text=True)
+    row = out.stdout.splitlines()[1].split()          # text data bss ...
+    return int(row[0]) + int(row[1]) + int(row[2])
+
+
+def check_saved(ship=os.path.join(REPO, "build", "mac"),
+                control=os.path.join(REPO, "build", "mac-resident")):
+    """Grade OVL_SAVED against the two builds it is the difference of.
+
+    Every format's gain is OVL_SAVED less the images it keeps, so a stale
+    OVL_SAVED is a stale budget for all thirty formats at once — and it went
+    32 B stale on 2026-09-26 with FORMATS.md corrected and this file not,
+    which then read as part of the residue. A difference of two builds can be
+    checked, so it is.
+    """
+    a, b = code_and_a5(control), code_and_a5(ship)
+    if a is None or b is None:
+        return ("OVL_SAVED not checked (no m68k size tool, or build/mac and "
+                "build/mac-resident are not both built)")
+    if a - b != OVL_SAVED:
+        raise SystemExit(
+            "run_tiers: OVL_SAVED is %d B and the builds say %d B —\n"
+            "    %s: %d B of CODE + A5\n    %s: %d B\n"
+            "  Re-take OVL_SAVED, FORMATS.md's *Three configurations, one "
+            "tree*\n  and OVL_RESIDUE together: the residue is measured "
+            "against OVL_SAVED,\n  so correcting one alone moves every "
+            "format's budget by the difference."
+            % (OVL_SAVED, a - b, os.path.relpath(control, REPO), a,
+               os.path.relpath(ship, REPO), b))
+    return ("OVL_SAVED agrees with %s less %s (%d B)"
+            % (os.path.relpath(control, REPO), os.path.relpath(ship, REPO),
+               OVL_SAVED))
+
+
 def gain(keep):
     """What the overlay release gives this format's layer, in bytes."""
     if not keep:                          # the whole bundle stays
@@ -485,9 +568,16 @@ def main():
     ap.add_argument("--check-images", action="store_true",
                     help="grade IMAGES against build/mac and stop; `make "
                          "clean` means --check runs before that build exists")
+    ap.add_argument("--check-saved", action="store_true",
+                    help="grade OVL_SAVED against build/mac and "
+                         "build/mac-resident and stop; needs BOTH built, so "
+                         "it runs after ci.sh's resident control")
     a = ap.parse_args()
     if a.check_images:
         print("run_tiers: %s" % check_images())
+        return 0
+    if a.check_saved:
+        print("run_tiers: %s" % check_saved())
         return 0
     if not a.tier and not a.budget and not a.check:
         ap.error("give --tier, --budget or --check")
@@ -499,6 +589,7 @@ def main():
     if a.shipped or a.check:
         fmts, keep = formats(), keep_sets()
         print("run_tiers: %s" % check_images())
+        print("run_tiers: %s" % check_saved())
         tmp = tempfile.mkdtemp(prefix="run_tiers.")
     try:
         if a.check:

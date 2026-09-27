@@ -21,10 +21,12 @@ file moving, and FORMATS.md's size table spent four days describing
 tables that had stopped being emitted.
 
 The threshold is not a taste: at the System 6.0.8 / 512 KB tier the
-narrowest PASSING fixture (derived-LHA_Expander_1.0.3.sea) has 6,952 B
-of headroom, bisected 2026-09-23. A 2,048 B step is therefore three
-deliberate acknowledgements before a tier loses a fixture, and each one
-is a commit that has to say so.
+narrowest PASSING fixture (derived-LHA_Expander_1.0.3.sea) has 11,924 B
+of headroom — it needs 116,784 B against that tier's 128,708, both
+re-taken 2026-09-27; it was 6,952 B when this file was written, against a
+budget 4,746 B lower. A 2,048 B step is therefore five deliberate
+acknowledgements before a tier loses a fixture, and each one is a commit
+that has to say so.
 
     tools/check_app_size.py build/mac/MacExtract.code.bin
 
@@ -105,7 +107,7 @@ def main():
           "  tools/run_tiers.py --check,\n"
           "  then raise EXPECT in this file in the SAME commit and say what\n"
           "  the bytes bought. At the sys6-512K tier the narrowest passing\n"
-          "  fixture had 6,952 B of headroom when this was written."
+          "  fixture had 11,924 B of headroom on 2026-09-27."
           % (what, abs(delta), size, EXPECT, TAKEN), file=sys.stderr)
     return 1
 

@@ -287,6 +287,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
 - 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
 - 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
+- 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
 
 ---
 
@@ -18139,3 +18140,73 @@ SpaceSaver runs did not. Both instances have the same shape and the second
 adds one method to it: **grep for the COMMENT, not for the bug.** The comment
 is the proof somebody understood the problem once, and it is evidence about
 every sibling that does not have it.
+
+## 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
+
+Yesterday's probe granted an LZH archive 753,382 B at the 1 MB floor where
+`tools/run_tiers.py` computed 750,456 B, and that 2,926 B was labelled a
+hypothesis because the base and the grant came from different binaries. Taken
+today from ONE tree and ONE probe pair — `run.py --mem 1M -D UNC_AT_BUDGET`
+with and without `-D UNC_OVL_RESIDENT` — it decomposes exactly:
+
+    base, re-taken       652,996 B   was 648,250      +4,746
+    residue, re-taken       -714 B   was  +1,138      -1,852 (-1,820 net of
+                                                       OVL_SAVED's 32 B)
+    2,926 B accounted for to the byte
+
+**So the model was never pessimistic. It was arithmetic on a stale base**, and
+the direction was the one arithmetic cannot be trusted in: the same mistake
+this file records for the floor budget, where 896 B of UTF-8 fold — a correct
+sum on a correct formula — was subtracted from a base three weeks old and
+moved the figure away from the machine. **A difference of two measurements is
+a measurement only if both come from the same binary.** Until then it is two
+numbers, which is why yesterday refused to correct anything.
+
+### The constant that fit three formats was a property of the build
+
+`OVL_RESIDUE` reproduced three granted budgets exactly with one value, and
+that read as structure. It is not: re-measured on this tree it is **−714 B**,
+the opposite sign, and 1,852 B away. What the three-row fit actually
+established was that the PER-FORMAT part of the arithmetic — images kept, 8 B
+of block header each — is right, because an error there could not have been
+absorbed by one additive term shared by three different keep sets. The term
+itself is per-build slack, and a budget is `FreeMem()` on a binary: it goes
+stale exactly when the tier budgets do, and must be re-taken with them.
+
+Ten keep sets now, not three, all of them from one pair of binaries and all
+leaving the same constant to the byte — including the envelope row, which
+LOSES 26,706 B because the bundle stays. Three measurements against one free
+parameter are two chances to disagree; ten are nine. 368 B of the constant is
+now attributed as well: the probe is not the build being modelled, and
+`-D UNC_AT_BUDGET` costs the eager configuration 400 B of `CODE` + A5 against
+the control's 320 B, so a pair measured through it saves 116,720 B where the
+shipped pair saves 117,088 B. What is left unattributed is 346 B.
+
+### Two smells, both already on the list, both paying out again
+
+**A cross-file contradiction.** `OVL_SAVED` was 117,056 B under a comment
+naming FORMATS.md's *Three configurations, one tree* as "the only place to
+correct them" — and that table read 117,088 B, corrected there for v0.34.0's
+Compact Pro segment check and not here. 32 B, inside the residue, invisible.
+A constant that is the DIFFERENCE OF TWO BUILD ARTEFACTS can be graded against
+them, so `run_tiers.py --check-saved` now does, out of `ci.sh` after the
+resident control. **A comment saying where a number lives is not a check.**
+
+**A number quoted for the wrong question.** The open item attributed the base
+gap to "this tree's application is ~24 B smaller", which is what the code-size
+table says v0.34.0's segment check cost. The base had moved 4,746 B — 200
+times that — because the table answers *what did this change cost*, not *what
+is the difference between these two dates*. The tell was available without any
+measurement: a 24 B application difference cannot produce a 2,926 B
+discrepancy, and the estimate was quoted anyway because it was the only size
+number in reach.
+
+### What it cost, and the one number that was free
+
+Two 1 MB boots to settle it and nine more to widen it from three keep sets to
+ten, plus three tier re-takes on three machines. All three tier budgets rose
+by the same 4,746 B, and no tally moved on either lane — so the cost of having
+carried a stale base was nothing yet, which is exactly the condition under
+which it would have been carried until it cost something. The third tier's
+budget was PREDICTED from the first two before that boot: two machines had
+moved 4,746 B, so System 3.0 / 512 KB was expected at 224,108 B, and it is.
