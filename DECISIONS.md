@@ -303,6 +303,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
 - 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
 - 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
+- 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
 
 ---
 
@@ -18959,3 +18960,51 @@ unmutated turned a coverage question into a grading one. **A function
 at zero is a question about every suite, not just the one you were
 measuring** — and the cheapest way to tell them apart is to run the
 instrument on input that is supposed to work.
+
+
+## 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
+
+`-lh3-`'s match path turned out to be graded by nothing, so `-lh2-`
+was asked the same question the same way: run the GRADED suite under
+the coverage build and read which functions never execute.
+
+**`-lh2-` came out much better, and for a reason worth stating.** Its
+archives are written by a real encoder — the patched LHa this repo
+builds — so `unc_lzdyn_decode` and `lzd_decode_p` are at 100 %. The
+`-lh3-` hole existed because this project writes its own `-lh3-`
+streams and the encoder only emitted literals; where somebody else's
+encoder makes the input, that class of hole does not arise.
+
+**One path was still at zero: `lzd_reconst`.** The adaptive tree
+halves every frequency and rebuilds when the root's count reaches
+0x8000 — 32,768 codes — and every subject in the set was far short of
+that. It is the `-lh1-` decoder's own shape too, and there
+`lzah_reconst` is at 100 %, because real corpus archives are long
+enough. `-lh2-` has no corpus archives at all; its subjects are the
+ones this file chooses, and none was big enough.
+
+**Choosing one took three attempts, and the two failures are the
+instructive part**:
+
+- **48 KB of incompressible bytes** added no `-lh2-` entry at all. LHa
+  stores what it cannot shrink as `-lh0-`, so the subject was there
+  and the method was not — visible only because the entry COUNT did
+  not move, which is why that count is printed.
+- **80 KB of digits** compressed and stayed `-lh2-`, and still missed.
+  Ten symbols make a three-byte match available almost everywhere, so
+  the codes ran at roughly a quarter of the bytes.
+- **50 KB over a 64-symbol alphabet** does both at once: six bits of
+  entropy a byte, so Huffman alone shrinks it and the method survives,
+  while a three-byte repeat is rare enough that the code count tracks
+  the length.
+
+`lzd_reconst` and `lzd_update_c` are now at 100 %, and this is
+GRADING rather than coverage: `run_lzh.py` has LHa's own decoder read
+each archive before this engine is handed one.
+
+**The general shape, now seen twice in one day.** A decoder path
+guarded by a threshold — a frequency ceiling, a table restart, a code
+width — is reached by the size of the input rather than by its shape,
+and a suite assembled from small subjects will never reach any of
+them. `lzd_update_p` is the one left here, wanting 32,768 MATCHES
+rather than codes, and it is recorded rather than chased.

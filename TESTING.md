@@ -808,10 +808,32 @@ anything about the suite.**
    | `lzs_decode_p` | 0 | **88.9 %** |
    | `lzs_read_tree_p` | 0 | **64.3 %** |
 
-   `-lh2-` is untouched by design — it is written by the patched LHa
-   this repo builds on demand, and a seed a reproducible fuzzer needs
-   cannot depend on a binary that may not be built. (`lzd_flush` shows
-   coverage because the `-lh3-` decoder calls it too.)
+   `-lh2-` is untouched by design as far as the FUZZER goes — it is
+   written by the patched LHa this repo builds on demand, and a seed a
+   reproducible fuzzer needs cannot depend on a binary that may not be
+   built. (`lzd_flush` shows coverage because the `-lh3-` decoder calls
+   it too.)
+
+   **Its graded suite was asked the same question, and one path failed
+   it.** Run under the coverage build, `run_lzh.py`'s `-lh2-` entries
+   reach `unc_lzdyn_decode` and `lzd_decode_p` at 100 % — so unlike
+   `-lh3-`, the match path was always exercised, the encoder being a
+   real one. But **`lzd_reconst` was at zero**: the adaptive tree
+   halves every frequency and rebuilds when the root's count reaches
+   0x8000, which is 32,768 codes, and every subject was far short of
+   it. A subject that crosses it is now in the set (`-lh2-` entries 15
+   → 18) and `lzd_reconst` and `lzd_update_c` are at 100 %.
+
+   **Two obvious shapes failed first, and both are worth knowing.** 48
+   KB of incompressible bytes added no `-lh2-` entry at all — LHa
+   stores what it cannot shrink as `-lh0-`. 80 KB of digits compressed
+   and stayed `-lh2-`, but ten symbols make a three-byte match
+   available almost everywhere, so the codes ran at roughly a quarter
+   of the bytes and still missed the threshold. A 64-symbol alphabet
+   does both at once: six bits of entropy a byte, so Huffman alone
+   shrinks it, while a three-byte repeat is rare enough that the code
+   count tracks the length. `lzd_update_p` stays partial — its own
+   branch wants 32,768 MATCHES, which no subject here reaches.
 
    A 400-case run had far more at zero and most of it was sampling; the
    difference between 400 and 3,000 is how the two were told apart, and

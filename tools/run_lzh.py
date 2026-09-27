@@ -476,6 +476,28 @@ def lh2(macextract, problems):
                            + b"PAD" * 100
                            + bytes((i * 91 + 7) & 0xFF for i in range(6000)))
         data["zeros.bin"] = b"\0" * 40000
+        # BIG ENOUGH TO REBUILD THE TREE. -lh2- halves every frequency
+        # and rebuilds when the root's count reaches 0x8000, which is
+        # 32,768 codes — and every subject above is far short of that,
+        # so `lzd_reconst` was covered by nothing until 2026-09-27
+        # (measured with tools/fuzz_cover.py's build; BLOCKERS.md).
+        # Two conditions at once, and each ruled out an obvious shape.
+        # It must COMPRESS, or LHa stores it as -lh0- and adds no -lh2-
+        # entry at all — which is what 48 KB of incompressible bytes
+        # did. And nearly every code must be a LITERAL, or the count
+        # falls far short of the length — which is what 80 KB of digits
+        # did, ten symbols making a three-byte match available almost
+        # everywhere. A 64-symbol alphabet does both: six bits of
+        # entropy a byte, so Huffman alone shrinks it and the method
+        # survives, while a three-byte repeat is rare enough that the
+        # codes track the bytes. Deterministic: a fixed recurrence,
+        # not `random`.
+        _x = 0x12345678
+        _b = bytearray()
+        for _ in range(50000):
+            _x = (1103515245 * _x + 12345) & 0xFFFFFFFF
+            _b.append(0x41 + ((_x >> 16) % 64))
+        data["rebuild.txt"] = bytes(_b)
         for name, content in sorted(data.items()):
             open(os.path.join(work, name), "wb").write(content)
         for level in (0, 1, 2):
