@@ -292,6 +292,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
 - 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
 - 2026-09-27 (the inventory that was kept twice) — a gaps file and a licence notice both listed what was borrowed, they disagreed, and the list is now one file and a check
+- 2026-09-27 (half a citation) — one of the two facts behind DiskDoubler method 8 was measured away and the other turned out to be unfalsifiable on this corpus, which is a better answer than unmeasured
+- 2026-09-27 (the check that tested the wrong thing) — a provenance check built to catch a shed citation missed one within the hour, because it tested for a mention and shedding leaves a mention behind
 
 ---
 
@@ -18442,3 +18444,89 @@ per-file detail is gone from both, to NOTICE.
 session-start reading from ~15k to ~12k. The brief is not closed — six
 items still have a route — but the LICENCE question is, and stating
 that once in Part 1 costs a paragraph where tracking it cost a table.
+
+
+## 2026-09-27 (half a citation) — one of the two facts behind DiskDoubler method 8 was measured away and the other turned out to be unfalsifiable on this corpus, which is a better answer than unmeasured
+
+`src/unc_internal.h` carried `Source: XADDiskDoublerParser.m case 8`
+for two facts at once: that DiskDoubler method 8 IS Compact Pro's two
+decode stages, and that its Huffman block is 0xfff0 where Compact
+Pro's own is 0x1fff0. It was filed as **probably the cheapest thing
+in the table**, because Compact Pro's own description is published and
+`tools/derive_cpt.py` already reads it from those pages alone. It paid
+half.
+
+**The first fact is measured.** `tools/derive_dd8.py` decodes every
+method-8 fork in reach with that reader and compares against the
+sha256 an independent oracle recorded: **7 of 7, byte for byte.** It
+is no longer anybody's word that method 8 is Compact Pro inside a
+DiskDoubler container.
+
+**The second cannot be measured here, and the grid is what says so.**
+The block size was swept DOWN as well as up, which is the part worth
+transferring: a size larger than the cost a stream ever reaches never
+flushes, so it decodes identically and pins nothing, while a size
+below that cost makes the decoder look for a tree that is not there
+and fails. **Every size at or above 0x1000 reads all 7 forks; the
+largest that fails anywhere is 0x400.** So these streams never reach
+even 0x400 cost units, 0xfff0 is unfalsifiable on this corpus, and the
+honest entry is not "unmeasured" but "no specimen here can tell" —
+with the specimen named: a method-8 fork whose coder output crosses
+0xfff0 cost units, 2 per literal and 3 per match. The biggest in
+reach is 44,549 B and compresses to 1,230.
+
+**Two harness errors on the way, both worth the note.** The first run
+returned NONE for all seven, and the reflex — that the claim was
+false — was wrong twice over. The stages are FUSED in the published
+reading: `lzh` sinks through an `Rle` object rather than handing back
+an intermediate, so calling both in sequence decodes twice. And a
+method-8 fork opens with **sixteen bytes whose sum selects the path**,
+which are the container's and not the coder's. What established the
+harness rather than the claim was checking the OFFSETS first: four
+stored forks in the same archive hash to their oracle values exactly,
+so the container arithmetic was right and the fault had to be in the
+decode. **Grade the harness on a case whose answer is already known
+before reading anything into a failure** — here that case cost one
+command and was sitting in the same file.
+
+
+## 2026-09-27 (the check that tested the wrong thing) — a provenance check built to catch a shed citation missed one within the hour, because it tested for a mention and shedding leaves a mention behind
+
+`tools/check_provenance.py` was written to end the "recorded as shed
+while still carrying a citation" class of bug, and its second stated
+guarantee was the reverse direction: **a file in CARRIES that sheds its
+last citation fails, so a row cannot quietly stay in the inventory
+after it is empty.**
+
+Within the hour, `src/fmt_mime.c`'s only live citation — the uu
+terminator — moved to mpack, leaving one sentence saying it had been
+macutils' until that day. **The check passed.** It tested whether the
+file MENTIONS either reference, and shedding a citation properly leaves
+a mention behind: the note that says what the file no longer owes. The
+one event the check existed to catch was the one event it could not
+see.
+
+**The fix is the marker, and NOTICE had already named it**: *"Files
+that transcribe XADMaster code carry a `Source: reference/XADMaster/
+<file>` comment."* Liveness is that marker, not the mention. Six
+carriers stated their citations without one — `fmt_packit.c`,
+`unc_lzah.c` and the four tolerance files — so those were normalised,
+which also retires the complaint the inventory carried for a day that
+the `Source:` grep *"finds 11 of 17 files and no more"*: it finds all
+of them now, and the second spelling is gone.
+
+The selftest gained the assertion that makes this stick: **liveness
+must be a strict subset of mention.** If the two sets are ever equal
+the script has collapsed back into the version that passed
+`fmt_mime.c`, and it says so rather than printing ok.
+
+**The transferable part is about building checks, not about licences.**
+Three times this project has recorded a file as shed while it still
+carried a citation, and the check aimed at that class was built around
+the wrong predicate on the first try. *A check's predicate has to be
+the thing that CHANGES at the event*, and "mentions XADMaster" does not
+change when a citation goes — only the marked form does. The general
+question to ask of a new check: **what does the source look like
+immediately before and immediately after the event, and does the
+predicate differ between those two states?** Here it did not, and one
+worked example would have shown it — which is what the selftest now is.

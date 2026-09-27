@@ -21,8 +21,8 @@
  * MC68000 conventions, most significant byte first". The byte-swapped
  * magics 0x00160500 / 0x07160500 and version 0x00000200 below accept a
  * header written the other way round, and read the entry table to
- * match. XADMaster is the sole source of that — LGPL, see NOTICE, and
- * reference/XADMaster/XADAppleSingleParser.m. It stops at the table:
+ * match. XADMaster is the sole source of that — LGPL, see NOTICE.
+ * Source: reference/XADMaster/XADAppleSingleParser.m. It stops at the table:
  * the CONTENTS of entries 8 and 9 are read big-endian whatever the
  * header said, because the RFC defines them as Macintosh structures
  * rather than as header fields.

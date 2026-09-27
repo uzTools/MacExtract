@@ -3,9 +3,15 @@
  * that carries both forks and the Finder info.
  *
  * Sources (transcribed, never guessed):
- *   reference/macutils/hexbin/hexbin.c  — dispatch: a line beginning
- *       "begin " selects the uu decoder, after any amount of mail
- *       banner has been skipped.
+ *   reference/mpack/uudecode.c          — dispatch, since 2026-09-27
+ *       (macutils' hexbin.c until then): any amount of preamble is
+ *       skipped looking for a line that begins "begin ", and the
+ *       terminator is "end" followed by whitespace. mpack's state
+ *       machine spells both out — st_start for the first and st_last
+ *       for the second — and mpack is permissive (CMU), where hexbin
+ *       is not. What mpack does NOT state, and what is therefore
+ *       still macutils' below: the CR/LF rule, because mpack is
+ *       LF-only throughout (part_gets breaks on '\n' alone).
  *   reference/macutils/hexbin/mu.c      — the UUTool layout: the data
  *       fork's section, then an OPTIONAL " .rsrc" section, then a
  *       " .finfo" section holding the Finder info, each terminated by

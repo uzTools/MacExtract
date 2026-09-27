@@ -59,9 +59,9 @@
 /* CRC-16 with reflected polynomial 0xA001 (CRC-16/USB when init and
  * final xor are 0xFFFF). The standard specifies one checksum and this
  * is not it: XADMaster is the sole source, accepting this as a fallback
- * for files made by encoders that reached for the wrong table — see
- * reference/XADMaster/XADMacArchiveParser.m (XADCRCTable_a001 use),
- * LGPL, see NOTICE. Bitwise form; runs over 124 bytes only, speed is
+ * for files made by encoders that reached for the wrong table.
+ * Source: reference/XADMaster/XADMacArchiveParser.m (XADCRCTable_a001
+ * use, and the nonzero-date test above) — LGPL, see NOTICE. Bitwise form; runs over 124 bytes only, speed is
  * irrelevant. */
 static uint16_t mb_crc16_a001(uint16_t crc, const uint8_t *buf, int32_t len)
 {

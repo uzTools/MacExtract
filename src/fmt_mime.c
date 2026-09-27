@@ -437,8 +437,10 @@ static int mime_hex(int c)
     return -1;
 }
 
-/* Does this line end a uu document? Source: reference/macutils/hexbin,
- * as src/fmt_uu.c reads it — the word "end" on a line of its own. */
+/* Does this line end a uu document? Source: reference/mpack/uudecode.c
+ * (permissive, CMU), the st_last state: "end" followed by whitespace.
+ * macutils' hexbin until 2026-09-27; this test is looser than either,
+ * accepting "end" and ignoring what follows. */
 static int mime_uu_is_end(const uint8_t *l, int32_t len)
 {
     return len >= 3 && l[0] == 'e' && l[1] == 'n' && l[2] == 'd';

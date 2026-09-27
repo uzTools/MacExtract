@@ -8,7 +8,9 @@
  * Aladdin published nothing about it, and neither deark nor macutils
  * reads it. So it stays, and so does what that costs.
  *
- * Layout (source: reference/XADMaster/XADStuffItSplitParser.m,
+ * Source: reference/XADMaster/XADStuffItSplitParser.m — the whole
+ * layout below.
+ * Layout (reference/XADMaster/XADStuffItSplitParser.m,
  * +recognizeFileWithHandle:, +volumesForHandle: and -parse — LGPL,
  * see NOTICE):
  *

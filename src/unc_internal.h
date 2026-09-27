@@ -1032,10 +1032,23 @@ typedef int (*UncPutRun)(void *ctx, const uint8_t *p, uint32_t n);
 /* ------------------------------------------------------------------ */
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
 /* which is Compact Pro compression inside a DiskDoubler container      */
-/* (Source: XADDiskDoublerParser.m case 8). The only difference is the  */
+/* THAT METHOD 8 IS COMPACT PRO'S STAGES IS MEASURED, since            */
+/* 2026-09-27: all 7 method-8 forks in reach decode byte for byte      */
+/* against the oracle's sha256 with a reader written from Compact      */
+/* Pro's three published wiki pages alone (tools/derive_dd8.py).       */
+/* THE BLOCK SIZE BELOW IS STILL XADDiskDoublerParser.m case 8's,      */
+/* and this corpus cannot pin it: every size at or above 0x1000 reads  */
+/* every fork and the largest that fails anywhere is 0x400, so no      */
+/* stream here reaches even that much cost and 0xfff0 is unfalsifiable */
+/* on it. What would pin it is a fork whose coder output crosses       */
+/* 0xfff0 cost units (DECISIONS.md 2026-09-27, *half a citation*).     */
+/* The only difference is the                                          */
 /* Huffman block size: 0x1fff0 for Compact Pro (fmt_cpt.c, CPT_BLOCK,   */
 /* and the published description agrees) and 0xfff0 for DiskDoubler     */
-/* (fmt_dd.c, at the call). This comment had the two the WRONG WAY      */
+/* (fmt_dd.c, at the call) —                                           */
+/* Source: reference/XADMaster/XADDiskDoublerParser.m case 8, for that  */
+/* 0xfff0 and nothing else in this block any more.                      */
+/* This comment had the two the WRONG WAY                               */
 /* ROUND until 2026-09-20, when a fetched specification disagreed with  */
 /* it and the code turned out to be right.                              */
 /* ------------------------------------------------------------------ */

@@ -41,7 +41,9 @@
  * one the entry is reported and the reader resyncs by scanning for the
  * next magic, which is macutils' strategy (pit.c "trying to sync") and
  * the only thing possible, since an undecodable entry does not say
- * where it ends. XADMaster's two handles are the reference for both
+ * where it ends.
+ * Source: reference/macutils/macunpack/pit.c (the resync) and
+ * reference/XADMaster/XADPackItParser.m (both ciphers). XADMaster's two handles are the reference for both
  * ciphers, and for the rule that the next block begins at the next
  * EIGHT-byte boundary after an encrypted one rather than the next
  * byte. Appendix B lists "PMa5" twice, for both ciphers, so the

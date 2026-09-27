@@ -205,7 +205,8 @@ static void lzah_update(Lzah *h, uint32_t c)
  * for UNIX writes the same five steps for LArc's -lz5- and not for
  * -lh1- (reference/lha/src/larc.c, decode_start_lz5) and lhasa fills
  * the -lh1- buffer with spaces (lh1_decoder.c), so this pattern here
- * is XADMaster's alone and is in OPEN_ITEMS.md's inventory. ARC's Trimmed takes the zeros and NOT the pattern: deark
+ * is XADMaster's alone and is in NOTICE's inventory.
+ * Source: reference/XADMaster/XADLZHDynamicHandle.m (resetLZSSHandle). ARC's Trimmed takes the zeros and NOT the pattern: deark
  * passes history_fill_val = 0 and its ring buffer starts zeroed
  * (reference/deark/foreign/lzhuf.h, lzhuf_Decode_init); a Trimmed
  * member whose first match reaches back past the start of the data is

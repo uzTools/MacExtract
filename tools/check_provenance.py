@@ -20,9 +20,15 @@ the two sets below, and this fails when one is not:
                 owes, or to compare against it.  Nothing borrowed.
 
 A file that gains a citation fails as unclassified: inventory it.  A
-file in CARRIES that stops mentioning anything fails too — that is a
-row that can leave, and the point of the check is that nobody has to
-notice it by hand.
+file in CARRIES whose last Source-marked citation goes fails too — that
+is a row that can leave, and the point of the check is that nobody has
+to notice it by hand.
+
+LIVENESS IS THE SOURCE: MARKER, NOT THE MENTION, and that distinction
+is the whole check.  The first version of this script tested for a
+mention, and within the hour `src/fmt_mime.c` shed its last citation,
+kept one historical sentence, and passed — failing in exactly the
+direction the script was written to catch (BLOCKERS.md).
 
 Moving a file from CARRIES to HISTORICAL is the act of shedding it:
 do it in the same commit as the re-citation, with NOTICE.
@@ -50,7 +56,6 @@ CARRIES = {
     "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, PackIt's keytr1, ARC's garble",
     "fmt_binhex.c":     "macutils hexbin's rules about text that has been mailed",
     "fmt_uu.c":         "the same, plus UUTool's MU layout (macutils mu.c)",
-    "fmt_mime.c":       "the uu terminator, as fmt_uu.c reads it",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary.c":  "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
@@ -65,17 +70,31 @@ HISTORICAL = {
     "fmt_exo.c", "fmt_exo_probe.c", "fmt_foreign.c", "fmt_superdisk.c",
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",
-    "fmt_binhex_priv.h", "sit6_tables.h",
+    "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c",
 }
 
 MENTION = re.compile(r"XAD|macutils")
 
+# A LIVE citation is Source-marked. That is NOTICE's own stated
+# convention ("Files that transcribe XADMaster code carry a
+# 'Source: reference/XADMaster/<file>' comment"), and it is the only
+# mechanical way to tell a citation from a note saying what a file no
+# longer owes. Checking MENTIONS instead misses the case that matters:
+# on 2026-09-27 `src/fmt_mime.c` shed its last live citation and kept a
+# historical sentence, and a mention-based check passed it — the check
+# was wrong in exactly the direction it was built to catch.
+LIVE = re.compile(r"Source:[^\n]*(XAD|macutils)")
+
 
 def main():
-    found = set()
+    found = set()      # mentions either reference at all
+    live = set()       # carries a Source-marked citation
     for p in sorted(SRC.glob("*.c")) + sorted(SRC.glob("*.h")):
-        if MENTION.search(p.read_text(errors="replace")):
+        text = p.read_text(errors="replace")
+        if MENTION.search(text):
             found.add(p.name)
+        if LIVE.search(text):
+            live.add(p.name)
 
     bad = []
 
@@ -85,11 +104,16 @@ def main():
                    "inventory; if the mention is only historical, add it to "
                    "HISTORICAL." % name)
 
-    for name in sorted(set(CARRIES) - found):
-        bad.append("%s is listed as carrying \"%s\" but no longer mentions "
-                   "XADMaster or macutils at all. If it has shed its last "
-                   "citation, move it to HISTORICAL, out of NOTICE's "
-                   "inventory and out of OPEN_ITEMS.md." % (name, CARRIES[name]))
+    for name in sorted(set(CARRIES) - live):
+        bad.append("%s is listed as carrying \"%s\" but has no Source-marked "
+                   "citation left. If it has shed its last, move it to "
+                   "HISTORICAL, out of NOTICE's inventory and out of "
+                   "OPEN_ITEMS.md; if it still borrows something, mark the "
+                   "citation with a Source: line." % (name, CARRIES[name]))
+
+    for name in sorted(live - set(CARRIES)):
+        bad.append("%s carries a Source-marked citation but is not in "
+                   "CARRIES. Inventory it in NOTICE." % name)
 
     for name in sorted(HISTORICAL - found):
         bad.append("%s is listed as historical but mentions neither "
@@ -112,15 +136,23 @@ def main():
             raise SystemExit("check_provenance: SELFTEST FAILED — the scan "
                              "found no mention in unc_lzdyn.c, so it is not "
                              "scanning anything")
-        print("check_provenance: selftest ok (scan sees %d files)" % len(found))
+        # Liveness must be strictly narrower than mention, or the check
+        # has collapsed back into the version that missed fmt_mime.c.
+        if not (live < found):
+            raise SystemExit("check_provenance: SELFTEST FAILED — every "
+                             "mention counts as live, so a file that sheds "
+                             "its last citation and keeps a historical note "
+                             "would pass")
+        print("check_provenance: selftest ok (%d mention, %d carry a live "
+              "Source: citation)" % (len(found), len(live)))
 
     if bad:
         for b in bad:
             print("check_provenance: FAIL: " + b)
         return 1
 
-    print("check_provenance: ok (%d carrying, %d historical, all in NOTICE)"
-          % (len(CARRIES), len(HISTORICAL)))
+    print("check_provenance: ok (%d carrying a live citation, %d historical, "
+          "all in NOTICE)" % (len(CARRIES), len(HISTORICAL)))
     return 0
 
 

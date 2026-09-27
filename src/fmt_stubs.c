@@ -72,7 +72,7 @@ UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io)
  * below is byte-for-byte what it was and no corpus file reaches the new
  * one.
  *
- * Source for the first two: reference/macutils/macunpack/dd.h, which
+ * Source: reference/macutils/macunpack/dd.h, for the first two, which
  * states both magics and both header shapes — MAGIC2 "\253\315\000\124"
  * is the same four bytes, C_HDRCRC 82 in an 84-byte compressed-file
  * header, ARCHHDRCRC 76 in a 78-byte archive header. XADMaster's
