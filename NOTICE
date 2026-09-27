@@ -18,8 +18,11 @@ This project's decoders are transcriptions/ports of algorithms from:
     AppleSingle header, and the whole StuffIt split header in
     `src/fmt_sitseg.c`, which Aladdin never published and which nothing
     else in `reference/` reads (deark and macutils were both looked
-    at). Of the three detect-only probes in `src/fmt_stubs.c`, **none
-    is XADMaster's any longer**: StuffIt X's magic is deark's,
+    at). **No detect-only signature anywhere in this engine is
+    XADMaster's since 2026-09-27** — `src/fmt_foreign.c` and the two
+    format probes went to deark and to the StuffIt wiki that day (see
+    deark, below). Of the three detect-only probes in
+    `src/fmt_stubs.c`, none had been XADMaster's for longer: StuffIt X's magic is deark's,
     DiskDoubler's two older headers are in macutils' `macunpack/dd.h`
     — magic, offsets, CRC position and all — and since 2026-09-21 the
     Now Compress probe cites `docs/formats/now-compress.md`, where the
@@ -237,6 +240,19 @@ This project's decoders are transcriptions/ports of algorithms from:
     signature Aladdin never published, which
     `modules/unsupported.c` reads exactly as this does, so the probe
     no longer needs XADMaster's reading of it.
+    **And since 2026-09-27 it is the source of every detect-only
+    signature in `src/fmt_foreign.c` and of `src/fmt_packit_probe.c`**,
+    all of which were XADMaster parsers' until that day: ARJ's two
+    bytes with the header-size bounds and the basic-header CRC-32
+    (`modules/arj.c`), RAR's three generations (`modules/rar.c`,
+    `rar_get_fmtver`), Cabinet (`modules/cab.c`), Zoo at offset 0x14
+    (`modules/zoo.c`), bzip2, 7-Zip and xz (`modules/unsupported.c`,
+    `get_fmt`) and PackIt's recogniser (`modules/packit.c`). Two
+    things there are not deark's and need nobody: bzip2's EMPTY form
+    is `bzip2 -c < /dev/null`, run here, and `src/fmt_sit_probe.c` is
+    the StuffIt wiki's own magic table. deark's `modules/packit.c` is
+    also where `src/fmt_packit.c` gets its two CRC-16/XMODEMs, which
+    were macutils' until the same day.
 
   * mpack/munpack 1.6, by John G. Myers — Copyright (c) 1993, 1994
     Carnegie Mellon University. Permissive: "Permission to use, copy,

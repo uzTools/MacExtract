@@ -45,20 +45,27 @@ static int mem_is(const uint8_t *p, const char *lit, int32_t n)
 }
 
 /* ARJ's is the one signature short enough to occur by accident — two
- * bytes — so it is corroborated the way XADMaster corroborates it: the
- * basic header's declared size is in range and its stored CRC-32 checks
- * out. Source: XADARJParser.m, -recognizeFileWithHandle (which scans;
- * this looks at offset 0 only, where an archive that is not a
- * self-extracting .exe keeps it) and reference/deark/modules/arj.c,
- * de_identify_arj, for the 32..2600 bounds. */
+ * bytes — so it is corroborated: the basic header's declared size is in
+ * range and its stored CRC-32 checks out.
+ * Source: reference/deark/modules/arj.c (MIT) — g_arj_hdr_id for the
+ * two bytes, de_identify_arj for the 30..2600 bounds (deark names the
+ * ARJ TECHNOTE for the ceiling) and arj_read_member for the contract
+ * this checks: a CRC-32 of the basic header, stored little-endian
+ * immediately after it. This looks at offset 0 only, where an archive
+ * that is not a self-extracting .exe keeps it; deark's identify does
+ * the same and its parser scans.
+ * The bounds were XADARJParser.m's 32 and its 40-byte minimum until
+ * 2026-09-27, when the file was re-cited to deark and took deark's
+ * numbers with it (DECISIONS.md, *the signatures that were already on
+ * the disk*). No fixture exercises this path either way. */
 static int arj_at_zero(const uint8_t *head, int32_t len)
 {
     int32_t size;
 
-    if (len < 40) return 0;
+    if (len < 38) return 0;
     if (head[0] != 0x60 || head[1] != 0xea) return 0;
     size = (int32_t)unc_get_u16le(head + 2);
-    if (size < 32 || size > 2600) return 0;
+    if (size < 30 || size > 2600) return 0;
     if (4 + size + 4 > len) return 0;
     return unc_get_u32le(head + 4 + size) ==
            ~unc_crc32(UNC_CRC32_INIT, head + 4, size);
@@ -66,7 +73,11 @@ static int arj_at_zero(const uint8_t *head, int32_t len)
 
 /* bzip2: "BZh" + a level digit, then either a block header or the
  * end-of-stream marker — an empty archive has no block.
- * Source: XADBzip2Parser.m, -recognizeFileWithHandle. */
+ * Source: reference/deark/modules/unsupported.c (MIT), get_fmt, for
+ * "BZh" and the block header 0x314159265359. deark does not state the
+ * EMPTY form, and it needs no reference: `bzip2 -c < /dev/null` writes
+ * 42 5a 68 39 17 72 45 38 50 90, measured here 2026-09-27, which is
+ * the second branch byte for byte. */
 static int bzip2_head(const uint8_t *h, int32_t len)
 {
     if (len < 10) return 0;
@@ -149,8 +160,9 @@ UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
     /* RAR, all three generations. 1.5-4.x and 5.x share their first
      * seven bytes and differ in the eighth, so 5 is tested first;
      * "RE~^" is RAR 1.3/1.4, which predates the signature.
-     * Source: XADRARParser.m (IsRARSignature, IsAncientRARSignature)
-     * and XADRAR5Parser.m (IsRAR5Signature). */
+     * Source: reference/deark/modules/rar.c (MIT), rar_get_fmtver —
+     * g_rar5_sig, g_rar4_sig and g_rar_oldsig, the three in that
+     * order. */
     if (len >= 8 && mem_is(head, "Rar!\x1a\x07\x01", 7) && head[7] == 0x00)
         return UNC_FORMAT_RAR5;
     if (len >= 7 && mem_is(head, "Rar!\x1a\x07\x00", 7))
@@ -159,23 +171,27 @@ UncFormat unc_foreign_probe(const uint8_t *head, int32_t len,
         head[2] == 0x7e && head[3] == 0x5e)
         return UNC_FORMAT_RAR;
 
-    /* 7-Zip. Source: XAD7ZipParser.m, Is7ZipSignature. */
+    /* 7-Zip. Source: reference/deark/modules/unsupported.c (MIT),
+     * get_fmt. */
     if (len >= 32 && mem_is(head, "7z\xbc\xaf\x27\x1c", 6) && head[6] == 0x00)
         return UNC_FORMAT_7Z;
 
-    /* xz. Source: XADXZParser.m, -recognizeFileWithHandle. */
+    /* xz. Source: reference/deark/modules/unsupported.c (MIT),
+     * get_fmt, which states all six bytes. */
     if (len >= 6 && head[0] == 0xfd && mem_is(head + 1, "7zXZ", 4) &&
         head[5] == 0x00)
         return UNC_FORMAT_XZ;
 
     if (bzip2_head(head, len)) return UNC_FORMAT_BZIP2;
 
-    /* Microsoft Cabinet. Source: XADCABParser.m. */
+    /* Microsoft Cabinet. Source: reference/deark/modules/cab.c (MIT),
+     * de_identify_cab. */
     if (len >= 4 && mem_is(head, "MSCF", 4)) return UNC_FORMAT_CAB;
 
     /* Zoo: its magic is 32 bits, but at offset 0x14 rather than 0, so it
-     * cannot collide with anything probed before it. Source:
-     * XADZooParser.m and reference/deark/modules/zoo.c. */
+     * cannot collide with anything probed before it.
+     * Source: reference/deark/modules/zoo.c (MIT), de_identify_zoo,
+     * which states the offset and all four bytes. */
     if (len >= 0x22 && head[0x14] == 0xdc && head[0x15] == 0xa7 &&
         head[0x16] == 0xc4 && head[0x17] == 0xfd)
         return UNC_FORMAT_ZOO;

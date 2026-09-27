@@ -4,7 +4,8 @@
  * for every file it is handed, and a probe inside a blob would mean loading
  * the decoder to decide the file is not one (BRANCH_NOTES.md).
  *
- * Source: unchanged from fmt_sit.c, whose provenance comments stand.
+ * Source: at the probe itself. The rest of the format's provenance is
+ * fmt_sit.c's.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -13,7 +14,18 @@
 UncFormat unc_sit_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;
-    /* Source: XADStuffItParser.m recognizeFileWithHandle. */
+    /* Source: reference/notes/sit_format_theunarchiver.md, the
+     * archive-header table — "Magic number 2 (0x724c6175)" at offset
+     * 10, and the "Known values for Magic number 1" list: SIT!, ST46,
+     * ST50, ST60, ST65, STin. It is the same page fmt_sit.c walks the
+     * container with.
+     * THE WIDENING BELOW IS THIS PROJECT'S, not the page's: ST + two
+     * digits and STi + a digit generalise that list to the pattern it
+     * shows, so an installer version nobody has listed still opens.
+     * It cannot cost a false positive, because 'rLau' has to match as
+     * well — and it reaches nothing here: all 336 archives in the
+     * corpus with 'rLau' at 10 carry 'SIT!' at 0, at either offset a
+     * MacBinary header can put them (measured 2026-09-27). */
     if (len < 14) return UNC_FORMAT_UNKNOWN;
     if (unc_get_u32be(head + 10) != 0x724c6175u) return UNC_FORMAT_UNKNOWN;   /* 'rLau' */
     if (unc_get_u32be(head) == 0x53495421u) return UNC_FORMAT_SIT;        /* 'SIT!' */

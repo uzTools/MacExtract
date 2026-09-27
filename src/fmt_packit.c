@@ -30,11 +30,12 @@
  * 94-byte HEADER into the same stream as the two forks was measured
  * here on 2026-09-20 and is appendix C's closing note as well.
  *
- * What is still somebody else's, and says so where it is used: that
- * the two CRCs are CRC-16/XMODEM (the appendix names them and not
- * their polynomial; macutils' pit.c checks the header one, XADMaster
- * ignores it, and we check it), and everything about the two
- * encrypted forms.
+ * What is still somebody else's, and says so where it is used:
+ * everything about the two encrypted forms. **That the two CRCs are
+ * CRC-16/XMODEM stopped being macutils' on 2026-09-27**: the appendix
+ * names the fields and not their polynomial, but deark's packit.c
+ * (MIT) builds both with DE_CRCOBJ_CRC16_XMODEM and checks the header
+ * one exactly as this does — where XADMaster ignores it.
  *
  * PMa5 and PMa6 are decrypted where a password is available; without
  * one the entry is reported and the reader resyncs by scanning for the
@@ -283,7 +284,9 @@ resynced:
         }
 
         /* Header CRC over the first 92 bytes. Appendix C names the
-         * field; that it is CRC-16/XMODEM is macutils' pit.c.
+         * field; that it is CRC-16/XMODEM, and that a reader checks
+         * it, is reference/deark/modules/packit.c (MIT), de_run_packit
+         * (crco_hdr) — macutils' pit.c until 2026-09-27.
          * PackIt stores nothing that verifies a password, so for an
          * encrypted entry this IS the verification: a wrong key makes
          * a header that does not check, and the host is asked again. */

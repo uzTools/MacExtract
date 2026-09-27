@@ -289,6 +289,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
 - 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
 - 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
+- 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
 
 ---
 
@@ -18280,3 +18281,62 @@ supporting measurement that could not fail ("0 false positives across 928
 fixtures" — the corpus held neither a package nor a script), plus those seven
 boots. Settled with no boot at all: the disproof was five resources on an
 image this project has had installed since August.
+
+
+## 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
+
+`OPEN_ITEMS.md`'s XADMaster inventory carried a row for
+`src/fmt_foreign.c`, `src/fmt_sit_probe.c` and
+`src/fmt_packit_probe.c` — seven formats' detect-only signatures and
+two recognisers, each cited to the XADMaster parser it came from. Its
+"other reference on this machine" cell read: *deark for Zoo, already
+cited; the rest are in each format's own published description, none
+of which is on this disk.*
+
+**That cell asked about descriptions and answered for implementations.**
+deark is on this disk, `tools/build_deark.sh` compiles it on every
+`ci.sh` run, and it states eight of the ten:
+
+| signature | where deark states it |
+|---|---|
+| ARJ `60 ea`, the 30..2600 header bounds, the basic-header CRC-32 | `modules/arj.c` — `g_arj_hdr_id`, `de_identify_arj`, `arj_read_member` |
+| RAR 5.x, 1.5–4.x, and "RE~^" | `modules/rar.c`, `rar_get_fmtver` |
+| Cabinet `MSCF` | `modules/cab.c` |
+| Zoo, four bytes at 0x14 | `modules/zoo.c` (already cited) |
+| bzip2 `BZh` + the block header | `modules/unsupported.c`, `get_fmt` |
+| 7-Zip, xz | the same function |
+| PackIt's recogniser | `modules/packit.c`, `de_identify_packit` |
+
+The two it does not state need nobody. bzip2's EMPTY form — the
+end-of-stream marker where a block would be — is one command here:
+`bzip2 -c < /dev/null` writes `42 5a 68 39 17 72 45 38 50 90`, which
+is the branch byte for byte. And StuffIt's recogniser is the wiki page
+`fmt_sit.c` already walks the container with: it gives `0x724c6175` at
+offset 10 and lists `SIT!`, `ST46`, `ST50`, `ST60`, `ST65`, `STin`.
+
+**What was not free, and is labelled.** The probe accepts a superset
+of that list — `ST` and two digits, `STi` and a digit. That widening
+is XADMaster's in origin and is kept as this project's, marked as
+such, on the argument that it cannot cost a false positive because
+`rLau` must match too: all 336 archives in the corpus with `rLau` at
+offset 10 carry `SIT!`, at either offset a MacBinary header can put
+them. And ARJ's lower bound moved from XADMaster's 32 to deark's 30
+(with the length guard from 40 to 38) rather than be kept as an
+unsourced tightening — deark names the ARJ TECHNOTE for its ceiling,
+so its numbers are the sourced ones. No fixture exercises the ARJ
+path either way.
+
+**The lesson is one already on BLOCKERS' list, paying out again: an
+oracle that was never asked.** Method 6 cost four weeks of "macutils
+is the only reference" while deark implemented it under MIT. This row
+cost five weeks of "none of which is on this disk" — written about
+specifications, believed about the code — while deark's identify
+functions sat two directories away, being compiled every run. The
+question that finds this class is not *"is there a description?"* but
+*"does anything here READ this format?"*
+
+**Consequence: the row is gone**, the first to leave the inventory for
+a reason other than a rewrite, and the table is 12 rows over 18 files.
+The licence does not move — `unc_lzdyn.c`, `unc_crypt.c`, `unc_lzah.c`
+and the tolerance row are still measured-unclosable — and nothing
+executable changed but two ARJ constants.
