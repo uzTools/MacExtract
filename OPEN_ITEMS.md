@@ -254,8 +254,13 @@ from never entered to 69.7 % of its lines (TESTING.md, *Fuzzing*).
 - **DiskDoubler 3, 4 and 7, and ARC's Crush** — `ddencode.py` writes
   three of those but only under Mini vMac, so the output would have to
   be captured as a committed seed rather than generated per run.
-- **Now Compress's coders** — a mutation-then-repair generator, since
-  the gate is a checksum and more cases cannot get past it.
+- **Now Compress's coders** — **done 2026-09-27.** `fuzz.py`'s fifth
+  generator flips bits inside a block's payload and recomputes that
+  block's 32-bit trailer with `mutate_now.py`'s `fix_trailer`, which is
+  the only way past the gate. The family goes from 6 functions never
+  entered to 1, `now_find_delta`, at two seeds. That last one wants a
+  file whose block table carries a delta, which neither corpus archive
+  has.
 
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.

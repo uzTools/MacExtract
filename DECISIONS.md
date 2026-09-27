@@ -301,6 +301,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
 - 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
 - 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
+- 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
 
 ---
 
@@ -18866,3 +18867,44 @@ forced the question until somebody asked why they differed.
 Worth noting what asking cost: five days of a file in the inventory
 with nothing uniquely XADMaster's in it, and a decision offered to the
 maintainer three times that was not a decision.
+
+
+## 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
+
+Now Compress's coders were the one measured gap with a remedy this
+repository already owned. `tools/mutate_now.py` exists to change a
+field and fix every checksum that field sits under, so that the
+program which wrote the file cannot notice; a fuzz generator wants the
+opposite half of the same trick — corrupt what the CODER reads and fix
+what the WALK checks. `fuzz.py`'s fifth generator flips bits inside a
+block's payload and calls `mutate_now.fix_trailer`.
+
+**It works: Now Compress goes from 6 functions never entered to 1**,
+`now_find_delta`, and that reproduces at seeds 11 and 12. It is the
+only route past that gate — the gate the one decoder heap overflow
+this project has found sat behind.
+
+**The rest of what the first run appeared to show was a draw.** At a
+sixth of the cases the total never-entered count rose from 132 to 149
+and StuffIt classic went from 0 to 7, which was written up as the
+repair generator starving the other generators. Two things disproved
+it. Lowering the share to a twentieth took the total to **163** —
+higher, not lower, so not monotonic in the weight. And an identical
+build at seed 12 gives StuffIt classic 1 where seed 11 gives 6, ARC 10
+where it gives 6, Compact Pro 1 where it gives 4.
+
+**The cause is obvious once stated**: changing a generator changes the
+whole RNG consumption sequence, so every run draws a different sample
+of ~950 fixtures, and the rare formats — StuffIt method 6, ARC's
+squeeze and crunch, Compact Pro's RLE — are hit or missed by luck.
+
+**The lesson is about the instrument, not the fuzzer. A measurement
+with no noise floor cannot support a delta.** `fuzz_cover.py` was
+built, used, and written up across three runs before anyone ran it
+twice with the same code and different seeds; one extra run — about
+six minutes — established that the floor is ±5 functions per family
+and retired a causal sentence that had already been committed to
+`fuzz.py`'s comments. The figures the instrument CAN support are
+whole-family ones: `-lh2-`'s `lzd_*` set is at zero at every seed, and
+6 → 1 holds at both. Those are the two it now reports as findings; the
+rest of the table is labelled as noisy in place.

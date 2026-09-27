@@ -138,6 +138,59 @@ def method_seeds(tmp):
     return [p]
 
 
+# A fifth generator: mutate a Now Compress block's PAYLOAD and then
+# repair the 32-bit sum that block carries, so the file still passes
+# every gate the container checks on the way in.
+#
+# It exists because `tools/fuzz_cover.py` measured, 2026-09-27, that the
+# Now Compress coders are never entered however many ordinary mutants
+# are thrown at them: the format checksums its block table and its
+# blocks, so a random edit is refused before any coder runs. **That is
+# the gate the one heap overflow ever found in a decoder here sat
+# behind** — `now_next_block` checking a length against `incap` where
+# the buffer is `blkcap`, found by a crafted archive under ASan and
+# never by a mutant. More cases cannot get past a checksum; repairing it
+# can.
+#
+# The repair is `tools/mutate_now.py`'s own `fix_trailer`, which that
+# tool uses to make changes a correct reader cannot notice.
+def now_repair(data, rng, mn):
+    """Flip bits inside block payloads, then fix each block's trailer."""
+    d = bytearray(data)
+    try:
+        bl = [(off, end) for _n, off, end, _m, _p in mn.blocks(d)]
+    except BaseException:
+        return bytes(d)
+    # Leave the block header alone and stop short of the trailer: the
+    # point is to corrupt what the CODER reads, not what the walk does.
+    spans = [(off + 8, end - 4) for off, end in bl if end - 4 > off + 8]
+    if not spans:
+        return bytes(d)
+    for _ in range(rng.randrange(1, 9)):
+        lo, hi = spans[rng.randrange(len(spans))]
+        d[rng.randrange(lo, hi)] ^= 1 << rng.randrange(8)
+    for off, end in bl:
+        mn.fix_trailer(d, off, end)
+    return bytes(d)
+
+
+def now_seeds():
+    """Corpus files the repair generator can work on, or []."""
+    try:
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        import mutate_now as mn
+    except Exception:
+        return [], None
+    out = []
+    for p in corpus():
+        try:
+            if list(mn.blocks(bytearray(open(p, "rb").read()))):
+                out.append(p)
+        except BaseException:
+            continue
+    return out, mn
+
+
 def corpus():
     out = []
     for f in sorted(os.listdir(FIXDIR)):
@@ -209,6 +262,7 @@ def main():
         if extra is None:
             return 1
         seeds += extra
+        nowfiles, nowmod = now_seeds()
         encrypted = crypt_seeds(tmp, args.crypt_kind)
         if encrypted is None:
             return 1
@@ -217,6 +271,8 @@ def main():
                  ", ".join(args.crypt_kind or CRYPT_KINDS)))
         print("fuzz: %d generated seed(s) for methods the corpus lacks "
               "(-lh3-)" % len(extra))
+        print("fuzz: %d Now Compress file(s) for the repair generator"
+              % len(nowfiles))
         ncrypt = 0
         for i in range(args.iterations):
             # A quarter of the run is the ciphers, because they are a
@@ -224,6 +280,20 @@ def main():
             # ~950 fixtures would be drawn about once in 150.
             kind = 3 if args.crypt_only or rng.randrange(4) == 3 \
                 else rng.randrange(3)
+            # The repair generator is the only way past a checksum, and
+            # a checksum is what keeps every ordinary mutant out of the
+            # Now Compress coders. A twentieth of the ordinary cases is
+            # enough: the coders go from 6 functions never entered to 1
+            # at that share, reproduced at two seeds, and the rest of
+            # the run stays with the generators that need the draws.
+            #
+            # It is NOT 20 because a sixth was measured to starve the
+            # others — that was inferred from one run and is withdrawn:
+            # per-family reach swings by about five functions between
+            # seeds at 3,000 cases, so a single-run delta says nothing
+            # (TESTING.md, *Fuzzing*; BLOCKERS.md).
+            if kind != 3 and nowfiles and rng.randrange(20) == 0:
+                kind = 4
             if kind == 3:
                 # Round robin, not a random choice: a quarter of 150 is
                 # 37 cases and there are nine shapes to get through, so
@@ -235,6 +305,10 @@ def main():
                 blob = crypt_mutate(
                     data, rng,
                     [] if args.crypt_untargeted else cranges)
+            elif kind == 4:
+                src = nowfiles[rng.randrange(len(nowfiles))]
+                data = cache.setdefault(src, open(src, "rb").read())
+                blob = now_repair(data, rng, nowmod)
             elif kind == 0:
                 src = rng.choice(seeds)
                 data = cache.setdefault(src, open(src, "rb").read())

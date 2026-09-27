@@ -740,12 +740,34 @@ anything about the suite.**
    method, the way `synth_crypt.py` seeds the ciphers.
 
    Now Compress is the one with a second cause worth naming: its
-   archives ARE in the corpus, and its coders are still unreached,
+   archives ARE in the corpus, and its coders were unreached anyway,
    because the block table is gated by a 32-bit sum that a random
    mutation destroys (`now_tables`). **That is the gate that hid the
    one heap overflow this project has found in a decoder** — a length
    checked against `incap` where the buffer is `blkcap`, found by a
    crafted archive under ASan and never by a mutant.
+
+   **A fifth generator answers that one, since 2026-09-27**, because
+   more cases cannot get past a checksum and repairing it can: flip
+   bits inside a block's PAYLOAD, then recompute that block's 32-bit
+   trailer with `tools/mutate_now.py`'s own `fix_trailer` — the routine
+   that tool uses to make changes a correct reader cannot notice. It
+   takes a twentieth of the ordinary cases when the corpus holds a file
+   for it (two do, under `corpus()`'s size filter). **Now Compress goes
+   from 6 functions never entered to 1**, `now_find_delta`, reproduced
+   at seeds 11 and 12.
+
+   **How much of this table to believe.** The per-family counts are
+   noisy: seeds 11 and 12 over an identical build differ by up to five
+   functions in a family — StuffIt classic 6 against 1, ARC 6 against
+   10, Compact Pro 4 against 1. **A single-run delta in a family is not
+   a finding**, and one was briefly read as one here: a first cut gave
+   the repair generator a sixth of the cases, the totals moved, and
+   that was written up as starvation before a second seed showed the
+   same swings with the weight unchanged (BLOCKERS.md, *Withdrawn
+   claims*). What survives repetition is the whole-family signal —
+   `-lh2-`'s `lzd_*` set is at zero at every seed, and Now Compress's
+   6 → 1 holds at both.
 
    **`-lh3-` has a seed since 2026-09-27**, and it is the decoder half
    of what `synth_crypt.py` does for the ciphers: `fuzz.py`'s
