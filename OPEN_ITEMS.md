@@ -243,10 +243,13 @@ from never entered to 69.7 % of its lines (TESTING.md, *Fuzzing*).
 
 **What is left, and what each wants:**
 
-- **`-lh3-`'s position tree** — `lzs_read_tree_p` and `lzs_decode_p` are
-  still at zero. They need a seed shaped for them, not more cases: one
-  wants the escape only a `send_p_tree` stream emits, the other a match
-  that survives mutation.
+- **`-lh3-` is done, 2026-09-27.** `lh3_lz_stream()` writes matches —
+  LHa adjudicates it — and the seeds are split one archive per case, so
+  a mutation has only the first entry to get past. Every `-lh3-`
+  function is reached: `unc_lzst0_decode` 100 %, `lzs_decode_p` 88.9 %,
+  `lzs_read_tree_p` 64.3 %. It also closed a CORRECTNESS gap: no
+  `-lh3-` stream written here had ever contained a match, so the
+  decoder's LZSS half was graded by nothing (BLOCKERS.md).
 - **`-lh2-`** — written only by the patched LHa this repo builds on
   demand, and a seed a reproducible fuzzer needs cannot depend on a
   binary that may not be built. A committed seed is the way, as for

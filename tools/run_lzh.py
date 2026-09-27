@@ -528,6 +528,16 @@ def lh2(macextract, problems):
 # handed one, so the grading is still three-way — the bytes, LHa, and us.
 
 LH3_N1, LH3_NP, LH3_CBIT, LH3_LENFIELD, LH3_BUFBITS = 286, 128, 9, 4, 16
+LH3_THRESHOLD = 3          # the shortest match the format expresses
+# The LONGEST is 31, measured 2026-09-27 and not derived. The alphabet is
+# 286 symbols and the decoders read a length as `c - (256 - 3)`, which
+# makes symbol 285 a match of 32 — and BOTH readers refuse it: LHa
+# reports a CRC error and this engine reports a truncated file, on the
+# same stream, while 3..31 round-trip through both at every distance
+# tried. Why 285 is not a length-32 code is NOT established; what is
+# established is where the ceiling sits (DECISIONS.md 2026-09-27, *the
+# encoder that only wrote literals*).
+LH3_MAXMATCH = 31
 
 
 class _Bits:
@@ -627,6 +637,99 @@ def lh3_stream(data, single=False, send_p_tree=False):
     return out.bytes()
 
 
+def _lz_tokens(data, maxmatch=LH3_MAXMATCH, maxdist=8192):
+    """Greedy LZSS over an 8 KB window, min match 3, max 32.
+
+    Deliberately simple and deterministic: a 3-gram hash of the last
+    position each triple was seen at, walked back through a chain that
+    is capped so the cost stays linear. It does not have to compress
+    well — it has to emit MATCHES, which nothing that writes -lh3- here
+    ever did (DECISIONS.md 2026-09-27, *the encoder that only wrote
+    literals*)."""
+    tokens, i, n = [], 0, len(data)
+    heads, prev = {}, [-1] * n
+    while i < n:
+        best_len, best_dist = 0, 0
+        if i + 3 <= n:
+            key = bytes(data[i:i + 3])
+            j = heads.get(key, -1)
+            hops = 0
+            while j >= 0 and i - j <= maxdist and hops < 64:
+                l = 0
+                while l < maxmatch and i + l < n and data[j + l] == data[i + l]:
+                    l += 1
+                if l > best_len:
+                    best_len, best_dist = l, i - j
+                    if l == maxmatch:
+                        break
+                j = prev[j]
+                hops += 1
+        if best_len >= LH3_THRESHOLD:
+            take = best_len
+            tokens.append(("m", best_len, best_dist))
+        else:
+            take = 1
+            tokens.append(("l", data[i]))
+        for k in range(i, min(i + take, n)):
+            if k + 3 <= n:
+                key = bytes(data[k:k + 3])
+                prev[k] = heads.get(key, -1)
+                heads[key] = k
+        i += take
+    return tokens
+
+
+def lh3_lz_stream(data):
+    """One -lh3- block that carries MATCHES.
+
+    The length alphabet is 256..285, symbol = length + 253 for lengths
+    3..32 (the decoder reads `c - (0x100 - 3)`). A position is a 7-bit
+    p-symbol and six raw bits: `pos = (j << 6) + low`, and the source is
+    `loc - pos - 1`, so `pos` is the distance minus one. The p-tree is
+    sent explicitly with every length 7, which makes it a COMPLETE code
+    whose canonical assignment is the symbol itself — so `j` goes out as
+    seven plain bits.
+
+    LHa adjudicates this: `lh3()` extracts the archive with LHa before
+    it asks this engine, so a stream LHa reads back wrong is the
+    encoder's fault and says so."""
+    tokens = _lz_tokens(data)
+    freqs = [0] * LH3_N1
+    for t in tokens:
+        freqs[t[1] + 253 if t[0] == "m" else t[1]] += 1
+    lens = _huff_lengths(freqs, 15)
+    codes = _canon(lens)
+
+    out = _Bits()
+    # THE BLOCK SIZE IS A COUNT OF SYMBOLS, NOT OF BYTES. Both decoders
+    # decrement it once per code they read (LHa's shuf.c `blocksize--`,
+    # this engine's lzs_decode_c), so with matches the two differ — and
+    # a literals-only stream, which is all this file wrote until
+    # 2026-09-27, cannot tell them apart. Getting it wrong makes the
+    # decoder read codes past the end of the data and copy from the
+    # space-filled window, which is exactly what LHa handed back.
+    out.put(len(tokens), LH3_BUFBITS)
+    for i in range(LH3_N1):
+        if lens[i]:
+            out.put(1, 1)
+            out.put(lens[i] - 1, LH3_LENFIELD)
+        else:
+            out.put(0, 1)
+    out.put(1, 1)                        # an explicit position tree
+    for _ in range(LH3_NP):
+        out.put(7, LH3_LENFIELD)
+    for t in tokens:
+        if t[0] == "l":
+            out.put(codes[t[1]], lens[t[1]])
+        else:
+            sym = t[1] + 253
+            out.put(codes[sym], lens[sym])
+            pos = t[2] - 1
+            out.put(pos >> 6, 7)
+            out.put(pos & 63, 6)
+    return out.bytes()
+
+
 def lh3_crc16(data):
     crc = 0
     for b in data:
@@ -640,7 +743,9 @@ def lh3_archive(entries):
     """A level-0 .lzh of -lh3- entries: [(name, data, kwargs)]."""
     out = b""
     for name, data, kw in entries:
-        packed = lh3_stream(data, **kw)
+        kw = dict(kw)
+        packed = (lh3_lz_stream(data) if kw.pop("lz", False)
+                  else lh3_stream(data, **kw))
         nb = name.encode("latin1")
         head = (b"-lh3-" + struct.pack("<I", len(packed))
                 + struct.pack("<I", len(data))
@@ -667,6 +772,15 @@ def lh3(macextract, problems):
         # decoder still has to read.
         ("single.bin", b"Q" * 5000, {"single": True}),
         ("ptree.txt", text, {"send_p_tree": True}),
+        # MATCHES. Until 2026-09-27 every case above was literals only,
+        # so the decoder's whole LZSS half — lzs_decode_p and the copy
+        # loop — was graded by nothing, here or anywhere (BLOCKERS.md).
+        ("lz.txt", text, {"lz": True}),
+        ("lzruns.bin", b"=" * 400 + b"\0" * 600 + b"ab" * 300, {"lz": True}),
+        ("lzmixed.bin", bytes((i * 37 + (i >> 3) * 101) & 0xFF
+                              for i in range(1500)) + b"tail" * 50,
+         {"lz": True}),
+        ("lzoverlap.bin", b"XY" + b"Z" * 400, {"lz": True}),
     ]
     graded = 0
     work = tempfile.mkdtemp()

@@ -131,11 +131,23 @@ def method_seeds(tmp):
         ("one.bin", b"x", {}),                  # one symbol: takes the escape
         ("single.bin", b"Q" * 5000, {"single": True}),
         ("ptree.txt", text, {"send_p_tree": True}),
+        # Matches, so the mutants can reach the decoder's LZSS half.
+        ("lz.txt", text, {"lz": True}),
+        ("lzruns.bin", b"=" * 400 + b"\0" * 600 + b"ab" * 300, {"lz": True}),
     ]
-    p = os.path.join(tmp, "seed-lh3.lzh")
-    with open(p, "wb") as f:
-        f.write(run_lzh.lh3_archive(cases))
-    return [p]
+    # ONE ARCHIVE PER CASE, not one archive of ten. A mutant of a
+    # ten-entry archive almost always breaks an earlier entry, and the
+    # walk stops there — measured 2026-09-27, when the match cases were
+    # added to a combined seed and `lzs_decode_p` stayed at 0 % while
+    # the unmutated archive reached it. Split, each case is the FIRST
+    # entry of its own archive and a mutation has to get past only it.
+    out = []
+    for i, c in enumerate(cases):
+        p = os.path.join(tmp, "seed-lh3-%d.lzh" % i)
+        with open(p, "wb") as f:
+            f.write(run_lzh.lh3_archive([c]))
+        out.append(p)
+    return out
 
 
 # A fifth generator: mutate a Now Compress block's PAYLOAD and then

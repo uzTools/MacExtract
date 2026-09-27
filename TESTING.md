@@ -784,10 +784,30 @@ anything about the suite.**
    | `lzs_decode_p`, `lzs_read_tree_p` | 0 | **still 0** |
    | `unc_lzdyn_decode` and the `lzd_*` set (`-lh2-`) | 0 | **still 0** |
 
-   Two things that did NOT move, and why. The position tree is still
-   unreached: `lzs_read_tree_p` needs the escape only the `send_p_tree`
-   case emits and `lzs_decode_p` needs a match to survive the mutation,
-   so both want a seed shaped for them rather than more cases. And
+   **The rest of `-lh3-` followed on 2026-09-27, and getting there
+   found a hole in the CORRECTNESS suite rather than the fuzzer.**
+   `lzs_decode_p` was at zero on the UNMUTATED seed as well, which
+   means no `-lh3-` stream this project has ever written contains a
+   match: `lh3_stream()` Huffman-codes the 256 byte values and emits
+   nothing above 255. The six graded cases are the only `-lh3-` files
+   anywhere here, so **the decoder's whole LZSS half — `lzs_decode_p`
+   and the copy loop — was graded by nothing** (BLOCKERS.md).
+
+   `lh3_lz_stream()` writes matches, and LHa adjudicates it: `lh3()`
+   extracts with LHa before it asks this engine, so a stream LHa reads
+   back wrong is the encoder's fault. Four match cases joined the
+   graded set, `-lh3-` entries going 6 to 10, and two seeds joined the
+   fuzzer. With the seeds split one archive per case — a mutant of a
+   ten-entry archive breaks an earlier entry and the walk stops, which
+   is why a combined seed left `lzs_decode_p` at zero — every `-lh3-`
+   function is now reached:
+
+   | function | before | after |
+   |---|---|---|
+   | `unc_lzst0_decode` | 0 | **100 %** |
+   | `lzs_decode_p` | 0 | **88.9 %** |
+   | `lzs_read_tree_p` | 0 | **64.3 %** |
+
    `-lh2-` is untouched by design — it is written by the patched LHa
    this repo builds on demand, and a seed a reproducible fuzzer needs
    cannot depend on a binary that may not be built. (`lzd_flush` shows

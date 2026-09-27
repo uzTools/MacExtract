@@ -302,6 +302,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
 - 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
 - 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
+- 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
 
 ---
 
@@ -18908,3 +18909,53 @@ and retired a causal sentence that had already been committed to
 whole-family ones: `-lh2-`'s `lzd_*` set is at zero at every seed, and
 6 → 1 holds at both. Those are the two it now reports as findings; the
 rest of the table is labelled as noisy in place.
+
+
+## 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
+
+The `-lh3-` position tree was the cheap item left on the fuzz-coverage
+list: `lzs_read_tree_p` and `lzs_decode_p` at zero, wanting a seed
+shaped for them. Before writing one, the seed was run UNMUTATED through
+the coverage build to see which of the two the mutants were losing.
+
+**`lzs_decode_p` was at zero there too**, and that is a different kind
+of fact. It means no `-lh3-` stream this project has ever written
+contains a match: `lh3_stream()` builds a Huffman code over the 256
+byte values and emits nothing above 255. The corpus has no `-lh3-`
+archive, so those streams are the only ones in reach. **The decoder's
+whole LZSS half — `lzs_decode_p` and the copy loop — was graded by
+nothing**, while `run_lzh.py` reported six cases agreeing with LHa.
+Agreement on literals says nothing about matches.
+
+**Writing the encoder was the fix, and LHa was the adjudicator**: the
+suite already extracts the generated archive with LHa before asking
+this engine, so a stream LHa reads back wrong is the encoder's fault
+and says so immediately. It said so twice.
+
+- **The block size is a count of SYMBOLS, not bytes.** Both decoders
+  decrement it once per code read. A literals-only stream cannot tell
+  the two apart, which is why the field had been wrong-by-construction
+  and invisible since the encoder was written.
+- **The longest match is 31, not 32.** The alphabet is 286 symbols and
+  both decoders read a length as `c - (256 - 3)`, which makes symbol
+  285 a match of 32 — and both refuse it, LHa with a CRC error and this
+  engine with a truncated file, on the same stream, while 3..31
+  round-trip through both at every distance tried. **Why 285 is not a
+  length-32 code is not established**; the ceiling is measured and
+  labelled as such rather than explained.
+
+**And the seeds had to be split.** With the match cases added to the
+existing ten-entry archive, `lzs_decode_p` stayed at zero under
+fuzzing: a mutant of a ten-entry archive almost always breaks an
+earlier entry and the walk stops before reaching the interesting one.
+One archive per case, and every `-lh3-` function is reached —
+`unc_lzst0_decode` 100 %, `lzs_decode_p` 88.9 %, `lzs_read_tree_p`
+64.3 %.
+
+**What this says about coverage instruments.** `fuzz_cover.py` was
+built to ask whether the FUZZER reaches the decoders. The most valuable
+thing it found was not about the fuzzer at all: running the seed
+unmutated turned a coverage question into a grading one. **A function
+at zero is a question about every suite, not just the one you were
+measuring** — and the cheapest way to tell them apart is to run the
+instrument on input that is supposed to work.
