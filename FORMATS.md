@@ -1280,13 +1280,16 @@ five-entry Amiga archive — the Linux figures plus the shell's constant
 ## btoa, the other ASCII armour
 
 **In scope since 2026-08-23**, and it came out of a menu: StuffIt Deluxe
-3.5.1's Translate menu is built from the files in
-`System Folder:Extensions:Aladdin:Translators`, and there are fourteen
-of them. Thirteen are formats this project already reads —
-`AppleSingle`, `BinHex4`, `CompactPro`, `DeArc` (ARC), `MacBinary`,
-`Text`, `UUCode`, `UnPack` (PackIt: its own `STR#` 129 holds `.pit`),
-`UnZip`, `Unix Compress`, `tar`, and Segmenting and PKG below. The
-fourteenth was `btoa/atob`, and nothing here had heard of it.
+3.5.1's Translate menu carries fourteen format entries, thirteen of them
+the files in `System Folder:Extensions:Aladdin:Translators` and the
+fourteenth `Segmenting`, which has no file there (*The paid box*, below).
+Twelve were formats this project already read — `AppleSingle`, `BinHex4`,
+`CompactPro`, `DeArc` (ARC), `MacBinary`, `Text`, `UUCode`, `UnPack`
+(PackIt: its own `STR#` 129 holds `.pit`), `UnZip`, `Unix Compress`,
+`tar` and Segmenting — and a thirteenth, `PKG Expand`, it named from
+2026-08-23 to 2026-09-27 and does not recognise any more (*AppleLink
+packages*, above). The fourteenth was `btoa/atob`, and nothing here had
+heard of it.
 
 Paul Rutter's btoa is uuencode's rival from the Unix side: four bytes
 become five printable characters in base 85, which is 25% overhead
@@ -4990,7 +4993,7 @@ with this archive."*
 | `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the fourteen are listed under *btoa*, above | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
+| base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the thirteen are listed under *The paid box*, below | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
 | AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **not recognised.** Named from 2026-08-23 to 2026-09-27, when what had been read out of `PKG Expand Translator` turned out to be the translator API's command parser, shared verbatim with five of its siblings (*AppleLink packages*, above). Two specimens; what is missing is a reference for their binary layout |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
@@ -4998,6 +5001,58 @@ with this archive."*
 | Verification | none published | 932 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
+
+### The paid box: StuffIt Deluxe 3.5.1 (2026-09-27)
+
+Expander 4.0.2 is the free yardstick; **Deluxe 3.5.1 is the paid one**, and
+README.md compares against both. Read off the installed image —
+`~/.cache/macextract/vmac/spacesaver/ssdeluxe.hfv`, volume `System_7_0_1`,
+installed 2026-08-22 (DECISIONS.md 2026-08-22, *it runs, and it will not
+compress on demand*) — and quoted from the files in its `Read Us First!`
+folder. Like the two tables above, no row is a head-to-head run: Deluxe has
+never been timed.
+
+**"Deluxe with DropStuff" is one purchase, not two.** `Drag & Drop
+Applications` holds `DropStuff™` 3.5.2, `StuffIt Expander™` 3.5.2,
+`DropConvert™` and `DropCompress™` beside `StuffIt Deluxe™` itself; the
+installer also puts `~Magic Menu™` and `~StuffIt SpaceSaver™` in Control
+Panels and `StuffIt Engine™` and `Viewer Engine™` in Extensions. Its own
+`What was installed(and where)` lists all of it, System 6 destinations
+included.
+
+**Thirteen translator files, fourteen Translate-menu entries.**
+`System Folder:Extensions:Aladdin:Translators` holds AppleSingle, BinHex4,
+btoa/atob, CompactPro, DeArc, MacBinary, PKG Expand, tar, Text, Unix Compress,
+UnPack, UnZip and UUCode — thirteen, one for one with that manifest, and
+identical on all 42 `ss*.hfv` images. The folder's fourteenth ITEM is the
+invisible `Icon\r`. The Translate menu photographed at
+`specimens/spacesaver/deluxe/12-menu-x300.png` has fourteen format entries:
+those thirteen and **Segmenting**, which has no file there.
+
+**What the box expands**: `.sit`/`.sea` natively, the thirteen translators,
+SpaceSaver through its control panel, StuffIt segments through Segmenting, and
+**gzip** — *"Added support for gzip expansion. This can be found by choosing
+UnZip from StuffIt's translate menu."* (`What's New in Deluxe 3.5.1`). Magic
+Menu's own Expand list, same file, is *".zip, .arc, .Z (Unix Compress), .gz
+(gzip), .uu (UUencoded), .hqx (BinHex), .pkg (AppleLink packages), .cpt
+(Compact Pro), and SpaceSaver-compressed files"*.
+
+**What it does not**: StuffIt 5, which postdates it by three years; `.lzh`,
+Now Compress, SuperDisk!, base64 and MIME, none of which it names anywhere —
+and **DiskDoubler, which the box used to expand and stopped**: *"DDExpand
+removed (Symantec no longer supports this feature)"*, same file. That is the
+one format in this project's table an Aladdin customer lost rather than never
+had.
+
+**Encryption and comments.** *"With the exception of StuffIt 3.X archives,
+StuffIt Expander will not expand encrypted or password protected archives"*
+and *"All other expansion methods … WILL save comments within StuffIt archives
+to a separate TeachText file called ``Comments about [name of archive]''"*
+(`StuffIt Deluxe Read Me`). The Deluxe application's own Archive menu carries
+`Edit Comment…` and its Translate menu `Change Password…`
+(`specimens/spacesaver/deluxe/`, shots 10 and 12); it wrote the three
+encrypted StuffIt archives this engine is graded against (*Encryption*,
+above).
 
 ### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 
@@ -5096,5 +5151,9 @@ on `macburger-helper.hqx` — and stand as taken.
   the distribution used here.
 - [ATPM 5.05 — review of StuffIt Deluxe 5.1.2](https://atpm.com/5.05/stuffit.shtml),
   for StuffIt 5 archives being unreadable by 4.x.
+- StuffIt Deluxe 3.5.1 as installed here: the image's own folder listings, its
+  `Read Us First!` files (`StuffIt Deluxe Read Me`, `What's New in Deluxe
+  3.5.1`, `User's Guide Addenda`, `What was installed(and where)`) and the
+  menus photographed in `specimens/spacesaver/deluxe/`.
 - [Wikipedia — StuffIt Expander](https://en.wikipedia.org/wiki/StuffIt_Expander),
   for freeware status and version history.
