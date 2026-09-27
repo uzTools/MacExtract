@@ -4270,7 +4270,8 @@ refused having reached 37,372 B, because renegotiating has a floor and that
 archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
-**The same machine under System 6.0.8 manages 64/71**
+**The same machine under System 6.0.8 manages 66/71 on the shipped build**
+(**2026-09-27**, below) **and 64/71 with every decoder resident**
 (`run.py --emu mv-512Ke --system System6.hfv`, **2026-09-22**; 63/69 on
 2026-09-04, 58/69 before the stack was cut to 12 KB, which this tier's
 "unchanged" note had not accounted for — the reserve going flat could not
@@ -4283,14 +4284,31 @@ System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch and a double-click launch from a booted Finder.
 
-**64/71 is the resident build's, and no machine has run the shipped one at
-this tier. Hypothesis, modelled rather than measured: 66/71**
-(`tools/run_tiers.py --tier sys6-512K --shipped`). A budget per format clears
-`derived-Troi-ClipSave-Plug-in1.1.sit` and `derived-Expand_Now_1.0.1.sea`
-here; `popper-1.7.tar.Z` stays refused and for a different reason than
-before, because a `.Z` is an envelope and keeps the whole bundle (*What each
-format is granted*). One emulator run settles it, and nothing rests on it
-until then (OPEN_ITEMS.md, *The overlay loader*).
+**64/71 is the resident build's. The shipped build is 66/71, MEASURED
+2026-09-27** on the v0.34.0 binary (`run.py --emu mv-512Ke --system
+System6.hfv --list sample.txt`) — and it is the one number in this file that
+was PREDICTED before it was run. `tools/run_tiers.py --tier sys6-512K
+--shipped` said 66/71 and named the five it would refuse; the machine
+refused those five and no others: `popper-1.7.tar.Z`, `synth-dd-m5.dd`,
+`derived-a2basic.dmg.sit`, `derived-Cool_Tools__.sit` (7 of 8 entries) and
+`derived-Library_ISBN_Barcoder.sit` (33 of 34). The two the model said a
+per-format budget would clear, `derived-Troi-ClipSave-Plug-in1.1.sit` and
+`derived-Expand_Now_1.0.1.sea`, both passed. `popper-1.7.tar.Z` stays
+refused for a different reason than before, because a `.Z` is an envelope
+and keeps the whole bundle (*What each format is granted*). `run_tiers.py`
+asserts this tier by name from that day.
+
+**One number under it did NOT reproduce, and it is labelled a hypothesis.**
+The same boot with `-D UNC_AT_BUDGET` grants an LZH archive **753,382 B** at
+the 1 MB floor where the model computes 750,456 B (648,250 resident + a
+102,206 B gain) — the model **pessimistic by 2,926 B**, where the record for
+this arithmetic is a 1,138 B residue. Two things are unattributed and both
+have to be settled before that number means anything: the 648,250 B base was
+taken on the v0.33.0 binary and this tree's is ~24 B smaller, and the
+`-D UNC_AT_BUDGET` build is not the build whose grant is being modelled.
+**What would settle it:** the same probe run on the resident autotest build
+of this tree, so base and grant come from one binary (OPEN_ITEMS.md, *The
+overlay loader*).
 
 The reserve explains the rest, and it is now a flat 20 KB on every tier:
 `budget = FreeMem() - 20,480`, which the three 2026-09-22 probes reproduce to

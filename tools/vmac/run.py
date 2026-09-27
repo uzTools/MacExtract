@@ -596,7 +596,13 @@ def main():
                 shutil.rmtree(workdir, ignore_errors=True)
 
     shutil.rmtree(bootdir, ignore_errors=True)
-    print(f"\n{npass}/{len(fixtures)} PASS at {args.mem} on {args.system}")
+    # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
+    # summary that reports --mem's default while a different machine ran is how
+    # a 512 KB result gets filed as a 4 MB one. sys30.py beside this file has
+    # guarded against exactly that since it was written; this one printed
+    # args.mem until 2026-09-27, when a real 512Ke sweep reported "at 4M".
+    machine = (args.emu or f"mv-{args.mem}").replace("mv-", "")
+    print(f"\n{npass}/{len(fixtures)} PASS at {machine} on {args.system}")
     if args.json:
         json.dump(results, open(args.json, "w"), indent=1)
     return 0 if npass == len(fixtures) else 1

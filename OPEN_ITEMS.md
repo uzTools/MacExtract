@@ -161,16 +161,24 @@ tiers a machine has run it on, and at no others.** Since 2026-09-26 it models
 a budget per tier PER FORMAT and per envelope layer, and reproduces the
 v0.33.0 binary's 69/71 at System 3.0 / 512 KB and 71/71 at the floor target,
 refusing the same fixtures by name; the resident lane is kept beside it as the
-engine's regression detector (TESTING.md, *The tiers a budget predicts*). What
-is still open is the evidence under the model: the per-format gains rest on
+engine's regression detector (TESTING.md, *The tiers a budget predicts*). **The `sys6-512K` half closed on
+2026-09-27**: the model predicted 66/71 and named its five refusals, the
+machine returned 66/71 refusing those five and no others, and `run_tiers.py`
+asserts that tier by name from that day (FORMATS.md, *512 KB machines*). So
+the model now predicts all three tiers a machine has run.
+
+What is still open is the arithmetic UNDER it. The per-format gains rest on
 three granted budgets measured on 2026-09-24 on the branch this merged from,
-which has since lost DART, and the arithmetic reproduces them only up to a
-1,138 B residue nothing accounts for. **What would close it:** one Mini vMac
-run of the shipped binary at `sys6-512K`, where the model predicts 66/71
-against the resident build's measured 64/71 (FORMATS.md, *512 KB machines*) —
-a tier it does not assert precisely because nothing has run it — and the three
-granted budgets re-taken on the current tree. A machine that says anything
-other than 66/71 there is the finding, and BLOCKERS.md is where it goes.
+which has since lost DART, and the residue is not what the record says: the
+2026-09-27 probe grants an LZH archive **753,382 B** at the 1 MB floor where
+the model computes 750,456 B — **pessimistic by 2,926 B**, against a recorded
+1,138 B. *Hypothesis, not a finding*: the base was taken on v0.33.0 and this
+tree's is ~24 B smaller, and the `-D UNC_AT_BUDGET` build is not the build
+being modelled, so the two numbers do not yet come from one binary.
+**What would close it:** that probe run on the RESIDENT autotest build of this
+tree, giving base and grant from the same binary, and the three granted
+budgets re-taken with it. A residue that survives that is the finding, and
+BLOCKERS.md is where it goes.
 
 ## What is still XADMaster's, and what would have to replace it
 

@@ -211,17 +211,24 @@ BUNDLE = 143072
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
-# counts 69 is exactly what a count cannot fail on. Both tiers were run on
-# the v0.33.0 binary — 2026-09-25 for `sys3-512K` (`sys30.py --emu mv-512Ke`)
-# and the same day at the 1 MB floor (FORMATS.md, *512 KB machines* and
-# *Floor target verification*).
+# counts 69 is exactly what a count cannot fail on. `sys3-512K` was run on
+# the v0.33.0 binary on 2026-09-25 (`sys30.py --emu mv-512Ke`), the 1 MB
+# floor on the v0.34.0 binary on 2026-09-26, and `sys6-512K` on v0.34.0 on
+# 2026-09-27 (FORMATS.md, *512 KB machines* and *Floor target
+# verification*).
 #
-# `sys6-512K` is NOT here: no machine has run the shipped build at that tier,
-# so this lane prints its prediction and asserts nothing. Adding it means an
-# emulator run, not a number (OPEN_ITEMS.md, *The overlay loader*).
+# `sys6-512K` JOINED on 2026-09-27, and it is the one tier where this lane
+# made a prediction before anything ran it: it said 66/71 and named five
+# fixtures, and `run.py --emu mv-512Ke --system System6.hfv` on the v0.34.0
+# binary returned 66/71 refusing those five and no others. That is the only
+# unfalsified-then-tested prediction the model has, which is why the sweep
+# was worth a boot (FORMATS.md, *512 KB machines*; DECISIONS.md 2026-09-27).
 EXPECT_SHIPPED = {
     "floor-1M": (),
     "sys3-512K": ("derived-Library_ISBN_Barcoder.sit", "synth-dd-m5.dd"),
+    "sys6-512K": ("derived-Cool_Tools__.sit", "derived-Library_ISBN_Barcoder.sit",
+                  "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
+                  "synth-dd-m5.dd"),
 }
 
 CCOMMENT = re.compile(r"/\*.*?\*/", re.S)

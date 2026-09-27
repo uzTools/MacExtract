@@ -286,6 +286,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
 - 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
 - 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
+- 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
 
 ---
 
@@ -18085,3 +18086,56 @@ weakness listed the field two paragraphs above it.
 probe has ever had, with the package's real header as the negative control
 and both real sets' shape as the positive; it was confirmed to fail with the
 check removed before it was believed.
+
+## 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
+
+`tools/run_tiers.py`'s shipped lane was written on 2026-09-26 and could
+reproduce two tiers a Macintosh had already run. At the third, System 6.0.8
+on a 512 KB Macintosh 512Ke, it made a PREDICTION instead: 66/71 against the
+resident build's measured 64/71, naming the five fixtures it would refuse and
+the two a per-format budget would clear. FORMATS.md carried that as a
+hypothesis and asserted nothing on it, which was right.
+
+**The machine returned 66/71, refusing those five and no others**, and
+`derived-Troi-ClipSave-Plug-in1.1.sit` and `derived-Expand_Now_1.0.1.sea`
+both passed as modelled. `run_tiers.py` asserts the tier by name from today,
+and the assertion was confirmed to fail with one name misspelled before it
+was believed.
+
+**Why this was worth a boot when two tiers already agreed.** Reproducing a
+number somebody has already measured cannot distinguish a model from a
+lookup table — the fixtures, the budgets and the expected tallies were all
+in the file. A prediction made before the run is the only version of that
+test that can fail for the right reason, and this model had exactly one
+outstanding. *A model validated only against the runs it was built from is
+a record of those runs.*
+
+### The residue did not reproduce, and that is labelled
+
+The same boot with `-D UNC_AT_BUDGET` grants an LZH archive 753,382 B at the
+1 MB floor where the arithmetic computes 750,456 B — pessimistic by 2,926 B,
+where the record for this model is a 1,138 B residue. **Hypothesis**: two
+things are unattributed, the 648,250 B base having been taken on the v0.33.0
+binary against this tree's ~24 B smaller one, and the probe build not being
+the build whose grant is modelled. The next step is one command and it is
+written down (OPEN_ITEMS.md, *The overlay loader*). Recording it as a
+discrepancy rather than as a correction is the whole point: a number taken
+from two different binaries is not a residue, it is two numbers.
+
+### And the harness beside it was lying about which machine ran
+
+`run.py` printed its summary as `N/M PASS at {args.mem}`, so this sweep —
+`--emu mv-512Ke`, a 512 KB machine — reported **"66/71 PASS at 4M"**.
+`sys30.py`, the driver beside it, has guarded against exactly this since it
+was written, with a comment naming the consequence: *"a summary that reports
+--mem's default while a different machine ran is how a 512 KB result gets
+filed as a 4 MB one."* The JSON record was always right; only the line a
+human reads was wrong. Fixed the same way sys30.py does it.
+
+**No new smell: this is the second instance of one already on the list** —
+*a harness that ends its runs differently from the harness beside it*, filed
+2026-08-22 when `arcmac.py` shut its emulator down properly and three
+SpaceSaver runs did not. Both instances have the same shape and the second
+adds one method to it: **grep for the COMMENT, not for the bug.** The comment
+is the proof somebody understood the problem once, and it is evidence about
+every sibling that does not have it.

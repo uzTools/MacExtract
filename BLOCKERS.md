@@ -322,7 +322,14 @@ insight at all:
   Added 2026-08-22: three SpaceSaver runs "measured unchanged" on a machine
   that never booted, because their image had been copied out of a KILLED
   emulator. `arcmac.py` had picked Special ▸ Shut Down for exactly that
-  reason since the ARC specimens; nothing compared the two.
+  reason since the ARC specimens; nothing compared the two. **Again
+  2026-09-27**, and this time the sibling documented the reason: `run.py`
+  printed `PASS at {args.mem}`, so a `--emu mv-512Ke` sweep reported *"66/71
+  PASS at 4M"*, while `sys30.py` had computed the machine from `--emu` all
+  along under a comment saying *"how a 512 KB result gets filed as a 4 MB
+  one"*. **Grep for the comment, not for the bug**: the comment is the proof
+  somebody understood it once, and it is evidence about every file that does
+  NOT have it.
 - **a graded case that has never run on this machine, announcing itself
   in every CI run.** Added 2026-09-26: `run_crypt.py` prints *"no `arc`
   ... garbled ARC skipped"* on every `./ci.sh`, and ARC's garble is one
