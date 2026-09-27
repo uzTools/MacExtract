@@ -290,6 +290,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
 - 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
 - 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
+- 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
 
 ---
 
@@ -18340,3 +18341,52 @@ a reason other than a rewrite, and the table is 12 rows over 18 files.
 The licence does not move — `unc_lzdyn.c`, `unc_crypt.c`, `unc_lzah.c`
 and the tolerance row are still measured-unclosable — and nothing
 executable changed but two ARJ constants.
+
+
+## 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
+
+`src/unc_util.c`'s three CRC tables were cited to XADMaster's `CRC.m`
+and macutils' `arc_updcrc`, and the same comment said they were
+"generated mechanically from the polynomials". Both cannot be the
+load-bearing statement. The inventory row for them read **unmeasured,
+and expected to be 0 B** — the only row in the table with no verdict
+at all.
+
+**The claim was true and had never been checked.**
+`tools/check_crc_tables.py` rebuilds all three from the polynomial its
+published description states — CRC-16/XMODEM from
+`binhex40_lewis.txt`'s bitwise algorithm, CRC-32 from
+`zip_appnote.txt`, CRC-16/ARC from 0xA001, which deark and lhasa each
+BUILD rather than list — and all 768 entries agree, with the three
+standard check values. Nothing executable changed, so the 0 B was
+right; what was missing was the evidence.
+
+**The check has a `--selftest` and `ci.sh` runs it that way.** It
+bends one entry of each table and confirms all three are caught,
+because a table checker that silently matched nothing would pass for
+years (CLAUDE.md, *a test that passes may not be testing anything*).
+
+**And the file carried a third citation its row never named**: the
+block-cipher tail padding, cited to `XADPackItDESHandle`. Rather than
+re-cite it, it was measured. The pad path executes **3 times over
+`run_crypt.py`'s 45 cases** — established by counting, not assumed —
+and the suite is byte-for-byte green with the pad changed from 0 to
+**0xA5**. The value cannot be observed, so it is not a format detail
+and needs no source. Zero stays because it is what the reference
+does; nothing rests on it.
+
+**What did NOT close, and why it is worth writing down.**
+`unc_internal.h` was about to leave the table with `unc_util.c`, and
+it carries three more citations belonging to other rows' subjects: the
+MIME line reader's `readline.c`, `Source: XADDiskDoublerParser.m case
+8` for method 8 being Compact Pro's two stages, and a second statement
+of the LZAH window preload. None was inventoried. They are in the
+`fmt_binhex.c`, `fmt_dd.c` and `unc_lzah.c` rows now. **A shared
+header collects citations from every subject that uses it, so a row
+naming one of its items reads as naming the file** — which is how a
+file with five citations nearly left an inventory of files with
+citations. The 2026-09-26 entry found the same shape in the same
+header and fixed only the two declarations it was looking at.
+
+**Consequence: `src/unc_util.c` leaves, `src/unc_internal.h` stays**,
+and the table is 11 rows over 17 files.

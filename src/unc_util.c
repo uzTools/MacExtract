@@ -143,16 +143,29 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
 /* ------------------------------------------------------------------ */
 /* CRC primitives                                                     */
 /*                                                                    */
+/* ALL THREE TABLES ARE THEIR POLYNOMIALS, and since 2026-09-27 that  */
+/* is checked rather than asserted: tools/check_crc_tables.py rebuilds */
+/* each from the polynomial its PUBLISHED description states, compares */
+/* all 768 entries, and runs the three standard check values. It has   */
+/* a --selftest that bends one entry of each table and confirms all    */
+/* three are caught, and ci.sh runs it. The tables were XADMaster's    */
+/* CRC.m and macutils' arc_updcrc until that day; the file had said    */
+/* "generated mechanically from the polynomials" all along and         */
+/* nothing had ever checked it (DECISIONS.md 2026-09-27, *the tables   */
+/* that said they were generated*).                                    */
+/*                                                                    */
 /* CRC-16/XMODEM: poly 0x1021, init 0, MSB-first, no final xor.       */
-/*   Used by MacBinary II/III (header CRC over bytes 0..123, checked  */
-/*   in reference/XADMaster/XADMacArchiveParser.m via the equivalent  */
-/*   reflected-table formulation) and BinHex 4                        */
-/*   (reference/XADMaster/XADBinHexParser.m).                         */
+/*   Source: reference/notes/binhex40_lewis.txt, section "CRCs",      */
+/*   which states the bitwise algorithm step by step with its initial */
+/*   register. Used by MacBinary II/III (header CRC over bytes        */
+/*   0..123), BinHex 4 and PackIt.                                    */
 /* CRC-32: poly 0x04C11DB7 reflected (table constant 0xEDB88320),     */
-/*   init/final-xor handled by callers. Used by Arsenic, gzip, zip.   */
-/*   Source: reference/XADMaster/CRC.m — LGPL, see NOTICE.            */
-/* Tables generated mechanically from the polynomials; the standard   */
-/* check values xmodem("123456789")=0x31C3 and                        */
+/*   init/final-xor handled by callers. Source:                       */
+/*   reference/notes/zip_appnote.txt, which states the polynomial and */
+/*   the 0xdebb20e3 residue. Used by Arsenic, gzip, zip, Compact Pro. */
+/* CRC-16/ARC: at its own table, below.                               */
+/*                                                                    */
+/* The standard check values xmodem("123456789")=0x31C3 and           */
 /* crc32("123456789")=0xCBF43926 are asserted in tests/unit_main.c    */
 /* (test_crc, with an incremental-equals-one-shot case beside them),  */
 /* and crc16_arc("123456789")=0xBB3D in tests/unit_formats.c against  */
@@ -243,10 +256,11 @@ static const uint32_t unc_crc32_table[256] = {
 
 /* CRC-16/ARC: poly 0xA001 (reflected), init 0, no final xor.
  * Used by StuffIt classic header and fork CRCs.
- * Source: reference/XADMaster/CRC.m (XADCRCTable_a001) and
- * reference/macutils (arc_updcrc) — LGPL, see NOTICE; this row is in
- * OPEN_ITEMS.md's XADMaster inventory since 2026-09-26, with two
- * permissive implementations that BUILD the table from the polynomial.
+ * Source: the polynomial, 0x8005 reflected to 0xA001 — which is what
+ * reference/deark (MIT) and reference/lhasa (ISC) each BUILD this
+ * table from rather than listing it, and what tools/check_crc_tables.py
+ * builds it from here. It was XADMaster's CRC.m (XADCRCTable_a001) and
+ * macutils' arc_updcrc until 2026-09-27.
  * Check value: crc16_arc("123456789") = 0xBB3D (tests/unit_formats.c,
  * beside an independent bitwise implementation). */
 static const uint16_t unc_crc16_arc_table[256] = {
@@ -414,9 +428,14 @@ int unc_bufin_next_slow(UncBufIn *b)
     if (b->crypt && b->crypt->blocksize > 1) {
         /* A block cipher cannot decrypt half a block, and io->read is
          * allowed to come up short, so fill the buffer rather than take
-         * what arrives. At a genuine EOF the tail is zero-padded to the
-         * block size, which is what the reference handles do
-         * (XADPackItDESHandle: memset the block, then break). */
+         * what arrives. At a genuine EOF the tail is padded to the block
+         * size, and THE PAD VALUE CANNOT BE OBSERVED — measured
+         * 2026-09-27, not reasoned: this path executes 3 times over
+         * tools/run_crypt.py's 45 cases, and the suite is byte-for-byte
+         * green with the pad changed to 0xA5. Zero is kept because it is
+         * what the reference handles use (XADPackItDESHandle memsets the
+         * block), but nothing depends on it, so the citation is a note
+         * and not a source. */
         uint32_t got = 0;
         want -= want % b->crypt->blocksize;
         if (want == 0) want = b->crypt->blocksize;

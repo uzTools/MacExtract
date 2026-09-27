@@ -342,9 +342,14 @@ int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
 
 /* ------------------------------------------------------------------ */
 /* MSB-first bit reader over UncBufIn                                 */
-/* (Classic Mac compressors emit bits high-to-low within each byte;   */
-/* source: reference/macutils/macunpack/de_huffman.c getbit_be and    */
-/* reference/XADMaster/CSInputBuffer.h.)                              */
+/* (Classic Mac compressors emit bits high-to-low within each byte.)  */
+/* Source: reference/deark/src/deark-dbuf.c (MIT) — de_bitreader and  */
+/* de_bitbuf_lowlevel, the same design in the same two modes: a right- */
+/* aligned buffer refilled a byte at a time, the next bits taken with  */
+/* >> nbits_in_bitbuf & mask in MSB mode and off the bottom in LSB     */
+/* mode, and de_bitreader_skip_to_byte_boundary where this has         */
+/* unc_bitin_align. It was macutils' de_huffman.c (getbit_be) and     */
+/* XADMaster's CSInputBuffer.h until 2026-09-27.                       */
 /* ------------------------------------------------------------------ */
 
 typedef struct UncBitIn {
@@ -586,20 +591,23 @@ int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want);
 
 /* CRC-16/XMODEM: poly 0x1021, init 0, no reflection, no final xor.
  * Used by MacBinary II and BinHex 4.
- * Source: reference/XADMaster/CRC.m (XADCalculateCRC/XADCRCTable) and
- * reference/macutils/crc/ — LGPL, see NOTICE. */
+ * Source: reference/notes/binhex40_lewis.txt, section "CRCs". The
+ * table is checked against that polynomial by
+ * tools/check_crc_tables.py; see src/unc_util.c. */
 uint16_t unc_crc16_xmodem(uint16_t crc, const uint8_t *buf, int32_t len);
 
 /* CRC-16/ARC: poly 0xA001 (reflected), init 0, no final xor.
  * Used by StuffIt classic (header + fork CRCs).
- * Source: reference/XADMaster/CRC.m (XADCRCTable_a001).
+ * Source: the polynomial itself — deark and lhasa each build this
+ * table from 0xA001, as tools/check_crc_tables.py does here.
  * Check value: 0xBB3D over "123456789". */
 uint16_t unc_crc16_arc(uint16_t crc, const uint8_t *buf, int32_t len);
 
 /* CRC-32 (IEEE, reflected, poly 0x04C11DB7 => table 0xEDB88320,
  * init 0xFFFFFFFF, final xor 0xFFFFFFFF handled by caller).
  * Used by Arsenic, gzip, zip.
- * Source: reference/XADMaster/CRC.m (XADCRCReverseTable usage). */
+ * Source: reference/notes/zip_appnote.txt, which states the
+ * polynomial and the 0xdebb20e3 residue. */
 uint32_t unc_crc32(uint32_t crc, const uint8_t *buf, int32_t len);
 
 /* The initial value that definition calls for. The final xor is the

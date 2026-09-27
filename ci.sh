@@ -22,6 +22,13 @@ python3 tools/check_docs.py || fail "documentation checks"
 echo "=== tuple-truth lint ==="
 python3 tools/check_tuple_truth.py || fail "tuple-truth lint"
 
+# The three CRC tables said "generated mechanically from the polynomials"
+# for months with nothing checking it. This rebuilds all three from the
+# PUBLISHED polynomial and compares 768 entries; --selftest bends one
+# entry of each first, so a pass means something.
+echo "=== CRC tables are their polynomials ==="
+python3 tools/check_crc_tables.py --selftest || fail "CRC table check"
+
 echo "=== variant 1: sanitizers (ASan+UBSan+alignment) ==="
 make clean >/dev/null
 make BUILD=build/san \
