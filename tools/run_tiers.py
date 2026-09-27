@@ -30,7 +30,7 @@ Both are swept in seconds:
     tools/run_tiers.py --check                       # both lanes, asserted
     tools/run_tiers.py --tier sys3-512K              # resident, one tier
     tools/run_tiers.py --tier sys3-512K --shipped    # shipped, one tier
-    tools/run_tiers.py --budget 128708 --list tools/vmac/sample.txt
+    tools/run_tiers.py --budget 129244 --list tools/vmac/sample.txt
     tools/run_tiers.py --tier floor-1M --macextract build/rel/macextract
     tools/run_tiers.py --check-saved     # OVL_SAVED against the two builds
 
