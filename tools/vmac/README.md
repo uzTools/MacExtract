@@ -2128,6 +2128,20 @@ which has no Command key, is not. *Hypothesis*, unreduced and now with two
 guests' worth of evidence: the Menu Manager wants mouse movement neither
 emulator's pointer injection produces.
 
+**But DRAGGING works, and that is the useful half of the same experiment.**
+Holding the button down across relative `mouse_move` packets is exactly what
+a Finder drag needs, and it tracks: pressing on an application icon, stepping
+882 px across the screen and releasing over a volume copied it, ghost icon and
+all (`shots/h_drag_over.png`, `shots/h_dropped.png`, 2026-09-27). So the limit
+is the Menu Manager specifically, not held-button interaction in general —
+file copies, window drags and anything else that is press-move-release are
+available. There is no `drag()` helper yet; it is four lines:
+
+    m.goto(sx, sy)
+    m.burst(["mouse_button 1"], wait=0.6)
+    m.step(dx, dy)                       # splits into <=40 px packets itself
+    m.burst(["mouse_button 0"], wait=2.0)
+
 ## Checking a run off the disk instead of off the screen
 
 `run.py` reads its result from the framebuffer: the application paints a grid

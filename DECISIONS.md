@@ -297,6 +297,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the layout Aladdin's own output settled) — the specimens had been on disk since August, and the measurement was two one-line perturbations
 - 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
 - 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
+- 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
 
 ---
 
@@ -18676,3 +18677,38 @@ XADMaster's naming of the two fields it reads and discards — a
 ever seen the bit set. The temptation after a day of wins is to write
 "an archive with a comment would grade it" as though the comment part
 were established. It is not.
+
+
+## 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
+
+The route filed for `fmt_sit5.c`'s bit 5 was *"a guest whose boot
+volume is HFS, where StuffIt Deluxe 5.0.1 will run"*. Before building
+one, the cheap version was worth trying: the alert is what Mac OS
+raises when an application makes a File Manager call that HFS+ does
+not support, so if the trigger were the volume the APPLICATION sits
+on, copying it to the plain-HFS `sitwork` volume would be enough.
+
+**It is not.** Copied to `sitwork` and launched from there, StuffIt
+Deluxe 5.0.1 gives the identical alert. The trigger is the SYSTEM's
+volume, not the application's — so the route needs an OS installed
+onto an HFS volume, and this machine has no Mac OS install media at
+all. A route that read as "a system image" is really "an OS install",
+which is a different size of job, and the entry says so now.
+
+**The experiment paid for itself anyway, in the harness.** Getting the
+application onto `sitwork` meant a Finder drag, and holding the button
+down across relative `mouse_move` packets is precisely what a drag
+needs. It tracks: press on the icon, step 882 px, release over the
+volume, and the copy happens, ghost icon and all. **So the menu limit
+found an hour earlier is the Menu Manager specifically, not
+held-button interaction in general** — which is a much better-bounded
+statement than "the pointer cannot select things", and it makes file
+copies, window drags and anything else press-move-release available to
+future sessions (`tools/vmac/README.md`, *what the pointer cannot
+select*).
+
+Worth keeping as a pattern: **the cheap version of a route is worth
+running even when you expect it to fail, because the failure is what
+distinguishes two hypotheses that the filed wording had merged.** Here
+"HFS+ is the problem" and "the application's own volume is the
+problem" were the same sentence until one of them was tested.
