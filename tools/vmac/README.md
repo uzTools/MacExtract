@@ -2142,6 +2142,28 @@ available. There is no `drag()` helper yet; it is four lines:
     m.step(dx, dy)                       # splits into <=40 px packets itself
     m.burst(["mouse_button 0"], wait=2.0)
 
+### A plain-HFS Mac OS 9 boot volume — `hfsboot.img`
+
+`$UNC_VMAC_HOME/../sit5/hfsboot.img` is a 1 GB **Mac OS Standard**
+volume carrying a bootable System Folder, built 2026-09-27 with no install
+media:
+
+    tools/vmac/mkapmdisk.py <MacOS9.img> hfsboot.img 1024 HFSBoot
+    # attach as a fourth drive, drag the System Folder onto it inside the
+    # guest (1,751 items, ~215 MB, about five minutes), then Cmd-Y to flush
+
+Relaunch with it as `index=0` and it is the startup disk: it sits at the top
+of the desktop volume icons, the *"did not shut down properly"* alert stops
+appearing, and the HFS+ volume gains ~500 MB as its virtual-memory swapfile
+goes idle. **That is how to tell which volume booted**, since About This
+Computer is behind the Apple menu and menu items are not selectable here.
+
+It exists because *"StuffIt Deluxe 5.0.1 needs an HFS boot volume"* turned
+out to be false — the application raises its file-system alert in all four
+combinations of boot volume and application volume, so the trigger is Mac OS
+9.2 (BLOCKERS.md, *Withdrawn claims*). The volume is kept anyway: the next
+HFS-versus-HFS+ question costs one relaunch instead of an afternoon.
+
 ## Checking a run off the disk instead of off the screen
 
 `run.py` reads its result from the framebuffer: the application paints a grid

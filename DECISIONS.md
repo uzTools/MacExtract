@@ -298,6 +298,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
 - 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
 - 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
+- 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
 
 ---
 
@@ -18712,3 +18713,57 @@ running even when you expect it to fail, because the failure is what
 distinguishes two hypotheses that the filed wording had merged.** Here
 "HFS+ is the problem" and "the application's own volume is the
 problem" were the same sentence until one of them was tested.
+
+
+## 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
+
+The route for `fmt_sit5.c`'s bit 5 was filed as *"a guest whose boot
+volume is HFS, where StuffIt Deluxe 5.0.1 will run"*, then refined the
+same day to *"an OS installed onto an HFS volume, not a copy"* when
+running the application from the plain-HFS `sitwork` volume changed
+nothing. Both readings are now withdrawn: **an HFS boot volume was
+built and the application behaves identically on it.**
+
+**How the volume was built**, which is reusable and took no install
+media: `tools/vmac/mkapmdisk.py` clones a working Apple Partition Map
+from the Mac OS 9 master and drops a freshly `hformat`-ed **HFS**
+volume into it, so a 1 GB `hfsboot.img` mounts as Mac OS Standard.
+The System Folder was then copied across inside the guest — 1,751
+items, about 215 MB, roughly five minutes — the volume was flushed by
+unmounting it (Cmd-Y), and QEMU was relaunched with that disk as
+index 0. It became the startup disk: it sits at the top of the desktop
+volume icons, the *"did not shut down properly"* alert stops
+appearing, and the HFS+ volume gains about 500 MB of free space, which
+is its virtual-memory swapfile no longer being in use.
+
+**The 2×2, all four failing:**
+
+| booted from | application run from | result |
+|---|---|---|
+| HFS+ | HFS+ | the alert |
+| HFS+ | HFS | the alert |
+| **HFS** | HFS+ | the alert |
+| **HFS** | HFS | the alert |
+
+**So the alert names the file system and is not about it.** StuffIt
+Deluxe 5.0.1 will not run under Mac OS 9.2 whatever the volumes are;
+the remaining route is an older system — 8.x — and this machine has no
+Mac OS install media of any kind. That is a fetch or a person, not a
+search, and OPEN_ITEMS says so.
+
+**Two things worth keeping.** `hfsboot.img` is a working plain-HFS
+Mac OS 9 boot volume and is kept, because the next question about HFS
+versus HFS+ behaviour now costs one relaunch instead of an afternoon.
+And the drag work of the last two hours generalises: the System Folder
+copy, the window move that made room for it, and the `Put Away` that
+undid a misdrop are all press-move-release, all reliable, and all
+recorded in `tools/vmac/README.md`.
+
+**The lesson is about how the route was worded.** *"A guest whose boot
+volume is HFS"* was written from the alert's own text, which says
+"file system" — and was believed twice, once when filed and once when
+refined, before anything tested it. **An error message's noun is a
+hypothesis about the cause, not a statement of it**; this one named
+the file system while being a property of the OS release. The cheapest
+disproof was available both times and cost about ninety minutes when
+it was finally run.
