@@ -102,6 +102,42 @@ def crypt_seeds(tmp, kinds=None):
     return out
 
 
+# Methods no corpus fixture uses. `tools/fuzz_cover.py` measured the
+# consequence on 2026-09-27: three of the four generators mutate a corpus
+# fixture, so the fuzzer's reach is the CORPUS's coverage, and a method
+# this project grades by generating a file was fuzzed by nothing at all —
+# `src/unc_lzdyn.c` was 16 of 16 functions never entered. These seeds are
+# the decoder half of what `synth_crypt.py` does for the ciphers: pure
+# Python, deterministic, so the coverage is the same wherever this runs.
+#
+# -lh3- only, for now. -lh2- is written by the patched LHa this repo
+# builds on demand, and a seed a reproducible fuzzer needs cannot depend
+# on a binary that may not be built (TESTING.md, *Fuzzing*).
+def method_seeds(tmp):
+    """Archives for methods the corpus has no specimen of."""
+    try:
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        import run_lzh
+    except Exception as e:                      # pragma: no cover
+        print("fuzz: cannot import the -lh3- encoder: %s" % e,
+              file=sys.stderr)
+        return None
+    text = b"LHarc 1.13 wrote -lh3- and almost nothing else ever did.\n" * 40
+    cases = [
+        ("text.txt", text, {}),
+        ("runs.bin", b"=" * 400 + b"\0" * 600 + b"ab" * 300, {}),
+        ("random.bin", bytes((i * 37 + (i >> 3) * 101) & 0xFF
+                             for i in range(4000)), {}),
+        ("one.bin", b"x", {}),                  # one symbol: takes the escape
+        ("single.bin", b"Q" * 5000, {"single": True}),
+        ("ptree.txt", text, {"send_p_tree": True}),
+    ]
+    p = os.path.join(tmp, "seed-lh3.lzh")
+    with open(p, "wb") as f:
+        f.write(run_lzh.lh3_archive(cases))
+    return [p]
+
+
 def corpus():
     out = []
     for f in sorted(os.listdir(FIXDIR)):
@@ -169,12 +205,18 @@ def main():
         if not seeds:
             print("fuzz: no corpus fixtures present", file=sys.stderr)
             return 1
+        extra = method_seeds(tmp)
+        if extra is None:
+            return 1
+        seeds += extra
         encrypted = crypt_seeds(tmp, args.crypt_kind)
         if encrypted is None:
             return 1
         print("fuzz: %d encrypted seeds (%s)"
               % (len(encrypted),
                  ", ".join(args.crypt_kind or CRYPT_KINDS)))
+        print("fuzz: %d generated seed(s) for methods the corpus lacks "
+              "(-lh3-)" % len(extra))
         ncrypt = 0
         for i in range(args.iterations):
             # A quarter of the run is the ciphers, because they are a

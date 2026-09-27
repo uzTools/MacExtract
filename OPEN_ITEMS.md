@@ -233,14 +233,27 @@ archives are in the corpus, and a 32-bit sum over the block table
 rejects every mutant before a coder runs — the gate the one decoder
 heap overflow sat behind (TESTING.md, *Fuzzing*; BLOCKERS.md).
 
-**What would close it:** a seed per method, deterministic and in-repo,
-the way `tools/synth_crypt.py` writes nine cipher shapes in pure
-Python. Three exist already in some form and differ in cost:
-`run_lzh.py` carries a pure-Python `-lh3-` encoder that could be a seed
-today; `-lh2-` needs the patched LHa this repo builds on demand, which
-a reproducible fuzzer cannot depend on; `ddencode.py` writes
-DiskDoubler 3, 4 and 5 but only under Mini vMac, so its output would
-have to be captured as a committed seed rather than generated per run.
+**`-lh3-` was seeded on 2026-09-27** and the family is no longer wholly
+unfuzzed: `fuzz.py`'s `method_seeds()` builds a six-entry archive with
+`run_lzh.py`'s pure-Python encoder, and the `-lh3-` entry point goes
+from never entered to 69.7 % of its lines (TESTING.md, *Fuzzing*).
+
+**What is left, and what each wants:**
+
+- **`-lh3-`'s position tree** — `lzs_read_tree_p` and `lzs_decode_p` are
+  still at zero. They need a seed shaped for them, not more cases: one
+  wants the escape only a `send_p_tree` stream emits, the other a match
+  that survives mutation.
+- **`-lh2-`** — written only by the patched LHa this repo builds on
+  demand, and a seed a reproducible fuzzer needs cannot depend on a
+  binary that may not be built. A committed seed is the way, as for
+  DiskDoubler below.
+- **DiskDoubler 3, 4 and 7, and ARC's Crush** — `ddencode.py` writes
+  three of those but only under Mini vMac, so the output would have to
+  be captured as a committed seed rather than generated per run.
+- **Now Compress's coders** — a mutation-then-repair generator, since
+  the gate is a checksum and more cases cannot get past it.
+
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.
 

@@ -727,7 +727,7 @@ anything about the suite.**
    | LZH container | 21 | 3 — `lzh_larc`, `lzh_preload`, `lzh_put_run` |
    | DiskDoubler | 24 | 4 — `dd_rle` (method 3), `dd_huffman` (4), `dd_stac*` (7) |
    | Now Compress | 13 | 6 — the coders and the block table |
-   | **LZH `-lh2-`/`-lh3-`** | 16 | **16 — the whole file, never fuzzed** |
+   | **LZH `-lh2-`/`-lh3-`** | 16 | **16 — the whole file, never fuzzed**; **11 after the seed below** |
 
    **Every one of those is a method with no specimen in the corpus**,
    and the cause is structural rather than bad luck: three of the four
@@ -746,6 +746,30 @@ anything about the suite.**
    one heap overflow this project has found in a decoder** — a length
    checked against `incap` where the buffer is `blkcap`, found by a
    crafted archive under ASan and never by a mutant.
+
+   **`-lh3-` has a seed since 2026-09-27**, and it is the decoder half
+   of what `synth_crypt.py` does for the ciphers: `fuzz.py`'s
+   `method_seeds()` builds a six-entry `-lh3-` archive with
+   `run_lzh.py`'s pure-Python encoder — deterministic, no binary, so
+   the coverage is the same wherever this runs — and adds it to the
+   pool the mutation and splice generators draw from. Re-measured, same
+   3,000 cases and seed:
+
+   | function | before | after |
+   |---|---|---|
+   | `unc_lzst0_decode` (the `-lh3-` entry) | 0 | **69.7 % of lines** |
+   | `lzs_ready_made`, `lzs_block_head`, `lzs_decode_c`, `lzs_read_tree_c` | 0 | **100 / 85 / 73 / 72 %** |
+   | `lzs_decode_p`, `lzs_read_tree_p` | 0 | **still 0** |
+   | `unc_lzdyn_decode` and the `lzd_*` set (`-lh2-`) | 0 | **still 0** |
+
+   Two things that did NOT move, and why. The position tree is still
+   unreached: `lzs_read_tree_p` needs the escape only the `send_p_tree`
+   case emits and `lzs_decode_p` needs a match to survive the mutation,
+   so both want a seed shaped for them rather than more cases. And
+   `-lh2-` is untouched by design — it is written by the patched LHa
+   this repo builds on demand, and a seed a reproducible fuzzer needs
+   cannot depend on a binary that may not be built. (`lzd_flush` shows
+   coverage because the `-lh3-` decoder calls it too.)
 
    A 400-case run had far more at zero and most of it was sampling; the
    difference between 400 and 3,000 is how the two were told apart, and
