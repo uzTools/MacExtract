@@ -14,8 +14,9 @@ The sample is **71 fixtures** since 2026-09-22, when the two StuffIt 5
 archives whose names are UTF-8 joined it. Every figure below was taken on
 **v0.33.0** on 2026-09-25 — the release that made the decoders `'OVLY'`
 images and dropped DART — **except System 6.0.8 at the 1 MB floor, which is
-v0.34.0's**, the binary now in `dist/` (2026-09-26; what stands in for the
-other six is below the table).
+v0.34.0's** (2026-09-26). `dist/` has been rebuilt once since that run, so no
+tier has run exactly the bytes it now holds; what stands in for all seven is
+below the table.
 
 | tier | result |
 |---|---|
@@ -27,13 +28,15 @@ other six is below the table).
 | System 7.0.1, 4 MB | **71/71** |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
 
-**v0.34.0: one tier re-run, six carried on an argument.** The shipping binary
-has moved twice since the 2026-09-25 sweeps — a one-predicate fix in
+**One tier re-run, six carried on an argument.** The shipping binary has
+moved three times since the 2026-09-25 sweeps — a one-predicate fix in
 `src/fmt_arc.c`, where an ARC entry whose garbled stream ran short was refused
-without the password being tried, and the Compact Pro segment identity check,
+without the password being tried; the Compact Pro segment identity check,
 which costs **24 B of resident code** and so takes 24 B off every tier's
-budget. **System 6.0.8 at the 1 MB floor was re-run on the v0.34.0 binary:
-71/71, 2026-09-26** (FORMATS.md, *Floor target verification*). The other six
+budget; and `unc_applelink_probe`'s removal on 2026-09-27, which gives 496 B
+back and puts **536 B onto every tier's budget** (*Withdrawn claims*).
+**System 6.0.8 at the 1 MB floor was re-run on the v0.34.0 binary: 71/71,
+2026-09-26** (FORMATS.md, *Floor target verification*). The other six
 tiers were not, and what stands in for them is measured rather than asserted:
 the ARC predicate is reachable only AFTER an entry's decode has failed, so
 every entry that extracts takes the identical path, and the sample's three
@@ -42,8 +45,11 @@ file, and no fixture in the sample is a Compact Pro segment; and 24 B is two
 orders of magnitude under the narrowest margin between any passing layer's
 demand and its budget anywhere in the sample, which is **16,490 B**
 (re-measured 2026-09-27 at the re-taken budgets; `tools/run_tiers.py`, whose
-shipped lane `ci.sh` asserts every run). *One measurement and an
-argument — not seven re-runs.* Per-tier
+shipped lane `ci.sh` asserts every run). The removed probe could only ever
+NAME a file, and none of the 71 sampled fixtures opens with the token it
+required (measured 2026-09-27), so no sampled format changed; and a change
+that only frees memory cannot turn a pass into a refusal. *One measurement
+and an argument — not seven re-runs.* Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
 any of it is `tools/vmac/README.md`; what no emulator here can settle is
