@@ -10,12 +10,16 @@
  * docs/formats/serialized-huffman-tree.md, method 8's coder is
  * docs/formats/stuffit-method-8-mw.md, method 13's is the first note
  * above, and method 6's code book and framing are
- * docs/formats/stuffit-method-6.md. **Nothing in this file is
- * XADStuffItParser.m's, XADCompressHandle.m's or macunpack/sit.c's
- * any more**, since 2026-09-21: method 6's framing was the last of
- * it, and the RLE90 filter left the same day for the format's own
- * published description, reference/notes/rle90_theunarchiver.md,
- * which states every rule it implements.
+ * docs/formats/stuffit-method-6.md. Nothing in this file is
+ * XADCompressHandle.m's or macunpack/sit.c's any more, and nothing
+ * on the PLAIN path is XADStuffItParser.m's, since 2026-09-21:
+ * method 6's framing was the last of it, and the RLE90 filter left
+ * the same day for the format's own published description,
+ * reference/notes/rle90_theunarchiver.md, which states every rule it
+ * implements. **The ENCRYPTED fork's key layout is still
+ * XADStuffItParser.m's** and says so where it is used; this header,
+ * NOTICE and OPEN_ITEMS.md all said "nothing at all" from 2026-09-22
+ * until 2026-09-27 (BLOCKERS.md, *Withdrawn claims*).
  *
  * Archive header (22 bytes): u32 magic ('SIT!' or installer 'ST..'
  * variants), u16 numfiles, u32 totalsize, u32 magic2 'rLau', u8

@@ -79,8 +79,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     (`tools/derive_sit13.py`), and the tables compared array by array
     against XADStuffIt13Handle.m's before `gen_sit13_tables.py` was
     pointed at the page instead. **Since 2026-09-22 `src/fmt_sit.c`
-    owes XADStuffItParser.m, XADCompressHandle.m and
-    `macunpack/sit.c` nothing at all.** Method 6 was the last of it.
+    owes XADCompressHandle.m and `macunpack/sit.c` nothing at all,
+    and XADStuffItParser.m nothing on the plain path** — method 6 was
+    the last of it. **Its ENCRYPTED fork's key layout is still
+    XADStuffItParser.m's** (`decryptHandleForEntryWithDictionary`:
+    sixteen bytes of key material at the end of the fork, and the pad
+    count at header offset 104), as StuffIt 5's encrypted archive is
+    still XADStuffIt5Parser.m's. This paragraph read "nothing at all"
+    from 2026-09-22 to 2026-09-27.
     Its fixed code book stopped being macutils' on 2026-09-21 —
     `src/sit6_tables.h` carried 1,028 bytes of tables derived from
     `code6[258]` and `sit_dosplit`, and it is now the thirteen
