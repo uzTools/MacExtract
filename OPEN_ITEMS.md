@@ -250,13 +250,19 @@ from never entered to 69.7 % of its lines (TESTING.md, *Fuzzing*).
   `lzs_read_tree_p` 64.3 %. It also closed a CORRECTNESS gap: no
   `-lh3-` stream written here had ever contained a match, so the
   decoder's LZSS half was graded by nothing (BLOCKERS.md).
-- **`-lh2-`** — written only by the patched LHa this repo builds on
-  demand, and a seed a reproducible fuzzer needs cannot depend on a
-  binary that may not be built. A committed seed is the way, as for
-  DiskDoubler below.
-- **DiskDoubler 3, 4 and 7, and ARC's Crush** — `ddencode.py` writes
-  three of those but only under Mini vMac, so the output would have to
-  be captured as a committed seed rather than generated per run.
+- **`-lh2-` is done, 2026-09-27**, by exactly that route: the bytes are
+  committed at `tools/seeds/lh2.lzh` rather than generated per run.
+  `src/unc_lzdyn.c` goes from 16 of 16 functions never entered to 1 —
+  `lzd_reconst`, which wants 32,768 codes, too large for a seed and
+  covered by the graded suite instead.
+- **DiskDoubler 3, 4 and 5 are done, 2026-09-27** — and `ddencode.py
+  --build` turned out to need no emulator at all, so the files were
+  written locally and committed under `tools/seeds/`. DiskDoubler goes
+  from 4 functions never entered to 2.
+- **DiskDoubler method 7 and ARC's Crush** — nothing here writes either.
+  Method 7 is the Sigma Designs card's compression, with specimens on
+  the 3.1.2 and 3.7 disks but none in the corpus; Crush has no
+  implementation anywhere (Part 1).
 - **Now Compress's coders** — **done 2026-09-27.** `fuzz.py`'s fifth
   generator flips bits inside a block's payload and recomputes that
   block's 32-bit trailer with `mutate_now.py`'s `fix_trailer`, which is

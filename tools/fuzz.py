@@ -110,9 +110,23 @@ def crypt_seeds(tmp, kinds=None):
 # the decoder half of what `synth_crypt.py` does for the ciphers: pure
 # Python, deterministic, so the coverage is the same wherever this runs.
 #
-# -lh3- only, for now. -lh2- is written by the patched LHa this repo
+# -lh3- is generated here; -lh2- is COMMITTED, at tools/seeds/lh2.lzh.
+# That asymmetry is the point: -lh3- has a pure-Python encoder in
+# run_lzh.py, while -lh2- is written only by the patched LHa this repo
 # builds on demand, and a seed a reproducible fuzzer needs cannot depend
-# on a binary that may not be built (TESTING.md, *Fuzzing*).
+# on a binary that may not be built. Committing the bytes gives every
+# machine the same seed. How it was made is in TESTING.md, *Fuzzing*;
+# it is this project's own output, not a corpus fixture.
+SEED_DIR = os.path.join(ROOT, "tools", "seeds")
+LH2_SEED = os.path.join(SEED_DIR, "lh2.lzh")
+# DiskDoubler methods 3, 4 and 5, written by tools/vmac/ddencode.py
+# --build, which needs no emulator. No corpus fixture uses any of them,
+# so without these the fuzzer never entered dd_rle or dd_huffman. The
+# same files are round-tripped by this engine and, for the vendor's
+# verdict, read by Salient's own 1991 expander (TESTING.md).
+DD_SEEDS = ("dd-Rle2.dd", "dd-HuffDeep.dd", "dd-Splay128.dd")
+
+
 def method_seeds(tmp):
     """Archives for methods the corpus has no specimen of."""
     try:
@@ -147,6 +161,12 @@ def method_seeds(tmp):
         with open(p, "wb") as f:
             f.write(run_lzh.lh3_archive([c]))
         out.append(p)
+    if os.path.exists(LH2_SEED):
+        out.append(LH2_SEED)
+    for name in DD_SEEDS:
+        p = os.path.join(SEED_DIR, name)
+        if os.path.exists(p):
+            out.append(p)
     return out
 
 
@@ -281,8 +301,9 @@ def main():
         print("fuzz: %d encrypted seeds (%s)"
               % (len(encrypted),
                  ", ".join(args.crypt_kind or CRYPT_KINDS)))
-        print("fuzz: %d generated seed(s) for methods the corpus lacks "
-              "(-lh3-)" % len(extra))
+        print("fuzz: %d seed(s) for methods the corpus lacks "
+              "(-lh3- generated, -lh2- and DiskDoubler 3/4/5 committed)"
+              % len(extra))
         print("fuzz: %d Now Compress file(s) for the repair generator"
               % len(nowfiles))
         ncrypt = 0

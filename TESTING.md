@@ -808,11 +808,33 @@ anything about the suite.**
    | `lzs_decode_p` | 0 | **88.9 %** |
    | `lzs_read_tree_p` | 0 | **64.3 %** |
 
-   `-lh2-` is untouched by design as far as the FUZZER goes — it is
-   written by the patched LHa this repo builds on demand, and a seed a
-   reproducible fuzzer needs cannot depend on a binary that may not be
-   built. (`lzd_flush` shows coverage because the `-lh3-` decoder calls
+   **`-lh2-` is a COMMITTED seed since 2026-09-27**, `tools/seeds/
+   lh2.lzh`, 4,896 B. It cannot be generated per run the way `-lh3-` is:
+   only the patched LHa this repo builds on demand writes the method,
+   and a reproducible fuzzer cannot depend on a binary that may not be
+   built — so the bytes are in the tree and every machine gets the same
+   seed. It is this project's own output, not a corpus fixture. To
+   remake it: `sh tools/build_lha_lh2.sh`, then compress a
+   repetitive text and 6,000 bytes over a 64-symbol alphabet with
+   `lha ao2q10`, which gives two `-lh2-` entries, one match-heavy and
+   one literal-heavy; LHa's own `t` verifies it and so does this engine.
+
+   With it, **`src/unc_lzdyn.c` goes from 16 of 16 functions never
+   entered to 1**: only `lzd_reconst`, which wants 32,768 codes — too
+   large to sit in a fuzz seed, and already covered by the graded suite
+   above. (`lzd_flush` shows coverage because the `-lh3-` decoder calls
    it too.)
+
+   **DiskDoubler 3, 4 and 5 are committed seeds too**, the same day and
+   for the same reason: `tools/seeds/dd-Rle2.dd`, `dd-HuffDeep.dd` and
+   `dd-Splay128.dd`, written by `tools/vmac/ddencode.py --build`, which
+   needs no emulator. No corpus fixture uses any of those methods.
+   DiskDoubler goes from **4 functions never entered to 2** — only
+   `dd_stac` and `dd_stac_bits`, method 7, which nothing here can write:
+   it is the Sigma Designs card's compression, and its specimens are on
+   the 3.1.2 and 3.7 disks rather than in the corpus. The same three
+   files are round-tripped by this engine and, for the vendor's verdict,
+   read by Salient's own 1991 expander (`ddencode.py --expand`).
 
    **Its graded suite was asked the same question, and one path failed
    it.** Run under the coverage build, `run_lzh.py`'s `-lh2-` entries
