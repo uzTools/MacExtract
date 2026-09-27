@@ -288,6 +288,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
 - 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
 - 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
+- 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
 
 ---
 
@@ -18204,9 +18205,78 @@ number in reach.
 ### What it cost, and the one number that was free
 
 Two 1 MB boots to settle it and nine more to widen it from three keep sets to
-ten, plus three tier re-takes on three machines. All three tier budgets rose
+ten, plus three tier re-takes on three machines — and then all of it again
+after the AppleLink probe left the same day (*the recogniser that was a command
+line*), which moved every budget 536 B and every per-format GAIN not at all.
+That second pass is the one that makes the 346 B a figure: an unattributed
+remainder that survives a 496 B change to the application unchanged is not
+noise in the measurement. All three tier budgets rose
 by the same 4,746 B, and no tally moved on either lane — so the cost of having
 carried a stale base was nothing yet, which is exactly the condition under
 which it would have been carried until it cost something. The third tier's
 budget was PREDICTED from the first two before that boot: two machines had
 moved 4,746 B, so System 3.0 / 512 KB was expected at 224,108 B, and it is.
+
+## 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
+
+`unc_applelink_probe` shipped from 2026-08-23 and named a file an AppleLink
+package when its first whitespace-delimited token was `Decode` and its third
+`to` or `into`. That is `PKG Expand Translator`'s @0x2952 transcribed
+accurately, cited, and witnessed by four byte patterns a different build would
+fail (`tools/vmac/spacesaver.py --pkg`). Two real packages arrived on
+2026-09-26 and it named neither, and the open item asked the right question:
+*two shapes of input, or the wrong routine?*
+
+**Neither. It is the right routine for a question nobody asked it.** The five
+other translators with code on the same disk carry the SAME routine:
+
+| translator | `STR# 129` items 1–4 | its recogniser |
+|---|---|---|
+| PKG Expand | `Decode`, ` Folder`, `.pkg`, `to` | @0x2952 |
+| CompactPro | `Decode`, ` Folder`, `.cpt`, `to` | @0x2bc8 — instruction for instruction the same |
+| UnZip | `Decode`, ` Folder`, `.zip`, `to` | same shape, same three item tests |
+| BinHex4, UUCode, Unix Compress | `Decode`, `Encode`, `replace`, … `to` | same shape |
+
+Its input is a Handle the host passes at `param+4`, its answer goes back in
+`param+8`, and the selector at `param+12` decides whether it is being asked to
+PARSE (bit 1) or to RUN (bit 2). `Decode "X" to "Y"` is a sentence in the
+StuffIt translator API's command language. A file test it is not: the
+CompactPro translator's copy would reject all 108 Compact Pro fixtures in this
+corpus, and PKG Expand's accepted `Decode "Payload.hqx" to "Out"`, which is
+equally the CompactPro translator's command.
+
+Where Aladdin's file recognition actually lives is visible in the same
+resource: `STR# 129` item 3 is the EXTENSION, used to strip `.pkg` and append
+` Folder` for the destination (@0x2e5c), and the translator's Standard File
+dialog lists only directories. It never sniffs. What expands a package is not
+in the translator either — it calls `GetResource('Eng ', 2)` in
+`StuffIt Engine™` and jumps in (@0x334c).
+
+**The probe is removed rather than kept.** It was the only thing `.pkg` had,
+and what it matched was a translator command that appears in no archive — a
+name that cannot be right about a file. The unit test now asserts the four
+lines it used to accept are `UNC_FORMAT_UNKNOWN`, which is a test that fails
+if the probe comes back.
+
+### The lesson, and it is a new smell
+
+Rule #1 says a magic number comes from a reference implementation with a
+`/* Source: */` comment, and every word of that was obeyed here. It does not
+say **check which question the cited routine answers.** The available check
+costs nothing and would have worked on the day: the reference implementation
+had five siblings, one of them for a format with 108 fixtures in this corpus,
+and running the sibling's copy of the routine against those fixtures answers
+"is this a format test?" immediately.
+
+It also explains an expensive day that had already been paid for: the seven
+boots of 2026-09-01 that could not hand Aladdin's expander a package, because
+its dialog lists only directories (DECISIONS.md 2026-09-01). That was this
+same fact from the other side — a translator that takes a place and a command
+has no use for a file dialog — and it was read as an obstacle rather than as
+evidence about the routine.
+
+**Cost: 35 days of a format counted as named that named no file**, plus a
+supporting measurement that could not fail ("0 false positives across 928
+fixtures" — the corpus held neither a package nor a script), plus those seven
+boots. Settled with no boot at all: the disproof was five resources on an
+image this project has had installed since August.

@@ -1622,11 +1622,12 @@ the second predicts what a user's Macintosh refuses.
 
 The resident lane asserts every tally Mini vMac agreed with for that
 build, which since 2026-09-22 is all three: **71/71 at the 1 MB floor
-target** (652,996 B), **67/71 on a 512 KB Macintosh under System 3.0**
-(224,108 B) and **64/71 on the same machine under System 6.0.8**
-(128,708 B) — the same four and seven fixtures, by name, that the
-machines refuse. All three budgets were re-taken 2026-09-27 and all three
-rose 4,746 B; no tally moved (FORMATS.md, *Budget*). The fourth arrived 2026-09-22 with
+target** (653,532 B), **67/71 on a 512 KB Macintosh under System 3.0**
+(224,644 B) and **64/71 on the same machine under System 6.0.8**
+(129,244 B) — the same four and seven fixtures, by name, that the
+machines refuse. All three budgets were re-taken twice on 2026-09-27 — +4,746 B
+and then +536 B, the three moving together each time — and no tally moved
+(FORMATS.md, *Budget*). The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
 assertable the same day, when its budget was re-taken. A tally that moves is
 a memory regression or a memory win; either way the number in `EXPECT`
@@ -1663,7 +1664,7 @@ DECISIONS.md 2026-09-26, *a budget per format, and one per layer*).
   NO; that walk is not reachable from the CLI, so the shipped lane keeps
   them for those two formats always and grants 9,808 B less than the
   machine does. It decides nothing: the narrowest margin on any Compact
-  Pro or zip layer in the sample is 146,726 B, re-measured 2026-09-27.
+  Pro or zip layer in the sample is 147,262 B, re-measured 2026-09-27.
 - **Fragmentation.** A budget is one number; the Memory Manager also has
   to find one PIECE that big, which the shell reports separately
   ("Memory is too broken up"). Nothing here models it. **No disagreement

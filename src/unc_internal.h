@@ -1318,7 +1318,6 @@ UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);
-UncFormat unc_applelink_probe(const uint8_t *head, int32_t len, UncIO *io);
 uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
 UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io);
 

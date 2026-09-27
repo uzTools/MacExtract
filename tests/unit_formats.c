@@ -3264,13 +3264,17 @@ static void test_cptseg_probe(void)
 }
 
 /* ------------------------------------------------------------------ */
-/* AppleLink package (`.pkg`) — detect only                           */
+/* AppleLink package (`.pkg`) — NOT recognised, deliberately          */
 /*                                                                    */
-/* The whole magic is three tokens, which is what Aladdin's own        */
-/* reader checks (`PKG Expand Translator`, `Othe` 0 @0x2952). These    */
-/* assert the shape of that test rather than the format: there is no   */
-/* `.pkg` file here to check a reading against, and the probe is the   */
-/* only thing shipped.                                                 */
+/* `unc_applelink_probe` shipped from 2026-08-23 to 2026-09-27 and    */
+/* tested three tokens — `Decode <thing> to|into <place>` — read out  */
+/* of `PKG Expand Translator`. That routine is the StuffIt translator */
+/* COMMAND parser and not a file test: the CompactPro, UnZip, UUCode, */
+/* BinHex4 and Unix Compress translators each carry the same routine  */
+/* with the same `STR# 129` verbs, so a line it accepts is equally    */
+/* every one of their commands and none of their formats. Removed;    */
+/* these assert that it stays removed (FORMATS.md, *AppleLink         */
+/* packages*; DECISIONS.md 2026-09-27).                               */
 /* ------------------------------------------------------------------ */
 
 static void ss_sniff_is(const char *text, UncFormat want)
@@ -3461,21 +3465,14 @@ static void test_foreign(void)
 
 static void test_applelink(void)
 {
-    /* What the translator accepts. */
-    ss_sniff_is("Decode \"My File\" to \"Some Folder\"\r",
-                UNC_FORMAT_APPLELINK);
-    ss_sniff_is("Decode Thing into Folder\r", UNC_FORMAT_APPLELINK);
-    /* Case-insensitive, as _CmpString is called there. */
-    ss_sniff_is("DECODE thing TO folder\r", UNC_FORMAT_APPLELINK);
-    /* Leading whitespace is skipped by the same tokenizer. */
-    ss_sniff_is("\r\n   Decode thing to folder\r", UNC_FORMAT_APPLELINK);
-
-    /* And what it does not. A prefix is not a token... */
-    ss_sniff_is("Decoder ring to nowhere\r", UNC_FORMAT_UNKNOWN);
-    /* ...the third token has to be there and has to be one of two... */
-    ss_sniff_is("Decode thing\r", UNC_FORMAT_UNKNOWN);
-    ss_sniff_is("Decode thing from folder\r", UNC_FORMAT_UNKNOWN);
-    /* ...and prose that merely starts with the word is not a package. */
+    /* A translator command line names nothing. Every one of these was
+     * sniffed as "AppleLink package" until 2026-09-27, and the first is
+     * also, word for word, what the CompactPro translator's own
+     * recogniser accepts. */
+    ss_sniff_is("Decode \"My File\" to \"Some Folder\"\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("Decode Thing into Folder\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("DECODE thing TO folder\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("\r\n   Decode thing to folder\r", UNC_FORMAT_UNKNOWN);
     ss_sniff_is("Decode the message by hand, then send it to Bob.\r",
                 UNC_FORMAT_UNKNOWN);
 }

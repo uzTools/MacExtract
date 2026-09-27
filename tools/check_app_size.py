@@ -21,8 +21,8 @@ file moving, and FORMATS.md's size table spent four days describing
 tables that had stopped being emitted.
 
 The threshold is not a taste: at the System 6.0.8 / 512 KB tier the
-narrowest PASSING fixture (derived-LHA_Expander_1.0.3.sea) has 11,924 B
-of headroom — it needs 116,784 B against that tier's 128,708, both
+narrowest PASSING fixture (derived-LHA_Expander_1.0.3.sea) has 12,460 B
+of headroom — it needs 116,784 B against that tier's 129,244, both
 re-taken 2026-09-27; it was 6,952 B when this file was written, against a
 budget 4,746 B lower. A 2,048 B step is therefore five deliberate
 acknowledgements before a tier loses a fixture, and each one is a commit
@@ -44,9 +44,12 @@ import sys
 # overlays became the default the same day; the same build still exists as the
 # control (UNC_OVL_RESIDENT=1) and has its own ceiling in
 # tools/build_mac.sh, which is where a per-configuration limit belongs.
-EXPECT = 64896
+# LOWERED 2026-09-27 from 64,896 to 64,384, at the size on the day: the
+# AppleLink `.pkg` probe left with the routine it was transcribed from
+# (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
+EXPECT = 64384
 TOLERANCE = 2048
-TAKEN = "2026-09-25"
+TAKEN = "2026-09-27"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -107,7 +110,7 @@ def main():
           "  tools/run_tiers.py --check,\n"
           "  then raise EXPECT in this file in the SAME commit and say what\n"
           "  the bytes bought. At the sys6-512K tier the narrowest passing\n"
-          "  fixture had 11,924 B of headroom on 2026-09-27."
+          "  fixture had 12,460 B of headroom on 2026-09-27."
           % (what, abs(delta), size, EXPECT, TAKEN), file=sys.stderr)
     return 1
 

@@ -73,7 +73,6 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          1, 0, unc_superdisk_extract },
     { UNC_FORMAT_DDSEG,       "DiskDoubler split",   1, 0, unc_ddseg_extract },
     { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver",  1, 0, unc_spacesaver_extract },
-    { UNC_FORMAT_APPLELINK,   "AppleLink package",   0, 0, NULL },
     { UNC_FORMAT_BTOA,        "btoa",                1, 1, unc_btoa_extract },
     { UNC_FORMAT_BASE64,      "base64",              1, 1, unc_b64_extract },
     { UNC_FORMAT_MIME,        "MIME message",        1, 0, unc_mime_extract },
@@ -242,10 +241,6 @@ static const UncProbe unc_sniff_order[] = {
      * header: a printable 13-byte name, a known method, and sizes that
      * land on the next header or the end marker. */
     unc_arc_probe,
-    /* An AppleLink package is TEXT, so it sits with the other text
-     * formats — and before them, because its test is three whole tokens
-     * and theirs are scans for a line that may be anywhere. */
-    unc_applelink_probe,
     /* BinHex last: it scans for a banner amid mail garbage. uuencode
      * and btoa sit beside it — same habitat, same kind of scan — and
      * before it, because BinHex's probe reads on past its own banner

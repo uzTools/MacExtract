@@ -54,7 +54,7 @@ has grown before, on request.
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, and there is nothing measured for one to do** | every codec here is integer bit work: the only FP-shaped operation in the engine is Arsenic's two divides per symbol, **0.72 % of the run** against 9.9 % for the linear symbol search beside it (FORMATS.md, *What is still hot*). An FPU is also only available where it is not needed — a 68881 implies a 68020, which already has `DIVU.L`, while the 68000 that pays for `__udivsi3` has none — and the fastest tier reaches no FPU at all, running through the 68LC040 emulator. The formats' own answer to differing CPUs is a decompress-only twin that accepts every CPU, and all of those modules are implemented. A second `-mcpu=68020` build is the adjacent trade and is also out (DECISIONS.md 2026-09-23, *hardware decoding*) |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has never heard of. The branch `rom64k` guards the trap and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies — and **nobody has run it on one**, so this stays out until hardware says otherwise (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A Macintosh **128K** is out for a measured second reason: its largest single block is 63,744 B against 142,152 B of `CODE` |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on names and entry counts alone. **Half the premise is gone and the decision is the maintainer's**: an MIT implementation and a stored-CRC oracle for all 7 entries have been on this disk since 2026-09-22, so only "not a Macintosh method" still carries it (DECISIONS.md 2026-09-22, *the premise that stopped being true*). **What it would cost is still unmeasured** — a removal delta can be built and an addition cannot — but the comparable coders put it at **~1.5–2 KB of `CODE`, estimated, not measured**, against 11,924 B of headroom at the tightest tier |
+| PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on names and entry counts alone. **Half the premise is gone and the decision is the maintainer's**: an MIT implementation and a stored-CRC oracle for all 7 entries have been on this disk since 2026-09-22, so only "not a Macintosh method" still carries it (DECISIONS.md 2026-09-22, *the premise that stopped being true*). **What it would cost is still unmeasured** — a removal delta can be built and an addition cannot — but the comparable coders put it at **~1.5–2 KB of `CODE`, estimated, not measured**, against 12,460 B of headroom at the tightest tier |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART was the one exception between 2026-09-09 and 2026-09-25** — a compressed DART expands to an uncompressed one, a codec with no volume in it — and it is out again: what reads a DART is a mounter, and that is MacMount's, so expanding disk images is not this program's job in any form (DECISIONS.md 2026-09-25, *the disk images that found another home*). NDIF and UDIF were prototyped on a branch and never merged, for the same reason |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
@@ -248,13 +248,19 @@ packages*). They settle what a package is and open two items:
   `ALink.PKG` at least five. The *transfer manifest* hypothesis is withdrawn
   (BLOCKERS.md). The rest of the layout is not derived: rule #1 does not let
   two specimens stand in for a reference.
-- **The shipped probe is Aladdin's recogniser and neither package passes it.**
-  `macextract sniff` implements the `Decode … to …` token test read out of
-  `PKG Expand Translator`; on a real package it says *unknown*. Whether the
-  translator takes two shapes of input or the reading was of the wrong
-  routine is unsettled, and settling it is a boot (`tools/vmac/
-  spacesaver.py --pkg`), not a download. **Closed by:** a reading of the
-  translator that accepts the two specimens.
+- **There is no content test for one, and the probe that claimed to be it is
+  gone.** Settled 2026-09-27 and it needed no boot: the `Decode … to …` token
+  test read out of `PKG Expand Translator` is the translator API's COMMAND
+  parser, carried verbatim by five siblings on the same disk whose formats are
+  Compact Pro, zip, BinHex, uuencode and Unix compress. `unc_applelink_probe`
+  is removed; a `.pkg` sniffs as *unknown*, which is what it was already doing
+  on both real packages (FORMATS.md, *AppleLink packages*; DECISIONS.md
+  2026-09-27, *the recogniser that was a command line*). **Closed by:** a
+  reference implementation or a published layout for the binary container —
+  Aladdin's translator recognises a package by its extension and reads a
+  FOLDER, so it is not one.
 
-No decoder is written, and the second reader — the translator itself — is on
-the emulator image.
+No decoder is written, and the reader on the emulator image turns out to be a
+driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
+it, so whatever expands a package is in that 26,362-byte resource and not in
+the translator.

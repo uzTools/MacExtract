@@ -78,7 +78,7 @@ What it CANNOT see, and why the emulator stays
   that walk is not reachable from the CLI, so this lane keeps them for
   those two formats always and grants 9,808 B LESS than the machine
   does. Deliberately pessimistic, and it decides nothing: the narrowest
-  margin on any Compact Pro or zip layer in the sample is 146,726 B
+  margin on any Compact Pro or zip layer in the sample is 147,262 B
   (`derived-MUSFMT10.ZIP` at System 6.0.8 / 512 KB, re-measured
   2026-09-27).
 - **Fragmentation.** The budget is one number; the Memory Manager also
@@ -128,18 +128,22 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (224108, "System 3.0, Macintosh 512Ke (244,588 B free)"),
-    "sys6-512K": (128708, "System 6.0.8, Macintosh 512Ke (149,188 B free)"),
-    "floor-1M":  (652996, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (224644, "System 3.0, Macintosh 512Ke (245,124 B free)"),
+    "sys6-512K": (129244, "System 6.0.8, Macintosh 512Ke (149,724 B free)"),
+    "floor-1M":  (653532, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
-# Re-taken on all three machines 2026-09-27, and **all three rose by exactly
-# 4,746 B**: 219,362 -> 224,108, 123,962 -> 128,708 and 648,250 -> 652,996.
-# One application-size change landing one for one on three different machines
-# and two different systems, which is what this target is supposed to do; the
-# third was PREDICTED from the first two before it was run. The 2026-09-22 set
-# was taken before the merge and DART's removal. No tally moved: 71/71, 67/71
-# and 64/71 with the same names (FORMATS.md, *512 KB machines*).
+# Re-taken on all three machines TWICE on 2026-09-27, and each time all three
+# moved by the identical amount: +4,746 B with the merge and DART's removal in
+# (219,362 -> 224,108, 123,962 -> 128,708, 648,250 -> 652,996), then +536 B
+# when the AppleLink probe left (DECISIONS.md 2026-09-27, *the recogniser that
+# was a command line*). One application-size change landing one for one on
+# three machines and two systems, which is what this target is supposed to do;
+# the sys3 figure was PREDICTED from the other two before the first of those
+# runs. **496 B of application bought 536 B of budget** — 40 B more than the
+# arithmetic, which is the same rounding slack recorded below in the other
+# direction. No tally moved on either lane, either time: 71/71, 67/71 and
+# 64/71 resident with the same names (FORMATS.md, *512 KB machines*).
 
 # Re-taken 2026-09-22 with the 1990 DiskDoubler header in, and **all three
 # fell by exactly 32 B**: 219,394 -> 219,362, 123,994 -> 123,962 and
@@ -184,15 +188,16 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # ---------------------------------------------------------------------------
 
 # What the overlay build does NOT carry resident, in bytes: the control's
-# `CODE` + A5 less the shipped build's, 151,612 + 37,796 - 53,356 - 18,964.
-# Both measured 2026-09-26 with `m68k-apple-macos-size` (FORMATS.md,
+# `CODE` + A5 less the shipped build's, 151,140 + 37,724 - 52,884 - 18,940.
+# Both measured 2026-09-27 with `m68k-apple-macos-size` (FORMATS.md,
 # *Three configurations, one tree*), which is the only place to correct them.
-# It read 117,056 — that table's PREVIOUS set — until 2026-09-27: v0.34.0's
-# Compact Pro segment check moved all four figures and this line was not one
-# of the places corrected. check_saved() below now grades it against the two
+# It read 117,056 — a set two corrections old — until 2026-09-27: v0.34.0's
+# Compact Pro segment check had moved all four figures and this line was not
+# one of the places corrected. check_saved() below grades it against the two
 # builds whenever they and the toolchain are present, so the next 32 B fails
-# `ci.sh` instead of surfacing as a residue.
-OVL_SAVED = 117088
+# `ci.sh` instead of surfacing as a residue — and it caught the AppleLink
+# probe's removal the same day.
+OVL_SAVED = 117040
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -205,24 +210,25 @@ OVL_HANDLE = 8
 # and all eleven leave the same constant to the byte (FORMATS.md, *What it
 # buys, against the control*).
 #
-# 368 B of it is now attributed: the probe build is not the shipped build, and
-# `-D UNC_AT_BUDGET` costs the shipped configuration 400 B of `CODE` + A5
-# against the control's 320 B. The remaining 346 B is unattributed slack, and
-# a budget is `FreeMem()` on a binary — so this moves whenever the
-# application's size does, exactly like TIERS above. It was +1,138 B on
-# 2026-09-24's branch: that is 1,852 B of drift across the merge, DART's
-# removal and v0.34.0, and NOT a structural constant (DECISIONS.md
+# 320 B of it is attributed: the probe build is not the shipped build, and
+# `-D UNC_AT_BUDGET` costs the eager configuration 400 B of `CODE` + A5
+# against the control's 304 B, so the pair the budgets are read off saves
+# 116,720 B where the shipped pair saves 117,040 B. **The 346 B left over is
+# reproducible** — it was the same 346 B either side of the AppleLink probe's
+# removal, which moved the shipped build 496 B and every gain in this model
+# not at all. It was +1,138 B on 2026-09-24's branch, measured against a base
+# from that branch, and that is NOT a structural constant (DECISIONS.md
 # 2026-09-27, *the residue that was two numbers*).
 #
 # DROPPING IT CHANGES NO PREDICTION, because the narrowest margin between a
-# passing layer's demand and its budget is **15,954 B** across the three tiers
+# passing layer's demand and its budget is **16,490 B** across the three tiers
 # this lane now asserts — `a2ps.V4.3.tar.Z`'s compress layer at System 6.0.8 /
-# 512 KB, which needs 86,048 B of 102,002 — and 49,638 B if the 512 KB System 6
+# 512 KB, which needs 86,048 B of 102,538 — and 50,174 B if the 512 KB System 6
 # tier is left out (re-measured 2026-09-27 by bisecting every layer of all 71
 # fixtures at the re-taken budgets; it was 13,028 B and 46,712 B at the
 # 2026-09-22 ones. DECISIONS.md 2026-09-26, *a budget per format, and one per
 # layer*).
-OVL_RESIDUE = -714
+OVL_RESIDUE = -666
 
 # The fourteen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/`. They are checked against that build whenever it

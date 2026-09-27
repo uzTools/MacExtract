@@ -84,7 +84,6 @@ typedef enum UncFormat {
     UNC_FORMAT_SPACESAVER,    /* StuffIt SpaceSaver compressed file     */
 
     /* Named, not extracted, since 2026-08-23. */
-    UNC_FORMAT_APPLELINK,     /* AppleLink package (`.pkg`)             */
 
     /* Brought in scope 2026-08-23; appended for the same ABI reason. */
     UNC_FORMAT_BTOA,          /* btoa/atob ASCII armour                 */

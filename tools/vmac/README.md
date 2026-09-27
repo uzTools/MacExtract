@@ -25,8 +25,8 @@ decoder resident, 66/69 before the sample grew, 65/69 before the reserve went
 flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
 System6.hfv` is **66/71** (2026-09-27, the shipped v0.34.0 build, the tier
 `run_tiers.py` predicted before anything ran it; 64/71 on 2026-09-22 with
-every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). The resident budgets are **224,108 B** and
-**128,708 B**, both re-taken on the machine 2026-09-27 with the floor's;
+every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). The resident budgets are **224,644 B** and
+**129,244 B**, both re-taken on the machine 2026-09-27 with the floor's;
 `tools/run_tiers.py` reproduces both tiers on Linux fixture for fixture, and
 the one that never matched was the budget and not the model.
 
@@ -2280,7 +2280,7 @@ the oracle. **Read the numbers, not the verdict.**
 
 **Pair it with `-D UNC_OVL_RESIDENT` to get a budget that can be subtracted
 from another.** The switch is not free — it costs the eager configuration
-400 B of `CODE` + A5 and the control 320 B — so a budget read here is that
+400 B of `CODE` + A5 and the control 304 B — so a budget read here is that
 much lower than the build the tallies come from, and a grant compared against
 a base from a DIFFERENT build carries the difference as a mystery. That is
 what 2,926 B of "residue" turned out to be on 2026-09-27 (FORMATS.md, *Three

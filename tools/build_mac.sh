@@ -307,7 +307,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # on the other side*). It costs the RESIDENT control 4 B and the shipped
 # build 0 — fmt_arc is in an overlay there — which is also how it got in:
 # nothing built this configuration. `ci.sh` builds it since the same day.
-UNC_MAC_CODE_DEFAULT=151612
+UNC_MAC_CODE_DEFAULT=151140
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -393,7 +393,7 @@ UNC_MAC_CODE_DEFAULT=151612
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37796
+UNC_MAC_A5_DEFAULT=37724
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -432,10 +432,19 @@ UNC_MAC_A5_DEFAULT=37796
 # `01 01 00 00` with a zero index and was sniffed as the first segment of a
 # Compact Pro set until this commit (DECISIONS.md 2026-09-26, *the bargain
 # that was finally paid*).
-UNC_MAC_CODE_EAGER=53356
-UNC_MAC_A5_EAGER=18964
-UNC_MAC_CODE_LAZY=51980
-UNC_MAC_A5_LAZY=19060
+# LOWERED 2026-09-27, all six ceilings, at the size on the day: the
+# AppleLink `.pkg` probe was removed once the routine it transcribed turned
+# out to be the StuffIt translator API's COMMAND parser rather than a file
+# test (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
+# Eager code 53,356 -> 52,884 and A5 18,964 -> 18,940; lazy 51,980 ->
+# 51,508 and 19,060 -> 19,036; resident 151,612 -> 151,140 and 37,796 ->
+# 37,724. That is **496 B off every extraction's budget on a 1 MB Mac
+# Plus**, given back, and a ratchet is lowered on the same terms it would
+# be raised so that it cannot be spent later by accident.
+UNC_MAC_CODE_EAGER=52884
+UNC_MAC_A5_EAGER=18940
+UNC_MAC_CODE_LAZY=51508
+UNC_MAC_A5_LAZY=19036
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

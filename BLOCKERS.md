@@ -40,7 +40,7 @@ every entry that extracts takes the identical path, and the sample's three
 ARC-family archives are not garbled; the segment check can only ever REFUSE a
 file, and no fixture in the sample is a Compact Pro segment; and 24 B is two
 orders of magnitude under the narrowest margin between any passing layer's
-demand and its budget anywhere in the sample, which is **15,954 B**
+demand and its budget anywhere in the sample, which is **16,490 B**
 (re-measured 2026-09-27 at the re-taken budgets; `tools/run_tiers.py`, whose
 shipped lane `ci.sh` asserts every run). *One measurement and an
 argument — not seven re-runs.* Per-tier
@@ -119,7 +119,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-eight**
+and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-nine**
 mechanisms keep finding the next one — counted 2026-09-26, when the
 sentence still said ten and the list had thirty — and two of them need no
 insight at all:
@@ -409,6 +409,15 @@ insight at all:
   searching and both fell out of one query against the bytes — Discmaster
   indexes what `file` prints, so eight magic bytes are a search term. Ask what
   a corpus is indexed BY before concluding it does not hold the thing.
+- **a routine transcribed faithfully and asked a question it does not
+  answer.** Added 2026-09-27: `PKG Expand Translator`'s @0x2952 was copied
+  correctly and shipped as an AppleLink `.pkg` recogniser for 35 days. It is
+  the translator API's COMMAND parser, and the five translators beside it on
+  the same disk carry the same routine for Compact Pro, zip, BinHex, uuencode
+  and Unix compress. Rule #1 makes you cite a reference; it does not make you
+  check WHICH question the cited routine answers. **Run the sibling's copy
+  against a format you can already grade** — this one rejects all 108
+  Compact Pro fixtures.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -490,8 +499,8 @@ line is what makes the next one worth re-testing.
 | The `--namevol` run that did not boot was a one-off infrastructure failure | it reproduces exactly, and the cause is in the harness: the enrolled image was copied out of a KILLED emulator, so it is torn. Three runs were built on it | 2026-08-22 |
 | SpaceSaver's trigger is known: rename a file to end in `small` and it compresses | four runs that booted AND flushed do it correctly and nothing compresses; the OTHER rename rule on the same page fires on the same event, turning `Forked` into a StuffIt archive | 2026-08-22 |
 | SpaceSaver 3.5.1 is installed and running | its control panel runs; its EXTENSION shows no sign of it. With `~Magic Menu™` deleted the menu bar carried no icon menu at all, so the menu `STR# 1024` describes was never installed | 2026-08-22 |
-| AppleLink `.pkg` has no reference implementation anywhere reachable | the SpaceSaver image has had one all along: `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name` resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k with Aladdin's usual module preamble | 2026-08-22 |
-| AppleLink `.pkg` cannot be sniffed without inventing a magic number | true of magic numbers, false of sniffing: Aladdin's own recogniser reads three whitespace-delimited TOKENS, and `macextract sniff` now does the same at 0 false positives across 928 fixtures | 2026-08-23 |
+| AppleLink `.pkg` has no reference implementation anywhere reachable | the SpaceSaver image has had one all along: `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name` resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k with Aladdin's usual module preamble | 2026-08-22, and **narrowed 2026-09-27**: that translator is a DRIVER — it recognises nothing and calls `GetResource('Eng ', 2)` in `StuffIt Engine™` to do the work — so the reference for the format, if it is on the image at all, is that 26,362-byte resource (*Corrected figures*) |
+| AppleLink `.pkg` cannot be sniffed without inventing a magic number | true of magic numbers, false of sniffing: Aladdin's own recogniser reads three whitespace-delimited TOKENS, and `macextract sniff` now does the same at 0 false positives across 928 fixtures | 2026-08-23, and **this withdrawal is itself withdrawn** — that routine is the translator API's command parser and names no file (*Corrected figures*, 2026-09-27) |
 | Compact Pro's encryption algorithm is unknown, so an encrypted `.cpt` can only be reported | Compact Pro 1.51's own `CODE` 3: the key at 0x1892, the 64-bit CRC table at 0x408e, the seed at 0x40fe, and the encrypt and decrypt loops at 0x1152 and 0x1f08 — then graded by the application, both ways | 2026-08-23 |
 | Compact Pro enables encryption only for a registration whose name ends with `*`, so no copy here can grade the cipher | registering with the code Macintosh Garden publishes (`Registered` / 35427117): the refusal goes away, the Add dialog's Encrypt checkbox appears, and the application both encrypts and decrypts. The `*` test at 0x485e is really there; it is not the only path to that flag, and reading one branch was not reading the feature | 2026-08-23 |
 | StuffIt classic's archive key is XADMaster's loop, and the open question is only whether `unar` 1.10.8 or current XADMaster matches Aladdin | three archives StuffIt Deluxe 3.5.1 wrote, with passwords of 8, 9 and 17 characters: the fold count is **ceil(len/8)**, so XADMaster is wrong at 8 and at 17+ (it folds an all-zero block at 8 and never more than two) and `unar` 1.10.8 is wrong at 9+ (it folds one). Neither reference had it, and this engine had shipped XADMaster's | 2026-08-23 |
@@ -788,7 +797,10 @@ standing on its own. It rests on an assumption nobody stated — that
 recognising a format means matching bytes at a fixed offset. AppleLink's does
 not. `PKG Expand Translator`'s recogniser tokenizes the file as text and
 checks three words, so the test was there to be copied rather than invented,
-and copying it is what rule #1 asks for.
+and copying it is what rule #1 asks for. **Corrected 2026-09-27: the routine
+copied is that translator's COMMAND parser and recognises no file at all**, so
+this withdrawal was right about the technique and wrong about the instance,
+and the probe it licensed is gone (*Corrected figures*).
 
 **Cost: a day, and it would have been the life of the project.** The smell is
 the one this file calls *a limitation stated about the environment that is
@@ -1553,15 +1565,42 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"AppleLink `.pkg` cannot be sniffed without inventing a magic number" was
+  withdrawn on the wrong grounds, and the probe that replaced it is now gone
+  too.** The 2026-08-23 reading — `PKG Expand Translator`'s @0x2952
+  tokenizes and accepts `Decode <thing> to|into <place>` — is an accurate
+  transcription of that routine. It is not a recogniser for a FILE: the same
+  routine, instruction for instruction, is in the CompactPro, UnZip, BinHex4,
+  UUCode and Unix Compress translators on the same disk, each with its own
+  `STR# 129` verbs and its own extension in item 3, and its input is a Handle
+  the host passes at `param+4`. It parses the translator API's command
+  language. So `macextract sniff` named `Decode "Payload.hqx" to "Out"` an
+  AppleLink package — which is equally the CompactPro translator's command —
+  and named neither real package anything. `unc_applelink_probe` was removed
+  2026-09-27 and the unit test now asserts its absence. **Cost: 35 days of a
+  format counted as *named* that never named a file, a supporting measurement
+  ("0 false positives across 928 fixtures") that could not fail because the
+  corpus held neither a package nor a script, and the seven boots of
+  2026-09-01 spent trying to hand Aladdin's expander a package — a dialog
+  that lists only directories was the same fact from the other side.** The
+  smell is a new one and it is on the list: **a routine transcribed
+  faithfully and asked a question it does not answer.** What would have caught
+  it on the day: the translator beside it handles a format this project
+  extracts 108 fixtures of, and that routine rejects every one of them
+  (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
+
 - **"The shipped model is pessimistic by 2,926 B, against a recorded 1,138 B
   residue"** — carried as a labelled hypothesis for one day and withdrawn
   2026-09-27, when the base and the grant were taken from one tree and one
   probe pair. Neither number was wrong and the subtraction was not a
-  measurement: the base had been taken on another branch, and re-taken it is
-  **652,996 B** rather than 648,250 while the residue is **−714 B** rather
-  than +1,138 — **+4,746 less 1,820, the 2,926 B to the byte**. The residue
+  measurement: the base had been taken on another branch, and re-taken it was
+  **652,996 B** rather than 648,250 while the residue was **−714 B** rather
+  than +1,138 — **+4,746 less 1,820, the 2,926 B to the byte**. (Both moved
+  again the same day when the AppleLink probe left, to 653,532 B and −666 B,
+  and the ten per-format GAINS between them did not move at all.) The residue
   was never a structural constant either; it is per-build slack, and it goes
-  stale exactly when a tier budget does. **Cost: nothing, because it was
+  stale exactly when a tier budget does — while the 346 B of it that nothing
+  accounts for was the same either side of that 496 B change. **Cost: nothing, because it was
   labelled.** Had it been corrected on the day it was seen, the 2,926 B would
   have gone into `OVL_RESIDUE` and the model would have been wrong in both
   terms at once — the same error this file already records for the floor

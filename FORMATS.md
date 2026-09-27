@@ -70,7 +70,7 @@ under *Table notes*.
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
-| AppleLink package (.pkg) | **named, and the probe misses the two real ones** | — | two specimens since 2026-09-26; neither passes the shipped probe, which is Aladdin's own recogniser (*AppleLink packages*, below) | — | — |
+| AppleLink package (.pkg) | **not recognised** — the probe was removed 2026-09-27 | — | two specimens since 2026-09-26; what was read out of Aladdin's translator is its COMMAND parser and not a file test (*AppleLink packages*, below) | — | — |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
@@ -1668,22 +1668,44 @@ discs uncompressed — `Marketing/Antipiracy Toolkit/Antipiracy-Read Me First`,
 dated 1992-03-08 and so predates both, which is a thing for whoever writes
 the decoder to settle rather than a reason not to write it.
 
-**Neither passes the probe this engine ships.** `unc_applelink_probe`
-implements the recogniser in `PKG Expand Translator` (`Othe` 0 @0x2952): it
-pulls whitespace-delimited tokens, skipping space, tab and CR, honouring
-double quotes and backslash escapes, and accepts a file whose first token is
-`Decode` and whose third is `to` or `into`, compared with `_CmpString` and so
-case-insensitive; `STR# 129` is the rest of that vocabulary — `Decode`, `to`,
-`into`, `convert`, `noConvert`, ` Folder`, `.pkg`, and the errors
-*"Destination not found: "* and *"No items matching: "*. That reading is
-unchanged and cited. What is withdrawn is the conclusion drawn from it:
-`ALink.PKG` sniffs as **unknown**, and `Read First.PKG` sniffs as **Compact
-Pro segment**, because `unc_cptseg_probe` accepts any file whose byte 0 is 1
-with a zero longword at 4 and says in its own comment that it is deliberately
-weak. The "0 false positives across 928 fixtures" measurement stands and
-means less than it read: the corpus held no package. Both are open items.
+**The routine that was read is the translator's COMMAND parser, and the
+probe is gone.** `unc_applelink_probe` shipped from 2026-08-23 to 2026-09-27
+and implemented `PKG Expand Translator`'s @0x2952: whitespace-delimited
+tokens, first `Decode` and third `to` or `into`, `_CmpString` and so
+case-insensitive. That transcription was accurate and it answers a different
+question than the one it was put to — **five sibling translators on the same
+disk carry the same routine with the same `STR# 129` verbs**:
 
-**What the translator does with one is still only read, not run.** A package
+| translator | `STR# 129` items 1–4 |
+|---|---|
+| PKG Expand | `Decode`, ` Folder`, `.pkg`, `to` |
+| CompactPro | `Decode`, ` Folder`, `.cpt`, `to` |
+| UnZip | `Decode`, ` Folder`, `.zip`, `to` |
+| BinHex4 | `Decode`, `Encode`, `replace`, … `to` |
+| UUCode | `Decode`, `Encode`, `replace`, … `to` |
+| Unix Compress | `Decode`, `Encode`, `replace`, … `to` |
+
+The CompactPro translator's recogniser is instruction-for-instruction the
+same routine as PKG Expand's, differing in its globals and in item 3 — the
+EXTENSION. Its input is a Handle the host passes at `param+4`, not the file:
+`Decode "X" to "Y"` is a command in the translator API's own language, so a
+line it accepts is equally the CompactPro translator's command and a Compact
+Pro archive is not. Applied to file content, that test named
+`Decode "Payload.hqx" to "Out"` an AppleLink package, and **that is all it
+ever named** — so the probe is removed rather than kept (DECISIONS.md
+2026-09-27, *the recogniser that was a command line*). The "0 false positives
+across 928 fixtures" measurement was true and empty: the corpus held neither
+a package nor a translator script.
+
+`ALink.PKG` and `Read First.PKG` both sniff as **unknown** today. The second
+sniffed as a **Compact Pro segment** until v0.34.0's segment identity check,
+which that very file is what bought (`src/fmt_cptseg.c`). **What a content
+probe for the real format needs is a reference for the binary layout, and
+this translator is not one** — Aladdin recognised a package by its
+extension.
+
+**What the translator does with one is only read, not run — and what it
+reads is a folder.** A package
 expands into a folder named after itself — `.pkg` stripped, `" Folder"`
 appended, so `Report.pkg` becomes `Report Folder` (@0x2e5c) — and the
 expansion is not in the translator at all: it opens the file and then calls
@@ -1692,10 +1714,12 @@ The translator is a driver. Its Standard File dialog lists **only
 directories** (`ioFlAttrib` bit 4, `Othe` 0 @0x215e), which is why no package
 written here could be selected — seven boots, each with a control that
 succeeded (DECISIONS.md 2026-09-01, *the package that cannot be handed
-over*). `tools/vmac/spacesaver.py --pkg` re-derives the recogniser out of the
-installed translator, with four witnesses that fail against a different
-build; feeding it one of these two specimens is the run that would settle
-whether the translator takes two shapes of input.
+over*). That is consistent with the command reading above: the translator is
+handed a place and a command, and never sniffs anything.
+`tools/vmac/spacesaver.py --pkg` re-derives the routine out of the installed
+translator, with four witnesses that fail against a different build; **no
+boot was needed to settle what it is** — the five sibling translators were on
+the same image all along.
 
 ## Archives named but not extracted
 
@@ -2400,11 +2424,18 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **53,356 B** | 18,964 B | **64,896 B** | **211,328 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,980 B | 19,060 B | 63,488 B | 210,048 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 151,612 B | 37,796 B | 183,552 B | 186,880 B |
+| **eager — SHIPPED** | (default) | **52,884 B** | 18,940 B | **64,384 B** | **210,816 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,508 B | 19,036 B | 63,104 B | 209,664 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 151,140 B | 37,724 B | 183,040 B | 186,368 B |
 
-**All three re-measured 2026-09-26 on one tree**, `CODE` and A5 by
+**All three re-measured 2026-09-27**, when the AppleLink `.pkg` probe was
+removed: eager `CODE` −472 B and A5 −24 B, lazy the same, the control −472 and
+−72 (DECISIONS.md 2026-09-27, *the recogniser that was a command line*). On a
+1 MB Mac Plus that is **496 B back on every extraction's budget**, and the
+machine gave 536 B — 40 B more than the arithmetic, the same rounding slack
+this section records in the other direction below. All six ratchets in
+`tools/build_mac.sh` were lowered to the sizes on the day. The set before was
+53,356 / 18,964, 51,980 / 19,060 and 151,612 / 37,796, **measured 2026-09-26**, `CODE` and A5 by
 `m68k-apple-macos-size` as `tools/build_mac.sh` reads them for its
 ratchets. The `CODE` and A5 columns moved for v0.34.0's Compact Pro
 segment identity check, and they moved in OPPOSITE directions: code +24 B
@@ -2433,16 +2464,16 @@ entry is refused*). Measured the same way, 2026-09-27:
 
 | build | `CODE` | A5 | over the shipped column above |
 |---|---|---|---|
-| autotest, eager | 48,036 B | 21,996 B | −2,288 B |
-| autotest, eager, `-D UNC_AT_BUDGET` | 48,312 B | 22,120 B | −1,888 B |
-| autotest, resident | 146,032 B | 40,800 B | −2,576 B against the control |
-| autotest, resident, `-D UNC_AT_BUDGET` | 146,248 B | 40,904 B | −2,256 B against the control |
+| autotest, eager | 47,564 B | 21,940 B | −2,320 B |
+| autotest, eager, `-D UNC_AT_BUDGET` | 47,840 B | 22,064 B | −1,920 B |
+| autotest, resident | 145,560 B | 40,760 B | −2,544 B against the control |
+| autotest, resident, `-D UNC_AT_BUDGET` | 145,776 B | 40,848 B | −2,240 B against the control |
 
-So **the probe costs the eager configuration 400 B and the control 320 B**,
+So **the probe costs the eager configuration 400 B and the control 304 B**,
 and every budget here is that much lower than the build whose tallies it is
 quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
-control*), and 368 B of the residue there is exactly this: 117,088 B saved
+control*), and 320 B of the residue there is exactly this: 117,040 B saved
 between the shipped pair against 116,720 B between the probe pair.
 
 The bundle is **143,072 B** — the fourteen images sum to 142,892 B, so its
@@ -2478,29 +2509,33 @@ probe pair** (`run.py --mem 1M -D UNC_AT_BUDGET`, with and without
 
 | the archive | sniffed as | eager (shipped) | over the control |
 |---|---|---|---|
-| `derived-Export.sit`, `derived-KeyGraphics.sit` | StuffIt, StuffIt 5 | 735,140 B | **+82,144 B** |
-| `lhasa-unix114i-h2_lh7.lzh`, `lhasa-maclha-l1_lh5.lzh`, `aminet-lha_68k.lha` | LZH | 753,382 B | **+100,386 B** |
-| `derived-keyAhead.cpt` | Compact Pro, nothing encrypted | 747,166 B | **+94,170 B** |
-| `synth-dd-m3.dd` | DiskDoubler | 747,166 B | +94,170 B |
-| `synth-exo-zip-store.zip` | Zip, nothing encrypted | 735,698 B | **+82,702 B** |
-| `synth-exo-tar.tar` | Tar | 735,698 B | +82,702 B |
-| `synth-arc-mixed.arc` | ARC | 745,022 B | **+92,026 B** |
-| `synth-packit-1.pit` | PackIt | 750,494 B | **+97,498 B** |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | 758,012 B | **+105,016 B** |
-| `synth-exo-gz.gz`, `export-hc.hqx` | gzip, BinHex — an envelope | 626,290 B | **−26,706 B** |
+| `derived-Export.sit`, `derived-KeyGraphics.sit` | StuffIt, StuffIt 5 | 735,676 B | **+82,144 B** |
+| `lhasa-unix114i-h2_lh7.lzh`, `aminet-lha_68k.lha` | LZH | 753,918 B | **+100,386 B** |
+| `derived-keyAhead.cpt` | Compact Pro, nothing encrypted | 747,702 B | **+94,170 B** |
+| `synth-dd-m3.dd` | DiskDoubler | 747,702 B | +94,170 B |
+| `synth-exo-zip-store.zip` | Zip, nothing encrypted | 736,234 B | **+82,702 B** |
+| `synth-exo-tar.tar` | Tar | 736,234 B | +82,702 B |
+| `synth-arc-mixed.arc` | ARC | 745,558 B | **+92,026 B** |
+| `synth-packit-1.pit` | PackIt | 751,030 B | **+97,498 B** |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 758,548 B | **+105,016 B** |
+| `synth-exo-gz.gz`, `export-hc.hqx` | gzip, BinHex — an envelope | 626,826 B | **−26,706 B** |
 
-**The control is 652,996 B for every row, and does not move with the
+**The control is 653,532 B for every row, and does not move with the
 archive**: with every decoder linked in the engine gets the same heap whatever
 it decodes, so the 82–105 KB the eager column gains belongs to the mechanism
 rather than to other work. That is why the resident build is kept — as an
 instrument, not a fallback. It held across three LZH archives at this tier and
-across two formats at System 6.0.8 / 512 KB, where both read 128,708 B.
+across two formats at System 6.0.8 / 512 KB, where both read the same figure.
 
 **Ten keep sets, and the arithmetic of *What each format is granted* accounts
 for every one of them to the byte** with a single additive constant — the
 envelope row, which loses memory, included. It was three rows against one
-constant until 2026-09-27, and those three were taken on another branch:
-DECISIONS.md 2026-09-27, *the residue that was two numbers*.
+constant until 2026-09-27, and those three were taken on another branch
+(DECISIONS.md 2026-09-27, *the residue that was two numbers*). **Every row was
+then re-taken after the AppleLink probe's removal and every GAIN was
+unchanged**, all ten, while each grant rose the same 536 B as the control: the
+per-format part of the model survived a 496 B change to the application without
+moving.
 
 **Eager against lazy is 894 B–10.7 KB** of budget for a format that must keep
 the ciphers, against **no disk access after the archive is chosen**, measured
@@ -2514,12 +2549,13 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 117,088 B of `CODE` and A5 the shipped build does not carry
+which is the 117,040 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
-of block header each, less a **714 B residue**: 368 B of that is the probe
-build's own weight and 346 B is unattributed (DECISIONS.md 2026-09-27, *the
-residue that was two numbers*). Ten rows ARE measurements, taken 2026-09-27
-on one tree; the four marked otherwise are the same sum with no fixture to
+of block header each, less a **666 B residue**: 320 B of that is the probe
+build's own weight and **346 B is unattributed — the same 346 B either side of
+a 496 B change to the application**, which is what makes it a figure rather
+than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
+Ten rows ARE measurements, taken 2026-09-27 on one tree; the four marked otherwise are the same sum with no fixture to
 take them on. `tools/run_tiers.py --shipped` is where it is applied
 (TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a
 budget per format, and one per layer*).
@@ -2542,11 +2578,11 @@ budget per format, and one per layer*).
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 143,072 B held against 117,088 B saved. It costs nothing on the tiers
+it — 143,072 B held against 117,040 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
-clears the System 3.0 / 512 KB envelope budget of 197,402 B by 49,638 B.
+clears the System 3.0 / 512 KB envelope budget of 197,938 B by 50,174 B.
 
 ### Where the traps are written down
 
@@ -2607,7 +2643,7 @@ the `.data` output section — the A5 global world, allocated once and never
 purgeable.
 
 **What a month of growth cost the tiers: nothing, and the margin is
-11,924 B** (2026-09-23, when every byte still was resident; the margin
+12,460 B** (2026-09-23, when every byte still was resident; the margin
 re-taken 2026-09-27 against that day's budgets). The shipped
 binary went 178,560 B on 2026-08-28 to 188,672 B, +10,112 B, all of it heap a
 Macintosh no longer had. Whether it cost a fixture is not arithmetic but
@@ -2618,7 +2654,7 @@ At budgets 10,112 B smaller, the floor and the System 3.0 tier hold but
 **System 6.0.8 / 512 KB drops to 63**. Bisecting that: the narrowest
 passing fixture is `derived-LHA_Expander_1.0.3.sea`, which needs
 **116,784 B** (bisected to the byte 2026-09-27) against that tier's
-128,708 — **11,924 B of headroom**, which is why
+129,244 — **12,460 B of headroom**, which is why
 `tools/check_app_size.py` fails CI on a 2 KB move. The per-entry profile did not grow with the code: the formats added
 in that month peak at 5 KB (base64) and 8 KB (MIME), against this table's
 existing maximum of 396 KB.
@@ -2882,20 +2918,22 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 652,996 B** — measured
+**What a 1 MB Mac Plus actually leaves the engine is 653,532 B** — measured
 **2026-09-27** with `run.py --mem 1M -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
-which reports `FreeMem()` at **673,476 B** and the shell's reserve at a flat
+which reports `FreeMem()` at **674,012 B** and the shell's reserve at a flat
 20 KB. It was 648,250/668,730 B on 2026-09-22.
 
-**All three tier budgets rose by exactly 4,746 B on 2026-09-27**, re-taken on
-the three machines with the merge and DART's removal in — 648,250 → 652,996
-here, 219,362 → 224,108 and 123,962 → 128,708 on the 512Ke (*512 KB
-machines*). One application-size change landing one for one on three machines
-and two systems; the third was predicted from the first two before it was run,
-and no tally moved. **This is the pair of numbers a probe build reports**, and
-`-D UNC_AT_BUDGET` costs the control 320 B of `CODE` + A5 and the shipped
-configuration 400 B (*Three configurations, one tree*), so the build the
-tallies come from has that much more than these figures say.
+**All three tier budgets were re-taken twice on 2026-09-27, and each time all
+three moved by the identical amount**: **+4,746 B** with the merge and DART's
+removal in (648,250 → 652,996 here, 219,362 → 224,108 and 123,962 → 128,708 on
+the 512Ke), then **+536 B** when the AppleLink probe left (→ 653,532, 224,644
+and 129,244; *512 KB machines*). One application-size change landing one for
+one on three machines and two systems; the System 3.0 figure was predicted from
+the other two before the first of those runs, and no tally moved either time.
+**These are the numbers a PROBE build reports**, and `-D UNC_AT_BUDGET` costs
+the control 304 B of `CODE` + A5 and the eager configuration 400 B (*Three
+configurations, one tree*), so the build the tallies come from has that much
+more than these figures say.
 
 **All three tier budgets fell by exactly 32 B on 2026-09-22** when the 1990 DiskDoubler header went in — 648,282 → 648,250 here, 219,394 → 219,362 and 123,994 → 123,962 on the 512Ke. **The arithmetic predicted 64**: that change is +48 B of code and +16 B of A5, and both are supposed to come off the budget one for one. Half of it did not arrive, and the gap is recorded rather than explained — a `CODE` resource is a handle of its own size and the A5 world is rounded, so tens of bytes of growth can land in slack already paid for. The measurement is the number; the arithmetic is what says when to go and take one (DECISIONS.md 2026-09-22, *the header that was a length*).
 
@@ -3011,7 +3049,7 @@ measured on the roomy one says nothing about the tight one:
 
 | | free | reserve | budget |
 |---|---|---|---|
-| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 673,476 B | 20 KB | **652,996 B** (measured 2026-09-27; 668,730/648,250 on 2026-09-22 with the 1990 DiskDoubler header in, 668,762/648,282 earlier the same day, 668,580/648,100 on 2026-08-31) |
+| System 6.0.8, 1 MB, no MultiFinder (whole machine) | 674,012 B | 20 KB | **653,532 B** (measured 2026-09-27; 673,476/652,996 earlier the same day, 668,730/648,250 on 2026-09-22 with the 1990 DiskDoubler header in, 668,580/648,100 on 2026-08-31) |
 | System 7 / MultiFinder at the declared 400 KB minimum, **shipped overlay build** | 285,812 B | 20 KB | **265,332 B** |
 | the same partition, resident control build | 202,126 B | 20 KB | **181,646 B** |
 
@@ -4264,21 +4302,22 @@ allocation strategy reaches it on a machine this size.
 **The two that the overlays recovered** were failing for a reason the
 mechanism does answer: `derived-a2basic.dmg.sit` needs 240,898 B in one block
 and `derived-Cool_Tools__.sit` 242,464 B, against a resident build's
-224,108 B budget — a shortfall of ~17 KB and ~18 KB, and the shipped build
+224,644 B budget — a shortfall of ~16 KB and ~18 KB, and the shipped build
 grants 82–105 KB more (*Overlays*). `derived-Cool_Tools__.sit` was new to the
 SAMPLE rather than to the engine, joining the Mac list on 2026-09-22 for its
 UTF-8 names.
 
-**The budget is 224,108 B**, measured **2026-09-27**: a 244,588 B free heap
+**The budget is 224,644 B**, measured **2026-09-27**: a 245,124 B free heap
 read off the machine (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D
 UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
 20,480 B reserve, and the figure `tools/run_tiers.py` asserts this tier at. It
-was **219,362 B** from 2026-09-22, and before that **197,728 B** — taken
-2026-08-31 and never re-taken across the stack cut and a month of decoder
+read 224,108 B earlier the same day, **219,362 B** from 2026-09-22, and before
+that **197,728 B** — taken 2026-08-31 and never re-taken across the stack cut and a month of decoder
 work; under the quarter rule before that it was 163,656 B. This tier's figure
-was PREDICTED before the 2026-09-27 run: the floor and System 6 tiers had both
-risen 4,746 B that morning, so this one was expected at 224,108 B and is
-(*Budget*).
+was PREDICTED before the first 2026-09-27 run: the floor and System 6 tiers had
+both risen 4,746 B that morning, so this one was expected at 224,108 B and was
+(*Budget*); all three then rose another 536 B together with the AppleLink
+probe's removal.
 
 **67/71 was the ceiling for a RESIDENT build, and it was a property of these
 four archives against that build's budget.** `tools/run_tiers.py` applies
@@ -4288,7 +4327,7 @@ shipped build's **69/71** here too, refusing the same two by name. The
 minimum budget each one needs, bisected on 2026-09-22 — and the first two are
 what the overlay build now clears:
 
-| fixture | needs | of which | against 224,108 B |
+| fixture | needs | of which | against 224,644 B |
 |---|---|---|---|
 | `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.07x |
 | `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.08x |
@@ -4328,9 +4367,9 @@ it asks for.
 "unchanged" note had not accounted for — the reserve going flat could not
 help it, and the stack did),
 and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
-nothing else: free heap when extraction starts is **244,588 B** under System
-3.0 against **149,188 B** under System 6.0.8 (both 2026-09-27), a gap of
-95,400 B — **the same gap to the byte the third time the pair has been
+nothing else: free heap when extraction starts is **245,124 B** under System
+3.0 against **149,724 B** under System 6.0.8 (both 2026-09-27), a gap of
+95,400 B — **the same gap to the byte the fourth time the pair has been
 taken**, against System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch and a double-click launch from a booted Finder.
@@ -4351,9 +4390,10 @@ asserts this tier by name from that day.
 
 **The 2,926 B that read as a discrepancy under it was the stale base**, and
 it is settled: taken on one tree and one probe pair on 2026-09-27, the base
-is 652,996 B and not 648,250, the LZH grant is 753,382 B as before, and the
-two differ by 4,746 B of base less 1,820 B of residue drift — the 2,926 B to
-the byte. The arithmetic now accounts for ten keep sets exactly (*What it
+was 652,996 B and not 648,250, the LZH grant 753,382 B as before, and the two
+differ by 4,746 B of base less 1,820 B of residue drift — the 2,926 B to the
+byte. (Both figures moved 536 B later that day with the AppleLink probe, and
+the gain between them did not move at all.) The arithmetic now accounts for ten keep sets exactly (*What it
 buys, against the control*), and the residue it leaves is −714 B rather than
 +1,138 (BLOCKERS.md, *Withdrawn claims*; DECISIONS.md 2026-09-27, *the
 residue that was two numbers*).
@@ -4951,7 +4991,7 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the fourteen are listed under *btoa*, above | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
-| AppleLink `.pkg` | with the add-on | **named since 2026-08-23**, not expanded: the probe is Aladdin's own recogniser, read out of the `PKG Expand Translator` that StuffIt Deluxe 3.5.1 ships (*AppleLink packages*, above). What is missing is a specimen |
+| AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **not recognised.** Named from 2026-08-23 to 2026-09-27, when what had been read out of `PKG Expand Translator` turned out to be the translator API's command parser, shared verbatim with five of its siblings (*AppleLink packages*, above). Two specimens; what is missing is a reference for their binary layout |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
