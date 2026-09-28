@@ -285,16 +285,32 @@ no resource fork (FORMATS.md, *What a module gives back*). So there is
 nothing here that would restore an optimized file byte for byte, and
 refusing rests on the declared lengths rather than on the module.
 
-**What is open is running a `DCMP` under `qemu-m68k`**, which would let this
-engine produce what StuffIt Deluxe produces rather than refusing. The four
-`DCMP`s are position-independent 68k and Aladdin's codecs already run that
-way here for two other formats (`tools/ssmodule/`, `tools/sdmodule/`). What
-is not known is the `COMP`/`DCMP` parameter block: the acceptance test and
-the selector convention are read (FORMATS.md; selectors -1, -2, -3, -5, -6
-and a positive byte count, three arguments, a callback for the data), and
-the rest is not. **Whether it is worth having is a question, not a given**:
-what it buys is a valid document rather than the user's file, for four
-formats nobody has sent an archive of.
+**What is open is RUNNING a module, and the ABI for it is read**
+(FORMATS.md, *The module ABI*): `Module(Ptr, long *selector, ProcPtr)`,
+Pascal, with the selector carrying the request and the answer. What it
+would buy is exactly what StuffIt Deluxe gives — a valid document, not the
+original bytes — which is the same capability and no more.
+
+**There are two routes and they are not the same size.** A `DCMP` does its
+own File Manager I/O: `MacPaint 1`'s data path is a `_Read`/`_Write`/
+`_SetEOF` loop that rewrites the file on disk.
+
+- **On the Macintosh** the Toolbox is already underneath it. The shell
+  would load the `'DCMP'` out of `{system}Optimizers:`, write the
+  remnant to the destination and hand the module the file — which is what
+  the application does. It also changes what this project has been: the
+  engine is the product and the shell is thin, and this would put a
+  capability in the shell alone, on the one platform where the modules
+  exist.
+- **On Linux**, under `qemu-m68k` as `tools/ssmodule/` runs SpaceSaver's
+  codecs, it needs a File Manager, a Memory Manager and part of the
+  Resource Manager shimmed. That harness answers **three** traps; this
+  would need something closer to twenty, and a fake volume for the module
+  to read and write.
+
+**And either way the result is not the user's file**, so it would want
+saying so in the interface and in README.md rather than being presented as
+an extraction.
 
 **And the encryptors, which the same harness can now reach.** 2.x could
 encrypt with `PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the

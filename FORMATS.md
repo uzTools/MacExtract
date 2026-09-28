@@ -1649,6 +1649,47 @@ part synthetic because of that — the Photoshop one has a real PSD data fork
 and a resource fork built to the module's test — so they show what a module
 does once it accepts a file, not what a real document looks like.
 
+### The module ABI, read 2026-09-28
+
+**How the application calls one**, from its own CODE 8 (the helper at
++0x882 locks the resource handle, dereferences it and jumps to the
+module's first byte, which is a `bra.s` over the 16-byte header):
+
+```
+pascal void Module(Ptr buffer, long *selector, ProcPtr io);
+```
+
+Callee-pops, twelve bytes of arguments. `*selector` is both the request
+and the answer:
+
+| `*selector` | means |
+|---|---|
+| **-1** | *will you take this file?* — the module writes 0 or 1 back |
+| -2, -3 | its name and kind, into the buffer |
+| -5 | put up its settings dialog |
+| -6 | clear a flag |
+| **> 0** | process that many bytes |
+
+**Each module carries its own id at +8 of the resource**, after the
+`'COMP'`/`'DCMP'` tag at +4 — 1, 2, 3, 4, 5 — which is the same number as
+the resource id and the same number that lands in the archive's byte 106.
+
+**The acceptance test is a file type and a resource.** `Sound 1` compares
+the long at +32 of the record it is handed against `FSSD` and then wants
+`Get1Resource('INFO', 1000)`; `Photoshop 1` compares against `8BIM` —
+Photoshop 1.0's type, not the later `8BPS` — and wants an `8BIM` 1000
+resource of ten bytes or more whose word at +8 is a colour mode of 1 or
+3..7; `MacPaint 1` keys on `PNTG`.
+
+**And a `DCMP` does its own File Manager I/O.** `MacPaint 1`'s data path
+is a read/write loop over `_Read`, `_Write` and `_SetEOF` through the
+usual async/HFS trap glue — it rewrites the FILE, it does not transform a
+buffer the caller hands it. That is what decides where this could ever be
+run: on a Macintosh the Toolbox is already there, and on Linux it would
+need a File Manager, a Memory Manager and part of the Resource Manager
+shimmed under `qemu-m68k`, where `tools/ssmodule/` needs three traps
+(OPEN_ITEMS.md, *StuffIt 2.0's Optimizers*).
+
 ### What a module gives back, and why the header already said so
 
 **StuffIt Deluxe 2.0.1, with `MacPaint 1` installed, does not restore the
