@@ -188,16 +188,27 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # ---------------------------------------------------------------------------
 
 # What the overlay build does NOT carry resident, in bytes: the control's
-# `CODE` + A5 less the shipped build's, 151,140 + 37,724 - 52,884 - 18,940.
-# Both measured 2026-09-27 with `m68k-apple-macos-size` (FORMATS.md,
+# `CODE` + A5 less the shipped build's, 151,432 + 37,768 - 52,972 - 18,964.
+# All four measured 2026-09-28 with `m68k-apple-macos-size` (FORMATS.md,
 # *Three configurations, one tree*), which is the only place to correct them.
 # It read 117,056 — a set two corrections old — until 2026-09-27: v0.34.0's
 # Compact Pro segment check had moved all four figures and this line was not
 # one of the places corrected. check_saved() below grades it against the two
 # builds whenever they and the toolchain are present, so the next 32 B fails
 # `ci.sh` instead of surfacing as a residue — and it caught the AppleLink
-# probe's removal the same day.
-OVL_SAVED = 117040
+# probe's removal the same day, and the StuffIt add-on module fields on
+# 2026-09-28: **+224 B**, because that change costs the control 336 B of
+# resident code and A5 and the shipped build 112 B.
+#
+# NOT COMPENSATED ANYWHERE, deliberately. TIERS above and OVL_RESIDUE below
+# are measurements taken on the machine against a build 336 B smaller, so
+# every shipped prediction here is now ~560 B more generous than the
+# Macintosh will be until both are re-taken there. Arithmetic is not a
+# substitute for that measurement — subtracting from a stale one is how the
+# floor budget was once made worse (DECISIONS.md 2026-09-22, *the fold, on a
+# Macintosh*) — and it decides nothing: the narrowest margin between a
+# passing layer's demand and its budget is 16,490 B.
+OVL_SAVED = 117264
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -231,10 +242,14 @@ OVL_HANDLE = 8
 OVL_RESIDUE = -666
 
 # The fourteen images and the bundle they are read as, in bytes, measured
-# 2026-09-26 off `build/mac/`. They are checked against that build whenever it
-# is present (check_images below), so this table cannot drift silently while
-# the toolchain is installed; it is stated rather than only read so that the
-# lane still runs where Retro68 is not.
+# 2026-09-26 off `build/mac/` and STUFFIT re-taken 2026-09-28, +208 B for the
+# add-on module fields (FORMATS.md, *Where an archive names the module*) —
+# which is where that change lands in the shipped build: resident code took
+# 88 B of it and the rest is in the image, read at launch and released for
+# every archive that is not a StuffIt one. They are checked against that
+# build whenever it is present (check_images below), so this table cannot
+# drift silently while the toolchain is installed; it is stated rather than
+# only read so that the lane still runs where Retro68 is not.
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2392,
@@ -247,11 +262,11 @@ IMAGES = {
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    18002,
+    "OVL_ID_STUFFIT":    18210,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 143072
+BUNDLE = 143280
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

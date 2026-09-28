@@ -264,36 +264,35 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: the modules are here, the archives are not
+## StuffIt 2.0's Optimizers: named and refused, never seen
 
 **The floor is what makes this an item.** This unarchiver is for a 1986
 machine, and StuffIt Deluxe 2.0 is 1990–92 software from the same desks, so a
 user of ours is more likely than anybody to hand it an archive stuffed with an
 Optimizer enabled — which no StuffIt since 3.x will open either.
 
-**What is known** (FORMATS.md, *StuffIt 2.0's pluggable modules, and what an
-"Optimizer" was*): an Optimizer is a per-file-type preprocessor, shipped as a
-`SITe`/`SIT!` module carrying a `COMP` resource and usually a `DCMP`. All five
-of the 2.0.1 box are on this machine — `Sound 1`, `Photoshop 1`,
-`Photoshop:JPEG Lossy`, `MacPaint 1`, `Text 1`, at IDs 1 to 5 — and encryptors
-share the namespace (`PassLock` 514, `NewDEx` 515, `DESex` 576).
+**Where an archive names its module is read, and the reader acts on it**
+(FORMATS.md, *Where an archive names the module*): an optimized or externally
+compressed fork fails `UNC_ERR_MODULE` per entry, naming the module. Nothing
+is left to identify in the header.
 
-**What is missing is one archive.** A module is named by a 16-bit ID and the
-method nibble cannot hold it, so the ID is recorded somewhere this project has
-not identified; the only unexplained space in the entry header is bytes
-104..109, zero in 1,251 of 1,256 corpus entries. **What such an entry does
-here has never been observed** — refusing it cleanly per entry is the
-expectation, not a measurement.
+**What is missing is one archive.** No entry with any of these markers exists
+in the corpus or anywhere on this machine, so the refusal is graded against
+entries built to the reading, and three things stay untested: that Aladdin
+writes the header this way, that an optimized entry then refuses cleanly
+end to end, and whether a 2.x entry encrypted by one of the four encryptor
+modules decodes at all — `src/fmt_sit.c` implements the one scheme that
+encryptor id 4 means.
 
 **Closed by:** a specimen, and the route is an emulator session on the machine
 every harness here already runs. Deluxe 2.0.1 installs on a 68000 under System
 6; stuffing a text or MacPaint file with an Optimizer enabled writes the first
-one this project has seen. The same run answers three things at once: whether
-the entry refuses cleanly, where the module ID lives, and whether a 2.x entry
-encrypted by PassLock or DES decodes — which nothing here has ever tested,
-because `src/fmt_sit.c` implements one scheme and 2.x had three.
+one this project has seen, and the same run can write an encrypted one.
 
-**Naming it is worth more than decoding it.** A `Text 1` entry cannot be
-restored by anybody — its module has no `DCMP` because the bytes are gone —
-but a reader that recognises the marker can tell the user which module the
-file wants, instead of reporting a damaged archive.
+**Decoding one is a separate route, and it is open.** A `Text 1` entry cannot
+be restored by anybody — its module has no `DCMP` because the bytes are gone —
+but `Sound 1`, `Photoshop 1`, `Photoshop:JPEG Lossy` and `MacPaint 1` all
+carry one, and Aladdin's 68k codecs already run on Linux here under
+`qemu-m68k` for two other formats (`tools/ssmodule/`, `tools/sdmodule/`).
+What is not known is the `COMP`/`DCMP` parameter block, and there is no
+specimen to grade a `DCMP` against either way.

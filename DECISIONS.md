@@ -306,6 +306,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
 - 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
 - 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
+- 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
 
 ---
 
@@ -8045,12 +8046,13 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 300 bytes on the
+**Why not just carry the name.** `UncEntryInfo` is 302 bytes on the
 68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
 never right, the "296" this entry stated until 2026-09-03 stopped
 being right a few hours after it was written — 2026-09-03, *the struct
-that grew after it was measured* — and 298 became 300 on 2026-09-22
-with `name_utf8`) and it travels on a 4 KB call stack.
+that grew after it was measured* — 298 became 300 on 2026-09-22
+with `name_utf8`, and 302 on 2026-09-28 with the two module fields)
+and it travels on a 4 KB call stack.
 A name field big
 enough for zip's own maximum would be 65,535 bytes. The cap is the
 right decision; being silent about it was not.
@@ -19139,3 +19141,74 @@ constant that no input reads is not load-bearing however important it
 looks — and the way to find that out is to bend it and see whether
 anything notices. Bending the tail broke one fixture; bending the rest
 broke nothing.
+
+## 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
+
+**Claim.** Where a StuffIt 2.x archive records which add-on module a fork
+needs was filed as *"not known here"*, closed only by a specimen from an
+emulator session. It is six bytes of the entry header, and the program that
+writes them had been extracted onto this disk an hour earlier.
+
+**Evidence.** StuffIt Deluxe 2.0.1's Get Info pane calls its module manager
+once per fork with the fork's method byte and three id bytes; the module
+manager matches an installed module whose `COMP`/`DCMP` resource ID is
+`class << 8 | id`. The offsets are in FORMATS.md, *Where an archive names the
+module*.
+
+**Consequence.** `src/fmt_sit.c` refuses an optimized or externally
+compressed fork per entry (`UNC_ERR_MODULE`) and names the module. Four
+lessons, and the first is the one worth carrying.
+
+**A missing specimen and a missing implementation are different gaps, and
+this project keeps conflating them.** The item said "what such an entry does
+here has never been observed" — true — and concluded that the route was an
+archive. But the question it actually blocked was *where is the field*, and
+for that the WRITER is as good as its output and usually easier to get: it is
+one file, it is on archive.org, and `macextract` lists it. This is the same
+shape as the two claims BLOCKERS.md already keeps — "no oracle for this
+method" with the second oracle in `reference/`, "no second implementation
+exists" with one in a fixture's resource fork. **Before filing "we need a
+file this format wrote", ask whether the program that writes it is reachable,
+because a format's own application is a reference implementation under
+rule #1.**
+
+**A disassembly is a reading only if something in the same access pins the
+base.** The module manager is called with a pointer into a 112-byte buffer at
+`A5-2844`, and nothing in it says that `A5-2844` is header byte 0. What says
+so is that the SAME call passes two longs from `A5-2760` and `A5-2752`, uses
+them for the pane's compression percentage, and 84 and 92 are exactly where
+the header keeps a fork's decompressed and compressed length. Three of the
+four fields per fork then land on bytes XADMaster had already labelled
+"unknown", and the second per-fork call lands on the data-fork twin of each.
+Without that anchor the six offsets would have been a guess with a story
+attached.
+
+**A byte that means nothing unless a flag says otherwise cannot be checked
+against its distribution.** The corpus — 2,512 forks of 1,256 file entries in
+227 StuffIt archives — has bytes 46/47 nonzero in **91** of them, which reads
+as a refutation of "46 is the compressor module id" until you notice that no
+entry anywhere has method nibble 7. StuffIt 1.x wrote whatever was in the
+buffer. **Anchor a field's meaning to the flag that switches it on, not to
+the field being zero when it is off** — the earlier note that 104..109 were
+"zero in 1,251 of 1,256 entries" was measuring the absence of the feature and
+reading it as evidence about the bytes.
+
+**And the flag made this a correctness bug rather than a message.** An
+Optimizer is a preprocessor: it runs before the compressor, so a fork with
+bit `0x40` set decodes perfectly under its stated method and yields the
+optimized bytes — a text file with its resources deleted and its leading
+spaces turned into tabs — under the original's name, with the header's CRC
+agreeing, exit 0. The unit test shows it: take the refusal out and the same
+archive extracts, which is how it was established that the test can fail.
+**An unread header field is not inert when what it says is that the bytes
+mean something else.**
+
+And the oracle does exactly that. `unar` 1.10.8, handed the same synthetic
+archive, writes all three optimized entries' preprocessed bytes and reports
+success — which is worth more than the argument: the mistake this engine
+would have made is one a mature implementation makes today, and the excuse
+mechanism in `run_diff.py` would have pressed a future session into
+reproducing it, because that mechanism takes the oracle's word. TESTING.md
+records why this one decline is not eligible. **The first thing to do with a
+field nobody had read is to ask what the tool you grade yourself by does with
+it** — here, the answer settled whether refusing was pedantry or the point.

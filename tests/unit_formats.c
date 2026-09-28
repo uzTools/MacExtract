@@ -827,6 +827,86 @@ static void test_sit(void)
         CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
         CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_ENCRYPTED);
     }
+
+    /* An Optimizer, a Compressor and an Encryptor module, each named.
+     *
+     * WHAT THIS CANNOT SEE: no archive written by StuffIt 2.x is in
+     * hand, so these entries are built to the layout read out of
+     * StuffIt Deluxe 2.0.1's own application (src/fmt_sit.c) rather
+     * than measured. What it does check is the thing that matters
+     * either way — that a fork the archive says went through a module
+     * is REFUSED. The first case decodes perfectly as method 1 and its
+     * CRC agrees, so with the flag ignored it comes back UNC_OK with
+     * the optimized bytes under the original's name; the control below
+     * is the same archive with bit 0x40 cleared and it must extract,
+     * which is what makes the refusal a discrimination and not a
+     * blanket. */
+    {
+        uint8_t mod[256];
+        uint32_t mlen;
+        uint16_t crc;
+        int i;
+        /* flag/nibble to set, the id byte's offset, its value, and what
+         * the entry should then report. The NAME a host prints for an id
+         * is not graded here and cannot be: the table is the CLI's
+         * (cli/main.c, module_name), because on the 68000 target it
+         * would be resident A5 for every extraction. */
+        static const struct {
+            uint8_t meth; int off; uint8_t id; unsigned kind;
+        } cases[] = {
+            { 0x41, 106,  5, UNC_MODULE_OPTIMIZER  },
+            { 0x41, 106, 99, UNC_MODULE_OPTIMIZER  },
+            { 0x07,  46,  1, UNC_MODULE_COMPRESSOR },
+        };
+
+        for (i = 0; i < (int)(sizeof cases / sizeof cases[0]); i++) {
+            mlen = sit_synth(mod, "opt", 1, comp, sizeof comp,
+                             plain, sizeof plain);
+            mod[22 + 1] = cases[i].meth;
+            mod[22 + cases[i].off] = cases[i].id;
+            crc = unc_crc16_arc(0, mod + 22, 110);
+            mod[22 + 110] = (uint8_t)(crc >> 8);
+            mod[22 + 111] = (uint8_t)crc;
+            test_make_memio(&io, &m, mod, mlen);
+            cap_make(&sk, &cap);
+            CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL)
+                  == UNC_OK);
+            CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_MODULE);
+            CHECK(cap.info[0].module_kind == cases[i].kind);
+            CHECK(cap.info[0].module_id == cases[i].id);
+            CHECK(cap.dlen[0] == 0);       /* nothing was written */
+        }
+
+        /* The control: bit 0x40 cleared, everything else identical. */
+        mlen = sit_synth(mod, "opt", 1, comp, sizeof comp, plain, sizeof plain);
+        mod[22 + 106] = 5;
+        crc = unc_crc16_arc(0, mod + 22, 110);
+        mod[22 + 110] = (uint8_t)(crc >> 8);
+        mod[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, mod, mlen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].module_kind == UNC_MODULE_NONE);
+        CHECK(cap.dlen[0] == sizeof plain);
+
+        /* An encrypted fork names its encryptor too, and still fails as
+         * encrypted — that code says something this one does not. The
+         * id is 4, which is what StuffIt Deluxe 3.5.1 wrote for the
+         * built-in scheme on the three archives it made here. */
+        mlen = sit_synth(mod, "enc", 1, comp, sizeof comp, plain, sizeof plain);
+        mod[22 + 1] = 0x81;
+        mod[22 + 107] = 4;
+        crc = unc_crc16_arc(0, mod + 22, 110);
+        mod[22 + 110] = (uint8_t)(crc >> 8);
+        mod[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, mod, mlen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_ENCRYPTED);
+        CHECK(cap.info[0].module_kind == UNC_MODULE_ENCRYPTOR);
+        CHECK(cap.info[0].module_id == 4);
+    }
 }
 
 /* ------------------------------------------------------------------ */

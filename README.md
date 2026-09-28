@@ -120,6 +120,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
+| A StuffIt archive made with a 2.0 "Optimizer" add-on | 🔴 | 🔴 | 🔴 | 🔴 — but says which add-on it wants |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on | ✅ | ✅ | ✅ |
 | StuffIt SpaceSaver | ✅ with the add-on | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |

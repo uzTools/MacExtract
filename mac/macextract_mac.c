@@ -1284,6 +1284,18 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
     case UNC_ERR_UNSUPPORTED:
         RepCat(" uses a method this version cannot read");
         break;
+    case UNC_ERR_MODULE:
+        /* The only case here that does not carry its own sentence, and
+         * deliberately: on this target a string literal is .rodata in
+         * the A5 world, resident for every extraction, and the engine
+         * already has this one word for word. What the user needs first
+         * is that the archive is not damaged — it wants a StuffIt 2.0
+         * add-on, and only StuffIt Deluxe 2.0 with that module opens
+         * it. WHICH module is in the CLI's report and not in this one,
+         * for the same reason (cli/main.c, module_name). */
+        RepCat(" ");
+        RepCat(unc_strerror(status));
+        break;
     case UNC_ERR_CRC:
         RepCat(" is damaged: its checksum does not match");
         break;

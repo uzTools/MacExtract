@@ -1501,33 +1501,89 @@ except `Text 1`, a **`DCMP`**, the unstuffing half, at resource IDs **1, 2, 3,
 undone. **Encryptors use the same mechanism**: `PassLock` is `COMP`/`DCMP`
 **514**, and `deluxe-2-optional.sit` adds `NewDEx` **515** and `DESex` **576**.
 
-**So a module is named by a 16-bit ID, which the four-bit method nibble cannot
-hold** — an archive that used one has to name it somewhere else, and **where
-is not known here**. The entry header's six bytes at 104..109 are the only
-unexplained space in it, and across the corpus they are zero in 1,251 of 1,256
-entries; the five exceptions are two **version-1** archives whose bytes are
-constant per archive (`0010 0010 0010` in `derived-DDArchive.sit`, `0010 0010
-0020` in `derived-SystemIdle.Sit`) and whose methods are the ordinary 2 and 3.
-That is an observation, not a reading.
+**The resource ID is `(class << 8) | id`, and three classes share the
+namespace**: **0** an Optimizer (1..255), **1** a Compressor (256..511), **2**
+an Encryptor (512..767). That is the rule the 2.0.1 application's own module
+manager applies — given a class and an id byte it walks the installed modules,
+reads each one's resource ID with `GetResInfo` and matches `class << 8 | id` —
+and `PassLock` 514, `NewDEx` 515 and `DESex` 576 are class 2 ids 2, 3 and 64.
 
-**The route to a specimen is an emulator session, and the machine is the one
-every harness here already runs.** Deluxe 2.0.1 installs on a 68000 under
-System 6; stuffing a MacPaint or text file with an Optimizer enabled would
-produce the first such archive this project has seen, and its header would say
-where the ID lives. Until then, **that this engine would refuse an optimized
-entry is a hypothesis** — well supported, since the module's own `DCMP` is
-what Aladdin says you need. Two things bound it: 1.5.1-format archives cannot
-use modules at all (*"no external optimizers, encryptors, or compressors can
-be used"*, the Addendum), and by 3.x the feature is gone — the 3.5.1
-application still carries *"No optimizers are installed"* and *"Some items
-were encrypted or compressed with an optimizer that the StuffIt Engine does
-not currently support. They have been skipped."*
+### Where an archive names the module — read 2026-09-28, six bytes
+
+**Six bytes of the entry header, a method-byte flag and a method number, all
+of them previously "unknown".** Aladdin's Get Info pane hands one fork's method byte
+and three id bytes to that module manager, twice, once per fork; the same call
+takes the two lengths from offsets 84/92 and 88/96, which is what pins the
+base of the header it is reading from and so pins all six:
+
+| header | is | resource ID of the module |
+|---|---|---|
+| method byte bit **`0x40`** | an Optimizer ran on this fork | — |
+| **106** / **108** | Optimizer id, data / resource fork | `id` |
+| method nibble **7** | the fork used an external Compressor | — |
+| **46** / **47** | Compressor id, data / resource fork | `256 + id` |
+| method byte bit **`0x80`** | encrypted (already known) | — |
+| **107** / **109** | Encryptor id, data / resource fork | `512 + id` |
+
+`XADStuffItParser.m` names 46/47 `SITFH_DATACHAR`/`SITFH_RSRCCHAR` and 106..109
+`DATAUNK1`/`DATAUNK2`/`RSRCUNK1`/`RSRCUNK2`, with *"always 4 for encrypted?"*
+against the second of each pair — which is the encryptor id, and **4 is the
+built-in scheme that replaced the modules**: the three archives StuffIt Deluxe
+3.5.1 wrote here (*Encryption*, below) carry `07 03 00 04 00 04` at 104..109.
+The application hardcodes the name **DES** for encryptor id 1, a module this
+project has no file for.
+
+**The 2.0.1 method names, from the same pane** (STR# 261): 0 no compression,
+1 RLE, 2 LZW, 3 and **9** Huffman, 5 LZ-H, 6 FHF, **7 an external Compressor
+module**, 8 LZ-M, **10 PM1100**; 4 and 11 upwards are *"unknown method"* to it,
+which is where 13 and 15 would fall.
+
+**Nothing in the corpus uses any of it.** Measured over the **2,512 forks of
+1,256 file entries in 227 StuffIt archives** — the same 1,256 the earlier
+count of these bytes used: bit `0x40` never set, bit `0x80` never set, nibble
+7 never used, and the only method bytes present are 0, 1, 2, 3, 5, 6, 8 and
+13. Bytes 46/47 are nonzero in **91** of those entries and mean nothing there
+— a 1.x archive wrote whatever was in the buffer — which is why the reading is
+anchored to the flag and the nibble rather than to the bytes being zero. The
+five `104..109` "exceptions" counted before this reading are two
+**version-1** archives with stale bytes and ordinary methods; there is
+nothing left to explain.
+
+**So an optimized entry is refused per entry and named**, since 2026-09-28:
+`UNC_ERR_MODULE`, with `UncEntryInfo.module_kind`/`module_id` set in list mode
+too, and the CLI turning the pair into Aladdin's name — the names are the
+host's rather than the engine's, because on the 68000 target a table of them
+is A5 world resident for every extraction (`cli/main.c`, `module_name`).
+**This is a
+correctness fix, not only a message.** An Optimizer runs BEFORE the
+compressor, so the method decodes fine and hands back the optimized bytes — a
+text file with its resources dropped, under the original's name, with the
+header's CRC agreeing. Until this date that is what this engine would have
+written, and **it is what `unar` 1.10.8 still writes**: handed a synthetic
+archive whose three optimized entries carry ids 5, 4 and 200, it decodes all
+three, writes the preprocessed bytes and reports success, declining only the
+method-7 entry as *"File is not fully supported"* (measured 2026-09-28).
+TESTING.md, *When our engine declines an entry*, is why that decline is not
+eligible for the oracle's excuse. Two things bound the feature: 1.5.1-format archives cannot use
+modules at all (*"no external optimizers, encryptors, or compressors can be
+used"*, the Addendum), and by 3.x it is gone — the 3.5.1 application still
+carries *"No optimizers are installed"* and *"Some items were encrypted or
+compressed with an optimizer that the StuffIt Engine does not currently
+support. They have been skipped."*
+
+**What is still missing is an archive.** No specimen exists here, so the
+refusal is graded against entries built to this reading in
+`tests/unit_formats.c` — which cannot tell that the reading is right, only
+that the refusal fires and discriminates (removing it makes the same test
+fail with the optimized bytes written). OPEN_ITEMS.md, *StuffIt 2.0's
+Optimizers*, has what a specimen would add.
 
 **One question this opens about ENCRYPTION.** `src/fmt_sit.c` implements one
-scheme (*Encryption*, below). In 2.x an encrypted entry could have come from
-any of three modules — PassLock, NewDE or DES — and nothing here has ever
-seen an archive written by the first or the last. Untested, and the same
-specimen run would settle it.
+scheme (*Encryption*, below), and the encryptor id says which an entry wanted.
+In 2.x that could be any of four modules — `DES` (1), `PassLock` (2), `NewDEx`
+(3), `DESex` (64) — and nothing here has ever seen an archive written by any
+of them; the one scheme implemented is what id **4** means. Untested, and the
+same specimen run would settle it.
 
 ## Encryption
 
@@ -2323,9 +2379,10 @@ escape that arrives at 2 GB*) why the two Zip64 refusals differ.
 **Measured 2026-08-27.** A name meets two caps on its way to disk, and
 neither is negotiable. The ENGINE carries it in `UncEntryInfo.name`,
 `UNC_NAME_MAX` (255) bytes plus a terminator inside a struct that is
-**300 bytes on the 68000 target** (corrected 2026-09-03 from 296, which
-is where a field started rather than where the struct ended, and again
-2026-09-22 when `name_utf8` was added) and travels on a 4 KB
+**302 bytes on the 68000 target** (corrected 2026-09-03 from 296, which
+is where a field started rather than where the struct ended, again
+2026-09-22 when `name_utf8` was added, and again 2026-09-28 for
+`module_kind`/`module_id`) and travels on a 4 KB
 call stack; the
 FILESYSTEM takes what `pathconf` says, which is 255 bytes per component
 and 4,096 per path on ext4 and less on others. Until this date the first
@@ -2492,9 +2549,9 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **52,884 B** | 18,940 B | **64,384 B** | **210,816 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,508 B | 19,036 B | 63,104 B | 209,664 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 151,140 B | 37,724 B | 183,040 B | 186,368 B |
+| **eager — SHIPPED** | (default) | **52,972 B** | 18,964 B | **64,512 B** | **211,200 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,596 B | 19,060 B | 63,104 B | 209,792 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 151,432 B | 37,768 B | 183,296 B | 186,624 B |
 
 **All three re-measured 2026-09-27**, when the AppleLink `.pkg` probe was
 removed: eager `CODE` −472 B and A5 −24 B, lazy the same, the control −472 and
@@ -2541,10 +2598,13 @@ So **the probe costs the eager configuration 400 B and the control 304 B**,
 and every budget here is that much lower than the build whose tallies it is
 quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
-control*), and 320 B of the residue there is exactly this: 117,040 B saved
-between the shipped pair against 116,720 B between the probe pair.
+control*), and 320 B of the residue there is exactly this: **117,040 B saved
+between the shipped pair against 116,720 B between the probe pair**, both
+measured 2026-09-27. The shipped pair is **117,264 B** since 2026-09-28
+(*Three configurations, one tree*); the probe pair has not been re-measured,
+so the 320 B is that day's difference and not today's.
 
-The bundle is **143,072 B** — the fourteen images sum to 142,892 B, so its
+The bundle is **143,280 B** — the fourteen images sum to 143,100 B, so its
 index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
 bytes of padding to 4, which accounts for the whole difference (measured
 2026-09-26, off the raw bundle the build now writes for
@@ -2553,17 +2613,18 @@ of index with it: that figure is `ovl_bundle.r.rsrc.bin`, the Rez'd RESOURCE
 FORK around the bundle rather than the bundle (DECISIONS.md 2026-09-26, *the
 fork that was mistaken for its contents*). It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
-therefore watches the 64,896 B `MacExtract.code.bin` and not the download.
+therefore watches the 64,512 B `MacExtract.code.bin` and not the download.
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
-read at launch by the Segment Loader — 183,552 B — and the shipped build
-reads 64,896 B of `CODE` plus the 143,072 B bundle, which is 207,968 B: the
-same read redistributed plus **24,416 B** (DECISIONS.md 2026-09-25, *the
+read at launch by the Segment Loader — 183,296 B — and the shipped build
+reads 64,512 B of `CODE` plus the 143,280 B bundle, which is 207,792 B: the
+same read redistributed plus **24,496 B** (DECISIONS.md 2026-09-25, *the
 overlay launch read was counted as a cost twice*). The download grows by
-24,448 B over the same pair, 211,328 against 186,880, so the read delta and
-the download delta are two numbers **32 B apart** and not one number — and a
+24,576 B over the same pair, 211,200 against 186,624, so the read delta and
+the download delta are two numbers **80 B apart** and not one number — and a
 MacBinary download is quantised to 128 B a fork, so a pair this close is
-inside the padding and needs no further account. Both figures read 512 B apart
+inside the padding and needs no further account. All six figures re-taken
+2026-09-28; the pair was 32 B apart at the 2026-09-26 sizes. Both figures read 512 B apart
 until 2026-09-26, from the bundle's resource fork standing in for the bundle
 (DECISIONS.md 2026-09-26, *the fork that was mistaken for its contents*).
 
@@ -2617,12 +2678,18 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 117,040 B of `CODE` and A5 the shipped build does not carry
+which is the 117,264 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
 a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
+The residue and the tier budgets under it are the machine's, taken
+2026-09-27 against an application 336 B smaller than the current one, so
+every figure in this table is **~560 B more generous than the Macintosh now
+is**. Not corrected arithmetically, because that is how the floor budget was
+once made worse; it decides nothing at a narrowest margin of 16,490 B, and
+the place to fix it is a run on the machine.
 Ten rows ARE measurements, taken 2026-09-27 on one tree; the four marked otherwise are the same sum with no fixture to
 take them on. `tools/run_tiers.py --shipped` is where it is applied
 (TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a
@@ -2646,7 +2713,7 @@ budget per format, and one per layer*).
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 143,072 B held against 117,040 B saved. It costs nothing on the tiers
+it — 143,280 B held against 117,264 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -2700,10 +2767,10 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **211,328 B** of MacBinary (`dist/MacExtract.bin`,
-v0.33.0), and since 2026-09-25 that is no longer all resident: **64,896 B** is
+The application ships as **211,200 B** of MacBinary (`dist/MacExtract.bin`,
+v0.35.0), and since 2026-09-25 that is no longer all resident: **64,512 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **143,072 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **143,280 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside

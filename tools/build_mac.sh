@@ -307,7 +307,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # on the other side*). It costs the RESIDENT control 4 B and the shipped
 # build 0 — fmt_arc is in an overlay there — which is also how it got in:
 # nothing built this configuration. `ci.sh` builds it since the same day.
-UNC_MAC_CODE_DEFAULT=151140
+UNC_MAC_CODE_DEFAULT=151432
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -393,7 +393,7 @@ UNC_MAC_CODE_DEFAULT=151140
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37724
+UNC_MAC_A5_DEFAULT=37768
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -441,10 +441,25 @@ UNC_MAC_A5_DEFAULT=37724
 # 37,724. That is **496 B off every extraction's budget on a 1 MB Mac
 # Plus**, given back, and a ratchet is lowered on the same terms it would
 # be raised so that it cannot be spent later by accident.
-UNC_MAC_CODE_EAGER=52884
-UNC_MAC_A5_EAGER=18940
-UNC_MAC_CODE_LAZY=51508
-UNC_MAC_A5_LAZY=19036
+# RAISED 2026-09-28, all six, for the StuffIt add-on module fields — the six
+# header bytes and the 0x40 flag that say a fork went through an Optimizer,
+# a Compressor or an Encryptor module (FORMATS.md, *Where an archive names
+# the module*). Eager code 52,884 -> 52,972 and A5 18,940 -> 18,964; lazy
+# 51,508 -> 51,596 and 19,036 -> 19,060; resident 151,140 -> 151,432 and
+# 37,724 -> 37,768. **112 B off every extraction on a 1 MB Mac Plus in the
+# shipped build**, and 336 B in the control — the difference is that most of
+# this lands in the StuffIt 'OVLY' image, which grew 208 B and is released
+# for every archive that is not a StuffIt one.
+# What the bytes bought: a fork whose method byte says an Optimizer ran
+# decodes fine and yields the OPTIMIZED bytes — a text file with its
+# resources deleted, under the original's name, with the header's CRC
+# agreeing. It is refused per entry now instead. `run_tiers.py --check`
+# moves no tally in either lane with the images re-taken: 71/71, 67/71,
+# 64/71 resident and 71/71, 69/71, 66/71 shipped, the same fixtures by name.
+UNC_MAC_CODE_EAGER=52972
+UNC_MAC_A5_EAGER=18964
+UNC_MAC_CODE_LAZY=51596
+UNC_MAC_A5_LAZY=19060
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

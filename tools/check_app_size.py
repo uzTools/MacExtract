@@ -47,9 +47,15 @@ import sys
 # LOWERED 2026-09-27 from 64,896 to 64,384, at the size on the day: the
 # AppleLink `.pkg` probe left with the routine it was transcribed from
 # (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
-EXPECT = 64384
+# RE-TAKEN 2026-09-28 from 64,384 to 64,512: the StuffIt add-on module
+# fields (FORMATS.md, *Where an archive names the module*), which cost 112 B
+# of resident code + A5 and put 208 B into the StuffIt 'OVLY' image. Re-taken
+# rather than absorbed into the tolerance, on the same terms as
+# tools/build_mac.sh's six ratchets, which moved in the same commit; and
+# `run_tiers.py --check` moves no tally in either lane.
+EXPECT = 64512
 TOLERANCE = 2048
-TAKEN = "2026-09-27"
+TAKEN = "2026-09-28"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -60,9 +66,9 @@ TAKEN = "2026-09-27"
 # mistaken for its contents*). It is NOT resident, so its growth costs the
 # download and the launch read rather than the engine's budget — but a figure
 # nothing measures is a figure nobody can correct.
-EXPECT_BUNDLE = 143072
+EXPECT_BUNDLE = 143280
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-09-26"
+TAKEN_BUNDLE = "2026-09-28"
 
 
 def main():

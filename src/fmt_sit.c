@@ -33,15 +33,38 @@
  *   66 u32 type | 70 u32 creator | 74 u16 finderflags |
  *   76 u32 createdate | 80 u32 moddate | 84 u32 rsrclen |
  *   88 u32 datalen | 92 u32 rsrccomplen | 96 u32 datacomplen |
- *   100 u16 rsrc crc | 102 u16 data crc | 104.. pad/unknown |
+ *   100 u16 rsrc crc | 102 u16 data crc | 104 u8 rsrc crypt pad |
+ *   105 u8 data crypt pad | 106 u8 data optimizer | 107 u8 data
+ *   encryptor | 108 u8 rsrc optimizer | 109 u8 rsrc encryptor |
  *   110 u16 header crc
+ * and, in the same per-fork pattern, 46 u8 data compressor module,
+ * 47 u8 rsrc compressor module.
  * Fork data follows the header: rsrc fork first, then data fork.
  *
- * Method byte: 0x80 = encrypted flag; masked value 0x20 = folder
- * start, 0x21 = folder end (0x10 = "folder contains encrypted").
+ * Method byte: 0x80 = encrypted flag, 0x40 = an Optimizer ran on this
+ * fork; masked value 0x20 = folder start, 0x21 = folder end (0x10 =
+ * "folder contains encrypted").
  * Plain methods: 0 store, 1 RLE90, 2 compress LZW (14-bit, block
  * mode), 3 Huffman (bit-serialized tree), 5 LZAH, 6 fixed Huffman,
- * 8 MW, 13 LZSS+Huffman, 14 installer, 15 Arsenic.
+ * 7 an external Compressor module, 8 MW, 13 LZSS+Huffman,
+ * 14 installer, 15 Arsenic.
+ *
+ * THE SIX MODULE-ID BYTES, the 0x40 flag and method 7 —
+ *   Source: StuffIt Deluxe 2.0.1's own application, disassembled
+ *   (`CODE` 8 and 11 of `StuffIt Deluxe™`, off the installer payload
+ *   on disk 1 of `stuffit-deluxe-v2.sit`). Nothing published names
+ *   these bytes; XADStuffItParser.m calls all six unknown.
+ * — are read rather than guessed: the Get Info pane
+ * hands a fork's method byte and those three bytes to the module
+ * manager in its CODE 8, which matches an installed module whose
+ * 'COMP'/'DCMP' resource id is (class << 8) | the byte — class 0 for
+ * an Optimizer, 1 for a Compressor, 2 for an Encryptor. The same call
+ * gets the two lengths from offsets 84/92 and 88/96, which is what
+ * fixes the base and so the six offsets above. FORMATS.md, *StuffIt
+ * 2.0's pluggable modules, and what an "Optimizer" was*, has the
+ * derivation; DECISIONS.md 2026-09-28, *the six bytes Aladdin's own
+ * Get Info pane reads*, has why it is a reading and not an
+ * observation.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -49,10 +72,44 @@
 
 #define SIT_FILEHDRSIZE 112
 #define SIT_ENCRYPTED   0x80
+#define SIT_OPTIMIZED   0x40  /* an Optimizer module ran on this fork  */
 #define SIT_FOLDER_MASK 0x6F  /* ~(0x80|0x10) */
 #define SIT_STARTFOLDER 0x20
 #define SIT_ENDFOLDER   0x21
 #define SIT_METHODMASK  0x7F  /* ~0x80 */
+#define SIT_METH_MODULE 7     /* nibble: an external Compressor module */
+
+/* Which add-on module one fork needs, or UNC_MODULE_NONE. `rsrc` is 1
+ * for the resource fork, which is what every one of these fields keeps
+ * next to the data fork's: method 0 beside 1, optimizer 108 beside 106,
+ * encryptor 109 beside 107, compressor 47 beside 46 — so the offsets
+ * are arithmetic rather than a branch each.
+ *
+ * An Optimizer and an Encryptor can both have run; the Optimizer is
+ * reported, because encryption has an error code of its own and this
+ * one does not. A fork of length zero went through nothing, whatever
+ * its method byte says. */
+static unsigned sit_fork_module(const uint8_t *hdr, int rsrc, uint32_t len,
+                                uint8_t *id)
+{
+    uint8_t meth = hdr[1 - rsrc];
+
+    *id = 0;
+    if (len == 0) return UNC_MODULE_NONE;
+    if (meth & SIT_OPTIMIZED) {
+        *id = hdr[106 + 2 * rsrc];
+        return UNC_MODULE_OPTIMIZER;
+    }
+    if ((meth & 0x0f) == SIT_METH_MODULE) {
+        *id = hdr[46 + rsrc];
+        return UNC_MODULE_COMPRESSOR;
+    }
+    if (meth & SIT_ENCRYPTED) {
+        *id = hdr[107 + 2 * rsrc];
+        return UNC_MODULE_ENCRYPTOR;
+    }
+    return UNC_MODULE_NONE;
+}
 
 
 /* ------------------------------------------------------------------ */
@@ -941,7 +998,7 @@ int unc_sit_extract(UncCtx *c)
     while (pos + SIT_FILEHDRSIZE <= totalsize) {
         uint32_t namelen, rmeth, dmeth, rlen, dlen, rcomp, dcomp, start;
         UncEntryInfo e;
-        int sret, est;
+        int sret, est, needmod;
 
         if (unc_read_at(c->io, pos, hdr, SIT_FILEHDRSIZE) != UNC_OK) {
             err = UNC_ERR_TRUNCATED;
@@ -1012,6 +1069,32 @@ int unc_sit_extract(UncCtx *c)
         e.comp_data_size = dcomp;
         e.method_rsrc = (uint8_t)(rmeth & SIT_METHODMASK);
         e.method_data = (uint8_t)(dmeth & SIT_METHODMASK);
+        {
+            uint8_t did = 0, rid = 0;
+            unsigned dmod = sit_fork_module(hdr, 0, dlen, &did);
+            unsigned rmod = sit_fork_module(hdr, 1, rlen, &rid);
+
+            if (dmod != UNC_MODULE_NONE) {
+                e.module_kind = (uint8_t)dmod;
+                e.module_id   = did;
+            } else if (rmod != UNC_MODULE_NONE) {
+                e.module_kind = (uint8_t)rmod;
+                e.module_id   = rid;
+            }
+            /* An Optimizer ran BEFORE the compressor, so decoding the
+             * method would succeed and hand back the optimized bytes —
+             * a file with its resources dropped or its spaces turned
+             * into tabs, under the original's name and often with the
+             * header's CRC agreeing. Refusing it per entry is the
+             * whole point of reading these bytes: the alternative is
+             * silently wrong output. An external Compressor is refused
+             * here too rather than at the method switch, so that the
+             * report names the module instead of a method number. */
+            needmod = (dmod == UNC_MODULE_OPTIMIZER ||
+                       dmod == UNC_MODULE_COMPRESSOR ||
+                       rmod == UNC_MODULE_OPTIMIZER ||
+                       rmod == UNC_MODULE_COMPRESSOR);
+        }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; goto out; }
@@ -1019,7 +1102,9 @@ int unc_sit_extract(UncCtx *c)
         if (sret == 0) {
             est = UNC_OK;
             if (!c->opt.list_only) {
-                if (start + rcomp < start || start + rcomp + dcomp < start ||
+                if (needmod) {
+                    est = UNC_ERR_MODULE;
+                } else if (start + rcomp < start || start + rcomp + dcomp < start ||
                     (fsize != UNC_SIZE_UNKNOWN && start + rcomp + dcomp > fsize)) {
                     est = UNC_ERR_TRUNCATED;   /* forks extend past EOF */
                 } else {

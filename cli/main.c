@@ -791,6 +791,49 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     return 0;
 }
 
+/* The StuffIt add-on modules, named, or NULL for a pair this does not
+ * know — third-party modules existed and an id prints on its own.
+ *
+ * Source: StuffIt Deluxe 2.0.1's own two floppies. The Optimizers are
+ * the five files in the installer payload's `Optimizers` folder and
+ * PassLock is its `Encryptors` one, each named by its 'COMP'/'DCMP'
+ * resource id; NewDEx and DESex come off `deluxe-2-optional.sit` the
+ * same way. Encryptor 1 is the one module no file here has and the
+ * application names in its own code — the switch in its CODE 11 prints
+ * "DES" (FORMATS.md, *Where an archive names the module*).
+ *
+ * Encryptor **4 is deliberately absent**: it is the built-in scheme that
+ * replaced the modules, which is the one this engine implements, so it
+ * is not an add-on to name and its absence here is what makes the
+ * encrypted report below say something only when a password cannot help.
+ *
+ * Here and not in the engine because on the 68000 target these strings
+ * are .rodata in the A5 world, resident for every extraction, and the
+ * Macintosh shell has no room to print them. */
+static const char *module_name(unsigned kind, unsigned id)
+{
+    if (kind == UNC_MODULE_OPTIMIZER) {
+        switch (id) {
+        case 1: return "Sound 1";
+        case 2: return "Photoshop 1";
+        case 3: return "Photoshop:JPEG Lossy";
+        case 4: return "MacPaint 1";
+        case 5: return "Text 1";
+        default: return NULL;
+        }
+    }
+    if (kind == UNC_MODULE_ENCRYPTOR) {
+        switch (id) {
+        case 1:  return "DES";
+        case 2:  return "PassLock";
+        case 3:  return "NewDEx";
+        case 64: return "DESex";
+        default: return NULL;
+        }
+    }
+    return NULL;
+}
+
 static int sink_end(void *ctx, int status)
 {
     DiskSink *s = (DiskSink *)ctx;
@@ -816,7 +859,28 @@ static int sink_end(void *ctx, int status)
 
     if (status != UNC_OK) {
         s->errors++;
-        if (status == UNC_ERR_UNSUPPORTED) {
+        if (status == UNC_ERR_MODULE) {
+            /* Name the module, which is the one thing a user can act
+             * on: the file wants a 1990 StuffIt add-on, and no
+             * unarchiver since has had one. The id is what the archive
+             * records; the name is this host's, not the engine's, so
+             * that the Macintosh build does not pay A5 for a table only
+             * a terminal prints (macextract.h, UNC_MODULE_*). */
+            static const char *const kinds[] = {
+                "", "Optimizer", "Compressor", "Encryptor"
+            };
+            unsigned k = s->cur.module_kind;
+            const char *mn = module_name(k, s->cur.module_id);
+            if (k > UNC_MODULE_ENCRYPTOR) k = 0;
+            if (mn)
+                fprintf(stderr, "macextract: %s: needs the \"%s\" StuffIt "
+                                "%s, which nothing has\n",
+                        name, mn, kinds[k]);
+            else
+                fprintf(stderr, "macextract: %s: needs StuffIt %s module "
+                                "%u, which nothing has\n",
+                        name, kinds[k], s->cur.module_id);
+        } else if (status == UNC_ERR_UNSUPPORTED) {
             /* Name the method. A report that says "method 13" is one
              * somebody can act on; "unsupported" is not. The id is
              * informational (UncEntryInfo), and 0 means the format did
@@ -831,6 +895,20 @@ static int sink_end(void *ctx, int status)
             else
                 fprintf(stderr, "macextract: %s: %s\n", name,
                         unc_strerror(status));
+        } else if ((status == UNC_ERR_ENCRYPTED ||
+                    status == UNC_ERR_PASSWORD) &&
+                   s->cur.module_kind == UNC_MODULE_ENCRYPTOR &&
+                   module_name(UNC_MODULE_ENCRYPTOR, s->cur.module_id)) {
+            /* A StuffIt 2.x entry names the encryptor MODULE that wrote
+             * it, and this engine implements the built-in scheme that
+             * replaced them — so for these four the answer is not a
+             * better password, and saying "wrong password, or none
+             * given" would send the user looking for one. */
+            fprintf(stderr, "macextract: %s: encrypted by StuffIt's \"%s\" "
+                            "module, which nothing implements — no password "
+                            "will open it\n",
+                    name, module_name(UNC_MODULE_ENCRYPTOR,
+                                      s->cur.module_id));
         } else {
             fprintf(stderr, "macextract: %s: %s\n", name, unc_strerror(status));
         }

@@ -149,16 +149,35 @@ enum {
     UNC_ERR_CORRUPT     = -10,  /* internal structure inconsistency     */
     UNC_ERR_SEGMENTED   = -11,  /* multi-segment archive, parts missing */
     UNC_ERR_PASSWORD    = -12,  /* encrypted, and no usable password      */
-    UNC_ERR_TOOLARGE    = -13   /* entry past this engine's 32-bit reach  */
+    UNC_ERR_TOOLARGE    = -13,  /* entry past this engine's 32-bit reach  */
     /* -14 was UNC_ERR_NOTCOMPRESSED, for a DART that was already
      * uncompressed. DART left the engine on 2026-09-25 (DECISIONS.md,
      * *the disk images that found another home*); the number is not
      * reused, so a caller built against an older header cannot read a
      * new code as that one.                                            */
+    UNC_ERR_MODULE      = -15   /* needs a StuffIt add-on module (below)  */
 };
 
 /* Human-readable message for an error code. */
 const char *unc_strerror(int err);
+
+/* The three classes of StuffIt add-on module, in the order Aladdin's own
+ * application numbers them: the class is the high byte of the module's
+ * resource id, so an Optimizer is 1..255, a Compressor 256..511 and an
+ * Encryptor 512..767 (FORMATS.md, *StuffIt 2.0's pluggable modules*).
+ *
+ * The engine reports the class and the id and does NOT carry the modules'
+ * NAMES: on the 68000 target a table of them is .rodata in the A5 world,
+ * which comes off every extraction's heap whether or not anybody prints
+ * it (tools/build_mac.sh, the A5 ratchet). The five names Aladdin shipped
+ * are in cli/main.c, which is the host that prints them, and in
+ * FORMATS.md. */
+enum {
+    UNC_MODULE_NONE       = 0,
+    UNC_MODULE_OPTIMIZER  = 1,
+    UNC_MODULE_COMPRESSOR = 2,
+    UNC_MODULE_ENCRYPTOR  = 3
+};
 
 /* ------------------------------------------------------------------ */
 /* I/O abstraction                                                    */
@@ -281,6 +300,18 @@ typedef struct UncEntryInfo {
     uint8_t  name_utf8;
     uint8_t  method_data;   /* format-specific method id (informational) */
     uint8_t  method_rsrc;
+    /* The add-on module this entry needs, for the one format that has
+     * them: StuffIt 2.x could hand a fork to an external Optimizer,
+     * Compressor or Encryptor, shipped as a file of type 'SITe' whose
+     * 'COMP'/'DCMP' resource id is (kind - 1) << 8 | module_id. No
+     * unarchiver has those modules, so an entry that needs one fails
+     * UNC_ERR_MODULE; both fields are set anyway, in list mode too, so
+     * that a host can say WHICH module rather than "damaged".
+     * kind is UNC_MODULE_NONE unless the entry names one; where both
+     * forks do, this is the data fork's. The names Aladdin shipped are
+     * a host's to print — see UNC_MODULE_* above for why. */
+    uint8_t  module_kind;
+    uint8_t  module_id;
     /* Set when the archive's name for this entry was LONGER than
      * UNC_NAME_MAX and `name` holds only the first UNC_NAME_MAX bytes
      * of it. The engine cannot carry more (the buffer is part of this

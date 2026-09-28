@@ -530,6 +530,19 @@ A per-entry error from `macextract` is tolerated in exactly two cases, and
   implement — `oracle_methods` against `run_diff.py`'s
   `ORACLE_OUT_OF_SCOPE`, which today holds `Implode` and nothing else.
 
+**One decline is deliberately NOT eligible, and must never be made so.**
+An entry whose method byte says a StuffIt 2.x Optimizer ran fails
+`UNC_ERR_MODULE` here, and the message ends differently on purpose:
+`unar` 1.10.8 has no notion of that flag, decodes the method, writes the
+PREPROCESSED bytes under the original's name and **reports success**
+(measured 2026-09-28 on a synthetic three-entry archive — it declines only
+the external-Compressor method, as *"File is not fully supported"*). So on
+such a fixture the oracle and this engine would disagree and **this engine
+would be right**; an excuse anchored to the oracle would excuse the wrong
+answer. No corpus fixture produces one — nothing in 1,256 entries sets the
+flag (FORMATS.md, *Where an archive names the module*) — so nothing rests
+on this yet, which is the cheap time to write it down.
+
 Which of OUR errors is eligible for that excuse is `said_unsupported()`,
 and it matches the END of the message rather than the whole of it: the
 per-entry line names the method when the format states one ("method 6 is

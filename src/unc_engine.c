@@ -137,6 +137,7 @@ const char *unc_strerror(int err)
     case UNC_ERR_SEGMENTED:   return "multi-segment archive (missing segments)";
     case UNC_ERR_PASSWORD:    return "wrong password, or none given";
     case UNC_ERR_TOOLARGE:    return "entry is past this engine's 32-bit reach";
+    case UNC_ERR_MODULE:      return "needs a StuffIt add-on module nothing has";
     default:                  return "unknown error";
     }
 }

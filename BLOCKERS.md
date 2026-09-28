@@ -125,7 +125,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Thirty-nine**
+and one of those was worth 39/44 → 40/44 at the floor target. **Forty**
 mechanisms keep finding the next one — counted 2026-09-26, when the
 sentence still said ten and the list had thirty — and two of them need no
 insight at all:
@@ -424,6 +424,16 @@ insight at all:
   check WHICH question the cited routine answers. **Run the sibling's copy
   against a format you can already grade** — this one rejects all 108
   Compact Pro fixtures.
+- **an item that asks for a SPECIMEN when the question is about the
+  FORMAT.** Added 2026-09-28: where a StuffIt archive records its add-on
+  module ID was filed as closed only by an archive an emulator session
+  would have to write. It was six bytes, and the program that writes
+  them had been extracted onto this disk — by our own engine — an hour
+  earlier. The item was right that no specimen exists and wrong that the
+  header question needed one. **A missing specimen and a missing
+  implementation are different gaps**: for "what does this format write
+  where", the WRITER is a reference implementation under rule #1, and
+  one application is easier to get than one of its archives.
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -1580,6 +1590,23 @@ a harness can click is not the same list.
   is indistinguishable from a citation to one that says what it is
   claimed to say, and this one was plausible — the write-up IS about
   StuffIt 5, just not about its container.
+
+- **"Where a StuffIt archive records its add-on module ID is not known
+  here, and a specimen from an emulator session is the route."**
+  OPEN_ITEMS.md and FORMATS.md, withdrawn 2026-09-28, the same day it
+  was written. It is five header bytes and one method-byte flag, read
+  out of StuffIt Deluxe 2.0.1's own application — a file that had been
+  extracted onto this disk, and listed by our own engine, an hour
+  before the claim was filed. **Cost: the smallest possible in hours
+  and the largest in behaviour.** A fork whose method byte says an
+  Optimizer ran decodes fine and yields the OPTIMIZED bytes, with the
+  header's CRC agreeing and exit 0, so for as long as the field went
+  unread this engine would have written a silently different file
+  (DECISIONS.md 2026-09-28, *the six bytes Aladdin's own Get Info pane
+  reads*). **Why it survived:** the item asked for a specimen and was
+  right that no specimen exists — the mistake was concluding that the
+  header question needed one, when the program that WRITES the header
+  is a reference implementation under rule #1 and was already in hand.
 
 ### Corrected figures and superseded write-ups
 
