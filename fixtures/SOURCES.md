@@ -130,6 +130,7 @@ suite that owns it (TESTING.md).
 | data-converter-13.hqx | 05f4cc6470c209c8a739712af791281aea57efaca1a6273bb3a4de724d5ebd9f | 53005 | http://www.nic.funet.fi/index/info-mac/cmp/data-converter-13.hqx |
 | data-parser-41-hc.hqx | c1dd2a17794ebaf62d5a4fbd0798589351c2b92b2b1efa3bfcd341f6502f5649 | 47918 | http://www.nic.funet.fi/index/info-mac/cmp/data-parser-41-hc.hqx |
 | dd-expand-40.hqx | 5485390004eff5861ca665de401f12dd8dfa3e9b8ff591a983c8a108be761f7c | 181395 | http://www.nic.funet.fi/index/info-mac/cmp/dd-expand-40.hqx |
+| dd37-IACUtilities-A4.lib.dd | f193396675b0fd32445f6bd4c1d45a625ddb1a3a0de4d98b0ce899e807d6ff7c | 1356 | derived:hfsvol:diskdoubler/dd37.hfv:r:Programmers Only:Sample IAC ƒ:IAC Utilities (A4).Lib |
 | ddarchive.sit | bf34e9cdeca5162d07eaa937ea22a6e7f61e612e5d1058f87c107d657fef2087 | 35822 | http://www.nic.funet.fi/pub/mac/arcers/ddarchive.sit |
 | ddexpand301.bin | 1857fcd6ac8895d1f010244e7bca64d69c4c40208cd259c0d1a4595148c43831 | 82560 | http://www.nic.funet.fi/pub/mac/arcers/ddexpand301.bin |
 | ddtf-dd377ad-Test_Image | b926788a71822fbb121ceb181580523bbd22adeb1e7d4aea6aaa6c8aaeec8ca1 | 1408 | https://raw.githubusercontent.com/ssokolow/diskdoubler-test-files/c40c7dab3538231d64f59aceb953e64daf7984ef/build/sources.dd377.ad/Test%20Image |

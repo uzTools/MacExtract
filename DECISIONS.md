@@ -304,6 +304,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
 - 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
 - 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
+- 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
 
 ---
 
@@ -19008,3 +19009,49 @@ width — is reached by the size of the input rather than by its shape,
 and a suite assembled from small subjects will never reach any of
 them. `lzd_update_p` is the one left here, wanting 32,768 MATCHES
 rather than codes, and it is recorded rather than chased.
+
+
+## 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
+
+`-lh2-` and DiskDoubler 3/4/5 became committed seeds under
+`tools/seeds/` because this project WRITES those files: an encoder here
+makes them, so the bytes are ours to commit. DiskDoubler method 7 was
+filed as the one that could not follow, since nothing here writes Stac
+LZS and the only specimens are Salient's.
+
+**The conclusion drawn from that was wrong**, and it was wrong by
+importing the seed pattern into a case it does not fit. A vendor's file
+is not a seed, it is a FIXTURE, and fixtures have had a mechanism since
+the corpus existed: nothing is committed, `fixtures/SOURCES.md` carries
+a name, a hash, a size and a recipe, and `tools/harvest.py --restore`
+rebuilds them. Three `derived:` schemes were already there —
+`unar-nr`, `member`, `arcplus` — each carving a fixture out of a
+fetched parent and checking the hash.
+
+So method 7 wanted a fourth: `derived:hfsvol:<image>:<mode>:<HFS path>`,
+which lifts one file out of an emulator disk image with hfsutils. The
+parent is the DiskDoubler 3.7 disk, which is emulator material under
+the same rule as the ROM and the System images — fetched by setup,
+never committed. On a machine without it the fixture cannot be
+restored, which is the position every fixture is in on a fresh clone.
+
+**Two details cost a run each, and both are recorded where they bite.**
+The mode letter is load-bearing: a DiskDoubler file has to come off as
+the DATA fork alone, because MacBinary-wrapping it makes `unar` stop at
+the wrapper and report a 1,356-byte `DD01` file — the manifest then
+describes the container and never the contents, and the suite would
+compare our expansion against the unexpanded thing. And splitting the
+recipe's fields eats the HFS path's leading separator, which is what
+makes it absolute.
+
+**Result: DiskDoubler is at 0 functions never entered**, and the
+fixture is graded like any other — `unar` names the method `Stac LZS`
+and agrees with this engine on the 2,226-byte resource fork.
+
+**The lesson is about which pattern to reach for.** Two mechanisms
+looked interchangeable because both end in "a file the suite can use",
+and they are not: a seed is something this project made and may
+therefore commit; a fixture is somebody else's and may only be
+described. Asking who WROTE the bytes decides it, and that question was
+not asked until the maintainer asked where the copyrighted code was
+supposed to go.

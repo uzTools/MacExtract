@@ -828,13 +828,33 @@ anything about the suite.**
    **DiskDoubler 3, 4 and 5 are committed seeds too**, the same day and
    for the same reason: `tools/seeds/dd-Rle2.dd`, `dd-HuffDeep.dd` and
    `dd-Splay128.dd`, written by `tools/vmac/ddencode.py --build`, which
-   needs no emulator. No corpus fixture uses any of those methods.
-   DiskDoubler goes from **4 functions never entered to 2** — only
-   `dd_stac` and `dd_stac_bits`, method 7, which nothing here can write:
-   it is the Sigma Designs card's compression, and its specimens are on
-   the 3.1.2 and 3.7 disks rather than in the corpus. The same three
-   files are round-tripped by this engine and, for the vendor's verdict,
-   read by Salient's own 1991 expander (`ddencode.py --expand`).
+   needs no emulator. No corpus fixture used any of those methods. They
+   are round-tripped by this engine and, for the vendor's verdict, read
+   by Salient's own 1991 expander (`ddencode.py --expand`).
+
+   **Method 7 went a different way, and the difference is the point.**
+   Those three seeds are files this project WRITES, so committing them
+   is free. Method 7 is the Sigma Designs card's compression and
+   nothing here can write it — but 24 specimens already existed, two on
+   the 3.7 disk and 22 on the 3.1.2, and they are Salient's, which
+   fixtures never are. So it became a FIXTURE rather than a seed:
+   `dd37-IACUtilities-A4.lib.dd`, restored by a fourth `derived:`
+   scheme in `harvest.py` — `derived:hfsvol:<image>:<mode>:<HFS path>`,
+   which lifts one file out of an emulator disk image with hfsutils.
+   Nothing copyrighted is committed; `SOURCES.md` carries the hash and
+   the recipe, exactly as it does for the other 944.
+
+   Two details that cost a run each. The mode letter matters: a
+   DiskDoubler file must come off as the DATA fork alone (`r`), because
+   MacBinary-wrapping it makes `unar` stop at the wrapper and report a
+   1,356-byte `DD01` file — the manifest would then describe the
+   container and never the contents. And the HFS path needs its leading
+   separator restored after the recipe's fields are split, or hfsutils
+   reads it as relative.
+
+   With it, **DiskDoubler is at 0 functions never entered**, and the
+   fixture is graded like any other: `unar` names its method `Stac LZS`
+   and agrees with this engine on the 2,226-byte resource fork.
 
    **Its graded suite was asked the same question, and one path failed
    it.** Run under the coverage build, `run_lzh.py`'s `-lh2-` entries
@@ -1105,7 +1125,7 @@ sampled occurrence index **by trying to allocate the table and failing**
 CI forces it three ways:
 
 - `-DUNC_ARS_FORCE_SAMPLED` compiles the fast path out. The whole
-  932-fixture diff suite and all 9,320 robustness variants run through the
+  933-fixture diff suite and all 9,320 robustness variants run through the
   fallback under ASan+UBSan, and must be byte-exact.
 - `--budget 597036` (what a 1 MB Mac Plus leaves the engine) on the 31
   StuffIt 5 fixtures, with the normal adaptive build. This is the only step
@@ -1621,7 +1641,7 @@ is no `tar` or no sparse files.
 `unc_off_t` is 64-bit in the host build and 32-bit in the Macintosh one, so
 there are two engines and they cannot share one grading. Variant 5 builds the
 **32-bit** configuration — `make OFFDEFS=` — under the same sanitizers as
-variant 1 and runs the unit tests, all 932 fixtures against the oracle, the
+variant 1 and runs the unit tests, all 933 fixtures against the oracle, the
 9,320 robustness variants and the size limits through it. The lanes above it
 cover the 64-bit default.
 

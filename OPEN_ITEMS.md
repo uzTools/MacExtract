@@ -140,7 +140,12 @@ stays whatever else is shed.
 **Do not re-price these.** Each was settled with a measurement and the
 cost of re-asking is recorded: the `unc_lzdyn.c` row re-opened its own
 settled decision on the byte axis in 2026-09-23 and named nothing that
-had changed. What is still somebody else's and still has a ROUTE is
+had changed. **WinZip AES is the same shape and was in Part 2 until
+2026-09-28** — 2,150 B of `CODE`, settled on 2026-08-23 in the commit
+that added it, graded at four configurations every run. A price is a
+number, and numbers live in FORMATS.md (*Resident memory*); a gaps file
+listing one invites the decision to be re-opened, which is what happened
+to it once already. What is still somebody else's and still has a ROUTE is
 Part 2; the full per-file inventory is NOTICE's, checked by
 `tools/check_provenance.py` on every run.
 
@@ -150,155 +155,79 @@ Part 2; the full per-file inventory is NOTICE's, checked by
 
 ---
 
-## The overlay loader: what the host lane still cannot reach
+## The overlay loader: what no emulator here can answer
 
-**The Linux-side gap CLOSED on 2026-09-26.** `tests/run_overlay_host.sh`
-builds the fourteen images with the m68k-linux toolchain from the same sources
-and the same flags, runs the real loaders unmodified against them through a
-mock Memory and Resource Manager, and extracts 17 fixtures through the images
-byte-exact under `qemu-m68k` in both lifetimes — plus one fixture per image
-against the resident build. Six deliberate breaks are caught every run
-(TESTING.md, *The overlay loader, off the Macintosh*; DECISIONS.md 2026-09-26,
-*the loader that could be run after all*). Three things are still open, and
-only the first is about the mechanism:
+Two items, and both want the same thing: **a Macintosh with a 68020 or
+better, running the shipped binary** (MANUAL_TESTS.md §2 and §6). The
+Linux lane closed what it could on 2026-09-26 — it builds the fourteen
+images, runs the real loaders through a mock Memory and Resource
+Manager, extracts 17 fixtures byte-exact under `qemu-m68k`, and catches
+six deliberate breaks every run (TESTING.md, *The overlay loader, off
+the Macintosh*).
 
-**No tier with a CPU cache has ever run it.** The flush at both fixup sites is
-correct by documentation and unverified by measurement: Mini vMac is a 68000,
-the 68LC040 Emulator is documented to ignore the request, and the host lane has
-no cache either — it counts the call and proves it is reached, which is a
-different claim. `fc=1 fn=4` on System 7.0.1 says the route exists and fired.
-MANUAL_TESTS.md §2 is the only instrument for whether it is NEEDED.
+- **No tier with a CPU cache has ever run it.** The flush at both fixup
+  sites is correct by documentation and unverified by measurement: Mini
+  vMac is a 68000, the 68LC040 Emulator is documented to ignore the
+  request, and the host lane has no cache — it proves the call is
+  reached, which is a different claim. `fc=1 fn=4` on System 7.0.1 says
+  the route exists and fired; whether it is NEEDED, only hardware says.
+- **The shipped bytes RUN only on the emulator.** The host lane LOADS
+  them since 2026-09-26 (`--shipped-only`, `ci.sh` variant 3d, all 30
+  relocations across six images at the addresses they run at), but no
+  host lane can EXECUTE a Retro68 image — entered from an m68k-linux
+  binary it segfaults, measured.
 
-**The shipped bytes RUN only on the emulator.** Since 2026-09-26 the host
-lane does load them: `--shipped-only` (`ci.sh` variant 3d) hands the Retro68
-images and bundle to the real loader and checks the bundle's directory and all
-30 relocations across its six images at the addresses they run at — which the
-m68k-linux build cannot stand in for, since it emits 15 in one image. What no
-host lane can do is EXECUTE a Retro68 image: entered from an m68k-linux binary
-it segfaults (measured 2026-09-26). So the decoders' own behaviour in the
-shipped bytes is the tiers' evidence and nothing else's.
-
-**What would close those two:** a Macintosh with a 68020 or better, and a
-copy of the shipped binary run on one (MANUAL_TESTS.md §2 and §6). Short of
-that, read every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`,
-`kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
+**The maintainer has working hardware as of 2026-09-27**, so these stop
+being "needs a machine nobody has" and become two runs somebody can do.
+Short of them, read every tier sweep with the `-D UNC_AT_BUDGET` probe
+fields (`wa`, `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
 ## What is still somebody else's and could stop being
 
 **The per-file inventory is NOTICE's**, in *What is still somebody
 else's, in full*, and `tools/check_provenance.py` checks it on every
-`ci.sh` run: a file that gains a citation fails, and so does one that
-sheds its last — which is how a row leaves here without anybody
-noticing by hand. This section duplicated that list until 2026-09-27;
-the two disagreed, and the disagreement is what let a live citation in
-`src/fmt_sit.c` be recorded as shed in three documents at once
-(BLOCKERS.md, *Withdrawn claims*).
+`ci.sh` run — a file that gains a citation fails, and so does one that
+sheds its last. This section held a second copy until 2026-09-27, the
+two disagreed, and that is how a live citation in `src/fmt_sit.c` came
+to be recorded as shed in three documents at once (BLOCKERS.md).
 
-**What has no route at all is Part 1**, *The licence cannot move*.
-What is left here is the four items that could still move, and the one
-thing each is waiting for. **`src/fmt_lzh.c` left on 2026-09-27**: its
-last rule turned out not to be XADMaster's alone — lhasa produces the
-same filename, reaching it through C-string handling rather than
-stating it (DECISIONS.md, *the rule both references already
-followed*). The licence does not turn on any of them —
-that question is settled — so each is worth taking only for its own
-gain, which is the rule the brief was given under: **no regression for
-the licence's sake**.
+**What has no route at all is Part 1**, *The licence cannot move*. The
+licence does not turn on anything below — that is settled — so each is
+worth taking only for its own gain: **no regression for the licence's
+sake**.
 
 | what is left | what would move it |
 |---|---|
-| `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **most of this item went on 2026-09-27**, measured against the three archives DropStuff 5.0.1 wrote and has had in the cache since 2026-08-26: bit 7, bit 4's 14-byte shift and the MD5-of-MD5 password grade (`tools/derive_sit5crypt.py`, which needs no engine — the bytes Aladdin wrote and `hashlib`). Bit 5 shifts the hash four bytes further and **no archive in reach sets it**: all 47 StuffIt 5 archives on this machine read 0x10 or 0x90, and the StuffIt Deluxe 5.0.1 CD holds none at all (scanned 2026-09-27). That it marks a COMMENT is XADMaster's naming of the two fields and remains a **hypothesis**. **The FILE-SYSTEM route is disproved**, 2026-09-27, in all four combinations. The archive-comment UI is StuffIt Deluxe 5.0.1's, and that application raises *"an update to this software is required for compatibility with the improved Mac OS file system"* whether booted from HFS+ or from a plain-HFS volume built for the purpose (`tools/vmac/mkapmdisk.py`, a System Folder copied onto it, confirmed the startup disk), and whether run from an HFS+ volume or an HFS one. **The alert names the file system; the trigger is Mac OS 9.2 itself.** So the route is an older Mac OS — 8.x — and this machine has no Mac OS install media of any kind, only the StuffIt CD. That is a fetch or a person, not a search. DropStuff, which does run, has no comment option and its Preferences cannot be reached by the harness (`tools/vmac/README.md`, *what the pointer cannot select*) |
-| `unc_internal.h` — DiskDoubler method 8's Huffman block, 0xfff0 | **half taken 2026-09-27, and the half left needs a SPECIMEN, not a citation.** That method 8 is Compact Pro's stages is measured: all 7 method-8 forks in reach decode byte for byte against the oracle's sha256 with a reader written from Compact Pro's published pages alone (`tools/derive_dd8.py`). The block size is unfalsifiable here — every size at or above 0x1000 reads every fork, the largest that FAILS anywhere is 0x400, so no stream in the corpus reaches even that much cost. **What would pin it is one method-8 fork whose coder output crosses 0xfff0 cost units** — 2 per literal, 3 per match; the biggest in reach is 44,549 B and compresses to 1,230 |
-| `fmt_binhex.c`, `fmt_uu.c`, `unc_internal.h` — macutils' four remaining rules about mailed text | **two of six taken 2026-09-27, and the other four are each blocked for a DIFFERENT reason, which is why this will not close in one go.** Gone to mpack (permissive, CMU): the dispatch — any amount of preamble skipped looking for a line beginning `begin ` — and the uu terminator, `end` plus whitespace; both are `uudecode.c`'s state machine, `st_start` and `st_last`. `fmt_mime.c` carried only the terminator and has left the inventory. What is left, and what fails for each: the **CR/LF/CRLF rule and the unterminated last line** — mpack is LF-only throughout (`part_gets` breaks on `\n` alone) and deark ignores whitespace instead of reading lines, so neither states it; the **whole-line garbage skip** — deark's `binhex.c` ERRORS on a stray character and mpack's `macbhex.c` keeps the prefix it already decoded, so both differ in output rather than restating it; the **scan for a second document in one input** — mpack uses a `--- ` separator inside one part, not a rescan to EOF; and **UUTool's MU layout**, which nothing else implements. Each would need its own second reader |
-| `fmt_packit.c` — the resync strategy and both ciphers | a second implementation of `PMa5`/`PMa6`. deark's `packit.c` handles `PMag` and `PMa4` only and errors out where this resyncs. Appendix B lists "PMa5" twice and cannot name the fourth word, so the document is not it |
+| `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **a Mac OS 8.x image.** The rest of the item went 2026-09-27 (`tools/derive_sit5crypt.py`). No archive in reach sets bit 5 — 47 scanned, and the Deluxe CD holds none — and the only comment UI is StuffIt Deluxe 5.0.1, which will not run: the file-system route is disproved in all four combinations of boot and application volume, so the trigger is Mac OS 9.2 itself. This machine has no Mac OS install media. That it marks a comment is a **hypothesis** (DECISIONS.md 2026-09-27, *the file system was never the problem*) |
+| `unc_internal.h` — DiskDoubler method 8's Huffman block, `0xfff0` | **one method-8 fork whose coder output crosses 0xfff0 cost units**, 2 per literal and 3 per match. That method 8 IS Compact Pro's stages is measured, 7 of 7 forks (`tools/derive_dd8.py`); the block size is unfalsifiable on this corpus, where everything at or above 0x1000 reads every fork (DECISIONS.md 2026-09-27, *half a citation*) |
+| `fmt_binhex.c`, `fmt_uu.c`, `unc_internal.h` — macutils' four rules about mailed text | **a second reader per rule, and each is blocked differently** — which is why it will not close in one go. Checked 2026-09-27: mpack is LF-only so it cannot state the CR rule; deark errors on a stray character and mpack keeps the decoded prefix, so neither restates the whole-line garbage skip; mpack's second-document handling is a separator inside one part, not a rescan; and nothing else implements UUTool's MU layout. Two of the six left for mpack that day (TESTING.md; NOTICE) |
+| `fmt_packit.c` — the resync strategy and both ciphers | **a second implementation of `PMa5`/`PMa6`.** deark's `packit.c` handles `PMag` and `PMa4` only and errors where this resyncs; appendix B lists "PMa5" twice and cannot name the fourth word |
 
 **The template is the `-lh1-` coder** (DECISIONS.md 2026-09-19, *the
 tree that was Yoshizaki's*): faster, smaller and lighter, so it would
-have been taken on its merits with no licence question in sight. Of
-the rows once filed as having no other description, only Now Compress
-never had a published one, and it fell to reverse-engineering against
-the application on 2026-09-21.
+have been taken on its merits with no licence question in sight.
 
-## The methods the fuzzer cannot reach
+## The decoder paths nothing has fuzzed
 
-**Measured 2026-09-27, `tools/fuzz_cover.py`**, 3,000 cases at seed 11
-over a coverage build: `src/unc_lzdyn.c` is **16 of 16 functions never
-entered** — the whole `-lh2-`/`-lh3-` decoder — and DiskDoubler's
-methods 3, 4 and 7, ARC's Crush, three of Arsenic's index helpers and
-six of Now Compress's thirteen functions are never entered either.
+**Measured by `tools/fuzz_cover.py`** — a coverage build under
+`fuzz.py`, which is the only instrument here that distinguishes a
+decoder that ran from one that never did. Read the per-family counts
+with its noise floor in mind: seeds differ by about five functions
+(TESTING.md, *Fuzzing*).
 
-**The cause is structural.** Three of `fuzz.py`'s four generators
-mutate a corpus fixture, so the fuzzer's reach is the corpus's
-coverage, and every method this project grades by GENERATING a file
-rather than owning a specimen is graded for correctness and fuzzed not
-at all. Now Compress is the exception that is worth its own line: its
-archives are in the corpus, and a 32-bit sum over the block table
-rejects every mutant before a coder runs — the gate the one decoder
-heap overflow sat behind (TESTING.md, *Fuzzing*; BLOCKERS.md).
+Most of what this section listed on 2026-09-27 was closed the same day
+and the next — `-lh2-`, `-lh3-`, DiskDoubler 3/4/5/7 and Now Compress's
+coders all reach their decoders now, by seeds, by a fixture, and by a
+generator that repairs the checksum it breaks. What is left:
 
-**`-lh3-` was seeded on 2026-09-27** and the family is no longer wholly
-unfuzzed: `fuzz.py`'s `method_seeds()` builds a six-entry archive with
-`run_lzh.py`'s pure-Python encoder, and the `-lh3-` entry point goes
-from never entered to 69.7 % of its lines (TESTING.md, *Fuzzing*).
-
-**What is left, and what each wants:**
-
-- **`-lh3-` is done, 2026-09-27.** `lh3_lz_stream()` writes matches —
-  LHa adjudicates it — and the seeds are split one archive per case, so
-  a mutation has only the first entry to get past. Every `-lh3-`
-  function is reached: `unc_lzst0_decode` 100 %, `lzs_decode_p` 88.9 %,
-  `lzs_read_tree_p` 64.3 %. It also closed a CORRECTNESS gap: no
-  `-lh3-` stream written here had ever contained a match, so the
-  decoder's LZSS half was graded by nothing (BLOCKERS.md).
-- **`-lh2-` is done, 2026-09-27**, by exactly that route: the bytes are
-  committed at `tools/seeds/lh2.lzh` rather than generated per run.
-  `src/unc_lzdyn.c` goes from 16 of 16 functions never entered to 1 —
-  `lzd_reconst`, which wants 32,768 codes, too large for a seed and
-  covered by the graded suite instead.
-- **DiskDoubler 3, 4 and 5 are done, 2026-09-27** — and `ddencode.py
-  --build` turned out to need no emulator at all, so the files were
-  written locally and committed under `tools/seeds/`. DiskDoubler goes
-  from 4 functions never entered to 2.
-- **DiskDoubler method 7 and ARC's Crush** — nothing here writes either.
-  Method 7 is the Sigma Designs card's compression, with specimens on
-  the 3.1.2 and 3.7 disks but none in the corpus; Crush has no
-  implementation anywhere (Part 1).
-- **Now Compress's coders** — **done 2026-09-27.** `fuzz.py`'s fifth
-  generator flips bits inside a block's payload and recomputes that
-  block's 32-bit trailer with `mutate_now.py`'s `fix_trailer`, which is
-  the only way past the gate. The family goes from 6 functions never
-  entered to 1, `now_find_delta`, at two seeds. That last one wants a
-  file whose block table carries a delta, which neither corpus archive
-  has.
+| what | what it wants |
+|---|---|
+| `lzd_reconst` (`-lh2-`'s tree rebuild) | nothing, under fuzzing: it needs 32,768 codes, too large for a seed. The GRADED suite covers it since 2026-09-27 |
+| `now_find_delta` | an archive whose block table carries a delta. Neither corpus archive has one |
+| ARC's Crush | nothing writes it and no implementation exists anywhere (Part 1) |
 
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.
-
-## What WinZip's AES costs a Macintosh Plus
-
-**2,150 B of `CODE`, measured 2026-09-23**: 1,304 for SHA-1, HMAC and
-PBKDF2 and 846 for AES, out of `unc_crypt.c`'s 7,158 (FORMATS.md,
-*Resident memory*). Nothing else in the engine uses any of it — the four
-other hashes and ciphers are 996 B of DES, 546 of MD5 and 812 for the
-five small ones — so it is the clearest single-capability price in the
-file.
-
-**And that is all this is: a price, not an open question.** WinZip AES
-was settled on **2026-08-23**, in the commit that added it — *"so no
-encryption a zip can carry is refused"* — and `ci.sh` has graded it
-every run since at four configurations (AES-128/192/256 and a stored
-AES-256), on fixtures **7-Zip writes**, with a flipped ciphertext byte
-the authentication code must catch (`tools/run_crypt.py`). This section
-carried "dropping a format the engine already extracts is the
-maintainer's call ... nothing here will take it" until 2026-09-23, which
-re-opened that decision on the byte axis and named nothing that had
-changed since it was taken — the same failure as the `unc_lzdyn.c` row
-above, which this text cited as its precedent (DECISIONS.md 2026-09-23,
-*the 3,504 bytes that stay*). The reachability argument is in fact
-WEAKER here than there: "a System 6 machine will rarely meet" a 2003 zip
-feature is a claim about what is in reach, and any copy of 7-Zip or
-WinZip writes one, where `-lh2-` needed a fork this project patched
-itself.
 
 ## AppleLink `.pkg`: two packages, and a probe that names neither
 
@@ -313,17 +242,13 @@ packages*). They settle what a package is and open two items:
   `ALink.PKG` at least five. The *transfer manifest* hypothesis is withdrawn
   (BLOCKERS.md). The rest of the layout is not derived: rule #1 does not let
   two specimens stand in for a reference.
-- **There is no content test for one, and the probe that claimed to be it is
-  gone.** Settled 2026-09-27 and it needed no boot: the `Decode … to …` token
-  test read out of `PKG Expand Translator` is the translator API's COMMAND
-  parser, carried verbatim by five siblings on the same disk whose formats are
-  Compact Pro, zip, BinHex, uuencode and Unix compress. `unc_applelink_probe`
-  is removed; a `.pkg` sniffs as *unknown*, which is what it was already doing
-  on both real packages (FORMATS.md, *AppleLink packages*; DECISIONS.md
-  2026-09-27, *the recogniser that was a command line*). **Closed by:** a
-  reference implementation or a published layout for the binary container —
-  Aladdin's translator recognises a package by its extension and reads a
-  FOLDER, so it is not one.
+- **There is no content test for one.** The probe that claimed to be one
+  was reading a translator COMMAND parser and is gone; a `.pkg` sniffs as
+  *unknown*, which is what it already did on both real packages
+  (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
+  **Closed by:** a reference implementation or a published layout for the
+  binary container — Aladdin's translator recognises a package by its
+  extension and reads a FOLDER, so it is not one.
 
 No decoder is written, and the reader on the emulator image turns out to be a
 driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into

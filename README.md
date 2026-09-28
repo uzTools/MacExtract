@@ -118,18 +118,20 @@ could have had.
 | | StuffIt Expander 4.0.2 (free) | StuffIt Deluxe 3.5.1 with DropStuff (paid, System 7) | MacExtract |
 |---|---|---|---|
 | StuffIt, Compact Pro, BinHex, MacBinary | yes | yes | yes |
-| StuffIt 5 archives | no — needs Expander 5 or later | no — needs Deluxe 5, System 7.5.3 and 8 MB | yes |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu`, SpaceSaver | only with a paid add-on, System 7 only | yes — this is what the box was for | yes |
-| PackIt (`.pit`) | not listed | yes | yes |
-| AppleLink packages (`.pkg`) | with the add-on | yes | **no** — two specimens here and no description of the format to read them by |
-| `.lzh` / `.lha` | not named in its documentation | not in the box | yes |
-| DiskDoubler, Now Compress and SuperDisk! | no | no — the DiskDoubler translator was dropped from the box at 3.5 | yes |
-| A Mac file mailed as a MIME attachment | no translator for it | no translator for it | yes — both forks |
-| Sets split across floppies | StuffIt sets, with the add-on | StuffIt sets | StuffIt, Compact Pro, DiskDoubler, zip and `.001` sets, and mail split into several messages |
-| Split zip or Compact Pro sets | "cannot expand" — its own Read Me | not claimed | yes |
-| Encrypted archives | yes, if you know the password | StuffIt archives, yes — it writes them too | yes, and Compact Pro's too, which nothing else reads |
-| The note somebody typed into a Compact Pro or zip archive | written out beside the files | not claimed — it saves and edits StuffIt's own | same — a `Comments` document in the folder |
-| What you install | the application, a StuffIt Engine extension, and the add-on for anything above | an installer, five applications, two control panels, two extensions and thirteen translators | one application |
+| StuffIt 5 archives | no | no | yes |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu`, SpaceSaver | with the paid add-on | yes | yes |
+| PackIt (`.pit`) | no | yes | yes |
+| AppleLink packages (`.pkg`) | with the add-on | yes | no |
+| `.lzh` / `.lha` | no | no | yes |
+| DiskDoubler, Now Compress and SuperDisk! | no | no | yes |
+| A Mac file mailed as a MIME attachment | no | no | yes |
+| StuffIt sets split across floppies | with the add-on | yes | yes |
+| Compact Pro, zip or `.001` sets split across floppies | no | no | yes |
+| An archive that arrived as several mail messages | no | no | yes |
+| Encrypted StuffIt archives | yes | yes | yes |
+| Encrypted Compact Pro archives | no | no | yes |
+| The note somebody typed into an archive | yes | yes | yes |
+| What you install | an application, an extension and the add-on | an installer, five applications, two control panels, two extensions and thirteen translators | one application |
 | Source | free, closed | paid, closed | free, open (LGPL) |
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the

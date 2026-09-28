@@ -145,7 +145,7 @@ claims*):
 | method | what writes it | specimens | how graded |
 |---|---|---|---|
 | 1, Unix compress | DiskDoubler 3.7, "Method A (fastest)" | `subject-A.dd`, both forks; one more on the 3.1.2 disk | the bytes that went IN, on the emulated Mac; `unar` agrees |
-| 7, Stac LZS | the Sigma Designs card DiskDoubler 3.x drove | the two THINK C libraries on the 3.7 disk, 2,226 B each, **and 22 forks on the 3.1.2 disk, up to 97,906 B in 8 chunks** | the fork's own XOR checksum; `unar` agrees byte for byte |
+| 7, Stac LZS | the Sigma Designs card DiskDoubler 3.x drove | the two THINK C libraries on the 3.7 disk, 2,226 B each, **and 22 forks on the 3.1.2 disk, up to 97,906 B in 8 chunks**. **One is in the corpus since 2026-09-27** — `dd37-IACUtilities-A4.lib.dd`, lifted off the 3.7 disk by `harvest.py`'s `derived:hfsvol:` recipe rather than committed | the fork's own XOR checksum; `unar` agrees byte for byte, naming the method `Stac LZS` |
 | 2, splay Huffman | DiskDoubler 1.x-3.1.x | **one**: `XCMD.h` on the 3.1.2 disk, 564 → 386 B (2026-08-21) | the fork's own 16-bit sum, and the output is legible 1990 Salient C |
 | 3, RLE90 | DiskDoubler 1.x-2.x | **none** | Salient's 1991 expander, on forks this project encoded (below), at run lengths 3-255 and at **2**, the shortest the format expresses |
 | 4, StuffIt Huffman | DiskDoubler 1.x-2.x | **none** | the same, on two trees: one 2-11 levels deep and one over all 256 symbols with **a leaf at depth 1** |
