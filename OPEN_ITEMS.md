@@ -263,3 +263,37 @@ No decoder is written, and the reader on the emulator image turns out to be a
 driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
+
+## StuffIt 2.0's Optimizers: the modules are here, the archives are not
+
+**The floor is what makes this an item.** This unarchiver is for a 1986
+machine, and StuffIt Deluxe 2.0 is 1990–92 software from the same desks, so a
+user of ours is more likely than anybody to hand it an archive stuffed with an
+Optimizer enabled — which no StuffIt since 3.x will open either.
+
+**What is known** (FORMATS.md, *StuffIt 2.0's pluggable modules, and what an
+"Optimizer" was*): an Optimizer is a per-file-type preprocessor, shipped as a
+`SITe`/`SIT!` module carrying a `COMP` resource and usually a `DCMP`. All five
+of the 2.0.1 box are on this machine — `Sound 1`, `Photoshop 1`,
+`Photoshop:JPEG Lossy`, `MacPaint 1`, `Text 1`, at IDs 1 to 5 — and encryptors
+share the namespace (`PassLock` 514, `NewDEx` 515, `DESex` 576).
+
+**What is missing is one archive.** A module is named by a 16-bit ID and the
+method nibble cannot hold it, so the ID is recorded somewhere this project has
+not identified; the only unexplained space in the entry header is bytes
+104..109, zero in 1,251 of 1,256 corpus entries. **What such an entry does
+here has never been observed** — refusing it cleanly per entry is the
+expectation, not a measurement.
+
+**Closed by:** a specimen, and the route is an emulator session on the machine
+every harness here already runs. Deluxe 2.0.1 installs on a 68000 under System
+6; stuffing a text or MacPaint file with an Optimizer enabled writes the first
+one this project has seen. The same run answers three things at once: whether
+the entry refuses cleanly, where the module ID lives, and whether a 2.x entry
+encrypted by PassLock or DES decodes — which nothing here has ever tested,
+because `src/fmt_sit.c` implements one scheme and 2.x had three.
+
+**Naming it is worth more than decoding it.** A `Text 1` entry cannot be
+restored by anybody — its module has no `DCMP` because the bytes are gone —
+but a reader that recognises the marker can tell the user which module the
+file wants, instead of reporting a damaged archive.
