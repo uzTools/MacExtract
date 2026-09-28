@@ -105,34 +105,38 @@ cannot open RAR files."*, not something that looks like a damaged download.
 
 ## Compared with what Aladdin sold
 
-There were two ways to have StuffIt on a real Macintosh. **StuffIt Expander
-4.0.2** is the free one you would otherwise reach for, and on System 7 it is
-nicer to use — drag-and-drop, watch folders, background expansion; under
-System 6 it and MacExtract are both menu-driven. **StuffIt Deluxe 3.5.1** is
-what money bought in 1995, and it is the stronger yardstick: one purchase
-brought the Deluxe application, DropStuff, DropCompress, DropConvert, a copy
-of Expander, Magic Menu, SpaceSaver and thirteen format translators. It is
-installed here on System 7.0.1, and it is the most a Macintosh user of the day
-could have had.
+Three yardsticks, because StuffIt itself changed a great deal. **StuffIt
+Expander 4.0.2** (1996) is the free one you would otherwise reach for, and on
+System 7 it is nicer to use — drag-and-drop, watch folders, background
+expansion. **StuffIt Deluxe 3.5.1** (1995) is what money bought in the 68k
+era: one purchase brought the Deluxe application, DropStuff, DropCompress,
+DropConvert, a copy of Expander, Magic Menu, SpaceSaver and thirteen format
+translators. **StuffIt Deluxe 7.0.3 Classic** (2003) is the last StuffIt for
+Mac OS 9 and reads far more formats than either — but it is PowerPC-only, so
+on the machines this project is aimed at it does not run at all.
 
-| | StuffIt Expander 4.0.2 (free) | StuffIt Deluxe 3.5.1 with DropStuff (paid, System 7) | MacExtract |
-|---|---|---|---|
-| StuffIt, Compact Pro, BinHex, MacBinary | yes | yes | yes |
-| StuffIt 5 archives | no | no | yes |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu`, SpaceSaver | with the paid add-on | yes | yes |
-| PackIt (`.pit`) | no | yes | yes |
-| AppleLink packages (`.pkg`) | with the add-on | yes | no |
-| `.lzh` / `.lha` | no | no | yes |
-| DiskDoubler, Now Compress and SuperDisk! | no | no | yes |
-| A Mac file mailed as a MIME attachment | no | no | yes |
-| StuffIt sets split across floppies | with the add-on | yes | yes |
-| Compact Pro, zip or `.001` sets split across floppies | no | no | yes |
-| An archive that arrived as several mail messages | no | no | yes |
-| Encrypted StuffIt archives | yes | yes | yes |
-| Encrypted Compact Pro archives | no | no | yes |
-| The note somebody typed into an archive | yes | yes | yes |
-| What you install | an application, an extension and the add-on | an installer, five applications, two control panels, two extensions and thirteen translators | one application |
-| Source | free, closed | paid, closed | free, open (LGPL) |
+| | Expander 4.0.2 (free) | Deluxe 3.5.1 with DropStuff (paid) | Deluxe 7.0.3 Classic (paid) | MacExtract |
+|---|---|---|---|---|
+| Oldest Mac it runs on | System 6.0.5 | System 7 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
+| StuffIt, Compact Pro, BinHex, MacBinary | yes | yes | yes | yes |
+| StuffIt 5 archives | no | no | yes | yes |
+| StuffIt X (`.sitx`) | no | no | yes | no |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu` | with the paid add-on | yes | yes | yes |
+| StuffIt SpaceSaver | with the add-on | yes | no | yes |
+| PackIt (`.pit`) | no | yes | no | yes |
+| AppleLink packages (`.pkg`) | with the add-on | yes | no | no |
+| `.lzh` / `.lha` | no | no | yes | yes |
+| RAR, ARJ, bzip2 | no | no | yes | no |
+| DiskDoubler, Now Compress and SuperDisk! | no | no | no | yes |
+| A Mac file mailed as a MIME attachment | no | no | yes | yes |
+| StuffIt sets split across floppies | with the add-on | yes | yes | yes |
+| Compact Pro, zip or `.001` sets split across floppies | no | no | no | yes |
+| An archive that arrived as several mail messages | no | no | no | yes |
+| Encrypted StuffIt archives | yes | yes | yes | yes |
+| Encrypted Compact Pro archives | no | no | no | yes |
+| The note somebody typed into an archive | yes | yes | yes | yes |
+| What you install | an application, an extension and the add-on | an installer, five applications, two control panels, two extensions and thirteen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
+| Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:
@@ -146,11 +150,12 @@ same archives on the same disk, and timed by the same instrument:
 
 Choosing between them on speed alone gives you nothing to choose by. Times are
 to the nearest few seconds, and both wrote the same files — which is what makes
-them comparable at all. Expander is the one that was timed; Deluxe runs on the
-same emulated Plus, under System 7, and has never been put on the clock. The full capability
-table and the unrounded figures are in [FORMATS.md](FORMATS.md), under
-"Compared with StuffIt Expander 4.0.2", "The paid box" and "Timed on the same
-Mac Plus" inside it.
+them comparable at all. Expander is the one that was timed; Deluxe 3.5.1 runs on the
+same emulated Plus and has never been put on the clock, and 7.0.3 will not run
+on a 68k Mac at all. The full capability table and the unrounded figures are
+in [FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2",
+"The paid box", "The last classic box" and "Timed on the same Mac Plus" inside
+it.
 
 ## What you need, and how long you will wait
 

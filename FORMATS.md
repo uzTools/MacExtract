@@ -49,7 +49,7 @@ under *Table notes*.
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
+| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic — **method 14 is not implemented**, and real archives use it (*The last classic box*, below); **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
@@ -5054,6 +5054,55 @@ to a separate TeachText file called ``Comments about [name of archive]''"*
 encrypted StuffIt archives this engine is graded against (*Encryption*,
 above).
 
+### The last classic box: StuffIt Deluxe 7.0.3 Classic (2026-09-28)
+
+**The last StuffIt for classic Mac OS, and no 68000 Macintosh runs it.**
+Macintosh Garden's StuffIt Deluxe page lists nothing classic after it (6.0.1,
+6.5.1, 7.0.3; StuffIt 8 is Mac OS X only). `STFDLX703CLASSIC.SIT`, md5
+`7cec7ff83e2bbe984a2b5a152c466e8d`, fetched with the recipe
+`tools/vmac/spacesaver.py` already uses — `-A Mozilla/5.0 -e <the Garden
+page>` against `old.mac.gdn`, where a bare request gets 403 or 410. Inside is
+a `.smi` whose data fork is a plain HFS volume `hmount` opens, holding
+`StuffIt DLX 703 Classic Install`, an InstallerMaker application whose data
+fork is a StuffIt 5 archive. Every executable in it is PEF `pwpc` with no
+`CODE` resource, and its Read Me asks for *"at least Mac OS 8.6, Mac OS 9.1 or
+later is recommended"* and *"at least 32mb of RAM installed, and at least 20mb
+of Hard Disk space available"*.
+
+**Twenty-three format plug-ins** replace 3.5.1's thirteen translators:
+`apple`, `arc`, `arj`, `binhex`, `btoa`, `bz2`, `compress`, `cpt`, `freeze`,
+`gz`, `lha`, `macbin`, `mime`, `pack`, `pf`, `rar`, `sco`, `sit`, `sitseg`,
+`sitx`, `tar`, `uu`, `zip`. `pf` is **Private File**, Aladdin's own encrypted
+format, named as such in the Users Guide. Three names this project cannot
+identify from the files — `pack`, `sco` and `freeze`: their bundles carry no
+document types, their code is PEF, and the documentation names none of them.
+Reading `pack` as PackIt would be the natural guess and it is **not
+supported**: PackIt is named nowhere in 7.0.3.
+
+**Aladdin's own reference chapter** (`Documentation/StuffIt Deluxe Users
+Guide.pdf`, ch. 18, *Supported Archive Formats*): it creates `.sit`, `.sitx`,
+`.zip`, `.tar` and **`.lzh`**; expands but does not create `.arj`, `.arc`,
+`.cpt`, StuffIt 3.x, StuffIt 1.5.1, `.pf` and `.rar`; compresses single files
+as gzip, bzip and Unix compress; encodes MacBinary, UUEncode, BinHex and
+AppleSingle and expands MIME/Base 64. Expander 7.0.3's own file-type
+preference pane adds `Disk Images (.img, .smi)`, and its expansion pane names
+btoa. **PackIt, SpaceSaver, AppleLink `.pkg` and DiskDoubler appear nowhere in
+the application or its documentation** — the box gained the PC formats and
+dropped the Macintosh ones. Comments it keeps: *"it is possible to add
+comments to StuffIt, StuffIt X and Zip archives"*.
+
+**What it does not do that this engine does**: those four Macintosh formats,
+Compact Pro encryption, mail-split archives, and segments other than StuffIt's
+— *"StuffIt Deluxe is able to expand and create encrypted Zip archives, but
+does not currently support segmented or spanned Zip archives"*, same chapter.
+
+**And it found a hole in this engine: StuffIt 5 method 14.** The installer's
+own archive uses it, `src/fmt_sit5.c` implements 0, 13 and 15, and 84 of its
+258 entries refuse with *"method 14 is not supported yet"* — every plug-in,
+the engine shell and the Deluxe application among them. **`unar` extracts all
+258**, so there is both a specimen and an oracle; the specimen is a 13 MB
+download rather than a corpus fixture. Measured 2026-09-28, on v0.34.0.
+
 ### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,
@@ -5151,6 +5200,10 @@ on `macburger-helper.hqx` — and stand as taken.
   the distribution used here.
 - [ATPM 5.05 — review of StuffIt Deluxe 5.1.2](https://atpm.com/5.05/stuffit.shtml),
   for StuffIt 5 archives being unreadable by 4.x.
+- StuffIt Deluxe 7.0.3 Classic as downloaded here: the installer's archive
+  listing, the plug-in bundles, `Documentation/StuffIt Deluxe Read Me!` and
+  `StuffIt Deluxe Users Guide.pdf`, and StuffIt Expander 7.0.3's own
+  preference panes.
 - StuffIt Deluxe 3.5.1 as installed here: the image's own folder listings, its
   `Read Us First!` files (`StuffIt Deluxe Read Me`, `What's New in Deluxe
   3.5.1`, `User's Guide Addenda`, `What was installed(and where)`) and the
