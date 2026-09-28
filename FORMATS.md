@@ -18,6 +18,7 @@ under *Table notes*.
 - LZH / LHA
 - btoa, the other ASCII armour
 - base64 and MIME, the armour that replaced the others
+- StuffIt 2.0's pluggable modules, and what an "Optimizer" was
 - Encryption
 - AppleLink packages: two specimens, and a probe that names neither
 - Archives named but not extracted
@@ -711,28 +712,12 @@ Compress (2) 330/90, Huffman (3) 38/24, None (0) 13/7, Fixed Huffman (6) 6/2,
 LZAH (5) 1/1, MW (8) 3/1. Method 1 (RLE90) has no oracle coverage but does
 occur — `synth-sit-rle90.sit` and one real fork carry it.
 
-**The method byte's unused values, and Aladdin's "2.0 Optimizers".** This
-engine implements 0, 1, 2, 3, 5, 6, 8, 13 and 15; **4, 7, 9–12 and 14 are a
-per-entry error**. Nothing in reach names those: XADMaster and deark call 14
-*"Installer"* and decode neither, and macunpack's `sit.h` says *"all other
-numbers are reserved"*. What fills some of them is a 2.0 **Optimizer**, and
-**Expander 4.0.2's Read Me says what one costs to read**: *"StuffIt Expander
-will not expand StuffIt archives created using 2.0 Optimizers. You will need
-either the StuffIt Deluxe or the StuffIt Lite application, **and the 2.0
-optimizer used to compress the archive**."* So an Optimizer is a pluggable
-compressor whose archives need that same module back — not a method any
-general reader was ever expected to carry, which is why no reference here
-names one. 3.5.1 through 4.5 repeat the first sentence without the second.
-
-**No specimen is in reach.** Every fork in the corpus is one of the eight:
-227 archives, 2,512 forks, methods 0/1/2/3/5/6/8/13 only, by a walk of the
-entry headers (2026-09-28). **That such an archive would refuse here is
-therefore a hypothesis**, though a well-supported one: it holds unless an
-Optimizer wrote a standard method number, which Aladdin's own sentence makes
-unlikely. StuffIt X's optimizers are a different thing in a format this engine
-does not read, and unlike these they are documented (7.0's Users Guide:
-*"special compression methods designed to handle specific file types ... Wave
-sound files, Tiff graphics, and text files"*).
+**The method byte's unused values.** This engine implements 0, 1, 2, 3, 5, 6,
+8, 13 and 15; **4, 7, 9–12 and 14 are a per-entry error**. Nothing in reach
+names those: XADMaster and deark call 14 *"Installer"* and decode neither, and
+macunpack's `sit.h` says *"all other numbers are reserved"*. **Every fork in
+the corpus is one of the eight**: 227 archives, 2,512 forks, methods
+0/1/2/3/5/6/8/13 only, by a walk of the entry headers (2026-09-28).
 
 ### StuffIt 5: the Arsenic block size †
 
@@ -1486,6 +1471,63 @@ do the `\n`→CR translation THINK C's text mode did, so the ending is a
 property of the C library the port was compiled against.
 `tools/run_mime.py` grades CR, CRLF and LF separately, which is where
 that question lives.
+
+## StuffIt 2.0's pluggable modules, and what an "Optimizer" was
+
+**Aladdin's Read Mes warn about archives nothing since can open** — Expander
+4.0.2: *"StuffIt Expander will not expand StuffIt archives created using 2.0
+Optimizers. You will need either the StuffIt Deluxe or the StuffIt Lite
+application, and the 2.0 optimizer used to compress the archive."* 3.5.1
+through 4.5 repeat the first sentence only. **What an Optimizer is, and the
+modules themselves, are now in hand** (2026-09-28), off StuffIt Deluxe 2.0.1's
+two floppies (`stuffit-deluxe-v2.sit`, md5 `45b940a528fe2bc18560bf0b2ae60f7a`
+— DiskCopy images whose 84-byte header comes off, the same step
+`spacesaver.setup351` makes) and `deluxe-2-optional.sit`.
+
+**An Optimizer is a per-file-type preprocessor, not a compressor.** Aladdin's
+`Deluxe 2.0 Addendum` on disk 2: `Text 1` *"alters or disposes of this
+unneeded data without removing essential text"* — leading spaces to tabs,
+trailing whitespace stripped, resources deleted — and `MacPaint 1` *"works on
+a file by removing data that is not required ... will never remove artwork"*.
+Both were written by Robert Gibson, and *"usage, as with any Optimizer, is
+designed to be transparent"*.
+
+**Five of them ship, and they are numbered.** The 2.0.1 installer's payload is
+a StuffIt archive this engine lists; its `Optimizers` folder holds `Sound 1`,
+`Photoshop 1`, `Photoshop:JPEG Lossy`, `MacPaint 1` and `Text 1`, all type
+`SITe`/`SIT!`. Each carries a **`COMP`** resource — the stuffing half — and,
+except `Text 1`, a **`DCMP`**, the unstuffing half, at resource IDs **1, 2, 3,
+4 and 5** in that order. `Text 1` has no `DCMP` because nothing it does is
+undone. **Encryptors use the same mechanism**: `PassLock` is `COMP`/`DCMP`
+**514**, and `deluxe-2-optional.sit` adds `NewDEx` **515** and `DESex` **576**.
+
+**So a module is named by a 16-bit ID, which the four-bit method nibble cannot
+hold** — an archive that used one has to name it somewhere else, and **where
+is not known here**. The entry header's six bytes at 104..109 are the only
+unexplained space in it, and across the corpus they are zero in 1,251 of 1,256
+entries; the five exceptions are two **version-1** archives whose bytes are
+constant per archive (`0010 0010 0010` in `derived-DDArchive.sit`, `0010 0010
+0020` in `derived-SystemIdle.Sit`) and whose methods are the ordinary 2 and 3.
+That is an observation, not a reading.
+
+**The route to a specimen is an emulator session, and the machine is the one
+every harness here already runs.** Deluxe 2.0.1 installs on a 68000 under
+System 6; stuffing a MacPaint or text file with an Optimizer enabled would
+produce the first such archive this project has seen, and its header would say
+where the ID lives. Until then, **that this engine would refuse an optimized
+entry is a hypothesis** — well supported, since the module's own `DCMP` is
+what Aladdin says you need. Two things bound it: 1.5.1-format archives cannot
+use modules at all (*"no external optimizers, encryptors, or compressors can
+be used"*, the Addendum), and by 3.x the feature is gone — the 3.5.1
+application still carries *"No optimizers are installed"* and *"Some items
+were encrypted or compressed with an optimizer that the StuffIt Engine does
+not currently support. They have been skipped."*
+
+**One question this opens about ENCRYPTION.** `src/fmt_sit.c` implements one
+scheme (*Encryption*, below). In 2.x an encrypted entry could have come from
+any of three modules — PassLock, NewDE or DES — and nothing here has ever
+seen an archive written by the first or the last. Untested, and the same
+specimen run would settle it.
 
 ## Encryption
 
