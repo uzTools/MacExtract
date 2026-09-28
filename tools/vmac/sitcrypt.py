@@ -17,6 +17,15 @@ with passwords. So: have it encrypt a known file under a password of
 NINE characters, read the archive back, and see which reading gets the
 bytes out. That is the whole point of the harness.
 
+**What actually runs is MAGIC MENU, not the application** — established
+2026-09-28, and every step below is the same either way. Each dialog
+this harness drives is drawn over a FINDER menu bar (look at
+`specimens/sitcrypt/pw8/04-new-dialog.png`), because ⌘N and ⌘S here
+belong to Aladdin's Finder extension; the 3.5.1 application does not
+launch on this image at all. It makes no difference to the archives,
+and all the difference to anyone who comes here wanting a dialog only
+the application has (BLOCKERS.md, withdrawn claims).
+
     tools/vmac/sitcrypt.py --map        photograph the application's menus
     tools/vmac/sitcrypt.py              make the archive and read it back
     tools/vmac/sitcrypt.py --btoa-send  have the btoa/atob translator encode

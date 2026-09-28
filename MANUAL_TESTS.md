@@ -6,7 +6,8 @@ Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§6) or an account to post from (§7). Each item says what to do,
+hardware (§1–§6), an account to post from (§7) or a licensed copy of
+1990s software (§8). Each item says what to do,
 why nothing here can answer it, and what to record. Nothing below is a known
 failure; it is unverified, which is a different thing.
 
@@ -313,6 +314,45 @@ Rules): they go from the maintainer's own account.
 **What to record.** The issue URL, in `BLOCKERS.md` beside the claim it
 belongs to. If either is rejected or explained upstream, that is a withdrawn
 claim and goes in the same file with what it cost.
+
+---
+
+## 8. One archive, from a REGISTERED StuffIt Deluxe 2.x or 3.x
+
+This needs neither hardware nor an account — it needs a licensed copy, which
+is the one thing this machine cannot substitute for. **Two minutes of
+somebody's time closes the oldest open reading in FORMATS.md.**
+
+StuffIt Deluxe 2.0 could hand a file to an *Optimizer* before compressing it,
+and where the archive records which one is read out of the application's own
+code (FORMATS.md, *Where an archive names the module*). No such archive
+exists here to check the reading against, and `tools/vmac/sitopt.py` got as
+far as it can: 2.0.1 installs and launches on System 6, and then asks for a
+serial number and **checks it** — every code published on the page the
+software comes from is refused, and nothing here will go looking for one or
+read the check out of the binary. Magic Menu runs without one and stuffs, but
+its `StuffIt Options ▸` submenu offers compression method and Leave/Delete
+Originals only; the Optimizers dialog is the application's.
+
+- [ ] **Stuff one text file with `Text 1` enabled**, in StuffIt Deluxe 2.x
+      (*Options ▸ Compression Optimizers…*, Expert menus) or in any 3.x with
+      the 2.0 `Text 1` module installed. A text file with leading spaces,
+      trailing spaces and a resource fork exercises all three of the things
+      that Optimizer does.
+- [ ] **Stuff the same file again with the Optimizer off**, into a second
+      archive. The PAIR is the evidence: the two entry headers should differ
+      in the data fork's method byte (bit `0x40`) and in byte 106, and in
+      nothing else that is not a length or a CRC.
+- [ ] **If the copy is 2.x, one more with an Encryptor** — PassLock, NewDE or
+      DES from *Options* — which would be the first 2.x-encrypted archive
+      this project has seen. `src/fmt_sit.c` implements the scheme that
+      replaced them and none of those three.
+
+**What to record.** The two archives as MacBinary (a StuffIt archive's
+resource fork carries `'MKey'` and is not decoration), the input file, and
+which Optimizer. `tools/vmac/sitopt.py --show` prints the header bytes that
+matter. If byte 106 does NOT hold the module's id, the reading in FORMATS.md
+is wrong and the correction goes in `BLOCKERS.md` with what it cost.
 
 ---
 

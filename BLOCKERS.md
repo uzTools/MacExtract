@@ -1608,6 +1608,38 @@ a harness can click is not the same list.
   header question needed one, when the program that WRITES the header
   is a reference implementation under rule #1 and was already in hand.
 
+- **"The route to an optimized specimen is an emulator session on the
+  machine every harness here already runs — Deluxe 2.0.1 installs on a
+  68000 under System 6."** FORMATS.md and OPEN_ITEMS.md, withdrawn
+  2026-09-28, the day after it was written. It installs and it launches;
+  it then asks for a **serial number and checks it**, and every code
+  published on the page the software is downloaded from is refused
+  (`specimens/sitopt/personalize/`). 2.0.1 joins StuffIt Deluxe 3.5.1
+  and 4.0 at the same wall. **Cost: six emulator runs to find out**, and
+  the item now needs a person with a licensed copy (MANUAL_TESTS.md §8)
+  rather than a boot. **Why it survived:** "installs on a 68000 under
+  System 6" was true, and nobody had asked the next question —
+  *installing is not running*, and this box is 1990 commercial software
+  whose whole first dialog is a licence.
+
+- **"`sitcrypt.py` drives StuffIt Deluxe 3.5.1."** Its own docstring
+  since 2026-08-23, and tools/vmac/README.md reads the same way,
+  withdrawn 2026-09-28. **Nothing in this project has ever launched a
+  StuffIt Deluxe application.** Every dialog in those successful runs is
+  **Magic Menu's**, drawn over a Finder menu bar —
+  `specimens/sitcrypt/pw8/04-new-dialog.png` is "Create new archive as:"
+  with *File Edit View Label Archive Translate* greyed above it — and
+  the 3.5.1 application does not launch here either: three attempts,
+  75 s each, one of them a control with nothing added to the image.
+  **Cost: nothing to the encryption work, which only ever needed the
+  archives, and three runs to whoever needed the application** — this
+  session, going after the Optimizers dialog, which is in the
+  application and nowhere else. **Why it survived:** the harness worked.
+  A description of HOW a working harness works is the least-read line in
+  any file, and Magic Menu's dialogs look exactly like the
+  application's; the giveaway is the menu bar above them, which no
+  screenshot was ever read for.
+
 ### Corrected figures and superseded write-ups
 
 - **"AppleLink `.pkg` cannot be sniffed without inventing a magic number" was

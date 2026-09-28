@@ -307,6 +307,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
 - 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
 - 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
+- 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
 
 ---
 
@@ -19212,3 +19213,57 @@ reproducing it, because that mechanism takes the oracle's word. TESTING.md
 records why this one decline is not eligible. **The first thing to do with a
 field nobody had read is to ask what the tool you grade yourself by does with
 it** — here, the answer settled whether refusing was pedantry or the point.
+
+## 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
+
+**Claim.** The optimized specimen this project has never had was filed as one
+emulator session away. It is not reachable from this machine at all, and
+finding that out cost six boots and disproved something else on the way.
+
+**Evidence.** `tools/vmac/sitopt.py`. StuffIt Deluxe 2.0.1 installs by
+copying the installer's payload — no installer, no guessed dialogs — and
+launches on System 6. It then wants a name, a **signature drawn in a box**,
+and a **serial number it checks**: with the box empty it says *"You must type
+in and sign your name"*, and with it marked, *"The serial number you have
+entered is invalid"*, for every code published on the page the software comes
+from. Magic Menu runs without one and stuffs, and its `StuffIt Options ▸`
+submenu holds compression method and Leave/Delete Originals. Nothing else
+reaches an Optimizer.
+
+**Consequence.** MANUAL_TESTS.md §8 — two minutes of somebody with a licensed
+copy. Four things worth keeping.
+
+**The wall was not the one that was filed, and "installs" is not "runs".**
+The item said *"Deluxe 2.0.1 installs on a 68000 under System 6"*, which is
+true, and concluded that stuffing a file was therefore a boot away. This is
+1990 commercial software and its first dialog is a licence. **When the plan
+is to drive somebody's application, the first question is whether it will
+start** — cheaper to ask than anything downstream of it, and this project had
+already recorded the same wall for 3.5.1 and for 4.0 in the file next door.
+
+**Going after one thing disproved another, and that is the usual way.**
+`sitcrypt.py` says it drives StuffIt Deluxe 3.5.1. It does not: every dialog
+in its successful runs is **Magic Menu's**, over a Finder menu bar, and the
+3.5.1 application does not launch here either. Nothing in this project has
+ever launched a StuffIt Deluxe application. That cost the encryption work
+nothing — it only ever needed the archives — and it costs three runs to
+anyone who arrives wanting a dialog the application alone has, which is
+exactly what happened here. **A description of how a WORKING harness works is
+the least-read sentence in any file**, and the giveaway had been photographed
+twenty times: the menu bar above the dialog.
+
+**Run the control before believing the interesting explanation.** When the
+3.5.1 application first failed to come up, the image had 2.0's modules newly
+dropped into it, and "3.5.1 will not launch with a 2.0 Optimizer installed"
+was sitting there ready to be written down. The same image without them did
+not launch either. One run, and a false root cause that would have been
+quoted for months.
+
+**And a documented trap turned out to be narrower than its wording.**
+tools/vmac/README.md says a hierarchical submenu's items *"never highlight
+and cannot be selected however the pointer is moved"*. Under System 6, with
+Magic Menu 2.0, the parent item highlights and the submenu draws. The
+measured failure is real and is System 7's Translate menu; the sentence had
+generalised it to the Menu Manager. **A trap written from one measurement
+should name the thing it was measured on**, or the next session skips a route
+that works.

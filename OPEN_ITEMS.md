@@ -284,10 +284,16 @@ end to end, and whether a 2.x entry encrypted by one of the four encryptor
 modules decodes at all — `src/fmt_sit.c` implements the one scheme that
 encryptor id 4 means.
 
-**Closed by:** a specimen, and the route is an emulator session on the machine
-every harness here already runs. Deluxe 2.0.1 installs on a 68000 under System
-6; stuffing a text or MacPaint file with an Optimizer enabled writes the first
-one this project has seen, and the same run can write an encrypted one.
+**Closed by:** a specimen, and **the emulator cannot write one** —
+MANUAL_TESTS.md §8 is the route now. `tools/vmac/sitopt.py` installs 2.0.1 on
+System 6 by copying the installer's payload, and the application launches and
+then asks for a serial number and checks it; every code published on the page
+the software comes from is refused. 2.0's **Magic Menu** runs without one and
+stuffs — the first archive of known 2.0.1 provenance came off it, and this
+engine reads both its forks byte-exact — but its `StuffIt Options ▸` submenu
+offers compression method and Leave/Delete Originals and no Optimizer. The
+switch is in the application (DECISIONS.md 2026-09-28, *the two walls between
+here and one archive*).
 
 **Decoding one is a separate route, and it is open.** A `Text 1` entry cannot
 be restored by anybody — its module has no `DCMP` because the bytes are gone —

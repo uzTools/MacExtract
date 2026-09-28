@@ -1571,12 +1571,24 @@ carries *"No optimizers are installed"* and *"Some items were encrypted or
 compressed with an optimizer that the StuffIt Engine does not currently
 support. They have been skipped."*
 
-**What is still missing is an archive.** No specimen exists here, so the
-refusal is graded against entries built to this reading in
-`tests/unit_formats.c` — which cannot tell that the reading is right, only
-that the refusal fires and discriminates (removing it makes the same test
-fail with the optimized bytes written). OPEN_ITEMS.md, *StuffIt 2.0's
-Optimizers*, has what a specimen would add.
+**What is still missing is an archive, and the emulator cannot write one.**
+No specimen exists here, so the refusal is graded against entries built to
+this reading in `tests/unit_formats.c` — which cannot tell that the reading
+is right, only that the refusal fires and discriminates (removing it makes
+the same test fail with the optimized bytes written). `tools/vmac/sitopt.py`
+went after one on 2026-09-28 and found two walls: **2.0.1 checks its serial
+number**, and the only stuffer that runs without one — 2.0's Magic Menu —
+cannot reach an Optimizer. MANUAL_TESTS.md §8 is the route; DECISIONS.md
+2026-09-28, *the two walls between here and one archive*, is what each wall
+cost and what it taught.
+
+**One thing that run did settle.** The first archive of known 2.0.1
+provenance is here: `specimens/sitopt/stuff2/Subject.sit.bin`, stuffed by
+2.0.1's own Engine through Magic Menu from a subject this project wrote.
+Method 2 on both forks, and **bytes 46, 47 and 104..109 are all zero** —
+which is what the reading says a fork that went through no module looks
+like, from the writer itself rather than from a 1.x archive's leftovers. Both
+forks come back byte-exact through `macextract`.
 
 **One question this opens about ENCRYPTION.** `src/fmt_sit.c` implements one
 scheme (*Encryption*, below), and the encryptor id says which an entry wanted.

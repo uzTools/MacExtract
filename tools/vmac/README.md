@@ -2772,6 +2772,59 @@ Four things it will teach you if you drive another application here:
   stops changing rather than counting, because a fixed count either leaves
   a dialog up or types Return into the catalog window afterwards.
 
+### StuffIt Deluxe 2.0.1, and the two walls in front of an Optimizer — `sitopt.py`
+
+    tools/vmac/sitopt.py --setup        fetch the two 2.0.1 floppies
+    tools/vmac/sitopt.py --install      build the System 6 boot volume
+    tools/vmac/sitopt.py --personalize  meet the licence dialog
+    tools/vmac/sitopt.py --magic        the Finder with Magic Menu loaded
+    tools/vmac/sitopt.py --stuff        stuff a file, read the archive back
+    tools/vmac/sitopt.py --options      try the `StuffIt Options ▸` submenu
+    tools/vmac/sitopt.py --install351    the 3.5.1 image, 2.0's modules added
+    tools/vmac/sitopt.py --map351        launch 3.5.1 and peek its menus
+
+**It installs by COPYING, not by running the installer.** The download is a
+StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
+whose DATA fork is itself a StuffIt archive, and `macextract` unwraps the lot
+— so the application, `Text 1`, `PassLock`, the Engine, Magic Menu and
+Aladdin's own Preferences file go onto a copy of `System6.hfv` from Linux.
+Where each belongs is not guessed: `UnInstall Dlx Files Script`, on disk 2 of
+the box, erases `{system}Optimizers:Text 1` and the rest by name.
+
+**Neither StuffIt Deluxe application runs on this machine.** 2.0.1 launches
+and asks to be personalized: a name, a **signature drawn in a box** — it
+refuses OK without one — and a serial number it **checks**. Every code
+published on the Macintosh Garden page the software comes from is refused,
+one boot, six codes. 3.5.1 does not launch at all (three runs, one a
+control). FORMATS.md and MANUAL_TESTS.md §8 have what that blocks.
+
+**Magic Menu does run, and it is the half that works.** Loose in the System
+Folder it loads with "Help…" and "About Magic Menu™…" and nothing else; with
+`StuffIt Deluxe Extension` in `{system}Extensions:` as well, the Finder gains
+`Stuff File ⌘S`, `UnStuff File ⌘U` and `StuffIt Options ▸`. ⌘S shows **no
+dialog** — it stuffs the selection and the `.sit` appears in the window.
+`--stuff` does that, shuts down, reads the archive off and prints its entry
+header; `specimens/sitopt/stuff2/Subject.sit.bin` is the first archive of
+known 2.0.1 provenance this project has.
+
+**A hierarchical submenu DOES open here, which the note below says it does
+not.** `--options` pulls `Magic ▸ StuffIt Options ▸` down ten pixels at a
+time: the parent item highlights and the submenu draws (to the LEFT, because
+the parent is near the right edge) — `specimens/sitopt/options1/04-options-item.png`.
+That is System 6 and Magic Menu 2.0; the measured failure is System 7's
+Translate menu, and it stands. Whether an item in this one can be SELECTED is
+still untested, because there was nothing in it worth selecting: compression
+method, and Leave/Delete Originals. **No Optimizer.**
+
+What it CANNOT see:
+
+- **whether byte 106 really holds the module id.** That needs an archive an
+  Optimizer wrote, and this harness cannot make one.
+- **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1` in
+  both of the places 3.5 might look, and the application it would show up in
+  does not launch.
+- **anything about the 512 KB machine.** It boots `mv-4M` throughout.
+
 ### Making an encrypted StuffIt archive — `sitcrypt.py`
 
     tools/vmac/sitcrypt.py --map                     photograph the menus
@@ -2780,7 +2833,11 @@ Four things it will teach you if you drive another application here:
 StuffIt Deluxe 3.5.1 (installed by `spacesaver.py --install351`) writes
 StuffIt classic archives with passwords, and this drives it: File ▸ New,
 Archive ▸ Stuff… with **Encrypt with password** ticked, then the
-password twice. The archive comes off as MacBinary because the
+password twice. **Those menus are MAGIC MENU's, in the Finder** — the
+application itself has never launched on this machine, here or
+anywhere else in this tree (BLOCKERS.md, withdrawn claims, 2026-09-28).
+It changes nothing about the archives and everything about what else
+this image can be asked to do. The archive comes off as MacBinary because the
 verifier — `'MKey'` 0 — is in its RESOURCE fork.
 
 It exists because the archive key's fold count was a standing

@@ -128,9 +128,12 @@ All of these cost real time here:
   closed loop, and never through the absolute `usb-tablet`, which that guest
   ignores (`tools/vmac/os9mouse.py`). Positioning takes ~40 s — longer than a
   sticky menu stays open — so drive menus with Command keys. Mini vMac's mouse
-  is fine — except for **hierarchical menus, whose submenu items never
-  highlight and cannot be selected** however the pointer is moved (three ways
-  measured, `tools/vmac/README.md`). Find a route that is not a submenu.
+  is fine — except that on **System 7's Translate menu the submenu items
+  never highlight and cannot be selected** however the pointer is moved
+  (three ways measured, `tools/vmac/README.md`). That was written as a fact
+  about hierarchical menus until 2026-09-28, when a System 6 one opened and
+  highlighted its parent: **a submenu is worth one attempt** before a route
+  is abandoned for it.
 - An emulator run is minutes; do not poll it every few seconds, and **do not
   read a timeout as a measurement of anything**.
 
