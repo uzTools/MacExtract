@@ -100,8 +100,23 @@ CLI = os.path.join(REPO, "build", "macextract")
 # looks in. The types are the payload's, as `macextract l` prints them.
 INSTALL = [
     ((), "StuffIt Deluxe™", "APPL", "SIT!"),
+    # All five. The first run installed two and the application said so
+    # rather than guessing — *"* * * Optimizer Not Found: Sound 1"* in
+    # the script's own status file, which is why `Write Status To` is on
+    # every script here.
     (("System Folder", "Optimizers"), "Optimizers/Text 1", "SITe", "SIT!"),
     (("System Folder", "Optimizers"), "Optimizers/MacPaint 1", "SITe", "SIT!"),
+    (("System Folder", "Optimizers"), "Optimizers/Sound 1", "SITe", "SIT!"),
+    (("System Folder", "Optimizers"), "Optimizers/Photoshop 1", "SITe",
+     "SIT!"),
+    # The one whose Macintosh name has a SLASH in it. `macextract`
+    # applies the reversible '/'->':' swap on the way out (a ':' cannot
+    # occur in an HFS name and a '/' can), so the payload file is
+    # `Photoshop:JPEG Lossy` here and has to go back the other way
+    # before it reaches the volume — the uninstall script on disk 2
+    # erases `{system}Optimizers:Photoshop/JPEG Lossy`.
+    (("System Folder", "Optimizers"), "Optimizers/Photoshop:JPEG Lossy",
+     "SITe", "SIT!"),
     (("System Folder", "Encryptors"), "Encryptors/PassLock", "SITe", "SIT!"),
     # The Engine goes loose in the System Folder too: `{system}
     # Extensions:` is the System 7 place the uninstall script names, and
@@ -172,30 +187,42 @@ SCRIPT = "\r".join([
 ])
 
 
-def make_rsrc():
-    """A minimal resource fork, so `Delete resources` has work to do.
+def one_resource(rtype, rid, body):
+    """A resource fork holding exactly one resource.
 
-    A real one: a resource map with a single 'STR ' resource, laid out
-    per Inside Macintosh I-121 as tools/vmac/spacesaver.py's reader
-    parses it. Text 1 deletes resources from a text file, and a fork it
-    cannot parse is not a test of that.
+    Inside Macintosh I-121, the same layout `spacesaver.resources()`
+    parses: a 16-byte header, the data, then a map with one type entry
+    and one reference.
     """
-    body = b"\x1cStuffIt Deluxe 2.0.1 wrote it"
     data = len(body).to_bytes(4, "big") + body
-    # type list: one type, one reference
-    reflist = (0).to_bytes(2, "big") + (0xFFFF).to_bytes(2, "big") + \
-        b"\x00" + (0).to_bytes(3, "big") + (0).to_bytes(4, "big")
-    typelist = (0).to_bytes(2, "big") + b"STR " + (0).to_bytes(2, "big") + \
-        (2 + 8).to_bytes(2, "big")
-    themap = bytes(16) + bytes(4) + bytes(2) + \
-        (28).to_bytes(2, "big") + (28 + len(typelist) +
-                                   len(reflist)).to_bytes(2, "big") + \
+    reflist = rid.to_bytes(2, "big", signed=True) + \
+        (0xFFFF).to_bytes(2, "big") + b"\x00" + (0).to_bytes(3, "big") + \
+        (0).to_bytes(4, "big")
+    typelist = (0).to_bytes(2, "big") + rtype.encode("mac_roman") + \
+        (0).to_bytes(2, "big") + (2 + 8).to_bytes(2, "big")
+    # 16 bytes of header copy, 4 of handle, 2 of file ref, **2 of
+    # attributes**, then the two offsets — the attributes word is what
+    # the first version of this left out, which put `typeListOffset`
+    # two bytes early and made every fork it built unreadable. Nothing
+    # noticed until `Photoshop 1` declined a subject built to its own
+    # test: Get1Resource returned NULL and the module was right to say
+    # no. Inside Macintosh I-121, and `spacesaver.resources()` parses
+    # what this writes.
+    themap = bytes(16) + bytes(4) + bytes(2) + bytes(2) + \
+        (28).to_bytes(2, "big") + \
+        (28 + len(typelist) + len(reflist)).to_bytes(2, "big") + \
         typelist + reflist
     dataoff = 256
     head = (dataoff).to_bytes(4, "big") + \
         (dataoff + len(data)).to_bytes(4, "big") + \
         len(data).to_bytes(4, "big") + len(themap).to_bytes(4, "big")
     return head + bytes(dataoff - len(head)) + data + themap
+
+
+def make_rsrc():
+    """A resource fork with one 'STR ' in it, so `Text 1`'s *Delete
+    resources* has something to delete."""
+    return one_resource("STR ", 0, b"\x1cStuffIt Deluxe 2.0.1 wrote it")
 
 
 def fetch():
@@ -277,7 +304,7 @@ def install(args):
         rsrc = data + ".rsrc"
         if not os.path.exists(data):
             raise SystemExit("sitopt: the payload has no %s" % rel)
-        name = rel.split("/")[-1]
+        name = rel.split("/")[-1].replace(":", "/")
         mb = os.path.join(work, "i%d.bin" % i)
         # The Preferences file is the one with no resource fork at all;
         # everything else here is a resource fork with an empty data one.
@@ -385,6 +412,8 @@ def main():
     ap.add_argument("--add-paint", action="store_true")
     ap.add_argument("--paint", action="store_true")
     ap.add_argument("--makepaint", action="store_true")
+    ap.add_argument("--makemods", action="store_true")
+    ap.add_argument("--add-modules", action="store_true")
     ap.add_argument("--magic", action="store_true")
     ap.add_argument("--stuff", action="store_true")
     ap.add_argument("--options", action="store_true")
@@ -426,6 +455,10 @@ def main():
         return phase_paint(args)
     if args.makepaint:
         return phase_makepaint(args)
+    if args.add_modules:
+        return add_modules(args)
+    if args.makemods:
+        return phase_makemods(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -1149,6 +1182,221 @@ def phase_makepaint(args):
     if os.path.exists(st):
         data, _r = forks(st)
         print("=== PaintStatus.out")
+        for line in data.decode("mac-roman", "replace").split("\r"):
+            if line.strip():
+                print("  " + line)
+    return show_path(outdir)
+
+
+# The last three modules, and what each of them actually asks for —
+# which took two runs to stop guessing at. `Sound 1` is for **Sound
+# Designer II** files, not sounds in general: its COMP compares the
+# file's type against 'FSSD' and then wants an 'INFO' 1000 resource,
+# and it declined the corpus's 'sfil' suitcase (`derived-Eagle.sit`)
+# exactly as it should. `Photoshop 1` compares against **'8BIM'**,
+# Photoshop 1.0's own type rather than the later '8BPS', and wants an
+# '8BIM' 1000 resource. Both tests are read out of the modules' own
+# code (mods_subjects, below).
+#
+# **`Photoshop/JPEG Lossy` is the one that could falsify the rule.** It
+# carries a 'DCMP' (id 3) like the other reversible modules, but what it
+# does is lossy — and 255, the value this engine DECODES, is the value
+# the application's own Get Info pane prints as " lossy". If a lossy
+# module writes 255 while having a 'DCMP', decoding it gives bytes
+# nobody can check.
+PHOTO_NAME = "Photo"
+MODS_SCRIPT_NAME = "Modules Script"
+MODS_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}ModStatus.out"',
+    "Continue On Error",
+    'New Archive "{Startup}PlainMods.sit"',
+    'Stuff "{Startup}Sound2" with fast',
+    'Stuff "{Startup}Photo" with fast',
+    "Close",
+    'Enable Optimizer "Sound 1"',
+    'New Archive "{Startup}OptSound.sit"',
+    'Stuff "{Startup}Sound2" with fast',
+    "Close",
+    'Enable Optimizer "Photoshop 1"',
+    'New Archive "{Startup}OptPhoto.sit"',
+    'Stuff "{Startup}Photo" with fast',
+    "Close",
+    'Disable Optimizer "Photoshop 1"',
+    'Enable Optimizer "Photoshop/JPEG Lossy"',
+    'New Archive "{Startup}OptJpeg.sit"',
+    'Stuff "{Startup}Photo" with fast',
+    "Close",
+    "Quit",
+    "",
+])
+MODS_ARCHIVES = ["PlainMods.sit", "OptSound.sit", "OptPhoto.sit",
+                 "OptJpeg.sit"]
+
+
+def mods_subjects(work):
+    """The two subjects, as MacBinary. Returns [(path, note)]."""
+    out = []
+    # The Photoshop document, written by ImageMagick and read back by
+    # deark before it is used.
+    psd = os.path.join(work, "test.psd")
+    # RGB and not tiny, and then made to satisfy the module's OWN test.
+    #
+    # Source: `Photoshop 1`'s COMP resource, disassembled. Asked whether
+    # it will take a file (selector -1 in the parameter at +12), it
+    # compares the long at +32 of the file's record against **'8BIM'** —
+    # Photoshop 1.0's own file type, not the later '8BPS' — then opens
+    # the RESOURCE fork and does Get1Resource('8BIM', 1000): at least
+    # ten bytes, and the word at +8 must be 1 or 3..7, which is the
+    # colour mode. An ImageMagick PSD is type 8BPS with an empty
+    # resource fork, and both Photoshop modules declined it twice.
+    #
+    # So the data fork is a real PSD (deark reads it as mode 3, three
+    # channels) and the resource fork is built to that test. **That
+    # makes the subject synthetic where it counts**: it shows what the
+    # module does once it accepts a file, not what a real Photoshop
+    # document looks like.
+    r = subprocess.run(["convert", "-size", "160x120", "gradient:navy-orange",
+                        "-depth", "8", psd], capture_output=True)
+    if r.returncode == 0 and os.path.exists(psd):
+        blob = open(psd, "rb").read()
+        if blob[:4] != b"8BPS":
+            raise SystemExit("sitopt: ImageMagick did not write a PSD")
+        info = bytes(6) + (8).to_bytes(2, "big") + (3).to_bytes(2, "big") + \
+            bytes(6)                     # depth 8 at +6, mode 3 at +8
+        mb = os.path.join(work, "photo.bin")
+        open(mb, "wb").write(macbinary(PHOTO_NAME, "8BIM", "8BIM", blob,
+                                       one_resource("8BIM", 1000, info)))
+        out.append((mb, "%s, 8BIM/8BIM, %d B of PSD + an '8BIM' 1000 "
+                    "resource (mode 3)" % (PHOTO_NAME, len(blob))))
+    # And a Sound Designer II file, which is what `Sound 1` asks for:
+    # its COMP compares the same field against **'FSSD'** and then wants
+    # Get1Resource('INFO', 1000). The corpus's six sounds are 'sfil'
+    # suitcases and it declined one, correctly.
+    sd2 = os.path.join(work, "sd2.bin")
+    pcm = bytes((i * 7) % 256 for i in range(8192))
+    open(sd2, "wb").write(macbinary("Sound2", "FSSD", "Sd2a", pcm,
+                                    one_resource("INFO", 1000, bytes(32))))
+    out.append((sd2, "Sound2, FSSD/Sd2a, %d B + an 'INFO' 1000 resource"
+                % len(pcm)))
+    return out
+
+
+def add_modules(args):
+    """Add the three Optimizers the first install missed, IN PLACE.
+
+    `--install` rebuilds the volume from `System6.hfv` and would throw
+    away the registration, so anything added after `--personalize` is
+    added to the image rather than baked into a fresh one.
+    """
+    target = args.image or PAINTED
+    if not os.path.exists(target):
+        raise SystemExit("sitopt: no %s" % target)
+    work = tempfile.mkdtemp(prefix="sitopt-mod-")
+    try:
+        tree = payload(work)
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", target)
+            for i, rel in enumerate(("Sound 1", "Photoshop 1",
+                                     "Photoshop:JPEG Lossy")):
+                src = os.path.join(tree, "Optimizers", rel)
+                if not os.path.exists(src + ".rsrc"):
+                    raise SystemExit("sitopt: no %s in the payload" % rel)
+                mb = os.path.join(work, "m%d.bin" % i)
+                open(mb, "wb").write(macbinary(
+                    rel.replace(":", "/"), "SITe", "SIT!", b"",
+                    open(src + ".rsrc", "rb").read()))
+                dest = (VOL + ":System Folder:Optimizers:")
+                got = hfs(env, "hcopy", "-m", mb,
+                          dest.encode("mac_roman"))
+                if got.returncode != 0:
+                    raise SystemExit("sitopt: hcopy %s failed: %s"
+                                     % (rel, got.stderr))
+                print("sitopt: installed %s" % rel.replace(":", "/"))
+            out = subprocess.run(
+                ["hls", (VOL + ":System Folder:Optimizers:").encode()],
+                capture_output=True, env=env)
+            print("sitopt: Optimizers folder now: %s"
+                  % " ".join(out.stdout.decode("mac-roman",
+                                               "replace").split()))
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    return 0
+
+
+def phase_makemods(args):
+    """Sound 1, Photoshop 1 and JPEG Lossy, in one boot.
+
+    Same shape as --makepaint: put the subjects and a script on a copy
+    of the registered image, run it with ⌘E, read the archives back.
+    """
+    base = args.image or PAINTED
+    if not os.path.exists(base):
+        raise SystemExit("sitopt: no %s — --paint makes it" % base)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(WORK, "run-%s.hfv" % args.tag)
+    shutil.copyfile(base, img)
+    work = tempfile.mkdtemp(prefix="sitopt-mods-")
+    try:
+        items = mods_subjects(work)
+        for _p, note in items:
+            print("sitopt: subject %s" % note)
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(MODS_SCRIPT_NAME, "TEXT", "SIT!",
+                                       MODS_SCRIPT.encode("mac_roman")))
+        items.append((mb, "the script"))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            for p, _n in items:
+                got = hfs(env, "hcopy", "-m", p, (VOL + ":").encode())
+                if got.returncode != 0:
+                    raise SystemExit("sitopt: hcopy %s failed" % p)
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Mod")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("script-running", wait=args.script_wait)
+        s.shot("script-done", wait=25.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                for n in MODS_ARCHIVES + ["ModStatus.out", "Sound2",
+                                          PHOTO_NAME]:
+                    subprocess.run(["hcopy", "-m", (VOL + ":" + n).encode(),
+                                    os.path.join(outdir,
+                                                 n + ".bin").encode()],
+                                   capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    st = os.path.join(outdir, "ModStatus.out.bin")
+    if os.path.exists(st):
+        data, _r = forks(st)
+        print("=== ModStatus.out")
         for line in data.decode("mac-roman", "replace").split("\r"):
             if line.strip():
                 print("  " + line)

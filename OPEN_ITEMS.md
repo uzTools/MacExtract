@@ -264,37 +264,32 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: both rules measured, three modules untried
+## StuffIt 2.0's Optimizers: all five measured, no `DCMP` ever run
 
 **The floor is what makes this an item.** This unarchiver is for a 1986
-machine, and StuffIt Deluxe 2.0 is 1990–92 software from the same desks, so a
+machine, and StuffIt Deluxe 2.0 is 1990-92 software from the same desks, so a
 user of ours is more likely than anybody to hand it an archive stuffed with an
-Optimizer enabled — which no StuffIt since 3.x will open either.
+Optimizer enabled - which no StuffIt since 3.x will open either.
 
-**Where an archive names its module is read and confirmed against Aladdin's
-own output** (FORMATS.md, *Where an archive names the module*):
-`tools/vmac/sitopt.py` has StuffIt Deluxe 2.0.1 write the pair, and
-`tools/run_sitopt.py` grades this engine against what 2.0.1's own unstuffer
-gives back for them.
+**Where an archive names its module is read and confirmed on all five
+modules** (FORMATS.md, *What Aladdin's own output says*): every Optimizer
+that carries a `DCMP` writes its own resource id into byte 106 - 1, 2, 3, 4 -
+and `Text 1`, the only one that carries none, writes 255. This engine decodes
+255 and refuses the rest by name, which is the split Aladdin's own Engine
+makes. `tools/run_sitopt.py` grades eight archives 2.0.1 wrote.
 
-**Both branches of the rule are now measured**, on five archives 2.0.1
-wrote: `Text 1` (no `DCMP`) writes 255 and the entry decodes; `MacPaint 1`
-(`DCMP` 4) writes 4 and the entry is refused by name. Aladdin's own Engine
-makes the same split, which is what settles it rather than the reading.
-
-**What is open is three modules and a `DCMP`.** `Sound 1`, `Photoshop 1` and
-`Photoshop:JPEG Lossy` have never been run — the corpus has six `sfil` sounds
-and no Photoshop document — and no `DCMP` has ever been executed here, so
-*"the module would restore the original"* rests on the Engine's own advice to
-use the application. **Closed by:** a sound or Photoshop document through
-`sitopt.py --makepaint`'s route, and, for the `DCMP`, the `qemu-m68k`
-arrangement below.
+**What is open is that no `DCMP` has ever been executed here.** *"The module
+would restore the original"* is Aladdin's word - its Engine refuses such an
+entry and says to use the application - and not a measurement, so this engine
+refuses on the strength of somebody else's behaviour rather than on what the
+module does. **Closed by:** running one. The four `DCMP`s are
+position-independent 68k, and Aladdin's codecs already run on Linux here
+under `qemu-m68k` for two other formats (`tools/ssmodule/`,
+`tools/sdmodule/`); what is not known is the `COMP`/`DCMP` parameter block,
+of which the acceptance test is the part read so far (FORMATS.md).
 
 **And the encryptors, which the same harness can now reach.** 2.x could
 encrypt with `PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the
 built-in scheme that replaced all three; nothing here has ever seen an
 archive from any of them, and the application that writes one now runs
-(`sitopt.py`). **Decoding** an optimized fork is the other route: the four
-reversible modules' `DCMP`s are 68k code, and Aladdin's codecs already run on
-Linux here under `qemu-m68k` for two other formats (`tools/ssmodule/`,
-`tools/sdmodule/`). What is not known is the `COMP`/`DCMP` parameter block.
+(`tools/vmac/sitopt.py`).

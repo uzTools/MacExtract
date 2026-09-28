@@ -7,8 +7,8 @@ six header bytes taken out of the application's own code (FORMATS.md,
 *Where an archive names the module*). Until 2026-09-28 nothing graded
 that reading against an archive, because none existed here.
 
-`tools/vmac/sitopt.py` made five, over two boots, and this replays
-them:
+`tools/vmac/sitopt.py` made eight, over three boots, and this
+replays them:
 
   Plain.sit       the control — no Optimizer, the same subject
   Optimized.sit   `Text 1`, method 2
@@ -17,6 +17,9 @@ them:
   PlainPaint.sit  the control for the other kind of Optimizer
   OptPaint.sit    `MacPaint 1` over a document MacPaint 2.0 itself drew
   Painting.bin    that document, as MacPaint wrote it
+  OptSound.sit    `Sound 1`, over a Sound Designer II file
+  OptPhoto.sit    `Photoshop 1`, over a Photoshop document
+  OptJpeg.sit     `Photoshop/JPEG Lossy`, over the same document
 
 **The oracle is the writer.** An optimized entry's right answer is not
 the file that went in — `Text 1` turns leading spaces into tabs, strips
@@ -26,7 +29,7 @@ produces*, which is why `unstuffed.bin` is in the set. Grading this
 against the original subject would fail a correct engine, and grading
 it against our own output would pass a broken one.
 
-Five things are asserted, and each one has failed a version of this
+Six things are asserted, and each one has failed a version of this
 engine at some point today:
 
   1. the control extracts to the subject, both forks, byte for byte;
@@ -35,7 +38,15 @@ engine at some point today:
      says `rlen` 0, and an engine that invents one is wrong;
   4. the header bytes are what the reading says: `0x40` set on both
      method bytes, 106 and 108 both 255, and 46/47/107/109 zero;
-  5. **the other kind of Optimizer.** `MacPaint 1` carries a 'DCMP', so
+  5. **every module's id is its own.** All four Optimizers that carry
+     a 'DCMP' write their resource id into byte 106 — `Sound 1` 1,
+     `Photoshop 1` 2, `Photoshop/JPEG Lossy` 3, `MacPaint 1` 4 — and
+     each entry is refused with that module NAMED. `Text 1`, the one
+     with no 'DCMP', is the only 255. **JPEG Lossy is the case that
+     could have broken the rule and does not**: it is lossy, and 255
+     is what the application's Get Info pane prints as " lossy", but
+     it writes 3;
+  6. **the other kind of Optimizer.** `MacPaint 1` carries a 'DCMP', so
      something CAN undo it: it writes its own module id, 4, and the
      entry is refused by name. Aladdin's Engine refuses it too —
      *"Items that were encrypted or compressed with an optimizer or
@@ -49,9 +60,13 @@ What this CANNOT see:
 - **whether the module would restore the original.** Refusing is graded
   as agreement with Aladdin's Engine, not by running a 'DCMP'; nothing
   here has ever run one (OPEN_ITEMS.md).
-- **`Sound 1`, `Photoshop 1` or `Photoshop:JPEG Lossy`.** Two of the
-  five modules are exercised. The corpus has six 'sfil' sounds and no
-  Photoshop document at all.
+- **whether a real Photoshop or Sound Designer II document behaves the
+  same.** Those two subjects are part synthetic: the data fork of the
+  Photoshop one is a genuine PSD (ImageMagick wrote it, deark reads it
+  back), but its resource fork is built to the module's own acceptance
+  test, and the Sound Designer II file is 8 KB of generated samples. So
+  they show what a module does once it accepts a file, not that a real
+  document looks like this.
 - **anything at all on a fresh clone.** The specimens are not
   committed — they are an emulator's output, like `sitcrypt.py`'s — so
   this skips cleanly and says nothing when they are absent.
@@ -74,6 +89,7 @@ SPECIMENS = os.path.join(R.VMAC_HOME, "specimens", "sitopt")
 MADE = os.path.join(SPECIMENS, "make2")
 UNSTUFFED = os.path.join(SPECIMENS, "unstuff1", "unstuffed.bin")
 PAINT = os.path.join(SPECIMENS, "paintmake")
+MODS = os.path.join(SPECIMENS, "mods5")
 
 # The subject `sitopt.py` stuffed, repeated here rather than imported so
 # that this suite still grades if that harness is edited: what the
@@ -211,14 +227,40 @@ def main():
         else:
             print("run_sitopt: no paint specimens — the reversible "
                   "Optimizer is not graded (tools/vmac/sitopt.py --paint)")
+
+        # 5. the other three modules, each naming itself
+        mods = {"OptSound.sit.bin": ("Sound 1", 1, "Sound2"),
+                "OptPhoto.sit.bin": ("Photoshop 1", 2, "Photo"),
+                "OptJpeg.sit.bin": ("Photoshop:JPEG Lossy", 3, "Photo")}
+        if all(os.path.exists(os.path.join(MODS, n)) for n in mods):
+            for fn, (name, mid, entry) in sorted(mods.items()):
+                arc = os.path.join(MODS, fn)
+                h = header(arc)
+                if h is None or not (h[1] & 0x40):
+                    problems.append("%s: 0x40 is not set on the data "
+                                    "fork's method byte" % fn)
+                elif h[106] != mid:
+                    problems.append("%s: byte 106 is %d and `%s` is module "
+                                    "%d" % (fn, h[106], name, mid))
+                rc, msg = extract(args.macextract, arc,
+                                  os.path.join(work, fn))
+                if rc == 0:
+                    problems.append("%s extracted; `%s` carries a 'DCMP' "
+                                    "and this engine has none" % (fn, name))
+                elif name not in msg:
+                    problems.append("%s was refused without naming `%s`: %s"
+                                    % (fn, name, msg.strip()))
+        else:
+            print("run_sitopt: no Sound/Photoshop specimens — three "
+                  "modules are not graded (sitopt.py --makemods)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 5 archive(s) StuffIt Deluxe 2.0.1 wrote — both "
-          "kinds of Optimizer — graded against its own unstuffer and its "
-          "own Engine, %d problem(s)" % len(problems))
+    print("run_sitopt: 8 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
+          "Optimizers — graded against its own unstuffer and its own "
+          "Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0
 
 

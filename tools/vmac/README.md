@@ -2786,6 +2786,8 @@ Four things it will teach you if you drive another application here:
     tools/vmac/sitopt.py --add-paint    MacPaint 2.0 onto the same image
     tools/vmac/sitopt.py --paint        draw something and save it as PNTG
     tools/vmac/sitopt.py --makepaint    stuff it with `MacPaint 1` on/off
+    tools/vmac/sitopt.py --add-modules  the three Optimizers --install missed
+    tools/vmac/sitopt.py --makemods     Sound 1, Photoshop 1, JPEG Lossy
 
 **It installs by COPYING, not by running the installer.** The download is a
 StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
@@ -2846,6 +2848,28 @@ Optimizer off and on. **Click the icon to launch it**: type-select and ⌘O
 renamed the application to `Painting` on the first attempt, because nothing
 had launched and the Finder took the keystrokes.
 
+**The last three modules asked for documents, and said which.** Read out
+of each `COMP`: `Sound 1` compares the file's type against **`FSSD`** —
+Sound Designer II — and then wants an `INFO` 1000 resource; `Photoshop 1`
+compares against **`8BIM`**, Photoshop 1.0's own type rather than the later
+`8BPS`, and wants an `8BIM` 1000 resource of ten bytes or more whose word
+at +8 is a colour mode. A corpus `sfil` sound suitcase and an ImageMagick
+PSD were both declined, correctly, before that was read. `--makemods`
+builds subjects to those tests — the Photoshop one has a genuine PSD data
+fork and a resource fork made to satisfy the module — and all three then
+bite, writing 1, 2 and 3 into byte 106.
+
+**Three lessons from those runs, none of them about StuffIt.** The first
+attempt installed two of the five Optimizers and the application said so
+in the script's status file (*"Optimizer Not Found: Sound 1"*), which is
+what `Write Status To` is for. The module names go through the reversible
+`/`→`:` swap on the way out of the payload and have to go back: the
+Macintosh file is `Photoshop/JPEG Lossy`. And the resource forks this
+harness built were **unreadable** — the map was missing its attributes
+word, so `Get1Resource` returned NULL and the module declined a subject
+built for it; `spacesaver.resources()` parses what `one_resource()` writes
+now, which is the check that should have been there first.
+
 **`--unstuff` on the MacPaint archive is the other half of the answer.**
 Magic Menu refuses it — *"Items that were encrypted or compressed with an
 optimizer or compressor will be skipped. The Engine does not currently
@@ -2864,8 +2888,8 @@ Originals, no Optimizer, which is why the application had to run.
 
 What it CANNOT see:
 
-- **`Sound 1`, `Photoshop 1`, `Photoshop:JPEG Lossy`.** Two of the five
-  modules are exercised; the corpus has no document the other three take.
+- **whether a real Sound Designer II or Photoshop document behaves the
+  same.** Two subjects are built to the modules' own acceptance tests.
 - **whether a `DCMP` restores the original.** No module has ever been
   executed here; the refusal is graded as agreement with Aladdin's Engine.
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1` in

@@ -1036,7 +1036,7 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Five assertions over five archives 2.0.1 wrote, in two scripted runs:
+Six assertions over eight archives 2.0.1 wrote, in three scripted runs:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;
@@ -1047,7 +1047,11 @@ Five assertions over five archives 2.0.1 wrote, in two scripted runs:
    method bytes, 106 and 108 both 255, 46/47/107/109 zero;
 5. **the other kind of Optimizer** — `MacPaint 1`, over a document
    MacPaint 2.0 itself drew — records its own module id, 4, and is
-   REFUSED by name, while its control extracts byte for byte.
+   REFUSED by name, while its control extracts byte for byte;
+6. **and so do the other three.** `Sound 1` writes 1, `Photoshop 1` 2,
+   `Photoshop/JPEG Lossy` 3, each refused with that module named. JPEG
+   Lossy is the case that could have broken the rule — it is lossy, and
+   255 is what the application prints as *" lossy"* — and it writes 3.
 
 **Why refusing one and decoding the other is not a policy.** Aladdin's own
 Engine, asked to unstuff both, decoded the `Text 1` archive and refused the
@@ -1057,9 +1061,11 @@ instead."* The split this suite asserts is the format's.
 
 **What it cannot see.** Whether a `DCMP` really would restore the original:
 refusing is graded as agreement with the Engine, and nothing here has ever
-executed one of these modules. Three of the five Optimizers are also
-untried — the corpus has six `sfil` sounds and no Photoshop document. And
-it says nothing on a fresh clone: the specimens are emulator output and are
+executed one of these modules. Two subjects are also part synthetic —
+`Sound 1` wants a Sound Designer II file and `Photoshop 1` a Photoshop
+1.0-era one, and both were built to the acceptance test in the module's own
+`COMP` — so they show what a module does once it accepts a file rather than
+that a real document looks like that. And it says nothing on a fresh clone: the specimens are emulator output and are
 not committed, like `sitcrypt.py`'s, so the suite skips cleanly when they
 are absent.
 

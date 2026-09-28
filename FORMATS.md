@@ -1572,28 +1572,45 @@ application's Get Info pane special-cases 255 before it looks any module
 up, and 2.0.1's own unstuffer hands back the optimized bytes, 594 of them
 with no resource fork. So for 255 the archive's bytes are the file.
 
-**And for the other kind it does.** `MacPaint 1` carries a `DCMP`, and a
-document MacPaint 2.0 itself drew, stuffed with that Optimizer enabled,
-records **4 in bytes 106 and 108** — `MacPaint 1`'s resource id, which is
-what the reading said all along. Both method bytes read `62`, so **bit
-`0x20` is set as well as `0x40`**; it appeared on neither `Text 1` archive.
-One specimen of each, so that co-occurrence is an observation and the id
-is the reading.
+**And every other module writes its own id.** All four Optimizers that
+carry a `DCMP` were run, each over a document of the type it asks for, and
+each records its resource id in byte 106:
 
-**Aladdin's own Engine draws the same line this engine now draws.** Magic
-Menu unstuffed the `Text 1` archive without comment and refused the
-`MacPaint 1` one outright: *"Items that were encrypted or compressed with
-an optimizer or compressor will be skipped. The Engine does not currently
-support this. Please use StuffIt Deluxe instead."* So **255 → decode,
-anything else → refuse** is not this project's policy, it is the format's
-— and `unar` 1.10.8, which decodes both, is right about one of them.
+| Optimizer | `DCMP` | byte 106 | method byte | what it did to the fork |
+|---|---|---|---|---|
+| `Sound 1` | id 1 | **1** | `42` | 2,528 B → 146 |
+| `Photoshop 1` | id 2 | **2** | `42` | 10,495 B → 1,582 |
+| `Photoshop/JPEG Lossy` | id 3 | **3** | `40` | 10,495 B → 80 |
+| `MacPaint 1` | id 4 | **4** | `62` | 925 B → 477 |
+| `Text 1` | **none** | **255** | `42`, `40`, `45` | the sentinel |
 
-| Optimizer | `DCMP` | byte 106/108 | method bytes | Aladdin's Engine | this engine |
-|---|---|---|---|---|---|
-| `Text 1` | none | **255** | `42`, `40`, `45` | decodes it | decodes it |
-| `MacPaint 1` | id 4 | **4** | `62`, `62` | *"will be skipped"* | refuses, names it |
+**`JPEG Lossy` is the one that could have broken the rule, and does not.**
+It is lossy, and 255 is exactly what the application's Get Info pane
+prints as *" lossy"* — but it writes **3**. So 255 is not "lossy", it is
+"nothing can undo this", and `Text 1`, the only module with no `DCMP`, is
+the only module that writes it.
 
-`tools/run_sitopt.py` grades all five archives, the optimized ones against
+**Aladdin's own Engine draws the same line this engine draws.** Magic Menu
+unstuffed the `Text 1` archive without comment and refused the `MacPaint 1`
+one outright: *"Items that were encrypted or compressed with an optimizer
+or compressor will be skipped. The Engine does not currently support this.
+Please use StuffIt Deluxe instead."* So **255 → decode, anything else →
+refuse** is not this project's policy, it is the format's — and `unar`
+1.10.8, which decodes both, is right about one of them.
+
+**Bit `0x20` in the method byte is unexplained.** It is set on both of
+`MacPaint 1`'s forks and on none of the other four modules' — so it is not
+"an Optimizer ran" (that is `0x40`) and not "the module can undo it"
+(`Sound 1` and `Photoshop 1` can and do not set it). Nothing here depends
+on it: this engine keys on `0x40` and byte 106.
+
+**And byte 106 means nothing without `0x40`.** An archive stuffed while an
+Optimizer was merely ENABLED carries that optimizer's id in byte 106 with
+the flag clear and the fork untouched — measured, on the run where
+`Photoshop 1` declined a subject while `Sound 1` was still enabled and 106
+read 1 on an entry nothing had optimized.
+
+`tools/run_sitopt.py` grades all eight archives, the optimized ones against
 2.0.1's own unstuffed bytes rather than against the files that went in —
 which is the only definition of correct a preprocessor that undoes nothing
 has.
@@ -1621,12 +1638,21 @@ carries *"No optimizers are installed"* and *"Some items were encrypted or
 compressed with an optimizer that the StuffIt Engine does not currently
 support. They have been skipped."*
 
-**What is still missing is the other three modules, and a `DCMP` run.**
-`Sound 1`, `Photoshop 1` and `Photoshop:JPEG Lossy` are untried — the
-corpus has six `sfil` sounds and no Photoshop document — and nothing here
-has ever executed one of these modules, so *"a `DCMP` would restore the
-original"* is Aladdin's word (its Engine says to use the application) and
-not a measurement. OPEN_ITEMS.md, *StuffIt 2.0's Optimizers*.
+**What each module asks for, read out of its own `COMP`.** `Sound 1`
+compares the file's type against **`FSSD`** — Sound Designer II, not sounds
+in general — and then wants an `INFO` 1000 resource; it declined one of the
+corpus's `sfil` suitcases, correctly. `Photoshop 1` compares against
+**`8BIM`**, which is Photoshop 1.0's own type and not the later `8BPS`, and
+wants an `8BIM` 1000 resource of at least ten bytes whose word at +8 is a
+colour mode of 1 or 3..7. `MacPaint 1` keys on `PNTG`. Two subjects here are
+part synthetic because of that — the Photoshop one has a real PSD data fork
+and a resource fork built to the module's test — so they show what a module
+does once it accepts a file, not what a real document looks like.
+
+**What is still missing is a `DCMP` run.** Nothing here has ever executed
+one of these modules, so *"a `DCMP` would restore the original"* is
+Aladdin's word — its Engine says to use the application — and not a
+measurement. OPEN_ITEMS.md, *StuffIt 2.0's Optimizers*.
 
 **One question this opens about ENCRYPTION.** `src/fmt_sit.c` implements one
 scheme (*Encryption*, below), and the encryptor id says which an entry wanted.

@@ -310,6 +310,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
 - 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
 - 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
+- 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
 
 ---
 
@@ -19355,3 +19356,56 @@ output, and the reversible case came out of MacPaint's. **Where a format's
 own software is reachable, it answers questions about that format better
 than any reasoning about it** — including questions about a second format it
 happens to write.
+
+## 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
+
+**Claim.** All five 2.0 Optimizers write their own module id into byte 106,
+except the one that cannot be undone. Getting the last three to say so took
+three runs, and two of those runs failed for reasons that had nothing to do
+with StuffIt.
+
+**Evidence.** `Sound 1` → 1, `Photoshop 1` → 2, `Photoshop/JPEG Lossy` → 3,
+`MacPaint 1` → 4, `Text 1` → 255 (FORMATS.md, *What Aladdin's own output
+says*). `tools/run_sitopt.py` grades eight archives.
+
+**Consequence.** The reading is closed; what remains open is that no `DCMP`
+has been executed here. Four things worth keeping, and the last is the one
+that cost the most.
+
+**"It declined" is a question, not an answer, and the module can be asked.**
+A sound suitcase out of the corpus and a Photoshop document written by
+ImageMagick were both refused, twice, and the temptation each time was to
+vary the subject and try again — bigger, RGB, more channels. What ended it
+was disassembling forty instructions of each `COMP`: `Sound 1` compares the
+file's type against **`FSSD`**, Sound Designer II, so it is not a sound
+optimizer at all in the general sense; `Photoshop 1` compares against
+**`8BIM`**, which is Photoshop 1.0's type and not the `8BPS` every modern
+writer produces. **Two failed guesses cost more than the reading would
+have.**
+
+**A negative from a program is worth reading in its own words.** The first
+run of all three printed *"* * * Optimizer Not Found: Sound 1"* into the
+script's status file, because `--install` had copied two of the five
+modules. That is not a subtle failure — but it is only visible because
+every script here begins with `Write Status To`, and the alternative would
+have been three archives that looked exactly like a module declining.
+
+**The 255 sentinel survived the test that could have killed it.**
+`Photoshop/JPEG Lossy` is lossy, and 255 is precisely what the
+application's Get Info pane prints as *" lossy"*; had it written 255 while
+carrying a `DCMP`, this engine would be decoding entries whose bytes
+nobody can check. It writes **3**. So 255 means *nothing can undo this*,
+and `Text 1` — the only module with no `DCMP` at all — is the only module
+that writes it. **The case worth testing first is the one that would make
+you wrong**, and it was identified from the module inventory before any of
+these runs.
+
+**And the last refusal was ours.** `Photoshop 1` went on declining a
+subject built specifically to its own test, and the reason was that the
+resource fork this harness writes had never been read back by anything:
+its map was missing the two-byte attributes field, so `typeListOffset`
+sat two bytes early and `Get1Resource` returned NULL. The module was right
+every time. **A generator whose output nothing parses is not a generator**,
+and the check is one line — `spacesaver.resources()` is in this tree and
+reads real Macintosh forks. It now parses what `one_resource()` writes
+before either goes near an emulator.
