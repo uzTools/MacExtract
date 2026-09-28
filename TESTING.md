@@ -1026,6 +1026,35 @@ three sets rather than six files, and this harness grades file by file.
 **It can fail**: 25 mismatches against the build before the `DDA2` `0x1000`
 fix — five archives, ten self-extractors, and the forks under them.
 
+## The optimized StuffIt archives (`tools/run_sitopt.py`, in `ci.sh`)
+
+**The writer is the oracle.** StuffIt Deluxe 2.0 could run an *Optimizer*
+over a fork before compressing it, and for `Text 1` — leading spaces to
+tabs, trailing ones stripped, the resource fork deleted — **nothing undoes
+it**. So the right answer for such an entry is not the file that went in;
+it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
+reference is `unstuffed.bin`, the output of that application unstuffing its
+own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
+
+Four assertions over three archives 2.0.1 wrote in one scripted run:
+
+1. the control — same subject, no Optimizer — extracts to the subject,
+   both forks, byte for byte;
+2. the two optimized entries extract to **2.0.1's own unstuffed bytes**;
+3. neither writes a resource fork, because `Text 1` deleted it and the
+   header says `rlen` 0;
+4. the header bytes are what `src/fmt_sit.c` reads: `0x40` set on both
+   method bytes, 106 and 108 both 255, 46/47/107/109 zero.
+
+**What it cannot see.** An Optimizer that CAN be undone. All three
+specimens are `Text 1`, which writes the id 255 — the "nothing to restore"
+value, which this engine decodes — and the other branch, where a real
+module id is refused, is graded only by `tests/unit_formats.c` on entries
+built to the reading. One MacPaint, Sound or Photoshop document would close
+that (MANUAL_TESTS.md §8). It also says nothing on a fresh clone: the
+specimens are emulator output and are not committed, like `sitcrypt.py`'s,
+so the suite skips cleanly when they are absent.
+
 ## The forks `unar` refuses (`tools/run_ddforks.py`, on demand)
 
 `unar` 1.10.8 fails on 11 of the 33 DiskDoubler DDn forks in

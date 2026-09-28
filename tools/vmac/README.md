@@ -2772,16 +2772,17 @@ Four things it will teach you if you drive another application here:
   stops changing rather than counting, because a fixed count either leaves
   a dialog up or types Return into the catalog window afterwards.
 
-### StuffIt Deluxe 2.0.1, and the two walls in front of an Optimizer — `sitopt.py`
+### StuffIt Deluxe 2.0.1 writes an optimized archive — `sitopt.py`
 
     tools/vmac/sitopt.py --setup        fetch the two 2.0.1 floppies
     tools/vmac/sitopt.py --install      build the System 6 boot volume
-    tools/vmac/sitopt.py --personalize  meet the licence dialog
+    tools/vmac/sitopt.py --personalize  register it, and KEEP that image
+    tools/vmac/sitopt.py --make --force --no-expert   run the script
+    tools/vmac/sitopt.py --unstuff      have 2.0.1 unstuff its own archive
+    tools/vmac/sitopt.py --show <path>  any archive's entry headers
     tools/vmac/sitopt.py --magic        the Finder with Magic Menu loaded
-    tools/vmac/sitopt.py --stuff        stuff a file, read the archive back
-    tools/vmac/sitopt.py --options      try the `StuffIt Options ▸` submenu
-    tools/vmac/sitopt.py --install351    the 3.5.1 image, 2.0's modules added
-    tools/vmac/sitopt.py --map351        launch 3.5.1 and peek its menus
+    tools/vmac/sitopt.py --stuff        Magic Menu's ⌘S, read back
+    tools/vmac/sitopt.py --options      the `StuffIt Options ▸` submenu
 
 **It installs by COPYING, not by running the installer.** The download is a
 StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
@@ -2789,41 +2790,63 @@ whose DATA fork is itself a StuffIt archive, and `macextract` unwraps the lot
 — so the application, `Text 1`, `PassLock`, the Engine, Magic Menu and
 Aladdin's own Preferences file go onto a copy of `System6.hfv` from Linux.
 Where each belongs is not guessed: `UnInstall Dlx Files Script`, on disk 2 of
-the box, erases `{system}Optimizers:Text 1` and the rest by name.
+the box, erases `{system}Optimizers:Text 1` and the rest by name. Without
+the Preferences file the application stops at a Standard File dialog before
+it draws a window.
 
-**Neither StuffIt Deluxe application runs on this machine.** 2.0.1 launches
-and asks to be personalized: a name, a **signature drawn in a box** — it
-refuses OK without one — and a serial number it **checks**. Every code
-published on the Macintosh Garden page the software comes from is refused,
-one boot, six codes. 3.5.1 does not launch at all (three runs, one a
-control). FORMATS.md and MANUAL_TESTS.md §8 have what that blocks.
+**Registration, and where the code comes from.** 2.0.1 wants a name, a
+**signature drawn in a box** — it will not take OK without one — and a
+serial. The code is on the page the download itself is on,
+`macintoshgarden.org/apps/stuffit-deluxe-2`: *"A nnnnn (where 'n' = any
+number)"*. It is **not** `/apps/stuffit-deluxe`, whose codes `spacesaver.py`
+carries for 3.0.7 and 5.x; six of those were tried first and refused, and a
+registration wall was written into five files before the maintainer asked
+which page (BLOCKERS.md, withdrawn claims). `--personalize` keeps the
+registered image, because the application writes the personalization into
+its own resource fork — **do not re-run `--install` afterwards**, which
+rebuilds the volume from `System6.hfv` and loses it.
 
-**Magic Menu does run, and it is the half that works.** Loose in the System
-Folder it loads with "Help…" and "About Magic Menu™…" and nothing else; with
-`StuffIt Deluxe Extension` in `{system}Extensions:` as well, the Finder gains
-`Stuff File ⌘S`, `UnStuff File ⌘U` and `StuffIt Options ▸`. ⌘S shows **no
-dialog** — it stuffs the selection and the `.sit` appears in the window.
-`--stuff` does that, shuts down, reads the archive off and prints its entry
-header; `specimens/sitopt/stuff2/Subject.sit.bin` is the first archive of
-known 2.0.1 provenance this project has.
+**The run is a SCRIPT, not a sequence of clicks.** StuffIt Deluxe 2.0 has its
+own scripting language — vocabulary in the application's STR# 257, shapes in
+the payload's `Sample Scripts` — and `Scripts ▸ Execute Script…` (**⌘E**, not
+the menu item: at y=20 the item never highlights) runs a TEXT/`SIT!` file of
+it. `Write Status To` makes the application report what it did, and that
+status file comes back with the run:
+
+    Creating new archive: Macintosh:Optimized.sit
+    Stuffing items matching: Macintosh:Subject
+            (stuffing file: Subject)
+
+So the archive is written by commands whose spelling is Aladdin's, the
+control and the optimized pair come from one boot, and a syntax error says
+so instead of vanishing.
+
+**Read the image the emulator WROTE.** Mini vMac boots a copy in the
+session's temp directory, so mounting the image you handed it reports every
+archive missing from a run that made all three.
+
+**`--unstuff` is the oracle.** It boots the image `--make` wrote, deletes the
+original subject so what comes back cannot be it, and has Magic Menu unstuff
+`Optimized.sit`. For `Text 1` that gives the OPTIMIZED bytes — 594 of them,
+no resource fork — which is what makes "correct" definable for a
+preprocessor that undoes nothing, and what `tools/run_sitopt.py` grades
+against.
 
 **A hierarchical submenu DOES open here, which the note below says it does
 not.** `--options` pulls `Magic ▸ StuffIt Options ▸` down ten pixels at a
-time: the parent item highlights and the submenu draws (to the LEFT, because
-the parent is near the right edge) — `specimens/sitopt/options1/04-options-item.png`.
-That is System 6 and Magic Menu 2.0; the measured failure is System 7's
-Translate menu, and it stands. Whether an item in this one can be SELECTED is
-still untested, because there was nothing in it worth selecting: compression
-method, and Leave/Delete Originals. **No Optimizer.**
+time: the parent highlights and the submenu draws, to the LEFT because the
+parent is near the right edge. That is System 6 and Magic Menu 2.0; the
+measured failure is System 7's Translate menu and it stands. There was
+nothing in this one worth selecting — compression method, Leave/Delete
+Originals, no Optimizer, which is why the application had to run.
 
 What it CANNOT see:
 
-- **whether byte 106 really holds the module id.** That needs an archive an
-  Optimizer wrote, and this harness cannot make one.
+- **a reversible Optimizer.** Every specimen is `Text 1`; nothing here is a
+  MacPaint, Sound or Photoshop document (MANUAL_TESTS.md §8).
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1` in
-  both of the places 3.5 might look, and the application it would show up in
-  does not launch.
-- **anything about the 512 KB machine.** It boots `mv-4M` throughout.
+  both places 3.5 might look, and that application does not launch here.
+- **the 512 KB machine.** It boots `mv-4M` throughout.
 
 ### Making an encrypted StuffIt archive — `sitcrypt.py`
 

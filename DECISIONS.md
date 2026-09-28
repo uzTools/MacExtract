@@ -308,6 +308,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
 - 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
 - 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
+- 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
 
 ---
 
@@ -19267,3 +19268,54 @@ measured failure is real and is System 7's Translate menu; the sentence had
 generalised it to the Menu Manager. **A trap written from one measurement
 should name the thing it was measured on**, or the next session skips a route
 that works.
+
+## 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
+
+**Claim.** StuffIt Deluxe 2.0.1 does not check a serial number this project
+cannot supply, and the optimized specimen was never out of reach. Six codes
+were tried from the wrong version's page; the right one is printed on the
+page the file itself comes from.
+
+**Evidence.** `macintoshgarden.org/apps/stuffit-deluxe-2` — not
+`/apps/stuffit-deluxe`, which is where `spacesaver.py` gets 3.0.7's and
+5.x's codes and where these two downloads are not — says of this installer
+set: *"Requires a name and serial activation: A nnnnn (where 'n' = any
+number, for example: A 12345)"*, and offers a second build that is *"already
+pre-registered"*. `A 12345` was accepted first try.
+
+**Consequence.** Three archives written by 2.0.1 with `Text 1` enabled,
+graded by `tools/run_sitopt.py` against 2.0.1's own unstuffer, and an engine
+rule that is now measured rather than reasoned. Three lessons, and the first
+is not about StuffIt.
+
+**A provenance line is a claim about a URL, and the only test is to open
+it.** The codes were already in this repository with a citation attached, so
+reusing them read as reuse rather than as an assertion — and the citation
+was to a page that does not host the file I was using it for. Between
+noticing the refusal and being asked the question, that mistake had been
+written into five files and a commit message as *"every code published on
+the page the software comes from"*, a sentence that is precise, confident
+and false in both halves. **The cheapest disproof of a citation is
+`curl`**; what stopped it being run is that the claim did not feel like
+mine. This file already names the mechanism — *a limitation you inherited
+from the reference rather than measured* — and the new part is that an
+inherited PROVENANCE is the same shape.
+
+**"It refused six codes" is a measurement of the codes, not of the
+software.** The run that produced the wall was correct and its conclusion
+was not: nothing in it tested whether 2.0.1 accepts a valid serial, only
+whether it accepts three versions' worth of other ones. **A negative result
+is about the inputs that were tried**, and the inputs were chosen by a list
+I had not checked was for this version.
+
+**And the archive corrected the reading it was meant to confirm.** The
+reading said byte 106 holds the Optimizer module's id; `Text 1` is module
+5 and the byte reads **255**. 255 is the value for an Optimizer that cannot
+be undone — `Text 1` has no `DCMP`, the application's Get Info pane
+special-cases 255 before it looks anything up, and 2.0.1's own unstuffer
+hands back the optimized bytes — so the engine now DECODES those entries
+and refuses only the ids a module could restore. **This is the whole reason
+a specimen was worth six hours**: the flag, the two offsets and the class
+rule were all right, and the one part that a disassembly could not settle
+was what the writer actually puts there. A reading tells you where to look;
+only the writer tells you what it wrote.

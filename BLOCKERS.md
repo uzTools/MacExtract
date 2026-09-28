@@ -1608,19 +1608,37 @@ a harness can click is not the same list.
   header question needed one, when the program that WRITES the header
   is a reference implementation under rule #1 and was already in hand.
 
+- **"2.0.1 checks its serial number, so the optimized specimen needs a
+  person with a licensed copy."** Written into FORMATS.md,
+  OPEN_ITEMS.md, MANUAL_TESTS.md §8, BLOCKERS.md and a commit message,
+  and withdrawn **forty minutes later, by the maintainer asking one
+  question**: *macintoshgarden.org/apps/stuffit-deluxe doesn't contain
+  2.0, where did you get it?* It does not. The 2.0.1 downloads are on
+  **`/apps/stuffit-deluxe-2`**, a different page, which states the
+  scheme for this version in as many words — *"Requires a name and
+  serial activation: A nnnnn (where 'n' = any number, for example: A
+  12345)"* — and also offers a build that is *"already
+  pre-registered"*. `A 12345` was accepted on the first try and the
+  application came up in Expert menus. The six codes tried before it
+  were `spacesaver.py`'s, which are 3.0.7's and 5.x's, from the page
+  that does not host this file. **Cost: three emulator runs, a
+  registration wall invented out of the wrong page's codes, and a
+  manual-test item filed for something a shell command could do** —
+  all of it published before the question was asked. **Why it
+  survived:** the codes were already in the repository with a citation
+  attached, so reusing them felt like reuse rather than a claim; what
+  was never checked is that the citation is to the page the FILE comes
+  from. **A provenance line is a claim about a URL, and the way to test
+  it is to open the URL.**
+
 - **"The route to an optimized specimen is an emulator session on the
   machine every harness here already runs — Deluxe 2.0.1 installs on a
-  68000 under System 6."** FORMATS.md and OPEN_ITEMS.md, withdrawn
-  2026-09-28, the day after it was written. It installs and it launches;
-  it then asks for a **serial number and checks it**, and every code
-  published on the page the software is downloaded from is refused
-  (`specimens/sitopt/personalize/`). 2.0.1 joins StuffIt Deluxe 3.5.1
-  and 4.0 at the same wall. **Cost: six emulator runs to find out**, and
-  the item now needs a person with a licensed copy (MANUAL_TESTS.md §8)
-  rather than a boot. **Why it survived:** "installs on a 68000 under
-  System 6" was true, and nobody had asked the next question —
-  *installing is not running*, and this box is 1990 commercial software
-  whose whole first dialog is a licence.
+  68000 under System 6."** FORMATS.md and OPEN_ITEMS.md, **restored**
+  2026-09-28 having been withdrawn the same day. The withdrawal was the
+  wrong-page error above; with the published serial the route works and
+  **three optimized archives now exist** (`specimens/sitopt/make2/`).
+  What it cost is recorded in the entry above, and the original claim
+  was right all along.
 
 - **"`sitcrypt.py` drives StuffIt Deluxe 3.5.1."** Its own docstring
   since 2026-08-23, and tools/vmac/README.md reads the same way,

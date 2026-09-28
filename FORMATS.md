@@ -1549,7 +1549,42 @@ five `104..109` "exceptions" counted before this reading are two
 **version-1** archives with stale bytes and ordinary methods; there is
 nothing left to explain.
 
-**So an optimized entry is refused per entry and named**, since 2026-09-28:
+### What Aladdin's own output says — measured 2026-09-28
+
+**The reading is confirmed, and one line of it was wrong.** StuffIt Deluxe
+2.0.1, driven by `tools/vmac/sitopt.py`, stuffed one text subject three
+times — once with no Optimizer and twice with `Text 1` enabled, at two
+methods. Against the control, the optimized entries differ in exactly the
+bytes this section names and in nothing else that is not a length or a CRC:
+
+| | control | `Text 1` |
+|---|---|---|
+| method byte, data fork | `02` | **`42`** — `0x40` set |
+| method byte, rsrc fork | `02` | **`40`** — `0x40` set, method 0 |
+| **106** / **108** | 0 / 0 | **255 / 255** |
+| 46, 47, 107, 109 | 0 | 0 |
+| rsrc length | 338 | **0** — `Text 1` deleted it |
+
+**Byte 106 does not hold `Text 1`'s resource id.** It holds **255**, and
+`Text 1` is module 5. 255 is the value for an Optimizer that CANNOT BE
+UNDONE: `Text 1` has no `DCMP`, the application's Get Info pane
+special-cases 255 before it looks any module up, and — measured — 2.0.1's
+own unstuffer hands back the optimized bytes, 594 of them with no resource
+fork. So for 255 the archive's bytes are the file, and refusing the entry
+would withhold the only thing that exists. `tools/run_sitopt.py` grades this
+engine against those 594 bytes rather than against the subject that went in,
+which is the only definition of correct an irreversible preprocessor has;
+`unar` 1.10.8 produces them too and calls it a success, which for **this**
+id is right.
+
+**Whether a REVERSIBLE Optimizer writes its id is still unread.** `Sound 1`,
+`Photoshop 1`, `Photoshop:JPEG Lossy` and `MacPaint 1` all carry a `DCMP`;
+none has been run, because nothing here has a document of the types they
+take. Refusing a non-255 id is therefore graded only against entries built
+to the reading (MANUAL_TESTS.md §8).
+
+**So an optimized entry is refused per entry and named**, since 2026-09-28,
+**unless its id is 255**:
 `UNC_ERR_MODULE`, with `UncEntryInfo.module_kind`/`module_id` set in list mode
 too, and the CLI turning the pair into Aladdin's name — the names are the
 host's rather than the engine's, because on the 68000 target a table of them
@@ -1571,24 +1606,10 @@ carries *"No optimizers are installed"* and *"Some items were encrypted or
 compressed with an optimizer that the StuffIt Engine does not currently
 support. They have been skipped."*
 
-**What is still missing is an archive, and the emulator cannot write one.**
-No specimen exists here, so the refusal is graded against entries built to
-this reading in `tests/unit_formats.c` — which cannot tell that the reading
-is right, only that the refusal fires and discriminates (removing it makes
-the same test fail with the optimized bytes written). `tools/vmac/sitopt.py`
-went after one on 2026-09-28 and found two walls: **2.0.1 checks its serial
-number**, and the only stuffer that runs without one — 2.0's Magic Menu —
-cannot reach an Optimizer. MANUAL_TESTS.md §8 is the route; DECISIONS.md
-2026-09-28, *the two walls between here and one archive*, is what each wall
-cost and what it taught.
-
-**One thing that run did settle.** The first archive of known 2.0.1
-provenance is here: `specimens/sitopt/stuff2/Subject.sit.bin`, stuffed by
-2.0.1's own Engine through Magic Menu from a subject this project wrote.
-Method 2 on both forks, and **bytes 46, 47 and 104..109 are all zero** —
-which is what the reading says a fork that went through no module looks
-like, from the writer itself rather than from a 1.x archive's leftovers. Both
-forks come back byte-exact through `macextract`.
+**What is still missing is a REVERSIBLE Optimizer's archive.** The three
+`Text 1` specimens above are in hand and graded; what no run has produced is
+an entry whose id is a module with a `DCMP`, which is the case this engine
+refuses. MANUAL_TESTS.md §8 is the route.
 
 **One question this opens about ENCRYPTION.** `src/fmt_sit.c` implements one
 scheme (*Encryption*, below), and the encryptor id says which an entry wanted.
@@ -2563,7 +2584,7 @@ engine later the same day.
 |---|---|---|---|---|---|
 | **eager — SHIPPED** | (default) | **52,972 B** | 18,964 B | **64,512 B** | **211,200 B** |
 | lazy | `UNC_OVL_LAZY=1` | 51,596 B | 19,060 B | 63,104 B | 209,792 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 151,432 B | 37,768 B | 183,296 B | 186,624 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 151,492 B | 37,772 B | 183,424 B | 186,752 B |
 
 **All three re-measured 2026-09-27**, when the AppleLink `.pkg` probe was
 removed: eager `CODE` −472 B and A5 −24 B, lazy the same, the control −472 and
@@ -2612,11 +2633,11 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **117,264 B** since 2026-09-28
+measured 2026-09-27. The shipped pair is **117,328 B** since 2026-09-28
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **143,280 B** — the fourteen images sum to 143,100 B, so its
+The bundle is **143,328 B** — the fourteen images sum to 143,148 B, so its
 index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
 bytes of padding to 4, which accounts for the whole difference (measured
 2026-09-26, off the raw bundle the build now writes for
@@ -2628,15 +2649,15 @@ is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 64,512 B `MacExtract.code.bin` and not the download.
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
-read at launch by the Segment Loader — 183,296 B — and the shipped build
-reads 64,512 B of `CODE` plus the 143,280 B bundle, which is 207,792 B: the
-same read redistributed plus **24,496 B** (DECISIONS.md 2026-09-25, *the
+read at launch by the Segment Loader — 183,424 B — and the shipped build
+reads 64,512 B of `CODE` plus the 143,328 B bundle, which is 207,840 B: the
+same read redistributed plus **24,416 B** (DECISIONS.md 2026-09-25, *the
 overlay launch read was counted as a cost twice*). The download grows by
-24,576 B over the same pair, 211,200 against 186,624, so the read delta and
-the download delta are two numbers **80 B apart** and not one number — and a
+24,448 B over the same pair, 211,200 against 186,752, so the read delta and
+the download delta are two numbers **32 B apart** and not one number — and a
 MacBinary download is quantised to 128 B a fork, so a pair this close is
 inside the padding and needs no further account. All six figures re-taken
-2026-09-28; the pair was 32 B apart at the 2026-09-26 sizes. Both figures read 512 B apart
+2026-09-28. Both figures read 512 B apart
 until 2026-09-26, from the bundle's resource fork standing in for the bundle
 (DECISIONS.md 2026-09-26, *the fork that was mistaken for its contents*).
 
@@ -2690,7 +2711,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 117,264 B of `CODE` and A5 the shipped build does not carry
+which is the 117,328 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -2725,7 +2746,7 @@ budget per format, and one per layer*).
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 143,280 B held against 117,264 B saved. It costs nothing on the tiers
+it — 143,328 B held against 117,328 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -2782,7 +2803,7 @@ figure is `tools/code_map.py`'s, below.
 The application ships as **211,200 B** of MacBinary (`dist/MacExtract.bin`,
 v0.35.0), and since 2026-09-25 that is no longer all resident: **64,512 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **143,280 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **143,328 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside

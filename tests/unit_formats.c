@@ -858,6 +858,12 @@ static void test_sit(void)
             { 0x41, 106, 99, UNC_MODULE_OPTIMIZER  },
             { 0x07,  46,  1, UNC_MODULE_COMPRESSOR },
         };
+        /* 255 is NOT one of them: it is the id StuffIt Deluxe 2.0.1
+         * writes for an Optimizer nothing can undo, and such an entry
+         * decodes — 2.0.1's own unstuffer hands back exactly these
+         * bytes (tools/run_sitopt.py grades that against three archives
+         * it wrote). The refusal above is for the ids a 'DCMP' would
+         * restore. */
 
         for (i = 0; i < (int)(sizeof cases / sizeof cases[0]); i++) {
             mlen = sit_synth(mod, "opt", 1, comp, sizeof comp,
@@ -889,6 +895,24 @@ static void test_sit(void)
         CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
         CHECK(cap.info[0].module_kind == UNC_MODULE_NONE);
         CHECK(cap.dlen[0] == sizeof plain);
+
+        /* Optimizer id 255: decoded, not refused, and the fields still
+         * say what happened so a host can report it. */
+        mlen = sit_synth(mod, "lossy", 1, comp, sizeof comp,
+                         plain, sizeof plain);
+        mod[22 + 1] = 0x41;
+        mod[22 + 106] = 255;
+        crc = unc_crc16_arc(0, mod + 22, 110);
+        mod[22 + 110] = (uint8_t)(crc >> 8);
+        mod[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, mod, mlen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].module_kind == UNC_MODULE_OPTIMIZER);
+        CHECK(cap.info[0].module_id == 255);
+        CHECK(cap.dlen[0] == sizeof plain);
+        CHECK(memcmp(cap.data[0], plain, sizeof plain) == 0);
 
         /* An encrypted fork names its encryptor too, and still fails as
          * encrypted — that code says something this one does not. The

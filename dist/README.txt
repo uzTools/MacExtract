@@ -137,14 +137,15 @@ worth reporting -- most of the methods here were added because somebody
 sent one -- and the Linux version names the method for you, which is the
 part that makes a report worth sending.
 
-One kind of StuffIt file nothing can open, and it is worth knowing why.
-StuffIt Deluxe 2.0, in 1990, could hand a file to an add-on called an
-Optimizer before compressing it -- a separate little file you installed,
-which trimmed paint documents or text. Undoing that needs the same
-add-on, so not even StuffIt 3 or StuffIt Expander will open such an
-entry. MacExtract says that is what the file wants rather than calling
-the archive damaged, the rest of the archive still comes out, and the
-Linux version names which add-on it was.
+One kind of StuffIt file is worth knowing about. StuffIt Deluxe 2.0, in
+1990, could hand a file to an add-on called an Optimizer before
+compressing it -- a separate little file you installed, which trimmed
+text or paint documents. Where the add-on only tidied and could not put
+anything back, as the text one did, the file comes out here exactly as
+StuffIt Deluxe itself hands it back, tidied. Where the add-on COULD have
+restored what it took out, MacExtract skips that entry and says so,
+rather than giving you a file that is quietly not the one that went in;
+only StuffIt Deluxe with that same add-on will open those.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is

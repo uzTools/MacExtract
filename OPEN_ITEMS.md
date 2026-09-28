@@ -264,41 +264,33 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: named and refused, never seen
+## StuffIt 2.0's Optimizers: confirmed on the irreversible one, not the other
 
 **The floor is what makes this an item.** This unarchiver is for a 1986
 machine, and StuffIt Deluxe 2.0 is 1990–92 software from the same desks, so a
 user of ours is more likely than anybody to hand it an archive stuffed with an
 Optimizer enabled — which no StuffIt since 3.x will open either.
 
-**Where an archive names its module is read, and the reader acts on it**
-(FORMATS.md, *Where an archive names the module*): an optimized or externally
-compressed fork fails `UNC_ERR_MODULE` per entry, naming the module. Nothing
-is left to identify in the header.
+**Where an archive names its module is read and confirmed against Aladdin's
+own output** (FORMATS.md, *Where an archive names the module*):
+`tools/vmac/sitopt.py` has StuffIt Deluxe 2.0.1 write the pair, and
+`tools/run_sitopt.py` grades this engine against what 2.0.1's own unstuffer
+gives back for them.
 
-**What is missing is one archive.** No entry with any of these markers exists
-in the corpus or anywhere on this machine, so the refusal is graded against
-entries built to the reading, and three things stay untested: that Aladdin
-writes the header this way, that an optimized entry then refuses cleanly
-end to end, and whether a 2.x entry encrypted by one of the four encryptor
-modules decodes at all — `src/fmt_sit.c` implements the one scheme that
-encryptor id 4 means.
+**What is open is the other branch of one rule.** `Text 1` writes the id
+**255** — nothing can undo it, so the entry decodes, and that is the case the
+specimens cover. An Optimizer that CAN be undone should write its module's id
+instead, and such an entry is refused; no archive here has one, because
+nothing on this machine is a MacPaint, Sound or Photoshop document to hand to
+the four modules that carry a `DCMP`. **Closed by:** one archive from any of
+them — `sitopt.py --make` writes it once there is a subject of the right type
+(MANUAL_TESTS.md §8).
 
-**Closed by:** a specimen, and **the emulator cannot write one** —
-MANUAL_TESTS.md §8 is the route now. `tools/vmac/sitopt.py` installs 2.0.1 on
-System 6 by copying the installer's payload, and the application launches and
-then asks for a serial number and checks it; every code published on the page
-the software comes from is refused. 2.0's **Magic Menu** runs without one and
-stuffs — the first archive of known 2.0.1 provenance came off it, and this
-engine reads both its forks byte-exact — but its `StuffIt Options ▸` submenu
-offers compression method and Leave/Delete Originals and no Optimizer. The
-switch is in the application (DECISIONS.md 2026-09-28, *the two walls between
-here and one archive*).
-
-**Decoding one is a separate route, and it is open.** A `Text 1` entry cannot
-be restored by anybody — its module has no `DCMP` because the bytes are gone —
-but `Sound 1`, `Photoshop 1`, `Photoshop:JPEG Lossy` and `MacPaint 1` all
-carry one, and Aladdin's 68k codecs already run on Linux here under
+**Two more the same harness can now reach.** 2.x could encrypt with
+`PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the built-in
+scheme that replaced all three; nothing here has ever seen an archive from
+any of them, and the application that writes one now runs. And **decoding**
+an optimized fork is a separate route: the four reversible modules' `DCMP`s
+are 68k code, and Aladdin's codecs already run on Linux here under
 `qemu-m68k` for two other formats (`tools/ssmodule/`, `tools/sdmodule/`).
-What is not known is the `COMP`/`DCMP` parameter block, and there is no
-specimen to grade a `DCMP` against either way.
+What is not known is the `COMP`/`DCMP` parameter block.

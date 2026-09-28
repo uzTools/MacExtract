@@ -1,58 +1,60 @@
 #!/usr/bin/env python3
-"""sitopt.py — how far a machine with no licence gets towards an optimized archive.
+"""sitopt.py — have StuffIt Deluxe 2.0.1 write an OPTIMIZED archive.
 
 StuffIt Deluxe 2.0 could hand a fork to an external module before
 compressing it — an Optimizer, a Compressor or an Encryptor, each a file
 of type 'SITe' in a folder of the System Folder. Where an archive RECORDS
-which module it used is read out of the application itself (FORMATS.md,
-*Where an archive names the module*), and this engine refuses such an
-entry per entry. What has never existed here is one of those archives, so
-the refusal is graded against entries built to the reading.
-
-**This went after one and did not get it.** What it establishes instead
-is exactly where the wall is, so that MANUAL_TESTS.md §8 can ask somebody
-with a licensed copy for two minutes rather than for a guess:
-
-- 2.0.1 **installs by copying**: the download is a StuffIt archive of two
-  DiskCopy images, disk 1 holds an installer whose DATA fork is another
-  StuffIt archive, and `macextract` unwraps the lot. Where each piece
-  goes is Aladdin's own `UnInstall Dlx Files Script`, on disk 2, which
-  erases `{system}Optimizers:Text 1` and the rest by name. The installer
-  is never run.
-- 2.0.1 **launches, and then asks for a serial number and checks it.**
-  It also refuses OK until a signature is drawn in a box. None of the
-  codes published on the page the software comes from are accepted, and
-  nothing here goes looking for one or reads the check out of the binary
-  (DECISIONS.md 2026-08-22, the line `spacesaver.py` drew for 3.5.1).
-- **Magic Menu runs without one**, and is the half of StuffIt that has
-  ever worked on this machine: ⌘S stuffs the selection with no dialog.
-  Its `StuffIt Options ▸` submenu offers compression method and
-  Leave/Delete Originals — **no Optimizer**, which is the second wall.
+which module it used was read out of the application's own code
+(FORMATS.md, *Where an archive names the module*); this is what confirms
+that reading against archives the application itself wrote, and it
+corrected one line of it.
 
     tools/vmac/sitopt.py --setup        fetch the two 2.0.1 floppies
     tools/vmac/sitopt.py --install      build the System 6 boot volume
-    tools/vmac/sitopt.py --personalize  meet the licence dialog
+    tools/vmac/sitopt.py --personalize  register it, and KEEP that image
+    tools/vmac/sitopt.py --make --force --no-expert   run the script
+    tools/vmac/sitopt.py --unstuff      2.0.1 unstuffs its own archive
+    tools/vmac/sitopt.py --show <path>  any archive's entry headers
     tools/vmac/sitopt.py --magic        the Finder with Magic Menu loaded
-    tools/vmac/sitopt.py --stuff        stuff a file, read the archive back
+    tools/vmac/sitopt.py --stuff        Magic Menu's ⌘S, read back
     tools/vmac/sitopt.py --options      the `StuffIt Options ▸` submenu
-    tools/vmac/sitopt.py --install351   the 3.5.1 image, 2.0's modules added
-    tools/vmac/sitopt.py --map351       launch 3.5.1 and peek its menus
-    tools/vmac/sitopt.py --show <path>  print any StuffIt archive's headers
 
-`--show` is the one mode that needs no emulator and is the reason this
-file will still be useful when somebody answers §8: it prints, per entry,
-the method bytes and the six module bytes, and diffs two archives'
-headers when it is given both.
+**It installs by COPYING.** The download is a StuffIt archive of two
+DiskCopy images; disk 1 holds an installer whose DATA fork is another
+StuffIt archive, and `macextract` unwraps the lot. Where each piece goes
+is Aladdin's own `UnInstall Dlx Files Script`, on disk 2, which erases
+`{system}Optimizers:Text 1` and the rest by name. The installer is never
+run, so no dialog of its is guessed at.
+
+**The serial is published on the page the download is on** —
+`macintoshgarden.org/apps/stuffit-deluxe-2`, *"A nnnnn (where 'n' = any
+number)"*. It is NOT `/apps/stuffit-deluxe`, whose codes `spacesaver.py`
+carries for 3.0.7 and 5.x; those were tried first, refused, and written
+up as a registration wall before anybody opened the right page
+(BLOCKERS.md, withdrawn claims).
+
+**The run is a SCRIPT.** StuffIt Deluxe 2.0 has its own language —
+vocabulary in the application's STR# 257, shapes in the payload's
+`Sample Scripts` — and ⌘E runs a TEXT/'SIT!' file of it. So the control
+and the optimized pair come out of one boot, written by commands whose
+spelling is Aladdin's rather than by clicks on a checkbox at a
+coordinate, and `Write Status To` brings back the application's own
+account of what it did.
+
+**What the specimens settled**, and it is not what was expected: `Text 1`
+writes **255** into byte 106, not its module id of 5, and 2.0.1's own
+unstuffer hands back the OPTIMIZED bytes. 255 means an Optimizer nothing
+can undo, so this engine decodes those entries and refuses only the ids a
+'DCMP' could restore. `tools/run_sitopt.py` grades that.
 
 What this CANNOT see:
 
-- **whether byte 106 really holds the module id.** That needs an archive
-  an Optimizer wrote.
+- **a reversible Optimizer.** Every specimen is `Text 1`; nothing here is
+  a MacPaint, Sound or Photoshop document (MANUAL_TESTS.md §8).
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1`
-  in both of the places 3.5 might look; the application that would list
-  it does not launch here (BLOCKERS.md, withdrawn claims).
-- **the 512 KB machine.** It boots `mv-4M` throughout: 2.0.1's resource
-  fork alone is 423 KB.
+  in both places 3.5 might look; that application does not launch here.
+- **the 512 KB machine.** It boots `mv-4M`: the resource fork alone is
+  423 KB.
 """
 import argparse
 import hashlib
@@ -75,7 +77,7 @@ CACHE = os.path.join(os.path.expanduser("~"), ".cache", "macextract", "sit2")
 MAIN_SIT = os.path.join(CACHE, "stuffit-deluxe-v2.sit")
 OPT_SIT = os.path.join(CACHE, "deluxe-2-optional.sit")
 MAIN_MD5 = "45b940a528fe2bc18560bf0b2ae60f7a"
-PAGE = "https://macintoshgarden.org/apps/stuffit-deluxe"
+PAGE = "https://macintoshgarden.org/apps/stuffit-deluxe-2"
 MAIN_URL = "https://old.mac.gdn/apps/stuffit-deluxe-v2.sit"
 OPT_URL = "https://old.mac.gdn/apps/deluxe-2-optional.sit"
 
@@ -383,6 +385,8 @@ def main():
     ap.add_argument("--show", nargs="?", const=True,
                     help="an archive, or a directory of them")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--unstuff", action="store_true")
+    ap.add_argument("--image", help="boot this image instead")
     ap.add_argument("--tag", default="make")
     ap.add_argument("--script-wait", type=float, default=90.0)
     ap.add_argument("--no-expert", action="store_true",
@@ -402,6 +406,8 @@ def main():
         return 0
     if args.map351:
         return phase_map351(args)
+    if args.unstuff:
+        return phase_unstuff(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -444,9 +450,18 @@ ALERT_OK = (256, 166)        # the "invalid"/"must sign" alert's OK
 # are 5.x's. Nothing here goes looking for a registration number, and
 # nothing here reads the check out of the application — that is the
 # line this project drew for 3.5.1 (DECISIONS.md 2026-08-22).
-PUBLISHED_CODES = ["S12345", "DLXC-963-029519", "DLXC-907-029528",
-                   "DLXF-0859-006229", "DLXG-1112-268709",
-                   "DLXF-0835-001225"]
+# **"A" and five digits, any digits.** Published on the page these two
+# downloads come from, `macintoshgarden.org/apps/stuffit-deluxe-2`,
+# against the installer set itself: *"Requires a name and serial
+# activation: A nnnnn (where 'n' = any number, for example: A 12345).
+# Note: Entering the code with caps lock on, may be necessary."*
+#
+# The six codes this list held first were `spacesaver.py`'s, which are
+# from `/apps/stuffit-deluxe` — 3.0.7's "S"+5 and 5.x's DLX forms — and
+# 2.0.1 refused every one of them, correctly. They were the wrong
+# version's, and the page that has this file says so; nobody had opened
+# it (BLOCKERS.md, withdrawn claims).
+PUBLISHED_CODES = ["A 12345"]
 
 
 def sign(s):
@@ -833,6 +848,77 @@ def phase_options(args):
     return 0
 
 
+MADE = os.path.join(WORK, "sitopt-made.hfv")
+ARCHIVE_ICON = (240, 170)   # Optimized.sit; OptBetter.sit is at 172
+
+
+def phase_unstuff(args):
+    """Have 2.0.1 unstuff its OWN optimized archive, and keep what it writes.
+
+    The question this settles is a behaviour, not a reading. `Text 1`
+    has no 'DCMP' — nothing it does is undone — so the optimized bytes
+    may be all that exists, in which case extracting them is what
+    Aladdin's software itself does and refusing the entry loses a user
+    their file. If instead 2.0.1 produces the ORIGINAL, something
+    restores it and refusing is right. `unar` writes the optimized
+    bytes and calls it a success either way.
+
+    Booted from the image `--make` wrote, with the original `Subject`
+    DELETED first so that what comes back cannot be it.
+    """
+    src = args.image or MADE
+    if not os.path.exists(src):
+        raise SystemExit("sitopt: no %s — --make writes it" % src)
+    img = os.path.join(WORK, "run-unstuff.hfv")
+    shutil.copyfile(src, img)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        hfs(env, "hmount", img)
+        subprocess.run(["hdel", (VOL + ":Subject").encode()],
+                       capture_output=True, env=env)
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        s.shot("desktop", wait=12.0)
+        s.mac.click(*BOOT_ICON, double=True)
+        s.shot("volume", wait=12.0)
+        s.mac.click(*ARCHIVE_ICON)
+        s.shot("archive-selected", wait=3.0)
+        s.mac.command_key("u")
+        s.shot("unstuffed", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                dest = os.path.join(outdir, "unstuffed.bin")
+                subprocess.run(["hcopy", "-m", (VOL + ":Subject").encode(),
+                                dest.encode()], capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+                if os.path.exists(dest):
+                    data, rsrc = forks(dest)
+                    print("sitopt: 2.0.1 unstuffed it to %d B of data, "
+                          "%d B of resource" % (len(data), len(rsrc)))
+                    print("  same as the ORIGINAL subject: %s"
+                          % (data == SUBJECT_DATA))
+                    print("  first 60 bytes: %r" % data[:60])
+                else:
+                    print("sitopt: nothing called Subject came back")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    return 0
+
+
 def phase_map(args):
     """Launch and photograph the menu bar and every menu in it.
 
@@ -867,9 +953,13 @@ def phase_map(args):
 # The Scripts menu and Execute Script… in it, and the Edit menu's last
 # item, which is the switch between Standard and Expert menus (its title
 # is STR# 258's "Switch to Expert Menus"). Measured off --map.
-EDIT_X = 78
+# Measured off `personalize/07-try-A 12345.png`, the first screenshot
+# anything here has of 2.0.1's own menu bar: File Edit Archive Other
+# Options Scripts Windows — and it comes up in EXPERT menus already, so
+# the Edit menu's switch is not needed (--no-expert).
+EDIT_X = 68
 EDIT_SWITCH_Y = 156
-SCRIPTS_X = 395
+SCRIPTS_X = 280
 EXECUTE_Y = 20
 
 # What the run writes, at the root of the one volume it has.
@@ -913,8 +1003,13 @@ def phase_make(args):
         if not args.no_expert:
             s.menu(EDIT_X, EDIT_SWITCH_Y, "edit-switch")
             s.shot("expert", wait=3.0)
-        s.menu(SCRIPTS_X, EXECUTE_Y, "scripts-menu")
-        s.shot("script-picker", wait=6.0)
+        # ⌘E, not the menu item: `Scripts ▸ Execute Script…` opened the
+        # menu and selected nothing at y=20 (make1/06-script-picker.png
+        # is a Finder-less desktop where the picker should be), and the
+        # item carries a command key. This file's own advice.
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
         s.mac._xdo("type", "--delay", "120", "Optimize")
         s.shot("script-selected", wait=2.0)
         s.mac.key("Return")
@@ -925,7 +1020,11 @@ def phase_make(args):
     finally:
         time.sleep(5)
         s.close()
-    read_back(img, outdir)
+    # The image the emulator WROTE, not the one it was given: Mini vMac
+    # boots a copy in the session's temp directory (interactive.py's
+    # Mac.__init__), so mounting `img` reports every archive missing
+    # from a run that made all three.
+    read_back(os.path.join(s.work, "boot.hfv"), outdir)
     return show(outdir)
 
 

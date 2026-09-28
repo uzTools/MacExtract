@@ -89,6 +89,17 @@
  * reported, because encryption has an error code of its own and this
  * one does not. A fork of length zero went through nothing, whatever
  * its method byte says. */
+/* Optimizer id 255 is not an id. It is the value StuffIt Deluxe 2.0.1
+ * writes for an Optimizer that CANNOT BE UNDONE, and the entry is then
+ * decoded normally rather than refused — measured, against the only
+ * implementation there is: 2.0.1 stuffed a text file with `Text 1`
+ * enabled, wrote 255, and unstuffing that archive with 2.0.1 ITSELF
+ * gives back the optimized bytes and no resource fork (FORMATS.md,
+ * *Where an archive names the module*). `Text 1` has no 'DCMP' because
+ * there is nothing to undo, the application's own Get Info pane
+ * special-cases 255 before it looks any module up, and refusing such an
+ * entry would withhold the only bytes that exist. */
+#define SIT_OPT_IRREVERSIBLE 255
 static unsigned sit_fork_module(const uint8_t *hdr, int rsrc, uint32_t len,
                                 uint8_t *id)
 {
@@ -1082,17 +1093,29 @@ int unc_sit_extract(UncCtx *c)
                 e.module_id   = rid;
             }
             /* An Optimizer ran BEFORE the compressor, so decoding the
-             * method would succeed and hand back the optimized bytes —
-             * a file with its resources dropped or its spaces turned
-             * into tabs, under the original's name and often with the
-             * header's CRC agreeing. Refusing it per entry is the
-             * whole point of reading these bytes: the alternative is
-             * silently wrong output. An external Compressor is refused
-             * here too rather than at the method switch, so that the
-             * report names the module instead of a method number. */
-            needmod = (dmod == UNC_MODULE_OPTIMIZER ||
+             * method succeeds and hands back the optimized bytes — a
+             * file with its resources dropped or its spaces turned into
+             * tabs, under the original's name, with the header's CRC
+             * agreeing. Whether that is the right answer depends on
+             * whether anything can undo it, and the id says:
+             *
+             *   255  nothing can (`Text 1` has no 'DCMP'), those bytes
+             *        are all that exists, and StuffIt Deluxe 2.0.1
+             *        itself hands back exactly them — so DECODE.
+             *   else a 'DCMP' would restore the original, this engine
+             *        does not have it, and writing the preprocessed
+             *        bytes under the original's name is the silently
+             *        wrong output this reading is for — REFUSE.
+             *
+             * An external Compressor is refused whatever its id: there
+             * is no decoding that at all. It is refused here rather
+             * than at the method switch so the report names the
+             * module instead of a method number. */
+            needmod = ((dmod == UNC_MODULE_OPTIMIZER &&
+                        did != SIT_OPT_IRREVERSIBLE) ||
+                       (rmod == UNC_MODULE_OPTIMIZER &&
+                        rid != SIT_OPT_IRREVERSIBLE) ||
                        dmod == UNC_MODULE_COMPRESSOR ||
-                       rmod == UNC_MODULE_OPTIMIZER ||
                        rmod == UNC_MODULE_COMPRESSOR);
         }
 

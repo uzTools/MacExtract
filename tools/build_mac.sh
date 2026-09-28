@@ -307,7 +307,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # on the other side*). It costs the RESIDENT control 4 B and the shipped
 # build 0 — fmt_arc is in an overlay there — which is also how it got in:
 # nothing built this configuration. `ci.sh` builds it since the same day.
-UNC_MAC_CODE_DEFAULT=151432
+UNC_MAC_CODE_DEFAULT=151492
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -393,7 +393,7 @@ UNC_MAC_CODE_DEFAULT=151432
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37768
+UNC_MAC_A5_DEFAULT=37772
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -450,6 +450,11 @@ UNC_MAC_A5_DEFAULT=37768
 # shipped build**, and 336 B in the control — the difference is that most of
 # this lands in the StuffIt 'OVLY' image, which grew 208 B and is released
 # for every archive that is not a StuffIt one.
+# RAISED AGAIN the same day, control only, 151,432 -> 151,492 and 37,768 ->
+# 37,772: the rule that an Optimizer nothing can undo is DECODED rather than
+# refused (FORMATS.md, *What Aladdin's own output says*). **The shipped
+# build does not move at all** — that code is in the StuffIt image, which
+# grew 48 B — so this costs a 1 MB Mac Plus nothing and the control 64 B.
 # What the bytes bought: a fork whose method byte says an Optimizer ran
 # decodes fine and yields the OPTIMIZED bytes — a text file with its
 # resources deleted, under the original's name, with the header's CRC

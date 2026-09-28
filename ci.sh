@@ -184,6 +184,13 @@ python3 tools/run_foreign.py --macextract build/san/macextract \
 # `unar -p`, which is a different implementation of each cipher.
 python3 tools/run_crypt.py --macextract build/san/macextract \
     || fail "decryption tests"
+# The optimized StuffIt archives, graded by the program that WROTE them:
+# StuffIt Deluxe 2.0.1 under Mini vMac stuffed a text file with `Text 1`
+# enabled and unstuffed it again, and what it hands back is the only
+# definition of correct there is for an Optimizer that undoes nothing.
+# Skips cleanly with no specimens (TESTING.md).
+python3 tools/run_sitopt.py --macextract build/san/macextract \
+    || fail "StuffIt Optimizer tests"
 # StuffIt SpaceSaver has no oracle and no committed fixture either: what
 # grades it is a file SpaceSaver itself wrote under Mini vMac, which
 # lives beside the emulator's other state. Skips cleanly when there is

@@ -188,7 +188,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # ---------------------------------------------------------------------------
 
 # What the overlay build does NOT carry resident, in bytes: the control's
-# `CODE` + A5 less the shipped build's, 151,432 + 37,768 - 52,972 - 18,964.
+# `CODE` + A5 less the shipped build's, 151,492 + 37,772 - 52,972 - 18,964.
 # All four measured 2026-09-28 with `m68k-apple-macos-size` (FORMATS.md,
 # *Three configurations, one tree*), which is the only place to correct them.
 # It read 117,056 — a set two corrections old — until 2026-09-27: v0.34.0's
@@ -208,7 +208,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # floor budget was once made worse (DECISIONS.md 2026-09-22, *the fold, on a
 # Macintosh*) — and it decides nothing: the narrowest margin between a
 # passing layer's demand and its budget is 16,490 B.
-OVL_SAVED = 117264
+OVL_SAVED = 117328
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -246,7 +246,10 @@ OVL_RESIDUE = -666
 # add-on module fields (FORMATS.md, *Where an archive names the module*) —
 # which is where that change lands in the shipped build: resident code took
 # 88 B of it and the rest is in the image, read at launch and released for
-# every archive that is not a StuffIt one. They are checked against that
+# every archive that is not a StuffIt one. **+48 B more the same day**, for
+# the rule that an Optimizer nothing can undo is DECODED rather than
+# refused, which the specimens settled; resident code and A5 did not move
+# for it at all. They are checked against that
 # build whenever it is present (check_images below), so this table cannot
 # drift silently while the toolchain is installed; it is stated rather than
 # only read so that the lane still runs where Retro68 is not.
@@ -262,11 +265,11 @@ IMAGES = {
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    18210,
+    "OVL_ID_STUFFIT":    18258,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 143280
+BUNDLE = 143328
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
