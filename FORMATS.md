@@ -5044,6 +5044,21 @@ removed (Symantec no longer supports this feature)"*, same file. That is the
 one format in this project's table an Aladdin customer lost rather than never
 had.
 
+**Which version could, measured 2026-09-28.** The **3.0.7** installer
+(`stuffitdeluxe307_dsk.zip`, md5 `60ac40fb4cdf8f1ccfaa94944578bf07`, two
+floppies `hmount` opens) carries a **`DD Translator`** whose name record is
+followed by `SITo`/`SIT!` — the same type and creator as every other
+translator — beside an `AppleLink Package Translator`, which 3.5 renames
+`PKG Expand`. After 3.5 it stays gone through **4.0**, whose installer names
+fourteen translators (3.5.1's thirteen plus a `Claris Translator`), and
+**5.0.1**, whose CD installer carries thirteen — `LHa` and `MIME` arrive,
+`UnPack` and `PKG Expand` go. **6.x is unsettled**: the 6.0.1 updater's script
+names the path `:Translators:DiskDoubler Translator`, but an updater carries no
+translator payload records, so whether that file ships — and whether the entry
+installs it or removes it — needs the 6.0 CD (169 MB) rather than this
+download. 7.0.3 names one only among the items its installer cleans up, and
+ships no such plug-in. **Hypothesis, not measured**, for 6.x alone.
+
 **Encryption and comments.** *"With the exception of StuffIt 3.X archives,
 StuffIt Expander will not expand encrypted or password protected archives"*
 and *"All other expansion methods … WILL save comments within StuffIt archives
