@@ -255,20 +255,22 @@ data 'MExt' (0, "MacExtract") {
    The four numeric bytes are for programmatic comparison and are not what
    is displayed. Byte 2 carries the minor and bug-fix numbers as one BCD
    digit each (Multiverse.r declares the layout; the stage constants are its
-   own names), so a minor of 31 does not fit and 0x31 is written for a reader
-   that takes the byte whole. The STRINGS carry the real number, and
+   own names), so a minor of 35 does not fit and 0x35 is written for a reader
+   that takes the byte whole — the hex digits read as the number. That byte
+   said 0x31 from v0.31.0 to v0.34.0 because only the STRINGS are checked;
+   it is moved with them now. The STRINGS carry the real number, and
    tools/check_docs.py holds both of them against UNC_VERSION — this file is
    the fourth place the version is written, after include/macextract.h,
    README.md and dist/README.txt. */
 
 resource 'vers' (1, "MacExtract") {
-    0x00, 0x31, release, 0x00, verUS,
-    "0.34.0",
-    "0.34.0"
+    0x00, 0x35, release, 0x00, verUS,
+    "0.35.0",
+    "0.35.0"
 };
 
 resource 'vers' (2, "MacExtract") {
-    0x00, 0x31, release, 0x00, verUS,
-    "0.34.0",
-    "0.34.0"
+    0x00, 0x35, release, 0x00, verUS,
+    "0.35.0",
+    "0.35.0"
 };

@@ -73,13 +73,23 @@ and its size was fixed when the archive was made. Those entries are skipped
 with a message and the rest of the archive still comes out. Every other format
 fits in 512 KB, and with 1 MB the question does not arise.
 
-v0.34.0 fixes two things you could meet. A password-protected ARC archive
-whose scrambled data ran short was refused outright, with "file is
-truncated", instead of asking you for the password; it now asks. And a file
-that merely looks like one part of a split Compact Pro archive -- a real
-AppleLink package does -- was taken for one and then failed as a damaged
-archive. It is now left unrecognised, which is the honest answer: nothing
-here can open an AppleLink package.
+v0.35.0 changes almost nothing you would meet, and that is the honest
+summary: it is a release of tests, provenance and tooling. Two things did
+change. An ARJ archive whose header is a couple of bytes shorter than this
+program used to accept is now NAMED rather than passed over -- it still
+cannot be opened, ARJ being one of the formats this program identifies and
+does not extract. And AppleLink packages (.pkg) are no longer listed as a
+format at all: the test that claimed to recognise one turned out to be
+reading a menu command rather than a package, and no real package ever
+matched it. A .pkg is now simply unrecognised, which is what this program
+could already do with it.
+
+v0.34.0, before it, fixed two things you could meet. A password-protected
+ARC archive whose scrambled data ran short was refused outright, with "file
+is truncated", instead of asking you for the password; it now asks. And a
+file that merely looks like one part of a split Compact Pro archive -- a
+real AppleLink package does -- was taken for one and then failed as a
+damaged archive.
 
 Memory is as v0.33.0 left it: the decoders stay on disk until an archive
 turns out to need one, which leaves about 85 KB more for decoding than
