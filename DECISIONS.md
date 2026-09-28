@@ -305,6 +305,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
 - 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
 - 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
+- 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
 
 ---
 
@@ -19055,3 +19056,75 @@ therefore commit; a fixture is somebody else's and may only be
 described. Asking who WROTE the bytes decides it, and that question was
 not asked until the maintainer asked where the copyrighted code was
 supposed to go.
+
+
+## 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
+
+Asked why `unc_lzah.c`'s window preload is still XADMaster's when the
+five steps are published. The premise is right and the file already
+acts on it: `larc.c`'s `decode_start_lz5` and `lzah_preload` are the
+same five steps byte for byte. What is XADMaster's is narrower — the
+claim that `-lh1-` and StuffIt method 5 use that pattern, where LHa
+applies it to LArc's `-lz5-` and lhasa fills `-lh1-` with spaces.
+
+That is a claim about behaviour, so it looked measurable. **It is not,
+on this corpus**, and five builds say so — each the whole differential
+suite with a different window fill:
+
+| fill | result |
+|---|---|
+| the pattern | **933/933** |
+| all spaces, lhasa's `-lh1-` | **933/933** |
+| all zeros | 932/933 |
+| all `0xAA` | 932/933 |
+| the pattern with only its TAIL bent | 932/933 |
+
+**One fixture of 933 touches the preload at all** —
+`derived-BitMap11.sit`, 29 method-5 entries — and it touches only the
+last of the five steps, the trailing spaces. That is why all-spaces
+passes: it differs from the pattern everywhere except the one place
+anything reads.
+
+So the corpus proves the window is not zero-filled, and proves nothing
+about which non-zero reading is right. The ramps and the 13-byte runs
+are never read here.
+
+**Three routes, and none of them is progress:**
+
+- rewrite from `larc.c` — already done, that IS the code, and LHa for
+  UNIX is under its own licence, so the citation moves and the licence
+  does not (the `unc_lzdyn.c` row's position exactly);
+- adopt lhasa's all-spaces fill — permissive, and passes every test
+  here identically. But that swaps one unverified reading for another
+  and calls the swap evidence;
+- find a stream whose first match reaches back more than ~110 bytes
+  from the window end, into the ramps. Nothing in reach has one.
+
+**The transferable part is the shape of the question.** "The pattern is
+published" and "our use of the pattern is verified" are different
+claims, and the row said the first while being read as the second.
+
+**Asked for other rows of that shape, the answer was structural**:
+OPEN_ITEMS' provenance table answers only the first question, so every
+row was being read as an answer to the second. They diverge both ways.
+`fmt_packit.c`'s ciphers, `unc_crypt.c`'s StuffItDES and the
+mailed-text rules are all GRADED — by `unar -p`, by three archives
+StuffIt Deluxe wrote, and by `run_uu.py`'s gapped sets — so those rows
+implied a doubt that the evidence does not support; the table says so
+per row now, and its preamble names the two axes. The one that may
+genuinely coincide with `unc_lzah.c` is the **MacBinary CRC-16/0xA001
+fallback**: no document supports it and nothing found says any fixture
+exercises it either. Bending it would settle that, the way bending the
+preload did.
+
+**And the compression that prompted this cost the distinction once
+already.** Pruning the mailed-text row on 2026-09-27 deleted the
+sentence naming `run_uu.py` as its grader — the one clause that
+separated "the citation is stuck" from "the behaviour is unchecked".
+**Shortening a row is not free when the removed words were the
+evidence**, which is the counterweight to the rule that rows should
+state the claim and not the reasoning. A
+constant that no input reads is not load-bearing however important it
+looks — and the way to find that out is to bend it and see whether
+anything notices. Bending the tail broke one fixture; bending the rest
+broke nothing.

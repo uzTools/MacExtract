@@ -26,8 +26,12 @@ hand.
                        src/unc_internal.h. LHa for UNIX writes the same
                        five steps for LArc's -lz5-, not for -lh1-, and
                        lhasa fills the buffer with spaces instead, so
-                       the PATTERN is published and its application is
-                       XADMaster's.
+                       the PATTERN is published and its APPLICATION is
+                       XADMaster's. Measured 2026-09-28: no archive
+                       here can tell that application from lhasa's, the
+                       two agreeing everywhere the corpus reads — so
+                       the citation stands on XADMaster's word and not
+                       on evidence.
   src/unc_crypt.c      StuffItDES's nibble key schedule and key
                        derivation (XADStuffItDESHandle.m), StuffIt 5's
                        password hash (XADStuffIt5Parser.m), PackIt's

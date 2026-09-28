@@ -881,6 +881,21 @@ anything about the suite.**
    difference between 400 and 3,000 is how the two were told apart, and
    `fuzz_cover.py` says so rather than reporting one run as structure.
 
+   **A constant the corpus never reads, found the same way**, 2026-09-28
+   and recorded here because the method is the point rather than the
+   format: `unc_lzah.c`'s window preload for `-lh1-` and StuffIt method
+   5 was bent five ways and the whole differential suite run on each.
+   The pattern and an all-spaces fill both give **933/933**; zeros,
+   `0xAA`, and the pattern with only its trailing-spaces step bent all
+   give 932/933, failing the one fixture that touches it at all
+   (`derived-BitMap11.sit`, 29 method-5 entries). So the suite proves
+   the window is not zero-filled and cannot distinguish XADMaster's
+   pattern from lhasa's spaces — they agree exactly where anything
+   reads. **Bending a constant and seeing whether anything notices is
+   the only way to tell a load-bearing one from a decorative one**, and
+   it costs a build each (DECISIONS.md 2026-09-28, *the preload nothing
+   reaches*).
+
    **What none of this can see.** The reach figures are about EXECUTION,
    not about what the mutants explore once inside: one seed per cipher,
    none over 2.2 KB, so no keystream here runs long and no cipher's

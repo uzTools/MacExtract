@@ -206,11 +206,31 @@ static void lzah_update(Lzah *h, uint32_t c)
  * -lh1- (reference/lha/src/larc.c, decode_start_lz5) and lhasa fills
  * the -lh1- buffer with spaces (lh1_decoder.c), so this pattern here
  * is XADMaster's alone and is in NOTICE's inventory.
- * Source: reference/XADMaster/XADLZHDynamicHandle.m (resetLZSSHandle). ARC's Trimmed takes the zeros and NOT the pattern: deark
+ * Source: reference/XADMaster/XADLZHDynamicHandle.m (resetLZSSHandle).
+ *
+ * WHAT THE CORPUS CAN AND CANNOT SAY, measured 2026-09-28 by building
+ * five fills and running the whole differential suite on each:
+ *
+ *   the pattern, as below      933/933
+ *   all spaces (lhasa's -lh1-) 933/933
+ *   all zeros                  932/933
+ *   all 0xAA                   932/933
+ *   the pattern, tail bent     932/933
+ *
+ * ONE fixture of 933 touches the preload — derived-BitMap11.sit, 29
+ * method-5 entries — and it touches only the LAST step, the trailing
+ * spaces. So this corpus proves the window is not zero-filled and
+ * cannot distinguish XADMaster's pattern from lhasa's all-spaces fill:
+ * the two agree exactly where anything here reads. The ramps and the
+ * 13-byte runs are unexercised. Settling it wants a stream whose first
+ * match reaches back more than ~110 bytes from the window end
+ * (DECISIONS.md 2026-09-28, *the preload nothing reaches*).
+ *
+ * ARC's Trimmed takes the zeros and NOT the pattern: deark
  * passes history_fill_val = 0 and its ring buffer starts zeroed
  * (reference/deark/foreign/lzhuf.h, lzhuf_Decode_init); a Trimmed
  * member whose first match reaches back past the start of the data is
- * what tells the two apart, and the entry's CRC is what says so. */
+ * what tells THAT pair apart, and the entry's CRC is what says so. */
 static void lzah_preload(Lzah *h, int mode)
 {
     uint32_t i;
