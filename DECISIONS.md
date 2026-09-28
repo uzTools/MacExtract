@@ -19111,11 +19111,22 @@ row was being read as an answer to the second. They diverge both ways.
 mailed-text rules are all GRADED — by `unar -p`, by three archives
 StuffIt Deluxe wrote, and by `run_uu.py`'s gapped sets — so those rows
 implied a doubt that the evidence does not support; the table says so
-per row now, and its preamble names the two axes. The one that may
-genuinely coincide with `unc_lzah.c` is the **MacBinary CRC-16/0xA001
-fallback**: no document supports it and nothing found says any fixture
-exercises it either. Bending it would settle that, the way bending the
-preload did.
+per row now, and its preamble names the two axes. The one that
+genuinely coincides with `unc_lzah.c` is the **MacBinary CRC-16/0xA001
+fallback**, and bending it settled that the same day: it fires **zero
+times** across 933 fixtures and 9,330 robustness variants, and removing
+either it or the nonzero-date test beside it changes nothing any suite
+grades. The counter's control is a header built with the 0xA001 CRC —
+accepted by the fallback and by nothing else — so the zero is a
+measurement rather than a dead instrument.
+
+**Pinned rather than removed.** A case in `tests/unit_formats.c` now
+holds the fallback to that header, and it was shown to FAIL with the
+fallback taken out before it was kept. Removing the tolerance was the
+other option and is the wrong one: XADMaster did not invent it for
+nothing, and this corpus having no such file is a fact about the corpus.
+What the pin buys is that the two axes stop coinciding — the citation is
+still XADMaster's word, but a change to the behaviour is now noticed.
 
 **And the compression that prompted this cost the distinction once
 already.** Pruning the mailed-text row on 2026-09-27 deleted the

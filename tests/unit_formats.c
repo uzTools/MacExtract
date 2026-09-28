@@ -150,6 +150,30 @@ static void test_macbinary(void)
     test_make_memio(&io, &m, arc, len);
     CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
     arc[124] ^= 0xFF;
+
+    /* THE 0xA001 FALLBACK, pinned here because nothing else reaches it.
+     * fmt_macbinary.c accepts a header whose CRC was computed with the
+     * reflected 0xA001 table instead of CRC-16/XMODEM — XADMaster's
+     * tolerance, supported by no standard. Measured 2026-09-28: it
+     * fires ZERO times across 933 fixtures and 9,330 robustness
+     * variants, and removing it changes nothing any suite grades. So
+     * it was uncited AND unexercised, which is the pair OPEN_ITEMS
+     * calls the `unc_lzah.c` shape. This case does not make it right —
+     * only noticed, so a change to it cannot pass silently. */
+    {
+        uint16_t a = 0xFFFF;
+        uint32_t i, j;
+        for (i = 0; i < 124; i++) {
+            a ^= arc[i];
+            for (j = 0; j < 8; j++)
+                a = (a & 1) ? (uint16_t)((a >> 1) ^ 0xA001)
+                            : (uint16_t)(a >> 1);
+        }
+        a ^= 0xFFFF;
+        arc[124] = (uint8_t)(a >> 8); arc[125] = (uint8_t)a;
+        test_make_memio(&io, &m, arc, len);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_MACBINARY);
+    }
 }
 
 /* ------------------------------------------------------------------ */
