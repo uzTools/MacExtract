@@ -1036,7 +1036,7 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Four assertions over three archives 2.0.1 wrote in one scripted run:
+Five assertions over five archives 2.0.1 wrote, in two scripted runs:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;
@@ -1044,16 +1044,24 @@ Four assertions over three archives 2.0.1 wrote in one scripted run:
 3. neither writes a resource fork, because `Text 1` deleted it and the
    header says `rlen` 0;
 4. the header bytes are what `src/fmt_sit.c` reads: `0x40` set on both
-   method bytes, 106 and 108 both 255, 46/47/107/109 zero.
+   method bytes, 106 and 108 both 255, 46/47/107/109 zero;
+5. **the other kind of Optimizer** — `MacPaint 1`, over a document
+   MacPaint 2.0 itself drew — records its own module id, 4, and is
+   REFUSED by name, while its control extracts byte for byte.
 
-**What it cannot see.** An Optimizer that CAN be undone. All three
-specimens are `Text 1`, which writes the id 255 — the "nothing to restore"
-value, which this engine decodes — and the other branch, where a real
-module id is refused, is graded only by `tests/unit_formats.c` on entries
-built to the reading. One MacPaint, Sound or Photoshop document would close
-that (MANUAL_TESTS.md §8). It also says nothing on a fresh clone: the
-specimens are emulator output and are not committed, like `sitcrypt.py`'s,
-so the suite skips cleanly when they are absent.
+**Why refusing one and decoding the other is not a policy.** Aladdin's own
+Engine, asked to unstuff both, decoded the `Text 1` archive and refused the
+`MacPaint 1` one — *"Items that were encrypted or compressed with an
+optimizer or compressor will be skipped… Please use StuffIt Deluxe
+instead."* The split this suite asserts is the format's.
+
+**What it cannot see.** Whether a `DCMP` really would restore the original:
+refusing is graded as agreement with the Engine, and nothing here has ever
+executed one of these modules. Three of the five Optimizers are also
+untried — the corpus has six `sfil` sounds and no Photoshop document. And
+it says nothing on a fresh clone: the specimens are emulator output and are
+not committed, like `sitcrypt.py`'s, so the suite skips cleanly when they
+are absent.
 
 ## The forks `unar` refuses (`tools/run_ddforks.py`, on demand)
 

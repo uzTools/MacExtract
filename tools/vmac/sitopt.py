@@ -49,8 +49,13 @@ can undo, so this engine decodes those entries and refuses only the ids a
 
 What this CANNOT see:
 
-- **a reversible Optimizer.** Every specimen is `Text 1`; nothing here is
-  a MacPaint, Sound or Photoshop document (MANUAL_TESTS.md §8).
+- **`Sound 1`, `Photoshop 1`, `Photoshop:JPEG Lossy`.** Two of the five
+  modules are exercised; nothing on this machine is a document the
+  other three take. `MacPaint 1` needed one too, and MacPaint 2.0 drew
+  it — `--add-paint`, then `--paint`.
+- **whether a `DCMP` would restore the original.** No module has ever
+  been executed here; the refusal is graded as agreement with Aladdin's
+  own Engine, which refuses the same entry.
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1`
   in both places 3.5 might look; that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M`: the resource fork alone is
@@ -377,6 +382,9 @@ def main():
     ap.add_argument("--plain351", action="store_true",
                     help="the control: 3.5.1 with no module added")
     ap.add_argument("--map351", action="store_true")
+    ap.add_argument("--add-paint", action="store_true")
+    ap.add_argument("--paint", action="store_true")
+    ap.add_argument("--makepaint", action="store_true")
     ap.add_argument("--magic", action="store_true")
     ap.add_argument("--stuff", action="store_true")
     ap.add_argument("--options", action="store_true")
@@ -387,6 +395,10 @@ def main():
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--unstuff", action="store_true")
     ap.add_argument("--image", help="boot this image instead")
+    ap.add_argument("--archive", help="which archive to unstuff")
+    ap.add_argument("--item", help="the entry it holds")
+    ap.add_argument("--against", help="MacBinary to compare with")
+    ap.add_argument("--icon", help="x,y of the archive icon")
     ap.add_argument("--tag", default="make")
     ap.add_argument("--script-wait", type=float, default=90.0)
     ap.add_argument("--no-expert", action="store_true",
@@ -408,6 +420,12 @@ def main():
         return phase_map351(args)
     if args.unstuff:
         return phase_unstuff(args)
+    if args.add_paint:
+        return add_paint(args)
+    if args.paint:
+        return phase_paint(args)
+    if args.makepaint:
+        return phase_makepaint(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -849,6 +867,7 @@ def phase_options(args):
 
 
 MADE = os.path.join(WORK, "sitopt-made.hfv")
+PAINTED = os.path.join(WORK, "sitopt-painted.hfv")
 ARCHIVE_ICON = (240, 170)   # Optimized.sit; OptBetter.sit is at 172
 
 
@@ -867,6 +886,8 @@ def phase_unstuff(args):
     DELETED first so that what comes back cannot be it.
     """
     src = args.image or MADE
+    arc_name = args.archive or "Optimized.sit"
+    item = args.item or SUBJECT_NAME
     if not os.path.exists(src):
         raise SystemExit("sitopt: no %s — --make writes it" % src)
     img = os.path.join(WORK, "run-unstuff.hfv")
@@ -874,7 +895,7 @@ def phase_unstuff(args):
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
     try:
         hfs(env, "hmount", img)
-        subprocess.run(["hdel", (VOL + ":Subject").encode()],
+        subprocess.run(["hdel", (VOL + ":" + item).encode()],
                        capture_output=True, env=env)
         hfs(env, "humount")
     finally:
@@ -887,7 +908,7 @@ def phase_unstuff(args):
         s.shot("desktop", wait=12.0)
         s.mac.click(*BOOT_ICON, double=True)
         s.shot("volume", wait=12.0)
-        s.mac.click(*ARCHIVE_ICON)
+        s.mac.click(*(args.icon and tuple(int(v) for v in args.icon.split(",")) or ARCHIVE_ICON))
         s.shot("archive-selected", wait=3.0)
         s.mac.command_key("u")
         s.shot("unstuffed", wait=20.0)
@@ -899,7 +920,7 @@ def phase_unstuff(args):
             if subprocess.run(["hmount", written], capture_output=True,
                               env=env).returncode == 0:
                 dest = os.path.join(outdir, "unstuffed.bin")
-                subprocess.run(["hcopy", "-m", (VOL + ":Subject").encode(),
+                subprocess.run(["hcopy", "-m", (VOL + ":" + item).encode(),
                                 dest.encode()], capture_output=True, env=env)
                 subprocess.run(["humount"], capture_output=True, env=env)
                 if os.path.exists(dest):
@@ -909,6 +930,11 @@ def phase_unstuff(args):
                     print("  same as the ORIGINAL subject: %s"
                           % (data == SUBJECT_DATA))
                     print("  first 60 bytes: %r" % data[:60])
+                    if args.against and os.path.exists(args.against):
+                        od, orr = forks(args.against)
+                        print("  == %s: data %s, rsrc %s"
+                              % (os.path.basename(args.against),
+                                 data == od, rsrc == orr))
                 else:
                     print("sitopt: nothing called Subject came back")
         finally:
@@ -917,6 +943,216 @@ def phase_unstuff(args):
         time.sleep(4)
         s.close()
     return 0
+
+
+PAINT_SEA = ("/media/mac/Utilities/6/MacPaint/macpaint2.0.sea_.hqx")
+PAINT_NAME = "Mac Paint 2.0"
+PAINT_ICON = (172, 170)        # measured off paint1/02-volume.png
+PAINT_DOC = "Painting"
+
+
+def add_paint(args):
+    """Put MacPaint 2.0 on the REGISTERED image, without rebuilding it.
+
+    `--install` makes the volume from `System6.hfv` and would throw away
+    the personalization `--personalize` wrote into the application's own
+    resource fork, so anything added afterwards is added in place.
+
+    MacPaint is here because `MacPaint 1` is the Optimizer that CAN be
+    undone — it carries a 'DCMP' where `Text 1` does not — and it keys
+    on type 'PNTG' (the literal is in its 'COMP' resource three times).
+    Nothing in the 933-fixture corpus is a PNTG: the manifests have six
+    'sfil' sounds and no paint document at all. So the document is made
+    by the program that invented the format.
+    """
+    if not os.path.exists(BOOT):
+        raise SystemExit("sitopt: no %s — --install then --personalize" % BOOT)
+    if not os.path.exists(PAINT_SEA):
+        raise SystemExit("sitopt: no %s" % PAINT_SEA)
+    work = tempfile.mkdtemp(prefix="sitopt-paint-")
+    try:
+        out = os.path.join(work, "app")
+        subprocess.run([CLI, "x", "-o", out, PAINT_SEA], check=True,
+                       capture_output=True)
+        data = os.path.join(out, PAINT_NAME)
+        mb = os.path.join(work, "paint.bin")
+        open(mb, "wb").write(macbinary(PAINT_NAME, "APPL", "MPNT",
+                                       open(data, "rb").read(),
+                                       open(data + ".rsrc", "rb").read()))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", BOOT)
+            got = hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            if got.returncode != 0:
+                raise SystemExit("sitopt: hcopy failed: %s" % got.stderr)
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    print("sitopt: MacPaint 2.0 added to %s" % BOOT)
+    return 0
+
+
+def phase_paint(args):
+    """Draw in MacPaint and save the document, so a PNTG exists.
+
+    Every step is photographed because none of the coordinates are
+    known: this application has never run here.
+    """
+    img = os.path.join(WORK, "run-paint.hfv")
+    shutil.copyfile(BOOT, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        s.shot("desktop", wait=12.0)
+        s.mac.click(*BOOT_ICON, double=True)
+        s.shot("volume", wait=12.0)
+        # CLICK the icon. Type-select and ⌘O renamed the application to
+        # `Painting` on the first run — the Finder took the keystrokes
+        # because nothing had launched — which is `sitcrypt.py`'s
+        # oldest trap wearing a third hat.
+        s.mac.click(*PAINT_ICON)
+        s.shot("app-selected", wait=3.0)
+        s.mac.command_key("o")
+        s.shot("launched", wait=args.launch_wait)
+        # A few strokes in the middle of whatever canvas is there. The
+        # point is bytes that are not a blank page: `MacPaint 1` removes
+        # what is not artwork and must leave artwork alone.
+        ox, oy = s.mac.origin()
+        x = s.mac._xdo
+        for row in (120, 150, 180):
+            x("mousemove", str(ox + 140), str(oy + row))
+            time.sleep(0.3)
+            x("mousedown", "1")
+            for px in range(140, 340, 12):
+                x("mousemove", str(ox + px), str(oy + row + (px % 24) - 12))
+                time.sleep(0.05)
+            x("mouseup", "1")
+            time.sleep(0.4)
+        s.shot("drawn", wait=3.0)
+        s.mac.command_key("s")
+        s.shot("save-dialog", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", PAINT_DOC)
+        s.shot("save-named", wait=2.0)
+        s.mac.key("Return")
+        s.shot("saved", wait=10.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=10.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                out = subprocess.run(["hls", "-l", (VOL + ":").encode()],
+                                     capture_output=True, env=env)
+                for line in out.stdout.decode("mac-roman",
+                                              "replace").splitlines():
+                    if PAINT_DOC in line:
+                        print("sitopt: %s" % line.strip())
+                dest = os.path.join(outdir, PAINT_DOC + ".bin")
+                subprocess.run(["hcopy", "-m", (VOL + ":" + PAINT_DOC).encode(),
+                                dest.encode()], capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+                if os.path.exists(dest):
+                    shutil.copyfile(written, PAINTED)
+                    print("sitopt: kept the image with it at %s" % PAINTED)
+                else:
+                    print("sitopt: no %s on the volume" % PAINT_DOC)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    return 0
+
+
+# The second script, and the one the whole reading hangs on: `MacPaint
+# 1` carries a 'DCMP', so it is the REVERSIBLE kind, and what it writes
+# into byte 106 is the question `Text 1` could not answer (it writes the
+# 255 sentinel). Named so its first letters collide with nothing else on
+# the volume — `Painting` is right beside it in the picker.
+PAINT_SCRIPT_NAME = "Run Paint"
+PAINT_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}PaintStatus.out"',
+    "Continue On Error",
+    'New Archive "{Startup}PlainPaint.sit"',
+    'Stuff "{Startup}Painting" with fast',
+    "Close",
+    'Enable Optimizer "MacPaint 1"',
+    'New Archive "{Startup}OptPaint.sit"',
+    'Stuff "{Startup}Painting" with fast',
+    "Close",
+    "Quit",
+    "",
+])
+PAINT_ARCHIVES = ["PlainPaint.sit", "OptPaint.sit"]
+
+
+def phase_makepaint(args):
+    """Stuff the MacPaint document twice: Optimizer off, then on."""
+    if not os.path.exists(PAINTED):
+        raise SystemExit("sitopt: no %s — --paint makes it" % PAINTED)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(WORK, "run-%s.hfv" % args.tag)
+    shutil.copyfile(PAINTED, img)
+    work = tempfile.mkdtemp(prefix="sitopt-ps-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(PAINT_SCRIPT_NAME, "TEXT", "SIT!",
+                                       PAINT_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Run")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("script-running", wait=args.script_wait)
+        s.shot("script-done", wait=20.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                for n in PAINT_ARCHIVES + ["PaintStatus.out", "Painting"]:
+                    subprocess.run(["hcopy", "-m", (VOL + ":" + n).encode(),
+                                    os.path.join(outdir,
+                                                 n + ".bin").encode()],
+                                   capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    st = os.path.join(outdir, "PaintStatus.out.bin")
+    if os.path.exists(st):
+        data, _r = forks(st)
+        print("=== PaintStatus.out")
+        for line in data.decode("mac-roman", "replace").split("\r"):
+            if line.strip():
+                print("  " + line)
+    return show_path(outdir)
 
 
 def phase_map(args):
@@ -970,15 +1206,14 @@ STATUS = "Status.out"
 def phase_make(args):
     """Run the script, then read the archives and the status file back.
 
-    **This cannot work on this machine and is kept deliberately.** It
-    wants the application, which will not run without a serial number
-    (module docstring); what it does is the two minutes MANUAL_TESTS.md
-    §8 asks somebody with a licensed copy for, written down as code —
-    Scripts ▸ Execute Script… on a script whose vocabulary is STR# 257's
-    (`Enable Optimizer`, `New Archive`, `Stuff … with fast`,
-    `Write Status To`). Run it on an image where the application starts
-    and it should produce the pair; run it here and it photographs a
-    licence dialog. --force says you know which.
+    Scripts ▸ Execute Script… (⌘E) on a script whose vocabulary is
+    STR# 257's: `Enable Optimizer`, `New Archive`, `Stuff … with fast`,
+    `Write Status To`. It needs the image `--personalize` registered —
+    on an unregistered one the application stops at its licence dialog,
+    and every keystroke after that goes to the Finder, which renames
+    things. `--force` was a guard from when that wall was thought to be
+    permanent; it is kept so that mistake is a refusal rather than a
+    renamed file.
 
     The application QUITS itself — the script's last command — so the
     Finder is frontmost for Shut Down without a ⌘Q that might land on a
@@ -986,9 +1221,9 @@ def phase_make(args):
     """
     if not args.force:
         raise SystemExit(
-            "sitopt: --make drives the APPLICATION, which does not run "
-            "here: it checks its serial number (--personalize shows the "
-            "dialog, MANUAL_TESTS.md §8). --force runs it anyway.")
+            "sitopt: --make drives the APPLICATION, which needs the image "
+            "--personalize registered. Pass --force once you have run "
+            "that (and do NOT re-run --install after it).")
     outdir = os.path.join(SPECIMENS, args.tag)
     os.makedirs(outdir, exist_ok=True)
     img = os.path.join(WORK, "run-%s.hfv" % args.tag)
@@ -1100,10 +1335,9 @@ def describe(h):
 def show_path(path):
     """Print the entry headers of any StuffIt archive, MacBinary or not.
 
-    The mode that needs no emulator: what MANUAL_TESTS.md §8 points at,
-    for grading an archive somebody else's registered copy wrote. Given
-    two, it diffs their first entry's header — which is the whole of the
-    evidence an Optimizer leaves.
+    The mode that needs no emulator, for reading an archive somebody
+    else's copy wrote. Given two, it diffs their first entry's header —
+    which is the whole of the evidence an Optimizer leaves.
     """
     paths = []
     if os.path.isdir(path):

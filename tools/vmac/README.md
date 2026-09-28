@@ -2783,6 +2783,9 @@ Four things it will teach you if you drive another application here:
     tools/vmac/sitopt.py --magic        the Finder with Magic Menu loaded
     tools/vmac/sitopt.py --stuff        Magic Menu's ⌘S, read back
     tools/vmac/sitopt.py --options      the `StuffIt Options ▸` submenu
+    tools/vmac/sitopt.py --add-paint    MacPaint 2.0 onto the same image
+    tools/vmac/sitopt.py --paint        draw something and save it as PNTG
+    tools/vmac/sitopt.py --makepaint    stuff it with `MacPaint 1` on/off
 
 **It installs by COPYING, not by running the installer.** The download is a
 StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
@@ -2832,6 +2835,25 @@ no resource fork — which is what makes "correct" definable for a
 preprocessor that undoes nothing, and what `tools/run_sitopt.py` grades
 against.
 
+**The reversible Optimizer needed a document nothing here had.** `MacPaint
+1` carries a `DCMP` and keys on type `PNTG` (the literal is in its `COMP`
+resource three times); the 933-fixture corpus has six `sfil` sounds and no
+paint document at all. So `--add-paint` puts **MacPaint 2.0** on the same
+image — it is on this machine, in a `.sea.hqx` our own engine unwraps — and
+`--paint` launches it, drags three strokes across the canvas, saves
+`Painting` and keeps the image. `--makepaint` then stuffs that twice,
+Optimizer off and on. **Click the icon to launch it**: type-select and ⌘O
+renamed the application to `Painting` on the first attempt, because nothing
+had launched and the Finder took the keystrokes.
+
+**`--unstuff` on the MacPaint archive is the other half of the answer.**
+Magic Menu refuses it — *"Items that were encrypted or compressed with an
+optimizer or compressor will be skipped. The Engine does not currently
+support this. Please use StuffIt Deluxe instead."* — where it unstuffed the
+`Text 1` one without comment. That is Aladdin's Engine drawing the same line
+this engine draws, and it is why `run_sitopt.py` asserts a refusal for one
+and bytes for the other.
+
 **A hierarchical submenu DOES open here, which the note below says it does
 not.** `--options` pulls `Magic ▸ StuffIt Options ▸` down ten pixels at a
 time: the parent highlights and the submenu draws, to the LEFT because the
@@ -2842,8 +2864,10 @@ Originals, no Optimizer, which is why the application had to run.
 
 What it CANNOT see:
 
-- **a reversible Optimizer.** Every specimen is `Text 1`; nothing here is a
-  MacPaint, Sound or Photoshop document (MANUAL_TESTS.md §8).
+- **`Sound 1`, `Photoshop 1`, `Photoshop:JPEG Lossy`.** Two of the five
+  modules are exercised; the corpus has no document the other three take.
+- **whether a `DCMP` restores the original.** No module has ever been
+  executed here; the refusal is graded as agreement with Aladdin's Engine.
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1` in
   both places 3.5 might look, and that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M` throughout.

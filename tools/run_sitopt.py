@@ -7,12 +7,16 @@ six header bytes taken out of the application's own code (FORMATS.md,
 *Where an archive names the module*). Until 2026-09-28 nothing graded
 that reading against an archive, because none existed here.
 
-`tools/vmac/sitopt.py` made four, and this replays them:
+`tools/vmac/sitopt.py` made five, over two boots, and this replays
+them:
 
   Plain.sit       the control — no Optimizer, the same subject
   Optimized.sit   `Text 1`, method 2
   OptBetter.sit   `Text 1`, method 5
   unstuffed.bin   what 2.0.1's OWN unstuffer gives back for Optimized.sit
+  PlainPaint.sit  the control for the other kind of Optimizer
+  OptPaint.sit    `MacPaint 1` over a document MacPaint 2.0 itself drew
+  Painting.bin    that document, as MacPaint wrote it
 
 **The oracle is the writer.** An optimized entry's right answer is not
 the file that went in — `Text 1` turns leading spaces into tabs, strips
@@ -22,7 +26,7 @@ produces*, which is why `unstuffed.bin` is in the set. Grading this
 against the original subject would fail a correct engine, and grading
 it against our own output would pass a broken one.
 
-Four things are asserted, and each one has failed a version of this
+Five things are asserted, and each one has failed a version of this
 engine at some point today:
 
   1. the control extracts to the subject, both forks, byte for byte;
@@ -30,15 +34,24 @@ engine at some point today:
   3. neither writes a resource fork — `Text 1` deleted it, the header
      says `rlen` 0, and an engine that invents one is wrong;
   4. the header bytes are what the reading says: `0x40` set on both
-     method bytes, 106 and 108 both 255, and 46/47/107/109 zero.
+     method bytes, 106 and 108 both 255, and 46/47/107/109 zero;
+  5. **the other kind of Optimizer.** `MacPaint 1` carries a 'DCMP', so
+     something CAN undo it: it writes its own module id, 4, and the
+     entry is refused by name. Aladdin's Engine refuses it too —
+     *"Items that were encrypted or compressed with an optimizer or
+     compressor will be skipped. The Engine does not currently support
+     this. Please use StuffIt Deluxe instead."* — and decoded the
+     `Text 1` one without a murmur, so this engine's rule is the
+     Engine's rule. Its control must still extract byte for byte.
 
 What this CANNOT see:
 
-- **an Optimizer that CAN be undone.** Every specimen here is `Text 1`,
-  which has no 'DCMP' and writes the id 255; the rule that a
-  non-255 id is refused instead is graded only by
-  `tests/unit_formats.c`, on entries built to the reading. A MacPaint,
-  Sound or Photoshop specimen would close that (MANUAL_TESTS.md §8).
+- **whether the module would restore the original.** Refusing is graded
+  as agreement with Aladdin's Engine, not by running a 'DCMP'; nothing
+  here has ever run one (OPEN_ITEMS.md).
+- **`Sound 1`, `Photoshop 1` or `Photoshop:JPEG Lossy`.** Two of the
+  five modules are exercised. The corpus has six 'sfil' sounds and no
+  Photoshop document at all.
 - **anything at all on a fresh clone.** The specimens are not
   committed — they are an emulator's output, like `sitcrypt.py`'s — so
   this skips cleanly and says nothing when they are absent.
@@ -60,6 +73,7 @@ import run as R                                          # noqa: E402
 SPECIMENS = os.path.join(R.VMAC_HOME, "specimens", "sitopt")
 MADE = os.path.join(SPECIMENS, "make2")
 UNSTUFFED = os.path.join(SPECIMENS, "unstuff1", "unstuffed.bin")
+PAINT = os.path.join(SPECIMENS, "paintmake")
 
 # The subject `sitopt.py` stuffed, repeated here rather than imported so
 # that this suite still grades if that harness is edited: what the
@@ -101,6 +115,9 @@ def main():
 
     need = [os.path.join(MADE, n + ".sit.bin")
             for n in ("Plain", "Optimized", "OptBetter")] + [UNSTUFFED]
+    paint = [os.path.join(PAINT, n) for n in ("PlainPaint.sit.bin",
+                                              "OptPaint.sit.bin",
+                                              "Painting.bin")]
     missing = [p for p in need if not os.path.exists(p)]
     if missing:
         print("run_sitopt: no specimens (%s) — skipped; "
@@ -159,13 +176,49 @@ def main():
                 problems.append("%s: a module byte that should be zero is "
                                 "not (46=%d 47=%d 107=%d 109=%d)"
                                 % (name, h[46], h[47], h[107], h[109]))
+        # 5. the reversible Optimizer
+        if all(os.path.exists(q) for q in paint):
+            pd, pr = forks(os.path.join(PAINT, "Painting.bin"))
+            out = os.path.join(work, "plainpaint")
+            rc, msg = extract(args.macextract,
+                              os.path.join(PAINT, "PlainPaint.sit.bin"), out)
+            q = os.path.join(out, "Painting")
+            if rc != 0 or not os.path.exists(q):
+                problems.append("the paint control did not extract: %s"
+                                % msg.strip())
+            else:
+                if open(q, "rb").read() != pd:
+                    problems.append("the paint control's data fork is not "
+                                    "MacPaint's own file")
+                if (not os.path.exists(q + ".rsrc")
+                        or open(q + ".rsrc", "rb").read() != pr):
+                    problems.append("the paint control's resource fork is "
+                                    "not MacPaint's own")
+            out = os.path.join(work, "optpaint")
+            rc, msg = extract(args.macextract,
+                              os.path.join(PAINT, "OptPaint.sit.bin"), out)
+            if rc == 0:
+                problems.append("OptPaint.sit extracted; `MacPaint 1` can "
+                                "undo what it did and this engine has no "
+                                "'DCMP', so the entry must be refused")
+            elif "MacPaint 1" not in msg:
+                problems.append("OptPaint.sit was refused without naming "
+                                "the module: %s" % msg.strip())
+            h = header(os.path.join(PAINT, "OptPaint.sit.bin"))
+            if h and (h[106] != 4 or h[108] != 4):
+                problems.append("OptPaint: optimizer bytes are %d/%d, and "
+                                "`MacPaint 1` is module 4" % (h[106], h[108]))
+        else:
+            print("run_sitopt: no paint specimens — the reversible "
+                  "Optimizer is not graded (tools/vmac/sitopt.py --paint)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 3 archive(s) StuffIt Deluxe 2.0.1 wrote, graded "
-          "against its own unstuffer, %d problem(s)" % len(problems))
+    print("run_sitopt: 5 archive(s) StuffIt Deluxe 2.0.1 wrote — both "
+          "kinds of Optimizer — graded against its own unstuffer and its "
+          "own Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0
 
 

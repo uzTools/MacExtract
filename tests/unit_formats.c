@@ -860,10 +860,11 @@ static void test_sit(void)
         };
         /* 255 is NOT one of them: it is the id StuffIt Deluxe 2.0.1
          * writes for an Optimizer nothing can undo, and such an entry
-         * decodes — 2.0.1's own unstuffer hands back exactly these
-         * bytes (tools/run_sitopt.py grades that against three archives
-         * it wrote). The refusal above is for the ids a 'DCMP' would
-         * restore. */
+         * decodes. The ids above are the refused case, and it is not a
+         * guess either — `MacPaint 1` carries a 'DCMP' and writes its
+         * real id of 4, which Aladdin's own Engine refuses to unstuff.
+         * tools/run_sitopt.py grades both against five archives 2.0.1
+         * wrote. */
 
         for (i = 0; i < (int)(sizeof cases / sizeof cases[0]); i++) {
             mlen = sit_synth(mod, "opt", 1, comp, sizeof comp,

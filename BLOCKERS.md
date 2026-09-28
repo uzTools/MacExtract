@@ -1658,6 +1658,25 @@ a harness can click is not the same list.
   application's; the giveaway is the menu bar above them, which no
   screenshot was ever read for.
 
+- **"One archive from a reversible Optimizer needs a person outside this
+  machine."** MANUAL_TESTS.md §8, filed and deleted on 2026-09-28, in
+  the same session, **because the maintainer said it did not**: *"I
+  don't see it as a manual test, you can do it in emulation."* He was
+  right. The item asked for a MacPaint, Sound or Photoshop document, on
+  the grounds that the 933-fixture corpus has none — true, and the
+  manifests were searched to establish it. What was never asked is
+  **what would have to be handed to the emulator**, and the answer is
+  nothing: MacPaint 2.0 is on this machine in a `.sea.hqx` our own
+  engine unwraps, it runs under Mini vMac, and three dragged strokes
+  and a Save produced a `PNTG/MPNT` document in one boot. Stuffed with
+  `MacPaint 1` enabled it records **4** in byte 106 — the module's own
+  id, which is the half of the reading that `Text 1`'s 255 could not
+  confirm. **Cost: none, by one message.** **Why it survived four
+  minutes:** the search that preceded it was real and its result was
+  correctly negative, and a negative search feels like a finished
+  question. **"Nothing here is one" is a fact about the corpus; the
+  next question is whether anything here can MAKE one.**
+
 ### Corrected figures and superseded write-ups
 
 - **"AppleLink `.pkg` cannot be sniffed without inventing a magic number" was

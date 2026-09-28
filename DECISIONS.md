@@ -309,6 +309,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
 - 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
 - 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
+- 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
 
 ---
 
@@ -19319,3 +19320,38 @@ a specimen was worth six hours**: the flag, the two offsets and the class
 rule were all right, and the one part that a disassembly could not settle
 was what the writer actually puts there. A reading tells you where to look;
 only the writer tells you what it wrote.
+
+## 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
+
+**Claim.** The reversible half of the Optimizer reading — that byte 106
+holds the module's id when the module has a `DCMP` — did not need anybody
+outside this machine. It needed a MacPaint document, and MacPaint is here.
+
+**Evidence.** `MacPaint 1` keys on type `PNTG`; the 933-fixture corpus has
+six `sfil` sounds and no paint document, which is what the manifests say and
+what made this look closed. MacPaint 2.0 is on this machine in a `.sea.hqx`
+that `macextract` unwraps, runs on the same System 6 image, and drew one in
+a single boot. Stuffed with the Optimizer on, the entry records **4** in
+bytes 106 and 108 — `MacPaint 1`'s resource id.
+
+**Consequence.** MANUAL_TESTS.md §8 is deleted four minutes after it was
+written, and `tools/run_sitopt.py` grades both branches of the rule. Two
+things worth keeping.
+
+**A negative search feels like a finished question, and it is half of
+one.** The search was real: every manifest, every entry, by type code, and
+the answer *"there is no PNTG here"* was correct. What it licensed was
+*"therefore somebody must send one"*, and that step is where the mistake
+lives. **"Nothing here IS one" and "nothing here can MAKE one" are different
+sentences**, and this repository has a whole directory of programs that make
+things — its SpaceSaver, DiskDoubler, Now Compress and ARC specimens are all
+output, not finds. The question to ask before filing anything as manual is
+not *do we have the artefact* but *do we have something that emits it*.
+
+**And the thing that emitted it was the format's own application.** That is
+the same shape as the morning's finding, one layer up: the reading came out
+of StuffIt Deluxe's code, the irreversible case came out of StuffIt Deluxe's
+output, and the reversible case came out of MacPaint's. **Where a format's
+own software is reachable, it answers questions about that format better
+than any reasoning about it** — including questions about a second format it
+happens to write.

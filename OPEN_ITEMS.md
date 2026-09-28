@@ -264,7 +264,7 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: confirmed on the irreversible one, not the other
+## StuffIt 2.0's Optimizers: both rules measured, three modules untried
 
 **The floor is what makes this an item.** This unarchiver is for a 1986
 machine, and StuffIt Deluxe 2.0 is 1990–92 software from the same desks, so a
@@ -277,20 +277,24 @@ own output** (FORMATS.md, *Where an archive names the module*):
 `tools/run_sitopt.py` grades this engine against what 2.0.1's own unstuffer
 gives back for them.
 
-**What is open is the other branch of one rule.** `Text 1` writes the id
-**255** — nothing can undo it, so the entry decodes, and that is the case the
-specimens cover. An Optimizer that CAN be undone should write its module's id
-instead, and such an entry is refused; no archive here has one, because
-nothing on this machine is a MacPaint, Sound or Photoshop document to hand to
-the four modules that carry a `DCMP`. **Closed by:** one archive from any of
-them — `sitopt.py --make` writes it once there is a subject of the right type
-(MANUAL_TESTS.md §8).
+**Both branches of the rule are now measured**, on five archives 2.0.1
+wrote: `Text 1` (no `DCMP`) writes 255 and the entry decodes; `MacPaint 1`
+(`DCMP` 4) writes 4 and the entry is refused by name. Aladdin's own Engine
+makes the same split, which is what settles it rather than the reading.
 
-**Two more the same harness can now reach.** 2.x could encrypt with
-`PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the built-in
-scheme that replaced all three; nothing here has ever seen an archive from
-any of them, and the application that writes one now runs. And **decoding**
-an optimized fork is a separate route: the four reversible modules' `DCMP`s
-are 68k code, and Aladdin's codecs already run on Linux here under
-`qemu-m68k` for two other formats (`tools/ssmodule/`, `tools/sdmodule/`).
-What is not known is the `COMP`/`DCMP` parameter block.
+**What is open is three modules and a `DCMP`.** `Sound 1`, `Photoshop 1` and
+`Photoshop:JPEG Lossy` have never been run — the corpus has six `sfil` sounds
+and no Photoshop document — and no `DCMP` has ever been executed here, so
+*"the module would restore the original"* rests on the Engine's own advice to
+use the application. **Closed by:** a sound or Photoshop document through
+`sitopt.py --makepaint`'s route, and, for the `DCMP`, the `qemu-m68k`
+arrangement below.
+
+**And the encryptors, which the same harness can now reach.** 2.x could
+encrypt with `PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the
+built-in scheme that replaced all three; nothing here has ever seen an
+archive from any of them, and the application that writes one now runs
+(`sitopt.py`). **Decoding** an optimized fork is the other route: the four
+reversible modules' `DCMP`s are 68k code, and Aladdin's codecs already run on
+Linux here under `qemu-m68k` for two other formats (`tools/ssmodule/`,
+`tools/sdmodule/`). What is not known is the `COMP`/`DCMP` parameter block.

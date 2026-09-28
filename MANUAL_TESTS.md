@@ -6,15 +6,18 @@ Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§6), an account to post from (§7) or a file of a type
-nothing here has (§8). Each item says what to do,
+hardware (§1–§6) or an account to post from (§7). Each item says what to do,
 why nothing here can answer it, and what to record. Nothing below is a known
 failure; it is unverified, which is a different thing.
 
-**It is shorter than it was.** *A file that SpaceSaver itself wrote* asked a
-stranger to compress a file and send it; 48 of them turned out to be on
-CD-ROMs anybody can download (BLOCKERS.md). **Before asking somebody outside
-this machine for a file, search for it by its bytes.**
+**It is shorter than it was, twice over.** *A file that SpaceSaver itself
+wrote* asked a stranger to compress a file and send it; 48 of them turned
+out to be on CD-ROMs anybody can download. *One archive from a registered
+StuffIt Deluxe* was filed here on 2026-09-28 and deleted the same day: the
+emulator writes it, and the only thing actually missing was a MacPaint
+document, which MacPaint 2.0 drew under Mini vMac in one boot (BLOCKERS.md).
+**Before asking somebody outside this machine, ask what the emulator would
+have to be handed** — and search for the file by its bytes.
 
 Everything that *can* be automated already is, and lives elsewhere:
 
@@ -317,37 +320,6 @@ claim and goes in the same file with what it cost.
 
 ---
 
-## 8. One document a reversible Optimizer will take
-
-Neither hardware nor an account: a **file**, of a type one of four modules
-handles. Everything else about this is done.
-
-StuffIt Deluxe 2.0.1 now runs here — `tools/vmac/sitopt.py` installs and
-registers it and has it write archives — and the `Text 1` case is measured
-and graded (FORMATS.md, *What Aladdin's own output says*). `Text 1` is the
-IRREVERSIBLE kind: it writes the id 255 and there is nothing to undo. The
-branch nothing has tested is the other one, where the module has a `DCMP`
-and the archive should carry its real id — 1 `Sound 1`, 2 `Photoshop 1`,
-3 `Photoshop:JPEG Lossy`, 4 `MacPaint 1`. This engine REFUSES those entries,
-on a reading that no archive has confirmed.
-
-- [ ] **A MacPaint document (`PNTG`), a sound file or a Photoshop 2.5-era
-      document**, small, with nothing confidential in it. That is the whole
-      ask; the harness does the rest. Anything genuinely of its type — the
-      modules parse what they are given and pass through what they do not
-      recognise, which is itself worth knowing if it happens.
-- [ ] Or, if you would rather run it yourself: stuff it twice in StuffIt
-      Deluxe 2.x, once with that Optimizer enabled and once without, and
-      keep both archives as MacBinary.
-
-**What to record.** Byte 106 of the optimized entry's header.
-`tools/vmac/sitopt.py --show <archive>` prints it. If it holds the module's
-id — 4 for `MacPaint 1` — the reading is right and `run_sitopt.py` should
-grow the case. If it holds 255 as well, then 255 is not "irreversible" but
-"an Optimizer ran" and this engine refuses entries it should decode; that
-correction goes in `BLOCKERS.md` with what it cost.
-
----
 
 ## What a failure here would change
 
