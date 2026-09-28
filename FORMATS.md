@@ -713,20 +713,26 @@ occur — `synth-sit-rle90.sit` and one real fork carry it.
 
 **The method byte's unused values, and Aladdin's "2.0 Optimizers".** This
 engine implements 0, 1, 2, 3, 5, 6, 8, 13 and 15; **4, 7, 9–12 and 14 are a
-per-entry error**. Nothing in reach names them: XADMaster and deark call 14
-*"Installer"* and decode neither, macunpack's `sit.h` says *"all other numbers
-are reserved"*, and the only trace of the rest is one line Aladdin repeats
-from 3.5.1 through 4.5 — *"StuffIt Expander will not expand StuffIt archives
-created using 2.0 Optimizers"* — with no statement anywhere of what an
-Optimizer wrote. **Every fork in the corpus is one of the eight**: 227
-archives, 2,512 forks, methods 0/1/2/3/5/6/8/13 only, by a walk of the entry
-headers (2026-09-28). So there is no specimen here, and **whether an Optimizer
-archive would refuse is a hypothesis**: it does if an Optimizer took a method
-number of its own, and does not if it only produced a standard one. StuffIt
-X's optimizers are a different thing in a format this engine does not read,
-and unlike these they are documented (7.0's Users Guide: *"special compression
-methods designed to handle specific file types ... Wave sound files, Tiff
-graphics, and text files"*).
+per-entry error**. Nothing in reach names those: XADMaster and deark call 14
+*"Installer"* and decode neither, and macunpack's `sit.h` says *"all other
+numbers are reserved"*. What fills some of them is a 2.0 **Optimizer**, and
+**Expander 4.0.2's Read Me says what one costs to read**: *"StuffIt Expander
+will not expand StuffIt archives created using 2.0 Optimizers. You will need
+either the StuffIt Deluxe or the StuffIt Lite application, **and the 2.0
+optimizer used to compress the archive**."* So an Optimizer is a pluggable
+compressor whose archives need that same module back — not a method any
+general reader was ever expected to carry, which is why no reference here
+names one. 3.5.1 through 4.5 repeat the first sentence without the second.
+
+**No specimen is in reach.** Every fork in the corpus is one of the eight:
+227 archives, 2,512 forks, methods 0/1/2/3/5/6/8/13 only, by a walk of the
+entry headers (2026-09-28). **That such an archive would refuse here is
+therefore a hypothesis**, though a well-supported one: it holds unless an
+Optimizer wrote a standard method number, which Aladdin's own sentence makes
+unlikely. StuffIt X's optimizers are a different thing in a format this engine
+does not read, and unlike these they are documented (7.0's Users Guide:
+*"special compression methods designed to handle specific file types ... Wave
+sound files, Tiff graphics, and text files"*).
 
 ### StuffIt 5: the Arsenic block size †
 

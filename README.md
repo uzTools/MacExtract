@@ -117,25 +117,25 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | | Expander 4.0.2 (free, System 6) | Deluxe 5.5.1 (paid, last for 68k) | Deluxe 7.0.3 Classic (paid, last for Mac OS 9) | MacExtract |
 |---|---|---|---|---|
 | Oldest Mac it runs on | System 6.0.5 | System 7.5.3, 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
-| StuffIt, Compact Pro, BinHex, MacBinary | yes | yes | yes | yes |
-| StuffIt 5 archives | no | yes | yes | yes |
-| StuffIt X (`.sitx`) | no | no | yes | no |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu` | with the paid add-on | yes | yes | yes |
-| StuffIt SpaceSaver | with the add-on | yes | no | yes |
-| PackIt (`.pit`) | no | yes | no | yes |
-| AppleLink packages (`.pkg`) | with the add-on | yes | no | no |
-| `.lzh` / `.lha` | no | yes | yes | yes |
-| DiskDoubler (`.dd`) | no | yes | no | yes |
-| Now Compress and Alysis SuperDisk! | no | no | no | yes |
-| RAR, ARJ and bzip2 | no | bzip2 only | yes | no |
-| Private File (`.pf`) and self-mounting disk images | no | yes | yes | no |
-| A Mac file mailed as a MIME attachment | no | yes | yes | yes |
-| StuffIt sets split across floppies | with the add-on | yes | yes | yes |
-| Compact Pro, zip or `.001` sets split across floppies | no | no | no | yes |
-| An archive that arrived as several mail messages | no | no | no | yes |
-| Encrypted StuffIt archives | yes | yes | yes | yes |
-| Encrypted Compact Pro archives | no | no | no | yes |
-| The note somebody typed into an archive | yes | yes | yes | yes |
+| StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
+| StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
+| StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on | ✅ | ✅ | ✅ |
+| StuffIt SpaceSaver | ✅ with the add-on | ✅ | 🔴 | ✅ |
+| PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
+| AppleLink packages (`.pkg`) | ✅ with the add-on | ✅ | 🔴 | 🔴 |
+| `.lzh` / `.lha` | 🔴 | ✅ | ✅ | ✅ |
+| DiskDoubler (`.dd`) | 🔴 | ✅ | 🔴 | ✅ |
+| Now Compress and Alysis SuperDisk! | 🔴 | 🔴 | 🔴 | ✅ |
+| RAR, ARJ and bzip2 | 🔴 | ✅ bzip2 only | ✅ | 🔴 |
+| Private File (`.pf`) and self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
+| A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
+| StuffIt sets split across floppies | ✅ with the add-on | ✅ | ✅ | ✅ |
+| Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
+| An archive that arrived as several mail messages | 🔴 | 🔴 | 🔴 | ✅ |
+| Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
+| Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
+| The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
