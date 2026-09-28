@@ -5004,8 +5004,11 @@ with this archive."*
 
 ### The paid box: StuffIt Deluxe 3.5.1 (2026-09-27)
 
-Expander 4.0.2 is the free yardstick; **Deluxe 3.5.1 is the paid one**, and
-README.md compares against both. Read off the installed image —
+Expander 4.0.2 is the free yardstick; **Deluxe 3.5.1 is the paid one of the
+68k era**, and it is where the Macintosh formats peak before 5.5 gets them
+back (*The last 68k box*, below). README.md's table is 4.0.2, 5.5.1 and
+7.0.3 — one per machine — and this subsection is the middle of the three
+histories behind it. Read off the installed image —
 `~/.cache/macextract/vmac/spacesaver/ssdeluxe.hfv`, volume `System_7_0_1`,
 installed 2026-08-22 (DECISIONS.md 2026-08-22, *it runs, and it will not
 compress on demand*) — and quoted from the files in its `Read Us First!`
@@ -5052,12 +5055,15 @@ translator — beside an `AppleLink Package Translator`, which 3.5 renames
 `PKG Expand`. After 3.5 it stays gone through **4.0**, whose installer names
 fourteen translators (3.5.1's thirteen plus a `Claris Translator`), and
 **5.0.1**, whose CD installer carries thirteen — `LHa` and `MIME` arrive,
-`UnPack` and `PKG Expand` go. **6.x is unsettled**: the 6.0.1 updater's script
-names the path `:Translators:DiskDoubler Translator`, but an updater carries no
-translator payload records, so whether that file ships — and whether the entry
-installs it or removes it — needs the 6.0 CD (169 MB) rather than this
-download. 7.0.3 names one only among the items its installer cleans up, and
-ships no such plug-in. **Hypothesis, not measured**, for 6.x alone.
+`UnPack` and `PKG Expand` go. **It comes back at 5.5**, in Aladdin's own
+list of what is new there: *"DiskDoubler expansion now supported ... through
+all available expansion methods"*, and the `DiskDoubler Translator` in that
+installer carries `.dd` and the word `DiskDoubler` in its own resources. It
+survives into 6.x — the 6.0.1 updater's script names
+`:Translators:DiskDoubler Translator` — and is gone by 7.0.3, which ships no
+such plug-in and names one only among the items its installer cleans up. **So
+the format was expandable by 3.0.x, again from 5.5, and by nothing Aladdin
+shipped in between or after.**
 
 **Encryption and comments.** *"With the exception of StuffIt 3.X archives,
 StuffIt Expander will not expand encrypted or password protected archives"*
@@ -5068,6 +5074,45 @@ to a separate TeachText file called ``Comments about [name of archive]''"*
 (`specimens/spacesaver/deluxe/`, shots 10 and 12); it wrote the three
 encrypted StuffIt archives this engine is graded against (*Encryption*,
 above).
+
+### The last 68k box: StuffIt Deluxe 5.5.1 (2026-09-28)
+
+**The last StuffIt for a 68k Macintosh, and the widest Macintosh coverage any
+of them had.** Aladdin says both parts. *What's New in Deluxe 6.0*: *"All
+StuffIt components have been carbonized ... This has prompted us to also drop
+our 68k Mac support for this version. For users of 68K Macs that wish to have
+StuffIt technology, simply download any 5.5 version of Deluxe, DropStuff, or
+Expander"*, under the bullet *"Power PC only version"*. 5.5.1's own Read Me:
+*"The recommended system configuration for StuffIt Deluxe 5.5 is a Macintosh
+with System 7.5.3 or greater ... StuffIt Expander and DropStuff require System
+7.1.1 or greater"*, and it points 7.5.3 users at Apple's **CFM-68K Runtime
+Enabler**. `STUFFITDLX551.SIT`, md5 `27a0b498f5cd7a892e44241db30b2a42`,
+fetched like the others; its installer's data fork is a StuffIt archive this
+engine lists and `unar` extracts.
+
+**Seventeen translators**, `SITo`/`SIT!` like 3.5.1's: `AppleSingle`,
+`BinHex`, `btoa:atob`, **`BZip`**, `CompactPro`, `DeArc`, **`DiskDoubler`**,
+`LHa`, `MacBinary`, `MIME`, `tar`, `Text`, `Unix Compress`, **`UnPack`**,
+`UUCode`, **`WinSEA`** and `Zip`. Their own resources carry the extensions:
+`Zip` holds `.zip` and `.gz`, `DiskDoubler` holds `.dd`, `UnPack` holds
+`.pit` and the word `PackIt`, `BZip` holds `.bz2`. Expander 5.5's file-type
+pane lists `AppleLink (.pkg)`, `Disk Images (.img, .smi)` and
+`Private File (.pf)` on top of those, and its preferences carry
+*"Expand StuffIt SpaceSaver Files"* — SpaceSaver is still in the box here, and
+its own order form prices *"StuffIt Deluxe (w/SpaceSaver)"* at $79.95. 6.0's
+Read Me is where it goes: *"StuffIt SpaceSaver is no longer a part of the
+StuffIt Deluxe package"*.
+
+**So 5.5 is the one version that has all of PackIt, DiskDoubler, AppleLink
+`.pkg`, SpaceSaver and Compact Pro at once**, plus `.lzh`, MIME, bzip2, zip
+and gzip. Against 3.5.1 it loses nothing and gains six; against 7.0.3 it
+lacks StuffIt X, RAR, ARJ and the three plug-ins nobody here can name, and
+keeps the four Macintosh formats 7.0.3 drops. What it still does not do is
+Now Compress and SuperDisk!, Compact Pro encryption, mail-split archives, and
+segments other than StuffIt's.
+
+**It cannot be timed here.** A 68020 is the floor, and every emulator harness
+in this repository is a Mac Plus (`tools/vmac/README.md`).
 
 ### The last classic box: StuffIt Deluxe 7.0.3 Classic (2026-09-28)
 
@@ -5084,7 +5129,7 @@ fork is a StuffIt 5 archive. Every executable in it is PEF `pwpc` with no
 later is recommended"* and *"at least 32mb of RAM installed, and at least 20mb
 of Hard Disk space available"*.
 
-**Twenty-three format plug-ins** replace 3.5.1's thirteen translators:
+**Twenty-three format plug-ins** replace 5.5.1's seventeen translators:
 `apple`, `arc`, `arj`, `binhex`, `btoa`, `bz2`, `compress`, `cpt`, `freeze`,
 `gz`, `lha`, `macbin`, `mime`, `pack`, `pf`, `rar`, `sco`, `sit`, `sitseg`,
 `sitx`, `tar`, `uu`, `zip`. `pf` is **Private File**, Aladdin's own encrypted
@@ -5215,6 +5260,13 @@ on `macburger-helper.hqx` — and stand as taken.
   the distribution used here.
 - [ATPM 5.05 — review of StuffIt Deluxe 5.1.2](https://atpm.com/5.05/stuffit.shtml),
   for StuffIt 5 archives being unreadable by 4.x.
+- StuffIt Deluxe 5.5.1 and 6.0/6.0.1 as downloaded here: the installers'
+  archive listings, the translators' own resources, `Read Us First!` in each,
+  and StuffIt Expander 5.5's preference panes. 6.0's full installer travels
+  inside the 6.0.1 updater download, which is why no 169 MB CD was needed.
+- StuffIt Deluxe 3.0.7 and 4.0 as downloaded here: their installers' plaintext
+  name records, which is all an InstallerMaker 1.x payload gives up — neither
+  this engine nor `unar` reads that container.
 - StuffIt Deluxe 7.0.3 Classic as downloaded here: the installer's archive
   listing, the plug-in bundles, `Documentation/StuffIt Deluxe Read Me!` and
   `StuffIt Deluxe Users Guide.pdf`, and StuffIt Expander 7.0.3's own

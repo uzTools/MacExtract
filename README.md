@@ -105,37 +105,38 @@ cannot open RAR files."*, not something that looks like a damaged download.
 
 ## Compared with what Aladdin sold
 
-Three yardsticks, because StuffIt itself changed a great deal. **StuffIt
-Expander 4.0.2** (1996) is the free one you would otherwise reach for, and on
-System 7 it is nicer to use — drag-and-drop, watch folders, background
-expansion. **StuffIt Deluxe 3.5.1** (1995) is what money bought in the 68k
-era: one purchase brought the Deluxe application, DropStuff, DropCompress,
-DropConvert, a copy of Expander, Magic Menu, SpaceSaver and thirteen format
-translators. **StuffIt Deluxe 7.0.3 Classic** (2003) is the last StuffIt for
-Mac OS 9 and reads far more formats than either — but it is PowerPC-only, so
-on the machines this project is aimed at it does not run at all.
+Three yardsticks, one per machine you might be sitting at. **StuffIt Expander
+4.0.2** (1996) is the free one, and the newest StuffIt that still runs on
+System 6. **StuffIt Deluxe 5.5.1** (1999) is the high-water mark for a 68k
+Mac: Aladdin dropped 68k support at 6.0 and said so — *"For users of 68K Macs
+that wish to have StuffIt technology, simply download any 5.5 version"* — and
+5.5 reads more Macintosh formats than any StuffIt before or after it.
+**StuffIt Deluxe 7.0.3 Classic** (2003) is the last one for Mac OS 9, and it
+is PowerPC-only, so no 68k Mac runs it at all.
 
-| | Expander 4.0.2 (free) | Deluxe 3.5.1 with DropStuff (paid) | Deluxe 7.0.3 Classic (paid) | MacExtract |
+| | Expander 4.0.2 (free, System 6) | Deluxe 5.5.1 (paid, last for 68k) | Deluxe 7.0.3 Classic (paid, last for Mac OS 9) | MacExtract |
 |---|---|---|---|---|
-| Oldest Mac it runs on | System 6.0.5 | System 7 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
+| Oldest Mac it runs on | System 6.0.5 | System 7.5.3, 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
 | StuffIt, Compact Pro, BinHex, MacBinary | yes | yes | yes | yes |
-| StuffIt 5 archives | no | no | yes | yes |
+| StuffIt 5 archives | no | yes | yes | yes |
 | StuffIt X (`.sitx`) | no | no | yes | no |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | with the paid add-on | yes | yes | yes |
 | StuffIt SpaceSaver | with the add-on | yes | no | yes |
 | PackIt (`.pit`) | no | yes | no | yes |
 | AppleLink packages (`.pkg`) | with the add-on | yes | no | no |
-| `.lzh` / `.lha` | no | no | yes | yes |
-| RAR, ARJ, bzip2 | no | no | yes | no |
-| DiskDoubler, Now Compress and SuperDisk! | no | no | no | yes |
-| A Mac file mailed as a MIME attachment | no | no | yes | yes |
+| `.lzh` / `.lha` | no | yes | yes | yes |
+| DiskDoubler (`.dd`) | no | yes | no | yes |
+| Now Compress and Alysis SuperDisk! | no | no | no | yes |
+| RAR, ARJ and bzip2 | no | bzip2 only | yes | no |
+| Private File (`.pf`) and self-mounting disk images | no | yes | yes | no |
+| A Mac file mailed as a MIME attachment | no | yes | yes | yes |
 | StuffIt sets split across floppies | with the add-on | yes | yes | yes |
 | Compact Pro, zip or `.001` sets split across floppies | no | no | no | yes |
 | An archive that arrived as several mail messages | no | no | no | yes |
 | Encrypted StuffIt archives | yes | yes | yes | yes |
 | Encrypted Compact Pro archives | no | no | no | yes |
 | The note somebody typed into an archive | yes | yes | yes | yes |
-| What you install | an application, an extension and the add-on | an installer, five applications, two control panels, two extensions and thirteen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
+| What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
@@ -150,9 +151,9 @@ same archives on the same disk, and timed by the same instrument:
 
 Choosing between them on speed alone gives you nothing to choose by. Times are
 to the nearest few seconds, and both wrote the same files — which is what makes
-them comparable at all. Expander is the one that was timed; Deluxe 3.5.1 runs on the
-same emulated Plus and has never been put on the clock, and 7.0.3 will not run
-on a 68k Mac at all. The full capability table and the unrounded figures are
+them comparable at all. Expander 4.0.2 is the only one that could be timed: 5.5.1
+needs a 68020 and 7.0.3 a PowerPC, so neither will run on the Mac Plus these
+figures are taken on. The full capability table and the unrounded figures are
 in [FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2",
 "The paid box", "The last classic box" and "Timed on the same Mac Plus" inside
 it.
