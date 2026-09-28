@@ -46,7 +46,9 @@ engine at some point today:
      could have broken the rule and does not**: it is lossy, and 255
      is what the application's Get Info pane prints as " lossy", but
      it writes 3;
-  6. **the other kind of Optimizer.** `MacPaint 1` carries a 'DCMP', so
+  6. **the declared lengths**, which are what makes the rule a rule
+     rather than a convention — see 4b in the code; and
+  7. **the other kind of Optimizer.** `MacPaint 1` carries a 'DCMP', so
      something CAN undo it: it writes its own module id, 4, and the
      entry is refused by name. Aladdin's Engine refuses it too —
      *"Items that were encrypted or compressed with an optimizer or
@@ -227,6 +229,29 @@ def main():
         else:
             print("run_sitopt: no paint specimens — the reversible "
                   "Optimizer is not graded (tools/vmac/sitopt.py --paint)")
+
+        # 4b. THE DECLARED LENGTHS, which are the whole design.
+        #
+        # `Text 1` (255) rewrote the fork and StuffIt recorded the NEW
+        # lengths — 338/732 became 0/594 — so the header describes what
+        # is stored and anything can decode it. Every module with an id
+        # left the ORIGINAL lengths in the header (501/2945, 342/8192,
+        # unchanged from their controls) and stored a remnant, so
+        # nothing without the module can produce a fork of the declared
+        # size at all. That is why one decodes and the others are
+        # refused, and it is checkable without running anything.
+        ph = header(os.path.join(MADE, "Plain.sit.bin"))
+        oh = header(os.path.join(MADE, "Optimized.sit.bin"))
+        if ph and oh and (ph[84:92] == oh[84:92]):
+            problems.append("the 255 entry declares the same lengths as "
+                            "its control; it should declare the OPTIMIZED "
+                            "ones")
+        for ctl, opt in (("PlainPaint.sit.bin", "OptPaint.sit.bin"),):
+            a, b = (header(os.path.join(PAINT, ctl)),
+                    header(os.path.join(PAINT, opt)))
+            if a and b and a[84:92] != b[84:92]:
+                problems.append("%s does not declare its control's "
+                                "lengths; a module entry should" % opt)
 
         # 5. the other three modules, each naming itself
         mods = {"OptSound.sit.bin": ("Sound 1", 1, "Sound2"),

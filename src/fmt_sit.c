@@ -1102,10 +1102,14 @@ int unc_sit_extract(UncCtx *c)
              *   255  nothing can (`Text 1` has no 'DCMP'), those bytes
              *        are all that exists, and StuffIt Deluxe 2.0.1
              *        itself hands back exactly them — so DECODE.
-             *   else a 'DCMP' would restore the original, this engine
-             *        does not have it, and writing the preprocessed
-             *        bytes under the original's name is the silently
-             *        wrong output this reading is for — REFUSE.
+             *   else the header declares the ORIGINAL file's lengths
+             *        while the fork holds a remnant the module would
+             *        rebuild from — `MacPaint 1` declares a 501-byte
+             *        resource fork and stores two compressed bytes —
+             *        so nothing without the module can produce a fork
+             *        of the declared size at all. REFUSE. (What the
+             *        module gives back is a valid document, not the
+             *        original bytes: measured, FORMATS.md.)
              *
              * An external Compressor is refused whatever its id: there
              * is no decoding that at all. It is refused here rather

@@ -311,6 +311,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
 - 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
 - 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
+- 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
 
 ---
 
@@ -19409,3 +19410,44 @@ every time. **A generator whose output nothing parses is not a generator**,
 and the check is one line — `spacesaver.resources()` is in this tree and
 reads real Macintosh forks. It now parses what `one_resource()` writes
 before either goes near an emulator.
+
+## 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
+
+**Claim.** This engine refuses an entry whose Optimizer has a `DCMP`
+because *"the module would restore the original and we do not have it"*.
+The module does not restore the original. The refusal is right anyway, for
+a reason that was in the header from the start.
+
+**Evidence.** StuffIt Deluxe 2.0.1, `MacPaint 1` installed, unstuffing its
+own archive by script into an empty folder with the original deleted: the
+artwork is byte-identical from offset 512 on, the 512-byte header differs
+in 486 bytes, and the 501-byte resource fork is gone. Run twice, once with
+a second archive alongside and once alone, because the first run's output
+folder had two candidates in it.
+
+**Consequence.** FORMATS.md, *What a module gives back*; the engine comment
+now cites the lengths instead. Two things.
+
+**The declared lengths were the answer and nobody had compared them.** An
+entry optimized by `Text 1` declares 0/594 where its control declares
+338/732 — the header describes the OPTIMIZED file. Every entry optimized by
+a module with a `DCMP` declares its control's lengths exactly — 501/2945,
+342/8192 — and stores a remnant: `MacPaint 1`'s resource fork is two
+compressed bytes for a declared 501. **That is the whole design, it is four
+bytes of arithmetic per entry, and it makes the 255 sentinel obvious in
+hindsight**: 255 means the header already describes what is stored, so no
+module is needed to read it. The reason this took a day and six emulator
+runs to see is that every step was chasing behaviour — what decodes, what
+refuses, what the Engine says — and the header was sitting there the whole
+time. **Compare the control's bytes to the specimen's before running
+anything.**
+
+**This is the third right answer with a wrong reason this file records,
+and the pattern is now clear enough to name.** The others are
+`checkdisk.py`'s `hls -a` and the `HOpen` attribution. Each time the
+BEHAVIOUR was correct and the sentence next to it was not, and each time
+the wrong sentence survived because nothing fails when a comment is
+wrong. Here the sentence came from Aladdin's own alert — *"Please use
+StuffIt Deluxe instead"* — read as "the application can undo it" when it
+says only "the application can open it". **A quotation is evidence for
+what it says, not for what it implies.**

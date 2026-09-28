@@ -1649,10 +1649,37 @@ part synthetic because of that — the Photoshop one has a real PSD data fork
 and a resource fork built to the module's test — so they show what a module
 does once it accepts a file, not what a real document looks like.
 
-**What is still missing is a `DCMP` run.** Nothing here has ever executed
-one of these modules, so *"a `DCMP` would restore the original"* is
-Aladdin's word — its Engine says to use the application — and not a
-measurement. OPEN_ITEMS.md, *StuffIt 2.0's Optimizers*.
+### What a module gives back, and why the header already said so
+
+**StuffIt Deluxe 2.0.1, with `MacPaint 1` installed, does not restore the
+original.** Asked to unstuff its own optimized archive — by script, into an
+empty folder, with the original deleted first, twice — it produces a file
+whose artwork is byte-identical from offset 512 on, whose **512-byte header
+differs in 486 bytes**, and which has **no resource fork** where the
+original had 501. That is exactly what the Addendum promises: *"The
+painting palette and pattern settings along with current selection are
+examples of the type of information that gets removed… the palette and
+patterns will use default settings."* So a `DCMP` rebuilds a valid
+document; the bytes it replaces are gone.
+
+**And the declared lengths are the whole design.** They are visible in the
+header without running anything:
+
+| entry | declared rlen / dlen | its control | what the header describes |
+|---|---|---|---|
+| `Text 1`, id **255** | 0 / 594 | 338 / 732 | the **optimized** file |
+| `MacPaint 1`, id 4 | 501 / 2945 | 501 / 2945 | the **original** |
+| `Sound 1`, id 1 | 342 / 8192 | 342 / 8192 | the **original** |
+| `Photoshop 1`, id 2 | 326 / 115320 | 326 / 115320 | the **original** |
+
+So 255 means *the header already describes what is stored* — decode it and
+you have the file, which is why 2.0.1's own unstuffer just hands it over.
+An id means *the header describes a file the stored bytes are only a
+remnant of*: `MacPaint 1`'s entry declares a 501-byte resource fork and
+stores two compressed bytes for it. **Nothing without the module can
+produce a fork of the declared size**, which is why this engine refuses,
+why Aladdin's Engine refuses, and why refusing is not a judgement call.
+`tools/run_sitopt.py` asserts both halves of that table.
 
 **One question this opens about ENCRYPTION.** `src/fmt_sit.c` implements one
 scheme (*Encryption*, below), and the encryptor id says which an entry wanted.

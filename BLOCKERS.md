@@ -1677,6 +1677,25 @@ a harness can click is not the same list.
   question. **"Nothing here is one" is a fact about the corpus; the
   next question is whether anything here can MAKE one.**
 
+- **"A `DCMP` would restore the original."** FORMATS.md, OPEN_ITEMS.md,
+  TESTING.md and `src/fmt_sit.c`'s own comment, written 2026-09-28 and
+  withdrawn the same evening by asking the application to do it.
+  StuffIt Deluxe 2.0.1 with `MacPaint 1` installed unstuffs its own
+  optimized archive to a file whose artwork is byte-identical from
+  offset 512 on, whose 512-byte header differs in **486 bytes**, and
+  which has **no resource fork** where the original had 501. A `DCMP`
+  rebuilds a valid document; it does not give the bytes back, and the
+  Addendum says so in as many words — the palette and patterns *"will
+  use default settings"*. **Cost: nothing, because the BEHAVIOUR was
+  never derived from it** — the refusal rests on the declared lengths,
+  which name the original file while the stored data is a remnant, and
+  that was in the header the whole time. What the claim cost was the
+  reason attached to a right answer, which this file already names as a
+  mechanism of its own (*a correct WORKAROUND with the wrong reason
+  attached*). **Why it survived:** Aladdin's Engine says *"Please use
+  StuffIt Deluxe instead"*, and "the application can do it" was read as
+  "the application can undo it".
+
 ### Corrected figures and superseded write-ups
 
 - **"AppleLink `.pkg` cannot be sniffed without inventing a magic number" was

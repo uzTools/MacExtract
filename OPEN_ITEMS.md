@@ -278,15 +278,23 @@ and `Text 1`, the only one that carries none, writes 255. This engine decodes
 255 and refuses the rest by name, which is the split Aladdin's own Engine
 makes. `tools/run_sitopt.py` grades eight archives 2.0.1 wrote.
 
-**What is open is that no `DCMP` has ever been executed here.** *"The module
-would restore the original"* is Aladdin's word - its Engine refuses such an
-entry and says to use the application - and not a measurement, so this engine
-refuses on the strength of somebody else's behaviour rather than on what the
-module does. **Closed by:** running one. The four `DCMP`s are
-position-independent 68k, and Aladdin's codecs already run on Linux here
-under `qemu-m68k` for two other formats (`tools/ssmodule/`,
-`tools/sdmodule/`); what is not known is the `COMP`/`DCMP` parameter block,
-of which the acceptance test is the part read so far (FORMATS.md).
+**What a module gives back is measured too, and it is not the original.**
+StuffIt Deluxe 2.0.1 with `MacPaint 1` installed unstuffs its own optimized
+archive to a file with the artwork intact, a different 512-byte header and
+no resource fork (FORMATS.md, *What a module gives back*). So there is
+nothing here that would restore an optimized file byte for byte, and
+refusing rests on the declared lengths rather than on the module.
+
+**What is open is running a `DCMP` under `qemu-m68k`**, which would let this
+engine produce what StuffIt Deluxe produces rather than refusing. The four
+`DCMP`s are position-independent 68k and Aladdin's codecs already run that
+way here for two other formats (`tools/ssmodule/`, `tools/sdmodule/`). What
+is not known is the `COMP`/`DCMP` parameter block: the acceptance test and
+the selector convention are read (FORMATS.md; selectors -1, -2, -3, -5, -6
+and a positive byte count, three arguments, a callback for the data), and
+the rest is not. **Whether it is worth having is a question, not a given**:
+what it buys is a valid document rather than the user's file, for four
+formats nobody has sent an archive of.
 
 **And the encryptors, which the same harness can now reach.** 2.x could
 encrypt with `PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the

@@ -413,6 +413,7 @@ def main():
     ap.add_argument("--paint", action="store_true")
     ap.add_argument("--makepaint", action="store_true")
     ap.add_argument("--makemods", action="store_true")
+    ap.add_argument("--unstuffapp", action="store_true")
     ap.add_argument("--add-modules", action="store_true")
     ap.add_argument("--magic", action="store_true")
     ap.add_argument("--stuff", action="store_true")
@@ -459,6 +460,8 @@ def main():
         return add_modules(args)
     if args.makemods:
         return phase_makemods(args)
+    if args.unstuffapp:
+        return phase_unstuffapp(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -1401,6 +1404,115 @@ def phase_makemods(args):
             if line.strip():
                 print("  " + line)
     return show_path(outdir)
+
+
+# Having the APPLICATION unstuff an optimized archive. Magic Menu
+# refuses one — *"Please use StuffIt Deluxe instead"* — and StuffIt
+# Deluxe is what has the module, so this is the measurement behind the
+# claim that a 'DCMP' restores the original. The module's code runs;
+# what this does not do is call it directly (OPEN_ITEMS.md).
+UNST_SCRIPT_NAME = "Zunstuff"
+UNST_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}UnStatus.out"',
+    "Continue On Error",
+    'Destination "{Startup}Out:"',
+    "; UnStuff works on the OPEN archive's entries, not on a file:",
+    '; the first attempt said "* * * No open archive!" for both lines.',
+    "; ONE archive, because two of them both write `Painting` into the",
+    "; destination and the second run could not say which file it got.",
+    'Open Archive "{Startup}OptPaint.sit"',
+    'UnStuff "*"',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+def phase_unstuffapp(args):
+    """StuffIt Deluxe 2.0.1, with `MacPaint 1` installed, unstuffs the
+    archive its own Engine refused — and the original is deleted first,
+    so what comes back cannot be it."""
+    base = args.image or os.path.join(WORK, "sitopt-paintmade.hfv")
+    if not os.path.exists(base):
+        raise SystemExit("sitopt: no %s — --makepaint makes it" % base)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(WORK, "run-%s.hfv" % args.tag)
+    shutil.copyfile(base, img)
+    work = tempfile.mkdtemp(prefix="sitopt-un-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(UNST_SCRIPT_NAME, "TEXT", "SIT!",
+                                       UNST_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            subprocess.run(["hdel", (VOL + ":Painting").encode()],
+                           capture_output=True, env=env)
+            subprocess.run(["hmkdir", (VOL + ":Out").encode()],
+                           capture_output=True, env=env)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zun")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("script-running", wait=args.script_wait)
+        s.shot("script-done", wait=25.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            if subprocess.run(["hmount", written], capture_output=True,
+                              env=env).returncode == 0:
+                out = subprocess.run(["hls", "-l", (VOL + ":Out:").encode()],
+                                     capture_output=True, env=env)
+                print("=== Out:")
+                for line in out.stdout.decode("mac-roman",
+                                              "replace").splitlines():
+                    print("  " + line.strip())
+                for n in ("Out:Painting", "UnStatus.out"):
+                    subprocess.run(
+                        ["hcopy", "-m", (VOL + ":" + n).encode(),
+                         os.path.join(outdir,
+                                      n.split(":")[-1] + ".bin").encode()],
+                        capture_output=True, env=env)
+                subprocess.run(["humount"], capture_output=True, env=env)
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        time.sleep(4)
+        s.close()
+    st = os.path.join(outdir, "UnStatus.out.bin")
+    if os.path.exists(st):
+        data, _r = forks(st)
+        print("=== UnStatus.out")
+        for line in data.decode("mac-roman", "replace").split("\r"):
+            if line.strip():
+                print("  " + line)
+    got = os.path.join(outdir, "Painting.bin")
+    ref = os.path.join(SPECIMENS, "paintmake", "Painting.bin")
+    if os.path.exists(got) and os.path.exists(ref):
+        gd, gr = forks(got)
+        rd, rr = forks(ref)
+        print("=== what the application restored")
+        print("  data %d B, == MacPaint's original: %s" % (len(gd), gd == rd))
+        print("  rsrc %d B, == MacPaint's original: %s" % (len(gr), gr == rr))
+    else:
+        print("sitopt: nothing came back in Out:")
+    return 0
 
 
 def phase_map(args):
