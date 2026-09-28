@@ -5053,9 +5053,9 @@ floppies `hmount` opens) carries a **`DD Translator`** whose name record is
 followed by `SITo`/`SIT!` — the same type and creator as every other
 translator — beside an `AppleLink Package Translator`, which 3.5 renames
 `PKG Expand`. After 3.5 it stays gone through **4.0**, whose installer names
-fourteen translators (3.5.1's thirteen plus a `Claris Translator`), and
-**5.0.1**, whose CD installer carries thirteen — `LHa` and `MIME` arrive,
-`UnPack` and `PKG Expand` go. **It comes back at 5.5**, in Aladdin's own
+fourteen translators (3.5.1's thirteen plus a `Claris Translator`), **4.5**,
+where the set turns over — `LHa` and `MIME` arrive, `UnPack` and `PKG Expand`
+go — and **5.0.1**, which carries 4.5's thirteen unchanged. **It comes back at 5.5**, in Aladdin's own
 list of what is new there: *"DiskDoubler expansion now supported ... through
 all available expansion methods"*, and the `DiskDoubler Translator` in that
 installer carries `.dd` and the word `DiskDoubler` in its own resources. It
@@ -5111,8 +5111,25 @@ keeps the four Macintosh formats 7.0.3 drops. What it still does not do is
 Now Compress and SuperDisk!, Compact Pro encryption, mail-split archives, and
 segments other than StuffIt's.
 
-**It cannot be timed here.** A 68020 is the floor, and every emulator harness
-in this repository is a Mac Plus (`tools/vmac/README.md`).
+**Where plain 68000 support ends, and what is only inferred.** Each Read Me
+states its own floor and no more. **4.5**: *"the minimum system is now 7.1.1
+(a.k.a. System 7 PRO) ... All other components in StuffIt Deluxe will operate
+just fine with earlier versions of System 7"* — no processor named. **5.0.1**
+is the first to name one: *"The minimum hardware requirement is a 68020
+processor, 8MB of installed RAM, and a hard disk drive."* **5.5 names none at
+all**, so the `68020` in README.md's row for it is carried from 5.0.1 — the
+same 5.x line and engine — and is an **inference, not a quotation**. The free
+line says less still: **StuffIt Expander 5.5**'s Read Me is *"tested to run on
+any Mac OS from System 7.1.1 through 9.0"* with a *"minimum memory requirement
+... of only 384K"*, and names no processor either, which leaves it a candidate
+for the last 68000-capable StuffIt — untested here, because the oldest system
+it will run on is 7.1.1 and this machine's System 7 image is 7.0.1. By
+measurement the newest StuffIt this project has had running on a 68000 is
+**Expander 4.0.2**, on the Mac Plus the timings above come from, with **Deluxe
+3.5.1** beside it (DECISIONS.md 2026-08-22).
+
+**5.5 cannot be timed here either.** Even granting the 68020, every emulator
+harness in this repository is a Mac Plus (`tools/vmac/README.md`).
 
 ### The last classic box: StuffIt Deluxe 7.0.3 Classic (2026-09-28)
 
@@ -5264,6 +5281,9 @@ on `macburger-helper.hqx` — and stand as taken.
   archive listings, the translators' own resources, `Read Us First!` in each,
   and StuffIt Expander 5.5's preference panes. 6.0's full installer travels
   inside the 6.0.1 updater download, which is why no 169 MB CD was needed.
+- StuffIt Deluxe 4.5 and StuffIt Expander 5.5 as downloaded here, for the
+  system and processor floors each states, and for Expander 5.5's own list of
+  what it expands with and without the StuffIt Engine.
 - StuffIt Deluxe 3.0.7 and 4.0 as downloaded here: their installers' plaintext
   name records, which is all an InstallerMaker 1.x payload gives up — neither
   this engine nor `unar` reads that container.
