@@ -148,8 +148,9 @@ byte. One `Text 1` touched comes back tidied — which is what StuffIt
 Deluxe hands back too, since the plug-in threw the rest away. A painting
 `MacPaint 1` touched comes back with the picture intact and a blank
 header: its palette and pattern settings are gone, and not even StuffIt
-Deluxe itself can bring them back. `JPEG Lossy` entries are still
-refused, by name. Whenever a file is not exactly the one that was
+Deluxe itself can bring them back. One of the five, the JPEG one, is deliberately
+left out: what it kept is lossy, so nothing could give that picture back
+as it was — MacExtract names it and skips the entry. Whenever a file is not exactly the one that was
 archived, MacExtract tells you which file and why.
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the

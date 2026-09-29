@@ -55,6 +55,7 @@ has grown before, on request.
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has never heard of. The branch `rom64k` guards the trap and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies — and **nobody has run it on one**, so this stays out until hardware says otherwise (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A Macintosh **128K** is out for a measured second reason: its largest single block is 63,744 B against 142,152 B of `CODE` |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
 | PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | not a Macintosh method: it is PKZIP 1.x's, it predates deflate, and the two corpus archives carrying it are PC software. 7 entries across `4acalc.zip` and `4alnch11.zip`, graded on names and entry counts alone. **Half the premise is gone and the decision is the maintainer's**: an MIT implementation and a stored-CRC oracle for all 7 entries have been on this disk since 2026-09-22, so only "not a Macintosh method" still carries it (DECISIONS.md 2026-09-22, *the premise that stopped being true*). **What it would cost is still unmeasured** — a removal delta can be built and an addition cannot — but the comparable coders put it at **~1.5–2 KB of `CODE`, estimated, not measured**, against 12,460 B of headroom at the tightest tier |
+| StuffIt 2.0's `JPEG Lossy` Optimizer (module 3) | **named, refused per entry** | decided 2026-09-29, on worth rather than on difficulty. The other four Optimizers are extracted; this one is **lossy by construction** — Aladdin's own round trip changes 10.1 % of the pixel bytes — so no implementation, ours or anybody's, hands back the file that was archived. Everything else about it is known and cheap: the payload is a self-describing TIFF carrying its own tables, and 5 KB of decoder inside `fmt_sit.c` costs the shipped build **0 B of resident `CODE` and 0 B of A5** and moves no tier tally, measured (FORMATS.md, *What an Optimizer did to the fork*; *Three configurations, one tree*). What decides it is the other side: nobody has ever seen such an archive that this project did not write, and a person who has one has no sign an Optimizer touched it — except from this program, which names the module and skips the entry, which is the right answer to give them |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART was the one exception between 2026-09-09 and 2026-09-25** — a compressed DART expands to an uncompressed one, a codec with no volume in it — and it is out again: what reads a DART is a mounter, and that is MacMount's, so expanding disk images is not this program's job in any form (DECISIONS.md 2026-09-25, *the disk images that found another home*). NDIF and UDIF were prototyped on a branch and never merged, for the same reason |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
@@ -264,26 +265,13 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: one of five left, and it is a JPEG coder
+## StuffIt 2.0's Optimizers: all five settled, and two questions left over
 
 **Four of the five are extracted** as of 2026-09-29 — `Text 1` and
 `Sound 1` and `Photoshop 1` exactly, `MacPaint 1` as a valid document
 that is not the user's file (FORMATS.md, *What an Optimizer did to the
-fork*). What is left:
-
-- **`JPEG Lossy`, id 3.** The only Optimizer still refused, and the
-  2026-09-29 spike found it far more tractable than it was written up
-  as. Its payload is a **self-describing TIFF** carrying its own
-  quantisation and Huffman tables, and the codec is a licensed **C-Cube
-  JPEG** engine (FORMATS.md, *What an Optimizer did to the fork*). So
-  nothing needs recovering from the module: what is left is a baseline
-  JPEG entropy decoder plus an IDCT, against a payload whose every
-  parameter is explicit, with **an oracle and a subject that both now
-  exist**. What still argues against it: the result is lossy by
-  construction and can never be the user's file, `libtiff` will not
-  read compression 32865 so there is no shortcut, and the output is
-  PLANAR while a JPEG scan is not — so it either buffers the image or
-  decodes once per plane.
+fork*) — and the fifth, `JPEG Lossy`, is **out of scope** and in Part 1.
+What is left is not about the modules:
 
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1

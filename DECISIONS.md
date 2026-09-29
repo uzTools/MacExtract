@@ -317,6 +317,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
 - 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
 - 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
+- 2026-09-29 (a measured zero, declined) — `JPEG Lossy` is out of scope, and the price had nothing to do with it
 
 ---
 
@@ -19707,3 +19708,45 @@ words — C-Cube defined JPEG-in-TIFF and 32865 is their compression
 code. Ten minutes of disassembly for tables that were not there, when
 a resource listing gave the answer. **Read the labels before the
 instructions.**
+
+## 2026-09-29 (a measured zero, declined) — `JPEG Lossy` is out of scope, and the price had nothing to do with it
+
+**Decision.** StuffIt 2.0's `Photoshop/JPEG Lossy` Optimizer (module 3)
+is out of scope for v1. Entries it touched stay named and refused per
+entry. OPEN_ITEMS.md, Part 1.
+
+**What it is not decided on.** Not difficulty: the payload is a
+self-describing TIFF carrying its own quantisation and Huffman tables
+(*What an Optimizer did to the fork*, FORMATS.md). Not budget: a
+5,166-byte blob compiled into `src/fmt_sit.c` moved the shipped build's
+resident `CODE` and A5 by **0 and 0**, landed wholly in
+`ovl_stuffit.bin`, and moved no tier tally in either lane — measured,
+not estimated. **The price was zero and the answer is still no.**
+
+**What it is decided on.** The result is **lossy by construction**:
+Aladdin's own round trip changes 10.1 % of the pixel bytes, so no
+implementation returns the file that was archived. Nobody has ever seen
+such an archive that this project did not write. And whoever has one
+has no sign that an Optimizer touched it — except from this program,
+which names the module and skips the entry, and that is already the
+right answer to give them.
+
+**Two premises were offered for it and neither holds, which is worth
+recording because the decision does not need them.** *"A modern viewer
+can open the compressed file"* — no: forging the TIFF `Compression` tag
+from C-Cube's 32865 to TIFF 6.0's 6 gets the payload past `libtiff`,
+which returns a **solid black 256x256 frame**, one distinct byte value.
+That is worse than refusing, because it looks like an answer. And
+*"modern upscaling tools supersede the work"* — no: an upscaler cannot
+read a format, it can only improve what something else has already
+decoded. **A decision can be right on grounds other than the ones
+reached for, and saying so is cheaper than letting a wrong premise
+become the citation** — this file records three cases of a correct
+answer with the wrong reason attached, and this is the first where the
+reason was corrected before it was written down.
+
+**And the transferable half.** This project prices every axis before
+calling a thing free, and the habit is worth having for the case where
+the price comes back zero and the work is declined anyway. **Cost is
+a veto, not a reason.** What carried this was who would benefit and by
+how much, which no ratchet measures.

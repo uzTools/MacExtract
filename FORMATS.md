@@ -1857,6 +1857,18 @@ code resource — **`C3a` 1, 31,952 bytes, named "C-Cube V1.0"** — so the
 `COMP` and `DCMP` are wrappers around a licensed C-Cube JPEG engine.
 C-Cube is who defined JPEG-in-TIFF; 32865 is their code for it.
 
+**And nothing else reads it either.** Forging the TIFF `Compression`
+tag from 32865 to 6 — TIFF 6.0's old-style JPEG — gets the payload past
+`libtiff`, which then hands back a **solid black 256x256 frame**: one
+distinct byte value, measured. That is worse than refusing, and it is
+why "a modern viewer can open it" is not an argument for leaving these
+entries alone.
+
+**`JPEG Lossy` is out of scope for v1** as of 2026-09-29, decided on
+worth: everything below is known, the decoder costs the shipped build
+nothing measurable, and the result would still be lossy
+(OPEN_ITEMS.md, Part 1).
+
 **So nothing has to be recovered from the module.** *"The tables are not
 in the stream, so they are in the module"* was written here on
 2026-09-29 and is withdrawn (BLOCKERS.md): every parameter is in the
