@@ -17,7 +17,7 @@ replays them:
   PlainPaint.sit  the control for the other kind of Optimizer
   OptPaint.sit    `MacPaint 1` over a document MacPaint 2.0 itself drew
   Painting.bin    that document, as MacPaint wrote it
-  Painting2.bin   what 2.0.1's own unstuffer gives back for OptPaint
+  unapp3/Painting.bin  what 2.0.1's own unstuffer gives back for OptPaint
   OptSound.sit    `Sound 1`, over a Sound Designer II file
   OptPhoto.sit    `Photoshop 1`, over a Photoshop document
   OptJpeg.sit     `Photoshop/JPEG Lossy`, over the same document
