@@ -414,6 +414,7 @@ def main():
     ap.add_argument("--makepaint", action="store_true")
     ap.add_argument("--makemods", action="store_true")
     ap.add_argument("--unstuffapp", action="store_true")
+    ap.add_argument("--dcmp", action="store_true")
     ap.add_argument("--add-modules", action="store_true")
     ap.add_argument("--magic", action="store_true")
     ap.add_argument("--stuff", action="store_true")
@@ -462,6 +463,8 @@ def main():
         return phase_makemods(args)
     if args.unstuffapp:
         return phase_unstuffapp(args)
+    if args.dcmp:
+        return phase_dcmp(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -1512,6 +1515,55 @@ def phase_unstuffapp(args):
         print("  rsrc %d B, == MacPaint's original: %s" % (len(gr), gr == rr))
     else:
         print("sitopt: nothing came back in Out:")
+    return 0
+
+
+PROBE_BIN = os.path.join(REPO, "build", "dcmptest", "DcmpTest.bin")
+
+
+def phase_dcmp(args):
+    """Run `tools/vmac/dcmptest` against an installed Optimizer.
+
+    Launched AS THE FINDER, the way `traptest` is: the volume window has
+    a dozen icons by now and type-select has already renamed an
+    application once on this image. Booting straight into the probe
+    needs no navigation at all.
+    """
+    if not os.path.exists(PROBE_BIN):
+        raise SystemExit(
+            "sitopt: no %s — build it:\n"
+            "  cmake -B build/dcmptest -S tools/vmac/dcmptest "
+            "-DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/"
+            "retro68.toolchain.cmake && cmake --build build/dcmptest"
+            % PROBE_BIN)
+    base = args.image or BOOT
+    img = os.path.join(WORK, "run-dcmp.hfv")
+    shutil.copyfile(base, img)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        hfs(env, "hmount", img)
+        sysf = VOL + ":System Folder:"
+        subprocess.run(["hrename", (sysf + "Finder").encode(),
+                        (sysf + "TheFinder").encode()],
+                       capture_output=True, env=env)
+        got = hfs(env, "hcopy", "-m", PROBE_BIN, sysf.encode())
+        if got.returncode != 0:
+            raise SystemExit("sitopt: hcopy of the probe failed")
+        subprocess.run(["hrename", (sysf + "DcmpTest").encode(),
+                        (sysf + "Finder").encode()],
+                       capture_output=True, env=env)
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    s = Session(img, [], os.path.join(SPECIMENS, args.tag), mem=args.emu)
+    try:
+        s.boot()
+        s.shot("probe", wait=20.0)
+        s.shot("probe-settled", wait=25.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("sitopt: shots in %s" % os.path.join(SPECIMENS, args.tag))
     return 0
 
 

@@ -2896,6 +2896,33 @@ What it CANNOT see:
   both places 3.5 might look, and that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M` throughout.
 
+### Calling an Optimizer module — `dcmptest`, and `sitopt.py --dcmp`
+
+    cmake -B build/dcmptest -S tools/vmac/dcmptest \
+          -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
+    cmake --build build/dcmptest
+    tools/vmac/sitopt.py --dcmp
+
+**What it proves is the calling convention and nothing else.** The probe
+opens `{system}Optimizers:MacPaint 1`, takes its `'DCMP'` with
+`Get1IndResource` — the module file holds one, and its id is the module's
+number rather than 1 — and jumps to `*handle`, which is a `bra.s` over the
+sixteen-byte header. Selector **-3** is the cheapest request there is:
+every module answers it by copying its own name into the caller's buffer
+with `_BlockMove` and writing 1 back, so no file, no callback and no
+Memory Manager are involved. It comes back with **"MacPaint 1"** and a 1.
+
+**It is launched AS THE FINDER**, the way `traptest` is, and for a reason
+this harness learned the hard way: that volume has a dozen icons by now
+and a type-select on it has already renamed an application once. Booting
+into the probe needs no navigation. `--dcmp` replaces `Finder` on a COPY
+and renames the real one aside.
+
+**What it cannot see:** the data path. A `DCMP` latches the file from the
+record it is given at selector -1 and then reads and writes it through the
+File Manager, so calling the transform needs that record's layout and a
+remnant on disk — neither of which this probe touches (OPEN_ITEMS.md).
+
 ### Making an encrypted StuffIt archive — `sitcrypt.py`
 
     tools/vmac/sitcrypt.py --map                     photograph the menus

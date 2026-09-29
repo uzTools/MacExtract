@@ -1681,6 +1681,14 @@ Photoshop 1.0's type, not the later `8BPS` — and wants an `8BIM` 1000
 resource of ten bytes or more whose word at +8 is a colour mode of 1 or
 3..7; `MacPaint 1` keys on `PNTG`.
 
+**The convention is confirmed on a Macintosh**, not only read:
+`tools/vmac/dcmptest` opens `{system}Optimizers:MacPaint 1`, takes its
+`'DCMP'` with `Get1IndResource`, jumps to `*handle` with that signature
+and selector **-3** — and the module writes **1** back and copies
+**"MacPaint 1"** into the caller's buffer, with the id at +8 reading 4.
+So a Macintosh with the modules installed can call one; nothing else
+about the data path follows from that.
+
 **And a `DCMP` does its own File Manager I/O.** `MacPaint 1`'s data path
 is a read/write loop over `_Read`, `_Write` and `_SetEOF` through the
 usual async/HFS trap glue — it rewrites the FILE, it does not transform a

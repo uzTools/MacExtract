@@ -295,13 +295,25 @@ original bytes — which is the same capability and no more.
 own File Manager I/O: `MacPaint 1`'s data path is a `_Read`/`_Write`/
 `_SetEOF` loop that rewrites the file on disk.
 
-- **On the Macintosh** the Toolbox is already underneath it. The shell
-  would load the `'DCMP'` out of `{system}Optimizers:`, write the
-  remnant to the destination and hand the module the file — which is what
-  the application does. It also changes what this project has been: the
-  engine is the product and the shell is thin, and this would put a
-  capability in the shell alone, on the one platform where the modules
-  exist.
+- **On the Macintosh** the Toolbox is already underneath it, and the
+  calling convention is confirmed there: `tools/vmac/dcmptest` loads
+  `MacPaint 1`'s `'DCMP'` and gets its name and a 1 back from selector
+  -3 (FORMATS.md). **Two things stand between that and the feature**,
+  and the first is not shell work at all:
+  1. **the remnant's length is not in the header.** An optimized entry
+     declares the ORIGINAL fork lengths, so decoding it the ordinary
+     way fails — `MacPaint 1`'s resource fork declares 501 and stores
+     two compressed bytes, and this engine answers `UNC_ERR_CORRUPT`
+     with the refusal taken out. Producing the remnant means decoding
+     until the INPUT is exhausted rather than to a known output size,
+     which is a mode every method would need and which the entry-size
+     contract in `UncEntryInfo` does not currently have a way to say.
+  2. **the module latches the file from an earlier selector.**
+     `MacPaint 1`'s `DCMP` keeps `a0@(18)` and `a0@(48)` out of the
+     record passed to -1 and then does its own `_Read`/`_Write` against
+     that file, so the shell would have to hand it a record of the same
+     shape — whose layout is read only as far as the four fields the
+     acceptance test touches.
 - **On Linux**, under `qemu-m68k` as `tools/ssmodule/` runs SpaceSaver's
   codecs, it needs a File Manager, a Memory Manager and part of the
   Resource Manager shimmed. That harness answers **three** traps; this
