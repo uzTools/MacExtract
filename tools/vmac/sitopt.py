@@ -18,6 +18,7 @@ corrected one line of it.
     tools/vmac/sitopt.py --magic        the Finder with Magic Menu loaded
     tools/vmac/sitopt.py --stuff        Magic Menu's ⌘S, read back
     tools/vmac/sitopt.py --options      the `StuffIt Options ▸` submenu
+    tools/vmac/sitopt.py --dcmpdata     run MacPaint 1's COMP and DCMP
 
 **It installs by COPYING.** The download is a StuffIt archive of two
 DiskCopy images; disk 1 holds an installer whose DATA fork is another
@@ -53,9 +54,10 @@ What this CANNOT see:
   modules are exercised; nothing on this machine is a document the
   other three take. `MacPaint 1` needed one too, and MacPaint 2.0 drew
   it — `--add-paint`, then `--paint`.
-- **whether a `DCMP` would restore the original.** No module has ever
-  been executed here; the refusal is graded as agreement with Aladdin's
-  own Engine, which refuses the same entry.
+- **whether the other four modules restore anything.** `MacPaint 1` is
+  driven both ways by `--dcmpdata` and rebuilds a valid document;
+  nothing has run `Sound 1`, `Photoshop 1` or `JPEG Lossy`, and `Text
+  1` has no `DCMP` to run.
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1`
   in both places 3.5 might look; that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M`: the resource fork alone is
@@ -415,6 +417,7 @@ def main():
     ap.add_argument("--makemods", action="store_true")
     ap.add_argument("--unstuffapp", action="store_true")
     ap.add_argument("--dcmp", action="store_true")
+    ap.add_argument("--dcmpdata", action="store_true")
     ap.add_argument("--add-modules", action="store_true")
     ap.add_argument("--magic", action="store_true")
     ap.add_argument("--stuff", action="store_true")
@@ -465,6 +468,8 @@ def main():
         return phase_unstuffapp(args)
     if args.dcmp:
         return phase_dcmp(args)
+    if args.dcmpdata:
+        return phase_dcmpdata(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -1565,6 +1570,184 @@ def phase_dcmp(args):
         s.close()
     print("sitopt: shots in %s" % os.path.join(SPECIMENS, args.tag))
     return 0
+
+
+# The image --dcmpdata boots: `Painting` in the root and `MacPaint 1`
+# installed. --paint made it and --makepaint kept it.
+PAINTMADE = os.path.join(WORK, "sitopt-paintmade.hfv")
+
+
+def remnant(data):
+    """What an optimized MacPaint entry stores, from the module's own code.
+
+    `MacPaint 1`'s 'COMP' copies the document from offset 512 to the end
+    into a temp file starting at offset 4, then writes that file's own
+    length into the first four bytes; its 'DCMP' reads the same file back
+    from offset 4 and writes it to the rebuilt document at 512, after
+    512 bytes it never initialises. So the remnant is the artwork with a
+    length in front of it, and the header is what the Optimizer throws
+    away (FORMATS.md, *What a module gives back*).
+    """
+    art = data[512:]
+    return (4 + len(art)).to_bytes(4, "big") + art
+
+
+def phase_dcmpdata(args):
+    """Drive `MacPaint 1`'s DATA PATH, both halves, on a Macintosh.
+
+    A round trip: the 'COMP' is handed the document and makes the
+    remnant, and the 'DCMP' is handed a CInfoPBRec for a fresh file and
+    that remnant in chunks. Nothing this harness built goes into either
+    module — it only grades what comes out, against the document and
+    against what StuffIt Deluxe 2.0.1's own unstuffer produced from the
+    same archive (`specimens/sitopt/unapp3`).
+    """
+    if not os.path.exists(PROBE_BIN):
+        raise SystemExit(
+            "sitopt: no %s — build it:\n"
+            "  cmake -B build/dcmptest -S tools/vmac/dcmptest "
+            "-DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/"
+            "retro68.toolchain.cmake && cmake --build build/dcmptest"
+            % PROBE_BIN)
+    base = args.image or PAINTMADE
+    if not os.path.exists(base):
+        raise SystemExit("sitopt: no %s — --add-paint and --paint make it"
+                         % base)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    img = os.path.join(WORK, "run-dcmpdata.hfv")
+    shutil.copyfile(base, img)
+    work = tempfile.mkdtemp(prefix="sitopt-")
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        hfs(env, "hmount", img)
+        # The subject comes OFF the image, so the remnant is built from
+        # the same bytes the module will be asked to rebuild.
+        orig = os.path.join(work, "Painting.bin")
+        got = hfs(env, "hcopy", "-m", (VOL + ":" + PAINT_DOC).encode(),
+                  orig.encode())
+        if got.returncode != 0:
+            raise SystemExit("sitopt: no %s on %s" % (PAINT_DOC, base))
+        data, rsrc = forks(orig)
+        print("sitopt: %s is %d B data, %d B rsrc"
+              % (PAINT_DOC, len(data), len(rsrc)))
+        rem = remnant(data)
+        print("sitopt: the remnant the COMP should make is %d B, first "
+              "long %d" % (len(rem), int.from_bytes(rem[:4], "big")))
+        sysf = VOL + ":System Folder:"
+        subprocess.run(["hrename", (sysf + "Finder").encode(),
+                        (sysf + "TheFinder").encode()],
+                       capture_output=True, env=env)
+        if hfs(env, "hcopy", "-m", PROBE_BIN, sysf.encode()).returncode != 0:
+            raise SystemExit("sitopt: hcopy of the probe failed")
+        subprocess.run(["hrename", (sysf + "DcmpTest").encode(),
+                        (sysf + "Finder").encode()],
+                       capture_output=True, env=env)
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.rmtree(work, ignore_errors=True)
+
+    s = Session(img, [], outdir, mem=args.emu)
+    written = os.path.join(s.work, "boot.hfv")
+    try:
+        # **Not `s.boot()`.** That waits for three identical frames eight
+        # seconds apart, and this screen never gives them: the probe
+        # replaced the Finder and never called `InitCursor`, so System 6
+        # leaves the WATCH up and spins it — it is there in the middle
+        # of `01-report.png`. The settle ran its full timeout and
+        # returned after the machine had powered off, and both frames of
+        # two runs came back "You may now switch off your Macintosh
+        # safely." A boot here is under a minute; wait for it by the
+        # clock, and photograph the report while it is up.
+        time.sleep(90.0)
+        s.shot("report", wait=2.0)
+        s.shot("report-again", wait=45.0)
+        s.shot("off", wait=140.0)
+    finally:
+        time.sleep(4)
+        s.close()
+
+    # The probe calls _FlushVol and then loops; nothing shuts the machine
+    # down, so that call is the only reason any of this is on the image.
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        if subprocess.run(["hmount", written], capture_output=True,
+                          env=env).returncode != 0:
+            print("sitopt: cannot mount the image the emulator wrote")
+            return 1
+        for name, as_ in (("Rebuilt", "Rebuilt"),
+                          ("System Folder:Optimizers:Paint Temp 0",
+                           "PaintTemp0")):
+            dest = os.path.join(outdir, as_ + ".bin")
+            if subprocess.run(["hcopy", "-m", (VOL + ":" + name).encode(),
+                               dest.encode()], capture_output=True,
+                              env=env).returncode != 0:
+                print("sitopt: %-24s NOT on the volume" % name)
+        subprocess.run(["humount"], capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    print("sitopt: shots and files in %s" % outdir)
+    return grade_dcmpdata(outdir, data, rem)
+
+
+def grade_dcmpdata(outdir, data, rem):
+    """What the run has to show for itself.
+
+    Three checks, and the first is the one that decides whether the data
+    path is proven: the rebuilt document has to agree with what StuffIt
+    Deluxe 2.0.1's own unstuffer produced from the same archive. It can
+    only agree from offset 512 on — the 512 bytes before it are a stack
+    frame the module never initialises, which is measured in the
+    specimen and is why "byte-exact" is not the standard here.
+    """
+    bad = 0
+    ref = os.path.join(SPECIMENS, "unapp3", "Painting.bin")
+    got = os.path.join(outdir, "Rebuilt.bin")
+    if not os.path.exists(got):
+        print("sitopt: nothing was rebuilt")
+        return 1
+    gd, gr = forks(got)
+    print("=== what the DCMP rebuilt")
+    print("  data %d B (the original is %d)" % (len(gd), len(data)))
+    print("  rsrc %d B" % len(gr))
+    if len(gd) != len(data) or len(gr) != 0:
+        print("  PROBLEM: the lengths are not the original's with no rsrc")
+        bad += 1
+    if gd[512:] == data[512:]:
+        print("  artwork from 512 on: IDENTICAL to the original")
+    else:
+        print("  PROBLEM: the artwork does not match")
+        bad += 1
+    n = min(512, len(gd), len(data))
+    print("  header: %d of %d bytes differ from the original"
+          % (sum(1 for i in range(n) if gd[i] != data[i]), n))
+    if os.path.exists(ref):
+        rd, _rr = forks(ref)
+        print("  vs StuffIt Deluxe's own unstuffed file:")
+        print("    from 512 on: %s" % ("IDENTICAL" if gd[512:] == rd[512:]
+                                       else "DIFFERENT"))
+        if gd[512:] != rd[512:]:
+            bad += 1
+        n = min(512, len(gd), len(rd))
+        print("    header: %d of %d bytes differ from its header"
+              % (sum(1 for i in range(n) if gd[i] != rd[i]), n))
+    else:
+        print("  (no unapp3/Painting.bin to compare with)")
+    tmp = os.path.join(outdir, "PaintTemp0.bin")
+    if os.path.exists(tmp):
+        td, _tr = forks(tmp)
+        print("=== the remnant the COMP made, %d B" % len(td))
+        if td == rem:
+            print("  IDENTICAL to a length in front of the document"
+                  " from 512 on")
+        else:
+            print("  PROBLEM: differs from the one this harness built")
+            bad += 1
+    else:
+        print("=== the COMP's temp file did not come off the image")
+    print("sitopt: %d problem(s)" % bad)
+    return 1 if bad else 0
 
 
 def phase_map(args):

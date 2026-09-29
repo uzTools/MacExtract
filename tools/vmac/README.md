@@ -2788,6 +2788,7 @@ Four things it will teach you if you drive another application here:
     tools/vmac/sitopt.py --makepaint    stuff it with `MacPaint 1` on/off
     tools/vmac/sitopt.py --add-modules  the three Optimizers --install missed
     tools/vmac/sitopt.py --makemods     Sound 1, Photoshop 1, JPEG Lossy
+    tools/vmac/sitopt.py --dcmpdata     run MacPaint 1's COMP and DCMP
 
 **It installs by COPYING, not by running the installer.** The download is a
 StuffIt archive of two DiskCopy images; disk 1 holds one file, an installer
@@ -2890,38 +2891,87 @@ What it CANNOT see:
 
 - **whether a real Sound Designer II or Photoshop document behaves the
   same.** Two subjects are built to the modules' own acceptance tests.
-- **whether a `DCMP` restores the original.** No module has ever been
-  executed here; the refusal is graded as agreement with Aladdin's Engine.
+- **whether the other four modules' `DCMP`s behave as `MacPaint 1`'s
+  does.** That one is driven end to end by `--dcmpdata`, below; the
+  rest have never been run.
 - **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1` in
   both places 3.5 might look, and that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M` throughout.
 
-### Calling an Optimizer module — `dcmptest`, and `sitopt.py --dcmp`
+### Running an Optimizer module — `dcmptest`, `--dcmp` and `--dcmpdata`
 
     cmake -B build/dcmptest -S tools/vmac/dcmptest \
           -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
     cmake --build build/dcmptest
-    tools/vmac/sitopt.py --dcmp
+    tools/vmac/sitopt.py --dcmp        the calling convention, on sitopt.hfv
+    tools/vmac/sitopt.py --dcmpdata    the whole data path, on sitopt-paintmade.hfv
 
-**What it proves is the calling convention and nothing else.** The probe
+**`--dcmp` proves the calling convention and nothing else.** The probe
 opens `{system}Optimizers:MacPaint 1`, takes its `'DCMP'` with
-`Get1IndResource` — the module file holds one, and its id is the module's
-number rather than 1 — and jumps to `*handle`, which is a `bra.s` over the
-sixteen-byte header. Selector **-3** is the cheapest request there is:
-every module answers it by copying its own name into the caller's buffer
-with `_BlockMove` and writing 1 back, so no file, no callback and no
-Memory Manager are involved. It comes back with **"MacPaint 1"** and a 1.
+`Get1IndResource` — the module file holds one, and its id is the
+module's number rather than 1 — and jumps to `*handle`, which is a
+`bra.s` over the sixteen-byte header. Selector **-3** is the cheapest
+request there is: every module answers it by copying its own name into
+the caller's buffer with `_BlockMove` and writing 1 back, so no file, no
+callback and no Memory Manager are involved. It comes back with
+**"MacPaint 1"** and a 1.
+
+**`--dcmpdata` is the round trip, and it needs `Painting` on the
+volume** — so it boots `sitopt-paintmade.hfv`, not `sitopt.hfv`. The
+`COMP` is handed a `CInfoPBRec` at -1 and told to run at -4, and its
+output is read back through `*selector > 0`; that remnant then goes into
+the `DCMP` at -1, in 512-byte chunks, and -2. The grader checks the
+rebuilt document against the original and against what 2.0.1's own
+unstuffer produced (`specimens/sitopt/unapp3`), and the remnant against
+a length in front of the document from offset 512 on. **0 problems** on
+2026-09-29 (FORMATS.md, *What the data path does*).
 
 **It is launched AS THE FINDER**, the way `traptest` is, and for a reason
 this harness learned the hard way: that volume has a dozen icons by now
 and a type-select on it has already renamed an application once. Booting
-into the probe needs no navigation. `--dcmp` replaces `Finder` on a COPY
-and renames the real one aside.
+into the probe needs no navigation. `--dcmp` and `--dcmpdata` replace
+`Finder` on a COPY and rename the real one aside.
 
-**What it cannot see:** the data path. A `DCMP` latches the file from the
-record it is given at selector -1 and then reads and writes it through the
-File Manager, so calling the transform needs that record's layout and a
-remnant on disk — neither of which this probe touches (OPEN_ITEMS.md).
+Five things cost a run each, and only one of them is about StuffIt:
+
+- **Paint the screen white first.** The desktop is a grey pattern and
+  `DrawString` over it is unreadable at 512x342: the first data-path
+  run photographed eighteen lines of results nobody could make out.
+- **One `FSRead` is not a read.** A short count is legal, and this
+  volume gives one at a file's first extent — a single call for 2,437
+  bytes came back with 2,048. The untouched tail of the buffer went
+  through the module and came out as the rebuilt document's last 389
+  bytes: **the right length with the wrong content**, which is the
+  failure that looks most like success. The module's own transform
+  loops over `_Read` for exactly this reason.
+- **`_FlushVol` returning 0 is not Shut Down.** A run that flushed and
+  then hung left the rebuilt file's catalog entry reading zero length on
+  the image. The probe calls `ShutDwnPower` now, and the shots have to
+  be taken BEFORE it — **by the clock, not by `Session.boot()`**. That
+  settle wants three identical frames and this screen never gives them:
+  the probe replaced the Finder and never called `InitCursor`, so the
+  watch is up and spinning. Two runs ran the settle's full timeout and
+  photographed *"You may now switch off your Macintosh safely."* twice.
+- **A `COMP` will not let go of its temp file.** Opening
+  `{system}Optimizers:Paint Temp 0` while the module holds it gives -49,
+  `opWrErr`, and the selector that closes it (-2) is the one that
+  deletes it. `*selector > 0` hands the bytes over instead.
+- **`PBGetCatInfo` returns the file number in `ioDirID`**, so a record
+  passed straight on names the wrong directory. Put the three input
+  fields back before handing it to a module.
+
+What these CANNOT see:
+
+- **the other four modules' data paths.** `Sound 1`, `Photoshop 1` and
+  `JPEG Lossy` have a `DCMP` each and none has been run; `Text 1` has
+  none by design.
+- **whether a real MacPaint would open the rebuilt file.** It is
+  byte-identical to StuffIt Deluxe's own output from offset 512 on and
+  its first 512 bytes are a stack frame; nothing here has launched
+  MacPaint on one.
+- **anything about the ENGINE side.** Feeding a module the remnant of a
+  real archive needs that remnant, which is the open item
+  (OPEN_ITEMS.md).
 
 ### Making an encrypted StuffIt archive — `sitcrypt.py`
 
