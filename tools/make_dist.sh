@@ -195,10 +195,10 @@ one comes back tidied -- which is what StuffIt Deluxe itself hands back
 too, because the add-on threw that away and nothing can put it back. A
 paint document comes back with the picture intact and a blank header:
 its palette and pattern settings are gone for good, and not even
-StuffIt Deluxe can bring them back. The fifth add-on, the JPEG one, is skipped
-and named on purpose: what it kept of the picture is lossy, so nothing
-can give that picture back as it was -- not MacExtract, and not StuffIt
-Deluxe 2.0 with the add-on installed either.
+StuffIt Deluxe can bring them back. The fifth add-on, the JPEG one, is named and
+skipped for now. When it arrives it will be lossy too: what that add-on
+kept of the picture cannot be turned back into the picture, by
+MacExtract or by StuffIt Deluxe 2.0 with the add-on installed.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is

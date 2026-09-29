@@ -317,7 +317,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
 - 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
 - 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
-- 2026-09-29 (a measured zero, declined) — `JPEG Lossy` is out of scope, and the price had nothing to do with it
+- 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
 
 ---
 
@@ -19709,7 +19709,7 @@ code. Ten minutes of disassembly for tables that were not there, when
 a resource listing gave the answer. **Read the labels before the
 instructions.**
 
-## 2026-09-29 (a measured zero, declined) — `JPEG Lossy` is out of scope, and the price had nothing to do with it
+## 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
 
 **Decision.** StuffIt 2.0's `Photoshop/JPEG Lossy` Optimizer (module 3)
 is out of scope for v1. Entries it touched stay named and refused per
@@ -19744,6 +19744,16 @@ reached for, and saying so is cheaper than letting a wrong premise
 become the citation** — this file records three cases of a correct
 answer with the wrong reason attached, and this is the first where the
 reason was corrected before it was written down.
+
+**Reversed the same day.** The maintainer put it back in scope once
+the two premises were shown not to hold. Nothing below changes: the
+result is still lossy, so it will land as `module_restored = 2` —
+named and flagged, like `MacPaint 1` — and the reason to do it is that
+the format is fully described and costs the shipped build nothing, not
+that anybody will get their picture back. **The entry stays here with
+both halves**, because a decision that was made and unmade in a day is
+worth more as a record of how the arguments moved than either half is
+alone.
 
 **And the transferable half.** This project prices every axis before
 calling a thing free, and the habit is worth having for the case where

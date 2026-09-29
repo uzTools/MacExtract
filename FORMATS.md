@@ -1864,10 +1864,23 @@ distinct byte value, measured. That is worse than refusing, and it is
 why "a modern viewer can open it" is not an argument for leaving these
 entries alone.
 
-**`JPEG Lossy` is out of scope for v1** as of 2026-09-29, decided on
-worth: everything below is known, the decoder costs the shipped build
-nothing measurable, and the result would still be lossy
-(OPEN_ITEMS.md, Part 1).
+**How the entropy data is divided, read 2026-09-29.** The `TileOffsets`
+and `TileByteCounts` arrays declare 230 entries of which the last **six
+are zero**, so there are **224 segments** — and the scan carries exactly
+224 restart markers. Each segment ends `FF Dn 00`: an `RST` whose index
+runs continuously **mod 8 across the whole image**, never reset per
+tile, then one pad byte.
+
+**The segments come in 32 groups of 7, one group per 8-pixel tile row**
+(32 x 8 = 256 rows). Within a group the first **five** carry the
+picture and the last **two** are always 11 bytes — on a document whose
+ink is grey, that is five of luma and one each of `Cb` and `Cr`. The
+five grow and shrink with where the ink is: on a tile row inked from
+column 34 to 226 they run 76, 130, 157, 155, 114 bytes, small at both
+ends and largest in the middle, so **they divide the tile row across
+its width**. Exactly where they divide it is the one thing still
+unread, and the way to settle it is to decode with a candidate split
+and compare against the oracle.
 
 **So nothing has to be recovered from the module.** *"The tables are not
 in the stream, so they are in the module"* was written here on
