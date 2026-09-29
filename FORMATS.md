@@ -1823,6 +1823,7 @@ goes through the module and comes back
 | | |
 |---|---|
 | a Photoshop 1.0 document | **196,608 B of raw pixels — 256x256x3, no header at all** — with the geometry in an `8BIM` **1000** resource of ten bytes |
+| how those pixels are laid out | **PLANAR**: three whole 65,536-byte planes, not interleaved triples — read as planes the restored image has a mean adjacent-sample difference of **3.1**, read as triples **10.4** |
 | what `JPEG Lossy` stored | **14,127 B**, method nibble 0 — STORED, so the module's output is in the archive verbatim |
 | what 2.0.1 gave back | 196,608 B and the same resource fork, **10.1 % of the pixel bytes changed** — 58 distinct values where the document had 2 |
 
@@ -1846,6 +1847,15 @@ for a result that is lossy by construction. That is the refusal's
 ground now, and **"a 9 KB JPEG decoder" — written as fact on
 2026-09-29 and corrected the same day — was closer than the correction
 was** (BLOCKERS.md).
+
+**And the planar layout is what decides whether it fits the floor.** A
+JPEG scan hands back components together; this format wants a whole
+plane before the next one begins. So an implementation either buffers
+the image — 196 KB for a small one, unbounded for a real one — or runs
+the entropy decoder once per plane and discards two thirds of each
+pass, which the restart markers make practical and which is what keeps
+the memory to one MCU row. Whether the scan is interleaved at all is
+**not known**: that needs the tables first.
 
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512
