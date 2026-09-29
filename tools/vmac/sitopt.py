@@ -418,6 +418,8 @@ def main():
     ap.add_argument("--unstuffapp", action="store_true")
     ap.add_argument("--dcmp", action="store_true")
     ap.add_argument("--dcmpdata", action="store_true")
+    ap.add_argument("--add-archive",
+                    help="a MacBinary archive to put on the image first")
     ap.add_argument("--add-modules", action="store_true")
     ap.add_argument("--magic", action="store_true")
     ap.add_argument("--stuff", action="store_true")
@@ -1420,30 +1422,42 @@ def phase_makemods(args):
 # claim that a 'DCMP' restores the original. The module's code runs;
 # what this does not do is call it directly (OPEN_ITEMS.md).
 UNST_SCRIPT_NAME = "Zunstuff"
-UNST_SCRIPT = "\r".join([
-    "; written by tools/vmac/sitopt.py",
-    'Write Status To "{Startup}UnStatus.out"',
-    "Continue On Error",
-    'Destination "{Startup}Out:"',
-    "; UnStuff works on the OPEN archive's entries, not on a file:",
-    '; the first attempt said "* * * No open archive!" for both lines.',
-    "; ONE archive, because two of them both write `Painting` into the",
-    "; destination and the second run could not say which file it got.",
-    'Open Archive "{Startup}OptPaint.sit"',
-    'UnStuff "*"',
-    "Close",
-    "Quit",
-    "",
-])
+
+
+def unst_script(archive):
+    """The application's own script for unstuffing ONE archive."""
+    return "\r".join([
+        "; written by tools/vmac/sitopt.py",
+        'Write Status To "{Startup}UnStatus.out"',
+        "Continue On Error",
+        'Destination "{Startup}Out:"',
+        "; UnStuff works on the OPEN archive's entries, not on a file:",
+        '; the first attempt said "* * * No open archive!" for both lines.',
+        "; ONE archive, because two of them both write `Painting` into the",
+        "; destination and the second run could not say which file it got.",
+        'Open Archive "{Startup}%s"' % archive,
+        'UnStuff "*"',
+        "Close",
+        "Quit",
+        "",
+    ])
 
 
 def phase_unstuffapp(args):
-    """StuffIt Deluxe 2.0.1, with `MacPaint 1` installed, unstuffs the
-    archive its own Engine refused — and the original is deleted first,
-    so what comes back cannot be it."""
+    """StuffIt Deluxe 2.0.1 unstuffs an archive its own Engine refused —
+    the subject is deleted first, so what comes back cannot be it.
+
+    `--archive` and `--item` say which; the defaults are the `MacPaint 1`
+    pair. For a module whose archive is not already on the boot image —
+    `Sound 1`, `Photoshop 1` and `JPEG Lossy` were stuffed on a
+    different boot — pass `--image` and `--add-archive` and this copies
+    the archive on first.
+    """
     base = args.image or os.path.join(WORK, "sitopt-paintmade.hfv")
     if not os.path.exists(base):
         raise SystemExit("sitopt: no %s — --makepaint makes it" % base)
+    arcname = args.archive or "OptPaint.sit"
+    item = args.item or PAINT_DOC
     outdir = os.path.join(SPECIMENS, args.tag)
     os.makedirs(outdir, exist_ok=True)
     img = os.path.join(WORK, "run-%s.hfv" % args.tag)
@@ -1451,12 +1465,16 @@ def phase_unstuffapp(args):
     work = tempfile.mkdtemp(prefix="sitopt-un-")
     try:
         mb = os.path.join(work, "script.bin")
-        open(mb, "wb").write(macbinary(UNST_SCRIPT_NAME, "TEXT", "SIT!",
-                                       UNST_SCRIPT.encode("mac_roman")))
+        open(mb, "wb").write(macbinary(
+            UNST_SCRIPT_NAME, "TEXT", "SIT!",
+            unst_script(arcname).encode("mac_roman")))
         env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
         try:
             hfs(env, "hmount", img)
-            subprocess.run(["hdel", (VOL + ":Painting").encode()],
+            if args.add_archive:
+                hfs(env, "hcopy", "-m", os.path.abspath(args.add_archive),
+                    (VOL + ":").encode())
+            subprocess.run(["hdel", (VOL + ":" + item).encode()],
                            capture_output=True, env=env)
             subprocess.run(["hmkdir", (VOL + ":Out").encode()],
                            capture_output=True, env=env)
@@ -1491,7 +1509,7 @@ def phase_unstuffapp(args):
                 for line in out.stdout.decode("mac-roman",
                                               "replace").splitlines():
                     print("  " + line.strip())
-                for n in ("Out:Painting", "UnStatus.out"):
+                for n in ("Out:" + item, "UnStatus.out"):
                     subprocess.run(
                         ["hcopy", "-m", (VOL + ":" + n).encode(),
                          os.path.join(outdir,
@@ -1510,14 +1528,20 @@ def phase_unstuffapp(args):
         for line in data.decode("mac-roman", "replace").split("\r"):
             if line.strip():
                 print("  " + line)
-    got = os.path.join(outdir, "Painting.bin")
-    ref = os.path.join(SPECIMENS, "paintmake", "Painting.bin")
+    got = os.path.join(outdir, item + ".bin")
+    ref = args.against or os.path.join(SPECIMENS, "paintmake",
+                                       "Painting.bin")
     if os.path.exists(got) and os.path.exists(ref):
         gd, gr = forks(got)
         rd, rr = forks(ref)
         print("=== what the application restored")
-        print("  data %d B, == MacPaint's original: %s" % (len(gd), gd == rd))
-        print("  rsrc %d B, == MacPaint's original: %s" % (len(gr), gr == rr))
+        print("  data %d B (the subject is %d), identical: %s"
+              % (len(gd), len(rd), gd == rd))
+        print("  rsrc %d B (the subject is %d), identical: %s"
+              % (len(gr), len(rr), gr == rr))
+        if gd != rd and len(gd) == len(rd) and rd:
+            n = sum(1 for i in range(len(rd)) if gd[i] != rd[i])
+            print("  same length, %d of %d bytes differ" % (n, len(rd)))
     else:
         print("sitopt: nothing came back in Out:")
     return 0

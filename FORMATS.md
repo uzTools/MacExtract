@@ -1825,6 +1825,32 @@ which StuffIt then compressed not at all — method nibble 0, stored. Its
 RESOURCE fork is untouched by the module and carries its control's CRC,
 so only the data fork is at issue.
 
+**And there is no oracle for it: StuffIt Deluxe 2.0.1 will not decode
+its own `JPEG Lossy` archive.** Asked to, with the module installed, it
+puts up a modal alert — *"This file cannot be decoded by this version
+of the Photoshop JPEG optimizer. Perhaps the file is damaged or perhaps
+a newer version is needed."* — and the script stalls behind it
+(`specimens/sitopt/unjpeg1`). **The control rules out the image and the
+procedure**: on the same volume, the same boot and the same script,
+`OptPhoto.sit` unstuffs without a murmur and gives its data fork back
+identical to the subject (`specimens/sitopt/unphoto1`), which is also
+what this engine produces. So an implementation of module 3 could not
+be graded here even if one existed. **Why 2.0.1 refuses it is a
+hypothesis**: that subject is part synthetic — a real PSD data fork
+with an `8BIM` 1000 resource built to satisfy the module's acceptance
+test — so the likeliest reading is a document the `COMP` accepted and
+could not round-trip, rather than a broken module. A genuine Photoshop
+1.0-era document would settle it and this machine has none.
+
+**One thing the control showed that was not being looked for.** 2.0.1's
+own restored RESOURCE fork is the right length and differs from the
+subject's in **30 bytes**, all of them in the fork's padding and map
+region, where this engine's output matches the subject and the
+archive's stored CRC exactly. The Resource Manager rewriting a fork it
+creates would explain it and is **not tested**; what is measured is
+that on this entry the engine is closer to the archive than the
+application is.
+
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512
 bytes of its caller's stack, which nothing can reproduce — and writes

@@ -2871,6 +2871,24 @@ word, so `Get1Resource` returned NULL and the module declined a subject
 built for it; `spacesaver.resources()` parses what `one_resource()` writes
 now, which is the check that should have been there first.
 
+**`--unstuffapp` takes `--archive`, `--item` and `--add-archive` since
+2026-09-29**, so the application can be asked about any of the eight:
+
+    tools/vmac/sitopt.py --unstuffapp --tag unjpeg1 \
+      --image $VMAC/sitopt/sitopt-painted.hfv \
+      --add-archive /tmp/OptJpeg.sit.bin --archive OptJpeg.sit --item Photo
+
+That image is the one with all five Optimizers installed; the archives
+`--makemods` wrote are not on it, which is what `--add-archive` is for.
+**Asked about `OptJpeg.sit`, 2.0.1 refuses its own archive** — *"This
+file cannot be decoded by this version of the Photoshop JPEG
+optimizer"* — and the alert is MODAL, so the script never finishes and
+no status file comes back; the missing `UnStatus.out` is the symptom,
+and the screenshot is the finding. `OptPhoto.sit` on the same image in
+the same boot unstuffs cleanly, which is the control that makes it a
+fact about the module (FORMATS.md, *What an Optimizer did to the
+fork*).
+
 **`--unstuff` on the MacPaint archive is the other half of the answer.**
 Magic Menu refuses it — *"Items that were encrypted or compressed with an
 optimizer or compressor will be skipped. The Engine does not currently
