@@ -1059,13 +1059,12 @@ Engine, asked to unstuff both, decoded the `Text 1` archive and refused the
 optimizer or compressor will be skipped… Please use StuffIt Deluxe
 instead."* The split this suite asserts is the format's.
 
-**What it cannot see.** What a `DCMP` produces. That is not a guess any
-more — `MacPaint 1`'s two halves are run end to end by
-`tools/vmac/sitopt.py --dcmpdata`, and the document that comes back has
-the artwork and a 512-byte stack frame where its header was (FORMATS.md,
-*What the data path does*) — but none of it is reachable from an
-archive, so this suite grades the REFUSAL, which rests on the declared
-lengths naming a file the stored remnant cannot make. Two subjects are also part synthetic —
+**What it cannot see.** Whether a `DCMP` and this engine agree on
+anything but these four archives. Three of the four reversible
+Optimizers are undone in `src/fmt_sit.c` since 2026-09-29 and this
+suite grades the RESULT — byte for byte against the subject for `Sound
+1` and `Photoshop 1`, and against 2.0.1's own unstuffed output for
+`MacPaint 1` — but only over the documents this project made. Two subjects are also part synthetic —
 `Sound 1` wants a Sound Designer II file and `Photoshop 1` a Photoshop
 1.0-era one, and both were built to the acceptance test in the module's own
 `COMP` — so they show what a module does once it accepts a file rather than

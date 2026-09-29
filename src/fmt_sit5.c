@@ -410,7 +410,7 @@ int unc_sit5_extract(UncCtx *c)
                         if (hasrsrckey) sit5_fork_key(cr, archivekey, rsrckey);
                         est = unc_sit_decode_fork(c, UNC_FORK_RSRC, datastart,
                                                   rsrccomp, rsrclen, rsrcmethod,
-                                                  rsrccrc, iobuf, iocap,
+                                                  0, rsrccrc, iobuf, iocap,
                                                   obuf, ocap,
                                                   hasrsrckey ? cr : NULL);
                     }
@@ -419,7 +419,7 @@ int unc_sit5_extract(UncCtx *c)
                         est = unc_sit_decode_fork(c, UNC_FORK_DATA,
                                                   datastart + rsrccomp,
                                                   datacomp, datalen, datamethod,
-                                                  datacrc, iobuf, iocap,
+                                                  0, datacrc, iobuf, iocap,
                                                   obuf, ocap,
                                                   hasdatakey ? cr : NULL);
                     }

@@ -985,6 +985,25 @@ typedef struct UncForkOut {
      * it: MacLHA compresses a MacBinary payload and ArcMac splits at
      * one offset. Only meaningful while `split` is set. */
     uint32_t dstart, dend, rstart, rend;
+    /* What a StuffIt 2.0 Optimizer did to the fork before it was
+     * compressed, undone here at flush time and BEFORE the checksum —
+     * because the entry's CRC is over the ORIGINAL bytes wherever the
+     * module is exactly reversible (FORMATS.md, *What an Optimizer did
+     * to the fork*). Both are off for every other format and cost one
+     * test per flush.
+     *
+     * `delta`: the fork is a byte-wise difference; undo it with a
+     * running sum carried across flushes in `dacc`. That is the whole
+     * of what `Sound 1` and `Photoshop 1` do, and their two 'DCMP'
+     * resources are byte-identical apart from the name and the id.
+     *
+     * `skip`: drop this many bytes from the FRONT of the stream,
+     * accumulating them big-endian into `skipval` so the format can
+     * check them — `MacPaint 1` puts its remnant's own length there,
+     * and four bytes shifted into a long is both the smallest code and
+     * the value the caller wants. */
+    uint8_t  delta, dacc, skip;
+    uint32_t skipval;
 } UncForkOut;
 
 /* `write` and `ck` as above; `buf`/`cap` are the caller's staging.
@@ -1157,10 +1176,17 @@ int unc_archive_encrypted(UncFormat fmt, UncIO *io);
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
  * verifies its own internal CRC-32 instead). Shared by the classic
- * and SIT5 containers. Returns a per-entry status. */
+ * and SIT5 containers. Returns a per-entry status.
+ *
+ * `optdec` says what a StuffIt 2.0 Optimizer left behind and how to put
+ * it back — one of fmt_sit.c's SIT_OPTDEC_* values, and 0 for every
+ * caller that has no such thing. It can change what is STORED as well
+ * as what comes out: `MacPaint 1` declares the original length and
+ * stores a shorter remnant. */
 int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint32_t complen, uint32_t outlen, int method,
-                        uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
+                        int optdec, uint16_t wantcrc,
+                        uint8_t *iobuf, uint32_t iocap,
                         uint8_t *obuf, uint32_t ocap, UncCrypt *cr);
 
 /* LHarc's -lh1- coder (unc_lzah.c): a 4 KB-window LZSS whose literals

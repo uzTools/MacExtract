@@ -532,6 +532,8 @@ void unc_fork_out(UncForkOut *o, UncCtx *c, UncFork fork, int write,
     o->crc16 = 0;
     o->crc32 = 0;
     o->dstart = o->dend = o->rstart = o->rend = 0;
+    o->delta = o->dacc = o->skip = 0;
+    o->skipval = 0;
 }
 
 void unc_fork_split(UncForkOut *o, uint32_t dstart, uint32_t dend,
@@ -575,6 +577,31 @@ int unc_fork_flush(UncForkOut *o)
     int err = UNC_OK;
 
     if (o->len == 0) return UNC_OK;
+
+    /* An Optimizer's output is turned back into the file here, ahead of
+     * the checksum and the sink, so that everything downstream — the
+     * CRC, `written`, the split spans — sees the restored bytes and
+     * nothing else has to know. Source: the modules' own 'DCMP'
+     * resources, disassembled (FORMATS.md, *What an Optimizer did to
+     * the fork*). */
+    if (o->skip) {
+        uint32_t n = o->skip < o->len ? o->skip : o->len, i;
+        for (i = 0; i < n; i++)
+            o->skipval = (o->skipval << 8) | o->buf[i];
+        o->len -= n;
+        o->skip = (uint8_t)(o->skip - n);
+        for (i = 0; i < o->len; i++) o->buf[i] = o->buf[i + n];
+        if (o->len == 0) return UNC_OK;
+    }
+    if (o->delta) {
+        uint32_t i;
+        uint8_t a = o->dacc;
+        for (i = 0; i < o->len; i++) {
+            a = (uint8_t)(a + o->buf[i]);
+            o->buf[i] = a;
+        }
+        o->dacc = a;
+    }
 
     /* The checksum is over what was DECODED, so it is taken whether or
      * not the bytes are written: a test-only run and a password

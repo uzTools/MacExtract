@@ -1005,6 +1005,7 @@ typedef struct {
     Str63        curName;      /* sanitized current file name */
     UncEntryInfo cur;
     int          entries, errors, unsupported;
+    int          inexact;    /* restored, but not the original file */
     /* The shape of what was written, for the envelope unwrap in
      * ExtractOne: one file and no folders is what an envelope layer
      * looks like, and lastName/lastDir say where it landed. */
@@ -1269,6 +1270,19 @@ static void RepEntryFailed(const uint8_t *orig, int olen, const char *why)
 /* The same, for the failure the engine reports once the entry has been
  * accepted. The reason is what the user can act on, so each says what is
  * wrong rather than naming the error. */
+/* An entry an Optimizer left INEXACT. It did not fail — the file is on
+ * the disk and it opens — so it is not a RepFailed, and the report says
+ * what is true of it instead. One sentence, because on this target a
+ * literal is .rodata in the A5 world and resident for every extraction
+ * (see the UNC_ERR_MODULE arm below). */
+static void RepInexact(const uint8_t *orig, int olen)
+{
+    if (!RepNew(1)) return;
+    RepCatBytes(orig, olen);
+    RepMarkBreak();
+    RepCat(" opens, but is not the original file");
+}
+
 static void RepFailed(const uint8_t *orig, int olen, int status)
 {
     if (!RepNew(1)) return;
@@ -2198,6 +2212,18 @@ static int SINK_END(void *ctx, int status)
      * the one failure whose answer is the file itself, and the alert
      * says so rather than "some entries could not be extracted". */
     if (status == UNC_ERR_UNSUPPORTED) s->unsupported++;
+    /* Not a failure, and told anyway: `MacPaint 1` throws a painting's
+     * header and its resource fork away, and what this engine puts back
+     * is a valid document rather than the user's file (macextract.h,
+     * module_restored). Saying nothing would leave a file under the
+     * archive's name that differs from the one that was archived. */
+    if (status == UNC_OK && s->cur.module_restored == 2) {
+        int b = 0, k;
+        for (k = 0; k < (int)s->cur.name_len; k++)
+            if (s->cur.name[k] == '/') b = k + 1;
+        RepInexact(s->cur.name + b, (int)s->cur.name_len - b);
+        s->inexact++;
+    }
     if (s->cur.is_dir) s->dirCount++;
     else s->fileCount++;
     return 0;

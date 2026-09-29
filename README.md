@@ -117,7 +117,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | | Expander 4.0.2 (free, System 6) | Deluxe 5.5.1 (paid, last for 68k) | Deluxe 7.0.3 Classic (paid, last for Mac OS 9) | MacExtract |
 |---|---|---|---|---|
 | Oldest Mac it runs on | System 6.0.5 | System 7.5.3, 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
-| StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
+| StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅* |
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on | ✅ | ✅ | ✅ |
@@ -138,6 +138,19 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
+
+\* **One rare kind of StuffIt entry comes back changed, and MacExtract
+says so.** StuffIt Deluxe 2.0 (1990) could run a small plug-in called an
+*Optimizer* over a file before compressing it, and no StuffIt since has
+opened those archives. MacExtract opens **four of the five** Aladdin
+shipped. A file `Sound 1` or `Photoshop 1` touched comes back byte for
+byte. One `Text 1` touched comes back tidied — which is what StuffIt
+Deluxe hands back too, since the plug-in threw the rest away. A painting
+`MacPaint 1` touched comes back with the picture intact and a blank
+header: its palette and pattern settings are gone, and not even StuffIt
+Deluxe itself can bring them back. `JPEG Lossy` entries are still
+refused, by name. Whenever a file is not exactly the one that was
+archived, MacExtract tells you which file and why.
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:

@@ -49,7 +49,7 @@ under *Table notes*.
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **four of the five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` as a valid document (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic — **method 14 is not implemented**, and real archives use it (*The last classic box*, below); **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -1784,6 +1784,48 @@ at the end — which is how the application gets an optimized fork, and
 the only way to get one here: the temp file cannot be opened while the
 module holds it (-49, `opWrErr`), and -2 is the call that deletes it.
 
+### What an Optimizer did to the fork, and what this engine undoes
+
+**Three of the four reversible Optimizers are undone in `src/fmt_sit.c`
+as of 2026-09-29**, each read out of its own `'DCMP'` resource and each
+graded against an archive StuffIt Deluxe 2.0.1 wrote
+(`tools/run_sitopt.py`):
+
+| module | id | what it does to the fork | undone | checked by |
+|---|---|---|---|---|
+| `Sound 1` | 1 | **a byte-wise delta** over the whole fork, in place: `out[i] = out[i-1] + in[i]`, seeded 0 | **exactly** | the entry's own CRC-16 |
+| `Photoshop 1` | 2 | the same — the two `'DCMP'`s are byte-identical apart from the name and the id | **exactly** | the same |
+| `JPEG Lossy` | 3 | a 9 KB JPEG coder, and lossy | no — refused by name | — |
+| `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
+| `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
+
+**The CRC field says which kind an entry is.** Where the module is
+exactly reversible the header carries the ORIGINAL file's CRC-16 — the
+`Sound 1` and `Photoshop 1` entries carry `47a9` and `c495`, the same
+values their controls carry — so undoing the delta is verified by the
+archive itself. Where it is not, the field reads **`ffff`**: both forks
+of the `MacPaint 1` entry and the data fork of the `JPEG Lossy` one.
+So an optimized entry that cannot be restored exactly **carries no
+checksum at all**, which is the format saying so.
+
+**`Sound 1` and `Photoshop 1` cost six lines and no risk.** The filter
+is in `unc_fork_flush`, ahead of the checksum, so the CRC is taken over
+the restored bytes and every method funnels through it; the two modules
+are one `#define` apart. `Photoshop 1`'s 115,320-byte subject and
+`Sound 1`'s 8,192-byte one both come back byte for byte, both forks.
+
+**`MacPaint 1` is the one that needs saying out loud.** The engine
+writes **512 zero bytes** where the header was — the module writes 512
+bytes of its caller's stack, which nothing can reproduce — and writes
+**no resource fork**, because the module deleted it and 2.0.1's own
+unstuffer gives back none. `UncEntryInfo.module_restored` is 2 for such
+an entry, the CLI prints a line per entry and a line per run, the
+Macintosh report carries a sentence, and README.md carries the
+asterisk. **A remnant states its own length in its first four bytes,
+and the engine checks it against the one the declared length implies**
+— that is what turns a misread entry into `UNC_ERR_CORRUPT` instead of
+a file of the right size with the wrong bytes in it.
+
 ### What a module gives back, and why the header already said so
 
 **StuffIt Deluxe 2.0.1, with `MacPaint 1` installed, does not restore the
@@ -2791,11 +2833,20 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **52,972 B** | 18,964 B | **64,512 B** | **211,200 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,596 B | 19,060 B | 63,104 B | 209,792 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 151,492 B | 37,772 B | 183,424 B | 186,752 B |
+| **eager — SHIPPED** | (default) | **53,216 B** | 19,008 B | **64,768 B** | **211,840 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,840 B | 19,104 B | 63,360 B | 210,560 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 152,068 B | 37,820 B | 184,064 B | 187,392 B |
 
-**All three re-measured 2026-09-27**, when the AppleLink `.pkg` probe was
+**All three re-measured 2026-09-29**, for undoing the 2.0 Optimizers
+rather than refusing them (*What an Optimizer did to the fork*, above):
+eager `CODE` +244 B and A5 +44 B, lazy the same, the control +576 and
++48 — the gap is the StuffIt `'OVLY'` image, which grew **324 B** and is
+released for every archive that is not a StuffIt one. On a 1 MB Mac Plus
+that is **288 B off every extraction's budget**, and `run_tiers.py
+--check` moves no tally in either lane: 71/71, 67/71, 64/71 resident and
+71/71, 69/71, 66/71 shipped, the same fixtures by name. The set before
+was 52,972 / 18,964, 51,596 / 19,060 and 151,492 / 37,772,
+**re-measured 2026-09-27**, when the AppleLink `.pkg` probe was
 removed: eager `CODE` −472 B and A5 −24 B, lazy the same, the control −472 and
 −72 (DECISIONS.md 2026-09-27, *the recogniser that was a command line*). On a
 1 MB Mac Plus that is **496 B back on every extraction's budget**, and the

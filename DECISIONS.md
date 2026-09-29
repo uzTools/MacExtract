@@ -314,6 +314,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
 - 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
 - 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
+- 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
 
 ---
 
@@ -19556,3 +19557,64 @@ sentence meant: the data fork comes out exact and the resource fork
 comes out as 82 bytes of nothing, off the end of a two-byte stream.
 **A tool named as wrong about a case is still evidence about the
 case.**
+
+## 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
+
+**Claim.** `src/fmt_sit.c` now extracts an entry a 2.0 Optimizer
+touched. `Sound 1` and `Photoshop 1` come back byte for byte with the
+archive's own CRC agreeing; `MacPaint 1` comes back as a valid painting
+that is not the user's file and is reported as such; `JPEG Lossy` is
+still refused by name.
+
+**Evidence.** `tools/run_sitopt.py`, over the eight archives 2.0.1 wrote
+here: `Sound 1`'s 8,192-byte subject and `Photoshop 1`'s 115,320-byte
+one identical in both forks, `MacPaint 1`'s painting identical from
+offset 512 on to MacPaint's own file AND to 2.0.1's unstuffed output,
+with no resource fork. Three negative controls run: the delta disabled,
+the header length wrong by twelve, the length prefix left in — 2, 1 and
+1 problems respectively, and the last came out as `UNC_ERR_CORRUPT`
+rather than a wrong file.
+
+**Consequence.** FORMATS.md, *What an Optimizer did to the fork*;
+OPEN_ITEMS.md keeps `JPEG Lossy` and nothing else. Four things.
+
+**The 264-byte module was worth more than the 3,010-byte one.** A day
+went into `MacPaint 1` — disassembly, an emulator harness, a round trip
+— and what it buys is a document with a blank header. `Sound 1`'s
+`'DCMP'` is **264 bytes**, and reading it took ten minutes: it is a
+byte-wise cumulative sum and nothing else, it restores the file
+EXACTLY, and `Photoshop 1`'s is the same code with a different name.
+Two of the five were a six-line filter the whole time. **The module
+that was hard to run was the one the work started on because it was the
+one with a document on this disk — which is a reason to open a
+specimen, not a reason to rank a problem.** Survey the set before
+committing to a member of it.
+
+**The CRC field had been saying which entries were restorable.** An
+entry `Sound 1` optimized carries the ORIGINAL file's CRC-16 — the same
+value its control carries — so undoing the delta is verified by the
+archive. An entry `MacPaint 1` or `JPEG Lossy` optimized carries
+**`ffff` in both fields**. The format marks its own irreversible
+entries, and this project had looked at those bytes twice (the
+2026-09-28 header reading counted 104..109 and never printed 100..103)
+without noticing that one archive's CRCs matched its control's and
+another's were a constant. **A constant in a field that should vary is
+the smell this file already names; it applies to bytes in a header, not
+only to rows in a matrix.**
+
+**The filter went where every method already funnels.** `unc_fork_flush`
+takes the checksum, so putting the delta there means the CRC is over
+the RESTORED bytes and no decoder had to change — including method 2,
+which writes straight into the staging buffer and would have bypassed a
+filter in `unc_fork_put`. **Two candidate places, and the one that
+looked natural was wrong**; what settled it was reading which of them
+method 2 actually goes through.
+
+**And the guard is the part that earns its place.** `MacPaint 1`'s
+remnant states its own length in its first four bytes, and the engine
+compares it with the length the header implies. That is not redundancy:
+driving the module by hand produced a file of exactly the right SIZE
+with its last 389 bytes wrong, twice, and nothing about the output said
+so. Where a format states a quantity twice, check the two against each
+other — it is the only cheap defence against the failure that looks
+like success.

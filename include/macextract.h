@@ -303,15 +303,39 @@ typedef struct UncEntryInfo {
     /* The add-on module this entry needs, for the one format that has
      * them: StuffIt 2.x could hand a fork to an external Optimizer,
      * Compressor or Encryptor, shipped as a file of type 'SITe' whose
-     * 'COMP'/'DCMP' resource id is (kind - 1) << 8 | module_id. No
-     * unarchiver has those modules, so an entry that needs one fails
-     * UNC_ERR_MODULE; both fields are set anyway, in list mode too, so
-     * that a host can say WHICH module rather than "damaged".
+     * 'COMP'/'DCMP' resource id is (kind - 1) << 8 | module_id. Nothing
+     * has those modules, so what an entry can do depends on what its
+     * module DID, which the engine undoes for the ones it has read —
+     * see module_restored below. One whose module it cannot undo fails
+     * UNC_ERR_MODULE; both fields are set in every case, in list mode
+     * too, so that a host can say WHICH module rather than "damaged".
      * kind is UNC_MODULE_NONE unless the entry names one; where both
      * forks do, this is the data fork's. The names Aladdin shipped are
      * a host's to print — see UNC_MODULE_* above for why. */
     uint8_t  module_kind;
     uint8_t  module_id;
+    /* What the engine did about that module, set once the entry is
+     * decoded (0 in list mode, where nothing was decoded):
+     *
+     *   0  nothing to do — no module, or one whose output IS the file
+     *      (`Text 1`, id 255: there is nothing to undo).
+     *   1  the module's transform was undone EXACTLY, and the entry's
+     *      own CRC-16 verified the result: `Sound 1` and `Photoshop 1`
+     *      delta-code a fork and the header then carries the ORIGINAL
+     *      file's checksum.
+     *   2  the entry was restored INEXACTLY — a valid document, not
+     *      the user's file, and nothing checks it because an entry
+     *      like this carries no checksum at all. `MacPaint 1` throws
+     *      a painting's 512-byte header and its whole resource fork
+     *      away, and neither this engine nor StuffIt Deluxe itself can
+     *      put them back (FORMATS.md, *What an Optimizer did to the
+     *      fork*).
+     *
+     * A host that writes files should SAY SO for 2. The Linux CLI
+     * prints a line per entry and README.md carries the same warning;
+     * a silent 2 is a file that differs from the one the user
+     * archived, under its name, with no sign of it. */
+    uint8_t  module_restored;
     /* Set when the archive's name for this entry was LONGER than
      * UNC_NAME_MAX and `name` holds only the first UNC_NAME_MAX bytes
      * of it. The engine cannot carry more (the buffer is part of this

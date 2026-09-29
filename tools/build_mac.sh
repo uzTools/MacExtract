@@ -307,7 +307,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # on the other side*). It costs the RESIDENT control 4 B and the shipped
 # build 0 — fmt_arc is in an overlay there — which is also how it got in:
 # nothing built this configuration. `ci.sh` builds it since the same day.
-UNC_MAC_CODE_DEFAULT=151492
+UNC_MAC_CODE_DEFAULT=152068
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -393,7 +393,7 @@ UNC_MAC_CODE_DEFAULT=151492
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37772
+UNC_MAC_A5_DEFAULT=37820
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -461,10 +461,29 @@ UNC_MAC_A5_DEFAULT=37772
 # agreeing. It is refused per entry now instead. `run_tiers.py --check`
 # moves no tally in either lane with the images re-taken: 71/71, 67/71,
 # 64/71 resident and 71/71, 69/71, 66/71 shipped, the same fixtures by name.
-UNC_MAC_CODE_EAGER=52972
-UNC_MAC_A5_EAGER=18964
-UNC_MAC_CODE_LAZY=51596
-UNC_MAC_A5_LAZY=19060
+# RAISED 2026-09-29, all six, for UNDOING the 2.0 Optimizers rather than
+# refusing them: `Sound 1` and `Photoshop 1` delta-code a fork and are undone
+# exactly, and `MacPaint 1`'s remnant is rebuilt into a valid painting
+# (FORMATS.md, *What an Optimizer did to the fork*). Eager code 52,972 ->
+# 53,216 and A5 18,964 -> 19,008; lazy 51,596 -> 51,840 and 19,060 ->
+# 19,104; resident 151,492 -> 152,068 and 37,772 -> 37,820. **288 B off
+# every extraction on a 1 MB Mac Plus in the shipped build**, 624 B in the
+# control — the gap is the StuffIt 'OVLY' image, which carries most of it
+# and is released for every archive that is not a StuffIt one. The two
+# filters themselves are in `unc_fork_flush`, which is resident because
+# every format funnels through it; 44 B of the A5 figure is one sentence
+# the Macintosh report needs, because a file that is not the one that was
+# archived cannot come out under its name in silence.
+# What the bytes bought: an entry `Sound 1` or `Photoshop 1` optimized now
+# extracts BYTE FOR BYTE with the archive's own CRC-16 agreeing, and one
+# `MacPaint 1` optimized extracts as the same valid document StuffIt Deluxe
+# itself gives back. Three of the five Optimizers, where the day before
+# every one of them with a 'DCMP' was refused. `run_tiers.py --check` is
+# what says whether it cost a fixture.
+UNC_MAC_CODE_EAGER=53216
+UNC_MAC_A5_EAGER=19008
+UNC_MAC_CODE_LAZY=51840
+UNC_MAC_A5_LAZY=19104
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

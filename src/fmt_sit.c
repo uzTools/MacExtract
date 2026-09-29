@@ -99,7 +99,47 @@
  * there is nothing to undo, the application's own Get Info pane
  * special-cases 255 before it looks any module up, and refusing such an
  * entry would withhold the only bytes that exist. */
+/* What an Optimizer's id means for decoding. Every one of these is the
+ * module's own 'DCMP' resource, disassembled, and every one that is
+ * undone here is graded against an archive StuffIt Deluxe 2.0.1 wrote
+ * (tools/run_sitopt.py; FORMATS.md, *What an Optimizer did to the
+ * fork*). An id that is not listed is REFUSED by name — this engine
+ * undoes what it has read and nothing it has guessed at. */
+#define SIT_OPT_SOUND1       1   /* byte-wise delta over the fork       */
+#define SIT_OPT_PHOTOSHOP1   2   /* the same filter, same code          */
+#define SIT_OPT_JPEGLOSSY    3   /* a JPEG decoder, and lossy: refused  */
+#define SIT_OPT_MACPAINT1    4   /* drops a painting's 512-byte header  */
 #define SIT_OPT_IRREVERSIBLE 255
+
+/* MacPaint's header, which `MacPaint 1` throws away and its 'DCMP'
+ * replaces with 512 bytes of its caller's stack. What this engine
+ * writes there instead is zeros — as reproducible as the module's is
+ * not, and as valid: the version long at offset 0 is then 0, which is
+ * "no pattern data follows". Source: the module's 'COMP' copies the
+ * fork from offset 512 and its 'DCMP' writes it back at 512, measured
+ * both ways on a Macintosh (FORMATS.md, *What the data path does*). */
+#define SIT_PNTG_HEADER 512
+/* …behind a four-byte length the module's 'COMP' writes in front of the
+ * remnant and its 'DCMP' reads back on its first data call. */
+#define SIT_OPT_REMNANT_LEN 4
+
+/* 0 refuse; 1 decode as stored; 2 undo a byte-wise delta, exactly;
+ * 3 rebuild a MacPaint document, INEXACTLY. */
+#define SIT_OPTDEC_REFUSE  0
+#define SIT_OPTDEC_ASIS    1
+#define SIT_OPTDEC_DELTA   2
+#define SIT_OPTDEC_PNTG    3
+
+static int sit_opt_decodable(uint8_t id)
+{
+    switch (id) {
+    case SIT_OPT_IRREVERSIBLE: return SIT_OPTDEC_ASIS;
+    case SIT_OPT_SOUND1:
+    case SIT_OPT_PHOTOSHOP1:   return SIT_OPTDEC_DELTA;
+    case SIT_OPT_MACPAINT1:    return SIT_OPTDEC_PNTG;
+    default:                   return SIT_OPTDEC_REFUSE;
+    }
+}
 static unsigned sit_fork_module(const uint8_t *hdr, int rsrc, uint32_t len,
                                 uint8_t *id)
 {
@@ -870,14 +910,26 @@ static int sit_put_run(void *ctx, const uint8_t *p, uint32_t n)
  * per-entry status. */
 int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint32_t complen, uint32_t outlen, int method,
-                        uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
+                        int optdec, uint16_t wantcrc,
+                        uint8_t *iobuf, uint32_t iocap,
                         uint8_t *obuf, uint32_t ocap, UncCrypt *cr)
 {
     UncBufIn in;
     UncForkOut f;
     int err;
+    /* What is STORED, which is the fork's declared length unless an
+     * Optimizer shortened it. */
+    uint32_t stream = outlen;
 
     if (outlen == 0) return UNC_OK;
+
+    if (optdec == SIT_OPTDEC_PNTG) {
+        /* `MacPaint 1` stores a remnant: its own four-byte length, then
+         * the painting from offset 512 on. A declared length shorter
+         * than the header it drops describes no painting at all. */
+        if (outlen < SIT_PNTG_HEADER) return UNC_ERR_CORRUPT;
+        stream = outlen - SIT_PNTG_HEADER + SIT_OPT_REMNANT_LEN;
+    }
 
     if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
@@ -889,30 +941,53 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
     unc_fork_out(&f, c, fork, !c->opt.test_only, UNC_CK_CRC16_ARC,
                  obuf, ocap);
 
+    if (optdec == SIT_OPTDEC_DELTA) f.delta = 1;
+    if (optdec == SIT_OPTDEC_PNTG) {
+        /* The header the module never puts back, written before the
+         * remnant so everything downstream sees one stream. */
+        uint32_t i;
+        for (i = 0; i < SIT_PNTG_HEADER; i++)
+            if (unc_fork_put(&f, 0) != UNC_OK) return UNC_ERR_SINK;
+        if ((err = unc_fork_flush(&f)) != UNC_OK) return err;
+        f.skip = SIT_OPT_REMNANT_LEN;
+    }
+
     switch (method & 0x0f) {
-    case 0:  err = sit_store(&f, &in, outlen); break;
-    case 1:  err = sit_rle90(&f, &in, outlen); break;
-    case 2:  err = sit_lzw(&f, &in, outlen, complen, c->al); break;
-    case 3:  err = sit_huffman(&f, &in, outlen, c->al); break;
+    case 0:  err = sit_store(&f, &in, stream); break;
+    case 1:  err = sit_rle90(&f, &in, stream); break;
+    case 2:  err = sit_lzw(&f, &in, stream, complen, c->al); break;
+    case 3:  err = sit_huffman(&f, &in, stream, c->al); break;
     case 5:  {
         /* "LZAH" is LHarc's -lh1- coder, and the oracle runs one handle
          * for both; it lives in unc_lzah.c and fmt_lzh.c calls the same
          * function. */
         UncBitIn bi;
         unc_bitin_init(&bi, &in);
-        err = unc_lzah_decode(c->al, &bi, outlen, UNC_LZAH_LH1, sit_put_run, &f);
+        err = unc_lzah_decode(c->al, &bi, stream, UNC_LZAH_LH1, sit_put_run, &f);
         break;
     }
-    case 6:  err = sit6_fork(&f, &in, outlen, c->al); break;
-    case 8:  err = sit_mw_fork(&f, &in, outlen, c->al); break;
-    case 13: err = sit13_fork(&f, &in, outlen, c->al); break;
-    case 15: err = unc_arsenic_decode(&in, c->al, outlen, &f); break;
+    case 6:  err = sit6_fork(&f, &in, stream, c->al); break;
+    case 8:  err = sit_mw_fork(&f, &in, stream, c->al); break;
+    case 13: err = sit13_fork(&f, &in, stream, c->al); break;
+    case 15: err = unc_arsenic_decode(&in, c->al, stream, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }
     if (err == UNC_OK) err = unc_fork_flush(&f);
+    /* The remnant states its own length. Checking it against the one
+     * derived from the header is the only thing that stands between a
+     * misread entry and a file of the right SIZE with the wrong bytes
+     * in it — which is what this looked like the first time it was
+     * driven by hand (DECISIONS.md 2026-09-29). */
+    if (err == UNC_OK && optdec == SIT_OPTDEC_PNTG &&
+        (f.skip != 0 || f.skipval != stream))
+        err = UNC_ERR_CORRUPT;
     /* Method 15 carries its own CRC-32, checked inside the decoder;
-     * the header CRC-16 field is not meaningful for it. */
-    if (err == UNC_OK && (method & 0x0f) != 15 && f.crc16 != wantcrc)
+     * the header CRC-16 field is not meaningful for it. An entry
+     * `MacPaint 1` optimized carries no checksum either — 0xffff in
+     * both fields, where an entry `Sound 1` optimized carries the
+     * ORIGINAL file's CRC and so checks out once the delta is undone. */
+    if (err == UNC_OK && (method & 0x0f) != 15 &&
+        optdec != SIT_OPTDEC_PNTG && f.crc16 != wantcrc)
         err = UNC_ERR_CRC;
     return err;
 }
@@ -1009,7 +1084,8 @@ int unc_sit_extract(UncCtx *c)
     while (pos + SIT_FILEHDRSIZE <= totalsize) {
         uint32_t namelen, rmeth, dmeth, rlen, dlen, rcomp, dcomp, start;
         UncEntryInfo e;
-        int sret, est, needmod;
+        int sret, est, needmod, ddec = SIT_OPTDEC_ASIS,
+            rdec = SIT_OPTDEC_ASIS;
 
         if (unc_read_at(c->io, pos, hdr, SIT_FILEHDRSIZE) != UNC_OK) {
             err = UNC_ERR_TRUNCATED;
@@ -1093,34 +1169,52 @@ int unc_sit_extract(UncCtx *c)
                 e.module_id   = rid;
             }
             /* An Optimizer ran BEFORE the compressor, so decoding the
-             * method succeeds and hands back the optimized bytes — a
-             * file with its resources dropped or its spaces turned into
-             * tabs, under the original's name, with the header's CRC
-             * agreeing. Whether that is the right answer depends on
-             * whether anything can undo it, and the id says:
+             * method succeeds and hands back the OPTIMIZED bytes — a
+             * file with its resources dropped or its header thrown
+             * away, under the original's name. What to do about that
+             * is the id's to say, and this engine undoes the modules
+             * it has read and refuses every other by name:
              *
-             *   255  nothing can (`Text 1` has no 'DCMP'), those bytes
-             *        are all that exists, and StuffIt Deluxe 2.0.1
-             *        itself hands back exactly them — so DECODE.
-             *   else the header declares the ORIGINAL file's lengths
-             *        while the fork holds a remnant the module would
-             *        rebuild from — `MacPaint 1` declares a 501-byte
-             *        resource fork and stores two compressed bytes —
-             *        so nothing without the module can produce a fork
-             *        of the declared size at all. REFUSE. (What the
-             *        module gives back is a valid document, not the
-             *        original bytes: measured, FORMATS.md.)
+             *   255  there is nothing to undo (`Text 1` has no 'DCMP'),
+             *        those bytes are all that exists, and 2.0.1 itself
+             *        hands back exactly them.
+             *   1, 2 `Sound 1` and `Photoshop 1` delta-code the fork
+             *        and change nothing else — same length, and the
+             *        header still carries the ORIGINAL file's CRC, so
+             *        undoing it is exact AND checked.
+             *   4    `MacPaint 1` throws a painting's 512-byte header
+             *        and its whole resource fork away. What comes back
+             *        is a valid document and not the user's file, and
+             *        the entry carries no checksum to say otherwise —
+             *        so it is restored and FLAGGED, never silently.
+             *   else refused by name, `JPEG Lossy` (3) included: its
+             *        'DCMP' is a 9 KB JPEG decoder and it is lossy.
              *
              * An external Compressor is refused whatever its id: there
              * is no decoding that at all. It is refused here rather
              * than at the method switch so the report names the
              * module instead of a method number. */
-            needmod = ((dmod == UNC_MODULE_OPTIMIZER &&
-                        did != SIT_OPT_IRREVERSIBLE) ||
-                       (rmod == UNC_MODULE_OPTIMIZER &&
-                        rid != SIT_OPT_IRREVERSIBLE) ||
+            ddec = dmod == UNC_MODULE_OPTIMIZER ? sit_opt_decodable(did)
+                                                : SIT_OPTDEC_ASIS;
+            rdec = rmod == UNC_MODULE_OPTIMIZER ? sit_opt_decodable(rid)
+                                                : SIT_OPTDEC_ASIS;
+            needmod = (ddec == SIT_OPTDEC_REFUSE ||
+                       rdec == SIT_OPTDEC_REFUSE ||
                        dmod == UNC_MODULE_COMPRESSOR ||
                        rmod == UNC_MODULE_COMPRESSOR);
+            if (!needmod) {
+                if (ddec == SIT_OPTDEC_PNTG || rdec == SIT_OPTDEC_PNTG)
+                    e.module_restored = 2;
+                else if (ddec == SIT_OPTDEC_DELTA || rdec == SIT_OPTDEC_DELTA)
+                    e.module_restored = 1;
+            }
+            /* `MacPaint 1` deletes the resource fork outright: its
+             * entry declares the original's 501 bytes and stores a
+             * remnant of nothing, and 2.0.1's own unstuffer gives back
+             * a file with no resource fork at all. So the entry yields
+             * none, and says so here rather than promising one no
+             * decoder can fill. */
+            if (rdec == SIT_OPTDEC_PNTG) { rlen = 0; e.rsrc_size = 0; }
         }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -1149,7 +1243,8 @@ int unc_sit_extract(UncCtx *c)
                     if (est == UNC_OK)
                         est = unc_sit_decode_fork(c, UNC_FORK_RSRC, start,
                                        rc, rlen,
-                                       (int)rmeth, unc_get_u16be(hdr + 100),
+                                       (int)rmeth, rdec,
+                                       unc_get_u16be(hdr + 100),
                                        iobuf, iocap, obuf, ocap,
                                        renc ? cr : NULL);
                     if (est == UNC_OK && denc) {
@@ -1159,7 +1254,7 @@ int unc_sit_extract(UncCtx *c)
                     if (est == UNC_OK)
                         est = unc_sit_decode_fork(c, UNC_FORK_DATA,
                                        start + rcomp,
-                                       dc, dlen, (int)dmeth,
+                                       dc, dlen, (int)dmeth, ddec,
                                        unc_get_u16be(hdr + 102),
                                        iobuf, iocap, obuf, ocap,
                                        denc ? cr : NULL);

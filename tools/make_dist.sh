@@ -185,12 +185,19 @@ part that makes a report worth sending.
 One kind of StuffIt file is worth knowing about. StuffIt Deluxe 2.0, in
 1990, could hand a file to an add-on called an Optimizer before
 compressing it -- a separate little file you installed, which trimmed
-text or paint documents. Where the add-on only tidied and could not put
-anything back, as the text one did, the file comes out here exactly as
-StuffIt Deluxe itself hands it back, tidied. Where the add-on COULD have
-restored what it took out, MacExtract skips that entry and says so,
-rather than giving you a file that is quietly not the one that went in;
-only StuffIt Deluxe with that same add-on will open those.
+sound, paint, Photoshop or text documents before they were squeezed. No
+StuffIt since has opened those archives. MacExtract opens four of the
+five add-ons Aladdin shipped, and tells you when what comes out is not
+what went in.
+
+A sound or a Photoshop document comes back exactly as it was. A text
+one comes back tidied -- which is what StuffIt Deluxe itself hands back
+too, because the add-on threw that away and nothing can put it back. A
+paint document comes back with the picture intact and a blank header:
+its palette and pattern settings are gone for good, and not even
+StuffIt Deluxe can bring them back. The fifth add-on, the JPEG one, is
+skipped and named, and only StuffIt Deluxe 2.0 with that add-on
+installed will open those entries.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is

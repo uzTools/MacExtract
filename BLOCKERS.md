@@ -1732,6 +1732,23 @@ a harness can click is not the same list.
   bytes out the whole time: run against this archive it produces the
   2,437-byte remnant, byte for byte.
 
+- **"An entry a reversible Optimizer touched cannot be extracted, and
+  refusing it is not a judgement call."** FORMATS.md, OPEN_ITEMS.md,
+  TESTING.md and `src/fmt_sit.c`'s own comment, from 2026-09-28,
+  withdrawn 2026-09-29 when three of the four were implemented. The
+  refusal was right about `JPEG Lossy` and wrong about the other three:
+  `Sound 1` and `Photoshop 1` delta-code a fork and nothing else, so
+  the file comes back EXACTLY and the entry's own CRC — the original
+  file's — proves it, and `MacPaint 1` comes back as the same valid
+  document StuffIt Deluxe gives. **Cost: one day of the wrong module.**
+  The work went to `MacPaint 1`, whose `'DCMP'` is 3,010 bytes and
+  needed an emulator harness to drive, because it was the module with a
+  document on this disk; `Sound 1`'s is **264 bytes** and says all of
+  itself in ten minutes of disassembly. **Why it survived:** the first
+  module opened was the hardest one, and "a `DCMP` rewrites the file
+  through the File Manager" was then generalised to all four from a
+  sample of one. Two of them never touch a file at all.
+
 ### Corrected figures and superseded write-ups
 
 - **`MacPaint 1`'s data path was written as a loop over `_Read`,

@@ -359,6 +359,7 @@ typedef struct {
     UncEntryInfo cur;
     uint32_t    data_written, rsrc_written;
     int         entries, errors;
+    int         inexact;        /* entries an Optimizer left INEXACT   */
     int         unsupported;    /* entries whose METHOD this build lacks */
     int         unsup_method;   /* the first such method, for the message */
     /* For envelope auto-unwrap: shape of what was extracted. */
@@ -912,8 +913,27 @@ static int sink_end(void *ctx, int status)
         } else {
             fprintf(stderr, "macextract: %s: %s\n", name, unc_strerror(status));
         }
-    } else if (s->verbose && !s->list_only) {
-        printf("  %s (%u data, %u rsrc)\n", name, s->data_written, s->rsrc_written);
+    } else {
+        /* An Optimizer this engine could only PART undo. The bytes are
+         * on the disk under the archive's name and they are not the
+         * bytes that went in — `MacPaint 1` throws a painting's
+         * 512-byte header and its resource fork away and neither this
+         * nor StuffIt Deluxe can put them back — so say so, every
+         * time, whether or not anybody asked for -v. An entry restored
+         * EXACTLY (module_restored 1) says nothing: its own CRC
+         * verified it. README.md, *Compared with what Aladdin sold*. */
+        if (s->cur.module_restored == 2 && !s->list_only) {
+            const char *mn = module_name(s->cur.module_kind,
+                                         s->cur.module_id);
+            s->inexact++;
+            fprintf(stderr, "macextract: %s: rebuilt from what the \"%s\" "
+                            "StuffIt Optimizer left — a valid document, "
+                            "NOT the original file\n",
+                    name, mn ? mn : "?");
+        }
+        if (s->verbose && !s->list_only)
+            printf("  %s (%u data, %u rsrc)\n", name,
+                   s->data_written, s->rsrc_written);
     }
     if (s->cur.is_dir) s->dir_count++;
     else {
@@ -2649,6 +2669,16 @@ nextlayer:
                 onlymiss++;
             }
     }
+    /* Said once at the end as well as once per entry: a long run's
+     * per-entry lines scroll away, and this is the one thing about the
+     * output that a user has to know afterwards. Not an error — the
+     * files are there and they open. */
+    if (sink.inexact)
+        fprintf(stderr, "macextract: %d entr%s rebuilt from what a StuffIt "
+                        "Optimizer left, and %s NOT the original file%s\n",
+                sink.inexact, sink.inexact == 1 ? "y was" : "ies were",
+                sink.inexact == 1 ? "is" : "are",
+                sink.inexact == 1 ? "" : "s");
     if (sink.errors) {
         fprintf(stderr, "macextract: %d of %d entries failed\n",
                 sink.errors, sink.entries);

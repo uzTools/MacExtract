@@ -264,64 +264,26 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: both halves of one run on a Macintosh
+## StuffIt 2.0's Optimizers: one of five left, and it is a JPEG coder
 
-**The floor is what makes this an item.** This unarchiver is for a 1986
-machine, and StuffIt Deluxe 2.0 is 1990-92 software from the same desks, so a
-user of ours is more likely than anybody to hand it an archive stuffed with an
-Optimizer enabled - which no StuffIt since 3.x will open either.
+**Four of the five are extracted** as of 2026-09-29 — `Text 1` and
+`Sound 1` and `Photoshop 1` exactly, `MacPaint 1` as a valid document
+that is not the user's file (FORMATS.md, *What an Optimizer did to the
+fork*). What is left:
 
-**Where an archive names its module is read and confirmed on all five
-modules** (FORMATS.md, *What Aladdin's own output says*): every Optimizer
-that carries a `DCMP` writes its own resource id into byte 106 - 1, 2, 3, 4 -
-and `Text 1`, the only one that carries none, writes 255. This engine decodes
-255 and refuses the rest by name, which is the split Aladdin's own Engine
-makes. `tools/run_sitopt.py` grades eight archives 2.0.1 wrote.
+- **`JPEG Lossy`, id 3.** Its `'DCMP'` is a **9 KB JPEG decoder** and
+  it is lossy, so even a correct implementation would not give the
+  document back. Refused by name. Closing it means a baseline JPEG
+  decoder in the engine, on a 1 MB floor, for one Optimizer nobody has
+  ever seen in the wild — which is why it is listed rather than
+  planned.
+- **Nothing has seen an optimized archive that this project did not
+  make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1
+  under Mini vMac. A real one would test the readings against somebody
+  else's subject and somebody else's settings.
+- **The encryptors.** 2.x could encrypt with `PassLock`, `NewDEx` or
+  `DESex`, and `src/fmt_sit.c` implements the built-in scheme that
+  replaced all three; nothing here has ever seen an archive from any of
+  them, and the application that writes one now runs
+  (`tools/vmac/sitopt.py`).
 
-**What a module gives back is measured too, and it is not the original.**
-StuffIt Deluxe 2.0.1 with `MacPaint 1` installed unstuffs its own optimized
-archive to a file with the artwork intact, a different 512-byte header and
-no resource fork (FORMATS.md, *What a module gives back*). So there is
-nothing here that would restore an optimized file byte for byte, and
-refusing rests on the declared lengths rather than on the module.
-
-**Running a module is no longer open, and what it gives back is
-measured.** `tools/vmac/dcmptest` drives `MacPaint 1` both ways on an
-emulated Mac — the `COMP` makes the remnant, the `DCMP` rebuilds the
-document from it, byte-identical to StuffIt Deluxe's own output from
-offset 512 on (FORMATS.md, *What the data path does*). So the ABI, the
-record the module is handed and the shape of the remnant are all
-settled, and what a module buys is a valid document whose first 512
-bytes nothing can reproduce.
-
-**What is left is getting the remnant out of the archive, and it is
-smaller than this file said until 2026-09-29.** An optimized entry
-declares the ORIGINAL fork lengths, and every method here decodes to a
-known output size, so asking for 2,945 bytes of a fork that holds 2,437
-fails. That was written up as *"a mode every method would need"*;
-it is not (BLOCKERS.md, withdrawn claims). **The remnant carries its own
-length in its first four bytes**, and every method will stop at four
-bytes on request, so decoding twice — four bytes for the length, then
-that many — needs no change to any decoder. **Hypothesis: not built,
-not run.** What it does need is somewhere to say "this entry's stored
-length is not its declared length", which `UncEntryInfo` has no field
-for, and a rule for the fork with NO remnant: this entry's resource fork
-declares 501, stores 2 bytes and decodes to nothing at all.
-
-**And then there would still be two routes, of different sizes.** On the
-Macintosh the Toolbox is already underneath the module and `dcmptest`
-shows the sequence a shell would have to repeat. On Linux, under
-`qemu-m68k` as `tools/ssmodule/` runs SpaceSaver's codecs, it needs a
-File Manager, a Memory Manager and part of the Resource Manager shimmed:
-that harness answers **three** traps, this would need something closer to
-twenty, and a fake volume for the module to read and write.
-
-**And either way the result is not the user's file**, so it would want
-saying so in the interface and in README.md rather than being presented as
-an extraction.
-
-**And the encryptors, which the same harness can now reach.** 2.x could
-encrypt with `PassLock`, `NewDE` or `DES`, and `src/fmt_sit.c` implements the
-built-in scheme that replaced all three; nothing here has ever seen an
-archive from any of them, and the application that writes one now runs
-(`tools/vmac/sitopt.py`).

@@ -188,7 +188,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # ---------------------------------------------------------------------------
 
 # What the overlay build does NOT carry resident, in bytes: the control's
-# `CODE` + A5 less the shipped build's, 151,492 + 37,772 - 52,972 - 18,964.
+# `CODE` + A5 less the shipped build's, 152,068 + 37,820 - 53,216 - 19,008.
 # All four measured 2026-09-28 with `m68k-apple-macos-size` (FORMATS.md,
 # *Three configurations, one tree*), which is the only place to correct them.
 # It read 117,056 — a set two corrections old — until 2026-09-27: v0.34.0's
@@ -198,17 +198,20 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # `ci.sh` instead of surfacing as a residue — and it caught the AppleLink
 # probe's removal the same day, and the StuffIt add-on module fields on
 # 2026-09-28: **+224 B**, because that change costs the control 336 B of
-# resident code and A5 and the shipped build 112 B.
+# resident code and A5 and the shipped build 112 B. And **+336 B** on
+# 2026-09-29, for undoing the 2.0 Optimizers rather than refusing them: the
+# control 624 B and the shipped build 288 B (FORMATS.md, *What an Optimizer
+# did to the fork*).
 #
 # NOT COMPENSATED ANYWHERE, deliberately. TIERS above and OVL_RESIDUE below
-# are measurements taken on the machine against a build 336 B smaller, so
-# every shipped prediction here is now ~560 B more generous than the
+# are measurements taken on the machine against a build **624 B smaller**,
+# so every shipped prediction here is now ~1,200 B more generous than the
 # Macintosh will be until both are re-taken there. Arithmetic is not a
 # substitute for that measurement — subtracting from a stale one is how the
 # floor budget was once made worse (DECISIONS.md 2026-09-22, *the fold, on a
 # Macintosh*) — and it decides nothing: the narrowest margin between a
 # passing layer's demand and its budget is 16,490 B.
-OVL_SAVED = 117328
+OVL_SAVED = 117664
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -265,11 +268,11 @@ IMAGES = {
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    18258,
+    "OVL_ID_STUFFIT":    18582,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 143328
+BUNDLE = 143652
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -17,6 +17,7 @@ replays them:
   PlainPaint.sit  the control for the other kind of Optimizer
   OptPaint.sit    `MacPaint 1` over a document MacPaint 2.0 itself drew
   Painting.bin    that document, as MacPaint wrote it
+  Painting2.bin   what 2.0.1's own unstuffer gives back for OptPaint
   OptSound.sit    `Sound 1`, over a Sound Designer II file
   OptPhoto.sit    `Photoshop 1`, over a Photoshop document
   OptJpeg.sit     `Photoshop/JPEG Lossy`, over the same document
@@ -40,28 +41,40 @@ engine at some point today:
      method bytes, 106 and 108 both 255, and 46/47/107/109 zero;
   5. **every module's id is its own.** All four Optimizers that carry
      a 'DCMP' write their resource id into byte 106 — `Sound 1` 1,
-     `Photoshop 1` 2, `Photoshop/JPEG Lossy` 3, `MacPaint 1` 4 — and
-     each entry is refused with that module NAMED. `Text 1`, the one
-     with no 'DCMP', is the only 255. **JPEG Lossy is the case that
-     could have broken the rule and does not**: it is lossy, and 255
-     is what the application's Get Info pane prints as " lossy", but
-     it writes 3;
+     `Photoshop 1` 2, `Photoshop/JPEG Lossy` 3, `MacPaint 1` 4 —
+     and `Text 1`, the one with no 'DCMP', is the only 255. **JPEG
+     Lossy is the case that could have broken the rule and does not**:
+     it is lossy, and 255 is what the application's Get Info pane
+     prints as " lossy", but it writes 3;
   6. **the declared lengths**, which are what makes the rule a rule
      rather than a convention — see 4b in the code; and
-  7. **the other kind of Optimizer.** `MacPaint 1` carries a 'DCMP', so
-     something CAN undo it: it writes its own module id, 4, and the
-     entry is refused by name. Aladdin's Engine refuses it too —
-     *"Items that were encrypted or compressed with an optimizer or
-     compressor will be skipped. The Engine does not currently support
-     this. Please use StuffIt Deluxe instead."* — and decoded the
-     `Text 1` one without a murmur, so this engine's rule is the
-     Engine's rule. Its control must still extract byte for byte.
+  7. **what this engine undoes, and what it declines.** Since
+     2026-09-29 three of the four reversible Optimizers are undone
+     here, each module's own 'DCMP' having been disassembled:
+
+       `Sound 1` and `Photoshop 1` delta-code a fork and change
+       nothing else, so the subject comes back BYTE FOR BYTE, both
+       forks, and the entry's own CRC-16 — which is the original
+       file's — has to agree or the engine fails it. Nothing is said
+       to the user about those, and the silence is asserted too.
+
+       `MacPaint 1` throws a painting's 512-byte header and its whole
+       resource fork away, so the artwork must be byte-identical to
+       MacPaint's own file AND to 2.0.1's own unstuffed output, the
+       resource fork must be ABSENT, the header this engine writes
+       must be zeros — the module writes its caller's stack there and
+       nothing can reproduce that — and the run must SAY it is not
+       the original file.
+
+       `JPEG Lossy` is still refused, by name: its 'DCMP' is a 9 KB
+       JPEG decoder and it is lossy.
 
 What this CANNOT see:
 
-- **whether the module would restore the original.** Refusing is graded
-  as agreement with Aladdin's Engine, not by running a 'DCMP'; nothing
-  here has ever run one (OPEN_ITEMS.md).
+- **whether a 'DCMP' agrees with this engine on anything but these
+  four archives.** What each module does was read out of its own code
+  and then run on an emulated Mac (tools/vmac/dcmptest), but only over
+  the documents here.
 - **whether a real Photoshop or Sound Designer II document behaves the
   same.** Those two subjects are part synthetic: the data fork of the
   Photoshop one is a genuine PSD (ImageMagick wrote it, deark reads it
@@ -92,6 +105,10 @@ MADE = os.path.join(SPECIMENS, "make2")
 UNSTUFFED = os.path.join(SPECIMENS, "unstuff1", "unstuffed.bin")
 PAINT = os.path.join(SPECIMENS, "paintmake")
 MODS = os.path.join(SPECIMENS, "mods5")
+# What 2.0.1's OWN unstuffer gave back for OptPaint.sit — the only
+# thing "correct" can mean for an entry `MacPaint 1` optimized,
+# because the module does not restore the original either.
+UNAPP = os.path.join(SPECIMENS, "unapp3", "Painting.bin")
 
 # The subject `sitopt.py` stuffed, repeated here rather than imported so
 # that this suite still grades if that harness is edited: what the
@@ -212,16 +229,55 @@ def main():
                         or open(q + ".rsrc", "rb").read() != pr):
                     problems.append("the paint control's resource fork is "
                                     "not MacPaint's own")
+            # `MacPaint 1` drops a painting's 512-byte header and its
+            # whole resource fork, and this engine puts back a header of
+            # ZEROS — as reproducible as the module's own is not, since
+            # a 'DCMP' writes 512 bytes of its caller's stack there
+            # (FORMATS.md, *What the data path does*). So the artwork
+            # must be exact and the header must not be graded against
+            # anything: what is graded is that the entry comes out at
+            # the declared length, with no resource fork, with the
+            # painting byte-identical to MacPaint's own file AND to
+            # 2.0.1's own unstuffed output, and that the user is TOLD.
             out = os.path.join(work, "optpaint")
             rc, msg = extract(args.macextract,
                               os.path.join(PAINT, "OptPaint.sit.bin"), out)
-            if rc == 0:
-                problems.append("OptPaint.sit extracted; `MacPaint 1` can "
-                                "undo what it did and this engine has no "
-                                "'DCMP', so the entry must be refused")
-            elif "MacPaint 1" not in msg:
-                problems.append("OptPaint.sit was refused without naming "
-                                "the module: %s" % msg.strip())
+            q = os.path.join(out, "Painting")
+            if rc != 0 or not os.path.exists(q):
+                problems.append("OptPaint.sit did not extract: %s"
+                                % msg.strip())
+            else:
+                got = open(q, "rb").read()
+                if len(got) != len(pd):
+                    problems.append("OptPaint: the painting is %d bytes and "
+                                    "the header declares %d"
+                                    % (len(got), len(pd)))
+                elif got[512:] != pd[512:]:
+                    problems.append("OptPaint: the artwork is not "
+                                    "MacPaint's own from offset 512 on")
+                if got[:512] != bytes(512):
+                    problems.append("OptPaint: the 512-byte header this "
+                                    "engine writes is not zeros")
+                if os.path.exists(q + ".rsrc"):
+                    problems.append("OptPaint: a resource fork was written; "
+                                    "`MacPaint 1` deletes it and 2.0.1's "
+                                    "own unstuffer gives back none")
+                if "MacPaint 1" not in msg or "NOT the original" not in msg:
+                    problems.append("OptPaint extracted without saying it "
+                                    "is not the original file: %s"
+                                    % msg.strip())
+                if os.path.exists(UNAPP):
+                    ud, ur = forks(UNAPP)
+                    if got[512:] != ud[512:]:
+                        problems.append("OptPaint: the artwork differs from "
+                                        "what 2.0.1's own unstuffer gave "
+                                        "back")
+                    if ur:
+                        problems.append("the unapp3 specimen has a resource "
+                                        "fork; 2.0.1 gave back none")
+                else:
+                    print("run_sitopt: no unapp3 specimen — the DCMP's own "
+                          "output is not compared (sitopt.py --unstuffapp)")
             h = header(os.path.join(PAINT, "OptPaint.sit.bin"))
             if h and (h[106] != 4 or h[108] != 4):
                 problems.append("OptPaint: optimizer bytes are %d/%d, and "
@@ -267,13 +323,42 @@ def main():
                 elif h[106] != mid:
                     problems.append("%s: byte 106 is %d and `%s` is module "
                                     "%d" % (fn, h[106], name, mid))
-                rc, msg = extract(args.macextract, arc,
-                                  os.path.join(work, fn))
-                if rc == 0:
-                    problems.append("%s extracted; `%s` carries a 'DCMP' "
-                                    "and this engine has none" % (fn, name))
-                elif name not in msg:
-                    problems.append("%s was refused without naming `%s`: %s"
+                out = os.path.join(work, fn)
+                rc, msg = extract(args.macextract, arc, out)
+                if mid == 3:
+                    # `JPEG Lossy`'s 'DCMP' is a 9 KB JPEG decoder and
+                    # it is lossy. Refused, by name — the one module of
+                    # the five that still is.
+                    if rc == 0:
+                        problems.append("%s extracted; `%s` is a lossy JPEG "
+                                        "coder and is not implemented"
+                                        % (fn, name))
+                    elif name not in msg:
+                        problems.append("%s was refused without naming "
+                                        "`%s`: %s" % (fn, name, msg.strip()))
+                    continue
+                # `Sound 1` and `Photoshop 1` delta-code the fork and
+                # change nothing else, so undoing it is EXACT — graded
+                # against the subject itself, both forks, and the
+                # entry's own CRC-16 had to agree or the engine would
+                # have failed it. Nothing is said to the user about
+                # these, and that silence is part of the assertion.
+                sd, sr = forks(os.path.join(MODS, entry + ".bin"))
+                q = os.path.join(out, entry)
+                if rc != 0 or not os.path.exists(q):
+                    problems.append("%s did not extract: %s"
+                                    % (fn, msg.strip()))
+                    continue
+                if open(q, "rb").read() != sd:
+                    problems.append("%s: the data fork is not the subject "
+                                    "`%s` byte for byte" % (fn, entry))
+                if sr and (not os.path.exists(q + ".rsrc")
+                           or open(q + ".rsrc", "rb").read() != sr):
+                    problems.append("%s: the resource fork is not the "
+                                    "subject's" % fn)
+                if "NOT the original" in msg:
+                    problems.append("%s: `%s` is exactly reversible and the "
+                                    "run warned about it anyway: %s"
                                     % (fn, name, msg.strip()))
         else:
             print("run_sitopt: no Sound/Photoshop specimens — three "
