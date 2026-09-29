@@ -271,17 +271,19 @@ the translator.
 that is not the user's file (FORMATS.md, *What an Optimizer did to the
 fork*). What is left:
 
-- **`JPEG Lossy`, id 3.** The only Optimizer still refused, and it
-  **works** — Photoshop 1.0.7 runs under Mini vMac, a document it wrote
-  goes through the module and comes back with 10.1 % of its pixel bytes
-  changed (FORMATS.md, *What an Optimizer did to the fork*). So there
-  is now an oracle AND a subject, and what stands in the way is cost
-  and worth: the stored payload is entropy-coded baseline JPEG with
-  restart markers and **no tables in the stream**, so closing this
-  means a JPEG decoder on a 1 MB floor plus recovering the module's
-  own quantisation and Huffman tables out of its 9,176 bytes of code —
-  for a result that is lossy by construction and can never be the
-  user's file.
+- **`JPEG Lossy`, id 3.** The only Optimizer still refused, and the
+  2026-09-29 spike found it far more tractable than it was written up
+  as. Its payload is a **self-describing TIFF** carrying its own
+  quantisation and Huffman tables, and the codec is a licensed **C-Cube
+  JPEG** engine (FORMATS.md, *What an Optimizer did to the fork*). So
+  nothing needs recovering from the module: what is left is a baseline
+  JPEG entropy decoder plus an IDCT, against a payload whose every
+  parameter is explicit, with **an oracle and a subject that both now
+  exist**. What still argues against it: the result is lossy by
+  construction and can never be the user's file, `libtiff` will not
+  read compression 32865 so there is no shortcut, and the output is
+  PLANAR while a JPEG scan is not — so it either buffers the image or
+  decodes once per plane.
 
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1

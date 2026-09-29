@@ -316,6 +316,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
 - 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
 - 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
+- 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
 
 ---
 
@@ -19664,3 +19665,45 @@ dumped and read the day before and that field was not decoded, because
 the question then was "is there a JPEG in here" and the answer was no.
 **A structure worth dumping is worth parsing: the bytes that answer the
 next question are usually already on the screen.**
+
+## 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
+
+**Claim.** Recovering `Photoshop/JPEG Lossy`'s tables was never the
+task. Its payload is a self-describing TIFF with the quantisation and
+Huffman tables inside it, and the module wraps a licensed C-Cube JPEG
+engine.
+
+**Evidence.** The 14,047 bytes after the module's 80-byte header begin
+`MM\0*` and parse as a 22-entry TIFF IFD: 256x256, 3x8 bits, YCbCr,
+compression **32865** (C-Cube's private JPEG code), quantisation tables
+at tag 33606 that are Annex K's in zigzag order halved, DC and AC
+Huffman tables at 33607 and 33608 that are byte-identical to the
+module's `DATA` 1001, quality 25 at 33604 matching the module's `Pref`
+128. The module file also holds **`C3a` 1, 31,952 bytes, "C-Cube
+V1.0"**. FORMATS.md, *What an Optimizer did to the fork*.
+
+**Consequence.** The refusal in `src/fmt_sit.c` is unchanged and the
+estimate behind it is withdrawn (BLOCKERS.md). Three things.
+
+**The spike succeeded by failing its own premise.** It was set up to
+answer "can the tables be recovered from the module?" and the useful
+answer was "there is nothing to recover". **A spike should be allowed
+to invalidate its question, and the way to let it is to look at the
+artefact before executing the plan** — here, to list the module file's
+resources, which takes one command and had never been run. Every
+search for the tables had been inside the two resources already
+extracted.
+
+**A structure announces itself in its first four bytes.** `MM\0*` was
+printed to the screen the day before, in the hex dump that established
+the payload "cannot be a JPEG stream". That conclusion was right and
+useless: the question asked was "is there an `FF D8` here", and the
+bytes answering the *next* question were in the same 48 characters.
+**When a dump answers "no", read it again for what it does say.**
+
+**And the name was the fastest route of all.** "C-Cube V1.0" on a
+resource identifies the codec, its era and its file format in three
+words — C-Cube defined JPEG-in-TIFF and 32865 is their compression
+code. Ten minutes of disassembly for tables that were not there, when
+a resource listing gave the answer. **Read the labels before the
+instructions.**

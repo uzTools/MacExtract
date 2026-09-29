@@ -1751,6 +1751,26 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"The tables are not in the stream, so they are in the module;
+  implementing this means recovering them from 9,176 bytes of code."**
+  FORMATS.md and OPEN_ITEMS.md, written 2026-09-29 and withdrawn the
+  same day by the spike it was the justification for. **Every parameter
+  is in the payload**, which is a TIFF: quantisation tables at private
+  tag 33606, DC and AC Huffman tables at 33607 and 33608, quality at
+  33604, geometry in the ordinary IFD entries. **Cost: it was the whole
+  cost estimate** — "a JPEG decoder PLUS recovering the tables from a
+  disassembly" is a different piece of work from "a JPEG decoder", and
+  the second was quoted to the maintainer as the first. **Why it
+  survived:** two searches that were both real and both in the wrong
+  place. The tables were looked for in the `COMP` and `DCMP` resources
+  and never in **the module file's other resources** — which hold
+  `DATA` 1000 and 1001, the tables, and a 31,952-byte `C3a` named
+  *"C-Cube V1.0"* that is the actual codec. And the payload's first four
+  bytes, `MM\0*`, were printed to the screen the day before while the
+  question being asked was "is there an `FF D8` in here". **A structure
+  announces itself in its first four bytes; a negative answer to the
+  question you asked is not an answer to the question you have.**
+
 - **"There is no oracle and no subject for `JPEG Lossy`; a genuine
   Photoshop 1.0 document would need Photoshop 1.0."** OPEN_ITEMS.md and
   FORMATS.md, 2026-09-29, withdrawn the same day **when the maintainer

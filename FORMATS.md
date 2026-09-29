@@ -1795,7 +1795,7 @@ graded against an archive StuffIt Deluxe 2.0.1 wrote
 |---|---|---|---|---|
 | `Sound 1` | 1 | **a byte-wise delta** over the whole fork, in place: `out[i] = out[i-1] + in[i]`, seeded 0 | **exactly** | the entry's own CRC-16 |
 | `Photoshop 1` | 2 | the same — the two `'DCMP'`s are byte-identical apart from the name and the id | **exactly** | the same |
-| `JPEG Lossy` | 3 | **baseline-JPEG scan data** in a private 80-byte container, and lossy | no — refused by name | — |
+| `JPEG Lossy` | 3 | **a TIFF of C-Cube JPEG** behind an 80-byte header, tables and all, and lossy | no — refused by name | — |
 | `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
 | `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
 
@@ -1838,24 +1838,31 @@ modern `8BPS` PSD wearing Photoshop 1.0's type, read zeros out of a
 fabricated resource, and encoded a 0x0 image — which its own `DCMP`
 then refused, correctly.
 
-**What the payload is, measured.** After the 80 bytes it is
-entropy-coded JPEG with **restart markers RST0..RST7**, and **no
-`SOI`, `DQT`, `DHT`, `SOF` or `EOI`** — the tables are not in the
-stream, so they are in the module. Implementing it means a baseline
-JPEG decoder AND recovering those tables from its 9,176 bytes of code,
-for a result that is lossy by construction. That is the refusal's
-ground now, and **"a 9 KB JPEG decoder" — written as fact on
-2026-09-29 and corrected the same day — was closer than the correction
-was** (BLOCKERS.md).
+**What the payload is, and it is self-describing.** After the 80-byte
+header the remaining 14,047 bytes are a **TIFF file** — the first four
+are `MM\0*` — with 22 IFD entries that say everything an implementation
+needs:
 
-**And the planar layout is what decides whether it fits the floor.** A
-JPEG scan hands back components together; this format wants a whole
-plane before the next one begins. So an implementation either buffers
-the image — 196 KB for a small one, unbounded for a real one — or runs
-the entropy decoder once per plane and discards two thirds of each
-pass, which the restart markers make practical and which is what keeps
-the memory to one MCU row. Whether the scan is interleaved at all is
-**not known**: that needs the tables first.
+| | |
+|---|---|
+| geometry | 256x256, `SamplesPerPixel` 3, `BitsPerSample` 8/8/8, `PlanarConfiguration` 1 (chunky), `PhotometricInterpretation` **6, YCbCr** |
+| compression | **32865** — C-Cube's private JPEG code, from before TIFF 6.0 assigned 6 to it |
+| its own quantisation tables | three, at private tag **33606**, 64 words each: the standard Annex K luminance and chrominance tables **in zigzag order, halved** |
+| its own Huffman tables | three DC at **33607** and three AC at **33608**, `BITS[16]` + `HUFFVAL`, Kraft-valid, byte-identical to the module's `DATA` 1001 |
+| quality | 25, at private tag **33604** — the same 25 in the 80-byte header and in the module's `Pref` 128 |
+| the data | 230 segments, `TileOffsets`/`TileByteCounts`, about 11 bytes each |
+
+**And the codec has a name.** The module's resource fork holds a third
+code resource — **`C3a` 1, 31,952 bytes, named "C-Cube V1.0"** — so the
+`COMP` and `DCMP` are wrappers around a licensed C-Cube JPEG engine.
+C-Cube is who defined JPEG-in-TIFF; 32865 is their code for it.
+
+**So nothing has to be recovered from the module.** *"The tables are not
+in the stream, so they are in the module"* was written here on
+2026-09-29 and is withdrawn (BLOCKERS.md): every parameter is in the
+file. What an implementation needs is a baseline JPEG entropy decoder
+and an IDCT, with the tile geometry read off the IFD — and `libtiff`
+will not do it, because compression 32865 is nobody's standard.
 
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512
