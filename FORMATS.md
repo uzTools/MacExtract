@@ -2920,6 +2920,20 @@ which cost this section every number it has and `tools/build_mac.sh`'s
 ratchets none of them — that file was lowered in DART's own commit
 (DECISIONS.md 2026-09-26, *the numbers DART left behind*).
 
+**What a FORMAT's own code costs the shipped build: measured 2026-09-29,
+and it is nothing.** A 5,166-byte blob of code added to `src/fmt_sit.c`
+moved the eager build's resident `CODE` and A5 by **0 and 0** — it landed
+entirely in `ovl_stuffit.bin`, 18,582 -> 23,754 B, and in the bundle.
+Only the control grew, 152,068 -> 157,252. `run_tiers.py --check` held
+every tally by name in both lanes; the StuffIt per-format budget at
+System 3.0 / 512 KB went 306,832 -> 301,660 B and nothing crossed a
+line. So the 288 B that the 2026-09-29 Optimizer work cost every
+extraction was the part in `unc_util.c` and `mac/`, not the part in
+`fmt_sit.c` — **decoder code inside one format's overlay is free to
+every archive that is not of that format**, and the way to price the
+next one is to compile a blob of its size into the format's own file
+and read the six numbers off.
+
 `ci.sh` compiles all three configurations since 2026-09-26 (TESTING.md, *The
 three Macintosh configurations*); it built two until then, and the one it
 left out was the control, which duly went 4 B over its ratchet unnoticed.
