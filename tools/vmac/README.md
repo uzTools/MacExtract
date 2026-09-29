@@ -2886,8 +2886,11 @@ optimizer"* — and the alert is MODAL, so the script never finishes and
 no status file comes back; the missing `UnStatus.out` is the symptom,
 and the screenshot is the finding. `OptPhoto.sit` on the same image in
 the same boot unstuffs cleanly, which is the control that makes it a
-fact about the module (FORMATS.md, *What an Optimizer did to the
-fork*).
+fact about the module — and the archive then said the rest without any
+emulator at all: the entry is STORED, so its 80 bytes are the module's
+own output, and four of them are non-zero (FORMATS.md, *What an
+Optimizer did to the fork*). **A run that produces a refusal is worth
+reading the bytes behind before it is explained.**
 
 **`--unstuff` on the MacPaint archive is the other half of the answer.**
 Magic Menu refuses it — *"Items that were encrypted or compressed with an

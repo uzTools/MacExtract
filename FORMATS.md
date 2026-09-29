@@ -1835,12 +1835,27 @@ procedure**: on the same volume, the same boot and the same script,
 `OptPhoto.sit` unstuffs without a murmur and gives its data fork back
 identical to the subject (`specimens/sitopt/unphoto1`), which is also
 what this engine produces. So an implementation of module 3 could not
-be graded here even if one existed. **Why 2.0.1 refuses it is a
-hypothesis**: that subject is part synthetic — a real PSD data fork
-with an `8BIM` 1000 resource built to satisfy the module's acceptance
-test — so the likeliest reading is a document the `COMP` accepted and
-could not round-trip, rather than a broken module. A genuine Photoshop
-1.0-era document would settle it and this machine has none.
+be graded here even if one existed. **And why it refuses is measured, not guessed: the archive holds no
+image.** The entry's data fork is **stored** — method nibble 0, so the
+80 bytes ARE the module's output, readable without running anything —
+and **4 of those 80 bytes are non-zero**, with **no `0xFF` anywhere**.
+A JPEG stream cannot exist without `FF D8` and its marker segments, so
+whatever the `COMP` wrote, it is a header and nothing else. The subject
+is not blank either: 160x120 RGB with 200 distinct byte values.
+
+**The acceptance test is why.** It is a file type and a resource — and
+the subject's data fork is an **`8BPS` PSD, Photoshop 2.5 and later**,
+wearing Photoshop 1.0's `8BIM` type code with an `8BIM` 1000 resource
+built by hand to pass. So a 1990 module accepted a format that did not
+exist in 1990, found no pixels where it expected them, and emitted an
+empty header; its `DCMP` then refused the result, correctly. **Nothing
+could decode that entry**, which makes 2.0.1's alert right and makes
+the failure a property of the bytes rather than of the boot.
+
+**What is still untested is the module against a document it can
+read.** That needs a genuine Photoshop 1.0 file, and the 933-fixture
+corpus has none: its `8BIM` hits are all CREATOR codes on `PICT` and
+`TEXT` files, not documents of that type.
 
 **One thing the control showed that was not being looked for.** 2.0.1's
 own restored RESOURCE fork is the right length and differs from the

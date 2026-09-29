@@ -1751,6 +1751,21 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"Why StuffIt Deluxe 2.0.1 refuses its own `JPEG Lossy` archive is a
+  hypothesis; a real Photoshop 1.0 document would settle it."**
+  FORMATS.md and OPEN_ITEMS.md, written 2026-09-29 and settled the same
+  day, **by the maintainer asking whether it could be tested.** It
+  could, and not on a Macintosh: that entry's method nibble is 0, so
+  the 80 stored bytes ARE the module's output, and four of them are
+  non-zero with no `0xFF` in the fork at all. No JPEG stream can be
+  that. The archive holds an empty header, so nothing could decode it
+  and no document would have changed the run. **Cost: one emulator
+  boot that was not needed** — the answer was in a file already on this
+  disk, and the run before it had already printed `dcomp=80` next to
+  `dlen=115320`. **Why it survived:** a modal alert is a vivid result,
+  and a vivid result gets explained rather than checked. The refusal
+  was a fact about the ARCHIVE and was read as a fact about the module.
+
 - **"`JPEG Lossy`'s `'DCMP'` is a 9 KB JPEG decoder"** was written into
   FORMATS.md, OPEN_ITEMS.md, `tools/run_sitopt.py` and `src/fmt_sit.c`
   on 2026-09-29 and corrected the same day, **by the maintainer asking

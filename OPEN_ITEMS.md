@@ -284,15 +284,20 @@ fork*). What is left:
   day). **And the subject is extreme**: 115,320 bytes of Photoshop
   document became **80 stored bytes**, with StuffIt compressing them
   not at all, so whatever it is throws nearly everything away.
-  **And there is no oracle**: asked to decode that archive with the
-  module installed, StuffIt Deluxe 2.0.1 itself refuses it — *"This
-  file cannot be decoded by this version of the Photoshop JPEG
-  optimizer"* — where the neighbouring `Photoshop 1` archive unstuffs
-  on the same volume in the same boot (FORMATS.md, *What an Optimizer
-  did to the fork*). So an implementation could not be graded here.
-  What would move this is **a real Photoshop 1.0-era document**, which
-  would say whether the module refuses our synthetic subject or refuses
-  everything.
+  **And there is nothing in the archive to decode.** Those 80 bytes are
+  STORED, so they are the module's own output, and **4 of them are
+  non-zero with no `0xFF` anywhere** — no JPEG stream can be that. The
+  subject's data fork is an `8BPS` PSD (Photoshop 2.5 and later) with
+  Photoshop 1.0's `8BIM` type code and a hand-built resource, and the
+  acceptance test is only a type and a resource: the module took a
+  format that postdates it by years, found no pixels, and wrote a
+  header. StuffIt Deluxe 2.0.1 itself refuses the result — *"This file
+  cannot be decoded by this version of the Photoshop JPEG optimizer"* —
+  and is right to (FORMATS.md, *What an Optimizer did to the fork*).
+  **So there is no oracle and no subject**: what would move this is a
+  genuine Photoshop 1.0 document, which needs Photoshop 1.0. The
+  corpus has none — its `8BIM` hits are all CREATOR codes on `PICT`
+  and `TEXT` files.
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1
   under Mini vMac. A real one would test the readings against somebody
