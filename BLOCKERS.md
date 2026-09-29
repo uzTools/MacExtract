@@ -1696,7 +1696,32 @@ a harness can click is not the same list.
   StuffIt Deluxe instead"*, and "the application can do it" was read as
   "the application can undo it".
 
+- **"`*selector` -2 and -3 ask a module for its name and kind."**
+  FORMATS.md's ABI table, written 2026-09-28 from the application's CODE
+  8 and withdrawn 2026-09-29 by disassembling both halves of `MacPaint
+  1`. **-2 is the FINISH call**: a `DCMP` does the whole of its work
+  there — it opens the file it was named at -1, writes a new header,
+  copies the remnant in, and closes and deletes its temp file — and a
+  `COMP` closes and deletes its own. -3 is the only selector either
+  half answers with a string. **Cost: nothing, and that is the point.**
+  The probe that confirmed the calling convention used -3, which
+  works, so the row next to it was never exercised; a table filled in
+  from call sites rather than from handlers has one entry per selector
+  whether or not anybody has read the handler. **Why it survived:** the
+  application's own CODE 8 shows -2 being passed a buffer, and "it is
+  handed a buffer, so it fills the buffer" is a guess that reads like
+  an observation.
+
 ### Corrected figures and superseded write-ups
+
+- **`MacPaint 1`'s data path was written as a loop over `_Read`,
+  `_Write` and `_SetEOF`** (FORMATS.md, 2026-09-28). There is no
+  `_SetEOF` in either half of the module. It is `_Read`, `_Write`,
+  `_GetEOF` and `_SetFPos`, plus the HFS `_HOpen`/`_HCreate`/`_HDelete`
+  — the $0200 variants — and `PBGetFCBInfo`, which is how it decides
+  where to put its temp file. Corrected in place 2026-09-29; nothing
+  depended on it, and it is listed here because a trap list is the kind
+  of claim that gets copied.
 
 - **"AppleLink `.pkg` cannot be sniffed without inventing a magic number" was
   withdrawn on the wrong grounds, and the probe that replaced it is now gone

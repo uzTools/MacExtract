@@ -312,6 +312,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
 - 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
 - 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
+- 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
 
 ---
 
@@ -19451,3 +19452,62 @@ wrong. Here the sentence came from Aladdin's own alert — *"Please use
 StuffIt Deluxe instead"* — read as "the application can undo it" when it
 says only "the application can open it". **A quotation is evidence for
 what it says, not for what it implies.**
+
+## 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
+
+**Claim.** A 2.0 Optimizer's data path is now run rather than read:
+`MacPaint 1`'s `COMP` makes the remnant from a document and its `DCMP`
+rebuilds the document from the remnant, on an emulated Mac Plus, with
+nothing this project invented in between.
+
+**Evidence.** `tools/vmac/sitopt.py --dcmpdata`. The remnant is 2,437
+bytes — a 4-byte length, then the 2,945-byte document from offset 512 on,
+byte for byte. The rebuilt file is 2,945 bytes with no resource fork, and
+its artwork from 512 on is identical to the document AND to what StuffIt
+Deluxe 2.0.1's own unstuffer produced from the archive. FORMATS.md, *What
+the data path does*.
+
+**Consequence.** OPEN_ITEMS.md's Optimizer item loses everything but the
+one question that was never shell work — an optimized entry declares the
+ORIGINAL lengths, so producing the remnant needs a decode-until-input-
+exhausted mode `UncEntryInfo` cannot describe. Four things are worth
+keeping.
+
+**The record a module is handed is a `CInfoPBRec`, and TWO fields proved
+it rather than one.** The `DCMP` reads the parent directory at +48 and
+the `COMP` reads it at +100. Either alone is a number at an offset;
+together they are `ioDirID` and `ioFlParID`, which is a `PBGetCatInfo`
+result and nothing else. **When an offset could be anything, look for the
+second offset that could only be one thing.**
+
+**The 512 bytes a `DCMP` writes are the CALLER's uninitialised stack.**
+It links a 670-byte frame and writes 512 bytes of it to the front of the
+rebuilt document. Three runs of this probe write the same 512 bytes; a
+differently built probe writes 135 different ones; 2.0.1 writes 421
+different ones. So the 486-byte header difference measured the day
+before was never a palette or a default — the Addendum's *"will use
+default settings"* describes what MacPaint does afterwards, not what
+the module writes — and **an optimized MacPaint entry has no byte-exact
+answer that is not tied to one caller**. Note which way the samples cut:
+repeating the run says "deterministic", and only CHANGING the caller
+says what it is a function of. **One sample is a value, two are a
+guess, and the useful third is the one that varies something on
+purpose.**
+
+**Both bugs in this session were mine and neither was about StuffIt.**
+One `FSRead` for a 2,437-byte file returned 2,048 — the file's first
+extent — and the uninitialised tail of the buffer went through the
+module and came out as the rebuilt document's last 389 bytes, the right
+LENGTH with the wrong content, which is the failure shape that looks
+most like success. And `_FlushVol` returning 0 is not Shut Down: a run
+that flushed and hung left the rebuilt file's catalog entry reading zero
+on the image. **A short read is legal, and the module's own loop was
+there to be copied** — Aladdin's transform loops over `_Read` for
+exactly this reason, and the probe that did not was the one thing in the
+room not written by somebody who knew the File Manager.
+
+**And the way OUT of the module was the module.** The temp file a `COMP`
+writes cannot be opened while it holds it (-49, `opWrErr`), and -2 is
+the call that deletes it — but `*selector > 0` on a `COMP` reads that
+file into the caller's buffer and answers with the count. The probe
+spent a run going around the ABI for bytes the ABI hands over.

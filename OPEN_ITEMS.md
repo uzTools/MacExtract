@@ -264,7 +264,7 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: all five measured, no `DCMP` ever run
+## StuffIt 2.0's Optimizers: both halves of one run on a Macintosh
 
 **The floor is what makes this an item.** This unarchiver is for a 1986
 machine, and StuffIt Deluxe 2.0 is 1990-92 software from the same desks, so a
@@ -285,40 +285,32 @@ no resource fork (FORMATS.md, *What a module gives back*). So there is
 nothing here that would restore an optimized file byte for byte, and
 refusing rests on the declared lengths rather than on the module.
 
-**What is open is RUNNING a module, and the ABI for it is read**
-(FORMATS.md, *The module ABI*): `Module(Ptr, long *selector, ProcPtr)`,
-Pascal, with the selector carrying the request and the answer. What it
-would buy is exactly what StuffIt Deluxe gives — a valid document, not the
-original bytes — which is the same capability and no more.
+**Running a module is no longer open, and what it gives back is
+measured.** `tools/vmac/dcmptest` drives `MacPaint 1` both ways on an
+emulated Mac — the `COMP` makes the remnant, the `DCMP` rebuilds the
+document from it, byte-identical to StuffIt Deluxe's own output from
+offset 512 on (FORMATS.md, *What the data path does*). So the ABI, the
+record the module is handed and the shape of the remnant are all
+settled, and what a module buys is a valid document whose first 512
+bytes nothing can reproduce.
 
-**There are two routes and they are not the same size.** A `DCMP` does its
-own File Manager I/O: `MacPaint 1`'s data path is a `_Read`/`_Write`/
-`_SetEOF` loop that rewrites the file on disk.
+**What is left is ONE thing, and it is not shell work.** An optimized
+entry declares the ORIGINAL fork lengths, so decoding it the ordinary
+way fails — `MacPaint 1`'s resource fork declares 501 and stores two
+compressed bytes, and this engine answers `UNC_ERR_CORRUPT` with the
+refusal taken out. Producing the remnant means decoding until the INPUT
+is exhausted rather than to a known output size, which is a mode every
+method would need and which the entry-size contract in `UncEntryInfo`
+has no way to say. Nothing downstream of that can be tried until it is
+answered.
 
-- **On the Macintosh** the Toolbox is already underneath it, and the
-  calling convention is confirmed there: `tools/vmac/dcmptest` loads
-  `MacPaint 1`'s `'DCMP'` and gets its name and a 1 back from selector
-  -3 (FORMATS.md). **Two things stand between that and the feature**,
-  and the first is not shell work at all:
-  1. **the remnant's length is not in the header.** An optimized entry
-     declares the ORIGINAL fork lengths, so decoding it the ordinary
-     way fails — `MacPaint 1`'s resource fork declares 501 and stores
-     two compressed bytes, and this engine answers `UNC_ERR_CORRUPT`
-     with the refusal taken out. Producing the remnant means decoding
-     until the INPUT is exhausted rather than to a known output size,
-     which is a mode every method would need and which the entry-size
-     contract in `UncEntryInfo` does not currently have a way to say.
-  2. **the module latches the file from an earlier selector.**
-     `MacPaint 1`'s `DCMP` keeps `a0@(18)` and `a0@(48)` out of the
-     record passed to -1 and then does its own `_Read`/`_Write` against
-     that file, so the shell would have to hand it a record of the same
-     shape — whose layout is read only as far as the four fields the
-     acceptance test touches.
-- **On Linux**, under `qemu-m68k` as `tools/ssmodule/` runs SpaceSaver's
-  codecs, it needs a File Manager, a Memory Manager and part of the
-  Resource Manager shimmed. That harness answers **three** traps; this
-  would need something closer to twenty, and a fake volume for the module
-  to read and write.
+**And then there would still be two routes, of different sizes.** On the
+Macintosh the Toolbox is already underneath the module and `dcmptest`
+shows the sequence a shell would have to repeat. On Linux, under
+`qemu-m68k` as `tools/ssmodule/` runs SpaceSaver's codecs, it needs a
+File Manager, a Memory Manager and part of the Resource Manager shimmed:
+that harness answers **three** traps, this would need something closer to
+twenty, and a fake volume for the module to read and write.
 
 **And either way the result is not the user's file**, so it would want
 saying so in the interface and in README.md rather than being presented as

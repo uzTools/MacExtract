@@ -1649,54 +1649,119 @@ part synthetic because of that — the Photoshop one has a real PSD data fork
 and a resource fork built to the module's test — so they show what a module
 does once it accepts a file, not what a real document looks like.
 
-### The module ABI, read 2026-09-28
+### The module ABI, read 2026-09-28, driven end to end 2026-09-29
 
 **How the application calls one**, from its own CODE 8 (the helper at
 +0x882 locks the resource handle, dereferences it and jumps to the
 module's first byte, which is a `bra.s` over the 16-byte header):
 
 ```
-pascal void Module(Ptr buffer, long *selector, ProcPtr io);
+pascal void Module(Ptr buffer, long *selector, void *third);
 ```
 
 Callee-pops, twelve bytes of arguments. `*selector` is both the request
-and the answer:
+and the answer, and **it is also what says how to read the other two**:
 
-| `*selector` | means |
-|---|---|
-| **-1** | *will you take this file?* — the module writes 0 or 1 back |
-| -2, -3 | its name and kind, into the buffer |
-| -5 | put up its settings dialog |
-| -6 | clear a flag |
-| **> 0** | process that many bytes |
+| `*selector` | `buffer` | `third` | the module |
+|---|---|---|---|
+| **-1** | a `CInfoPBRec` | a `{ long; long; }` | *will you take this file?* — writes 0 or 1 back, and keeps the file's name, volume and directory out of the record |
+| **-2** | ignored | the same record | **finishes**: a `DCMP` rebuilds the file here, then closes and deletes its temp file; writes 1 back |
+| **-3** | 256 bytes to fill | ignored | copies its own name in with `_BlockMove`, writes 1 back |
+| **-4** | ignored | the same record | `COMP` only: runs the transform, and reports the length it produced in the record's SECOND long |
+| **-5** | ignored | NULL | puts up its About alert |
+| **-6** | NULL | NULL | `COMP` only: rewinds its output |
+| **> 0** | that many bytes | **a `ProcPtr`** | processes them — a `COMP` FILLS the buffer and answers with the count, a `DCMP` consumes it and answers with an `OSErr` |
+
+**-2 is the finish call, not "its kind".** This table read *"-2, -3 — its
+name and kind, into the buffer"* until 2026-09-29, when both halves of
+`MacPaint 1` were disassembled: -3 is the only selector either of them
+answers with a string (BLOCKERS.md, withdrawn claims).
+
+**The third argument changes type with the selector.** At the setup
+selectors the application passes the address of a `{ long; long; }` it
+fills — the LOW WORD of the first is a flag, and zero makes the module
+accept the file and then do nothing at all — and the module answers in
+the same two fields. At `*selector > 0` it passes the address of a
+jump-table entry instead, and a `COMP` calls it with the buffer and the
+NEGATED count; a `DCMP` never calls it, because a `DCMP` writes the file.
+
+**The record at -1 is a `CInfoPBRec`** — the application's own
+`PBGetCatInfo` result — and every field either half of `MacPaint 1`
+touches falls on one of its members: `ioNamePtr` at **+18** (a `Str255`
+the module `_BlockMove`s 256 bytes out of), `ioVRefNum` at **+22**,
+`ioFlFndrInfo.fdType` at **+32** — the acceptance test's field —
+`ioDirID` at **+48**, which the `DCMP` uses for the parent directory,
+and `ioFlParID` at **+100**, which the `COMP` uses for the same thing.
+**The two different fields for one directory are what settle it**:
+nothing but this record puts a directory ID at 48 AND at 100.
 
 **Each module carries its own id at +8 of the resource**, after the
 `'COMP'`/`'DCMP'` tag at +4 — 1, 2, 3, 4, 5 — which is the same number as
 the resource id and the same number that lands in the archive's byte 106.
 
-**The acceptance test is a file type and a resource.** `Sound 1` compares
-the long at +32 of the record it is handed against `FSSD` and then wants
-`Get1Resource('INFO', 1000)`; `Photoshop 1` compares against `8BIM` —
-Photoshop 1.0's type, not the later `8BPS` — and wants an `8BIM` 1000
-resource of ten bytes or more whose word at +8 is a colour mode of 1 or
-3..7; `MacPaint 1` keys on `PNTG`.
+**The acceptance test is a file type and a resource, and it is the
+`COMP`'s.** `Sound 1` compares the long at +32 of the record it is
+handed against `FSSD` and then wants `Get1Resource('INFO', 1000)`;
+`Photoshop 1` compares against `8BIM` — Photoshop 1.0's type, not the
+later `8BPS` — and wants an `8BIM` 1000 resource of ten bytes or more
+whose word at +8 is a colour mode of 1 or 3..7; `MacPaint 1` keys on
+`PNTG`. A `DCMP` tests nothing: by the time one runs, the archive has
+already named it.
 
-**The convention is confirmed on a Macintosh**, not only read:
-`tools/vmac/dcmptest` opens `{system}Optimizers:MacPaint 1`, takes its
-`'DCMP'` with `Get1IndResource`, jumps to `*handle` with that signature
-and selector **-3** — and the module writes **1** back and copies
-**"MacPaint 1"** into the caller's buffer, with the id at +8 reading 4.
-So a Macintosh with the modules installed can call one; nothing else
-about the data path follows from that.
+**A module's globals live inside its own resource.** It is THINK C code
+with the A4 idiom, and A4 is set to the resource's base address, so
+`MacPaint 1`'s `DCMP` keeps its param blocks, its temp file name and its
+output position in the zero-filled tail of the 3,010 bytes at
+`*handle`. The handle must stay locked between calls, which is what the
+application's helper does and what `dcmptest` does.
 
-**And a `DCMP` does its own File Manager I/O.** `MacPaint 1`'s data path
-is a read/write loop over `_Read`, `_Write` and `_SetEOF` through the
-usual async/HFS trap glue — it rewrites the FILE, it does not transform a
-buffer the caller hands it. That is what decides where this could ever be
-run: on a Macintosh the Toolbox is already there, and on Linux it would
-need a File Manager, a Memory Manager and part of the Resource Manager
+**And a `DCMP` does its own File Manager I/O**: `_Read`, `_Write`,
+`_GetEOF`, `_SetFPos` and the HFS `_HOpen`/`_HCreate`/`_HDelete` (the
+$0200 variants) through the usual async trap glue, plus
+`PBGetFCBInfo` — it rewrites the FILE, it does not transform a buffer
+the caller hands it. That is what decides where this could ever be run:
+on a Macintosh the Toolbox is already there, and on Linux it would need
+a File Manager, a Memory Manager and part of the Resource Manager
 shimmed under `qemu-m68k`, where `tools/ssmodule/` needs three traps
 (OPEN_ITEMS.md, *StuffIt 2.0's Optimizers*).
+
+### What the data path does, run on a Macintosh 2026-09-29
+
+**`tools/vmac/dcmptest` now drives `MacPaint 1` both ways**, under Mini
+vMac on a System 6 Mac Plus (`sitopt.py --dcmpdata`): the `COMP` is
+handed the 2,945-byte `Painting` and makes the remnant, and the `DCMP`
+is handed a `CInfoPBRec` for an empty file and that remnant. Nothing
+this project built goes into either module.
+
+| | |
+|---|---|
+| what `MacPaint 1` optimizes away | the **512-byte header** and the whole **resource fork** |
+| the remnant the `COMP` made | **2,437 B** — a 4-byte length, then the document from offset 512 on, byte for byte |
+| what the `DCMP` rebuilt from it | **2,945 B data, no resource fork** — the declared lengths of the original |
+| its artwork from 512 on | **byte-identical** to the document, and to what 2.0.1's own unstuffer produced from the archive (`specimens/sitopt/unapp3`) |
+| its first 512 bytes | **a stack frame**, below |
+
+So the split between a `COMP` and a `DCMP` is a file minus its header
+and a file plus a new one, and **the length in front of the remnant is
+how a `DCMP` knows when to stop** — the first positive-selector call
+reads it out of the caller's buffer and clamps every write to it.
+
+**The 512 bytes are never initialised, and they belong to the CALLER.**
+The `DCMP` links a 670-byte frame and `_Write`s 512 bytes of it to
+offset 0 of the rebuilt file without ever assigning them, so what lands
+there is whatever that program had last put on its stack. Measured:
+**three runs of the same probe write the same 512 bytes**, a probe built
+differently writes **135** different ones, and StuffIt Deluxe 2.0.1
+writes **421** different ones. So the header is a function of who called
+the module, an optimized MacPaint entry has **no byte-exact answer that
+is not tied to one caller**, and the 486-byte header difference measured
+against 2.0.1 the day before is what that looks like from outside.
+
+**And `*selector > 0` on a `COMP` is the read-out.** It reads its own
+temp file into the caller's buffer and answers with the count, then -1
+at the end — which is how the application gets an optimized fork, and
+the only way to get one here: the temp file cannot be opened while the
+module holds it (-49, `opWrErr`), and -2 is the call that deletes it.
 
 ### What a module gives back, and why the header already said so
 
@@ -1705,11 +1770,15 @@ original.** Asked to unstuff its own optimized archive — by script, into an
 empty folder, with the original deleted first, twice — it produces a file
 whose artwork is byte-identical from offset 512 on, whose **512-byte header
 differs in 486 bytes**, and which has **no resource fork** where the
-original had 501. That is exactly what the Addendum promises: *"The
-painting palette and pattern settings along with current selection are
-examples of the type of information that gets removed… the palette and
-patterns will use default settings."* So a `DCMP` rebuilds a valid
-document; the bytes it replaces are gone.
+original had 501. The Addendum promises the loss: *"The painting palette
+and pattern settings along with current selection are examples of the
+type of information that gets removed…"* It does NOT promise what fills
+the gap, and **the rest of that sentence — *"the palette and patterns
+will use default settings"* — is not what the module does**: those 512
+bytes are the `DCMP`'s own uninitialised stack frame, measured
+2026-09-29 (*What the data path does*, above). So a `DCMP` rebuilds a
+valid document; the bytes it replaces are gone, and what stands in for
+them is not reproducible by anything, Aladdin's software included.
 
 **And the declared lengths are the whole design.** They are visible in the
 header without running anything:
