@@ -271,12 +271,19 @@ the translator.
 that is not the user's file (FORMATS.md, *What an Optimizer did to the
 fork*). What is left:
 
-- **`JPEG Lossy`, id 3.** Its `'DCMP'` is a **9 KB JPEG decoder** and
-  it is lossy, so even a correct implementation would not give the
-  document back. Refused by name. Closing it means a baseline JPEG
-  decoder in the engine, on a 1 MB floor, for one Optimizer nobody has
-  ever seen in the wild — which is why it is listed rather than
-  planned.
+- **`JPEG Lossy`, id 3.** Refused by name, on three grounds and not
+  on a reading of its code. **It is lossy** — its own name says so,
+  2.0.1's Get Info pane prints *" lossy"* for it, and its entry carries
+  `ffff` where a checksum goes, which is the same marker `MacPaint 1`'s
+  forks carry — so even a perfect implementation would not give the
+  document back. **Its transform is unread**: the `'DCMP'` is **9,176
+  bytes**, against `Sound 1`'s 264, and what algorithm it is has NOT
+  been established — the name says JPEG and none of the standard JPEG
+  tables are in it verbatim, so "a JPEG decoder" is a **hypothesis**
+  (it was written here as fact on 2026-09-29 and corrected the same
+  day). **And the subject is extreme**: 115,320 bytes of Photoshop
+  document became **80 stored bytes**, with StuffIt compressing them
+  not at all, so whatever it is throws nearly everything away.
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1
   under Mini vMac. A real one would test the readings against somebody

@@ -1795,7 +1795,7 @@ graded against an archive StuffIt Deluxe 2.0.1 wrote
 |---|---|---|---|---|
 | `Sound 1` | 1 | **a byte-wise delta** over the whole fork, in place: `out[i] = out[i-1] + in[i]`, seeded 0 | **exactly** | the entry's own CRC-16 |
 | `Photoshop 1` | 2 | the same — the two `'DCMP'`s are byte-identical apart from the name and the id | **exactly** | the same |
-| `JPEG Lossy` | 3 | a 9 KB JPEG coder, and lossy | no — refused by name | — |
+| `JPEG Lossy` | 3 | **unread** — 9,176 bytes, and lossy | no — refused by name | — |
 | `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
 | `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
 
@@ -1813,6 +1813,17 @@ is in `unc_fork_flush`, ahead of the checksum, so the CRC is taken over
 the restored bytes and every method funnels through it; the two modules
 are one `#define` apart. `Photoshop 1`'s 115,320-byte subject and
 `Sound 1`'s 8,192-byte one both come back byte for byte, both forks.
+
+**`JPEG Lossy` is refused on the format's own evidence, not on a
+reading.** Its `'DCMP'` is 9,176 bytes — against `Sound 1`'s 264 — and
+nothing here has read it; what algorithm it is remains a
+**hypothesis**, the name being the only thing that says JPEG. What is
+measured is that it is lossy (2.0.1's Get Info pane prints *" lossy"*,
+and the entry carries `ffff` where a checksum goes) and that it is
+drastic: the 115,320-byte Photoshop subject became **80 stored bytes**,
+which StuffIt then compressed not at all — method nibble 0, stored. Its
+RESOURCE fork is untouched by the module and carries its control's CRC,
+so only the data fork is at issue.
 
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512

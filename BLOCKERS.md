@@ -1751,6 +1751,21 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"`JPEG Lossy`'s `'DCMP'` is a 9 KB JPEG decoder"** was written into
+  FORMATS.md, OPEN_ITEMS.md, `tools/run_sitopt.py` and `src/fmt_sit.c`
+  on 2026-09-29 and corrected the same day, **by the maintainer asking
+  what the status rested on.** It rested on the module's NAME and its
+  SIZE. The code has never been read: none of the standard JPEG tables
+  — the zigzag order, Annex K's Huffman bits, the luminance
+  quantisation table — is in it verbatim, which settles nothing either
+  way. It is 9,176 bytes and it is lossy (the application prints
+  *" lossy"*, and the entry carries `ffff` where a checksum goes), and
+  the refusal was always right on those grounds alone. **Cost: nothing,
+  because the behaviour never depended on it** — but it is the third
+  unlabelled inference this file has collected in two days, and the
+  cheapest possible tell was present: every OTHER module's row cites a
+  disassembly and this one cited a filename.
+
 - **`MacPaint 1`'s data path was written as a loop over `_Read`,
   `_Write` and `_SetEOF`** (FORMATS.md, 2026-09-28). There is no
   `_SetEOF` in either half of the module. It is `_Read`, `_Write`,

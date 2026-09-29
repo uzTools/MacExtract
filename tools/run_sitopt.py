@@ -66,8 +66,9 @@ engine at some point today:
        nothing can reproduce that — and the run must SAY it is not
        the original file.
 
-       `JPEG Lossy` is still refused, by name: its 'DCMP' is a 9 KB
-       JPEG decoder and it is lossy.
+       `JPEG Lossy` is still refused, by name. It is lossy — the
+       application says so and its entry carries no checksum — and its
+       9,176-byte 'DCMP' has not been read (OPEN_ITEMS.md).
 
 What this CANNOT see:
 
@@ -326,12 +327,12 @@ def main():
                 out = os.path.join(work, fn)
                 rc, msg = extract(args.macextract, arc, out)
                 if mid == 3:
-                    # `JPEG Lossy`'s 'DCMP' is a 9 KB JPEG decoder and
-                    # it is lossy. Refused, by name — the one module of
-                    # the five that still is.
+                    # `JPEG Lossy` is lossy and its 9,176-byte 'DCMP'
+                    # has not been read. Refused, by name — the one
+                    # module of the five that still is.
                     if rc == 0:
-                        problems.append("%s extracted; `%s` is a lossy JPEG "
-                                        "coder and is not implemented"
+                        problems.append("%s extracted; `%s` is lossy and "
+                                        "is not implemented"
                                         % (fn, name))
                     elif name not in msg:
                         problems.append("%s was refused without naming "

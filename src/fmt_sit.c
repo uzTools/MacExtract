@@ -107,7 +107,7 @@
  * undoes what it has read and nothing it has guessed at. */
 #define SIT_OPT_SOUND1       1   /* byte-wise delta over the fork       */
 #define SIT_OPT_PHOTOSHOP1   2   /* the same filter, same code          */
-#define SIT_OPT_JPEGLOSSY    3   /* a JPEG decoder, and lossy: refused  */
+#define SIT_OPT_JPEGLOSSY    3   /* lossy, and unread: refused          */
 #define SIT_OPT_MACPAINT1    4   /* drops a painting's 512-byte header  */
 #define SIT_OPT_IRREVERSIBLE 255
 
@@ -1188,7 +1188,10 @@ int unc_sit_extract(UncCtx *c)
              *        the entry carries no checksum to say otherwise —
              *        so it is restored and FLAGGED, never silently.
              *   else refused by name, `JPEG Lossy` (3) included: its
-             *        'DCMP' is a 9 KB JPEG decoder and it is lossy.
+             *        'DCMP' is 9,176 bytes and has not been read, and
+             *        the entry carries no checksum — the same ffff
+             *        both of `MacPaint 1`'s forks carry — so the
+             *        format itself says it cannot be given back.
              *
              * An external Compressor is refused whatever its id: there
              * is no decoding that at all. It is refused here rather
