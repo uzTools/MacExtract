@@ -418,6 +418,9 @@ def main():
     ap.add_argument("--unstuffapp", action="store_true")
     ap.add_argument("--dcmp", action="store_true")
     ap.add_argument("--dcmpdata", action="store_true")
+    ap.add_argument("--add-photoshop", action="store_true")
+    ap.add_argument("--psdoc", action="store_true")
+    ap.add_argument("--psjpeg", action="store_true")
     ap.add_argument("--add-archive",
                     help="a MacBinary archive to put on the image first")
     ap.add_argument("--add-modules", action="store_true")
@@ -472,6 +475,12 @@ def main():
         return phase_dcmp(args)
     if args.dcmpdata:
         return phase_dcmpdata(args)
+    if args.add_photoshop:
+        return add_photoshop(args)
+    if args.psdoc:
+        return phase_psdoc(args)
+    if args.psjpeg:
+        return phase_psjpeg(args)
     if args.magic:
         return phase_magic(args)
     if args.stuff:
@@ -1772,6 +1781,276 @@ def grade_dcmpdata(outdir, data, rem):
         print("=== the COMP's temp file did not come off the image")
     print("sitopt: %d problem(s)" % bad)
     return 1 if bad else 0
+
+
+# ------------------------------------------------------------------
+# Photoshop 1.0.7, and a document its own Optimizer can actually read
+# ------------------------------------------------------------------
+#
+# `Photoshop/JPEG Lossy` refused the subject `--makemods` built for it,
+# and so did StuffIt Deluxe itself (FORMATS.md). The subject was the
+# problem: its data fork was a modern `8BPS` PSD wearing Photoshop 1.0's
+# `8BIM` type, and the module reads an image's geometry out of the
+# `8BIM` 1000 RESOURCE and its pixels out of the DATA fork raw. Given a
+# document Photoshop 1.0 wrote, the same module round-trips it.
+#
+# The application is 1990 and its own page says "Macintosh SE or newer";
+# it runs on Mini vMac's Mac Plus anyway, which is the only variant
+# built here.
+PS_URL = "https://old.mac.gdn/apps/AdobePhotoshop1.img_.sit"
+PS_PAGE = "https://macintoshgarden.org/apps/photoshop-107"
+PS_SIT = os.path.join(os.path.expanduser("~"), ".cache", "macextract",
+                      "ps1", "AdobePhotoshop1.img_.sit")
+PS_MD5 = "9993070033425d5e1fd291d1db7b0f5b"
+PS_IMAGE = os.path.join(WORK, "sitopt-ps.hfv")
+PS_APP = "Adobe Photoshop\u2122 1.0"
+PS_DOC = "PSDoc"
+# Where the application's icon sits in the volume window, and the
+# PENCIL in its toolbox — the default tool is the marquee and the first
+# run drew a selection rectangle instead of a line.
+PS_ICON = (300, 172)
+PS_PENCIL = (41, 180)
+
+
+def ps_fetch():
+    """The Mini vMac disk image of Photoshop 1.0.7, in the foreground —
+    a backgrounded download on this machine stalls in poll()."""
+    os.makedirs(os.path.dirname(PS_SIT), exist_ok=True)
+    if not os.path.exists(PS_SIT):
+        subprocess.run(["curl", "-fsSL", "-e", PS_PAGE, "-o", PS_SIT,
+                        PS_URL], check=True)
+    got = hashlib.md5(open(PS_SIT, "rb").read()).hexdigest()
+    if got != PS_MD5:
+        raise SystemExit("sitopt: %s is md5 %s, expected %s"
+                         % (PS_SIT, got, PS_MD5))
+    print("sitopt: Photoshop 1.0.7, md5 %s as recorded" % got)
+
+
+def add_photoshop(args):
+    """Photoshop 1.0.7 onto the image that has all five Optimizers.
+
+    The download is a StuffIt archive of ONE DiskCopy image, which this
+    project's own engine unwraps; the 84-byte header comes off the same
+    way `--install` takes it off StuffIt's floppies.
+    """
+    ps_fetch()
+    base = args.image or os.path.join(WORK, "sitopt-painted.hfv")
+    if not os.path.exists(base):
+        raise SystemExit("sitopt: no %s — --add-modules makes it" % base)
+    work = tempfile.mkdtemp(prefix="sitopt-ps-")
+    try:
+        tree = os.path.join(work, "out")
+        subprocess.run([CLI, "x", "-o", tree, PS_SIT], check=True,
+                       capture_output=True)
+        src = None
+        for root, _d, files in os.walk(tree):
+            for f in files:
+                if f.endswith(".img"):
+                    src = os.path.join(root, f)
+        if not src:
+            raise SystemExit("sitopt: no .img in %s" % PS_SIT)
+        raw = os.path.join(work, "ps.dsk")
+        open(raw, "wb").write(open(src, "rb").read()[84:])
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", raw)
+            for name, dest in ((PS_APP, "app.bin"), ("PS Prefs", "prefs.bin")):
+                got = subprocess.run(
+                    ["hcopy", "-m", name.encode("mac_roman"),
+                     os.path.join(work, dest).encode()],
+                    capture_output=True, env=env)
+                if got.returncode != 0:
+                    raise SystemExit("sitopt: %s is not on the floppy" % name)
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+        shutil.copyfile(base, PS_IMAGE)
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", PS_IMAGE)
+            for dest in ("app.bin", "prefs.bin"):
+                hfs(env, "hcopy", "-m", os.path.join(work, dest),
+                    (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    print("sitopt: Photoshop 1.0.7 is on %s" % PS_IMAGE)
+    return 0
+
+
+def phase_psdoc(args):
+    """Draw in Photoshop 1.0.7 and save its NATIVE document.
+
+    256x256 RGB rather than the dialog's 512: a quarter of the pixels is
+    a quarter of every later step on a 7 MHz machine, and the point is a
+    real `8BIM` file, not a big one. What comes off is 196,608 bytes of
+    raw pixels — 256*256*3, no header at all — with the geometry in an
+    `8BIM` 1000 resource of ten bytes, which is the resource the
+    Optimizer's acceptance test reads.
+    """
+    img = os.path.join(WORK, "run-psdoc.hfv")
+    if not os.path.exists(PS_IMAGE):
+        raise SystemExit("sitopt: no %s — --add-photoshop makes it" % PS_IMAGE)
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        s.mac.click(*BOOT_ICON, double=True)
+        time.sleep(14)
+        s.mac.click(*PS_ICON)
+        time.sleep(3)
+        s.mac.command_key("o")
+        s.shot("launched", wait=90.0)
+        s.mac.command_key("n")
+        time.sleep(8)
+        s.mac._xdo("type", "--delay", "140", "256")
+        s.mac.key("Tab")
+        time.sleep(0.6)
+        s.mac._xdo("type", "--delay", "140", "256")
+        s.shot("new-dialog", wait=3.0)
+        s.mac.key("Return")
+        s.shot("new-doc", wait=20.0)
+        s.mac.click(*PS_PENCIL)
+        s.shot("pencil", wait=3.0)
+        ox, oy = s.mac.origin()
+        x = s.mac._xdo
+        for row in (110, 140, 170, 200, 230):
+            x("mousemove", str(ox + 100), str(oy + row))
+            time.sleep(0.3)
+            x("mousedown", "1")
+            for px in range(100, 300, 8):
+                x("mousemove", str(ox + px),
+                  str(oy + row + ((px // 8) % 7) * 3))
+                time.sleep(0.04)
+            x("mouseup", "1")
+            time.sleep(0.4)
+        s.shot("drawn", wait=4.0)
+        s.mac.command_key("s")
+        time.sleep(12)
+        s.mac._xdo("type", "--delay", "140", PS_DOC)
+        s.shot("save-named", wait=3.0)
+        s.mac.key("Return")
+        s.shot("saved", wait=25.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=25.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        read_one(os.path.join(s.work, "boot.hfv"), PS_DOC, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+PSJ_SCRIPT_NAME = "Zpsjpeg"
+PSJ_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}PSStatus.out"',
+    "Continue On Error",
+    "; the control first, with no Optimizer enabled",
+    'New Archive "{Startup}PlainPS.sit"',
+    'Stuff "{Startup}%s" with fast' % PS_DOC,
+    "Close",
+    'Enable Optimizer "Photoshop/JPEG Lossy"',
+    'New Archive "{Startup}JpegPS.sit"',
+    'Stuff "{Startup}%s" with fast' % PS_DOC,
+    "Close",
+    'Disable Optimizer "Photoshop/JPEG Lossy"',
+    "; and ask for the same document straight back",
+    'Destination "{Startup}Out:"',
+    'Open Archive "{Startup}JpegPS.sit"',
+    'UnStuff "*"',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+def phase_psjpeg(args):
+    """Stuff a REAL Photoshop document with `JPEG Lossy` and unstuff it,
+    in one boot — the round trip the synthetic subject could not do."""
+    doc = os.path.join(SPECIMENS, args.against or "psdoc",
+                       PS_DOC + ".bin")
+    if not os.path.exists(doc):
+        raise SystemExit("sitopt: no %s — --psdoc makes it" % doc)
+    if not os.path.exists(PS_IMAGE):
+        raise SystemExit("sitopt: no %s — --add-photoshop makes it" % PS_IMAGE)
+    img = os.path.join(WORK, "run-psjpeg.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-psj-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(PSJ_SCRIPT_NAME, "TEXT", "SIT!",
+                                       PSJ_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", doc, (VOL + ":").encode())
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            subprocess.run(["hmkdir", (VOL + ":Out").encode()],
+                           capture_output=True, env=env)
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zps")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("running", wait=args.script_wait)
+        s.shot("done", wait=45.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("PlainPS.sit", "JpegPS.sit", "PSStatus.out",
+                  "Out:" + PS_DOC):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    got = os.path.join(outdir, PS_DOC + ".bin")
+    if os.path.exists(got):
+        od, orr = forks(doc)
+        gd, gr = forks(got)
+        print("=== what `JPEG Lossy` gave back")
+        print("  data %d B (in: %d), identical: %s"
+              % (len(gd), len(od), gd == od))
+        print("  rsrc %d B (in: %d), identical: %s"
+              % (len(gr), len(orr), gr == orr))
+        if len(gd) == len(od) and gd != od:
+            n = sum(1 for i in range(len(od)) if gd[i] != od[i])
+            print("  %d of %d pixel bytes differ (%.1f%%) — it is LOSSY"
+                  % (n, len(od), 100.0 * n / len(od)))
+    return show_path(outdir)
+
+
+def read_one(image, name, outdir):
+    """One file off a written image, as MacBinary."""
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        if subprocess.run(["hmount", image], capture_output=True,
+                          env=env).returncode != 0:
+            return
+        dest = os.path.join(outdir, name.split(":")[-1] + ".bin")
+        if subprocess.run(["hcopy", "-m", (VOL + ":" + name).encode(),
+                           dest.encode()], capture_output=True,
+                          env=env).returncode != 0:
+            print("sitopt: %-16s NOT on the volume" % name)
+        subprocess.run(["humount"], capture_output=True, env=env)
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
 
 
 def phase_map(args):

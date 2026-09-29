@@ -2919,6 +2919,35 @@ What it CANNOT see:
   both places 3.5 might look, and that application does not launch here.
 - **the 512 KB machine.** It boots `mv-4M` throughout.
 
+### Photoshop 1.0.7, and the document its Optimizer can read
+
+    tools/vmac/sitopt.py --add-photoshop   fetch it and put it on the image
+    tools/vmac/sitopt.py --psdoc --tag psdoc     draw and save a native 8BIM file
+    tools/vmac/sitopt.py --psjpeg --tag psjpeg1  stuff it with JPEG Lossy, unstuff it
+
+**It runs on the Mac Plus, which its own page rules out.** Adobe's
+requirements say *"Macintosh SE or newer"*; Mini vMac's Plus is the only
+variant built here and Photoshop 1.0.7 launches on it in about 90
+seconds. The download is a StuffIt archive of one DiskCopy image, which
+this project's own engine unwraps.
+
+**Two coordinates had to be found and both are in `sitopt.py`.** The
+application's icon in the volume window, and the **PENCIL** in the
+toolbox — right column, row seven. The default tool is the marquee, so
+the first run dragged out a selection rectangle and saved a blank page.
+
+**The New dialog defaults to 512x512 RGB**; `--psdoc` types 256 into
+Width, Tabs, types 256 into Height, and takes the rest. What comes off
+the image is **196,608 bytes — 256x256x3 — of raw pixels with no header
+at all**, and an `8BIM` 1000 resource of ten bytes holding channels,
+height, width, depth and mode. That resource is what the Optimizer's
+acceptance test reads, and reading the module's geometry out of it is
+why the synthetic subject failed (FORMATS.md).
+
+**`--psjpeg` is the round trip in one boot** — control archive,
+optimized archive, and an UnStuff of the optimized one — so the answer
+does not depend on carrying an archive between sessions.
+
 ### Running an Optimizer module — `dcmptest`, `--dcmp` and `--dcmpdata`
 
     cmake -B build/dcmptest -S tools/vmac/dcmptest \

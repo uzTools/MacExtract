@@ -315,6 +315,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
 - 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
 - 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
+- 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
 
 ---
 
@@ -19618,3 +19619,48 @@ with its last 389 bytes wrong, twice, and nothing about the output said
 so. Where a format states a quantity twice, check the two against each
 other — it is the only cheap defence against the failure that looks
 like success.
+
+## 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
+
+**Claim.** `Photoshop/JPEG Lossy` is not broken. It refused the subject
+`--makemods` built for it because that subject was not a Photoshop 1.0
+document, and it round-trips one that is.
+
+**Evidence.** `sitopt.py --add-photoshop`, `--psdoc`, `--psjpeg`.
+Photoshop 1.0.7 launches under Mini vMac on the Mac Plus and saves its
+native format: **196,608 bytes of raw pixels, 256x256x3, no header**,
+with the geometry in an `8BIM` 1000 resource of ten bytes. Stuffed with
+the module enabled and unstuffed in the same boot, the document comes
+back the same size with **10.1 % of its pixel bytes changed** and 58
+distinct values where it had 2. FORMATS.md, *What an Optimizer did to
+the fork*.
+
+**Consequence.** The refusal in `src/fmt_sit.c` is unchanged and its
+grounds are replaced: there IS an oracle and a subject now, and what
+stops it is a JPEG decoder on a 1 MB floor. Three things.
+
+**The corpus was mistaken for the machine, for the third time.** This
+file already records the MacPaint case, where *"nothing here is a paint
+document"* was true and *"so nobody here can make one"* did not follow
+— and BLOCKERS.md states the rule in as many words. It was not applied
+here: *"the corpus has no type-`8BIM` document"* was searched, correct,
+and published as *"no oracle and no subject"*. The application was a
+441 KB download away. **A rule written down after being learned is not
+learned; the tell is that the sentence "this machine has none" reads as
+a conclusion rather than as the question "can it make one?".**
+
+**And the requirements page was wrong in the useful direction.**
+Photoshop 1.0.7's page says *"Macintosh SE or newer"*, which would have
+ruled out every emulator this project has. It runs on the Plus. **A
+stated minimum is a support claim, not a measurement** — cheaper to
+boot it than to believe it, and the boot was four minutes.
+
+**The failure the day before had its cause in the archive's first
+sixteen bytes.** The module's container records channels, height and
+width, and on the synthetic subject it reads **0, 0, 0** where the real
+document reads **3, 256, 256** — it had taken its geometry from the
+`8BIM` 1000 resource the harness fabricated. The 80 bytes had been
+dumped and read the day before and that field was not decoded, because
+the question then was "is there a JPEG in here" and the answer was no.
+**A structure worth dumping is worth parsing: the bytes that answer the
+next question are usually already on the screen.**

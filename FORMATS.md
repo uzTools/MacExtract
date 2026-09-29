@@ -1795,7 +1795,7 @@ graded against an archive StuffIt Deluxe 2.0.1 wrote
 |---|---|---|---|---|
 | `Sound 1` | 1 | **a byte-wise delta** over the whole fork, in place: `out[i] = out[i-1] + in[i]`, seeded 0 | **exactly** | the entry's own CRC-16 |
 | `Photoshop 1` | 2 | the same — the two `'DCMP'`s are byte-identical apart from the name and the id | **exactly** | the same |
-| `JPEG Lossy` | 3 | **unread** — 9,176 bytes, and lossy | no — refused by name | — |
+| `JPEG Lossy` | 3 | **baseline-JPEG scan data** in a private 80-byte container, and lossy | no — refused by name | — |
 | `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
 | `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
 
@@ -1814,57 +1814,38 @@ the restored bytes and every method funnels through it; the two modules
 are one `#define` apart. `Photoshop 1`'s 115,320-byte subject and
 `Sound 1`'s 8,192-byte one both come back byte for byte, both forks.
 
-**`JPEG Lossy` is refused on the format's own evidence, not on a
-reading.** Its `'DCMP'` is 9,176 bytes — against `Sound 1`'s 264 — and
-nothing here has read it; what algorithm it is remains a
-**hypothesis**, the name being the only thing that says JPEG. What is
-measured is that it is lossy (2.0.1's Get Info pane prints *" lossy"*,
-and the entry carries `ffff` where a checksum goes) and that it is
-drastic: the 115,320-byte Photoshop subject became **80 stored bytes**,
-which StuffIt then compressed not at all — method nibble 0, stored. Its
-RESOURCE fork is untouched by the module and carries its control's CRC,
-so only the data fork is at issue.
+**`JPEG Lossy` works, and the subject was the problem.** Photoshop
+1.0.7 runs under Mini vMac on the Mac Plus — its own page says
+*"Macintosh SE or newer"* and it runs anyway — and a document it wrote
+goes through the module and comes back
+(`sitopt.py --add-photoshop`, `--psdoc`, `--psjpeg`):
 
-**And there is no oracle for it: StuffIt Deluxe 2.0.1 will not decode
-its own `JPEG Lossy` archive.** Asked to, with the module installed, it
-puts up a modal alert — *"This file cannot be decoded by this version
-of the Photoshop JPEG optimizer. Perhaps the file is damaged or perhaps
-a newer version is needed."* — and the script stalls behind it
-(`specimens/sitopt/unjpeg1`). **The control rules out the image and the
-procedure**: on the same volume, the same boot and the same script,
-`OptPhoto.sit` unstuffs without a murmur and gives its data fork back
-identical to the subject (`specimens/sitopt/unphoto1`), which is also
-what this engine produces. So an implementation of module 3 could not
-be graded here even if one existed. **And why it refuses is measured, not guessed: the archive holds no
-image.** The entry's data fork is **stored** — method nibble 0, so the
-80 bytes ARE the module's output, readable without running anything —
-and **4 of those 80 bytes are non-zero**, with **no `0xFF` anywhere**.
-A JPEG stream cannot exist without `FF D8` and its marker segments, so
-whatever the `COMP` wrote, it is a header and nothing else. The subject
-is not blank either: 160x120 RGB with 200 distinct byte values.
+| | |
+|---|---|
+| a Photoshop 1.0 document | **196,608 B of raw pixels — 256x256x3, no header at all** — with the geometry in an `8BIM` **1000** resource of ten bytes |
+| what `JPEG Lossy` stored | **14,127 B**, method nibble 0 — STORED, so the module's output is in the archive verbatim |
+| what 2.0.1 gave back | 196,608 B and the same resource fork, **10.1 % of the pixel bytes changed** — 58 distinct values where the document had 2 |
 
-**The acceptance test is why.** It is a file type and a resource — and
-the subject's data fork is an **`8BPS` PSD, Photoshop 2.5 and later**,
-wearing Photoshop 1.0's `8BIM` type code with an `8BIM` 1000 resource
-built by hand to pass. So a 1990 module accepted a format that did not
-exist in 1990, found no pixels where it expected them, and emitted an
-empty header; its `DCMP` then refused the result, correctly. **Nothing
-could decode that entry**, which makes 2.0.1's alert right and makes
-the failure a property of the bytes rather than of the boot.
+So the module is not broken and `ffff` is confirmed on a second subject.
 
-**What is still untested is the module against a document it can
-read.** That needs a genuine Photoshop 1.0 file, and the 933-fixture
-corpus has none: its `8BIM` hits are all CREATOR codes on `PICT` and
-`TEXT` files, not documents of that type.
+**The earlier refusal was our subject, and its own header said so.**
+That 80-byte container carries the geometry the module read out of the
+`8BIM` 1000 resource, and on the synthetic subject it reads **channels
+0, height 0, width 0** where the real document's reads **3, 256, 256**.
+The acceptance test is a file type and a resource, so the module took a
+modern `8BPS` PSD wearing Photoshop 1.0's type, read zeros out of a
+fabricated resource, and encoded a 0x0 image — which its own `DCMP`
+then refused, correctly.
 
-**One thing the control showed that was not being looked for.** 2.0.1's
-own restored RESOURCE fork is the right length and differs from the
-subject's in **30 bytes**, all of them in the fork's padding and map
-region, where this engine's output matches the subject and the
-archive's stored CRC exactly. The Resource Manager rewriting a fork it
-creates would explain it and is **not tested**; what is measured is
-that on this entry the engine is closer to the archive than the
-application is.
+**What the payload is, measured.** After the 80 bytes it is
+entropy-coded JPEG with **restart markers RST0..RST7**, and **no
+`SOI`, `DQT`, `DHT`, `SOF` or `EOI`** — the tables are not in the
+stream, so they are in the module. Implementing it means a baseline
+JPEG decoder AND recovering those tables from its 9,176 bytes of code,
+for a result that is lossy by construction. That is the refusal's
+ground now, and **"a 9 KB JPEG decoder" — written as fact on
+2026-09-29 and corrected the same day — was closer than the correction
+was** (BLOCKERS.md).
 
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512

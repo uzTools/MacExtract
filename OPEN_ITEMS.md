@@ -271,33 +271,18 @@ the translator.
 that is not the user's file (FORMATS.md, *What an Optimizer did to the
 fork*). What is left:
 
-- **`JPEG Lossy`, id 3.** Refused by name, on three grounds and not
-  on a reading of its code. **It is lossy** — its own name says so,
-  2.0.1's Get Info pane prints *" lossy"* for it, and its entry carries
-  `ffff` where a checksum goes, which is the same marker `MacPaint 1`'s
-  forks carry — so even a perfect implementation would not give the
-  document back. **Its transform is unread**: the `'DCMP'` is **9,176
-  bytes**, against `Sound 1`'s 264, and what algorithm it is has NOT
-  been established — the name says JPEG and none of the standard JPEG
-  tables are in it verbatim, so "a JPEG decoder" is a **hypothesis**
-  (it was written here as fact on 2026-09-29 and corrected the same
-  day). **And the subject is extreme**: 115,320 bytes of Photoshop
-  document became **80 stored bytes**, with StuffIt compressing them
-  not at all, so whatever it is throws nearly everything away.
-  **And there is nothing in the archive to decode.** Those 80 bytes are
-  STORED, so they are the module's own output, and **4 of them are
-  non-zero with no `0xFF` anywhere** — no JPEG stream can be that. The
-  subject's data fork is an `8BPS` PSD (Photoshop 2.5 and later) with
-  Photoshop 1.0's `8BIM` type code and a hand-built resource, and the
-  acceptance test is only a type and a resource: the module took a
-  format that postdates it by years, found no pixels, and wrote a
-  header. StuffIt Deluxe 2.0.1 itself refuses the result — *"This file
-  cannot be decoded by this version of the Photoshop JPEG optimizer"* —
-  and is right to (FORMATS.md, *What an Optimizer did to the fork*).
-  **So there is no oracle and no subject**: what would move this is a
-  genuine Photoshop 1.0 document, which needs Photoshop 1.0. The
-  corpus has none — its `8BIM` hits are all CREATOR codes on `PICT`
-  and `TEXT` files.
+- **`JPEG Lossy`, id 3.** The only Optimizer still refused, and it
+  **works** — Photoshop 1.0.7 runs under Mini vMac, a document it wrote
+  goes through the module and comes back with 10.1 % of its pixel bytes
+  changed (FORMATS.md, *What an Optimizer did to the fork*). So there
+  is now an oracle AND a subject, and what stands in the way is cost
+  and worth: the stored payload is entropy-coded baseline JPEG with
+  restart markers and **no tables in the stream**, so closing this
+  means a JPEG decoder on a 1 MB floor plus recovering the module's
+  own quantisation and Huffman tables out of its 9,176 bytes of code —
+  for a result that is lossy by construction and can never be the
+  user's file.
+
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1
   under Mini vMac. A real one would test the readings against somebody

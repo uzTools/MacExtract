@@ -1751,6 +1751,22 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"There is no oracle and no subject for `JPEG Lossy`; a genuine
+  Photoshop 1.0 document would need Photoshop 1.0."** OPEN_ITEMS.md and
+  FORMATS.md, 2026-09-29, withdrawn the same day **when the maintainer
+  asked whether one could be made in emulation.** It could, in about an
+  hour: Photoshop 1.0.7 is a 441 KB download, this project's own engine
+  unwraps it, and it runs on Mini vMac's Mac Plus — which its own
+  requirements page rules out, saying *"Macintosh SE or newer"*. A
+  document it wrote round-trips through the module. **Cost: none yet,
+  and it would have been the item's whole justification.** **Why it
+  survived:** the same shape this file has already recorded twice — a
+  correctly negative search of the CORPUS was read as a negative answer
+  about the MACHINE. The rule was even written down after the MacPaint
+  case: *"Nothing here is one" is a fact about the corpus; the next
+  question is whether anything here can MAKE one.* It was not asked
+  here either, and the difference was one question from somebody else.
+
 - **"Why StuffIt Deluxe 2.0.1 refuses its own `JPEG Lossy` archive is a
   hypothesis; a real Photoshop 1.0 document would settle it."**
   FORMATS.md and OPEN_ITEMS.md, written 2026-09-29 and settled the same
