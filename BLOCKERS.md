@@ -1712,6 +1712,26 @@ a harness can click is not the same list.
   handed a buffer, so it fills the buffer" is a guess that reads like
   an observation.
 
+- **"Producing the remnant means a decode-until-input-exhausted mode in
+  every method, which `UncEntryInfo` has no way to describe."**
+  OPEN_ITEMS.md and FORMATS.md, written 2026-09-28 and withdrawn
+  2026-09-29 **by the maintainer asking why the decoders had to be
+  touched at all.** They do not. Every method here decodes to a
+  requested output length and stops, so a caller may ask for FOUR bytes
+  — and the remnant's first four bytes are its own length, which
+  `MacPaint 1`'s `DCMP` reads out of the caller's buffer on its first
+  positive-selector call. Decode four, read 2,437, decode 2,437. The
+  half of the sentence that survives is the entry-size contract: there
+  is still nowhere in `UncEntryInfo` to say that a stored length differs
+  from a declared one. **Cost: none in code, because nothing was built
+  on it — and it had already been used once to size the work as "not
+  worth opening", which is the expensive kind of wrong.** **Why it
+  survived:** it was true of the decoders as written, and "the loop
+  condition is wrong" slid into "the loop must change" without anybody
+  asking what else could supply the right number. `unar` had the same
+  bytes out the whole time: run against this archive it produces the
+  2,437-byte remnant, byte for byte.
+
 ### Corrected figures and superseded write-ups
 
 - **`MacPaint 1`'s data path was written as a loop over `_Read`,

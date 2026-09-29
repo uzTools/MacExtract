@@ -1757,6 +1757,27 @@ the module, an optimized MacPaint entry has **no byte-exact answer that
 is not tied to one caller**, and the 486-byte header difference measured
 against 2.0.1 the day before is what that looks like from outside.
 
+**The archive really does store that remnant, and a second
+implementation says so.** `unar` 1.10.8 decodes the optimized entry's
+data fork — 477 stored bytes — to **2,437 bytes byte-identical to what
+the `COMP` produced on the Mac**, and reports *"Wrong checksum"*. So
+the chain closes: archive → remnant → `DCMP` → document. It also shows
+what `unar` is doing, which is decoding until the INPUT runs out and
+handing back what it has.
+
+**But `unar` is right about one fork of two.** The same entry's
+resource fork declares 501, stores **2** bytes, and has no remnant at
+all — `MacPaint 1` deletes resource forks and its `DCMP` writes none —
+and `unar` produces **82 bytes** there, off the end of a two-byte
+stream, with *"Error on decrunching"*. So for an optimized entry its
+data fork is the remnant and its resource fork is invented.
+
+**And an optimized entry carries NO checksum.** Both CRC-16 fields read
+`ffff` where the control archive's read `9939` and `0629` — measured on
+the pair `--makepaint` wrote. Nothing can verify a remnant, by this
+format's own design, which is worth knowing before any scheme that
+decodes one is judged by whether it "checks out".
+
 **And `*selector > 0` on a `COMP` is the read-out.** It reads its own
 temp file into the caller's buffer and answers with the count, then -1
 at the end — which is how the application gets an optimized fork, and

@@ -294,15 +294,19 @@ record the module is handed and the shape of the remnant are all
 settled, and what a module buys is a valid document whose first 512
 bytes nothing can reproduce.
 
-**What is left is ONE thing, and it is not shell work.** An optimized
-entry declares the ORIGINAL fork lengths, so decoding it the ordinary
-way fails — `MacPaint 1`'s resource fork declares 501 and stores two
-compressed bytes, and this engine answers `UNC_ERR_CORRUPT` with the
-refusal taken out. Producing the remnant means decoding until the INPUT
-is exhausted rather than to a known output size, which is a mode every
-method would need and which the entry-size contract in `UncEntryInfo`
-has no way to say. Nothing downstream of that can be tried until it is
-answered.
+**What is left is getting the remnant out of the archive, and it is
+smaller than this file said until 2026-09-29.** An optimized entry
+declares the ORIGINAL fork lengths, and every method here decodes to a
+known output size, so asking for 2,945 bytes of a fork that holds 2,437
+fails. That was written up as *"a mode every method would need"*;
+it is not (BLOCKERS.md, withdrawn claims). **The remnant carries its own
+length in its first four bytes**, and every method will stop at four
+bytes on request, so decoding twice — four bytes for the length, then
+that many — needs no change to any decoder. **Hypothesis: not built,
+not run.** What it does need is somewhere to say "this entry's stored
+length is not its declared length", which `UncEntryInfo` has no field
+for, and a rule for the fork with NO remnant: this entry's resource fork
+declares 501, stores 2 bytes and decodes to nothing at all.
 
 **And then there would still be two routes, of different sizes.** On the
 Macintosh the Toolbox is already underneath the module and `dcmptest`

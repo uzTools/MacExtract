@@ -313,6 +313,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
 - 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
 - 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
+- 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
 
 ---
 
@@ -19511,3 +19512,47 @@ writes cannot be opened while it holds it (-49, `opWrErr`), and -2 is
 the call that deletes it — but `*selector > 0` on a `COMP` reads that
 file into the caller's buffer and answers with the count. The probe
 spent a run going around the ABI for bytes the ABI hands over.
+
+## 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
+
+**Claim.** Getting an optimized entry's remnant out of a StuffIt archive
+does NOT need a new decode mode in the eight methods. It needs the right
+output length, and the remnant carries it.
+
+**Evidence.** Every method in `src/fmt_sit.c` decodes to a requested
+length and stops — the file's own comment states it as an invariant. So
+a caller may ask for four bytes, and `MacPaint 1`'s `DCMP` reads the
+remnant's total length out of the first four bytes of the caller's
+buffer on its first positive-selector call. And `unar` 1.10.8, run
+against the archive 2.0.1 wrote here, produces **2,437 bytes identical
+to what the `COMP` made on the Mac** — so the stored bytes are the
+remnant, adjudicated by a second implementation. Two-pass decoding is a
+**hypothesis**; the rest is measured.
+
+**Consequence.** OPEN_ITEMS.md's Optimizer item shrinks; the withdrawal
+is in BLOCKERS.md. Three things.
+
+**The claim was disproved by somebody asking why, not by a run.** The
+question was *"why do you need to touch other decoders to add the 512
+missing bytes"* — and the honest answer required opening
+`unc_sit_decode_fork`, which nobody had done while writing three files
+about it. **An estimate is a claim, and it is subject to the same rule
+as any other: it gets checked against the code it is about, not against
+how the problem felt.**
+
+**"The loop condition is wrong" became "the loop must change" with no
+step in between.** Both sentences are about the same line of code and
+only the first is an observation. The second silently assumed the
+decoder is the only thing that could supply the number, and the number
+was in the data. **When a limit looks wrong, ask what else knows the
+right value before deciding who has to be rewritten.**
+
+**And the oracle already had the answer, again.** `unar` decodes this
+entry and has since before any of this started — FORMATS.md has said so
+in the words *"`unar`, which decodes both, is right about one of them"*
+since 2026-09-28, while the neighbouring paragraph called the remnant
+unreachable. It is right about one of them in a sharper sense than that
+sentence meant: the data fork comes out exact and the resource fork
+comes out as 82 bytes of nothing, off the end of a two-byte stream.
+**A tool named as wrong about a case is still evidence about the
+case.**
