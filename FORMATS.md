@@ -1879,6 +1879,29 @@ C-Cube's integer one and nothing else. The format:
 | tables | one quantisation, one DC and one AC per component, all three from the file's own private tags |
 | bits | MSB-first, `FF 00` stuffing, the last byte of a segment padded with 1s |
 
+**The last 0.96 % is C-Cube's own IDCT, and no standard one is it.**
+Measured 2026-09-30, three families tried against the same specimen:
+
+| IDCT | bytes differing from 2.0.1's output |
+|---|---|
+| exact, in floating point | **0.96 %** whole image; 4.83 % over the blocks that carry ink |
+| jpeg-6b `jpeg_idct_islow` | **1.065 %** — worse |
+| a separable integer transform, swept over 8..16 bits of cosine precision and every split of the two descales | best **4.48 %** over the inked blocks, marginally better than exact and nowhere near zero |
+
+Every difference is **exactly 1**, in both directions (1,068 up and 810
+down), and 71 % of them sit within 0.10 of a rounding tie — but the rest
+do not, reaching 0.41, so C-Cube's transform carries real approximation
+error and is not any of the three above. Closing the gap means lifting
+its arithmetic out of the 31,952-byte `C3a` resource.
+
+**And the direction is worth stating: being MORE accurate makes the
+answer differ MORE.** The exact IDCT is not the target — a 1990
+approximation is — so byte-exactness here would mean reproducing
+C-Cube's rounding error on purpose, for an image that is lossy already
+and whose original no software can return. The bar this engine will be
+held to is **within 1 of Aladdin's own output on every byte**, which is
+a bound over the whole image rather than an equality.
+
 **Two things in there are not JPEG's.** A restart marker that does not
 reset the DC predictor is the opposite of what T.81 says one is for,
 and the padded width means a decoder must decode 21 MCUs of every row

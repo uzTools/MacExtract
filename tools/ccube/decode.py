@@ -152,10 +152,15 @@ def ifd(t):
     return out
 
 
-# A float IDCT, which is not what the module uses: it agrees with
+# A float IDCT, which is not what the module uses. It agrees with
 # Aladdin's own output on 99.04 % of bytes and differs by exactly 1 on
-# the rest. The engine's has to be integer, and getting the last 0.96 %
-# is what "byte-exact" will cost.
+# the rest — and **no standard IDCT does better**: jpeg-6b's islow is
+# worse (1.065 %), and a separable integer transform swept over 8..16
+# bits and every descale split only reaches 4.48 % on the inked blocks
+# against this one's 4.83 %. C-Cube's arithmetic is its own, it is in
+# the 31,952-byte `C3a` resource, and matching it byte for byte would
+# mean reproducing a 1990 approximation on purpose (FORMATS.md).
+# Do not spend an afternoon re-trying those three.
 _C = [[(0.353553390593 if u == 0 else 0.5) *
        math.cos((2 * x + 1) * u * math.pi / 16) for u in range(8)]
       for x in range(8)]
