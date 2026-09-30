@@ -1894,6 +1894,34 @@ do not, reaching 0.41, so C-Cube's transform carries real approximation
 error and is not any of the three above. Closing the gap means lifting
 its arithmetic out of the 31,952-byte `C3a` resource.
 
+**Where the transform actually lives, read 2026-09-30.** Not in `C3a`:
+that resource is the wrapper and the TIFF writer — it is the one that
+stores `MM` — and its only multiplies are array strides. The codec is
+**`CCOD` -2011, 25,754 bytes**, and in the whole of it there are
+**eleven multiply constants and not one belongs to a DCT**:
+
+| constant | /2^14 | what it is |
+|---|---|---|
+| 9617, 1868, -2769, -5433, -6858, -1332 | 0.587, 0.114, -0.169, -0.331, -0.419, -0.081 | RGB to YCbCr, at CCOD+0xcf8 |
+| 22965, 29036, -11703, -5631 | **1.402, 1.772**, -0.714, -0.344 | YCbCr to RGB, at CCOD+0xd98, with a saturation table at +0xdb8 |
+
+**So the DCT and its inverse use no multiplication at all** — which is
+what a 68000 deserves, where `MULS.W` costs 70 cycles. The forward
+transform is at CCOD+0xf9e and is recognisable at sight: pairs of
+samples added, `addi.w #-256` for the level shift of two summed samples
+at once, then `lsl.w #2`.
+
+**And the core is a TABLE-DRIVEN lifting network.** At CCOD+0x1492 the
+operand indices are fetched from tables, decremented, and used to index
+a local array; the pair is added, halved with `asr.w #1`, and corrected
+by `addq #1` when negative — a halving that rounds toward zero. The
+butterfly is described by data, not unrolled in code.
+
+**That is why no standard IDCT matched and none ever will.** Matching
+this one byte for byte needs the network AND its index tables, which
+are built at run time. It is no longer a question of picking the right
+approximation.
+
 **And the direction is worth stating: being MORE accurate makes the
 answer differ MORE.** The exact IDCT is not the target — a 1990
 approximation is — so byte-exactness here would mean reproducing
