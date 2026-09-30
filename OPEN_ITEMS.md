@@ -275,11 +275,14 @@ fork*). What is left:
   of it, by the maintainer's decision. The two premises offered for
   dropping it did not hold (DECISIONS.md 2026-09-29, *a measured zero,
   declined*), and the cost is measured at **0 B of resident `CODE` and
-  0 B of A5** on the shipped build. What is left to read is where each
-  tile row's five luma segments divide it across the width; everything
-  else about the format is in FORMATS.md, *What an Optimizer did to the
-  fork*. The result will still be lossy, so it lands as
-  `module_restored = 2` like `MacPaint 1` — named, and flagged.
+  0 B of A5** on the shipped build. **The format is fully read and
+  decoded** as of 2026-09-30: `tools/ccube/decode.py` lands within 1 of
+  StuffIt Deluxe 2.0.1's own output on every byte (FORMATS.md, *What an
+  Optimizer did to the fork*). What is left is engine work — the
+  decoder in C99 on the 68000 contract, with an INTEGER IDCT, which is
+  what the last 0.96 % of bytes will cost. The result will still be
+  lossy, so it lands as `module_restored = 2` like `MacPaint 1` —
+  named, and flagged.
 
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1

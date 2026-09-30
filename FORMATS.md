@@ -1864,30 +1864,28 @@ distinct byte value, measured. That is worse than refusing, and it is
 why "a modern viewer can open it" is not an argument for leaving these
 entries alone.
 
-**How the entropy data is divided, read 2026-09-29.** The `TileOffsets`
-and `TileByteCounts` arrays declare 230 entries of which the last **six
-are zero**, so there are **224 segments** — and the scan carries exactly
-224 restart markers. Each segment ends `FF Dn 00`: an `RST` whose index
-runs continuously **mod 8 across the whole image**, never reset per
-tile, then one pad byte.
+**The whole syntax, read 2026-09-30 and confirmed by decoding it.**
+`tools/ccube/decode.py` decodes the payload on Linux and comes out
+**0.96 % of bytes away from what StuffIt Deluxe 2.0.1 itself restored,
+every one of them by exactly 1** — which is a float IDCT against
+C-Cube's integer one and nothing else. The format:
 
-**The segments come in 32 groups of 7, one group per 8-pixel tile row**
-(32 x 8 = 256 rows). Within a group the first **five** carry the
-picture and the last **two** are always 11 bytes — on a document whose
-ink is grey, that is five of luma and one each of `Cb` and `Cr`. The
-five grow and shrink with where the ink is: on a tile row inked from
-column 34 to 226 they run 76, 130, 157, 155, 114 bytes, small at both
-ends and largest in the middle, so **they divide the tile row across
-its width**. Exactly where they divide it is the one thing still
-unread, and the way to settle it is to decode with a candidate split
-and compare against the oracle.
+| | |
+|---|---|
+| an MCU | **2 luma blocks, one `Cb`, one `Cr` — 4:2:2**, so 16x8 pixels |
+| a segment | **exactly 3 MCUs**, 48x8 pixels, ending `FF Dn` and one pad byte |
+| a tile row | **7 segments = 21 MCUs = 336 pixels** for a 256-pixel image: the encoder pads the width and codes the padding flat, which is why the last two segments of every row are 11 bytes whatever the picture does |
+| the restart index | runs continuously **mod 8 across the whole image**, and **does not reset the DC predictors** — only the very first segment of the file carries a non-zero DC difference on a flat image |
+| tables | one quantisation, one DC and one AC per component, all three from the file's own private tags |
+| bits | MSB-first, `FF 00` stuffing, the last byte of a segment padded with 1s |
 
-**So nothing has to be recovered from the module.** *"The tables are not
-in the stream, so they are in the module"* was written here on
-2026-09-29 and is withdrawn (BLOCKERS.md): every parameter is in the
-file. What an implementation needs is a baseline JPEG entropy decoder
-and an IDCT, with the tile geometry read off the IFD — and `libtiff`
-will not do it, because compression 32865 is nobody's standard.
+**Two things in there are not JPEG's.** A restart marker that does not
+reset the DC predictor is the opposite of what T.81 says one is for,
+and the padded width means a decoder must decode 21 MCUs of every row
+and keep 16. Both were found by decoding rather than by reading: the
+first because only the FIRST segment of the file was a byte longer than
+its neighbours, the second because the last two segments of every tile
+row stayed 11 bytes on rows the drawing crossed.
 
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512
