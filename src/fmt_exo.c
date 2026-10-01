@@ -31,17 +31,82 @@
 
 /* Shared emit callback: write to sink data fork. */
 typedef struct ExoSink {
-    UncCtx *c;
-    int     failed;
+    UncCtx  *c;
+    int      failed;
+    /* ZipIt stores a Macintosh file as a MacBinary stream and zips
+     * THAT, so one decoded stream is a 128-byte header, the data fork
+     * padded to 128, then the resource fork. `split` routes the stream
+     * to two forks by position; the entry's CRC-32 is still taken over
+     * all of it, header and padding included, which is what the
+     * directory records. Same arrangement as MacLHA's (fmt_lzh.c). */
+    uint8_t  split;
+    uint32_t pos, ds, de, rs, re;
+    /* The first 128 bytes, captured for the header peek. */
+    uint8_t *head;
+    uint32_t headgot;
 } ExoSink;
 
 static int exo_emit(void *ctx, const uint8_t *p, int32_t n)
 {
     ExoSink *s = (ExoSink *)ctx;
-    if (s->c->opt.test_only) return UNC_OK;
-    if (s->c->sink->write(s->c->sink->ctx, UNC_FORK_DATA, p, n) < 0)
-        return UNC_ERR_SINK;
+
+    /* Peek mode: capture the first 128 bytes and write NOTHING —
+     * begin_entry has not been called yet. Once they are in hand the
+     * decode is stopped by failing the callback, which is the only
+     * brake a chunk emitter has: zlib hands over a whole bufferful at
+     * a time, so asking unc_inflate_raw for 128 bytes instead would
+     * trip its "more output than declared" check before emitting any
+     * of them. The status is discarded by the caller. */
+    if (s->head) {
+        while (n > 0 && s->headgot < 128) {
+            s->head[s->headgot++] = *p++;
+            n--;
+        }
+        return s->headgot < 128 ? UNC_OK : UNC_ERR_SINK;
+    }
+    if (!s->split) {
+        s->pos += (uint32_t)n;
+        if (s->c->opt.test_only) return UNC_OK;
+        if (s->c->sink->write(s->c->sink->ctx, UNC_FORK_DATA, p, n) < 0)
+            return UNC_ERR_SINK;
+        return UNC_OK;
+    }
+    /* Split: walk the chunk, handing each fork the part that falls in
+     * its span and dropping the header and the padding between them. */
+    while (n > 0) {
+        uint32_t end = s->pos + (uint32_t)n;
+        uint32_t lo, hi;
+        UncFork fk;
+
+        if (s->pos < s->de && end > s->ds) { lo = s->ds; hi = s->de;
+                                             fk = UNC_FORK_DATA; }
+        else if (s->pos < s->re && end > s->rs) { lo = s->rs; hi = s->re;
+                                                  fk = UNC_FORK_RSRC; }
+        else { s->pos = end; return UNC_OK; }   /* header or padding */
+
+        if (s->pos < lo) {          /* skip up to the span */
+            uint32_t skip = lo - s->pos;
+            if (skip > (uint32_t)n) skip = (uint32_t)n;
+            p += skip; n -= (int32_t)skip; s->pos += skip;
+            continue;
+        }
+        {
+            uint32_t take = hi - s->pos;
+            if (take > (uint32_t)n) take = (uint32_t)n;
+            if (!s->c->opt.test_only &&
+                s->c->sink->write(s->c->sink->ctx, fk, p, (int32_t)take) < 0)
+                return UNC_ERR_SINK;
+            p += take; n -= (int32_t)take; s->pos += take;
+        }
+    }
     return UNC_OK;
+}
+
+static void exo_sink_init(ExoSink *s, UncCtx *c)
+{
+    s->c = c; s->failed = 0; s->split = 0; s->pos = 0;
+    s->ds = s->de = s->rs = s->re = 0;
+    s->head = NULL; s->headgot = 0;
 }
 
 static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
@@ -120,7 +185,7 @@ int unc_gzip_extract(UncCtx *c)
 
     if (!c->opt.list_only) {
         uint32_t produced = 0, crc = UNC_CRC32_INIT;
-        es.c = c;
+        exo_sink_init(&es, c);
         est = unc_inflate_raw(&in, c->al, obuf, ocap, UNC_SIZE_UNKNOWN,
                               &produced, &crc, exo_emit, &es);
         if (est == UNC_OK) {
@@ -480,10 +545,200 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
     return est;
 }
 
+/* ZipIt's MacBinary payload: the first 128 decoded bytes of an entry,
+ * so the header can be read before begin_entry is called.
+ *
+ * It has to be before, not during: a MacBinary stream's two fork sizes
+ * are what the entry IS, and an entry is offered to the sink with both
+ * of them set. MacLHA pays the same price for the same reason and in
+ * the same way — decode the entry, stop at 128 bytes, then decode it
+ * again properly (fmt_lzh.c, *MacLHA's payload*). One header's worth
+ * of output, once per 0x2605 entry.
+ *
+ * Returns 1 and fills `mb` when the 128 bytes are a MacBinary header
+ * whose fork spans fit inside the entry. An ENCRYPTED entry is left
+ * alone: the peek would have to derive the key and burn a password
+ * attempt before the entry proper, and no ZipIt archive is in reach to
+ * say whether one exists. It comes out as a single data fork, which is
+ * what every version of this engine has done. */
+static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                       uint32_t method, uint32_t csize, uint32_t usize,
+                       uint8_t *mb, uint8_t *iobuf, uint32_t iocap,
+                       uint8_t *obuf, uint32_t ocap)
+{
+    uint8_t lh[30];
+    UncBufIn in;
+    ExoSink es;
+    uint32_t crc = UNC_CRC32_INIT;
+
+    if (usize < 128 || usize == UNC_SIZE_UNKNOWN) return 0;
+    if (zip_seek(c, part, lhoffs) != UNC_OK ||
+        unc_read_full(c->io, lh, 30) != UNC_OK) return 0;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
+    if (zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
+                    unc_get_u16le(lh + 28)) != UNC_OK) return 0;
+
+    exo_sink_init(&es, c);
+    es.head = mb;
+    unc_bufin_init(&in, c->io, NULL, iobuf, iocap);
+    in.limit = csize;
+    /* 128 is asked for and the error that the stream holds more is
+     * discarded: what is being tested is whether 128 bytes came out. */
+    (void)zip_decode(c, &in, &es, method, usize, &crc, obuf, ocap);
+    if (es.headgot != 128) return 0;
+    if (!unc_macbinary_probe(mb, 128, 0)) return 0;
+    {
+        uint32_t sec  = unc_get_u16be(mb + 120);
+        uint32_t dlen = unc_get_u32be(mb + 83);
+        uint32_t rlen = unc_get_u32be(mb + 87);
+        uint32_t ds = 128u + ((sec + 127u) & ~127u);
+        uint32_t rs = ds + ((dlen + 127u) & ~127u);
+        if (dlen > usize || rlen > usize || rs + rlen > usize) return 0;
+    }
+    return 1;
+}
+
 /* The value a central-directory field carries when the real one is in
  * the Zip64 extra field instead. Not a ceiling: the format's own
  * escape, which happens to be all-ones. */
 #define ZIP64_ESC32 0xFFFFFFFFu
+
+/* 0x334d's Finder flags and dates, which the CENTRAL directory does not
+ * carry: deark's ef_infozipmac reads type and creator and then
+ * `if(eii->is_central) goto done`, and every field measured here is
+ * exactly 14 bytes long for that reason. The rest of the record is in
+ * the LOCAL header, and is DEFLATED unless flag 0x0004 says otherwise.
+ *
+ * The attribute record, once uncompressed — all little-endian:
+ *   0  fdFlags Short, fdLocation.v/.h Short, fdFldr Short
+ *   8  FXInfo 16 bytes
+ *   24 FVersNum Byte, ACUser Byte
+ *   26 FlCrDat, FlMdDat, FlBkDat ULong
+ *   38 CrGMTOffs, MdGMTOffs, BkGMTOffs Long, signed — OPTIONAL
+ * Source: reference/notes/zip_extrafld_infozip.txt, *Attributes*.
+ *
+ * The three dates are taken UNADJUSTED, and that is the one place
+ * this differs from both reference implementations. The document says
+ * of them: "These time numbers are original Mac FileTime values
+ * (local time!)", and of the offsets that they "may be used to
+ * support timestamp adjustment after inter-timezone transfer". This
+ * engine's consumer is `ioFlCrDat`/`ioFlMdDat` (mac/macextract_mac.c),
+ * which are local Mac times — so the stored value is already the
+ * wanted one and adding the offset would move every date by a
+ * timezone. XADMaster adds it because it is building an absolute
+ * NSDate; that is right for XADMaster and wrong here.
+ *
+ * THE TWO REFERENCE IMPLEMENTATIONS DISAGREE ON THE SIGN, so neither
+ * adjudicates this: XADMaster does `create += readInt32LE` and deark
+ * does `de_mac_time_to_timestamp(mt_raw - mt_offset)`, and both then
+ * label the result UTC. They cannot both be right. The document is
+ * what settles it, and it settles it by making the question moot —
+ * FlCrDat is the local Mac time already, and local is what the sink
+ * wants, so no offset of either sign enters.
+ *
+ * The choice IS observable here and has no oracle: every entry of
+ * rexnebular_1_0_0.zip carries CrGMTOffs = MdGMTOffs = BkGMTOffs =
+ * -18000, so this engine's dates stand 5 h from `lsar`'s on all 22.
+ * A MacZip fixture whose dates were graded against `lsar` would fail
+ * on that difference, and the failure would be the oracle's.
+ *
+ * Flag bit 3 (64-bit dates) refuses the record: this engine's dates
+ * are uint32. Bit 4 says the offsets are ABSENT, which costs nothing
+ * now that they are not wanted.
+ *
+ * Only ever called for an entry whose central record carried a 0x334d,
+ * so an archive with no Macintosh field in it pays nothing at all —
+ * not the seek, not the read, and not the inflate. */
+#define ZIP_MACATTR_WANT 38u    /* through FlMdDat; the GMT offsets
+                                 * after it are not wanted (above) */
+
+typedef struct { uint8_t buf[ZIP_MACATTR_WANT]; uint32_t got; } ZipAttrSink;
+
+static int zip_attr_emit(void *ctx, const uint8_t *p, int32_t n)
+{
+    ZipAttrSink *a = (ZipAttrSink *)ctx;
+    while (n > 0 && a->got < ZIP_MACATTR_WANT) {
+        a->buf[a->got++] = *p++;
+        n--;
+    }
+    return UNC_OK;   /* the tail is deliberately discarded: what
+                      * follows offset 50 is a path and a comment */
+}
+
+static void zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                          UncEntryInfo *e)
+{
+    uint8_t lh[30];
+    uint8_t ex[256];
+    uint32_t lnamelen, lextralen, exlen, q;
+
+    if (zip_seek(c, part, lhoffs) != UNC_OK ||
+        unc_read_full(c->io, lh, 30) != UNC_OK)
+        return;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return;
+    lnamelen  = unc_get_u16le(lh + 26);
+    lextralen = unc_get_u16le(lh + 28);
+    if (!lextralen) return;
+    exlen = lextralen < sizeof ex ? lextralen : (uint32_t)sizeof ex;
+    if (zip_seek(c, part, lhoffs + 30 + lnamelen) != UNC_OK ||
+        unc_read_full(c->io, ex, (int32_t)exlen) != UNC_OK)
+        return;
+
+    for (q = 0; q + 4 <= exlen; ) {
+        uint32_t id = unc_get_u16le(ex + q);
+        uint32_t sz = unc_get_u16le(ex + q + 2);
+        const uint8_t *d = ex + q + 4;
+        if (sz + 4u > exlen - q) break;
+        if (id != 0x334d || sz < 14) { q += 4 + sz; continue; }
+        {
+            uint32_t ulen = unc_get_u32le(d);
+            uint32_t fl   = unc_get_u16le(d + 4);
+            ZipAttrSink a;
+            const uint8_t *rec = NULL;
+
+            if (fl & 0x0008) return;     /* 64-bit dates: not read */
+            a.got = 0;
+            if (fl & 0x0004) {
+                /* Stored in the field itself, right after type and
+                 * creator — no compression method and no CRC. */
+                if (sz >= 14 + ZIP_MACATTR_WANT) {
+                    rec = d + 14;
+                    a.got = ZIP_MACATTR_WANT;
+                }
+            } else if (sz >= 20 && unc_get_u16le(d + 14) == 8 &&
+                       ulen >= ZIP_MACATTR_WANT && ulen <= 1000000u) {
+                /* u16le method (8 = deflate), u32le CRC, then the
+                 * stream. Anything else — Info-ZIP could in principle
+                 * write method 6 there, which deark declines too — is
+                 * left unread rather than guessed at. */
+                uint8_t iobuf[128], obuf[64];
+                UncBufIn in;
+                uint32_t produced = 0;
+                unc_bufin_init(&in, c->io, NULL, iobuf, (uint32_t)sizeof iobuf);
+                in.limit = sz - 20;
+                if (zip_seek(c, part, lhoffs + 30 + lnamelen + q + 4 + 20)
+                        == UNC_OK &&
+                    unc_inflate_raw(&in, c->al, obuf, (uint32_t)sizeof obuf,
+                                    ulen, &produced, NULL,
+                                    zip_attr_emit, &a) == UNC_OK &&
+                    a.got >= ZIP_MACATTR_WANT)
+                    rec = a.buf;
+            }
+            if (!rec) return;
+            e->finder_flags = unc_get_u16le(rec);
+            {
+                uint32_t cr = unc_get_u32le(rec + 26);
+                uint32_t mo = unc_get_u32le(rec + 30);
+                /* A date below one day is "never set": both reference
+                 * implementations treat it so, and the engine's own
+                 * convention is 0 for unstated. */
+                if (cr >= 86400u) e->create_date = cr;
+                if (mo >= 86400u) e->mod_date = mo;
+            }
+            return;
+        }
+    }
+}
 
 /* One central-directory record's extra fields. Four matter here:
  * WinZip's AES (0x9901), Zip64 (0x0001), and the two Macintosh writers'
@@ -518,6 +773,12 @@ typedef struct {
     uint32_t mtype, mcreator;
     uint16_t mflags;
     uint8_t  mhave;              /* a Macintosh field was recognised */
+    uint8_t  mbin;               /* ZipIt 0x2605 seen: the entry's data
+                                  * is a MacBinary stream */
+    uint8_t  mattrs;             /* 0x334d seen: the attribute record
+                                  * is in the LOCAL header, so Finder
+                                  * flags and the dates need a second
+                                  * read (zip_mac_attrs) */
 } ZipExtra;
 
 static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
@@ -572,12 +833,13 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
              * The first fourteen bytes are the whole of what the
              * CENTRAL directory carries: the uncompressed length of the
              * attribute record, a flag word, then type and creator.
-             * Source: XADMaster XADZipParser.m (`extid==0x334d&&
-             * size>=14`: readUInt32LE len, readUInt16LE flags, two
-             * readID) and deark modules/zip.c `ef_infozipmac`, which
-             * reads the same six fields and then `if(eii->is_central)
-             * goto done` — so there is nothing further to find here,
-             * and nothing to decompress to get this much.
+             * Source: reference/notes/zip_extrafld_infozip.txt,
+             * *Info-ZIP Macintosh Extra Field (new)*, which gives the
+             * central-header version as exactly BSize, Flags, fdType,
+             * fdCreator and stops there — the local-header version is
+             * the one that goes on. APPNOTE.TXT lists 0x334d in its
+             * header-id table (4.6.1) and specifies no layout for it,
+             * which is why the Info-ZIP document is the citation.
              *
              * Byte-wise through unc_get_* like everything else: a
              * record at an odd offset in the extra field would fault a
@@ -585,24 +847,46 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
             z->mtype = unc_get_u32be(ex + 10);
             z->mcreator = unc_get_u32be(ex + 14);
             z->mhave = 1;
+            z->mattrs = 1;
         } else if (id == 0x2705 && sz >= 12 &&
                    unc_get_u32be(ex + 4) == 0x5A504954ul) {
             /* ZipIt's short field for FILES: the signature 'ZPIT',
-             * then type and creator, then Finder flags BIG-endian if
-             * the field is long enough to hold them.
-             * Source: XADMaster XADZipParser.m, `extid==0x2705&&
-             * size>=12`, which guards on readID=='ZPIT' before
-             * trusting any of it. */
+             * then type and creator, then Finder flags BIG-endian.
+             * Source: APPNOTE.TXT 4.6.5 — '"ZPIT" beLong
+             * extra-field signature, FileType Byte[4], Creator
+             * Byte[4], fdFlags beShort attributes from FInfo.frFlags,
+             * MAY be omitted'. "MAY be omitted" is why the flags are
+             * read only once the field is long enough to hold them,
+             * and the signature is checked first because every one of
+             * these three blocks is identified by it. */
             z->mtype = unc_get_u32be(ex + 8);
             z->mcreator = unc_get_u32be(ex + 12);
             if (sz >= 14) z->mflags = unc_get_u16be(ex + 16);
+            z->mhave = 1;
+        } else if (id == 0x2605 && sz >= 13 &&
+                   unc_get_u32be(ex + 4) == 0x5A504954ul) {
+            /* ZipIt's LONG field. What it says about the entry is
+             * that the entry is MacBinary: APPNOTE.TXT 4.6.4 is
+             * explicit — "This block MUST be present if the file is
+             * stored MacBinary-encoded and it SHOULD NOT be used if
+             * the file is not stored MacBinary-encoded". Its own
+             * fdType and fdCreator sit behind a variable-length
+             * FileName and are not read, because the MacBinary header
+             * carries both and is the thing the forks are measured
+             * from anyway — one source for the entry rather than two
+             * that can disagree.
+             * Source: APPNOTE.TXT 4.6.4 — '"ZPIT" beLong, FnLen Byte,
+             * FileName variable, FileType Byte[4], Creator Byte[4]',
+             * whose minimum is the 13 bytes guarded for here. */
+            z->mbin = 1;
             z->mhave = 1;
         } else if (id == 0x2805 && sz >= 6 &&
                    unc_get_u32be(ex + 4) == 0x5A504954ul) {
             /* ZipIt's short field for DIRECTORIES: 'ZPIT' then Finder
              * flags, and no type or creator — a folder has none.
-             * Source: XADMaster XADZipParser.m, `extid==0x2805&&
-             * size>=6`. */
+             * Source: APPNOTE.TXT 4.6.6 — '"ZPIT" beLong, frFlags
+             * beShort attributes from DInfo.frFlags, MAY be omitted,
+             * View beShort ZipIt view flag, MAY be omitted'. */
             z->mflags = unc_get_u16be(ex + 8);
             z->mhave = 1;
         }
@@ -794,6 +1078,9 @@ int unc_zip_extract(UncCtx *c)
         uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
         uint32_t mtype, mcreator;
         uint16_t mflags;
+        uint8_t mattrs, mbin, mbok;
+        uint8_t mb[128];
+        uint32_t mbds, mbde, mbrs, mbre;
         int aeskeybytes, aesversion;
         int z64err;
         uint32_t aesmethod;
@@ -868,6 +1155,8 @@ int unc_zip_extract(UncCtx *c)
             z.mcreator = 0;
             z.mflags = 0;
             z.mhave = 0;
+            z.mattrs = 0;
+            z.mbin = 0;
             if (cdbuf) {
                 if (extralen && cdrel + 46 + namelen + extralen <= cdsize) {
                     ex = cdbuf + cdrel + 46 + namelen;
@@ -899,6 +1188,8 @@ int unc_zip_extract(UncCtx *c)
             mtype = z.mtype;
             mcreator = z.mcreator;
             mflags = z.mflags;
+            mattrs = z.mattrs;
+            mbin = z.mbin;
         }
 
         unc_entry_clear(&e);
@@ -937,6 +1228,31 @@ int unc_zip_extract(UncCtx *c)
         if (!e.is_dir) {
             e.type = mtype;
             e.creator = mcreator;
+        }
+        if (mattrs) zip_mac_attrs(c, startdisk, lhoffs, &e);
+
+        /* ZipIt's long field: the entry's data is a MacBinary stream,
+         * and what the entry is called for is inside its header. */
+        mbok = 0;
+        mbds = mbde = mbrs = mbre = 0;
+        if (mbin && !e.is_dir && !(flags & 0x0001) &&
+            zip_mb_peek(c, startdisk, lhoffs, method, csize, usize,
+                        mb, iobuf, iocap, obuf, ocap)) {
+            uint32_t sec  = unc_get_u16be(mb + 120);
+            uint32_t dlen = unc_get_u32be(mb + 83);
+            uint32_t rlen = unc_get_u32be(mb + 87);
+            mbds = 128u + ((sec + 127u) & ~127u);
+            mbde = mbds + dlen;
+            mbrs = mbds + ((dlen + 127u) & ~127u);
+            mbre = mbrs + rlen;
+            e.data_size = dlen;
+            e.rsrc_size = rlen;
+            e.type = unc_get_u32be(mb + 65);
+            e.creator = unc_get_u32be(mb + 69);
+            e.finder_flags = (uint16_t)((mb[73] << 8) | mb[101]);
+            e.create_date = unc_get_u32be(mb + 91);
+            e.mod_date = unc_get_u32be(mb + 95);
+            mbok = 1;
         }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -986,7 +1302,12 @@ int unc_zip_extract(UncCtx *c)
                         UncBufIn in;
                         uint32_t crc = UNC_CRC32_INIT;
                         ExoSink es;
-                        es.c = c;
+                        exo_sink_init(&es, c);
+                        if (mbok) {
+                            es.split = 1;
+                            es.ds = mbds; es.de = mbde;
+                            es.rs = mbrs; es.re = mbre;
+                        }
                         /* The data follows the header's own name and
                          * extra fields; skipping forward rather than
                          * seeking is what lets an entry begin in one

@@ -373,6 +373,16 @@ fi
     curl -sL -o reference/notes/zip_appnote.txt \
         "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT"
 
+# Info-ZIP's own extra-field catalogue, which is where the MACINTOSH
+# extra fields are specified: APPNOTE.TXT lists 0x334d in its header-id
+# table and gives no layout for it, while this document carries the
+# whole of Dirk Haase's 'Mac3' field, central and local, and the five
+# flag bits. Shipped in the zip source distribution as
+# proginfo/extrafld.txt.
+[ -f reference/notes/zip_extrafld_infozip.txt ] || \
+    curl -sL -o reference/notes/zip_extrafld_infozip.txt \
+        "https://raw.githubusercontent.com/LuaDist/zip/master/proginfo/extrafld.txt"
+
 # WinZip's AES specification, which APPENDIX E of APPNOTE.TXT names as
 # the published layout of the 0x9901 extra field: the vendor version,
 # the two-character vendor ID "AE", the strength byte (1, 2, 3 for 128,
