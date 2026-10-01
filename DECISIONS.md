@@ -318,6 +318,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
 - 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
 - 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
+- 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
 
 ---
 
@@ -19760,3 +19761,52 @@ calling a thing free, and the habit is worth having for the case where
 the price comes back zero and the work is declined anyway. **Cost is
 a veto, not a reason.** What carried this was who would benefit and by
 how much, which no ratchet measures.
+
+## 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
+
+**Found, not decided.** A Macintosh-written zip carries type, creator,
+Finder flags and the Mac dates in an extra field, and this engine reads
+none of it. `zip_extra_scan` knows Zip64 and WinZip AES; the six
+Macintosh header ids go past as unknown. Filed in OPEN_ITEMS.md Part 2,
+*Zip's Macintosh extra fields*, with what would close it. Not
+implemented and not priced.
+
+**The evidence came from a user's download page.** Macintosh Garden's
+Rex Nebular entry has a 2022 comment saying the disk images lose their
+type and creator and that MacZip is needed to restore them. That is a
+statement about Info-ZIP's `0x334d` field, and it is true of this
+engine too: on `rexnebular_1_0_0.zip` the data forks are perfect — 21
+of 21 byte-identical to `unzip`, ten disk images matching the MD5s the
+archive ships in its own `checksum.md5` — and `l` prints an empty
+type/creator for all 22 entries while `lsar` reads them correctly off
+the same bytes. The `.sit` on that same page comes out with all four
+pieces of metadata, 15 of 15 forks byte-identical to `unar`.
+
+**Why no suite caught it, and the grading was not at fault.** The
+differential suite does grade type/creator wherever `lsar` reads them
+(*the DiskDoubler corpus becomes fixtures*, 2026-08-21 later). It had
+nothing to grade: none of the seven zips among 947 fixtures carries a
+Macintosh extra field. `derived-MUSFMT10.ZIP` is the near miss — host
+byte 0x07, written on a Macintosh, and carrying no extra fields at all.
+Two of the other six are PKZIP 1.x from PC software indexes and two are
+generated here.
+
+**The transferable half, and it sharpens a rule already in CLAUDE.md.**
+That rule says an aggregate check cannot fail on a property it never
+aggregates. This is the next one in: **a property the suite DOES grade
+is still ungraded if no fixture exhibits it.** The grading code, the
+oracle and the assertion were all present and correct for fourteen
+months of corpus growth, and the whole apparatus was a no-op on this
+field because the subject was missing. So the question to ask of a
+graded property is not "is it checked?" but **"which fixture would fail
+if it broke?"** — and if the answer cannot be named, the check is
+decoration.
+
+**The second half is about where fixtures come from.** This corpus was
+harvested by name and extension from Macintosh software indexes, and
+`.zip` is the one extension those indexes mostly do not hold — the Mac
+archives there are `.sit`, `.cpt`, `.hqx`, `.bin`. The zips arrived from
+PC indexes and from a generator instead, so the format's *Macintosh*
+dialect was never sampled. **A corpus inherits its blind spots from the
+query that built it**, which is the same shape as 2026-09-26's *was the
+search by NAME?* and costs a capability rather than a file.
