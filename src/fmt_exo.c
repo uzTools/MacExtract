@@ -485,8 +485,10 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
  * escape, which happens to be all-ones. */
 #define ZIP64_ESC32 0xFFFFFFFFu
 
-/* One central-directory record's extra fields. Two matter here: WinZip's
- * AES (0x9901) and Zip64 (0x0001).
+/* One central-directory record's extra fields. Four matter here:
+ * WinZip's AES (0x9901), Zip64 (0x0001), and the two Macintosh writers'
+ * fields that carry Finder metadata — Info-ZIP's 0x334d and ZipIt's
+ * 0x2705/0x2805.
  *
  * A Zip64 field holds only those values whose central-directory field
  * carries the escape (0xFFFFFFFF, or 0xFFFF for a disk number), in the
@@ -511,6 +513,11 @@ typedef struct {
     int      aeskeybytes, aesversion;
     uint32_t aesmethod;
     int      err;                /* UNC_OK, or this entry's refusal */
+    /* Finder metadata off a Macintosh writer's extra field. 0 means
+     * "not stated", which is what UncEntryInfo already uses. */
+    uint32_t mtype, mcreator;
+    uint16_t mflags;
+    uint8_t  mhave;              /* a Macintosh field was recognised */
 } ZipExtra;
 
 static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
@@ -558,6 +565,46 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
                 z->aeskeybytes = (int)(8 + 8 * strength);  /* 16/24/32 */
                 z->aesmethod = unc_get_u16le(ex + 9);
             }
+        } else if (id == 0x334d && sz >= 14) {
+            /* Info-ZIP's Macintosh field ("M3"), written by MacZip —
+             * the Macintosh port of Info-ZIP's zip, which is the only
+             * common writer that puts Finder metadata in a zip at all.
+             * The first fourteen bytes are the whole of what the
+             * CENTRAL directory carries: the uncompressed length of the
+             * attribute record, a flag word, then type and creator.
+             * Source: XADMaster XADZipParser.m (`extid==0x334d&&
+             * size>=14`: readUInt32LE len, readUInt16LE flags, two
+             * readID) and deark modules/zip.c `ef_infozipmac`, which
+             * reads the same six fields and then `if(eii->is_central)
+             * goto done` — so there is nothing further to find here,
+             * and nothing to decompress to get this much.
+             *
+             * Byte-wise through unc_get_* like everything else: a
+             * record at an odd offset in the extra field would fault a
+             * 68000 on a word read (CLAUDE.md, 68000 discipline). */
+            z->mtype = unc_get_u32be(ex + 10);
+            z->mcreator = unc_get_u32be(ex + 14);
+            z->mhave = 1;
+        } else if (id == 0x2705 && sz >= 12 &&
+                   unc_get_u32be(ex + 4) == 0x5A504954ul) {
+            /* ZipIt's short field for FILES: the signature 'ZPIT',
+             * then type and creator, then Finder flags BIG-endian if
+             * the field is long enough to hold them.
+             * Source: XADMaster XADZipParser.m, `extid==0x2705&&
+             * size>=12`, which guards on readID=='ZPIT' before
+             * trusting any of it. */
+            z->mtype = unc_get_u32be(ex + 8);
+            z->mcreator = unc_get_u32be(ex + 12);
+            if (sz >= 14) z->mflags = unc_get_u16be(ex + 16);
+            z->mhave = 1;
+        } else if (id == 0x2805 && sz >= 6 &&
+                   unc_get_u32be(ex + 4) == 0x5A504954ul) {
+            /* ZipIt's short field for DIRECTORIES: 'ZPIT' then Finder
+             * flags, and no type or creator — a folder has none.
+             * Source: XADMaster XADZipParser.m, `extid==0x2805&&
+             * size>=6`. */
+            z->mflags = unc_get_u16be(ex + 8);
+            z->mhave = 1;
         }
         ex += 4 + sz;
         exlen -= 4 + sz;
@@ -745,6 +792,8 @@ int unc_zip_extract(UncCtx *c)
     for (i = 0; i < nentries; i++) {
         uint32_t method, flags, wantcrc, csize, usize;
         uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
+        uint32_t mtype, mcreator;
+        uint16_t mflags;
         int aeskeybytes, aesversion;
         int z64err;
         uint32_t aesmethod;
@@ -815,6 +864,10 @@ int unc_zip_extract(UncCtx *c)
             z.aesversion = 0;
             z.aesmethod = method;
             z.err = UNC_OK;
+            z.mtype = 0;
+            z.mcreator = 0;
+            z.mflags = 0;
+            z.mhave = 0;
             if (cdbuf) {
                 if (extralen && cdrel + 46 + namelen + extralen <= cdsize) {
                     ex = cdbuf + cdrel + 46 + namelen;
@@ -843,6 +896,9 @@ int unc_zip_extract(UncCtx *c)
             aesversion = z.aesversion;
             aesmethod = z.aesmethod;
             z64err = z.err;
+            mtype = z.mtype;
+            mcreator = z.mcreator;
+            mflags = z.mflags;
         }
 
         unc_entry_clear(&e);
@@ -868,6 +924,20 @@ int unc_zip_extract(UncCtx *c)
         e.comp_data_size = csize;
         e.rsrc_size = 0;
         e.method_data = (uint8_t)(method > 255 ? 255 : method);
+        /* Finder metadata, where a Macintosh writer stated it. A
+         * DIRECTORY is given its Finder flags and no type or creator:
+         * both reference implementations read 0x334d's type/creator
+         * slots unconditionally, but a folder has neither, and MacZip
+         * fills them with DInfo bytes instead — `docs/` in
+         * rexnebular_1_0_0.zip reads 0x002f000c/0x0154012b, which is a
+         * rectangle and a point, not two codes. ZipIt says the same by
+         * construction: its directory field (0x2805) has no room for
+         * them at all. */
+        e.finder_flags = mflags;
+        if (!e.is_dir) {
+            e.type = mtype;
+            e.creator = mcreator;
+        }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; break; }
