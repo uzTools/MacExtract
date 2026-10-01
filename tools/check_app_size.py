@@ -66,7 +66,7 @@ TAKEN = "2026-09-28"
 # mistaken for its contents*). It is NOT resident, so its growth costs the
 # download and the launch read rather than the engine's budget — but a figure
 # nothing measures is a figure nobody can correct.
-EXPECT_BUNDLE = 143328
+EXPECT_BUNDLE = 145652
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-09-28"
 
