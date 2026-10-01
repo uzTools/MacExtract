@@ -128,10 +128,20 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (224644, "System 3.0, Macintosh 512Ke (245,124 B free)"),
-    "sys6-512K": (129244, "System 6.0.8, Macintosh 512Ke (149,724 B free)"),
-    "floor-1M":  (653532, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (222620, "System 3.0, Macintosh 512Ke (245,124 B free)"),
+    "sys6-512K": (127220, "System 6.0.8, Macintosh 512Ke (149,724 B free)"),
+    "floor-1M":  (651508, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+
+# DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
+# resident CODE the zip Macintosh extra fields added to the CONTROL build
+# (tools/build_mac.sh, UNC_MAC_CODE_DEFAULT). The relationship is one for
+# one and has landed one for one on three machines twice (below), so the
+# arithmetic is the measurement here and no emulator was booted for it.
+# **The SHIPPED lane is unaffected**: that material is all in `ovl_exo`
+# and is released for every archive that is not a zip. No tally moved on
+# either lane: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71
+# shipped, the same fixtures by name.
 
 # Re-taken on all three machines TWICE on 2026-09-27, and each time all three
 # moved by the identical amount: +4,746 B with the merge and DART's removal in
@@ -211,7 +221,12 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # floor budget was once made worse (DECISIONS.md 2026-09-22, *the fold, on a
 # Macintosh*) — and it decides nothing: the narrowest margin between a
 # passing layer's demand and its budget is 16,490 B.
-OVL_SAVED = 117664
+# 2026-10-01: 117,664 -> 119,680 with zip's Macintosh extra fields in.
+# The whole +2,016 is the gap widening rather than anything new being
+# saved — the control took +2,024 B of resident CODE and the shipped
+# build took none, the 8 B being the A5 the control gave back. This is
+# the number the overlay build exists to make large.
+OVL_SAVED = 119680
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

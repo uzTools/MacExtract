@@ -307,7 +307,26 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # on the other side*). It costs the RESIDENT control 4 B and the shipped
 # build 0 — fmt_arc is in an overlay there — which is also how it got in:
 # nothing built this configuration. `ci.sh` builds it since the same day.
-UNC_MAC_CODE_DEFAULT=152068
+# RAISED 2026-10-01, the CONTROL ONLY, for zip's four Macintosh extra
+# fields: Info-ZIP's 0x334d and ZipIt's 0x2605/0x2705/0x2805, which carry
+# the type, creator, Finder flags and dates a Macintosh-written zip has
+# always held and this engine read none of (DECISIONS.md 2026-10-01).
+# Resident 152,068 -> 154,092; **the shipped build did not move at all**,
+# eager code and A5 both +0, because every byte of it is in the
+# `ovl_exo` image, which went 27,252 -> 29,252 and is released for every
+# archive that is not a zip. So this is 2,024 B off every extraction in
+# the control and 0 B in what ships — the widest that gap has been, and
+# the reason the overlay build exists.
+# `run_tiers.py --check` moves no tally on either lane with the images
+# and the resident budgets re-taken: 71/71, 67/71, 64/71 resident at
+# 651,508 / 222,620 / 127,220, and 71/71, 69/71, 66/71 shipped, the same
+# fixtures by name. What it costs the control is headroom — the narrowest
+# passing fixture at sys6-512K keeps about 10,436 B of its 12,460.
+# What the bytes bought: a zip written on a Macintosh extracts with its
+# Finder metadata, and a ZipIt entry gives back BOTH FORKS instead of a
+# MacBinary stream in the data fork. dist/README.txt's "type and creator
+# codes and dates all survive" was false for zip until this.
+UNC_MAC_CODE_DEFAULT=154092
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
