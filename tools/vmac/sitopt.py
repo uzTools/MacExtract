@@ -421,6 +421,19 @@ def main():
     ap.add_argument("--add-photoshop", action="store_true")
     ap.add_argument("--psdoc", action="store_true")
     ap.add_argument("--psjpeg", action="store_true")
+    # A SECOND subject, for one question: `CCOD`+0x3826's
+    # round-toward-zero correction is in the module's code and the exact
+    # output does not want it (FORMATS.md, *What an Optimizer did to the
+    # fork*). One image cannot say whether the trace mis-read that tail
+    # or the image never takes it; a second one with different content
+    # can, so the drawing and the document name are arguments now.
+    ap.add_argument("--drawing", choices=("zigzag", "grid"),
+                    default="zigzag",
+                    help="what --psdoc draws: the original five zigzag "
+                         "strokes, or a dense grid (high-frequency, which "
+                         "is what exercises the IDCT's rounding)")
+    ap.add_argument("--psname", default=PS_DOC,
+                    help="the Photoshop document's name on the volume")
     ap.add_argument("--add-archive",
                     help="a MacBinary archive to put on the image first")
     ap.add_argument("--add-modules", action="store_true")
@@ -1880,6 +1893,52 @@ def add_photoshop(args):
     return 0
 
 
+def stroke(x, ox, oy, pts):
+    """One pencil stroke through `pts`. A classic application joins
+    successive mouse positions, so a straight line needs two of them and
+    not one per pixel — which is the difference between a 40-second
+    drawing and a four-minute one."""
+    x("mousemove", str(ox + pts[0][0]), str(oy + pts[0][1]))
+    time.sleep(0.25)
+    x("mousedown", "1")
+    for px, py in pts[1:]:
+        x("mousemove", str(ox + px), str(oy + py))
+        time.sleep(0.06)
+    x("mouseup", "1")
+    time.sleep(0.3)
+
+
+def draw(s, which):
+    """Draw in the canvas with the pencil.
+
+    `zigzag` is the original: five wavy strokes on white, which leaves
+    most of the image flat — 2 distinct byte values in the document and
+    58 after the module had been through it.
+
+    `grid` is the second subject, and it is chosen for the ARITHMETIC
+    rather than for looking like anything: a 6-pixel comb against a
+    12-pixel one puts an edge in nearly every 8x8 block, in both
+    directions at once, so the blocks carry AC energy everywhere
+    instead of in five bands. That is what multiplies the number of
+    times the output stage rounds a negative value, which is the one
+    question a second image is for (FORMATS.md, *What an Optimizer did
+    to the fork*).
+    """
+    ox, oy = s.mac.origin()
+    x = s.mac._xdo
+    if which == "zigzag":
+        for row in (110, 140, 170, 200, 230):
+            stroke(x, ox, oy, [(px, row + ((px // 8) % 7) * 3)
+                               for px in range(100, 300, 8)])
+        return
+    for row in range(105, 239, 6):                  # the horizontal comb
+        stroke(x, ox, oy, [(100, row), (300, row)])
+    for col in range(100, 301, 12):                 # and the vertical one
+        stroke(x, ox, oy, [(col, 105), (col, 238)])
+    stroke(x, ox, oy, [(100, 105), (300, 238)])     # two diagonals, which
+    stroke(x, ox, oy, [(300, 105), (100, 238)])     # no block can predict
+
+
 def phase_psdoc(args):
     """Draw in Photoshop 1.0.7 and save its NATIVE document.
 
@@ -1915,22 +1974,11 @@ def phase_psdoc(args):
         s.shot("new-doc", wait=20.0)
         s.mac.click(*PS_PENCIL)
         s.shot("pencil", wait=3.0)
-        ox, oy = s.mac.origin()
-        x = s.mac._xdo
-        for row in (110, 140, 170, 200, 230):
-            x("mousemove", str(ox + 100), str(oy + row))
-            time.sleep(0.3)
-            x("mousedown", "1")
-            for px in range(100, 300, 8):
-                x("mousemove", str(ox + px),
-                  str(oy + row + ((px // 8) % 7) * 3))
-                time.sleep(0.04)
-            x("mouseup", "1")
-            time.sleep(0.4)
+        draw(s, args.drawing)
         s.shot("drawn", wait=4.0)
         s.mac.command_key("s")
         time.sleep(12)
-        s.mac._xdo("type", "--delay", "140", PS_DOC)
+        s.mac._xdo("type", "--delay", "140", args.psname)
         s.shot("save-named", wait=3.0)
         s.mac.key("Return")
         s.shot("saved", wait=25.0)
@@ -1938,7 +1986,7 @@ def phase_psdoc(args):
         s.shot("quit", wait=25.0)
         s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
         s.shot("off", wait=35.0)
-        read_one(os.path.join(s.work, "boot.hfv"), PS_DOC, outdir)
+        read_one(os.path.join(s.work, "boot.hfv"), args.psname, outdir)
     finally:
         time.sleep(3)
         s.close()
@@ -1946,34 +1994,38 @@ def phase_psdoc(args):
 
 
 PSJ_SCRIPT_NAME = "Zpsjpeg"
-PSJ_SCRIPT = "\r".join([
-    "; written by tools/vmac/sitopt.py",
-    'Write Status To "{Startup}PSStatus.out"',
-    "Continue On Error",
-    "; the control first, with no Optimizer enabled",
-    'New Archive "{Startup}PlainPS.sit"',
-    'Stuff "{Startup}%s" with fast' % PS_DOC,
-    "Close",
-    'Enable Optimizer "Photoshop/JPEG Lossy"',
-    'New Archive "{Startup}JpegPS.sit"',
-    'Stuff "{Startup}%s" with fast' % PS_DOC,
-    "Close",
-    'Disable Optimizer "Photoshop/JPEG Lossy"',
-    "; and ask for the same document straight back",
-    'Destination "{Startup}Out:"',
-    'Open Archive "{Startup}JpegPS.sit"',
-    'UnStuff "*"',
-    "Close",
-    "Quit",
-    "",
-])
+
+
+def psj_script(doc):
+    """The round trip, for whichever document --psname names."""
+    return "\r".join([
+        "; written by tools/vmac/sitopt.py",
+        'Write Status To "{Startup}PSStatus.out"',
+        "Continue On Error",
+        "; the control first, with no Optimizer enabled",
+        'New Archive "{Startup}PlainPS.sit"',
+        'Stuff "{Startup}%s" with fast' % doc,
+        "Close",
+        'Enable Optimizer "Photoshop/JPEG Lossy"',
+        'New Archive "{Startup}JpegPS.sit"',
+        'Stuff "{Startup}%s" with fast' % doc,
+        "Close",
+        'Disable Optimizer "Photoshop/JPEG Lossy"',
+        "; and ask for the same document straight back",
+        'Destination "{Startup}Out:"',
+        'Open Archive "{Startup}JpegPS.sit"',
+        'UnStuff "*"',
+        "Close",
+        "Quit",
+        "",
+    ])
 
 
 def phase_psjpeg(args):
     """Stuff a REAL Photoshop document with `JPEG Lossy` and unstuff it,
     in one boot — the round trip the synthetic subject could not do."""
     doc = os.path.join(SPECIMENS, args.against or "psdoc",
-                       PS_DOC + ".bin")
+                       args.psname + ".bin")
     if not os.path.exists(doc):
         raise SystemExit("sitopt: no %s — --psdoc makes it" % doc)
     if not os.path.exists(PS_IMAGE):
@@ -1985,8 +2037,9 @@ def phase_psjpeg(args):
     work = tempfile.mkdtemp(prefix="sitopt-psj-")
     try:
         mb = os.path.join(work, "script.bin")
-        open(mb, "wb").write(macbinary(PSJ_SCRIPT_NAME, "TEXT", "SIT!",
-                                       PSJ_SCRIPT.encode("mac_roman")))
+        open(mb, "wb").write(macbinary(
+            PSJ_SCRIPT_NAME, "TEXT", "SIT!",
+            psj_script(args.psname).encode("mac_roman")))
         env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
         try:
             hfs(env, "hmount", img)
@@ -2015,12 +2068,12 @@ def phase_psjpeg(args):
         s.shot("off", wait=35.0)
         written = os.path.join(s.work, "boot.hfv")
         for n in ("PlainPS.sit", "JpegPS.sit", "PSStatus.out",
-                  "Out:" + PS_DOC):
+                  "Out:" + args.psname):
             read_one(written, n, outdir)
     finally:
         time.sleep(3)
         s.close()
-    got = os.path.join(outdir, PS_DOC + ".bin")
+    got = os.path.join(outdir, args.psname + ".bin")
     if os.path.exists(got):
         od, orr = forks(doc)
         gd, gr = forks(got)

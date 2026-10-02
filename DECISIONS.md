@@ -321,6 +321,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
 - 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
 - 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
+- 2026-10-02 (the measurement that was waiting for a second input) — `CCOD`+0x3826 does not round toward zero, and one drawing was too easy to say so
 
 ---
 
@@ -19988,3 +19989,51 @@ is Sound Designer II and nothing else.
   overlay, so the shipped build measured identical before and after.
   Price the axis the user actually pays on before debating whether the
   work is worth doing.
+
+## 2026-10-02 (the measurement that was waiting for a second input) — `CCOD`+0x3826 does not round toward zero, and one drawing was too easy to say so
+
+**The C-Cube entry above shipped with one thing labelled unexplained**:
+the module's output stage appeared to apply the same round-toward-zero
+correction every rotation in its IDCT applies, and the decoder was
+byte-exact only WITHOUT it. 709 of 65,536 luma samples missed by one
+with it. That is written up as settled now (FORMATS.md, *What an
+Optimizer did to the fork*) and the claim is withdrawn (BLOCKERS.md).
+What follows is how, because the method is worth more than the answer.
+
+**An unexplained measurement has a shape: two readings that cannot both
+be true, and not enough data to say which.** Here they were "the trace
+of that tail is wrong" and "the image never takes that branch". Neither
+is testable by reading the disassembly again — the first one is a claim
+ABOUT that reading, so re-reading it is the one experiment guaranteed to
+be circular. What separates them is an input: an image that takes the
+branch so often that "never" is not available.
+
+**So the second subject was drawn for the arithmetic and not for the
+picture.** `sitopt.py --psdoc --drawing grid` draws a 6-pixel comb
+crossed with a 12-pixel one, which puts an edge in nearly every 8x8
+block in both directions at once; Photoshop 1.0.7 saved it, StuffIt
+Deluxe 2.0.1 stuffed it with `JPEG Lossy` and unstuffed it in the same
+boot. The module stored 22,097 B of it against the first subject's
+14,127 and changed 21.0 % of the pixel bytes against 10.1 %. The
+correction then got **9,645** output bytes wrong against the first
+subject's 2,127, and the decoder was byte-exact on both. The branch is
+taken; the correction is not the module's; the attribution was a
+misreading.
+
+**Two transferable halves.**
+
+- **"Unexplained" is a label with an expiry date, and the thing that
+  retires it is usually an input rather than an insight.** This one sat
+  for two days while the available move looked like more disassembly.
+  The question to ask of an unexplained measurement is not *what else
+  could cause this* but *what input would make the two explanations
+  disagree* — and here that was a drawing, which cost two emulator
+  boots and no reasoning at all.
+- **A test that passes on an easy subject is not evidence that it is
+  load-bearing.** Putting the correction back into `src/sit_ccube.c`
+  fails the first subject by 2,127 bytes and the second by 9,645, so
+  both sections of `run_sitopt.py` catch it — but the first one caught
+  it only because the oracle is byte-exact. A tolerance anywhere in that
+  comparison would have swallowed the easy subject and kept the hard
+  one, which is the argument for grading an approximation by equality
+  when equality is available at all.

@@ -123,6 +123,14 @@ MODS = os.path.join(SPECIMENS, "mods5")
 # --psjpeg).
 PSJ = os.path.join(SPECIMENS, "ps-jpeg1")
 PSDOC = os.path.join(SPECIMENS, "psdoc", "PSDoc.bin")
+# And the SECOND subject, a dense grid rather than five strokes
+# (`sitopt.py --psdoc --drawing grid --psname PSDoc2`). It is here for
+# the arithmetic: it reaches the output stage's negative branch 9,645
+# times against the first subject's 709, which is what withdrew the
+# round-toward-zero reading of CCOD+0x3826 (BLOCKERS.md). A decoder that
+# regains that correction passes section 6 and fails this one.
+PSJ2 = os.path.join(SPECIMENS, "ps-jpeg2")
+PSDOC2 = os.path.join(SPECIMENS, "psdoc2", "PSDoc2.bin")
 # What 2.0.1's OWN unstuffer gave back for OptPaint.sit — the only
 # thing "correct" can mean for an entry `MacPaint 1` optimized,
 # because the module does not restore the original either.
@@ -425,12 +433,59 @@ def main():
         else:
             print("run_sitopt: no ps-jpeg1 specimens — `JPEG Lossy` is not "
                   "graded (sitopt.py --psdoc, --psjpeg)")
+
+        # 7. the same, over the subject that exercises the rounding.
+        jarc = os.path.join(PSJ2, "JpegPS.sit.bin")
+        jref = os.path.join(PSJ2, "PSDoc2.bin")
+        jctl = os.path.join(PSJ2, "PlainPS.sit.bin")
+        if os.path.exists(jarc) and os.path.exists(jref) \
+                and os.path.exists(PSDOC2):
+            out = os.path.join(work, "psjpeg2")
+            rc, msg = extract(args.macextract, jarc, out)
+            q = os.path.join(out, "PSDoc2")
+            rd, _ = forks(jref)
+            od, orr = forks(PSDOC2)
+            if rc != 0 or not os.path.exists(q):
+                problems.append("the grid JpegPS.sit did not extract: %s"
+                                % msg.strip())
+            else:
+                got = open(q, "rb").read()
+                if got != rd:
+                    n = sum(1 for i in range(min(len(got), len(rd)))
+                            if got[i] != rd[i])
+                    problems.append("JpegPS(grid): the data fork is not "
+                                    "2.0.1's own restored bytes (%d B "
+                                    "against %d, %d differing)"
+                                    % (len(got), len(rd), n))
+                if (not os.path.exists(q + ".rsrc")
+                        or open(q + ".rsrc", "rb").read() != orr):
+                    problems.append("JpegPS(grid): the resource fork is not "
+                                    "the document's own")
+                if got == od:
+                    problems.append("JpegPS(grid): the data fork equals the "
+                                    "ORIGINAL, which a lossy Optimizer "
+                                    "cannot give back")
+            # and its control, which says the subject itself round-trips
+            if os.path.exists(jctl):
+                out = os.path.join(work, "psplain2")
+                rc, msg = extract(args.macextract, jctl, out)
+                q = os.path.join(out, "PSDoc2")
+                if rc != 0 or not os.path.exists(q):
+                    problems.append("the grid control did not extract: %s"
+                                    % msg.strip())
+                elif open(q, "rb").read() != od:
+                    problems.append("the grid control's data fork is not "
+                                    "the subject")
+        else:
+            print("run_sitopt: no ps-jpeg2 specimens — the second `JPEG "
+                  "Lossy` subject is not graded (sitopt.py --psdoc "
+                  "--drawing grid --psname PSDoc2, --psjpeg)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 9 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
+    print("run_sitopt: 11 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
           "Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0

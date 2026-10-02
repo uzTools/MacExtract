@@ -278,10 +278,15 @@ static void cc_idct(int32_t *blk)
 
 /* (x + 16) >> 5, the level shift and the clamp.
  *
- * **CCOD+0x3826 applies the same round-toward-zero correction here
- * that every rotation applies, and the output is exact only WITHOUT
- * it**: with it, 709 of 65,536 luma samples miss by one. Measured, and
- * unexplained — FORMATS.md says so too rather than smoothing it over. */
+ * **No round-toward-zero correction here**, unlike every rotation in
+ * the network above. This was recorded as unexplained until
+ * 2026-10-02, because CCOD+0x3826 was read as applying one: a second
+ * subject settles it. A dense drawing reaches `v < 0` 9,645 times
+ * against the first subject's 709, and the correction is wrong on
+ * every one of them while this is byte-exact on both — so the
+ * attribution was a misreading of the disassembly, not a branch these
+ * images miss (BLOCKERS.md, *Withdrawn claims*; FORMATS.md, *What an
+ * Optimizer did to the fork*). Do not "fix" this to match the asm. */
 static int cc_sample(int32_t x)
 {
     int32_t v = ((x + 16) >> 5) + 128;

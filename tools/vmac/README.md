@@ -2952,6 +2952,10 @@ What it CANNOT see:
     tools/vmac/sitopt.py --psdoc --tag psdoc     draw and save a native 8BIM file
     tools/vmac/sitopt.py --psjpeg --tag psjpeg1  stuff it with JPEG Lossy, unstuff it
 
+    # and the SECOND subject, two boots, 2026-10-02
+    tools/vmac/sitopt.py --psdoc --drawing grid --psname PSDoc2 --tag psdoc2
+    tools/vmac/sitopt.py --psjpeg --psname PSDoc2 --against psdoc2 --tag ps-jpeg2
+
 **It runs on the Mac Plus, which its own page rules out.** Adobe's
 requirements say *"Macintosh SE or newer"*; Mini vMac's Plus is the only
 variant built here and Photoshop 1.0.7 launches on it in about 90
@@ -2974,6 +2978,26 @@ why the synthetic subject failed (FORMATS.md).
 **`--psjpeg` is the round trip in one boot** — control archive,
 optimized archive, and an UnStuff of the optimized one — so the answer
 does not depend on carrying an archive between sessions.
+
+**`--drawing grid` is a second subject chosen for the arithmetic, and it
+withdrew a claim.** `--drawing zigzag` (the default, and what made the
+first document) is five pencil strokes on white, which leaves most of
+the image flat; `grid` is a 6-pixel comb crossed with a 12-pixel one
+plus two diagonals, so nearly every 8x8 block carries an edge in both
+directions. The module stores **22,097 B** of it against the first
+subject's 14,127 and changes **21.0 %** of the pixel bytes against
+10.1 %. That was enough to settle whether `CCOD`+0x3826 rounds toward
+zero: it does not, and the first subject's 2,127 wrong bytes had been
+few enough to look like a branch the image never took (FORMATS.md,
+*What an Optimizer did to the fork*; BLOCKERS.md, *Withdrawn claims*).
+**A second subject is how a disassembly question gets settled when the
+first one is too easy** — the drawing is an argument now (`--drawing`)
+and so is the document's name (`--psname`), so a third costs two boots
+and no editing.
+
+What those two runs CANNOT see: anything about a different JPEG
+quality, which is 25 in both because it is the module's default and
+nothing here has varied it.
 
 ### Running an Optimizer module — `dcmptest`, `--dcmp` and `--dcmpdata`
 

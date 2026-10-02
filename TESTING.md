@@ -1054,7 +1054,7 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Seven assertions over nine archives 2.0.1 wrote, in four scripted runs:
+Seven assertions over eleven archives 2.0.1 wrote, in five scripted runs:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;
@@ -1077,12 +1077,18 @@ Seven assertions over nine archives 2.0.1 wrote, in four scripted runs:
    them, which is asserted too; the synthetic `JPEG Lossy` (3) entry is
    the one the module could not encode, and must be refused rather than
    invented;
-7. **`JPEG Lossy` over a document Photoshop 1.0.7 itself wrote** comes
-   out **byte-identical to 2.0.1's own restored file**, with the
+7. **`JPEG Lossy` over two documents Photoshop 1.0.7 itself wrote**
+   comes out **byte-identical to 2.0.1's own restored file**, with the
    resource fork identical to the ORIGINAL document's — which 2.0.1's
    output is not — and the user told. It must NOT equal the original
    data fork: that would mean a lossy module had given back what it
-   threw away.
+   threw away. The second document is a dense grid and is graded for
+   one reason: it puts the output stage's negative branch on 9,645
+   bytes against the first one's 2,127, so a decoder that regains
+   `CCOD`+0x3826's round-toward-zero correction fails it four times as
+   loudly (BLOCKERS.md, *Withdrawn claims*). Measured 2026-10-02 by
+   putting that correction back: 2,127 and 9,645 wrong, both sections
+   failing.
 
 **Where the split came from.** Aladdin's own Engine, asked to unstuff
 both, decoded the `Text 1` archive and refused the `MacPaint 1` one —
@@ -1096,7 +1102,8 @@ anything but these nine archives. All four reversible Optimizers are
 undone in `src/fmt_sit.c` and this suite grades the RESULT — byte for
 byte against the subject for `Sound 1` and `Photoshop 1`, and against
 2.0.1's own unstuffed output for `MacPaint 1` and `JPEG Lossy` — but
-only over the SETTINGS this project asked 2.0.1 for: one JPEG quality,
+only over the SETTINGS this project asked 2.0.1 for: one JPEG quality
+   (two subjects at it, since 2026-10-02),
 one compression method per Optimizer, and no Optimizer over an encrypted
 entry. The archives themselves are not synthetic — 2.0.1 wrote every one
 of them — so what is unseen is coverage of its options rather than

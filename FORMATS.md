@@ -1982,13 +1982,30 @@ RESOURCE fork comes out identical to the ORIGINAL document's, which
 | the tiers | unmoved: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped |
 | peak RAM, 256x256 | **31.7 KB**, bisected — the stored fork, one MCU row of three components, and the tables. It grows with the stored fork and with 16 B per pixel of padded WIDTH, not with the image |
 
-**One thing in it is measured and unexplained.** The code at
-CCOD+0x3826 applies the same round-toward-zero correction after
-`(x + 16) >> 5` that every rotation applies, and **the output is only
-exact WITHOUT it**: with the correction 709 of 65,536 luma samples miss
-by one, without it none do. Recorded rather than smoothed over — the
-decoder omits it, the asm has it, and why they agree anyway is not
-known.
+**The one thing that was unexplained is settled, by a second subject.**
+It read here until 2026-10-02 that CCOD+0x3826 applies the same
+round-toward-zero correction after `(x + 16) >> 5` that every rotation
+applies, and that the output is exact only WITHOUT it — 709 of 65,536
+luma samples missing by one with it. 709 is few enough that *"this
+image never takes that branch"* survived as an explanation. A second
+document settles it:
+
+| | the first subject | the second |
+|---|---|---|
+| what it is | five pencil strokes on white | a 6-pixel comb crossed with a 12-pixel one, and two diagonals (`sitopt.py --psdoc --drawing grid`) |
+| what `JPEG Lossy` stored | 14,127 B | **22,097 B** |
+| what the module changed | 10.1 % of the pixel bytes | **21.0 %** |
+| this decoder against 2.0.1's own output | **0 bytes differ** | **0 bytes differ** |
+| output bytes the correction gets wrong (`decode.py --rtz`) | 2,127 of 196,608 — **709** of them luma | **9,645** of 196,608 |
+
+Each of those wrong bytes is a sample the correction changed, so the
+branch is taken thousands of times and the correction is wrong on every
+one of them. **The output stage does not round toward zero**; the
+attribution of that idiom to +0x3826 was a misreading of the
+disassembly and is withdrawn (BLOCKERS.md, *Withdrawn claims*). The
+decoder did not change — it was right throughout, and what moved is the
+comment that called it a mystery. `src/sit_ccube.c` is byte-exact on
+both subjects, and `tools/run_sitopt.py` grades both.
 
 **That is why no standard IDCT matched and none ever will.** Matching
 this one byte for byte needs the network AND its index tables, which

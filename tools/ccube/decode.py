@@ -205,15 +205,29 @@ def idct(c):
     return out
 
 
+RTZ = False          # --rtz: the correction the disassembly has
+
+
 def sample(x):
     """(x + 16) >> 5, the level shift, and the clamp.
 
-    **The code at CCOD+0x3826 has a round-toward-zero correction here
-    that this does NOT, and adding it makes the output wrong.** With it,
-    709 of 65,536 luma samples miss by one; without it, none do. That is
-    measured and unexplained — recorded rather than smoothed over.
+    **No round-toward-zero correction here**, unlike every rotation in
+    the network above, and CCOD+0x3826 was read as applying one until
+    2026-10-02. On the first subject, with it, 709 of 65,536 luma samples
+    miss by one; without it, none do.
+
+    `--rtz` is the experiment that settled why. A second, dense subject
+    reaches `v < 0` **9,645** times and `--rtz` is wrong on every one
+    of them, while this is byte-exact on both subjects — so the branch
+    IS taken and the correction is not the module's. The attribution of
+    it to CCOD+0x3826 was a misreading of the disassembly and is
+    withdrawn (BLOCKERS.md). The switch is kept because it is the
+    instrument that said so.
     """
-    v = ((x + 16) >> 5) + 128
+    v = (x + 16) >> 5
+    if RTZ and v < 0:
+        v += 1
+    v += 128
     return 0 if v < 0 else (255 if v > 255 else v)
 
 
@@ -296,7 +310,12 @@ def main():
     ap.add_argument("payload")
     ap.add_argument("--against", help="MacBinary of 2.0.1's own restored file")
     ap.add_argument("--out", help="write the planar RGB here")
+    ap.add_argument("--rtz", action="store_true",
+                    help="apply CCOD+0x3826's round-toward-zero "
+                         "correction in the output stage")
     args = ap.parse_args()
+    global RTZ
+    RTZ = args.rtz
     got, w, h = run(open(args.payload, "rb").read())
     print("ccube: decoded %dx%d, %d bytes planar RGB" % (w, h, len(got)))
     if args.out:
@@ -310,9 +329,13 @@ def main():
         n = sum(1 for d in diff if d)
         print("ccube: vs 2.0.1's own output — %d of %d bytes differ (%.2f %%), "
               "largest %d" % (n, len(ref), 100.0 * n / len(ref), max(diff)))
-        if n:
+        if n and not args.rtz:
             print("ccube: PROBLEM: this decoder is meant to be BYTE-EXACT")
             return 1
+        if n:
+            # --rtz is an experiment, not the decoder: a difference here
+            # is the measurement being asked for.
+            print("ccube: (--rtz) that is the measurement, not a failure")
     return 0
 
 
