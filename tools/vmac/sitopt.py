@@ -433,6 +433,8 @@ def main():
     ap.add_argument("--psrest", action="store_true")
     ap.add_argument("--psfold", action="store_true")
     ap.add_argument("--pssea", action="store_true")
+    ap.add_argument("--install-sea", action="store_true")
+    ap.add_argument("--psicons", action="store_true")
     ap.add_argument("--password", default="swordfish")
     ap.add_argument("--quality", type=int,
                     help="set the JPEG Optimizer's Q before stuffing "
@@ -506,6 +508,10 @@ def main():
         return phase_dcmpdata(args)
     if args.add_photoshop:
         return add_photoshop(args)
+    if args.psicons:
+        return phase_psicons(args)
+    if args.install_sea:
+        return phase_install_sea(args)
     if args.pssea:
         return phase_pssea(args)
     if args.psfold:
@@ -2409,10 +2415,135 @@ def unstuffer(work):
     raise SystemExit("sitopt: no UnStuffIt Deluxe in the disk 2 installer")
 
 
+SEA_IMAGE = os.path.join(WORK, "sitopt-sea.hfv")
+WINDOW_ZOOM = (411, 47)         # the volume window's zoom box
+WINDOW_GROW = (414, 236)        # its grow box, which is what works
+SEA_INSTALLER = (47, 193)       # `UnStuffIt Deluxe™ Installer`, once the
+                                # window is grown (`--psicons`)
+SEA_APP = (370, 97)             # `StuffIt Deluxe™` on the INSTALLED volume,
+                                # whose window `--install-sea` left grown and
+                                # scrolled — measured off pssea3/02-volume.png
+
+
+def phase_psicons(args):
+    """Photograph the volume window with every icon showing.
+
+    **Finder type-select does not work in this harness.** Two phases
+    assumed it did — `--magic`'s shot is called `subject-selected` and
+    nothing in it is selected — and `--install-sea` then failed
+    silently, because an icon that is never selected is an icon that
+    ⌘O does not open. So an icon has to be CLICKED, and a click needs a
+    position: this zooms the window out to show all of them and
+    photographs it, which is one boot spent so the next one can aim.
+    """
+    img = os.path.join(WORK, "run-psicons.hfv")
+    shutil.copyfile(SEA_IMAGE if os.path.exists(SEA_IMAGE) else PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        s.shot("desktop", wait=8.0)
+        s.mac.click(*BOOT_ICON, double=True)
+        s.shot("volume", wait=12.0)
+        # The zoom box did nothing on the first run — clicking (411,47)
+        # left the window exactly as it was — so the window is GROWN
+        # instead, by dragging its bottom-right corner to the screen's.
+        s.mac.drag(414, 236, 500, 330)
+        s.shot("zoomed", wait=6.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+def phase_install_sea(args):
+    """Run `UnStuffIt Deluxe™ Installer`, and keep the volume it makes.
+
+    Placing the self-unstuffer by hand does not work: loose on the
+    volume, in the System Folder and in `Extensions`, 2.0.1 still says
+    *"No Self-UnStuffer can be found that supports this archive"*
+    (`--pssea`, three boots). Its STR# 267 names eight folders and none
+    of them is for one, so whatever the installer does is not a copy —
+    and the cheapest way to find out what it does is to let it do it.
+
+    The result is kept as `sitopt-sea.hfv`, the way `--personalize`
+    keeps the registered volume, because an installer run is minutes
+    and the archive-making script is seconds.
+    """
+    img = os.path.join(WORK, "run-installsea.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-isea-")
+    try:
+        d2 = os.path.join(CACHE, "v2", "StuffIt Deluxe v2",
+                          "StuffIt Deluxe\u2122 Disk 2.image")
+        raw = os.path.join(work, "disk2.dsk")
+        open(raw, "wb").write(open(d2, "rb").read()[84:])
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        inst = os.path.join(work, "inst.bin")
+        try:
+            hfs(env, "hmount", raw)
+            hfs(env, "hcopy", "-m",
+                "UnStuffIt Deluxe\u2122 Installer".encode("mac_roman"), inst)
+            hfs(env, "humount")
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", inst, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        s.shot("desktop", wait=8.0)
+        s.mac.click(*BOOT_ICON, double=True)
+        s.shot("volume", wait=12.0)
+        # **Finder type-select does not work here.** Two phases assumed
+        # it did and neither checked: `--magic`'s `subject-selected`
+        # shot has nothing selected in it, and this phase's first run
+        # typed a name, pressed ⌘O and photographed an unchanged window
+        # three times. The icon is clicked instead — which needs the
+        # window grown, because it is the thirteenth of thirteen and
+        # below the fold (`--psicons`).
+        s.mac.drag(WINDOW_GROW[0], WINDOW_GROW[1], 500, 330)
+        s.shot("grown", wait=6.0)
+        s.mac.click(*SEA_INSTALLER, double=True)
+        s.shot("installer", wait=args.launch_wait)
+        # Whatever its default button is, Return takes it; then
+        # photograph, because nothing here knows this installer.
+        for n in (1, 2, 3):
+            s.mac.key("Return")
+            s.shot("install%d" % n, wait=12.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=15.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        shutil.copyfile(os.path.join(s.work, "boot.hfv"), SEA_IMAGE)
+    finally:
+        time.sleep(3)
+        s.close()
+    print("sitopt: kept %s" % SEA_IMAGE)
+    return show_path(outdir)
+
+
 def phase_pssea(args):
     """A SELF-EXTRACTING archive, which needs the other half of the box."""
     img = os.path.join(WORK, "run-pssea.hfv")
-    shutil.copyfile(PS_IMAGE, img)
+    # **The INSTALLED volume, and only it.** Copying what the installer
+    # made — `UnStuffIt Deluxe Folder` and the application inside it —
+    # onto the image this harness knows does NOT work: 2.0.1 still says
+    # *"No Self-UnStuffer can be found"*, on four runs now. So the
+    # application finds it through the **Desktop database**, which
+    # `hcopy` never writes and only a real install updates, and the only
+    # volume that has one is `--install-sea`'s. Its window is the one
+    # that run grew, so the application is clicked at SEA_APP rather
+    # than at `launch()`'s coordinate.
+    on_sea = os.path.exists(SEA_IMAGE)
+    shutil.copyfile(SEA_IMAGE if on_sea else PS_IMAGE, img)
     outdir = os.path.join(SPECIMENS, args.tag)
     os.makedirs(outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="sitopt-sea-")
@@ -2428,7 +2559,23 @@ def phase_pssea(args):
             open(us + ".rsrc", "rb").read()))
         env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
         try:
+            if os.path.exists(SEA_IMAGE):
+                hfs(env, "hmount", SEA_IMAGE)
+                for f in ("UnStuffIt Deluxe\u2122", "Read Me First"):
+                    subprocess.run(
+                        ["hcopy", "-m",
+                         (VOL + ":UnStuffIt Deluxe Folder:" + f).encode(),
+                         os.path.join(work, "us_" + f[:6] + ".bin")],
+                        capture_output=True, env=env)
+                hfs(env, "humount")
             hfs(env, "hmount", img)
+            if os.path.exists(os.path.join(work, "us_UnStuf.bin")):
+                subprocess.run(
+                    ["hmkdir", (VOL + ":UnStuffIt Deluxe Folder").encode()],
+                    capture_output=True, env=env)
+                hfs(env, "hcopy", "-m",
+                    os.path.join(work, "us_UnStuf.bin"),
+                    (VOL + ":UnStuffIt Deluxe Folder:").encode())
             hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
             # Loose on the volume AND in the System Folder: STR# 267's
             # "9 Magic Fldrs" is where the application looks, and which
@@ -2454,7 +2601,15 @@ def phase_pssea(args):
         shutil.rmtree(work, ignore_errors=True)
     s = Session(img, [], outdir, mem=args.emu)
     try:
-        launch(s, args)
+        if on_sea:
+            s.boot()
+            s.shot("desktop", wait=8.0)
+            s.mac.click(*BOOT_ICON, double=True)
+            s.shot("volume", wait=12.0)
+            s.mac.click(*SEA_APP, double=True)
+            s.shot("launched", wait=args.launch_wait)
+        else:
+            launch(s, args)
         s.mac.command_key("e")
         s.shot("script-picker", wait=8.0)
         s.mac._xdo("type", "--delay", "120", "Zsea")

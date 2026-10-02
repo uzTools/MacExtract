@@ -3042,6 +3042,29 @@ no prompt and no error in the status file. So the MENU's setting does
 not reach a scripted `Stuff`, and PassLock belongs to `--psencgui`,
 which drives File ▸ New Archive… and Archive ▸ Stuff… instead.
 
+**Two things about the Finder here, both of which cost runs.**
+
+- **Type-select does not work.** Opening a volume and typing a file's
+  name selects nothing — `--magic`'s shot is called `subject-selected`
+  and has nothing selected in it, which nobody noticed because that
+  phase went on to photograph menus and never needed the selection.
+  `--install-sea` inherited the assumption, pressed ⌘O on nothing and
+  photographed an unchanged window three times, with no error
+  anywhere. **Click the icon**, which means knowing where it is:
+  `--psicons` grows the window — by DRAGGING its grow box, since the
+  zoom box does nothing here — and photographs every icon so the next
+  run can aim.
+- **`hcopy` does not register a file in the Desktop database**, so a
+  1990 application looking for an add-on by TYPE will not find it.
+  Measured four placements deep on the self-unstuffer: loose on the
+  volume, in the System Folder, in `Extensions`, and in the
+  `UnStuffIt Deluxe Folder` the installer itself makes — 2.0.1 said
+  *"No Self-UnStuffer can be found"* every time, and only the volume
+  its own installer had touched behaved. The Optimizers and the
+  encryptors escape this because the application looks for THOSE by
+  path, in the eight folders its `STR# 267` names
+  (`--install-sea` is the phase that runs a real installer).
+
 **The script's own security words are another matter**, and this file
 said they named nothing installed until 2026-10-02, which was an
 assumption and was wrong (BLOCKERS.md). `--psdes` asks for both:

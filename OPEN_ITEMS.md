@@ -300,53 +300,28 @@ the translator.
 
 ## StuffIt 2.0: everything it writes, and the one thing left over
 
-**All five are extracted** as of 2026-10-02 — `Text 1`, `Sound 1` and
-`Photoshop 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents
-that are not the user's file, the second of them byte-exact against
-what StuffIt Deluxe 2.0.1 itself restores (FORMATS.md, *What an
-Optimizer did to the fork*). What is left is not about the modules:
+**Everything StuffIt Deluxe 2.0.1 writes with what was in its box is
+extracted** as of 2026-10-02, each graded against an archive it wrote
+itself: all five Optimizers, all five ciphers, every compression word,
+a 1.5.1-compatible archive and a folder (FORMATS.md, *What an Optimizer
+did to the fork*, *The three ways 2.0.1 encrypts*; TESTING.md, the
+sitopt suite's 27 archives).
 
-- **One thing the application can be asked for and has not been.**
-  The sixteen specimens are `tools/vmac/sitopt.py`'s, but **StuffIt
-  Deluxe 2.0.1 itself** wrote them under Mini vMac — the original
-  writer, not a synthesiser — so a third party's archive would add
-  nothing to the header reading. What was narrow was what the
-  application had been ASKED for, and most of that closed on
-  2026-10-02 (FORMATS.md, *What an Optimizer did to the fork*): every
-  compression method the script language has, and a second quality,
-  are measured now. What is left:
+Two things are left, and neither is a decoder:
 
-  **A SELF-EXTRACTING archive, which this project cannot yet make.**
-  `Save As "…" Self-UnStuffing` is the right syntax — 2.0.1's status
-  file logs *"(Self-UnStuffing option)"* — and it then answers *"No
-  Self-UnStuffer can be found that supports this archive"*. The
-  self-unstuffer is the other half of the box: `UnStuffIt Deluxe™`
-  lives inside disk 2's own installer, whose data fork is a StuffIt
-  archive, and lifting it out and placing it loose on the volume, in
-  the System Folder and in `Extensions` does not satisfy the
-  application (`sitopt.py --pssea`, three boots, 2026-10-02). **What
-  would close it:** running `UnStuffIt Deluxe™ Installer` under the
-  emulator, which is a GUI installer nothing here has driven. The
-  engine reads self-extracting StuffIt archives — the corpus has
-  several — so what is untested is whether a 2.0-written one differs,
-  not whether the shape is handled.
+- **A self-extracting archive THIS writer made.** The engine reads
+  them — 77 `.sea` fixtures extract, graded against `unar` — so what is
+  unproved is whether 2.0.1's differs. Six boots on 2026-10-02 got the
+  installer run (*"Installation was successful"*, volume kept as
+  `sitopt-sea.hfv`) and stopped at reaching the application on that
+  volume, whose Finder window the installer left grown and scrolled.
+  **What would close it:** that icon's position, measured the way
+  `--psicons` measures one, or a Desktop rebuild on the image this
+  harness already knows. The mechanism is settled: 2.0.1 finds a
+  self-unstuffer through the Desktop database, which `hcopy` cannot
+  write (`tools/vmac/README.md`).
 
-  Everything else, as of 2026-10-02, has been asked for and read: all
-  five Optimizers, all five ciphers, every compression word including
-  `guess`, a 1.5.1-compatible archive and a folder (FORMATS.md, *The
-  three ways 2.0.1 encrypts*, and *What an Optimizer did to the
-  fork*). **`Custom Compression…` is out of scope** rather than open:
-  it takes a third party's compressor module (method nibble 7), none
-  shipped in the box, and an archive from one would have to come from
-  whoever has it — Part 1.
-
-  Two subjects are also part synthetic: `Sound 1` is 8 KB of generated
-  samples where a Sound Designer II file belongs, and `Photoshop 1`'s
-  resource fork is built to the module's own acceptance test. Only the
-  first of those needs software this project does not have.
-- **The encryptors are done.** Closed 2026-10-02: all five of StuffIt
-  2.x's schemes are decrypted and `PassLock`'s entries are read without
-  a password, each graded against a known plaintext (FORMATS.md,
-  *Encryption*). What remains is a third party's module nothing here
-  has — refused by id, which is what that path is for.
-
+- **Nothing has seen an archive this project did not make.** All 27 are
+  2.0.1's own output under Mini vMac — the writer rather than a
+  synthesiser, so the reading is graded against authentic bytes — but
+  one subject per module, chosen here.
