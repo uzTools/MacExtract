@@ -319,6 +319,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
 - 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
 - 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
+- 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
 
 ---
 
@@ -19810,3 +19811,67 @@ PC indexes and from a generator instead, so the format's *Macintosh*
 dialect was never sampled. **A corpus inherits its blind spots from the
 query that built it**, which is the same shape as 2026-09-26's *was the
 search by NAME?* and costs a capability rather than a file.
+
+## 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
+
+**Decision.** Read them. Info-ZIP's `0x334d` and ZipIt's
+`0x2705`/`0x2805` give type, creator, Finder flags and dates; a ZipIt
+`0x2605` entry's data is a MacBinary stream and yields both forks.
+**+2,000 B, all in `ovl_exo`**; resident `CODE` +0, A5 +0, peak RAM +0,
+no tier tally moved (FORMATS.md, *Zip's Macintosh extra fields*).
+
+**The price that nearly got paid was not bytes.** The first
+implementation cited `reference/XADMaster/XADZipParser.m`, because that
+is what was sitting in `reference/` and it reads all four fields.
+`tools/check_provenance.py` failed it: `fmt_exo.c` is in HISTORICAL —
+*"mentions a reference only to say what it no longer owes"* — and
+citing XADMaster would have moved the zip reader into the fifteen files
+that owe it, for four small features, in a project whose licence is
+already forced by that debt and which records *"no regression for the
+licence's sake"*.
+
+**It did not have to.** APPNOTE.TXT 4.6.4–4.6.6 specifies all three
+ZipIt fields, and has since long before this project, *including*
+`0x2605`'s whole meaning: "This block MUST be present if the file is
+stored MacBinary-encoded". It was already in `reference/notes/` and had
+been read for Zip64 and AES. `0x334d` is named in APPNOTE.TXT's
+header-id table with no layout, and is specified in full — central and
+local, all five flag bits, the attribute record field by field — in
+Info-ZIP's own `proginfo/extrafld.txt`, by the field's designer. One
+`curl`. **So the entire licence cost of this work was an unfetched
+document**, and the thing that made it visible was a gate that fires on
+the shape of a comment.
+
+**And the spec did not only change the citation, it changed the
+code.** The dates are taken unadjusted, which is what neither reference
+does. `FlCrDat` is "original Mac FileTime values (local time!)" and
+this engine's consumer is `ioFlCrDat`, which is local — so the stored
+value is already the wanted one. Then the decisive part: **XADMaster
+adds `CrGMTOffs` and deark subtracts it, and both label the result
+UTC.** They cannot both be right, so neither is an oracle for that
+field, and the document settles it by making the offset irrelevant
+here. Every entry of `rexnebular_1_0_0.zip` carries −18000, so the
+choice is observable and this engine's dates stand 5 h from `lsar`'s.
+
+**Three transferable halves.**
+
+- **"The reference implementation on disk" is not the same thing as
+  "the source".** Both readers were right for their own target and one
+  of them was wrong for this one. A spec describes the format; a reader
+  describes the format *plus* its author's purpose, and transcribing
+  takes both. This repository has shed six formats' worth of that debt
+  by finding the publication; this is the first time the publication
+  was already in `reference/` and had been read for other fields.
+- **When two implementations disagree, the disagreement is the
+  finding.** It is cheaper to detect than either one being wrong: no
+  specimen is needed, only reading both. And it retires an oracle for
+  one field without touching its standing for the rest, which is why
+  the date column cannot be graded against `lsar` and the type/creator
+  column can.
+- **A hardcoded budget does not fall when the build grows.**
+  `run_tiers.py`'s resident `TIERS` are figures re-taken on real
+  machines, so the resident tallies were read at budgets that had not
+  been reduced by the control's +2,024 B and were reported as unmoved
+  before they were a measurement. They do hold at 651,508 / 222,620 /
+  127,220 — but *"a constant in the peak-RAM matrix"* is the smell
+  CLAUDE.md names, and the matrix is not the only place one hides.
