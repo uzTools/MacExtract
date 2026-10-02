@@ -1911,11 +1911,26 @@ transform is at CCOD+0xf9e and is recognisable at sight: pairs of
 samples added, `addi.w #-256` for the level shift of two summed samples
 at once, then `lsl.w #2`.
 
+**It builds a cosine table on the stack at CCOD+0xeaa**, fifteen words
+written as immediates: `512, 100, 196, 284, 362, 426, 473, 502, 502,
+473, 426, 362, 284, 196, 100`. Those are **cos(k.pi/16) at scale 2^9** —
+502/512 = 0.9805 against cos(pi/16) = 0.98079, and so on down to
+100/512 = 0.1953 against 0.19509. So the transform's precision is **nine
+bits**, and it rounds toward zero.
+
 **And the core is a TABLE-DRIVEN lifting network.** At CCOD+0x1492 the
 operand indices are fetched from tables, decremented, and used to index
 a local array; the pair is added, halved with `asr.w #1`, and corrected
 by `addq #1` when negative — a halving that rounds toward zero. The
 butterfly is described by data, not unrolled in code.
+
+**Knowing the table does not give the transform.** A separable matrix
+IDCT built from exactly those fifteen values, truncating toward zero,
+swept over both descale shifts and both ways of handling the DC term,
+gets **28.6 % of the inked samples wrong** at its best — ten times worse
+than an ordinary float IDCT. C-Cube keeps far more precision between the
+two passes than a 9-bit matrix multiply can, which is what a lifting
+network is for.
 
 **That is why no standard IDCT matched and none ever will.** Matching
 this one byte for byte needs the network AND its index tables, which
