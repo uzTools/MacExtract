@@ -73,8 +73,28 @@ and its size was fixed when the archive was made. Those entries are skipped
 with a message and the rest of the archive still comes out. Every other format
 fits in 512 KB, and with 1 MB the question does not arise.
 
-v0.35.0 changes almost nothing you would meet, and that is the honest
-summary: it is a release of tests, provenance and tooling. Two things did
+v0.36.0 is about one program: StuffIt Deluxe 2.0, from 1990. Everything
+that application could write, this one now opens.
+
+Its five add-on Optimizers, which no StuffIt since has opened, are
+described further down. New here is the other half: StuffIt Deluxe 2.0
+could lock an archive with a password, four different ways, and all four
+open now -- its own DES and NewDE, and the NewDEx and DESex plug-ins
+from its optional disk. You give the password; the archive opens. A
+fifth, a third-party add-on called PassLock, turns out never to have
+encrypted anything at all: it writes a password into the file and
+nothing else, so those archives open without one, and if you were
+relying on it for privacy in 1990, you were not getting any.
+
+The rest of what that application wrote already opened and is now
+checked rather than assumed: archives that stuff a folder, archives
+saved in the older 1.5.1 format, every compression setting it offered,
+and the self-extracting archives it made. Twenty-eight archives written
+by StuffIt Deluxe 2.0 itself, under an emulator, are tested against
+this program on every build.
+
+v0.35.0, before it, changed almost nothing you would meet, and that is
+the honest summary: it is a release of tests, provenance and tooling. Two things did
 change. An ARJ archive whose header is a couple of bytes shorter than this
 program used to accept is now NAMED rather than passed over -- it still
 cannot be opened, ARJ being one of the formats this program identifies and
