@@ -69,9 +69,13 @@
    goes stale while still looking plausible. So the three sentences and the
    bundle's own three terms (images + index = bundle) are held against the
    constants, and the run refuses to report a pass unless bending two of
-   them is caught. **What it cannot see:** the twelve per-format rows
-   themselves — those are `run_tiers.gain()` of a set of images and nothing
-   recomputes them, so re-take them from that function rather than by hand.
+   them is caught. That selftest bends the figures the same code reads, so
+   it was also failed from OUTSIDE once on 2026-10-02 — one of the four
+   `123,776`s changed by hand to `123,777`, which named the sentence, the
+   constant and the function to re-derive from. **What it cannot see:** the
+   twelve per-format rows themselves — those are `run_tiers.gain()` of a set
+   of images and nothing recomputes them, so re-take them from that function
+   rather than by hand.
 
 0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` since
    2026-09-25): a Python function whose every `return` carries a tuple of
