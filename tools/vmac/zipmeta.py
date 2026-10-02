@@ -17,6 +17,18 @@ nothing on its own. The three `docs/*.txt` entries are `TEXT/MSWD`, which
 no default produces. Either those come back MSWD or StuffIt did not read
 the field.
 
+**This driver needs System 7 and will silently do nothing on System
+6.** It picks every folder and application by typing its name and
+pressing Cmd-O, and Finder type-ahead SELECTION arrived with System 7 —
+System 6's Finder has no such feature, so a typed name there selects
+nothing and Cmd-O opens nothing. The image `spacesaver.py` builds boots
+System 7.0.1, which is why this works; `03-opened-stuffit.png` shows the
+Label menu and a `System_7_0_1` volume. Anything retargeted at a System
+6 volume must drive the Finder some other way (`tools/vmac/README.md`).
+The `Escape` before each name is a SECOND and unrelated guard: on
+System 7 a later search in the same boot concatenates onto the
+type-ahead buffer and matches nothing unless the buffer is cleared.
+
 **What this CANNOT see.** It grades ONE StuffIt — Expander 3.5.2 over
 StuffIt Engine 3.5.2 and UnZip Translator 3.5, the installation
 `spacesaver.py` builds and the only one here. 3.5.1 is from 1994 and Info-ZIP's `0x334d` carries
