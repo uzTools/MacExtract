@@ -322,6 +322,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
 - 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
 - 2026-10-02 (the measurement that was waiting for a second input) — `CCOD`+0x3826 does not round toward zero, and one drawing was too easy to say so
+- 2026-10-02 (three defaults that were being read as format) — what StuffIt Deluxe 2.0.1 will actually be asked for, and what it refuses to be asked by script
 
 ---
 
@@ -20037,3 +20038,67 @@ misreading.
   comparison would have swallowed the easy subject and kept the hard
   one, which is the argument for grading an approximation by equality
   when equality is available at all.
+
+## 2026-10-02 (three defaults that were being read as format) — what StuffIt Deluxe 2.0.1 will actually be asked for, and what it refuses to be asked by script
+
+**Every optimized specimen this project had was one subject, at the
+default quality, through one compression method.** Nothing was wrong
+with any of them; the problem is what a single point looks like — a
+constant. Six boots turned that point into a range, and three things
+that had been written down as properties of the format turned out to be
+properties of the defaults. The figures are FORMATS.md's; this is why
+each one mattered.
+
+**The quantisation tables are not "halved".** FORMATS.md described tag
+33606 as *"the standard Annex K luminance and chrominance tables in
+zigzag order, halved"*, which is exactly true of a Q=25 archive and of
+nothing else: at Q=50 they are Annex K **unscaled**, so the rule is
+Annex K x Q/50 and "halved" was the default's arithmetic. The decoder
+was never at risk — it reads the tables out of the file — but a
+transcription that had taken the sentence at face value would have
+been.
+
+**And the quality is a user setting, which took a wrong turn to find.**
+The Optimizers dialog is an activation LIST with Cancel and OK, and
+this file would have recorded that a quality cannot be set at all. It
+can: clicking a module's row opens **the module's own dialog**, which
+asks for a quantization level and recommends 20 to 30. What exposed it
+was a run that was doing something else and failed — the dialog
+swallowed a file name into its Q field, and the screenshot of that
+failure is the whole finding. **A probe that fails usefully is worth
+more than one that passes blindly**, and the difference is whether it
+photographs after every click.
+
+**The method matrix closed a comment in the engine.** `src/fmt_sit.c`
+refuses an optimized `JPEG Lossy` fork whose method nibble is not 0 and
+said so with *"the only shape seen"*, which is a hypothesis wearing a
+measurement's clothes. Asked for `fast`, `faster`, `better` and
+`optimal`, 2.0.1 stores the optimized fork every time and byte-identically
+— the method applies to the fork the Optimizer did not touch. The
+refusal is now measured across every method the script language has.
+
+**The one that did not close is the interesting one.** `PassLock` sits
+in the System Folder, and arming it from Options ▸ Custom Encryption…
+ticks that menu item — and a scripted `Stuff` then writes a plain
+archive, with no prompt and no error. The script language's security
+vocabulary is `newde` and `des` (STR# 257) and neither names an
+installed encryptor, so **the menu state does not reach scripted
+stuffing at all**. That is a fact about the application worth having
+before anybody spends a day scripting an encrypted archive out of it.
+
+**Two transferable halves.**
+
+- **A default observed once is indistinguishable from a constant, and
+  the docs will record it as one.** All three corrections here are the
+  same shape: a single specimen's value written down as the format's.
+  The cue is a figure that appears in a table with no range beside it —
+  and the cheap test is not more reading, it is asking the writer for a
+  second value. Six boots covered a matrix that four days of
+  disassembly had left as "the only shape seen".
+- **When a tool will not be driven the way you want, find out which
+  half refuses.** The script language and the menus are not two
+  interfaces to one program here: the menus configure the interactive
+  Stuff and the script carries its own arguments, and the overlap is
+  only as wide as STR# 257. Discovering that cost one boot; assuming
+  the menu was global would have cost several and produced a specimen
+  that was quietly not encrypted.

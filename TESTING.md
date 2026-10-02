@@ -1054,7 +1054,7 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Seven assertions over eleven archives 2.0.1 wrote, in five scripted runs:
+Seven assertions over thirteen archives 2.0.1 wrote, in six runs:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;
@@ -1088,7 +1088,12 @@ Seven assertions over eleven archives 2.0.1 wrote, in five scripted runs:
    `CCOD`+0x3826's round-toward-zero correction fails it four times as
    loudly (BLOCKERS.md, *Withdrawn claims*). Measured 2026-10-02 by
    putting that correction back: 2,127 and 9,645 wrong, both sections
-   failing.
+   failing. A THIRD archive is the same subject at **Q=50** rather than
+   the module's default 25, whose quantisation tables are Annex K
+   unscaled where the default's are half of it — the only specimen that
+   can fail a decoder which assumes the tables instead of reading tag
+   33606, and it is asserted to differ from the Q=25 archive so that a
+   quality which silently did not take is a failure too.
 
 **Where the split came from.** Aladdin's own Engine, asked to unstuff
 both, decoded the `Text 1` archive and refused the `MacPaint 1` one —
@@ -1102,12 +1107,16 @@ anything but these nine archives. All four reversible Optimizers are
 undone in `src/fmt_sit.c` and this suite grades the RESULT — byte for
 byte against the subject for `Sound 1` and `Photoshop 1`, and against
 2.0.1's own unstuffed output for `MacPaint 1` and `JPEG Lossy` — but
-only over the SETTINGS this project asked 2.0.1 for: one JPEG quality
-   (two subjects at it, since 2026-10-02),
-one compression method per Optimizer, and no Optimizer over an encrypted
-entry. The archives themselves are not synthetic — 2.0.1 wrote every one
-of them — so what is unseen is coverage of its options rather than
-authenticity of its output. Two SUBJECTS are part synthetic, which is a
+only over the SETTINGS this project asked 2.0.1 for — which since
+2026-10-02 is two subjects, two qualities and every compression method
+the script language has. What is left unseen there is **an Optimizer
+over an ENCRYPTED entry**, and not for want of asking: `PassLock` is
+installed and arming it ticks the menu, but a scripted `Stuff` ignores
+it and writes a plain archive, so that combination needs the
+application's own Stuff dialog (`tools/vmac/README.md`). The archives
+themselves are not synthetic — 2.0.1 wrote every one of them — so what
+is unseen is coverage of its options rather than authenticity of its
+output. Two SUBJECTS are part synthetic, which is a
 different gap: `Sound 1` wants a Sound Designer II file and got generated
 samples, and `Photoshop 1`'s resource fork was built to the acceptance
 test in the module's own `COMP` — so those two show what a module does

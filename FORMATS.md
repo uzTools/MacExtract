@@ -1848,9 +1848,9 @@ needs:
 |---|---|
 | geometry | 256x256, `SamplesPerPixel` 3, `BitsPerSample` 8/8/8, `PlanarConfiguration` 1 (chunky), `PhotometricInterpretation` **6, YCbCr** |
 | compression | **32865** — C-Cube's private JPEG code, from before TIFF 6.0 assigned 6 to it |
-| its own quantisation tables | three, at private tag **33606**, 64 words each: the standard Annex K luminance and chrominance tables **in zigzag order, halved** |
+| its own quantisation tables | three, at private tag **33606** (type LONG: three offsets, 64 words each), **Annex K's luminance and chrominance tables in zigzag order, scaled by Q/50** — exactly Annex K at Q=50 and exactly half at Q=25, measured at both 2026-10-02. *"Halved"* stood here until then and was Q=25's output mistaken for the format |
 | its own Huffman tables | three DC at **33607** and three AC at **33608**, `BITS[16]` + `HUFFVAL`, Kraft-valid, byte-identical to the module's `DATA` 1001 |
-| quality | 25, at private tag **33604** — the same 25 in the 80-byte header and in the module's `Pref` 128 |
+| quality | tag **33604**, the same value at **offset 8** of the 80-byte header and in the module's `Pref` 128. 25 is the DEFAULT, not the format: the module's own dialog takes any Q (*"values of 20 to 30 are recommended. Values over 30 cause image degradation"*) and a Q=50 archive made here is 18,327 B against Q=25's 22,097 |
 | the data | 230 segments, `TileOffsets`/`TileByteCounts`, about 11 bytes each |
 
 **And the codec has a name.** The module's resource fork holds a third
@@ -1967,6 +1967,22 @@ StuffIt Deluxe 2.0.1's own restored file — all **196,608 bytes**, the
 entropy decode, the dequantisation, this IDCT, the output stage and the
 YCbCr-to-RGB conversion — with **0 bytes differing**. The 0.96 % that
 an ordinary float IDCT could not close is closed.
+
+**What the application will actually ask for, measured 2026-10-02.**
+Every specimen before that day was one subject at the default quality
+through one compression method, so three things that look like format
+were only defaults:
+
+| asked for | what the archive says |
+|---|---|
+| `fast`, `faster`, `better`, `optimal` — every method the script language has | the optimized fork is **always stored** (`dmeth` 0x40, nibble 0) and the payload is **byte-identical** across all four; the method applies to the fork the Optimizer did NOT touch, which came back at methods 2, 6, 5 and 8 |
+| Q=50 instead of the default 25 | an 18,327 B payload against 22,097, and quantisation tables that are **Annex K unscaled** where Q=25's are half of it. `src/sit_ccube.c` is byte-exact on both, because it reads tag 33606 rather than assuming a table |
+| encryption, from a script | **not possible.** `PassLock` is in the System Folder and arming it from Options ▸ Custom Encryption… ticks that item, but a scripted `Stuff` then writes a plain archive with no prompt and no error. The script language's only security words are `newde` and `des` (STR# 257) and neither names an installed encryptor |
+
+So the engine's refusal of a non-zero method nibble on an optimized
+`JPEG Lossy` fork (`src/fmt_sit.c`) is a measurement now rather than
+the hypothesis its comment carried, and the quality is a user setting
+this project had been reading as a constant.
 
 **`src/sit_ccube.c` is that, in the engine.** It decodes the archive
 2.0.1 wrote from a document Photoshop 1.0.7 itself made, and the data

@@ -131,6 +131,12 @@ PSDOC = os.path.join(SPECIMENS, "psdoc", "PSDoc.bin")
 # regains that correction passes section 6 and fails this one.
 PSJ2 = os.path.join(SPECIMENS, "ps-jpeg2")
 PSDOC2 = os.path.join(SPECIMENS, "psdoc2", "PSDoc2.bin")
+# The same document at Q=50 instead of the module's default 25
+# (`sitopt.py --psjpeg --quality 50`). Its quantisation tables are
+# Annex K unscaled where the default's are half of it, so this is the
+# only specimen that can fail a decoder which ASSUMES the tables
+# instead of reading tag 33606.
+PSJ3 = os.path.join(SPECIMENS, "ps-jpeg3")
 # What 2.0.1's OWN unstuffer gave back for OptPaint.sit — the only
 # thing "correct" can mean for an entry `MacPaint 1` optimized,
 # because the module does not restore the original either.
@@ -480,12 +486,53 @@ def main():
             print("run_sitopt: no ps-jpeg2 specimens — the second `JPEG "
                   "Lossy` subject is not graded (sitopt.py --psdoc "
                   "--drawing grid --psname PSDoc2, --psjpeg)")
+
+        # 8. the same subject at a quality the module did not default to.
+        jarc = os.path.join(PSJ3, "JpegPS.sit.bin")
+        jref = os.path.join(PSJ3, "PSDoc2.bin")
+        if os.path.exists(jarc) and os.path.exists(jref) \
+                and os.path.exists(PSDOC2):
+            out = os.path.join(work, "psjpeg3")
+            rc, msg = extract(args.macextract, jarc, out)
+            q = os.path.join(out, "PSDoc2")
+            rd, _ = forks(jref)
+            od, orr = forks(PSDOC2)
+            if rc != 0 or not os.path.exists(q):
+                problems.append("the Q=50 JpegPS.sit did not extract: %s"
+                                % msg.strip())
+            else:
+                got = open(q, "rb").read()
+                if got != rd:
+                    n = sum(1 for i in range(min(len(got), len(rd)))
+                            if got[i] != rd[i])
+                    problems.append("JpegPS(Q=50): the data fork is not "
+                                    "2.0.1's own restored bytes (%d B "
+                                    "against %d, %d differing)"
+                                    % (len(got), len(rd), n))
+                if (not os.path.exists(q + ".rsrc")
+                        or open(q + ".rsrc", "rb").read() != orr):
+                    problems.append("JpegPS(Q=50): the resource fork is not "
+                                    "the document's own")
+                if got == od:
+                    problems.append("JpegPS(Q=50): the data fork equals the "
+                                    "ORIGINAL, which a lossy Optimizer "
+                                    "cannot give back")
+            # and the archive is a DIFFERENT one: a decoder that ignored
+            # the file's own tables could still pass section 7.
+            a2 = os.path.join(PSJ2, "JpegPS.sit.bin")
+            if os.path.exists(a2) and \
+                    open(a2, "rb").read() == open(jarc, "rb").read():
+                problems.append("the Q=50 archive is byte-identical to the "
+                                "Q=25 one; the quality did not take")
+        else:
+            print("run_sitopt: no ps-jpeg3 specimens — the second QUALITY "
+                  "is not graded (sitopt.py --psjpeg --quality 50)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 11 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
+    print("run_sitopt: 13 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
           "Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0

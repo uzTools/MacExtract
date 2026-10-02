@@ -421,6 +421,15 @@ def main():
     ap.add_argument("--add-photoshop", action="store_true")
     ap.add_argument("--psdoc", action="store_true")
     ap.add_argument("--psjpeg", action="store_true")
+    ap.add_argument("--psmatrix", action="store_true")
+    ap.add_argument("--psmenus", action="store_true")
+    ap.add_argument("--psopts", action="store_true")
+    ap.add_argument("--psenc", action="store_true")
+    ap.add_argument("--psencgui", action="store_true")
+    ap.add_argument("--password", default="swordfish")
+    ap.add_argument("--quality", type=int,
+                    help="set the JPEG Optimizer's Q before stuffing "
+                         "(its own dialog; the default is 25)")
     # A SECOND subject, for one question: `CCOD`+0x3826's
     # round-toward-zero correction is in the module's code and the exact
     # output does not want it (FORMATS.md, *What an Optimizer did to the
@@ -490,6 +499,16 @@ def main():
         return phase_dcmpdata(args)
     if args.add_photoshop:
         return add_photoshop(args)
+    if args.psencgui:
+        return phase_psencgui(args)
+    if args.psenc:
+        return phase_psenc(args)
+    if args.psopts:
+        return phase_psopts(args)
+    if args.psmenus:
+        return phase_psmenus(args)
+    if args.psmatrix:
+        return phase_psmatrix(args)
     if args.psdoc:
         return phase_psdoc(args)
     if args.psjpeg:
@@ -2056,6 +2075,9 @@ def phase_psjpeg(args):
     try:
         s.boot()
         launch(s, args)
+        if args.quality:
+            s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+            set_jpeg_quality(s, args.quality)
         s.peek(SCRIPTS_X, "scripts-menu")
         s.mac.command_key("e")
         s.shot("script-picker", wait=8.0)
@@ -2086,6 +2108,407 @@ def phase_psjpeg(args):
             n = sum(1 for i in range(len(od)) if gd[i] != od[i])
             print("  %d of %d pixel bytes differ (%.1f%%) — it is LOSSY"
                   % (n, len(od), 100.0 * n / len(od)))
+    return show_path(outdir)
+
+
+MX_SCRIPT_NAME = "Zpsmatrix"
+MX_METHODS = ("faster", "better", "optimal")
+MX_ARCHIVES = tuple("J%s.sit" % m.capitalize() for m in MX_METHODS)
+
+
+def mx_script(doc):
+    """The same document through every compression method the script
+    language has, with `JPEG Lossy` enabled throughout.
+
+    The question is whether an optimized fork is always STORED. The
+    engine reads the method nibble of an optimized entry and decodes
+    C-Cube's payload out of the stored bytes (`src/fmt_sit.c`); if 2.0.1
+    will compress an Optimizer's output as well, that path needs the
+    remnant decompressed first, and nothing here has ever asked it for
+    anything but `fast`. `optimal` is the application's own "try them
+    and keep the smallest", so it is the one most likely to say yes.
+
+    One UnStuff, not three: the restored file is the oracle and the
+    three archives should produce the same one, which is itself worth
+    asserting.
+    """
+    out = ["; written by tools/vmac/sitopt.py",
+           'Write Status To "{Startup}MxStatus.out"',
+           "Continue On Error",
+           'Enable Optimizer "Photoshop/JPEG Lossy"']
+    for m, arc in zip(MX_METHODS, MX_ARCHIVES):
+        out += ['New Archive "{Startup}%s"' % arc,
+                'Stuff "{Startup}%s" with %s' % (doc, m),
+                "Close"]
+    out += ['Disable Optimizer "Photoshop/JPEG Lossy"',
+            'Destination "{Startup}Out:"',
+            'Open Archive "{Startup}%s"' % MX_ARCHIVES[1],
+            'UnStuff "*"',
+            "Close", "Quit", ""]
+    return "\r".join(out)
+
+
+# The Options menu of the REGISTERED 2.0.1, measured off
+# `specimens/sitopt/psmenus1/12-menu-x230.png` by counting ink per row
+# rather than by eye: items are 16 px apart from y=28, with separators
+# at 140 and 172.
+OPTIONS_X = 230
+OPT_OPTIMIZERS_Y = 156          # "Compression Optimizers…"
+OPT_CUSTOM_ENC_Y = 236          # "Custom Encryption…"
+# Cancel, off `psopts1/07-dialog-optimizers.png`. **Neither ⌘. nor
+# Escape dismisses these dialogs** — measured 2026-10-02, when both were
+# tried and the next shot was the same dialog still up, so the run's
+# second menu action never happened and photographed it again. A 1990
+# modal wants its button clicked.
+OPT_CANCEL = (211, 299)
+
+
+# The two dialogs' own geometry, off `specimens/sitopt/psopts2`.
+OPT_OK = (295, 299)             # the Optimizers dialog
+ENC_PASSLOCK = (170, 76)        # the first row of the encryptor list
+ENC_OK = (340, 285)
+ENC_CANCEL = (340, 312)
+# The JPEG module's row in the Optimizers list: Text 1, Sound 1,
+# Photoshop/JPEG Lossy, Photoshop 1, MacPaint 1 at 16 px from y=84, and
+# the checkmark column is to the LEFT of the name (x=145 in the shot).
+OPT_JPEG_ROW = (200, 120)
+
+ENC_SCRIPT_NAME = "Zpsenc"
+ENC_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}EncStatus.out"',
+    "Continue On Error",
+    'Enable Optimizer "Photoshop/JPEG Lossy"',
+    'New Archive "{Startup}EncJpeg.sit"',
+    'Stuff "{Startup}PSDoc2" with fast',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+ENC_ARCHIVE = "EncG.sit"
+
+# The JPEG module's OWN dialog, which opens when its row in the
+# Optimizers list is clicked — measured off
+# `specimens/sitopt/psenc2/21-stuffed.png`. It says: "Please specify the
+# JPEG quantization level to use. Values of 20 to 30 are recommended.
+# Values over 30 cause image degradation.", a Q field, a "Prompt for Q
+# on each file." checkbox and OK. So the quality IS settable, and 25 is
+# only its default — which is the opposite of what the activation list
+# alone suggested.
+JPEG_Q_FIELD = (398, 219)       # focused and SELECTED when it opens:
+                                # typing replaces, clicking would append
+JPEG_Q_PROMPT = (205, 253)      # "Prompt for Q on each file."
+JPEG_Q_OK = (256, 278)
+
+
+def set_jpeg_quality(s, q):
+    """Open the Optimizers list, click the JPEG module, set Q, come back.
+
+    Nothing is typed into the Q field after a click: the field comes up
+    with its contents selected, so the first keystroke replaces them —
+    measured the hard way, when a run that typed a file name while this
+    dialog was up left `PSDoc2` in the quantization field and swallowed
+    every keystroke after it (`specimens/sitopt/psenc2`).
+    """
+    s.menu(OPTIONS_X, OPT_OPTIMIZERS_Y, "menu-optimizers")
+    s.shot("opt-dialog", wait=8.0)
+    s.mac.click(*OPT_JPEG_ROW)
+    s.shot("module-dialog", wait=6.0)
+    s.mac._xdo("type", "--delay", "160", str(q))
+    s.shot("q-typed", wait=3.0)
+    s.mac.click(*JPEG_Q_PROMPT)         # stop it asking per file
+    s.shot("q-no-prompt", wait=2.0)
+    s.mac.click(*JPEG_Q_OK)
+    s.shot("q-ok", wait=5.0)
+    s.mac.click(*OPT_OK)
+    s.shot("opt-closed", wait=5.0)
+
+
+def phase_psencgui(args):
+    """The same archive through the APPLICATION's own Stuff, because the
+    script's cannot be encrypted.
+
+    Measured 2026-10-02 (`specimens/sitopt/psenc1`): arming `PassLock`
+    from Options ▸ Custom Encryption… ticks that item — the menu
+    photograph after the run shows it — and a scripted `Stuff … with
+    fast` then writes an archive byte-for-byte the shape of an
+    unencrypted one, with no prompt and no error. The script language's
+    security words are `newde` and `des` (STR# 257) and neither names an
+    installed encryptor, so a script cannot ask for the one that is
+    here. The interactive Stuff can: File ▸ New Archive… (⌘N), then
+    Archive ▸ Stuff… (⌘S), and PassLock asks for the password itself.
+    """
+    doc = os.path.join(SPECIMENS, args.against or "psdoc2",
+                       args.psname + ".bin")
+    if not os.path.exists(doc):
+        raise SystemExit("sitopt: no %s — --psdoc makes it" % doc)
+    img = os.path.join(WORK, "run-psencgui.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    try:
+        hfs(env, "hmount", img)
+        hfs(env, "hcopy", "-m", doc, (VOL + ":").encode())
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+        s.menu(OPTIONS_X, OPT_CUSTOM_ENC_Y, "menu-encryption")
+        s.shot("enc-dialog", wait=8.0)
+        s.mac.click(*ENC_PASSLOCK)
+        s.mac.click(*ENC_OK)
+        s.shot("enc-armed", wait=5.0)
+        # the JPEG Optimizer, ticked in the dialog rather than by script
+        s.menu(OPTIONS_X, OPT_OPTIMIZERS_Y, "menu-optimizers")
+        s.shot("opt-dialog", wait=8.0)
+        s.mac.click(*OPT_JPEG_ROW)
+        s.shot("opt-ticked", wait=3.0)
+        s.mac.click(*OPT_OK)
+        s.shot("opt-armed", wait=5.0)
+        # File ▸ New Archive…
+        s.mac.command_key("n")
+        s.shot("new-archive", wait=10.0)
+        s.mac._xdo("type", "--delay", "140", ENC_ARCHIVE)
+        s.shot("archive-named", wait=3.0)
+        s.mac.key("Return")
+        s.shot("archive-made", wait=12.0)
+        # Archive ▸ Stuff…
+        s.mac.command_key("s")
+        s.shot("stuff-dialog", wait=10.0)
+        s.mac._xdo("type", "--delay", "140", args.psname)
+        s.shot("subject-selected", wait=4.0)
+        s.mac.key("Return")
+        s.shot("stuff-return", wait=8.0)
+        # whatever asks for the password, twice in case it verifies
+        for n in (1, 2):
+            s.mac._xdo("type", "--delay", "140", args.password)
+            s.mac.key("Return")
+            s.shot("password%d" % n, wait=8.0)
+        s.shot("stuffed", wait=30.0)
+        s.mac.command_key("w")
+        s.shot("closed", wait=8.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=15.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        read_one(os.path.join(s.work, "boot.hfv"), ENC_ARCHIVE, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+def phase_psenc(args):
+    """An entry that is OPTIMIZED and ENCRYPTED, which needs both.
+
+    `PassLock` is a `SITe` module in the System Folder's Encryptors
+    folder — one of the three 2.x encryptors OPEN_ITEMS.md records as
+    never seen here — and it is reached from Options ▸ Custom
+    Encryption…, not from the script language, whose STR# 257 has
+    `newde` and `des` and no password at all. So the encryptor is armed
+    through the DIALOG and the stuffing is left to a script.
+
+    The password prompt is the fragile part: it is the application's,
+    it arrives mid-script, and nothing here knows how many times. The
+    run types it, photographs, and types it again at each wait, which
+    is harmless if no dialog is up — the keystrokes land in a script
+    that is not reading the keyboard.
+    """
+    doc = os.path.join(SPECIMENS, args.against or "psdoc2",
+                       args.psname + ".bin")
+    if not os.path.exists(doc):
+        raise SystemExit("sitopt: no %s — --psdoc makes it" % doc)
+    img = os.path.join(WORK, "run-psenc.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-enc-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(ENC_SCRIPT_NAME, "TEXT", "SIT!",
+                                       ENC_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", doc, (VOL + ":").encode())
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+        # arm PassLock
+        s.menu(OPTIONS_X, OPT_CUSTOM_ENC_Y, "menu-encryption")
+        s.shot("enc-dialog", wait=8.0)
+        s.mac.click(*ENC_PASSLOCK)
+        s.shot("enc-selected", wait=3.0)
+        s.mac.click(*ENC_OK)
+        s.shot("enc-armed", wait=5.0)
+        # and the menu again, to photograph which item is ticked now
+        s.peek(OPTIONS_X, "options-after")
+        # run the script
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zpse")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        for n in range(1, 5):
+            s.shot("running%d" % n, wait=12.0)
+            s.mac._xdo("type", "--delay", "140", args.password)
+            s.mac.key("Return")
+        s.shot("done", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("EncJpeg.sit", "EncStatus.out"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+def phase_psopts(args):
+    """Photograph the two dialogs behind the Options menu.
+
+    `Compression Optimizers…` is where an Optimizer is turned on, and
+    the question is whether it is also where one is CONFIGURED: every
+    JPEG specimen here is quality 25, which is the module's `Pref` 128,
+    and nothing has ever asked for another. `Custom Encryption…` is the
+    other half: `PassLock` sits in the System Folder's Encryptors
+    folder and no archive here has ever used it, so what that dialog
+    lists is the whole question of whether this machine can make one.
+
+    Both are opened, photographed and cancelled by CLICKING Cancel:
+    neither ⌘. nor Escape closes them. A dialog that will not cancel
+    costs only the shutdown — the shots are written on the HOST, so the
+    photograph survives a hang, which is why this runs before anything
+    tries to make an archive with what it finds.
+    """
+    img = os.path.join(WORK, "run-psopts.hfv")
+    if not os.path.exists(PS_IMAGE):
+        raise SystemExit("sitopt: no %s — --add-photoshop makes it" % PS_IMAGE)
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+        for tag, y in (("optimizers", OPT_OPTIMIZERS_Y),
+                       ("custom-encryption", OPT_CUSTOM_ENC_Y)):
+            s.menu(OPTIONS_X, y, "menu-" + tag)
+            s.shot("dialog-" + tag, wait=8.0)
+            s.mac.click(*OPT_CANCEL)
+            s.shot("after-" + tag, wait=5.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=12.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+def phase_psmenus(args):
+    """Peek every menu of the REGISTERED 2.0.1, which `--map` never saw.
+
+    `--map` runs on `sitopt.hfv`, where the application stops at its
+    personalization dialog, so the menu sweep it produced is a
+    photograph of that dialog twelve times. This runs the same sweep on
+    the image Photoshop and the Optimizers live on, which IS registered.
+
+    Two questions, both of them about what a user could ask for that
+    this project never has: where `Optimizers…` lives and whether an
+    Optimizer has settings (the JPEG one encodes at quality 25, which
+    is its `Pref` 128 and the only quality any specimen here carries),
+    and what the Stuff dialog's Security popup offers now that
+    `PassLock` is in the System Folder. Peeks only — a menu is pulled
+    down, photographed and released, so nothing is clicked and no
+    modal dialog can swallow the run.
+    """
+    img = os.path.join(WORK, "run-psmenus.hfv")
+    if not os.path.exists(PS_IMAGE):
+        raise SystemExit("sitopt: no %s — --add-photoshop makes it" % PS_IMAGE)
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        # Expert menus first: Options and Scripts are not installed in
+        # the standard set, and Archive's own items differ between them.
+        s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+        s.shot("menubar", wait=3.0)
+        for x in range(30, 480, 40):
+            s.peek(x, "menu-x%03d" % x)
+        s.mac.command_key("q")
+        s.shot("quit", wait=12.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+def phase_psmatrix(args):
+    """Every compression method over an optimized fork, in one boot."""
+    doc = os.path.join(SPECIMENS, args.against or "psdoc2",
+                       args.psname + ".bin")
+    if not os.path.exists(doc):
+        raise SystemExit("sitopt: no %s — --psdoc makes it" % doc)
+    img = os.path.join(WORK, "run-psmatrix.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-mx-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(MX_SCRIPT_NAME, "TEXT", "SIT!",
+                                       mx_script(args.psname)
+                                       .encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", doc, (VOL + ":").encode())
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            subprocess.run(["hmkdir", (VOL + ":Out").encode()],
+                           capture_output=True, env=env)
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        s.boot()
+        launch(s, args)
+        s.peek(SCRIPTS_X, "scripts-menu")
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zpsm")
+        s.shot("script-selected", wait=3.0)
+        s.mac.key("Return")
+        s.shot("running", wait=args.script_wait)
+        s.shot("done", wait=90.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in MX_ARCHIVES + ("MxStatus.out", "Out:" + args.psname):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
     return show_path(outdir)
 
 

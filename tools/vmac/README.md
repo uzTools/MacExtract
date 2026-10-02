@@ -2956,6 +2956,14 @@ What it CANNOT see:
     tools/vmac/sitopt.py --psdoc --drawing grid --psname PSDoc2 --tag psdoc2
     tools/vmac/sitopt.py --psjpeg --psname PSDoc2 --against psdoc2 --tag ps-jpeg2
 
+    # what the application will actually ask for, 2026-10-02
+    tools/vmac/sitopt.py --psmatrix --psname PSDoc2 --against psdoc2 --tag psmatrix1
+    tools/vmac/sitopt.py --psmenus --tag psmenus1        the REGISTERED menus
+    tools/vmac/sitopt.py --psopts  --tag psopts2         the two Options dialogs
+    tools/vmac/sitopt.py --psjpeg --quality 50 --psname PSDoc2 \
+                         --against psdoc2 --tag ps-jpeg3
+    tools/vmac/sitopt.py --psenc --psname PSDoc2 --against psdoc2 --tag psenc1
+
 **It runs on the Mac Plus, which its own page rules out.** Adobe's
 requirements say *"Macintosh SE or newer"*; Mini vMac's Plus is the only
 variant built here and Photoshop 1.0.7 launches on it in about 90
@@ -2995,9 +3003,49 @@ first one is too easy** — the drawing is an argument now (`--drawing`)
 and so is the document's name (`--psname`), so a third costs two boots
 and no editing.
 
-What those two runs CANNOT see: anything about a different JPEG
-quality, which is 25 in both because it is the module's default and
-nothing here has varied it.
+**`--quality N` sets the module's own Q, which turns out to exist.**
+`--psmenus` photographs the REGISTERED application's menus — `--map`
+could not, because the image it runs on stops at the personalization
+dialog and its twelve menu shots are twelve photographs of that — and
+Options carries every compression method, `Compression Optimizers…` and
+four encryption items. `--psopts` opens the two dialogs behind it. The
+Optimizers one is an activation LIST, which is why this file said for
+an afternoon that a quality could not be set; clicking a module's row
+in that list opens **the module's own dialog**, which says *"Please
+specify the JPEG quantization level to use. Values of 20 to 30 are
+recommended. Values over 30 cause image degradation."* and has a Q
+field and a *"Prompt for Q on each file"* checkbox. So Q=25 was a
+default being read as a format (FORMATS.md, *What an Optimizer did to
+the fork*).
+
+Three things cost a run each, and all three are about 1990 modal
+dialogs:
+
+- **Neither ⌘. nor Escape cancels one.** Both were tried on the
+  Optimizers dialog and the next shot was the same dialog, so the
+  run's next menu action never happened and photographed it again.
+  Click the button.
+- **A module's dialog swallows everything after it.** The run that
+  found it was typing a file name for the Stuff dialog; the
+  quantization field accepted `PSDoc2`, then `swordfish`, and the
+  archive was never made. A screenshot after every click is what made
+  that readable rather than mysterious.
+- **The field comes up SELECTED**, so `--quality` types the number
+  without clicking first — a click would place a caret and append to
+  the 25 that is already there.
+
+**And a script cannot encrypt.** `--psenc` arms `PassLock` from
+Options ▸ Custom Encryption… — the menu photograph afterwards shows
+that item ticked — and the scripted `Stuff` then writes an archive
+byte-for-byte the shape of an unencrypted one, with no prompt and no
+error in the status file. STR# 257's only security words are `newde`
+and `des`, and neither names the encryptor that is installed. So that
+combination belongs to `--psencgui`, which drives File ▸ New Archive…
+and Archive ▸ Stuff… instead, and **has not completed a run**: the
+module's Q dialog is what stopped the first attempt.
+
+What `--psmatrix` CANNOT see: `Custom Compression…`, the one method in
+the Options menu with no script word.
 
 ### Running an Optimizer module — `dcmptest`, `--dcmp` and `--dcmpdata`
 

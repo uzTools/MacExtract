@@ -287,21 +287,31 @@ that are not the user's file, the second of them byte-exact against
 what StuffIt Deluxe 2.0.1 itself restores (FORMATS.md, *What an
 Optimizer did to the fork*). What is left is not about the modules:
 
-- **The matrix asked of 2.0.1 is narrow, and nothing else is.** The
-  nine specimens are `tools/vmac/sitopt.py`'s, but they are written by
-  **StuffIt Deluxe 2.0.1 itself** under Mini vMac — the original
-  writer, not a synthesiser — so the header reading is already graded
-  against authentic output and a third party's archive would add
-  nothing to it. What is narrow is what the application was ASKED for:
-  one JPEG quality (25, the default), one compression method per
-  Optimizer, no Optimizer-plus-encryption entry, and a `Sound 1`
-  subject that is 8 KB of generated samples rather than a Sound
-  Designer II file (`Photoshop 1`'s resource fork is likewise built to
-  the module's own acceptance test; its `JPEG Lossy` subject is a real
-  Photoshop 1.0.7 document). Every one of those is a boot of the same
-  harness, so this is unwritten coverage rather than a missing
-  specimen — and only a subject that needs software this project does
-  not have, Sound Designer II, is anything else.
+- **Two things the application can be asked for and has not been.**
+  The thirteen specimens are `tools/vmac/sitopt.py`'s, but **StuffIt
+  Deluxe 2.0.1 itself** wrote them under Mini vMac — the original
+  writer, not a synthesiser — so a third party's archive would add
+  nothing to the header reading. What was narrow was what the
+  application had been ASKED for, and most of that closed on
+  2026-10-02 (FORMATS.md, *What an Optimizer did to the fork*): every
+  compression method the script language has, and a second quality,
+  are measured now. What is left:
+
+    - **an Optimizer over an ENCRYPTED entry.** `PassLock` is
+      installed and arming it ticks the menu, but a scripted `Stuff`
+      ignores it and writes a plain archive — the script language's
+      only security words are `newde` and `des` and neither names an
+      installed encryptor. It needs the application's own Stuff
+      dialog, which `sitopt.py --psencgui` drives and has not yet
+      completed (`tools/vmac/README.md`). This would also be the first
+      archive here from ANY of the three 2.x encryptors.
+    - **`Custom Compression…`**, the one Options-menu method with no
+      script word.
+
+  Two subjects are also part synthetic: `Sound 1` is 8 KB of generated
+  samples where a Sound Designer II file belongs, and `Photoshop 1`'s
+  resource fork is built to the module's own acceptance test. Only the
+  first of those needs software this project does not have.
 - **The encryptors.** 2.x could encrypt with `PassLock`, `NewDEx` or
   `DESex`, and `src/fmt_sit.c` implements the built-in scheme that
   replaced all three; nothing here has ever seen an archive from any of
