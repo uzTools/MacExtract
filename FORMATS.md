@@ -3036,6 +3036,45 @@ neither adjudicates the field. It is observable: every entry of
 5 h from `lsar`'s on all 22 (DECISIONS.md 2026-10-01, *the field that was
 published all along*).
 
+### What Aladdin's own software does with the same bytes
+
+**StuffIt does not read them. It guesses from the filename**, measured
+2026-10-02 on StuffIt Deluxe 3.5.1 (`tools/vmac/zipmeta.py`). Its `UnZip
+Translator` 3.5 carries an `E2Ty` resource — nineteen rows of
+extension → type/creator, `.TXT` → `TEXT/ttxt`, `.DOC` → `TEXT/MSWD`,
+`.GIF` → `GIFf/GCon` and so on — and that table is the whole of how an
+unzipped file gets its Finder info. No extra-field id appears anywhere
+in the translator: `0x334d` ×0, `ZPIT` ×0, `0x2705` ×0 in 55,523 B.
+
+Over four entries cut from `rexnebular_1_0_0.zip` with their `0x334d`
+fields byte-intact, StuffIt Expander 4.0.2 on that installation gives:
+
+| entry | the archive | StuffIt | us |
+|---|---|---|---|
+| `checksum.md5` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/ttxt` |
+| `docs/rex_codes.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/MSWD` |
+| `docs/rex_codes_dos.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/MSWD` |
+| `docs/rex_bonus_notes.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/MSWD` |
+
+`checksum.md5` agreeing is not evidence — `TEXT/ttxt` is what the table
+gives anything it does not recognise, and `.md5` is not in it. **`MSWD`
+is the discriminator** and it is lost three times out of three.
+
+**It also rewrites the data.** `docs/rex_codes.txt` comes off the Mac at
+720 B against the archive's 739: nineteen CRLF pairs converted to bare
+CR. The conversion is exactly that and nothing else — our extraction
+with `\r\n` → `\r` applied is byte-identical to StuffIt's output, on
+both files checked. `checksum.md5` was CR-only already and comes back
+byte-identical. So a text entry out of StuffIt is not the file that was
+archived, which is a second reason the Macintosh Garden comment tells
+people to use MacZip.
+
+**This is one version and the result does not generalise.** 3.5.1 is
+from 1994 and Info-ZIP's field carries "Last Revision 19981005" in its
+own specification, so it predates the thing it fails to read. Deluxe
+5.5, 6.0.1 and 7.0.3 are on this machine as uninstalled installers, all
+postdating it, and none has been run (OPEN_ITEMS.md).
+
 ### What grades it
 
 | what | against |

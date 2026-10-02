@@ -194,6 +194,7 @@ read.
 | `spacesaver.py` | Aladdin's **SpaceSaver**, off the StuffIt Deluxe 5.0.1 CD. 3.5.1 runs; 5.0 does not run on 7.0.1. `--layout` reads the format out of it without booting anything — see below before spending a boot on it |
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
+| `zipmeta.py` | **what Aladdin's software does with a MacZip archive's Finder metadata.** `--table` reads the `UnZip Translator`'s extension-to-type table without booting; `--expander` hands StuffIt Expander a four-entry cut of the real archive and reads the volume back |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
@@ -411,6 +412,32 @@ nonsense first:
   `--dest` passed twice while the DEFAULT destination was broken, because it
   sends the output to an empty floppy and the bug needed the archive's own
   folder. Ask which case the new phase stopped exercising.
+
+## What StuffIt does with a zip's Finder metadata — `zipmeta.py`
+
+    tools/vmac/zipmeta.py --make /tmp/rex/rexnebular_1_0_0.zip
+    tools/vmac/zipmeta.py --table        # no emulator
+    tools/vmac/zipmeta.py --expander     # one boot, reads the volume back
+
+`--make` cuts four entries out of a real MacZip archive keeping their
+local headers, `0x334d` fields and compressed data BYTE FOR BYTE — only
+the central-directory offsets are rewritten — so this grades Aladdin
+against a published archive and not against one written here.
+
+**`--table` is the answer and needs no boot.** The `UnZip Translator`'s
+`E2Ty` resource is nineteen rows of extension → type/creator, parsed by
+arithmetic that checks itself: 2 + 19 × 16 = 306, the whole resource.
+The result is in FORMATS.md, *What Aladdin's own software does with the
+same bytes*.
+
+**What it cannot see.** It grades ONE StuffIt, the 3.5.1 that
+`spacesaver.py` installs, which predates the field by four years — so a
+negative here is not a fact about StuffIt in general. It cannot tell
+"read the field and ignored it" from "never looked", because both leave
+the same volume; the translator's own bytes are what distinguish them.
+And `checksum.md5` coming back right proves nothing: `TEXT/ttxt` is the
+table's answer for anything it does not recognise. **Read the `MSWD`
+rows.**
 
 ## Making Now Compress archives with Now Compress — `nowcompress.py`
 
