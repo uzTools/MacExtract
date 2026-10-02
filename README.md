@@ -121,6 +121,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on | ✅ | ✅ | ✅ |
+| Type and creator in a zip made on a Mac | 🔴 ** | not tested ** | not tested ** | ✅ |
 | StuffIt SpaceSaver | ✅ with the add-on | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
 | AppleLink packages (`.pkg`) | ✅ with the add-on | ✅ | 🔴 | 🔴 |
@@ -138,6 +139,25 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
+
+\*\* **A zip made on a Macintosh carries the Finder's type and creator,
+and StuffIt throws them away.** The StuffIt on hand here — Expander
+3.5.2 with UnZip Translator 3.5, 1994 — works them out from the
+filename instead, off a built-in table of nineteen extensions: `.TXT`
+becomes `TEXT/ttxt`, `.DOC` becomes `TEXT/MSWD`, and anything it does
+not recognise becomes `TEXT/ttxt` too. Over the Rex Nebular archive on
+Macintosh Garden, whose uploader used MacZip, three files that should
+come back `TEXT/MSWD` come back `TEXT/ttxt`. There is no `.dsk` row in
+that table either, which is why the nine disk images in it lose the
+`DDim/DDp+` that tells DiskCopy what they are. It also quietly
+converts line endings, so a text file is 720 bytes where the archive
+holds 739. MacExtract reads what the archive actually stored.
+
+The 🔴 for Expander 4.0.2 is not that measurement: 4.0.2 on its own
+cannot open a zip at all, so there is nothing for it to preserve.
+Deluxe 5.5.1 and 7.0.3 both came out after the field was published and
+**neither has been tested here** — they will not install on the
+System 7 machine this was measured on, so take the blank literally.
 
 \* **One rare kind of StuffIt entry comes back changed, and MacExtract
 says so.** StuffIt Deluxe 2.0 (1990) could run a small plug-in called an

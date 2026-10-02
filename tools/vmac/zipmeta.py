@@ -17,8 +17,9 @@ nothing on its own. The three `docs/*.txt` entries are `TEXT/MSWD`, which
 no default produces. Either those come back MSWD or StuffIt did not read
 the field.
 
-**What this CANNOT see.** It grades ONE StuffIt — Deluxe 3.5.1, the only
-one installed here. 3.5.1 is from 1994 and Info-ZIP's `0x334d` carries
+**What this CANNOT see.** It grades ONE StuffIt — Expander 3.5.2 over
+StuffIt Engine 3.5.2 and UnZip Translator 3.5, the installation
+`spacesaver.py` builds and the only one here. 3.5.1 is from 1994 and Info-ZIP's `0x334d` carries
 "Last Revision 19981005" in its own specification, so a negative result
 here is a fact about a version that predates the field and NOT about
 StuffIt in general; 5.5, 6.0.1 and 7.0.3 are on this disk as uninstalled
@@ -184,7 +185,7 @@ def report(volume, shots):
 
 
 def expander(keep=False):
-    """Hand the subject to StuffIt Expander 4.0.2 and read the volume back."""
+    """Hand the subject to StuffIt Expander 3.5.2 and read the volume back."""
     import glob
     if not os.path.exists(INSTALLED):
         raise SystemExit("zipmeta: no installed image")

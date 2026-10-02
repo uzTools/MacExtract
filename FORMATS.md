@@ -3047,7 +3047,9 @@ unzipped file gets its Finder info. No extra-field id appears anywhere
 in the translator: `0x334d` ×0, `ZPIT` ×0, `0x2705` ×0 in 55,523 B.
 
 Over four entries cut from `rexnebular_1_0_0.zip` with their `0x334d`
-fields byte-intact, StuffIt Expander 4.0.2 on that installation gives:
+fields byte-intact, **StuffIt Expander 3.5.2** on that installation —
+its `vers` resource, read off the image; the 4.0.2 that `expander.py`
+times is a separate download and is not what runs here — gives:
 
 | entry | the archive | StuffIt | us |
 |---|---|---|---|
@@ -3069,11 +3071,16 @@ byte-identical. So a text entry out of StuffIt is not the file that was
 archived, which is a second reason the Macintosh Garden comment tells
 people to use MacZip.
 
-**This is one version and the result does not generalise.** 3.5.1 is
-from 1994 and Info-ZIP's field carries "Last Revision 19981005" in its
-own specification, so it predates the thing it fails to read. Deluxe
-5.5, 6.0.1 and 7.0.3 are on this machine as uninstalled installers, all
-postdating it, and none has been run (OPEN_ITEMS.md).
+**This is one version and the result does not generalise.** Expander,
+engine and translator are all 3.5.x, 1994, and Info-ZIP's field carries
+"Last Revision 19981005" in its own specification — so this software
+predates the thing it fails to read by four years. Deluxe 5.5, 6.0.1 and
+7.0.3 are on this machine as uninstalled installers, all postdating it,
+and none has been run: 5.5's extracted set is 100 placeholder stubs of
+2,784 B and 7.0.3 is an unopened `.smi` (OPEN_ITEMS.md). **Expander
+4.0.2, the free yardstick elsewhere in this file, cannot open a zip at
+ALL without DropStuff with Expander Enhancer** — System 7 only, not
+free, and not on this machine.
 
 ### What grades it
 

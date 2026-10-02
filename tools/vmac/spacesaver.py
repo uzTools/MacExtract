@@ -4182,8 +4182,10 @@ def pkgexpander(keep=False):
     `--pkgexpand` established what PKG Expand's own dialog will take: a
     FOLDER and nothing else, while CPT Expand in the same application
     and the same boot lists files. So the command that names a package
-    is not that one. StuffIt Expander 4.0.2 is on this image too, in
-    `Drag & Drop Applications`, and it shares the engine and therefore
+    is not that one. StuffIt Expander is on this image too, in
+    `Drag & Drop Applications` — **3.5.2**, not the 4.0.2 this docstring
+    claimed until 2026-10-02; its `vers` resource says so and
+    `zipmeta.py --table` reads it. It shares the engine and therefore
     the translators — its Expand dialog lists everything the engine
     claims it can open, which is the question stated as a listing.
 
