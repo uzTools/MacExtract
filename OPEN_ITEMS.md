@@ -315,11 +315,20 @@ Two things are left, and neither is a decoder:
   installer run (*"Installation was successful"*, volume kept as
   `sitopt-sea.hfv`) and stopped at reaching the application on that
   volume, whose Finder window the installer left grown and scrolled.
-  **What would close it:** that icon's position, measured the way
-  `--psicons` measures one, or a Desktop rebuild on the image this
-  harness already knows. The mechanism is settled: 2.0.1 finds a
-  self-unstuffer through the Desktop database, which `hcopy` cannot
-  write (`tools/vmac/README.md`).
+  **The mechanism is NOT settled.** "2.0.1 finds a self-unstuffer
+  through the Desktop database" was written here after four failed
+  placements and is not supported: deleting the volume's `Desktop`
+  file to force a rebuild, with the installer's own folder copied in,
+  changed nothing — *"No Self-UnStuffer can be found"* again, on the
+  seventh boot. What IS measured is narrower: only a volume the
+  installer itself wrote has ever satisfied the application, and on
+  that volume the Finder then cannot resolve `TEXT`/`SIT!` to StuffIt
+  Deluxe at all (*"the application is busy or missing"*).
+
+  **What would close it:** drive the application on the installed
+  volume by clicking its own icon — `--psicons` measures a position,
+  and opening an application directly is not the lookup that failed
+  there.
 
 - **Nothing has seen an archive this project did not make.** All 27 are
   2.0.1's own output under Mini vMac — the writer rather than a

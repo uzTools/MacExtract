@@ -3044,26 +3044,36 @@ which drives File ▸ New Archive… and Archive ▸ Stuff… instead.
 
 **Two things about the Finder here, both of which cost runs.**
 
-- **Type-select does not work.** Opening a volume and typing a file's
-  name selects nothing — `--magic`'s shot is called `subject-selected`
-  and has nothing selected in it, which nobody noticed because that
-  phase went on to photograph menus and never needed the selection.
-  `--install-sea` inherited the assumption, pressed ⌘O on nothing and
-  photographed an unchanged window three times, with no error
-  anywhere. **Click the icon**, which means knowing where it is:
-  `--psicons` grows the window — by DRAGGING its grow box, since the
-  zoom box does nothing here — and photographs every icon so the next
-  run can aim.
-- **`hcopy` does not register a file in the Desktop database**, so a
-  1990 application looking for an add-on by TYPE will not find it.
-  Measured four placements deep on the self-unstuffer: loose on the
-  volume, in the System Folder, in `Extensions`, and in the
-  `UnStuffIt Deluxe Folder` the installer itself makes — 2.0.1 said
-  *"No Self-UnStuffer can be found"* every time, and only the volume
-  its own installer had touched behaved. The Optimizers and the
-  encryptors escape this because the application looks for THOSE by
-  path, in the eight folders its `STR# 267` names
-  (`--install-sea` is the phase that runs a real installer).
+- **Type-select is a SYSTEM 7 feature, so it does nothing on these
+  System 6 volumes.** Typing a file's name in an open window and
+  pressing ⌘O opened nothing in `--install-sea`, twice — an action
+  with a consequence, which is the evidence that counts. (`--magic`'s
+  shot is called `subject-selected` and has nothing selected in it,
+  but an absent highlight is consistent with three different things,
+  including a frame that photographed the wrong window; it was never
+  the proof.) This file said *"does not work in this harness"* for an
+  afternoon until `spacesaver/zipmeta`'s frames showed it working on
+  `ssinstalled.hfv` — which boots **System 7.0.1**, where the Finder
+  has type-ahead selection and System 6's has none. On System 7, clear
+  the type-ahead buffer with Escape before each name or a second
+  search concatenates onto the first.
+
+  So on a System 6 volume, **click the icon**, which means knowing
+  where it is: `--psicons` grows the window — by DRAGGING its grow
+  box, since the zoom box does nothing here — and photographs every
+  icon so the next run can aim.
+- **A file `hcopy` puts on a volume is not enough for an add-on the
+  application finds by TYPE — and WHY is still open.** Five placements
+  of the self-unstuffer were refused: loose on the volume, in the
+  System Folder, in `Extensions`, in the `UnStuffIt Deluxe Folder` the
+  installer itself makes, and all of those again with the volume's
+  `Desktop` file deleted so the Finder would rebuild it. Only a volume
+  the installer itself wrote has ever satisfied 2.0.1. *"It is the
+  Desktop database"* was written here on the strength of the first four
+  and the rebuild did not support it, so it is a hypothesis and is
+  labelled as one. The Optimizers and encryptors are unaffected either
+  way: the application looks for THOSE by path, in the eight folders
+  its `STR# 267` names.
 
 **The script's own security words are another matter**, and this file
 said they named nothing installed until 2026-10-02, which was an

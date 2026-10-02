@@ -2420,9 +2420,11 @@ WINDOW_ZOOM = (411, 47)         # the volume window's zoom box
 WINDOW_GROW = (414, 236)        # its grow box, which is what works
 SEA_INSTALLER = (47, 193)       # `UnStuffIt Deluxe™ Installer`, once the
                                 # window is grown (`--psicons`)
-SEA_APP = (370, 97)             # `StuffIt Deluxe™` on the INSTALLED volume,
-                                # whose window `--install-sea` left grown and
-                                # scrolled — measured off pssea3/02-volume.png
+# On the INSTALLED volume the application's icon is in the window's
+# clipped top row and a double-click on its label does not open it. The
+# SCRIPT is in the third row, fully visible, and its creator is `SIT!` —
+# so opening the script is what launches the application here.
+SEA_SCRIPT_ICON = (240, 200)
 
 
 def phase_psicons(args):
@@ -2542,8 +2544,16 @@ def phase_pssea(args):
     # volume that has one is `--install-sea`'s. Its window is the one
     # that run grew, so the application is clicked at SEA_APP rather
     # than at `launch()`'s coordinate.
-    on_sea = os.path.exists(SEA_IMAGE)
-    shutil.copyfile(SEA_IMAGE if on_sea else PS_IMAGE, img)
+    # The INSTALLED volume cannot be driven: its Finder window is the
+    # one `--install-sea` grew, and on it even a double-click on the
+    # script comes back *"the file could not be opened (the application
+    # is busy or missing)"* — that volume's Desktop database no longer
+    # resolves `SIT!` to the application. So the KNOWN-GOOD image is
+    # used, with what the installer made copied onto it and its own
+    # Desktop file DELETED: the Finder rebuilds one at boot, and a
+    # rebuilt database is what registers a file `hcopy` put there.
+    on_sea = False
+    shutil.copyfile(PS_IMAGE, img)
     outdir = os.path.join(SPECIMENS, args.tag)
     os.makedirs(outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="sitopt-sea-")
@@ -2577,6 +2587,8 @@ def phase_pssea(args):
                     os.path.join(work, "us_UnStuf.bin"),
                     (VOL + ":UnStuffIt Deluxe Folder:").encode())
             hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            subprocess.run(["hdel", (VOL + ":Desktop").encode()],
+                           capture_output=True, env=env)
             # Loose on the volume AND in the System Folder: STR# 267's
             # "9 Magic Fldrs" is where the application looks, and which
             # of them holds a self-unstuffer is not written down here.
@@ -2606,12 +2618,14 @@ def phase_pssea(args):
             s.shot("desktop", wait=8.0)
             s.mac.click(*BOOT_ICON, double=True)
             s.shot("volume", wait=12.0)
-            s.mac.click(*SEA_APP, double=True)
+            s.mac.click(*SEA_SCRIPT_ICON, double=True)
             s.shot("launched", wait=args.launch_wait)
         else:
             launch(s, args)
+        # Opening the script may have run it already; ⌘E and the name
+        # are harmless if it did and are the whole job if it did not.
         s.mac.command_key("e")
-        s.shot("script-picker", wait=8.0)
+        s.shot("script-picker", wait=10.0)
         s.mac._xdo("type", "--delay", "120", "Zsea")
         s.mac.key("Return")
         s.shot("running", wait=args.script_wait)
