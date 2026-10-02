@@ -51,7 +51,7 @@ under *Table notes*.
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **four of the five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` as a valid document (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic — **method 14 is not implemented**, and real archives use it (*The last classic box*, below); **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries) | 12–54 KB¶ | full |
+| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries). **None of the five carries a Macintosh extra field**, so that part is graded outside the corpus | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -2942,6 +2942,51 @@ it. `tools/run_names.py` holds both caps from both sides in zip, tar,
 uuencode, AppleSingle and a nine-deep Now Compress tree, in `ci.sh`
 since 2026-08-27.
 
+## Zip's Macintosh extra fields
+
+**Read since 2026-10-01**, and cited to specifications alone: APPNOTE.TXT
+4.6.4–4.6.6 for ZipIt's three fields and Info-ZIP's own
+`proginfo/extrafld.txt` (`reference/notes/zip_extrafld_infozip.txt`, fetched
+by `tools/fetch_references.sh`) for `0x334d`, which APPNOTE.TXT names in its
+header-id table without giving a layout. `src/fmt_exo.c` stays in
+`check_provenance.py`'s HISTORICAL set and NOTICE did not change.
+
+| field | what is taken | cost in `ovl_exo` |
+|---|---|---|
+| Info-ZIP `0x334d`, central | type, creator | +200 B |
+| ZipIt `0x2705` / `0x2805` | type, creator, Finder flags | +160 B |
+| Info-ZIP `0x334d`, local | Finder flags, created and modified | +668 B |
+| ZipIt `0x2605` | both forks + all of the above, off the MacBinary header | +1,000 B |
+| | **total** | **+2,000 B** |
+
+Resident `CODE` +0, A5 +0, peak RAM +0 on all seven corpus zips and on
+`rexnebular_1_0_0.zip` in both list and extract mode. **One non-zero RAM
+figure:** `0x334d`'s attribute record is deflated, and inflating it takes
+**7,672 B** transiently — zlib's state and a 512-byte window, freed before the
+entry's own decode, so it raises the measured peak only where nothing larger
+inflates. A MacZip of stored entries goes 14,056 → 21,728 B.
+
+**The dates are taken UNADJUSTED and this is deliberate.** `FlCrDat` is, in
+Info-ZIP's words, an "original Mac FileTime value (local time!)", and the
+consumer is `ioFlCrDat` — already local. The `CrGMTOffs` beside it exists
+"to support timestamp adjustment after inter-timezone transfer" and is not
+wanted here. **The two reference implementations disagree on its sign** —
+XADMaster adds it, deark subtracts it, both labelling the result UTC — so
+neither adjudicates the field. It is observable: every entry of
+`rexnebular_1_0_0.zip` carries `CrGMTOffs = -18000`, so these dates stand
+5 h from `lsar`'s on all 22 (DECISIONS.md 2026-10-01, *the field that was
+published all along*).
+
+### What grades it
+
+| what | against |
+|---|---|
+| `0x334d` type, creator, Finder flags | `lsar`, **22/22** on `rexnebular_1_0_0.zip` — a real MacZip archive, 29.7 MB, Zip 2.3, host 0x07 |
+| `0x334d` data forks | Info-ZIP's `unzip`, 21/21 byte-identical, and the ten disk images against the MD5s the archive ships in its own `checksum.md5` |
+| both attribute-record shapes | the deflated one on that archive; the `0x0004` stored one on a generated archive |
+| `0x2605` both forks | extracting the same MacBinary FIXTURE standalone — byte-identical — with `unar` agreeing on the wrapper (`cdev/altw`, 31,714 B) |
+| ZipIt `0x2705`/`0x2805` | `lsar`, on a GENERATED archive only. **No real ZipIt archive is on this machine** (OPEN_ITEMS.md) |
+
 ## Overlays: what the application ships, and what it costs
 
 **Since 2026-09-25 the decoders and ciphers are not resident.** They are
@@ -2957,9 +3002,22 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **53,216 B** | 19,008 B | **64,768 B** | **211,840 B** |
+| **eager — SHIPPED** | (default) | **53,216 B** | 19,008 B | **64,768 B** | **213,760 B** |
 | lazy | `UNC_OVL_LAZY=1` | 51,840 B | 19,104 B | 63,360 B | 210,560 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 152,068 B | 37,820 B | 184,064 B | 187,392 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | 154,092 B | 37,812 B | 186,112 B | 189,440 B |
+
+**The control's two columns were re-measured 2026-10-01** for zip's four
+Macintosh extra fields, and the shipped build's `CODE` and A5 did not
+move at all: +2,024 B of resident `CODE` and −8 B of A5 in the control
+against **+0 and +0** in what ships, because every byte is in `ovl_exo`
+(27,252 → 29,252 B), released for any archive that is not a zip.
+`run_tiers.py --check` moves no tally in either lane with the images and
+the resident budgets re-taken: 71/71, 67/71, 64/71 resident and 71/71,
+69/71, 66/71 shipped, the same fixtures by name. **This is the widest
+the gap between the two builds has been** — 2,024 B off every
+extraction in the control, nothing in the release (DECISIONS.md
+2026-10-01, *the field that was published all along*). Only the
+download column moved for the shipped build, 211,840 → 213,760 B.
 
 **All three re-measured 2026-09-29**, for undoing the 2.0 Optimizers
 rather than refusing them (*What an Optimizer did to the fork*, above):
@@ -3035,7 +3093,7 @@ measured 2026-09-27. The shipped pair is **117,328 B** since 2026-09-28
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **143,328 B** — the fourteen images sum to 143,148 B, so its
+The bundle is **145,652 B** — the fourteen images sum to 145,472 B, so its
 index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
 bytes of padding to 4, which accounts for the whole difference (measured
 2026-09-26, off the raw bundle the build now writes for
@@ -3044,7 +3102,10 @@ of index with it: that figure is `ovl_bundle.r.rsrc.bin`, the Rez'd RESOURCE
 FORK around the bundle rather than the bundle (DECISIONS.md 2026-09-26, *the
 fork that was mistaken for its contents*). It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
-therefore watches the 64,512 B `MacExtract.code.bin` and not the download.
+therefore watches the 64,768 B `MacExtract.code.bin` and not the download.
+(That figure read 64,512 B here until 2026-10-01, which was the
+ratchet's EXPECT rather than the build's size — 256 B inside its
+tolerance, so nothing had ever failed on the difference.)
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 183,424 B — and the shipped build
