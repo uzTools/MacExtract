@@ -49,7 +49,6 @@ document, so every "always" above is an always over one file.
 License: LGPL-2.1-or-later. See LICENSE and NOTICE.
 """
 import argparse
-import math
 import struct
 import sys
 
@@ -152,32 +151,70 @@ def ifd(t):
     return out
 
 
-# A float IDCT, which is not what the module uses. It agrees with
-# Aladdin's own output on 99.04 % of bytes and differs by exactly 1 on
-# the rest — and **no standard IDCT does better**: jpeg-6b's islow is
-# worse (1.065 %), and a separable integer transform swept over 8..16
-# bits and every descale split only reaches 4.48 % on the inked blocks
-# against this one's 4.83 %. C-Cube's arithmetic is its own, it is in
-# the 31,952-byte `C3a` resource, and matching it byte for byte would
-# mean reproducing a 1990 approximation on purpose (FORMATS.md).
-# Do not spend an afternoon re-trying those three.
-_C = [[(0.353553390593 if u == 0 else 0.5) *
-       math.cos((2 * x + 1) * u * math.pi / 16) for u in range(8)]
-      for x in range(8)]
+# C-Cube's own IDCT, transcribed from CCOD+0x2f3c (FORMATS.md, *What an
+# Optimizer did to the fork*). Cosines at 2^9; each rotation sums its two
+# 32-bit products and then shifts right 9, rounding TOWARD ZERO; the
+# coefficients are pre-scaled << 3 and the result descaled by (x+16)>>5.
+# With this the decoder is byte-exact against StuffIt Deluxe 2.0.1's own
+# output. A float IDCT is not: it differs on 0.96 % of samples, every one
+# by exactly 1, because C-Cube's is an approximation and being more
+# accurate than it is the wrong target.
+C1, C2, C3, C4, C5, C6, C7 = 502, 473, 426, 362, 284, 196, 100
 
 
-def idct(b):
-    out = [[0.0] * 8 for _ in range(8)]
-    for y in range(8):
-        for x in range(8):
-            s = 0.0
-            for v in range(8):
-                for u in range(8):
-                    c = b[v * 8 + u]
-                    if c:
-                        s += c * _C[x][u] * _C[y][v]
-            out[y][x] = s
+def sh(x):
+    """asr.l #9, then addq.l #1 if the result is negative."""
+    v = x >> 9
+    return v + 1 if v < 0 else v
+
+
+def idct1(x):
+    """One 8-point pass, as CCOD+0x2f3c does it."""
+    a4 = sh(C7 * x[1] - C1 * x[7])
+    a7 = sh(C7 * x[7] + C1 * x[1])
+    a5 = sh(C3 * x[5] - C5 * x[3])
+    a6 = sh(C5 * x[5] + C3 * x[3])
+    e0 = sh(C4 * (x[0] + x[4]))
+    e1 = sh(C4 * (x[0] - x[4]))
+    a2 = sh(C6 * x[2] - C2 * x[6])
+    a3 = sh(C2 * x[2] + C6 * x[6])
+    b4, b5 = a4 + a5, a4 - a5
+    b6, b7 = a7 - a6, a7 + a6
+    b0, b1 = e0 + a3, e1 + a2
+    b2, b3 = e1 - a2, e0 - a3
+    d5 = sh(C4 * (b6 - b5))
+    d6 = sh(C4 * (b6 + b5))
+    return [b0 + b7, b1 + d6, b2 + d5, b3 + b4,
+            b3 - b4, b2 - d5, b1 - d6, b0 - b7]
+
+
+def idct(c):
+    """Columns first, then rows — which is what the de-zigzag table's
+    stride says, and the two passes are the same code."""
+    cc = [v << 3 for v in c]
+    t = [0] * 64
+    for col in range(8):
+        v = idct1([cc[r * 8 + col] for r in range(8)])
+        for r in range(8):
+            t[r * 8 + col] = v[r]
+    out = [0] * 64
+    for r in range(8):
+        v = idct1(t[r * 8:r * 8 + 8])
+        for k in range(8):
+            out[r * 8 + k] = v[k]
     return out
+
+
+def sample(x):
+    """(x + 16) >> 5, the level shift, and the clamp.
+
+    **The code at CCOD+0x3826 has a round-toward-zero correction here
+    that this does NOT, and adding it makes the output wrong.** With it,
+    709 of 65,536 luma samples miss by one; without it, none do. That is
+    measured and unexplained — recorded rather than smoothed over.
+    """
+    v = ((x + 16) >> 5) + 128
+    return 0 if v < 0 else (255 if v > 255 else v)
 
 
 def run(payload):
@@ -225,24 +262,26 @@ def run(payload):
                         ox, oy = mx * MCU_W + k * 8, row * 8
                         for yy in range(8):
                             for xx in range(8):
-                                Y[oy + yy][ox + xx] = px[yy][xx]
+                                Y[oy + yy][ox + xx] = sample(px[yy * 8 + xx])
                     else:
                         ox, oy = mx * 8, row * 8
                         tgt = CB if comp == 1 else CR
                         for yy in range(8):
                             for xx in range(8):
-                                tgt[oy + yy][ox + xx] = px[yy][xx]
+                                tgt[oy + yy][ox + xx] = sample(px[yy * 8 + xx]) - 128
     def clamp(v):
-        return 0 if v < 0 else (255 if v > 255 else int(v + 0.5))
+        return 0 if v < 0 else (255 if v > 255 else v)
+    # The module's own YCbCr to RGB, at CCOD+0xd98: 1.402 and 1.772 at
+    # 2^14, and the two green terms at the same scale.
     out = bytearray(w * h * 3)
     for y in range(h):
         for x in range(w):
-            yy = Y[y][x] + 128
+            yy = Y[y][x]
             cb = CB[y][x // 2]
             cr = CR[y][x // 2]
-            out[y * w + x] = clamp(yy + 1.402 * cr)
-            out[w * h + y * w + x] = clamp(yy - 0.344136 * cb - 0.714136 * cr)
-            out[2 * w * h + y * w + x] = clamp(yy + 1.772 * cb)
+            out[y * w + x] = clamp(yy + ((22965 * cr) >> 14))
+            out[w * h + y * w + x] = clamp(yy - ((11703 * cr + 5631 * cb) >> 14))
+            out[2 * w * h + y * w + x] = clamp(yy + ((29036 * cb) >> 14))
     return bytes(out), w, h
 
 
@@ -271,8 +310,8 @@ def main():
         n = sum(1 for d in diff if d)
         print("ccube: vs 2.0.1's own output — %d of %d bytes differ (%.2f %%), "
               "largest %d" % (n, len(ref), 100.0 * n / len(ref), max(diff)))
-        if max(diff) > 1:
-            print("ccube: PROBLEM: a difference larger than IDCT rounding")
+        if n:
+            print("ccube: PROBLEM: this decoder is meant to be BYTE-EXACT")
             return 1
     return 0
 

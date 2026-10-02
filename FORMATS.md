@@ -1796,7 +1796,7 @@ graded against an archive StuffIt Deluxe 2.0.1 wrote
 |---|---|---|---|---|
 | `Sound 1` | 1 | **a byte-wise delta** over the whole fork, in place: `out[i] = out[i-1] + in[i]`, seeded 0 | **exactly** | the entry's own CRC-16 |
 | `Photoshop 1` | 2 | the same — the two `'DCMP'`s are byte-identical apart from the name and the id | **exactly** | the same |
-| `JPEG Lossy` | 3 | **a TIFF of C-Cube JPEG** behind an 80-byte header, tables and all, and lossy | no — refused by name | — |
+| `JPEG Lossy` | 3 | **a TIFF of C-Cube JPEG** behind an 80-byte header, tables and all, and lossy | **read in full, and decoded byte-exact** off the engine (`tools/ccube/decode.py`); not in `src/` yet | — |
 | `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
 | `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
 
@@ -1962,14 +1962,19 @@ column of an 8x8 word array) and writes rows of an intermediate array
 of longs; pass two reads that array's columns and is instruction for
 instruction the same code.
 
-**Transcribed with all of that, it lands at 1.08 % of the luma plane
-differing from 2.0.1's own output, every difference exactly 1** —
-against 35 % before the output stage was read. For comparison the
-ordinary float IDCT differs on 0.955 %. So the transcription is
-structurally right and still **marginally worse than floating point**,
-which means one rounding detail is still wrong. What it is has not been
-found; the structure, the constants, the scaling and the rounding
-idiom are all read from the code and all agree.
+**And with that it is BYTE-EXACT.** `tools/ccube/decode.py` reproduces
+StuffIt Deluxe 2.0.1's own restored file — all **196,608 bytes**, the
+entropy decode, the dequantisation, this IDCT, the output stage and the
+YCbCr-to-RGB conversion — with **0 bytes differing**. The 0.96 % that
+an ordinary float IDCT could not close is closed.
+
+**One thing in it is measured and unexplained.** The code at
+CCOD+0x3826 applies the same round-toward-zero correction after
+`(x + 16) >> 5` that every rotation applies, and **the output is only
+exact WITHOUT it**: with the correction 709 of 65,536 luma samples miss
+by one, without it none do. Recorded rather than smoothed over — the
+decoder omits it, the asm has it, and why they agree anyway is not
+known.
 
 **That is why no standard IDCT matched and none ever will.** Matching
 this one byte for byte needs the network AND its index tables, which
