@@ -1096,11 +1096,17 @@ anything but these nine archives. All four reversible Optimizers are
 undone in `src/fmt_sit.c` and this suite grades the RESULT — byte for
 byte against the subject for `Sound 1` and `Photoshop 1`, and against
 2.0.1's own unstuffed output for `MacPaint 1` and `JPEG Lossy` — but
-only over the documents this project made. Two subjects are also part synthetic —
-`Sound 1` wants a Sound Designer II file and `Photoshop 1` a Photoshop
-1.0-era one, and both were built to the acceptance test in the module's own
-`COMP` — so they show what a module does once it accepts a file rather than
-that a real document looks like that. And it says nothing on a fresh clone: the specimens are emulator output and are
+only over the SETTINGS this project asked 2.0.1 for: one JPEG quality,
+one compression method per Optimizer, and no Optimizer over an encrypted
+entry. The archives themselves are not synthetic — 2.0.1 wrote every one
+of them — so what is unseen is coverage of its options rather than
+authenticity of its output. Two SUBJECTS are part synthetic, which is a
+different gap: `Sound 1` wants a Sound Designer II file and got generated
+samples, and `Photoshop 1`'s resource fork was built to the acceptance
+test in the module's own `COMP` — so those two show what a module does
+once it accepts a file rather than that a real document looks like that.
+`JPEG Lossy`'s subject is a real Photoshop 1.0.7 document and is the one
+exception. And it says nothing on a fresh clone: the specimens are emulator output and are
 not committed, like `sitcrypt.py`'s, so the suite skips cleanly when they
 are absent.
 

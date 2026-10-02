@@ -287,10 +287,21 @@ that are not the user's file, the second of them byte-exact against
 what StuffIt Deluxe 2.0.1 itself restores (FORMATS.md, *What an
 Optimizer did to the fork*). What is left is not about the modules:
 
-- **Nothing has seen an optimized archive that this project did not
-  make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1
-  under Mini vMac. A real one would test the readings against somebody
-  else's subject and somebody else's settings.
+- **The matrix asked of 2.0.1 is narrow, and nothing else is.** The
+  nine specimens are `tools/vmac/sitopt.py`'s, but they are written by
+  **StuffIt Deluxe 2.0.1 itself** under Mini vMac — the original
+  writer, not a synthesiser — so the header reading is already graded
+  against authentic output and a third party's archive would add
+  nothing to it. What is narrow is what the application was ASKED for:
+  one JPEG quality (25, the default), one compression method per
+  Optimizer, no Optimizer-plus-encryption entry, and a `Sound 1`
+  subject that is 8 KB of generated samples rather than a Sound
+  Designer II file (`Photoshop 1`'s resource fork is likewise built to
+  the module's own acceptance test; its `JPEG Lossy` subject is a real
+  Photoshop 1.0.7 document). Every one of those is a boot of the same
+  harness, so this is unwritten coverage rather than a missing
+  specimen — and only a subject that needs software this project does
+  not have, Sound Designer II, is anything else.
 - **The encryptors.** 2.x could encrypt with `PassLock`, `NewDEx` or
   `DESex`, and `src/fmt_sit.c` implements the built-in scheme that
   replaced all three; nothing here has ever seen an archive from any of

@@ -19947,8 +19947,33 @@ an unexplained disagreement between a trace and a result is a finding
 with a number on it, and the next person to touch this function needs
 it more than they need a tidy story.
 
+**And "somebody else's archive" was the wrong bar, which took saying
+out loud.** This section carried an open item reading *"nothing has
+seen an optimized archive that this project did not make"* until
+2026-10-02. It conflated two different things: an archive **we
+synthesised** and an archive **the original application wrote for us**.
+All nine specimens are the second — StuffIt Deluxe 2.0.1's own output,
+under Mini vMac, with the module installed the way a 1990 user
+installed it — so the header reading is graded against authentic bytes
+already, and a stranger's archive would not make it more authentic.
+What a stranger's archive would really have supplied is a combination
+nobody here thought to ask for: a different JPEG quality, a different
+compression method, an Optimizer over an encrypted entry. The writer is
+on the emulator image, so those are boots of `sitopt.py` rather than a
+search — which is why the item moved from *"find one"* to *"ask for
+them"* (OPEN_ITEMS.md). The one thing that search genuinely cannot
+replace is a SUBJECT needing software this project does not have, which
+is Sound Designer II and nothing else.
+
 **Two transferable halves.**
 
+- **The provenance that matters is the WRITER's, not the owner's.** A
+  specimen is synthetic when something other than the format's own
+  implementation produced it — not when it was produced here. Those two
+  readings of "ours" are what let a corpus gap masquerade as an
+  authenticity gap for four days, and the distinction is worth making
+  before a hunt is started: ask whether the real writer is reachable
+  first, because a reachable writer turns a search into a loop.
 - **"More correct" is not a direction when the oracle is old
   software.** Every tolerance in this repository is a bound on a
   distance to some reference; when the reference is an approximation,
