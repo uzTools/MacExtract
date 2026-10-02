@@ -3161,7 +3161,7 @@ engine later the same day.
 Lossy` (`src/sit_ccube.c`): resident `CODE` +4,024 B and A5 +72 B, and
 the SHIPPED build unmoved in both — all of it is in the StuffIt overlay,
 which grew 4,592 B. The `MacExtract.bin` column moves with the bundle.
-Before that they were re-measured 2026-10-01** for zip's four
+Before that they were re-measured 2026-10-01 for zip's four
 Macintosh extra fields, and the shipped build's `CODE` and A5 did not
 move at all: +2,024 B of resident `CODE` and −8 B of A5 in the control
 against **+0 and +0** in what ships, because every byte is in `ovl_exo`
@@ -3244,15 +3244,17 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **117,328 B** since 2026-09-28
+measured 2026-09-27. The shipped pair is **123,776 B** since 2026-10-02
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **145,652 B** — the fourteen images sum to 145,472 B, so its
+The bundle is **150,244 B** — the fourteen images sum to 150,064 B, so its
 index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
-bytes of padding to 4, which accounts for the whole difference (measured
-2026-09-26, off the raw bundle the build now writes for
-`tests/run_overlay_host.sh`). It read **143,616 B** here until then, and 724 B
+bytes of padding to 4, which accounts for the whole difference (re-measured
+2026-10-02 for `src/sit_ccube.c`, off the raw bundle the build writes for
+`tests/run_overlay_host.sh`; it was 145,652 B against 145,472 B from
+2026-09-26, and the index is the same 180 B at both sizes because none of
+the three terms depends on how big an image is). It read **143,616 B** here until then, and 724 B
 of index with it: that figure is `ovl_bundle.r.rsrc.bin`, the Rez'd RESOURCE
 FORK around the bundle rather than the bundle (DECISIONS.md 2026-09-26, *the
 fork that was mistaken for its contents*). It is not resident while an archive
@@ -3325,42 +3327,59 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 117,328 B of `CODE` and A5 the shipped build does not carry
+which is the 123,776 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
 a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 The residue and the tier budgets under it are the machine's, taken
-2026-09-27 against an application 336 B smaller than the current one, so
-every figure in this table is **~560 B more generous than the Macintosh now
-is**. Not corrected arithmetically, because that is how the floor budget was
-once made worse; it decides nothing at a narrowest margin of 16,490 B, and
-the place to fix it is a run on the machine.
-Ten rows ARE measurements, taken 2026-09-27 on one tree; the four marked otherwise are the same sum with no fixture to
-take them on. `tools/run_tiers.py --shipped` is where it is applied
+2026-09-27 against a SHIPPED application of 52,972 B of `CODE` and 18,964 B
+of A5. It is 53,216 and 19,008 now (*Three configurations, one tree*), so
+every figure in this table is **288 B more generous than the Macintosh now
+is** — the whole of that is the 2026-09-29 Optimizer work's resident part;
+`src/sit_ccube.c` and zip's extra fields added none of it. Not corrected
+arithmetically, because that is how the floor budget was once made worse;
+it decides nothing at a narrowest margin of 16,490 B, and the place to fix
+it is a run on the machine. **This read "336 B smaller" and "~560 B more
+generous" until 2026-10-02**, two figures that could not both be the gap
+between the same pair of builds; the two sizes are quoted above now so the
+subtraction is the reader's.
+Every figure in it is that sum, re-taken 2026-10-02 against the current
+`OVL_SAVED` and images — the ten marked *(measured)* are the formats with a
+fixture in the Mac sample, so `run_tiers.py --shipped` confirms the tally
+at that budget; the four marked otherwise are the same sum with no fixture
+to take them on. `tools/run_tiers.py --shipped` is where it is applied
 (TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a
 budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+82,144 B** (measured) |
-| LZH | lzh, codecs | **+100,386 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +84,362 B (arithmetic), and **+94,170 B** where the directory says no entry is encrypted (measured) |
-| DiskDoubler | cptdd, codecs | **+94,170 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +72,894 B (arithmetic), **+82,702 B** unencrypted (measured) |
-| Tar | exo, codecs | **+82,702 B** (measured) |
-| ARC | arc, ciphers, codecs | **+92,026 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+97,498 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +93,232 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| SuperDisk! | superdisk, codecs | +102,898 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| Now Compress | now, codecs | **+105,016 B** (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−26,706 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+83,708 B** (measured) |
+| LZH | lzh, codecs | **+107,122 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +91,098 B (arithmetic), and **+100,906 B** where the directory says no entry is encrypted (measured) |
+| DiskDoubler | cptdd, codecs | **+100,906 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +77,630 B (arithmetic), **+87,438 B** unencrypted (measured) |
+| Tar | exo, codecs | **+87,438 B** (measured) |
+| ARC | arc, ciphers, codecs | **+98,762 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+104,234 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +99,968 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| SuperDisk! | superdisk, codecs | +109,634 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| Now Compress | now, codecs | **+111,752 B** (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,142 B** (measured) |
+
+**Every row moved on 2026-10-02 and only one of them moved for its own
+format.** `OVL_SAVED` went 117,328 -> 123,776 B when the resident control
+grew with `src/sit_ccube.c`, so each grant above is **+6,448 B** — a
+release build keeps what the control has to carry, and the control
+carrying more is what the release does not. StuffIt's row is the
+exception: its own image grew 4,592 B at the same time, so it gained
+**+1,564 B** net. Nothing in the shipped build moved.
 
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 143,328 B held against 117,328 B saved. It costs nothing on the tiers
+it — 150,244 B held against 123,776 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which

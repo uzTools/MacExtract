@@ -404,6 +404,109 @@ def check_doc_sizes():
     return out
 
 
+# ------------------------------------------------- figures derived from one
+# What this catches, and why a grep could not: `OVL_SAVED` is quoted in
+# FORMATS.md three times in three different sentences, and EVERY per-format
+# budget in *What each format is granted* is derived from it. On 2026-10-02
+# all of them were stale — the constant had moved twice (117,664 -> 119,680
+# in 527bfe0, then -> 123,776 for `src/sit_ccube.c`) and the prose had moved
+# neither time. It was invisible to a search for the literal number because
+# the prose figure was never the same literal: it read 117,328 against a
+# constant of 117,664, a related-but-different quantity, which is exactly how
+# one goes stale while still looking plausible.
+#
+# So this holds the PROSE against the constant the model actually computes
+# with. The number nothing measures is the one nobody can correct
+# (DECISIONS.md 2026-10-02, *C-Cube's JPEG is in the engine*).
+#
+# What it cannot see: the twelve per-format rows themselves. They are
+# `run_tiers.gain()` of a set of images, and nothing here recomputes them —
+# re-take them from that function, which is what produced them.
+DERIVED = [
+    (r"the ([\d,]+) B of `CODE` and A5 the shipped build does not carry",
+     "OVL_SAVED", "what the release leaves, in *What each format is granted*"),
+    (r"The shipped pair is \*\*([\d,]+) B\*\*",
+     "OVL_SAVED", "the shipped pair, under the probe-build table"),
+    (r"([\d,]+) B held against ([\d,]+) B saved",
+     "BUNDLE,OVL_SAVED", "the envelope row's own arithmetic"),
+]
+
+
+def _run_tiers_consts():
+    text = (ROOT / "tools" / "run_tiers.py").read_text()
+    out = {}
+    for name in ("OVL_SAVED", "BUNDLE"):
+        m = re.search(r"^%s = (-?\d+)" % name, text, re.M)
+        if m:
+            out[name] = int(m.group(1))
+    return out
+
+
+def _n(s):
+    return int(s.replace(",", "").replace("\u202f", ""))
+
+
+def check_derived_figures(text=None):
+    consts = _run_tiers_consts()
+    missing = [k for k in ("OVL_SAVED", "BUNDLE") if k not in consts]
+    if missing:
+        return ["tools/run_tiers.py: no %s — check_docs has stopped "
+                "checking the figures derived from it" % ", ".join(missing)]
+    if text is None:
+        text = (ROOT / "FORMATS.md").read_text()
+    out = []
+    for pattern, keys, shown in DERIVED:
+        m = re.search(pattern, text)
+        if not m:
+            out.append("FORMATS.md: no sentence matching %r — this check "
+                       "has stopped checking %s" % (pattern, shown))
+            continue
+        for got, key in zip(m.groups(), keys.split(",")):
+            if _n(got) != consts[key]:
+                out.append("FORMATS.md says %s for %s; tools/run_tiers.py "
+                           "computes with %s = %s. Every per-format budget "
+                           "in *What each format is granted* is derived from "
+                           "it, so correct the table in the same commit "
+                           "(from run_tiers.gain(), not by hand)."
+                           % (got, shown, key, "{:,}".format(consts[key])))
+
+    # And the bundle's own three terms, which must close: the index is the
+    # difference, and it does not depend on how big an image is.
+    m = re.search(r"The bundle is \*\*([\d,]+) B\*\* — the fourteen images "
+                  r"sum to ([\d,]+) B, so its\nindex costs \*\*([\d,]+) B\*\*",
+                  text)
+    if not m:
+        out.append("FORMATS.md: no bundle/images/index sentence — this "
+                   "check has stopped checking the bundle's arithmetic")
+    else:
+        bundle, images, index = (_n(g) for g in m.groups())
+        if bundle != consts["BUNDLE"]:
+            out.append("FORMATS.md says the bundle is %s B; "
+                       "tools/run_tiers.py computes with BUNDLE = %s"
+                       % ("{:,}".format(bundle),
+                          "{:,}".format(consts["BUNDLE"])))
+        if images + index != bundle:
+            out.append("FORMATS.md: the bundle's terms do not close — "
+                       "%s B of images plus %s B of index is %s, not %s"
+                       % ("{:,}".format(images), "{:,}".format(index),
+                          "{:,}".format(images + index),
+                          "{:,}".format(bundle)))
+    return out
+
+
+def selftest_derived():
+    """Establish that it can fail: perturb each figure and require a report."""
+    text = (ROOT / "FORMATS.md").read_text()
+    consts = _run_tiers_consts()
+    caught = 0
+    for name in ("OVL_SAVED", "BUNDLE"):
+        bent = text.replace("{:,}".format(consts[name]),
+                            "{:,}".format(consts[name] + 64))
+        if bent != text and check_derived_figures(bent):
+            caught += 1
+    return caught
+
+
 # --------------------------------------------------------------- counts
 WORDS = {"ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13,
          "fourteen": 14, "fifteen": 15, "sixteen": 16, "seventeen": 17,
@@ -469,7 +572,13 @@ def main():
     problems = (check_index(fix) + check_citations() + check_version() +
                 check_synthetic() + check_target_struct() +
                 check_placeholders() + check_dist_readme() +
-                check_doc_sizes() + check_smell_count())
+                check_doc_sizes() + check_smell_count() +
+                check_derived_figures())
+    caught = selftest_derived()
+    if caught != 2:
+        problems.append("check_docs: the derived-figure selftest bent two "
+                        "figures and %d were caught — it cannot fail, so it "
+                        "is not checking them" % caught)
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

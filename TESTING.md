@@ -59,6 +59,20 @@
    lives elsewhere — that last one is the failure mode these documents
    actually have (CLAUDE.md, *Writing things down*).
 
+   **A third figure joined on 2026-10-02: the ones DERIVED from
+   `tools/run_tiers.py`'s model.** `OVL_SAVED` is quoted in FORMATS.md in
+   three different sentences and every per-format budget in *What each
+   format is granted* is computed from it; the constant had moved twice
+   and the prose neither time. A search for the literal could not find it
+   because the prose figure was never the literal — 117,328 against a
+   constant of 117,664, a related-but-different quantity, which is how one
+   goes stale while still looking plausible. So the three sentences and the
+   bundle's own three terms (images + index = bundle) are held against the
+   constants, and the run refuses to report a pass unless bending two of
+   them is caught. **What it cannot see:** the twelve per-format rows
+   themselves — those are `run_tiers.gain()` of a set of images and nothing
+   recomputes them, so re-take them from that function rather than by hand.
+
 0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` since
    2026-09-25): a Python function whose every `return` carries a tuple of
    two or more must never be tested for truthiness, because a tuple is

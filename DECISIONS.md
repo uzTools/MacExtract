@@ -19925,6 +19925,18 @@ decoder holds one MCU row of three components and decodes the stream
 once per output plane rather than keeping three. That is the trade this
 format invites, because the stream is 14 KB and a full plane is 64 KB.
 
+**And one line of it was undefined behaviour nothing but a sanitizer
+could have found.** The IDCT pre-scale was written `blk[i] <<= 3`, the
+shift the module performs — and a dequantised coefficient is signed, so
+on a negative one that is undefined in C99 (6.5.7p4), which this engine
+compiles as `-std=c99 -pedantic` without ever hearing about it. UBSan
+said so on the first full `ci.sh` run, at a coefficient of −25. It is
+`blk[i] *= 8` now, which every 68000 compiler turns into the same
+shifts. The decoder had already been graded byte-exact against 2.0.1's
+own output BEFORE that run: **a transform can be bit-for-bit correct on
+every specimen and still be undefined**, because UB is a property of the
+source and not of the answer.
+
 **One thing is left measured and unexplained, on purpose.**
 `CCOD`+0x3826 applies the same round-toward-zero correction after
 `(x + 16) >> 5` that every rotation in the network applies, and the

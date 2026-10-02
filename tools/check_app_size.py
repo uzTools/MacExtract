@@ -66,9 +66,18 @@ TAKEN = "2026-09-28"
 # mistaken for its contents*). It is NOT resident, so its growth costs the
 # download and the launch read rather than the engine's budget — but a figure
 # nothing measures is a figure nobody can correct.
-EXPECT_BUNDLE = 145652
+# RE-TAKEN 2026-10-02 from 145,652 to 150,244: `src/sit_ccube.c`, the
+# C-Cube JPEG decoder that undoes the `JPEG Lossy` Optimizer (FORMATS.md,
+# *What an Optimizer did to the fork*). All 4,592 B of it are in
+# `ovl_stuffit.bin`, 18,582 -> 23,174 B, so the SHIPPED build's resident
+# `CODE` and A5 did not move at all and EXPECT above is untouched — what
+# was bought is the fifth and last Optimizer, byte-exact against StuffIt
+# Deluxe 2.0.1's own restored file, for 4,592 B of download and launch
+# read and nothing off any extraction's budget. `run_tiers.py --check`
+# moves no tally in either lane.
+EXPECT_BUNDLE = 150244
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-09-28"
+TAKEN_BUNDLE = "2026-10-02"
 
 
 def main():
