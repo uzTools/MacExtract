@@ -107,7 +107,7 @@
  * undoes what it has read and nothing it has guessed at. */
 #define SIT_OPT_SOUND1       1   /* byte-wise delta over the fork       */
 #define SIT_OPT_PHOTOSHOP1   2   /* the same filter, same code          */
-#define SIT_OPT_JPEGLOSSY    3   /* lossy, and unread: refused          */
+#define SIT_OPT_JPEGLOSSY    3   /* C-Cube JPEG in a TIFF (sit_ccube.c) */
 #define SIT_OPT_MACPAINT1    4   /* drops a painting's 512-byte header  */
 #define SIT_OPT_IRREVERSIBLE 255
 
@@ -129,6 +129,7 @@
 #define SIT_OPTDEC_ASIS    1
 #define SIT_OPTDEC_DELTA   2
 #define SIT_OPTDEC_PNTG    3
+#define SIT_OPTDEC_JPEG    4
 
 static int sit_opt_decodable(uint8_t id)
 {
@@ -137,6 +138,7 @@ static int sit_opt_decodable(uint8_t id)
     case SIT_OPT_SOUND1:
     case SIT_OPT_PHOTOSHOP1:   return SIT_OPTDEC_DELTA;
     case SIT_OPT_MACPAINT1:    return SIT_OPTDEC_PNTG;
+    case SIT_OPT_JPEGLOSSY:    return SIT_OPTDEC_JPEG;
     default:                   return SIT_OPTDEC_REFUSE;
     }
 }
@@ -931,6 +933,25 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
         stream = outlen - SIT_PNTG_HEADER + SIT_OPT_REMNANT_LEN;
     }
 
+    /* `JPEG Lossy` is not a stream this engine can decode a piece at a
+     * time: its payload is a TIFF, read by offsets, three times over
+     * (sit_ccube.c). So the whole stored fork is read in. That is the
+     * module's own OUTPUT and already compressed, which is why StuffIt
+     * keeps it at method 0 — the only shape seen and the only one
+     * handled; anything else is refused rather than guessed at. */
+    if (optdec == SIT_OPTDEC_JPEG) {
+        uint8_t *raw;
+        if ((method & 0x0f) != 0) return UNC_ERR_UNSUPPORTED;
+        if (complen == 0) return UNC_ERR_CORRUPT;
+        raw = (uint8_t *)unc_alloc(c->al, complen);
+        if (!raw) return UNC_ERR_MEM;
+        err = unc_read_at(c->io, at, raw, (int32_t)complen);
+        if (err == UNC_OK)
+            err = unc_ccube_decode(c, fork, raw, complen, outlen, obuf, ocap);
+        unc_free(c->al, raw);
+        return err;
+    }
+
     if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = complen;
@@ -1187,11 +1208,10 @@ int unc_sit_extract(UncCtx *c)
              *        is a valid document and not the user's file, and
              *        the entry carries no checksum to say otherwise —
              *        so it is restored and FLAGGED, never silently.
-             *   else refused by name, `JPEG Lossy` (3) included: its
-             *        'DCMP' is 9,176 bytes and has not been read, and
-             *        the entry carries no checksum — the same ffff
-             *        both of `MacPaint 1`'s forks carry — so the
-             *        format itself says it cannot be given back.
+             *   3    `JPEG Lossy` stores C-Cube's JPEG in a TIFF, and
+             *        sit_ccube.c decodes it byte-exactly against what
+             *        2.0.1 itself restores. Lossy, so FLAGGED like 4.
+             *   else refused by name.
              *
              * An external Compressor is refused whatever its id: there
              * is no decoding that at all. It is refused here rather
@@ -1206,7 +1226,8 @@ int unc_sit_extract(UncCtx *c)
                        dmod == UNC_MODULE_COMPRESSOR ||
                        rmod == UNC_MODULE_COMPRESSOR);
             if (!needmod) {
-                if (ddec == SIT_OPTDEC_PNTG || rdec == SIT_OPTDEC_PNTG)
+                if (ddec == SIT_OPTDEC_PNTG || rdec == SIT_OPTDEC_PNTG ||
+                    ddec == SIT_OPTDEC_JPEG || rdec == SIT_OPTDEC_JPEG)
                     e.module_restored = 2;
                 else if (ddec == SIT_OPTDEC_DELTA || rdec == SIT_OPTDEC_DELTA)
                     e.module_restored = 1;

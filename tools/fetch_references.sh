@@ -473,3 +473,18 @@ if [ ! -f reference/notes/packit_unpackit.txt ]; then
 fi
 
 echo "references ready"
+
+# ITU-T T.81 (1992), the JPEG standard, from the W3C's mirror — the
+# published half of what `src/sit_ccube.c` decodes. The StuffIt 2.0
+# `JPEG Lossy` Optimizer stores C-Cube's JPEG inside a TIFF, and its
+# ENTROPY layer is T.81's: Annex F's procedure for turning BITS and
+# HUFFVAL into MINCODE/MAXCODE/VALPTR (F.2.2.3, Figures F.15-F.16), the
+# category-coded DC difference and AC run/size pairs, FF 00 stuffing
+# (F.1.2.3) and the zig-zag order of Figure A.6. What is NOT in here is
+# the part that had to be disassembled: C-Cube's own IDCT, its 3-MCU
+# restart segments that do not reset the DC predictor, its padded tile
+# rows, and the TIFF private tags 33604/33606/33607/33608 (FORMATS.md,
+# *What an Optimizer did to the fork*).
+[ -f reference/notes/itu-t81.pdf ] || \
+    curl -sL -o reference/notes/itu-t81.pdf \
+        "https://www.w3.org/Graphics/JPEG/itu-t81.pdf"

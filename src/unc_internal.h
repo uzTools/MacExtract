@@ -1189,6 +1189,16 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint8_t *iobuf, uint32_t iocap,
                         uint8_t *obuf, uint32_t ocap, UncCrypt *cr);
 
+/* The payload a StuffIt 2.0 `JPEG Lossy` Optimizer stores: C-Cube's
+ * JPEG inside a TIFF behind an 80-byte module header (sit_ccube.c).
+ * `stored` is the entry's STORED fork, whole — that Optimizer's output
+ * is already compressed and StuffIt keeps it at method 0, which is the
+ * only shape this handles. Writes `outlen` bytes of planar RGB to
+ * `fork` and returns a per-entry status. */
+int unc_ccube_decode(UncCtx *c, UncFork fork, const uint8_t *stored,
+                     uint32_t storedlen, uint32_t outlen,
+                     uint8_t *obuf, uint32_t ocap);
+
 /* LHarc's -lh1- coder (unc_lzah.c): a 4 KB-window LZSS whose literals
  * and lengths come from an adaptive Huffman tree of 314 leaves. Shared
  * by StuffIt classic's method 5 and LZH's -lh1-, which are the same

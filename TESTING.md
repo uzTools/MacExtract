@@ -1036,7 +1036,7 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Six assertions over eight archives 2.0.1 wrote, in three scripted runs:
+Seven assertions over nine archives 2.0.1 wrote, in four scripted runs:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;
@@ -1045,26 +1045,40 @@ Six assertions over eight archives 2.0.1 wrote, in three scripted runs:
    header says `rlen` 0;
 4. the header bytes are what `src/fmt_sit.c` reads: `0x40` set on both
    method bytes, 106 and 108 both 255, 46/47/107/109 zero;
-5. **the other kind of Optimizer** — `MacPaint 1`, over a document
-   MacPaint 2.0 itself drew — records its own module id, 4, and is
-   REFUSED by name, while its control extracts byte for byte;
-6. **and so do the other three.** `Sound 1` writes 1, `Photoshop 1` 2,
-   `Photoshop/JPEG Lossy` 3, each refused with that module named. JPEG
-   Lossy is the case that could have broken the rule — it is lossy, and
-   255 is what the application prints as *" lossy"* — and it writes 3.
+5. **the declared lengths**, which are checkable without running
+   anything: the `Text 1` entry declares the lengths of the fork it
+   REWROTE, every module with an id left its control's lengths in the
+   header;
+6. **the other kind of Optimizer** — `MacPaint 1`, over a document
+   MacPaint 2.0 itself drew — records its own module id, 4, and comes
+   out at the declared length with the artwork byte-identical to
+   MacPaint's own file AND to 2.0.1's unstuffed output, a header of 512
+   zeros, no resource fork, and the user TOLD; its control extracts byte
+   for byte. `Sound 1` (id 1) and `Photoshop 1` (2) come back byte for
+   byte against the subject, both forks, and the run says nothing about
+   them, which is asserted too; the synthetic `JPEG Lossy` (3) entry is
+   the one the module could not encode, and must be refused rather than
+   invented;
+7. **`JPEG Lossy` over a document Photoshop 1.0.7 itself wrote** comes
+   out **byte-identical to 2.0.1's own restored file**, with the
+   resource fork identical to the ORIGINAL document's — which 2.0.1's
+   output is not — and the user told. It must NOT equal the original
+   data fork: that would mean a lossy module had given back what it
+   threw away.
 
-**Why refusing one and decoding the other is not a policy.** Aladdin's own
-Engine, asked to unstuff both, decoded the `Text 1` archive and refused the
-`MacPaint 1` one — *"Items that were encrypted or compressed with an
-optimizer or compressor will be skipped… Please use StuffIt Deluxe
-instead."* The split this suite asserts is the format's.
+**Where the split came from.** Aladdin's own Engine, asked to unstuff
+both, decoded the `Text 1` archive and refused the `MacPaint 1` one —
+*"Items that were encrypted or compressed with an optimizer or
+compressor will be skipped… Please use StuffIt Deluxe instead."* That is
+graded here as a fact about the Engine; this engine refuses neither, and
+says instead which entries are not the file that was archived.
 
 **What it cannot see.** Whether a `DCMP` and this engine agree on
-anything but these four archives. Three of the four reversible
-Optimizers are undone in `src/fmt_sit.c` since 2026-09-29 and this
-suite grades the RESULT — byte for byte against the subject for `Sound
-1` and `Photoshop 1`, and against 2.0.1's own unstuffed output for
-`MacPaint 1` — but only over the documents this project made. Two subjects are also part synthetic —
+anything but these nine archives. All four reversible Optimizers are
+undone in `src/fmt_sit.c` and this suite grades the RESULT — byte for
+byte against the subject for `Sound 1` and `Photoshop 1`, and against
+2.0.1's own unstuffed output for `MacPaint 1` and `JPEG Lossy` — but
+only over the documents this project made. Two subjects are also part synthetic —
 `Sound 1` wants a Sound Designer II file and `Photoshop 1` a Photoshop
 1.0-era one, and both were built to the acceptance test in the module's own
 `COMP` — so they show what a module does once it accepts a file rather than

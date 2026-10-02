@@ -326,7 +326,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # Finder metadata, and a ZipIt entry gives back BOTH FORKS instead of a
 # MacBinary stream in the data fork. dist/README.txt's "type and creator
 # codes and dates all survive" was false for zip until this.
-UNC_MAC_CODE_DEFAULT=154092
+UNC_MAC_CODE_DEFAULT=158116
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -412,7 +412,7 @@ UNC_MAC_CODE_DEFAULT=154092
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37820
+UNC_MAC_A5_DEFAULT=37884
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

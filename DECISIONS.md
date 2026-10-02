@@ -320,6 +320,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
 - 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
 - 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
+- 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
 
 ---
 
@@ -19875,3 +19876,78 @@ choice is observable and this engine's dates stand 5 h from `lsar`'s.
   before they were a measurement. They do hold at 651,508 / 222,620 /
   127,220 — but *"a constant in the peak-RAM matrix"* is the smell
   CLAUDE.md names, and the matrix is not the only place one hides.
+
+## 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
+
+**`src/sit_ccube.c` decodes the `JPEG Lossy` Optimizer's payload and the
+restored data fork is byte-identical to what StuffIt Deluxe 2.0.1 itself
+hands back** — 196,608 bytes, zero differing — while the RESOURCE fork
+comes out identical to the original document's, which 2.0.1's own output
+is not. The figures, the format and the transform are FORMATS.md, *What
+an Optimizer did to the fork*; what follows is why it was written that
+way.
+
+**The target was Aladdin's output, not the picture.** A float IDCT came
+0.96 % away and jpeg-6b's `jpeg_idct_islow` came 1.065 % away — *worse*
+— so accuracy was moving in the wrong direction. That is the whole
+shape of the problem: the subject is an image a 1990 encoder already
+threw information out of, so the only reachable answer is the one its
+own decoder produced, approximation error included. Deciding that early
+is what turned an open-ended "get closer" into a finite task: read the
+arithmetic out of the module.
+
+**Half of it was published and that half was unfetched.** The entropy
+layer is ITU-T T.81's — Annex F's BITS/HUFFVAL tables, the category
+codes, `FF 00` stuffing, Figure A.6's zig-zag — and the spec was not in
+`reference/` while this was being read out of a disassembly. It is now
+(`reference/notes/itu-t81.pdf`, one `curl` in
+`tools/fetch_references.sh`), and `src/sit_ccube.c` cites the two halves
+separately: what T.81 states, and what only `CCOD` does. Same shape as
+the zip extra fields a day earlier — the licence and the reading cost of
+a format are both lowered by looking for the publication first.
+
+**And reading it was cheaper than guessing at it.** A sweep over
+families and precisions — eight to sixteen bits of cosine, every split
+of the two descales — bottomed out at 4.48 % on the inked blocks and
+could not have converged, because the transform is not a parameterised
+version of any standard one. `tools/ccube/m68ktrace.py`, a symbolic
+interpreter over one straight-line region, had the complete 1-D network
+out of `CCOD`+0x2f3c in about an hour. **A search over plausible
+implementations is unbounded; reading the implementation is bounded by
+the size of the function.**
+
+**The engine pays for it only when it is needed.** Every byte is in the
+StuffIt overlay — 18,582 → 23,174 B — so the shipped build's resident
+`CODE` and A5 are unchanged to the byte, and all six tier tallies are
+unmoved. Peak heap is 31.7 KB for a 256x256 document, and it grows with
+the stored fork and with the PADDED width, not with the image: the
+decoder holds one MCU row of three components and decodes the stream
+once per output plane rather than keeping three. That is the trade this
+format invites, because the stream is 14 KB and a full plane is 64 KB.
+
+**One thing is left measured and unexplained, on purpose.**
+`CCOD`+0x3826 applies the same round-toward-zero correction after
+`(x + 16) >> 5` that every rotation in the network applies, and the
+output is exact only WITHOUT it — with it, 709 of 65,536 luma samples
+miss by one. The decoder omits it and says so in a comment. Smoothing
+that over would have meant describing the asm as something it is not;
+an unexplained disagreement between a trace and a result is a finding
+with a number on it, and the next person to touch this function needs
+it more than they need a tidy story.
+
+**Two transferable halves.**
+
+- **"More correct" is not a direction when the oracle is old
+  software.** Every tolerance in this repository is a bound on a
+  distance to some reference; when the reference is an approximation,
+  improving the approximation increases the distance. The cue was that
+  the better IDCT scored worse — which looked like a bug for an hour
+  and was the measurement that settled the approach.
+- **The cost question and the scope question are different
+  questions.** This module was put out of scope and put back the same
+  day (2026-09-29, above) on an argument about whether anybody would
+  notice such an entry. What finally made it cheap was neither
+  argument: it is that a format's decoder lives in that format's
+  overlay, so the shipped build measured identical before and after.
+  Price the axis the user actually pays on before debating whether the
+  work is worth doing.

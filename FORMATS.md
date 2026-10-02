@@ -50,7 +50,7 @@ under *Table notes*.
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **four of the five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` as a valid document (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic — **method 14 is not implemented**, and real archives use it (*The last classic box*, below); **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries). **None of the five carries a Macintosh extra field**, so that part is graded outside the corpus | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -1787,16 +1787,16 @@ module holds it (-49, `opWrErr`), and -2 is the call that deletes it.
 
 ### What an Optimizer did to the fork, and what this engine undoes
 
-**Three of the four reversible Optimizers are undone in `src/fmt_sit.c`
-as of 2026-09-29**, each read out of its own `'DCMP'` resource and each
-graded against an archive StuffIt Deluxe 2.0.1 wrote
-(`tools/run_sitopt.py`):
+**All four reversible Optimizers are undone in `src/fmt_sit.c`** — three
+of them as of 2026-09-29 and `JPEG Lossy` as of 2026-10-02 — each read
+out of its own `'DCMP'` resource and each graded against an archive
+StuffIt Deluxe 2.0.1 wrote (`tools/run_sitopt.py`):
 
 | module | id | what it does to the fork | undone | checked by |
 |---|---|---|---|---|
 | `Sound 1` | 1 | **a byte-wise delta** over the whole fork, in place: `out[i] = out[i-1] + in[i]`, seeded 0 | **exactly** | the entry's own CRC-16 |
 | `Photoshop 1` | 2 | the same — the two `'DCMP'`s are byte-identical apart from the name and the id | **exactly** | the same |
-| `JPEG Lossy` | 3 | **a TIFF of C-Cube JPEG** behind an 80-byte header, tables and all, and lossy | **read in full, and decoded byte-exact** off the engine (`tools/ccube/decode.py`); not in `src/` yet | — |
+| `JPEG Lossy` | 3 | **a TIFF of C-Cube JPEG** behind an 80-byte header, tables and all | **inexactly** (lossy), and **byte-exact against 2.0.1's own output** | nothing — `ffff` |
 | `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
 | `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
 
@@ -1968,6 +1968,20 @@ entropy decode, the dequantisation, this IDCT, the output stage and the
 YCbCr-to-RGB conversion — with **0 bytes differing**. The 0.96 % that
 an ordinary float IDCT could not close is closed.
 
+**`src/sit_ccube.c` is that, in the engine.** It decodes the archive
+2.0.1 wrote from a document Photoshop 1.0.7 itself made, and the data
+fork comes out **byte-identical to what 2.0.1 restored** — while the
+RESOURCE fork comes out identical to the ORIGINAL document's, which
+2.0.1's own output does not (it rewrites 30 bytes of the fork's map).
+`tools/run_sitopt.py` asserts all of it.
+
+| | |
+|---|---|
+| what it costs the SHIPPED build | **0 B of resident `CODE`, 0 B of A5** — every byte is in the StuffIt overlay, 18,582 -> **23,174 B**, released for any archive that is not a StuffIt one |
+| the control | 154,092 -> 158,116 `CODE`, 37,820 -> 37,884 A5 |
+| the tiers | unmoved: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped |
+| peak RAM, 256x256 | **31.7 KB**, bisected — the stored fork, one MCU row of three components, and the tables. It grows with the stored fork and with 16 B per pixel of padded WIDTH, not with the image |
+
 **One thing in it is measured and unexplained.** The code at
 CCOD+0x3826 applies the same round-toward-zero correction after
 `(x + 16) >> 5` that every rotation applies, and **the output is only
@@ -1981,13 +1995,12 @@ this one byte for byte needs the network AND its index tables, which
 are built at run time. It is no longer a question of picking the right
 approximation.
 
-**And the direction is worth stating: being MORE accurate makes the
-answer differ MORE.** The exact IDCT is not the target — a 1990
-approximation is — so byte-exactness here would mean reproducing
-C-Cube's rounding error on purpose, for an image that is lossy already
-and whose original no software can return. The bar this engine will be
-held to is **within 1 of Aladdin's own output on every byte**, which is
-a bound over the whole image rather than an equality.
+**And the direction was worth stating: being MORE accurate made the
+answer differ MORE.** The exact IDCT was never the target — a 1990
+approximation is — so matching it meant reproducing C-Cube's rounding
+error on purpose. That is what the trace above delivered, so the bar
+here is an equality and not the bound of within-1 this section proposed
+while the arithmetic was still unknown.
 
 **Two things in there are not JPEG's.** A restart marker that does not
 reset the DC predictor is the opposite of what T.81 says one is for,
@@ -3071,7 +3084,40 @@ byte-identical. So a text entry out of StuffIt is not the file that was
 archived, which is a second reason the Macintosh Garden comment tells
 people to use MacZip.
 
-**This is one version and the result does not generalise.** Expander,
+**Three generations, read out of their own binaries.** The 5.5 and
+7.0.3 zip readers were lifted WITHOUT an emulator: both distributions
+ship an Aladdin `APPL/STi0` installer whose payload `unar` expands —
+7.0.3's arrives inside a `.smi` whose data fork is a plain HFS volume
+with its MDB at 1024. The engine lists those payloads but decodes
+neither: **StuffIt method 14** (OPEN_ITEMS.md).
+
+| version | the binary that reads zip | bytes | `0x334d` | `ZPIT` |
+|---|---|---|---|---|
+| 3.5 (1994) | `UnZip Translator 3.5`, its own `E2Ty` of 19 rows | 55,523 | 0 | 0 |
+| 5.5 (1999) | `Zip Translator 5.5`, no `E2Ty` of its own | 57,923 | 0 | 0 |
+| 5.5 (1999) | `StuffIt Engine 5.5`, carrying `E2Ty` of **234 rows** | 2,118,391 | 7 | 1 |
+| 7.0.3 (2003) | `StuffIt Plug-Ins/zip`, PowerPC | 435,334 | 0 | 0 |
+| 7.0.3 (2003) | `StuffItEngineShell`, PowerPC | 1,427,888 | 1 | 0 |
+
+**A count of zero is worth something here and a count of seven is not
+a contradiction.** Both architectures put a compared immediate in the
+instruction: 68k `CMPI.W #$334D` and PowerPC `cmpwi rX,0x334d` each
+carry the bytes `33 4d`, so a reader that tested for the field would
+show them. All eight occurrences above were examined and none is
+preceded by a compare or a move-immediate — and two of the engine's
+seven are the ASCII of its own `E2Ty` row `.S3M` → `S3M `, which
+identifies them rather than merely excusing them. The totals are also
+BELOW chance for the size (2.1 MB would give ~32 uniformly), so these
+forks are not uniform and absence is weaker than it looks; the
+instruction-encoding argument is what carries this, not the count.
+
+**Only 3.5.2 was run.** 5.5 and 7.0.3 need a 68020 or PowerPC — Mini
+vMac is a 68000 — so an empirical check means installing them under the
+Mac OS 9 QEMU harness, which has no mode for installing third-party
+software and whose pointer costs ~40 s a move (`tools/vmac/README.md`).
+Not done. What is above is a reading of their code, labelled as such.
+
+**The 3.5 result does not generalise on its own.** Expander,
 engine and translator are all 3.5.x, 1994, and Info-ZIP's field carries
 "Last Revision 19981005" in its own specification — so this software
 predates the thing it fails to read by four years. Deluxe 5.5, 6.0.1 and
@@ -3107,11 +3153,15 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **53,216 B** | 19,008 B | **64,768 B** | **213,760 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,840 B | 19,104 B | 63,360 B | 210,560 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | 154,092 B | 37,812 B | 186,112 B | 189,440 B |
+| **eager — SHIPPED** | (default) | **53,216 B** | 19,008 B | **64,768 B** | **218,368 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,840 B | 19,104 B | 63,360 B | 217,088 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **158,116 B** | **37,884 B** | 190,208 B | 193,536 B |
 
-**The control's two columns were re-measured 2026-10-01** for zip's four
+**The control's two columns were re-measured 2026-10-02** for `JPEG
+Lossy` (`src/sit_ccube.c`): resident `CODE` +4,024 B and A5 +72 B, and
+the SHIPPED build unmoved in both — all of it is in the StuffIt overlay,
+which grew 4,592 B. The `MacExtract.bin` column moves with the bundle.
+Before that they were re-measured 2026-10-01** for zip's four
 Macintosh extra fields, and the shipped build's `CODE` and A5 did not
 move at all: +2,024 B of resident `CODE` and −8 B of A5 in the control
 against **+0 and +0** in what ships, because every byte is in `ovl_exo`

@@ -213,6 +213,10 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # control 624 B and the shipped build 288 B (FORMATS.md, *What an Optimizer
 # did to the fork*).
 #
+# And **+4096 B** on 2026-10-02, for `JPEG Lossy`: sit_ccube.c costs the
+# control 6,112 B of resident CODE and A5 and the shipped build NOTHING —
+# every byte of it is in the StuffIt overlay, which grew 18,582 -> 23,174 B.
+#
 # NOT COMPENSATED ANYWHERE, deliberately. TIERS above and OVL_RESIDUE below
 # are measurements taken on the machine against a build **624 B smaller**,
 # so every shipped prediction here is now ~1,200 B more generous than the
@@ -226,7 +230,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # saved — the control took +2,024 B of resident CODE and the shipped
 # build took none, the 8 B being the A5 the control gave back. This is
 # the number the overlay build exists to make large.
-OVL_SAVED = 119680
+OVL_SAVED = 123776
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -283,11 +287,11 @@ IMAGES = {
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    18582,
+    "OVL_ID_STUFFIT":    23174,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 145652
+BUNDLE = 150244
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

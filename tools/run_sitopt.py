@@ -7,7 +7,7 @@ six header bytes taken out of the application's own code (FORMATS.md,
 *Where an archive names the module*). Until 2026-09-28 nothing graded
 that reading against an archive, because none existed here.
 
-`tools/vmac/sitopt.py` made eight, over three boots, and this
+`tools/vmac/sitopt.py` made nine, over four boots, and this
 replays them:
 
   Plain.sit       the control — no Optimizer, the same subject
@@ -20,7 +20,10 @@ replays them:
   unapp3/Painting.bin  what 2.0.1's own unstuffer gives back for OptPaint
   OptSound.sit    `Sound 1`, over a Sound Designer II file
   OptPhoto.sit    `Photoshop 1`, over a Photoshop document
-  OptJpeg.sit     `Photoshop/JPEG Lossy`, over the same document
+  OptJpeg.sit     `Photoshop/JPEG Lossy`, over the same document —
+                  the subject that module could NOT encode
+  psdoc/PSDoc.bin a document Photoshop 1.0.7 itself wrote
+  ps-jpeg1/       `JPEG Lossy` over THAT, and what 2.0.1 restored from it
 
 **The oracle is the writer.** An optimized entry's right answer is not
 the file that went in — `Text 1` turns leading spaces into tabs, strips
@@ -30,8 +33,8 @@ produces*, which is why `unstuffed.bin` is in the set. Grading this
 against the original subject would fail a correct engine, and grading
 it against our own output would pass a broken one.
 
-Six things are asserted, and each one has failed a version of this
-engine at some point today:
+Seven things are asserted, and each one has failed a version of this
+engine at some point:
 
   1. the control extracts to the subject, both forks, byte for byte;
   2. both optimized entries extract to **2.0.1's own unstuffed bytes**;
@@ -48,9 +51,9 @@ engine at some point today:
      prints as " lossy", but it writes 3;
   6. **the declared lengths**, which are what makes the rule a rule
      rather than a convention — see 4b in the code; and
-  7. **what this engine undoes, and what it declines.** Since
-     2026-09-29 three of the four reversible Optimizers are undone
-     here, each module's own 'DCMP' having been disassembled:
+  7. **what this engine undoes, and how far.** All four reversible
+     Optimizers are undone here, each module's own 'DCMP' having been
+     disassembled:
 
        `Sound 1` and `Photoshop 1` delta-code a fork and change
        nothing else, so the subject comes back BYTE FOR BYTE, both
@@ -66,23 +69,31 @@ engine at some point today:
        nothing can reproduce that — and the run must SAY it is not
        the original file.
 
-       `JPEG Lossy` is still refused, by name. It is lossy — the
-       application says so and its entry carries no checksum — and its
-       9,176-byte 'DCMP' has not been read (OPEN_ITEMS.md).
+       `JPEG Lossy` stores C-Cube's JPEG in a TIFF and is decoded
+       by `src/sit_ccube.c`, which carries that codec's own integer
+       IDCT rather than a better one. So the bar is BYTE-EXACTNESS
+       against 2.0.1's own restored file — being more accurate than the
+       module would miss — while the resource fork is graded against
+       the ORIGINAL document, which this engine reproduces and 2.0.1
+       does not. The run must say it is not the original file, and the
+       data fork must NOT equal the original: a lossy module cannot
+       give back what it threw away. The entry whose subject the module
+       could not encode (OptJpeg.sit) must still be refused.
 
 What this CANNOT see:
 
 - **whether a 'DCMP' agrees with this engine on anything but these
-  four archives.** What each module does was read out of its own code
+  nine archives.** What each module does was read out of its own code
   and then run on an emulated Mac (tools/vmac/dcmptest), but only over
   the documents here.
-- **whether a real Photoshop or Sound Designer II document behaves the
-  same.** Those two subjects are part synthetic: the data fork of the
-  Photoshop one is a genuine PSD (ImageMagick wrote it, deark reads it
-  back), but its resource fork is built to the module's own acceptance
-  test, and the Sound Designer II file is 8 KB of generated samples. So
-  they show what a module does once it accepts a file, not that a real
-  document looks like this.
+- **whether a real Sound Designer II document behaves the same.** That
+  subject is 8 KB of generated samples, and the `Photoshop 1` one is
+  part synthetic too — a genuine PSD data fork (ImageMagick wrote it,
+  deark reads it back) behind a resource fork built to the module's own
+  acceptance test. So they show what a module does once it accepts a
+  file, not that a real document looks like this. The `JPEG Lossy`
+  subject is the exception: Photoshop 1.0.7 itself drew and saved it on
+  an emulated Mac Plus, which is why that one is graded byte for byte.
 - **anything at all on a fresh clone.** The specimens are not
   committed — they are an emulator's output, like `sitcrypt.py`'s — so
   this skips cleanly and says nothing when they are absent.
@@ -106,6 +117,12 @@ MADE = os.path.join(SPECIMENS, "make2")
 UNSTUFFED = os.path.join(SPECIMENS, "unstuff1", "unstuffed.bin")
 PAINT = os.path.join(SPECIMENS, "paintmake")
 MODS = os.path.join(SPECIMENS, "mods5")
+# The `JPEG Lossy` round trip: a document Photoshop 1.0.7 itself
+# wrote, the archive 2.0.1 made of it with that Optimizer enabled,
+# and the file 2.0.1 then restored (tools/vmac/sitopt.py --psdoc,
+# --psjpeg).
+PSJ = os.path.join(SPECIMENS, "ps-jpeg1")
+PSDOC = os.path.join(SPECIMENS, "psdoc", "PSDoc.bin")
 # What 2.0.1's OWN unstuffer gave back for OptPaint.sit — the only
 # thing "correct" can mean for an entry `MacPaint 1` optimized,
 # because the module does not restore the original either.
@@ -327,16 +344,16 @@ def main():
                 out = os.path.join(work, fn)
                 rc, msg = extract(args.macextract, arc, out)
                 if mid == 3:
-                    # `JPEG Lossy` is lossy and its 9,176-byte 'DCMP'
-                    # has not been read. Refused, by name — the one
-                    # module of the five that still is.
+                    # This subject is the one `JPEG Lossy` could not
+                    # take: a modern 8BPS PSD wearing Photoshop 1.0's
+                    # type code, so the module wrote an empty header and
+                    # 2.0.1 refuses its own archive (FORMATS.md). The
+                    # engine must refuse it too rather than invent a
+                    # picture — the real round trip is graded below.
                     if rc == 0:
-                        problems.append("%s extracted; `%s` is lossy and "
-                                        "is not implemented"
-                                        % (fn, name))
-                    elif name not in msg:
-                        problems.append("%s was refused without naming "
-                                        "`%s`: %s" % (fn, name, msg.strip()))
+                        problems.append("%s extracted; that entry holds "
+                                        "an 80-byte header and no image"
+                                        % fn)
                     continue
                 # `Sound 1` and `Photoshop 1` delta-code the fork and
                 # change nothing else, so undoing it is EXACT — graded
@@ -364,12 +381,56 @@ def main():
         else:
             print("run_sitopt: no Sound/Photoshop specimens — three "
                   "modules are not graded (sitopt.py --makemods)")
+
+        # 6. `JPEG Lossy`, over a document Photoshop 1.0.7 itself wrote.
+        #
+        # The bar here is BYTE-EXACTNESS against 2.0.1's own restored
+        # file, which is attainable because `src/sit_ccube.c` carries
+        # C-Cube's own IDCT rather than a better one — being more
+        # accurate than the module would miss (FORMATS.md, *What an
+        # Optimizer did to the fork*). The resource fork is graded
+        # against the ORIGINAL, which this engine reproduces and 2.0.1
+        # itself does not.
+        jarc = os.path.join(PSJ, "JpegPS.sit.bin")
+        jref = os.path.join(PSJ, "PSDoc.bin")
+        if os.path.exists(jarc) and os.path.exists(jref) \
+                and os.path.exists(PSDOC):
+            out = os.path.join(work, "psjpeg")
+            rc, msg = extract(args.macextract, jarc, out)
+            q = os.path.join(out, "PSDoc")
+            rd, rr = forks(jref)
+            od, orr = forks(PSDOC)
+            if rc != 0 or not os.path.exists(q):
+                problems.append("JpegPS.sit did not extract: %s"
+                                % msg.strip())
+            else:
+                got = open(q, "rb").read()
+                if got != rd:
+                    n = sum(1 for i in range(min(len(got), len(rd)))
+                            if got[i] != rd[i])
+                    problems.append("JpegPS: the data fork is not 2.0.1's "
+                                    "own restored bytes (%d B against %d, "
+                                    "%d differing)" % (len(got), len(rd), n))
+                if (not os.path.exists(q + ".rsrc")
+                        or open(q + ".rsrc", "rb").read() != orr):
+                    problems.append("JpegPS: the resource fork is not the "
+                                    "document's own")
+                if "NOT the original" not in msg:
+                    problems.append("JpegPS extracted without saying it is "
+                                    "not the original file: %s" % msg.strip())
+                if got == od:
+                    problems.append("JpegPS: the data fork equals the "
+                                    "ORIGINAL, which a lossy Optimizer "
+                                    "cannot give back")
+        else:
+            print("run_sitopt: no ps-jpeg1 specimens — `JPEG Lossy` is not "
+                  "graded (sitopt.py --psdoc, --psjpeg)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 8 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
+    print("run_sitopt: 9 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
           "Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0

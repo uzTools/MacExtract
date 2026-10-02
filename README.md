@@ -121,7 +121,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on | ✅ | ✅ | ✅ |
-| Type and creator in a zip made on a Mac | 🔴 ** | not tested ** | not tested ** | ✅ |
+| Type and creator in a zip made by MacZip | 🔴 ** | 🔴 ** | 🔴 ** | ✅ |
 | StuffIt SpaceSaver | ✅ with the add-on | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
 | AppleLink packages (`.pkg`) | ✅ with the add-on | ✅ | 🔴 | 🔴 |
@@ -140,8 +140,8 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
-\*\* **A zip made on a Macintosh carries the Finder's type and creator,
-and StuffIt throws them away.** The StuffIt on hand here — Expander
+\*\* **A zip made by MacZip — the Macintosh port of Info-ZIP's `zip` —
+carries the Finder's type and creator, and StuffIt throws them away.** The StuffIt on hand here — Expander
 3.5.2 with UnZip Translator 3.5, 1994 — works them out from the
 filename instead, off a built-in table of nineteen extensions: `.TXT`
 becomes `TEXT/ttxt`, `.DOC` becomes `TEXT/MSWD`, and anything it does
@@ -153,24 +153,29 @@ that table either, which is why the nine disk images in it lose the
 converts line endings, so a text file is 720 bytes where the archive
 holds 739. MacExtract reads what the archive actually stored.
 
-The 🔴 for Expander 4.0.2 is not that measurement: 4.0.2 on its own
-cannot open a zip at all, so there is nothing for it to preserve.
-Deluxe 5.5.1 and 7.0.3 both came out after the field was published and
-**neither has been tested here** — they will not install on the
-System 7 machine this was measured on, so take the blank literally.
+The other three 🔴 are read out of the code rather than run. **Deluxe
+5.5.1 and 7.0.3 both came out after the field was published**, so being
+newer was the thing worth checking — and both do it the same way 3.5.2
+does. 5.5's zip reader has no table of its own; the engine behind it
+carries one of 234 extensions. 7.0.3's is a separate PowerPC plug-in.
+Neither contains the two bytes that identify the field anywhere a
+comparison could use them, and a comparison is exactly where those
+bytes would have to appear. Expander 4.0.2's 🔴 is a different fact
+again: on its own it cannot open a zip at all, so it has nothing to
+preserve. Only 3.5.2 was actually run over an archive.
 
 \* **One rare kind of StuffIt entry comes back changed, and MacExtract
 says so.** StuffIt Deluxe 2.0 (1990) could run a small plug-in called an
 *Optimizer* over a file before compressing it, and no StuffIt since has
-opened those archives. MacExtract opens **four of the five** Aladdin
-shipped. A file `Sound 1` or `Photoshop 1` touched comes back byte for
-byte. One `Text 1` touched comes back tidied — which is what StuffIt
-Deluxe hands back too, since the plug-in threw the rest away. A painting
-`MacPaint 1` touched comes back with the picture intact and a blank
-header: its palette and pattern settings are gone, and not even StuffIt
-Deluxe itself can bring them back. The fifth, the JPEG one, is named and skipped for
-now; when it lands it will be lossy too, because that is what it kept. Whenever a file is not exactly the one that was
-archived, MacExtract tells you which file and why.
+opened those archives. MacExtract opens **all five** Aladdin shipped. A
+file `Sound 1` or `Photoshop 1` touched comes back byte for byte. One
+`Text 1` touched comes back tidied — which is what StuffIt Deluxe hands
+back too, since the plug-in threw the rest away. A painting `MacPaint 1`
+touched comes back with the picture intact and a blank header, and a
+photograph the `JPEG Lossy` one touched comes back softened: both lost
+something before the archive was ever written, and nothing can bring it
+back. Whenever a file is not exactly the one that was archived,
+MacExtract tells you which file and why.
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:

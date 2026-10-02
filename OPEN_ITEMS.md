@@ -166,7 +166,8 @@ code.
 | what is left | what would close it |
 |---|---|
 | ZipIt's `0x2705`/`0x2805`/`0x2605` are graded on GENERATED archives | **one real ZipIt archive.** `lsar` agrees on all three fields and `unar` agrees on a `0x2605` entry's forks, but every subject was written here, and `0x2605`'s own premise — that ZipIt sets it when and only when the data is MacBinary — is APPNOTE.TXT 4.6.4's word and nothing this machine can check. ZipIt was shareware and its archives are plain `.zip`: **invisible to a search by name**, which is the blind spot that hid the whole item until a user's download page named it (DECISIONS.md 2026-10-01) |
-| the StuffIt result is one version old | **StuffIt Deluxe 5.5, 6.0.1 or 7.0.3 run over the same archive.** 3.5.1 assigns type/creator from a filename table and loses `MSWD` three times out of three (FORMATS.md, *What Aladdin's own software does with the same bytes*) — but it is from 1994 and the field is from 1998, so that says nothing about whether Aladdin ever added it. All three later versions are on this disk as uninstalled installers and all three postdate the field; none runs on the System 7.0.1 image `zipmeta.py` uses, so this wants Mac OS 8 or 9 |
+| the StuffIt result is read rather than run for 5.5 and 7.0.3 | **an emulator that installs them.** Their zip readers were lifted out of the installers without booting anything and neither tests for the field (FORMATS.md, *What Aladdin's own software does with the same bytes*) — but only 3.5.2 has been run over an archive. 5.5 wants a 68020 and 7.0.3 a PowerPC, so both mean the Mac OS 9 QEMU harness, which has no mode for installing third-party software and a pointer that costs ~40 s a move. The files are already extracted, so the install could be ASSEMBLED rather than driven — the engine and translator placed in a System Folder — which is the cheaper route and is untried |
+| StuffIt method 14 | **a decoder.** Both the 5.5 and the 7.0.3 installer payloads are StuffIt archives this engine lists entry for entry and decodes not at all: 71 of 185 entries in 5.5's. `unar` reads both. Found 2026-10-02 while getting at their zip readers; nothing in the corpus carries method 14, which is why no suite has ever asked for it |
 | no Macintosh zip is in the corpus at all | **a fixture, and a decision about the dates first.** `rexnebular_1_0_0.zip` is real, is graded 22/22 on type/creator and Finder flags, and is 29.7 MB — the largest fixture there would be. Adding it with DATES graded would fail against `lsar`, by the 5 h its `CrGMTOffs = -18000` accounts for, and the failure would be the oracle's: XADMaster and deark disagree on that field's sign. That has to be written down as the oracle's limit before a fixture can rest on it (FORMATS.md, *Zip's Macintosh extra fields*) |
 
 ## The overlay loader: what no emulator here can answer
@@ -278,25 +279,13 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: all five settled, and two questions left over
+## StuffIt 2.0's Optimizers: all five extracted, and two questions left over
 
-**Four of the five are extracted** as of 2026-09-29 — `Text 1` and
-`Sound 1` and `Photoshop 1` exactly, `MacPaint 1` as a valid document
-that is not the user's file (FORMATS.md, *What an Optimizer did to the
-fork*). What is left:
-
-- **`JPEG Lossy`, id 3 — back IN scope**, the same day it was put out
-  of it, by the maintainer's decision. The two premises offered for
-  dropping it did not hold (DECISIONS.md 2026-09-29, *a measured zero,
-  declined*), and the cost is measured at **0 B of resident `CODE` and
-  0 B of A5** on the shipped build. **The format is fully read and
-  decoded** as of 2026-09-30: `tools/ccube/decode.py` lands within 1 of
-  StuffIt Deluxe 2.0.1's own output on every byte (FORMATS.md, *What an
-  Optimizer did to the fork*). What is left is engine work — the
-  decoder in C99 on the 68000 contract, with an INTEGER IDCT, which is
-  what the last 0.96 % of bytes will cost. The result will still be
-  lossy, so it lands as `module_restored = 2` like `MacPaint 1` —
-  named, and flagged.
+**All five are extracted** as of 2026-10-02 — `Text 1`, `Sound 1` and
+`Photoshop 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents
+that are not the user's file, the second of them byte-exact against
+what StuffIt Deluxe 2.0.1 itself restores (FORMATS.md, *What an
+Optimizer did to the fork*). What is left is not about the modules:
 
 - **Nothing has seen an optimized archive that this project did not
   make.** All eight are `tools/vmac/sitopt.py`'s, written by 2.0.1

@@ -2923,9 +2923,9 @@ reading the bytes behind before it is explained.**
 Magic Menu refuses it — *"Items that were encrypted or compressed with an
 optimizer or compressor will be skipped. The Engine does not currently
 support this. Please use StuffIt Deluxe instead."* — where it unstuffed the
-`Text 1` one without comment. That is Aladdin's Engine drawing the same line
-this engine draws, and it is why `run_sitopt.py` asserts a refusal for one
-and bytes for the other.
+`Text 1` one without comment. That is where the line Aladdin's own Engine
+draws was measured; `run_sitopt.py` asserts it as a fact about that
+application, and this engine refuses neither archive.
 
 **A hierarchical submenu DOES open here, which the note below says it does
 not.** `--options` pulls `Magic ▸ StuffIt Options ▸` down ten pixels at a

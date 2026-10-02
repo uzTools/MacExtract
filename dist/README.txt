@@ -141,8 +141,8 @@ One kind of StuffIt file is worth knowing about. StuffIt Deluxe 2.0, in
 1990, could hand a file to an add-on called an Optimizer before
 compressing it -- a separate little file you installed, which trimmed
 sound, paint, Photoshop or text documents before they were squeezed. No
-StuffIt since has opened those archives. MacExtract opens four of the
-five add-ons Aladdin shipped, and tells you when what comes out is not
+StuffIt since has opened those archives. MacExtract opens all five
+add-ons Aladdin shipped, and tells you when what comes out is not
 what went in.
 
 A sound or a Photoshop document comes back exactly as it was. A text
@@ -150,10 +150,10 @@ one comes back tidied -- which is what StuffIt Deluxe itself hands back
 too, because the add-on threw that away and nothing can put it back. A
 paint document comes back with the picture intact and a blank header:
 its palette and pattern settings are gone for good, and not even
-StuffIt Deluxe can bring them back. The fifth add-on, the JPEG one, is named and
-skipped for now. When it arrives it will be lossy too: what that add-on
-kept of the picture cannot be turned back into the picture, by
-MacExtract or by StuffIt Deluxe 2.0 with the add-on installed.
+StuffIt Deluxe can bring them back. A photograph the JPEG add-on
+touched comes back softened in the same way, and byte for byte the
+picture StuffIt Deluxe 2.0 itself hands back: the add-on threw away
+part of it in 1990, and no software can return it.
 
 Archives split across floppies: a StuffIt segmented set is joined back
 together. Open the first part; the rest are found beside it, and if one is
