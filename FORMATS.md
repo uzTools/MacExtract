@@ -1947,11 +1947,29 @@ trace shows the transform is the rotation network above and +0x1492 is
 some other pass. Corrected rather than withdrawn, because nothing was
 built on it.
 
-**And transcribed exactly, it is still 35 % wrong against the
-specimen** — both pass orders, every plausible final shift. So a
-scaling step between dequantisation and the first pass, or between the
-passes, lies outside the region traced. **The structure is no longer
-the unknown; a factor is.**
+**The missing factor was at both ends, and the tail of the function had
+it.** The coefficients are pre-scaled `<< 3`; the result goes through
+
+```
+v = (x + 16) >> 5 ;  if v < 0 then v += 1 ;  v += 128 ;  clamp 0..255
+```
+
+at CCOD+0x381c — a word `addi.w #16` and `asr.w #5`, the same
+round-toward-zero correction, then the level shift and the clamp. Pass
+one takes COLUMNS of the coefficient block (its de-zigzag table is
+gathered at stride 16 with the loop index at stride 2, which is a
+column of an 8x8 word array) and writes rows of an intermediate array
+of longs; pass two reads that array's columns and is instruction for
+instruction the same code.
+
+**Transcribed with all of that, it lands at 1.08 % of the luma plane
+differing from 2.0.1's own output, every difference exactly 1** —
+against 35 % before the output stage was read. For comparison the
+ordinary float IDCT differs on 0.955 %. So the transcription is
+structurally right and still **marginally worse than floating point**,
+which means one rounding detail is still wrong. What it is has not been
+found; the structure, the constants, the scaling and the rounding
+idiom are all read from the code and all agree.
 
 **That is why no standard IDCT matched and none ever will.** Matching
 this one byte for byte needs the network AND its index tables, which
