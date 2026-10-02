@@ -323,6 +323,9 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
 - 2026-10-02 (the measurement that was waiting for a second input) — `CCOD`+0x3826 does not round toward zero, and one drawing was too easy to say so
 - 2026-10-02 (three defaults that were being read as format) — what StuffIt Deluxe 2.0.1 will actually be asked for, and what it refuses to be asked by script
+- 2026-10-02 (the question that was about the user, not the format) — `PassLock` protects nothing, so the engine stops refusing
+- 2026-10-02 (the verifier that said where NOT to look) — all five of StuffIt 2.x's ciphers, decrypted
+- 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
 
 ---
 
@@ -20102,3 +20105,164 @@ before anybody spends a day scripting an encrypted archive out of it.
   only as wide as STR# 257. Discovering that cost one boot; assuming
   the menu was global would have cost several and produced a specimen
   that was quietly not encrypted.
+
+## 2026-10-02 (the question that was about the user, not the format) — `PassLock` protects nothing, so the engine stops refusing
+
+**"But what if the user has the password?"** The engine had just been
+taught to refuse a `PassLock` entry with *"no password will open it"*,
+and that question is the one nobody had asked of it. The answer turned
+out to be that the password is irrelevant: the module appends sixteen
+bytes of key material and the method's padding and **leaves every
+compressed byte of both forks exactly as an unprotected archive has
+them** — measured on two subjects, FORMATS.md, *Encryption*. So an
+entry that is "encrypted" is readable, and refusing it withheld bytes
+sitting in the clear.
+
+**The specimen was built to answer a different question, and could
+answer this one only because of one decision.** It was made to test an
+Optimizer over an encrypted entry, and the quality was left at the
+module's default deliberately so that the plaintext would be a payload
+this project already had, byte for byte, rather than something new.
+That turned a "can we decrypt it?" question into a comparison: XOR the
+two and look. They were identical, which is not a result a cipher can
+produce. **A specimen whose plaintext is already known is worth more
+than one that is merely valid**, and it costs nothing to arrange at the
+time — only afterwards.
+
+**Then the claim was investigated properly, which is what it deserved.**
+Two diffs are a coincidence away from being wrong, so: the entry's own
+CRC-16 passes over what the engine produces (the format checking the
+bytes rather than us); the module's `DCMP` data path — the one handed a
+block of the fork — **pushes the buffer pointer and calls a routine
+that sets a flag and returns, never dereferencing it**; its `COMP` is
+the same shape, so nothing is transformed in either direction by
+design; and its About box says *"PassLock provides simple password
+protection for files"*. The module's own `COMP`/`DCMP` resource id is
+**514** — `(kind-1) << 8 | id` with kind 3 and id 2 — which also
+confirms the header byte this engine reads it by.
+
+**And then it was made SILENT, which is the opposite of where this
+started.** The first version printed a line per entry, a line per run
+and a line in listings. A user can do nothing with that fact: there is
+no password to find, no file damaged, nothing to retry. The entries
+that earn a line are the ones whose bytes on disk are not the bytes
+that went in — an `MacPaint 1` or `JPEG Lossy` document — and a
+`PassLock` entry's ARE. An unarchiver that editorialises on every entry
+is one whose warnings stop being read, so the fact lives in FORMATS.md
+where somebody can look it up, and the extraction is quiet.
+
+**The field went with the message, and that is the measurable half.**
+`UncEntryInfo.encryptor_nominal` took the struct from 302 to 304 bytes
+on the 68000 — fields 292..300 are packed and `name_full_len` then
+needs a pad, so one byte of struct cost two of size — and with nothing
+left to read it, it is gone and the struct is 302 again. `check_docs.py`
+failed on the stated size in both directions, naming all three places,
+which is the difference between a figure that is corrected and one that
+quietly rots.
+
+**Two transferable halves.**
+
+- **A refusal is a claim, and it gets tested like one.** *"No password
+  will open it"* was about the format and was false of it; the true
+  statement was *"we do not implement this"*, which is about us. The
+  cue is a message that tells a user what the WORLD cannot do — this
+  repository has written one of those before, and the test is always
+  the same: would somebody with the right software, or the right
+  password, get a different answer?
+- **A security property is worth measuring before it is assumed in
+  either direction.** The 1990 word "encryptor" carried the assumption
+  that bytes were enciphered, through a header field, a refusal, and a
+  message, until two archives were diffed. Nobody needed to break
+  anything: the comparison that settled it was one XOR, and it was
+  available from the first specimen.
+- **A true fact is not automatically worth printing.** The honest
+  message and the useful behaviour were different answers here. What
+  decides it is whether the reader can do anything with it — and the
+  test for a warning is the same as for a log line: if it fires on
+  every instance and nobody can act on it, it is noise that makes the
+  warnings beside it less likely to be read.
+
+## 2026-10-02 (the verifier that said where NOT to look) — all five of StuffIt 2.x's ciphers, decrypted
+
+**Five schemes, three ciphers, one key derivation.** `DES` and `DESex`
+are standard DES in CBC; `NewDE™` and `NewDEx` are StuffItDES in CBC;
+3.5's built-in is StuffItDES through an 8-byte feedback XOR; and
+`PassLock` enciphers nothing. The table is FORMATS.md's, *The three
+ways 2.0.1 encrypts*. This is how they were found, because the method
+transfers and the ciphers do not.
+
+**The engine's own verifier located the problem before any analysis.**
+`unc_crypt_sit` derives an archive key from the password, decrypts the
+`'MKey'` resource under it and checks that block against itself — and
+on a 2.0.1 `DES` archive, with the right password, **it passed**. That
+single bit of information said the password, the folding and the whole
+archive stage were already correct and that only the fork transform
+could be wrong, which turned an open-ended "what cipher is this?" into
+a bounded sweep. **A verifier is a bisection point**: when a format has
+one, run it first, because a pass tells you which half of your
+implementation to stop reading.
+
+**Then the sweep, which is cheap because the oracle is exact.** 32
+variants of the file-key stage against 8 transforms, scored by how many
+of 286 known plaintext bytes come back — and the answer was 286 of 286
+on the first run that included STANDARD DES, which this engine had all
+along for PackIt. The sweep is not clever; it is only possible because
+the specimen was made with a plain control in the same boot, so the
+plaintext is known exactly rather than recognised by eye.
+
+**The implementation was then two cipher kinds and a switch.** Both
+primitives already existed — `des_crypt` with IP and FP for PackIt,
+`sitdes_crypt` without them for StuffIt — and CBC is four lines around
+either. Nothing new was written cryptographically, which is the
+measure of how much the key derivation was doing.
+
+**Two transferable halves.**
+
+- **A refusal that names what the WORLD cannot do is a bug twice over.**
+  The second one today: PassLock's message said no password would open
+  an archive whose bytes were in the clear, and this one said nothing
+  implements a cipher that this engine implemented four hours later.
+  Both were true of us and false of the file. The smell is any message
+  with "nothing", "never" or "cannot be" about something outside the
+  program.
+- **Ask the format's own check before asking the format.** Every
+  encrypted format here has some verifier — an `'MKey'` block, a check
+  byte, a two-byte MAC — and it is usually treated as a yes/no for the
+  user's password. It is also a measurement of your own code, free, and
+  it halves the search space the moment it passes.
+
+## 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
+
+**The question that produced this was "are we good now?"** and the
+honest answer needed a bar, because "everything StuffIt 2 can make" has
+no edge: the format lets a fork be handed to an external COMPRESSOR
+module the way it can to an Optimizer or an encryptor, and anybody could
+have written one in 1991. The maintainer set the line: **everything the
+application writes by default** — with what Aladdin sold in the box —
+and a third party's plug-in waits for somebody's file.
+
+**It is the right line because it is finite and the inside of it is now
+closed.** Aladdin's two disks carry five Optimizers, three encryptors
+and nine translators, and **not one compressor**. So "by default" is a
+list that can be exhausted, and on 2026-10-02 it was: every Optimizer,
+every cipher, every compression word the script language has including
+`guess`, a 1.5.1-compatible archive and a folder, each asked of 2.0.1
+itself and each read back (FORMATS.md). The alternative bar — anything
+the format permits — cannot be closed by any amount of work here,
+because the missing piece is a file nobody has.
+
+**And it changes what the comparison table claims.** The row says what
+StuffIt Deluxe 2.0 itself wrote, which is a promise about archives a
+user might actually hold, rather than about the format's grammar. The
+cells for the two later Deluxes say *not tested here* rather than a
+colour, because nothing in this project has run them against these
+archives — the 🔴 that IS there is 2.0's own Engine refusing an entry
+its Optimizers touched, in its own words.
+
+**The transferable half.** **A completeness claim needs a bar somebody
+can check, and "what the format permits" is usually the wrong one.**
+The useful bar is what the SHIPPED software produces, because that is
+both finite and what users have. This repository has the same shape
+elsewhere — "every method the corpus uses" versus every method the
+format defines — and the first is a measurement while the second is an
+argument.

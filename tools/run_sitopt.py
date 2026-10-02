@@ -137,6 +137,12 @@ PSDOC2 = os.path.join(SPECIMENS, "psdoc2", "PSDoc2.bin")
 # only specimen that can fail a decoder which ASSUMES the tables
 # instead of reading tag 33606.
 PSJ3 = os.path.join(SPECIMENS, "ps-jpeg3")
+# An entry that is BOTH optimized and encrypted, which no script can
+# write: `PassLock` is armed from Options ▸ Custom Encryption… and the
+# stuffing is the application's own (`sitopt.py --psencgui`). It is the
+# first archive here from any of 2.x's three encryptor modules.
+PSENC = os.path.join(SPECIMENS, "psenc3", "EncG.sit.bin")
+PSJ2REF = os.path.join(PSJ2, "PSDoc2.bin")
 # What 2.0.1's OWN unstuffer gave back for OptPaint.sit — the only
 # thing "correct" can mean for an entry `MacPaint 1` optimized,
 # because the module does not restore the original either.
@@ -167,10 +173,10 @@ def header(path):
     return data[22:22 + 112]
 
 
-def extract(cli, arc, out):
+def extract(cli, arc, out, extra=()):
     os.makedirs(out, exist_ok=True)
-    r = subprocess.run([cli, "x", "-o", out, arc], capture_output=True,
-                       text=True)
+    r = subprocess.run([cli, "x", "-o", out, arc] + list(extra),
+                       capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -527,12 +533,242 @@ def main():
         else:
             print("run_sitopt: no ps-jpeg3 specimens — the second QUALITY "
                   "is not graded (sitopt.py --psjpeg --quality 50)")
+
+        # 9. optimized AND password-protected by `PassLock`.
+        #
+        # `PassLock` enciphers nothing — measured four ways: both forks
+        # of two subjects against the unprotected archives of the same
+        # ones, the entry's own CRC over what comes out, and the
+        # module's own `COMP` and `DCMP`, whose data paths never
+        # dereference the buffer they are handed (FORMATS.md,
+        # *Encryption*). So the entry comes out WITHOUT a password and
+        # the run says NOTHING about the protection: there is nothing
+        # for a user to do about it, and an unarchiver that editorialises
+        # on every entry is one people stop reading. What it must still
+        # report is the Optimizer's loss, which is about the bytes.
+        if os.path.exists(PSENC) and os.path.exists(PSJ2REF):
+            rd, _ = forks(PSJ2REF)
+            od, orr = forks(PSDOC2)
+            for label, extra in (("no password", []),
+                                 ("a password", ["-p", "swordfish"])):
+                out = os.path.join(work, "psenc-" + label.replace(" ", ""))
+                rc, msg = extract(args.macextract, PSENC, out, extra)
+                q = os.path.join(out, "PSDoc2")
+                if rc != 0 or not os.path.exists(q):
+                    problems.append("the PassLock archive did not extract "
+                                    "with %s: %s" % (label, msg.strip()[:120]))
+                    continue
+                if open(q, "rb").read() != rd:
+                    problems.append("the PassLock archive's data fork is not "
+                                    "2.0.1's own restored bytes (%s)" % label)
+                if (not os.path.exists(q + ".rsrc")
+                        or open(q + ".rsrc", "rb").read() != orr):
+                    problems.append("the PassLock archive's resource fork is "
+                                    "not the document's own (%s)" % label)
+                if "PassLock" in msg or "password" in msg:
+                    problems.append("the PassLock archive, with %s, said "
+                                    "something about the password: %s"
+                                    % (label, msg.strip()[:120]))
+                if "NOT the original" not in msg:
+                    problems.append("the PassLock archive, with %s, did not "
+                                    "say the Optimizer's output is not the "
+                                    "original file" % label)
+        else:
+            print("run_sitopt: no psenc3 specimen — `PassLock` is not graded "
+                  "(sitopt.py --psencgui)")
+
+        # 10. the control for that claim, on a subject with no Optimizer
+        # anywhere near it: the same text file, LZW-compressed, stuffed
+        # twice in one boot — once with `PassLock` armed through the
+        # application's own Stuff and once from a script, which cannot
+        # encrypt. Both must extract to the same bytes.
+        enc = os.path.join(SPECIMENS, "enctext1", "EncT.sit.bin")
+        plain = os.path.join(SPECIMENS, "enctext1", "PlainT.sit.bin")
+        if os.path.exists(enc) and os.path.exists(plain):
+            oe = os.path.join(work, "enct")
+            op = os.path.join(work, "plaint")
+            rce, msge = extract(args.macextract, enc, oe)
+            rcp, _ = extract(args.macextract, plain, op)
+            if rce != 0 or rcp != 0:
+                problems.append("the PassLock text pair did not both "
+                                "extract: %s" % msge.strip()[:120])
+            else:
+                for fn in ("Subject", "Subject.rsrc"):
+                    a = os.path.join(oe, fn)
+                    b = os.path.join(op, fn)
+                    if not os.path.exists(a) or not os.path.exists(b):
+                        problems.append("the PassLock text pair is missing %s"
+                                        % fn)
+                    elif open(a, "rb").read() != open(b, "rb").read():
+                        problems.append("%s differs between the protected "
+                                        "archive and the plain one" % fn)
+                if msge.strip():
+                    problems.append("the protected text archive was not "
+                                    "silent: %s" % msge.strip()[:120])
+        else:
+            print("run_sitopt: no enctext1 pair — the `PassLock` control is "
+                  "not graded (sitopt.py --enctext)")
+
+        # 11. the two ciphers that are real, built in, and DECRYPTED.
+        #
+        # `DES` says so with 0x80 and encryptor id 1, `NewDE` with a bit
+        # of its own (0x10) and no id — the folder flag's value, which
+        # is what it was read as until 2026-10-02. Both share 3.5's key
+        # derivation exactly, down to the 'MKey' verifier, and differ
+        # only in the fork transform: standard DES in CBC for one,
+        # StuffItDES in CBC for the other (FORMATS.md, *The three ways
+        # 2.0.1 encrypts*).
+        #
+        # The control stuffed in the same boot IS the plaintext, so this
+        # grades the decryption against bytes rather than against an
+        # absence of errors — and a wrong password must still be
+        # refused, which is what says the key check is doing its job.
+        des = os.path.join(SPECIMENS, "psdes1")
+        if os.path.exists(os.path.join(des, "NoneT.sit.bin")):
+            out = os.path.join(work, "noneT")
+            rc, msg = extract(args.macextract, os.path.join(des,
+                                                            "NoneT.sit.bin"),
+                              out)
+            if rc != 0 or not os.path.exists(os.path.join(out, "Subject")):
+                problems.append("the psdes control did not extract: %s"
+                                % msg.strip()[:120])
+            for arc, what in (("DesT.sit.bin", "DES"),
+                              ("NewdeT.sit.bin", "NewDE")):
+                p2 = os.path.join(des, arc)
+                if not os.path.exists(p2):
+                    continue
+                o = os.path.join(work, what + "ok")
+                rc, msg = extract(args.macextract, p2, o, ["-p", "swordfish"])
+                if rc != 0:
+                    problems.append("%s did not decrypt: %s"
+                                    % (what, msg.strip()[:120]))
+                for fn in ("Subject", "Subject.rsrc"):
+                    a = os.path.join(o, fn)
+                    b = os.path.join(out, fn)
+                    if not os.path.exists(a):
+                        problems.append("%s did not write %s" % (what, fn))
+                    elif open(a, "rb").read() != open(b, "rb").read():
+                        problems.append("%s's %s is not the plain control's "
+                                        "bytes" % (what, fn))
+                # and the key check has to be able to say no
+                o2 = os.path.join(work, what + "bad")
+                rc, msg = extract(args.macextract, p2, o2, ["-p", "hunter2"])
+                if rc == 0:
+                    problems.append("%s accepted the wrong password" % what)
+                if "wrong password" not in msg:
+                    problems.append("%s, with a wrong password, did not say "
+                                    "so: %s" % (what, msg.strip()[:120]))
+                if os.path.exists(os.path.join(o2, "Subject")):
+                    problems.append("%s wrote Subject with a wrong password"
+                                    % what)
+        else:
+            print("run_sitopt: no psdes1 specimens — `DES` and `NewDE` are "
+                  "not graded (sitopt.py --psdes)")
+
+        # 12. the two ENCRYPTOR MODULES off the optional disk, and
+        # `PassLock` beside them on the same subject.
+        #
+        # `NewDEx` (id 3) and `DESex` (id 64) turn out to be the two
+        # built-in ciphers packaged as plug-ins — StuffItDES in CBC and
+        # standard DES in CBC — measured against the same plaintext
+        # (FORMATS.md, *The three ways 2.0.1 encrypts*). The control is
+        # psdes1's plain archive of the same `Subject`, so this grades
+        # bytes and not the absence of an error.
+        ex = os.path.join(SPECIMENS, "psex2")
+        ctl = os.path.join(SPECIMENS, "psdes1", "NoneT.sit.bin")
+        if os.path.exists(os.path.join(ex, "EncC.sit.bin")) \
+                and os.path.exists(ctl):
+            base = os.path.join(work, "exctl")
+            rc, msg = extract(args.macextract, ctl, base)
+            if rc != 0:
+                problems.append("the psex control did not extract: %s"
+                                % msg.strip()[:120])
+            for arc, who in (("EncA.sit.bin", "PassLock"),
+                             ("EncB.sit.bin", "NewDEx"),
+                             ("EncC.sit.bin", "DESex")):
+                p3 = os.path.join(ex, arc)
+                if not os.path.exists(p3):
+                    continue
+                o = os.path.join(work, who)
+                rc, msg = extract(args.macextract, p3, o, ["-p", "swordfish"])
+                if rc != 0:
+                    problems.append("%s did not decode: %s"
+                                    % (who, msg.strip()[:120]))
+                    continue
+                for fn in ("Subject", "Subject.rsrc"):
+                    a2 = os.path.join(o, fn)
+                    b2 = os.path.join(base, fn)
+                    if not os.path.exists(a2):
+                        problems.append("%s did not write %s" % (who, fn))
+                    elif open(a2, "rb").read() != open(b2, "rb").read():
+                        problems.append("%s's %s is not the plain control's "
+                                        "bytes" % (who, fn))
+                # `PassLock` needs no password and must not ask; the two
+                # real ciphers must refuse a wrong one.
+                o2 = os.path.join(work, who + "-bad")
+                rc, msg = extract(args.macextract, p3, o2, ["-p", "hunter2"])
+                if who == "PassLock":
+                    if rc != 0:
+                        problems.append("PassLock refused a wrong password; "
+                                        "it enciphers nothing")
+                elif rc == 0 or "wrong password" not in msg:
+                    problems.append("%s accepted or mis-reported a wrong "
+                                    "password: %s" % (who, msg.strip()[:120]))
+        else:
+            print("run_sitopt: no psex2 specimens — `NewDEx` and `DESex` are "
+                  "not graded (sitopt.py --psex)")
+
+        # 13. the rest of what 2.0.1 writes by default: `guess` and
+        # `none`, a 1.5.1-compatible archive, and a FOLDER. The first
+        # three must come out as the plain control's bytes; the folder
+        # must come out as a folder with both its files, one of which
+        # has a resource fork (sitopt.py --psrest, --psfold).
+        rest = os.path.join(SPECIMENS, "psrest1")
+        if os.path.exists(os.path.join(rest, "RGuess.sit.bin")):
+            base = os.path.join(work, "restctl")
+            extract(args.macextract, ctl, base)
+            for arc in ("RGuess", "RNone", "R151", "RSea"):
+                p4 = os.path.join(rest, arc + ".sit.bin")
+                if not os.path.exists(p4):
+                    continue
+                o = os.path.join(work, arc)
+                rc, msg = extract(args.macextract, p4, o)
+                if rc != 0:
+                    problems.append("%s did not extract: %s"
+                                    % (arc, msg.strip()[:120]))
+                    continue
+                for fn in ("Subject", "Subject.rsrc"):
+                    a3 = os.path.join(o, fn)
+                    if not os.path.exists(a3) or open(a3, "rb").read() != \
+                            open(os.path.join(base, fn), "rb").read():
+                        problems.append("%s's %s is not the control's bytes"
+                                        % (arc, fn))
+        else:
+            print("run_sitopt: no psrest1 specimens — `guess`, `none` and "
+                  "the 1.5.1 archive are not graded (sitopt.py --psrest)")
+
+        fold = os.path.join(SPECIMENS, "psfold1", "RFold.sit.bin")
+        if os.path.exists(fold):
+            o = os.path.join(work, "fold")
+            rc, msg = extract(args.macextract, fold, o)
+            if rc != 0:
+                problems.append("the folder archive did not extract: %s"
+                                % msg.strip()[:120])
+            else:
+                for rel in ("Papers/First", "Papers/First.rsrc",
+                            "Papers/Second"):
+                    if not os.path.exists(os.path.join(o, rel)):
+                        problems.append("the folder archive did not write %s"
+                                        % rel)
+        else:
+            print("run_sitopt: no psfold1 specimen — a FOLDER 2.0.1 stuffed "
+                  "is not graded (sitopt.py --psfold)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 13 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
+    print("run_sitopt: 27 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
           "Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0

@@ -1054,7 +1054,11 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Seven assertions over thirteen archives 2.0.1 wrote, in six runs:
+Nine assertions over twenty-seven archives 2.0.1 wrote, in twelve runs
+— which between them are **everything that application writes with what
+was in its box**: every Optimizer, every cipher, every compression
+word, a 1.5.1-compatible archive and a folder. The one shape missing is
+a self-extracting archive, and OPEN_ITEMS.md says why:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;
@@ -1094,6 +1098,27 @@ Seven assertions over thirteen archives 2.0.1 wrote, in six runs:
    can fail a decoder which assumes the tables instead of reading tag
    33606, and it is asserted to differ from the Q=25 archive so that a
    quality which silently did not take is a failure too.
+8. **Every cipher StuffIt 2.x has.** `DES` and `DESex` (standard DES
+   in CBC), `NewDE™` and `NewDEx` (StuffItDES in CBC) and `PassLock`
+   (no cipher at all) each stuffed over one `Subject`, with a plain
+   archive of the same subject from the same boots — so the control IS
+   the plaintext and the suite grades BYTES, not the absence of an
+   error. A wrong password must still be refused by the four real ones
+   and must not be asked for by `PassLock`. Swapping the two primitives
+   in `unc_crypt.c`, or the two modules' ids in `fmt_sit.c`, makes four
+   and two assertions fail respectively — measured 2026-10-02.
+   `PassLock` in particular: an entry it protected must extract
+   **without a password**, come out byte-exact, and the run must say
+   **nothing** about the password — the protection is nominal, there is
+   nothing a user can act on, and the suite asserts the silence as well
+   as the bytes. Two archives: one that is ALSO `JPEG Lossy`-optimized,
+   where the Optimizer's loss must still be reported because that is
+   about the bytes, and a text file stuffed twice in one boot,
+   protected and plain, whose extractions must be identical. Removing
+   the pass-through makes the first fail with *"wrong password, or none
+   given"*, with a password *"archive structure is corrupt"*, and the
+   text pair refuse — measured 2026-10-02, which is how this one is
+   known to be testing something.
 
 **Where the split came from.** Aladdin's own Engine, asked to unstuff
 both, decoded the `Text 1` archive and refused the `MacPaint 1` one —
@@ -1108,12 +1133,11 @@ undone in `src/fmt_sit.c` and this suite grades the RESULT — byte for
 byte against the subject for `Sound 1` and `Photoshop 1`, and against
 2.0.1's own unstuffed output for `MacPaint 1` and `JPEG Lossy` — but
 only over the SETTINGS this project asked 2.0.1 for — which since
-2026-10-02 is two subjects, two qualities and every compression method
-the script language has. What is left unseen there is **an Optimizer
-over an ENCRYPTED entry**, and not for want of asking: `PassLock` is
-installed and arming it ticks the menu, but a scripted `Stuff` ignores
-it and writes a plain archive, so that combination needs the
-application's own Stuff dialog (`tools/vmac/README.md`). The archives
+2026-10-02 is two subjects, two qualities, every compression method the
+script language has, and both with and without `PassLock`. What is left
+unseen is `Custom Compression…`, the one method with no script word,
+and the two encryptor modules this machine does not have (`NewDE™`,
+`DES`). The archives
 themselves are not synthetic — 2.0.1 wrote every one of them — so what
 is unseen is coverage of its options rather than authenticity of its
 output. Two SUBJECTS are part synthetic, which is a

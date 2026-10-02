@@ -3034,15 +3034,28 @@ dialogs:
   without clicking first — a click would place a caret and append to
   the 25 that is already there.
 
-**And a script cannot encrypt.** `--psenc` arms `PassLock` from
-Options ▸ Custom Encryption… — the menu photograph afterwards shows
-that item ticked — and the scripted `Stuff` then writes an archive
-byte-for-byte the shape of an unencrypted one, with no prompt and no
-error in the status file. STR# 257's only security words are `newde`
-and `des`, and neither names the encryptor that is installed. So that
-combination belongs to `--psencgui`, which drives File ▸ New Archive…
-and Archive ▸ Stuff… instead, and **has not completed a run**: the
-module's Q dialog is what stopped the first attempt.
+**A script cannot reach `PassLock`, but it CAN encrypt.** `--psenc`
+arms PassLock from Options ▸ Custom Encryption… — the menu photograph
+afterwards shows that item ticked — and the scripted `Stuff` then
+writes an archive byte-for-byte the shape of an unencrypted one, with
+no prompt and no error in the status file. So the MENU's setting does
+not reach a scripted `Stuff`, and PassLock belongs to `--psencgui`,
+which drives File ▸ New Archive… and Archive ▸ Stuff… instead.
+
+**The script's own security words are another matter**, and this file
+said they named nothing installed until 2026-10-02, which was an
+assumption and was wrong (BLOCKERS.md). `--psdes` asks for both:
+
+    tools/vmac/sitopt.py --psdes --tag psdes1
+
+`Stuff … with fast des` and `… with fast newde` each prompt for a
+password and write a real encrypted archive, with a plain control from
+the same boot. **`NewDE™` and `DES` are built into the application**;
+`Custom Encryption…` is the plug-in route, which is what the menu's
+shape said all along — the two cipher items sit beside it, not inside
+it. The optional disk's `NewDEx` (id 3) and `DESex` (id 64) are
+different things again, and this project has both as `.rsrc` files it
+has never installed.
 
 What `--psmatrix` CANNOT see: `Custom Compression…`, the one method in
 the Options menu with no script word.

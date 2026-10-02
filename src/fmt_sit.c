@@ -42,8 +42,14 @@
  * Fork data follows the header: rsrc fork first, then data fork.
  *
  * Method byte: 0x80 = encrypted flag, 0x40 = an Optimizer ran on this
- * fork; masked value 0x20 = folder start, 0x21 = folder end (0x10 =
- * "folder contains encrypted").
+ * fork; masked value 0x20 = folder start, 0x21 = folder end. **0x10 on
+ * a FILE entry is `NewDE`**, the second cipher built into StuffIt
+ * Deluxe 2.0.1 — not a folder flag: measured 2026-10-02 on an archive
+ * its own script wrote with `Stuff … with fast newde`, whose method
+ * bytes are 0x12 and whose 286 compressed bytes differ from the
+ * unencrypted archive's in 285 places. The folder markers carry it
+ * too, where it does mean "this folder holds encrypted entries", which
+ * is why SIT_FOLDER_MASK takes it out of the comparison.
  * Plain methods: 0 store, 1 RLE90, 2 compress LZW (14-bit, block
  * mode), 3 Huffman (bit-serialized tree), 5 LZAH, 6 fixed Huffman,
  * 7 an external Compressor module, 8 MW, 13 LZSS+Huffman,
@@ -72,6 +78,7 @@
 
 #define SIT_FILEHDRSIZE 112
 #define SIT_ENCRYPTED   0x80
+#define SIT_NEWDE       0x10  /* on a FILE entry: `NewDE`, built in    */
 #define SIT_OPTIMIZED   0x40  /* an Optimizer module ran on this fork  */
 #define SIT_FOLDER_MASK 0x6F  /* ~(0x80|0x10) */
 #define SIT_STARTFOLDER 0x20
@@ -111,6 +118,87 @@
 #define SIT_OPT_MACPAINT1    4   /* drops a painting's 512-byte header  */
 #define SIT_OPT_IRREVERSIBLE 255
 
+/* The ENCRYPTOR id, at header 107 (data) and 109 (rsrc), beside the
+ * Optimizer's at 106/108. `src/unc_crypt.c` implements exactly one
+ * scheme — StuffItDES, the one StuffIt Deluxe 3.5.1 writes — and 3.5.1's
+ * own three archives carry **4** there (tools/vmac/sitcrypt.py).
+ * `PassLock`, the 1990 plug-in, carries **2**: measured 2026-10-02 on
+ * the first archive this project has from any of 2.x's three encryptor
+ * modules (tools/vmac/sitopt.py --psencgui). Its container is the same
+ * shape — sixteen bytes of key after the ciphertext, the pad count at
+ * 104/105, an 'MKey' in the archive's resource fork — so nothing but
+ * this id tells the two apart, and without it the built-in cipher runs
+ * on PassLock's bytes and reports the garbage it produces as a corrupt
+ * archive.
+ *
+ * **Zero is accepted too, and is not the same claim.** It is what this
+ * project's own `tools/synth_crypt.py` writes, and no real writer has
+ * been seen to leave it unset — so zero means "the field says nothing"
+ * and is read as the built-in scheme, where 2 is a positive statement
+ * that some other module did the work. Refusing zero would reject
+ * sixteen cases of `tools/run_crypt.py` that decrypt correctly. */
+#define SIT_ENC_STUFFITDES   4
+#define SIT_ENC_UNSET        0
+/* And `PassLock` is id 2, which this engine reads WITHOUT a password,
+ * because there is nothing to read past: measured 2026-10-02 on two
+ * archives StuffIt Deluxe 2.0.1 wrote with the module armed — an
+ * optimized 22,097-byte stored fork and a 286-byte LZW one — against
+ * the unencrypted archives of the same subjects. Every compressed byte
+ * of both forks is IDENTICAL; the module appends sixteen bytes of key
+ * material and the method's padding and enciphers nothing. So its
+ * protection is enforced by the application that wrote it and not by
+ * the file, and refusing such an entry withholds bytes that are in the
+ * clear (FORMATS.md, *Encryption*).
+ *
+ * **And the module's own code says the same.** Its `DCMP`'s data path
+ * — `*selector > 0`, the one handed a block of the fork — pushes the
+ * buffer pointer and calls a routine that sets a flag in the module's
+ * globals and returns; the pointer is never dereferenced, and the
+ * `COMP` side is the same shape. So nothing is transformed in either
+ * direction, by design, and the entry's own CRC-16 then verifies what
+ * this engine produces. PassLock's About box puts it in its author's
+ * words: *"PassLock provides simple password protection for files"*
+ * (Graven Imagery, 1990). */
+#define SIT_ENC_PASSLOCK     2
+#define SIT_ENC_DES          1   /* 2.x's built-in `DES`              */
+#define SIT_ENC_NEWDEX       3   /* the optional disk's `NewDEx`      */
+#define SIT_ENC_DESEX       64   /* the optional disk's `DESex`       */
+
+/* Which cipher a fork's bytes are under — FIVE ways of saying three
+ * things, measured 2026-10-02 against a known plaintext on archives
+ * StuffIt Deluxe 2.0.1 wrote (FORMATS.md, *The three ways 2.0.1
+ * encrypts*):
+ *
+ *   `NewDE` built in   0x10 on the method byte, no id   StuffItDES, CBC
+ *   `NewDEx` module    0x80, id 3                       the same
+ *   `DES` built in     0x80, id 1                       standard DES, CBC
+ *   `DESex` module     0x80, id 64                      the same
+ *   3.5's built-in     0x80, id 4 (or unset)            the 8-byte feedback
+ *
+ * So the two plug-ins off the optional disk are the two built-in
+ * ciphers packaged as modules, which is what their names say and what
+ * an archive from each confirms. The key derivation above all of them
+ * is one piece of code. */
+static int sit_scheme(unsigned meth, unsigned id)
+{
+    if (meth & SIT_NEWDE)        return UNC_SIT_SCHEME_NEWDE;
+    if (id == SIT_ENC_NEWDEX)    return UNC_SIT_SCHEME_NEWDE;
+    if (id == SIT_ENC_DES || id == SIT_ENC_DESEX)
+        return UNC_SIT_SCHEME_DES;
+    return UNC_SIT_SCHEME_FEEDBACK;
+}
+/* All six this engine knows what to do with: 0 (the field unset) and 4
+ * (3.5's built-in feedback); 1 and 64, which are `DES` and `DESex`;
+ * 3, `NewDEx`; and 2, `PassLock`, which enciphers nothing. An id
+ * outside this set is some third party's module and is refused by
+ * number — nothing here has one. */
+#define sit_enc_known(id) ((id) == SIT_ENC_STUFFITDES || \
+                           (id) == SIT_ENC_UNSET || \
+                           (id) == SIT_ENC_DES || \
+                           (id) == SIT_ENC_DESEX || \
+                           (id) == SIT_ENC_NEWDEX || \
+                           (id) == SIT_ENC_PASSLOCK)
+
 /* MacPaint's header, which `MacPaint 1` throws away and its 'DCMP'
  * replaces with 512 bytes of its caller's stack. What this engine
  * writes there instead is zeros — as reproducible as the module's is
@@ -149,6 +237,18 @@ static unsigned sit_fork_module(const uint8_t *hdr, int rsrc, uint32_t len,
 
     *id = 0;
     if (len == 0) return UNC_MODULE_NONE;
+    /* An ENCRYPTOR this engine cannot read outranks an Optimizer, and
+     * an entry can carry both: StuffIt Deluxe 2.0.1 with `JPEG Lossy`
+     * enabled and `PassLock` armed writes 0xc0 as the method byte, the
+     * Optimizer's 3 at 106 and the encryptor's 2 at 107. Reporting the
+     * Optimizer there would be true and useless — nothing can get as
+     * far as running it — and until 2026-10-02 it is what happened, so
+     * the entry came back as a corrupt archive instead of as one
+     * nothing can open (cli/main.c names the module). */
+    if ((meth & SIT_ENCRYPTED) && !sit_enc_known(hdr[107 + 2 * rsrc])) {
+        *id = hdr[107 + 2 * rsrc];
+        return UNC_MODULE_ENCRYPTOR;
+    }
     if (meth & SIT_OPTIMIZED) {
         *id = hdr[106 + 2 * rsrc];
         return UNC_MODULE_OPTIMIZER;
@@ -941,13 +1041,45 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
      * handled; anything else is refused rather than guessed at. */
     if (optdec == SIT_OPTDEC_JPEG) {
         uint8_t *raw;
+        uint32_t n = complen, i;
         if ((method & 0x0f) != 0) return UNC_ERR_UNSUPPORTED;
         if (complen == 0) return UNC_ERR_CORRUPT;
-        raw = (uint8_t *)unc_alloc(c->al, complen);
+        /* An ENCRYPTED fork is decrypted as it is read everywhere else
+         * — `in.crypt` below, applied by `unc_bufin` on every refill —
+         * and this path does not use that reader, so it decrypts the
+         * block itself or hands C-Cube's decoder ciphertext. `complen`
+         * has already had the entry's sixteen key bytes taken off it by
+         * the caller, and `unc_bufin` pads the last part block itself.
+         * The TIFF is read by offsets, so a pad at the end is never
+         * looked at.
+         * Measured 2026-10-02 on the first archive that is both
+         * optimized and encrypted — StuffIt Deluxe 2.0.1 with
+         * `JPEG Lossy` enabled and `PassLock` armed, which no script
+         * can write (tools/vmac/README.md). */
+        raw = (uint8_t *)unc_alloc(c->al, n);
         if (!raw) return UNC_ERR_MEM;
-        err = unc_read_at(c->io, at, raw, (int32_t)complen);
+        /* Through `unc_bufin` rather than `unc_read_at`, for ONE
+         * reason: the cipher lives in its own 'OVLY' image and
+         * `fmt_sit.c` lives in another, so a direct `unc_crypt_apply`
+         * does not link in the overlay build — measured, by variant 3c
+         * failing to build the StuffIt image. The reader is where that
+         * call belongs anyway: it is the path every other method's
+         * bytes take. */
+        if (c->io->seek(c->io->ctx, at) < 0) {
+            unc_free(c->al, raw);
+            return UNC_ERR_IO;
+        }
+        unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+        in.limit = n;
+        if (cr) in.crypt = cr;
+        err = UNC_OK;
+        for (i = 0; i < n; i++) {
+            int b = unc_bufin_next(&in);
+            if (b < 0) { err = in.err; break; }
+            raw[i] = (uint8_t)b;
+        }
         if (err == UNC_OK)
-            err = unc_ccube_decode(c, fork, raw, complen, outlen, obuf, ocap);
+            err = unc_ccube_decode(c, fork, raw, n, outlen, obuf, ocap);
         unc_free(c->al, raw);
         return err;
     }
@@ -1042,7 +1174,7 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
 /* ------------------------------------------------------------------ */
 
 static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
-                          uint32_t complen)
+                          uint32_t complen, int scheme)
 {
     uint8_t entrykey[16];
     int attempt = 0;
@@ -1054,7 +1186,8 @@ static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
     for (;;) {
         int err = unc_password(c, attempt > 0);
         if (err != UNC_OK) return err;
-        err = unc_crypt_sit(cr, c->al, c->pw, c->pwlen, entrykey, c->opt.mkey);
+        err = unc_crypt_sit(cr, c->al, c->pw, c->pwlen, entrykey,
+                            c->opt.mkey, scheme);
         if (err == UNC_OK) return UNC_OK;
         attempt++;              /* the archive rejected it; ask again */
     }
@@ -1256,12 +1389,42 @@ int unc_sit_extract(UncCtx *c)
                     /* Sixteen bytes of key sit at the end of an
                      * encrypted fork and are not part of its stream. */
                     uint32_t rc = rcomp, dc = dcomp;
-                    int renc = (rmeth & SIT_ENCRYPTED) && rlen;
-                    int denc = (dmeth & SIT_ENCRYPTED) && dlen;
+                    /* `NewDE` marks a fork with a bit of its own rather
+                     * than with 0x80 and an encryptor id, and that bit
+                     * is the value the FOLDER markers use for "this
+                     * folder holds encrypted entries" — which is why an
+                     * entry carrying it was decoded as though the
+                     * ciphertext were the method's own bytes, and came
+                     * back as a corrupt archive, until 2026-10-02. */
+                    int renc = ((rmeth & SIT_ENCRYPTED) ||
+                                (rmeth & SIT_NEWDE)) && rlen;
+                    int denc = ((dmeth & SIT_ENCRYPTED) ||
+                                (dmeth & SIT_NEWDE)) && dlen;
 
                     est = UNC_OK;
-                    if (renc) {
-                        est = sit_fork_crypt(c, cr, start, rcomp);
+                    /* A scheme we do not implement is refused as such,
+                     * rather than decrypted into rubbish and reported
+                     * as a corrupt archive (SIT_ENC_STUFFITDES). */
+                    if ((renc && !sit_enc_known(hdr[109])) ||
+                        (denc && !sit_enc_known(hdr[107])))
+                        est = UNC_ERR_ENCRYPTED;
+
+                    /* `PassLock` enciphers nothing, so the sixteen key
+                     * bytes come off and no cipher is keyed and no
+                     * password is asked for — the entry decodes as it
+                     * would unprotected, and the host is told that is
+                     * what happened. */
+                    if (renc && hdr[109] == SIT_ENC_PASSLOCK) {
+                        rc -= 16;
+                        renc = 0;
+                    }
+                    if (denc && hdr[107] == SIT_ENC_PASSLOCK) {
+                        dc -= 16;
+                        denc = 0;
+                    }
+                    if (est == UNC_OK && renc) {
+                        est = sit_fork_crypt(c, cr, start, rcomp,
+                                             sit_scheme(rmeth, hdr[109]));
                         if (est == UNC_OK) rc -= 16;
                     }
                     if (est == UNC_OK)
@@ -1272,7 +1435,8 @@ int unc_sit_extract(UncCtx *c)
                                        iobuf, iocap, obuf, ocap,
                                        renc ? cr : NULL);
                     if (est == UNC_OK && denc) {
-                        est = sit_fork_crypt(c, cr, start + rcomp, dcomp);
+                        est = sit_fork_crypt(c, cr, start + rcomp, dcomp,
+                                             sit_scheme(dmeth, hdr[107]));
                         if (est == UNC_OK) dc -= 16;
                     }
                     if (est == UNC_OK)

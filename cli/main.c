@@ -896,18 +896,31 @@ static int sink_end(void *ctx, int status)
             else
                 fprintf(stderr, "macextract: %s: %s\n", name,
                         unc_strerror(status));
-        } else if ((status == UNC_ERR_ENCRYPTED ||
-                    status == UNC_ERR_PASSWORD) &&
+        } else if (status == UNC_ERR_ENCRYPTED &&
                    s->cur.module_kind == UNC_MODULE_ENCRYPTOR &&
                    module_name(UNC_MODULE_ENCRYPTOR, s->cur.module_id)) {
+            /* UNC_ERR_ENCRYPTED only, since 2026-10-02: the engine
+             * implements 2.x's `DES` and `NewDE` now, so a wrong
+             * password on one of those is a wrong password and must say
+             * so. This branch is for the modules it does NOT implement,
+             * where no password helps. Including UNC_ERR_PASSWORD here
+             * told somebody with a typo that their archive was
+             * unopenable. */
             /* A StuffIt 2.x entry names the encryptor MODULE that wrote
              * it, and this engine implements the built-in scheme that
-             * replaced them — so for these four the answer is not a
-             * better password, and saying "wrong password, or none
-             * given" would send the user looking for one. */
+             * replaced them — so the answer is not a better password,
+             * and saying "wrong password, or none given" would send the
+             * user looking for one.
+             *
+             * It does NOT say "nothing implements it", which is what
+             * stood here until 2026-10-02: StuffIt Deluxe 2.x with that
+             * module opens these archives perfectly well, and a message
+             * that tells somebody their data is unreachable when it is
+             * merely unreachable BY US is the kind of claim this
+             * project has had to withdraw before (BLOCKERS.md). */
             fprintf(stderr, "macextract: %s: encrypted by StuffIt's \"%s\" "
-                            "module, which nothing implements — no password "
-                            "will open it\n",
+                            "module, which this engine does not implement "
+                            "— a password will not help\n",
                     name, module_name(UNC_MODULE_ENCRYPTOR,
                                       s->cur.module_id));
         } else {

@@ -70,11 +70,14 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
                                       (const uint8_t *)g->in, (uint16_t)g->len);
     case OVL_CRYPT_SIT:
         /* entrykey[16] and mkey[8] both arrive: `in` is the password,
-         * `out` points at a two-pointer array so one struct carries both. */
+         * `out` points at a two-pointer array so one struct carries
+         * both, and `pos` — "a second length" — carries which of the
+         * three fork ciphers this entry wants (UNC_SIT_SCHEME_*). */
         return (int32_t)unc_crypt_sit((UncCrypt *)g->obj, (UncAlloc *)g->al,
                                       (const uint8_t *)g->in, (uint16_t)g->len,
                                       ((const uint8_t **)g->out)[0],
-                                      ((const uint8_t **)g->out)[1]);
+                                      ((const uint8_t **)g->out)[1],
+                                      (int)g->pos);
     case OVL_CRYPT_SIT5_KEY:
         return (int32_t)unc_crypt_sit5_key((const uint8_t *)g->in,
                                            (uint16_t)g->len,

@@ -230,7 +230,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # saved — the control took +2,024 B of resident CODE and the shipped
 # build took none, the 8 B being the A5 the control gave back. This is
 # the number the overlay build exists to make large.
-OVL_SAVED = 123776
+OVL_SAVED = 124640
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -281,17 +281,17 @@ IMAGES = {
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":      15784,
-    "OVL_ID_CRYPT":       9800,
+    "OVL_ID_CRYPT":      10140,
     "OVL_ID_EXO":        29252,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    23174,
+    "OVL_ID_STUFFIT":    23670,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 150244
+BUNDLE = 151080
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

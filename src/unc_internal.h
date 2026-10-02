@@ -138,6 +138,8 @@ enum {
     UNC_CRYPT_PIT_XOR,    /* PackIt PMa5                               */
     UNC_CRYPT_PIT_DES,    /* PackIt PMa6                               */
     UNC_CRYPT_SIT_DES,    /* StuffIt classic fork cipher               */
+    UNC_CRYPT_SIT_CBC,    /* StuffIt 2.x `DES`: standard DES in CBC     */
+    UNC_CRYPT_SIT_NEWDE,  /* StuffIt 2.x `NewDE`: StuffItDES in CBC     */
     UNC_CRYPT_RC4,        /* StuffIt 5                                 */
     UNC_CRYPT_ZIP,        /* PKWARE's zip stream cipher                */
     UNC_CRYPT_CPT,        /* Compact Pro's 64-bit CRC keystream        */
@@ -219,9 +221,16 @@ void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen);
 int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                         const uint8_t hash[UNC_SIT5_KEYLEN],
                         uint8_t out[UNC_SIT5_KEYLEN]);
+/* `scheme` picks what the FORK is encrypted with — the key derivation
+ * above it is the same for all three, measured 2026-10-02 on archives
+ * StuffIt Deluxe 2.0.1 and 3.5.1 wrote (FORMATS.md, *The three ways
+ * 2.0.1 encrypts*). */
+#define UNC_SIT_SCHEME_FEEDBACK 0   /* 3.5's built-in: the 8-byte XOR  */
+#define UNC_SIT_SCHEME_DES      1   /* 2.x `DES`: standard DES, CBC    */
+#define UNC_SIT_SCHEME_NEWDE    2   /* 2.x `NewDE`: StuffItDES, CBC    */
 int  unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
                    uint16_t pwlen, const uint8_t entrykey[16],
-                   const uint8_t mkey[8]);
+                   const uint8_t mkey[8], int scheme);
 int  unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                           const uint8_t *salt, int keybytes,
                           const uint8_t verifier[2]);

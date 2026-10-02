@@ -67,6 +67,7 @@ import argparse
 import hashlib
 import os
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -426,6 +427,12 @@ def main():
     ap.add_argument("--psopts", action="store_true")
     ap.add_argument("--psenc", action="store_true")
     ap.add_argument("--psencgui", action="store_true")
+    ap.add_argument("--enctext", action="store_true")
+    ap.add_argument("--psdes", action="store_true")
+    ap.add_argument("--psex", action="store_true")
+    ap.add_argument("--psrest", action="store_true")
+    ap.add_argument("--psfold", action="store_true")
+    ap.add_argument("--pssea", action="store_true")
     ap.add_argument("--password", default="swordfish")
     ap.add_argument("--quality", type=int,
                     help="set the JPEG Optimizer's Q before stuffing "
@@ -499,6 +506,18 @@ def main():
         return phase_dcmpdata(args)
     if args.add_photoshop:
         return add_photoshop(args)
+    if args.pssea:
+        return phase_pssea(args)
+    if args.psfold:
+        return phase_psfold(args)
+    if args.psrest:
+        return phase_psrest(args)
+    if args.psex:
+        return phase_psex(args)
+    if args.psdes:
+        return phase_psdes(args)
+    if args.enctext:
+        return phase_enctext(args)
     if args.psencgui:
         return phase_psencgui(args)
     if args.psenc:
@@ -2226,6 +2245,563 @@ def set_jpeg_quality(s, q):
     s.shot("opt-closed", wait=5.0)
 
 
+def opt_encryptors(work):
+    """The optional disk's encryptor modules, extracted HERE rather than
+    read out of a cache.
+
+    `~/.cache/macextract/sit2/opt/` holds a copy from an earlier
+    session, and on 2026-10-02 it was 82 bytes longer than the archive's
+    own `NewDEx` and did not parse as a resource fork at all — so the
+    module installed from it was ignored by the application, and the
+    Custom Encryption list still showed one name. Extracting on every
+    run costs a second and cannot go stale. The ids are the proof it
+    worked: a module's 'COMP'/'DCMP' id is `(kind - 1) << 8 | id`, so
+    NewDEx is 515 and DESex 576.
+    """
+    if not os.path.exists(OPT_SIT):
+        raise SystemExit("sitopt: no %s — --setup fetches it" % OPT_SIT)
+    out = os.path.join(work, "optional")
+    subprocess.run([CLI, "x", "-o", out, OPT_SIT], check=True,
+                   capture_output=True)
+    for root, _dirs, files in os.walk(out):
+        if os.path.basename(root) == "Encryptors":
+            return root
+    raise SystemExit("sitopt: no Encryptors folder in %s" % OPT_SIT)
+ENC_ROWS = (76, 92, 108)        # the list, 16 px apart from the first
+
+
+def phase_psex(args):
+    """Install `NewDEx` and `DESex` and make an archive with each.
+
+    They are the optional disk's ENCRYPTOR MODULES — `deluxe-2-optional.sit`,
+    which this project has — and nothing here has ever had an archive
+    from either, so `src/fmt_sit.c` refuses ids 3 and 64 by name. The
+    built-in `DES` and `NewDE` are decoded (FORMATS.md, *The three ways
+    2.0.1 encrypts*), and the obvious question is whether the modules
+    are the same two ciphers packaged differently.
+
+    One archive per row of the Custom Encryption list, named by ROW
+    rather than by module: the dialog's order is not known in advance,
+    and the entry header's own encryptor id says which module wrote it
+    (2 PassLock, 3 NewDEx, 64 DESex). The subject is `Subject`, which
+    the image already carries, so a plain archive of it from any other
+    run is the plaintext.
+    """
+    img = os.path.join(WORK, "run-psex.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-ex-")
+    try:
+        encdir = opt_encryptors(work)
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            for mod in ("NewDEx", "DESex"):
+                rsrc = os.path.join(encdir, mod + ".rsrc")
+                if not os.path.exists(rsrc):
+                    raise SystemExit("sitopt: no %s in the optional disk's "
+                                     "payload" % mod)
+                mb = os.path.join(work, mod + ".bin")
+                # Resource fork only, like `PassLock`: these modules have
+                # no data fork at all.
+                open(mb, "wb").write(macbinary(mod, "SITe", "SIT!", b"",
+                                               open(rsrc, "rb").read()))
+                hfs(env, "hcopy", "-m", mb,
+                    (VOL + ":System Folder:Encryptors:").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+        for n, y in enumerate(ENC_ROWS):
+            tag = "ABC"[n]
+            s.menu(OPTIONS_X, OPT_CUSTOM_ENC_Y, "menu-enc-%s" % tag)
+            s.shot("enc-list-%s" % tag, wait=8.0)
+            s.mac.click(ENC_PASSLOCK[0], y)
+            s.shot("enc-picked-%s" % tag, wait=3.0)
+            s.mac.click(*ENC_OK)
+            s.shot("enc-armed-%s" % tag, wait=5.0)
+            s.mac.command_key("n")
+            s.shot("new-%s" % tag, wait=10.0)
+            s.mac._xdo("type", "--delay", "140", "Enc" + tag)
+            s.mac.key("Return")
+            s.shot("made-%s" % tag, wait=12.0)
+            s.mac.command_key("s")
+            s.shot("stuff-%s" % tag, wait=10.0)
+            s.mac._xdo("type", "--delay", "140", "Subject")
+            s.mac.key("Return")
+            s.shot("stuffing-%s" % tag, wait=10.0)
+            for _ in (1, 2):
+                s.mac._xdo("type", "--delay", "140", args.password)
+                s.mac.key("Return")
+                s.shot("pw-%s" % tag, wait=8.0)
+            s.shot("stuffed-%s" % tag, wait=20.0)
+            s.mac.command_key("w")
+            s.shot("closed-%s" % tag, wait=8.0)
+        s.mac.command_key("q")
+        s.shot("quit", wait=15.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("EncA.sit", "EncB.sit", "EncC.sit"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+SEA_SCRIPT_NAME = "Zsea"
+SEA_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}SeaStatus.out"',
+    "Continue On Error",
+    'New Archive "{Startup}RSea3.sit"',
+    'Stuff "{Startup}Subject" with fast',
+    'Save As "{Startup}RSea3.sea" Self-UnStuffing',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+def unstuffer(work):
+    """`UnStuffIt Deluxe™`, out of its own installer on disk 2.
+
+    `Save As … Self-UnStuffing` is the right syntax — the status file
+    says *"(Self-UnStuffing option)"* — and 2.0.1 then answers *"No
+    Self-UnStuffer can be found that supports this archive"*, because
+    the box installs that half separately. The installer's DATA fork is
+    a StuffIt archive, the same shape as disk 1's, so the application
+    inside it is lifted out here rather than by running an installer
+    under the emulator.
+    """
+    d2 = os.path.join(CACHE, "v2", "StuffIt Deluxe v2",
+                      "StuffIt Deluxe\u2122 Disk 2.image")
+    if not os.path.exists(d2):
+        raise SystemExit("sitopt: no %s — --setup fetches it" % d2)
+    raw = os.path.join(work, "disk2.dsk")
+    open(raw, "wb").write(open(d2, "rb").read()[84:])   # the DiskCopy header
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    inst = os.path.join(work, "unstuffinst.bin")
+    try:
+        hfs(env, "hmount", raw)
+        hfs(env, "hcopy", "-m",
+            "UnStuffIt Deluxe\u2122 Installer".encode("mac_roman"), inst)
+        hfs(env, "humount")
+    finally:
+        shutil.rmtree(env["HOME"], ignore_errors=True)
+    data = os.path.join(work, "inst.data")
+    blob = open(inst, "rb").read()
+    dlen = struct.unpack(">I", blob[83:87])[0]
+    open(data, "wb").write(blob[128:128 + dlen])
+    out = os.path.join(work, "ustree")
+    subprocess.run([CLI, "x", "-o", out, data], check=True, capture_output=True)
+    for root, _dirs, files in os.walk(out):
+        for f in files:
+            if f.startswith("UnStuffIt Deluxe") and not f.endswith(".rsrc"):
+                return os.path.join(root, f)
+    raise SystemExit("sitopt: no UnStuffIt Deluxe in the disk 2 installer")
+
+
+def phase_pssea(args):
+    """A SELF-EXTRACTING archive, which needs the other half of the box."""
+    img = os.path.join(WORK, "run-pssea.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-sea-")
+    try:
+        us = unstuffer(work)
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(SEA_SCRIPT_NAME, "TEXT", "SIT!",
+                                       SEA_SCRIPT.encode("mac_roman")))
+        usb = os.path.join(work, "us.bin")
+        open(usb, "wb").write(macbinary(
+            "UnStuffIt Deluxe\u2122", "APPL", "USTD",
+            open(us, "rb").read(),
+            open(us + ".rsrc", "rb").read()))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            # Loose on the volume AND in the System Folder: STR# 267's
+            # "9 Magic Fldrs" is where the application looks, and which
+            # of them holds a self-unstuffer is not written down here.
+            hfs(env, "hcopy", "-m", usb, (VOL + ":").encode())
+            hfs(env, "hcopy", "-m", usb,
+                (VOL + ":System Folder:").encode())
+            # STR# 267's eight folders are Preferences, Help, Viewers,
+            # Compressors, Encryptors, Optimizers, Translators and
+            # Extensions — none of them for a self-unstuffer, so the
+            # third copy goes where the Engine lives and the fourth
+            # beside the application, which is the only other place a
+            # 1990 application looks.
+            subprocess.run(["hmkdir",
+                            (VOL + ":System Folder:Extensions").encode()],
+                           capture_output=True, env=env)
+            hfs(env, "hcopy", "-m", usb,
+                (VOL + ":System Folder:Extensions:").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zsea")
+        s.mac.key("Return")
+        s.shot("running", wait=args.script_wait)
+        s.shot("done", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("RSea3.sea", "RSea3.sit", "SeaStatus.out"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+FOLD_SCRIPT_NAME = "Zfold"
+FOLD_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}FoldStatus.out"',
+    "Continue On Error",
+    "; a FOLDER, which puts folder markers in the entry stream",
+    'New Archive "{Startup}RFold.sit"',
+    'Stuff "{Startup}Papers" with fast',
+    "Close",
+    "; and a self-extracting one, through Save As rather than New",
+    'New Archive "{Startup}RSea2.sit"',
+    'Stuff "{Startup}Subject" with fast',
+    'Save As "{Startup}RSea2.sea" Self-UnStuffing',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+def phase_psfold(args):
+    """A folder and a self-extractor — the last two shapes.
+
+    `--psrest` asked for both and got neither: the folder it named is
+    not on this image, and `New Archive … Self-UnStuffing` came back
+    *"Unknown Option"*. So the folder is MADE here first, with two files
+    in it, and the self-extractor goes through `Save As`, which is the
+    other word STR# 257 has for it. Disk 2 of the box carries an
+    `UnStuffIt Deluxe™ Installer` and nothing here has run it, so the
+    likely answer is the application's own *"No Self-UnStuffer can be
+    found"* — which is an answer, and the status file will say it.
+    """
+    img = os.path.join(WORK, "run-psfold.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-fold-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(FOLD_SCRIPT_NAME, "TEXT", "SIT!",
+                                       FOLD_SCRIPT.encode("mac_roman")))
+        one = os.path.join(work, "one.bin")
+        two = os.path.join(work, "two.bin")
+        open(one, "wb").write(macbinary("First", "TEXT", "ttxt",
+                                        b"the first file in the folder\r" * 4,
+                                        make_rsrc()))
+        open(two, "wb").write(macbinary("Second", "TEXT", "ttxt",
+                                        b"and the second\r" * 7, b""))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            subprocess.run(["hmkdir", (VOL + ":Papers").encode()],
+                           capture_output=True, env=env)
+            for f in (one, two):
+                hfs(env, "hcopy", "-m", f, (VOL + ":Papers:").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zfold")
+        s.mac.key("Return")
+        s.shot("running", wait=args.script_wait)
+        s.shot("done", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("RFold.sit", "RSea2.sit", "RSea2.sea", "FoldStatus.out"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+REST_SCRIPT_NAME = "Zrest"
+REST_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}RestStatus.out"',
+    "Continue On Error",
+    "; every compression word left: `guess` is the menu's Best Guess",
+    'New Archive "{Startup}RGuess.sit"',
+    'Stuff "{Startup}Subject" with guess',
+    "Close",
+    'New Archive "{Startup}RNone.sit"',
+    'Stuff "{Startup}Subject" with none',
+    "Close",
+    "; a 1.5.1-compatible archive, which is a FORMAT and not a method",
+    'New Archive "{Startup}R151.sit" 1.5.1',
+    'Stuff "{Startup}Subject" with fast',
+    "Close",
+    "; a FOLDER, so the entry stream carries folder markers",
+    'New Archive "{Startup}RFolder.sit"',
+    'Stuff "{Startup}Tutorial Files" with fast',
+    "Close",
+    "; and a self-unstuffing one",
+    'New Archive "{Startup}RSea.sit" Self-UnStuffing',
+    'Stuff "{Startup}Subject" with fast',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+def phase_psrest(args):
+    """Ask 2.0.1 for everything it can still be asked for.
+
+    What is left after the Optimizers, the ciphers and the four
+    compression words this project has measured: `guess` (the menu's
+    Best Guess), `none`, a **1.5.1-compatible** archive, a FOLDER, and a
+    **self-unstuffing** one. Each is a shape the engine may or may not
+    read, and `Continue On Error` means a line the script language does
+    not accept is logged and the run goes on — so a wrong guess at the
+    syntax costs a line of the status file rather than the boot.
+    """
+    img = os.path.join(WORK, "run-psrest.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-rest-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(REST_SCRIPT_NAME, "TEXT", "SIT!",
+                                       REST_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zrest")
+        s.mac.key("Return")
+        s.shot("running", wait=args.script_wait)
+        s.shot("done", wait=60.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("RGuess.sit", "RNone.sit", "R151.sit", "RFolder.sit",
+                  "RSea.sit", "RestStatus.out"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+DES_SCRIPT_NAME = "Zdes"
+DES_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}DesStatus.out"',
+    "Continue On Error",
+    'New Archive "{Startup}DesT.sit"',
+    'Stuff "{Startup}Subject" with fast des',
+    "Close",
+    'New Archive "{Startup}NewdeT.sit"',
+    'Stuff "{Startup}Subject" with fast newde',
+    "Close",
+    "; and the control, with the same subject and no security word",
+    'New Archive "{Startup}NoneT.sit"',
+    'Stuff "{Startup}Subject" with fast',
+    "Close",
+    "Quit",
+    "",
+])
+
+
+def phase_psdes(args):
+    """Are `NewDE™` and `DES` modules, or are they built in?
+
+    The Options menu lists them as items of their own BESIDE `Custom
+    Encryption…`, which is the plug-in route and the only one that
+    reaches `PassLock`. STR# 257 has `des` and `newde` as script words,
+    so a script can ask for them by name — which this does, with a
+    control in the same boot. Two outcomes and both are answers: an
+    archive, which means the application carries the cipher and this
+    project can grade a 1990 encrypted archive at last; or
+    `* * * Encryptor Not Found:` in the status file, which means they
+    are modules Aladdin shipped separately and this machine has
+    neither.
+
+    `tools/vmac/README.md` records the claim this is testing: that a
+    script cannot encrypt. That was measured for the MENU's setting and
+    ASSUMED for these two words, which is not the same thing.
+    """
+    img = os.path.join(WORK, "run-psdes.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-des-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(DES_SCRIPT_NAME, "TEXT", "SIT!",
+                                       DES_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zdes")
+        s.mac.key("Return")
+        # A password dialog, if either word reaches a cipher, is the
+        # application's and arrives mid-script; type into it blind and
+        # photograph, the way --psenc does.
+        for n in (1, 2, 3, 4):
+            s.shot("running%d" % n, wait=12.0)
+            s.mac._xdo("type", "--delay", "140", args.password)
+            s.mac.key("Return")
+        s.shot("done", wait=45.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("DesT.sit", "NewdeT.sit", "NoneT.sit", "DesStatus.out"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
+ENCT_SCRIPT_NAME = "Zenct"
+ENCT_SCRIPT = "\r".join([
+    "; written by tools/vmac/sitopt.py",
+    'Write Status To "{Startup}EncTStatus.out"',
+    "Continue On Error",
+    'New Archive "{Startup}PlainT.sit"',
+    'Stuff "{Startup}Subject" with fast',
+    "Close",
+    "Quit",
+    "",
+])
+ENCT_ARCHIVE = "EncT"           # the save field already carries ".sit"
+
+
+def phase_enctext(args):
+    """Does `PassLock` encrypt ANYTHING? The control for the first one.
+
+    The archive `--psencgui` wrote has both forks byte-identical to the
+    unencrypted archive of the same document, plus 23 bytes on each —
+    7 of padding and 16 of key — so on that evidence the module is
+    password PROTECTION and not encryption. One archive is not a
+    format, and the first one was an optimized, STORED fork, so this
+    asks again with an ordinary text file and a compressed method: the
+    same subject, password-protected through the application's own
+    Stuff, and a plain archive of it from a script in the same boot.
+    """
+    img = os.path.join(WORK, "run-enctext.hfv")
+    shutil.copyfile(PS_IMAGE, img)
+    outdir = os.path.join(SPECIMENS, args.tag)
+    os.makedirs(outdir, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="sitopt-enct-")
+    try:
+        mb = os.path.join(work, "script.bin")
+        open(mb, "wb").write(macbinary(ENCT_SCRIPT_NAME, "TEXT", "SIT!",
+                                       ENCT_SCRIPT.encode("mac_roman")))
+        env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+        try:
+            hfs(env, "hmount", img)
+            hfs(env, "hcopy", "-m", mb, (VOL + ":").encode())
+            hfs(env, "humount")
+        finally:
+            shutil.rmtree(env["HOME"], ignore_errors=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    s = Session(img, [], outdir, mem=args.emu)
+    try:
+        launch(s, args)
+        s.menu(EDIT_X, EDIT_SWITCH_Y, "expert-menus")
+        # the protected one, through the application's own Stuff
+        s.menu(OPTIONS_X, OPT_CUSTOM_ENC_Y, "menu-encryption")
+        s.shot("enc-dialog", wait=8.0)
+        s.mac.click(*ENC_PASSLOCK)
+        s.mac.click(*ENC_OK)
+        s.shot("enc-armed", wait=5.0)
+        s.mac.command_key("n")
+        s.shot("new-archive", wait=10.0)
+        s.mac._xdo("type", "--delay", "140", ENCT_ARCHIVE)
+        s.mac.key("Return")
+        s.shot("archive-made", wait=12.0)
+        s.mac.command_key("s")
+        s.shot("stuff-dialog", wait=10.0)
+        s.mac._xdo("type", "--delay", "140", "Subject")
+        s.shot("subject-selected", wait=4.0)
+        s.mac.key("Return")
+        s.shot("stuff-return", wait=10.0)
+        for n in (1, 2):
+            s.mac._xdo("type", "--delay", "140", args.password)
+            s.mac.key("Return")
+            s.shot("password%d" % n, wait=8.0)
+        s.shot("stuffed", wait=25.0)
+        s.mac.command_key("w")
+        s.shot("closed", wait=8.0)
+        # and the control, from a script, which cannot encrypt
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zenct")
+        s.mac.key("Return")
+        s.shot("script-done", wait=45.0)
+        s.menu(SPECIAL_X, SHUT_DOWN_Y, "special-menu")
+        s.shot("off", wait=35.0)
+        written = os.path.join(s.work, "boot.hfv")
+        for n in ("EncT.sit", "PlainT.sit", "EncTStatus.out"):
+            read_one(written, n, outdir)
+    finally:
+        time.sleep(3)
+        s.close()
+    return show_path(outdir)
+
+
 def phase_psencgui(args):
     """The same archive through the APPLICATION's own Stuff, because the
     script's cannot be encrypted.
@@ -2264,33 +2840,38 @@ def phase_psencgui(args):
         s.mac.click(*ENC_PASSLOCK)
         s.mac.click(*ENC_OK)
         s.shot("enc-armed", wait=5.0)
-        # the JPEG Optimizer, ticked in the dialog rather than by script
-        s.menu(OPTIONS_X, OPT_OPTIMIZERS_Y, "menu-optimizers")
-        s.shot("opt-dialog", wait=8.0)
-        s.mac.click(*OPT_JPEG_ROW)
-        s.shot("opt-ticked", wait=3.0)
-        s.mac.click(*OPT_OK)
-        s.shot("opt-armed", wait=5.0)
-        # File ▸ New Archive…
+        # The JPEG Optimizer, ticked in the dialog rather than by
+        # script — and clicking its row opens the MODULE's own dialog,
+        # which is what swallowed the first attempt's keystrokes. Q is
+        # left at the default on purpose: the plaintext payload is then
+        # the one `ps-jpeg2` already holds, 22,097 bytes of it, so
+        # whoever implements PassLock has an exact answer to check
+        # against rather than only a file that decrypts without error.
+        set_jpeg_quality(s, 25)
+        # File ▸ New Archive…, which is a Standard File save
         s.mac.command_key("n")
         s.shot("new-archive", wait=10.0)
         s.mac._xdo("type", "--delay", "140", ENC_ARCHIVE)
         s.shot("archive-named", wait=3.0)
         s.mac.key("Return")
         s.shot("archive-made", wait=12.0)
-        # Archive ▸ Stuff…
+        # Archive ▸ Stuff…, a Standard File open: type-select, Return
         s.mac.command_key("s")
         s.shot("stuff-dialog", wait=10.0)
         s.mac._xdo("type", "--delay", "140", args.psname)
         s.shot("subject-selected", wait=4.0)
         s.mac.key("Return")
-        s.shot("stuff-return", wait=8.0)
-        # whatever asks for the password, twice in case it verifies
-        for n in (1, 2):
+        s.shot("stuff-return", wait=10.0)
+        # PassLock asks for the password itself, and nothing here knows
+        # its dialog: type, Return, photograph, and do it again in case
+        # it verifies. A shot between each is what makes a wrong guess
+        # readable afterwards.
+        for n in (1, 2, 3):
             s.mac._xdo("type", "--delay", "140", args.password)
+            s.shot("password%d-typed" % n, wait=3.0)
             s.mac.key("Return")
-            s.shot("password%d" % n, wait=8.0)
-        s.shot("stuffed", wait=30.0)
+            s.shot("password%d" % n, wait=10.0)
+        s.shot("stuffed", wait=40.0)
         s.mac.command_key("w")
         s.shot("closed", wait=8.0)
         s.mac.command_key("q")

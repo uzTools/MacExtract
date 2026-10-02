@@ -120,6 +120,15 @@ def check_one(label, archive, want, password, macextract, problems,
             shutil.rmtree(out, ignore_errors=True)
 
 
+def crc16_arc(data, crc=0):
+    """CRC-16/ARC, as `synth_crypt.py` and the format use it."""
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xa001 if crc & 1 else crc >> 1
+    return crc
+
+
 def check_refusal(label, archive, macextract, problems, args=(),
                   expect="wrong password"):
     """A wrong or missing password must be reported per entry, and must
@@ -236,7 +245,57 @@ def main():
         shutil.copyfile(p, bare)
         check_refusal("sit-des without 'MKey'", bare, macextract, problems,
                       ["-p", SHORT_PW], expect="encrypted")
-        ran += 4
+
+        # An encryptor module this engine does not implement. The
+        # container is identical — sixteen bytes of key after the
+        # ciphertext, the pad count at 104/105, an 'MKey' in the
+        # archive's own resource fork — and the ONLY thing that tells
+        # them apart is the encryptor id at header 107/109: StuffIt
+        # Deluxe 3.5.1 writes 4 there and `PassLock`, 2.x's plug-in,
+        # writes 2 (FORMATS.md, *Encryption*). Without this the built-in
+        # cipher runs on the other scheme's bytes and the rubbish it
+        # produces is reported as a corrupt archive, which sends the
+        # user looking for a damaged file. Graded on a BENT copy because
+        # the real specimen is emulator output and is not committed; the
+        # archive `sitopt.py --psencgui` wrote is the measurement behind
+        # the number.
+        other = os.path.join(tmp, "unknown-enc.sit")
+        raw = bytearray(open(p, "rb").read())
+        # id 3, which is NOT one of the three this engine knows what to
+        # do with: 0 (the field unset), 2 (`PassLock`, which enciphers
+        # nothing and is read without a password) and 4 (StuffItDES,
+        # which it decrypts). 2 was the id here until `PassLock` was
+        # measured, and the case then stopped testing a refusal at all.
+        raw[22 + 107] = 3                       # data fork's encryptor
+        raw[22 + 109] = 3                       # resource fork's
+        # AND optimized, which is the shape that actually broke: an
+        # entry carrying both reported only its Optimizer, so the
+        # encryptor was never noticed and the built-in cipher ran on
+        # another scheme's bytes. Bent to 0x40|method with `JPEG Lossy`
+        # at 106 because the real archive cannot be committed; without
+        # these two bytes this case passes whether or not the engine
+        # has the fix.
+        raw[22 + 1] = 0xc0              # encrypted + optimized + stored
+        raw[22 + 106] = 3               # `JPEG Lossy`, as the real one is
+        raw[22 + 0] = 0x82              # and the resource fork encrypted
+        # bytes 0..109 of an entry header are covered by its own CRC-16
+        # at 110, so a bent byte is a corrupt archive until this is
+        # re-taken — which is the engine reading the header honestly and
+        # was worth one run to be reminded of.
+        hdr_crc = crc16_arc(bytes(raw[22:22 + 110]))
+        raw[22 + 110] = (hdr_crc >> 8) & 0xff
+        raw[22 + 111] = hdr_crc & 0xff
+        open(other, "wb").write(bytes(raw))
+        # What this case CANNOT see: that the engine refuses BEFORE
+        # trying the cipher. On this bent archive the entry is turned
+        # away either way; on the real one (`run_sitopt.py`, section 9)
+        # a supplied password made it decrypt rubbish and report a
+        # corrupt archive until `fmt_sit.c` checked the id at the
+        # decode site as well.
+        check_refusal("sit-des by an unimplemented encryptor", other,
+                      macextract, problems, ["-p", SHORT_PW],
+                      expect="encrypted")
+        ran += 5
 
         # The long-password case: our own round trip only, because the
         # oracle here predates the iteration XADMaster now uses.

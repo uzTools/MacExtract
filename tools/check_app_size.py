@@ -75,7 +75,14 @@ TAKEN = "2026-09-28"
 # Deluxe 2.0.1's own restored file, for 4,592 B of download and launch
 # read and nothing off any extraction's budget. `run_tiers.py --check`
 # moves no tally in either lane.
-EXPECT_BUNDLE = 150244
+# RE-TAKEN 2026-10-02 again, 150,244 -> 151,080: StuffIt 2.x's five
+# ciphers. 856 B of it is the crypt image (9,284 -> 10,140), the rest
+# the StuffIt one, and the SHIPPED build's resident code moved by eight
+# bytes — the shim passing which cipher an entry wants. What was bought
+# is `DES`, `DESex`, `NewDE`, `NewDEx` and `PassLock`, all five graded
+# against a known plaintext (FORMATS.md, *The three ways 2.0.1
+# encrypts*). `run_tiers.py --check` moves no tally in either lane.
+EXPECT_BUNDLE = 151080
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-02"
 

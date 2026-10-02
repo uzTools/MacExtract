@@ -135,6 +135,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
 | An archive that arrived as several mail messages | 🔴 | 🔴 | 🔴 | ✅ |
 | Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
+| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 | not tested here | not tested here | ✅*** |
 | Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
@@ -163,6 +164,18 @@ comparison could use them, and a comparison is exactly where those
 bytes would have to appear. Expander 4.0.2's 🔴 is a different fact
 again: on its own it cannot open a zip at all, so it has nothing to
 preserve. Only 3.5.2 was actually run over an archive.
+
+\*** **The bar is what StuffIt Deluxe 2.0 writes with what was in its
+box** — the five Optimizers, the two ciphers built into the
+application, the two encryptor modules on its optional disk, and
+`PassLock`, which turns out to encipher nothing at all. Every one of
+them is undone here, each graded against an archive 2.0.1 itself wrote
+under an emulator. A *third party's* compression plug-in is outside
+that bar: none shipped in the box, this project has never seen one, and
+if any exist the files will have to come from somebody who has them.
+The 🔴 is 2.0's own Engine, which refuses an entry its Optimizers
+touched — *"Please use StuffIt Deluxe instead"* — and what the two
+later Deluxes do with these archives has not been measured here.
 
 \* **One rare kind of StuffIt entry comes back changed, and MacExtract
 says so.** StuffIt Deluxe 2.0 (1990) could run a small plug-in called an

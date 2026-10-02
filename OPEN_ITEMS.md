@@ -71,6 +71,25 @@ way.
 
 ## Limits of the formats themselves
 
+- **A fork compressed by a third party's StuffIt COMPRESSOR module
+  (method nibble 7) is not decodable here, and the bar is deliberate.**
+  StuffIt Deluxe 2.x could hand a fork to an external compressor the
+  way it could to an Optimizer or an encryptor, and the Options menu's
+  `Custom Compression…` is where one would be chosen. The slot is real
+  and the application says so itself: its `STR# 267`, *"9 Magic
+  Fldrs"*, lists the eight folders it searches — `Preferences, Help,
+  Viewers, **Compressors**, Encryptors, Optimizers, Translators,
+  Extensions`. **Aladdin filled five of them and left that one empty.**
+  Their two disks carry five Optimizers, three encryptors and nine
+  translators and not one compressor, so every
+  shape the application writes with what was sold has been asked for
+  and read (FORMATS.md, *What an Optimizer did to the fork*, *The three
+  ways 2.0.1 encrypts*). A module from somebody else cannot be
+  manufactured here and nothing in thirty years of corpora has shown
+  one. **What would change it:** a file from whoever has one. The
+  engine names the module id and refuses the entry, which is what that
+  path exists for.
+
 - **A raw brotli stream cannot be identified, by this or any program.** RFC
   7932 section 9.1 is its entire stream header: one to seven bits of WBITS,
   and nothing else. No magic number, no signature, no version byte, no
@@ -279,7 +298,7 @@ driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
 it, so whatever expands a package is in that 26,362-byte resource and not in
 the translator.
 
-## StuffIt 2.0's Optimizers: all five extracted, and two questions left over
+## StuffIt 2.0: everything it writes, and the one thing left over
 
 **All five are extracted** as of 2026-10-02 — `Text 1`, `Sound 1` and
 `Photoshop 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents
@@ -287,8 +306,8 @@ that are not the user's file, the second of them byte-exact against
 what StuffIt Deluxe 2.0.1 itself restores (FORMATS.md, *What an
 Optimizer did to the fork*). What is left is not about the modules:
 
-- **Two things the application can be asked for and has not been.**
-  The thirteen specimens are `tools/vmac/sitopt.py`'s, but **StuffIt
+- **One thing the application can be asked for and has not been.**
+  The sixteen specimens are `tools/vmac/sitopt.py`'s, but **StuffIt
   Deluxe 2.0.1 itself** wrote them under Mini vMac — the original
   writer, not a synthesiser — so a third party's archive would add
   nothing to the header reading. What was narrow was what the
@@ -297,24 +316,37 @@ Optimizer did to the fork*). What is left is not about the modules:
   compression method the script language has, and a second quality,
   are measured now. What is left:
 
-    - **an Optimizer over an ENCRYPTED entry.** `PassLock` is
-      installed and arming it ticks the menu, but a scripted `Stuff`
-      ignores it and writes a plain archive — the script language's
-      only security words are `newde` and `des` and neither names an
-      installed encryptor. It needs the application's own Stuff
-      dialog, which `sitopt.py --psencgui` drives and has not yet
-      completed (`tools/vmac/README.md`). This would also be the first
-      archive here from ANY of the three 2.x encryptors.
-    - **`Custom Compression…`**, the one Options-menu method with no
-      script word.
+  **A SELF-EXTRACTING archive, which this project cannot yet make.**
+  `Save As "…" Self-UnStuffing` is the right syntax — 2.0.1's status
+  file logs *"(Self-UnStuffing option)"* — and it then answers *"No
+  Self-UnStuffer can be found that supports this archive"*. The
+  self-unstuffer is the other half of the box: `UnStuffIt Deluxe™`
+  lives inside disk 2's own installer, whose data fork is a StuffIt
+  archive, and lifting it out and placing it loose on the volume, in
+  the System Folder and in `Extensions` does not satisfy the
+  application (`sitopt.py --pssea`, three boots, 2026-10-02). **What
+  would close it:** running `UnStuffIt Deluxe™ Installer` under the
+  emulator, which is a GUI installer nothing here has driven. The
+  engine reads self-extracting StuffIt archives — the corpus has
+  several — so what is untested is whether a 2.0-written one differs,
+  not whether the shape is handled.
+
+  Everything else, as of 2026-10-02, has been asked for and read: all
+  five Optimizers, all five ciphers, every compression word including
+  `guess`, a 1.5.1-compatible archive and a folder (FORMATS.md, *The
+  three ways 2.0.1 encrypts*, and *What an Optimizer did to the
+  fork*). **`Custom Compression…` is out of scope** rather than open:
+  it takes a third party's compressor module (method nibble 7), none
+  shipped in the box, and an archive from one would have to come from
+  whoever has it — Part 1.
 
   Two subjects are also part synthetic: `Sound 1` is 8 KB of generated
   samples where a Sound Designer II file belongs, and `Photoshop 1`'s
   resource fork is built to the module's own acceptance test. Only the
   first of those needs software this project does not have.
-- **The encryptors.** 2.x could encrypt with `PassLock`, `NewDEx` or
-  `DESex`, and `src/fmt_sit.c` implements the built-in scheme that
-  replaced all three; nothing here has ever seen an archive from any of
-  them, and the application that writes one now runs
-  (`tools/vmac/sitopt.py`).
+- **The encryptors are done.** Closed 2026-10-02: all five of StuffIt
+  2.x's schemes are decrypted and `PassLock`'s entries are read without
+  a password, each graded against a known plaintext (FORMATS.md,
+  *Encryption*). What remains is a third party's module nothing here
+  has — refused by id, which is what that path is for.
 

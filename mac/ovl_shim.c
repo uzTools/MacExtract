@@ -159,12 +159,14 @@ int unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 
 int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
                   uint16_t pwlen,
-                  const uint8_t entrykey[16], const uint8_t mkey[8])
+                  const uint8_t entrykey[16], const uint8_t mkey[8],
+                  int scheme)
 {
     OverlayEntry e = ovl_entry(); OvlArgs g; const uint8_t *pair[2];
     if (!e) return UNC_ERR_MEM;
     pair[0] = entrykey; pair[1] = mkey;
     g.obj = cr; g.al = al; g.in = pw; g.len = pwlen; g.out = (void *)pair;
+    g.pos = (uint32_t)scheme;
     return (int)OVL_CALL(OVL_CRYPT_SIT, &g);
 }
 

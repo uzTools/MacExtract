@@ -326,7 +326,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # Finder metadata, and a ZipIt entry gives back BOTH FORKS instead of a
 # MacBinary stream in the data fork. dist/README.txt's "type and creator
 # codes and dates all survive" was false for zip until this.
-UNC_MAC_CODE_DEFAULT=158116
+# RAISED 2026-10-02 to 158,972: StuffIt 2.x's five ciphers (above).
+# The CONTROL carries them resident where the release has them in the
+# crypt overlay, which is the whole point of the control — +856 B of
+# code and +8 of A5 here against +8 and -8 in what ships.
+UNC_MAC_CODE_DEFAULT=158972
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -412,7 +416,7 @@ UNC_MAC_CODE_DEFAULT=158116
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
-UNC_MAC_A5_DEFAULT=37884
+UNC_MAC_A5_DEFAULT=37892
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -499,9 +503,25 @@ UNC_MAC_A5_DEFAULT=37884
 # itself gives back. Three of the five Optimizers, where the day before
 # every one of them with a 'DCMP' was refused. `run_tiers.py --check` is
 # what says whether it cost a fixture.
-UNC_MAC_CODE_EAGER=53216
+# RAISED 2026-10-02 by EIGHT BYTES, and the A5 figure fell by the same
+# eight: `unc_crypt_sit` takes a third thing now — WHICH of StuffIt
+# 2.x's fork ciphers an entry wants — and the one resident piece of that
+# is `mac/ovl_shim.c` putting it into the overlay call's argument block.
+# Everything else is in the two overlays: the choice is made in
+# `fmt_sit.c` (StuffIt's image) and the ciphers live in the crypt one.
+# What the eight bytes bought: **every cipher StuffIt 2.x has.** `DES`
+# and `DESex` are standard DES in CBC, `NewDE` and `NewDEx` are
+# StuffItDES in CBC, and an entry `PassLock` "protected" is read without
+# a password because that module enciphers nothing — five schemes that
+# were refused the day before, each graded against a known plaintext
+# (FORMATS.md, *The three ways 2.0.1 encrypts*). `run_tiers.py --check`
+# is what says whether it cost a fixture.
+UNC_MAC_CODE_EAGER=53224
 UNC_MAC_A5_EAGER=19008
-UNC_MAC_CODE_LAZY=51840
+# +8 on 2026-10-02 for the same reason as the eager pair above: the
+# overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
+# wants. A5 fell to 19,096 and its ceiling is left where it was.
+UNC_MAC_CODE_LAZY=51848
 UNC_MAC_A5_LAZY=19104
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

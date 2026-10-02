@@ -856,7 +856,7 @@ int unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
  * keyForPasswordData:entryKey:MKey:. */
 int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
                   uint16_t pwlen, const uint8_t entrykey[16],
-                  const uint8_t mkey[8])
+                  const uint8_t mkey[8], int scheme)
 {
     uint8_t ks[16][8];
     const uint32_t *sp;
@@ -923,9 +923,28 @@ int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
     sitdes_setkey(filekey, ks);
     sitdes_crypt(fileiv, ks, 0, sp);
 
-    crypt_clear(cr, UNC_CRYPT_SIT_DES, 8);
-    cr->a = unc_get_u32be(&filekey[0]);
-    cr->b = unc_get_u32be(&filekey[4]);
+    /* Everything above is shared by all three schemes — the archive key,
+     * the 'MKey' and its verifier, the file key and IV — and only the
+     * fork transform differs. Measured 2026-10-02 against a known
+     * PLAINTEXT: StuffIt Deluxe 2.0.1 stuffed one subject three times in
+     * one boot, with `des`, with `newde` and with neither, so the
+     * control holds the exact 286 compressed bytes behind both
+     * ciphertexts (tools/vmac/sitopt.py --psdes). Both come out with 0
+     * bytes differing. */
+    if (scheme == UNC_SIT_SCHEME_DES) {
+        crypt_clear(cr, UNC_CRYPT_SIT_CBC, 8);
+        des_setkey(cr->ks, filekey);
+    } else if (scheme == UNC_SIT_SCHEME_NEWDE) {
+        crypt_clear(cr, UNC_CRYPT_SIT_NEWDE, 8);
+        sitdes_setkey(filekey, cr->ks);
+    } else {
+        crypt_clear(cr, UNC_CRYPT_SIT_DES, 8);
+        cr->a = unc_get_u32be(&filekey[0]);
+        cr->b = unc_get_u32be(&filekey[4]);
+    }
+    /* c and d are the IV for the feedback and the chaining block for
+     * the two CBC schemes; both advance the same way through
+     * `unc_crypt_apply`. */
     cr->c = unc_get_u32be(&fileiv[0]);
     cr->d = unc_get_u32be(&fileiv[4]);
     return UNC_OK;
@@ -972,6 +991,28 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
             unc_put_u32be(buf + i + 4, right ^ cr->b ^ cr->d);
             cr->c = cr->d;
             cr->d = rotr32(left ^ right ^ cr->a ^ cr->b ^ cr->d, 1);
+        }
+        break;
+
+    case UNC_CRYPT_SIT_CBC:
+    case UNC_CRYPT_SIT_NEWDE:
+        /* CBC: decrypt the block, XOR the previous CIPHERTEXT into it,
+         * and carry that ciphertext forward — across refills too, which
+         * is why it lives in the struct. `DES` is the standard cipher,
+         * IP and FP included; `NewDE` is StuffItDES, which omits them.
+         * The key schedule is the same shape for both and was built at
+         * key setup. */
+        for (i = 0; i + 8 <= len; i += 8) {
+            uint32_t cl = unc_get_u32be(buf + i);
+            uint32_t cr2 = unc_get_u32be(buf + i + 4);
+            if (cr->kind == UNC_CRYPT_SIT_CBC)
+                des_crypt(cr->ks, buf + i, 1, cr->tab);
+            else
+                sitdes_crypt(buf + i, cr->ks, 0, cr->tab);
+            unc_put_u32be(buf + i, unc_get_u32be(buf + i) ^ cr->c);
+            unc_put_u32be(buf + i + 4, unc_get_u32be(buf + i + 4) ^ cr->d);
+            cr->c = cl;
+            cr->d = cr2;
         }
         break;
 
