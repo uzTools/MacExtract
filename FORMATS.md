@@ -1912,11 +1912,46 @@ transform is at CCOD+0xf9e and is recognisable at sight: pairs of
 samples added, `addi.w #-256` for the level shift of two summed samples
 at once, then `lsl.w #2`.
 
-**And the core is a TABLE-DRIVEN lifting network.** At CCOD+0x1492 the
-operand indices are fetched from tables, decremented, and used to index
-a local array; the pair is added, halved with `asr.w #1`, and corrected
-by `addq #1` when negative — a halving that rounds toward zero. The
-butterfly is described by data, not unrolled in code.
+**The transform's precision is nine bits.** CCOD+0xeaa and CCOD+0x2f3c
+— the forward and the inverse — each build the same table on the stack
+as fifteen immediates: `512, 100, 196, 284, 362, 426, 473, 502, 502,
+473, 426, 362, 284, 196, 100`. Those are **cos(k.pi/16) at 2^9**:
+502/512 = 0.9805 against cos(pi/16) = 0.98079, down to 100/512 = 0.1953
+against 0.19509.
+
+**The multiplies go through a helper**, `jsr %a4@(31482)`, a 32-bit
+multiply reached through the A4 jump table — which is why a search for
+multiply CONSTANTS found only the colour transform.
+
+**And `tools/ccube/m68ktrace.py` read the whole 1-D transform out of
+CCOD+0x2f3c**, symbolically, in about an hour:
+
+```
+a4 = sh(c7*x1 - c1*x7)   a2 = sh(c6*x2 - c2*x6)   e0 = sh(c4*(x0 + x4))
+a5 = sh(c3*x5 - c5*x3)   a3 = sh(c2*x2 + c6*x6)   e1 = sh(c4*(x0 - x4))
+a6 = sh(c5*x5 + c3*x3)   b4 = a4+a5  b5 = a4-a5   b0 = e0+a3  b1 = e1+a2
+a7 = sh(c7*x7 + c1*x1)   b6 = a7-a6  b7 = a7+a6   b2 = e1-a2  b3 = e0-a3
+d5 = sh(c4*(b6 - b5))    d6 = sh(c4*(b6 + b5))
+out = b0+b7, b1+d6, b2+d5, b3+b4, b3-b4, b2-d5, b1-d6, b0-b7
+```
+
+`sh(x)` is `asr.l #9` and then `addq.l #1` **if the result is
+negative**, which is NOT truncation: it overshoots by one on exact
+negative multiples of 512. `x0..x7` come from a de-zigzag table at the
+first argument + 4636, in slots 16 bytes apart; the array between the
+two passes holds **longs**, so nothing is truncated to a word there.
+
+**The lifting network at CCOD+0x1492 is not this.** It was described
+here as "the core" on 2026-09-30, from a halving with `asr.w #1`; the
+trace shows the transform is the rotation network above and +0x1492 is
+some other pass. Corrected rather than withdrawn, because nothing was
+built on it.
+
+**And transcribed exactly, it is still 35 % wrong against the
+specimen** — both pass orders, every plausible final shift. So a
+scaling step between dequantisation and the first pass, or between the
+passes, lies outside the region traced. **The structure is no longer
+the unknown; a factor is.**
 
 **That is why no standard IDCT matched and none ever will.** Matching
 this one byte for byte needs the network AND its index tables, which
