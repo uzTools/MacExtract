@@ -2376,6 +2376,33 @@ SEA_SCRIPT = "\r".join([
 ])
 
 
+def self_unstuffers(work):
+    """The three `AUSt` stubs, out of the MAIN installer's payload.
+
+    **`UnStuffIt Deluxe™` is not the file** — that is the standalone
+    unstuffing application, and placing it five ways never satisfied
+    2.0.1. The self-extractor stubs are `Self-UnStuffers/Everything
+    UnStuffer`, `Fast UnStuffer` and `Optimal:Better UnStuffer` (the
+    last with this project's reversible `/`->`:` swap in its name), all
+    of type **`AUSt`**, and `INSTALL` above never copied them — which is
+    the whole of why *"No Self-UnStuffer can be found that supports this
+    archive"*: there was none to find. The message means what it says,
+    and each stub supports a set of methods.
+    """
+    tree = payload(work)
+    out = []
+    for root, _dirs, files in os.walk(tree):
+        if os.path.basename(root) != "Self-UnStuffers":
+            continue
+        for f in sorted(files):
+            if f.endswith(".rsrc"):
+                continue
+            out.append(os.path.join(root, f))
+    if not out:
+        raise SystemExit("sitopt: no Self-UnStuffers in the payload")
+    return out
+
+
 def unstuffer(work):
     """`UnStuffIt Deluxe™`, out of its own installer on disk 2.
 
@@ -2425,6 +2452,10 @@ SEA_INSTALLER = (47, 193)       # `UnStuffIt Deluxe™ Installer`, once the
 # SCRIPT is in the third row, fully visible, and its creator is `SIT!` —
 # so opening the script is what launches the application here.
 SEA_SCRIPT_ICON = (240, 200)
+SEA_SCROLL_UP = (415, 90)       # the window's scrollbar up-arrow
+SEA_APP_ICON = (370, 112)       # `StuffIt Deluxe™`, once the window is
+                                # scrolled back to the top: the rightmost
+                                # icon of the first row (`--psicons`)
 
 
 def phase_psicons(args):
@@ -2552,8 +2583,13 @@ def phase_pssea(args):
     # used, with what the installer made copied onto it and its own
     # Desktop file DELETED: the Finder rebuilds one at boot, and a
     # rebuilt database is what registers a file `hcopy` put there.
-    on_sea = False
-    shutil.copyfile(PS_IMAGE, img)
+    # Back to the INSTALLED volume, which is the only one whose
+    # application has ever found a self-unstuffer. Its window is left
+    # scrolled by `--install-sea`, so the top row is clipped and the
+    # application's icon is cut in half — which is why a double-click on
+    # its label did nothing. Scroll the window up first.
+    on_sea = os.path.exists(SEA_IMAGE)
+    shutil.copyfile(SEA_IMAGE if on_sea else PS_IMAGE, img)
     outdir = os.path.join(SPECIMENS, args.tag)
     os.makedirs(outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="sitopt-sea-")
@@ -2579,6 +2615,23 @@ def phase_pssea(args):
                         capture_output=True, env=env)
                 hfs(env, "humount")
             hfs(env, "hmount", img)
+            # The three stubs, in the three places a 1990 application
+            # might look: a folder of their own in the System Folder,
+            # loose in it, and beside the application.
+            for src in self_unstuffers(work):
+                name = os.path.basename(src).replace(":", "/")
+                mb2 = os.path.join(work, "su_%s.bin" % len(name))
+                open(mb2, "wb").write(macbinary(
+                    name, "AUSt", "SIT!", open(src, "rb").read(),
+                    open(src + ".rsrc", "rb").read()
+                    if os.path.exists(src + ".rsrc") else b""))
+                subprocess.run(
+                    ["hmkdir", (VOL + ":System Folder:Self-UnStuffers")
+                     .encode()], capture_output=True, env=env)
+                for dest in (VOL + ":System Folder:Self-UnStuffers:",
+                             VOL + ":System Folder:", VOL + ":"):
+                    subprocess.run(["hcopy", "-m", mb2, dest.encode()],
+                                   capture_output=True, env=env)
             if os.path.exists(os.path.join(work, "us_UnStuf.bin")):
                 subprocess.run(
                     ["hmkdir", (VOL + ":UnStuffIt Deluxe Folder").encode()],
@@ -2618,7 +2671,11 @@ def phase_pssea(args):
             s.shot("desktop", wait=8.0)
             s.mac.click(*BOOT_ICON, double=True)
             s.shot("volume", wait=12.0)
-            s.mac.click(*SEA_SCRIPT_ICON, double=True)
+            for _ in range(4):
+                s.mac.click(*SEA_SCROLL_UP)
+                time.sleep(0.4)
+            s.shot("scrolled", wait=5.0)
+            s.mac.click(*SEA_APP_ICON, double=True)
             s.shot("launched", wait=args.launch_wait)
         else:
             launch(s, args)

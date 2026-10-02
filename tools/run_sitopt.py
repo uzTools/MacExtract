@@ -747,6 +747,30 @@ def main():
             print("run_sitopt: no psrest1 specimens — `guess`, `none` and "
                   "the 1.5.1 archive are not graded (sitopt.py --psrest)")
 
+        # 14. a SELF-EXTRACTING archive 2.0.1 wrote. The stub is about
+        # 19 KB of code in front of the same archive — its entry header
+        # is byte-identical to the plain one's — and it must come out as
+        # the control's bytes (sitopt.py --pssea).
+        sea = os.path.join(SPECIMENS, "pssea9", "RSea3.sea.bin")
+        if os.path.exists(sea):
+            base = os.path.join(work, "seactl")
+            extract(args.macextract, ctl, base)
+            o = os.path.join(work, "sea")
+            rc, msg = extract(args.macextract, sea, o)
+            if rc != 0:
+                problems.append("the self-extracting archive did not "
+                                "extract: %s" % msg.strip()[:120])
+            else:
+                for fn in ("Subject", "Subject.rsrc"):
+                    a4 = os.path.join(o, fn)
+                    if not os.path.exists(a4) or open(a4, "rb").read() != \
+                            open(os.path.join(base, fn), "rb").read():
+                        problems.append("the self-extractor's %s is not the "
+                                        "control's bytes" % fn)
+        else:
+            print("run_sitopt: no pssea9 specimen — a 2.0.1 self-extractor "
+                  "is not graded (sitopt.py --pssea)")
+
         fold = os.path.join(SPECIMENS, "psfold1", "RFold.sit.bin")
         if os.path.exists(fold):
             o = os.path.join(work, "fold")
@@ -768,7 +792,7 @@ def main():
 
     for p in problems:
         print("run_sitopt: %s" % p)
-    print("run_sitopt: 27 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
+    print("run_sitopt: 28 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
           "Engine, %d problem(s)" % len(problems))
     return 1 if problems else 0

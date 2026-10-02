@@ -1054,11 +1054,11 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
-Nine assertions over twenty-seven archives 2.0.1 wrote, in twelve runs
+Ten assertions over twenty-eight archives 2.0.1 wrote, in fourteen runs
 — which between them are **everything that application writes with what
 was in its box**: every Optimizer, every cipher, every compression
-word, a 1.5.1-compatible archive and a folder. The one shape missing is
-a self-extracting archive, and OPEN_ITEMS.md says why:
+word, a 1.5.1-compatible archive, a folder, and a self-extracting
+archive:
 
 1. the control — same subject, no Optimizer — extracts to the subject,
    both forks, byte for byte;

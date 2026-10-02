@@ -3062,18 +3062,27 @@ which drives File ▸ New Archive… and Archive ▸ Stuff… instead.
   where it is: `--psicons` grows the window — by DRAGGING its grow
   box, since the zoom box does nothing here — and photographs every
   icon so the next run can aim.
-- **A file `hcopy` puts on a volume is not enough for an add-on the
-  application finds by TYPE — and WHY is still open.** Five placements
-  of the self-unstuffer were refused: loose on the volume, in the
-  System Folder, in `Extensions`, in the `UnStuffIt Deluxe Folder` the
-  installer itself makes, and all of those again with the volume's
-  `Desktop` file deleted so the Finder would rebuild it. Only a volume
-  the installer itself wrote has ever satisfied 2.0.1. *"It is the
-  Desktop database"* was written here on the strength of the first four
-  and the rebuild did not support it, so it is a hypothesis and is
-  labelled as one. The Optimizers and encryptors are unaffected either
-  way: the application looks for THOSE by path, in the eight folders
-  its `STR# 267` names.
+- **The application was telling the truth and I was placing the wrong
+  file.** *"No Self-UnStuffer can be found that supports this
+  archive"* survived `UnStuffIt Deluxe™` loose on the volume, in the
+  System Folder, in `Extensions`, in the folder its own installer
+  makes, with the `Desktop` file deleted for a rebuild, and finally on
+  the volume that installer wrote — six placements and eight boots.
+  **`UnStuffIt Deluxe™` is the standalone unstuffing application and
+  not a stub.** The self-extractor stubs are three `AUSt` files in the
+  MAIN installer's payload — `Self-UnStuffers/Everything UnStuffer`,
+  `Fast UnStuffer`, `Optimal:Better UnStuffer` — which `INSTALL` above
+  never copied, so there was genuinely none on the volume to find. With
+  them in a `Self-UnStuffers` folder in the System Folder, `Save As …
+  Self-UnStuffing` writes a `.sea` first time. Their names are the rest
+  of the message: each supports a set of METHODS, which is what *"that
+  supports this archive"* means.
+
+  Two guesses died on the way and both are worth not repeating: that a
+  file `hcopy` places is invisible because of the **Desktop database**
+  (deleting it and forcing a rebuild changed nothing), and that the
+  **installer** was doing something a copy could not (the volume it
+  wrote refused the archive too).
 
 **The script's own security words are another matter**, and this file
 said they named nothing installed until 2026-10-02, which was an

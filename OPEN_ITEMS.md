@@ -303,34 +303,13 @@ the translator.
 **Everything StuffIt Deluxe 2.0.1 writes with what was in its box is
 extracted** as of 2026-10-02, each graded against an archive it wrote
 itself: all five Optimizers, all five ciphers, every compression word,
-a 1.5.1-compatible archive and a folder (FORMATS.md, *What an Optimizer
-did to the fork*, *The three ways 2.0.1 encrypts*; TESTING.md, the
-sitopt suite's 27 archives).
+a 1.5.1-compatible archive, a folder, and a **self-extracting archive**
+(FORMATS.md, *What an Optimizer did to the fork*, *The three ways 2.0.1
+encrypts*; TESTING.md, the sitopt suite's 28 archives).
 
-Two things are left, and neither is a decoder:
+One thing is left, and it is not a decoder:
 
-- **A self-extracting archive THIS writer made.** The engine reads
-  them — 77 `.sea` fixtures extract, graded against `unar` — so what is
-  unproved is whether 2.0.1's differs. Six boots on 2026-10-02 got the
-  installer run (*"Installation was successful"*, volume kept as
-  `sitopt-sea.hfv`) and stopped at reaching the application on that
-  volume, whose Finder window the installer left grown and scrolled.
-  **The mechanism is NOT settled.** "2.0.1 finds a self-unstuffer
-  through the Desktop database" was written here after four failed
-  placements and is not supported: deleting the volume's `Desktop`
-  file to force a rebuild, with the installer's own folder copied in,
-  changed nothing — *"No Self-UnStuffer can be found"* again, on the
-  seventh boot. What IS measured is narrower: only a volume the
-  installer itself wrote has ever satisfied the application, and on
-  that volume the Finder then cannot resolve `TEXT`/`SIT!` to StuffIt
-  Deluxe at all (*"the application is busy or missing"*).
-
-  **What would close it:** drive the application on the installed
-  volume by clicking its own icon — `--psicons` measures a position,
-  and opening an application directly is not the lookup that failed
-  there.
-
-- **Nothing has seen an archive this project did not make.** All 27 are
+- **Nothing has seen an archive this project did not make.** All 28 are
   2.0.1's own output under Mini vMac — the writer rather than a
   synthesiser, so the reading is graded against authentic bytes — but
   one subject per module, chosen here.
