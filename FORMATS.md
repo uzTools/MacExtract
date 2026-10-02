@@ -27,6 +27,7 @@ under *Table notes*.
 - Hardening
 - Size limits
 - Name limits
+- Zip's Macintosh extra fields
 - Overlays: what the application ships, and what it costs
 - Resident memory, stack and launch (Mac target)
 - Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)

@@ -155,37 +155,18 @@ Part 2; the full per-file inventory is NOTICE's, checked by
 
 ---
 
-## Zip's Macintosh extra fields: the one zip flavour that carries forks
+## Zip's Macintosh extra fields: what is left after reading them
 
-**The zip reader drops every byte of Finder metadata a Macintosh-written
-zip carries.** `zip_extra_scan` (`src/fmt_exo.c`) recognises two header
-ids, Zip64's `0x0001` and WinZip AES's `0x9901`; the six Macintosh ids
-are walked past as unknown — Info-ZIP's `0x334d`, ZipIt's `0x2605`,
-`0x2705` and `0x2805`, `0x07c8` and SmartZIP's `0x4d63`. So type,
-creator, Finder flags and the Mac dates are read by neither `l` nor `x`,
-and a `.sit` that holds the same files comes out with all four.
+**The fields are read since 2026-10-01** — type, creator, Finder flags,
+dates, and both forks out of a ZipIt `0x2605` entry (FORMATS.md, *Zip's
+Macintosh extra fields*, has the figures and what grades each one). Two
+things did not close with them, and both are about evidence rather than
+code.
 
-Measured 2026-10-01 on `rexnebular_1_0_0.zip` (Macintosh Garden, 29.7 MB,
-22 entries, Zip 2.3 host 0x07, a `0x334d` field on every entry): the data
-forks are byte-exact — all 21 files identical to Info-ZIP's `unzip`, and
-the ten disk images match the MD5s the archive itself ships in
-`checksum.md5` — while `l` prints an empty type/creator for all 22 and
-`lsar` reads the right type and creator for every one of them off the
-same bytes. The ten disk images lose `DDim/DDp+`, which is what makes
-DiskCopy refuse them; the uploader's own note on that page says MacZip
-is needed to put it back.
-
-**No corpus fixture can fail on this.** None of the seven zips in 947
-fixtures carries any Macintosh extra field — `derived-MUSFMT10.ZIP` is
-host 0x07, Macintosh-written, and has no extra fields at all — so the
-differential suite's type/creator grading, which is real and rides
-`lsar` (DECISIONS.md 2026-08-21 (later), *the DiskDoubler corpus becomes
-fixtures*), has never had a subject here.
-
-| what | what would close it |
+| what is left | what would close it |
 |---|---|
-| `0x334d` type/creator/Finder flags/dates | **a decoder and a fixture.** Both reference implementations are already on disk: `reference/XADMaster/XADZipParser.m` (`extid==0x334d&&size>=14`) and `reference/deark/modules/zip.c` (`ef_infozipmac`). Type and creator need no decompression — bytes 6–14 of the 14-byte field, present in the central directory and the local header alike; Finder flags and the three dates sit in a deflated blob of 59–80 B that `unc_inflate` already reads. **Cost is unmeasured** — neither `CODE` size nor peak RAM has been put to it |
-| ZipIt's `0x2605`/`0x2705`/`0x2805` | the same, plus a ZipIt-written archive. `0x2605` means *the entry data is MacBinary*, which this engine already decodes — so a resource fork is reachable there, and `0x334d`'s is not the same shape and has not been looked at |
+| ZipIt's `0x2705`/`0x2805`/`0x2605` are graded on GENERATED archives | **one real ZipIt archive.** `lsar` agrees on all three fields and `unar` agrees on a `0x2605` entry's forks, but every subject was written here, and `0x2605`'s own premise — that ZipIt sets it when and only when the data is MacBinary — is APPNOTE.TXT 4.6.4's word and nothing this machine can check. ZipIt was shareware and its archives are plain `.zip`: **invisible to a search by name**, which is the blind spot that hid the whole item until a user's download page named it (DECISIONS.md 2026-10-01) |
+| no Macintosh zip is in the corpus at all | **a fixture, and a decision about the dates first.** `rexnebular_1_0_0.zip` is real, is graded 22/22 on type/creator and Finder flags, and is 29.7 MB — the largest fixture there would be. Adding it with DATES graded would fail against `lsar`, by the 5 h its `CrGMTOffs = -18000` accounts for, and the failure would be the oracle's: XADMaster and deark disagree on that field's sign. That has to be written down as the oracle's limit before a fixture can rest on it (FORMATS.md, *Zip's Macintosh extra fields*) |
 
 ## The overlay loader: what no emulator here can answer
 
