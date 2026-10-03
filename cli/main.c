@@ -2647,6 +2647,12 @@ nextlayer:
 
     if (ret != UNC_OK) {
         fprintf(stderr, "macextract: %s: %s\n", file, unc_strerror(ret));
+        /* The names that were shortened are on the disk whatever the
+         * WALK then did, so the notice that says where to find them is
+         * owed on this path too — and it is what frees the list, which
+         * this path leaked until 2026-10-03 (found by UBSan/ASan on a
+         * mutated archive, TESTING.md, *Method 14*). */
+        sink_report_cuts(&sink);
         return 1;
     }
     if (sink.unsupported) {
