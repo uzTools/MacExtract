@@ -1191,6 +1191,14 @@ decoder's one real defect — a signed left shift in the canonical code
 assignment, UB on a corrupt tree (DECISIONS.md 2026-10-03) — and a
 pre-existing leak in the CLI's own name-cut notice.
 
+**Big-endian, and on the machine.** `tests/run_mac_sink.sh` carries the
+fixture since 2026-10-03, so the decoder also runs under qemu-m68k
+through the Mac shell's own sink on every `ci.sh` run — the target it
+was written for, and the only lane that runs it big-endian. That one can
+fail too: the same bent base fails `mac-sink` on this fixture and on no
+other. The application itself ran it on four emulated tiers the same
+day (FORMATS.md, *Run on a Macintosh*).
+
 **What none of it sees:** the two real payloads, which no committed
 suite can reach. They are re-run by hand, and the figures and what
 adjudicates them are in FORMATS.md, *StuffIt 5's method 14*.

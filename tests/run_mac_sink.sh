@@ -26,7 +26,13 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-Compact_Pro_Package derived-resforkkiller.sit \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
-          derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit"
+          derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
+          synth-sit14.sit"
+
+# `synth-sit14.sit` was added 2026-10-03 with StuffIt method 14, whose two
+# real subjects are multi-megabyte installers no suite can hold (TESTING.md,
+# *StuffIt method 14*). This is the only lane that runs that decoder
+# BIG-ENDIAN, under qemu-m68k, which is the target it was written for.
 
 # `derived-800saywhat301j.sit` was added 2026-09-22 with the UTF-8 fold. Its
 # three Japanese names have no MacRoman spelling at all, so the shell writes a

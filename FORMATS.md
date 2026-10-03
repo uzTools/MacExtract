@@ -2181,6 +2181,28 @@ refused per entry at the two 512 KB tiers, where StuffIt 5's granted
 budget is 306,376 B and 210,976 B (*What each format is granted*);
 `run_tiers.py --check` moves no tally on either lane.
 
+### Run on a Macintosh, 2026-10-03
+
+`synth-sit14.sit` through the shipped application, four files out and
+byte-exact against the engine's own output each time, at **peak heap
+65,194 B** on every one:
+
+| tier | result |
+|---|---|
+| System 6.0.8, 4 MB Mac Plus | **PASS**, 5.2 s (`run.py`) |
+| System 6.0.8, **1 MB** floor | **PASS**, 5.1 s (`run.py --mem 1M`) |
+| System 3.0, 1 MB | **PASS**, 18.8 s (`sys30.py --mem 1M`) |
+| System 3.0, Macintosh **512Ke** | **PASS**, 18.8 s (`sys30.py --emu mv-512Ke`) |
+
+It is not in `sample.txt`, so none of the tier TALLIES moves — those stay
+at the 71 fixtures their figures were taken on. What these four runs say
+is that the decoder reached the machine through its `'OVLY'` image and
+ran there, which no host lane can show. The big-endian half is in
+`ci.sh` for good: `tests/run_mac_sink.sh` carries the fixture, so the
+decoder runs under qemu-m68k through the Mac shell's own sink on every
+run — checked by bending it, which fails that lane on that fixture and
+nothing else.
+
 ## Encryption
 
 **In scope since 2026-08-23.** **Eight** ciphers across **six** formats —
