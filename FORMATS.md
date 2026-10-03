@@ -19,6 +19,7 @@ under *Table notes*.
 - btoa, the other ASCII armour
 - base64 and MIME, the armour that replaced the others
 - StuffIt 2.0's pluggable modules, and what an "Optimizer" was
+- StuffIt 5's method 14
 - Encryption
 - AppleLink packages: two specimens, and a probe that names neither
 - Archives named but not extracted
@@ -51,7 +52,7 @@ under *Table notes*.
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
-| StuffIt 5 (.sit) | extract | 0, 13, 15 Arsenic — **method 14 is not implemented**, and real archives use it (*The last classic box*, below); **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures | 0.13–2.03 MB† | 23 of 31 fixtures extract FULLY; the rest refuse per entry |
+| StuffIt 5 (.sit) | extract | 0, 13, **14** (*Method 14*, below), 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures + 1 synthetic, and the two installer payloads outside the corpus (*Method 14*) | 0.13–2.03 MB† | 24 of 32 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below) | 5 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries). **None of the five carries a Macintosh extra field**, so that part is graded outside the corpus | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
@@ -2110,6 +2111,76 @@ In 2.x that could be any of four modules — `DES` (1), `PassLock` (2), `NewDEx`
 of them; the one scheme implemented is what id **4** means. Untested, and the
 same specimen run would settle it.
 
+## StuffIt 5's method 14
+
+**Implemented 2026-10-03** (`src/sit14.c`). LZSS over a window of up to
+256 KB, both of its alphabets canonically Huffman-coded, with a fresh
+pair of trees in every block: 308 symbols for literals and match
+lengths, 75 for distances, and a `1<<j` alphabet the code lengths
+themselves may be coded in. Transcribed from libxad's `SIT_14` and
+inventoried in NOTICE; **no other implementation exists** — deark names
+method 14 "installer" and leaves its decompressor NULL, and `lsar`
+reports the compression as *"Installer"* off the same lore.
+
+### The two subjects, and what adjudicates them
+
+Neither is a corpus fixture: both are Aladdin's own installers, 6.6 MB
+and 12.4 MB of commercial software (*The last classic box*).
+
+| payload | entries | `t` (the container's CRC-16, per fork) | against `unar` |
+|---|---|---|---|
+| StuffIt Deluxe 7.0.3's `StuffIt DLX 703 Classic Install` | 258 | **258/258 pass** | every one of `unar`'s 204 data forks and 77 resource forks byte-identical |
+| StuffIt Deluxe 5.5's `StuffIt Deluxe™ 5.5 Installer` | 184 | **184/184 pass** | every one of `unar`'s 119 data forks and 63 resource forks byte-identical |
+
+`unar` extracts FEWER forks than this engine does from both — it fails
+two files on 7.0.3's and collapses the archives' repeated names — so the
+comparison is over what it does produce. The per-fork CRC-16 is the
+container's own and covers the rest.
+
+**And a fixture that needs neither**: `synth-sit14.sit`, 1,859 B, written
+by `tools/synth_sit14.py` — an encoder for the format, from the same
+reading — and graded against `unar` on all four of its entries in every
+`ci.sh` run (TESTING.md).
+
+### What real streams actually use (instrumented build, 2026-10-03)
+
+| | 7.0.3's payload | 5.5's |
+|---|---|---|
+| blocks | 566 | 277 |
+| tree reads: nested / raw | **524 / 608** | 273 / 281 |
+| nested alphabet, 4 / 8 / 16 / 32 symbols | 6 / 17 / 501 / **0** | 0 / 6 / 267 / **0** |
+| repeat escapes / zero escapes | 8,665 / 11,088 | 3,761 / 4,612 |
+| literals / matches | 7,268,970 / 2,026,122 | 4,233,171 / 973,420 |
+| longest match | **16,387 B**, the ladder's ceiling | 16,387 B |
+| longest distance | **262,140 B** against a 262,144 B window | 262,141 B |
+| longest code | 17 bits | 17 bits |
+| byte boundaries, and how many pad with a nonzero bit | 2,222 / **0** | 1,104 / **0** |
+
+Three of those rows are why the departures in `src/sit14.c` are safe to
+make rather than guesses: the padding is zero everywhere, so discarding
+it properly instead of leaving it in the buffer (libxad's
+`xadIOByteBoundary`) cannot be told apart; no stream nests twice, which
+is the one shape the reference could not have decoded anyway; and the
+longest code is 17 bits against the 32 the assignment can represent.
+
+### What it costs
+
+| | |
+|---|---|
+| peak heap, 7.0.3's payload | **276,088 B** — the 256 KB window, 4.7 KB of trees and ladders, and the I/O buffers |
+| peak heap, `synth-sit14.sit` | 65,152 B (its longest fork is 17,799 B, so the window is 32 KB) |
+| `ovl_stuffit` image | 23,670 → **26,278 B**, read at launch and released for every archive that is not a StuffIt one |
+| resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
+| resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |
+| deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 3,386 B (*Stack*) |
+
+The window is sized to the fork rather than always 256 KB, by
+`sit13_winsize`'s argument (*StuffIt classic: method 13's window*), so a
+small fork pays for a small window. A fork that wants the whole 256 KB is
+refused per entry at the two 512 KB tiers, where StuffIt 5's granted
+budget is 306,376 B and 210,976 B (*What each format is granted*);
+`run_tiers.py --check` moves no tally on either lane.
+
 ## Encryption
 
 **In scope since 2026-08-23.** **Eight** ciphers across **six** formats —
@@ -2874,7 +2945,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 932 fixtures byte-exact against `unar` manifests
+- Differential: 934 fixtures byte-exact against `unar` manifests
   (both forks + type/creator), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -2949,7 +3020,7 @@ remains out of scope (OPEN_ITEMS.md, part 1). `tools/run_ziplarge.py` holds
 the boundary from both sides, in `ci.sh` since 2026-08-25; DECISIONS.md
 2026-08-25 has why a count is worse than a length.
 
-**The corpus could not have caught it: the largest zip in 932 fixtures has 29
+**The corpus could not have caught it: the largest zip in 934 fixtures has 29
 entries**, and the robustness variants perturb a fixture rather than grow one.
 
 **A zip's per-entry Zip64 escape arrives at 2 GB, not 4, and until 2026-08-27
@@ -3207,8 +3278,9 @@ people to use MacZip.
 7.0.3 zip readers were lifted WITHOUT an emulator: both distributions
 ship an Aladdin `APPL/STi0` installer whose payload `unar` expands —
 7.0.3's arrives inside a `.smi` whose data fork is a plain HFS volume
-with its MDB at 1024. The engine lists those payloads but decodes
-neither: **StuffIt method 14** (OPEN_ITEMS.md).
+with its MDB at 1024. **Both payloads extract whole since 2026-10-03**,
+which is what the method-14 decoder was for (*Method 14*, below); they
+were listed and not decoded until then.
 
 | version | the binary that reads zip | bytes | `0x334d` | `ZPIT` |
 |---|---|---|---|---|
@@ -3272,11 +3344,16 @@ engine later the same day.
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **53,224 B** | 19,000 B | **64,768 B** | **219,264 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,848 B | 19,096 B | 63,360 B | 217,088 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **158,972 B** | **37,892 B** | 191,104 B | 194,432 B |
+| **eager — SHIPPED** | (default) | **53,224 B** | 19,000 B | **64,768 B** | **221,824 B** |
+| lazy | `UNC_OVL_LAZY=1` | 51,848 B | 19,096 B | 63,360 B | 220,544 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **161,596 B** | **37,892 B** | 193,792 B | 197,120 B |
 
-**Re-measured again 2026-10-02**, for StuffIt 2.x's five ciphers: the
+**Re-measured again 2026-10-03**, for StuffIt method 14 (*StuffIt 5's
+method 14*): the control +2,624 B of `CODE` and +0 of A5, the SHIPPED
+build **+0 and +0** — the decoder is in the StuffIt image, 23,670 →
+26,278 B — and only the download column moved with the bundle,
+219,264 → 221,824 B.
+Before that, 2026-10-02, for StuffIt 2.x's five ciphers: the
 control +856 B of `CODE` and +8 of A5, where the SHIPPED build pays
 **+8 and −8** — the ciphers are in the crypt overlay (9,284 → 10,140 B)
 and the choice between them in the StuffIt one, so the only resident
@@ -3368,11 +3445,11 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **124,640 B** since 2026-10-02
+measured 2026-09-27. The shipped pair is **127,264 B** since 2026-10-03
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **151,080 B** — the fourteen images sum to 150,900 B, so its
+The bundle is **153,688 B** — the fourteen images sum to 153,508 B, so its
 index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
 bytes of padding to 4, which accounts for the whole difference (re-measured
 2026-10-02 twice, for `src/sit_ccube.c` and then for the five ciphers,
@@ -3452,7 +3529,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 124,640 B of `CODE` and A5 the shipped build does not carry
+which is the 127,264 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -3480,22 +3557,23 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+83,736 B** (measured) |
-| LZH | lzh, codecs | **+107,986 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +91,622 B (arithmetic), and **+101,770 B** where the directory says no entry is encrypted (measured) |
-| DiskDoubler | cptdd, codecs | **+101,770 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +78,154 B (arithmetic), **+88,302 B** unencrypted (measured) |
-| Tar | exo, codecs | **+88,302 B** (measured) |
-| ARC | arc, ciphers, codecs | **+99,286 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+104,758 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +100,832 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| SuperDisk! | superdisk, codecs | +110,498 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| Now Compress | now, codecs | **+112,616 B** (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,114 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+83,752 B** (measured) |
+| LZH | lzh, codecs | **+110,610 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +94,246 B (arithmetic), and **+104,394 B** where the directory says no entry is encrypted (measured) |
+| DiskDoubler | cptdd, codecs | **+104,394 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +80,778 B (arithmetic), **+90,926 B** unencrypted (measured) |
+| Tar | exo, codecs | **+90,926 B** (measured) |
+| ARC | arc, ciphers, codecs | **+101,910 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+107,382 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +103,456 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| SuperDisk! | superdisk, codecs | +113,122 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| Now Compress | now, codecs | **+115,240 B** (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,098 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
-and then -> 124,640 B with the five ciphers, so every grant rises with
+and then -> 124,640 B with the five ciphers, and -> 127,264 B on
+2026-10-03 with method 14, so every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. The two rows that
 moved differently are the ones whose own image grew — StuffIt's, which
@@ -3506,7 +3584,7 @@ by more than eight bytes.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 151,080 B held against 124,640 B saved. It costs nothing on the tiers
+it — 153,688 B held against 127,264 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -3657,7 +3735,7 @@ suffix says the compiler already cloned it with its arguments folded in.
 
 **The top 25 functions are ~55 KB of 138 KB**, so there is no single
 structural win here — only many small ones, each with correctness risk against
-a 932-fixture suite, for a few hundred bytes apiece.
+a 934-fixture suite, for a few hundred bytes apiece.
 
 **And the functions where the BYTES are are disjoint from the functions where
 the TIME is.** The `UNC_HOT` set — `sit_lzw`, `sit_huffman`,
@@ -5923,7 +6001,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 932 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 934 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 
@@ -6098,12 +6176,13 @@ Compact Pro encryption, mail-split archives, and segments other than StuffIt's
 — *"StuffIt Deluxe is able to expand and create encrypted Zip archives, but
 does not currently support segmented or spanned Zip archives"*, same chapter.
 
-**And it found a hole in this engine: StuffIt 5 method 14.** The installer's
-own archive uses it, `src/fmt_sit5.c` implements 0, 13 and 15, and 84 of its
-258 entries refuse with *"method 14 is not supported yet"* — every plug-in,
-the engine shell and the Deluxe application among them. **`unar` extracts all
-258**, so there is both a specimen and an oracle; the specimen is a 13 MB
-download rather than a corpus fixture. Measured 2026-09-28, on v0.34.0.
+**And it found a hole in this engine: StuffIt 5 method 14.** The
+installer's own archive uses it, and on v0.34.0 84 of its 258 entries
+refused with *"method 14 is not supported yet"* — every plug-in, the
+engine shell and the Deluxe application among them (80 of 258 by
+v0.36.0; four entries had gained support in between). **It is closed
+since 2026-10-03**: all 258 extract, and the figures are in *Method 14*
+below.
 
 ### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 

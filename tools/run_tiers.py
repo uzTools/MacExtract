@@ -230,7 +230,11 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # saved — the control took +2,024 B of resident CODE and the shipped
 # build took none, the 8 B being the A5 the control gave back. This is
 # the number the overlay build exists to make large.
-OVL_SAVED = 124640
+# 2026-10-03: 124,640 -> 127,264 with StuffIt method 14 in, and the same
+# shape again: the control took +2,620 B of resident CODE and +4 of A5
+# and the shipped build took neither, every byte of the decoder being in
+# the `ovl_stuffit` image.
+OVL_SAVED = 127264
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -271,7 +275,9 @@ OVL_RESIDUE = -666
 # every archive that is not a StuffIt one. **+48 B more the same day**, for
 # the rule that an Optimizer nothing can undo is DECODED rather than
 # refused, which the specimens settled; resident code and A5 did not move
-# for it at all. They are checked against that
+# for it at all. **STUFFIT re-taken again 2026-10-03, +2,604 B for
+# method 14** (src/sit14.c), 2,608 B of it in the image: resident code and
+# A5 did not move for that either. They are checked against that
 # build whenever it is present (check_images below), so this table cannot
 # drift silently while the toolchain is installed; it is stated rather than
 # only read so that the lane still runs where Retro68 is not.
@@ -287,11 +293,11 @@ IMAGES = {
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    23670,
+    "OVL_ID_STUFFIT":    26278,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 151080
+BUNDLE = 153688
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

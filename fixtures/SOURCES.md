@@ -908,6 +908,7 @@ suite that owns it (TESTING.md).
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
 | synth-sit-fixhuf.sit | 230ccec1522c0ea3deb1140cacb76c2dae3716cf9d6e5b9e26219ad4000867e8 | 2601 | synthetic:tools/synth_sit6.py |
 | synth-sit-rle90.sit | cdd044dcabffafe20f7dc54c9b9b28b0890330c528543e09cfe37e4e0b9d1b47 | 1287 | synthetic:tools/synth_sit1.py |
+| synth-sit14.sit | 34e589511b0338b9af2f63a891bbc9a448ed2548ab4c85ad5013238e9d6d3bc1 | 1859 | synthetic:tools/synth_sit14.py |
 | synth-uu-mac.uu | e2ac98889d442f3a3053a8c4d7be695c11f3b55accf79659f0c97d1172d9d705 | 3020 | synthetic:tools/synth_uu.py |
 | syserrtable30.sit | d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb | 24496 | http://www.nic.funet.fi/pub/mac/da/syserrtable30.sit |
 | systemidle.sit | 99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca | 18923 | http://www.nic.funet.fi/pub/mac/da/systemidle.sit |

@@ -52,6 +52,19 @@ hand.
                        wrote itself, which stop decoding if the
                        sixteen bytes are read anywhere but the fork's
                        end.
+  src/sit14.c          StuffIt 5's method 14, the whole file, from
+                       SIT_14/SIT14_ReadTree/SIT14_Update in
+                       XADStuffItOldHandles.m (libxad's decoder). No
+                       other implementation of the method exists to
+                       rewrite it from: deark names method 14
+                       "installer" and leaves its decompressor NULL,
+                       and `lsar` calls it "Installer" off the same
+                       lore. What is NOT transcribed is listed at the
+                       top of the file — the two recursions, the 17 KB
+                       of tables the reference builds and never reads,
+                       and the block-length wrap — and the four
+                       departures are measured against `unar` over
+                       every fork in reach.
   src/fmt_sit5.c       one bit of the encrypted archive's flag byte —
                        bit 5, which shifts the password hash by four
                        more bytes and which nothing reachable sets

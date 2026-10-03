@@ -1150,6 +1150,51 @@ exception. And it says nothing on a fresh clone: the specimens are emulator outp
 not committed, like `sitcrypt.py`'s, so the suite skips cleanly when they
 are absent.
 
+## StuffIt method 14 (`tools/synth_sit14.py`, in `ci.sh` via `run_diff`)
+
+**The format had no fixture and no suite could ask for it.** Method 14
+appears in no corpus archive: the two that settled the decoder are
+Aladdin's own installer payloads, 6.6 MB and 12.4 MB, neither committable
+nor restorable by `harvest.py` (FORMATS.md, *StuffIt 5's method 14*). So
+`tools/synth_sit14.py` writes the shape instead — an ENCODER for the
+format, from the same reading of libxad's `SIT_14` — and
+`fixtures/synth-sit14.sit` (1,859 B) is graded against `unar` by
+`run_diff` like every other fixture, on four entries chosen one per
+shape: literals across two blocks, the shortest match the ladder can
+state at the overlapping distance 1, extra bits on both ladders plus the
+**longest match the format can code** (16,387 B), and a **nested tree**
+— the code lengths themselves Huffman-coded, which is what 524 of the
+7.0.3 payload's 1,132 tree reads do.
+
+**Three implementations agree on those bytes**: the Python encoder, this
+engine's decoder, and `unar`. That is what makes the fixture evidence
+rather than a round trip through our own reading — and the agreement
+caught the encoder's first version, which wrote a repeat count without
+the escape value in front of it.
+
+**It can fail**, checked the way this repository checks: bending the
+match-length base by one byte in `src/sit14.c` fails this fixture and
+only this fixture, 31/32 (2026-10-03). Which also says that **no other
+fixture covers method 14** — if one did, the bend would have failed two.
+
+**Robustness.** `run_robustness.py` takes the fixture with everything
+else, so ten truncated and bit-flipped variants of it run under
+ASan+UBSan on every `ci.sh` run. **What that cannot see:** most variants
+of THIS fixture never reach the decoder — the 80-byte StuffIt 5 banner is
+4 % of a 1,859-byte file, so a whole-file mutation usually lands in it
+and the archive is refused as unrecognised, and a mutated length field
+is refused on the allocation budget. Measured instead by 2,000 mutants
+confined to the compressed streams, which reach **95.5 % of
+`unc_sit14_decode`'s lines and 100 % of every helper** (gcov) with no
+crash, no sanitizer trip and no timeout. That run is what found the
+decoder's one real defect — a signed left shift in the canonical code
+assignment, UB on a corrupt tree (DECISIONS.md 2026-10-03) — and a
+pre-existing leak in the CLI's own name-cut notice.
+
+**What none of it sees:** the two real payloads, which no committed
+suite can reach. They are re-run by hand, and the figures and what
+adjudicates them are in FORMATS.md, *StuffIt 5's method 14*.
+
 ## The forks `unar` refuses (`tools/run_ddforks.py`, on demand)
 
 `unar` 1.10.8 fails on 11 of the 33 DiskDoubler DDn forks in
@@ -1714,7 +1759,7 @@ on such an archive — it walks 65,535 entries and reports success, which is how
 a 70,000-entry zip lost 4,465 files silently until that date (FORMATS.md,
 *Size limits*).
 
-The corpus cannot reach this: **the largest zip in 932 fixtures has 29
+The corpus cannot reach this: **the largest zip in 934 fixtures has 29
 entries**, and robustness variants perturb a fixture rather than grow one. So
 the subjects are generated, and graded by three things that are not our
 output — CPython's `zipfile`, which wrote them and whose `namelist()` is the
@@ -1819,7 +1864,7 @@ Added 2026-08-27. Two caps meet a name — the engine's `UNC_NAME_MAX`
 first cut names with nothing said, so a 457-byte path extracted under a
 name that was not the archive's (FORMATS.md, *Name limits*).
 
-The subjects are generated because **the longest name in 932 fixtures is
+The subjects are generated because **the longest name in 934 fixtures is
 120 bytes** — under half the engine's cap, so neither the differential
 suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
@@ -2083,8 +2128,8 @@ progress callback.
 is a one-entry MacBinary wrapper, and probing it says nothing about the
 StuffIt walk inside; the descent is by result rather than by a list of
 formats — a layer yielding exactly one file that is itself a recognised
-archive is an envelope, whatever it is called. 932 fixtures become
-**1,349 archives walked three ways**, 419 of them behind a wrapper. The
+archive is an envelope, whatever it is called. 934 fixtures become
+**1,351 archives walked three ways**, 419 of them behind a wrapper. The
 whole sweep costs about 10 s, because what makes the differential suite
 slow is running `unar` and comparing files rather than our own decode.
 
@@ -2819,7 +2864,7 @@ emulator tiers are what cover these:
   heap probe built from `ApplicationZone`, `LMGetApplLimit` and `MaxBlock`.
 - **The control lane's oracle is this project's own output**, so it cannot
   notice a decoder that is wrong in both configurations. That is what the
-  932-fixture differential suite is for; this lane grades only that the
+  934-fixture differential suite is for; this lane grades only that the
   mechanism is transparent.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)

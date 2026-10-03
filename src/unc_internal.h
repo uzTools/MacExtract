@@ -1260,6 +1260,13 @@ int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
                        UncForkOut *f);
 
+/* Method 14 (sit14.c): LZSS over a window of up to 256 KB, both
+ * alphabets Huffman-coded per block. Writes into the fork writer, which
+ * keeps the container's CRC-16 — unlike Arsenic, this method carries no
+ * check of its own. */
+int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
+                     UncForkOut *f);
+
 /* Raw-deflate decode via vendored zlib (unc_inflate.c). Decodes one
  * complete deflate stream from `in`, leaving the reader positioned on
  * the first byte after it. maxout: expected output size cap, or

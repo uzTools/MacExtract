@@ -1122,6 +1122,7 @@ int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
     case 6:  err = sit6_fork(&f, &in, stream, c->al); break;
     case 8:  err = sit_mw_fork(&f, &in, stream, c->al); break;
     case 13: err = sit13_fork(&f, &in, stream, c->al); break;
+    case 14: err = unc_sit14_decode(&in, c->al, stream, &f); break;
     case 15: err = unc_arsenic_decode(&in, c->al, stream, &f); break;
     default: return UNC_ERR_UNSUPPORTED;
     }

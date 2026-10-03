@@ -106,6 +106,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit5\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_arsenic\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "sit14\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_ccube\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_exo\\.c$")
     # zlib and the inflate wrapper go with them: fmt_exo is their only caller,
@@ -572,6 +573,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sit_probe.c
             ${ENGINE_DIR}/src/fmt_sit5.c
             ${ENGINE_DIR}/src/fmt_sit5_probe.c
+            ${ENGINE_DIR}/src/sit14.c
             ${ENGINE_DIR}/src/sit_arsenic.c
             ${ENGINE_DIR}/src/sit_ccube.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_stuffit.c
@@ -582,6 +584,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_sit_probe.c
             ${ENGINE_DIR}/src/fmt_sit5.c
             ${ENGINE_DIR}/src/fmt_sit5_probe.c
+            ${ENGINE_DIR}/src/sit14.c
             ${ENGINE_DIR}/src/sit_arsenic.c
             ${ENGINE_DIR}/src/sit_ccube.c
             ${OVL_DEPS})

@@ -73,13 +73,22 @@ and its size was fixed when the archive was made. Those entries are skipped
 with a message and the rest of the archive still comes out. Every other format
 fits in 512 KB, and with 1 MB the question does not arise.
 
-v0.36.0 is about one program: StuffIt Deluxe 2.0, from 1990. Everything
-that application could write, this one now opens.
+v0.37.0 opens the last StuffIt archives this program could not: the
+ones made with compression method 14, which StuffIt 5 used and nothing
+else ever wrote. Aladdin's own installers are full of them -- in StuffIt
+Deluxe 7.0.3's, 80 of its 258 files used it, and this program listed
+them and gave up. All 258 come out now, and all 184 of StuffIt Deluxe
+5.5's. If you have ever been told a .sit was "not supported yet" on a
+file this program could see the names inside, this is the release that
+reads it.
+
+v0.36.0, before it, was about one program: StuffIt Deluxe 2.0, from
+1990. Everything that application could write, this one opens.
 
 Its five add-on Optimizers, which no StuffIt since has opened, are
-described further down. New here is the other half: StuffIt Deluxe 2.0
-could lock an archive with a password, four different ways, and all four
-open now -- its own DES and NewDE, and the NewDEx and DESex plug-ins
+described further down. The other half of that release: StuffIt Deluxe
+2.0 could lock an archive with a password, four different ways, and all
+four open -- its own DES and NewDE, and the NewDEx and DESex plug-ins
 from its optional disk. You give the password; the archive opens. A
 fifth, a third-party add-on called PassLock, turns out never to have
 encrypted anything at all: it writes a password into the file and

@@ -330,7 +330,17 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # The CONTROL carries them resident where the release has them in the
 # crypt overlay, which is the whole point of the control — +856 B of
 # code and +8 of A5 here against +8 and -8 in what ships.
-UNC_MAC_CODE_DEFAULT=158972
+# RAISED 2026-10-03 to 161,596, the CONTROL ONLY: StuffIt method 14
+# (src/sit14.c, 2,613 B of text and no data or bss at all, measured off
+# the object). **The shipped build did not move**, eager code and A5
+# both +0, because the decoder goes in the `ovl_stuffit` image — 23,670
+# -> 26,274 B, read at launch and released for every archive that is
+# not a StuffIt one. 4 B of the 2,624 came out of the A5 world below,
+# which is the rodata-alignment effect this file records either way.
+# What the bytes bought: the 80 entries of StuffIt Deluxe 7.0.3's own
+# installer and the 71 of 5.5's that this engine listed and refused
+# (DECISIONS.md 2026-10-03).
+UNC_MAC_CODE_DEFAULT=161596
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -416,6 +426,11 @@ UNC_MAC_CODE_DEFAULT=158972
 # LOWERED 2026-09-26, −4 B, at the size on the day: the same change moved
 # 4 B out of the A5 world as it put 4 B into code. A ratchet is lowered on
 # the terms it is raised.
+# UNMOVED 2026-10-03 by StuffIt method 14, and that is measured rather
+# than assumed: `size -A` puts src/sit14.c at 2,613 B of text, 0 of
+# .data and 0 of .bss, so it has nothing to put here. It read 4 B higher
+# in the middle of that work and went back when the decoder's own text
+# changed — rodata alignment, the effect recorded four times above.
 UNC_MAC_A5_DEFAULT=37892
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries

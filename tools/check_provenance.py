@@ -50,6 +50,7 @@ CARRIES = {
     "fmt_packit.c":     "the resync strategy (macutils pit.c) and both ciphers",
     "fmt_sit.c":        "three method-8 rules no specimen reaches",
     "fmt_sit5.c":       "the encrypted header's bit 5, which nothing here sets",
+    "sit14.c":          "StuffIt 5's method 14, the whole file (libxad's SIT_14)",
     "fmt_dd.c":         "the DDAR 0x20 raw-fork shape",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
     "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, PackIt's keytr1, ARC's garble",

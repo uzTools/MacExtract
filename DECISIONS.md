@@ -326,6 +326,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-02 (the question that was about the user, not the format) — `PassLock` protects nothing, so the engine stops refusing
 - 2026-10-02 (the verifier that said where NOT to look) — all five of StuffIt 2.x's ciphers, decrypted
 - 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
+- 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
 
 ---
 
@@ -20266,3 +20267,80 @@ both finite and what users have. This repository has the same shape
 elsewhere — "every method the corpus uses" versus every method the
 format defines — and the first is a measurement while the second is an
 argument.
+
+## 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
+
+**The session opened with "the only open items need files we don't have",
+and that was wrong about one row.** StuffIt 5 method 14 sat in
+OPEN_ITEMS.md asking for *a decoder* — and everything a decoder needs was
+already on this disk: two specimens (Aladdin's own 5.5 and 7.0.3
+installer payloads), an oracle that reads them (`unar`), and a reference
+implementation in `reference/XADMaster/XADStuffItOldHandles.m`, the file
+this project already transcribes for method 8. **Re-reading the row cost
+less than believing it.** The engine listed 258 entries of 7.0.3's
+installer and refused 80 of them; it extracts all 258 now.
+
+**What the method is**: LZSS over a 256 KB window with both alphabets
+canonically Huffman-coded per block, and a third alphabet the code
+lengths themselves may be coded in. Nothing else implements it — deark
+names it "installer" with a NULL decompressor — so the citation is
+permanent and is in NOTICE and Part 1 of OPEN_ITEMS.md, not Part 2.
+
+**Four places where the transcription deliberately departs, and each is
+measured rather than argued:**
+
+- **Two recursions had to go** (68000 discipline): the code-length
+  quicksort, which is the same partition driven from an explicit range
+  stack — the permutation is identical because each subrange is sorted
+  independently and the order they are taken in cannot change the result
+  — and the nested tree read, which becomes a branch rather than a
+  self-call.
+- **A nested tree that nests again is refused.** The reference passes one
+  array as both the inner call's scratch and its result, so a second
+  level would decode through a trie it was overwriting. That is not a
+  format, it is an aliasing accident; and no stream reaches it — 797
+  nested reads across both payloads, every one at depth 1.
+- **The byte boundary discards its bits.** `xadIOByteBoundary` clears the
+  bit COUNT and leaves up to seven bits in the buffer, which the next
+  refill ORs a byte over; it only works because encoders pad with zeros.
+  Measured: **3,326 boundaries across both payloads, not one with a
+  nonzero pad**, so the two readings cannot be told apart here.
+- **The block length clamps instead of wrapping.** The reference lets
+  `n -= matchlen` go through zero and relies on the output limit to stop.
+
+**The 17 KB of tables that are not there.** `SIT_14` builds `var6[1024]`
+and `var8[0x4000]` and never reads either: they are a compressor's
+inverse mapping, left in a decoder. Transcribing a reference means
+reading it, not copying it — 17 KB of a 283 KB working set, on a machine
+whose floor is 1 MB.
+
+**The grading needed an ENCODER, and that is the transferable part.**
+Both specimens are multi-megabyte commercial installers: not
+committable, not restorable, so no suite in `ci.sh` could ever have
+touched this decoder. `tools/synth_sit14.py` writes the format instead —
+1,859 B, four entries, one shape each — and `unar` adjudicates it, so
+three implementations agree about every byte. **Writing the encoder is
+also what proved the reading**: its first version emitted a repeat count
+without the escape in front of it, and the decoder said so.
+
+**What the fuzzer could not do, and what it then found.** 1,500 cases of
+`fuzz.py` entered not one method-14 function: the seed is drawn from 946
+fixtures and this one is 1,859 B. Pointing 2,000 mutants at its streams
+instead reached 95.5 % of the decoder's lines — and failed twice. One was
+a signed left shift in the canonical code assignment, undefined on a
+corrupt tree where the reference's unsigned counter merely wraps; the
+other was a leak in `cli/main.c` that predated all of this, on the path
+where the archive fails after a name was shortened — which also means
+the notice telling a user where those files went was suppressed on
+exactly the runs where it was least obvious. **A targeted fuzz run is
+worth more than a bigger random one when the seed is small**, and
+"0 failures" from a run you have not measured the reach of is the
+emptiest kind of green.
+
+**What it costs the Macintosh: nothing resident.** 2,613 B of text, all
+of it in the `ovl_stuffit` image (23,670 → 26,278 B), which is released
+for every archive that is not a StuffIt one — so the shipped build's
+`CODE` and A5 did not move by a byte, and the control's +2,624 B is what
+the overlay build exists to avoid paying. Peak heap is 276 KB on a real
+fork and 65 KB on the synthetic, because the window is sized to the fork
+(`sit13_winsize`'s argument). No tier tally moves.

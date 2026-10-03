@@ -82,9 +82,17 @@ TAKEN = "2026-09-28"
 # is `DES`, `DESex`, `NewDE`, `NewDEx` and `PassLock`, all five graded
 # against a known plaintext (FORMATS.md, *The three ways 2.0.1
 # encrypts*). `run_tiers.py --check` moves no tally in either lane.
-EXPECT_BUNDLE = 151080
+# RE-TAKEN 2026-10-03, 151,080 -> 153,688: StuffIt 5's method 14
+# (`src/sit14.c`). All 2,608 B of it are in `ovl_stuffit.bin`,
+# 23,670 -> 26,278 B, so the SHIPPED build's resident `CODE` and A5 did
+# not move at all and EXPECT above is untouched. What was bought is the
+# last StuffIt method this engine could not read: 258 of 258 entries in
+# StuffIt Deluxe 7.0.3's own installer where 80 refused, and 184 of 184
+# in 5.5's (FORMATS.md, *StuffIt 5's method 14*). `run_tiers.py --check`
+# moves no tally in either lane.
+EXPECT_BUNDLE = 153688
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-02"
+TAKEN_BUNDLE = "2026-10-03"
 
 
 def main():
