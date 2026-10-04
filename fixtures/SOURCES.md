@@ -833,6 +833,7 @@ suite that owns it (TESTING.md).
 | resmaster.sit | eecfa4a0bec1aaa9914629a8bebfe4175dda500abf8d3399e74d7b841f233c38 | 24148 | http://www.nic.funet.fi/pub/mac/da/resmaster.sit |
 | retrospect-2i-patch.hqx | 821fb33a816f112765f44a5924c760831ed0facd457a8d8ed41589102dd6a445 | 39354 | http://www.nic.funet.fi/index/info-mac/disk/retrospect-2i-patch.hqx |
 | reversescreen.bin | 3ff8c666221f707d4262a4542f9082a535ba693ae28bfdc30c6c5fbc0a495f44 | 1944 | http://www.nic.funet.fi/pub/mac/cdev/reversescreen.bin |
+| rexnebular_1_0_0.zip | 413ed07cba844da89d87d8e12ef18307aae11980a7d1c5a56d9c72e0af50cfb0 | 31167318 | https://old.mac.gdn/games/rexnebular_1_0_0.zip |
 | ripem-mac-08b2.hqx | 993fb34741a166ac9bfb14d8bbf4af98f28c80c44c86d862128772768111cb36 | 186185 | http://www.nic.funet.fi/index/info-mac/cmp/ripem-mac-08b2.hqx |
 | robert_s-text-cleanup-10.hqx | 2b2960ec1d9bc617d5526bdad2911ac4cbc08a77cb8b676d602ed74fef576eae | 73817 | http://www.nic.funet.fi/index/info-mac/text/robert's-text-cleanup-10.hqx |
 | rp-converter-11-hc.hqx | 7e31e419eb54d90a0437734b81a9a65a406857ea8d19d3893cd5cf05c9df34c1 | 10834 | http://www.nic.funet.fi/index/info-mac/cmp/rp-converter-11-hc.hqx |

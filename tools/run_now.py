@@ -61,7 +61,7 @@ def forks(root, path, who):
     side = os.path.join(head, "._" + tail)
     if not os.path.isfile(side):
         return data, b"", None, None
-    rsrc, typ, creator = parse_appledouble(side)
+    rsrc, typ, creator, _flags = parse_appledouble(side)
     return data, rsrc or b"", typ, creator
 
 

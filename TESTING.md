@@ -169,8 +169,8 @@ unar -nr -D -f -q -k hidden -e <enc> -o <tmpdir> <fixture>
 
 `fixtures/manifests/<fixture>.json`: fixture sha256/size, lsar format
 name, and per entry: name (UTF-8, NFC-normalized), data fork
-sha256+size, resource fork sha256+size, type/creator when the oracle
-exposes them, and `oracle_methods` — the compression method(s) `lsar`
+sha256+size, resource fork sha256+size, type/creator and `finder_flags`
+when the oracle exposes them, and `oracle_methods` — the compression method(s) `lsar`
 names for that entry (`XADCompressionName`; two forks can differ, so it
 is a list). Nothing in the engine reads it; it exists so a harness can
 ask what an entry is compressed with without asking the engine.
@@ -190,6 +190,72 @@ written in 1990, and the five Compact Pro Package installers), and
 `derived-MUSFMT10.ZIP`, whose 495-byte end-of-central-directory comment
 has been saved since 2026-08-26. All seven are graded; no format is
 excused.
+
+And, for a fixture that needs one, `ungraded`: the fields no oracle on
+this machine can adjudicate, with the reason beside each. One fixture
+has one (*The Finder metadata, and the one field no oracle settles*,
+below).
+
+### The Finder metadata, and the one field no oracle settles
+
+`run_diff.py` lists with `macextract l --finder`, which prints type,
+creator and Finder flags as hex. **The pretty columns could not be read
+back:** `%4s/%-4s` of a code holding a space (`PDF `) or a NUL moves the
+name by a field, so the suite looked that entry up under a mangled name,
+found no manifest entry, and compared nothing — silently. **200 of the
+corpus's 5,539 type/creator codes hold a space** (measured 2026-10-04).
+All 935 fixtures pass with the hex form, so what the silence hid was
+agreement; the hole was in what COULD have been seen, which is the point
+(DECISIONS.md 2026-10-04, *the column that moved the name*).
+
+The flags are graded wherever the ORACLE recorded them — AppleDouble's
+`fdFlags` where `unar` wrote a sidecar, `lsar`'s `XADFinderFlags`
+otherwise, and the two agree on all 423 entries where both are present.
+**A manifest built before 2026-10-04 carries no such key and grades
+nothing here**, so `run_diff.py` prints the number of entries it did
+compare rather than letting a silent zero read as coverage. Across the
+corpus 3,195 entries would be gradeable and the engine agrees with
+`lsar` on every one (measured 2026-10-04); backfilling them means
+rebuilding manifests, which is its own change.
+
+**The dates are graded nowhere, and for zip's `0x334d` nothing can grade
+them:** XADMaster adds `CrGMTOffs`, deark subtracts it, and both label
+the result UTC (FORMATS.md, *Zip's Macintosh extra fields*). So the
+fixture that carries the field DECLARES the exclusion rather than
+inheriting it from the manifest schema's silence:
+
+```json
+"ungraded": { "dates": "XADMaster adds CrGMTOffs and deark subtracts it ..." }
+```
+
+`run_diff.py` refuses any other key under `ungraded` — a fixture cannot
+declare away a field the suite does compare — requires a non-empty
+reason, and prints every declaration on each run.
+`make_manifests.py` carries the key across a `--force` rebuild, which is
+what keeps the one tolerance from being dropped by a command that looks
+like a refresh.
+
+**What this cannot see:** whether the dates are right — nothing on this
+machine can say; the flags of any entry whose manifest predates the
+field; and anything the oracle does not report at all, since an absent
+value is never compared and never excused.
+
+**What the fixture costs, measured before it was taken** (2026-10-04,
+the sanitizer build):
+
+| | cost |
+|---|---|
+| `run_diff.py`, this fixture alone | **0.51 s**, median of 5 — against 0.03 s for `derived-MUSFMT10.ZIP`. `ci.sh` runs the diff suite in five build variants, so **~2.6 s** a run |
+| `run_robustness.py`, its ten variants | **2.8 s**, median of 3, in three variants: **~8.4 s** a run. The four truncations cost nothing at all — a zip is read from its end, so a cut one is refused before anything inflates |
+| the slowest single variant | **0.51 s**, against the suite's 30 s timeout: 59× of headroom, which is the figure that matters for a fixture ten times larger than any other |
+| `fixtures/` on disk | **+31,167,318 B** on 72 MB, +41 %, and 10.5× the previous largest fixture |
+
+**The suite-level wall clock cannot see any of this, and that is worth
+recording so it is not re-measured that way.** Eleven suites timed with
+the fixture and again without it came to 489 s against 511 s — the run
+WITHOUT it was 22 s slower, and the diff suite alone moved 24.7 → 38.4 s
+between two runs of identical work. Run-to-run variance on this machine
+is larger than the whole quantity. **Time the fixture, not the suite.**
 
 ### When the oracle fails on an entry
 
@@ -1767,7 +1833,7 @@ on such an archive — it walks 65,535 entries and reports success, which is how
 a 70,000-entry zip lost 4,465 files silently until that date (FORMATS.md,
 *Size limits*).
 
-The corpus cannot reach this: **the largest zip in 934 fixtures has 29
+The corpus cannot reach this: **the largest zip in 935 fixtures has 29
 entries**, and robustness variants perturb a fixture rather than grow one. So
 the subjects are generated, and graded by three things that are not our
 output — CPython's `zipfile`, which wrote them and whose `namelist()` is the
@@ -1872,7 +1938,7 @@ Added 2026-08-27. Two caps meet a name — the engine's `UNC_NAME_MAX`
 first cut names with nothing said, so a 457-byte path extracted under a
 name that was not the archive's (FORMATS.md, *Name limits*).
 
-The subjects are generated because **the longest name in 934 fixtures is
+The subjects are generated because **the longest name in 935 fixtures is
 120 bytes** — under half the engine's cap, so neither the differential
 suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
@@ -2136,7 +2202,7 @@ progress callback.
 is a one-entry MacBinary wrapper, and probing it says nothing about the
 StuffIt walk inside; the descent is by result rather than by a list of
 formats — a layer yielding exactly one file that is itself a recognised
-archive is an envelope, whatever it is called. 934 fixtures become
+archive is an envelope, whatever it is called. 935 fixtures become
 **1,351 archives walked three ways**, 419 of them behind a wrapper. The
 whole sweep costs about 10 s, because what makes the differential suite
 slow is running `unar` and comparing files rather than our own decode.
@@ -2872,7 +2938,7 @@ emulator tiers are what cover these:
   heap probe built from `ApplicationZone`, `LMGetApplLimit` and `MaxBlock`.
 - **The control lane's oracle is this project's own output**, so it cannot
   notice a decoder that is wrong in both configurations. That is what the
-  934-fixture differential suite is for; this lane grades only that the
+  935-fixture differential suite is for; this lane grades only that the
   mechanism is transparent.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)

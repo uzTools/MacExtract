@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 934 fixtures in `./ci.sh`.
+byte-exact against the oracle across 935 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -187,7 +187,6 @@ code.
 |---|---|
 | ZipIt's `0x2705`/`0x2805`/`0x2605` are graded on GENERATED archives | **one real ZipIt archive.** `lsar` agrees on all three fields and `unar` agrees on a `0x2605` entry's forks, but every subject was written here, and `0x2605`'s own premise — that ZipIt sets it when and only when the data is MacBinary — is APPNOTE.TXT 4.6.4's word and nothing this machine can check. ZipIt was shareware and its archives are plain `.zip`: **invisible to a search by name**, which is the blind spot that hid the whole item until a user's download page named it (DECISIONS.md 2026-10-01) |
 | the StuffIt result is read rather than run for 5.5 and 7.0.3 | **an emulator that installs them.** Their zip readers were lifted out of the installers without booting anything and neither tests for the field (FORMATS.md, *What Aladdin's own software does with the same bytes*) — but only 3.5.2 has been run over an archive. 5.5 wants a 68020 and 7.0.3 a PowerPC, so both mean the Mac OS 9 QEMU harness, which has no mode for installing third-party software and a pointer that costs ~40 s a move. **This engine now extracts both payloads whole** (FORMATS.md, *StuffIt 5's method 14*), so the install can be ASSEMBLED rather than driven — the engine and translator placed in a System Folder — which is the cheaper route and is untried |
-| no Macintosh zip is in the corpus at all | **a fixture, and a decision about the dates first.** `rexnebular_1_0_0.zip` is real, is graded 22/22 on type/creator and Finder flags, and is 29.7 MB — the largest fixture there would be. Adding it with DATES graded would fail against `lsar`, by the 5 h its `CrGMTOffs = -18000` accounts for, and the failure would be the oracle's: XADMaster and deark disagree on that field's sign. That has to be written down as the oracle's limit before a fixture can rest on it (FORMATS.md, *Zip's Macintosh extra fields*) |
 
 ## The overlay loader: what no emulator here can answer
 

@@ -67,19 +67,25 @@ def sha256_file(path):
 
 
 def parse_appledouble(path):
-    """Return (rsrc_bytes, type4cc, creator4cc) from an AppleDouble file.
+    """Return (rsrc_bytes, type4cc, creator4cc, finder_flags) from an
+    AppleDouble file.
 
     AppleDouble layout (per RFC 1740 / the files unar emits):
       u32 magic 0x00051607, u32 version, 16 bytes filler, u16 nentries,
       then nentries * (u32 id, u32 offset, u32 length).
       id 2 = resource fork, id 9 = Finder info (type + creator + flags).
+
+    The flags are bytes 8..9 of the Finder info, `fdFlags`. They agree
+    with lsar's XADFinderFlags wherever both are present (423 entries
+    checked 2026-10-04), so either source is the oracle's word; this
+    takes them from the same place it takes type and creator.
     """
     with open(path, "rb") as f:
         blob = f.read()
     if len(blob) < 26 or struct.unpack(">I", blob[:4])[0] != 0x00051607:
-        return None, None, None
+        return None, None, None, None
     nent = struct.unpack(">H", blob[24:26])[0]
-    rsrc, typ, creator = b"", None, None
+    rsrc, typ, creator, flags = b"", None, None, None
     for i in range(nent):
         off = 26 + 12 * i
         if off + 12 > len(blob):
@@ -92,7 +98,9 @@ def parse_appledouble(path):
         elif eid == 9 and elen >= 8:
             typ = blob[eoff:eoff + 4].decode("mac_roman")
             creator = blob[eoff + 4:eoff + 8].decode("mac_roman")
-    return rsrc, typ, creator
+            if elen >= 10:
+                flags = struct.unpack(">H", blob[eoff + 8:eoff + 10])[0]
+    return rsrc, typ, creator, flags
 
 
 def norm(name):
@@ -165,8 +173,8 @@ def oracle_encoding(fmt):
 
 
 def lsar_metadata(fixture, encoding=ORACLE_ENCODING_DEFAULT):
-    """Return (formatname, {name: (type, creator)}, {name: [method, ...]},
-    archive comment or None).
+    """Return (formatname, {name: (type, creator, finder_flags)},
+    {name: [method, ...]}, archive comment or None).
 
     The method names are the ORACLE's own (`XADCompressionName`), one set
     per entry name because a two-fork entry is two lsar records and the
@@ -193,8 +201,9 @@ def lsar_metadata(fixture, encoding=ORACLE_ENCODING_DEFAULT):
     for e in data.get("lsarContents", []):
         name = norm(e.get("XADFileName", ""))
         t, c = e.get("XADFileType"), e.get("XADFileCreator")
+        ff = e.get("XADFinderFlags")
         to4 = lambda v: struct.pack(">I", v).decode("mac_roman") if v else None
-        meta[name] = (to4(t), to4(c))
+        meta[name] = (to4(t), to4(c), None if ff is None else ff & 0xffff)
         m = e.get("XADCompressionName")
         if m:
             methods.setdefault(name, set()).add(m)
@@ -825,7 +834,13 @@ def build_manifest(fixture_path, verbose=False):
             fs = set(files)
             for d in sorted(dirs):
                 p = norm(os.path.normpath(os.path.join(rel, d)))
-                entries.append({"name": p, "is_dir": True})
+                ent = {"name": p, "is_dir": True}
+                # A folder has Finder flags of its own and the oracle
+                # reports them (0x03f0 on a MacZip folder); nothing else
+                # about a directory is ground truth here.
+                if p in meta and meta[p][2] is not None:
+                    ent["finder_flags"] = meta[p][2]
+                entries.append(ent)
             # One entry per name, whether it arrived as a data-fork
             # file, a "._" sidecar, or both. A sidecar with no data
             # file beside it is a real entry whose data fork is empty:
@@ -847,7 +862,7 @@ def build_manifest(fixture_path, verbose=False):
                     ent["data_sha256"] = sha256_file(full)
                 ad = os.path.join(root, "._" + base)
                 if os.path.exists(ad):
-                    rsrc, typ, creator = parse_appledouble(ad)
+                    rsrc, typ, creator, fflags = parse_appledouble(ad)
                     # Every "._" file unar writes is an AppleDouble
                     # container; one that is not means the oracle put
                     # something else there, which is not ground truth.
@@ -862,8 +877,17 @@ def build_manifest(fixture_path, verbose=False):
                         ent["type"] = typ
                     if creator:
                         ent["creator"] = creator
+                    if fflags is not None:
+                        ent["finder_flags"] = fflags
                 if "type" not in ent and p in meta and meta[p][0]:
                     ent["type"], ent["creator"] = meta[p][0], meta[p][1]
+                # The Finder flags, from whichever of the two the oracle
+                # offered. An entry the oracle reports no flags for gets
+                # no key: an absent field must never become an excuse,
+                # so run_diff grades the ones that are here and says how
+                # many that is.
+                if "finder_flags" not in ent and p in meta and meta[p][2] is not None:
+                    ent["finder_flags"] = meta[p][2]
                 if p in methods:
                     ent["oracle_methods"] = methods[p]
                 # A fork the oracle failed on is not ground truth,
@@ -1019,7 +1043,21 @@ def main():
                       file=sys.stderr)
                 skipped += 1
                 continue
+        prev = {}
+        if os.path.exists(out):
+            try:
+                prev = json.load(open(out))
+            except ValueError:
+                prev = {}
         m = build_manifest(fx)
+        if m is not None and prev.get("ungraded"):
+            # A declaration of what no oracle can grade is the
+            # manifest's own word, not the oracle's, so a rebuild has
+            # nothing to regenerate it from: carry it across, or the
+            # next --force silently drops the one tolerance a fixture
+            # rests on (TESTING.md, *The Finder metadata, and the one
+            # field no oracle settles*).
+            m["ungraded"] = prev["ungraded"]
         if m is None:
             failed += 1
             # A stale manifest for an oracle-unreliable fixture is

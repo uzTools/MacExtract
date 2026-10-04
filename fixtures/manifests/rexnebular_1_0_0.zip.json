@@ -1,0 +1,290 @@
+{
+ "entries": [
+  {
+   "creator": "DDp+",
+   "data_sha256": "87355b6273ff60bc50f1ac7d3fe6d492f2dd7db2df94cbbd5a8fbe13a93b7209",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_1.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "4f43a1ac18f4f8d2ccf273b879dd49bc86de965e3f9c15f4450de8c28fac77d5",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_2.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "6bfd675fdf4ff7e7c9b0066b6307e6e74a3447320cc26958d634cc337efd3730",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_3.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "91fba311d194281e0f0da083698579e1ffcb2c49e44cc4d765c7bbc7c923c1e3",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_4.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "e5bfdd4ff1d442f59789aa5ed0ff6dfb42d4690b0906d565aead7d46cb94b6a4",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_5.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "4625b07517174328c4e2a4fe90f903f4680f032ce0c4b17b58a37f0662f8cfe9",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_6.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "b529950812acfd861747014668a2c3950d14d5570ce1b56598ff099b1244714e",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_7.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "1d6aa63808642628d78bd655a6a3aaa56ac3e44082aa655e941fbf5cb6b6ba9f",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_8.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "0bf57dbe22e0dfd858822ad2fde1c222859d7ddf1038c90f9bee634dc8bd42db",
+   "data_size": 1474560,
+   "finder_flags": 256,
+   "name": "Rex_9.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "DDp+",
+   "data_sha256": "38e80fe224bcbb8275e0bdfcf5664889aab863f441123ca5fb9dbd5f6b535cad",
+   "data_size": 13932544,
+   "finder_flags": 256,
+   "name": "Rex_Installed.dsk",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "DDim"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "914764b33d8641437914d7be430f8c1e381d61619bb974361bd38a3d98fc5d62",
+   "data_size": 448,
+   "finder_flags": 256,
+   "name": "checksum.md5",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "finder_flags": 1008,
+   "is_dir": true,
+   "name": "docs"
+  },
+  {
+   "creator": "CARO",
+   "data_sha256": "422dc24f396bc3310ac0c6b677e44e9c998a7916135e258b8ac6ce0ebe3fc10d",
+   "data_size": 2776304,
+   "finder_flags": 256,
+   "name": "docs/mac_package.pdf",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PDF "
+  },
+  {
+   "creator": "CARO",
+   "data_sha256": "f6b0d518e76f1a25961fbf8e27d7f4131af2c1b78fdc19adaa8ae3e34cbd6b50",
+   "data_size": 973109,
+   "finder_flags": 256,
+   "name": "docs/mac_supplement.pdf",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PDF "
+  },
+  {
+   "creator": "CARO",
+   "data_sha256": "4874bca0d1db623a3ee9e19477c5850576b1d2ebe7b4689d193cbe86fd788c49",
+   "data_size": 2874913,
+   "finder_flags": 256,
+   "name": "docs/pc_audio_log.pdf",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PDF "
+  },
+  {
+   "creator": "CARO",
+   "data_sha256": "ab3b7a4012e16a20b46ee00620f2d58f7a01db7b299574e531c3a5bf72c9565c",
+   "data_size": 3569059,
+   "finder_flags": 256,
+   "name": "docs/pc_manual.pdf",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "PDF "
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "d8b0e91e3f7d5ac25c2a9d33c3a18c42803883051308ce0e40256ee37278d7ff",
+   "data_size": 9535,
+   "finder_flags": 256,
+   "name": "docs/rex_bonus_notes.txt",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "3f7979cfce23705f41070a0144aaf37027af24061c3d037d1d8767888df2d046",
+   "data_size": 739,
+   "finder_flags": 256,
+   "name": "docs/rex_codes.txt",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "d99698b23746b3b3eb0d94b34fde813172fd631425112defbb9077fa825d5c32",
+   "data_size": 1198,
+   "finder_flags": 256,
+   "name": "docs/rex_codes_dos.txt",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "864c47b55438067915fe19f9515d2606118a1b167d539ac217aa9d246212437d",
+   "data_size": 5607,
+   "finder_flags": 256,
+   "name": "docs/rex_game_hints.txt",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "d3110dca8023280ee8f37bd6206d2ba5d122dc469979bf04a4c5e607d251ce65",
+   "data_size": 11970,
+   "finder_flags": 256,
+   "name": "docs/rex_walkthrough_a.txt",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MSWD",
+   "data_sha256": "710c5b7cda9e709cb2a9ae46673b28d9b908ccae8b93ca4470cafb99f2c29c18",
+   "data_size": 9010,
+   "finder_flags": 256,
+   "name": "docs/rex_walkthrough_b.txt",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "rexnebular_1_0_0.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "413ed07cba844da89d87d8e12ef18307aae11980a7d1c5a56d9c72e0af50cfb0",
+ "size": 31167318,
+ "ungraded": {
+  "dates": "XADMaster adds CrGMTOffs and deark subtracts it, both labelling the result UTC, so no second implementation adjudicates Info-ZIP 0x334d's three Macintosh dates. Every entry here carries CrGMTOffs = -18000, so this engine's unadjusted dates stand 5 h from lsar's on all 22 (FORMATS.md, *Zip's Macintosh extra fields*)."
+ }
+}

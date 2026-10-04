@@ -345,6 +345,17 @@ typedef struct {
     int         nonly;
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
+    int         show_finder;    /* --finder: the Finder metadata as hex
+                                 * — type, creator, flags — in place of
+                                 * the four-character columns. Off by
+                                 * default: the hex is for a parser, not
+                                 * a reader. The pretty columns cannot be
+                                 * read back, which is why this exists: a
+                                 * code holding a space ("PDF ") or a NUL
+                                 * moves the name, and the suite then
+                                 * compares nothing at all (TESTING.md,
+                                 * *The Finder metadata, and the one
+                                 * field no oracle settles*) */
     const char *archive;        /* the archive's own filename: the
                                  * comment file is named after it       */
     int         no_comment;     /* --no-comment: read it, drop it       */
@@ -575,15 +586,25 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         }
         fourcc_str(info->type, t);
         fourcc_str(info->creator, c);
-        if (info->is_dir)
-            printf("d %10s %10s %-9s %s\n", "-", "-", "-", name);
-        else {
+        if (info->is_dir) {
+            if (s->show_finder)
+                printf("d %10s %10s %08lx/%08lx %04x %s\n", "-", "-",
+                       (unsigned long)info->type, (unsigned long)info->creator,
+                       (unsigned)info->finder_flags, name);
+            else
+                printf("d %10s %10s %-9s %s\n", "-", "-", "-", name);
+        } else {
             char dsz[16], rsz[16];
             if (info->data_size == UNC_SIZE_UNKNOWN) snprintf(dsz, sizeof dsz, "?");
             else snprintf(dsz, sizeof dsz, "%u", info->data_size);
             if (info->rsrc_size == UNC_SIZE_UNKNOWN) snprintf(rsz, sizeof rsz, "?");
             else snprintf(rsz, sizeof rsz, "%u", info->rsrc_size);
-            printf("f %10s %10s %4s/%-4s %s\n", dsz, rsz, t, c, name);
+            if (s->show_finder)
+                printf("f %10s %10s %08lx/%08lx %04x %s\n", dsz, rsz,
+                       (unsigned long)info->type, (unsigned long)info->creator,
+                       (unsigned)info->finder_flags, name);
+            else
+                printf("f %10s %10s %4s/%-4s %s\n", dsz, rsz, t, c, name);
         }
         return 1; /* skip data */
     }
@@ -1940,6 +1961,10 @@ static void usage(void)
         "                 <archive>.comment.txt, and printed by l and t\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
+        "  --finder       with l, the Finder metadata as hex — type,\n"
+        "                 creator, flags — in place of the four-character\n"
+        "                 columns, which a parser cannot read back when a\n"
+        "                 code holds a space or a NUL\n"
         "  -v             verbose\n"
         "  --version      print the version and exit\n");
 }
@@ -1948,6 +1973,7 @@ int main(int argc, char **argv)
 {
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
     int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
+    int show_finder = 0;
     int no_comment = 0;
     uint32_t budget = 0;
     int i;
@@ -2027,6 +2053,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--no-comment") == 0) no_comment = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
+        else if (strcmp(argv[i], "--finder") == 0) show_finder = 1;
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
         else if (argv[i][0] == '-') { usage(); return 2; }
         else file = argv[i];
@@ -2077,6 +2104,7 @@ nextlayer:
     sink.overwrite = overwrite;
     sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
     sink.verbose = verbose;
+    sink.show_finder = show_finder;
 
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;

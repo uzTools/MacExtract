@@ -327,6 +327,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-02 (the verifier that said where NOT to look) — all five of StuffIt 2.x's ciphers, decrypted
 - 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
 - 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
+- 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
 
 ---
 
@@ -20344,3 +20345,79 @@ for every archive that is not a StuffIt one — so the shipped build's
 the overlay build exists to avoid paying. Peak heap is 276 KB on a real
 fork and 65 KB on the synthetic, because the window is sized to the fork
 (`sit13_winsize`'s argument). No tier tally moves.
+
+## 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
+
+**The fixture lands.** `rexnebular_1_0_0.zip` — 29.7 MB, 22 entries, Zip
+2.3, host 0x07, the archive a Macintosh Garden comment pointed at on
+2026-10-01 — is corpus fixture 935, and the first Macintosh-written zip
+there has ever been. Until today every claim about Info-ZIP's `0x334d`
+rested on archives written here. OPEN_ITEMS.md's row is closed and gone,
+not annotated.
+
+**What is graded, and the one thing that is not.** Names, folders, both
+forks, type/creator and Finder flags: 22/22 against `lsar`, 21 data
+forks byte-identical to `unar`, on every `ci.sh` run. The three
+Macintosh DATES are graded nowhere, and the reason is a fact about the
+oracles rather than about this engine: **XADMaster does `create +=
+readInt32LE` and deark does `de_mac_time_to_timestamp(mt_raw -
+mt_offset)`, and both label the result UTC** (re-read in
+`XADZipParser.m` and `modules/zip.c` today, because a claim about to
+carry a fixture is worth opening the source for). They cannot both be
+right, so neither adjudicates `CrGMTOffs`; and the choice is observable
+— every entry here carries −18000, so this engine's unadjusted dates
+stand 5 h from `lsar`'s on all 22.
+
+**So the exclusion is declared, not inherited.** The manifest carries
+`"ungraded": {"dates": "..."}` with that reasoning in it; `run_diff.py`
+refuses any other field under the key, refuses an empty reason, and
+prints the declaration every run. `make_manifests.py` carries it across
+a `--force` rebuild, because a rebuild has nothing to regenerate it
+from and would otherwise drop it silently. The alternative was to add
+the fixture and let the manifest schema's silence stand in for the
+decision — which is how a tolerance stops being re-read.
+
+**And the fixture found a hole on the way in.** The suite takes
+type/creator from `macextract l`, whose columns are `%4s/%-4s` — so a
+code holding a SPACE moves the name by a field. `PDF /CARO` parsed as
+type `PDF` and name `/CARO docs/mac_package.pdf`; no manifest entry has
+that name, so the comparison did not fail, **it did not happen**. 200 of
+the corpus's 5,539 type/creator codes hold a space, and a NUL inside a
+code truncates the row outright. `l --finder` now prints type, creator
+and flags as hex — the only form a parser can read back — and an
+unparsable row is a failure rather than a shrug. All 935 fixtures pass
+with the exact comparison, so what the silence hid was agreement; what
+it cost was the ability to notice.
+
+**The Finder flags are graded now, where the oracle has them** — 22
+entries today, all this fixture's, since no older manifest carries the
+key. Corpus-wide 3,195 would be gradeable, `unar`'s AppleDouble
+`fdFlags` and `lsar`'s `XADFinderFlags` agree on all 423 where both
+exist, and the engine agrees with `lsar` on every one of the 3,195
+(measured today). Recording them means rebuilding 934 manifests, which
+is a change of its own and not this one.
+
+**What it costs, measured before it was taken.** 0.51 s a diff run and
+2.8 s a robustness run, so ~11 s of `ci.sh` across the eight lanes that
+run those two suites; the slowest robustness variant is 0.51 s against a
+30 s timeout; `fixtures/` grows 41 %. The figures and the table are in
+TESTING.md, *The Finder metadata, and the one field no oracle settles*.
+
+**And the way NOT to measure it, which cost an hour.** Timing eleven
+suites with the fixture and again without gave 489 s against 511 s — the
+run without it SLOWER, and the diff suite moving 24.7 → 38.4 s between
+two runs of identical work. The quantity being measured is smaller than
+this machine's run-to-run variance, so the experiment could only return
+noise however carefully it was run. **A difference measurement needs the
+difference to be bigger than the instrument**; the fixture's own 0.51 s,
+taken five times in-process, was both cheaper and conclusive.
+
+**The transferable half.** Both halves of this entry are one shape: *a
+comparison that cannot run is indistinguishable from one that passes.*
+The dates cannot be compared because the oracles disagree, and that is
+now a printed declaration; the space-bearing codes could not be compared
+because our own output format ate them, and that is now a parse failure.
+Neither was visible anywhere — `run_diff.py` printed "fixtures ok"
+through both. So the fix in both cases was to make the suite COUNT what
+it compares, which is why it now prints how many Finder flags it
+checked.
