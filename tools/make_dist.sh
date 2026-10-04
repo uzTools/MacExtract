@@ -69,9 +69,11 @@ Two things to know about the smallest machines. On System 3.0 the Open dialog
 ignores Command-period, so close it with the Cancel button; Command-period
 still stops an extraction everywhere. And in 512 KB, a StuffIt 5 archive
 written with large blocks will not fit -- a block has to be in memory whole,
-and its size was fixed when the archive was made. Those entries are skipped
-with a message and the rest of the archive still comes out. Every other format
-fits in 512 KB, and with 1 MB the question does not arise.
+and its size was fixed when the archive was made. The largest method 14 files
+are the same story for the same reason: that method looks back over as much as
+256 KB, and the room has to be there. Those entries are skipped with a message
+and the rest of the archive still comes out. Every other format fits in
+512 KB, and with 1 MB the question does not arise.
 
 v0.37.0 opens the last StuffIt archives this program could not: the
 ones made with compression method 14, which StuffIt 5 used and nothing
