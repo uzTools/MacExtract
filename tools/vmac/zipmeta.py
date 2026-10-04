@@ -34,8 +34,10 @@ StuffIt Engine 3.5.2 and UnZip Translator 3.5, the installation
 `spacesaver.py` builds and the only one here. 3.5.1 is from 1994 and Info-ZIP's `0x334d` carries
 "Last Revision 19981005" in its own specification, so a negative result
 here is a fact about a version that predates the field and NOT about
-StuffIt in general; 5.5, 6.0.1 and 7.0.3 are on this disk as uninstalled
-installers and all postdate it. It also cannot distinguish "read the
+StuffIt in general. **`sitzip.py` is where the later boxes are**: 5.5
+and 7.0.3 were assembled into a Mac OS 9 System Folder and run on
+2026-10-04, and both fail the field too; 6.0.1 is still an uninstalled
+installer. It also cannot distinguish "read the
 field and ignored it" from "never looked": both leave the same volume.
 What it CAN do is name the mechanism, because the translator's own
 `E2Ty` resource is a filename-extension table and `--table` prints it

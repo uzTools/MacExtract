@@ -3274,40 +3274,48 @@ any other field under the key and prints the declaration on every run
 
 ### What Aladdin's own software does with the same bytes
 
-**StuffIt does not read them. It guesses from the filename**, measured
-2026-10-02 on StuffIt Deluxe 3.5.1 (`tools/vmac/zipmeta.py`). Its `UnZip
-Translator` 3.5 carries an `E2Ty` resource — nineteen rows of
-extension → type/creator, `.TXT` → `TEXT/ttxt`, `.DOC` → `TEXT/MSWD`,
-`.GIF` → `GIFf/GCon` and so on — and that table is the whole of how an
-unzipped file gets its Finder info. No extra-field id appears anywhere
-in the translator: `0x334d` ×0, `ZPIT` ×0, `0x2705` ×0 in 55,523 B.
+**No StuffIt reads them. Every one guesses from the filename** — three
+generations, nine years apart, all RUN rather than read: 3.5.2 on
+2026-10-02 (`tools/vmac/zipmeta.py`), **5.5 and 7.0.3 on 2026-10-04**
+(`tools/vmac/sitzip.py`). 3.5's `UnZip Translator` carries an `E2Ty`
+resource — nineteen rows of extension → type/creator, `.TXT` →
+`TEXT/ttxt`, `.DOC` → `TEXT/MSWD`, `.GIF` → `GIFf/GCon` and so on — and
+that table is the whole of how an unzipped file gets its Finder info. No
+extra-field id appears anywhere in the translator: `0x334d` ×0, `ZPIT`
+×0, `0x2705` ×0 in 55,523 B.
 
 Over four entries cut from `rexnebular_1_0_0.zip` with their `0x334d`
-fields byte-intact, **StuffIt Expander 3.5.2** on that installation —
-its `vers` resource, read off the image; the 4.0.2 that `expander.py`
-times is a separate download and is not what runs here — gives:
+fields byte-intact, each box's own **StuffIt Expander** — 3.5.2's `vers`
+read off the image, the 4.0.2 that `expander.py` times is a separate
+download and is not what runs here — gives:
 
-| entry | the archive | StuffIt | us |
-|---|---|---|---|
-| `checksum.md5` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/ttxt` |
-| `docs/rex_codes.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/MSWD` |
-| `docs/rex_codes_dos.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/MSWD` |
-| `docs/rex_bonus_notes.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/MSWD` |
+| entry | the archive | 3.5.2 | 5.5 | 7.0.3 | us |
+|---|---|---|---|---|---|
+| `checksum.md5` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/ttxt` | **nothing** | `TEXT/ttxt` |
+| `docs/rex_codes.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/MSWD` |
+| `docs/rex_codes_dos.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/MSWD` |
+| `docs/rex_bonus_notes.txt` | `TEXT/MSWD` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/ttxt` | `TEXT/MSWD` |
 
 `checksum.md5` agreeing is not evidence — `TEXT/ttxt` is what the table
 gives anything it does not recognise, and `.md5` is not in it. **`MSWD`
-is the discriminator** and it is lost three times out of three.
+is the discriminator** and all three lose it three times out of three.
+7.0.3 does not even reach the fallback: that entry arrives with type and
+creator both zero, so the Finder shows it as a blank document.
 
-**It also rewrites the data.** `docs/rex_codes.txt` comes off the Mac at
-720 B against the archive's 739: nineteen CRLF pairs converted to bare
-CR. The conversion is exactly that and nothing else — our extraction
-with `\r\n` → `\r` applied is byte-identical to StuffIt's output, on
-both files checked. `checksum.md5` was CR-only already and comes back
-byte-identical. So a text entry out of StuffIt is not the file that was
+**And the data is rewritten up to 5.5, but not by 7.0.3.**
+`docs/rex_codes.txt` comes off a 3.5.2 or 5.5 Mac at 720 B against the
+archive's 739: nineteen CRLF pairs converted to bare CR. The conversion
+is exactly that and nothing else — our extraction with `\r\n` → `\r`
+applied is byte-identical to each, on all three `.txt` entries;
+`checksum.md5` was CR-only already and comes back identical. **7.0.3
+converts nothing**: all four forks are byte-identical to the archive's.
+So a text entry out of the older boxes is not the file that was
 archived, which is a second reason the Macintosh Garden comment tells
-people to use MacZip.
+people to use MacZip — and the last classic StuffIt fixed the data while
+losing the one piece of Finder info its predecessors guessed right.
 
-**Three generations, read out of their own binaries.** The 5.5 and
+**Three generations, read out of their own binaries before any of them
+was run.** The 5.5 and
 7.0.3 zip readers were lifted WITHOUT an emulator: both distributions
 ship an Aladdin `APPL/STi0` installer whose payload `unar` expands —
 7.0.3's arrives inside a `.smi` whose data fork is a plain HFS volume
@@ -3335,22 +3343,32 @@ BELOW chance for the size (2.1 MB would give ~32 uniformly), so these
 forks are not uniform and absence is weaker than it looks; the
 instruction-encoding argument is what carries this, not the count.
 
-**Only 3.5.2 was run.** 5.5 and 7.0.3 need a 68020 or PowerPC — Mini
-vMac is a 68000 — so an empirical check means installing them under the
-Mac OS 9 QEMU harness, which has no mode for installing third-party
-software and whose pointer costs ~40 s a move (`tools/vmac/README.md`).
-Not done. What is above is a reading of their code, labelled as such.
+**The reading is now corroborated by the behaviour, not instead of
+it.** 5.5 and 7.0.3 were run on 2026-10-04, and both agree with what
+their code said: the table above the figures is what the Mac produced.
+Neither installer was driven to get there — the installation was
+ASSEMBLED, the pieces placed into a plain-HFS Mac OS 9 System Folder
+from Linux (`tools/vmac/sitzip.py`, and `tools/vmac/README.md` for how
+and what it cannot see).
 
-**The 3.5 result does not generalise on its own.** Expander,
-engine and translator are all 3.5.x, 1994, and Info-ZIP's field carries
-"Last Revision 19981005" in its own specification — so this software
-predates the thing it fails to read by four years. Deluxe 5.5, 6.0.1 and
-7.0.3 are on this machine as uninstalled installers, all postdating it,
-and none has been run: 5.5's extracted set is 100 placeholder stubs of
-2,784 B and 7.0.3 is an unopened `.smi` (OPEN_ITEMS.md). **Expander
-4.0.2, the free yardstick elsewhere in this file, cannot open a zip at
-ALL without DropStuff with Expander Enhancer** — System 7 only, not
-free, and not on this machine.
+**The 3.5 result did not generalise on its own, and that is why the
+other two were run.** Expander, engine and translator are all 3.5.x,
+1994, and Info-ZIP's field carries "Last Revision 19981005" in its own
+specification — so that software predates the thing it fails to read by
+four years. 5.5 (1999) and 7.0.3 (2003) both postdate it and both fail
+it anyway. **6.0.1 is still only an uninstalled installer** and is the
+one generation nothing here has run. **Expander 4.0.2, the free
+yardstick elsewhere in this file, cannot open a zip at ALL without
+DropStuff with Expander Enhancer** — System 7 only, not free, and not on
+this machine.
+
+**What the runs needed that nothing here had.** 7.0.3's Expander refuses
+to launch under the CarbonLib the Mac OS 9 image ships — *"Expander
+requires CarbonLib 1.6.0 or later."*, and `hfsboot.img` carries **1.4**
+— so Apple's CarbonLib 1.6 update is installed first, by the guest,
+because its `.smi` is NDIF and nothing on this machine decompresses one
+(`sitzip.py --carbonlib`; disk images are out of scope, OPEN_ITEMS.md
+Part 1).
 
 ### What grades it
 

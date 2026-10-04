@@ -329,6 +329,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
 - 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
 - 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
+- 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
 
 ---
 
@@ -20571,3 +20572,95 @@ it was noticed only because `git diff` said `1 insertion, 13 deletions`.
 round-trips byte-exact. **A generator that regenerates a file it does not own
 all of will throw away the part it does not know about**, and the diff is the
 only thing that was ever going to say so.
+
+## 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
+
+**The question.** FORMATS.md said StuffIt does not read Info-ZIP's
+`0x334d` and rested that on two different kinds of evidence: 3.5.2 had
+been RUN over an archive, and 5.5 and 7.0.3 had been READ — their zip
+readers lifted out of the installers and searched for the compared
+immediate. The reading was labelled as a reading. It is now a
+measurement too: both were run on 2026-10-04 and both agree with it
+(FORMATS.md, *What Aladdin's own software does with the same bytes*).
+
+**Why it got cheap enough to do.** The blocker was never the question,
+it was the installation: 5.5 wants a 68020 and 7.0.3 a PowerPC, so both
+mean the Mac OS 9 QEMU guest, whose pointer costs ~40 s a move and
+whose menus cannot be used at all. Two unrelated things had meanwhile
+removed the obstacle. Method 14 landed on 2026-10-03, so this engine
+extracts both installer PAYLOADS whole; and `hfsboot.img` had existed
+since 2026-09-27 — a plain-HFS Mac OS 9 boot volume, which hfsutils can
+write. Between them the installation can be **assembled on Linux**: the
+engine, the translators and the application `hcopy -m`'d into a System
+Folder, and the guest booted with the result. No installer is walked, no
+serial number is typed, and the only pointer work left is two licence
+buttons. **An item filed as "needs an emulator that installs them" was
+closed by a decoder and a disk image, neither written for it.**
+
+**Where the pieces go is read, not remembered.** The 5.5 engine's own
+`STR# 999` is `Extensions`, `Aladdin`, `Extensions:Aladdin`; `STR# 1004`
+holds `:Extensions` and `StuffIt Engine™`; `fld# 999` names
+`Translators`. The installer's *What was installed (and where)* draws
+the same tree in two `PICT`s, which render here. That is the format rule
+applied to a filesystem layout, and it cost nothing: every guess would
+have been checked by a boot anyway, and a boot is eight minutes.
+
+**Select by type and creator, never by name.** An InstallerMaker payload
+carries a zero-length `STde`/`STin` directive beside most real files —
+one per thing the installer deletes or moves — and `! Zip Translator` is
+one of them. The first assembly pattern-matched `*Translator` and
+selected the directives: empty files, in the folder where the engine
+looks for translators, with nothing to say they were wrong. Picking by
+`SITo`/`SIT!` and asserting the count the box documents (seventeen)
+fails instead.
+
+**Three keystrokes that lie, and all three look identical from outside.**
+
+- **A Return in the Finder renames.** The sequence opened with
+  `os9.py`'s `Cmd-Q, Return`, which quits the Setup Assistant the HFS+
+  master puts up on every boot. `hfsboot.img` has no assistant, so the
+  Finder was frontmost, the Return opened the selected icon's name for
+  editing, and the three letters typed next went into it: the boot
+  volume `HFSBoot` was renamed `sit`, and the run then opened it instead
+  of the transfer volume and reported every step as healthy. **A step
+  borrowed from another harness carries that harness's assumptions
+  about what is on screen.**
+- **A chord the application does not have is a chord the guest
+  ignored.** 5.5's Expand is ⌘E and 7.0.3's is ⌘O — `MENU` 129 in each
+  — and under ⌘E the 7.0.3 run sat on its drop window for 127 s and
+  then carried on. The resource says which; nothing else does.
+- **Return does not reach a button that is not the default.** Apple's
+  disk image draws `Disagree` and `Agree` with identical frames, and so
+  does the installer's *"you must agree"* alert; six presses moved
+  neither. The `Choose` button of 7.0.3's Navigation Services dialog is
+  the same shape of problem — and worse, because `Open` beside it is
+  enabled for FOLDERS, so the run that pressed Return navigated into
+  the boot volume and reported "expansion started" with nothing
+  expanding.
+
+Each of those produced a complete, plausible run that measured nothing.
+What caught all three was the same thing: **the verdict is read off the
+disk afterwards and the screenshots are looked at**, so "0 agree, 4
+differ" and "NOTHING extracted" are different outcomes and a renamed
+volume is visible in the frame.
+
+**The CarbonLib gate, and why the guest had to do that part.** 7.0.3's
+Expander refuses to launch under the CarbonLib the image ships — it says
+so, by name and version. Apple's 1.6 update is a self-mounting image
+whose data fork is NDIF, and reading one is out of scope here
+(OPEN_ITEMS.md Part 1), so the Macintosh mounts it: the harness launches
+the `.smi`, clicks `Agree`, opens the volume, opens the installer, and
+walks its default buttons. The pass condition is the extension's `vers`
+read back off the volume with hfsutils, which is the only part of that
+chain that cannot be fooled by a screenshot of the right window at the
+wrong moment.
+
+**What came out.** No StuffIt reads the field, across nine years and
+three generations, and all three lose `MSWD` three times out of three.
+Two differences between them are worth more than the agreement: 7.0.3
+stopped rewriting text — 3.5.2 and 5.5 convert CRLF to CR and 7.0.3
+returns all four forks byte-identical to the archive — and 7.0.3 stopped
+GUESSING, leaving `checksum.md5` with type and creator both zero where
+its predecessors at least produced `TEXT/ttxt`. **The last classic
+StuffIt fixed the data and dropped the metadata**, which is the opposite
+trade from the one this engine makes.

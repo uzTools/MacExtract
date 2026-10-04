@@ -195,6 +195,7 @@ read.
 | `sdcompress.py` | the other half: Alysis's 1991 **SuperDisk! control panel**, which COMPRESSES. It wrote the five specimens the single-file container was derived from, and `--verify` re-grades them |
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
 | `zipmeta.py` | **what Aladdin's software does with a MacZip archive's Finder metadata.** `--table` reads the `UnZip Translator`'s extension-to-type table without booting; `--expander` hands StuffIt Expander a four-entry cut of the real archive and reads the volume back |
+| `sitzip.py` | the same question put to the two LATER boxes — **StuffIt Deluxe 5.5 and 7.0.3 Classic, on Mac OS 9, with no installer driven**: the engine, the translators and the application are placed into a plain-HFS System Folder from Linux. `--carbonlib` installs the one thing that cannot be placed — see below |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
@@ -432,12 +433,102 @@ same bytes*.
 
 **What it cannot see.** It grades ONE StuffIt, the 3.5.1 that
 `spacesaver.py` installs, which predates the field by four years — so a
-negative here is not a fact about StuffIt in general. It cannot tell
+negative here is not a fact about StuffIt in general; `sitzip.py`, below,
+is where 5.5 and 7.0.3 are. It cannot tell
 "read the field and ignored it" from "never looked", because both leave
 the same volume; the translator's own bytes are what distinguish them.
 And `checksum.md5` coming back right proves nothing: `TEXT/ttxt` is the
 table's answer for anything it does not recognise. **Read the `MSWD`
 rows.**
+
+## The same question, two boxes later — `sitzip.py`
+
+    tools/vmac/zipmeta.py --make fixtures/rexnebular_1_0_0.zip
+    tools/vmac/sitzip.py --payload 55     # no emulator: extract and index
+    tools/vmac/sitzip.py --carbonlib      # once, for 7.0.3 only
+    tools/vmac/sitzip.py --run 55
+    tools/vmac/sitzip.py --run 703
+    tools/vmac/sitzip.py --list -o <rundir>    # what the run left behind
+
+`zipmeta.py` grades StuffIt 3.5.2, which predates Info-ZIP's `0x334d` by
+four years. This grades **5.5 and 7.0.3** on the same four-entry subject,
+and the result is in FORMATS.md, *What Aladdin's own software does with
+the same bytes*.
+
+**Nothing is installed by an installer.** Both boxes' payloads extract
+whole with this engine (FORMATS.md, *StuffIt 5's method 14*), and
+`hfsboot.img` — below — is a plain-HFS Mac OS 9 boot volume hfsutils can
+write, so the engine, the seventeen translators (5.5) or the engine shell
+and twenty-three plug-ins (7.0.3) are `hcopy -m`'d into a System Folder
+from Linux. That is what made this cheap enough to do at all: the
+alternative was walking two Aladdin installers with a pointer that costs
+~40 s a move.
+
+**Where each piece goes is read off the software.** The 5.5 engine's own
+`STR# 999` *Aladdin Folder Names* is `Extensions`, `Aladdin`,
+`Extensions:Aladdin`; its `STR# 1004` *Path Names* holds `:Extensions`
+and `StuffIt Engine™`; its `fld# 999` names `Translators`, `Viewers`,
+`Magic Menu Extensions`. The installer's own *What was installed (and
+where)* draws the same tree in two `PICT`s. 7.0.3's `StuffItEngineShell`
+is a `shlb` carrying the Pascal string `StuffIt Plug-Ins`.
+
+**Entries are selected by TYPE and CREATOR, never by name.** An
+InstallerMaker payload carries a zero-length `STde`/`STin` DIRECTIVE
+beside most real files — one per thing the installer deletes or moves —
+and `! Zip Translator` is one of them. A name pattern picks the directive
+as happily as the file, and placing it would put an empty file where the
+engine looks for a translator. The counts are asserted (17 translators,
+23 plug-ins), so a payload that changes shape fails rather than
+half-installs.
+
+**`--carbonlib` is a prerequisite for 7.0.3 and nothing else.** Its
+Expander refuses to launch: *"Expander requires CarbonLib 1.6.0 or
+later."*, and the image carries **1.4**, read off the extension's own
+`vers`. Apple ships 1.6 as a self-mounting image whose data fork is NDIF
+— the resource fork's `bcem` names the volume `CarbonLib` — so nothing
+here decompresses it and the Macintosh mounts it instead. The 40 MB
+`CarbonLib_160_languages.sit` is the same `.smi` once per language and
+no help. The run ends by reading `CarbonLib`'s `vers` back **off the
+disk**, not off a screenshot, and keeps the volume as
+`hfsboot-carbon.img` only if it says 1.6.
+
+### Four things that each cost a boot
+
+- **Do not open with os9.py's `Cmd-Q, Return`.** That pair quits the
+  Setup Assistant, which the HFS+ master puts up on every boot;
+  `hfsboot.img` does not have one, so the Finder is frontmost and the
+  Return opens the SELECTED icon's name for EDITING. The boot volume is
+  selected on a fresh desktop, so the next three keystrokes went into
+  its name and Cmd-Down committed them: `HFSBoot` was renamed `sit` and
+  its window opened in place of the transfer volume's. **A keystroke
+  that is harmless in one application renames a volume in another.**
+- **The Expand command's Command key is not the same in both boxes.**
+  5.5's `MENU` 129 is `File ▸ Expand… / E`; 7.0.3's is
+  `File ▸ Expand / O`. A chord the application does not have is
+  indistinguishable from one the guest ignored — 7.0.3 sat on its drop
+  window for 127 s under ⌘E. Read the `MENU` resource, do not guess.
+- **The two Expand dialogs are not the same dialog.** 5.5 puts up
+  Standard File, already listing the transfer volume. 7.0.3 puts up
+  **Navigation Services**, which opens on the Desktop, lists the
+  volumes, and greys `Open` out the moment a FILE is highlighted — so
+  the archive is taken with `Choose`, and the run that pressed Return
+  instead opened the boot volume and reported a healthy "expansion
+  started".
+- **Return does not reach a button that is not the default**, which is
+  how both licence agreements stop a keyboard-only run: Apple's disk
+  image draws `Disagree` and `Agree` identically, and so does the
+  installer's *"you must agree to the terms"* alert — six presses moved
+  neither. Those two clicks are the only pointer work here, and their
+  coordinates are measured off the screenshots they are named for.
+
+**What it cannot see.** The same two things `zipmeta.py` cannot: it
+grades each box's **Expander** and not every reader in it, and it cannot
+tell "read the field and ignored it" from "never looked" — both leave
+the same volume. The binaries' own bytes are what distinguish those, and
+that reading is in FORMATS.md beside the result. One keyboard primitive
+it relies on that no other harness here uses: **Tab selects the first
+icon in a Finder window by name**, which is how the installer on a disk
+whose contents are unknown gets opened.
 
 ## Making Now Compress archives with Now Compress — `nowcompress.py`
 
