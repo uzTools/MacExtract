@@ -328,6 +328,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
 - 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
 - 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
+- 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
 
 ---
 
@@ -20421,3 +20422,152 @@ Neither was visible anywhere — `run_diff.py` printed "fixtures ok"
 through both. So the fix in both cases was to make the suite COUNT what
 it compares, which is why it now prints how many Finder flags it
 checked.
+
+## 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
+
+OPEN_ITEMS.md had named its own blind spot: ZipIt's three Macintosh extra
+fields were graded on archives written here, because **ZipIt's output is a
+plain `.zip` and is invisible to a search by name.** That sentence was true
+and incomplete, which is the whole of this entry.
+
+### What was indexed, and what was not
+
+The question from 2026-09-26 is *what is the corpus indexed BY*, and
+Discmaster answers it twice over.
+
+**By content, for the self-extractors.** A ZipIt SEA is a code stub with the
+zip behind it, and dexvert — the identifier Discmaster runs — knows that stub
+on sight and files it as `zipIt`. `format=zipIt` returns 69 files, 67 of them
+ZipIt's own distribution across European and Japanese cover discs — 59 are
+copies of one 1.4 self-extractor — and **two that somebody else made**, an EV
+Nova plug-in and its installer. No search by name could have found those two,
+and none was needed, because somebody else had already read the bytes.
+
+**Not at all, for the plain ones.** `detection=ZPIT` returns one unrelated
+file and `q=ZPIT` over content returns none: the extra-field id is not in
+anybody's index. So the plain ones were found by scanning: `format=zip`
+restricted to each of the 40 Discmaster items `tools/fetch_specimens.py`
+already cites gives **3,029 zips**, and the first local file header of each
+was fetched with an HTTP `Range` request — **512 bytes per archive, 1.5 MB
+for the sweep** against 7.3 GB to download them. **Seven carry a ZipIt
+field**, four of them distinct archives. A range scan is the cheap form of
+"search by content" when no index has the content: it costs one request per
+candidate and reads the one header that settles it.
+`tools/scan_discmaster_zips.py` is that sweep, kept so the next one is a
+widened item list rather than a rewrite. **One trap in it is written down
+because the tool fell into it the first time it ran:** Discmaster's `pageNum`
+is 0-based, and `pageNum=1` on a single-page result returns an empty JSON
+array rather than an error — so a sweep that starts at page 1 reports "0
+zips" for an item holding 35 and looks finished. It was caught only because
+the item being tested was one with a known hit in it. **A crawler asked for
+a page that does not exist gets an empty answer, not an error**; test it
+against something you already know is there.
+
+### The premise, measured in both directions
+
+APPNOTE.TXT 4.6.4 says the long field "MUST be present if the file is stored
+MacBinary-encoded and SHOULD NOT be used if the file is not". Over the nine
+specimens, **119 entries**: every one of the **16 file entries with a
+reachable `0x2605` payload decodes to a MacBinary stream**, and **not one of
+the 86 entries carrying `0x2705` does**. The field's own `FileType` and
+`Creator` equal the MacBinary header's in all 16, so the decision to read the
+header and not the field (2026-10-01) loses nothing — now measured rather
+than argued.
+
+**One exception, and it is ZipIt 1.x's.** Those versions write the LONG field
+on DIRECTORY entries, where APPNOTE assigns `0x2805` — three of them here,
+across 1.4 and the Japanese 1.x build. A
+directory entry is zero bytes, so its claim to be MacBinary is simply false.
+It costs nothing because `zip_mb_peek` refuses anything under 128 bytes and
+then probes the header: **the engine verifies the claim instead of trusting
+the flag**, which is why a writer that lies about it was already handled.
+ZipIt 2.2.2 uses `0x2805`.
+
+### The three shapes a real writer uses
+
+APPNOTE marks most of these members "MAY be omitted", and every option is
+exercised in the wild: `0x2705` at **12 bytes** (type and creator alone,
+ZipIt 1.x), **14** (plus `fdFlags`) and **16** (plus the trailing word);
+`0x2805` always at 8. So both of the engine's length guards do something,
+and the 12-byte form — the one a generated archive never produced here — now
+has a subject.
+
+### The name, which neither implementation reads
+
+A `0x2605` field carries APPNOTE's "full Macintosh filename", and this engine
+deliberately ignores it. **It is the field that settles the name, and it
+settles it against each implementation once.** Over 20 real `0x2605` entries
+the zip's own name, the field's name and the MacBinary header's name agree 16
+times. The four that differ split evenly:
+
+- ZipIt 2.2.2's `Drop files here to zip (OS X)` is 29 characters in the zip
+  and in the field, and 22 inside the MacBinary header. XADMaster renames the
+  entry to the header's name and **loses `(OS X)`**; this engine keeps the
+  zip's, and the field backs it.
+- ZipIt 1.x upper-cased the names it put in the zip — `PSYCHO!`, `README`,
+  `SAMPLE` — and kept `Psycho!`, `READ ME`, `Sample` in the field.
+  XADMaster recovers them; **this engine writes the PC-safe name**, and
+  `README` has even lost a space.
+
+Nothing was changed for it, because **every entry this build can extract is
+in the agreeing 16**: all four divergent entries are either refused by method
+or already right. What it costs to fix is in OPEN_ITEMS.md; what matters here
+is that the tolerance in `tools/run_zipit.py` is not "ours is right" but
+"ZipIt's own field is one of the two names", which can therefore fail.
+
+### And the premise that fell with it
+
+`Psycho!v1.0ß1.zip` is a White Knight script set from February 1994, written
+by ZipIt, every entry a MacBinary payload with a resource fork — and **every
+entry compressed with method 6, Implode.** OPEN_ITEMS.md's Part 1 keeps
+Implode out on two grounds, of which one was already gone (2026-09-22: an MIT
+implementation and an oracle are both on this disk) and the other was *"not a
+Macintosh method: it is PKZIP 1.x's, and the two corpus archives carrying it
+are PC software"*. **That is now false, measured.** The archive's own comment
+says who wrote it. The CLI's refusal for those three entries ends *"if you
+can share this file, please open an issue — a specimen is exactly what is
+needed to add support"*, and the specimen has arrived; the decision is still
+the maintainer's and nothing was implemented. Note the coupling: adding
+Implode would also need the `0x2605` name, because these are the three
+entries whose names this engine gets wrong.
+
+### What went into the suite, and why not all of it
+
+Two became corpus fixtures, both plain zips the sniffer reads unaided:
+`MrTs_Paint_Folder.zip` (`0x2705` and `0x2805`, no forks) and
+`NPWritersKit.zip` (a `0x2605` entry, 150,016 B of data fork and 323 B of
+resource fork). Those are graded by `run_diff.py` against a committed
+manifest with **no oracle at run time**, which is the strongest form this
+project has.
+
+The other seven are specimens, for one reason: **a ZipIt SEA is not
+recognised.** `unc_zip_probe` reads the head, and the head is PowerPC or 68k
+code. The walker needs nothing — it addresses the central directory
+absolutely, so `-f Zip` reads all five correctly — so this is a probe-shaped
+gap and it is in OPEN_ITEMS.md with its cost. `tools/run_zipit.py` forces the
+format for those five and asserts that the other four are sniffed, so the
+distinction cannot quietly disappear.
+
+### The instrument, and what it cannot see
+
+`run_zipit.py` was made to fail three ways before it was believed: rewriting
+every `0x2605` id to `0x2805` in one specimen gives 4 failures, and moving
+the `0x2705` flag read by two bytes in `src/fmt_exo.c` gives 66. It asserts
+per-specimen tallies — entries, one count per field id, MacBinary payloads —
+because a parse that stopped parsing would otherwise report zero of
+everything and pass. It compares no fork of an entry whose method is out of
+scope and prints that declaration every run. And it adjudicates no date:
+`lsar` reports zip's MS-DOS stamp where a `0x2605` entry's MacBinary header
+carries two Macintosh ones, so the two are not the same field.
+
+### The tool that was eating the documentation
+
+`harvest.py --probe` rewrites `fixtures/SOURCES.md` whole and wrote back its
+own `HEADER` constant, so **registering a fixture deleted the twelve lines of
+prose under it** — the paragraph naming the fixtures that are not archives
+and must not have manifests. Nothing reads that file, so nothing ever failed;
+it was noticed only because `git diff` said `1 insertion, 13 deletions`.
+`save_sources` now keeps everything above the table marker verbatim and
+round-trips byte-exact. **A generator that regenerates a file it does not own
+all of will throw away the part it does not know about**, and the diff is the
+only thing that was ever going to say so.

@@ -53,7 +53,7 @@ under *Table notes*.
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, **14** (*Method 14*, below), 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures + 1 synthetic, and the two installer payloads outside the corpus (*Method 14*) | 0.13–2.03 MB† | 24 of 32 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below) | 6 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries). **One carries the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none (*Zip's Macintosh extra fields*) | 12–54 KB¶ | full |
+| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below) | 8 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries), plus 2 synthetic. **Three carry the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none, plus `MrTs_Paint_Folder.zip` and `NPWritersKit.zip`, the first real ZipIt archives here — seven more are specimens (*Zip's Macintosh extra fields*, *ZipIt's own archives*) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -2967,7 +2967,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 935 fixtures byte-exact against `unar` manifests
+- Differential: 937 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -3042,7 +3042,7 @@ remains out of scope (OPEN_ITEMS.md, part 1). `tools/run_ziplarge.py` holds
 the boundary from both sides, in `ci.sh` since 2026-08-25; DECISIONS.md
 2026-08-25 has why a count is worse than a length.
 
-**The corpus could not have caught it: the largest zip in 935 fixtures has 29
+**The corpus could not have caught it: the largest zip in 937 fixtures has 29
 entries**, and the robustness variants perturb a fixture rather than grow one.
 
 **A zip's per-entry Zip64 escape arrives at 2 GB, not 4, and until 2026-08-27
@@ -3243,9 +3243,13 @@ header-id table without giving a layout. `src/fmt_exo.c` stays in
 | ZipIt `0x2605` | both forks + all of the above, off the MacBinary header | +1,000 B |
 | | **total** | **+2,000 B** |
 
-Resident `CODE` +0, A5 +0, peak RAM +0 on all eight corpus zips in both
-list and extract mode — `rexnebular_1_0_0.zip` is one of them since
-2026-10-04. **One non-zero RAM figure:** `0x334d`'s attribute record is
+Resident `CODE` +0, A5 +0, peak RAM +0 on all eight corpus zips there
+were when it was measured, in both list and extract mode —
+`rexnebular_1_0_0.zip` is one of them since 2026-10-04. The two ZipIt
+fixtures added later that day are not part of that DELTA and both sit
+inside the range beside this format in the table above: 13,645 B
+listing and 21,317 B extracting `MrTs_Paint_Folder.zip`, 53,297 B
+either way for `NPWritersKit.zip`. **One non-zero RAM figure:** `0x334d`'s attribute record is
 deflated, and inflating it takes
 **7,672 B** transiently — zlib's state and a 512-byte window, freed before the
 entry's own decode, so it raises the measured peak only where nothing larger
@@ -3355,9 +3359,67 @@ free, and not on this machine.
 | `0x334d` type, creator, Finder flags | `lsar`, **22/22** on `rexnebular_1_0_0.zip` — a real MacZip archive, 29.7 MB, Zip 2.3, host 0x07, **a corpus fixture since 2026-10-04**, so `ci.sh` compares all three on every run rather than once by hand |
 | `0x334d` data forks | Info-ZIP's `unzip`, 21/21 byte-identical, and the ten disk images against the MD5s the archive ships in its own `checksum.md5`; `unar`'s manifest grades the same 21 in `ci.sh` |
 | both attribute-record shapes | the deflated one on that archive; the `0x0004` stored one on a generated archive |
-| `0x2605` both forks | extracting the same MacBinary FIXTURE standalone — byte-identical — with `unar` agreeing on the wrapper (`cdev/altw`, 31,714 B) |
-| ZipIt `0x2705`/`0x2805` | `lsar`, on a GENERATED archive only. **No real ZipIt archive is on this machine** (OPEN_ITEMS.md) |
+| all three ZipIt fields | **nine archives ZipIt itself wrote**, since 2026-10-04 (*ZipIt's own archives*, below): 119 entries, every type, creator, Finder-flag word and both fork lengths agreeing with `lsar`, and 113 forks byte-identical to `unar`. Two of them are corpus FIXTURES — `MrTs_Paint_Folder.zip` and `NPWritersKit.zip` — so `run_diff.py` grades one archive of each shape with no oracle at run time; the other seven are specimens graded by `tools/run_zipit.py` |
+| `0x2605` both forks | `NPWritersKit.zip`'s entry, 150,016 B of data fork and 323 B of resource fork, byte-identical to `unar` every `ci.sh` run; and extracting the same MacBinary FIXTURE standalone — byte-identical — with `unar` agreeing on the wrapper (`cdev/altw`, 31,714 B) |
 | `0x334d`'s three dates | **nothing, and nothing here can**: the two reference implementations disagree on `CrGMTOffs`'s sign (above), so a second implementation is not an oracle for this field. Declared ungraded in the fixture's manifest and printed by `run_diff.py` every run |
+
+### ZipIt's own archives
+
+**Nine, found on 2026-10-04 by searching for the BYTES.** Five are
+self-extracting, which is how Discmaster's identifier could name them
+(`format=zipIt`); the other four came out of a `Range`-scan of the first
+local file header of all 3,029 zips on the 40 CD-ROMs and FTP mirrors
+`tools/fetch_specimens.py` cites — 512 bytes each, **seven hits**
+(DECISIONS.md 2026-10-04, *the archive that carried its own extractor*).
+`tools/specimens/zipit.tsv` re-fetches them.
+
+| | |
+|---|---|
+| writers | **three are ZipIt's own distribution** — 1.4, a Japanese-market 1.x and 2.2.2 — and **five are other people's work**: a White Knight script set (1994), a Java applet's zip living in a resource fork, an Atari emulator a Mac user re-zipped, an EV Nova plug-in and its installer (2002), and a MacTech source drop (2007) |
+| entries | **119** |
+| `0x2605` | 22 — 16 with a reachable payload, **all 16 a MacBinary stream**; 3 on DIRECTORIES (ZipIt 1.x; see below); 3 refused by method |
+| `0x2705` | 86, and **not one of them is MacBinary** |
+| `0x2805` | 11, all 8 bytes |
+| against `lsar` | 119/119 on name, type, creator, Finder flags and both fork lengths, bar 4 names (below) |
+| against `unar` | **113 forks byte-identical** |
+| sniffed unaided | 4 of 9 — the five self-extractors are passed `-f Zip` |
+
+**So `0x2605`'s premise holds in both directions**, where before
+2026-10-04 it was APPNOTE.TXT 4.6.4's word and nothing more
+(OPEN_ITEMS.md's row for it is closed and gone). The field's own
+`FileType` and `Creator` equal the MacBinary header's in all 16, so
+reading the header rather than the field costs nothing.
+
+**Field lengths a real writer uses.** `0x2705` appears at **12** bytes
+(type and creator alone — ZipIt 1.x, and the form no generated archive
+here ever produced), **14** (plus `fdFlags`) and **16** (plus the
+trailing word); `0x2805` always at 8, with `frFlags` of 0x0000, 0x03a0
+and 0x2310. Both of the engine's length guards therefore do something.
+
+**ZipIt 1.x writes the long field on directories**, where APPNOTE
+assigns `0x2805` — three entries, across 1.4 and the Japanese build. Those entries are zero bytes, so the field's claim
+that the data is MacBinary is false for them; it costs nothing because
+`zip_mb_peek` refuses anything under 128 bytes and then probes the
+header, so the engine verifies the claim rather than trusting the flag.
+
+**Four names differ from `unar`'s, and ZipIt's own field adjudicates
+each.** A `0x2605` field carries APPNOTE's "full Macintosh filename" and
+this engine does not read it; over 20 real `0x2605` entries the zip's
+name, the field's name and the MacBinary header's name agree 16 times.
+XADMaster renames a MacBinary entry to the header's name, which loses
+`(OS X)` off one of ZipIt 2.2.2's; ZipIt 1.x upper-cased the names it put
+in the zip and kept the Macintosh ones in the field, which this engine
+then misses on three. **Every entry this build can extract is in the
+agreeing 16**, so nothing was changed for it (OPEN_ITEMS.md has what it
+would cost).
+
+**One of them is a Macintosh Implode archive.** `Psycho!v1.0ß1.zip`
+(`zipit-Psycho_1.0b1.zip` on disk, since a specimen name has to be
+ASCII), February 1994, three MacBinary entries with resource forks,
+every one Zip method 6 — which Part 1 of OPEN_ITEMS.md keeps out partly because
+Implode is "not a Macintosh method". It is refused per entry, cleanly,
+and `run_zipit.py` declares those three ungraded with the reason.
+
 
 ## Overlays: what the application ships, and what it costs
 
@@ -3765,7 +3827,7 @@ suffix says the compiler already cloned it with its arguments folded in.
 
 **The top 25 functions are ~55 KB of 138 KB**, so there is no single
 structural win here — only many small ones, each with correctness risk against
-a 935-fixture suite, for a few hundred bytes apiece.
+a 937-fixture suite, for a few hundred bytes apiece.
 
 **And the functions where the BYTES are are disjoint from the functions where
 the TIME is.** The `UNC_HOT` set — `sit_lzw`, `sit_huffman`,
@@ -6031,7 +6093,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 935 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 937 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 

@@ -1,0 +1,53 @@
+{
+ "entries": [
+  {
+   "finder_flags": 0,
+   "is_dir": true,
+   "name": "Mr.T's Paint Folder"
+  },
+  {
+   "creator": "Növä",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1280,
+   "name": "Mr.T's Paint Folder/A-team",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "Npïf"
+  },
+  {
+   "creator": "Növä",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1280,
+   "name": "Mr.T's Paint Folder/Mr.T's Paint",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "Npïf"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "6a31321258da92835d0a44d41048c8cddac421f0069fef4626fa79efabee0d12",
+   "data_size": 397,
+   "finder_flags": 270,
+   "name": "Mr.T's Paint Folder/READ ME OR DIE!!!!!",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "MrTs_Paint_Folder.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "3dccac5974d2f4289f50c1cc10773a0283ea852705f79506be94874212ed0cc8",
+ "size": 1019
+}

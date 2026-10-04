@@ -205,6 +205,16 @@ python3 tools/run_spacesaver.py --macextract build/san/macextract \
 # panel in the emulator cache; skips cleanly without it.
 python3 tools/ssmodule/run_ssmodule.py --macextract build/san/macextract \
     || fail "SpaceSaver module differential"
+# Nine archives ZipIt itself wrote: the subjects for its three Macintosh
+# extra fields, which until 2026-10-04 were all generated here. Five are
+# self-extracting and are passed `-f Zip`; the other four are sniffed
+# unaided, which the suite asserts. Specimens rather than fixtures
+# because a ZipIt SEA is not recognised (OPEN_ITEMS.md); the two plain
+# ones that are fixtures, `MrTs_Paint_Folder.zip` and
+# `NPWritersKit.zip`, run_diff.py grades with no oracle. Skips cleanly
+# with no specimens (TESTING.md).
+python3 tools/run_zipit.py --macextract build/san/macextract \
+    || fail "ZipIt tests"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the

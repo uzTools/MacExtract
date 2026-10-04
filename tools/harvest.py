@@ -73,9 +73,29 @@ def load_sources():
     return rows
 
 
+def preamble():
+    """Everything SOURCES.md says above its table, kept verbatim.
+
+    The file is rewritten whole on every registration, and until
+    2026-10-04 that threw away the prose: HEADER was written back and
+    the twelve lines of explanation after it were not, so one --probe
+    deleted the paragraph saying which fixtures are not archives and
+    must not have manifests. Nothing reads the file, so nothing failed;
+    `git diff` saying "1 insertion, 13 deletions" is what caught it.
+    Falls back to HEADER for a fresh clone.
+    """
+    marker = "| name | sha256 | size | url |"
+    if os.path.exists(SOURCES):
+        text = open(SOURCES, encoding="utf-8").read()
+        if marker in text:
+            return text[:text.index(marker)] + marker + "\n|---|---|---|---|\n"
+    return HEADER
+
+
 def save_sources(rows):
-    with open(SOURCES, "w") as f:
-        f.write(HEADER)
+    head = preamble()
+    with open(SOURCES, "w", encoding="utf-8") as f:
+        f.write(head)
         for name in sorted(rows):
             sha, size, url = rows[name]
             f.write(f"| {name} | {sha} | {size} | {url} |\n")

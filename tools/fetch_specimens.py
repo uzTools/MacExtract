@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """fetch_specimens.py — the specimens this project downloads rather than makes.
 
-Two formats are graded against files that no emulator here can produce
+Three sets are graded against files that no emulator here can produce
 and that may not be committed (copyrighted, like everything in
-`fixtures/`). Both were found on Discmaster, which indexes the contents
+`fixtures/`). All were found on Discmaster, which indexes the contents
 of archived CD-ROMs and disk images and serves each file raw; the tables
 beside this script record size, sha256 and URL for every one.
 
@@ -18,6 +18,9 @@ beside this script record size, sha256 and URL for every one.
               (TESTING.md).
   applelink   the two AppleLink packages, which have no reader here yet
               (FORMATS.md, *AppleLink packages*).
+  zipit       9 archives ZipIt itself wrote — five self-extracting, four
+              a plain `.zip`. `tools/run_zipit.py` grades them
+              (TESTING.md).
 
 How they were found, and how to find more, is DECISIONS.md 2026-09-26
 (the magic in somebody else's index).
@@ -35,9 +38,11 @@ SETS = {
     # set name    table                     directory under HOME/specimens
     "spacesaver": ("spacesaver.tsv", "spacesaver"),
     "applelink":  ("applelink.tsv", "applelink"),
+    "zipit":      ("zipit.tsv", "zipit"),
 }
 # `run_spacesaver.py` wants NAME.ss and NAME.ss.orig beside each other.
-SUFFIX = {"ss": ".ss", "orig": ".ss.orig", "pkg": ""}
+SUFFIX = {"ss": ".ss", "orig": ".ss.orig", "pkg": "",
+          "sea": ".sea", "zip": ".zip"}
 
 
 def table(name):

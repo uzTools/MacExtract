@@ -204,7 +204,7 @@ back:** `%4s/%-4s` of a code holding a space (`PDF `) or a NUL moves the
 name by a field, so the suite looked that entry up under a mangled name,
 found no manifest entry, and compared nothing — silently. **200 of the
 corpus's 5,539 type/creator codes hold a space** (measured 2026-10-04).
-All 935 fixtures pass with the hex form, so what the silence hid was
+All 937 fixtures pass with the hex form, so what the silence hid was
 agreement; the hole was in what COULD have been seen, which is the point
 (DECISIONS.md 2026-10-04, *the column that moved the name*).
 
@@ -1833,7 +1833,7 @@ on such an archive — it walks 65,535 entries and reports success, which is how
 a 70,000-entry zip lost 4,465 files silently until that date (FORMATS.md,
 *Size limits*).
 
-The corpus cannot reach this: **the largest zip in 935 fixtures has 29
+The corpus cannot reach this: **the largest zip in 937 fixtures has 29
 entries**, and robustness variants perturb a fixture rather than grow one. So
 the subjects are generated, and graded by three things that are not our
 output — CPython's `zipfile`, which wrote them and whose `namelist()` is the
@@ -1938,7 +1938,7 @@ Added 2026-08-27. Two caps meet a name — the engine's `UNC_NAME_MAX`
 first cut names with nothing said, so a 457-byte path extracted under a
 name that was not the archive's (FORMATS.md, *Name limits*).
 
-The subjects are generated because **the longest name in 935 fixtures is
+The subjects are generated because **the longest name in 937 fixtures is
 120 bytes** — under half the engine's cap, so neither the differential
 suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
@@ -2202,8 +2202,8 @@ progress callback.
 is a one-entry MacBinary wrapper, and probing it says nothing about the
 StuffIt walk inside; the descent is by result rather than by a list of
 formats — a layer yielding exactly one file that is itself a recognised
-archive is an envelope, whatever it is called. 935 fixtures become
-**1,351 archives walked three ways**, 419 of them behind a wrapper. The
+archive is an envelope, whatever it is called. 937 fixtures become
+**1,354 archives walked three ways**, 419 of them behind a wrapper. The
 whole sweep costs about 10 s, because what makes the differential suite
 slow is running `unar` and comparing files rather than our own decode.
 
@@ -2938,7 +2938,7 @@ emulator tiers are what cover these:
   heap probe built from `ApplicationZone`, `LMGetApplLimit` and `MaxBlock`.
 - **The control lane's oracle is this project's own output**, so it cannot
   notice a decoder that is wrong in both configurations. That is what the
-  935-fixture differential suite is for; this lane grades only that the
+  937-fixture differential suite is for; this lane grades only that the
   mechanism is transparent.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
@@ -3287,6 +3287,94 @@ the unit test still asserts is the per-ENTRY refusal, now for method 5, which
 no version of SpaceSaver ever wrote. The unit tests also carry what no
 specimen here has: a resource fork whose stream is written BEFORE the data
 fork's, which is what the header's offsets are for.
+
+## ZipIt's own archives (`tools/run_zipit.py`, in `ci.sh`)
+
+Added 2026-10-04. Until that day every subject for ZipIt's three
+Macintosh extra fields was generated here, and `0x2605`'s premise — the
+field is present when and only when the entry's data is MacBinary — was
+APPNOTE.TXT 4.6.4's word (DECISIONS.md 2026-10-04, *the archive that
+carried its own extractor*). **Nine archives ZipIt itself wrote** now
+grade it; the figures are FORMATS.md, *ZipIt's own archives*.
+
+    tools/fetch_specimens.py --only zipit
+    python3 tools/run_zipit.py --macextract build/macextract
+
+`tools/specimens/zipit.tsv` is the table, and the files land beside the
+other specimens — outside the repository, like every fixture, because
+they are somebody's shareware:
+
+    ~/.cache/macextract/vmac/specimens/zipit/
+
+**How four of them were found is re-runnable.**
+`tools/scan_discmaster_zips.py` lists every zip on the Discmaster items
+you name and reads 512 bytes of each over HTTP `Range`, which is enough
+to see the first entry's extra field. Not in `ci.sh` — it needs the
+network and produces URLs rather than a verdict — and widening the
+sweep to more items is a one-line change:
+
+    tools/scan_discmaster_zips.py \
+        --items-from tools/specimens/spacesaver.tsv \
+        --items-from tools/specimens/applelink.tsv
+
+is the 2026-10-04 run: **3,029 zips, seven hits**. It keeps its progress
+in `--state` and resumes, because it will not finish inside one
+foreground timeout.
+
+**Two of the nine are corpus fixtures as well.** `MrTs_Paint_Folder.zip`
+carries `0x2705` and `0x2805`; `NPWritersKit.zip` carries a `0x2605`
+entry with 150,016 B of data fork and 323 B of resource fork. Both are
+plain zips, so `run_diff.py` grades them against a committed manifest
+with **no oracle at run time**, which is stronger than anything this
+suite does. They stay in this suite too, because what it checks of them
+— the fields themselves — a manifest does not record.
+
+Four things run per specimen:
+
+1. **The format, read independently of the engine.** Every ZipIt field
+   is parsed in Python: the central copy must equal the local one, and
+   each size must be what `'ZPIT'` plus the members it declares needs.
+2. **`0x2605` against the bytes.** The entry is inflated and its first
+   128 bytes probed as MacBinary — the same test `zip_mb_peek` makes —
+   in both directions: a `0x2605` entry that is not MacBinary fails, and
+   so does a `0x2705` entry that is.
+3. **`l --finder` against `lsar`**: name, type, creator, Finder flags
+   and both fork lengths.
+4. **`x` against `unar`**: every data and resource fork byte for byte,
+   `unar`'s AppleDouble sidecar unwrapped (this engine writes the fork
+   raw).
+
+**Per-specimen tallies are asserted, and that is the part that matters.**
+`EXPECT` holds entries, one count per field id, and the number of
+MacBinary payloads for each archive. A parse that stopped parsing would
+otherwise report zero of everything and pass — the failure mode this
+project has hit twice (CLAUDE.md, *A test that passes may not be testing
+anything*). It was made to fail two ways before being believed:
+rewriting every `0x2605` id to `0x2805` in one specimen gives 4
+failures, and moving the `0x2705` flag read by two bytes in
+`src/fmt_exo.c` gives 66.
+
+**What it cannot see.**
+
+- **It does not test that a ZipIt SEA is RECOGNISED**, because it is
+  not: `unc_zip_probe` reads the head and the head is PowerPC or 68k
+  code, so the five self-extractors are passed `-f Zip` (OPEN_ITEMS.md).
+  The four plain ones are *required* to sniff as `Zip`, and the count of
+  each is printed, so the distinction cannot quietly change.
+- **No fork of an entry whose method is out of scope**, and `UNGRADED`
+  names every one with the reason. Today that is
+  `Psycho!v1.0ß1.zip`'s three Implode entries. The declaration carries
+  the NUMBER, so a fourth refusal there — or a refusal anywhere else —
+  fails.
+- **No date.** `lsar` reports zip's own MS-DOS stamp where a `0x2605`
+  entry's MacBinary header carries two Macintosh ones. They are not the
+  same field, so agreement between them would mean nothing and
+  disagreement would mean nothing either.
+- **Four names `unar` spells differently**, each allowed only while
+  ZipIt's own `0x2605` FileName is one of the two spellings — which is
+  checked, and is what lets the tolerance fail. It is not "ours is
+  right": on three of the four it is `unar` that is right
+  (OPEN_ITEMS.md).
 
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 

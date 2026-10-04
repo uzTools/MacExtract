@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "creator": "MSWD",
+   "data_sha256": "b2cb1532245abc84f0afcb971496742366f125b6b530d22648d1bea3364628c7",
+   "data_size": 150016,
+   "finder_flags": 256,
+   "name": "NPWriters_Kit.doc",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "3389d2d5b655a11ccb866743b8f9d77569a63703f161adc9e0654e38d8e774ae",
+   "rsrc_size": 323,
+   "type": "W8BN"
+  }
+ ],
+ "fixture": "NPWritersKit.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "24a95a079c91037a806da458658d49cd58cbf8fa2e69c8403ac5bdeb51b9e6af",
+ "size": 55970
+}

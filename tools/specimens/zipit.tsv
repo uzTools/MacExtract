@@ -1,0 +1,15 @@
+# ZipIt archives, every one written by ZipIt itself. Found by CONTENT:
+# Discmaster's identifier knows a ZipIt self-extractor on sight, so
+# format=zipIt names them where no search by name could — ZipIt's
+# output is a plain .zip (DECISIONS.md 2026-10-04).
+# tools/run_zipit.py grades them; FORMATS.md has the figures.
+# name	role	size	sha256	url
+zipit-MrTs_Paint_and_more	sea	247424	b2071d60ce7edb4d460854be0857787da70d845d6f0c29033d24926be85f361f	https://discmaster.textfiles.com/file/43251/EVN.zip/EVN/Cheats/Mr.Ts_Paint_and_more.sea
+zipit-MrTs_Paint	sea	110001	27108bb21d90e60dbcfbb0441559fff40ec5b7562591fc45c2549f3ccf2e6f51	https://discmaster.textfiles.com/file/43251/EVN.zip/EVN/Plugins/Mr.Ts_Paint.sea/Mr.T%27s%20Paint.sea
+zipit-1.4	sea	763264	959de4d14f4a1dd6ab7d7704abd445714f7c32847527385d677282f947b97b40	https://discmaster.textfiles.com/file/38397/Palmtops_numero57.iso/mac/Outils/Mac%20OS/ZipIt%201.4.sea
+zipit-2.2.2	sea	734336	7d0d0ef2688cf8c1c68dfcb5a17a56602d8db623ca6e69e3a06011291cfbedb4	https://discmaster.textfiles.com/file/38748/maccd%20100.iso/maccd%20100/Utilities/Mac%20OS/ZipIt%202.2.2.sea
+zipit-1.x-jp	sea	725632	22ba9bbd6e37488f95260699d3c16dae340fb0b3669b7d5c0acc161ea4fb85e3	https://discmaster.textfiles.com/file/41148/mac100-199907.iso/mac100-199907.iso/%EF%BE%80%EF%BE%9E%EF%BD%B3%EF%BE%9D%EF%BE%9B%EF%BD%B0%EF%BE%84%EF%BE%9E%EF%BE%97%EF%BE%9D%EF%BD%B7%EF%BE%9D%EF%BD%B8%EF%BE%9E/%E6%B5%B7%E5%A4%96/zipit.sea
+zipit-Psycho_1.0b1	zip	18480	e2d3792c4f7f5d64e7bca5d63f84d4ebd1a52ea470b88f82c63a4368d6b75e33	https://discmaster.textfiles.com/file/11960/ftp.uni-potsdam.de.zip/ftp.uni-potsdam.de/Communication.zip/Communication/term/white-knight-psycho-10b1.hqx/Psycho%21v1.0%C3%9F1.zip
+zipit-MacTech-23.08	zip	43668	7f123092b0beba489b8a7d049f0854173bbdbdf780a530a222b14b426c5eb76e	https://discmaster.textfiles.com/file/11927/ftp.mactech.com.zip/ftp.mactech.com/ftp.mactech.com/src/mactech/volume23_2007/23.08.zip
+zipit-r95dm13	zip	84198	c03a9ce7fa140f93d02764b8878e5181c7827daf45b0ecf8842c6595a7c99ce3	https://discmaster.textfiles.com/file/11869/www.umich.edu.archive.2014.03.zip/www.umich.edu/~archive/atari/8bit/Emulators/Computer/r95dm13.zip
+zipit-JoesFinger	zip	4909	57407cab31d5f721a76da06f1d9eff94724e1fd5fc984191e3281370afa8a7ce	https://discmaster.textfiles.com/file/14746/Info-Mac_XI_Disc_2.cdr_/Info-Mac%20XI%20Disc%202.cdr/Programs/Communication/Internet/JavaFinger/Java%20Finger%21/Java%20Finger%21.rsrc/ZIP%21_128_JoesFinger
