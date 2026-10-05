@@ -24,7 +24,7 @@ about names:
     request per candidate, reading the one header that settles it.
 
 So: list the candidates with a query that names the bytes, fetch a few
-hundred bytes of each, and decide in this process.  Three probes, each
+hundred bytes of each, and decide in this process.  Four probes, each
 written from this project's own reading of the format it names:
 
   pkg  an AppleLink package — SqueezePlay (FORMATS.md, *AppleLink
@@ -43,6 +43,11 @@ written from this project's own reading of the format it names:
   dd   a DiskDoubler compressed file, reported with both forks' method
        bytes and lengths (docs/formats/diskdoubler-container.md, *A
        compressed file*).  `--method` keeps only the forks that use one.
+  pit  a PackIt archive, reported only when a block is `PMa5` or
+       `PMa6` — the two encrypted forms, which no corpus here has.
+       Added 2026-10-05.  It fetches the WHOLE file, because an
+       encrypted block is almost never the first one and a `PMa4`
+       block can only be stepped over by decoding it.
 
 Examples — each sweep this tool has actually run is in TESTING.md
 (*Searching somebody else's index by content*):
@@ -51,6 +56,7 @@ Examples — each sweep this tool has actually run is in TESTING.md
     tools/scan_discmaster.py --probe dd  --query 'detection=abcd0054*' \
         --sort size --desc --method 8
     tools/scan_discmaster.py --probe sit --query 'format=sit' --walk 24
+    tools/scan_discmaster.py --probe pit --query 'detection=504d61*'
 
 Progress is written to `--state` after every chunk and re-read on the
 next run, so a sweep survives a timeout: run it again and it picks up
@@ -261,7 +267,89 @@ class DdProbe:
                 "dmeth": head[20], "rmeth": head[21]}
 
 
-PROBES = {"pkg": PkgProbe, "sit": SitProbe, "dd": DdProbe}
+class PitProbe:
+    """A PackIt archive, walked to the end of its block chain.
+
+    The question this one answers is whether any archive in the index
+    has an ENCRYPTED entry, and it cannot be asked of the first 16
+    bytes: a `PMa5` or `PMa6` block is almost never the first one, and
+    `detection=504d6135*` and `504d6136*` return **0 rows between
+    them** (measured 2026-10-05). Following the chain to find one means
+    DECODING every `PMa4` block on the way, because a compressed entry
+    is Huffman-coded from its first bit and its own lengths are inside
+    the stream — so this probe wants the whole file where `pkg`, `sit`
+    and `dd` want 512 bytes.
+
+    The decoder is `tools/derive_packit.py`'s, written from the
+    format's published appendices. Its primitives rather than its
+    `entries()`: the loop below bounds every length against the bytes
+    actually present, which a reader of known-good fixtures does not
+    have to do and a reader of 1.74 billion strangers does.
+    """
+    need = 16
+    limit = 4 << 20
+
+    def __call__(self, head, size):
+        import derive_packit as DP
+        start = 0
+        if head[:4] not in (b"PMag", b"PMa4", b"PEnd") and len(head) >= 132:
+            start = 128                      # a MacBinary envelope
+        if head[start:start + 3] != b"PMa" and head[start:start + 4] != b"PEnd":
+            return None
+        if len(head) < min(size, self.limit):
+            return "more"
+        out, at, d, end = [], start, head, "ran out"
+        try:
+            while at + 4 <= len(d):
+                kind = d[at:at + 4]
+                if kind == b"PEnd":
+                    end = "PEnd"
+                    break
+                if kind in (b"PMa5", b"PMa6"):
+                    out.append({"magic": kind.decode(), "at": at,
+                                "encrypted": True})
+                    end = "encrypted"
+                    break                    # nothing can say where it ends
+                if kind == b"PMag":
+                    h = d[at + 4:at + 4 + DP.HDR]
+                    if len(h) < DP.HDR:
+                        break
+                    name, dsize, rsize = DP.header(h)
+                    if dsize + rsize > len(d) - at:
+                        return None
+                    out.append({"magic": "PMag", "at": at, "name": name,
+                                "dlen": dsize, "rlen": rsize})
+                    at += 4 + DP.HDR + dsize + rsize + 2
+                    continue
+                if kind == b"PMa4":
+                    bs = DP.Bits(d, at + 4)
+                    tree = DP.read_tree(bs)
+                    h = DP.decode(bs, tree, DP.HDR)
+                    name, dsize, rsize = DP.header(h)
+                    # A compressed entry's DECODED size is normally
+                    # larger than the bytes left in the file, so the
+                    # bound here is the one the bit stream gives: a
+                    # symbol costs at least one bit. (The first draft
+                    # bounded it by the file length and rejected every
+                    # archive tools/synth_pit.py writes.)
+                    if dsize + rsize > 8 * (len(d) - at):
+                        return None
+                    DP.decode(bs, tree, dsize + rsize + 2)
+                    out.append({"magic": "PMa4", "at": at, "name": name,
+                                "dlen": dsize, "rlen": rsize})
+                    at = (bs.p + 7) // 8
+                    continue
+                return None                  # not a PackIt block at all
+        except Exception:
+            # A truncated or damaged archive is not a finding here; what
+            # was read before it still is.
+            if not out:
+                return None
+        return {"base": start, "entries": out, "end": end,
+                "encrypted": [e for e in out if e.get("encrypted")]}
+
+
+PROBES = {"pkg": PkgProbe, "sit": SitProbe, "dd": DdProbe, "pit": PitProbe}
 
 
 # ---- the index ------------------------------------------------------
@@ -456,6 +544,15 @@ def main():
                                   e["rmeth"], e["dmeth"], e["b106"],
                                   e["b108"])
                                for e in flagged)))
+        elif a.probe == "pit":
+            if not v["encrypted"]:
+                continue
+            print("  %s\n    %d block(s), %s"
+                  % (url_of(item, fileid), len(v["entries"]),
+                     "; ".join("%s%s" % (e["magic"],
+                                         "" if e.get("encrypted")
+                                         else " %r" % e["name"])
+                               for e in v["entries"])))
         else:
             print("  %s\n    version %d, %d item(s), tiles %s: %s"
                   % (url_of(item, fileid), v["ver"], v["items"], v["tiles"],

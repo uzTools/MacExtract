@@ -7,10 +7,19 @@
  *   ARC          a plain repeating XOR of the password over the
  *                compressed bytes (XADXORHandle).
  *   PackIt PMa5  an XOR too, but the key is the password run through
- *                DES's PC-1 permutation and then applied modulo SEVEN
- *                over an eight-byte key (XADPackItXORHandle — the
- *                modulus is the original's and is kept).
- *   PackIt PMa6  DES in ECB, decrypting eight bytes at a time.
+ *                DES's PC-1 permutation, which yields 56 bits — so the
+ *                keystream is SEVEN bytes, cycled, and restarted at
+ *                every entry.
+ *   PackIt PMa6  DES in ECB, decrypting eight bytes at a time. Both of
+ *                PackIt's are the application's own, read out of and
+ *                then RUN out of Packit III 1.3's `CODE` 1 and `CODE`
+ *                256 (tools/derive_pitcrypt.py; DECISIONS.md
+ *                2026-10-05), which is also where the key being the
+ *                zero-padded first eight characters comes from
+ *                (@0x0bda, @0x0c1e) and which direction of DES decodes
+ *                (@0x3390 writes with the ascending rounds, so reading
+ *                is the descending ones). Nine tables in `CODE` 256,
+ *                and every one of them is FIPS 46-3's to the word.
  *   StuffIt      a two-stage thing: standard DES with no IP/FP and its
  *   classic      own key schedule ("StuffItDES") derives a per-file key
  *                from the password, the archive's 'MKey' resource and a
@@ -45,9 +54,9 @@
  * ciphers here — StuffIt's variant is that round function and no other
  * (see *StuffItDES* below); reference/XADMaster/XADStuffItDESHandle.m
  * for what remains format knowledge, the nibble key schedule and the
- * derivation the three real archives grade; XADStuffIt5Parser.m,
- * XADPackItParser.m (both PackIt handles) and XADXORHandle.m (ARC's
- * garble). The other four handles left on 2026-09-23 for the documents
+ * derivation the three real archives grade; XADStuffIt5Parser.m and
+ * XADXORHandle.m (ARC's garble). Both PackIt handles left on 2026-10-05
+ * for the application itself. The other four left on 2026-09-23 for the documents
  * that state what they do: RFC 3174, RFC 2104 and RFC 2898 for SHA-1,
  * HMAC and PBKDF2, reference/notes/winzip_aes.txt for AE-1/AE-2's
  * parameters, zip_appnote.txt section 6.1 for the traditional zip
@@ -721,10 +730,12 @@ void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     if (pwlen == 0) cr->kind = UNC_CRYPT_NONE;
 }
 
-/* PackIt PMa5. The key is DES's PC-1 applied to eight password bytes;
- * it is then used modulo SEVEN, which loses key[7] entirely. That is
- * what XADPackItXORHandle does and what the files were written by.
- * Source: XADPackItParser.m (keytr1). */
+/* PackIt PMa5. The key is DES's PC-1 applied to eight password bytes,
+ * and PC-1 selects 56 of the 64, so what comes out is seven bytes and
+ * the eighth is never written: Packit III 1.3 allocates exactly seven
+ * (CODE 1 @0x3386, the counter it resets to) and cycles them.
+ * Source: tools/derive_pitcrypt.py, which runs that routine; the table
+ * itself is FIPS 46-3's PC-1. */
 void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 {
     uint8_t passbuf[8];
@@ -733,8 +744,9 @@ void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     crypt_clear(cr, UNC_CRYPT_PIT_XOR, 1);
     for (i = 0; i < 8; i++) passbuf[i] = i < pwlen ? pw[i] : 0;
     for (i = 0; i < 56; i++) {
-        /* keytr1 is PC-1: its C half then its D half, which is how the
-         * standard's own table divides at 28. */
+        /* PC-1, its C half then its D half, which is how the
+         * standard's own table divides at 28 — and the order the
+         * application's single 56-entry table has it in. */
         int bitindex = (i < 28 ? unc_des_pc1c[i] : unc_des_pc1d[i - 28]) - 1;
         cr->key[i / 8] = (uint8_t)(cr->key[i / 8] |
             (((passbuf[bitindex / 8] << (bitindex % 8)) & 0x80) >> (i % 8)));
@@ -742,7 +754,12 @@ void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     cr->keylen = 7;
 }
 
-/* PackIt PMa6: DES, and the operation that DECODES is DES's decrypt. */
+/* PackIt PMa6: DES, keyed on the first eight password bytes zero-padded,
+ * and the operation that DECODES is DES's decrypt — Packit III 1.3
+ * writes with the block routine whose rounds ascend (CODE 1 @0x33fc,
+ * reached only from the writer) and reads with the one whose rounds
+ * descend. Graded by two archives its own code encrypted
+ * (tools/derive_pitcrypt.py --make). */
 int unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
                          uint16_t pwlen)
 {

@@ -336,6 +336,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
 - 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
 - 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
+- 2026-10-05 (the reference implementation was the fixture's payload) — PackIt's two ciphers read out of PackIt III 1.3, and then RUN out of it
+- 2026-10-05 (the negative that was about one rule) — a line-ending citation shed to a file the same header already cited
 - 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
 - 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
 - 2026-10-06 (the Optimizer that was in somebody else's corpus) — the one key that identifies a StuffIt 2.x feature, and the two harness defects between it and the answer
@@ -21360,6 +21362,190 @@ fail on the case the engine gets right and not on the case it gets
 wrong.** Asking what evidence a tolerance rests on is in CLAUDE.md;
 asking which direction it can fail in is the same question one turn
 further on.
+
+
+## 2026-10-05 (the reference implementation was the fixture's payload) — PackIt's two ciphers read out of PackIt III 1.3, and then RUN out of it
+
+**The claim that moved.** OPEN_ITEMS.md's licence table said
+`fmt_packit.c`'s resync and both ciphers wanted "a second
+implementation of `PMa5`/`PMa6`", and gave three reasons there was
+none: deark's `packit.c` errors on both words, macutils' `pit.c` skips
+the block, and appendix B of the unPACKIT manual lists "PMa5" twice so
+it cannot even name the fourth word. **The third is false, and reading
+it to write this entry is what showed that** — the manual's (L)ist
+section gives all four words and attributes both encrypted forms to
+PackIt III; only appendix B's table duplicates one (BLOCKERS.md). The
+other two are true, and what no edition of the document does is
+describe either cipher. The fourth
+place nobody looked is the corpus: `fixtures/packit.pit_.bin` is a
+PackIt archive whose four members include **`Packit III 1.3`**,
+APPL/`'PIT '`, dated 6/14/87 by its own `'PIT '` resource — the
+generation that wrote every `PMa5` and `PMa6` block there has ever been. An
+application is all resource fork, so `tools/derive_packit.py` had been
+grading the container against an archive carrying the writer of the
+part it could not cite.
+
+**That pattern has now cost four rows.** CLAUDE.md records it as "a
+self-extracting fixture carried a second implementation in its own
+resource fork"; this one was not self-extracting and needed no
+unwrapping trick — the application was simply the payload. The usable
+form of the lesson is narrower than "look in the corpus": **a format's
+own application is a reference implementation, and for a Macintosh
+format of the 1980s the application is a file somebody archived.** Ask
+what the corpus contains, not only what it exercises.
+
+**Read, and then executed.** The reading went in
+`tools/derive_pitcrypt.py` in the shape `tools/derive_sqp.py`
+established — 32 byte patterns each checked AT the offset it is claimed
+to sit at, which matters because 17 of them occur more than once in
+the resource — a count `--witness` prints rather than asserts, because
+the first draft of this entry guessed it at twelve. But `CODE` 1 is 68k with exactly one Toolbox trap in the
+cipher's call graph (`_BlockMove`, A02E), so it does not have to be
+read ONLY: `tools/pitcrypt/pit_run.c` sets up an A5 world at the
+offsets the binary addresses its globals by, maps `CODE` 1 executable,
+copies `CODE` 256 to A5-19150 where the runtime reads it, and calls
+`SetKey` at @0x334a and the cipher at @0x3390 as plain C-convention
+subroutines under `qemu-m68k`. **The same four lines of SIGILL handling
+`tools/sdmodule/` already needed serve the trap.** `--make` then has
+the original cipher encrypt two entries, wraps them in a container
+`tools/synth_pit.py` writes from the published appendices, and asks
+this engine to read them back: 890 B, 890 B and 302 B, every fork
+byte-exact, and `PMa6`'s output identical to `openssl enc -des-ecb`
+over the same key.
+
+**The smell this one came from, and it is a new one.** The table's
+own two-axes note said "our use is graded — `unar -p` reads both
+ciphers back every run", and that was true and worth nothing: `unar`
+IS XADMaster, the implementation both ciphers were transcribed from.
+**A differential test whose oracle is the implementation the code was
+copied from grades the transcription and not the format**, and it
+cannot fail on a shared mistake. It belongs beside "ask what evidence a
+tolerance rests on; if the answer is our own output, it cannot fail" —
+the variant is that *somebody else's* output is not enough either when
+that somebody is where the code came from. Four of the eight ciphers
+here now have an archive the original software produced; the other four
+are ARC (Debian's `arc`), zip (Info-ZIP), WinZip AES (7-Zip) and
+`PassLock`, which enciphers nothing.
+
+**What the application settled that no document could.** The fourth
+magic byte is `'0' + 4·compressed + mode` (@0x109a..0x10c4) rather than
+a table, which is exactly why a document written from the outside lists
+one of them twice. Both encryption menu items also force compression on
+(@0x0c7e, @0x0c9a) and the compression item goes inert while the
+mode is nonzero (@0x0c50), **so `PMa1` and `PMa2` cannot exist** — a
+reassurance the arithmetic alone would not have given, and the reason
+this engine's four-word magic check is complete rather than lucky. The
+`PMa5` key is seven bytes because PC-1 selects 56 bits (@0x3386), not
+eight bytes used modulo seven; the output is identical and the
+description was the reference's shape, not the format's. And the key is
+set once per ENTRY with the magic written in the clear (@0x12c0,
+@0x12ec): no salt, no chaining.
+
+**The one behaviour change, and why it is not free.** The resync for an
+entry nothing can decrypt was macutils' byte-wise scan for the next
+magic. PackIt's writer rounds its last flush up with `addq.l #7` /
+`and.l #-8` whenever the mode is nonzero (@0x1942), so an encrypted
+stream is always a whole number of eight-byte blocks and the next magic
+can only begin on that grid. Scanning the grid instead is PackIt's own
+arithmetic rather than a transcription — and the bytes came back. The
+grid alone is bigger — `fmt_packit.c` 2,142 -> 2,160 B of m68k text at
+`-Os`, measured — but the 4-byte magic test was written out TWICE in
+that file, once in the walk and once in the resync, and factoring it
+into one predicate more than pays for the grid: **`ovl_packit` fell 4
+B**. The resident control's code rose 20 B with its A5 falling by the
+same 20, so `OVL_SAVED` is unchanged and only that configuration's two
+ceilings are re-taken. **Two of this project's own ratchets made that
+happen rather than let it past**: `run_tiers.py --check-images` refused
+the moved image twice, and `build_mac.sh` refused the control at 32 B
+over. The first draft of the grid cost 26 B and would have bought a
+ceiling raise with it. It was
+taken because it could be made to fail: the third specimen's ciphertext
+carries a false `'PMag'` five bytes in, off the grid, and the engine
+rebuilt with the old scan loses the entry AFTER it with the right key
+and the wrong one both. Any 64 bytes are legal ciphertext, so that is
+an archive PackIt could have written. **An ungraded behaviour change
+taken for a citation would have been the `unc_lzah.c` shape — uncited
+and ungraded at once — pointing the other way.**
+
+**And the citation it replaces had a second error in it.** The claim
+that the document "cannot name the fourth word" had been in
+`fmt_packit.c`, in `derive_packit.py` and in OPEN_ITEMS.md since
+2026-09-21, and it is wrong: the duplicate is in appendix B's TABLE,
+while the (L)ist command's section two pages earlier names `PMa6` and
+says which PackIt wrote it. Nobody had re-read the document since the
+container was derived from it — the appendix was what that work needed,
+so the appendix is what got checked. **A document is not one claim.**
+When a citation says "the spec does not state X", the part of the spec
+that was read is usually the part the last task needed.
+
+That also bounds this entry: the manual attributes both encrypted forms
+to PackIt **III**, and 1.0 to 1.2 are not on this disk. Everything
+above is measured on **1.3**; for the earlier III releases it is a
+hypothesis, and the docs say so where the figures are.
+
+**No wild archive can grade either cipher, and that is now measured.**
+Discmaster's first-16-bytes index answers 0 rows for `504d6135*` and
+`504d6136*`, which only means no archive BEGINS with an encrypted
+block — so `tools/scan_discmaster.py` got a `pit` probe that walks the
+chain, decoding every `PMa4` on the way, because a compressed block
+cannot be stepped over any other way. **182 wild archives, 1,107
+blocks, zero encrypted** (plus 6 more from a partial `.pit` extension
+sweep). The ciphers were not under-specimened by accident: PackIt III's
+encryption appears to have gone essentially unused, which is also why
+the only grader available is the application. The probe's blind spot is
+named in TESTING.md and is the obvious one — a MacBinary-wrapped
+archive does not have `PMa` in its first bytes, and this project's own
+PackIt fixture is one.
+
+**One harness trap worth the line.** The first runs of `pit_run`
+returned a different exit status on every invocation while writing
+correct ciphertext. 1987 Macintosh code saves the registers it feels
+like — `SetKey` saves none and uses A2; the dispatcher pushes D4/A3 and
+then writes D2, D3 and A2 — so an inline-asm clobber list of
+`d0 d1 a0 a1` is not caution, it is wrong. Naming D2-D5 and A2-A4 fixed
+it. The symptom was in the harness and looked like the cipher.
+
+
+## 2026-10-05 (the negative that was about one rule) — a line-ending citation shed to a file the same header already cited
+
+**The claim that moved.** `src/fmt_uu.c` and `src/unc_internal.h` cited
+macutils' `hexbin/readline.c` for one rule: CR, LF and CRLF each end a
+line, and a last line need not be terminated at all. OPEN_ITEMS.md said
+why it was stuck — *"mpack is LF-only so it cannot state the CR rule"* —
+and that is true: mpack's `part_gets` breaks on `'\n'` alone.
+
+**What was not asked.** deark. The 2026-09-27 sweep that produced the
+other three cells of that row DID read deark — for the whole-line
+garbage skip, where it errors, and for the second-document rescan,
+where it has none — and the CR cell was written about mpack only. deark
+has `dbuf_find_line` in `src/deark-dbuf.c`: CR alone, LF alone and CR+LF
+each end a line (`eol_size` 2 for the pair), a line at end of file with
+no terminator is still a line (`eol_size` 0, content returned), and
+nothing at all is not one. MIT. Its own `modules/xfer.c` uudecode uses
+it, and treats a CR or LF at the start of a line as *"a multi-byte EOL
+sequence, or blank line"* and skips it — which is exactly the choice
+`fmt_uu.c` makes and documents. **`src/unc_internal.h` already cited
+`deark-dbuf.c` four lines below, for the bit reader.**
+
+**The transferable part.** A negative result is about the pair
+(reference, fact), and this row recorded one as if it were about the
+fact: *"nobody else states the CR rule"* was reached from *"mpack does
+not"*. The row even listed deark in its other cells, so the gap was
+visible in the cell beside it. **When a row gives a different blocker
+per item, check that each blocker names every reference and not just
+the one that failed first** — and if the file you are citing already
+cites a candidate for something else, that candidate is one grep away.
+
+**What this does and does not close.** Three of the original six rules
+are gone — two to mpack, this one to deark — and `unc_internal.h` is
+off the row entirely, down to the LZAH preload. Three remain, all with
+their blockers re-verified the same day against the same two
+references: the whole-line garbage skip (deark errors, mpack keeps the
+prefix), the second-document rescan (deark's binhex reads one document
+and bounds its banner search to 8,192 bytes), and UUTool's MU layout,
+which nothing else implements. No behaviour changed; the readers are
+byte for byte what they were, and `tools/run_uu.py`'s gapped sets and
+the multi-part fixtures grade them as before.
 
 
 ## 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named

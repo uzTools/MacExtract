@@ -2605,8 +2605,9 @@ interpolated position for the purpose (`unc_progress_at`).
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
 Added 2026-08-23, when decryption came into scope. **Nothing in the
-corpus is encrypted** — `lsar -j` over all 903 fixtures reports
-`XADIsEncrypted` 0 for every entry — so this suite writes every archive
+corpus is encrypted** — `lsar -j` over all **961** fixtures reports
+`XADIsEncrypted` 0 for every entry (re-counted 2026-10-05; it read 903
+from 2026-08-23 while the corpus grew under it) — so this suite writes every archive
 it grades, and the whole design is about not grading a decoder against a
 generator that shares its reading.
 
@@ -2617,7 +2618,12 @@ four — StuffIt classic's StuffItDES, StuffIt 5's RC4, and PackIt's XOR
 and DES — have no encoder on this machine, so `tools/synth_crypt.py`
 writes them and **`unar -p` adjudicates**: a different implementation of
 each cipher, extracting the same file with the same password, byte for
-byte. For StuffIt classic the fixture is MacBinary, because the password
+byte. **For PackIt, `unar` was not a different implementation and the
+cell above said it was** — it IS XADMaster, which is where both of
+those ciphers were transcribed from, so that adjudication could not
+fail on a shared mistake (DECISIONS.md 2026-10-05, *the reference
+implementation was the fixture's payload*). Since 2026-10-05 the
+grading is PackIt III 1.3's own code, below. For StuffIt classic the fixture is MacBinary, because the password
 verifier is the archive's `'MKey'` resource and the oracle needs the
 resource fork too; our CLI is given the bare `.sit` and finds the same
 resource in the sidecar file it writes itself.
@@ -2629,6 +2635,35 @@ MacBinary, because the password verifier is in the archive's resource
 fork. Three are kept, with passwords of 8, 9 and 17 characters, and
 those lengths are not decoration: they are what showed that the fold
 count is ceil(len/8) and that neither reference implements it.
+
+**PackIt's two ciphers are graded by PackIt III 1.3**, the generation
+that wrote every `PMa5` and `PMa6` block there has ever been, which is
+inside the fixture `packit.pit_.bin` (1.0 to 1.2 are not here, so the
+reading is 1.3's — FORMATS.md says so where the figures are). No emulator: its `CODE` 1 is 68k with
+one Toolbox trap in the cipher's call graph, so
+`tools/pitcrypt/pit_run.c` calls the original routines as subroutines
+under `qemu-m68k`, and `tools/derive_pitcrypt.py --make` has them
+encrypt the blocks of three archives it leaves in
+`$UNC_VMAC_HOME/specimens/pitcrypt/`. `run_crypt.py` replays whatever
+is there and says so loudly when there is nothing — eight of its cases
+are these. The third archive is the one with something to teach: its
+ciphertext carries a false `'PMag'` five bytes in, off the eight-byte
+grid PackIt pads to, and the engine rebuilt with the byte-wise resync
+it replaced loses the entry AFTER it, with the right key and the wrong
+one both. **That is the only part of this that can fail on the
+resync**; the other two archives pass either way.
+
+`tools/derive_pitcrypt.py` run without arguments also checks the
+reading itself, which no suite does: 32 byte patterns at the offsets in
+`CODE` 1 they are claimed to sit at, and `CODE` 256's nine tables
+against FIPS 46-3's own PDF through `gen_crypt_tables.py`. It is not in
+`ci.sh` — it needs the fixture, the m68k cross-compiler and
+`qemu-m68k`, and skips cleanly without any of them. **So nothing in a
+`ci.sh` run compiles `tools/pitcrypt/pit_run.c` or re-checks a
+witness**: the specimens it produced are graded on every run, the
+reading that produced them is graded when somebody asks. That is
+`tools/derive_sqp.py`'s position too, and for the same reason — the
+input is copyrighted and not committed.
 
 **What this suite cannot see, and what does.** It grades StuffItDES end
 to end and says nothing about how it is written, so the 2026-09-19 fold
@@ -3687,7 +3722,7 @@ has indexed the content.
     tools/scan_discmaster.py --probe pkg \
         --query 'extension=.pkg&family=unknown&dedup=dedup'
 
-Three probes, each written from this project's own reading of the format
+Four probes, each written from this project's own reading of the format
 it names, so each can be checked against the corpus before it is pointed
 at a stranger's disk. That check matters more than it sounds:
 
@@ -3696,6 +3731,7 @@ at a stranger's disk. That check matters more than it sounds:
 | `pkg` | an AppleLink package: the item count, the version, eight zero bytes, then the whole directory validated against the file's own size and tiling | **exactly the 6 synthesised `.pkg` fixtures out of 956 files in `fixtures/`**, and both real packages, which is a test that can fail in both directions |
 | `sit` | a classic StuffIt archive, reported when an entry's method byte carries the Optimizer bit `0x40` or the encrypted bit `0x10` | the 336 `rLau` archives in `fixtures/` — **none** of which sets either bit, which is why the sweep was worth running |
 | `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, where it reproduces FORMATS.md's *the biggest method-8 fork in reach is 44,549 B and compresses to 1,230* |
+| `pit` | a PackIt archive, walked to the end of its block chain — reported only when a block is `PMa5` or `PMa6`. Added 2026-10-05. It wants the WHOLE file where the other three want 512 bytes, because an encrypted block is almost never the first one and a `PMa4` block can only be stepped over by DECODING it (`tools/derive_packit.py`'s decoder, with every length bounded against the bytes present) | **exactly the 5 PackIt archives out of 962 files in `fixtures/`**, every one of them walking to its `PEnd`, and all 3 encrypted specimens in `specimens/pitcrypt/`, each stopping at its encrypted block — so it can fail in both directions. Its first draft bounded a COMPRESSED entry's decoded size by the bytes left in the file and rejected every archive `tools/synth_pit.py` writes |
 
 **The sweeps that have been run, by key:**
 
@@ -3706,6 +3742,17 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-06 | `detection=abcd0054*&sizeMin=40000`, deduplicated | 2,046 | all 2,046 are DiskDoubler compressed files, carrying **612 method-8 forks** up to 6,212,378 B of coder output; two became fixtures and pinned the 0xfff0 block size (FORMATS.md, *Method 8's Huffman block*) |
 | 2026-10-06 | `format=sit`, deduplicated, ordered by hash — a uniform sample | 10,000 | 8,798 classic StuffIt archives, **0 Optimizer bits** in their first entries |
 | 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,998 entry headers**, and the **5 Optimizer bits** this project has ever seen in the wild, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). Two further entries carry the bit inside one damaged archive, counted twice because it is on two CDs, which `unar` also refuses |
+
+| 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
+| 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
+| 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |
+
+**What the PackIt sweep cannot see** is a MacBinary-wrapped archive:
+`detection=504d61*` reads the first 16 bytes, and
+`packit.pit_.bin` — this project's own fixture — has a MacBinary header
+in front of them. The `.pit` extension sweep is the other way in, and
+its hit rate says why it is slow going: 6 PackIt archives in the first
+3,324 files with that extension.
 
 **`--bytes` is what found the Optimizer, and it costs nothing.** The
 `sit` probe walks the entry chain inside the bytes already fetched, so

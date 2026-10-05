@@ -9,16 +9,20 @@
  *       terminator is "end" followed by whitespace. mpack's state
  *       machine spells both out — st_start for the first and st_last
  *       for the second — and mpack is permissive (CMU), where hexbin
- *       is not. What mpack does NOT state, and what is therefore
- *       still macutils' below: the CR/LF rule, because mpack is
- *       LF-only throughout (part_gets breaks on '\n' alone).
+ *       is not. What mpack does NOT state is the CR/LF rule, because
+ *       it is LF-only throughout (part_gets breaks on '\n' alone) —
+ *       and that was taken for "nobody else states it" until
+ *       2026-10-05, when deark was asked (below).
+ *   reference/deark/src/deark-dbuf.c (MIT) and modules/xfer.c
+ *       — the line rule, since 2026-10-05 (macutils' readline.c until
+ *       then): dbuf_find_line ends a line at CR, at LF or at CR+LF and
+ *       treats a last line with no terminator as a line, and deark's
+ *       own uudecode skips the blank line a CRLF leaves behind.
  *   reference/macutils/hexbin/mu.c      — the UUTool layout: the data
  *       fork's section, then an OPTIONAL " .rsrc" section, then a
  *       " .finfo" section holding the Finder info, each terminated by
  *       a zero-length line and the word "end". SIXB()/mu_convert(),
  *       including the restoration of trailing spaces that mailers eat.
- *   reference/macutils/hexbin/readline.c — a line ends at CR, LF or
- *       both, and the last line need not be terminated at all.
  *
  * Two shapes are read:
  *
@@ -84,10 +88,14 @@ static uint32_t uu_abs(uint32_t base, const UncBufIn *in)
 
 /* ------------------------------------------------------------------ */
 /* Line reader                                                        */
-/* Source: reference/macutils/hexbin/readline.c — CR, LF or CRLF, and  */
-/* a final line without a terminator is still a line. A line longer    */
-/* than the buffer is truncated at the buffer and the rest skipped,    */
-/* which cannot lose a uu line (they are 61 characters).               */
+/* Source: reference/deark/src/deark-dbuf.c (MIT), dbuf_find_line —    */
+/* CR, LF or CRLF, and a final line without a terminator is still a    */
+/* line; and reference/deark/modules/xfer.c's own uudecode, which      */
+/* takes CR or LF as the end of a line and skips the blank line a CRLF */
+/* leaves behind, which is the choice made below. macutils' readline.c */
+/* until 2026-10-05. A line longer than the buffer is truncated at the */
+/* buffer and the rest skipped, which cannot lose a uu line (they are  */
+/* 61 characters).                                                     */
 /* ------------------------------------------------------------------ */
 static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
 {
@@ -106,10 +114,11 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
             break;
         }
         /* CR, LF, or both. A CRLF pair leaves an empty line behind,
-         * which every loop here skips — the same thing macutils ends up
-         * doing, since readline.c's push-back condition can never be
-         * false. Peeking instead would need a byte of push-back, and
-         * UncBufIn only seeks forward. */
+         * which every loop here skips — which is what deark's own
+         * uudecode does with it (xfer.c, do_uudecode_internal: a CR or
+         * LF at the start of a line is "a multi-byte EOL sequence, or
+         * blank line" and is skipped). Peeking instead would need a
+         * byte of push-back, and UncBufIn only seeks forward. */
         if (c == '\n' || c == '\r') break;
         if (l->len < UU_LINE_MAX) l->buf[l->len++] = (uint8_t)c;
         else {

@@ -335,11 +335,14 @@ static inline int unc_bufin_peek(UncBufIn *b)
 /* CR, LF and CRLF all end a line, and a last line need not be        */
 /* terminated at all — and the one a btoa file saved on a Mac needed  */
 /* (FORMATS.md, "btoa").                                              */
-/* Source: reference/macutils/hexbin/readline.c, which states that    */
-/* rule. Marked 2026-10-06: it was a live citation without the marker */
-/* the inventory check reads, which is the shape of defect            */
-/* DECISIONS.md 2026-09-27 (*the check that tested the wrong thing*)  */
-/* normalised in six other files.                                     */
+/* Source: reference/deark/src/deark-dbuf.c (MIT), dbuf_find_line —   */
+/* CR alone, LF alone and CR+LF each end a line, a line with no EOL   */
+/* at end of file is still a line, and nothing at all is not one. The */
+/* same file this header already cites four lines down for the bit    */
+/* reader; it was macutils' readline.c until 2026-10-05, when the     */
+/* 2026-09-27 sweep that had asked deark about one of these four      */
+/* rules was asked about this one too (DECISIONS.md 2026-10-05, *the  */
+/* negative that was about one rule*).                                */
 /* Unlike the readers inside fmt_uu.c and fmt_btoa.c, this            */
 /* one consumes CRLF as ONE terminator instead of letting the LF come  */
 /* back as an empty line: those two formats may ignore a blank line    */

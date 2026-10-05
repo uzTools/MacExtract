@@ -484,6 +484,55 @@ def main():
             print("run_crypt: no ENCRYPTED Compact Pro specimen in %s — "
                   "tools/vmac/cptcrypt.py --make --probe writes one" % made)
 
+        # ---- PackIt, against blocks PACKIT'S OWN CODE encrypted --------
+        # The two above are this project's own output, and until
+        # 2026-10-05 the only oracle for them was `unar` — which is
+        # XADMaster, the reference both ciphers were transcribed from, so
+        # that grading could not fail. Packit III 1.3's `CODE` 1 runs
+        # under `qemu-m68k`, and `tools/derive_pitcrypt.py --make` has it
+        # encrypt the blocks instead. One of the three specimens carries
+        # a false 'PMag' five bytes into its ciphertext: the resync is on
+        # an eight-byte grid because PackIt pads to one, and a reader
+        # that scans byte-wise parses that and loses the entry after it.
+        pitdir = os.path.join(os.environ.get("UNC_VMAC_HOME",
+                              os.path.expanduser("~/.cache/macextract/vmac")),
+                              "specimens", "pitcrypt")
+        meta = os.path.join(pitdir, "made.json")
+        m = json.load(open(meta)) if os.path.exists(meta) else {}
+        if m:
+            subjects = {s["name"]: s for s in m["subjects"]}
+            for arch in sorted(m["archives"]):
+                rec = m["archives"][arch]
+                want = {n: bytes.fromhex(m["clear"][n]) for n in m["clear"]}
+                for n in rec["subjects"]:
+                    want[n] = bytes.fromhex(subjects[n]["data"])
+                    if subjects[n]["rsrc"]:
+                        want[n + ".rsrc"] = bytes.fromhex(subjects[n]["rsrc"])
+                path = os.path.join(pitdir, arch)
+                if rec["subjects"]:
+                    check_one("packit %s (its own code encrypted it)"
+                              % rec["magic"], path, want, m["password"],
+                              macextract, problems, oracle=False)
+                    ran += 1
+                # Right key or wrong, the two clear entries either side
+                # must come out: that is the resync, and the trap
+                # specimen has nothing else to grade.
+                for pw in (m["password"], "nope"):
+                    out = tempfile.mkdtemp()
+                    run([macextract, "x", "-o", out, "-p", pw, path])
+                    for n in m["clear"]:
+                        if extracted(out, n) != bytes.fromhex(m["clear"][n]):
+                            problems.append("packit %s: %s lost with the %s "
+                                            "key" % (arch, n,
+                                                     "right" if pw ==
+                                                     m["password"] else
+                                                     "wrong"))
+                    shutil.rmtree(out, ignore_errors=True)
+                    ran += 1
+        else:
+            print("run_crypt: no PackIt specimens in %s — "
+                  "tools/derive_pitcrypt.py --make writes them" % pitdir)
+
         # ---- WinZip AES, from 7-Zip -----------------------------------
         # `unar` 1.10.8 cannot open one of these at ALL — every key
         # length, stored or deflated, comes back "Missing or wrong

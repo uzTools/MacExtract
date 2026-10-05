@@ -300,7 +300,12 @@ OVL_RESIDUE = -666
 # method 14** (src/sit14.c), 2,608 B of it in the image: resident code and
 # A5 did not move for that either. **OVL_ID_SQP joined 2026-10-05**,
 # 1,972 B, and it is the whole of what an AppleLink package's decoder
-# costs the shipped build. They are checked against that
+# costs the shipped build. **PACKIT re-taken 2026-10-05, -4 B**: the
+# resync for an entry nothing can decrypt now steps the eight-byte
+# cipher grid PackIt's own writer pads to, instead of scanning
+# byte-wise, and the magic test it shares with the archive walk is
+# written once instead of twice — which more than pays for the grid
+# (FORMATS.md, *PackIt's two ciphers*). They are checked against that
 # build whenever it is present (check_images below), so this table cannot
 # drift silently while the toolchain is installed; it is stated rather than
 # only read so that the lane still runs where Retro68 is not.
@@ -314,14 +319,14 @@ IMAGES = {
     "OVL_ID_EXO":        29252,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         4938,
-    "OVL_ID_PACKIT":      2648,
+    "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER": 16722,
     "OVL_ID_STUFFIT":    26278,
     "OVL_ID_SQP":         1972,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 155672
+BUNDLE = 155668
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

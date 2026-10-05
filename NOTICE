@@ -34,10 +34,14 @@ hand.
                        on evidence.
   src/unc_crypt.c      StuffItDES's nibble key schedule and key
                        derivation (XADStuffItDESHandle.m), StuffIt 5's
-                       password hash (XADStuffIt5Parser.m), PackIt's
-                       keytr1 (XADPackItParser.m) and ARC's garble
-                       (XADXORHandle.m). None of the standards in
-                       reference/notes/ states the first or the third.
+                       password hash (XADStuffIt5Parser.m) and ARC's
+                       garble (XADXORHandle.m). No standard in
+                       reference/notes/ states the first. PackIt's two
+                       ciphers left on 2026-10-05: they are Packit III
+                       1.3's own, read out of and then RUN out of its
+                       CODE 1 and CODE 256 under qemu-m68k, and graded
+                       by three archives that code encrypted
+                       (tools/derive_pitcrypt.py).
   src/fmt_arc.c        Crunch 5/6/7 and Crush (PAK's LZW), the method
                        numbers and the CRC contract —
                        XADARCCrunchHandle.m and XADARCCrushHandle.m.
@@ -73,23 +77,23 @@ hand.
                        password all left on 2026-09-27, measured
                        against the three archives DropStuff 5.0.1
                        wrote (tools/derive_sit5crypt.py).
-  src/fmt_packit.c     the resync strategy (macutils' pit.c, "trying to
-                       sync") and both ciphers (XADPackItParser.m).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
                        nothing reachable sets.
-  src/fmt_binhex.c,    macutils' hexbin: four rules about text that has
-  src/fmt_uu.c         been mailed rather than about an encoding — the
-                       line-ending rule and the unterminated last line
-                       (readline.c, restated in src/unc_internal.h for
-                       MIME), mu_convert() and UUTool's MU layout
-                       (mu.c), the skip of a line with intermediate
-                       garbage, and the scan for a second document in
-                       one input (hqx.c, hexbin.c). Two more left on
-                       2026-09-27 for mpack (below), which is
-                       permissive: the dispatch — any amount of
-                       preamble skipped looking for "begin " — and the
-                       uu terminator. `src/fmt_mime.c` carried only
-                       the second and is clear of both references now.
+  src/fmt_binhex.c,    macutils' hexbin: THREE rules about text that has
+  src/fmt_uu.c         been mailed rather than about an encoding —
+                       mu_convert() and UUTool's MU layout (mu.c), the
+                       skip of a line with intermediate garbage, and
+                       the scan for a second document in one input
+                       (hqx.c, hexbin.c). Two left on 2026-09-27 for
+                       mpack (below), which is permissive: the dispatch
+                       — any amount of preamble skipped looking for
+                       "begin " — and the uu terminator;
+                       `src/fmt_mime.c` carried only the second and is
+                       clear of both references now. A fourth left on
+                       2026-10-05 for deark (below): the line-ending
+                       rule and the unterminated last line, which
+                       dbuf_find_line states for all three terminators
+                       and which deark's own uudecode uses.
   src/fmt_macbinary.c, four things no specification supports: the
   src/fmt_applesingle.c  MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c     nonzero-date test, the byte-swapped AppleSingle
@@ -97,9 +101,11 @@ hand.
                        plus DiskDoubler's two older headers, which are
                        macutils' dd.h. Checked against deark on
                        2026-09-27: it states none of them.
-  src/unc_internal.h   the MIME line rule above and the LZAH preload
-                       above. Both were stated without the Source:
-                       marker the inventory check reads until
+  src/unc_internal.h   the LZAH preload above. The MIME line rule left
+                       on 2026-10-05 for deark's dbuf_find_line, which
+                       is in the same file this header already cited
+                       for the bit reader. Both were stated without the
+                       Source: marker the inventory check reads until
                        2026-10-06, when the file's third item left and
                        the check said so.
                        DiskDoubler method 8 is no longer here. That it
@@ -122,7 +128,8 @@ This project's decoders are transcriptions/ports of algorithms from:
   * XADMaster — the engine of The Unarchiver, by Dag Ågren (MacPaw).
     https://github.com/MacPaw/XADMaster — LGPL-2.1.
     StuffIt (classic + SIT5), Compact Pro, PackIt and related handles
-    were used as the primary reference.
+    were used as the primary reference. PackIt is none of it any more,
+    container, ciphers or resync (below).
     NOT BinHex, MacBinary, AppleSingle/AppleDouble, zip, tar or gzip:
     since 2026-09-19 each of those container parsers cites the public
     document its facts are written in instead (the "CONTAINER FORMAT
@@ -291,10 +298,15 @@ This project's decoders are transcriptions/ports of algorithms from:
     unPACKIT manual, and `docs/formats/packit.md` carries the four
     corrections they need — a reader written from those appendices
     alone reads all 38 forks of the corpus's PackIt archives
-    (`tools/derive_packit.py`). What that file still owes macutils is
-    that the two CRCs the appendix names are CRC-16/XMODEM and the
-    resync strategy for an entry it cannot decode; the two ciphers are
-    XADMaster's.
+    (`tools/derive_packit.py`). What that file still owed macutils was
+    that the two CRCs the appendix names are CRC-16/XMODEM, and the
+    resync for an entry it cannot decode; the two ciphers were
+    XADMaster's. **Neither since 2026-10-05**: `Packit III 1.3` ships
+    inside the corpus fixture `packit.pit_.bin`, which makes the
+    generation that wrote every `PMa5` and `PMa6` block the reference for
+    both — witnessed at 32 offsets in its `CODE` 1 and then EXECUTED
+    under `qemu-m68k` (`tools/derive_pitcrypt.py`). That file owes
+    neither reference anything now.
     A build of `macunpack` is also the second oracle for the
     differential test suite (TESTING.md) — test-time only, not linked
     into anything shipped.
@@ -369,6 +381,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     the StuffIt wiki's own magic table. deark's `modules/packit.c` is
     also where `src/fmt_packit.c` gets its two CRC-16/XMODEMs, which
     were macutils' until the same day.
+    **And since 2026-10-05 `dbuf_find_line` in `src/deark-dbuf.c` is
+    what `src/fmt_uu.c` and `src/unc_internal.h` cite for the line
+    rule** — CR alone, LF alone and CR+LF each end a line, and a last
+    line with no terminator is still a line — with
+    `modules/xfer.c`'s own uudecode for the blank line a CRLF leaves
+    behind. Both were macutils' `hexbin/readline.c` until then,
+    because the 2026-09-27 sweep that asked deark about those files'
+    other rules never asked it about this one.
 
   * mpack/munpack 1.6, by John G. Myers — Copyright (c) 1993, 1994
     Carnegie Mellon University. Permissive: "Permission to use, copy,

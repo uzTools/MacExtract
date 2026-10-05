@@ -36,8 +36,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOC = os.path.join(ROOT, "reference", "notes", "packit_unpackit.txt")
 
 # Appendix B's table of subfile types. It lists "PMa5" twice, for
-# simple encryption and for DES; macutils' README.unpit knows only the
-# first two. Neither encrypted form appears in the corpus.
+# simple encryption and for DES — but the document is not wrong about
+# the fourth word, only that table is: the (L)ist command's own section
+# gives "PMa6 - compressed and DES encrypted (PACKIT III)", which this
+# project read as absent until 2026-10-05 (BLOCKERS.md). macutils'
+# README.unpit knows only the first two. Neither encrypted form appears
+# in the corpus; tools/derive_pitcrypt.py makes specimens of both with
+# PackIt III 1.3's own code.
 STORED, HUFF, END = b"PMag", b"PMa4", b"PEnd"
 ENCRYPTED = (b"PMa5", b"PMa6")
 

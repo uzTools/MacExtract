@@ -350,7 +350,16 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +316 on 2026-10-05 for the zip-behind-a-stub probe (see the eager
 # pair below): resident and shipped moved by the same 316 B, which is
 # what says none of it went into an overlay image.
-UNC_MAC_CODE_DEFAULT=164060
+# RAISED 2026-10-05 to 164,080, the CONTROL ONLY, +20: PackIt's resync
+# for an entry nothing can decrypt now steps the eight-byte cipher grid
+# its own writer pads to instead of scanning byte-wise, which is
+# PackIt III 1.3's arithmetic rather than macutils' loop
+# (src/fmt_packit.c; FORMATS.md, *PackIt's two ciphers*). **A5 fell by
+# the same 20** — the rodata-alignment effect this file records either
+# way — so CODE + A5 is 201,984 B in the control for the second build
+# running and OVL_SAVED does not move. The SHIPPED build did not move
+# at all: the decoder is in `ovl_packit`, 2,648 -> 2,672 B.
+UNC_MAC_CODE_DEFAULT=164080
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -446,7 +455,7 @@ UNC_MAC_CODE_DEFAULT=164060
 # probe's pointer in the sniff order. Measured on the same tree as the
 # code figure above.
 # +4 on 2026-10-05, with the code ceiling above.
-UNC_MAC_A5_DEFAULT=37924
+UNC_MAC_A5_DEFAULT=37904
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
