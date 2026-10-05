@@ -735,11 +735,16 @@ anything about the suite.**
 
 6. **Fuzzing** (`tools/fuzz.py`): seeded, reproducible
    mutation/splice/magic-garbage cases through `macextract t` under the
-   sanitizer build, plus a fourth generator (**2026-09-23**) that flips
-   one to four bits in an encrypted archive `tools/synth_crypt.py` wrote
-   and runs `macextract x -p` on it. Nonzero exits are fine,
-   signals/sanitizer aborts/hangs fail. 4,000 cases at M9; every CI run
-   does a 150-case smoke, a quarter of it the ciphers, in ~3 s.
+   sanitizer build, plus three generators that exist because those
+   three reach nothing on their own — a fourth (**2026-09-23**) that
+   flips one to four bits in an encrypted archive
+   `tools/synth_crypt.py` wrote and runs `macextract x -p` on it, a
+   fifth (**2026-09-27**) that repairs the checksum it breaks in a Now
+   Compress block, and a sixth (**2026-10-05**) that mutates a NAMED
+   seed inside the ranges its generator calls compressed. Nonzero exits
+   are fine, signals/sanitizer aborts/hangs fail. 4,000 cases at M9;
+   every CI run does a 150-case smoke, a quarter of it the ciphers, in
+   ~3 s.
 
    **One seed per cipher since 2026-09-26, and every one of the eight is
    reached.** `synth_crypt.py` writes nine shapes — StuffIt classic's
@@ -879,12 +884,105 @@ anything about the suite.**
    What that does NOT say: a mutant is graded by nothing, here as
    everywhere in this file. What is graded is the seed.
 
+   **A sixth generator since 2026-10-05: a NAMED seed, mutated inside
+   the ranges its own generator calls compressed.** StuffIt 5's method
+   14 is the shape that wanted it. Its only specimen here is
+   `synth_sit14.py`'s 1,859 B among ~950 fixtures, so what generators 1
+   and 2 reach it with is a draw — none in 1,500 cases (DECISIONS.md
+   2026-10-03), two or three in 3,000, which enter ten of the decoder's
+   eleven functions and leave the nested-tree reader at zero at both
+   seeds. `synth_sit14.py --ranges` reports its four streams, 1,345 B of
+   the file against 514 B of banner and entry headers, and the generator
+   keeps every edit inside them. 3,000 cases:
+
+   | | seed 11 | seed 12 |
+   |---|---|---|
+   | of 11 functions, never entered, before → after | 1 → **0** | 1 → **0** |
+   | `sit14_lengths_coded` (the nested tree) | 0 → **100 %** | 0 → **100 %** |
+   | `sit14_tree` | 50 → **100 %** | 50 → **100 %** |
+   | `unc_sit14_decode` | 92.5 → **95.5 %** | 89.5 → **95.5 %** |
+
+   **Naming the seed is most of it; targeting is the rest.** Measured
+   over 120 `--stream-only` cases, which is what a 3,000-case run
+   spends on this seed anyway: `--stream-untargeted` — the seed named
+   and mutated anywhere, i.e. what generator 1 does when it draws the
+   file — reaches all eleven functions and 95.5 % of the entry
+   function's lines, and targeting reaches **98.5 %** and takes
+   `sit14_tree` from 94.4 to 100. Both flags stay, so the before and
+   the after come from one instrument, the way `--crypt-untargeted`
+   does.
+
+   **It can fail, checked the way this repository checks.** The defect
+   the ad-hoc targeted run found on 2026-10-03 — `sit14_build`'s code
+   counter made signed, so a corrupt tree shifts it past 32 bits — was
+   planted again and the whole instrument asked whether it would have
+   caught it. **400 `--stream-only` cases: 11 failures. The old
+   instrument at 3,000 cases and the same seed: none**, though it
+   enters the decoder there. A mixed 3,000-case run finds it twice,
+   which is the ~120 stream cases at the same hit rate. **`ci.sh`'s
+   150-case smoke does NOT** — its 11 stream cases at that hit rate
+   find a defect of this shape about a quarter of the time, and seed 7
+   is one of the three quarters. The smoke is a regression guard; the
+   figures here come from runs nobody does on every commit.
+
+   **What the targeted mode cannot see** is now a branch and a line:
+   the window-wrap half of `sit14_flush`, which needs a fork past 256
+   KB where this seed's largest is 17,799 B, and the `goto out` on a
+   failed flush, which is a sink write error and nothing a mutant can
+   cause. Both are reached only by the two real payloads, which no
+   committed suite can touch (FORMATS.md, *StuffIt 5's method 14*).
+   The seed also arrives in ONE container, a bare `.sit`: method 14
+   inside MacBinary or BinHex is fuzzed by nothing. And a mutant is
+   graded by nothing — what is graded is the seed, which `run_diff`
+   adjudicates against `unar`.
+
+   **The twelve seeds `method_seeds()` already wrote had the same
+   problem, and it was invisible**: they are in the POOL rather than
+   named in the draw, so each is 1 of ~958 and drawn about 2.3 times in
+   3,000 cases, which puts a tenth of the weight on never being drawn
+   at all. That tail landed — `-lh2-`'s `lzd_*` set read 2 functions
+   never entered at seed 12 and **16 of 16, the whole file, one
+   reshuffle later**, the seed having been committed on 2026-09-27
+   precisely to take that family off zero. Generators 1 and 2 now draw
+   a named seed on **one case in 32** (`--named-share`; `--no-weight`
+   is the old behaviour, and reproduces its runs to the case): each is
+   drawn about six times, the corpus keeps 97 % of the draws, and
+   `-lh2-` reads 1 — `lzd_reconst`, which wants 32,768 codes — at
+   seeds 11, 12 and 13 alike.
+
+   1/16 was measured too and buys nothing: the same families at the
+   same counts at those three seeds, with a HIGHER total never-entered
+   at all three (174/163/156 against 147/137/150). What none of these
+   runs can say is whether the 3 % costs a corpus family anything —
+   ARC reads 7, 11 and 18 functions never entered at 1/32 against 15,
+   15 and 13 at 1/16, so its worst run is the cheaper share's and what
+   moves ARC is the draw.
+
+   **Two rows of the table above could not report, found while
+   splitting it.** `^sit\d*_` put method 14's eleven functions inside
+   "StuffIt classic", and a family of 34 cannot read as wholly at zero
+   — which is the one signal this instrument calls reliable. So method
+   14's state was unreadable here from the day it landed, at 1,500
+   cases where the decoder was entirely unfuzzed and at 3,000 where one
+   function of eleven is; the figures above come from a "StuffIt method
+   14" row of its own. The BinHex row's regex named `hqx_`/`binhex_` where
+   the functions are `bh_`: it matched nothing and printed no line at
+   all, so twelve functions read as absent rather than as unmeasured
+   for as long as the tool has existed. Both claims are withdrawn in
+   BLOCKERS.md with what they cost. `fuzz_cover.py` now says how many
+   engine functions fall in NO family — 381 of 581, the containers and
+   envelopes it was never a claim about — so the next prefix nobody
+   adds a row for is visible instead of silent.
+
    **How much of this table to believe.** The per-family counts are
    noisy: seeds 11 and 12 over an identical build differ by up to
    **thirteen** functions in a family — ARC 0 against 13 and StuffIt
-   classic 9 against 2, measured 2026-10-05, where the same comparison
+   classic 8 against 1, measured 2026-10-05, where the same comparison
    on 2026-09-27 gave five at most (StuffIt classic 6 against 1, ARC 6
-   against 10, Compact Pro 4 against 1). **A single-run delta in a
+   against 10, Compact Pro 4 against 1). Those StuffIt figures were
+   first recorded as 9 against 2, which was the row before method 14
+   was split out of it; the eleventh function was at zero at BOTH
+   seeds, so one of each nine and two was structure and not noise. **A single-run delta in a
    family is not a finding**, and one was briefly read as one here: a
    first cut gave the repair generator a sixth of the cases, the totals
    moved, and
@@ -1277,10 +1375,15 @@ ASan+UBSan on every `ci.sh` run. **What that cannot see:** most variants
 of THIS fixture never reach the decoder — the 80-byte StuffIt 5 banner is
 4 % of a 1,859-byte file, so a whole-file mutation usually lands in it
 and the archive is refused as unrecognised, and a mutated length field
-is refused on the allocation budget. Measured instead by 2,000 mutants
-confined to the compressed streams, which reach **95.5 % of
-`unc_sit14_decode`'s lines and 100 % of every helper** (gcov) with no
-crash, no sanitizer trip and no timeout. That run is what found the
+is refused on the allocation budget.
+
+**In `fuzz.py` since 2026-10-05**, as the stream generator: the same
+archive rebuilt as a NAMED seed and mutated only inside the four spans
+`synth_sit14.py --ranges` calls compressed, which is about 110 cases of
+a 3,000-case run. It reaches every function of the decoder and every
+line of it but the window wrap and a sink-write failure, at seeds 11 and
+12 alike (*Fuzzing*, above, for the figures and for what it still cannot
+see). The 2,000-mutant run that measured this first is what found the
 decoder's one real defect — a signed left shift in the canonical code
 assignment, UB on a corrupt tree (DECISIONS.md 2026-10-03) — and a
 pre-existing leak in the CLI's own name-cut notice.

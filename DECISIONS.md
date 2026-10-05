@@ -332,6 +332,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
 - 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
 - 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
+- 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
 
 ---
 
@@ -20851,3 +20852,98 @@ family is WHOLLY at zero, at more than one seed.
 to, and every oracle built under that directory: deark, lha, mpack,
 50 MB of clone-and-compile. It rebuilds one directory and now empties
 only that one.
+
+## 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
+
+**The item said to fix the instrument rather than the row, and the row
+turned out to be half wrong as well.** It read *"method 14's decoder is
+never entered by `fuzz.py`"*, measured over 1,500 cases on 2026-10-03.
+At 3,000 cases, **ten of its eleven functions are entered**, at seeds 11
+and 12 alike: the seed is 1 of ~958 in the pool the mutation and splice
+generators draw from, which is about 2.3 draws in a run that long. The
+zero was a sample, and the claim was written without the case count it
+was measured at (BLOCKERS.md). The instrument's own docstring says a
+family at zero in a small run may be sampling — which is the
+*limitation written one paragraph from its own remedy* smell, in the
+cheapest possible form: the paragraph was in the tool being quoted.
+
+**What was really missing is the part a bigger run cannot buy.** The
+nested-tree reader, `sit14_lengths_coded`, is at 0 % at both seeds and
+every case count tried, because it is entry 4's shape and most mutants
+die before the walk reaches it. So the fix is the one the ciphers got in
+2026-09-26, in the other half of the engine: name the seed, and confine
+the edits to the bytes a DECODER reads. `synth_sit14.py --ranges` is
+`synth_crypt.py --ranges`' contract — the four method-14 streams, 1,345
+B of 1,859, the rest being an 80-byte banner and four entry headers that
+refuse the file when they are bent.
+
+**And the decomposition is worth keeping, because it is not the obvious
+one.** Naming the seed is most of the gain: 120 cases of the file
+mutated ANYWHERE already reach all eleven functions and 95.5 % of the
+entry function's lines. Targeting adds 98.5 % and `sit14_tree` 94.4 →
+100. The reasoning that the banner makes whole-file mutation useless is
+true per case and false per hundred — *most* mutants dying in the
+sniffer is not *all* of them, and a generator that draws the same file
+120 times gets the survivors. **A per-case probability is not a reach
+figure**; what made the difference here was arithmetic over the pool,
+not the mutation shape.
+
+**The twelve seeds that already existed had the same disease, and
+nothing could see it.** `method_seeds()` has written `-lh2-`, `-lh3-`
+and DiskDoubler 3/4/5 seeds since 2026-09-27, each committed or
+generated precisely to take a family off zero — and then dropped into
+the pool with the same weight as any fixture, so whether the family is
+reached is a draw with about a tenth of the weight on never. It landed
+during this work: `-lh2-`'s `lzd_*` read 2 functions never entered at
+seed 12, and **16 of 16, the whole file, one reshuffle later.** A seed
+committed to the tree so a family would stop being at zero, and whether
+it was at zero was decided by the RNG. Named seeds now take one case in
+32, at which `-lh2-` reads 1 at seeds 11, 12 and 13 alike.
+
+**1/32 rather than 1/16 is measured, and the figure that chose it is not
+the one I expected to use.** Both shares give the same families the same
+counts at three seeds, so stability does not separate them; what does is
+the total never-entered, LOWER at 1/32 at all three (147/137/150 against
+174/163/156). What no run here can say is whether 3 % of the draws costs
+a corpus family anything, and the attempt to say so is instructive: ARC
+reads 7, 11 and 18 functions never entered at 1/32 against 15, 15 and 13
+at 1/16, so the cheaper share owns the worst run of the six. **A family
+whose specimens are one archive each is a lottery however the draws are
+weighted**, and this is the withdrawn starvation claim of 2026-09-27
+again — which is why the share was chosen on the one number that moved
+in one direction at every seed, and the rest reported as noise.
+
+**Two rows of the measuring instrument could not report at all, and
+both were found by splitting it.** `^sit\d*_` put method 14's eleven
+functions inside a "StuffIt classic" of 34, and a family of 34 cannot
+read as wholly at zero — the one signal this instrument calls reliable.
+So method 14's state had been unreadable there since the day it landed,
+which is what made the open item believable: the row it was filed from
+could not have contradicted it. The BinHex row's regex named `hqx_`/`binhex_` where the
+functions are `bh_`: zero matches, and the tool skipped empty families
+silently, so twelve functions read as absent rather than unmeasured for
+as long as the tool has existed. Both are the *check whose subject
+failed to load* in a new place: **an aggregate that names its subjects
+by pattern has to be asked whether the pattern matched anything.** The
+tool now prints a row that matches nothing, and counts the functions
+that match no row — 381 of 581, which is the containers and envelopes
+it was never a claim about.
+
+**And it was asked whether it would have found the defect that
+motivated it**, which is the only form of "this works" this repository
+accepts: `sit14_build`'s code counter planted signed again — the 2026-10-03
+defect — is caught by **11 of 400 `--stream-only` cases and by none of
+3,000 under the old instrument**, which enters the decoder there and
+still misses it. Entered is not exercised, in one measurement. `ci.sh`'s
+150-case smoke misses it too, at 11 stream cases and a 2.75 % hit rate;
+that is what a smoke is, and the figure is in TESTING.md so nobody reads
+the green as coverage.
+
+**What the new mode cannot see**, recorded because a harness without
+that paragraph is worth less than its figures: the window-wrap half of
+`sit14_flush`, which needs a fork past 256 KB where this seed's largest
+is 17,799 B — the window is sized to the fork, so nothing smaller can
+reach it — and the `goto out` after a failed flush, which is a sink
+write error no mutant can cause. One container only, a bare `.sit`. And
+a mutant is graded by nothing: what is graded is the seed, which
+`run_diff` adjudicates against `unar` on every run.

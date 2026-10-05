@@ -23,6 +23,7 @@ fixtures/SOURCES.md).
 """
 import argparse
 import hashlib
+import json
 import struct
 import sys
 
@@ -395,6 +396,14 @@ def crc16_arc(data):
 
 
 def build():
+    """Returns (bytes, ranges) — `ranges` being the half-open byte span of
+    each entry's method-14 stream in the file, the same contract
+    `synth_crypt.py --ranges` has for ciphertext. A mutator confined to
+    those spans corrupts what the DECODER reads and nothing the
+    container checks on the way in: 1,345 B of the 1,859, the rest being
+    an 80-byte banner and four entry headers that refuse the file when a
+    mutation lands in them. Worth 95.5 % of the decoder's lines to
+    98.5 % over 120 cases (TESTING.md, *Fuzzing*)."""
     entries = []
     for name, blocks in cases():
         stream, data = encode(blocks)
@@ -412,6 +421,7 @@ def build():
     struct.pack_into(">I", head, 94, firstoffs)
 
     body = bytearray()
+    ranges = []
     for name, data, stream in entries:
         nb = name.encode("mac_roman")
         e = bytearray()
@@ -434,22 +444,40 @@ def build():
         e += b"TEXTttxt"
         e += struct.pack(">H", 0)                # finder flags
         e += bytes(22)                           # version 1 filler
+        ranges.append((firstoffs + len(body) + len(e),
+                       firstoffs + len(body) + len(e) + len(stream)))
         e += stream
         body += e
 
     struct.pack_into(">I", head, 84, firstoffs + len(body))
-    return bytes(head) + bytes(body)
+    blob = bytes(head) + bytes(body)
+    # The ranges are what a mutator trusts, and a range off by a header
+    # would point it at the container — which costs reach and nothing
+    # else, so nothing would say so. Checked here, where both halves
+    # are in hand.
+    assert len(ranges) == len(entries)          # or zip() checks a prefix
+    for (lo, hi), (_n, _d, stream) in zip(ranges, entries):
+        assert blob[lo:hi] == stream, "stream range %d..%d is not it" % (lo, hi)
+    return blob, ranges
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--out", required=True)
+    ap.add_argument("--ranges",
+                    help="write the method-14 stream ranges of the output "
+                         "to this file as JSON, for a mutator that wants "
+                         "the decoder and not the container")
     args = ap.parse_args()
-    blob = build()
+    blob, ranges = build()
     with open(args.out, "wb") as fh:
         fh.write(blob)
-    print("%s: %d B, sha256 %s"
-          % (args.out, len(blob), hashlib.sha256(blob).hexdigest()))
+    if args.ranges:
+        with open(args.ranges, "w") as fh:
+            json.dump(ranges, fh)
+    print("%s: %d B, sha256 %s, %d stream(s) over %d B"
+          % (args.out, len(blob), hashlib.sha256(blob).hexdigest(),
+             len(ranges), sum(hi - lo for lo, hi in ranges)))
     return 0
 
 

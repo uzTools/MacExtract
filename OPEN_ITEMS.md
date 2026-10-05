@@ -263,12 +263,14 @@ and the next — `-lh2-`, `-lh3-`, DiskDoubler 3/4/5/7 and Now Compress's
 coders all reach their decoders now, by seeds, by a fixture, and by a
 generator that repairs the checksum it breaks — and **Now Compress is
 the first family with nothing left at all**, since 2026-10-05
-(TESTING.md, *Fuzzing*). What is left:
+(TESTING.md, *Fuzzing*). **StuffIt 5's method 14 is the second**, since
+the same day, by a generator that mutates a named seed inside its own
+compressed streams. What is left:
 
 | what | what it wants |
 |---|---|
 | `lzd_reconst` (`-lh2-`'s tree rebuild) | nothing, under fuzzing: it needs 32,768 codes, too large for a seed. The GRADED suite covers it since 2026-09-27 |
-| method 14's decoder, under `fuzz.py` | **nothing, except a bigger run.** The seed is picked from the whole corpus, so `synth-sit14.sit` — 1,859 B of 946 fixtures — came up in none of 1,500 cases, and the sniffer rejects most mutants of it anyway: the 80-byte banner is 4 % of the file. Measured instead by 2,000 mutants confined to its streams, which reach 95.5 % of `unc_sit14_decode`'s lines and 100 % of every helper (TESTING.md, *StuffIt method 14*) |
+| `sit14_flush`'s window wrap (method 14) | a fork past 256 KB, where the synthetic seed's largest is 17,799 B — the window is sized to the fork, so nothing smaller can wrap it. Reached only by the two real payloads, which no committed suite can touch (TESTING.md, *Fuzzing*, for the mode's other limits) |
 | ARC's Crush | nothing writes it and no implementation exists anywhere (Part 1) |
 
 **Nothing here is known to be hiding a defect** — that is the point:

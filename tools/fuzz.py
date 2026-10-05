@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """fuzz.py — randomized robustness pass across all formats.
 
-Four generators, seeded and reproducible:
+Six generators, seeded and reproducible:
   1. mutation: take a random corpus fixture, apply 1..64 random byte
      mutations / truncations / duplications;
   2. splice: concatenate random slices of two fixtures;
@@ -15,6 +15,14 @@ Four generators, seeded and reproducible:
      anywhere has to get through whatever the container checks first, and
      targeting the ciphertext raises every shape's reach — measured, per
      shape, by tools/fuzz_reach.py.
+  5. now-repair: flip bits inside a Now Compress block payload and fix
+     the 32-bit sum that block carries, which is the only way past the
+     gate that keeps every ordinary mutant out of those coders.
+  6. stream: a NAMED seed, mutated only inside the byte ranges its
+     generator declares as compressed — the decoder half of what the
+     crypt generator's targeting does for the ciphers. Generators 1 and
+     2 draw a seed out of ~950 fixtures, so a format whose only specimen
+     is a small synthetic one is fuzzed by nothing in practice.
 
 Every case runs `macextract t --budget 4194304 -p <password>` (the
 sanitizer build) with a timeout. The budget is in BYTES and takes no
@@ -265,6 +273,131 @@ def now_seeds(tmp):
     return out, mn
 
 
+# A sixth generator: a seed named here rather than drawn, mutated only
+# inside the byte ranges its generator declares as compressed.
+#
+# Generators 1 and 2 pick a seed out of the whole corpus, so what the
+# fuzzer reaches is weighted by FILE COUNT and not by what is worth
+# reaching. StuffIt 5's method 14 is the shape that makes this visible:
+# its only specimen here is `synth_sit14.py`'s 1,859 B among ~950
+# fixtures, so 1,500 cases entered not one of its eleven functions
+# (DECISIONS.md 2026-10-03) and 3,000 enter ten of them, by about 2.3
+# draws — a sample rather than a property of the format.
+#
+# NAMING the seed is most of the fix and the targeting is the rest,
+# measured: 120 cases of this file mutated anywhere reach all eleven
+# functions and 95.5 % of the entry function's lines, confined to the
+# streams 98.5 % (TESTING.md, *Fuzzing*). So the banner argument — 80
+# bytes of 1,859, which refuses the file when a mutation lands in it —
+# is true per case and much weaker per hundred.
+#
+# The targeting is the same argument the crypt generator's `--ranges`
+# rests on, in the other half of the engine, and the two halves can be
+# told apart here too: `--stream-untargeted` names the seed and mutates
+# it anywhere, which is what generator 1 does when it draws the file.
+#
+# Each tool takes `-o` and `--ranges` and writes the same bytes every
+# run, so the coverage is the same wherever this runs.
+STREAM_SEEDS = (
+    ("sit14", "synth_sit14.py", "seed-sit14.sit"),
+)
+
+
+def stream_mutate(data, rng, ranges):
+    """Edits confined to `ranges`: bit flips, byte-run overwrites, and a
+    cut. Not 1..64 edits the way `mutate` does — a stream is a Huffman
+    code followed by whatever it codes, so an early edit changes the
+    meaning of everything after it and a dozen more only move where the
+    decoder gives up."""
+    buf = bytearray(data)
+    spans = [(lo, min(hi, len(buf))) for lo, hi in ranges]
+    spans = [(lo, hi) for lo, hi in spans if lo < hi]
+    if not spans:
+        return bytes(buf)
+    for _ in range(rng.randrange(1, 9)):
+        lo, hi = spans[rng.randrange(len(spans))]
+        kind = rng.randrange(8)
+        if kind == 0:      # cut the file inside the stream: the decoder
+            buf = buf[:rng.randrange(lo, hi)]   # has to run out of input
+            spans = [(a, min(b, len(buf))) for a, b in spans]
+            spans = [(a, b) for a, b in spans if a < b]
+            if not spans:
+                break
+        elif kind == 1:    # overwrite a run
+            at = rng.randrange(lo, hi)
+            n = min(rng.randrange(1, 64), hi - at)
+            buf[at:at + n] = bytes(rng.randrange(256) for _ in range(n))
+        else:              # flip
+            buf[rng.randrange(lo, hi)] ^= 1 << rng.randrange(8)
+    return bytes(buf)
+
+
+def stream_seeds(tmp):
+    """One seed per named shape, with the ranges its generator calls
+    compressed. A seed whose ranges are empty or outside the file would
+    mutate nothing and read exactly like a clean run, so it is a failure
+    here and not a skip — the way a missing cipher seed is."""
+    out = []
+    for name, tool, fname in STREAM_SEEDS:
+        p = os.path.join(tmp, fname)
+        rp = p + ".ranges"
+        try:
+            subprocess.run([sys.executable,
+                            os.path.join(ROOT, "tools", tool),
+                            "-o", p, "--ranges", rp],
+                           check=True, capture_output=True)
+        except (OSError, subprocess.CalledProcessError) as e:
+            print("fuzz: cannot write the %s seed: %s" % (name, e),
+                  file=sys.stderr)
+            return None
+        ranges = [tuple(r) for r in json.load(open(rp))]
+        size = os.path.getsize(p)
+        if not ranges or not all(0 <= lo < hi <= size for lo, hi in ranges):
+            print("fuzz: the %s seed reports %d range(s) over %d B — a seed "
+                  "whose streams cannot be located fuzzes nothing"
+                  % (name, len(ranges), size), file=sys.stderr)
+            return None
+        out.append((name, p, ranges))
+    return out
+
+
+# How often generators 1 and 2 draw one of the NAMED seeds above rather
+# than a corpus fixture.
+#
+# They are in the same pool as ~950 fixtures, so each is drawn about 2.3
+# times in a 3,000-case run and the chance that a given one is drawn not
+# at all is about a tenth — which is not a tail, it is a result that
+# happened: the `-lh2-` family read 2 functions never entered at seed 12
+# and 16 of 16, the whole file, one reshuffle later (TESTING.md,
+# *Fuzzing*). The seed was committed in 2026-09-27 precisely so that
+# family would stop being at zero, and whether it is was left to a draw.
+#
+# At one in thirty-two each named seed is drawn about six times instead,
+# and the corpus keeps 97 % of the draws. That is enough: the `-lh2-`
+# family reads 1 function never entered — `lzd_reconst`, the one that
+# wants 32,768 codes — at every seed tried, 11, 12 and 13, where
+# unweighted it gave 1, 2, 3 and 16 over four runs.
+#
+# 1/16 was measured too, and buys nothing: the same families, the same
+# counts, at the same three seeds. What it does change is the total,
+# which is LOWER at 1/32 at all three (147/137/150 against 174/163/156)
+# — so the cheaper share is also the one that takes less from the
+# corpus, and there is no reading of these runs in which 1/16 wins.
+#
+# What these runs CANNOT say is whether the 3 % costs a corpus family
+# anything: ARC reads 7, 11 and 18 functions never entered at 1/32 and
+# 15, 15 and 13 at 1/16, i.e. its worst run is the cheaper share's, so
+# the draw and not the share is what moves it (TESTING.md, *Fuzzing*).
+NAMED_SHARE = 32
+
+
+def pick_seed(rng, seeds, named, share=NAMED_SHARE):
+    """A seed for generator 1 or 2, with the named ones weighted up."""
+    if named and rng.randrange(share) == 0:
+        return named[rng.randrange(len(named))]
+    return seeds[rng.randrange(len(seeds))]
+
+
 def corpus():
     out = []
     for f in sorted(os.listdir(FIXDIR)):
@@ -314,6 +447,27 @@ def main():
                     help="flip anywhere in an encrypted seed, never inside "
                          "its ciphertext — what this did before 2026-09-26, "
                          "kept so the before and after are one instrument")
+    # The two that make the stream generator measurable with
+    # tools/fuzz_cover.py: one to point every case at it, one to say how
+    # much of its reach is the NAMING and how much is the targeting.
+    ap.add_argument("--stream-only", action="store_true",
+                    help="every case a named stream seed, not a twentieth")
+    ap.add_argument("--stream-untargeted", action="store_true",
+                    help="mutate a stream seed anywhere, the way generator "
+                         "1 would if it ever drew the file — kept so the "
+                         "before and after are one instrument")
+    ap.add_argument("--named-share", type=int, default=NAMED_SHARE,
+                    metavar="N", help="draw a named method seed on one "
+                                      "case in N (default %d); the figures "
+                                      "that chose it are in TESTING.md, "
+                                      "*Fuzzing*" % NAMED_SHARE)
+    ap.add_argument("--no-weight", action="store_true",
+                    help="draw the named method seeds with the same weight "
+                         "as any fixture, which is what this did before "
+                         "2026-10-05")
+    ap.add_argument("--no-stream", action="store_true",
+                    help="leave the stream seeds out altogether, which is "
+                         "what this did before 2026-10-05")
     ap.add_argument("--keep-dir", default=ROOT,
                     help="where a failing case is kept (default: the repo "
                          "root, where somebody will notice it)")
@@ -336,28 +490,43 @@ def main():
         if extra is None:
             return 1
         seeds += extra
+        named = [] if args.no_weight else extra
         nowfiles, nowmod = now_seeds(tmp)
         if nowfiles is None:
             return 1
         encrypted = crypt_seeds(tmp, args.crypt_kind)
         if encrypted is None:
             return 1
+        streams = [] if args.no_stream else stream_seeds(tmp)
+        if streams is None:
+            return 1
         print("fuzz: %d encrypted seeds (%s)"
               % (len(encrypted),
                  ", ".join(args.crypt_kind or CRYPT_KINDS)))
         print("fuzz: %d seed(s) for methods the corpus lacks "
-              "(-lh3- generated, -lh2- and DiskDoubler 3/4/5 committed)"
-              % len(extra))
+              "(-lh3- generated, -lh2- and DiskDoubler 3/4/5 committed), "
+              "drawn %s"
+              % (len(extra),
+                 "like any fixture" if args.no_weight
+                 else "1 case in %d" % args.named_share))
         print("fuzz: %d Now Compress file(s) for the repair generator, "
               "%d of them with a rebased block table"
               % (len(nowfiles), len(DELTA_SEEDS)))
+        print("fuzz: %d named stream seed(s) (%s), mutated %s"
+              % (len(streams), ", ".join(n for n, _p, _r in streams) or "-",
+                 "anywhere" if args.stream_untargeted
+                 else "inside their declared streams"))
         ncrypt = 0
+        nstream = 0
         for i in range(args.iterations):
             # A quarter of the run is the ciphers, because they are a
             # quarter of nothing otherwise: nine encrypted seeds among
             # ~950 fixtures would be drawn about once in 150.
-            kind = 3 if args.crypt_only or rng.randrange(4) == 3 \
-                else rng.randrange(3)
+            if args.stream_only:
+                kind = 5
+            else:
+                kind = 3 if args.crypt_only or rng.randrange(4) == 3 \
+                    else rng.randrange(3)
             # The repair generator is the only way past a checksum, and
             # a checksum is what keeps every ordinary mutant out of the
             # Now Compress coders. A twentieth of the ordinary cases is
@@ -367,11 +536,21 @@ def main():
             #
             # It is NOT 20 because a sixth was measured to starve the
             # others — that was inferred from one run and is withdrawn:
-            # per-family reach swings by about five functions between
-            # seeds at 3,000 cases, so a single-run delta says nothing
-            # (TESTING.md, *Fuzzing*; BLOCKERS.md).
-            if kind != 3 and nowfiles and rng.randrange(20) == 0:
-                kind = 4
+            # per-family reach swings by up to thirteen functions
+            # between seeds at 3,000 cases, so a single-run delta says
+            # nothing (TESTING.md, *Fuzzing*; BLOCKERS.md). That figure
+            # read "about five" here until 2026-10-05, a fourth place
+            # citing it where the correction named three.
+            #
+            # The stream generator takes a twentieth as well, and from
+            # the SAME draw, so adding it did not change how often the
+            # Now Compress one fires.
+            if kind not in (3, 5):
+                share = rng.randrange(20)
+                if share == 0 and nowfiles:
+                    kind = 4
+                elif share == 1 and streams:
+                    kind = 5
             if kind == 3:
                 # Round robin, not a random choice: a quarter of 150 is
                 # 37 cases and there are nine shapes to get through, so
@@ -387,13 +566,26 @@ def main():
                 src = nowfiles[rng.randrange(len(nowfiles))]
                 data = cache.setdefault(src, open(src, "rb").read())
                 blob = now_repair(data, rng, nowmod)
+            elif kind == 5:
+                # Round robin, not a draw, for the reason the ciphers
+                # are: a twentieth of a 150-case smoke is 5 cases, so a
+                # second named shape would be skipped outright often
+                # enough to matter. There is one today.
+                _name, src, sranges = streams[nstream % len(streams)]
+                nstream += 1
+                data = cache.setdefault(src, open(src, "rb").read())
+                blob = mutate(data, rng) if args.stream_untargeted \
+                    else stream_mutate(data, rng, sranges)
             elif kind == 0:
-                src = rng.choice(seeds)
+                src = pick_seed(rng, seeds, named,
+                                args.named_share)
                 data = cache.setdefault(src, open(src, "rb").read())
                 blob = mutate(data, rng)
             elif kind == 1:
-                s1 = rng.choice(seeds)
-                s2 = rng.choice(seeds)
+                s1 = pick_seed(rng, seeds, named,
+                               args.named_share)
+                s2 = pick_seed(rng, seeds, named,
+                               args.named_share)
                 d1 = cache.setdefault(s1, open(s1, "rb").read())
                 d2 = cache.setdefault(s2, open(s2, "rb").read())
                 c1 = rng.randrange(len(d1) + 1)
@@ -440,6 +632,7 @@ def main():
                 print(r.stderr.decode("utf-8", "replace")[:400])
 
     print(f"fuzz: {args.iterations} cases, {ncrypt} of them encrypted, "
+          f"{nstream} of them a named stream seed, "
           f"{bad} failures (seed {args.seed})")
     return 1 if bad else 0
 
