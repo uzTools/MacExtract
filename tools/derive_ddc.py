@@ -110,6 +110,7 @@ def read_filehdr(b, at):
         mtime=u32(b, at + F_MTIME), ctime=u32(b, at + F_CTIME),
         data_delta=u16(b, at + F_DATADELTA),
         rsrc_delta=u16(b, at + F_RSRCDELTA),
+        data_crc=u16(b, at + F_DATACRC), rsrc_crc=u16(b, at + F_RSRCCRC),
         info1=b[at + F_INFO1], info2=b[at + F_INFO2],
         payload=at + F_SIZE)
 

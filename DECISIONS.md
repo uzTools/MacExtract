@@ -337,6 +337,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
 - 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
 - 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
+- 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
 
 ---
 
@@ -21457,3 +21458,78 @@ machine; and a generator bug that the agreement between generator and
 decoder hid for a day — a folder's type and creator being its window
 rectangle (2026-10-05). A real package with a folder in it would have
 caught that in one run, and 14 of them were two queries away.
+
+
+## 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
+
+DECISIONS.md 2026-09-27, *half a citation*, measured one of the two
+facts behind DiskDoubler method 8 and filed the other as unfalsifiable:
+**no stream in the corpus reached even 0x400 cost units**, so every
+block size at or above 0x1000 decoded every fork identically and
+`0xfff0` could not be told from any of them. The entry named the
+specimen it wanted — *a method-8 fork whose coder output crosses 0xfff0
+cost units, 2 per literal and 3 per match* — and the row went into
+OPEN_ITEMS.md's licence table, where it sat for nine days.
+
+### The specimen was one query
+
+`detection=abcd0054*` is **15,454 DiskDoubler compressed files** in
+Discmaster's first-16-bytes index — the magic word and the header size
+are the first four bytes of every one. Restricted to 40 KB and up and
+deduplicated it is 2,046 files, all 2,046 of which the probe confirms
+are compressed files, and they carry **612 method-8 forks**, the
+largest 6,212,378 B of coder output against the corpus's 1,230. Two
+were taken, both small enough to be cheap fixtures and large enough to
+flush: 84,057 B of coder output from 210,944, and 87,646 from 242,237.
+
+**Compressed size is the thing to filter on, and the arithmetic is
+worth writing down**, because the obvious filter is wrong: the biggest
+fork in the old corpus is 44,549 B UNCOMPRESSED and reaches under 0x400
+cost units, because it compresses to 1,230 B. Cost tracks coded
+SYMBOLS, not output length — about 0.83 cost units per compressed byte
+on a match-heavy stream and about 1.8 on a literal-heavy one — so
+crossing 0xfff0 = 65,520 wants roughly 36–79 KB of COMPRESSED fork.
+Sorting a search by uncompressed size would have found nothing.
+
+### The adjudicator was already in the header
+
+The first instinct was to grade the sweep against `unar`, and that
+works — but the constant being pinned is XADMaster's own, so fitting it
+to XADMaster's output pins the value without re-deriving it.
+
+A method-8 fork's header states a **CRC-16/ARC over its decoded
+bytes** (`docs/formats/diskdoubler-container.md`, +48 and +50), and a
+wrong block size yields the right NUMBER of bytes and the wrong ones.
+So the file adjudicates its own decode: **0xfff0 is the only size of
+eleven swept whose output satisfies the stored CRC**, on both forks,
+with no oracle and no reference implementation in the loop. The
+citation is shed on that, not on the agreement with `unar` — and the
+two agree fork for fork and size for size over all 9 forks and 11
+sizes, which `derive_dd8.py` now asserts, so a lane that silently
+became a restatement of the other says so. One bit flipped in a stored
+CRC makes it print the disagreement and return non-zero; that was run
+before the result was believed.
+
+*When a constant has to be measured against somebody else's program,
+look first for the thing the FORMAT checks.* A checksum, a declared
+length, a tiling — those adjudicate without an implementation, and they
+are the difference between confirming a transcription and re-deriving
+it.
+
+### What the row cost, and the one that paid for it
+
+Nine days, and the specimen was in an index this project had already
+used twice. The same sweep that produced it had just closed the
+AppleLink item for the same reason (*the lesson that was written down
+and then not applied*): **two rows of the same table, in the same
+afternoon, both filed as "no specimen here can tell" and both wrong
+about the world rather than about the corpus.** The honest form of
+such a row is the one *half a citation* used — it said *this corpus*
+cannot pin it, and named the specimen — and that is exactly why the
+sweep took one command to aim.
+
+One real find on the way: `derive_dd8.py` skipped every compressed FILE
+in the corpus, because a `.dd` states no name and the harness matched
+manifest entries BY name. It had been reading 7 forks out of one
+archive and silently ignoring 66 files, which is also why nothing
+noticed that the corpus's method-8 population was so small.

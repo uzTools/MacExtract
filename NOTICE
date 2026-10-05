@@ -97,16 +97,21 @@ hand.
                        plus DiskDoubler's two older headers, which are
                        macutils' dd.h. Checked against deark on
                        2026-09-27: it states none of them.
-  src/unc_internal.h   the MIME line rule above, the LZAH preload
-                       above, and DiskDoubler method 8's Huffman block
-                       size of 0xfff0 (XADDiskDoublerParser.m case 8).
-                       That method 8 IS Compact Pro's two stages
-                       stopped being that parser's on 2026-09-27: all
-                       7 such forks in reach decode byte for byte from
-                       Compact Pro's published pages alone
-                       (tools/derive_dd8.py). The block size cannot be
-                       measured on this corpus — no stream in it
-                       reaches even 0x400 cost units.
+  src/unc_internal.h   the MIME line rule above and the LZAH preload
+                       above. Both were stated without the Source:
+                       marker the inventory check reads until
+                       2026-10-06, when the file's third item left and
+                       the check said so.
+                       DiskDoubler method 8 is no longer here. That it
+                       IS Compact Pro's two stages stopped being
+                       XADDiskDoublerParser.m's on 2026-09-27, and the
+                       Huffman block size of 0xfff0 on 2026-10-06: two
+                       wild forks reach a block flush, and 0xfff0 is
+                       the only size of eleven swept whose output
+                       satisfies the CRC-16 those forks' own headers
+                       state — the archives adjudicate it, with no
+                       reference implementation in the loop
+                       (tools/derive_dd8.py).
 
 Everything else this engine does that these references also do is
 written from a published description or measured here; the rest of

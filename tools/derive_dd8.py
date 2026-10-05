@@ -71,11 +71,20 @@ def forks(path):
     for e in ents:
         if e.get("is_dir") or e.get("stored"):
             continue
-        if not e.get("path") or any(x is None for x in e["path"]):
+        if shape == "single" and len(ents) == 1 and len(byname) == 1:
+            # A compressed FILE states no name — it kept the host's,
+            # with `.dd` on the end — so there is nothing to match on
+            # and nothing to match against: one record, one manifest
+            # entry. Skipping it left every `.dd` in the corpus out of
+            # this measurement until 2026-10-06, which is where the
+            # forks that pin the block size turned out to be.
+            name, m = next(iter(byname.items()))
+        elif not e.get("path") or any(x is None for x in e["path"]):
             continue          # an end-of-directory record carries no name
-        name = b"/".join(e["path"]).decode("mac-roman")
-        leaf = e["path"][-1].decode("mac-roman")
-        m = byname.get(name) or byname.get(leaf)
+        else:
+            name = b"/".join(e["path"]).decode("mac-roman")
+            leaf = e["path"][-1].decode("mac-roman")
+            m = byname.get(name) or byname.get(leaf)
         if not m:
             continue
         # The data fork's compressed bytes come first, then the
@@ -84,10 +93,31 @@ def forks(path):
         for kind in ("data", "rsrc"):
             comp = e[kind + "_comp"]
             if e[kind + "_method"] == 8 and comp and m.get(kind + "_size"):
-                out.append((name, kind, at, comp,
-                            m[kind + "_size"], m[kind + "_sha256"]))
+                out.append((name, kind, at, comp, m[kind + "_size"],
+                            m[kind + "_sha256"], e[kind + "_crc"]))
             at += comp
     return out
+
+
+def crc16_arc(b):
+    """The checksum a method-8 fork's own header states, over the
+    decoded bytes.
+
+    Source: docs/formats/diskdoubler-container.md, the header table at
+    +48 and +50, and `src/fmt_dd.c` (*the fork's checksum is a CRC-16/
+    ARC over the result*).
+
+    **This is what makes the block size measurable without an oracle.**
+    A wrong block size yields the right NUMBER of bytes and the wrong
+    ones, and the archive itself says so: no reference implementation
+    and no second decoder is in the loop, only the file.
+    """
+    crc = 0
+    for x in b:
+        crc ^= x
+        for _ in range(8):
+            crc = (crc >> 1) ^ 0xA001 if crc & 1 else crc >> 1
+    return crc
 
 
 def decode(d, at, comp, nout, blocksize):
@@ -120,6 +150,7 @@ def main():
         return 0
 
     works = {b: 0 for b in GRID}
+    disagree = []
     floors = []
     total = 0
     archives = 0
@@ -131,17 +162,23 @@ def main():
             continue
         archives += 1
         d = open(p, "rb").read()
-        for name, kind, at, comp, nout, sha in fs:
+        for name, kind, at, comp, nout, sha, crc in fs:
             total += 1
-            hit = []
+            hit, bycrc = [], []
             for bs in GRID:
                 try:
                     out = decode(d, at, comp, nout, bs)
                 except Exception:
                     continue
-                if len(out) == nout and hashlib.sha256(out).hexdigest() == sha:
+                if len(out) != nout:
+                    continue
+                if crc16_arc(out) == crc:
+                    bycrc.append(bs)
+                if hashlib.sha256(out).hexdigest() == sha:
                     hit.append(bs)
                     works[bs] += 1
+            if hit != bycrc:
+                disagree.append((os.path.basename(p), name, kind, hit, bycrc))
             if a.verbose or not hit:
                 print("  %-34s %-4s %6d B  %s"
                       % (name, kind, nout,
@@ -163,11 +200,22 @@ def main():
         mark = "  <- the citation's" if bs == CLAIMED else ""
         print("            0x%-6X %3d/%d%s" % (bs, works[bs], total, mark))
 
+    if disagree:
+        print("            THE TWO ADJUDICATORS DISAGREE on %d fork(s) — "
+              "the oracle's sha256 and the fork's own CRC-16 should name "
+              "the same block sizes:" % len(disagree))
+        for f, nm, kd, hit, bc in disagree[:10]:
+            print("              %s %s %s: sha %s vs crc %s"
+                  % (f, nm, kd, [hex(b) for b in hit], [hex(b) for b in bc]))
+        return 1
+
     ok = works[CLAIMED] == total
     alone = [b for b in GRID if works[b] == total]
     if ok and alone == [CLAIMED]:
         print("            MEASURED: Compact Pro's stages read every one, "
-              "and 0x%X is the only block size in the grid that does."
+              "and 0x%X is the only block size in the grid that does — "
+              "by the forks' OWN CRC-16 as well as by the oracle's "
+              "sha256, which agree fork for fork and size for size."
               % CLAIMED)
         return 0
     if ok:

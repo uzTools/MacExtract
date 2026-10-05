@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 943 fixtures in `./ci.sh`.
+byte-exact against the oracle across 945 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -245,7 +245,6 @@ preload nothing reaches*).
 | what is left | what would move it |
 |---|---|
 | `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **a Mac OS 8.x image.** The rest of the item went 2026-09-27 (`tools/derive_sit5crypt.py`). No archive in reach sets bit 5 — 47 scanned, and the Deluxe CD holds none — and the only comment UI is StuffIt Deluxe 5.0.1, which will not run: the file-system route is disproved in all four combinations of boot and application volume, so the trigger is Mac OS 9.2 itself. This machine has no Mac OS install media. That it marks a comment is a **hypothesis** (DECISIONS.md 2026-09-27, *the file system was never the problem*) |
-| `unc_internal.h` — DiskDoubler method 8's Huffman block, `0xfff0` | **one method-8 fork whose coder output crosses 0xfff0 cost units**, 2 per literal and 3 per match. That method 8 IS Compact Pro's stages is measured, 7 of 7 forks (`tools/derive_dd8.py`); the block size is unfalsifiable on this corpus, where everything at or above 0x1000 reads every fork (DECISIONS.md 2026-09-27, *half a citation*) |
 | `fmt_binhex.c`, `fmt_uu.c`, `unc_internal.h` — macutils' four rules about mailed text | **a second reader per rule, and each is blocked differently** — which is why it will not close in one go. Checked 2026-09-27: mpack is LF-only so it cannot state the CR rule; deark errors on a stray character and mpack keeps the decoded prefix, so neither restates the whole-line garbage skip; mpack's second-document handling is a separator inside one part, not a rescan; and nothing else implements UUTool's MU layout. Two of the six left for mpack that day (TESTING.md; NOTICE). **Our use of all four is graded** — `tools/run_uu.py`'s gapped sets and the multi-part fixtures — so what is stuck is the citation, not the behaviour |
 | `fmt_packit.c` — the resync strategy and both ciphers | **a second implementation of `PMa5`/`PMa6`.** deark's `packit.c` handles `PMag` and `PMa4` only and errors where this resyncs; appendix B lists "PMa5" twice and cannot name the fourth word. **Our use is graded**: `unar -p` reads both ciphers back every run (FORMATS.md, *Encryption*) |
 
@@ -278,7 +277,7 @@ compressed streams. What is left:
 
 **AppleLink packages would have joined this list on 2026-10-05** — the
 fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
-`.pkg` is 6 of 943 fixtures and it draws uniformly — so the suite got a lane
+`.pkg` is 6 of 945 fixtures and it draws uniformly — so the suite got a lane
 that bends those six directly instead: 300 mutants, a fixed seed, 270 of
 them still sniffing as a package and every one decoding without a sanitizer
 report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a

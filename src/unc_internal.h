@@ -333,9 +333,14 @@ static inline int unc_bufin_peek(UncBufIn *b)
 /* Text line reader (unc_util.c)                                      */
 /*                                                                    */
 /* CR, LF and CRLF all end a line, and a last line need not be        */
-/* terminated at all — the rule reference/macutils/hexbin/readline.c   */
-/* states, and the one a btoa file saved on a Mac needed (FORMATS.md,  */
-/* "btoa"). Unlike the readers inside fmt_uu.c and fmt_btoa.c, this    */
+/* terminated at all — and the one a btoa file saved on a Mac needed  */
+/* (FORMATS.md, "btoa").                                              */
+/* Source: reference/macutils/hexbin/readline.c, which states that    */
+/* rule. Marked 2026-10-06: it was a live citation without the marker */
+/* the inventory check reads, which is the shape of defect            */
+/* DECISIONS.md 2026-09-27 (*the check that tested the wrong thing*)  */
+/* normalised in six other files.                                     */
+/* Unlike the readers inside fmt_uu.c and fmt_btoa.c, this            */
 /* one consumes CRLF as ONE terminator instead of letting the LF come  */
 /* back as an empty line: those two formats may ignore a blank line    */
 /* anywhere, and MIME may not — a blank line is where a part's headers */
@@ -1064,19 +1069,21 @@ typedef int (*UncPutRun)(void *ctx, const uint8_t *p, uint32_t n);
 /* 2026-09-27: all 7 method-8 forks in reach decode byte for byte      */
 /* against the oracle's sha256 with a reader written from Compact      */
 /* Pro's three published wiki pages alone (tools/derive_dd8.py).       */
-/* THE BLOCK SIZE BELOW IS STILL XADDiskDoublerParser.m case 8's,      */
-/* and this corpus cannot pin it: every size at or above 0x1000 reads  */
-/* every fork and the largest that fails anywhere is 0x400, so no      */
-/* stream here reaches even that much cost and 0xfff0 is unfalsifiable */
-/* on it. What would pin it is a fork whose coder output crosses       */
-/* 0xfff0 cost units (DECISIONS.md 2026-09-27, *half a citation*).     */
-/* The only difference is the                                          */
+/* AND SO IS THE BLOCK SIZE, since 2026-10-06, by the archives          */
+/* themselves: a wrong size yields the right NUMBER of bytes and the    */
+/* wrong ones, and a method-8 fork's header states a CRC-16/ARC over    */
+/* the decoded result. Over the 9 forks in reach, 0xfff0 is the only    */
+/* size of eleven swept whose output satisfies that stored CRC — no     */
+/* oracle and no reference implementation in the loop, only the file    */
+/* (tools/derive_dd8.py; DECISIONS.md 2026-10-06, *the other half of    */
+/* that citation*). It took two wild forks, 210,944 and 242,237 B,      */
+/* to reach a flush at all: until they were found no stream here        */
+/* crossed even 0x400 cost units and every size above that read every   */
+/* fork identically.                                                    */
+/* The only difference from Compact Pro is the                          */
 /* Huffman block size: 0x1fff0 for Compact Pro (fmt_cpt.c, CPT_BLOCK,   */
 /* and the published description agrees) and 0xfff0 for DiskDoubler     */
-/* (fmt_dd.c, at the call) —                                           */
-/* Source: reference/XADMaster/XADDiskDoublerParser.m case 8, for that  */
-/* 0xfff0 and nothing else in this block any more.                      */
-/* This comment had the two the WRONG WAY                               */
+/* (fmt_dd.c, at the call). This comment had the two the WRONG WAY      */
 /* ROUND until 2026-09-20, when a fetched specification disagreed with  */
 /* it and the code turned out to be right.                              */
 /* ------------------------------------------------------------------ */
@@ -1234,6 +1241,11 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
  *   UNC_LZAH_LH1      LHarc's -lh1- and StuffIt method 5: 0x100 is a
  *                     match of 3, and the window carries XADMaster's
  *                     preload (value runs, ramps, zeros, spaces).
+ *                     Source: reference/XADMaster/
+ *                     XADLZHDynamicHandle.m, resetLZSSHandle, which
+ *                     is where the preload is written — the same citation
+ *                     src/unc_lzah.c carries, marked here too on
+ *                     2026-10-06.
  *   UNC_LZAH_TRIMMED  ARC 7.x's "Trimmed": 0x100 is a STOP code, 0x101
  *                     is a match of 3 (so 3..59, one shorter than
  *                     -lh1-), and the window starts as zeros.

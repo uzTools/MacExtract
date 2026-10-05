@@ -61,7 +61,7 @@ CARRIES = {
     "fmt_applesingle.c": "the byte-swapped header",
     "fmt_sitseg.c":     "the whole StuffIt split header",
     "fmt_stubs.c":      "DiskDoubler's two older headers (macutils dd.h)",
-    "unc_internal.h":   "the MIME line rule, DiskDoubler method 8, the LZAH preload",
+    "unc_internal.h":   "the MIME line rule and the LZAH preload",
 }
 
 # Mentions a reference only to say what it no longer owes, or to

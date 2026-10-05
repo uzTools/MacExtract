@@ -71,7 +71,7 @@ explaining itself belongs in DECISIONS.md instead.
 
 | M57 The scan that was already being paid for | A zip BEHIND something else — a self-extracting archive, whose first bytes are code — is recognised, and the decision was arithmetic rather than design: the backwards scan for the end-of-central-directory record **was already running on every file the sniffer rejects**, 50.0 % of all its reads, and the answer was thrown away one line before the question was asked in a form that could not reach it. All five ZipIt self-extractors sniff unaided where they needed `-f Zip`, four of them through their MacBinary envelope the way a user hands one over. Cost: **+0 reads and +0 bytes on 7,601 of 8,364 non-archives**, one 4-byte read on a zip, **316 B of resident code and 4 of A5**. The same sweep found the other half: the segment probe had been claiming four Python `.pyc` files and a deark `.o` as spanned-zip parts on four chance bytes, and `zip -s` turned out to **split the central directory**, which the first draft refused | DECISIONS.md 2026-10-05 (*the scan that was already being paid for*), FORMATS.md (*What the zip pair claims, and what it costs*), BLOCKERS.md (*Withdrawn claims*), TESTING.md |
 
-**The suite is 943 fixtures**, byte-exact against `unar` and, where `unar`
+**The suite is 945 fixtures**, byte-exact against `unar` and, where `unar`
 fails, `macunpack`; 9,430 robustness variants clean. The Mac shell replays a
 **71-fixture** sample byte-exact at 4 MB and at the 1 MB floor on System
 6.0.8, at 4 MB and at the 1 MB floor on System 3.0, and on System 7.0.1 —

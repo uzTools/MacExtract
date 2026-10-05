@@ -58,8 +58,10 @@ addition since the overlays landed (FORMATS.md, *Three configurations, one
 tree*). **No tier was re-run for it**, and what stands in for them is the
 same shape of argument as above: the probe can only ever NAME a file, none
 of the 71 sampled fixtures is a package or passes the version-and-eight-
-zero-bytes test that precedes its directory walk (measured — 0 of 943
-fixtures sniff as one), and 788 B is twenty times under the narrowest
+zero-bytes test that precedes its directory walk (measured — 0 of the 71,
+and across the whole corpus only the 6 fixtures that ARE packages sniff
+as one; this read *"0 of 943 fixtures"* until 2026-10-06, which
+contradicted FORMATS.md's 6 of 955 and meant the 71), and 788 B is twenty times under the narrowest
 margin between any passing layer's demand and its budget anywhere in the
 sample, which is **16,490 B**. `run_tiers.py --check` moves no tally in
 either lane at the re-taken figures: 71/71, 67/71, 64/71 resident and

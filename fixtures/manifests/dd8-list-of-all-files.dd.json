@@ -1,0 +1,23 @@
+{
+ "entries": [
+  {
+   "creator": "????",
+   "data_sha256": "8ac043205a0128f89b55b7926854848651b6fcceae474c279a1c633d5b0eb6f8",
+   "data_size": 242237,
+   "finder_flags": 256,
+   "name": "dd8-list-of-all-files",
+   "oracle_methods": [
+    "Compact Pro",
+    "None"
+   ],
+   "rsrc_sha256": "220f0f354448d7c6c5aa070f714bcd536964304fbf18e4210464fcd0d48a0b32",
+   "rsrc_size": 286,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "dd8-list-of-all-files.dd",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "bb56686b0d9dced3ef94873dfb8aa57db989dba203a10524a951193bac28c205",
+ "size": 88100
+}

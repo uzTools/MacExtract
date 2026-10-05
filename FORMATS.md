@@ -95,7 +95,8 @@ each one and how it was graded.
 **Four of them on the first day**, which was every method the corpus used
 then: 0 stored, 6/9 (an 8 KB-block LZSS), 8 (Compact Pro compression in a
 DiskDoubler container: the same two stages as `.cpt`, at a 0xfff0 Huffman block
-instead of 0x1fff0), 10 (DDn: a 64 KB-window LZSS whose literals, offsets and
+instead of 0x1fff0 — both facts measured, the block size since 2026-10-06,
+*Method 8's Huffman block*, below), 10 (DDn: a 64 KB-window LZSS whose literals, offsets and
 lengths are three separately Huffman-coded streams laid out back to back). The
 other seven came from running DiskDoubler itself (M15, M19, M20). This
 paragraph said "four methods, which is every method the corpus uses" until
@@ -291,6 +292,34 @@ comes out identical from all nine independent compressions, forks included.
 115 of these became fixtures in M17, with a pinned URL and a manifest each,
 so `run_diff.py` grades them on every run; how they were registered is in
 TESTING.md.
+
+#### Method 8's Huffman block, pinned by the forks' own checksum
+
+**0xfff0, measured 2026-10-06, and the adjudicator is the archive.** A
+method-8 fork's header states a CRC-16/ARC over its decoded bytes, and a
+wrong block size produces the right NUMBER of bytes and the wrong ones —
+so the file itself says which size is right, with no oracle and no
+reference implementation in the loop. `tools/derive_dd8.py` sweeps eleven
+sizes over every method-8 fork in reach:
+
+| forks | sizes that satisfy the stored CRC |
+|---|---|
+| the 7 in `ddtf-dd377ddb-*`, up to 44,549 B | every size at or above 0x1000 — these streams never reach a flush |
+| **`dd8-hermes-docs.dd`**, 210,944 B from 84,057 | **0xfff0 alone**, of eleven |
+| **`dd8-list-of-all-files.dd`**, 242,237 B from 87,646 | **0xfff0 alone**, of eleven |
+
+Both new forks were found on 2026-10-06 by the first-16-bytes key
+`detection=abcd0054*` — 15,454 DiskDoubler compressed files, 2,046 of them
+over 40 KB, **612 method-8 forks** up to 6,212,378 B compressed
+(TESTING.md, *Searching somebody else's index by content*). The two chosen
+are small enough to be cheap and large enough to flush; the open item had
+asked for exactly one of them since 2026-09-27.
+
+The oracle's sha256 and the forks' own CRC name the same sizes on all 9
+forks and all 11 sizes, and `derive_dd8.py` fails if they ever stop
+agreeing — which is what says the CRC lane is not simply restating the
+manifest. It was shown to fail: one bit flipped in a stored CRC makes it
+print the disagreement and return non-zero.
 
 ### Now Compress ✧
 
@@ -3229,7 +3258,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 943 fixtures byte-exact against `unar` manifests
+- Differential: 945 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -6561,7 +6590,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 943 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 945 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 
