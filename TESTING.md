@@ -1246,6 +1246,16 @@ it is what StuffIt Deluxe 2.0.1 itself gives back, which is why the suite's
 reference is `unstuffed.bin`, the output of that application unstuffing its
 own archive under Mini vMac (`tools/vmac/sitopt.py --unstuff`).
 
+**Lane 15 is the only one whose subject nobody here made.** Two
+Giga-ROM CD archives from 1992-93 carry a `Text 1`-optimized entry —
+methods 8 and 3, id 255, resource fork deleted — and they are fixtures,
+so `run_diff.py` grades their bytes against `unar` manifests and this
+lane grades the six header bytes a manifest does not record (FORMATS.md,
+*Two optimized archives nobody here made*). Changing the 255 to a 1
+makes it fail twice and the engine refuse the archive, measured
+2026-10-06. How they were found is *Searching somebody else's index by
+content*, below.
+
 Ten assertions over twenty-eight archives 2.0.1 wrote, in fourteen runs
 — which between them are **everything that application writes with what
 was in its box**: every Optimizer, every cipher, every compression
@@ -3693,6 +3703,28 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-06 | `detection=<n>01` + 14 zero bytes, n = 1…50 except 7, deduplicated | 1,443 | **36** AppleLink packages |
 | 2026-10-06 | `extension=.pkg&family=unknown`, deduplicated | 2,641 | 13 more, **49** in all, 7 of them version 0 |
 | 2026-10-06 | `detection=abcd0054*&sizeMin=40000`, deduplicated | 2,046 | all 2,046 are DiskDoubler compressed files, carrying **612 method-8 forks** up to 6,212,378 B of coder output; two became fixtures and pinned the 0xfff0 block size (FORMATS.md, *Method 8's Huffman block*) |
+| 2026-10-06 | `format=sit`, deduplicated, ordered by hash — a uniform sample | 10,000 | 8,798 classic StuffIt archives, **0 Optimizer bits** in their first entries |
+| 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,998 entry headers**, and the **5 Optimizer bits** this project has ever seen in the wild, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). Two further entries carry the bit inside one damaged archive, counted twice because it is on two CDs, which `unar` also refuses |
+
+**`--bytes` is what found the Optimizer, and it costs nothing.** The
+`sit` probe walks the entry chain inside the bytes already fetched, so
+8 KB per archive reads several entries for the same ONE request that
+512 B reads one — and over half of these archives open with a folder
+marker, which carries no method byte at all. First-entry-only saw
+8,798 archives and 0 hits; 8 KB saw 12,998 headers in 7,929 archives
+and 7.
+
+**Two harness defects on the way, both of the kind that produces
+findings rather than failures.** The walk had no END: it stepped
+through the archive's declared total size and read compressed data as
+file headers, which reported four Optimizer entries whose names were
+English prose out of the middle of a fork. And the probe's flag bits
+were the published table's, where `0x10` is documented as a folder
+marker — **it is `NewDE`, measured here on 2026-10-02**, and the
+encrypted bit is `0x80` (`src/fmt_sit.c`). The first version of the
+probe reported encrypted-folder markers as encrypted entries. *A probe
+written from the published description, in a repository that has
+measured the same bytes, is written from the wrong source.*
 
 **Both keys were needed, and the pair is the method.** The hex token
 cannot see a version-0 package — version 0 puts a zero byte where the

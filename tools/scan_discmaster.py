@@ -195,13 +195,21 @@ class SitProbe:
         # on 2026-10-06 — puts its first FILE header inside the same
         # 512 bytes. One entry per probe would have seen no method byte
         # at all in over half the corpus.
+        total = u32(head, off + 6)
+        # **The walk stops where the ARCHIVE says it does**, not where
+        # the fetched bytes run out: the header's total size at +6 is
+        # the end, and a walk that passes it reads compressed data as
+        # though it were a file header. Measured 2026-10-06, after a
+        # deep sweep reported four Optimizer entries whose names were
+        # English prose out of the middle of a fork.
+        end = min(len(head), off + total) if total >= 22 else len(head)
         ents, at = [], off + 22
-        while at + 112 <= len(head):
+        while at + 112 <= end:
             e = entry(head, at)
             ents.append(e)
             at += 112 + e.get("rclen", 0) + e.get("dclen", 0)
         return {"base": off, "ver": head[off + 14],
-                "files": u16(head, off + 4), "total": u32(head, off + 6),
+                "files": u16(head, off + 4), "total": total,
                 "next": at, "entries": ents}
 
 
@@ -351,6 +359,13 @@ def main():
                     help="dd: report only a fork using this method")
     ap.add_argument("--walk", type=int, default=1,
                     help="sit: entries to follow, one request each")
+    ap.add_argument("--bytes", type=int, default=0,
+                    help="fetch this many bytes per file instead of the "
+                         "probe's own default. For `sit` this is the cheap "
+                         "way to see more than the first entry: the walk "
+                         "inside the fetched bytes costs no extra request, "
+                         "so 8 KB covers several entries of a small archive "
+                         "for the same number of round trips")
     ap.add_argument("--state", default=None)
     ap.add_argument("--budget", type=float, default=540.0,
                     help="seconds to spend fetching this run")
@@ -359,6 +374,8 @@ def main():
         ap.error("name at least one --query")
     state_path = a.state or "/tmp/discmaster-%s.json" % a.probe
     probe = PROBES[a.probe]()
+    if a.bytes:
+        probe.need = probe.limit = a.bytes
 
     state = {"files": {}, "probed": {}, "queries": {}}
     if os.path.exists(state_path):

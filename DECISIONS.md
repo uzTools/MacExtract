@@ -338,6 +338,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
 - 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
 - 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
+- 2026-10-06 (the Optimizer that was in somebody else's corpus) — the one key that identifies a StuffIt 2.x feature, and the two harness defects between it and the answer
+- 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
 
 ---
 
@@ -21533,3 +21535,128 @@ in the corpus, because a `.dd` states no name and the harness matched
 manifest entries BY name. It had been reading 7 forks out of one
 archive and silently ignoring 66 files, which is also why nothing
 noticed that the corpus's method-8 population was so small.
+
+
+## 2026-10-06 (the Optimizer that was in somebody else's corpus) — the one key that identifies a StuffIt 2.x feature, and the two harness defects between it and the answer
+
+OPEN_ITEMS.md had one item left for StuffIt 2.0: *"nothing has seen an
+archive this project did not make"*, all 28 being StuffIt Deluxe
+2.0.1's own output under Mini vMac. Two archives now are somebody
+else's, and getting there needed the right key and two harness fixes.
+
+### Version 2 is not StuffIt 2.x, and that had to be measured first
+
+The obvious key is the archive header's version byte. It does not work,
+and the index says so without downloading anything: `detection=` is
+full-text over the first 16 bytes, so
+`53495421????????????724c6175<vv>??` counts classic StuffIt archives by
+version byte. **4,351 carry 1, 75,381 carry 2, and no other value
+exists at all** among files with `SIT!` at byte 0. Over 16,727 archives
+actually read, the census is 14,030 twos, 2,600 ones and **97 sixes,
+every one of them an `ST65` archive** — InstallerMaker 6.5's magic. So
+the byte tracks the writer's generation, not the application: 2 covers
+everything from 2.0 to 4.5, and a search by it selects nothing.
+
+**What identifies 2.x is a feature only 2.x had**: the Optimizer bit
+`0x40` on an entry's method byte, with the module id at header +106.
+That is per-ENTRY, 22 bytes into the archive and past every preceding
+fork — not indexed anywhere, and not in the first 16 bytes either. So
+the sweep is a `Range` scan: list archives by `format=sit`, fetch the
+head of each, walk the chain.
+
+### The two defects, and which one was dangerous
+
+**The walk had no end.** It stepped by `112 + rclen + dclen` until the
+fetched bytes ran out, where the archive's own header states its total
+size at +6. Past that it was reading compressed data as file headers,
+and it duly reported four Optimizer entries whose names were English
+prose out of the middle of a fork. That one is harmless because it is
+obvious: a name like *"rt up by pressing a Command-Shift-number"* is
+not a file name.
+
+**The flag bits were the published table's**, and that is the dangerous
+one. `reference/notes/sit_format_theunarchiver.md` documents bit 4
+(`0x10`) as part of the folder marker; this repository measured on
+2026-10-02 that **`0x10` is `NewDE`**, the second cipher built into
+2.0.1, and that the encrypted flag is `0x80` (`src/fmt_sit.c`). The
+first version of the probe therefore called encrypted-FOLDER markers
+encrypted entries, and would have missed every real encrypted entry.
+*A probe written from the published description, in a repository that
+has already measured the same bytes against a writer, is written from
+the wrong source* — and the local corpus is what catches it: the probe
+was run over 336 archives and 60 specimens before it was pointed at a
+stranger's disk, and the specimens are what showed it flagging the
+wrong thing.
+
+### `--bytes` is the cheap half of a deep walk
+
+A folder marker carries no fork, so an archive that opens with one —
+**1,081 of the first 1,946 swept** — puts its first file header a few
+hundred bytes in. The probe walks the chain inside the bytes already
+fetched, which costs no extra request, so `--bytes 8192` turns one
+round trip per archive into several entries per archive: 8,798 archives
+and 0 hits at 512 B became 12,998 headers in 7,929 archives and 7 hits
+at 8 KB. **When a format's records are chained, the unit of a content
+scan is the fetch, not the record** — ask for more bytes before asking
+for more requests.
+
+### What the two archives are worth
+
+Both are `Text 1`'s, the Optimizer with no `'DCMP'` and the id 255 that
+means CANNOT BE UNDONE, on Giga-ROM CDs pressed in 1992-93. They grade
+three things nothing here could: the bit and the 255 on bytes nobody in
+this repository wrote; the **method nibble under the bit** — 3 in one of
+them, where 2.0.1 was only ever asked here for 0, 2, 5, 6 and 8, so a
+reader that masked the byte wrongly fails on a file it has never seen;
+and the deleted resource fork declared by somebody else's writer. Both
+outer files are MacBinary-wrapped self-extractors, so the envelope
+chain comes with them.
+
+**What the sweep says about the rest is the useful negative.** Five
+Optimizer bits in 21,767 wild entry headers, in three archives, and
+every one is the same module. (Two further entries carry the bit inside
+`CURSORS.SIT`, counted twice because it is on two CDs: a version-1
+archive whose chain does not step by `112 + rclen + dclen` at its third
+record, and which `unar` refuses outright — so it is a damaged file
+rather than a reading this scanner gets wrong.) The four reversible Optimizers and all five ciphers are still
+graded only on this project's own archives, and OPEN_ITEMS.md now says
+so with the number attached — which is the difference between *"nobody
+has looked"* and *"looked, and here is how rare it is"*.
+
+
+## 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
+
+`fmt_sit5.c`'s bit 5 is the one row of OPEN_ITEMS.md's licence table
+that was filed as needing something off this machine, and the route
+column said why: the only comment UI is StuffIt Deluxe 5.0.1, Mac OS
+9.2 refuses to run it, the file-system theory was disproved in all four
+combinations (2026-09-27), **and "this machine has no Mac OS install
+media."**
+
+That last sentence was never tested. `archive.org`'s search API —
+queried from this machine, where `tools/vmac/os9.py --setup` has been
+downloading a 2 GB Mac OS 9 image since August — answers **33 items for
+Mac OS 8 and 23 for 8.5/8.6**. One of them, `mac-os-8.6-working-iso`,
+is a 304 MB `7z` holding the retail install CD: 665,600,000 bytes that
+`file` calls *Macintosh HFS data (bootable)*, with `LK` boot blocks, a
+volume named `Mac OS 8.6` created 1999-04-16, and `System Folder`,
+`Install Mac OS 8.6` and `Utilities` where `hdir` can list them. It is
+on this disk, and the fetch is four commands in
+`tools/vmac/README.md`.
+
+**What that does and does not close.** The row stays open: three things
+are unmeasured, in order — whether `qemu-system-ppc -M mac99` boots
+8.6 at all, whether 5.0.1 runs on it, and whether 5.0.1's comment UI
+sets bit 5, which is still a hypothesis. What changed is that none of
+them needs anybody outside this machine.
+
+**The pattern, for the third time today.** Three rows were filed as
+"no specimen/no media in reach" — AppleLink's three container paths,
+DiskDoubler method 8's block size, and this — and all three were about
+a search that had not been run rather than about the world. The common
+shape is a route column that names an ARTEFACT ("a third real
+package", "a method-8 fork that flushes", "a Mac OS 8.x image") and
+then asserts its absence in the same sentence. *The assertion is the
+part to check; the artefact is usually indexed somewhere.* A route
+column is a better place to record WHERE you looked than to record
+that nothing exists.

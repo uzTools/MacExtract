@@ -1688,6 +1688,40 @@ visual), ImageMagick (`import`, `convert`), `xdotool`, `hfsutils`
 (`hformat`/`hmount`/`hcopy`, shipped with Retro68), and a Retro68 toolchain
 in `$RETRO68` or `/opt/Retro68-build/toolchain`.
 
+## Mac OS 8.6 media — fetched 2026-10-06, booted by nothing yet
+
+**The retail Mac OS 8.6 install CD is on this disk**, and the claim it
+replaces is BLOCKERS.md's *"this machine has no Mac OS install media"*,
+which had stood since 2026-09-27 as the blocker on StuffIt 5's
+encrypted flag bit 5 (OPEN_ITEMS.md). It came off the same host
+`os9.py --setup` already uses, in one 304 MB download:
+
+    mkdir -p ~/.cache/macextract/macos86 && cd ~/.cache/macextract/macos86
+    curl -L -o MacOS8.6.7z \
+      "https://archive.org/download/mac-os-8.6-working-iso/MacOS%208.6.7z"
+    # sha256 02699210106c8f1251be6648c0827bf4d9696628bee3dfc5d23499ecabb78215
+    7z x MacOS8.6.7z            # -> MacOS8.6.iso, 665,600,000 B
+    # sha256 d1be7882f1c37539344a5a42...  (hfsutils opens it)
+    hmount MacOS8.6.iso && hdir
+
+**What is measured about it, and what is not.** `file` calls it
+*Macintosh HFS data (bootable)*, the boot blocks open `LK` and name
+`System`, the volume is `Mac OS 8.6` created 1999-04-16, and `hdir`
+lists `System Folder`, `Install Mac OS 8.6`, `Update to Mac OS 8.6`,
+`Utilities` and `CD Extras` — so it is retail install media and not a
+dud. **Nothing has booted it**: whether `qemu-system-ppc -M mac99`
+starts 8.6 at all, whether StuffIt Deluxe 5.0.1 runs on it, and whether
+5.0.1's comment UI sets bit 5 are three separate unmeasured questions,
+in that order. The image is not committed, like every ROM and System
+image here.
+
+Two more items are on the same host if this one will not boot — a
+1.65 GB **pre-installed 8.6 hard-disk image** (`mac-os-8.6-hd.tar.gz`)
+and the **8.5 retail CD** as a 663 MB `.dmg`
+(`mac-os-8.5-install-cd-691-2017-a`) — so "the media" is not a single
+point of failure any more. 33 Mac OS 8 items and 23 for 8.5/8.6 answer
+`archive.org`'s own search API.
+
 ## Mac OS 9
 
 `os9.py` boots Mac OS 9.2 under `qemu-system-ppc -M mac99,via=pmu`, headless,

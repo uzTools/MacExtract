@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "aust",
+   "data_sha256": "290667e0c585da9ed4cc33ff8854a7f8d1b35ff90d7b2cf419782063fd64b1df",
+   "data_size": 6798,
+   "finder_flags": 8460,
+   "name": "QK 2.1 icon family.sit",
+   "rsrc_sha256": "d2b893ded0f8a79e3e1f02932a9309be1724afd93a68200de640d6037009cc7f",
+   "rsrc_size": 22532,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "sitopt-wild-QK21icons.sea.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "30a84ccecabc638c32bf7cdfd0327fcba93e27e5d21cb0ef925c6ba1cfd595de",
+ "size": 29696
+}

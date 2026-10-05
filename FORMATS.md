@@ -47,12 +47,12 @@ under *Table notes*.
 
 | Format | Status | Methods | Oracle coverage | Peak RAM | 400 KB budget |
 |---|---|---|---|---|---|
-| MacBinary I/II/III | extract | — | 233 fixtures | 8 KB | full |
+| MacBinary I/II/III | extract | — | 236 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
 | BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
-| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
+| StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 229 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, **14** (*Method 14*, below), 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures + 1 synthetic, and the two installer payloads outside the corpus (*Method 14*) | 0.13–2.03 MB† | 24 of 32 fixtures extract FULLY; the rest refuse per entry |
 | Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below). **A zip BEHIND something else** — a self-extracting archive, whose first bytes are code — is recognised since 2026-10-05, from the end-of-central-directory record the sniffer was already scanning for (*What the zip pair claims, and what it costs*, below) | 8 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries), plus 2 synthetic. **Three carry the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none, plus `MrTs_Paint_Folder.zip` and `NPWritersKit.zip`, the first real ZipIt archives here — seven more are specimens (*Zip's Macintosh extra fields*, *ZipIt's own archives*) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
@@ -738,7 +738,9 @@ existed.
 
 ### StuffIt classic: per-entry method coverage ‡‡
 
-**Across the 227 fixtures**,
+**Across the 227 fixtures this census was taken over** — 229 since
+2026-10-06, when two archives nobody here made joined them
+(*Two optimized archives nobody here made*) —
 counted from the manifests: LZ+Huffman (13) 970 entries in 115 fixtures,
 Compress (2) 330/90, Huffman (3) 38/24, None (0) 13/7, Fixed Huffman (6) 6/2,
 LZAH (5) 1/1, MW (8) 3/1. Method 1 (RLE90) has no oracle coverage but does
@@ -1851,6 +1853,52 @@ StuffIt Deluxe 2.0.1 wrote (`tools/run_sitopt.py`):
 | `JPEG Lossy` | 3 | **a TIFF of C-Cube JPEG** behind an 80-byte header, tables and all | **inexactly** (lossy), and **byte-exact against 2.0.1's own output** | nothing — `ffff` |
 | `MacPaint 1` | 4 | drops the painting's **512-byte header** and the **whole resource fork**; stores its own length, then the file from 512 on | **inexactly** | the remnant's own length, against the declared one |
 | `Text 1` | 5 → **255** | tabs, trailing space, resources — and nothing undoes it | nothing to undo | the entry's own CRC-16 |
+
+### Two optimized archives nobody here made
+
+**Found 2026-10-06**, and until then every optimized archive on this
+disk was StuffIt Deluxe 2.0.1's own output under Mini vMac — authentic
+bytes, but one subject per module, chosen here (DECISIONS.md 2026-10-06,
+*the Optimizer that was in somebody else's corpus*). Both are
+`Text 1`'s, off Giga-ROM CDs pressed in 1992-93, and both are fixtures
+with a pinned URL:
+
+| fixture | the optimized entry | method under the bit | ids at 106/108 | `rlen` |
+|---|---|---|---|---|
+| `derived-QK_2.1_icon_family.sit` | `QK 2.1 icon info`, 1,487 B | **8** | 255/0 | 0 |
+| `derived-SoundEdit_icon_family.sit` | `SoundEdit™ icon info`, 1,307 B | **3** | 255/0 | 0 |
+
+**What they grade that nothing here could.** The `0x40` bit and the 255
+marker, on archives this project did not write; the **method nibble
+under that bit** — 3, where 2.0.1 was only ever asked here for 0, 2, 5,
+6 and 8, so a reader that masked the byte wrongly fails on a file it
+has never seen; and the deleted resource fork, declared 0 by a writer
+nobody here drove. `run_diff.py` grades their bytes against `unar`
+manifests like any fixture, and `tools/run_sitopt.py`'s lane 15 grades
+the six header bytes, which a manifest does not record. One byte
+changed — the 255 to a 1 — makes that lane fail twice and the engine
+refuse the archive, measured.
+
+**Both outer files are MacBinary-wrapped SELF-EXTRACTING archives**
+(`APPL`/`aust`, a 22,532-byte extractor in the resource fork), so the
+pair `sitopt-wild-*.sea.bin` → `derived-*.sit` exercises the envelope
+chain as well.
+
+**What is still only this project's own output** is the four REVERSIBLE
+Optimizers and all five ciphers: 21,767 wild entry headers carry five
+Optimizer bits, in three archives, and every one is `Text 1`'s
+(OPEN_ITEMS.md).
+
+### The version byte, across 16,727 wild archives
+
+The published table calls the byte at +14 *"Version (meaning not quite
+clear)"*. Measured 2026-10-06 over 16,727 classic StuffIt archives read
+by `tools/scan_discmaster.py`: **14,030 carry 2, 2,600 carry 1 and 97
+carry 6 — and nothing else.** Every 6 is an `ST65` archive, StuffIt
+InstallerMaker 6.5's magic, so the byte tracks the writer rather than
+the container: 1 is 1.5.1's, 2 is everything from 2.0 on, and 6 arrives
+with that installer. **It does not identify StuffIt 2.x**, which is why
+the Optimizer bit was the key the sweep had to use.
 
 **The CRC field says which kind an entry is.** Where the module is
 exactly reversible the header carries the ORIGINAL file's CRC-16 — the
@@ -3258,7 +3306,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 945 fixtures byte-exact against `unar` manifests
+- Differential: 949 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -5150,7 +5198,7 @@ of it: **−7.95 %**.
 **The three envelope rows are the same change and it is not a decoder at all:**
 `unc_macbinary_probe` moved ahead of the 64 KB backwards scan that
 `unc_zipseg_probe` runs on every file, and the scan itself became a pointer
-walk. MacBinary is 234 of the 929 fixtures.
+walk. MacBinary is 234 of the 929 fixtures the measurement was taken over.
 
 **A real zip is unchanged**, which is the control: `4acalc.zip` is 8 KB, it
 finds its end-of-central-directory record in the first window and always
@@ -6590,7 +6638,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 945 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 949 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 

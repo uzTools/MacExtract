@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 945 fixtures in `./ci.sh`.
+byte-exact against the oracle across 949 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -244,7 +244,7 @@ preload nothing reaches*).
 
 | what is left | what would move it |
 |---|---|
-| `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **a Mac OS 8.x image.** The rest of the item went 2026-09-27 (`tools/derive_sit5crypt.py`). No archive in reach sets bit 5 — 47 scanned, and the Deluxe CD holds none — and the only comment UI is StuffIt Deluxe 5.0.1, which will not run: the file-system route is disproved in all four combinations of boot and application volume, so the trigger is Mac OS 9.2 itself. This machine has no Mac OS install media. That it marks a comment is a **hypothesis** (DECISIONS.md 2026-09-27, *the file system was never the problem*) |
+| `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **three boots nobody has done.** No archive in reach sets bit 5 (47 scanned), and the only comment UI is StuffIt Deluxe 5.0.1, which Mac OS 9.2 refuses. **The media stopped being the blocker on 2026-10-06**: the retail Mac OS 8.6 install CD is on this disk, bootable HFS, 665,600,000 B (`tools/vmac/README.md`, *Mac OS 8.6 media*; BLOCKERS.md for the withdrawal). Unmeasured, in order: does `qemu-system-ppc -M mac99` boot 8.6, does 5.0.1 run on it, does its comment UI set bit 5 — the last still a **hypothesis** (DECISIONS.md 2026-09-27, *the file system was never the problem*) |
 | `fmt_binhex.c`, `fmt_uu.c`, `unc_internal.h` — macutils' four rules about mailed text | **a second reader per rule, and each is blocked differently** — which is why it will not close in one go. Checked 2026-09-27: mpack is LF-only so it cannot state the CR rule; deark errors on a stray character and mpack keeps the decoded prefix, so neither restates the whole-line garbage skip; mpack's second-document handling is a separator inside one part, not a rescan; and nothing else implements UUTool's MU layout. Two of the six left for mpack that day (TESTING.md; NOTICE). **Our use of all four is graded** — `tools/run_uu.py`'s gapped sets and the multi-part fixtures — so what is stuck is the citation, not the behaviour |
 | `fmt_packit.c` — the resync strategy and both ciphers | **a second implementation of `PMa5`/`PMa6`.** deark's `packit.c` handles `PMag` and `PMa4` only and errors where this resyncs; appendix B lists "PMa5" twice and cannot name the fourth word. **Our use is graded**: `unar -p` reads both ciphers back every run (FORMATS.md, *Encryption*) |
 
@@ -277,7 +277,7 @@ compressed streams. What is left:
 
 **AppleLink packages would have joined this list on 2026-10-05** — the
 fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
-`.pkg` is 6 of 945 fixtures and it draws uniformly — so the suite got a lane
+`.pkg` is 6 of 949 fixtures and it draws uniformly — so the suite got a lane
 that bends those six directly instead: 300 mutants, a fixed seed, 270 of
 them still sniffing as a package and every one decoding without a sanitizer
 report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a
@@ -298,9 +298,9 @@ held. One thing is left, and it is a run rather than a file:
 
 | what is left | what would close it |
 |---|---|
-| **the six specimens found on 2026-10-06 have not been on a Macintosh.** The two oldest packages and the six synthesised ones have (FORMATS.md, *Run on a Macintosh*), and the six new ones are the ones carrying the folders, the stored forks and a member that expands to 541,179 B | **`tools/vmac/run.py --mem 1M --expect` over the six**, which is the same command the other eight were run with. What it would measure that Linux cannot: the `'OVLY'` image, the real sniff path, and whether a 541 KB member fits a 1 MB Macintosh's volume at all |
+| **the six specimens found on 2026-10-06 have not been on a Macintosh**, and they are the ones with the folders, the stored forks and a 541,179 B member (FORMATS.md, *Run on a Macintosh*) | **`tools/vmac/run.py --mem 1M --expect` over the six** — the command the other eight were run with. It would measure the `'OVLY'` image, the real sniff path, and whether 541 KB fits a 1 MB machine's volume |
 
-## StuffIt 2.0: everything it writes, and the one thing left over
+## StuffIt 2.0: the modules that are still only this project's own output
 
 **Everything StuffIt Deluxe 2.0.1 writes with what was in its box is
 extracted** as of 2026-10-02, each graded against an archive it wrote
@@ -309,9 +309,13 @@ a 1.5.1-compatible archive, a folder, and a **self-extracting archive**
 (FORMATS.md, *What an Optimizer did to the fork*, *The three ways 2.0.1
 encrypts*; TESTING.md, the sitopt suite's 28 archives).
 
-One thing is left, and it is not a decoder:
+**`Text 1` stopped being one of them on 2026-10-06**: two Giga-ROM CD
+archives carry an entry it optimized, at methods 8 and 3, with the 255
+marker and the deleted resource fork, and both are fixtures
+(FORMATS.md, *Two optimized archives nobody here made*). What is left
+is narrower than the row this replaces, and the search that narrowed it
+is worth not repeating:
 
-- **Nothing has seen an archive this project did not make.** All 28 are
-  2.0.1's own output under Mini vMac — the writer rather than a
-  synthesiser, so the reading is graded against authentic bytes — but
-  one subject per module, chosen here.
+| what is left | what would close it |
+|---|---|
+| **the four REVERSIBLE Optimizers and all five ciphers are graded only on archives this project made** — `Sound 1`, `Photoshop 1`, `JPEG Lossy`, `MacPaint 1`, `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **a wild archive carrying one.** The sweep has been run: **21,767 entry headers in 16,727 archives**, two keys, **5 Optimizer bits in 3 archives, every one `Text 1`'s**, 38 encrypted, 8 `NewDE` (TESTING.md, *Searching somebody else's index by content*). So they are rare, not absent; the widening is more archives or deeper walks by the same key. A wild ENCRYPTED archive grades a refusal rather than a decryption unless its password is published beside it |

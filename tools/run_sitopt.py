@@ -101,6 +101,8 @@ What this CANNOT see:
     tools/run_sitopt.py --macextract build/macextract
 """
 import argparse
+import hashlib
+import json
 import os
 import subprocess
 import sys
@@ -113,6 +115,7 @@ sys.path.insert(0, os.path.join(HERE, "vmac"))
 import run as R                                          # noqa: E402
 
 SPECIMENS = os.path.join(R.VMAC_HOME, "specimens", "sitopt")
+FIXTURES = os.path.join(REPO, "fixtures")
 MADE = os.path.join(SPECIMENS, "make2")
 UNSTUFFED = os.path.join(SPECIMENS, "unstuff1", "unstuffed.bin")
 PAINT = os.path.join(SPECIMENS, "paintmake")
@@ -787,6 +790,85 @@ def main():
         else:
             print("run_sitopt: no psfold1 specimen — a FOLDER 2.0.1 stuffed "
                   "is not graded (sitopt.py --psfold)")
+        # 15. THE ONLY OPTIMIZED ARCHIVES NOBODY HERE MADE.
+        #
+        # Everything above is 2.0.1's own output under Mini vMac, which
+        # is authentic but one subject per module, chosen here. These
+        # two are FIXTURES — Giga-ROM CD icon collections from 1992,
+        # found on 2026-10-06 by walking 7,929 wild classic StuffIt
+        # archives' entry chains over HTTP `Range`
+        # (DECISIONS.md 2026-10-06, *the Optimizer that was in somebody
+        # else's corpus*) — so `run_diff.py` already grades their bytes
+        # against `unar` manifests. What it does not grade is the six
+        # header bytes this engine's whole reading of the Optimizer
+        # rests on, which is what this lane is for.
+        #
+        # Both carry `Text 1`: the id 255 that means CANNOT BE UNDONE,
+        # and the resource fork it deletes. The method under the bit is
+        # the point — 8 in one, **3** in the other, where this
+        # project's own archives only ever reached 0, 2, 5, 6 and 8 —
+        # so a reader that masked the nibble wrongly would fail on an
+        # archive it had never seen.
+        wild = [("derived-QK_2.1_icon_family.sit", "QK 2.1 icon info", 8),
+                ("derived-SoundEdit_icon_family.sit",
+                 "SoundEdit\u2122 icon info", 3)]
+        seen = 0
+        for fx, entry, method in wild:
+            path = os.path.join(FIXTURES, fx)
+            man = os.path.join(FIXTURES, "manifests", fx + ".json")
+            if not os.path.exists(path) or not os.path.exists(man):
+                continue
+            seen += 1
+            blob = open(path, "rb").read()
+            # The optimized entry is the last header the walk reaches;
+            # find it by name rather than by position.
+            at, hdr = 22, None
+            while at + 112 <= len(blob):
+                nl = min(blob[at + 2], 63)
+                if blob[at + 3:at + 3 + nl].decode("mac-roman") == entry:
+                    hdr = blob[at:at + 112]
+                    break
+                at += 112 + int.from_bytes(blob[at + 92:at + 96], "big") \
+                    + int.from_bytes(blob[at + 96:at + 100], "big")
+            if hdr is None:
+                problems.append("%s: no entry called %r" % (fx, entry))
+                continue
+            rm, dm = hdr[0], hdr[1]
+            if not (dm & 0x40):
+                problems.append("%s: %r's data method byte is 0x%02x and "
+                                "carries no Optimizer bit" % (fx, entry, dm))
+            if (dm & 0x0F) != method:
+                problems.append("%s: %r is method %d under the bit, not %d"
+                                % (fx, entry, dm & 0x0F, method))
+            if hdr[106] != 255 or hdr[108] != 0:
+                problems.append("%s: %r's optimizer bytes are %d/%d, and "
+                                "`Text 1` writes 255 with no resource fork"
+                                % (fx, entry, hdr[106], hdr[108]))
+            if int.from_bytes(hdr[84:88], "big") != 0:
+                problems.append("%s: %r declares a resource fork, and "
+                                "`Text 1` deletes it" % (fx, entry))
+            # 255 must be DECODED, not refused: those are the only
+            # bytes that exist (src/fmt_sit.c).
+            o = os.path.join(work, "wild-" + fx)
+            rc, msg = extract(args.macextract, path, o)
+            want = [e for e in json.load(open(man))["entries"]
+                    if e["name"] == entry]
+            got = os.path.join(o, entry)
+            if rc != 0 or not os.path.exists(got):
+                problems.append("%s did not extract: %s"
+                                % (fx, msg.strip()[:120]))
+            elif want and hashlib.sha256(
+                    open(got, "rb").read()).hexdigest() != \
+                    want[0]["data_sha256"]:
+                problems.append("%s: %r is not the oracle's bytes"
+                                % (fx, entry))
+            if os.path.exists(got + ".rsrc"):
+                problems.append("%s: a resource fork was written for %r"
+                                % (fx, entry))
+        if seen != len(wild):
+            print("run_sitopt: %d of %d wild optimized fixtures present — "
+                  "the rest is not graded (fixtures/SOURCES.md)"
+                  % (seen, len(wild)))
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -794,7 +876,8 @@ def main():
         print("run_sitopt: %s" % p)
     print("run_sitopt: 28 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
-          "Engine, %d problem(s)" % len(problems))
+          "Engine, plus 2 optimized archives nobody here made, "
+          "%d problem(s)" % len(problems))
     return 1 if problems else 0
 
 
