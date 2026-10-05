@@ -1880,6 +1880,30 @@ a harness can click is not the same list.
   contradiction smell at its cheapest: the weak claim was already
   shipping.
 
+- **"ZipIt 1.x upper-cased the names it put in the zip and kept the
+  Macintosh ones in the field."** FORMATS.md's *ZipIt's own archives*
+  and OPEN_ITEMS.md's row for the `0x2605` FileName, both from
+  2026-10-04, withdrawn 2026-10-05. Of the three 1.x writers here only
+  one did: ZipIt 1.4's own distribution zip and the Japanese 1.x's
+  carry `Read me`, `Mac SEA` and `Drop files here to zip`, spaces and
+  mixed case intact. The conversion is a **user preference** — ZipIt
+  1.4's resource fork holds a `DOSN` boolean, "dosify filenames", and
+  the help text "Convert filenames to MS-DOS compatible format (8.3,
+  uppercase)" — so the population that diverges is "whoever left that
+  checkbox on", which no version number bounds. **Cost: nothing in
+  code — it never reached any.** What it cost was the only estimate
+  anyone had of how likely the open item is ever to matter: filed as a
+  habit of writers that stopped shipping in 1995, where the real answer
+  is a switch any ZipIt can still have on. **Why it survived:** both
+  halves of the disproof were inside ONE archive this suite already
+  extracts byte-exact on every run — the counter-example names are what
+  `macextract l` prints for ZipIt 1.4's own distribution zip, and the
+  switch is in the application that zip carries — so it was two
+  commands from a file already on the disk, and the claim was written
+  about a version because a version is what the specimen table records
+  (DECISIONS.md 2026-10-05, *a leaf is not a path, and a version is not
+  a preference*).
+
 ### Corrected figures and superseded write-ups
 
 - **`fuzz_cover.py`'s noise floor: "seeds 11 and 12 over an identical

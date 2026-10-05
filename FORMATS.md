@@ -3651,11 +3651,43 @@ each.** A `0x2605` field carries APPNOTE's "full Macintosh filename" and
 this engine does not read it; over 20 real `0x2605` entries the zip's
 name, the field's name and the MacBinary header's name agree 16 times.
 XADMaster renames a MacBinary entry to the header's name, which loses
-`(OS X)` off one of ZipIt 2.2.2's; ZipIt 1.x upper-cased the names it put
-in the zip and kept the Macintosh ones in the field, which this engine
-then misses on three. **Every entry this build can extract is in the
-agreeing 16**, so nothing was changed for it (OPEN_ITEMS.md has what it
-would cost).
+`(OS X)` off one of ZipIt 2.2.2's; one archive's names were converted to
+MS-DOS form before they went into the zip, the Macintosh ones kept in
+the field, and this engine misses those three. **Every entry this build
+can extract is in the agreeing 16**, so nothing was changed for it
+(OPEN_ITEMS.md has what it would cost).
+
+**The name coupling, re-measured 2026-10-05.** Every `0x2605` field on
+this disk — the nine specimens' 22 and `NPWritersKit.zip`'s, **23** —
+read off the bytes and compared with the zip's own leaf:
+
+| | |
+|---|---|
+| fields | 23 = 3 on directories + 3 Implode + 17 MacBinary payloads |
+| FileName differs from the zip's leaf | **3**, every one Zip method 6 in `zipit-Psycho_1.0b1.zip` |
+| …of those, on an entry this build decodes | **0** |
+| longest FileName, and the field's end within the extra record | 29 B, 46 B — every one of the 23 is the FIRST field, so the streamed reader's 64-byte `exbuf` reaches all of them |
+
+`tools/run_zipit.py` sweeps that coupling on every `ci.sh` run now and
+fails if a divergent FileName ever lands on a method the build reads
+(TESTING.md, *ZipIt's own archives*).
+
+**The conversion is a PREFERENCE, not a version — measured.** ZipIt 1.4's own
+distribution zip and the Japanese 1.x's keep mixed case and spaces —
+`Read me`, `Mac SEA`, `Drop files here to zip` — and 1.4's resource fork
+carries the switch that explains the one archive that does not: a
+`DOSN` boolean, "dosify filenames", help text "Convert filenames to
+MS-DOS compatible format (8.3, uppercase)". So the population that
+diverges is "archives whose author left that on", which no version
+number bounds (BLOCKERS.md, *Withdrawn claims*).
+
+**A leaf is not a path, and that bounds what the substitution buys —
+measured.** `Psycho!v1.0ß1.zip`'s three entries sit under `PSYCHO!/`, for which the
+archive holds **no entry and no field** — ZipIt writes the long field
+on directories, but only where it stores them. Substituting the field's
+leaf therefore recovers `Psycho!`, `READ ME` and `Sample` and leaves the
+enclosing folder upper-cased: 3 of the 4 wrong name components in the
+only archive here where it changes anything.
 
 **One of them is a Macintosh Implode archive.** `Psycho!v1.0ß1.zip`
 (`zipit-Psycho_1.0b1.zip` on disk, since a specimen name has to be

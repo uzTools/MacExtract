@@ -32,7 +32,7 @@ a user hands one over, and compared with their data fork's extraction.
 well, so `run_diff.py` grades a real ZipIt archive of each shape with
 no oracle at run time.
 
-Five things are checked, and the tallies in EXPECT are asserted so that
+Six things are checked, and the tallies in EXPECT are asserted so that
 a download that changed, or a parse that stopped parsing, fails here
 instead of going quiet:
 
@@ -45,7 +45,13 @@ instead of going quiet:
      and both fork lengths;
   4. `x` against `unar`: every data and resource fork byte for byte;
   5. and for the four that arrived wrapped, `x` on the whole file
-     against `x` on its data fork — the auto-unwrap route.
+     against `x` on its data fork — the auto-unwrap route;
+  6. every `0x2605` FileName against the zip's own leaf, over these
+     nine and `fixtures/*.zip` both. APPNOTE.TXT 4.6.4 calls the field
+     the "full Macintosh filename" and this engine extracts under the
+     zip's name instead; the two agree on everything it can decode, and
+     a divergence on method 0 or 8 fails here, because that is the day
+     the substitution OPEN_ITEMS.md keeps open starts mattering.
 
 **What it cannot see.** The probe's own reasoning: these nine all
 carry a well-formed record, so nothing here can fail on a corroboration
@@ -55,11 +61,15 @@ fork of an entry whose method is out of v1 scope, and UNGRADED below
 names every one with the reason. And it adjudicates no date: `lsar`
 reports zip's own MS-DOS stamp where a `0x2605` entry's MacBinary
 header carries two Macintosh ones, so the two are not the same field.
+Check 6 reads these nine and `fixtures/*.zip` and nothing else, so a
+ZipIt archive arriving in the corpus inside a `.hqx` or a `.sea`
+carries fields it never sees; it prints what it swept.
 
 Nothing here fails when the specimens are absent — it prints what it
 skipped and returns 0, so a fresh clone stays green.
 """
 import argparse
+import glob
 import json
 import os
 import shutil
@@ -535,6 +545,60 @@ def refused_names(ents):
                for e in ents if e["method"] not in (0, 8))
 
 
+def diverging_names(ents):
+    """Every `0x2605` entry whose FileName is NOT the zip's own leaf.
+
+    APPNOTE.TXT 4.6.4 calls the field the "full Macintosh filename" and
+    this engine extracts under the zip's name instead; the two agree on
+    every entry any build here can decode, and where they do not the
+    method is out of v1 scope. Returns (our name, the field's leaf,
+    method) for each."""
+    out = []
+    for e in ents:
+        fname = long_field_name(e)
+        if fname is None:
+            continue
+        leaf = e["name"].rstrip(b"/").split(b"/")[-1]
+        if fname != leaf:
+            out.append((e["name"].rstrip(b"/").decode("mac_roman"),
+                        fname.decode("mac_roman"), e["method"]))
+    return out
+
+
+def grade_name_coupling(paths):
+    """Does a divergent `0x2605` FileName ever sit on an entry this
+    build DECODES? That coupling is why OPEN_ITEMS.md keeps the leaf
+    substitution open instead of taking it, and it was measured by hand
+    once. No oracle and no engine run: the field and the zip's own name
+    both come off the bytes."""
+    arch = fields = diverged = reachable = 0
+    for p in paths:
+        try:
+            with open(p, "rb") as fh:
+                d = macbinary_datafork(fh.read())
+        except OSError:
+            continue
+        ents = walk(d)
+        if ents is None:
+            continue
+        arch += 1
+        refused = refused_names(ents)
+        fields += sum(1 for e in ents if long_field_name(e) is not None)
+        for nm, fname, method in diverging_names(ents):
+            diverged += 1
+            if nm in refused:
+                continue
+            reachable += 1
+            print("zipit: %s: %r carries 0x2605 FileName %r and method %d "
+                  "IS decoded here — the leaf substitution OPEN_ITEMS.md "
+                  "keeps open has become observable"
+                  % (os.path.basename(p), nm, fname, method))
+    print("zipit: %d archive(s) swept for 0x2605 names, %d field(s), "
+          "%d divergent, %d of those on an entry this build decodes"
+          % (arch, fields, diverged, reachable))
+    return reachable
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -545,19 +609,27 @@ def main():
 
     paths = [os.path.join(SPECIMENS, n) for n in sorted(EXPECT)]
     have = [p for p in paths if os.path.exists(p)]
+
+    # The name coupling wants neither oracle, so it is swept first and
+    # over the corpus zips as well — on a fresh clone it has nothing to
+    # read and says so with a count of 0.
+    nbad = grade_name_coupling(
+        have + sorted(glob.glob(os.path.join(REPO, "fixtures", "*.zip"))))
+
     if not have:
         print("zipit: no specimens in %s, skipping "
               "(tools/fetch_specimens.py --only zipit)" % SPECIMENS)
-        return 0
+        return 1 if nbad else 0
     for p in paths:
         if p not in have:
             print("zipit: %s absent, not graded" % os.path.basename(p))
     for tool in ("unar", "lsar"):
         if shutil.which(tool) is None:
             print("zipit: %s not installed, skipping" % tool)
-            return 0
+            return 1 if nbad else 0
 
-    bad = entries = macbin = forks = unaided = aliased = skipped = 0
+    bad = nbad
+    entries = macbin = forks = unaided = aliased = skipped = 0
     wrapped = 0
     tally = {0x2605: 0, 0x2705: 0, 0x2805: 0}
     for p in have:

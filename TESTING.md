@@ -3561,7 +3561,7 @@ with **no oracle at run time**, which is stronger than anything this
 suite does. They stay in this suite too, because what it checks of them
 — the fields themselves — a manifest does not record.
 
-Four things run per specimen:
+Six things run, the last of them over the corpus zips as well:
 
 1. **The format, read independently of the engine.** Every ZipIt field
    is parsed in Python: the central copy must equal the local one, and
@@ -3582,6 +3582,16 @@ Four things run per specimen:
    what is underneath a ZipIt `.sea` is a PEF container with the zip
    behind it. The data-fork side of the comparison is the one step 4 has
    already held against `unar`.
+6. **The name coupling.** Added 2026-10-05. Every `0x2605` FileName,
+   across the nine specimens and every `fixtures/*.zip`, compared with
+   the zip's own leaf off the bytes — no `unar`, no engine run — and a
+   divergence that lands on method 0 or 8 is a FAILURE, because that is
+   the day the leaf substitution OPEN_ITEMS.md keeps open starts
+   changing what comes out. **23 fields, 3 divergent, 0 of them
+   decodable** on 2026-10-05, and the count is printed. Made to fail
+   first: one name in a copy of `zipit-1.4` converted the way ZipIt's
+   "dosify filenames" option would have converted it, and the check
+   names the entry and returns non-zero.
 
 **Per-specimen tallies are asserted, and that is the part that matters.**
 `EXPECT` holds entries, one count per field id, and the number of
@@ -3618,7 +3628,20 @@ failures, and moving the `0x2705` flag read by two bytes in
   ZipIt's own `0x2605` FileName is one of the two spellings — which is
   checked, and is what lets the tolerance fail. It is not "ours is
   right": on three of the four it is `unar` that is right
-  (OPEN_ITEMS.md).
+  (OPEN_ITEMS.md). **It can only fail in one direction**, which is why
+  check 6 exists: where the entry has a reachable MacBinary payload a
+  dosified zip name makes `unar` and this engine disagree and the
+  tolerance fails, measured; where it has none — the shape all three
+  Implode entries have, measured, and a stored non-MacBinary `0x2605`
+  entry would have, hypothesis — the tolerance takes the field's own
+  name as `unar`'s expected alias and passes with our name wrong
+  (DECISIONS.md 2026-10-05, *a leaf is not a path, and a version is not
+  a preference*).
+- **Check 6 reads `fixtures/*.zip` and the nine specimens, and nothing
+  else.** A ZipIt archive arriving in the corpus under another
+  extension — inside a `.hqx`, or as a `.sea` — carries fields it would
+  not see. It prints the number of archives it swept, so a sweep that
+  found nothing is visible rather than silent.
 
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 

@@ -335,6 +335,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
 - 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
 - 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
+- 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
 
 ---
 
@@ -20510,10 +20511,13 @@ times. The four that differ split evenly:
   and in the field, and 22 inside the MacBinary header. XADMaster renames the
   entry to the header's name and **loses `(OS X)`**; this engine keeps the
   zip's, and the field backs it.
-- ZipIt 1.x upper-cased the names it put in the zip — `PSYCHO!`, `README`,
-  `SAMPLE` — and kept `Psycho!`, `READ ME`, `Sample` in the field.
-  XADMaster recovers them; **this engine writes the PC-safe name**, and
-  `README` has even lost a space.
+- One archive's names went into the zip converted to MS-DOS form —
+  `PSYCHO!`, `README`, `SAMPLE` — with `Psycho!`, `READ ME`, `Sample` kept
+  in the field. XADMaster recovers them; **this engine writes the PC-safe
+  name**, and `README` has even lost a space. (Written here as a habit of
+  ZipIt 1.x; corrected 2026-10-05 — it is a per-archive PREFERENCE, and
+  two other 1.x writers here do not do it. See that day's entry, *a leaf
+  is not a path, and a version is not a preference*.)
 
 Nothing was changed for it, because **every entry this build can extract is
 in the agreeing 16**: all four divergent entries are either refused by method
@@ -21265,3 +21269,90 @@ not zeros, in the comment" — and had been declaring 43,521 entries in a
 47-byte directory since the day it was written. The property it tests, a
 signature straddling the backwards scanner's window edge, never depended
 on that. Corrected where it lives, with both bytes written.
+
+---
+
+## 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
+
+The brief was to read ZipIt's `0x2605` FileName — APPNOTE.TXT 4.6.4's
+"full Macintosh filename" — and extract under it, because `READ ME`
+comes out of this engine as `README`. The gate came first: **is the
+substitution observable on anything this build can decode?** It is not,
+and the answer took one probe over the bytes rather than any change to
+the engine.
+
+**Measured.** Every `0x2605` field reachable on this disk — the nine
+ZipIt specimens' 22 and `NPWritersKit.zip`'s — is **23**: three on
+directories, three Zip method 6, seventeen with a MacBinary payload.
+The FileName differs from the zip's own leaf on **3**, every one of
+them method 6 in `zipit-Psycho_1.0b1.zip`, refused per entry. **0 of
+the 23 divergences sit on a method this build reads.** FORMATS.md
+(*ZipIt's own archives*) has the table. So the row stays in
+OPEN_ITEMS.md, coupled to the Implode decision, which is the
+maintainer's and was not going to be taken sideways by a name fix.
+
+Two things the gate turned up that the item had not had.
+
+### A version was a preference
+
+The row and FORMATS.md both said "ZipIt 1.x upper-cased the names it
+put in the zip". Three 1.x writers are on this disk and only one did:
+`macextract l` on 1.4's own distribution zip and on the Japanese 1.x's
+prints `Read me`, `Mac SEA` and `Drop files here to zip`, spaces and
+mixed case intact. The switch is in ZipIt 1.4 itself: extract the
+specimen, read the strings out of the application's resource fork, and
+there is a `DOSN` boolean called "dosify filenames" with the help text
+*"Convert filenames to MS-DOS compatible format (8.3, uppercase)"* and
+a menu item *"Convert all filenames to PC-compatible format"*. The
+transferable part is not the correction, it is **where the disproof was
+sitting**: both halves of it — the counter-example names and the
+switch that explains them — were inside one archive this suite already
+extracts byte-exact on every run, 11 entries of it, and neither had
+ever been looked at. A claim about what a program did is cheapest to
+test when a copy of the program is in the corpus, which is exactly when
+nobody tests it (BLOCKERS.md, *Withdrawn claims*).
+
+It also changes what the open item is worth. Filed as a habit of
+writers that stopped shipping, the divergence looked like a closed
+population. As a checkbox, it is unbounded — any ZipIt, any year,
+whoever left it on.
+
+### A leaf is not a path
+
+The field carries one component. `Psycho!v1.0ß1.zip`'s three entries
+live under `PSYCHO!/`, and the archive holds **no entry and no field
+for that folder** — ZipIt writes the long field on directories, but
+only where it stores them, and this archive stores none. A leaf
+substitution would therefore produce `PSYCHO!/Psycho!`,
+`PSYCHO!/READ ME` and `PSYCHO!/Sample`: three of the four wrong name
+components in the only archive where it changes anything, with the
+remaining one still wrong and nothing in the archive able to fix it.
+The item had been written as "it is the right name in all 20", which is
+true of the field and not of the path it goes into.
+
+### The tolerance that could only fail one way
+
+What was committed is the measurement, not the fix:
+`grade_name_coupling` in `tools/run_zipit.py` sweeps the nine specimens
+and the corpus zips, compares each FileName with the zip's leaf off the
+bytes alone, and fails if a divergence ever lands on method 0 or 8. It
+needs neither `unar` nor the engine, and it was shown to fail before it
+was believed — on a copy of `zipit-1.4` with one name converted the way
+ZipIt would have, it names the entry and returns non-zero.
+
+That copy is also what showed the check is not redundant. The suite
+already had a name tolerance, `alias_of`, written so it could fail:
+`unar` renames a MacBinary entry to its header's name, ours keeps the
+zip's, and the tolerance holds only while ZipIt's own field backs one
+of the two. On the doctored copy — a MacBinary entry whose zip name had
+been dosified — `grade_list` does fail, two rows, as designed. But on
+an entry with **no reachable MacBinary payload** the same function
+takes the field's name as `unar`'s expected alias and passes, which is
+precisely the shape the three Implode entries have — measured: the
+suite is green on them and our name for all three is wrong — and the
+shape a stored non-MacBinary `0x2605` entry would have, which is a
+hypothesis, no such entry being on this disk. **The tolerance could
+fail on the case the engine gets right and not on the case it gets
+wrong.** Asking what evidence a tolerance rests on is in CLAUDE.md;
+asking which direction it can fail in is the same question one turn
+further on.
