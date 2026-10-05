@@ -3344,11 +3344,12 @@ cuts each at three points. `synth-sqp-forks.pkg` is also in
 
 **What no lane here covers, and what was run instead.** None of this
 touches a Macintosh: the images, the Toolbox and the File Manager are
-`tools/vmac/run.py`'s and `sys30.py`'s, and eight packages were put
-through them on 2026-10-05 — 6/6 synthesised and 2/2 real at the 1 MB
-floor, 3/3 on System 3.0, the real ones with `--expect` because a
-specimen has no committed manifest (FORMATS.md, *Run on a Macintosh*).
-**The six specimens added on 2026-10-06 have not been** (OPEN_ITEMS.md).
+`tools/vmac/run.py`'s and `sys30.py`'s, and **all fourteen packages have
+been put through them** — 6/6 synthesised and 2/2 real on 2026-10-05,
+the other six real ones on 2026-10-06, all at the 1 MB floor, plus 3/3
+on System 3.0. The real ones need `--expect` because a specimen has no
+committed manifest, which is also why `sys30.py` cannot take them
+(FORMATS.md, *Run on a Macintosh*).
 Those are not in `ci.sh` and not in `sample.txt`; re-run them from
 `tools/vmac/README.md`.
 

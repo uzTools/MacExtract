@@ -287,19 +287,6 @@ a row here.
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.
 
-## AppleLink `.pkg`: the packages that have not been on a Macintosh
-
-**Every container path the format has is reached by a real package since
-2026-10-06** — a resource fork, both stored bits, version 0 and folders
-to four levels, over **67 forks of 8 packages**, with `gzip` reading 59
-of the streams independently (FORMATS.md, *What the eight real packages
-exercise*; DECISIONS.md 2026-10-06). That closed the item this section
-held. One thing is left, and it is a run rather than a file:
-
-| what is left | what would close it |
-|---|---|
-| **the six specimens found on 2026-10-06 have not been on a Macintosh**, and they are the ones with the folders, the stored forks and a 541,179 B member (FORMATS.md, *Run on a Macintosh*) | **`tools/vmac/run.py --mem 1M --expect` over the six** — the command the other eight were run with. It would measure the `'OVLY'` image, the real sniff path, and whether 541 KB fits a 1 MB machine's volume |
-
 ## StuffIt 2.0: the modules that are still only this project's own output
 
 **Everything StuffIt Deluxe 2.0.1 writes with what was in its box is

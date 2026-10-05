@@ -2797,28 +2797,36 @@ fills**, which is the ceiling the table row at the top of this file
 carries. The 541,179-byte member does not raise it: the tables are sized
 by the code width, not by the fork.
 
-### Run on a Macintosh, 2026-10-05
+### Run on a Macintosh, 2026-10-05 and 2026-10-06
 
-Eight packages — the six synthesised and the two oldest real ones —
+**All fourteen packages** — the six synthesised and all eight real ones —
 through the shipped application on an emulated Mac Plus, so the decoder
 reached the machine through its `'OVLY'` image, the 666-byte probe ran in
 the real sniff path, and the File Manager wrote the forks. No host lane
-can show any of that. **The six specimens found on 2026-10-06 have not
-been on a Macintosh** (OPEN_ITEMS.md), and they are the ones with the
-folders, the stored forks and the 541,179-byte member.
+can show any of that.
 
 | tier | result |
 |---|---|
 | System 6.0.8, 4 MB Mac Plus | **PASS** (`run.py`) |
-| System 6.0.8, **1 MB** floor | **6/6** synthesised packages, and **2/2 of the real ones it was given** (`run.py --mem 1M`, the specimens with `--expect`) |
-| System 3.0 / Finder 5.1, **1 MB** | **3/3** (`sys30.py --mem 1M`) |
+| System 6.0.8, **1 MB** floor | **6/6** synthesised and **8/8 real** (`run.py --mem 1M`, the specimens with `--expect`; the six found on 2026-10-06 added that day) |
+| System 3.0 / Finder 5.1, **1 MB** | **3/3** synthesised. `sys30.py` has no `--expect`, so it grades committed manifests only and a specimen has none |
 
-**The machine's peak heap is the Linux figure plus 16 B, on all eight it
-ran**: 10,848 B for the folder tree up to **41,360 B** for
-`synth-sqp-clear.pkg`, whose table fills, and 13,412 and 17,636 B for
-`Read First.PKG` and `ALink.PKG`. Eight packages, eight figures, one
-constant — which is what says the Mac is running the same allocations and
-not merely the same decoder.
+**A 541,179-byte member fits a 1 MB Macintosh**, which was the open
+question: `MPW Shell 3.2.2.pkg` writes it to the floppy and peaks at
+41,360 B of heap, because the LZW tables are sized by the code width and
+not by the fork. The 31-member package writes 21 files and peaks at
+35,360 B; the four-folder one writes five.
+
+**The machine's peak heap is the Linux figure plus 16 B — on thirteen of
+the fourteen.** 10,848 B for the folder tree up to **41,360 B** wherever
+the table fills, which is now three real packages as well as
+`synth-sqp-clear.pkg`. The exception is `SD! Patcher > 1.8.2.PKG` at
+**8,576 B on both**, and it is the one package whose only fork is
+STORED: the 16 B is attached to something the stored path never
+allocates. One figure out of fourteen breaking a constant is the
+constant being understood rather than assumed — and the other thirteen
+are what say the Mac runs the same allocations and not merely the same
+decoder.
 
 None of these is in `sample.txt`, so no tier TALLY moves: those stay at
 the 71 fixtures their figures were taken on (BLOCKERS.md, the tier
