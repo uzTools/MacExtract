@@ -16,9 +16,9 @@ engine's generic dispatcher (DECISIONS.md 2026-10-05). Its `'Othe' 1` is
 below is named by the binary itself rather than guessed at.
 
 Everything this script implements is cited to a routine and an offset in
-that resource, and `--witness` checks thirteen byte patterns that a
-different build would fail — so a changed input makes this print FAIL
-rather than silently confirm today's reading.
+that resource, and `--witness` checks twenty-nine byte patterns AT the
+offsets they are claimed to sit at — so a changed input makes this print
+FAIL rather than silently confirm today's reading.
 
     tools/derive_sqp.py                  grade the two real packages
     tools/derive_sqp.py --witness        check the reading against the binary
@@ -26,7 +26,10 @@ rather than silently confirm today's reading.
 
 Not in `ci.sh`: it needs the two packages (`tools/fetch_specimens.py
 --only applelink`) and, for `--witness`, the translator resource, which is
-copyrighted and not committed. It skips cleanly without either.
+copyrighted and not committed. It skips cleanly without either. What IS
+in `ci.sh` is `tools/run_sqp.py`, which grades the ENGINE — against these
+packages when they are present, and against `tools/synth_sqp.py` always
+(TESTING.md, *AppleLink packages: SqueezePlay*).
 `tools/vmac/README.md` (*The AppleLink package expander*) has the one
 command that rebuilds the resource from the 3.0.7 installer.
 """
@@ -42,66 +45,119 @@ SPECIMENS = os.path.join(HOME, "specimens", "applelink")
 TRANSLATOR = os.path.join(HOME, "pkgeng", "alink307.bin")
 
 # ---------------------------------------------------------------------------
-# What the reading rests on. Each is a byte pattern in `'Othe' 1` of
-# `AppleLink Package Translator` 3.0.3, with the routine it sits in.
+# What the reading rests on. Each is (offset, what, bytes): a pattern in
+# `'Othe' 1` of `AppleLink Package Translator` 3.0.3, the routine it sits
+# in, and the offset it sits AT — checked at that offset, because six of
+# these patterns occur more than once in the resource and an address is
+# half of what identifies them.
 WITNESSES = [
-    ("RdSQPDirectory @0x5e72: reads an 86-byte record",
+    (0x5e76, "RdSQPDirectory @0x5e72: reads an 86-byte record",
      "70562d40fffc486df814"),
-    ("WrSQPDirectory @0x5f80: seeks to 86 * index ...",
+    (0x5e10, "RdHFSDirectory @0x5e06: reads FOUR bytes, then the same 86",
+     "70042d40fffc"),
+    (0x5fb6, "WrSQPDirectory @0x5f80: seeks to 86 * index ...",
      "c2fc00564842c4fc0056"),
-    ("WrSQPDirectory: ... + 10, and writes from node+12",
+    (0x5fc6, "WrSQPDirectory: ... + 10, and writes from node+12",
      "740ad282"),
-    ("WrHFSDirectory @0x5eb2: HFS directory at 86 * count + 22",
+    (0x5ed6, "WrHFSDirectory @0x5eb2: HFS directory at 86 * count + 22",
      "7056c1ee00127216"),
-    ("WrHFSDirectory: 90-byte records, written from node+8",
+    (0x5ee8, "WrHFSDirectory: 90-byte records, written from node+8",
      "c4fc005a4843c6fc005a"),
-    ("ResetDecompressor @0x25ac: code width starts at 9",
+    (0x3074, "ReadFileAndBuildLinkedList @0x2faa: the version is 0 or 1",
+     "0c400001"),
+    (0x309a, "ReadFileAndBuildLinkedList: version 1's second header is at "
+             "86 * count + 10", "c1fc0056d07c000a"),
+    (0x31be, "ReadFileAndBuildLinkedList: a version-0 item is level 1 and "
+             "not a folder", "397c00010008426c000a"),
+    (0x118e, "CalculateFolderSize @0x113c: a non-zero folder flag recurses",
+     "4a68000a"),
+    (0x11d0, "CalculateFolderSize: a folder owns the items after it whose "
+             "level is greater", "bc680008"),
+    (0x25b2, "ResetDecompressor @0x25ac: code width starts at 9",
      "3b7c0009fef0"),
-    ("ResetDecompressor: first free code is 257",
+    (0x25e2, "ResetDecompressor: first free code is 257",
      "3b7c0101feec"),
-    ("Decompress @0x2a78: 256 is the clear code",
+    (0x2abe, "Decompress @0x2a78: 256 is the clear code",
      "0c470100"),
-    ("Decompress: the table stops growing at 8192",
+    (0x2ae0, "Decompress: a clear sets the next free code to 256 — which is "
+             "`compress`'s own `free_ent = FIRST - 1`", "3b7c0100feec"),
+    (0x2b46, "Decompress: the table stops growing at 8192",
      "0c472000"),
-    ("GetCode @0x2b98: the 13th bit is the last",
+    (0x2bd2, "GetCode @0x2b98: the 13th bit is the last",
      "700db06dfef0"),
-    ("GetExpandedSize @0x13ac: node+88 + node+92 is the expanded size",
+    (0x2632, "ResetCompressor @0x260e: the hash table is 8,599 entries",
+     "2e3c00002197"),
+    (0x288e, "Compress @0x27de: the table is cleared when it FILLS, and "
+             "this binary has no other reason to clear it", "0c6d2000fec4"),
+    (0x29f2, "PutCode @0x28fe: writing a clear takes the width back to 9",
+     "3b7c0009fecc"),
+    (0x13cc, "GetExpandedSize @0x13ac: node+88 + node+92 is the expanded size",
      "202c0058d0ac005c"),
-    ("DoWork @0x0: bit 1 of node+96 selects stored over LZW",
-     "082b00010060"),
-    ("DoWork: a stored fork's length comes from node+92",
+    (0x0618, "DoWork @0x0: bit 1 of the flag byte at node+96 selects stored "
+             "over LZW for the DATA fork", "082b00010060"),
+    (0x0532, "DoWork: a stored data fork's length comes from node+92",
      "2e2b005c"),
+    (0x0714, "DoWork: there is a resource fork when node+16 is non-zero",
+     "4aab0010"),
+    (0x096e, "DoWork @0x96e: bit 2 of the SAME byte selects stored for the "
+             "RESOURCE fork", "082b00020060"),
+    (0x0976, "DoWork: a stored resource fork's length comes from node+88",
+     "2e2b0058"),
+    (0x0bea, "DoSqForward @0xb60: a package is created as type 'HBSF', "
+             "creator 'GEOL'", "2f3c47454f4c2f3c48425346"),
+    (0x0c46, "DoSqForward: the header's count byte is capped at 50",
+     "0c470032"),
+    (0x1d62, "DoItemsForward @0x1ca2: and the SQP directory takes only the "
+             "first 50 items", "7032b050"),
 ]
 
 # ---------------------------------------------------------------------------
 # The container.
 #
-# Source: WrSQPDirectory @0x5f80 writes record `i` at 86*i + 10 and takes
-# its 86 bytes from the in-memory node at node+12; WrHFSDirectory @0x5eb2
-# writes the second directory at 86*count + 22, 90 bytes per record taken
-# from node+8 — so an HFS record is the same fields with four more bytes
-# in front of them, and a field at SQP record +N is at node +N+12.
+# Source: ReadFileAndBuildLinkedList @0x2faa is the reader, and it is
+# what the layout below is taken from; DoSqForward @0xb60,
+# WrSQPDirectory @0x5f80 and WrHFSDirectory @0x5eb2 are the writer and
+# agree with it from the other side.
 #
-#   +0    u8      number of items
-#   +1    u8      version (1)
-#   +2    u8[8]   zero
+#   +0    u8      number of items in the SQP directory (<= 50)
+#   +1    u8      version: 0 or 1
+#   +2    u8[8]   eight bytes, zero in both packages, read by nothing
 #   +10           SQP directory: count x 86-byte records
-#   +86n+10 u32   number of items, again; u8[8] zero
-#   +86n+22       HFS directory: count x 90-byte records
-#   +86n+22+90n   the members' bytes, in record order
+#
+#   version 0 ends there: those ARE the items, each at level 1 and none
+#   a folder (@0x31be). version 1 carries a second directory, and it is
+#   the one the expander reads:
+#
+#   +86n+10 u32   number of items in the HFS directory; u8[8] zero
+#   +86n+22       HFS directory: count x 90-byte records --
+#                 u16 level, u16 non-zero if a FOLDER, then the same 86
+#   then           the members' bytes
+#
+#   The two counts need not agree. The SQP directory is a flat list of
+#   the FILES, capped at 50, skipping anything typed 'HBSF', 'PIT ' or
+#   'SIT!' (@0x1d5e) -- so a package with a folder in it has an 86-byte
+#   hole where that item's SQP record would be. The header's count is
+#   what LOCATES the HFS directory; the item count is the second
+#   header's.
 #
 #   -- an SQP record, with the routine that names each field --
-#   +8    u32     compressed length          DoWork, the copy loop's budget
-#   +12   u32     absolute offset of the member   DoWork @0x606, SetFPos
-#   +20   OSType  file type                  the field the engine tests
-#   +24   OSType  creator
-#   +28   u16     Finder flags
+#   +0    u32     zero; written as zero (AddItems @0x239c), read nowhere
+#   +4    u32     resource fork's compressed length   DoWork @0x714, @0x944
+#   +8    u32     data fork's compressed length       DoWork @0x45a, @0x5ce
+#   +12   u32     data fork's absolute offset         DoWork @0x606, SetFPos
+#   +16   u32     resource fork's absolute offset     DoWork @0x816
+#   +20   FInfo   16 bytes: type, creator, Finder flags, location, folder
 #   +36   Str31   name (32 bytes)
 #   +68   u32     creation date
 #   +72   u32     modification date
-#   +76   u32     resource fork length       GetExpandedSize, node+88
-#   +80   u32     data fork length           GetExpandedSize, node+92
-#   +84   u16     flags; bit 1 = stored      DoWork @0x618, btst #1
+#   +76   u32     resource fork's expanded length     GetExpandedSize, node+88
+#   +80   u32     data fork's expanded length         GetExpandedSize, node+92
+#   +84   u8      flags: bit 1 = data fork stored, bit 2 = resource fork
+#                 stored (DoWork @0x618 and @0x96e, both `btst` on the
+#                 BYTE). Bit 7 is set by InitSqp @0x5d56 and tested
+#                 nowhere; bits 3 to 6 are the list's own state and are
+#                 cleared when a package is read (@0x312c).
+#   +85   u8      zero
 # sha256 of each member's expanded data fork, recorded 2026-10-05 from the
 # reading below. These are the regression oracle: nothing else here can
 # tell a decoder that is subtly wrong from one that is right, because the
@@ -121,43 +177,85 @@ EXPANDED = {
 HDR = 10
 SQP_REC = 86
 HFS_REC = 90
-F_STORED = 1 << 1
+SQP_MAX = 50
+F_STORED_DATA = 1 << 1
+F_STORED_RSRC = 1 << 2
+
+
+def _record(r):
+    """The 86 bytes, as fields."""
+    return {
+        "rclen": struct.unpack(">I", r[4:8])[0],
+        "dclen": struct.unpack(">I", r[8:12])[0],
+        "doff": struct.unpack(">I", r[12:16])[0],
+        "roff": struct.unpack(">I", r[16:20])[0],
+        "type": r[20:24].decode("mac-roman"),
+        "creator": r[24:28].decode("mac-roman"),
+        "finder": struct.unpack(">H", r[28:30])[0],
+        "name": r[37:37 + r[36]].decode("mac-roman", "replace"),
+        "ctime": struct.unpack(">I", r[68:72])[0],
+        "mtime": struct.unpack(">I", r[72:76])[0],
+        "rlen": struct.unpack(">I", r[76:80])[0],
+        "dlen": struct.unpack(">I", r[80:84])[0],
+        "flags": r[84],
+    }
 
 
 def directory(d):
-    """(count, [record]) — the SQP directory."""
+    """(version, sqp_count, [record]) — the items, from whichever
+    directory the expander would read."""
     if len(d) < HDR:
         raise ValueError("shorter than a header")
-    count, version = d[0], d[1]
+    sqp_count, version = d[0], d[1]
+    if version > 1:
+        raise ValueError("version %d is not 0 or 1" % version)
     recs = []
-    for i in range(count):
-        p = HDR + SQP_REC * i
-        r = d[p:p + SQP_REC]
-        if len(r) < SQP_REC:
-            raise ValueError("directory runs off the end")
-        recs.append({
-            "clen": struct.unpack(">I", r[8:12])[0],
-            "off": struct.unpack(">I", r[12:16])[0],
-            "type": r[20:24].decode("mac-roman"),
-            "creator": r[24:28].decode("mac-roman"),
-            "finder": struct.unpack(">H", r[28:30])[0],
-            "name": r[37:37 + r[36]].decode("mac-roman", "replace"),
-            "ctime": struct.unpack(">I", r[68:72])[0],
-            "mtime": struct.unpack(">I", r[72:76])[0],
-            "rlen": struct.unpack(">I", r[76:80])[0],
-            "dlen": struct.unpack(">I", r[80:84])[0],
-            "flags": struct.unpack(">H", r[84:86])[0],
-        })
-    return count, version, recs
+    if version == 0:
+        for i in range(sqp_count):
+            p = HDR + SQP_REC * i
+            r = d[p:p + SQP_REC]
+            if len(r) < SQP_REC:
+                raise ValueError("directory runs off the end")
+            rec = _record(r)
+            rec["level"], rec["folder"] = 1, 0
+            recs.append(rec)
+        return version, sqp_count, recs
+    base = SQP_REC * sqp_count + HDR
+    if len(d) < base + 12:
+        raise ValueError("no second header")
+    n = struct.unpack(">I", d[base:base + 4])[0]
+    for i in range(n):
+        p = base + 12 + HFS_REC * i
+        r = d[p:p + HFS_REC]
+        if len(r) < HFS_REC:
+            raise ValueError("HFS directory runs off the end")
+        rec = _record(r[4:])
+        rec["level"] = struct.unpack(">H", r[0:2])[0]
+        rec["folder"] = struct.unpack(">H", r[2:4])[0]
+        recs.append(rec)
+    return version, sqp_count, recs
 
 
-def hfs_directory_at(count):
-    """Source: WrHFSDirectory @0x5eb2 — 86 * count + 22."""
-    return SQP_REC * count + 22
+def members_start(version, sqp_count, n):
+    """Source: DoSqForward @0xc8e reserves 86 * count, then writes 12
+    bytes and reserves 90 * n."""
+    if version == 0:
+        return HDR + SQP_REC * sqp_count
+    return SQP_REC * sqp_count + 22 + HFS_REC * n
 
 
-def members_start(count):
-    return hfs_directory_at(count) + HFS_REC * count
+def paths(recs):
+    """The path of each item, folders applied: CalculateFolderSize
+    @0x113c reads the items after a folder whose level is greater as its
+    children."""
+    out, stack = [], []
+    for r in recs:
+        del stack[max(r["level"] - 1, 0):]
+        name = r["name"].replace("/", ":")
+        out.append("/".join(stack + [name]))
+        if r["folder"]:
+            stack.append(name)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -233,10 +331,14 @@ class GetCode:
 def decompress(data, stats=None):
     """Decompress @0x2a78.
 
-    CORRECTION to anyone's memory of Unix `compress`: on a clear code
-    this expander sets the next free code to **256**, not 257 (@0x2ae0),
-    so the clear code's own slot is reused from then on. That is what the
-    binary does and it is not what `compress` does.
+    On a clear code this expander sets the next free code to **256**
+    (@0x2ae0), so the clear code's own slot is reused from then on. That
+    is what `compress` itself does — `free_ent = FIRST - 1` in
+    reference/macutils/macunpack/de_compress.c — and the claim that it
+    was a DEVIATION from compress is withdrawn (BLOCKERS.md). What sets
+    257 is deark's rendering of the same algorithm, and `src/unc_lzw.c`
+    follows deark: the two differ only in a table slot no valid stream
+    ever names (DECISIONS.md 2026-10-05).
     """
     b = GetCode(data)
     prefix = [0] * (MAX_CODE + 1)
@@ -289,21 +391,27 @@ def decompress(data, stats=None):
     return out
 
 
-def member(d, rec, stats=None):
-    """The member's data fork.
-
-    The resource fork is a second stream in the same region, handled by
-    the same stored-or-LZW branch (DoWork @0x9f2). Both real packages
-    carry rlen == 0, so this script does not claim to place it: that part
-    is READ but UNGRADED (OPEN_ITEMS.md).
-    """
-    raw = d[rec["off"]:rec["off"] + rec["clen"]]
-    if rec["flags"] & F_STORED:
-        return raw[:rec["dlen"]], "stored"
+def fork(d, off, clen, elen, stored, stats=None):
+    """One fork — the same stored-or-LZW branch for both (DoWork @0x618
+    for the data fork, @0x96e for the resource fork)."""
+    if elen == 0:
+        return b"", "empty"
+    raw = d[off:off + clen]
+    if stored:
+        return raw[:elen], "stored"
     # No limit: the stream has to RUN OUT at the declared length. Passing
-    # rec["dlen"] in as a ceiling would make the length check assert a
-    # property of this decoder's own truncation and it could never fail.
-    return decompress(raw, stats), "lzw"
+    # elen in as a ceiling would make the length check assert a property
+    # of this decoder's own truncation and it could never fail.
+    return bytes(decompress(raw, stats)), "lzw"
+
+
+def member(d, rec, stats=None):
+    """(data fork, how) and (resource fork, how)."""
+    data = fork(d, rec["doff"], rec["dclen"], rec["dlen"],
+                rec["flags"] & F_STORED_DATA, stats)
+    rsrc = fork(d, rec["roff"], rec["rclen"], rec["rlen"],
+                rec["flags"] & F_STORED_RSRC, stats)
+    return data, rsrc
 
 
 # ---------------------------------------------------------------------------
@@ -315,11 +423,12 @@ def witness():
     code = open(TRANSLATOR, "rb").read()
     print("AppleLink Package Translator 3.0.3, 'Othe' 1: %d B" % len(code))
     bad = 0
-    for what, hx in WITNESSES:
-        at = code.find(bytes.fromhex(hx))
-        bad += at < 0
-        print("  %-8s %s" % ("%06x" % at if at >= 0 else "MISSING", what))
-    print("derive_sqp: %d of %d witnesses found"
+    for at, what, hx in WITNESSES:
+        b = bytes.fromhex(hx)
+        ok = code[at:at + len(b)] == b
+        bad += not ok
+        print("  %06x %-3s %s" % (at, "ok" if ok else "NO", what))
+    print("derive_sqp: %d of %d witnesses at the offsets claimed"
           % (len(WITNESSES) - bad, len(WITNESSES)))
     return 1 if bad else 0
 
@@ -341,54 +450,77 @@ def grade():
               "tools/fetch_specimens.py --only applelink" % SPECIMENS)
         return 0
     total = exact = clears = widest = 0
+    stored = forks = 0
     for fn in pkgs:
         d = open(os.path.join(SPECIMENS, fn), "rb").read()
-        count, version, recs = directory(d)
-        start = members_start(count)
-        print("%s — %d B, %d item%s, version %d"
-              % (fn, len(d), count, "" if count == 1 else "s", version))
+        version, sqp_count, recs = directory(d)
+        start = members_start(version, sqp_count, len(recs))
+        print("%s — %d B, %d item%s, version %d (SQP directory: %d)"
+              % (fn, len(d), len(recs), "" if len(recs) == 1 else "s",
+                 version, sqp_count))
         print("  SQP directory 0x%x..0x%x, HFS directory 0x%x..0x%x, "
               "members from 0x%x"
-              % (HDR, HDR + SQP_REC * count, hfs_directory_at(count),
-                 members_start(count), start))
-        if recs and recs[0]["off"] != start:
-            print("  !! first member is at 0x%x, not 0x%x"
-                  % (recs[0]["off"], start))
-        for r in recs:
+              % (HDR, HDR + SQP_REC * sqp_count,
+                 SQP_REC * sqp_count + 22, start, start))
+        ranges = []
+        for r, path in zip(recs, paths(recs)):
             st = {"clears": 0, "n_bits": 0, "free_ent": 0, "codes": 0}
-            out, how = member(d, r, st)
-            digest = hashlib.sha256(out).hexdigest()
-            want = EXPANDED.get((fn, r["name"]))
-            ok = len(out) == r["dlen"] and r["rlen"] == 0 \
-                and (want is None or want == digest)
+            if r["folder"]:
+                print("  %-26s FOLDER, level %d" % (repr(path), r["level"]))
+                total += 1
+                exact += 1
+                continue
+            (data, dhow), (rsrc, rhow) = member(d, r, st)
+            digest = hashlib.sha256(data).hexdigest()
+            want = EXPANDED.get((fn, path))
+            ok = (len(data) == r["dlen"] and len(rsrc) == r["rlen"]
+                  and (want is None or want == digest))
             total += 1
             exact += ok
-            print("  %-26s %s/%s %5d -> %5d B (want %d) %-6s %s"
-                  % (repr(r["name"]), r["type"], r["creator"], r["clen"],
-                     len(out), r["dlen"], how, "OK" if ok else "MISMATCH"))
-            note = "" if want is None else (
-                "  matches" if want == digest else "  != RECORDED")
-            print("      sha256 %s%s" % (digest, note))
-            if how == "lzw":
+            forks += r["rlen"] > 0
+            stored += (dhow == "stored") + (rhow == "stored")
+            if r["dlen"]:
+                ranges.append((r["doff"], r["dclen"]))
+            if r["rlen"]:
+                ranges.append((r["roff"], r["rclen"]))
+            print("  %-26s %s/%s %5d -> %5d B (want %d) %-6s | rsrc %d -> %d "
+                  "%-6s %s"
+                  % (repr(path), r["type"], r["creator"], r["dclen"],
+                     len(data), r["dlen"], dhow, r["rclen"], len(rsrc), rhow,
+                     "OK" if ok else "MISMATCH"))
+            print("      sha256 %s%s"
+                  % (digest, "" if want is None else
+                     ("  matches" if want == digest else "  != RECORDED")))
+            if dhow == "lzw" or rhow == "lzw":
                 widest = max(widest, st["n_bits"])
                 clears += st["clears"]
                 print("      %d codes; %d clear code(s); widest %d bits; "
                       "table reached %d"
                       % (st["codes"], st["clears"], st["n_bits"],
                          st["free_ent"]))
-        end = max((r["off"] + r["clen"] for r in recs), default=start)
+        end = max((o + n for o, n in ranges), default=start)
+        tiled = sum(n for _, n in ranges) == len(d) - start and end == len(d)
         print("  members tile 0x%x..0x%x; file is 0x%x  %s"
-              % (start, end, len(d),
-                 "exact" if end == len(d) else "!! SHORT"))
+              % (start, end, len(d), "exact" if tiled else "!! NOT TILED"))
+        if not tiled:
+            exact = -1
     print("derive_sqp: %d of %d members expand to their declared length"
           % (exact, total))
     # Say what the specimens do NOT exercise, rather than leaving it to be
     # inferred from a pass (TESTING.md, *AppleLink packages: SqueezePlay*).
-    print("derive_sqp: UNEXERCISED by these packages — %s%sthe resource "
-          "fork and the stored mode"
-          % ("the clear code (%d seen), " % clears if clears == 0 else "",
-             "widths above %d of 13 bits, " % widest if widest < MAX_BITS
-             else ""))
+    missing = []
+    if clears == 0:
+        missing.append("the clear code (0 seen)")
+    if widest < MAX_BITS:
+        missing.append("widths above %d of 13 bits" % widest)
+    if forks == 0:
+        missing.append("the resource fork")
+    if stored == 0:
+        missing.append("the stored mode")
+    print("derive_sqp: UNEXERCISED by these packages — %s"
+          % (", ".join(missing) if missing else "nothing"))
+    print("derive_sqp: tools/synth_sqp.py writes each of those, and "
+          "tools/run_sqp.py grades the engine on them")
     return 0 if exact == total else 1
 
 
