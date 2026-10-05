@@ -334,6 +334,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
 - 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
 - 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
+- 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
 
 ---
 
@@ -21118,3 +21119,149 @@ sibling's dialog could not be given one (seven boots, 2026-09-01), but
 that was the 3.5 translator and this is a different program with its own
 interface — and CLAUDE.md's rule about a submenu applies to a dialog too:
 it is worth one attempt.
+
+## 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
+
+The brief was to decide, with measurements, whether to recognise ZipIt
+self-extracting archives. OPEN_ITEMS.md had priced the fix as **not
+free**: "the cost is a backward scan for every file the sniffer rejects,
+against a corpus where most are not zips". That premise was wrong, and
+not by a little — **the scan was already running on every one of those
+files, finding the record, and throwing it away.**
+
+`unc_zipseg_probe` sits immediately before `unc_zip_probe` in the sniff
+order and scans the last 64 KB backwards for the end-of-central-directory
+record. When that record said "disk 0" it returned `UNC_FORMAT_UNKNOWN` —
+because a set of one is not a segment — and the next probe then looked at
+the first four bytes of the file, which in a self-extractor are code. The
+answer was in hand and discarded one line before the question was asked
+again in a form that could not reach it.
+
+### The number that settled it
+
+`tools/sniff_io_probe.c` counts `UncIO.read` calls and bytes for
+`unc_sniff` alone, which is the axis that matters on a Macintosh — each
+call is a `SetFPos` + `FSRead` pair on a floppy — and the one no Linux
+wall clock shows. With the scan disabled as the control, it is **50.0 %
+of every read a sniff of the 955-file corpus makes and 71.4 % of the
+bytes**: 44.8 reads and 45,271 bytes for each of the 204 BinHex
+fixtures alone. Recognising the archive behind the stub adds **one
+four-byte read** to a file whose record corroborates and **+0 reads,
++0 bytes to all 7,601 files a sweep of 8,364 non-archives has the
+sniffer reject**. The figures are FORMATS.md's, *What the zip pair
+claims, and what it costs*.
+
+So the axis the item was filed on was already spent. What the change
+actually costs is **316 B of resident `CODE` and 4 B of A5, in all three
+configurations** — 320 B off every extraction's budget on a 1 MB Mac
+Plus. Nothing goes into an `'OVLY'` image and nothing can: the sniffer
+calls this probe for every file it is handed, which is the same position
+the 666-byte AppleLink probe is in (2026-10-05, *the probe that had to be
+a file test*). The instruction axis is 0.003 % of one extraction and no
+tick probe was run, because CLAUDE.md reserves the emulator for close
+calls and four orders of magnitude is not one.
+
+### Why self-extracting LZH's reasoning does not transfer
+
+Part 1 of OPEN_ITEMS.md keeps self-extracting LZH out because "the
+archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding
+it means knowing each of those loaders" — `unar` has a parser per
+platform. That is a statement about **LZH**, not about executables: an
+LZH has no directory, its entries are a chain from the first header, and
+nothing in the file says where that header is. The only way to find it is
+to understand the loader in front of it.
+
+A zip is the opposite case, and it is the format that makes it so. Every
+offset in a zip is absolute from the start of the FILE, and the record
+that gives them is at the END, found by scanning backwards from there.
+The stub is never looked at. That is why `-f Zip` already read all five
+ZipIt specimens correctly before any of this, and why the walker needed
+no change: the only thing that could not see past the code was the
+sniffer's first four bytes.
+
+The second half of the item's own reasoning points the same way: there is
+no plain `.zip` beside a ZipIt `.sea` to hand over instead, so "the
+answer is to hand the `.lzh` itself to the extractor" has no counterpart
+here. **And a DOS self-extracting zip being newly claimed is a gain
+rather than the hazard the item read it as** — measured on one built here
+with `zip -A`, it extracts its entries correctly, which is what a user
+wants from an unarchiver; the alternative is "format not recognized".
+Four of the five ZipIt specimens are the same case wearing a Macintosh
+wrapper: MacBinary comes off, and what is underneath is a PEF container
+with a zip behind it.
+
+### What the measurement found that was not asked about
+
+Sweeping 8,364 files that are not Macintosh archives — `reference/`,
+this repository's own trees, the emulator's specimen cache — turned up
+**five that the engine was already claiming**, as `UNC_FORMAT_ZIPSEG`:
+four Python `.pyc` files and one of deark's object files. The segment
+half of the zip pair required `PK\5\6` by backwards scan and a nonzero
+"number of this disk", and nothing else whatever. A `.pyc` carries those
+four bytes by chance about once in 1,700 files.
+
+That is the cheaper half of the same lesson. The item worried that
+claiming a trailing zip was too weak a test — four bytes plus a disk
+number plus a verified directory — while **the probe beside it was
+shipping four bytes plus a disk number and no directory at all.** The
+strong test was being withheld and the weak one was already in the
+binary. Both halves now go through `zs_cd_is_there` (BLOCKERS.md,
+*Withdrawn claims*, for what it cost).
+
+### The test that was proposed, the test that shipped, and why they differ
+
+The item's proposal was "require that the directory it points at starts
+with `PK\1\2` and holds the entry count it declares". The first half
+ships. The second does not, for two measured reasons:
+
+- **It is not well defined.** APPNOTE.TXT 4.3.13 lets a *digital
+  signature* record follow the central file headers inside the same
+  directory, so a walk that expects `total` headers and then the end is
+  reading a rule the format does not state.
+- **It costs reads where the whole point is that reads are the cost.**
+  Walking a 74-entry ZipIt specimen's directory is ~74 reads against the
+  4 the entire sniff now takes.
+
+What shipped instead is the same consistency claim as a **lower bound**:
+a central file header is 46 bytes before its name (4.3.12), so a
+directory of `total` entries cannot be smaller than 46 × total, and the
+`here` entries that are on this part lie in front of the record (4.3.6)
+and need 46 bytes each there too. Zero reads, and it is the row that
+rejects a junk record in the unit test. Each of the five tests is
+observed to reject something — FORMATS.md has the table — which is the
+answer to "what evidence does this tolerance rest on": not our own
+output.
+
+### The first draft refused a set Info-ZIP writes
+
+Two of the five tests are conditional on the directory being on this
+part, and that condition is not caution. **`zip -s` splits the central
+directory** once it outgrows a part: measured at 1,200 entries and 64 KB
+per part — disk 7 of 8, the directory starting on **disk 6**, 132,048
+bytes of it declared, and 238 of the 1,201 entries in the 26,312-byte
+file the record is in, where the signature at the declared offset is the
+middle of somebody's filename. The first draft required the extent
+unconditionally and refused that set: eight parts, 1,200 entries, "format
+not recognized".
+
+Nothing in this repository had ever generated that shape. The three
+things that found it were, in order: running the generator at a size
+nobody had tried, the suite that already existed being pointed at the
+result, and `tools/synth_zipsplit.py` gaining a `zspancd` case so the
+next draft cannot repeat it. It is the plainest instance of the rule this
+project keeps re-learning — **a test that passes may not be testing
+anything** — in its other direction: the five zip cases in
+`run_segments.py` all passed the broken draft, because none of them was
+big enough to make Info-ZIP do the interesting thing.
+
+### A fixture that declared 43,521 entries
+
+Adding the `total` test made nine existing checks fail, and the engine was
+right: `zs_build_tail` in `tests/unit_formats.c` wrote both two-byte
+entry counts **one byte at a time**, so the high byte was whatever the
+caller's buffer held. Two of its three callers hand it a zeroed buffer
+and read 1 as intended; the third fills with 0xAA on purpose — "noise,
+not zeros, in the comment" — and had been declaring 43,521 entries in a
+47-byte directory since the day it was written. The property it tests, a
+signature straddling the backwards scanner's window edge, never depended
+on that. Corrected where it lives, with both bytes written.

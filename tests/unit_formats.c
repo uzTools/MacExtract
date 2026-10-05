@@ -1217,6 +1217,139 @@ static void test_zip_comment(void)
     CHECK(cap.dlen[0] == strlen(ZIP_SYNTH_PAYLOAD));
 }
 
+/* A zip BEHIND something else — a self-extracting archive, whose first
+ * bytes are executable code. Nothing in the corpus is one and nothing
+ * here can be: the five specimens ZipIt wrote are not committable
+ * (fixtures/SOURCES.md), and `tools/run_zipit.py` grades those. What is
+ * pinned here is the probe's reasoning, which no whole archive isolates:
+ * the claim rests on the end-of-central-directory record alone, and each
+ * of the five things that record has to agree with is bent in turn.
+ *
+ * The stub is a PEF container's first bytes — "Joy!peff" — because that
+ * is what all five of those specimens begin with, measured 2026-10-05.
+ * Its content is irrelevant to the engine, which never looks at it; what
+ * matters is that the archive's offsets count from the start of the FILE
+ * and not from the start of the zip, which is what Info-ZIP's `zip -A`
+ * and ZipIt both write (FORMATS.md, *What the zip pair claims, and what
+ * it costs*). */
+#define ZIP_STUB_LEN 200u
+
+static uint32_t zip_synth_behind_stub(uint8_t *out, uint32_t *cdp,
+                                      uint32_t *eop)
+{
+    uint32_t cd, eocd, len;
+
+    memset(out, 0, ZIP_STUB_LEN);
+    memcpy(out, "Joy!peffpwpc", 12);
+    len = zip_synth(out + ZIP_STUB_LEN, NULL, 0, &cd, &eocd);
+    cd += ZIP_STUB_LEN;
+    eocd += ZIP_STUB_LEN;
+    /* The two offsets a stub displaces: "relative offset of local
+     * header" (APPNOTE.TXT 4.4.16) and "offset of start of central
+     * directory" (4.4.24). Both are from the start of the file. */
+    put32le(out + cd + 42, 0 + ZIP_STUB_LEN);
+    put32le(out + eocd + 16, cd);
+    if (cdp) *cdp = cd;
+    if (eop) *eop = eocd;
+    return ZIP_STUB_LEN + len;
+}
+
+static void test_zip_behind_a_stub(void)
+{
+    static const char *payload = ZIP_SYNTH_PAYLOAD;
+    uint8_t arc[256 + ZIP_STUB_LEN];
+    uint32_t n = (uint32_t)strlen(payload);
+    uint32_t cd, eocd, len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+    len = zip_synth_behind_stub(arc, &cd, &eocd);
+
+    /* Recognised with nothing forced, and extracted from the directory
+     * the record points at. This is the whole of the 2026-10-05 change:
+     * before it, the sniff of this buffer was UNC_FORMAT_UNKNOWN. */
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
+
+    /* --- the five tests, one bend each ----------------------------- *
+     * Each must take the claim away. A corroboration nothing can fail
+     * is not one (CLAUDE.md), and four bytes of `PK\5\6` on their own
+     * claimed five files of 8,364 that are not archives at all. */
+
+    /* 1. the central file header is not where the record says. This is
+     *    a stub glued in front of an archive whose offsets were never
+     *    adjusted — the file cannot be read as a zip, and must not be
+     *    claimed as one. */
+    put32le(arc + eocd + 16, cd - ZIP_STUB_LEN);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put32le(arc + eocd + 16, cd);
+
+    /* 2. no entries: nothing to extract, and the count every walk is
+     *    bounded by. */
+    put16le(arc + eocd + 10, 0);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put16le(arc + eocd + 10, 1);
+
+    /* 3. more entries on this disk than in the whole directory. */
+    put16le(arc + eocd + 8, 2);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put16le(arc + eocd + 8, 1);
+
+    /* 4. a directory too small to hold the entries it declares: a
+     *    central file header is 46 bytes before its name (4.3.12). */
+    put32le(arc + eocd + 12, 45);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    /* 5. ...and one that does not fit in front of the record pointing
+     *    at it. 0xFFFFFFFF is Zip64's escape (4.4.23), so this is also
+     *    the test that the arithmetic cannot wrap. */
+    put32le(arc + eocd + 12, 0xFFFFFFFFu);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put32le(arc + eocd + 12, eocd - cd);
+
+    /* Restored, it is claimed again — so the five checks above were
+     * measuring the bend and not something they broke on the way. */
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+
+    /* --- a signature by chance, which is what the five files had ---- *
+     * `PK\5\6` in a buffer that is not an archive, with the fields that
+     * follow it being whatever was there. It must be claimed as neither
+     * zip NOR zip segment: the segment half took exactly this on the
+     * strength of a nonzero disk number until 2026-10-05 (BLOCKERS.md,
+     * *Withdrawn claims*). Four shapes, because a chance record's disk
+     * number is as likely to be nonzero as zero. */
+    {
+        static const uint16_t disk[4] = { 0, 1, 626, 0xFFFFu };
+        unsigned k;
+        for (k = 0; k < 4; k++) {
+            uint8_t junk[600];
+            uint32_t at = 400;
+            unsigned j;
+            for (j = 0; j < sizeof junk; j++)
+                junk[j] = (uint8_t)(j * 37u + 11u);     /* not an archive */
+            memcpy(junk + at, "PK\x05\x06", 4);
+            put16le(junk + at + 4, disk[k]);
+            test_make_memio(&io, &m, junk, sizeof junk);
+            CHECK(unc_sniff(&io) != UNC_FORMAT_ZIP);
+            CHECK(unc_sniff(&io) != UNC_FORMAT_ZIPSEG);
+        }
+    }
+}
+
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
  * cover the decoders (tools/run_lzh.py, fixtures/manifests); what a
  * whole archive cannot isolate is covered here: every method byte the
@@ -1694,7 +1827,12 @@ static uint32_t zs_build_tail(uint8_t *buf, uint32_t crc, uint32_t n,
     memcpy(buf + eocd, "PK\x05\x06", 4);
     put16le(buf + eocd + 4, ndisks - 1);         /* "number of this disk" */
     put16le(buf + eocd + 6, cddisk);
-    buf[eocd + 8] = 1; buf[eocd + 10] = 1;       /* entry counts */
+    /* Both entry counts, both bytes each. They were a single byte apiece
+     * until 2026-10-05 and read as 1 only because two of the three
+     * callers hand this a zeroed buffer; the third fills with 0xAA and
+     * was declaring 43,521 entries in a 47-byte directory. */
+    put16le(buf + eocd + 8, 1);                  /* entries on this disk */
+    put16le(buf + eocd + 10, 1);                 /* entries altogether   */
     put32le(buf + eocd + 12, eocd - cd);         /* cd size */
     put32le(buf + eocd + 16, cdrel);             /* cd offset in cddisk */
     put16le(buf + eocd + 20, commentlen);
@@ -4635,6 +4773,7 @@ void run_format_tests(void)
     test_tar();
     test_zip();
     test_zip_comment();
+    test_zip_behind_a_stub();
     test_lzh_probe();
     test_cptseg_probe();
     test_lzh_extract();

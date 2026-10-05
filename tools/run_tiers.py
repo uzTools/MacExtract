@@ -244,6 +244,17 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # against a build 788 B smaller, so every shipped prediction is that much
 # more generous than the Macintosh will be until they are re-taken there
 # (FORMATS.md, *Three configurations, one tree*).
+# 2026-10-05, same day, the zip-behind-a-stub probe: **UNCHANGED at
+# 128,592**, and that is the interesting part. The control took +316 B of
+# resident CODE and +4 of A5 and so did the shipped build — identically,
+# because `src/fmt_zipseg.c` is resident in every configuration and
+# nothing of it can go into an image: the sniffer calls that probe for
+# every file it is handed. A difference of two equal numbers does not
+# move, so this line is right by arithmetic rather than by luck, and
+# check_saved() grades it either way. Not compensated either: the three
+# TIERS budgets below are now a further 320 B more generous than the
+# Macintosh will be until they are re-taken there (FORMATS.md, *What the
+# zip pair claims, and what it costs*).
 OVL_SAVED = 128592
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and

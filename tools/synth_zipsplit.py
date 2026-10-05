@@ -148,12 +148,40 @@ def case_solo(d):
     return _finish(d, "Solo", ["-0"], "src", "zsolo")
 
 
+def case_spancd(d):
+    """A set whose CENTRAL DIRECTORY does not fit in the last part.
+
+    `zip -s` splits the directory too once it outgrows a part, and the
+    last part then holds only its tail: "number of the disk with the
+    start of the central directory" is an EARLIER part than "number of
+    this disk", and the directory's declared offset and size belong to
+    that earlier one. Measured 2026-10-05 at 1,200 entries and 64 KB
+    per part: disk 7 of 8, the directory starting on disk 6, 132,048
+    bytes of it, and 238 of the 1,201 entries in the file the EOCD is
+    in.
+
+    Nothing here reached that shape until this case existed, and the
+    first draft of `zs_cd_is_there` (src/fmt_zipseg.c) refused such a
+    part by requiring the directory to fit in front of the record that
+    points at it — true of every single-file archive and false here.
+    Long names, because it is the DIRECTORY that has to overflow and a
+    name is the only part of an entry that is stored in it twice.
+    """
+    src = os.path.join(d, "src")
+    for i in range(1200):
+        _write(os.path.join(src,
+               "an-entry-whose-name-is-long-so-the-directory-grows-%04d.bin"
+               % i), _rand(400 + i, 200))
+    return _finish(d, "SpanCD", ["-0"], "src", "zspancd")
+
+
 CASES = {
     "zstored":  case_stored,
     "zdeflate": case_deflate,
     "znested":  case_nested,
     "zmany":    case_many,
     "zsolo":    case_solo,
+    "zspancd":  case_spancd,
 }
 
 

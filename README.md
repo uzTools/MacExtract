@@ -77,6 +77,11 @@ application simply runs.
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name — and a `.hqx` or `.uu`
 holding several files, or one posted in several parts, gives you all of it.
+**Self-extracting archives are opened as archives** — the Macintosh ones,
+including ZipIt's, which are a PowerPC application with a zip hidden behind
+it. You get the files, on a Mac that could never have run the application.
+(A self-extracting `.exe` from the PC side is not recognised unless what is
+behind it is a zip.)
 SpaceSaver files are the odd ones: they look like ordinary documents, because
 SpaceSaver compressed them in place and only the Mac that made one could read
 it. `macextract` carries the table those files need, so a lone floppy is

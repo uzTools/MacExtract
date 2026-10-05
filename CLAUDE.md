@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M56 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M57 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **943-fixture** differential suite against

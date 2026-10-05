@@ -3575,6 +3575,13 @@ Four things run per specimen:
 4. **`x` against `unar`**: every data and resource fork byte for byte,
    `unar`'s AppleDouble sidecar unwrapped (this engine writes the fork
    raw).
+5. **`x` on the whole file against `x` on its data fork**, for the four
+   that arrived MacBinary-wrapped. That is the route a user takes — hand
+   the download over and let the envelope come off — and until
+   2026-10-05 it ended in "format not recognized" once it had, because
+   what is underneath a ZipIt `.sea` is a PEF container with the zip
+   behind it. The data-fork side of the comparison is the one step 4 has
+   already held against `unar`.
 
 **Per-specimen tallies are asserted, and that is the part that matters.**
 `EXPECT` holds entries, one count per field id, and the number of
@@ -3588,11 +3595,16 @@ failures, and moving the `0x2705` flag read by two bytes in
 
 **What it cannot see.**
 
-- **It does not test that a ZipIt SEA is RECOGNISED**, because it is
-  not: `unc_zip_probe` reads the head and the head is PowerPC or 68k
-  code, so the five self-extractors are passed `-f Zip` (OPEN_ITEMS.md).
-  The four plain ones are *required* to sniff as `Zip`, and the count of
-  each is printed, so the distinction cannot quietly change.
+- **The probe's own reasoning.** Since 2026-10-05 all nine are
+  *required* to sniff as `Zip` with nothing forced — it was four of
+  nine, the five self-extractors being passed `-f Zip` — and the count
+  is printed, so a regression cannot be quiet. But all nine carry a
+  well-formed end-of-central-directory record, so nothing here can fail
+  on a corroboration that stopped corroborating:
+  `test_zip_behind_a_stub` in `tests/unit_formats.c` bends each of the
+  five tests in turn, and a chance `PK\5\6` in something that is not an
+  archive at all is that test's business too (FORMATS.md, *What the zip
+  pair claims, and what it costs*).
 - **No fork of an entry whose method is out of scope**, and `UNGRADED`
   names every one with the reason. Today that is
   `Psycho!v1.0ß1.zip`'s three Implode entries. The declaration carries
@@ -3629,7 +3641,7 @@ and refusing files, `--no-parts`, and the part-open counters.
 
 ### Spanned zip (`tools/synth_zipsplit.py`, same runner)
 
-Five more cases, and here the generator is **Info-ZIP** rather than us:
+Six more cases, and here the generator is **Info-ZIP** rather than us:
 `zip -s 64k` builds each case split, and the same input again unsplit.
 That second archive is the reason this scheme is adjudicated four ways
 rather than three — the source tree, `unar`, our CLI on the set, and our
@@ -3639,9 +3651,23 @@ if `zip` is absent, the way the whole file is if `unar` is.
 
 The cases: stored entries straddling part boundaries; a deflated stream
 straddling one; nested folders with an 8-bit name and an empty file;
-twelve parts, so the extension rolls over `.z09` → `.z10`; and a
+twelve parts, so the extension rolls over `.z09` → `.z10`; a
 `zip -s` archive that did not need splitting (one file, the marker
-present, "disk 0" — which must extract even under `--no-parts`).
+present, "disk 0" — which must extract even under `--no-parts`); and
+`zspancd`, added 2026-10-05.
+
+**`zspancd` is the one worth knowing about, because the generator had to
+be pushed to produce it.** `zip -s` SPLITS the central directory once it
+outgrows a part, and nothing here had ever made it do that: at 1,200
+entries with long names and 64 KB per part it writes disk 7 of 8 with
+the directory starting on **disk 6**, 132,048 bytes of it declared, and
+238 of the 1,201 entries in the 26,312-byte file the record is in. The
+first draft of `zs_cd_is_there` (`src/fmt_zipseg.c`) refused such a part
+— and the five cases above all passed it, because none of them was big
+enough. Re-do the size if you touch that function: the case exists
+because a suite that is green on small sets says nothing about large
+ones (DECISIONS.md 2026-10-05, *the scan that was already being paid
+for*).
 
 **The two cases that hold the scheme up** are the mutations, because
 parts are placed by FILENAME here and a filename proves nothing: two
@@ -4051,6 +4077,58 @@ minutes, and the whole set is the better part of an hour.
   any file; `derive_huffman_tree.py` refuses such matches, and the
   reason it does is that one of them was reported as a confirmation
   on 2026-09-20 before anybody looked at it.
+
+## What a SNIFF costs in reads (`tools/sniff_io_probe.c`, not in `ci.sh`)
+
+Added 2026-10-05. Every other instrument here measures extraction; this
+one measures `unc_sniff` alone, on the axis a Linux wall clock cannot
+show. It wraps `UncIO` with counters and prints one line per file:
+
+    gcc -std=c99 -O2 -DUNC_OFF64 -Iinclude tools/sniff_io_probe.c \
+        build/rel/*.o -o build/rel/sniff_io_probe
+    find fixtures -maxdepth 1 -type f ! -name '*.md' | sort \
+        | xargs build/rel/sniff_io_probe
+
+    fixtures/4acalc.zip fmt=Zip reads=4 bytes=1562 seeks=4 size=10422
+
+**Reads, not bytes, are what it is for.** On a Macintosh each call is a
+`SetFPos` + `FSRead` pair, which on a floppy is a head move;
+`unc_zip_scan_eocd` is sized by that count and the sniff order was
+rearranged twice to keep files away from it (`src/unc_engine.c`). It is
+what established that the backwards scan for a zip's
+end-of-central-directory record is **50.0 % of every read a sniff of the
+corpus makes** — and so that recognising a zip behind a self-extractor's
+code stub was already paid for (FORMATS.md, *What the zip pair claims,
+and what it costs*).
+
+**How to attribute a share to one probe:** build a second binary with
+that probe's work short-circuited and subtract. That is how the 50.0 %
+was arrived at, and it is the only way — the instrument sees the total,
+not who spent it.
+
+**What it cannot see.**
+
+- **Nothing about correctness.** It prints the format and counts the
+  I/O; whether the format is RIGHT is `run_diff.py`'s question and every
+  other suite's.
+- **Cycles, or time.** A read of 4 bytes and a read of 1,027 count one
+  each, which is the point on a floppy and wrong on a hard disk. For
+  instructions use `tools/m68kprof.py` below; for the real cost, the
+  tick probe on an emulated Mac.
+- **The Macintosh's own I/O.** `fread` through stdio is not `FSRead`
+  through the File Manager, and nothing here buffers the way the Mac
+  shell does.
+- **Any file it is not handed.** It is a sweep, so what it measures is
+  the population you give it: the corpus is 955 archives, and the
+  interesting population for a REJECTION cost is files that are not
+  archives at all — `reference/`, this repository's own trees, the
+  specimen cache. 8,364 of those were swept on 2026-10-05, which is
+  also what found five being claimed as a spanned-zip part
+  (BLOCKERS.md, *Withdrawn claims*).
+- **A regression**, because it asserts nothing. The claims it was used
+  to settle are pinned where something can fail on them:
+  `test_zip_behind_a_stub` in `tests/unit_formats.c`, and
+  `tools/run_zipit.py`'s nine-of-nine sniff count.
 
 ## The 68000 profile (`tools/m68kprof.py`, not in `ci.sh`)
 

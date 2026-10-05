@@ -65,7 +65,24 @@ sample, which is **16,490 B**. `run_tiers.py --check` moves no tally in
 either lane at the re-taken figures: 71/71, 67/71, 64/71 resident and
 71/71, 69/71, 66/71 shipped, the same fixtures by name. What that argument
 does NOT cover is a `.pkg` on the machine: no Macintosh has run one, and
-the format is not in `sample.txt` (OPEN_ITEMS.md). Per-tier
+the format is not in `sample.txt` (OPEN_ITEMS.md).
+
+**And a fifth time on 2026-10-05, also in the other direction: the zip
+pair's probe costs the shipped build 316 B of resident code and 4 B of
+A5**, so that a zip behind a self-extractor's code stub is recognised
+(FORMATS.md, *What the zip pair claims, and what it costs*). **No tier
+was re-run**, and the argument is stronger than the shape above because
+the first leg of it is a measurement rather than a property: **0 of the
+955 corpus files changes the format it sniffs as**, so no sampled
+fixture reaches a different decoder, and the three zips in `sample.txt`
+pay one extra four-byte read each. 320 B is fifty times under the
+narrowest margin between any passing layer's demand and its budget
+anywhere in the sample, which is **16,490 B**. `run_tiers.py --check`
+moves no tally in either lane. What the argument does NOT cover is a
+self-extracting zip on the machine: none is in `sample.txt`, because
+none is committable (five specimens, `tools/specimens/zipit.tsv`), so
+the format runs on a Macintosh only as the plain zips already there do.
+Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
 any of it is `tools/vmac/README.md`; what no emulator here can settle is
@@ -1823,6 +1840,45 @@ a harness can click is not the same list.
   module opened was the hardest one, and "a `DCMP` rewrites the file
   through the File Manager" was then generalised to all four from a
   sample of one. Two of them never touch a file at all.
+
+- **"A ZipIt self-extracting archive is not recognised, and a probe
+  that could see past the stub is not free: the cost is a backward scan
+  for every file the sniffer rejects."** OPEN_ITEMS.md's own row for
+  it, carried as UNMEASURED from 2026-10-04, withdrawn 2026-10-05 when
+  somebody counted the reads. **The scan was already running on every
+  one of those files** — `unc_zipseg_probe` sits one line above
+  `unc_zip_probe` and does exactly that scan, 50.0 % of every read a
+  sniff of the corpus makes — and when the record said "disk 0" it
+  threw the answer away. Measured cost of the fix on files the sniffer
+  rejects: **+0 reads, +0 bytes over 7,601 of them**; one four-byte read
+  on a zip. **Cost: the five specimens went a day unrecognised, which is
+  nothing — but the row had been written as a price, and a price is what
+  stops an item being looked at.** **Why it survived:** the row named
+  the right mechanism and never asked whether it was already there. Both
+  probes were in the same six lines of the sniff order and the comment
+  beside them says the scan happens; the claim was about cost, and the
+  cost was somebody else's already (DECISIONS.md 2026-10-05, *the scan
+  that was already being paid for*).
+
+- **"A spanned-zip part is identified by its end-of-central-directory
+  record and its disk number."** `src/fmt_zipseg.c` and FORMATS.md's
+  zip rows, from 2026-08-09, withdrawn 2026-10-05. Those two things were
+  the whole test, and four bytes of `PK\5\6` reached by a backwards
+  scan happen by chance: a sweep of **8,364 files that are not
+  Macintosh archives found five being claimed as `UNC_FORMAT_ZIPSEG`** —
+  four Python `.pyc` files and one of deark's object files. **Cost: a
+  wrong answer on about one file in 1,700 that is not an archive, for
+  fourteen months, and the CLI's message for it asks the user to go and
+  find the other parts of a set that does not exist.** It was found
+  while measuring something else — the sweep existed to count what the
+  ZIPIT change would newly claim, and the bigger number was what the
+  build already claimed. **Why it survived:** no suite feeds this engine
+  anything that is not an archive, so a false positive on ordinary files
+  had nowhere to show. And the open item beside it was worrying that a
+  *stronger* test — four bytes, a disk number AND a corroborated
+  directory — might be too weak to adopt, which is the cross-file
+  contradiction smell at its cheapest: the weak claim was already
+  shipping.
 
 ### Corrected figures and superseded write-ups
 

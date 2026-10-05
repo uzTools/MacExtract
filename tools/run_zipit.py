@@ -21,15 +21,18 @@ other four came out of a range scan of the first local header of all
 indexes (DECISIONS.md 2026-10-04, *the archive that carried its own
 extractor*).
 
-A ZipIt SEA is a code stub with the zip behind it, and `unc_zip_probe`
-reads the head, so the five self-extractors are passed `-f Zip`. The
-zip WALKER needs no help — it addresses the central directory
-absolutely — and the four plain ones are sniffed unaided, which this
-suite asserts rather than assumes. `MrTs_Paint_Folder.zip` and
-`NPWritersKit.zip` are corpus fixtures as well, so `run_diff.py` grades
-a real ZipIt archive of each shape with no oracle at run time.
+A ZipIt SEA is a code stub with the zip behind it. The five of them
+needed `-f Zip` until 2026-10-05; since then the sniffer finds the
+archive behind the stub from the end-of-central-directory record it was
+already scanning for, so nothing here forces a format and all nine are
+sniffed unaided — which this suite asserts rather than assumes. Four
+arrived MacBinary-wrapped, and those are also extracted WHOLE, the way
+a user hands one over, and compared with their data fork's extraction.
+`MrTs_Paint_Folder.zip` and `NPWritersKit.zip` are corpus fixtures as
+well, so `run_diff.py` grades a real ZipIt archive of each shape with
+no oracle at run time.
 
-Four things are checked, and the tallies in EXPECT are asserted so that
+Five things are checked, and the tallies in EXPECT are asserted so that
 a download that changed, or a parse that stopped parsing, fails here
 instead of going quiet:
 
@@ -40,14 +43,18 @@ instead of going quiet:
      128 bytes probed as MacBinary, in both directions;
   3. `l --finder` against `lsar`: name, type, creator, Finder flags
      and both fork lengths;
-  4. `x` against `unar`: every data and resource fork byte for byte.
+  4. `x` against `unar`: every data and resource fork byte for byte;
+  5. and for the four that arrived wrapped, `x` on the whole file
+     against `x` on its data fork — the auto-unwrap route.
 
-**What it cannot see.** It does not test that a ZipIt SEA is
-RECOGNISED, because it is not (OPEN_ITEMS.md). It compares no fork of
-an entry whose method is out of v1 scope, and UNGRADED below names
-every one with the reason. And it adjudicates no date: `lsar` reports
-zip's own MS-DOS stamp where a `0x2605` entry's MacBinary header
-carries two Macintosh ones, so the two are not the same field.
+**What it cannot see.** The probe's own reasoning: these nine all
+carry a well-formed record, so nothing here can fail on a corroboration
+that stopped corroborating — `test_zip_behind_a_stub` in
+tests/unit_formats.c bends each of the five in turn. It compares no
+fork of an entry whose method is out of v1 scope, and UNGRADED below
+names every one with the reason. And it adjudicates no date: `lsar`
+reports zip's own MS-DOS stamp where a `0x2605` entry's MacBinary
+header carries two Macintosh ones, so the two are not the same field.
 
 Nothing here fails when the specimens are absent — it prints what it
 skipped and returns 0, so a fresh clone stays green.
@@ -323,11 +330,15 @@ def pair_up(ents, ours, theirs):
     return out
 
 
-def ours_list(exe, path, force):
+def ours_list(exe, path):
     """`l --finder`, parsed. Type, creator and flags come out as hex so
     a four-character code holding a space cannot move the name column
-    (TESTING.md, *The Finder metadata...*)."""
-    cmd = [exe, "l", "--finder"] + (["-f", "Zip"] if force else []) + [path]
+    (TESTING.md, *The Finder metadata...*).
+
+    Nothing is forced: since 2026-10-05 a self-extracting archive is
+    sniffed like any other, so the format is the sniffer's answer and
+    this suite grades it."""
+    cmd = [exe, "l", "--finder", path]
     r = subprocess.run(cmd, capture_output=True, timeout=900)
     if r.returncode != 0:
         return None, r.stderr.decode("utf-8", "replace").strip()
@@ -379,8 +390,8 @@ def theirs_list(path):
     return out
 
 
-def grade_list(exe, name, path, ents, force, refused):
-    ours, err = ours_list(exe, path, force)
+def grade_list(exe, name, path, ents, refused):
+    ours, err = ours_list(exe, path)
     if ours is None:
         print("zipit: %s: `l` FAILED (%s)" % (name, err))
         return 1, 0, 0
@@ -439,7 +450,7 @@ def collect(root):
     return out
 
 
-def grade_extract(exe, name, path, ents, force, refused):
+def grade_extract(exe, name, path, ents, refused):
     work = tempfile.mkdtemp(prefix="zipit-")
     try:
         a, b = os.path.join(work, "unar"), os.path.join(work, "ours")
@@ -448,8 +459,7 @@ def grade_extract(exe, name, path, ents, force, refused):
         subprocess.run(["unar", "-nr", "-D", "-f", "-q", "-k", "hidden",
                         "-e", "macintosh", "-o", a, path],
                        capture_output=True, timeout=1800)
-        cmd = [exe, "x", "--forks", "hidden"] + \
-              (["-f", "Zip"] if force else []) + ["-o", b, path]
+        cmd = [exe, "x", "--forks", "hidden", "-o", b, path]
         r = subprocess.run(cmd, capture_output=True, timeout=1800)
         if r.returncode != 0 and not refused:
             print("zipit: %s: `x` FAILED (%s)"
@@ -474,6 +484,46 @@ def grade_extract(exe, name, path, ents, force, refused):
                 elif want[i]:
                     forks += 1
         return bad, forks
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def grade_wrapped(exe, name, raw_path, fork_path, refused):
+    """The whole file as downloaded, against its data fork alone.
+
+    Four of the nine arrived MacBinary-wrapped, which is how a Macintosh
+    file crosses a network. The route a user takes is to hand that file
+    over whole: the engine takes the envelope off and then has to
+    recognise what is underneath — a stub with a zip behind it. Nothing
+    else here walks that path, and until 2026-10-05 it ended in "format
+    not recognized" after the envelope came off (DECISIONS.md).
+
+    The data-fork extraction this compares against is the one
+    grade_extract has already held against `unar`."""
+    work = tempfile.mkdtemp(prefix="zipitw-")
+    try:
+        a, b = os.path.join(work, "whole"), os.path.join(work, "fork")
+        os.makedirs(a)
+        os.makedirs(b)
+        for out, subj in ((a, raw_path), (b, fork_path)):
+            r = subprocess.run([exe, "x", "--forks", "hidden", "-o", out,
+                                subj], capture_output=True, timeout=1800)
+            if r.returncode != 0 and not refused:
+                print("zipit: %s: `x` FAILED on %s (%s)"
+                      % (name, os.path.basename(subj),
+                         r.stderr.decode("utf-8", "replace").strip()))
+                return 1
+        ta, tb = collect(a), collect(b)
+        if ta != tb:
+            only_a = sorted(set(ta) - set(tb))
+            only_b = sorted(set(tb) - set(ta))
+            print("zipit: %s: unwrapping the whole file does not give the "
+                  "data fork's extraction (%d vs %d items%s%s)"
+                  % (name, len(ta), len(tb),
+                     "; only whole: %r" % only_a if only_a else "",
+                     "; only fork: %r" % only_b if only_b else ""))
+            return 1
+        return 0
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -508,6 +558,7 @@ def main():
             return 0
 
     bad = entries = macbin = forks = unaided = aliased = skipped = 0
+    wrapped = 0
     tally = {0x2605: 0, 0x2705: 0, 0x2805: 0}
     for p in have:
         name = os.path.basename(p)
@@ -531,15 +582,17 @@ def main():
             tmp.close()
             subject = tmp.name
         try:
-            if not sfx:
-                r = subprocess.run([a.macextract, "sniff", subject],
-                                   capture_output=True, timeout=300)
-                got = r.stdout.decode("utf-8", "replace").strip()
-                if got != "Zip":
-                    print("zipit: %s: sniffed as %r, not Zip" % (name, got))
-                    bad += 1
-                else:
-                    unaided += 1
+            # Every one of the nine, self-extracting or not. This
+            # assertion was `if not sfx` until 2026-10-05, when the
+            # five SEAs stopped needing `-f Zip` (DECISIONS.md).
+            r = subprocess.run([a.macextract, "sniff", subject],
+                               capture_output=True, timeout=300)
+            got = r.stdout.decode("utf-8", "replace").strip()
+            if got != "Zip":
+                print("zipit: %s: sniffed as %r, not Zip" % (name, got))
+                bad += 1
+            else:
+                unaided += 1
             refused = refused_names(ents)
             want = UNGRADED.get(name, (0, None))[0]
             if len(refused) != want:
@@ -552,21 +605,25 @@ def main():
             for k in tally:
                 tally[k] += t[k]
             macbin += mb
-            n, cnt, al = grade_list(a.macextract, name, subject, ents, sfx,
+            n, cnt, al = grade_list(a.macextract, name, subject, ents,
                                     refused)
             bad += n
             entries += cnt
             aliased += al
-            n, f = grade_extract(a.macextract, name, subject, ents, sfx,
+            n, f = grade_extract(a.macextract, name, subject, ents,
                                  refused)
             bad += n
             forks += f
+            if subject is not p:
+                bad += grade_wrapped(a.macextract, name, p, subject, refused)
+                wrapped += 1
         finally:
             if tmp:
                 os.unlink(tmp.name)
         if a.verbose:
-            print("zipit: %s: %d entries, %s" % (name, len(ents),
-                  "self-extracting, format forced" if sfx else "sniffed as Zip"))
+            print("zipit: %s: %d entries, %s, sniffed as Zip"
+                  % (name, len(ents),
+                     "self-extracting" if sfx else "a plain zip"))
 
     for k in sorted(UNGRADED):
         if os.path.join(SPECIMENS, k) in have:
@@ -575,11 +632,13 @@ def main():
     if aliased:
         print("  %d entr(y/ies) named differently by unar, each adjudicated "
               "by ZipIt's own 0x2605 FileName" % aliased)
-    print("zipit: %d archive(s), %d sniffed unaided, %d entries, %d forks "
+    print("zipit: %d archive(s), %d sniffed unaided, %d also extracted "
+          "whole through their MacBinary envelope, %d entries, %d forks "
           "byte-identical to unar; fields 0x2605 x%d (%d MacBinary payloads), "
           "0x2705 x%d, 0x2805 x%d; %d entr(y/ies) declined by method; "
           "%d failure(s)"
-          % (len(have), unaided, entries, forks, tally[0x2605], macbin,
+          % (len(have), unaided, wrapped, entries, forks, tally[0x2605],
+             macbin,
              tally[0x2705], tally[0x2805], skipped, bad))
     return 1 if bad else 0
 

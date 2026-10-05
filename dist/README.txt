@@ -30,7 +30,15 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-Since v0.37.0, and in this download: AppleLink packages (.pkg) open.
+Since v0.37.0, and in this download: self-extracting zip archives open.
+ZipIt made these -- a .sea you double-click, which on a modern Mac of
+the day unpacked itself. The application part is PowerPC code, so on a
+Mac Plus it was simply a file you could not use; the zip behind it was
+always there, and this program now finds it and gives you the files.
+Pick the .sea in MacExtract's Open dialog and it opens like any other
+archive. The same is true of a self-extracting zip from the PC side.
+
+Also since v0.37.0, and in this download: AppleLink packages (.pkg) open.
 AppleLink was Apple's own online service, and a .pkg is the little
 archive its software made for sending files over it, in 1992 -- one
 Aladdin wrote the code for and nobody else ever read. Opening one used
@@ -99,7 +107,9 @@ carried them), AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (.Z).
 Nested files like .sit.hqx or .tar.Z are unwrapped automatically, by looking
 inside them
 rather than trusting the name, and a .hqx holding several files -- one
-newsgroup posting, several attachments -- gives you all of them. Resource
+newsgroup posting, several attachments -- gives you all of them. A
+Macintosh self-extracting archive is opened as the archive it is, zip
+ones included (above). Resource
 forks, type and creator codes and dates all survive, so an extracted
 application simply runs. StuffIt X and the PC-side and modern
 archives -- RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip,

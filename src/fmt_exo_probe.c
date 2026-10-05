@@ -114,6 +114,14 @@ UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io)
     return UNC_FORMAT_TAR;
 }
 
+/* The HEAD test, and only that. Where a zip's archive begins is found
+ * from its end-of-central-directory record, and the probe that scans for
+ * that one runs just before this (unc_zipseg_probe, which claims a
+ * corroborated record for either of the two zip formats). What is left
+ * here is every
+ * zip whose record is missing or unconfirmable and which says what it is
+ * at offset 0 anyway: a truncated archive, an empty one, and a file whose
+ * directory is not where it claims. */
 UncFormat unc_zip_probe(const uint8_t *head, int32_t len, UncIO *io)
 {
     (void)io;

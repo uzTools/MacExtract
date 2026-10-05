@@ -66,7 +66,16 @@ import sys
 # CONTENT, which Aladdin's own reader never did (FORMATS.md, *AppleLink
 # packages: SqueezePlay*). `run_tiers.py --check` moves no tally in
 # either lane.
-EXPECT = 65664
+# RE-TAKEN 2026-10-05 again, 65,664 -> 66,048, for the zip behind a
+# stub: `zs_cd_is_there` in src/fmt_zipseg.c, which corroborates the
+# end-of-central-directory record the probe was already scanning for and
+# claims the archive behind a self-extractor's code. Resident `CODE`
+# moved +316 and A5 +4 in all three configurations — none of it in an
+# 'OVLY' image, because the sniffer calls that probe for every file it is
+# handed. Re-taken rather than absorbed into the tolerance, on the same
+# terms as tools/build_mac.sh's six ratchets, which moved in the same
+# commit. `run_tiers.py --check` moves no tally in either lane.
+EXPECT = 66048
 TOLERANCE = 2048
 TAKEN = "2026-10-05"
 

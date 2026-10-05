@@ -29,6 +29,7 @@ under *Table notes*.
 - Size limits
 - Name limits
 - Zip's Macintosh extra fields
+- What the zip pair claims, and what it costs
 - Overlays: what the application ships, and what it costs
 - Resident memory, stack and launch (Mac target)
 - Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)
@@ -53,7 +54,7 @@ under *Table notes*.
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 227 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, **14** (*Method 14*, below), 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures + 1 synthetic, and the two installer payloads outside the corpus (*Method 14*) | 0.13–2.03 MB† | 24 of 32 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below) | 8 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries), plus 2 synthetic. **Three carry the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none, plus `MrTs_Paint_Folder.zip` and `NPWritersKit.zip`, the first real ZipIt archives here — seven more are specimens (*Zip's Macintosh extra fields*, *ZipIt's own archives*) | 12–54 KB¶ | full |
+| Zip | extract | store, deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream (*Zip's Macintosh extra fields*, below). **A zip BEHIND something else** — a self-extracting archive, whose first bytes are code — is recognised since 2026-10-05, from the end-of-central-directory record the sniffer was already scanning for (*What the zip pair claims, and what it costs*, below) | 8 fixtures (2 of them PKZIP 1.x, graded on names and entry counts only — Implode is out of v1 scope, and `unar` adjudicates 5 of their 7 entries), plus 2 synthetic. **Three carry the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none, plus `MrTs_Paint_Folder.zip` and `NPWritersKit.zip`, the first real ZipIt archives here — seven more are specimens (*Zip's Macintosh extra fields*, *ZipIt's own archives*) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -3625,7 +3626,7 @@ local file header of all 3,029 zips on the 40 CD-ROMs and FTP mirrors
 | `0x2805` | 11, all 8 bytes |
 | against `lsar` | 119/119 on name, type, creator, Finder flags and both fork lengths, bar 4 names (below) |
 | against `unar` | **113 forks byte-identical** |
-| sniffed unaided | 4 of 9 — the five self-extractors are passed `-f Zip` |
+| sniffed unaided | **9 of 9 since 2026-10-05**, where it was 4 — the five self-extractors needed `-f Zip` until the probe learnt to read past the stub (*What the zip pair claims, and what it costs*, below). Four of them arrived MacBinary-wrapped and extract whole through that envelope |
 
 **So `0x2605`'s premise holds in both directions**, where before
 2026-10-04 it was APPNOTE.TXT 4.6.4's word and nothing more
@@ -3664,6 +3665,138 @@ Implode is "not a Macintosh method". It is refused per entry, cleanly,
 and `run_zipit.py` declares those three ungraded with the reason.
 
 
+## What the zip pair claims, and what it costs
+
+**Measured 2026-10-05.** A zip behind something else — a self-extracting
+archive, whose first bytes are code — is recognised since that day, and
+the decision was a measurement rather than a design: the backwards scan
+the recognition needs was **already being run on every file the sniffer
+rejects**, and thrown away. Reasoning: DECISIONS.md 2026-10-05, *the
+scan that was already being paid for*.
+
+### What the backwards scan already cost, before any of this
+
+One instrument, `tools/sniff_io_probe.c`, counting `UncIO.read` calls
+and bytes through the caller's callbacks for `unc_sniff` alone — the
+axis a Linux wall clock cannot see, because on a Macintosh each call is
+a `SetFPos` + `FSRead` pair. Over the **955 corpus files**, with the
+scan in `unc_zipseg_probe` disabled as the control:
+
+| | reads | bytes |
+|---|---|---|
+| a whole sniff of the corpus | 19,025 | 13,456,817 |
+| of which the end-of-central-directory scan | **9,519 (50.0 %)** | **9,605,702 (71.4 %)** |
+
+Per file that reaches it, the scan is **44.8 reads and 45,271 bytes for
+a BinHex fixture** (204 of them, the commonest file in the corpus that
+no earlier probe claims), 50.0 and 50,678 for a tar, 36.2 and 36,459 for
+an ARC. A file claimed by one of the magic numbers above the zip pair
+pays nothing at all.
+
+### What recognising the archive behind a stub adds to that
+
+| population | verdict changes | reads | bytes |
+|---|---|---|---|
+| 955 corpus fixtures | **0** | +10 | +40 |
+| 8,364 files that are not Macintosh archives¹ | 6 (below) | +125 | +30,740 |
+| …of those, the **7,601 the sniffer rejects** | 0 | **+0** | **+0** |
+| …of those, the 757 it claims | 0 | +4 | +16 |
+
+¹ `reference/` and this repository's own trees plus the emulator's
+specimen cache — source, objects, documents, screenshots — swept with
+both binaries over identical bytes.
+
+**So the scan is not the cost, because the scan is not new.** What is
+new is one four-byte read of the central directory, paid only by a file
+whose record corroborates, and `+0` on every file the sniffer turns
+down. The six changed verdicts are **one gained** —
+`zipit-MrTs_Paint.sea`, the one ZipIt self-extractor that arrived
+without a MacBinary wrapper — and **five withdrawn**: four Python `.pyc`
+files and one of deark's `.o` files, which the segment half of the pair
+had been calling a spanned-zip part on four chance bytes and a nonzero
+disk number (BLOCKERS.md, *Withdrawn claims*). Those five now walk the
+rest of the probe list, which is the whole of the +125.
+
+### 68000 instructions
+
+`qemu-m68k -d exec,nochain,in_asm` through `tools/m68kprof.py`, the
+`-Os -mcpu=68000` build (TESTING.md, *The 68000 profile*). Instructions,
+not cycles:
+
+| sniffing | before | after | |
+|---|---|---|---|
+| the 10 zip fixtures | 145,879 | 151,243 | **+5,364, +536 per zip, +3.7 %** |
+| 12 BinHex fixtures | 8,414,926 | 8,414,855 | **−71, nothing** |
+
+The BinHex row is the point: a file with no record pays nothing, because
+the new tests are behind the scan succeeding. The run-to-run spread of
+this instrument is ~83 instructions on the zip row, so +5,364 is real
+and −71 is not. **No tick probe was run and the rule says why**: one
+`t` of a 440 KB zip is 17,518,142 instructions on the same build, so
++536 is 0.003 % of an extraction — four orders of magnitude from the
+close call CLAUDE.md reserves the emulator for.
+
+### Resident memory
+
+The probe is resident in **every** configuration, because the sniffer
+calls it for every file it is handed — the same shape as the AppleLink
+one (*Overlays*, below). Nothing went into an `'OVLY'` image, and the
+control moving by the same amount is what says so:
+
+| build | `CODE` | A5 |
+|---|---|---|
+| eager — SHIPPED | 54,012 → **54,328** (+316) | 19,060 → 19,064 (+4) |
+| lazy | 52,588 → 52,904 (+316) | 19,148 → 19,144 (−4) |
+| resident — the control | 163,744 → **164,060** (+316) | 37,920 → 37,924 (+4) |
+
+**320 B off every extraction's budget on a 1 MB Mac Plus.**
+`MacExtract.code.bin` 65,664 → 66,048 B; the bundle does not move.
+`src/fmt_zipseg.c` is 628 → 916 B of `-Os -mcpu=68000` text on the
+m68k-linux toolchain. `run_tiers.py --check` moves no tally in either
+lane.
+
+### What the claim rests on, and what each test rejects
+
+Four bytes of `PK\5\6` are not evidence — the five withdrawn claims are
+the measurement of that. `zs_cd_is_there` requires five things of the
+record, four of them arithmetic on fields already read and the fifth one
+four-byte read. What each one is actually observed to reject:
+
+| the test | APPNOTE.TXT | what it rejected here |
+|---|---|---|
+| at least one entry | 4.4.22 | 2 of the 5 chance signatures |
+| no more entries on this part than in the whole directory | 4.4.21 vs 4.4.22 | 2 of the 5 |
+| the directory does not start on a LATER part than this one | 4.4.20 vs 4.4.19 | 1 of the 5 |
+| ≥ 46 bytes of directory per entry, and ≥ 46 per entry that is on THIS part in front of the record | 4.3.12, 4.3.6 | a junk record in `tests/unit_formats.c` |
+| and, where the directory is on this part, `PK\1\2` at the offset the record gives | 4.3.12 | the three MacBinary-WRAPPED ZipIt specimens, whose offsets are 128 B short of the file, and a stub glued in front of an archive `zip -A` was never run on |
+
+**The entry COUNT is not walked, deliberately.** "Holds the entry count
+it declares" was the shape the open item proposed; it is not well
+defined — 4.3.13 lets a *digital signature* record follow the headers
+inside the same directory — and on a 74-entry ZipIt specimen it would
+cost ~74 reads where the whole sniff costs 4. The ≥ 46 bytes per entry
+row is the same consistency claim as a lower bound, at zero reads, and
+it is the row that fires on junk.
+
+**Two of those tests are conditional, and `zip -s` is why.** Info-ZIP
+**splits the central directory** once it outgrows a part: measured
+2026-10-05 at 1,200 entries and 64 KB per part — disk 7 of 8, the
+directory starting on disk 6, 132,048 bytes of it declared, and 238 of
+the 1,201 entries in the 26,312-byte file the record is in. Requiring
+either the extent or the signature on such a part refuses a set
+Info-ZIP writes, which the first draft of this function did.
+`tools/synth_zipsplit.py`'s `zspancd` case is that shape, in `ci.sh`.
+
+### What is graded
+
+| what | against |
+|---|---|
+| all five ZipIt self-extractors | `tools/run_zipit.py`, **9 of 9 sniffed unaided** where it was 4 of 9, every fork still byte-identical to `unar`; and the **four that arrived MacBinary-wrapped extracted WHOLE**, the route a user takes, against their data fork's extraction |
+| each of the five tests, bent one at a time | `test_zip_behind_a_stub` in `tests/unit_formats.c`, on a synthetic archive behind a `Joy!peff` stub. 5 of its checks fail on the engine of the day before |
+| a chance `PK\5\6` in something that is not an archive | the same test, four disk numbers; three of the four were claimed as a segment before |
+| a spanned set whose directory crosses a part | `tools/synth_zipsplit.py`'s `zspancd`, in `tools/run_segments.py` — graded against `unar`, against the source tree and against the same content zipped unsplit |
+
+
 ## Overlays: what the application ships, and what it costs
 
 **Since 2026-09-25 the decoders and ciphers are not resident.** They are
@@ -3680,9 +3813,9 @@ engine later the same day, fourteen until AppleLink packages arrived on
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,012 B** | 19,060 B | **65,664 B** | **224,640 B** |
-| lazy | `UNC_OVL_LAZY=1` | 52,588 B | 19,140 B | 64,256 B | 223,360 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **163,744 B** | **37,920 B** | 196,096 B | 199,424 B |
+| **eager — SHIPPED** | (default) | **54,328 B** | 19,064 B | **66,048 B** | **225,024 B** |
+| lazy | `UNC_OVL_LAZY=1` | 52,904 B | 19,144 B | 64,512 B | 223,616 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **164,060 B** | **37,924 B** | 196,352 B | 199,680 B |
 
 **Re-measured 2026-10-05**, for AppleLink packages (*AppleLink packages:
 SqueezePlay*): the control +2,148 B of `CODE` and +28 of A5, the shipped

@@ -229,7 +229,18 @@ static const UncProbe unc_sniff_order[] = {
      * as an archive that happens to be broken rather than as a piece of
      * one. This costs every file that reaches here a bounded backwards
      * scan for an end-of-central-directory record; a whole zip has one
-     * in its last 512 bytes, so it pays a single read. */
+     * in its last 512 bytes, so it pays a single read.
+     *
+     * It is also where a zip is recognised BEHIND something else — a
+     * self-extracting archive, whose first bytes are code. The record
+     * this probe already has in hand says where the central directory
+     * is, absolutely, so the decoder needs nothing extra and neither
+     * does the sniff: one four-byte read confirms the directory is
+     * there. Nothing below is reached by such a file today, and nothing
+     * above can be taken from it — every probe ahead of this one has a
+     * magic number at a fixed offset, and 8,364 files that are not
+     * archives were swept for the claim (FORMATS.md, *What the zip pair
+     * claims, and what it costs*). */
     unc_zipseg_probe,
     unc_zip_probe,
     /* SuperDisk!'s own mark is a module signature or a record tag at
