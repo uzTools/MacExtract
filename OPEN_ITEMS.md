@@ -27,7 +27,10 @@ tool** (BLOCKERS.md 2026-08-25); **have you looked at all** (BLOCKERS.md, the
 ARC 7 row, filed and disproved the same day); and — added 2026-09-26, when
 the whole *waiting on a file* section went — **was the search by NAME?** A
 format that renames nothing is invisible to every index built on names and
-plain to one built on magic.
+plain to one built on magic. **That one is worth asking twice**: on
+2026-10-06 it emptied a row that had been written in the same entry as
+the lesson, about the one format of the two that never got the magic
+search (BLOCKERS.md).
 
 **Only OPEN items live in part 2.** A closed one moves out rather than being
 annotated: the lesson to DECISIONS.md, the withdrawn claim to BLOCKERS.md,
@@ -285,38 +288,18 @@ a row here.
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.
 
-## AppleLink `.pkg`: three container paths no real package has
+## AppleLink `.pkg`: the packages that have not been on a Macintosh
 
-**The format extracts since 2026-10-05** (FORMATS.md, *AppleLink packages:
-SqueezePlay*; M56). The two real packages sniff, all four members come out
-byte-exact, six synthesised packages carry the paths those two cannot
-reach, and **`gzip` decodes every LZW fork independently** — a SqueezePlay
-fork is a `.Z` payload without its header, which settled the clear code and
-the 13-bit width against somebody else's program. The 256-vs-257 "deviation
-from `compress`" that was going to need a codec parameter was a claim about
-this engine's own source and is withdrawn (BLOCKERS.md).
+**Every container path the format has is reached by a real package since
+2026-10-06** — a resource fork, both stored bits, version 0 and folders
+to four levels, over **67 forks of 8 packages**, with `gzip` reading 59
+of the streams independently (FORMATS.md, *What the eight real packages
+exercise*; DECISIONS.md 2026-10-06). That closed the item this section
+held. One thing is left, and it is a run rather than a file:
 
-What is left is one thing, and it is not a decoder:
-
-- **Three container paths are graded against this project's own reading of
-  the one reference implementation, and nothing else.** The **resource
-  fork** (`rlen` is 0 in all four real members), the **stored** mode (set in
-  none), and **version 0 and folders** (both packages are version 1 and
-  flat) are exercised only by `tools/synth_sqp.py`, which is an encoder
-  written from the same binary as the decoder — so a mistake in that reading
-  would make the generator and the engine wrong together, **and one did**:
-  a folder's type and creator are its window rectangle, the generator put
-  `TEXT`/`ttxt` there because the decoder expected them, and the agreement
-  was the only thing checking it (DECISIONS.md 2026-10-05). The codec's two
-  rows do not have this problem; the container has no second reader
-  anywhere, and `unar`, deark and macunpack have never heard of the format.
-  **Closed by:** a third real package with a resource fork, a stored member
-  or a folder — or, cheaper and on this machine, **handing a synthesised
-  package to `AppleLink Package Translator` 3.0.3 under Mini vMac** and
-  seeing what it writes. Its SIBLING could not be given one (seven boots,
-  2026-09-01, `PKG Expand Translator`'s Standard File dialog lists only
-  directories), but that is a different program with its own interface and
-  it is worth one attempt — the same rule CLAUDE.md records for a submenu.
+| what is left | what would close it |
+|---|---|
+| **the six specimens found on 2026-10-06 have not been on a Macintosh.** The two oldest packages and the six synthesised ones have (FORMATS.md, *Run on a Macintosh*), and the six new ones are the ones carrying the folders, the stored forks and a member that expands to 541,179 B | **`tools/vmac/run.py --mem 1M --expect` over the six**, which is the same command the other eight were run with. What it would measure that Linux cannot: the `'OVLY'` image, the real sniff path, and whether a 541 KB member fits a 1 MB Macintosh's volume at all |
 
 ## StuffIt 2.0: everything it writes, and the one thing left over
 

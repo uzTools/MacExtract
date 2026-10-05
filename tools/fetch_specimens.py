@@ -16,8 +16,10 @@ beside this script record size, sha256 and URL for every one.
               same file from a CD pressed before that machine had
               SpaceSaver on it. `tools/run_spacesaver.py` grades them
               (TESTING.md).
-  applelink   the two AppleLink packages, which have no reader here yet
-              (FORMATS.md, *AppleLink packages*).
+  applelink   eight AppleLink packages, between them reaching every path
+              the format has (FORMATS.md, *What the eight real packages
+              exercise*). `tools/run_sqp.py` grades the engine on them,
+              `tools/derive_sqp.py` the reading.
   zipit       9 archives ZipIt itself wrote — five self-extracting, four
               a plain `.zip`. `tools/run_zipit.py` grades them
               (TESTING.md).

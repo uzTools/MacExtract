@@ -336,6 +336,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
 - 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
 - 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
+- 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
 
 ---
 
@@ -21356,3 +21357,103 @@ fail on the case the engine gets right and not on the case it gets
 wrong.** Asking what evidence a tolerance rests on is in CLAUDE.md;
 asking which direction it can fail in is the same question one turn
 further on.
+
+
+## 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
+
+OPEN_ITEMS.md's *three container paths no real package has* was filed on
+2026-10-05 and closed on 2026-10-06. What closed it was not new
+reasoning: it was the question DECISIONS.md 2026-09-26 had already
+written down, asked of the half of that entry which never got it.
+
+### The search that was by name, in the entry that says not to search by name
+
+2026-09-26 found two things in one sweep. SpaceSaver files came out of
+Discmaster's *detections* index, searched for the eight bytes `file`
+prints — 296 hits — and the entry's lesson is explicit: *"a format that
+renames nothing is invisible to every index built on names and plainly
+visible in one built on magic."* The AppleLink packages in the same
+entry came out of a **path**: `AppleLink 6.1` on fifteen Apple Developer
+CDs, two files, both called `.PKG`. One technique, two formats, and the
+lesson applied to one of them.
+
+The index answers the other question too. Its own `searchHelp.html`
+documents a field nothing here had used: **`detection=` is also
+full-text over the first 16 bytes of every file**, ASCII or hex, with
+`*` at either end and `?` for any single character. A version-1
+SqueezePlay package's first 16 bytes are the item count, `01`, eight
+zero bytes, and the leading zero long of its first record — so **the
+format is a hex token**, `??01` and fourteen zeros. Fifty tokens, one
+per item count, deduplicated: **1,443 files, 36 of them packages**. A
+second key — `extension=.pkg&family=unknown`, 2,641 files — adds 13
+more including every version-0 one, because version 0 puts a zero where
+the token wants a 1 and that token matches 1.1 million files of
+padding. **49 real packages**, where the project had two.
+
+**Neither key subsumes the other, and that is the transferable part.**
+20 of the 49 are not called `.pkg` at all — `SPAudit10`, `Roland`,
+`MCNCode`, `Houston, TX Map picture`, `Iconf Display` — and the hex key
+is blind to a whole version. *When a search by content is possible at
+all, run it beside the search by name rather than instead of it; the two
+are blind in different directions.*
+
+### What six of them were worth
+
+Six are specimens now, chosen to reach what nothing authentic reached
+(FORMATS.md, *What the eight real packages exercise*). Every path the
+item listed is a real package's: a **resource fork** (30 members, up to
+352,407 B), the **stored** bit on the data fork and, separately, on the
+resource fork, **version 0**, and **folders** — 14 of them, nested four
+deep. `MPW Shell 3.2.2.pkg` alone carries **29 clear codes** and fills
+the 8,192-entry table, which no real package had come near; the two the
+project had reached 12 bits and 2,260 entries.
+
+`tools/derive_sqp.py` already knew how to grade them: it reads every
+package in the specimens directory, expands both forks with its own LZW,
+and prints what the set does NOT exercise. That line has read *"the
+clear code (0 seen), widths above 12 of 13 bits, the resource fork, the
+stored mode"* since it was written, and it now reads **"UNEXERCISED by
+these packages — nothing"**. The instrument that says an item is closed
+was built the day the item was opened.
+
+### Three readers and a fourth number, because a package has no checksum
+
+A SqueezePlay package carries no digest of any kind — not per member,
+not of itself — so "correct" has to be assembled. `tools/run_sqp.py`
+lane 1 now holds **67 forks of 8 packages** against four things at once:
+the engine's output, `derive_sqp.py`'s independent reading, `gzip`
+through a `.Z` header on all 59 LZW streams, and **each record's own
+declared expanded length**, which is the writer's arithmetic rather than
+anybody's reading of it. All four agree on all 67.
+
+The lane was shown to fail before it was believed, twice and both times
+by accident first: a tuple returned where bytes were expected made gzip
+"disagree" with 60 forks whose lengths matched exactly — a disagreement
+with no difference in it is a harness bug, not a finding — and the
+collision assertion below was written because the lane failed on a real
+package. Deliberately, afterwards: one byte flipped inside
+`Read First.PKG` makes it complain four separate ways.
+
+### The two members that want one file
+
+`Iconf Display` holds a member called `bullseye π` whose data fork is
+empty and another called **`bullseye π.rsrc`**. Under `-nr` the first
+member's resource fork and the second member's own (empty) data fork are
+the same output path. The engine refuses the second entry and names it,
+which is M9's refusal to overwrite reached by a real archive for the
+first time, and `--forks hidden` writes all six members. **No
+synthesiser here would have written that package** — the generator makes
+names it chose itself — and it is the one shape in this set that tests
+the shell's naming rather than the decoder.
+
+### What it cost
+
+The item was one day old, so the cost is not the item. It is what was
+built while the second search was not being run: `tools/synth_sqp.py`,
+an encoder written to reach five paths that four real packages reach;
+**seven Mini vMac boots on 2026-09-01** trying to hand a package to the
+translator's sibling; a MANUAL_TESTS.md request to somebody outside this
+machine; and a generator bug that the agreement between generator and
+decoder hid for a day — a folder's type and creator being its window
+rectangle (2026-10-05). A real package with a folder in it would have
+caught that in one run, and 14 of them were two queries away.

@@ -127,37 +127,119 @@ def extract(macextract, path, tmp):
     return r.returncode, got, r.stderr.decode("utf-8", "replace")
 
 
-def lane_real(macextract, bad):
+def lane_real(macextract, bad, with_gzip):
+    """Every real package in SPECIMENS, graded three ways.
+
+    The two the project started with have a recorded sha256 per member
+    (`REAL`).  The six found on 2026-10-06 do not and do not need one:
+    each record states the expanded length of both its forks, so the
+    WRITER's own arithmetic grades the length, `derive_sqp.py`'s reading
+    grades the bytes against a second implementation of the container,
+    and `gzip` grades every LZW stream against a program that has never
+    heard of the format (DECISIONS.md 2026-10-06).
+    """
     pkgs = sorted(os.listdir(SPECIMENS)) if os.path.isdir(SPECIMENS) else []
     if not pkgs:
         print("sqp: no real packages in %s — run tools/fetch_specimens.py "
               "--only applelink (lane 1 skipped)" % SPECIMENS)
         return 0
-    n = 0
+    n = recorded = gz = 0
     for fn in pkgs:
         path = os.path.join(SPECIMENS, fn)
+        blob = open(path, "rb").read()
         r = run([macextract, "sniff", path])
         got = r.stdout.decode().strip()
         if got != OURNAME:
             bad.append("%s: sniff says %r, not %r" % (fn, got, OURNAME))
+        version, sqpn, recs = _ds.directory(blob)
+        want, collide = {}, set()
+        for rec, member_path in zip(recs, _ds.paths(recs)):
+            if rec["folder"]:
+                continue
+            (data, _), (rsrc, _) = _ds.member(blob, rec)
+            # The data fork's file is written whether the member has one
+            # or not — `Iconf Display` has three members with an empty
+            # data fork, and each is a file on the way out.
+            for suffix, fork, declared in (("", data, rec["dlen"]),
+                                           (".rsrc", rsrc, rec["rlen"])):
+                if suffix and declared == 0:
+                    continue
+                if len(fork) != declared:
+                    bad.append("%s: %r's %s fork expands to %d B where its "
+                               "own record declares %d"
+                               % (fn, member_path, suffix or "data",
+                                  len(fork), declared))
+                if member_path + suffix in want:
+                    collide.add(member_path + suffix)
+                want[member_path + suffix] = fork
         with tempfile.TemporaryDirectory() as tmp:
             rc, files, err = extract(macextract, path, tmp)
-            if rc != 0:
+            # `-nr` writes a resource fork as NAME.rsrc, and `Iconf
+            # Display` holds a member called `bullseye π` and another
+            # called `bullseye π.rsrc`: two members of one real package
+            # that want one output file. The engine must REFUSE the
+            # second rather than overwrite the first, per entry.
+            if collide:
+                if rc == 0:
+                    bad.append("%s: %s is claimed by two members and the "
+                               "engine did not refuse either"
+                               % (fn, ", ".join(sorted(collide))))
+                for name in sorted(collide):
+                    if name not in err:
+                        bad.append("%s: refused %r without saying so"
+                                   % (fn, name))
+            elif rc != 0:
                 bad.append("%s: exit %d: %s" % (fn, rc, err[:200]))
-            for name, want in REAL.get(fn, {}).items():
+            for name, fork in sorted(want.items()):
+                if name in collide:
+                    continue
                 n += 1
                 if name not in files:
                     bad.append("%s: no %r came out" % (fn, name))
-                    continue
-                if sha(files[name]) != want:
-                    bad.append("%s: %r is not the recorded sha256" % (fn, name))
+                elif files[name] != fork:
+                    bad.append("%s: %r is %d B where derive_sqp.py's reading "
+                               "makes it %d" % (fn, name, len(files[name]),
+                                                len(fork)))
             for name in files:
-                if name.endswith(".rsrc"):
-                    bad.append("%s: wrote a resource fork for %r, and every "
-                               "member of both packages declares rlen 0"
-                               % (fn, name))
-    print("sqp: lane 1 — %d member(s) of %d real package(s) against "
-          "derive_sqp.py's recorded sha256" % (n, len(pkgs)))
+                if name.endswith(".rsrc") and name not in want:
+                    bad.append("%s: wrote a resource fork for %r, whose "
+                               "record declares rlen 0" % (fn, name))
+            for name, digest in REAL.get(fn, {}).items():
+                recorded += 1
+                if name not in files:
+                    bad.append("%s: no %r came out" % (fn, name))
+                elif sha(files[name]) != digest:
+                    bad.append("%s: %r is not the recorded sha256" % (fn, name))
+            if with_gzip:
+                gz += _gzip_real(blob, recs, _ds.paths(recs), fn, bad, tmp)
+    print("sqp: lane 1 — %d fork(s) of %d real package(s) against "
+          "derive_sqp.py's reading and their own declared lengths, %d of "
+          "them against its recorded sha256" % (n, len(pkgs), recorded))
+    if with_gzip:
+        print("sqp: lane 1 — %d LZW fork(s) of those packages decoded by "
+              "gzip through a .Z header, byte-identical" % gz)
+    return n
+
+
+def _gzip_real(blob, recs, paths_, fn, bad, tmp):
+    """Lane 3, on a real package: gzip against the package's own bytes."""
+    n = 0
+    for rec, member_path in zip(recs, paths_):
+        if rec["folder"]:
+            continue
+        for which, clen, off, elen, stored in (
+                ("data", rec["dclen"], rec["doff"], rec["dlen"],
+                 rec["flags"] & 0x02),
+                ("rsrc", rec["rclen"], rec["roff"], rec["rlen"],
+                 rec["flags"] & 0x04)):
+            if elen == 0 or stored:
+                continue
+            rc, out = gzip_expand(blob[off:off + clen], tmp)
+            n += 1
+            if rc != 0 or out != _ds.fork(blob, off, clen, elen, stored)[0]:
+                bad.append("%s: gzip disagrees about %r's %s fork "
+                           "(exit %d, %d B out of %d declared)"
+                           % (fn, member_path, which, rc, len(out), elen))
     return n
 
 
@@ -428,7 +510,7 @@ def main():
         return 1
     bad = []
     with_gzip = gzip_available()
-    lane_real(a.macextract, bad)
+    lane_real(a.macextract, bad, with_gzip)
     lane_synth(a.macextract, bad, with_gzip)
     lane_negative(a.macextract, bad)
     lane_fuzz(a.macextract, bad)

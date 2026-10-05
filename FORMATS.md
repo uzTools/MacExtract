@@ -74,7 +74,7 @@ under *Table notes*.
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
-| AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **4 of 4 members of the two real packages**, byte-exact against the sha256 an independent reading of Aladdin's own translator recorded, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 11–41 KB★★★★ | full |
+| AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 955 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
@@ -1009,19 +1009,21 @@ oracle.
 
 **In scope since 2026-10-05** (M56), where this row read *not recognised*
 and the format had a reading and no decoder. Everything about it — the two
-directories, the folder levels, the stored bits, the codec, what is graded
-by what and the four paths that rest on a generator rather than on
-authentic bytes — is *AppleLink packages: SqueezePlay*, below.
+directories, the folder levels, the stored bits, the codec, and what is
+graded by what — is *AppleLink packages: SqueezePlay*, below. **Every path
+the format has is reached by a real package since 2026-10-06**, where
+three had rested on a generator alone.
 
-Peak heap is **11 KB on the smallest package here and 41,344 B at the
-ceiling** — and 41,360 B on a Mac Plus, the Linux figure plus the shell's
-16 B, measured on all eight packages (*Run on a Macintosh*, below). The
-ceiling is a property of the format rather than of a file: the code width stops at 13 bits, so the LZW table cannot pass 8,192
-symbols × 4 B, and `synth-sqp-clear.pkg` is the fixture that fills it. The
-two real packages are 13,396 and 17,620 B. Nothing here allocates per
-ENTRY — the directory is read one record at a time and the folder path is
-in the same block as the buffers — so a package with 255 members peaks no
-higher than one with one.
+Peak heap is **8,576 B on the one package whose only fork is stored and
+41,344 B at the ceiling** — and 41,360 B on a Mac Plus, the Linux figure
+plus the shell's 16 B, measured on the eight packages it has run (*Run on
+a Macintosh*, below). The ceiling is a property of the format rather than
+of a file: the code width stops at 13 bits, so the LZW table cannot pass
+8,192 symbols × 4 B, and three real packages and `synth-sqp-clear.pkg`
+fill it. Nothing here allocates per ENTRY — the directory is read one
+record at a time and the folder path is in the same block as the buffers
+— so the 31-member package peaks lower than the one-member one whose
+table fills.
 
 ## StuffIt SpaceSaver
 
@@ -2606,8 +2608,8 @@ reference*).
 
 **The proof is not that argument.** A SqueezePlay fork with three bytes of
 `.Z` header in front of it — `1f 9d`, then 13 bits with block mode — is
-decoded **byte-identically by `gzip`**, on all four members of the two real
-packages and on all 18 LZW forks of the synthesised ones, the 36,000-byte
+decoded **byte-identically by `gzip`**, on all **59** LZW forks of the
+eight real packages and on all 18 of the synthesised ones, the 36,000-byte
 two-clear stream included. That makes the codec's oracle a second
 implementation rather than this repository's own reading, and
 `tools/run_sqp.py` runs it on every `ci.sh` pass.
@@ -2618,53 +2620,66 @@ FILLS and for no other reason, so a clear arrives after exactly 7,936 codes
 of a generation and nowhere else — which is what `tools/synth_sqp.py`
 implements.
 
-**What the two real packages actually exercise, measured 2026-10-05.** All
-four members are LZW, none is stored, none has a resource fork and **none
-contains a clear code**; the widest width reached is **12** of the 13 bits
-available, and the largest table is 2,260 of 8,192 entries.
+### What the eight real packages exercise
 
-| member | codes | clears | widest | table |
-|---|---|---|---|---|
-| `FileMaker Import` | 1,442 | 0 | 11 | 1,698 |
-| `Package Data` | 1,432 | 0 | 11 | 1,688 |
-| `Trademark Data` | 2,004 | 0 | 12 | 2,260 |
-| `Antipiracy-Read Me First` | 947 | 0 | 11 | 1,203 |
+**Every path the format has is reached by a package Aladdin's own writer
+wrote**, measured 2026-10-06 over the eight specimens
+`tools/fetch_specimens.py --only applelink` fetches — **53 items, 39 of
+them files, 14 folders, 30 members with a resource fork, 2 stored forks
+and 50 clear codes**. Six of the eight arrived on 2026-10-06
+(DECISIONS.md, *the lesson that was written down and then not applied*);
+until then four members of two packages were all there was, and three
+container paths had no specimen at all.
+
+| package | B | ver | items | folders | with a resource fork | stored forks | clears | widest | largest table |
+|---|---|---|---|---|---|---|---|---|---|
+| `MPW Shell 3.2.2.pkg` | 352,605 | 1 | 1 | 0 | 1 | 0 | **29** | 13 | 8,192 |
+| `SCNPCK3.4.PKG` | 226,898 | 1 | 9 | **4** | 4 | 0 | 17 | 13 | 8,192 |
+| `Sys 7 for MA 2.0.1.pkg` | 64,239 | 1 | **31** | **10** | 21 | 0 | 0 | 13 | 6,691 |
+| `1-AppleTalk - Concepts.PKG` | 53,206 | **0** | 1 | 0 | 0 | 0 | 4 | 13 | 8,192 |
+| `SD! Patcher > 1.8.2.PKG` | 32,831 | 1 | 1 | 0 | 1 | **1** (resource) | 0 | — | — |
+| `Iconf Display` | 18,771 | 1 | 6 | 0 | 3 | **1** (data) | 0 | 12 | 3,191 |
+| `ALink.PKG` | 6,900 | 1 | 3 | 0 | 0 | 0 | 0 | 12 | 2,260 |
+| `Read First.PKG` | 1,373 | 1 | 1 | 0 | 0 | 0 | 0 | 11 | 1,203 |
+
+The deepest tree is `Sys 7 for MA 2.0.1.pkg`'s, whose folder levels reach
+**4**; the widest member is `MPW Shell`'s resource fork, 352,407 B of LZW
+expanding to 541,179 and defining 231,818 codes.
 
 ### What is graded by what, and what is not
 
-**Five paths no real package reaches**, and they are not all graded the same
-way. `tools/synth_sqp.py` writes a package per path, following the same
-binary the decoder was read out of — `Compress` @0x27de and `PutCode`
-@0x28fe for the codec, `DoSqForward` @0xb60 and the two directory writers
-for the container — and `tools/run_sqp.py` grades the engine against the
-bytes that went in.
+| path | what grades it |
+|---|---|
+| the **clear code**, and **13-bit** codes | four real packages, 50 clears between them, **and `gzip`** on every one of those streams; `synth-sqp-clear.pkg` as well |
+| a **resource fork** | 30 real members, up to 352,407 B, and `synth-sqp-forks.pkg` |
+| the **stored** mode | both bits on real packages — the data fork's in `Iconf Display`, the resource fork's in `SD! Patcher > 1.8.2.PKG` — and `synth-sqp-stored.pkg` |
+| **version 0** | `1-AppleTalk - Concepts.PKG`, and `synth-sqp-v0.pkg` |
+| **folders** | 14 real folders in three packages, levels 1 to 4, and `synth-sqp-folder.pkg` |
 
-| path | why no specimen reaches it | what grades it |
-|---|---|---|
-| the **clear code** | a stream must define 7,936 codes first; the largest real member defines 2,004 | `synth-sqp-clear.pkg`, **and `gzip`** |
-| **13-bit** codes | the same: the width reaches 13 at 4,096 symbols | the same two |
-| a **resource fork** | `rlen` is 0 in all four real members | `synth-sqp-forks.pkg` — the generator alone |
-| the **stored** mode | set in none of them, and the writer only stores what compressing made no smaller | `synth-sqp-stored.pkg`, whose forks are incompressible so the writer's own rule stores them — the generator alone |
-| **version 0**, and **folders** | both real packages are version 1 and flat | `synth-sqp-v0.pkg` and `synth-sqp-folder.pkg` — the generator alone |
+**What the real packages cannot grade is the bytes themselves**, because
+a package carries no checksum of any kind: no per-member digest and none
+of its own. What stands in for one is three readers over the same bytes —
+the engine, `tools/derive_sqp.py`'s independent reading, and `gzip`
+through a `.Z` header — plus **each record's own declared expanded
+length**, which is the writer's arithmetic rather than this project's
+reading. **67 forks of 8 packages agree on all four counts**, 59 of them
+with `gzip` (`tools/run_sqp.py` lane 1). The four members of the two
+original packages keep their recorded sha256 as well.
 
-**The distinction matters and is the honest one.** The two codec rows have an
-independent reader; the three container rows are graded against a generator
-built from the same reading as the decoder, so a mistake in that reading
-would make both sides wrong together — **and one did**: a folder's type and
-creator are its window rectangle, and both sides said `TEXT`/`ttxt` until
-the structure the writer copies was read rather than assumed (DECISIONS.md
-2026-10-05). **No package written here has ever
-been handed to Aladdin's own expander** (OPEN_ITEMS.md), and the two real
-packages remain the only authentic bytes anything is graded on.
+**`tools/synth_sqp.py` is no longer the only thing behind any path**,
+which was the whole of OPEN_ITEMS.md's *three container paths* item until
+2026-10-06: a mistake in the reading that made generator and engine wrong
+together — and one did, a folder's type and creator being its window
+rectangle (DECISIONS.md 2026-10-05) — now has a real package on the other
+side of it. **No package written here has still ever been handed to
+Aladdin's own expander** (MANUAL_TESTS.md).
 
-### What the two packages grade
+### What the two oldest packages grade
 
 `ALink.PKG` (6,900 B, 1992-02-11) and `Read First.PKG` (1,373 B,
-1992-03-08), from `tools/fetch_specimens.py --only applelink`. The sha256 is
-of the expanded data fork, and against the CONTAINER it is the only
-regression oracle there is — a package carries no per-member checksum, nor
-any checksum of its own. The engine reproduces all four, and `gzip`
-reproduces the four streams inside them (*What is graded by what*, above).
+1992-03-08). The sha256 is of the expanded data fork, recorded 2026-10-05
+from an independent reading of the translator, and it is the regression
+oracle `tools/run_sqp.py` holds the engine to.
 
 | package | member | type/creator | packed | expanded | sha256 (expanded) |
 |---|---|---|---|---|---|
@@ -2677,6 +2692,18 @@ All four are text and all four read as what their names say: `Trademark
 Data` is a memo dated *Tuesday, February 11, 1992*, which is `ALink.PKG`'s
 own timestamp.
 
+### Two members of one package that want one file
+
+`Iconf Display` holds a member called `bullseye π` whose data fork is
+empty, and another called **`bullseye π.rsrc`**. `-nr` writes a resource
+fork as `NAME.rsrc`, so the first member's resource fork and the second
+member's own data fork are the same output path. **The engine refuses the
+second entry and says which**, rather than overwriting the first — the
+per-entry refusal M9 added for an existing output file, reached by a real
+archive for the first time — and `--forks hidden` writes all six members.
+`tools/run_sqp.py` asserts both. No synthesiser here would have written
+that package.
+
 **Three figures stated here before 2026-10-05 were wrong and are corrected
 above**: `ALink.PKG` has **3** members, not "at least five" — the extra
 hits were the HFS directory's copy of the same records; the two longwords
@@ -2684,36 +2711,45 @@ at record +8 and +12 are a length and an offset, not a pair that "sums to
 the file's length", which held in `Read First.PKG` by coincidence; and the
 timestamps are at record +68 and +72, not "+0x50".
 
-**And the engine's peak heap on them is 17,620 B and 13,396 B** — `t
---stats`, which is the figure the table row at the top of this file carries
-alongside the 41,344 B ceiling.
+**The engine's peak heap over the eight is 8,576 to 41,344 B** — `t
+--stats`, 2026-10-06: 8,576 B for `SD! Patcher > 1.8.2.PKG`, whose one
+fork is stored and allocates no table at all, 13,396 and 17,620 B for
+`Read First.PKG` and `ALink.PKG`, 21,348 for `Iconf Display`, 35,344 for
+`Sys 7 for MA 2.0.1.pkg`, and **41,344 B for the three whose table
+fills**, which is the ceiling the table row at the top of this file
+carries. The 541,179-byte member does not raise it: the tables are sized
+by the code width, not by the fork.
 
 ### Run on a Macintosh, 2026-10-05
 
-Every package this project has, through the shipped application on an
-emulated Mac Plus — so the decoder reached the machine through its
-`'OVLY'` image, the 666-byte probe ran in the real sniff path, and the
-File Manager wrote the forks. No host lane can show any of that.
+Eight packages — the six synthesised and the two oldest real ones —
+through the shipped application on an emulated Mac Plus, so the decoder
+reached the machine through its `'OVLY'` image, the 666-byte probe ran in
+the real sniff path, and the File Manager wrote the forks. No host lane
+can show any of that. **The six specimens found on 2026-10-06 have not
+been on a Macintosh** (OPEN_ITEMS.md), and they are the ones with the
+folders, the stored forks and the 541,179-byte member.
 
 | tier | result |
 |---|---|
 | System 6.0.8, 4 MB Mac Plus | **PASS** (`run.py`) |
-| System 6.0.8, **1 MB** floor | **6/6** synthesised packages, and **2/2 real ones** (`run.py --mem 1M`, the specimens with `--expect`) |
+| System 6.0.8, **1 MB** floor | **6/6** synthesised packages, and **2/2 of the real ones it was given** (`run.py --mem 1M`, the specimens with `--expect`) |
 | System 3.0 / Finder 5.1, **1 MB** | **3/3** (`sys30.py --mem 1M`) |
 
-**The machine's peak heap is the Linux figure plus 16 B, on all eight**:
-10,848 B for the folder tree up to **41,360 B** for `synth-sqp-clear.pkg`,
-whose table fills, and 13,412 and 17,636 B for `Read First.PKG` and
-`ALink.PKG`. Eight packages, eight figures, one constant — which is what
-says the Mac is running the same allocations and not merely the same
-decoder.
+**The machine's peak heap is the Linux figure plus 16 B, on all eight it
+ran**: 10,848 B for the folder tree up to **41,360 B** for
+`synth-sqp-clear.pkg`, whose table fills, and 13,412 and 17,636 B for
+`Read First.PKG` and `ALink.PKG`. Eight packages, eight figures, one
+constant — which is what says the Mac is running the same allocations and
+not merely the same decoder.
 
 None of these is in `sample.txt`, so no tier TALLY moves: those stay at
 the 71 fixtures their figures were taken on (BLOCKERS.md, the tier
-table). The two real packages have no committed manifest — a specimen
-cannot have one — so they are graded against this engine's own Linux
-output, whose correctness is `tools/run_sqp.py`'s lane 1 against the
-sha256 an independent reading recorded.
+table). A specimen cannot have a committed manifest, so the real packages
+are graded against this engine's own Linux output, whose correctness is
+`tools/run_sqp.py`'s lane 1 — the recorded sha256 for the four oldest
+members, and `derive_sqp.py`, `gzip` and each record's own declared
+length for all 67 forks.
 
 ### What 3.5's `PKG Expand Translator` is, and what it is not
 

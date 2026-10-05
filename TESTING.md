@@ -3283,18 +3283,28 @@ python3 tools/derive_sqp.py --witness      # and grade it against the binary
 
 | lane | subject | oracle |
 |---|---|---|
-| 1 | the **two real packages** | the sha256 `tools/derive_sqp.py` recorded on 2026-10-05 from an independent reading of `AppleLink Package Translator` 3.0.3 — IMPORTED from it rather than copied, so there is no second figure to drift. Skips cleanly without `tools/fetch_specimens.py --only applelink` |
+| 1 | the **eight real packages** — **67 forks**, every path the format has | three things at once, because a package carries no checksum: **`tools/derive_sqp.py`'s** independent reading of `AppleLink Package Translator` 3.0.3, **each record's own declared expanded length** (the writer's arithmetic, not this project's reading), and for 4 of the 67 the sha256 that script recorded on 2026-10-05 — IMPORTED from it rather than copied, so there is no second figure to drift. Skips cleanly without `tools/fetch_specimens.py --only applelink` |
+| 1 | `Iconf Display`'s two members that want one output file | the engine must REFUSE the second entry under `-nr` and name it, and `--forks hidden` must write all six (FORMATS.md, *Two members of one package that want one file*) |
 | 2 | **six synthesised packages** | the bytes `tools/synth_sqp.py` compressed |
-| 3 | every **LZW fork** of all eight | **`gzip -dc`**, over the fork's own bytes with three bytes of `.Z` header in front. Skips cleanly without gzip |
+| 3 | every **LZW fork** of all fourteen — 59 real, 18 synthesised | **`gzip -dc`**, over the fork's own bytes with three bytes of `.Z` header in front. Skips cleanly without gzip |
 | 4 | **ten bent packages**, and one cut one | the sniffer must answer `unknown` for each, and the cut one must be reported truncated |
 | 5 | **300 mutants** of the six fixtures, a fixed seed | no sanitizer report and no abnormal exit from the ones that still sniff as a package — 270 of 300 do |
 
 **Lane 3 is the one worth understanding.** A SqueezePlay fork is a Unix
 `compress` code stream — 13 bits, block mode — so `1f 9d 8d` in front of it
-makes a `.Z` file, and a second implementation decodes it. That is what grades
-the **clear code** and the **13-bit width**, which no real package reaches:
-the oracle for them is somebody else's program and not this repository's
-reading (FORMATS.md, *What is graded by what, and what is not*).
+makes a `.Z` file, and a second implementation decodes it. It reads all 59
+LZW forks of the real packages and all 18 synthesised ones byte-identically,
+so the oracle for the codec — the **clear code** and the **13-bit width**
+included, which four real packages reach since 2026-10-06 — is somebody
+else's program and not this repository's reading (FORMATS.md, *What is
+graded by what, and what is not*).
+
+**Lane 1 can fail, measured 2026-10-06.** One byte flipped inside
+`Read First.PKG`'s stream, in a copy dropped into the specimens directory,
+makes it complain four separate times: the fork expands one byte long
+against its record, the engine refuses the entry, the member does not come
+out, and gzip disagrees. And the collision assertion was written after the
+engine's refusal of `bullseye π.rsrc` failed the lane, not before.
 
 **Lane 4 is how a probe with no magic number earns its keep.** The sniffer
 tests a version byte, eight zero bytes, two item counts, every record's name
@@ -3324,10 +3334,11 @@ cuts each at three points. `synth-sqp-forks.pkg` is also in
 
 **What no lane here covers, and what was run instead.** None of this
 touches a Macintosh: the images, the Toolbox and the File Manager are
-`tools/vmac/run.py`'s and `sys30.py`'s, and all eight packages were put
+`tools/vmac/run.py`'s and `sys30.py`'s, and eight packages were put
 through them on 2026-10-05 — 6/6 synthesised and 2/2 real at the 1 MB
 floor, 3/3 on System 3.0, the real ones with `--expect` because a
 specimen has no committed manifest (FORMATS.md, *Run on a Macintosh*).
+**The six specimens added on 2026-10-06 have not been** (OPEN_ITEMS.md).
 Those are not in `ci.sh` and not in `sample.txt`; re-run them from
 `tools/vmac/README.md`.
 
@@ -3642,6 +3653,64 @@ failures, and moving the `0x2705` flag read by two bytes in
   extension — inside a `.hqx`, or as a `.sea` — carries fields it would
   not see. It prints the number of archives it swept, so a sweep that
   found nothing is visible rather than silent.
+
+## Searching somebody else's index by content (`tools/scan_discmaster.py`, not in `ci.sh`)
+
+Added 2026-10-06. Not in `ci.sh`: it needs the network, and what it
+produces is a list of URLs rather than a verdict. It is here so a sweep
+can be re-run and widened rather than re-invented, which is the same
+reason `tools/scan_discmaster_zips.py` exists for the narrower sweep it
+was written for.
+
+**Two content indexes, and the second was never used here before.**
+Discmaster's `detection=` field is full-text over what each identifier
+printed AND — documented on its own `searchHelp.html` — over the **first
+16 bytes of every file**, as ASCII or hex, with `*` at either end and `?`
+for any single character. The other is an HTTP `Range` request on the
+file itself, which is the cheap form of searching by content when nobody
+has indexed the content.
+
+    # a version-1 AppleLink package IS a hex token: ?? 01 and 14 zeros
+    tools/scan_discmaster.py --probe pkg \
+        --query 'detection=01010000000000000000000000000000&dedup=dedup'
+    tools/scan_discmaster.py --probe pkg \
+        --query 'extension=.pkg&family=unknown&dedup=dedup'
+
+Three probes, each written from this project's own reading of the format
+it names, so each can be checked against the corpus before it is pointed
+at a stranger's disk. That check matters more than it sounds:
+
+| probe | what it accepts | established before the sweep |
+|---|---|---|
+| `pkg` | an AppleLink package: the item count, the version, eight zero bytes, then the whole directory validated against the file's own size and tiling | **exactly the 6 synthesised `.pkg` fixtures out of 956 files in `fixtures/`**, and both real packages, which is a test that can fail in both directions |
+| `sit` | a classic StuffIt archive, reported when an entry's method byte carries the Optimizer bit `0x40` or the encrypted bit `0x10` | the 336 `rLau` archives in `fixtures/` — **none** of which sets either bit, which is why the sweep was worth running |
+| `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, where it reproduces FORMATS.md's *the biggest method-8 fork in reach is 44,549 B and compresses to 1,230* |
+
+**The sweeps that have been run, by key:**
+
+| date | key | listed | hits |
+|---|---|---|---|
+| 2026-10-06 | `detection=<n>01` + 14 zero bytes, n = 1…50 except 7, deduplicated | 1,443 | **36** AppleLink packages |
+| 2026-10-06 | `extension=.pkg&family=unknown`, deduplicated | 2,641 | 13 more, **49** in all, 7 of them version 0 |
+
+**Both keys were needed, and the pair is the method.** The hex token
+cannot see a version-0 package — version 0 puts a zero byte where the
+token wants a 1, and the resulting token (one byte, then fifteen zeros)
+has 1.1 million hits, most of them padding; all 7 version-0 packages came
+from the extension key. The extension key cannot see a package that is
+not called `.pkg`, and **20 of the 49 are not** — `SPAudit10`, `Roland`,
+`MCNCode`, `Houston, TX Map picture`, `Iconf Display`, `DART15Docs` and
+fourteen more; one of them is a specimen. Either key alone would have
+missed something.
+`n = 7` is excluded from the hex sweep for the same reason version 0 is:
+`0701` + zeros is 612,514 files.
+
+**What the tool cannot see**, both about the index rather than the
+formats: a file whose first 16 bytes the index did not record — which is
+why every `detection=` sweep above is paired with one reached a
+different way — and anything past Elasticsearch's result window, which
+is a server-side cap that `sizeMin`/`sizeMax` shards around rather than
+a page count.
 
 ## Segmented archives (`tools/run_segments.py`, in `ci.sh`)
 
