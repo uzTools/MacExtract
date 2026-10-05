@@ -273,31 +273,43 @@ generator that repairs the checksum it breaks. What is left:
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.
 
-## AppleLink `.pkg`: two packages, and a probe that names neither
+## AppleLink `.pkg`: the format is read, and nothing in the engine reads it
 
-**Two real AppleLink packages arrived on 2026-09-26** — `ALink.PKG` (6,900 B)
-and `Read First.PKG` (1,373 B), both beside AppleLink 6.1 on fifteen Apple
-Developer CDs, fetched by `tools/fetch_specimens.py` (FORMATS.md, *AppleLink
-packages*). They settle what a package is and open two items:
+**The format is SqueezePlay and it is settled.** Aladdin's own expander —
+`AppleLink Package Translator` 3.0.3, in the StuffIt Deluxe **3.0.7**
+installer, 33,300 bytes of 68k with **148 MacsBug symbols** — gives the
+container and the codec, and `tools/derive_sqp.py` grades that reading
+against both real packages: **4 of 4** members expand to their declared
+length, sha256 recorded (FORMATS.md, *AppleLink packages*). Rule #1 is
+satisfied: the citation is a reference implementation, not two specimens.
 
-- **A package is binary, and it is a container.** Each record holds two
-  lengths, a type, a creator, Finder flags, a Pascal name and two Macintosh
-  dates, with non-text data after them; `Read First.PKG` has one record and
-  `ALink.PKG` at least five. The *transfer manifest* hypothesis is withdrawn
-  (BLOCKERS.md). The rest of the layout is not derived: rule #1 does not let
-  two specimens stand in for a reference.
-- **There is no content test for one.** The probe that claimed to be one
-  was reading a translator COMMAND parser and is gone; a `.pkg` sniffs as
-  *unknown*, which is what it already did on both real packages
-  (DECISIONS.md 2026-09-27, *the recogniser that was a command line*).
-  **Closed by:** a reference implementation or a published layout for the
-  binary container — Aladdin's translator recognises a package by its
-  extension and reads a FOLDER, so it is not one.
+What is left is implementation, and one thing the specimens cannot grade:
 
-No decoder is written, and the reader on the emulator image turns out to be a
-driver: it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into
-it, so whatever expands a package is in that 26,362-byte resource and not in
-the translator.
+- **No decoder in the engine, and a `.pkg` still sniffs as *unknown*.**
+  The removed probe was never a file test (BLOCKERS.md). A real one now
+  has something to test: an item count, a version byte of 1, eight zero
+  bytes, and a directory whose records tile the file to its last byte.
+  **Closed by:** `src/fmt_sqp.c` plus a sniffer, an `'OVLY'` image and a
+  budget row — the ordinary cost of a format, and the codec is mostly
+  `src/unc_lzw.c`, which is already `compress(1)`-compatible with a
+  settable `maxbits` for `.Z`, ARC 8/9, StuffIt method 2 and DiskDoubler
+  method 1. **It cannot be reused unchanged:** SqueezePlay sets the next
+  free code to **256** after a clear where `compress` sets 257, so
+  reusing that decoder as-is would decode the first clear onwards wrongly
+  (FORMATS.md, *AppleLink packages*). **Neither real package contains a
+  clear code** — measured, 0 in all four members — so that deviation is
+  the one fact here no specimen can confirm.
+- **Four paths are read and UNGRADED, and all four want one more file.**
+  Measured over both packages: the **resource fork** (a second stream
+  through the same branch, `DoWork` @0x9f2 — `rlen` is 0 in all four
+  members), the **stored** mode (bit 1 of the record's flags, set in
+  none), the **clear code** (0 occurrences) and **13-bit codes** (the
+  widest reached is 12, the largest table 2,260 of 8,192).
+  **Closed by:** a third package that has a resource fork, a stored
+  member, or enough data to clear the table. Discmaster indexed the two
+  this project has and was not searched again for a third, and "this
+  machine cannot get one" is a claim to re-test before it is filed
+  (CLAUDE.md).
 
 ## StuffIt 2.0: everything it writes, and the one thing left over
 

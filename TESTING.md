@@ -3117,29 +3117,49 @@ that word meant (DECISIONS.md 2026-08-25, SpaceSaver's codecs).
 does not terminate on a corrupted stream; without the timeout the negative
 control hangs the suite, which is how it was found.
 
-## AppleLink packages (unit tests + a corpus sweep)
+## AppleLink packages: SqueezePlay (`tools/derive_sqp.py`, not in `ci.sh`)
 
-Added 2026-08-23. `.pkg` is detect-only, so what there is to test is the
-probe, and it is tested two ways.
+Rewritten 2026-10-05, when the format stopped being guessed at. `.pkg` is
+still not recognised by the engine, so there is nothing in `ci.sh` to run;
+what there is to test is the READING, and it is tested two ways.
 
-**Eight unit checks** assert the shape of Aladdin's own recogniser rather than
-the format: the two accepted third tokens, case-insensitivity, leading
-whitespace, and four near-misses — a prefix that is not a token (`Decoder`), a
-missing third token, a wrong one, and prose. They fail against a probe that
-stops checking the third token.
+**Thirteen witnesses** (`--witness`) are byte patterns in `'Othe' 1` of
+`AppleLink Package Translator` 3.0.3, one per fact the reader relies on:
+the 86-byte SQP record, the 90-byte HFS record at 86 × count + 22, the
+9-bit start, the 257th first code, the 256 clear code, the 8192 ceiling,
+the two fork lengths and the stored bit. A different build of the expander
+makes this print MISSING rather than silently confirm.
 
-**The corpus sweep is the part that matters.** A text-shaped probe can only be
-trusted by how often it is wrong about files that are not packages, so
-`macextract sniff` was run over all **928 fixtures**: 0 said AppleLink. That is
-the DiskCopy standard — its probe was graded the same way — and it is the only
-evidence available while no `.pkg` file exists here.
+**The grading is the part that matters.** Both real packages are parsed and
+every member expanded: **4 of 4** reach their declared length, and each is
+checked against a recorded sha256. The directory is also required to tile
+the file — the last member must end at the last byte — which is what
+catches an off-by-one in the record stride.
 
-**What this cannot see.** Whether a real package would be recognised. The
-probe is a transcription of the reference's test, and the reference is the
-only thing that says what a package looks like; nothing here closes that loop
-(OPEN_ITEMS.md). `tools/vmac/spacesaver.py --pkg` re-derives the test from the
-translator and prints four witnesses, which is a check on the transcription,
-not on the format.
+**What this cannot see.**
+
+- **Four paths that no member takes.** Both packages carry `rlen` = 0 and
+  neither sets the stored bit, and the LZW streams contain **0 clear
+  codes** and never widen past **12** of 13 bits (largest table 2,260 of
+  8,192). The script prints that list on every run — an UNEXERCISED line —
+  so a green pass cannot be read as covering them (OPEN_ITEMS.md).
+- **Whether a subtly wrong decoder is wrong.** A package has no per-member
+  checksum, so the only oracle beyond the declared length is the sha256
+  this script recorded from its own output on 2026-10-05. That makes it a
+  REGRESSION oracle and not an independent one; the independent evidence is
+  the declared length, the file tiling, and that all four members read as
+  coherent Mac-Roman text saying what their names say.
+- **The first version of this script could not fail at all**, and the fix
+  is the reason the length check is worth anything: it passed `rec["dlen"]`
+  into the decompressor as a ceiling and then asserted the output was that
+  long. Removing the ceiling makes the stream's natural end the test, and a
+  single flipped byte then reports 1,960 against 1,954 and exits non-zero
+  (DECISIONS.md 2026-10-05, *the sample that was read as the table*).
+
+The old unit checks for `unc_applelink_probe` are gone with the probe: what
+they asserted was the shape of a translator COMMAND parser, and the
+"0 of 928 fixtures said AppleLink" sweep was measured over a corpus holding
+neither a package nor a script (BLOCKERS.md).
 
 ## Archives named but not extracted (`tools/run_foreign.py`, in `ci.sh`)
 
@@ -3676,6 +3696,7 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_stuffit8.py` | StuffIt method 8 (Miller-Wegman) | all 4 method-8 forks in the corpus; `--grid` re-searches the parameters |
 | `derive_arc.py` | ARC's member header, RLE90, and methods 4, 8 and 9 | 6 members; `--grid` derives them from archives a real ARC 5.21q writes to order |
 | `derive_cpt.py` | Compact Pro, container and both coders | 536 forks of 68 archives |
+| `derive_sqp.py` | AppleLink `.pkg` — SqueezePlay's container and its 13-bit LZW, out of Aladdin's own expander | **4 of 4** members of the two real packages, to their declared length and a recorded sha256, plus 13 witnesses in the expander. What it CANNOT see: the resource fork and the stored mode, which neither package uses (above) |
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_sit6.py` | StuffIt method 6: its framing, its fixed code book and its PackBits tail | all 11 method-6 forks in the corpus — 27 blocks, 13 Huffman and 14 stored. It parses the 26 bytes out of deark's source rather than holding a copy, so it cannot agree with the engine by sharing a typo with it; and it measures the one thing the two references disagree about, whether the stop code follows the declared length (13 of 13) |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read — and since 2026-09-22 it NAMES those two rather than counting them, so the list can be held against the one `derive_ddc.py` reads out of the container |

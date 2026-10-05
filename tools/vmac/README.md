@@ -3568,3 +3568,60 @@ normally, and `3-cancelled.png` is written anyway, showing the progress dialog
 instead of the alert. That happened on 2026-08-07 when the DLOG grew 30 points
 taller. The constant's comment derives it from the DLOG origin plus the DITL
 rect; **check the screenshot actually shows the alert.**
+
+## The AppleLink package expander — getting it out, with no emulator
+
+Added 2026-10-05. The reference implementation for `.pkg` is
+`AppleLink Package Translator` 3.0.3, which ships **only** in the StuffIt
+Deluxe **3.0.7** installer — 3.5 replaced it with a `CompactPro` build
+(FORMATS.md, *AppleLink packages*). Getting it needs no boot: the installer
+is two StuffIt segments, and the join is arithmetic rather than guesswork.
+
+```sh
+# The 3.0.7 installer, two floppies `hmount` opens, in
+# ~/.cache/macextract/stuffit307/x/'Stuffit Deluxe 3.0.7'/
+#   StuffIt Deluxe 3.0.7 Disk 1.dsk     the installer, segment 1
+#   StuffIt Deluxe 3.0.7 Disk 2.dsk     segment 2
+python3 - <<'PY'
+import struct, sys
+sys.path.insert(0, 'tools/vmac')
+from superdisk import read_forks
+B = "/home/claude/.cache/macextract/stuffit307/x/Stuffit Deluxe 3.0.7/"
+seg = {}
+for f in ("StuffIt Deluxe 3.0.7 Disk 1.dsk", "StuffIt Deluxe 3.0.7 Disk 2.dsk"):
+    for v in read_forks(B + f).values():
+        d = v[2]                       # NOT values()[0]: each floppy also
+        if d[:2] == b"\xac\xd9":       # carries an `Icon\r` with an empty
+            seg[d[2:4]] = d            # data fork. Select by the magic.
+a, b = seg[b"\x00\x01"], seg[b"\x00\x02"]
+# Each segment carries a 100-byte header, and the payloads must sum to the
+# length the SIT! header declares. They do, to the byte.
+assert len(a) - 100 + len(b) - 100 == struct.unpack(">I", a[0x6a:0x6e])[0]
+open("/tmp/sd307.sit", "wb").write(a[100:] + b[100:])
+PY
+build/rel/macextract x --only "Aladdin/Translators/AppleLink Package Translator" \
+    -o /tmp/sd307out /tmp/sd307.sit
+```
+
+Then pull `'Othe' 1` out of the resource fork with `spacesaver.resources()`
+and write it to `$UNC_VMAC_HOME/pkgeng/alink307.bin`, which is where
+`tools/derive_sqp.py --witness` looks for it.
+
+**Three things to know.**
+
+- **`unar` cannot open the joined archive's translators usefully, and this
+  engine can.** `lsar` lists the members but the `.rsrc` sidecars it writes
+  are not raw resource forks — every one of them starts with the same
+  16 bytes — so `resources()` cannot parse them. `macextract x` writes the
+  fork and its CRCs pass.
+- **Neither tool recognises a StuffIt SEGMENT** (`ac d9 00 01`). `--part`
+  is for a different segmentation; `macextract l seg1.data` says *format
+  not recognized*. That is why the join is done by hand above, and the
+  check that it is right is the `assert` above: `len(a)-100 + len(b)-100`
+  equals the `0x14dd14` at offset 0x6a of segment 1 to the byte.
+- **The 148 MacsBug symbols are the whole reason this is readable.** A
+  symbol FOLLOWS the routine it names, so a name at offset X names the
+  routine ENDING at X — `tools/derive_sqp.py` documents the routines by
+  the address of their body, not of their name. `spacesaver.macsbug_symbols()`
+  returns the name offsets; mapping them to bodies is one loop and getting
+  it backwards shifts every citation by one routine.

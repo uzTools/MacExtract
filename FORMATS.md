@@ -21,7 +21,7 @@ under *Table notes*.
 - StuffIt 2.0's pluggable modules, and what an "Optimizer" was
 - StuffIt 5's method 14
 - Encryption
-- AppleLink packages: two specimens, and a probe that names neither
+- AppleLink packages: the format, read out of Aladdin's own expander
 - Archives named but not extracted
 - Envelope auto-unwrap
 - Segmented archives (multi-part sets)
@@ -73,7 +73,7 @@ under *Table notes*.
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
-| AppleLink package (.pkg) | **not recognised** — the probe was removed 2026-09-27 | — | two specimens since 2026-09-26; what was read out of Aladdin's translator is its COMMAND parser and not a file test (*AppleLink packages*, below) | — | — |
+| AppleLink package (.pkg) | **not recognised** — no decoder in the engine; the probe was removed 2026-09-27 | — | the format is READ and graded 4/4 on both specimens against `AppleLink Package Translator` 3.0.3, the reference implementation (*AppleLink packages*, below) | — | — |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
@@ -2448,90 +2448,159 @@ The CR is why the two hosts differ in one place and only one: the saved
 file keeps it, and the line the CLI PRINTS turns it into a newline,
 because a CR sent to a terminal overwrites the line just printed.
 
-## AppleLink packages: two specimens, and a probe that names neither
+## AppleLink packages: the format, read out of Aladdin's own expander
 
-**Two real packages, since 2026-09-26.** `ALink.PKG` (6,900 B, 1992-02-11)
-and `Read First.PKG` (1,373 B, 1992-03-08) ship beside AppleLink 6.1 on
-fifteen Apple Developer CDs; `tools/fetch_specimens.py --only applelink`
-fetches both, with sizes and sha256 in `tools/specimens/applelink.tsv`.
-They replace every earlier statement about what a `.pkg` is.
+**The format is SqueezePlay, and it is read.** Both real packages parse and
+all **4 of 4** members expand to their declared length byte for byte, graded
+by `tools/derive_sqp.py` (TESTING.md, *AppleLink packages: SqueezePlay*). **No decoder is in the
+engine yet**, and a `.pkg` still sniffs as *unknown* (OPEN_ITEMS.md).
 
-**A package is a binary container, not a manifest.** Read off the two files
-and nothing more — the layout is not derived here, because rule #1 does not
-let two specimens stand in for a reference. Both begin with two bytes
-(`01 01` and `03 01`) and then a record at +0x12 holding, in this order: two
-big-endian longwords (1,175 and 198 in `Read First.PKG`, which are its whole
-length between them), four zero bytes, a four-character **type** at +0x1e, a
-four-character **creator** at +0x22, **Finder flags** at +0x26, a **Pascal
-name** at +0x2e, and two Macintosh **timestamps** at +0x50. `Read First.PKG`
-has one such record — `TEXT`/`ttxt`, *"Antipiracy-Read Me First"* — and
-`ALink.PKG` has at least five, at +0x1e, +0x74, +0xca, +0x130 and +0x18a,
-all `TEXT`/`MACA`, named *"FileMaker Import"*, *"Package Data"* and
-*"Trademark Data"*. What follows the records is not text — `strings` finds
-nothing in it — and in `Read First.PKG` it is 1,175 bytes standing in for a
-document whose uncompressed copies run 2,272 to 2,603 B, so it is
-compressed. A package therefore names its members' Finder metadata inside
-itself and carries their bytes, which is exactly what the 2026-08-23
-*transfer manifest* hypothesis said it did not (BLOCKERS.md).
+**The reference implementation is `AppleLink Package Translator` 3.0.3,
+"Copyright © 1990-1992 Aladdin Systems, Inc."** — `'Othe' 1`, 33,300 bytes
+of 68k carrying **148 MacsBug symbols**, so every routine below is named by
+the binary. It ships in the **StuffIt Deluxe 3.0.7** installer and in no
+later one. Its `'HBSF' 0` resource is the Pascal string `SQUEEZEPLAY 1.0`,
+its menus read *"Expand from AppleLink Package"* and *"Compact into AppleLink
+Package"*, and it carries AppleLink's own `'ALinkFont'` and an
+`'INT ' 6000` named *"line speed, bps"*. `tools/vmac/README.md` (*The
+AppleLink package expander*) rebuilds it; `tools/derive_sqp.py --witness`
+checks thirteen byte patterns in it, which a different build fails.
 
-**Both packages are gradeable.** `Read First.PKG`'s member is on the same
-discs uncompressed — `Marketing/Antipiracy Toolkit/Antipiracy-Read Me First`,
-2,272 B on the May 1992 CD and 2,603 B from October 1992 on. The package is
-dated 1992-03-08 and so predates both, which is a thing for whoever writes
-the decoder to settle rather than a reason not to write it.
+### The container
 
-**The routine that was read is the translator's COMMAND parser, and the
-probe is gone.** `unc_applelink_probe` shipped from 2026-08-23 to 2026-09-27
-and implemented `PKG Expand Translator`'s @0x2952: whitespace-delimited
-tokens, first `Decode` and third `to` or `into`, `_CmpString` and so
-case-insensitive. That transcription was accurate and it answers a different
-question than the one it was put to — **five sibling translators on the same
-disk carry the same routine with the same `STR# 129` verbs**:
+Read off `RdSQPDirectory` @0x5e72, `WrSQPDirectory` @0x5f80 and
+`WrHFSDirectory` @0x5eb2, and verified on both packages — the members tile
+each file to its last byte with nothing left over.
 
-| translator | `STR# 129` items 1–4 |
+| offset | what |
 |---|---|
-| PKG Expand | `Decode`, ` Folder`, `.pkg`, `to` |
-| CompactPro | `Decode`, ` Folder`, `.cpt`, `to` |
-| UnZip | `Decode`, ` Folder`, `.zip`, `to` |
-| BinHex4 | `Decode`, `Encode`, `replace`, … `to` |
-| UUCode | `Decode`, `Encode`, `replace`, … `to` |
-| Unix Compress | `Decode`, `Encode`, `replace`, … `to` |
+| +0 | `u8` number of items; `u8` version (1 in both); 8 zero bytes |
+| +10 | **SQP directory**: *count* × **86**-byte records |
+| +86n+10 | `u32` number of items again, then 8 zero bytes |
+| +86n+22 | **HFS directory**: *count* × **90**-byte records — the same fields with four more bytes in front, since one is written from the node at +12 and the other from +8 |
+| +86n+22+90n | the members' bytes, in record order |
 
-The CompactPro translator's recogniser is instruction-for-instruction the
-same routine as PKG Expand's, differing in its globals and in item 3 — the
-EXTENSION. Its input is a Handle the host passes at `param+4`, not the file:
-`Decode "X" to "Y"` is a command in the translator API's own language, so a
-line it accepts is equally the CompactPro translator's command and a Compact
-Pro archive is not. Applied to file content, that test named
-`Decode "Payload.hqx" to "Out"` an AppleLink package, and **that is all it
-ever named** — so the probe is removed rather than kept (DECISIONS.md
-2026-09-27, *the recogniser that was a command line*). The "0 false positives
-across 928 fixtures" measurement was true and empty: the corpus held neither
-a package nor a translator script.
+An SQP record, with the routine that names each field:
 
-`ALink.PKG` and `Read First.PKG` both sniff as **unknown** today. The second
-sniffed as a **Compact Pro segment** until v0.34.0's segment identity check,
-which that very file is what bought (`src/fmt_cptseg.c`). **What a content
-probe for the real format needs is a reference for the binary layout, and
-this translator is not one** — Aladdin recognised a package by its
-extension.
+| offset | field | named by |
+|---|---|---|
+| +0, +4, +16 | three `u32`s, **zero in all four records** and not read by anything above | — |
+| +8 | `u32` compressed length | `DoWork`, the copy loop's budget |
+| +12 | `u32` absolute offset of the member | `DoWork` @0x606, `SetFPos` |
+| +20 | `OSType` file type | the field `StuffIt Engine™` also tests |
+| +24 | `OSType` creator | |
+| +28 | `u16` Finder flags, then 6 bytes of location | |
+| +36 | `Str31` name, 32 bytes fixed | |
+| +68 | `u32` creation date; +72 `u32` modification date | |
+| +76 | `u32` resource fork length | `GetExpandedSize` @0x13ac, node+88 |
+| +80 | `u32` data fork length | same routine, node+92 |
+| +84 | `u16` flags; **bit 1 set = stored**, clear = LZW | `DoWork` @0x618, `btst #1` |
 
-**What the translator does with one is only read, not run — and what it
-reads is a folder.** A package
-expands into a folder named after itself — `.pkg` stripped, `" Folder"`
-appended, so `Report.pkg` becomes `Report Folder` (@0x2e5c) — and the
-expansion is not in the translator at all: it opens the file and then calls
-`GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps into it (@0x334c).
-The translator is a driver. Its Standard File dialog lists **only
-directories** (`ioFlAttrib` bit 4, `Othe` 0 @0x215e), which is why no package
-written here could be selected — seven boots, each with a control that
-succeeded (DECISIONS.md 2026-09-01, *the package that cannot be handed
-over*). That is consistent with the command reading above: the translator is
-handed a place and a command, and never sniffs anything.
-`tools/vmac/spacesaver.py --pkg` re-derives the routine out of the installed
-translator, with four witnesses that fail against a different build; **no
-boot was needed to settle what it is** — the five sibling translators were on
-the same image all along.
+**The resource fork is read but UNGRADED.** It is a second stream in the
+same region through the same stored-or-LZW branch (`DoWork` @0x9f2), and
+both packages carry `rlen` = 0, so nothing here exercises it.
+
+### The codec
+
+`compress`-style LZW, off `GetCode` @0x2b98 and `Decompress` @0x2a78;
+`InitLzw` @0x26b0 builds the `lmask`/`rmask` tables and allocates the
+prefix, suffix and stack buffers (34,396 / 17,198 / 8,599 bytes).
+
+| parameter | value |
+|---|---|
+| code width | 9 bits, rising to **13** |
+| table ceiling | 8,192 codes |
+| clear code | **256** |
+| first free code | 257 after a reset |
+| packing | LSB-first, in blocks of *n_bits* bytes; a width change discards the rest of the block |
+
+**One difference from Unix `compress`, and it is the kind that has to come
+from the binary:** on a clear code this expander sets the next free code to
+**256**, not 257 (@0x2ae0), so the clear code's own slot is reused from then
+on. `src/unc_lzw.c` therefore cannot be reused unchanged (OPEN_ITEMS.md).
+
+**What the two packages actually exercise, measured 2026-10-05.** All four
+members are LZW and **none contains a clear code**; the widest width reached
+is **12** of the 13 bits available, and the largest table is 2,260 of 8,192
+entries. So the clear path, the 13-bit width, the stored mode and the
+resource fork are all READ and UNGRADED — `tools/derive_sqp.py` prints that
+list rather than leaving it to be inferred from a pass.
+
+| member | codes | clears | widest | table |
+|---|---|---|---|---|
+| `FileMaker Import` | 1,442 | 0 | 11 | 1,698 |
+| `Package Data` | 1,432 | 0 | 11 | 1,688 |
+| `Trademark Data` | 2,004 | 0 | 12 | 2,260 |
+| `Antipiracy-Read Me First` | 947 | 0 | 11 | 1,203 |
+
+### What the two packages grade
+
+`ALink.PKG` (6,900 B, 1992-02-11) and `Read First.PKG` (1,373 B,
+1992-03-08), from `tools/fetch_specimens.py --only applelink`. The sha256 is
+of the expanded data fork and is the only regression oracle there is — a
+package carries no per-member checksum.
+
+| package | member | type/creator | packed | expanded | sha256 (expanded) |
+|---|---|---|---|---|---|
+| `ALink.PKG` | `FileMaker Import` | `TEXT`/`MACA` | 1,855 | 3,098 | `21b65275…5602` |
+| | `Package Data` | `TEXT`/`MACA` | 1,841 | 3,097 | `08854431…3f2a` |
+| | `Trademark Data` | `TEXT`/`MACA` | 2,654 | 4,579 | `473810d5…6239` |
+| `Read First.PKG` | `Antipiracy-Read Me First` | `TEXT`/`ttxt` | 1,175 | 1,954 | `fb90a049…8641` |
+
+All four are text and all four read as what their names say: `Trademark
+Data` is a memo dated *Tuesday, February 11, 1992*, which is `ALink.PKG`'s
+own timestamp.
+
+**Three figures stated here before 2026-10-05 were wrong and are corrected
+above**: `ALink.PKG` has **3** members, not "at least five" — the extra
+hits were the HFS directory's copy of the same records; the two longwords
+at record +8 and +12 are a length and an offset, not a pair that "sums to
+the file's length", which held in `Read First.PKG` by coincidence; and the
+timestamps are at record +68 and +72, not "+0x50".
+
+### What 3.5's `PKG Expand Translator` is, and what it is not
+
+**It is a `CompactPro` build.** Its `'Othe' 0` resource is *named*
+`CompactPro`, its `'Name' 0` is `AppleLinkPKG`, and it carries no AppleLink
+resource of any kind — no font, no comms strings, no `'HBSF'`. 3.5 did not
+carry 3.0.7's expander forward under a new name; it replaced it with a
+driver. `Unix Compress Translator`'s code resource is likewise named
+`UUCode`.
+
+**Its seven-way dispatcher is the engine's, and no branch of it is `.pkg`.**
+`Othe` 0 @0x30c0 is an if/else-if chain of seven recognisers, each handing
+the file to one `'Eng '` resource in `StuffIt Engine™` through a pair of
+`GetResource`/`HLock`/`jsr`/`ReleaseResource` thunks — fourteen call sites,
+a complete 7 × 2 table:
+
+| recogniser | test | → | what that resource is |
+|---|---|---|---|
+| @0x37ac | extension `.HQX` | `'Eng ' 0` | BinHex — it holds the 64-character table |
+| @0x37f0 | type `PACT` **or** creator `EXTR` | `'Eng ' 1` | **Compact Pro** — `PACT`/`CPCT` is Compactor (`reference/macutils/README`), and its header parser and error numbers match `src/fmt_cpt.c` and `STR# 211` |
+| @0x3834 | type `HBSF` | `'Eng ' 2` | the **StuffIt/PackIt** unstuffer — it tests node+32 against `SIT!`, `PIT ` and `HBSF` |
+| @0x386a | `.ZIP`, `.GZ`, `.TGZ` | `'Eng ' 3` | Zip/gzip — it holds the gzip magic |
+| @0x38dc | `.ARC` | `'Eng ' 4` | ARC |
+| @0x3920 | `.Z` | `'Eng ' 5` | Unix compress — it holds `1f 9d` |
+| @0x3962 | `.UU`, `.UUE` | `'Eng ' 6` | uuencode |
+
+The claim that `'Eng ' 2` holds the AppleLink expander is **withdrawn**
+(BLOCKERS.md). No `'Eng '` resource does. **What the engine has about `.pkg`
+is two strings and no code**, measured over the whole 504,902-byte fork:
+`STR# 1002` (*"Triggers"*) lists `.sit`, `big`, `.sea`, `.cpt`, `.pkg` — the
+extensions that trigger expansion — and `PICT` 4001, the About picture,
+reads *"ARC (.arc) archives; AppleLink (.pkg) packages; gzip …"*. Every other
+occurrence of the word in the fork is Aladdin's own address,
+*"AppleLink: ALADDIN"*. The engine recognises a package by its extension,
+which is what `PKG Expand Translator` does too.
+
+**What the 3.5 translator does with a package is open it and hand it over.**
+It expands into a folder named after itself — `.pkg` stripped, `" Folder"`
+appended, so `Report.pkg` becomes `Report Folder` (@0x2e5c) — and its
+Standard File dialog lists **only directories** (`ioFlAttrib` bit 4, @0x215e),
+which is why no package written here could be selected: seven boots, each
+with a control that succeeded (DECISIONS.md 2026-09-01, *the package that
+cannot be handed over*). `tools/vmac/spacesaver.py --pkg` re-derives its
+command parser, with four witnesses that fail against a different build.
 
 ## Archives named but not extracted
 
@@ -6107,7 +6176,7 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the thirteen are listed under *The paid box*, below | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
-| AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **not recognised.** Named from 2026-08-23 to 2026-09-27, when what had been read out of `PKG Expand Translator` turned out to be the translator API's command parser, shared verbatim with five of its siblings (*AppleLink packages*, above). Two specimens; what is missing is a reference for their binary layout |
+| AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **not recognised.** Named from 2026-08-23 to 2026-09-27, when what had been read out of `PKG Expand Translator` turned out to be the translator API's command parser, shared verbatim with five of its siblings (*AppleLink packages*, above). The layout is no longer missing: 3.0.7's `AppleLink Package Translator` is the reference and the format is read (*AppleLink packages*, above). What is missing is a decoder in the engine |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
@@ -6164,8 +6233,10 @@ had.
 (`stuffitdeluxe307_dsk.zip`, md5 `60ac40fb4cdf8f1ccfaa94944578bf07`, two
 floppies `hmount` opens) carries a **`DD Translator`** whose name record is
 followed by `SITo`/`SIT!` — the same type and creator as every other
-translator — beside an `AppleLink Package Translator`, which 3.5 renames
-`PKG Expand`. After 3.5 it stays gone through **4.0**, whose installer names
+translator — beside an `AppleLink Package Translator`, which 3.5 **replaces**
+with `PKG Expand`: a different build, whose code resource is named
+`CompactPro` (*AppleLink packages*, above). Read as a rename until
+2026-10-05. After 3.5 it stays gone through **4.0**, whose installer names
 fourteen translators (3.5.1's thirteen plus a `Claris Translator`), **4.5**,
 where the set turns over — `LHa` and `MIME` arrive, `UnPack` and `PKG Expand`
 go — and **5.0.1**, which carries 4.5's thirteen unchanged. **It comes back at 5.5**, in Aladdin's own

@@ -330,6 +330,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
 - 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
 - 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
+- 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
 
 ---
 
@@ -20664,3 +20665,111 @@ GUESSING, leaving `checksum.md5` with type and creator both zero where
 its predecessors at least produced `TEXT/ttxt`. **The last classic
 StuffIt fixed the data and dropped the metadata**, which is the opposite
 trade from the one this engine makes.
+
+
+## 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
+
+On 2026-09-27 the `.pkg` probe was withdrawn because the routine behind it
+was a command parser, and the same reading established where the real work
+must be: *"it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps
+in (@0x334c) ... the decoding lives in 25 KB code resources"*. That sentence
+became the open item, FORMATS.md's row and this session's brief: **read the
+26,362-byte `'Eng ' 2`.**
+
+**It is the StuffIt/PackIt unstuffer.** The disproof is to count the call
+sites. There are **fourteen** `'Eng '` literals in the translator's code, not
+two, and they are a complete 7 × 2 table: a pair of
+`GetResource`/`HLock`/`jsr`/`ReleaseResource` thunks for each id 0 through 6,
+every one of them reached from a seven-way if/else-if chain at @0x30c0. Each
+branch is a recogniser, and **none of them tests `.pkg`**:
+
+| recogniser | test | → |
+|---|---|---|
+| @0x37ac | extension `.HQX` | `'Eng ' 0` |
+| @0x37f0 | type `PACT` or creator `EXTR` | `'Eng ' 1` |
+| @0x3834 | type `HBSF` | `'Eng ' 2` |
+| @0x386a | `.ZIP`, `.GZ`, `.TGZ` | `'Eng ' 3` |
+| @0x38dc | `.ARC` | `'Eng ' 4` |
+| @0x3920 | `.Z` | `'Eng ' 5` |
+| @0x3962 | `.UU`, `.UUE` | `'Eng ' 6` |
+
+Three of those seven are confirmed by the resources' own contents rather
+than by the disassembly — `'Eng ' 0` holds BinHex's 64-character table,
+`'Eng ' 3` the gzip magic, `'Eng ' 5` `1f 9d` — so the table is checked two
+independent ways. `'Eng ' 1` is **Compact Pro**: `PACT`/`CPCT` is Compactor
+in `reference/macutils/README`, and the resource's header parser wants byte 0
+= 1, byte 1 ≤ 1 and a non-zero longword at +4, then seeks there and reads
+seven bytes — which is `src/fmt_cpt.c`'s signature, volume, index offset,
+index CRC, `nentries` and `commentlen`, field for field. Its error numbers
+index `STR# 211`, whose item 1 is *"it is not a Compact Pro file"* and whose
+item 15 — raised for a zero index offset — is *"this is a segmented
+archive"*, the same condition `fmt_cpt.c` returns `UNC_ERR_SEGMENTED` for.
+
+**The translator has no AppleLink code in it, and says so in a resource
+name.** `PKG Expand Translator`'s `'Othe' 0` is *named* `CompactPro`; its
+`'Name' 0` is `AppleLinkPKG`. `Unix Compress Translator`'s code resource is
+named `UUCode`. Aladdin built these plug-ins by copying a sibling and
+changing `STR# 129`, and the resource names recorded which sibling — which
+is also why that file's recogniser was "instruction for instruction the same"
+as CompactPro's in the 2026-09-27 entry. It was the same build.
+
+### Where the reference implementation actually was
+
+**StuffIt Deluxe 3.0.7 ships `AppleLink Package Translator` 3.0.3,
+"Copyright © 1990-1992 Aladdin Systems, Inc."** — and FORMATS.md had named
+that file on 2026-09-28, in the sentence *"which 3.5 renames `PKG Expand`"*.
+It is not a rename. It is a different program: `'Othe' 1`, 33,300 bytes,
+**148 MacsBug symbols**, AppleLink's own `'ALinkFont'`, an `'INT ' 6000`
+named *"line speed, bps"*, and menus reading *"Expand from AppleLink
+Package"*. Its `'HBSF' 0` resource is the Pascal string `SQUEEZEPLAY 1.0`,
+and its routines are `RdSQPDirectory`, `WrSQPDirectory`, `InitSqp`,
+`unpackFile`, `Decompress`, `GetCode`. The format's name is **SqueezePlay**.
+
+Getting it out needed no emulator. The 3.0.7 installer is two StuffIt
+segments (`ac d9 00 01` / `00 02`) that neither this engine nor `unar`
+recognises, but each carries a 100-byte header and `seg1[100:] + seg2[100:]`
+is **exactly** the `0x14dd14` the `SIT!` header declares — an arithmetic
+check, not a guess — after which `macextract` lists and extracts it and the
+CRCs pass.
+
+The layout, the codec and the grading are FORMATS.md's (*AppleLink
+packages*); `tools/derive_sqp.py` is the reader, with thirteen witnesses.
+All **4 of 4** members of both real packages expand to their declared length.
+
+### The lessons
+
+**Count the call sites before believing the one you read.** The 2026-09-27
+entry's new smell was *check which question the cited routine answers*; this
+is that one step on — **check whether the routine you cited is one of
+many.** The check costs nothing and would have worked on the day: searching
+the same 16,482 bytes for the `'Eng '` literal returns fourteen hits, and
+seven consecutive ids are a dispatch table rather than a format's decoder.
+The id that was sampled was reachable only through a `HBSF` type test, which
+is visible in the same function.
+
+**A resource's NAME is evidence about where its code came from.** It cost
+nothing to print and it settled what `PKG Expand Translator` is. Nothing had
+ever listed that translator's resources with their names until this session,
+although `tools/vmac/spacesaver.py --pkg` had been reading two resources out
+of the same file since 2026-08-23.
+
+**And the oldest one here again: the thing was one directory away.** The
+3.0.7 installer has been in `~/.cache/macextract/stuffit307/` since
+2026-09-28, downloaded to count translators by their names — and the answer
+to *"is there a reference implementation?"* was inside it, put there by a
+question about something else. That is the fourth time (deark's signatures,
+StuffIt Deluxe's encrypted forks, the StuffIt 5 crypt specimens, this), and
+the rule that keeps catching it is: **before filing a route that needs new
+evidence, look for the evidence a PAST question already produced.**
+
+### One thing this session got wrong in its own tool, and it is the smell in CLAUDE.md
+
+The first version of `derive_sqp.py` passed `rec["dlen"]` into the
+decompressor as a ceiling and then asserted that the output was `dlen` bytes
+long. **It reported OK on a package with a byte flipped in the middle of its
+LZW stream**, because the assertion was about its own truncation. Removing
+the ceiling makes the stream's natural end the test, and the same corrupted
+file then reports 1,960 bytes against a declared 1,954 and exits non-zero.
+The sha256 of each expanded member is recorded in the script for the same
+reason: a package carries no per-member checksum, so nothing else can tell a
+subtly wrong decoder from a right one.
