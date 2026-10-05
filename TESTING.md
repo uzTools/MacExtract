@@ -3322,6 +3322,15 @@ cuts each at three points. `synth-sqp-forks.pkg` is also in
 `tests/run_overlay_host.sh`'s control set, so the decoder runs through its
 `'OVLY'` image under qemu-m68k on every run.
 
+**What no lane here covers, and what was run instead.** None of this
+touches a Macintosh: the images, the Toolbox and the File Manager are
+`tools/vmac/run.py`'s and `sys30.py`'s, and all eight packages were put
+through them on 2026-10-05 — 6/6 synthesised and 2/2 real at the 1 MB
+floor, 3/3 on System 3.0, the real ones with `--expect` because a
+specimen has no committed manifest (FORMATS.md, *Run on a Macintosh*).
+Those are not in `ci.sh` and not in `sample.txt`; re-run them from
+`tools/vmac/README.md`.
+
 **What this cannot see.**
 
 - **Whether Aladdin's expander would read what the generator writes.** Three

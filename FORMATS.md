@@ -1013,8 +1013,9 @@ by what and the four paths that rest on a generator rather than on
 authentic bytes — is *AppleLink packages: SqueezePlay*, below.
 
 Peak heap is **11 KB on the smallest package here and 41,344 B at the
-ceiling**, and the ceiling is a property of the format rather than of a
-file: the code width stops at 13 bits, so the LZW table cannot pass 8,192
+ceiling** — and 41,360 B on a Mac Plus, the Linux figure plus the shell's
+16 B, measured on all eight packages (*Run on a Macintosh*, below). The
+ceiling is a property of the format rather than of a file: the code width stops at 13 bits, so the LZW table cannot pass 8,192
 symbols × 4 B, and `synth-sqp-clear.pkg` is the fixture that fills it. The
 two real packages are 13,396 and 17,620 B. Nothing here allocates per
 ENTRY — the directory is read one record at a time and the folder path is
@@ -2685,6 +2686,33 @@ timestamps are at record +68 and +72, not "+0x50".
 **And the engine's peak heap on them is 17,620 B and 13,396 B** — `t
 --stats`, which is the figure the table row at the top of this file carries
 alongside the 41,344 B ceiling.
+
+### Run on a Macintosh, 2026-10-05
+
+Every package this project has, through the shipped application on an
+emulated Mac Plus — so the decoder reached the machine through its
+`'OVLY'` image, the 666-byte probe ran in the real sniff path, and the
+File Manager wrote the forks. No host lane can show any of that.
+
+| tier | result |
+|---|---|
+| System 6.0.8, 4 MB Mac Plus | **PASS** (`run.py`) |
+| System 6.0.8, **1 MB** floor | **6/6** synthesised packages, and **2/2 real ones** (`run.py --mem 1M`, the specimens with `--expect`) |
+| System 3.0 / Finder 5.1, **1 MB** | **3/3** (`sys30.py --mem 1M`) |
+
+**The machine's peak heap is the Linux figure plus 16 B, on all eight**:
+10,848 B for the folder tree up to **41,360 B** for `synth-sqp-clear.pkg`,
+whose table fills, and 13,412 and 17,636 B for `Read First.PKG` and
+`ALink.PKG`. Eight packages, eight figures, one constant — which is what
+says the Mac is running the same allocations and not merely the same
+decoder.
+
+None of these is in `sample.txt`, so no tier TALLY moves: those stay at
+the 71 fixtures their figures were taken on (BLOCKERS.md, the tier
+table). The two real packages have no committed manifest — a specimen
+cannot have one — so they are graded against this engine's own Linux
+output, whose correctness is `tools/run_sqp.py`'s lane 1 against the
+sha256 an independent reading recorded.
 
 ### What 3.5's `PKG Expand Translator` is, and what it is not
 
