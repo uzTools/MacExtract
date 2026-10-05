@@ -331,6 +331,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
 - 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
 - 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
+- 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
 
 ---
 
@@ -20773,3 +20774,80 @@ file then reports 1,960 bytes against a declared 1,954 and exits non-zero.
 The sha256 of each expanded member is recorded in the script for the same
 reason: a package carries no per-member checksum, so nothing else can tell a
 subtly wrong decoder from a right one.
+
+
+## 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
+
+`now_find_delta` was the last Now Compress function no fuzzing entered,
+and OPEN_ITEMS.md said what it wanted: *"an archive whose block table
+carries a delta. Neither corpus archive has one."* Both halves of that
+are true. **It is also a file this project has written since M12** —
+`synth_now.py`'s `synth-now-delta` and `synth-now-delta-small`, graded
+three ways against `unar` by `run_now.py` on every `ci.sh` run. What was
+missing was one line of `fuzz.py`, whose repair generator draws from
+`corpus()` and so could only ever see files somebody else made. **When
+an item names what it wants, grep for it**: `synth-now-delta` is a
+literal string in this repository, and the row stood for eight days
+without anybody typing it.
+
+**But adding the file alone would have done nothing, which is why the
+row looked right.** `now_repair` finds a block's payload through
+`mutate_now.blocks` → `derive_now.member_blocks`, and that reader had no
+offset-delta search at all: it requires the last record's end offset to
+equal the member's declared end, which is exactly what a rebased table
+does not do. A delta archive therefore fell out of `now_seeds()`'s own
+filter — *no blocks, not a seed* — and would have done so silently. So
+the Python side got the search the engine has had all along, transcribed
+from the same place (`-findFileHeaderDeltaWithHeaderOffset:firstOffset:`,
+`reference/XADMaster/XADNowCompressHandle.m`), tried in the same order:
+an offset that cannot be right is not tried, otherwise the plain reading
+goes first.
+
+**And the one grader that could have noticed was the one that could not
+read the file.** `tools/mutate_now.py --check` decodes before and after
+and reports what moved — the step whose stated purpose is to say that a
+mutation is a fair question. On every `--delta` run it zipped two empty
+lists, printed `0 block(s) read the same, 0 changed`, and exited 0.
+Pass-shaped, and it had never once compared a block. It cost nothing
+downstream — the delta ladder's verdicts came from the Macintosh, where
+the archive's own self-extractor read a rebased file byte for byte
+(2026-09-21), and the engine's search is graded by `unar` — but it is
+why this item took eight days to close and not an afternoon, because the
+reader that would have reported *"I cannot read this"* reported a pass
+instead. The vacuous line had been printing since `--delta` was written,
+on 2026-09-21. **A comparator that
+iterates over what it parsed reports success when parsing failed.**
+Compared-nothing is now a failure, which is one line, and planting a
+`table_delta` that returns 0 turns the same run red.
+
+**One archive did have to be written, and it is the one with the sign
+on it.** The two that existed are off by +134 and +8; `mutate_now
+--delta` has accepted a negative since 2026-09-21 and nothing had ever
+handed one to a reader, so everything downstream of the search — an
+`int32_t` added to every offset, in both implementations — was graded
+only on positives. `synth-now-delta-neg` is off by **-64**, read by
+`unar` and by this engine and by `derive_now`, and **it is gated on the
+sign**: forcing `now_find_delta`'s answer positive refuses that archive
+and leaves the other three extracting, 1 of 4. A delta archive that
+does not fail when the arithmetic is broken is testing the search and
+not the correction.
+
+What the re-measurement says, and what it does not. `fuzz_cover.py` at
+3,000 cases: **Now Compress 13 functions, 0 never entered, at seeds 11
+and 12**, against the same two seeds naming `now_find_delta` as its one
+unreached function beforehand. Other families moved in both directions
+in those same runs — **ARC 0 at seed 11 against 13 at seed 12**, StuffIt
+classic 9 against 2 — which is not an effect of anything here (three
+files added to a pool shift every later draw in the run) but is **more
+than
+the five functions this instrument's noise floor claimed**. That figure
+is corrected to thirteen in all three places that cite it. The signal to
+read off this instrument remains the one it says to read: whether a
+family is WHOLLY at zero, at more than one seed.
+
+**One wart found by needing the instrument four times.**
+`fuzz_cover.py` opened with `make clean` and no `BUILD=`, which is
+`rm -rf build` — `build/san`, what `ci.sh` and `fuzz.py` both default
+to, and every oracle built under that directory: deark, lha, mpack,
+50 MB of clone-and-compile. It rebuilds one directory and now empties
+only that one.

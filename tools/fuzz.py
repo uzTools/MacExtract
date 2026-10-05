@@ -16,9 +16,14 @@ Four generators, seeded and reproducible:
      targeting the ciphertext raises every shape's reach — measured, per
      shape, by tools/fuzz_reach.py.
 
-Every case runs `macextract t --budget 4M -p <password>` (the sanitizer
-build) with a timeout. Any nonzero-but-clean exit is fine; crashes (signals),
-sanitizer aborts, or timeouts fail the run.
+Every case runs `macextract t --budget 4194304 -p <password>` (the
+sanitizer build) with a timeout. The budget is in BYTES and takes no
+suffix — `--budget 4M` parses as four — and a budget too small to hold a
+decoder's buffers refuses every entry, which looks exactly like a
+robustness result and is not one.
+
+Any nonzero-but-clean exit is fine; crashes (signals), sanitizer aborts,
+or timeouts fail the run.
 """
 import argparse, json, os, random, shutil, subprocess, sys, tempfile
 
@@ -206,14 +211,51 @@ def now_repair(data, rng, mn):
     return bytes(d)
 
 
-def now_seeds():
-    """Corpus files the repair generator can work on, or []."""
+# ...and the three archives whose block table carries a DELTA: every
+# offset it stores is off the real one by a constant, which the reader
+# has to recover before it can find a single block. NEITHER corpus
+# archive has one, so `now_find_delta` was the one Now Compress
+# function no amount of fuzzing entered — 3,000 cases at seeds 11 and
+# 12, with the repair generator already in place (TESTING.md,
+# *Fuzzing*). A mutant cannot grow a delta, because the shape is a
+# table whose checksum AGREES while its offsets do not: the only way
+# to fuzz that path is to seed it.
+#
+# Written here rather than committed, for the reason the -lh3- seeds
+# are: pure Python, so the coverage is the same wherever this runs.
+# They are also three of the archives `tools/run_now.py` grades three
+# ways — input bytes, `unar`, this CLI — on every ci.sh run, so a seed
+# here is a graded file and not merely one that parses.
+DELTA_SEEDS = ("synth-now-delta", "synth-now-delta-small",
+               "synth-now-delta-neg")
+
+
+def now_seeds(tmp):
+    """Files the repair generator can work on: the corpus's own Now
+    Compress archives, and the rebased ones written here."""
     try:
         sys.path.insert(0, os.path.join(ROOT, "tools"))
         import mutate_now as mn
-    except Exception:
-        return [], None
+        import synth_now
+    except Exception as e:                      # pragma: no cover
+        print("fuzz: cannot import the Now Compress tools: %s" % e,
+              file=sys.stderr)
+        return None, None
     out = []
+    for name in DELTA_SEEDS:
+        tree, delta = synth_now.archives()[name]
+        path = os.path.join(tmp, name + ".now")
+        with open(path, "wb") as f:
+            f.write(synth_now.build_archive(tree, delta))
+        # A seed the repair generator cannot walk is a seed that fuzzes
+        # nothing, and it would be invisible: `now_repair` hands back
+        # what it was given when it finds no block. So say so and fail,
+        # the way a missing cipher seed does.
+        if not list(mn.blocks(bytearray(open(path, "rb").read()))):
+            print("fuzz: no blocks in the %s seed — can mutate_now walk a "
+                  "rebased table?" % name, file=sys.stderr)
+            return None, None
+        out.append(path)
     for p in corpus():
         try:
             if list(mn.blocks(bytearray(open(p, "rb").read()))):
@@ -294,7 +336,9 @@ def main():
         if extra is None:
             return 1
         seeds += extra
-        nowfiles, nowmod = now_seeds()
+        nowfiles, nowmod = now_seeds(tmp)
+        if nowfiles is None:
+            return 1
         encrypted = crypt_seeds(tmp, args.crypt_kind)
         if encrypted is None:
             return 1
@@ -304,8 +348,9 @@ def main():
         print("fuzz: %d seed(s) for methods the corpus lacks "
               "(-lh3- generated, -lh2- and DiskDoubler 3/4/5 committed)"
               % len(extra))
-        print("fuzz: %d Now Compress file(s) for the repair generator"
-              % len(nowfiles))
+        print("fuzz: %d Now Compress file(s) for the repair generator, "
+              "%d of them with a rebased block table"
+              % (len(nowfiles), len(DELTA_SEEDS)))
         ncrypt = 0
         for i in range(args.iterations):
             # A quarter of the run is the ciphers, because they are a

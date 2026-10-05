@@ -27,12 +27,12 @@ WHAT IT CANNOT SEE, and both matter:
     That is `run_diff.sh`'s job, against the oracle.
   * It is a measurement of ONE seed and ONE case count, and **the
     per-family counts are noisy**: at 3,000 cases, seeds 11 and 12 over
-    an identical build differ by up to five functions in a family —
-    StuffIt classic 6 against 1, ARC 6 against 10, Compact Pro 4
-    against 1 (measured 2026-09-27). **A single-run delta in a family
-    is not a finding.** What the instrument says reliably is whether a
-    family is WHOLLY at zero, and whether a change moves a family in
-    and out of that state at more than one seed.
+    an identical build have differed by thirteen functions in a family —
+    ARC 0 against 13, StuffIt classic 9 against 2 (measured 2026-10-05;
+    the same comparison on 2026-09-27 gave five at most). **A single-run
+    delta in a family is not a finding.** What the instrument says
+    reliably is whether a family is WHOLLY at zero, and whether a change
+    moves a family in and out of that state at more than one seed.
   * A family at zero in a small run may be sampling rather than
     structure — the 400-case and 3,000-case runs of 2026-09-27 were
     told apart that way.
@@ -80,7 +80,13 @@ def main():
     a = ap.parse_args()
 
     if not a.keep:
-        run("make", "clean", stdout=subprocess.DEVNULL)
+        # BUILD= on the clean, because `make clean` without it is
+        # `rm -rf build` — which takes build/san (what ci.sh and
+        # fuzz.py default to) and every oracle built under build/:
+        # deark, lha, mpack, unar. This tool rebuilds one directory
+        # and only that one needs emptying.
+        run("make", "BUILD=" + BUILD, "clean",
+            stdout=subprocess.DEVNULL)
         r = run("make", "BUILD=build/cov", "CFLAGS=-O0 -g --coverage",
                 "LDFLAGS=--coverage", "all",
                 stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)

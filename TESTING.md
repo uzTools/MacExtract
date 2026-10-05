@@ -852,14 +852,42 @@ anything about the suite.**
    takes a twentieth of the ordinary cases when the corpus holds a file
    for it (two do, under `corpus()`'s size filter). **Now Compress goes
    from 6 functions never entered to 1**, `now_find_delta`, reproduced
-   at seeds 11 and 12.
+   at seeds 11 and 12 — and to **0 since 2026-10-05**, below.
+
+   **That last one needed a seed, not more cases.** `now_find_delta`
+   recovers a block table whose stored offsets are all off the real
+   ones by a constant *while its checksum agrees with them*, and no
+   mutation can grow that shape; neither corpus archive carries one.
+   So `now_seeds()` writes three that do, with
+   `synth_now.build_archive` — `synth-now-delta`, whose offsets are
+   relative to their own table, `synth-now-delta-small`, short by 8,
+   and `synth-now-delta-neg`, off by -64. The first two are the two
+   routes a reader takes into that search: an offset that cannot be
+   right at all, and one that has to fail a checksum first.
+
+   Pure Python, like the `-lh3-` seeds, so the coverage is the same
+   wherever this runs, and all three are archives `run_now.py` grades
+   three ways against `unar` on every `ci.sh` run. **Now Compress: 13
+   functions, 0 never entered, at seeds 11 and 12 over 3,000 cases** —
+   the first family here with nothing left.
+
+   `ci.sh`'s 150-case fuzz smoke grades the reader half as well: a seed
+   with no blocks for the repair generator is a failure and not a skip,
+   so deleting `derive_now.table_delta` turns `ci.sh` red — measured,
+   not assumed.
+
+   What that does NOT say: a mutant is graded by nothing, here as
+   everywhere in this file. What is graded is the seed.
 
    **How much of this table to believe.** The per-family counts are
-   noisy: seeds 11 and 12 over an identical build differ by up to five
-   functions in a family — StuffIt classic 6 against 1, ARC 6 against
-   10, Compact Pro 4 against 1. **A single-run delta in a family is not
-   a finding**, and one was briefly read as one here: a first cut gave
-   the repair generator a sixth of the cases, the totals moved, and
+   noisy: seeds 11 and 12 over an identical build differ by up to
+   **thirteen** functions in a family — ARC 0 against 13 and StuffIt
+   classic 9 against 2, measured 2026-10-05, where the same comparison
+   on 2026-09-27 gave five at most (StuffIt classic 6 against 1, ARC 6
+   against 10, Compact Pro 4 against 1). **A single-run delta in a
+   family is not a finding**, and one was briefly read as one here: a
+   first cut gave the repair generator a sixth of the cases, the totals
+   moved, and
    that was written up as starvation before a second seed showed the
    same swings with the weight unchanged (BLOCKERS.md, *Withdrawn
    claims*). What survives repetition is the whole-family signal —
@@ -2597,25 +2625,28 @@ archive and a Huffman code deeper than a nibble had no archive at all. So
 bytes that went in, what the oracle extracts, what our CLI extracts —
 exactly as the ARC and uuencode suites do, and for the same reason.
 
-Thirteen archives: one per block shape (each holding prose, run-length
+Fourteen archives: one per block shape (each holding prose, run-length
 content and incompressible noise), one stream cycling all five shapes with a
 non-zero `padding` between two blocks, a folder tree with a nested folder, an
-empty folder, a two-fork file, a resource-only file, a code 17 bits deep, two
-whose table offsets are wrong by a constant — one obviously (the reference
-does not even try zero), one plausibly (its checksum has to fail first) — and
-one where a stream's first block reaches back into the dictionary cache the
-previous stream left behind. Type and creator are checked separately, since
-comparing forks cannot see them: ours from `l -v`, the oracle's from the
+empty folder, a two-fork file, a resource-only file, a code 17 bits deep,
+three whose table offsets are wrong by a constant — one obviously (the
+reference does not even try zero), one plausibly (its checksum has to fail
+first), and since 2026-10-05 one wrong the OTHER way, off by **-64**, which
+is the only one gated on the SIGN of what the search returns: forcing that
+answer positive refuses it and leaves the other three extracting, 1 of 4 —
+and one where a stream's first block reaches back into the dictionary cache
+the previous stream left behind. Type and creator are checked separately,
+since comparing forks cannot see them: ours from `l -v`, the oracle's from the
 Finder info in its AppleDouble sidecar.
 
-**One of the thirteen is also committed as a fixture.**
+**One of the fourteen is also committed as a fixture.**
 `synth-now-mixed.now` — the stream cycling all five shapes — has an `unar`
 manifest in `fixtures/manifests/`, so the differential suite grades those
 paths byte-for-byte on every run, including on a machine with no `unar` at
 all, and any future Mac replay can pick it up. It is restored from
 `tools/synth_now.py -o`, like every other synthetic fixture (see *Corpus*).
 
-**And since 2026-09-21 the same thirteen trees are built a second way** —
+**And since 2026-09-21 the same trees are built a second way** —
 `build_archive(lead=True, word=True, trailer=True)`, the shape the encoder
 writes —
 and that build is required to be **word-aligned** (no block of an odd
@@ -2623,7 +2654,7 @@ length or at an odd offset, and no shape-3 coded region of an odd length,
 which is what makes the two accounts its header gives of where its stream
 starts agree), to carry a well-formed **16-byte archive trailer**, and to be
 read by `derive_now.py` and by this CLI, and to carry the **fork-boundary
-record** every member of every file the encoder wrote has. The thirteen
+record** every member of every file the encoder wrote has. The archives
 graded by `unar` keep the unaligned shape, because `unar` refuses a region
 that leaves it fewer than four spare bits; the aligned build is checked
 instead of replacing them. The record is the one of those differences that
@@ -2653,6 +2684,17 @@ Twelve mutations of `fmt_now.c` were also run against the whole suite and all
 twelve fail it (DECISIONS.md, "Now Compress: writing the archives the corpus
 never had") — including one that did NOT fail until the archive that tests it
 was rebuilt, which is written up there.
+
+**The READER half of the offset-delta search is graded beside this, since
+2026-10-05**, and not through this engine at all: `ci.sh` rebases a
+generated archive by 100 with `tools/mutate_now.py --delta` — which
+recomputes the 32-bit sum the table keeps over its own stored offsets, so
+the file is internally consistent — and requires `tools/derive_now.py` to
+decode the same blocks back out, 15 of 15. Deleting `derive_now`'s
+`table_delta` turns it red. What it cannot see: whether a delta a real
+encoder writes has this shape at all. No file Now Compress wrote here
+needs the search, and what the format's own mechanism is, is not known
+(FORMATS.md, *Now Compress*).
 
 **The corpus's second real archive is checked here too**, because the
 differential suite cannot: `derived-SyntheticReferences2.0.sea` (1995) defeats

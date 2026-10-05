@@ -138,6 +138,16 @@ python3 tools/vmac/walkprobe.py --check > /dev/null \
 # fixture too, so the diff suite grades those paths without `unar`.
 python3 tools/run_now.py --macextract build/san/macextract \
     || fail "Now Compress tests"
+# ...and the READER half of that search, graded by the container's own
+# arithmetic rather than by this engine: rebase a generated archive's
+# block table and require tools/derive_now.py to get the same blocks back
+# out of the result (TESTING.md, *Now Compress*).
+NOWTMP=$(mktemp -d)
+python3 tools/synth_now.py -o "$NOWTMP/plain.now" \
+    && python3 tools/mutate_now.py --delta 100 "$NOWTMP/plain.now" \
+        "$NOWTMP/rebased.now" --check > /dev/null \
+    || fail "offset-delta re-read (tools/mutate_now.py --delta --check)"
+rm -rf "$NOWTMP"
 # SuperDisk! is the one format in the corpus that neither `unar` nor
 # `macunpack` can read at all, so the oracle manifests describe only the
 # envelope. Its two archives were graded fork by fork by their OWN

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """synth_now.py — write Now Compress archives.
 
-The corpus holds exactly ONE real Now Compress archive, and it is a
-single file with a single fork whose blocks use two of the five shapes a
-block can have. Everything else fmt_now.c implements — stored,
-LZSS-only and Huffman-then-LZSS blocks, the offset-delta search,
-directories, data forks, several files in one archive — had no archive
-to run against.
+The corpus holds two real Now Compress archives, and the only one `unar`
+can adjudicate is a single file with a single fork whose blocks use two
+of the five shapes a block can have — the 1995 self-extractor defeats
+the oracle on every fork (TESTING.md, *Now Compress*). Everything else
+fmt_now.c implements — stored, LZSS-only and Huffman-then-LZSS blocks,
+the offset-delta search, directories, data forks, several files in one
+archive — had no archive to run against.
 
 So this writes them. Each archive is graded by `unar`, whose
 XADNowCompressHandle is the implementation fmt_now.c was transcribed
@@ -65,7 +66,7 @@ class BitW:
     2026-08-15: with 3 or fewer spare bits `unar` fails a block this
     decoder reads perfectly well. That is a property of the oracle
     rather than of the format, but an archive it cannot read grades
-    nothing, and the thirteen archives here exist to be graded.
+    nothing, and the fourteen archives here exist to be graded.
     """
 
     def __init__(self):
@@ -533,7 +534,7 @@ def build_archive(tree, delta=0, lead=False, sums=False, arch=False,
     accepts them, and they differ from what the encoder writes in ways
     nothing here checks (TESTING.md, *what the derivation tools cannot
     see*). Each is one rung of that ladder and both default OFF, so the
-    thirteen archives and the committed fixture are unchanged:
+    fourteen archives and the committed fixture are unchanged:
 
     - `lead` writes the **fork-boundary record** in front of each
       member's first block. Every member of every file the encoder wrote
@@ -706,9 +707,10 @@ def archives():
     ], 0)
 
     # The offsets in the table are wrong by a constant, which is what
-    # the checksum walk in now_find_delta exists to recover. Two shapes
-    # of wrong: obviously wrong (the reference does not even try zero),
-    # and plausible but wrong (the checksum has to fail first).
+    # the checksum walk in now_find_delta exists to recover. Three
+    # shapes of wrong: obviously wrong (the reference does not even try
+    # zero), plausible but wrong (the checksum has to fail first), and
+    # wrong the other way.
     out["synth-now-delta"] = ([
         file("shifted", data=d["text"][:3000], shapes=("newlzss", "huffman"),
              chunk=1000),
@@ -717,6 +719,16 @@ def archives():
         file("shifted", data=d["text"][:3000], shapes=("lzss", "stored"),
              chunk=1000),
     ], 8)
+    # A NEGATIVE delta: the offsets stored sit PAST their blocks rather
+    # than short of them. The search is indifferent — it looks for the
+    # table's checksum and subtracts — but everything downstream of it
+    # adds a signed quantity, and until 2026-10-05 no archive here or
+    # in the corpus gave it anything but a positive one. Both
+    # implementations read this; `unar` was asked first.
+    out["synth-now-delta-neg"] = ([
+        file("shifted", data=d["text"][:3000], shapes=("huffdeep", "lzss"),
+             chunk=1000),
+    ], -64)
 
     # The dictionary cache: a stream's first block may reach back into
     # the history the PREVIOUS stream left — which the reference calls
@@ -875,7 +887,7 @@ def ladder(outdir, control=None):
     project writes, plus a control it must accept.
 
     Graded by `unar` since M12 and never put to the encoder: the
-    thirteen archives differ from what Now Compress writes in ways
+    fourteen archives differ from what Now Compress writes in ways
     nothing here checks, and *"our reader accepts it"* is the tolerance
     that cannot fail (BLOCKERS.md's list of mechanisms). Two of those
     differences are now separable, so this is a ladder and not a

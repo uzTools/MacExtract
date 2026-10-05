@@ -255,18 +255,19 @@ have been taken on its merits with no licence question in sight.
 **Measured by `tools/fuzz_cover.py`** — a coverage build under
 `fuzz.py`, which is the only instrument here that distinguishes a
 decoder that ran from one that never did. Read the per-family counts
-with its noise floor in mind: seeds differ by about five functions
-(TESTING.md, *Fuzzing*).
+with its noise floor in mind: two seeds over one build have differed by
+thirteen functions in a family (TESTING.md, *Fuzzing*).
 
 Most of what this section listed on 2026-09-27 was closed the same day
 and the next — `-lh2-`, `-lh3-`, DiskDoubler 3/4/5/7 and Now Compress's
 coders all reach their decoders now, by seeds, by a fixture, and by a
-generator that repairs the checksum it breaks. What is left:
+generator that repairs the checksum it breaks — and **Now Compress is
+the first family with nothing left at all**, since 2026-10-05
+(TESTING.md, *Fuzzing*). What is left:
 
 | what | what it wants |
 |---|---|
 | `lzd_reconst` (`-lh2-`'s tree rebuild) | nothing, under fuzzing: it needs 32,768 codes, too large for a seed. The GRADED suite covers it since 2026-09-27 |
-| `now_find_delta` | an archive whose block table carries a delta. Neither corpus archive has one |
 | method 14's decoder, under `fuzz.py` | **nothing, except a bigger run.** The seed is picked from the whole corpus, so `synth-sit14.sit` — 1,859 B of 946 fixtures — came up in none of 1,500 cases, and the sniffer rejects most mutants of it anyway: the 80-byte banner is 4 % of the file. Measured instead by 2,000 mutants confined to its streams, which reach 95.5 % of `unc_sit14_decode`'s lines and 100 % of every helper (TESTING.md, *StuffIt method 14*) |
 | ARC's Crush | nothing writes it and no implementation exists anywhere (Part 1) |
 

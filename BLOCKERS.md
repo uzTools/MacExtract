@@ -125,7 +125,7 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Forty-one**
+and one of those was worth 39/44 → 40/44 at the floor target. **Forty-two**
 mechanisms keep finding the next one — recounted 2026-10-05; the sentence
 said ten when the list had thirty, on 2026-09-26 — and two of them need no
 insight at all:
@@ -448,12 +448,24 @@ insight at all:
   implementation are different gaps**: for "what does this format write
   where", the WRITER is a reference implementation under rule #1, and
   one application is easier to get than one of its archives.
+- **a comparator that iterates over what it parsed.** Added 2026-10-05:
+  `tools/mutate_now.py --check` decodes a file before and after a
+  mutation and reports the blocks that differ. Where the decode produced
+  NOTHING it reported zero differences and exited 0 — the same line and
+  the same status a clean run prints — and that was every `--delta` run
+  for the two weeks the option existed, because the reader had no
+  offset-delta search. **Ask
+  what a check prints when its subject fails to LOAD**: a pass and an
+  empty subject are one output unless something counts the comparisons
+  (below).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"`now_find_delta` wants an archive whose block table carries a delta. Neither corpus archive has one"** — OPEN_ITEMS.md, *The decoder paths nothing has fuzzed*, written 2026-09-27 | **`tools/synth_now.py` has written two since M12** — `synth-now-delta` and `synth-now-delta-small` — and `tools/run_now.py` grades both against `unar` on every `ci.sh` run. Both halves of the claim are true and neither was the gap: the fuzzer's Now Compress pool is `corpus()`, so what was missing was one line of `fuzz.py` (DECISIONS.md 2026-10-05). **Cost: the last unfuzzed function in the family stayed unfuzzed for eight days**, with the file it asked for in the same repository and in the same suite — and the fix, once found, moved Now Compress to 13 of 13 entered at two seeds. **Why it survived:** the sentence names the CORPUS, which is where a fuzzer's seeds come from, so it reads as a statement about what exists. When an item names what it wants, grep for the name | 2026-10-05 |
+| **`tools/mutate_now.py --check` "decodes the result with `tools/derive_now.py` to show that OUR reader still gets the original bytes out — which is what says the file is well formed and the question is a fair one"** — that tool's own docstring, 2026-09-21 | **On every `--delta` run it compared nothing.** `derive_now` had no offset-delta search, so a rebased table read as no table at all, and `check()` zipped two empty lists and printed `0 block(s) read the same, 0 changed` with exit 0. **Cost: nothing downstream** — the delta ladder's verdicts came from the archive's own self-extractor on an emulated Mac (DECISIONS.md 2026-09-21) and the engine's search is graded by `unar` — **but it is why the item above stayed open**: the one reader that could have said *I cannot read this* said *pass* instead. Compared-nothing is a failure now, and planting a `table_delta` that returns 0 turns the run red | 2026-10-05 |
 | **ZipIt's `0x2605` premise — the field is set when and only when the data is MacBinary — "is APPNOTE.TXT 4.6.4's word and nothing this machine can check"** — OPEN_ITEMS.md, written 2026-10-01 with the three fields | **nine archives ZipIt itself wrote, and it holds in both directions**: all 16 `0x2605` entries with a reachable payload decode to a MacBinary stream, and not one of the 86 `0x2705` entries does. The field's own type and creator equal the MacBinary header's in all 16 (FORMATS.md, *ZipIt's own archives*). **Cost: three days of a field read on faith**, and a row in OPEN_ITEMS.md that named its own blind spot and was believed anyway. **Why it survived:** the sentence beside it — "ZipIt's archives are plain `.zip`, invisible to a search by name" — is TRUE, and it was read as an impossibility rather than as the one thing to route around | 2026-10-04 |
 | **"ZipIt was shareware and its archives are plain `.zip`: invisible to a search by name"** — OPEN_ITEMS.md, 2026-10-01, offered as the reason no real one could be found | **true of the archives and false of the ARCHIVERS.** A ZipIt self-extractor is a code stub with the zip behind it, and the identifier Discmaster runs names that stub: `format=zipIt` returns 69 files, three of them archives other people made. And the plain ones are reachable too, just not by any index — `format=zip` over the 40 items `fetch_specimens.py` already cites gives 3,029 zips, and an HTTP `Range` request for the first 512 bytes of each found **seven carrying a ZipIt field for 1.5 MB of traffic**, against 7.3 GB to download them. **Cost: the whole item**, and it had been written the same week the *waiting on a file* section emptied for exactly this reason. **Why it survived:** the 2026-09-26 lesson was recorded as *search by magic, not by name* — and the magic here is not indexed either. **A range scan is the cheap form of searching by content when nobody has indexed the content**: one request per candidate, reading the one header that settles it | 2026-10-04 |
 | **PKZIP 1.x Implode is out of scope because it is "not a Macintosh method: it is PKZIP 1.x's, and the two corpus archives carrying it are PC software"** — OPEN_ITEMS.md, Part 1, the last surviving half of that row's premise after 2026-09-22 | **`Psycho!v1.0ß1.zip`, written by ZipIt in February 1994** — three MacBinary entries with resource forks, every one Implode, and its own archive comment says which program wrote it (FORMATS.md, *ZipIt's own archives*). Found in the same sweep as the row above. **Cost: not yet known, because the decision is the maintainer's and nothing was implemented** — but the CLI's refusal for those three entries ends *"if you can share this file, please open an issue — a specimen is exactly what is needed to add support"*, so the program had been asking for this file for months. **Why it survived:** the claim was about the CORPUS ("the two corpus archives carrying it are PC software") and was read as being about the format. Counting the archives you have cannot tell you what a format was used for | 2026-10-04 |
@@ -1772,6 +1784,19 @@ a harness can click is not the same list.
   sample of one. Two of them never touch a file at all.
 
 ### Corrected figures and superseded write-ups
+
+- **`fuzz_cover.py`'s noise floor: "seeds 11 and 12 over an identical
+  build differ by up to five functions in a family."** Measured
+  2026-09-27, corrected 2026-10-05 to **thirteen** — ARC 0 against 13,
+  StuffIt classic 9 against 2, at 3,000 cases over one build. The
+  original number was right about the three families it named and was
+  written as a bound over all of them. **Cost: nothing — it is the
+  cautious direction, and the conclusion it guards (read whether a
+  family is WHOLLY at zero, at more than one seed) is unaffected** — but
+  a noise floor is quoted to decide whether a delta is real, so a floor
+  that is too low is the one error that makes a non-finding look like
+  one. Corrected in TESTING.md, OPEN_ITEMS.md and the tool's own
+  docstring, which are the three places that cite it.
 
 - **"The tables are not in the stream, so they are in the module;
   implementing this means recovering them from 9,176 bytes of code."**

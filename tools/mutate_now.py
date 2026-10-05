@@ -588,6 +588,11 @@ def check(orig, mutated):
         print("mutate-now: --check needs an archive this reader walks")
         return 1
     for (na, _, ba), (nb, _, bb) in zip(a, b):
+        if (ba is None) != (bb is None):
+            bad += 1
+            print("  %s: %s" % (na, "no longer reads as a member"
+                                if bb is None else "did not read before"))
+            continue
         for xa, xb in zip(ba or [], bb or []):
             if xa[3] == xb[3]:
                 same += 1
@@ -595,6 +600,15 @@ def check(orig, mutated):
                 bad += 1
                 print("  %s @%d: %s -> %s" % (na, xa[1], xa[3], xb[3]))
     print("mutate-now: %d block(s) read the same, %d changed" % (same, bad))
+    # A mutation nothing read is a mutation nothing checked. That line
+    # above said "0 block(s) read the same, 0 changed" and this returned
+    # 0 until 2026-10-05, and EVERY --delta run took that route: this
+    # reader had no offset-delta search, so a rebased table read as no
+    # table at all and the vacuous pass looked like a verdict
+    # (DECISIONS.md 2026-10-05).
+    if not same and not bad:
+        print("mutate-now: --check compared NOTHING, which is not a pass")
+        return 1
     return 0 if not bad else 1
 
 

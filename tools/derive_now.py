@@ -30,13 +30,19 @@ self-extractor, 3 of 3, and the 1995 `SyntheticReferences2.0`, 306 of
 306, whose 9.9 MB fork alone is 304 blocks of the coder an archive
 uses.
 
-**Nothing is searched for.** A block table is one layout at one offset
-width, a shape-3 block's header says where its stream starts and ends,
-and four checksums — over the file header, each entry record, each
-block table and each block — say a walk is on the rails
-(docs/formats/now-compress.md).
+**Nothing is searched for but one thing.** A block table is one layout
+at one offset width, a shape-3 block's header says where its stream
+starts and ends, and four checksums — over the file header, each entry
+record, each block table and each block — say a walk is on the rails
+(docs/formats/now-compress.md). The exception, since 2026-10-05, is a
+table whose stored offsets are all off by a constant: `table_delta`
+recovers it by searching for the table's own checksum, which is the
+reader half of `now_find_delta` in `src/fmt_now.c` and is tried only
+where the plain reading fails.
 
-Not in `ci.sh`: it needs the emulator's specimen directory.
+Not in `ci.sh` as a TOOL: it needs the emulator's specimen directory.
+One routine of it is, through `tools/fuzz.py`'s Now Compress seeds —
+`table_delta`, whose loss makes a seed unwalkable and the run fail.
 """
 import argparse
 import os
@@ -589,7 +595,42 @@ def members(d):
     return out or None
 
 
-def member_blocks(d, st, en):
+# NOW_MAXBLOCKS in src/fmt_now.c. The record-count bound in
+# member_blocks below is this tool's own and is half of it.
+MAXBLOCKS = 0x2000
+
+
+def table_delta(d, st, stored):
+    """How far every offset a member's table STORES is off the real one,
+    or 0 — short of it where the constant is positive, past it where it
+    is negative, which `synth-now-delta-neg` is.
+
+    Walk the data area in 4-byte words from `st`, summing bytes as they
+    go, until a word equals the sum of every byte before it: that word
+    is the table's checksum, so the table ends — and the first block
+    begins — four bytes later. The difference from the offset the table
+    states is the constant.
+
+    Source: reference/XADMaster/XADNowCompressHandle.m,
+    -findFileHeaderDeltaWithHeaderOffset:firstOffset:, which
+    `now_find_delta` in src/fmt_now.c transcribes. Candidates are
+    st+16, st+24, ... — the least a table can hold is one record — and
+    the bound is the same 0x2000.
+    """
+    if st + 20 > len(d):
+        return 0
+    total = sum(d[st:st + 16])
+    for n in range(2, MAXBLOCKS):
+        at = st + 8 * n
+        if at + 4 > len(d):
+            return 0
+        if int.from_bytes(d[at:at + 4], "big") == (total & 0xFFFFFFFF):
+            return st + 8 * n + 4 - stored
+        total += sum(d[at:at + 8])
+    return 0
+
+
+def member_blocks(d, st, en, delta=None):
     """One member's block table.
 
     A member's data area opens with **a u32 saying where its first block
@@ -624,10 +665,29 @@ def member_blocks(d, st, en):
     5.0.1 writes in front of every table. The engine calls it a stream
     restart and reloads its dictionary cache there (FORMATS.md, *Now
     Compress*).
+
+    **The offsets a table stores are sometimes all off the real ones by
+    a constant**, and `delta` is that constant, signed: a block starts
+    at the offset stored plus it, while the checksum is over the bytes
+    as STORED. Left at None the constant is searched for, in the order
+    src/fmt_now.c takes from the reference — an offset that cannot be
+    right at all is not tried, otherwise the plain reading gets the
+    first go and `table_delta` is the fallback. Until 2026-10-05 this
+    reader had no such search, so a rebased table read as no table at
+    all: `tools/mutate_now.py --delta` wrote files only the engine and
+    the Macintosh could read, and its own `--check` compared nothing
+    and said so in a line that looked like a pass.
     """
     if st + 8 > len(d):
         return None
-    first = int.from_bytes(d[st:st + 4], "big")
+    stored = int.from_bytes(d[st:st + 4], "big")
+    if delta is None:
+        if stored >= st + 20:
+            recs = member_blocks(d, st, en, 0)
+            if recs:
+                return recs
+        delta = table_delta(d, st, stored)
+    first = stored + delta
     n = (first - st - 4) // 8 - 1
     if n < 0 or n > 4096 or st + 4 + 8 * n + 8 > len(d) or first > len(d):
         return None
@@ -635,7 +695,7 @@ def member_blocks(d, st, en):
     for _ in range(n):
         mode = int.from_bytes(d[p:p + 2], "big")
         pad = int.from_bytes(d[p + 2:p + 4], "big")
-        end = int.from_bytes(d[p + 4:p + 8], "big")
+        end = int.from_bytes(d[p + 4:p + 8], "big") + delta
         recs.append((last, mode, pad))
         last = end
         p += 8

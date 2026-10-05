@@ -64,7 +64,7 @@ under *Table notes*.
 | Split file (plain .001/.002) | extract | — (join only; the joined file is the next layer) | 3 generated sets, adjudicated against the bytes that were cut, `unar` where it can join, and our unsplit read | 8 KB | full |
 | StuffIt X (.sitx) | detect only | — | — (no fixture) | — | — |
 | DiskDoubler (DD, DDAR, DDA2) | extract | **all eleven**: 0 store, 1 Unix compress, 2/5 splay Huffman, 3 RLE90, 4 StuffIt Huffman, 6/9 AD LZSS, 7 Stac LZS, 8 Compact Pro, 10 DDn✦ | 88 fixtures (6 harvested + 82 CC0 files graded against their own originals, in `ci.sh` since 2026-08-21) + 19 BinHexed copies of those + 28 specimens (2 written by DiskDoubler 3.7 under Mini vMac, 2 off its distribution disk, 24 off Salient's 3.1.2 disk)✦ | 8–392 KB✦ | full |
-| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 13 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 137 KB with one block slot, 235 KB with four✧ | full |
+| Now Compress | extract | stored, LZSS, Huffman, Huffman+LZSS, "new" LZSS✧ | 2 real fixtures + 14 generated archives (all five shapes, adjudicated by `unar`); `synth-now-mixed.now` also has an `unar` manifest and is in the differential suite | 137 KB with one block slot, 235 KB with four✧ | full |
 | ARC / ArcMac (.arc) | extract | 1/2 store, 3 RLE90, 4 squeeze+RLE90, 5/6/7 crunch, 8 12-bit LZW+RLE90, 9 13-bit LZW, **0x0a crushed (PAK) and 0x0b distilled since 2026-08-25, 0x0a trimmed (ARC 7.x) and the ARC 7 container since 2026-08-25**, 0x7f compress; ArcMac's two-fork payload since 2026-08-16★★★; **garbled (password-XORed) members decrypted** | 10 generated archives (methods 1-9, adjudicated by `unar`) + 3 written by Debian's `arc` 5.21q; **2 real PAK specimens + 7 archives PAK 2.51 wrote under DOSBox** (`tools/pak.py`); `synth-arc-mixed.arc`, `arc2pak1.pak` and `derived-INTRECHO.pak` have manifests and are in the differential suite | 4–46.5 KB★ | full |
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
@@ -327,7 +327,7 @@ for is not a curiosity of the 1995 archive, which is what this section
 said until 2026-09-21.
 
 Everything else — the other three shapes, a 17-bit code and both routes into
-the offset-delta search — is covered since 2026-08-15 by 13 generated archives
+the offset-delta search — is covered since 2026-08-15 by 14 generated archives
 adjudicated by `unar` (TESTING.md), byte-exact there and under qemu-m68k.
 
 **And since 2026-09-21 one archive written here is read by Now Compress
@@ -337,7 +337,7 @@ byte-exact. What an archive needs to be opened at all is three things
 (`docs/formats/now-compress.md`) — a **16-byte trailer** past the last
 member, **32,768-byte blocks**, and every block starting on a **word
 boundary**. The first two are refusals and the third is a block that
-decodes wrong in an archive that otherwise extracts; the thirteen
+decodes wrong in an archive that otherwise extracts; the fourteen
 `unar`-graded archives keep the old shape, because an aligned region can
 leave `unar` fewer than the four spare bits it needs (TESTING.md, *The
 rungs*).
