@@ -65,7 +65,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
  * resource from the ciphers, because an encrypted zip has no reason to load
  * a SpaceSaver decoder or the other way round. */
-/* In the EAGER lifetime, which is what ships, all fourteen images live in ONE
+/* In the EAGER lifetime, which is what ships, all fifteen images live in ONE
  * resource, 'OVLY' 128, read once at launch (tools/overlay/mkbundle.py). The
  * per-image ids below are then indexes INTO that bundle rather than resource
  * numbers; under UNC_OVL_LAZY=1 they are the resource numbers themselves. */
@@ -98,6 +98,10 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_ID_BINHEX        140
 #define OVL_ID_BTOA          141   /* btoa/atob, which nothing calls into
                                     * and which calls nothing            */
+#define OVL_ID_SQP           142   /* AppleLink packages. Its own image for
+                                    * the same reason as the two above: it
+                                    * calls into the codecs image for LZW
+                                    * and nothing calls into it         */
 
 /* How many images there can be, for sizing a table rather than for numbering
  * one: mac/ovl_load_lazy.c keeps a loaded image per slot and must not be able
@@ -126,6 +130,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_COMPRESSZ_EXTRACT  47
 #define OVL_TAR_EXTRACT        48
 #define OVL_CODEC_EXPORTS      49
+#define OVL_SQP_EXTRACT        50
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

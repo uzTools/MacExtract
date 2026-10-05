@@ -27,7 +27,14 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
-          synth-sit14.sit"
+          synth-sit14.sit synth-sqp-forks.pkg"
+
+# `synth-sqp-forks.pkg` was added 2026-10-05 with AppleLink packages. It is
+# the two-fork case: a member with both forks, one with only a resource fork
+# and one with only a data fork, which is what makes it the right one here —
+# this lane is the Mac shell's own fork writer, big-endian, under qemu-m68k.
+# Every multi-byte field in that container is read byte-wise, so an endianness
+# mistake in it would show here and nowhere else in `ci.sh`.
 
 # `synth-sit14.sit` was added 2026-10-03 with StuffIt method 14, whose two
 # real subjects are multi-megabyte installers no suite can hold (TESTING.md,

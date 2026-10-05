@@ -1250,9 +1250,19 @@ FORMATS.md, *StuffIt SpaceSaver's container*.
 
 **`--pkg` is in this file because the translator is on this image.** The same
 installation carries fourteen of Aladdin's translators, and one of them reads
-AppleLink packages — the format this project could not name until 2026-08-23.
-It prints that translator's `Name`, its vocabulary and its recogniser, with
-four witnesses; FORMATS.md, *AppleLink packages*, is what came of it.
+AppleLink packages. It prints that translator's `Name`, its vocabulary and
+its recogniser, with four witnesses — a recogniser that turned out to parse
+the translator API's command language rather than a file (BLOCKERS.md). The
+format is read out of a DIFFERENT translator, 3.0.7's, and *The AppleLink
+package expander* below is how to get that one; FORMATS.md, *AppleLink
+packages: SqueezePlay*, is what came of it.
+
+**And the next thing these boot modes are for.** `tools/synth_sqp.py` writes
+real packages now, and the one run that would settle what no automated lane
+here can — whether Aladdin's own expander reads what this project's reading
+produces — is offering one to `AppleLink Package Translator` **3.0.3**
+rather than to 3.5's `PKG Expand Translator`, which is what all three modes
+below drive. Nobody has tried it (OPEN_ITEMS.md, *AppleLink `.pkg`*).
 
 **The three `--pkg*` boot modes offer that translator a package written
 here, and all three come back empty.** Each writes five one-line packages

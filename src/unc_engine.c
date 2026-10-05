@@ -76,6 +76,7 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_BTOA,        "btoa",                1, 1, unc_btoa_extract },
     { UNC_FORMAT_BASE64,      "base64",              1, 1, unc_b64_extract },
     { UNC_FORMAT_MIME,        "MIME message",        1, 0, unc_mime_extract },
+    { UNC_FORMAT_SQP,         "AppleLink package",   1, 0, unc_sqp_extract },
     /* Named, never extracted (src/fmt_foreign.c). */
     { UNC_FORMAT_RAR,         "RAR",                 0, 0, NULL },
     { UNC_FORMAT_RAR5,        "RAR 5",               0, 0, NULL },
@@ -235,6 +236,14 @@ static const UncProbe unc_sniff_order[] = {
      * byte 8, either way confirmed by the 0x27 record that must end
      * the file — weak on its own, so it sits after the magics. */
     unc_superdisk_probe,
+    /* An AppleLink package has no magic number at all, so its probe is
+     * the container's own arithmetic — a version byte, eight zero bytes
+     * and a directory whose forks tile the file to its last byte. It
+     * costs a file that is not one ten bytes already read, which is why
+     * it sits here rather than at the end: everything below scans, and a
+     * package that reached them would pay for the scan before being
+     * recognised (fmt_sqp_probe.c). */
+    unc_sqp_probe,
 
     /* Weaker/structural probes. */
     unc_tar_probe,

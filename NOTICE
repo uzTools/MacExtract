@@ -387,6 +387,27 @@ This project's decoders are transcriptions/ports of algorithms from:
     suite (TESTING.md, tools/build_mpack.sh): test-time only, never
     linked into anything shipped.
 
+  * AppleLink Package Translator 3.0.3 (Aladdin Systems, Inc.,
+    1990-1992). No public specification of the AppleLink `.pkg`
+    container exists and no other implementation of it does either —
+    `unar`, deark and macunpack have never heard of it — so
+    `src/fmt_sqp.c` and `src/fmt_sqp_probe.c` were written from the
+    format's own 68k reader and writer, read out of the `'Othe' 1`
+    resource of the translator that ships in the StuffIt Deluxe 3.0.7
+    installer. That resource carries 148 MacsBug symbols, so every
+    routine cited in those files is named by the binary itself:
+    `ReadFileAndBuildLinkedList`, `DoSqForward`, `RdHFSDirectory`,
+    `CalculateFolderSize`, `DoWork`, `Decompress`, `GetCode`,
+    `Compress`, `PutCode`. No code was copied; every citation is an
+    address in a binary this project does not redistribute, and
+    `tools/derive_sqp.py --witness` checks twenty-nine byte patterns in
+    it at the offsets they are claimed to sit at. The CODEC it names is
+    Unix `compress`'s LZW, which this engine already carried for `.Z`,
+    ARC and DiskDoubler and which is credited above; the container and
+    the two directories are the part that is read out of Aladdin's
+    binary. The installer is fetched, never committed
+    (tools/vmac/README.md, *The AppleLink package expander*).
+
   * Alysis SuperDisk! / Disk Expander (Alysis Software Corporation,
     1991-1992). No public specification of this format exists and no
     other implementation of it does either, so `src/fmt_superdisk.c`

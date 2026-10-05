@@ -1,0 +1,57 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "1f815d1bb9f6eed41197e55552ffa46e00ee6821232d3730e3c339ef8b21d4fc",
+   "data_size": 500,
+   "finder_flags": 0,
+   "name": "Top",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "d03262279c774f1c800cc46734828b8c6815836d95af2d6e06c2529a5643e136",
+   "data_size": 800,
+   "finder_flags": 0,
+   "name": "Folder/Inside",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "is_dir": true,
+   "name": "Folder/Deeper"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "0d93661b436ae1cb560f4a1c468d1af48152144bcc4f0de568cfbd081b7d2df5",
+   "data_size": 600,
+   "finder_flags": 0,
+   "name": "Folder/Deeper/Bottom",
+   "rsrc_sha256": "f7e8c426abc55369c9302104b13e06b7b848bafe20e329f436cc644b3d5869e9",
+   "rsrc_size": 200,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c183127863e60cf781a0a7d17b7d216c367e40b0676689746ed4b0fbb1b314a4",
+   "data_size": 400,
+   "finder_flags": 0,
+   "name": "After",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sqp-folder.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "8685c68b16d7ff428b833aff1e59e3e50ceea3cf09bb68e0f16772d2dfdc7dc2",
+ "size": 2343
+}

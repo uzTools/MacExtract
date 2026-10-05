@@ -84,7 +84,7 @@ else()
     else()
         list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
         foreach(img crypt spacesaver cptdd lzh arc now superdisk packit text
-                    stuffit exo codecs binhex btoa)
+                    stuffit exo codecs binhex btoa sqp)
             list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
         endforeach()
     endif()
@@ -98,6 +98,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_now\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_superdisk\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_packit\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sqp\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_mime\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_uu\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_btoa\\.c$")
@@ -665,6 +666,24 @@ add_custom_command(
             ${ENGINE_DIR}/src/fmt_btoa.c
             ${ENGINE_DIR}/src/fmt_btoa_probe.c
             ${OVL_DEPS})
+
+# AppleLink packages. The PROBE is not in the image — it is resident, like
+# every other probe — so this is the walk and the two fork readers alone,
+# and the LZW they call is the codecs image's.
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_SQP
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
+            ${ENGINE_DIR}/tools/overlay/ovl_sqp.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${ENGINE_DIR}/src/fmt_sqp.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_sqp.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
+            ${ENGINE_DIR}/src/fmt_sqp.c
+            ${OVL_DEPS})
 # The bundle. Depends on the per-format .r rules only so that their .bin
 # side-products exist; mkoverlay.sh writes <out>.bin beside <out>.r.
 #
@@ -692,6 +711,7 @@ add_custom_command(
             OVL_ID_CODECS:${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.bin
             OVL_ID_BINHEX:${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.bin
             OVL_ID_BTOA:${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.bin
+            OVL_ID_SQP:${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.bin
     DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
@@ -707,6 +727,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_codecs.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
             ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${ENGINE_DIR}/tools/overlay/ovlid.py
             ${ENGINE_DIR}/tools/overlay/overlay.h)

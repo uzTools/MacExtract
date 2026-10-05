@@ -225,6 +225,17 @@ python3 tools/ssmodule/run_ssmodule.py --macextract build/san/macextract \
 # with no specimens (TESTING.md).
 python3 tools/run_zipit.py --macextract build/san/macextract \
     || fail "ZipIt tests"
+# AppleLink packages. Nothing else on earth reads the container — not
+# `unar`, not deark, not macunpack — so three different oracles stand in:
+# the sha256 tools/derive_sqp.py recorded from an independent reading of
+# Aladdin's own translator (the two real packages, when they are in the
+# specimen cache), the bytes tools/synth_sqp.py compressed, and gzip,
+# which decodes a SqueezePlay fork byte-exact through a .Z header because
+# the codec IS Unix compress at 13 bits. Plus ten bent packages the
+# sniffer has to refuse: a probe with no magic number is only worth what
+# its negative controls are.
+python3 tools/run_sqp.py --macextract build/san/macextract \
+    || fail "AppleLink package (SqueezePlay) tests"
 
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the
@@ -275,7 +286,7 @@ echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 
 # The OVERLAY LOADER, which no suite here reached until 2026-09-26. The
-# application's fourteen 'OVLY' images exist only in a Retro68 build, so every
+# application's fifteen 'OVLY' images exist only in a Retro68 build, so every
 # lane above — and the 932 fixtures, and the 9,320 robustness variants — runs
 # the decoders as ordinary linked code. This one builds the same images with
 # the m68k-linux toolchain, runs the REAL loader against them through a mock
@@ -376,7 +387,7 @@ UNC_AT_OVERLAY=1 sh tools/build_mac.sh || fail "overlay build (eager)"
 python3 tools/run_tiers.py --check-images \
     || fail "the overlay images moved — re-take run_tiers.py's IMAGES"
 
-# variant 4c: the LAZY lifetime — the same fourteen images, one resource
+# variant 4c: the LAZY lifetime — the same fifteen images, one resource
 # each, read when a format turns out to want one. It is not shipped, and that
 # is precisely why it is built: the two lifetimes were separate branches until
 # 2026-09-25, and because neither tree compiled the other, the same

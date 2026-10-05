@@ -204,7 +204,7 @@ back:** `%4s/%-4s` of a code holding a space (`PDF `) or a NUL moves the
 name by a field, so the suite looked that entry up under a mangled name,
 found no manifest entry, and compared nothing — silently. **200 of the
 corpus's 5,539 type/creator codes hold a space** (measured 2026-10-04).
-All 937 fixtures pass with the hex form, so what the silence hid was
+All 943 fixtures pass with the hex form, so what the silence hid was
 agreement; the hole was in what COULD have been seen, which is the point
 (DECISIONS.md 2026-10-04, *the column that moved the name*).
 
@@ -1964,7 +1964,7 @@ on such an archive — it walks 65,535 entries and reports success, which is how
 a 70,000-entry zip lost 4,465 files silently until that date (FORMATS.md,
 *Size limits*).
 
-The corpus cannot reach this: **the largest zip in 937 fixtures has 29
+The corpus cannot reach this: **the largest zip in 943 fixtures has 29
 entries**, and robustness variants perturb a fixture rather than grow one. So
 the subjects are generated, and graded by three things that are not our
 output — CPython's `zipfile`, which wrote them and whose `namelist()` is the
@@ -2069,7 +2069,7 @@ Added 2026-08-27. Two caps meet a name — the engine's `UNC_NAME_MAX`
 first cut names with nothing said, so a 457-byte path extracted under a
 name that was not the archive's (FORMATS.md, *Name limits*).
 
-The subjects are generated because **the longest name in 937 fixtures is
+The subjects are generated because **the longest name in 943 fixtures is
 120 bytes** — under half the engine's cap, so neither the differential
 suite nor its variants could reach either limit. They are graded by
 CPython's `zipfile` and `tarfile`, which wrote them and have no such
@@ -2333,8 +2333,8 @@ progress callback.
 is a one-entry MacBinary wrapper, and probing it says nothing about the
 StuffIt walk inside; the descent is by result rather than by a list of
 formats — a layer yielding exactly one file that is itself a recognised
-archive is an envelope, whatever it is called. 937 fixtures become
-**1,354 archives walked three ways**, 419 of them behind a wrapper. The
+archive is an envelope, whatever it is called. 943 fixtures become
+**1,360 archives walked three ways**, 419 of them behind a wrapper. The
 whole sweep costs about 10 s, because what makes the differential suite
 slow is running `unar` and comparing files rather than our own decode.
 
@@ -2516,7 +2516,8 @@ is missing half its files. Two formats did exactly that (BLOCKERS.md).
 
 The question here is a disagreement: when `unar` calls a cut archive
 broken, do we? The most-entried two fixtures of each format are cut to
-25, 50 and 75 % — 87 archives across 15 formats — and a fixture where
+25, 50 and 75 % — **93 archives across 16 formats** since AppleLink
+packages joined on 2026-10-05 — and a fixture where
 `lsar` reports a parse failure and `macextract t` exits 0 is a failure
 of this suite.
 
@@ -2540,8 +2541,11 @@ than one record after the last entry (`derived-DD_Expand.sea` does, and
 `unar` reads it), so a cut that lands in that same window is
 byte-for-byte a valid ending — `ddtf-ddpro411dd3.dd` cut to a fifth is
 the measured case (DECISIONS.md 2026-08-29, *a cut archive*). A format `unar` cannot read at all (SuperDisk!, Now Compress,
-SpaceSaver): it fails on the whole archive as well, so its failure is
-not evidence about the cut one. And WHERE the cut falls — three
+SpaceSaver, AppleLink packages): it fails on the whole archive as well,
+so its failure is not evidence about the cut one — for AppleLink, what
+asserts the engine's own answer instead is `tools/run_sqp.py`'s lane 4
+(*AppleLink packages: SqueezePlay*), where a cut package must be refused
+by the sniffer and reported truncated by the walk. And WHERE the cut falls — three
 fractions per fixture, so a hole that only opens at one offset is not
 found by three. A wider sweep is not in `ci.sh` but has been run: all
 932 fixtures at the same three fractions, 2,796 cut archives, none
@@ -2981,7 +2985,7 @@ numbers DART left behind*).
 
 | variant | build | what it is |
 |---|---|---|
-| 4 | `build/mac` | the SHIPPED application — fourteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
+| 4 | `build/mac` | the SHIPPED application — fifteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
 | 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in, the application as it was until 2026-09-25. It is the CONTROL for budget measurements (FORMATS.md, *Overlays*), it has its own ceiling in `tools/build_mac.sh`, and it is built by `ci.sh` since 2026-09-26 |
 
@@ -3020,7 +3024,7 @@ source produced the same payload hash.
 
 ## The overlay loader, off the Macintosh (`tests/run_overlay_host.sh`, `ci.sh` variant 3c)
 
-Added 2026-09-26. **The fourteen `'OVLY'` images had no automated test of any
+Added 2026-09-26. **The fifteen `'OVLY'` images had no automated test of any
 kind**: they exist only in a Retro68 build, so every lane above runs the
 decoders as ordinary linked code, and whether an image is found, relocated,
 kept, released or re-read was answered by emulator tiers, by hand, at minutes
@@ -3040,10 +3044,10 @@ Four lanes, in one script, ~65 s:
 
 | lane | what it grades |
 |---|---|
-| the images | fourteen of them, from `tools/overlay/images.py`'s inventory — which is PARSED out of `mac/CMakeLists.txt`, so a fifteenth image cannot exist in the build and be missing here |
+| the images | fifteen of them, from `tools/overlay/images.py`'s inventory — which is PARSED out of `mac/CMakeLists.txt`, so a sixteenth image cannot exist in the build and be missing here. It read fourteen until 2026-10-05, when `ovl_sqp` joined and this count had to be raised with it — which is the drift the assertion exists to make loud |
 | the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format, the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, which is relocated a second time by the difference of two addresses |
-| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **17 fixtures, byte-exact, in both lifetimes** |
-| one per image | seventeen fixtures reaching thirteen of the fourteen images, each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME). Exit status is compared too, and neither build is required to succeed |
+| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **19 fixtures, byte-exact, in both lifetimes** |
+| one per image | eighteen fixtures reaching fourteen of the fifteen images, each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME, AppleLink). Exit status is compared too, and neither build is required to succeed |
 | the SHIPPED images (`--shipped-only`, `ci.sh` variant 3d) | the same loader against the images **Retro68** just built — the bytes `dist/` ships — in both lifetimes: found, relocated at the address they run at, kept, released. This is the only check anywhere on the bundle's own directory and on **30 relocations across six images**, which is what Retro68 emits where the m68k-linux build of the same sources emits 15 in one. They cannot be CALLED here: a Retro68 image entered from an m68k-linux host binary segfaults, measured rather than assumed, so that lane stops at the loader |
 
 **The mock is harsher than a Macintosh, deliberately**
@@ -3083,7 +3087,7 @@ emulator tiers are what cover these:
   heap probe built from `ApplicationZone`, `LMGetApplLimit` and `MaxBlock`.
 - **The control lane's oracle is this project's own output**, so it cannot
   notice a decoder that is wrong in both configurations. That is what the
-  937-fixture differential suite is for; this lane grades only that the
+  943-fixture differential suite is for; this lane grades only that the
   mechanism is transparent.
 
 ## Alysis SuperDisk! (`tools/run_superdisk.py`, in `ci.sh`)
@@ -3262,49 +3266,103 @@ that word meant (DECISIONS.md 2026-08-25, SpaceSaver's codecs).
 does not terminate on a corrupted stream; without the timeout the negative
 control hangs the suite, which is how it was found.
 
-## AppleLink packages: SqueezePlay (`tools/derive_sqp.py`, not in `ci.sh`)
+## AppleLink packages: SqueezePlay (`tools/run_sqp.py`, in `ci.sh`)
 
-Rewritten 2026-10-05, when the format stopped being guessed at. `.pkg` is
-still not recognised by the engine, so there is nothing in `ci.sh` to run;
-what there is to test is the READING, and it is tested two ways.
+Rewritten 2026-10-05, when the format stopped being read and started being
+extracted. Five lanes, and they grade different things — which is the point,
+because nothing on earth but Aladdin's own translator reads the container:
+`unar`, deark and macunpack have never heard of the format (checked
+2026-10-05, zero hits for "applelink" or "squeezeplay" across all three).
 
-**Thirteen witnesses** (`--witness`) are byte patterns in `'Othe' 1` of
-`AppleLink Package Translator` 3.0.3, one per fact the reader relies on:
-the 86-byte SQP record, the 90-byte HFS record at 86 × count + 22, the
-9-bit start, the 257th first code, the 256 clear code, the 8192 ceiling,
-the two fork lengths and the stored bit. A different build of the expander
-makes this print MISSING rather than silently confirm.
+```sh
+python3 tools/run_sqp.py --macextract build/san/macextract
+python3 tools/run_sqp.py --register        # rewrite the six manifests
+python3 tools/derive_sqp.py                # grade the READING, not the engine
+python3 tools/derive_sqp.py --witness      # and grade it against the binary
+```
 
-**The grading is the part that matters.** Both real packages are parsed and
-every member expanded: **4 of 4** reach their declared length, and each is
-checked against a recorded sha256. The directory is also required to tile
-the file — the last member must end at the last byte — which is what
-catches an off-by-one in the record stride.
+| lane | subject | oracle |
+|---|---|---|
+| 1 | the **two real packages** | the sha256 `tools/derive_sqp.py` recorded on 2026-10-05 from an independent reading of `AppleLink Package Translator` 3.0.3 — IMPORTED from it rather than copied, so there is no second figure to drift. Skips cleanly without `tools/fetch_specimens.py --only applelink` |
+| 2 | **six synthesised packages** | the bytes `tools/synth_sqp.py` compressed |
+| 3 | every **LZW fork** of all eight | **`gzip -dc`**, over the fork's own bytes with three bytes of `.Z` header in front. Skips cleanly without gzip |
+| 4 | **ten bent packages**, and one cut one | the sniffer must answer `unknown` for each, and the cut one must be reported truncated |
+| 5 | **300 mutants** of the six fixtures, a fixed seed | no sanitizer report and no abnormal exit from the ones that still sniff as a package — 270 of 300 do |
+
+**Lane 3 is the one worth understanding.** A SqueezePlay fork is a Unix
+`compress` code stream — 13 bits, block mode — so `1f 9d 8d` in front of it
+makes a `.Z` file, and a second implementation decodes it. That is what grades
+the **clear code** and the **13-bit width**, which no real package reaches:
+the oracle for them is somebody else's program and not this repository's
+reading (FORMATS.md, *What is graded by what, and what is not*).
+
+**Lane 4 is how a probe with no magic number earns its keep.** The sniffer
+tests a version byte, eight zero bytes, two item counts, every record's name
+length and level, and that the forks tile the file to its last byte; each of
+those is bent in turn and must make it answer `unknown`. The same nine bends
+are in `tests/unit_formats.c` (`test_sqp`) over a 202-byte package built in
+memory, so they run under the sanitizers on every `ci.sh` pass as well.
+
+**Lane 5 exists because `tools/fuzz.py` cannot reach this decoder.** It
+draws uniformly from the corpus, so a `.pkg` is 6 of 943 manifests, and
+`tools/fuzz_cover.py` at 400 cases measured `unc_sqp_extract` and `sqp_fork`
+at **zero lines** while `unc_sqp_probe` reached **83.9 %** — the probe is
+called for every file and the walk for almost none. The lane bends the six
+fixtures directly instead, and the figure that says it is testing the WALK
+rather than the probe is the 270: a mutation has to land in the directory to
+break the tiling, and the directory is a tenth of the bytes.
+
+**Six fixtures, in the differential suite too.** `synth-sqp-{plain,forks,
+stored,clear,v0,folder}.pkg` are registered in `fixtures/SOURCES.md` as
+`synthetic:` — `harvest.py --restore` regenerates them — with manifests whose
+`oracle` field names the generator, so `make_manifests.py` leaves them alone.
+`run_diff.py` grades them like any other fixture (**22 forks, 17 Finder-flag
+rows**), `run_robustness.sh` corrupts each ten ways and `run_truncation.py`
+cuts each at three points. `synth-sqp-forks.pkg` is also in
+`tests/run_overlay_host.sh`'s control set, so the decoder runs through its
+`'OVLY'` image under qemu-m68k on every run.
 
 **What this cannot see.**
 
-- **Four paths that no member takes.** Both packages carry `rlen` = 0 and
-  neither sets the stored bit, and the LZW streams contain **0 clear
-  codes** and never widen past **12** of 13 bits (largest table 2,260 of
-  8,192). The script prints that list on every run — an UNEXERCISED line —
-  so a green pass cannot be read as covering them (OPEN_ITEMS.md).
-- **Whether a subtly wrong decoder is wrong.** A package has no per-member
-  checksum, so the only oracle beyond the declared length is the sha256
-  this script recorded from its own output on 2026-10-05. That makes it a
-  REGRESSION oracle and not an independent one; the independent evidence is
-  the declared length, the file tiling, and that all four members read as
-  coherent Mac-Roman text saying what their names say.
-- **The first version of this script could not fail at all**, and the fix
-  is the reason the length check is worth anything: it passed `rec["dlen"]`
+- **Whether Aladdin's expander would read what the generator writes.** Three
+  of the five paths no real package reaches — the resource fork, the stored
+  mode, version 0 and folders — are graded against a generator built from the
+  same reading as the decoder, so a mistake in that reading makes both sides
+  wrong together, **and one did**: a folder's type and creator are its window
+  rectangle and both sides said `TEXT`/`ttxt` until 2026-10-05, because the
+  generator wrote what the decoder expected. What caught it was reading the
+  structure the writer copies, not any lane here. **No package written here
+  has ever been handed to Aladdin's own expander** (OPEN_ITEMS.md names the
+  run that would change it).
+- **Whether a subtly wrong CONTAINER reading is wrong.** A package carries no
+  checksum of any kind, so what says a fork decoded is that its stream ended
+  exactly at the declared length and that the directory tiled the file. The
+  independent evidence beyond that is `gzip` on the codec, and that all four
+  real members read as coherent Mac-Roman text saying what their names say.
+- **The first version of `derive_sqp.py` could not fail at all**, and the fix
+  is why the length check is worth anything: it passed the declared length
   into the decompressor as a ceiling and then asserted the output was that
   long. Removing the ceiling makes the stream's natural end the test, and a
   single flipped byte then reports 1,960 against 1,954 and exits non-zero
   (DECISIONS.md 2026-10-05, *the sample that was read as the table*).
+- **The old probe's pin stays.** `test_applelink` asserts that five
+  translator COMMAND lines name nothing — they were sniffed as AppleLink
+  packages until 2026-09-27 — and the "0 of 928 fixtures said AppleLink"
+  sweep that supported the old probe was measured over a corpus holding
+  neither a package nor a script (BLOCKERS.md). The corpus holds six packages
+  now, so the same sweep can fail in both directions.
 
-The old unit checks for `unc_applelink_probe` are gone with the probe: what
-they asserted was the shape of a translator COMMAND parser, and the
-"0 of 928 fixtures said AppleLink" sweep was measured over a corpus holding
-neither a package nor a script (BLOCKERS.md).
+**Twenty-nine witnesses** (`derive_sqp.py --witness`) are byte patterns in
+`'Othe' 1` of the translator, each checked AT the offset it is claimed to sit
+at: the 86-byte SQP record, the 4+86 of an HFS one, the HFS directory at
+86 × count + 22, the version test, the folder level, the 9-bit start, the
+257th first code, the 256 clear code, the 8192 ceiling, the two fork lengths,
+both stored bits and the 50-item cap. It was thirteen patterns matched by
+`find` anywhere in the resource until 2026-10-05; six of the new ones occur
+more than once, and an address is half of what identifies them.
+`tools/vmac/README.md` (*The AppleLink package expander*) has the one command
+that rebuilds the resource from the 3.0.7 installer, which is copyrighted and
+not committed — `--witness` skips cleanly without it.
 
 ## Archives named but not extracted (`tools/run_foreign.py`, in `ci.sh`)
 
@@ -3841,7 +3899,7 @@ sha256 an independent oracle recorded in `fixtures/manifests/`.
 | `derive_stuffit8.py` | StuffIt method 8 (Miller-Wegman) | all 4 method-8 forks in the corpus; `--grid` re-searches the parameters |
 | `derive_arc.py` | ARC's member header, RLE90, and methods 4, 8 and 9 | 6 members; `--grid` derives them from archives a real ARC 5.21q writes to order |
 | `derive_cpt.py` | Compact Pro, container and both coders | 536 forks of 68 archives |
-| `derive_sqp.py` | AppleLink `.pkg` — SqueezePlay's container and its 13-bit LZW, out of Aladdin's own expander | **4 of 4** members of the two real packages, to their declared length and a recorded sha256, plus 13 witnesses in the expander. What it CANNOT see: the resource fork and the stored mode, which neither package uses (above) |
+| `derive_sqp.py` | AppleLink `.pkg` — SqueezePlay's two directories, its folder levels and its 13-bit LZW, out of Aladdin's own expander | **4 of 4** members of the two real packages, to their declared length and a recorded sha256, plus **29 witnesses checked at the offsets they are claimed to sit at**. It grades the READING; `tools/run_sqp.py` grades the engine against the same packages and against `tools/synth_sqp.py`'s six. What it CANNOT see: whether Aladdin's expander reads what that generator writes (above) |
 | `derive_sit13.py` | StuffIt's container and method 13 | 897 forks of 103 archives, all six code selectors |
 | `derive_sit6.py` | StuffIt method 6: its framing, its fixed code book and its PackBits tail | all 11 method-6 forks in the corpus — 27 blocks, 13 Huffman and 14 stored. It parses the 26 bytes out of deark's source rather than holding a copy, so it cannot agree with the engine by sharing a typo with it; and it measures the one thing the two references disagree about, whether the stop code follows the declared length (13 of 13) |
 | `derive_dd.py` | DiskDoubler's DD (10) and AD (6, 9) coders | 39 of 39 forks, two of them in method 10's delta form; with no container parser it tries both forms and says which read — and since 2026-09-22 it NAMES those two rather than counting them, so the list can be held against the one `derive_ddc.py` reads out of the container |

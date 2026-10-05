@@ -20,7 +20,7 @@ TWO LANES, and they grade different things
   decoder that starts asking for more memory moves a tally here whatever
   the Macintosh shell does with its resources.
 - **shipped** (`--shipped`) — one budget per tier PER FORMAT, which is
-  what the `'OVLY'` build has: the decoders are fourteen images read as
+  what the `'OVLY'` build has: the decoders are fifteen images read as
   one bundle at launch, and everything the sniffed format cannot want is
   released before the engine takes its budget (FORMATS.md, *Overlays*).
   This is the lane that predicts what a user's Macintosh refuses.
@@ -234,7 +234,17 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # shape again: the control took +2,620 B of resident CODE and +4 of A5
 # and the shipped build took neither, every byte of the decoder being in
 # the `ovl_stuffit` image.
-OVL_SAVED = 127264
+# 2026-10-05: 127,264 -> 128,592 with AppleLink packages in, and this one
+# moves BOTH sides: the control took +2,148 B of resident CODE and +28 of
+# A5, the shipped build +788 and +60. The shipped half is the PROBE (666 B,
+# resident because the sniffer calls it for every file), the release
+# switch's new case, the shim and the engine's table row; the decoder is
+# in the new `ovl_sqp` image. Like the rows above, nothing here is
+# compensated: the three TIERS budgets below are machine measurements
+# against a build 788 B smaller, so every shipped prediction is that much
+# more generous than the Macintosh will be until they are re-taken there
+# (FORMATS.md, *Three configurations, one tree*).
+OVL_SAVED = 128592
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -267,7 +277,7 @@ OVL_HANDLE = 8
 # layer*).
 OVL_RESIDUE = -666
 
-# The fourteen images and the bundle they are read as, in bytes, measured
+# The fifteen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/` and STUFFIT re-taken 2026-09-28, +208 B for the
 # add-on module fields (FORMATS.md, *Where an archive names the module*) —
 # which is where that change lands in the shipped build: resident code took
@@ -277,7 +287,9 @@ OVL_RESIDUE = -666
 # refused, which the specimens settled; resident code and A5 did not move
 # for it at all. **STUFFIT re-taken again 2026-10-03, +2,604 B for
 # method 14** (src/sit14.c), 2,608 B of it in the image: resident code and
-# A5 did not move for that either. They are checked against that
+# A5 did not move for that either. **OVL_ID_SQP joined 2026-10-05**,
+# 1,972 B, and it is the whole of what an AppleLink package's decoder
+# costs the shipped build. They are checked against that
 # build whenever it is present (check_images below), so this table cannot
 # drift silently while the toolchain is installed; it is stated rather than
 # only read so that the lane still runs where Retro68 is not.
@@ -294,10 +306,11 @@ IMAGES = {
     "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER": 16722,
     "OVL_ID_STUFFIT":    26278,
+    "OVL_ID_SQP":         1972,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":       11450,
 }
-BUNDLE = 153688
+BUNDLE = 155672
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

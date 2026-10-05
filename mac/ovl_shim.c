@@ -293,6 +293,16 @@ int unc_packit_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_PACKIT_EXTRACT, c, NULL);
 }
 
+/* AppleLink packages. Probe resident; decoder from the bundle. */
+int unc_sqp_extract(UncCtx *c)
+{
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_image(OVL_ID_SQP);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_SQP_EXTRACT, c, NULL);
+}
+
 /* MIME. Probe resident; decoder from the bundle. */
 int unc_mime_extract(UncCtx *c)
 {

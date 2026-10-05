@@ -1,0 +1,39 @@
+{
+ "entries": [
+  {
+   "creator": "MACA",
+   "data_sha256": "ac12ef2c475fb26356cfcbcbddd4d6bd25bb9382003364b52e7d25ab56e6632d",
+   "data_size": 3098,
+   "finder_flags": 0,
+   "name": "FileMaker Import",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "2753c70d6481ba8e4663d3223f4c1bd4924e39b2e026b402fe2deb4d442b7b91",
+   "data_size": 3097,
+   "finder_flags": 0,
+   "name": "Package Data",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "307a9005a1b579ab7f1f76feab19f4a8c4721e2cf68ad89e445416278dcb8b9a",
+   "data_size": 4579,
+   "finder_flags": 0,
+   "name": "Trademark Data",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sqp-plain.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "b1bf268f7f9ba09ae84eef4d4e3dd7a0768e8d294d91b52bc5d346efb3ffb773",
+ "size": 3437
+}

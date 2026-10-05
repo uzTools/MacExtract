@@ -29,7 +29,7 @@ below the table.
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
 
 **One tier re-run, six carried on an argument.** The shipping binary has
-moved three times since the 2026-09-25 sweeps — a one-predicate fix in
+moved four times since the 2026-09-25 sweeps — a one-predicate fix in
 `src/fmt_arc.c`, where an ARC entry whose garbled stream ran short was refused
 without the password being tried; the Compact Pro segment identity check,
 which costs **24 B of resident code** and so takes 24 B off every tier's
@@ -49,7 +49,23 @@ shipped lane `ci.sh` asserts every run). The removed probe could only ever
 NAME a file, and none of the 71 sampled fixtures opens with the token it
 required (measured 2026-09-27), so no sampled format changed; and a change
 that only frees memory cannot turn a pass into a refusal. *One measurement
-and an argument — not seven re-runs.* Per-tier
+and an argument — not seven re-runs.*
+
+**And it moved a fourth time on 2026-10-05, in the other direction: the
+AppleLink package probe costs the shipped build 788 B of resident code and
+A5**, which is 788 B off every tier's budget and the largest single
+addition since the overlays landed (FORMATS.md, *Three configurations, one
+tree*). **No tier was re-run for it**, and what stands in for them is the
+same shape of argument as above: the probe can only ever NAME a file, none
+of the 71 sampled fixtures is a package or passes the version-and-eight-
+zero-bytes test that precedes its directory walk (measured — 0 of 943
+fixtures sniff as one), and 788 B is twenty times under the narrowest
+margin between any passing layer's demand and its budget anywhere in the
+sample, which is **16,490 B**. `run_tiers.py --check` moves no tally in
+either lane at the re-taken figures: 71/71, 67/71, 64/71 resident and
+71/71, 69/71, 66/71 shipped, the same fixtures by name. What that argument
+does NOT cover is a `.pkg` on the machine: no Macintosh has run one, and
+the format is not in `sample.txt` (OPEN_ITEMS.md). Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
 any of it is `tools/vmac/README.md`; what no emulator here can settle is
@@ -125,10 +141,10 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Forty-two**
-mechanisms keep finding the next one — recounted 2026-10-05; the sentence
-said ten when the list had thirty, on 2026-09-26 — and two of them need no
-insight at all:
+and one of those was worth 39/44 → 40/44 at the floor target. **Forty-four**
+mechanisms keep finding the next one — recounted 2026-10-05 twice; the
+sentence said ten when the list had thirty, on 2026-09-26 — and two of them
+need no insight at all:
 
 - a live claim sitting next to an already-withdrawn one;
 - **two files disagreeing** — a cross-file contradiction is a disproof nobody
@@ -174,6 +190,28 @@ insight at all:
   does not fail anything, so nothing ever re-tests it — and it is what
   the next person copies instead of the fix.** Look for the explanation
   beside a flag, not just the flag.
+- **a deviation from a reference, measured against OUR rendering of it.**
+  Added 2026-10-05: "SqueezePlay sets the next free code to 256 after a
+  clear where `compress` sets 257" is true about `src/unc_lzw.c` and false
+  about `compress`, whose own decompressor sets 256 —
+  `reference/macutils/macunpack/de_compress.c`, `free_ent = FIRST - 1`.
+  257 is deark's rendering, and deark is what this engine was transcribed
+  from. **Before calling something a deviation, open the thing it is
+  supposed to deviate FROM**, not the file that implements it here. The
+  cost of this one was zero only because it was checked: the item built on
+  it asked for a codec parameter or a separate code path, and the measured
+  answer was neither (below).
+- **a reading that passes being read as a reading that is complete.**
+  Added 2026-10-05: `tools/derive_sqp.py` graded 4 of 4 members of both
+  real AppleLink packages byte-exact and had **five fields wrong**,
+  because every one of them is zero or constant in those two files — two
+  longwords filed as "read by nothing" are the resource fork's length and
+  offset, the stored flag is a bit of a BYTE and not of a word, the
+  resource fork has its own stored bit, and the header's count is one of
+  TWO counts. What found them was reading the WRITER as well as the
+  reader. **A grading that cannot fail on a field is not evidence about
+  that field**, and the question to ask is which fields the corpus holds
+  constant (below).
 - **a sample of a dispatch table read as the whole table.** Added
   2026-10-05: two `GetResource('Eng ', N)` sites were cited as where a
   format's decoder lives. There are fourteen of them — one pair per id,
@@ -551,7 +589,8 @@ line is what makes the next one worth re-testing.
 | SpaceSaver's trigger is known: rename a file to end in `small` and it compresses | four runs that booted AND flushed do it correctly and nothing compresses; the OTHER rename rule on the same page fires on the same event, turning `Forked` into a StuffIt archive | 2026-08-22 |
 | SpaceSaver 3.5.1 is installed and running | its control panel runs; its EXTENSION shows no sign of it. With `~Magic Menu™` deleted the menu bar carried no icon menu at all, so the menu `STR# 1024` describes was never installed | 2026-08-22 |
 | AppleLink `.pkg` has no reference implementation anywhere reachable | the SpaceSaver image has had one all along: `Extensions:Aladdin:Translators:PKG Expand Translator`, whose `Name` resource is `AppleLinkPKG` and whose `Othe` resource is 20 KB of 68k with Aladdin's usual module preamble | 2026-08-22, and **narrowed 2026-09-27**: that translator is a DRIVER — it recognises nothing and calls `GetResource('Eng ', 2)` in `StuffIt Engine™` to do the work — so the reference for the format, if it is on the image at all, is that 26,362-byte resource (*Corrected figures*) |
-| AppleLink `.pkg` cannot be sniffed without inventing a magic number | true of magic numbers, false of sniffing: Aladdin's own recogniser reads three whitespace-delimited TOKENS, and `macextract sniff` now does the same at 0 false positives across 928 fixtures | 2026-08-23, and **this withdrawal is itself withdrawn** — that routine is the translator API's command parser and names no file (*Corrected figures*, 2026-09-27) |
+| AppleLink `.pkg` cannot be sniffed without inventing a magic number | true of magic numbers, false of sniffing: Aladdin's own recogniser reads three whitespace-delimited TOKENS, and `macextract sniff` now does the same at 0 false positives across 928 fixtures | 2026-08-23, and **this withdrawal is itself withdrawn** — that routine is the translator API's command parser and names no file (*Corrected figures*, 2026-09-27). **Withdrawn a third time, 2026-10-05, and for the right reason at last:** a package is sniffed by its own arithmetic — a version byte, eight zero bytes, two item counts and a directory whose forks tile the file to its last byte — at **exactly the 6 of 955 fixtures that ARE packages and no others** (measured 2026-10-05, and it is a sweep that can now fail in both directions, which the old one could not: the corpus held neither a package nor a script), and 10 bent packages refused one test at a time (`src/fmt_sqp_probe.c`) |
+| SqueezePlay's LZW deviates from Unix `compress`: it sets the next free code to 256 after a clear where `compress` sets 257, so `src/unc_lzw.c` cannot be reused unchanged | **`compress` sets 256 there too** — `reference/macutils/macunpack/de_compress.c`, `free_ent = FIRST - 1`, a file this project has carried since M0. 257 is deark's rendering of the same algorithm, which is what `unc_lzw.c` follows; the two differ only in a table slot no valid stream can name. The engine reads SqueezePlay with `unc_lzw_init(..., 13, 1, ...)`, the configuration ARC method 9 already asks for, and `gzip` reads every fork of every package byte-identically through a `.Z` header. **Cost: none, because it was checked before anything was built on it** — the work it specified was a codec parameter or a second code path, measured at 0 bytes of either (DECISIONS.md 2026-10-05, *the deviation that was the reference*) | 2026-10-05 |
 | Compact Pro's encryption algorithm is unknown, so an encrypted `.cpt` can only be reported | Compact Pro 1.51's own `CODE` 3: the key at 0x1892, the 64-bit CRC table at 0x408e, the seed at 0x40fe, and the encrypt and decrypt loops at 0x1152 and 0x1f08 — then graded by the application, both ways | 2026-08-23 |
 | Compact Pro enables encryption only for a registration whose name ends with `*`, so no copy here can grade the cipher | registering with the code Macintosh Garden publishes (`Registered` / 35427117): the refusal goes away, the Add dialog's Encrypt checkbox appears, and the application both encrypts and decrypts. The `*` test at 0x485e is really there; it is not the only path to that flag, and reading one branch was not reading the feature | 2026-08-23 |
 | StuffIt classic's archive key is XADMaster's loop, and the open question is only whether `unar` 1.10.8 or current XADMaster matches Aladdin | three archives StuffIt Deluxe 3.5.1 wrote, with passwords of 8, 9 and 17 characters: the fold count is **ceil(len/8)**, so XADMaster is wrong at 8 and at 17+ (it folds an all-zero block at 8 and never more than two) and `unar` 1.10.8 is wrong at 9+ (it folds one). Neither reference had it, and this engine had shipped XADMaster's | 2026-08-23 |

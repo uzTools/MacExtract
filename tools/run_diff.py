@@ -42,6 +42,13 @@ IMPLEMENTED = {
     # "oracle" field (TESTING.md, "ARC and uuencode").
     "uuencode": "uuencode",                # M13
     "LZH": "LZH",                          # M28
+    # Nothing but Aladdin's own translator reads an AppleLink package —
+    # `unar`, deark and macunpack have never heard of the format — so
+    # these manifests are the bytes tools/synth_sqp.py compressed, with
+    # gzip reading every LZW fork through a .Z header in
+    # tools/run_sqp.py. The manifest says so in its "oracle" field
+    # (TESTING.md, *AppleLink packages: SqueezePlay*).
+    "SqueezePlay": "AppleLink package",    # M56
 }
 
 # Formats v1 names but does not extract. Until 2026-08-14 a fixture of one

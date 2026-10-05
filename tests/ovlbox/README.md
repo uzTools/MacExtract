@@ -1,6 +1,6 @@
 # `tests/ovlbox/` — the overlay loader, off the Macintosh
 
-The application's fourteen `'OVLY'` images were reached by no automated test
+The application's fifteen `'OVLY'` images were reached by no automated test
 until 2026-09-26: they exist only in a Retro68 build, so the 932-fixture
 corpus, the robustness variants and the sanitiser builds all exercise the
 decoders as ordinary linked code, and whether an image is FOUND, RELOCATED,

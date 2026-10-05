@@ -1114,6 +1114,9 @@ UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
 UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_packit_extract(UncCtx *c);
+
+UncFormat unc_sqp_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_sqp_extract(UncCtx *c);
 UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cpt_extract(UncCtx *c);
 UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);

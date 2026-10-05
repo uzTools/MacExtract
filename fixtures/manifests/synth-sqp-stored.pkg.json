@@ -1,0 +1,39 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "245772d2fb8da8e1781328b86e540d192caa1fe5eabedf8a1661993fea0bedec",
+   "data_size": 2048,
+   "finder_flags": 0,
+   "name": "Random Data",
+   "rsrc_sha256": "2edd9884ac894352d24b8a9545d465f8dd5fe3de10ddcafaed7fdfa35a56b969",
+   "rsrc_size": 1024,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "ba495dd3ee160a2b33d2c1d28fe253c9fe8383d246b0c9142e394b916ce6c418",
+   "data_size": 1200,
+   "finder_flags": 0,
+   "name": "Mixed",
+   "rsrc_sha256": "cac5f00e5434bc730f9b845b89af9f3b1e0e991b5f9fa42c2c0e17a206607392",
+   "rsrc_size": 600,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "bb7208bc9b5d7c04f1236a82a0093a5e33f40423d5ba8d4266f7092c3ba43b62",
+   "data_size": 1,
+   "finder_flags": 0,
+   "name": "Tiny",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sqp-stored.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "e972b130de618995f48e010de6e6004b01c84afdd044aed890ebb1325c9254f3",
+ "size": 4681
+}

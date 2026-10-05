@@ -1,0 +1,29 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "a804604b228ff06c23e4b0b285c79c0aadd5a2ce7e7b932587a3f89dbaca9b55",
+   "data_size": 1500,
+   "finder_flags": 0,
+   "name": "Flat One",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "aa4c22629baff20f3a743b0b944afac597a5bcc08bb8e0ad53eacd86eb6c7305",
+   "data_size": 900,
+   "finder_flags": 0,
+   "name": "Flat Two",
+   "rsrc_sha256": "327e4cd0c198b12a1ac93ba0c74887a965da9d004aeb16337bdef078718a2a5c",
+   "rsrc_size": 400,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sqp-v0.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "96c34bb8e7973ac830d6a71d3fdec426be186e07313bd6969d939b219ab8789a",
+ "size": 1331
+}

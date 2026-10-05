@@ -1,0 +1,39 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "4fd938637da62d27e636acc4c0a81d48ca49fd7df257fe0cfb5c7350f1cf9a83",
+   "data_size": 2000,
+   "finder_flags": 0,
+   "name": "Both Forks",
+   "rsrc_sha256": "9bd589870c7854b5afcca46d795fe27bbafbf961fdef43c4f41231796000b32f",
+   "rsrc_size": 1500,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 0,
+   "name": "Resource Only",
+   "rsrc_sha256": "1a6c3a66848e28ed083950a6e3227680faeb6ab4409bb142524136c2d918549f",
+   "rsrc_size": 900,
+   "type": "FKEY"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c7a1259f86e959305977fd9ac45ad5dcabee8083d60208dd7d3d092855c92358",
+   "data_size": 700,
+   "finder_flags": 0,
+   "name": "Data Only",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sqp-forks.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "637d2aa7f5bdd3a712d3c0ef1d88aa16e998310f855d4050e3581078fa6eb8d2",
+ "size": 2397
+}

@@ -1,6 +1,6 @@
 # FORMATS.md — format support matrix
 
-Status after M0–M52. "Oracle coverage" = fixtures with byte-exact
+Status after M0–M56. "Oracle coverage" = fixtures with byte-exact
 differential manifests (built from The Unarchiver's `unar`; see
 TESTING.md); every one passes, plus 10 corruption variants each in the
 robustness suite. "Peak RAM" = allocator high-water mark across the
@@ -21,7 +21,7 @@ under *Table notes*.
 - StuffIt 2.0's pluggable modules, and what an "Optimizer" was
 - StuffIt 5's method 14
 - Encryption
-- AppleLink packages: the format, read out of Aladdin's own expander
+- AppleLink packages: SqueezePlay, read out of Aladdin's own expander
 - Archives named but not extracted
 - Envelope auto-unwrap
 - Segmented archives (multi-part sets)
@@ -73,8 +73,8 @@ under *Table notes*.
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
-| AppleLink package (.pkg) | **not recognised** — no decoder in the engine; the probe was removed 2026-09-27 | — | the format is READ and graded 4/4 on both specimens against `AppleLink Package Translator` 3.0.3, the reference implementation (*AppleLink packages*, below) | — | — |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 940 fixtures (*Archives named but not extracted*, below) | — | — |
+| AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **4 of 4 members of the two real packages**, byte-exact against the sha256 an independent reading of Aladdin's own translator recorded, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 11–41 KB★★★★ | full |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 955 fixtures (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -1004,6 +1004,23 @@ encoded on an emulated Mac, decoded on one. `unar` reads none of these: it
 cannot recognise the format at all, which is why the encoder had to be the
 oracle.
 
+### AppleLink packages ★★★★
+
+**In scope since 2026-10-05** (M56), where this row read *not recognised*
+and the format had a reading and no decoder. Everything about it — the two
+directories, the folder levels, the stored bits, the codec, what is graded
+by what and the four paths that rest on a generator rather than on
+authentic bytes — is *AppleLink packages: SqueezePlay*, below.
+
+Peak heap is **11 KB on the smallest package here and 41,344 B at the
+ceiling**, and the ceiling is a property of the format rather than of a
+file: the code width stops at 13 bits, so the LZW table cannot pass 8,192
+symbols × 4 B, and `synth-sqp-clear.pkg` is the fixture that fills it. The
+two real packages are 13,396 and 17,620 B. Nothing here allocates per
+ENTRY — the directory is read one record at a time and the folder path is
+in the same block as the buffers — so a package with 255 members peaks no
+higher than one with one.
+
 ## StuffIt SpaceSaver
 
 **In scope since 2026-08-22**, read out of Aladdin's own engine rather than
@@ -1296,9 +1313,10 @@ fourteenth `Segmenting`, which has no file there (*The paid box*, below).
 Twelve were formats this project already read — `AppleSingle`, `BinHex4`,
 `CompactPro`, `DeArc` (ARC), `MacBinary`, `Text`, `UUCode`, `UnPack`
 (PackIt: its own `STR#` 129 holds `.pit`), `UnZip`, `Unix Compress`,
-`tar` and Segmenting — and a thirteenth, `PKG Expand`, it named from
-2026-08-23 to 2026-09-27 and does not recognise any more (*AppleLink
-packages*, above). The fourteenth was `btoa/atob`, and nothing here had
+`tar` and Segmenting — and a thirteenth, `PKG Expand`, which it named from
+2026-08-23 to 2026-09-27 on a reading that was not a file test, did not
+recognise at all for eight days, and **extracts since 2026-10-05**
+(*AppleLink packages*, above). The fourteenth was `btoa/atob`, and nothing here had
 heard of it.
 
 Paul Rutter's btoa is uuencode's rival from the Unix side: four bytes
@@ -2448,12 +2466,21 @@ The CR is why the two hosts differ in one place and only one: the saved
 file keeps it, and the line the CLI PRINTS turns it into a newline,
 because a CR sent to a terminal overwrites the line just printed.
 
-## AppleLink packages: the format, read out of Aladdin's own expander
+## AppleLink packages: SqueezePlay, read out of Aladdin's own expander
 
-**The format is SqueezePlay, and it is read.** Both real packages parse and
-all **4 of 4** members expand to their declared length byte for byte, graded
-by `tools/derive_sqp.py` (TESTING.md, *AppleLink packages: SqueezePlay*). **No decoder is in the
-engine yet**, and a `.pkg` still sniffs as *unknown* (OPEN_ITEMS.md).
+**The format is SqueezePlay, and it extracts since 2026-10-05.** Both real
+packages sniff as AppleLink packages and all **4 of 4** members come out
+byte-exact against the sha256 an independent reading of Aladdin's own
+translator recorded; six synthesised packages carry the paths those two
+cannot reach; and every LZW fork of all eight is decoded identically by
+**`gzip`**, because a SqueezePlay fork turns out to be a Unix `compress`
+code stream (*The codec*, below). `src/fmt_sqp.c` is the decoder,
+`src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
+(TESTING.md, *AppleLink packages: SqueezePlay*). The sniffer answers
+*AppleLink package* for **exactly the 6 of 955 fixtures that are packages
+and for nothing else** — a sweep that can fail in both directions, where
+the one the removed probe rested on could not fail at all, the corpus
+holding neither a package nor a translator script (BLOCKERS.md).
 
 **The reference implementation is `AppleLink Package Translator` 3.0.3,
 "Copyright © 1990-1992 Aladdin Systems, Inc."** — `'Othe' 1`, 33,300 bytes
@@ -2464,41 +2491,91 @@ its menus read *"Expand from AppleLink Package"* and *"Compact into AppleLink
 Package"*, and it carries AppleLink's own `'ALinkFont'` and an
 `'INT ' 6000` named *"line speed, bps"*. `tools/vmac/README.md` (*The
 AppleLink package expander*) rebuilds it; `tools/derive_sqp.py --witness`
-checks thirteen byte patterns in it, which a different build fails.
+checks **twenty-nine byte patterns AT the offsets they are claimed to sit
+at**, which a different build fails. It checked thirteen, by `find`, until
+2026-10-05: six of the patterns added that day occur more than once in the
+resource, and an address is half of what identifies one.
 
 ### The container
 
-Read off `RdSQPDirectory` @0x5e72, `WrSQPDirectory` @0x5f80 and
-`WrHFSDirectory` @0x5eb2, and verified on both packages — the members tile
-each file to its last byte with nothing left over.
+Read off `ReadFileAndBuildLinkedList` @0x2faa — the expander's own reader —
+with `DoSqForward` @0xb60, `WrSQPDirectory` @0x5f80, `WrHFSDirectory`
+@0x5eb2 and `RdHFSDirectory` @0x5e06 agreeing with it from the writer's
+side, and verified on both packages: the members tile each file to its last
+byte with nothing left over.
 
 | offset | what |
 |---|---|
-| +0 | `u8` number of items; `u8` version (1 in both); 8 zero bytes |
+| +0 | `u8` items in the SQP directory, capped at **50** (`DoSqForward` @0xc46) |
+| +1 | `u8` version: **0 or 1**, and an error message for anything else (@0x3074) |
+| +2 | 8 bytes, zero in both packages, read by nothing |
 | +10 | **SQP directory**: *count* × **86**-byte records |
-| +86n+10 | `u32` number of items again, then 8 zero bytes |
-| +86n+22 | **HFS directory**: *count* × **90**-byte records — the same fields with four more bytes in front, since one is written from the node at +12 and the other from +8 |
-| +86n+22+90n | the members' bytes, in record order |
+| +86n+10 | `u32` items in the HFS directory, then 8 zero bytes |
+| +86n+22 | **HFS directory**: *count* × **90**-byte records — a `u16` LEVEL, a `u16` that is non-zero for a FOLDER, then the same 86 bytes |
+| +86n+22+90n | the members' bytes |
+
+**Version 0 stops at the SQP directory** and those records are the items,
+each at level 1 and none a folder (@0x31be). Version 1 — both real packages,
+and everything Aladdin's writer produces — carries both, and **the HFS one is
+what the expander reads**.
+
+**The two counts need not agree, and three facts in this file said they were
+one count until 2026-10-05.** The SQP directory is a flat list of the FILES:
+capped at 50, skipping folders and anything typed `HBSF`, `PIT ` or `SIT!`
+(`DoItemsForward` @0x1d5e), name-uniquified on the way in. So a package with
+a folder in it has an 86-byte hole where that item's SQP record would be, and
+one with 60 files has ten items the SQP directory cannot name. The header's
+count is what LOCATES the HFS directory; the ITEM count is the second
+header's. Both specimens are flat and under 50, which is why one count read
+as two.
 
 An SQP record, with the routine that names each field:
 
 | offset | field | named by |
 |---|---|---|
-| +0, +4, +16 | three `u32`s, **zero in all four records** and not read by anything above | — |
-| +8 | `u32` compressed length | `DoWork`, the copy loop's budget |
-| +12 | `u32` absolute offset of the member | `DoWork` @0x606, `SetFPos` |
-| +20 | `OSType` file type | the field `StuffIt Engine™` also tests |
-| +24 | `OSType` creator | |
-| +28 | `u16` Finder flags, then 6 bytes of location | |
+| +0 | `u32` zero — written as zero (`AddItems` @0x239c), read nowhere | — |
+| +4 | `u32` **resource** fork's compressed length | `DoWork` @0x714, @0x944 |
+| +8 | `u32` **data** fork's compressed length | `DoWork` @0x45a, @0x5ce |
+| +12 | `u32` data fork's absolute offset | `DoWork` @0x606, `SetFPos` |
+| +16 | `u32` resource fork's absolute offset | `DoWork` @0x816 |
+| +20 | 16 bytes of Finder info — an `FInfo` for a file and a **`DInfo` for a folder**, so type and creator are a window RECTANGLE in a folder's record and are not reported; the Finder flags are at +8 of both, and so are the dates below (`ioFlCrDat` and `ioDrCrDat` are one field of one union) | `AddItems` @0x2378 copies all 16, whatever `PBGetCatInfo` left there |
 | +36 | `Str31` name, 32 bytes fixed | |
 | +68 | `u32` creation date; +72 `u32` modification date | |
-| +76 | `u32` resource fork length | `GetExpandedSize` @0x13ac, node+88 |
-| +80 | `u32` data fork length | same routine, node+92 |
-| +84 | `u16` flags; **bit 1 set = stored**, clear = LZW | `DoWork` @0x618, `btst #1` |
+| +76 | `u32` resource fork's expanded length | `GetExpandedSize` @0x13ac, node+88 |
+| +80 | `u32` data fork's expanded length | same routine, node+92 |
+| +84 | `u8` flags: **bit 1 = data fork stored**, **bit 2 = resource fork stored** | `DoWork` @0x618 and @0x96e, both `btst` on the BYTE |
+| +85 | `u8` zero | |
 
-**The resource fork is read but UNGRADED.** It is a second stream in the
-same region through the same stored-or-LZW branch (`DoWork` @0x9f2), and
-both packages carry `rlen` = 0, so nothing here exercises it.
+**Three corrections to what this section said before 2026-10-05**, all of
+them from reading routines it had not read:
+
+- `+4` and `+16` were filed as two of "three `u32`s not read by anything".
+  They are the **resource fork's** length and offset, the exact mirror of the
+  data fork's `+8` and `+12`, and `DoWork` @0x714 tests `+4` to decide
+  whether there is a second fork at all.
+- the stored flag is **bit 1 of the BYTE at +84**, not of a `u16` — which is
+  bit 9 of the word, so a `u16` reading would test the wrong bit. Both
+  specimens carry `0x8000` there, so neither reading could be told from the
+  other on this corpus: the high bit is set by `InitSqp` @0x5d56 and tested
+  nowhere, and bits 3 to 6 are the list's own state, cleared when a package
+  is read (@0x312c).
+- and the resource fork has **its own** stored bit, bit 2 of the same byte.
+
+**The tolerance to question first, if a real package is ever reported
+unrecognised, is the exact tiling.** The probe requires the forks to cover
+`[directory end, EOF)` with no gap and no byte to spare. That is what
+Aladdin's writer produces — it appends each fork as it compresses it, and
+both real packages tile to the byte — but it is a property of that writer
+rather than of the format, and a padded or aligned package from some other
+version would fail it. It is the strongest test available without a magic
+number, and it is the one with a stated cost.
+
+**A folder's own record carries no forks and must not be asked for any**:
+`DoItemsReverse` @0x1ecc branches away before `DoWork` for one, so the
+length fields in a folder's record are whatever `PBGetCatInfo` left there.
+A folder owns the items after it whose level is greater
+(`CalculateFolderSize` @0x113c), which is what the engine builds its paths
+from.
 
 ### The codec
 
@@ -2514,17 +2591,35 @@ prefix, suffix and stack buffers (34,396 / 17,198 / 8,599 bytes).
 | first free code | 257 after a reset |
 | packing | LSB-first, in blocks of *n_bits* bytes; a width change discards the rest of the block |
 
-**One difference from Unix `compress`, and it is the kind that has to come
-from the binary:** on a clear code this expander sets the next free code to
-**256**, not 257 (@0x2ae0), so the clear code's own slot is reused from then
-on. `src/unc_lzw.c` therefore cannot be reused unchanged (OPEN_ITEMS.md).
+**It is `compress`, and `src/unc_lzw.c` reads it with no change at all** —
+`unc_lzw_init(&z, al, in, 13, 1, clen)`, which is the configuration ARC
+method 9 already asks for. The claim that the expander DEVIATES from
+`compress` by setting the next free code to 256 after a clear is
+**withdrawn**: 256 is what `compress` itself sets there
+(`reference/macutils/macunpack/de_compress.c`, `free_ent = FIRST - 1`), and
+257 is deark's rendering of the same algorithm, which is the one this engine
+follows. The two differ in a table slot no valid stream ever names
+(BLOCKERS.md; DECISIONS.md 2026-10-05, *the deviation that was the
+reference*).
 
-**What the two packages actually exercise, measured 2026-10-05.** All four
-members are LZW and **none contains a clear code**; the widest width reached
-is **12** of the 13 bits available, and the largest table is 2,260 of 8,192
-entries. So the clear path, the 13-bit width, the stored mode and the
-resource fork are all READ and UNGRADED — `tools/derive_sqp.py` prints that
-list rather than leaving it to be inferred from a pass.
+**The proof is not that argument.** A SqueezePlay fork with three bytes of
+`.Z` header in front of it — `1f 9d`, then 13 bits with block mode — is
+decoded **byte-identically by `gzip`**, on all four members of the two real
+packages and on all 18 LZW forks of the synthesised ones, the 36,000-byte
+two-clear stream included. That makes the codec's oracle a second
+implementation rather than this repository's own reading, and
+`tools/run_sqp.py` runs it on every `ci.sh` pass.
+
+**One real difference from `compress`, on the WRITER's side:** this
+compressor has no ratio test. `Compress` @0x288e clears the table when it
+FILLS and for no other reason, so a clear arrives after exactly 7,936 codes
+of a generation and nowhere else — which is what `tools/synth_sqp.py`
+implements.
+
+**What the two real packages actually exercise, measured 2026-10-05.** All
+four members are LZW, none is stored, none has a resource fork and **none
+contains a clear code**; the widest width reached is **12** of the 13 bits
+available, and the largest table is 2,260 of 8,192 entries.
 
 | member | codes | clears | widest | table |
 |---|---|---|---|---|
@@ -2533,12 +2628,41 @@ list rather than leaving it to be inferred from a pass.
 | `Trademark Data` | 2,004 | 0 | 12 | 2,260 |
 | `Antipiracy-Read Me First` | 947 | 0 | 11 | 1,203 |
 
+### What is graded by what, and what is not
+
+**Five paths no real package reaches**, and they are not all graded the same
+way. `tools/synth_sqp.py` writes a package per path, following the same
+binary the decoder was read out of — `Compress` @0x27de and `PutCode`
+@0x28fe for the codec, `DoSqForward` @0xb60 and the two directory writers
+for the container — and `tools/run_sqp.py` grades the engine against the
+bytes that went in.
+
+| path | why no specimen reaches it | what grades it |
+|---|---|---|
+| the **clear code** | a stream must define 7,936 codes first; the largest real member defines 2,004 | `synth-sqp-clear.pkg`, **and `gzip`** |
+| **13-bit** codes | the same: the width reaches 13 at 4,096 symbols | the same two |
+| a **resource fork** | `rlen` is 0 in all four real members | `synth-sqp-forks.pkg` — the generator alone |
+| the **stored** mode | set in none of them, and the writer only stores what compressing made no smaller | `synth-sqp-stored.pkg`, whose forks are incompressible so the writer's own rule stores them — the generator alone |
+| **version 0**, and **folders** | both real packages are version 1 and flat | `synth-sqp-v0.pkg` and `synth-sqp-folder.pkg` — the generator alone |
+
+**The distinction matters and is the honest one.** The two codec rows have an
+independent reader; the three container rows are graded against a generator
+built from the same reading as the decoder, so a mistake in that reading
+would make both sides wrong together — **and one did**: a folder's type and
+creator are its window rectangle, and both sides said `TEXT`/`ttxt` until
+the structure the writer copies was read rather than assumed (DECISIONS.md
+2026-10-05). **No package written here has ever
+been handed to Aladdin's own expander** (OPEN_ITEMS.md), and the two real
+packages remain the only authentic bytes anything is graded on.
+
 ### What the two packages grade
 
 `ALink.PKG` (6,900 B, 1992-02-11) and `Read First.PKG` (1,373 B,
 1992-03-08), from `tools/fetch_specimens.py --only applelink`. The sha256 is
-of the expanded data fork and is the only regression oracle there is — a
-package carries no per-member checksum.
+of the expanded data fork, and against the CONTAINER it is the only
+regression oracle there is — a package carries no per-member checksum, nor
+any checksum of its own. The engine reproduces all four, and `gzip`
+reproduces the four streams inside them (*What is graded by what*, above).
 
 | package | member | type/creator | packed | expanded | sha256 (expanded) |
 |---|---|---|---|---|---|
@@ -2557,6 +2681,10 @@ hits were the HFS directory's copy of the same records; the two longwords
 at record +8 and +12 are a length and an offset, not a pair that "sums to
 the file's length", which held in `Read First.PKG` by coincidence; and the
 timestamps are at record +68 and +72, not "+0x50".
+
+**And the engine's peak heap on them is 17,620 B and 13,396 B** — `t
+--stats`, which is the figure the table row at the top of this file carries
+alongside the 41,344 B ceiling.
 
 ### What 3.5's `PKG Expand Translator` is, and what it is not
 
@@ -3036,7 +3164,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 937 fixtures byte-exact against `unar` manifests
+- Differential: 943 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -3511,21 +3639,34 @@ and `run_zipit.py` declares those three ungraded with the reason.
 ## Overlays: what the application ships, and what it costs
 
 **Since 2026-09-25 the decoders and ciphers are not resident.** They are
-fourteen flat, position-independent images in `'OVLY'` resources; the shipped
-build reads all fourteen as ONE bundle at launch and releases everything the
+fifteen flat, position-independent images in `'OVLY'` resources; the shipped
+build reads all fifteen as ONE bundle at launch and releases everything the
 sniffed format cannot want before the engine takes its budget. The mechanism
 is `mac/ovl_load_eager.c`, the images are built by `tools/overlay/`, and why
 it is the build rather than a branch is DECISIONS.md 2026-09-25, *two
 branches that were one file apart*. There were fifteen until DART left the
-engine later the same day.
+engine later the same day, fourteen until AppleLink packages arrived on
+2026-10-05, and fifteen again since.
 
 ### Three configurations, one tree
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **53,224 B** | 19,000 B | **64,768 B** | **221,824 B** |
-| lazy | `UNC_OVL_LAZY=1` | 51,848 B | 19,096 B | 63,360 B | 220,544 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **161,596 B** | **37,892 B** | 193,792 B | 197,120 B |
+| **eager — SHIPPED** | (default) | **54,012 B** | 19,060 B | **65,664 B** | **224,640 B** |
+| lazy | `UNC_OVL_LAZY=1` | 52,588 B | 19,140 B | 64,256 B | 223,360 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **163,744 B** | **37,920 B** | 196,096 B | 199,424 B |
+
+**Re-measured 2026-10-05**, for AppleLink packages (*AppleLink packages:
+SqueezePlay*): the control +2,148 B of `CODE` and +28 of A5, the shipped
+build **+788 and +60** — and this is the first format since the overlays
+landed whose shipped column moved by more than eight bytes. What moved it
+is not the decoder, which is 1,474 B and is in the new `ovl_sqp` image: it
+is the **666-byte PROBE**, which is resident because the sniffer calls it
+for every file it is handed, plus 48 B for the release switch's new case,
+the shim and the engine's table row. A format with no magic number pays
+for its sniffer on the target, and that is the trade: 788 B off every
+extraction's budget against a `.pkg` being recognised at all
+(DECISIONS.md 2026-10-05, *the probe that had to be a file test*).
 
 **Re-measured again 2026-10-03**, for StuffIt method 14 (*StuffIt 5's
 method 14*): the control +2,624 B of `CODE` and +0 of A5, the SHIPPED
@@ -3624,26 +3765,31 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **127,264 B** since 2026-10-03
+measured 2026-09-27. The shipped pair is **128,592 B** since 2026-10-05
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **153,688 B** — the fourteen images sum to 153,508 B, so its
-index costs **180 B**: a 4-byte header, 12 bytes of directory per image and 8
+The bundle is **155,672 B** — the fifteen images sum to 155,480 B, so its
+index costs **192 B**: a 4-byte header, 12 bytes of directory per image and 8
 bytes of padding to 4, which accounts for the whole difference (re-measured
-2026-10-02 twice, for `src/sit_ccube.c` and then for the five ciphers,
-off the raw bundle the build writes for `tests/run_overlay_host.sh`; it
-was 145,652 B against 145,472 B from 2026-09-26, and the index is the
-same 180 B at every size because none of the three terms depends on how
+2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw bundle the
+build writes for `tests/run_overlay_host.sh`; it was 153,688 B against
+153,508 B with fourteen, and the index grew by exactly the 12 bytes of one
+more directory entry, because none of the three terms depends on how
 big an image is). It read **143,616 B** here until then, and 724 B
 of index with it: that figure is `ovl_bundle.r.rsrc.bin`, the Rez'd RESOURCE
 FORK around the bundle rather than the bundle (DECISIONS.md 2026-09-26, *the
 fork that was mistaken for its contents*). It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
-therefore watches the 64,768 B `MacExtract.code.bin` and not the download.
-(That figure read 64,512 B here until 2026-10-01, which was the
+therefore watches the 65,664 B `MacExtract.code.bin` and not the download.
+(That figure read 64,768 B until 2026-10-05, when the AppleLink probe
+raised it, and 64,512 B until 2026-10-01, which was the
 ratchet's EXPECT rather than the build's size — 256 B inside its
-tolerance, so nothing had ever failed on the difference.)
+tolerance, so nothing had ever failed on the difference. **It was
+written as 65,536 for an hour on 2026-10-05, which was the same mistake
+again**: a figure estimated from the resident `CODE` rather than read off
+the file, and `check_app_size.py` reported the 128 B difference rather
+than failing on it, exactly as its tolerance is meant to.)
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 183,424 B — and the shipped build
@@ -3708,7 +3854,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 127,264 B of `CODE` and A5 the shipped build does not carry
+which is the 128,592 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -3716,54 +3862,60 @@ a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 The residue and the tier budgets under it are the machine's, taken
 2026-09-27 against a SHIPPED application of 52,972 B of `CODE` and 18,964 B
-of A5. It is 53,216 and 19,008 now (*Three configurations, one tree*), so
-every figure in this table is **288 B more generous than the Macintosh now
-is** — the whole of that is the 2026-09-29 Optimizer work's resident part;
-`src/sit_ccube.c` and zip's extra fields added none of it. Not corrected
+of A5. It is 54,012 and 19,060 now (*Three configurations, one tree*), so
+every figure in this table is **1,136 B more generous than the Macintosh now
+is** — 288 B of that is the 2026-09-29 Optimizer work's resident part and
+**788 B is the AppleLink package probe**, which is the largest single
+addition to the resident build since the overlays landed; `src/sit_ccube.c`,
+zip's extra fields and StuffIt method 14 added none of it. Not corrected
 arithmetically, because that is how the floor budget was once made worse;
 it decides nothing at a narrowest margin of 16,490 B, and the place to fix
 it is a run on the machine. **This read "336 B smaller" and "~560 B more
 generous" until 2026-10-02**, two figures that could not both be the gap
 between the same pair of builds; the two sizes are quoted above now so the
 subtraction is the reader's.
-Every figure in it is that sum, re-taken 2026-10-02 against the current
+Every figure in it is that sum, re-taken 2026-10-05 against the current
 `OVL_SAVED` and images — the ten marked *(measured)* are the formats with a
 fixture in the Mac sample, so `run_tiers.py --shipped` confirms the tally
-at that budget; the four marked otherwise are the same sum with no fixture
+at that budget; the five marked otherwise are the same sum with no fixture
 to take them on. `tools/run_tiers.py --shipped` is where it is applied
 (TESTING.md, *The tiers a budget predicts*; DECISIONS.md 2026-09-26, *a
 budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+83,752 B** (measured) |
-| LZH | lzh, codecs | **+110,610 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +94,246 B (arithmetic), and **+104,394 B** where the directory says no entry is encrypted (measured) |
-| DiskDoubler | cptdd, codecs | **+104,394 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +80,778 B (arithmetic), **+90,926 B** unencrypted (measured) |
-| Tar | exo, codecs | **+90,926 B** (measured) |
-| ARC | arc, ciphers, codecs | **+101,910 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+107,382 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +103,456 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| SuperDisk! | superdisk, codecs | +113,122 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| Now Compress | now, codecs | **+115,240 B** (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,098 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+119,534 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 1,972 B |
+| Now Compress | now, codecs | **+116,568 B** (measured) |
+| SuperDisk! | superdisk, codecs | +114,450 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+111,938 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+108,710 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+105,722 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +104,784 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+103,238 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +95,574 B (arithmetic), and **+105,722 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+92,254 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+85,080 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +82,106 B (arithmetic), **+92,254 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,754 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
-and then -> 124,640 B with the five ciphers, and -> 127,264 B on
-2026-10-03 with method 14, so every grant rises with
+and then -> 124,640 B with the five ciphers, -> 127,264 B on
+2026-10-03 with method 14 and -> 128,592 B on 2026-10-05 with AppleLink
+packages, so every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. The two rows that
 moved differently are the ones whose own image grew — StuffIt's, which
 took 4,592 B of C-Cube, and every row holding the crypt image, which
 took 856 B of CBC. Nothing in the shipped build's resident size moved
-by more than eight bytes.
+by more than eight bytes until 2026-10-05, when the AppleLink probe
+moved it 788 (*Three configurations, one tree*) — and the rows still
+rose, because the control took 2,148 B for the same format.
 
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 153,688 B held against 127,264 B saved. It costs nothing on the tiers
+it — 155,672 B held against 128,592 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6176,11 +6328,11 @@ with this archive."*
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
 | base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the thirteen are listed under *The paid box*, below | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
-| AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **not recognised.** Named from 2026-08-23 to 2026-09-27, when what had been read out of `PKG Expand Translator` turned out to be the translator API's command parser, shared verbatim with five of its siblings (*AppleLink packages*, above). The layout is no longer missing: 3.0.7's `AppleLink Package Translator` is the reference and the format is read (*AppleLink packages*, above). What is missing is a decoder in the engine |
+| AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **extracted since 2026-10-05**, and recognised by the file rather than by its name — which is the one thing Aladdin's own reader never did (*AppleLink packages*, above). Named from 2026-08-23 to 2026-09-27 on a routine that was the translator API's command parser, shared verbatim with five of its siblings, and not recognised at all for the eight days between |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 937 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 943 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 

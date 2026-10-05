@@ -65,7 +65,8 @@ to unpack a `.sit` until it already has something that can.
 ## What it opens
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
-(`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
+(`.hqx`), MacBinary, PackIt (`.pit`), AppleLink packages (`.pkg`),
+DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
 (`.uu`), btoa (`.ascii`), base64 and MIME mail attachments (`.b64`, `.mim`),
@@ -124,7 +125,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | Type and creator in a zip made by MacZip | 🔴 ** | 🔴 ** | 🔴 ** | ✅ |
 | StuffIt SpaceSaver | ✅ with the add-on | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
-| AppleLink packages (`.pkg`) | ✅ with the add-on | ✅ | 🔴 | 🔴 |
+| AppleLink packages (`.pkg`) | ✅ with the add-on | ✅ | 🔴 | ✅ |
 | `.lzh` / `.lha` | 🔴 | ✅ | ✅ | ✅ |
 | DiskDoubler (`.dd`) | 🔴 | ✅ | 🔴 | ✅ |
 | Now Compress and Alysis SuperDisk! | 🔴 | 🔴 | 🔴 | ✅ |

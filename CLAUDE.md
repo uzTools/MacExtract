@@ -5,17 +5,17 @@
 ## Mission
 
 1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
-2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** — the system a Macintosh Plus shipped with in January 1986; it also runs in **512 KB** on a Macintosh 512Ke, where the heaviest archives are refused per entry; the same binary must run unchanged through Mac OS 9. Its decoders ship as **fourteen `'OVLY'` images** read at launch and released as soon as the archive's format is known (FORMATS.md, *Overlays*).
+2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** — the system a Macintosh Plus shipped with in January 1986; it also runs in **512 KB** on a Macintosh 512Ke, where the heaviest archives are refused per entry; the same binary must run unchanged through Mac OS 9. Its decoders ship as **fifteen `'OVLY'` images** read at launch and released as soon as the archive's format is known (FORMATS.md, *Overlays*).
 
 The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M55 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M56 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
-a copy of it. The engine passes a **937-fixture** differential suite against
-`unar` and, where `unar` fails, `macunpack`, plus 9,370 robustness variants.
+a copy of it. The engine passes a **943-fixture** differential suite against
+`unar` and, where `unar` fails, `macunpack`, plus 9,430 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
 time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
@@ -83,7 +83,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the forty-two smells that keep finding the next one. The cheapest is a
+names the forty-four smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

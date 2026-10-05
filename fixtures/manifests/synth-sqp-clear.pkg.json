@@ -1,0 +1,29 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "5433e7517e60ec4b6ce053e9e35b4908e2afecd2d9faa65e9af546200dad0bd5",
+   "data_size": 36000,
+   "finder_flags": 0,
+   "name": "Table Filler",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "c6ad70a035fbd4ca183c27bf7686ec23a8aada35b5773365fdfe1b2fc0514cf4",
+   "data_size": 300,
+   "finder_flags": 0,
+   "name": "Short After",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sqp-clear.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "50c2e7427b9770e9105cf005fde82f238852ea0e2b8856a176ef22acd238f4da",
+ "size": 28667
+}

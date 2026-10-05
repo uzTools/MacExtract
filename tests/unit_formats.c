@@ -3597,13 +3597,144 @@ static void test_applelink(void)
     /* A translator command line names nothing. Every one of these was
      * sniffed as "AppleLink package" until 2026-09-27, and the first is
      * also, word for word, what the CompactPro translator's own
-     * recogniser accepts. */
+     * recogniser accepts. The probe that replaced it on 2026-10-05 is a
+     * file test and these stay here as the pin on the old one. */
     ss_sniff_is("Decode \"My File\" to \"Some Folder\"\r", UNC_FORMAT_UNKNOWN);
     ss_sniff_is("Decode Thing into Folder\r", UNC_FORMAT_UNKNOWN);
     ss_sniff_is("DECODE thing TO folder\r", UNC_FORMAT_UNKNOWN);
     ss_sniff_is("\r\n   Decode thing to folder\r", UNC_FORMAT_UNKNOWN);
     ss_sniff_is("Decode the message by hand, then send it to Bob.\r",
                 UNC_FORMAT_UNKNOWN);
+}
+
+/* ------------------------------------------------------------------ */
+/* AppleLink packages: SqueezePlay (src/fmt_sqp.c), M56               */
+/*                                                                    */
+/* The codec and the container are graded on real and synthesised      */
+/* packages by tools/run_sqp.py and the diff suite; what is here is    */
+/* the version-1 container at its smallest, so that every test the     */
+/* SNIFFER makes can be bent one at a time in a few bytes. The record  */
+/* below is a STORED fork, because the probe does not decode and this  */
+/* keeps the subject readable.                                        */
+/* ------------------------------------------------------------------ */
+
+/* One item, stored, four bytes of data fork. Returns the total length.
+ * Source: as fmt_sqp.c. */
+static uint32_t sqp_synth(uint8_t *buf)
+{
+    uint32_t i, start = 86u + 22u + 90u;   /* 198 */
+    uint8_t *rec;
+
+    for (i = 0; i < start + 4u; i++) buf[i] = 0;
+    buf[0] = 1;                            /* one SQP record  */
+    buf[1] = 1;                            /* version         */
+    buf[10 + 86 + 3] = 1;                  /* one HFS record  */
+
+    /* The HFS record: level 1, not a folder, then the same 86 bytes the
+     * SQP directory carries. */
+    rec = buf + 10 + 86 + 12;
+    rec[1] = 1;                            /* level           */
+    rec = rec + 4;
+    unc_put_u32be(rec + 8, 4);             /* data, compressed */
+    unc_put_u32be(rec + 12, start);        /* data, at         */
+    memcpy(rec + 20, "TEXTttxt", 8);
+    rec[36] = 1;
+    rec[37] = 'T';
+    unc_put_u32be(rec + 80, 4);            /* data, expanded   */
+    rec[84] = (uint8_t)(0x80 | 0x02);      /* InitSqp's bit, and stored */
+    memcpy(buf + 10, rec, 86);             /* the SQP copy of it */
+    memcpy(buf + start, "ABCD", 4);
+    return start + 4u;
+}
+
+static void test_sqp(void)
+{
+    uint8_t pkg[256], bent[256];
+    uint32_t len = sqp_synth(pkg);
+    uint32_t recat = 10u + 86u + 12u;      /* the HFS record   */
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_memio(&io, &m, pkg, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, pkg, len);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 1 && cap.info[0].name[0] == 'T');
+    CHECK(cap.info[0].type == 0x54455854u);     /* 'TEXT' */
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "ABCD", 4) == 0);
+    CHECK(cap.rlen[0] == 0);
+
+    /* Every test the probe makes, bent one at a time. A probe with no
+     * magic number is worth exactly what its negative controls are. */
+#define SQP_BENT(what, at, to) do {                                      \
+        memcpy(bent, pkg, len);                                          \
+        bent[at] = (uint8_t)(to);                                        \
+        test_make_memio(&io, &m, bent, len);                             \
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);                     \
+    } while (0)
+    SQP_BENT("the version byte", 1, 2);
+    SQP_BENT("one of the eight zero bytes", 5, 1);
+    SQP_BENT("the SQP count, which locates the HFS directory", 0, 2);
+    SQP_BENT("the item count", 10 + 86 + 3, 2);
+    SQP_BENT("the second header's zero bytes", 10 + 86 + 4, 1);
+    SQP_BENT("the level", recat + 1, 2);
+    SQP_BENT("the name length, past what a Str31 holds", recat + 4 + 36, 32);
+    SQP_BENT("the compressed length, so the members no longer tile",
+             recat + 4 + 11, 5);
+    SQP_BENT("the fork's offset", recat + 4 + 15, 199);
+#undef SQP_BENT
+    /* And one byte short of tiling, from the other end. */
+    test_make_memio(&io, &m, pkg, len - 1);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    /* A version-0 package is the SQP directory alone, with every item
+     * at level 1 (ReadFileAndBuildLinkedList @0x31be). */
+    memcpy(bent, pkg, len);
+    bent[1] = 0;
+    unc_put_u32be(bent + 10 + 12, 96);     /* the member moves to 10+86 */
+    unc_put_u32be(bent + 10 + 8, 4);
+    memcpy(bent + 96, "WXYZ", 4);
+    test_make_memio(&io, &m, bent, 100);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, bent, 100);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "WXYZ", 4) == 0);
+
+    /* A folder, whose own record carries no forks and must not be
+     * asked for any: DoItemsReverse @0x1ecc never calls DoWork for one,
+     * and the lengths in that record are the Finder's rather than the
+     * format's. */
+    memcpy(bent, pkg, len);
+    bent[recat + 2] = 0;
+    bent[recat + 3] = 1;                        /* it is a folder */
+    unc_put_u32be(bent + recat + 4 + 8, 0);     /* no fork lengths */
+    unc_put_u32be(bent + recat + 4 + 80, 0);
+    test_make_memio(&io, &m, bent, 198);        /* nothing after it */
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, bent, 198);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.info[0].is_dir == 1);
+    CHECK(cap.dlen[0] == 0 && cap.rlen[0] == 0);
+
+    /* The version the reference implementation refuses, and it refuses
+     * the whole file rather than one entry. */
+    memcpy(bent, pkg, len);
+    bent[1] = 2;
+    test_make_memio(&io, &m, bent, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.count == 0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -4514,6 +4645,7 @@ void run_format_tests(void)
     test_diskdoubler();
     test_nowcompress();
     test_applelink();
+    test_sqp();
     test_foreign();
     test_spacesaver();
     test_spacesaver_alg4();

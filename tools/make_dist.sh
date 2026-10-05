@@ -75,6 +75,14 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
+Since v0.37.0, and in this download: AppleLink packages (.pkg) open.
+AppleLink was Apple's own online service, and a .pkg is the little
+archive its software made for sending files over it, in 1992 -- one
+Aladdin wrote the code for and nobody else ever read. Opening one used
+to mean having StuffIt Deluxe and the right add-on. These are
+recognised by what is inside them, which not even Aladdin's own reader
+did: it went by the .pkg on the end of the name.
+
 v0.37.0 opens the last StuffIt archives this program could not: the
 ones made with compression method 14, which StuffIt 5 used and nothing
 else ever wrote. Aladdin's own installers are full of them -- in StuffIt
@@ -109,11 +117,10 @@ the honest summary: it is a release of tests, provenance and tooling. Two things
 change. An ARJ archive whose header is a couple of bytes shorter than this
 program used to accept is now NAMED rather than passed over -- it still
 cannot be opened, ARJ being one of the formats this program identifies and
-does not extract. And AppleLink packages (.pkg) are no longer listed as a
-format at all: the test that claimed to recognise one turned out to be
-reading a menu command rather than a package, and no real package ever
-matched it. A .pkg is now simply unrecognised, which is what this program
-could already do with it.
+does not extract. And the test that claimed to recognise an AppleLink
+package turned out to be reading a menu command rather than a package, so
+.pkg stopped being listed as a format at all -- until this build, where
+it is read properly (above).
 
 v0.34.0, before it, fixed two things you could meet. A password-protected
 ARC archive whose scrambled data ran short was refused outright, with "file
@@ -128,7 +135,8 @@ v0.32.0 had. On a 512 KB machine two more of the test archives come out
 whole; on larger machines it changes nothing you can see.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
-(.hqx), MacBinary, PackIt (.pit), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
+(.hqx), MacBinary, PackIt (.pit), AppleLink packages (.pkg),
+DiskDoubler (.dd, DDAR, DDA2), Now Compress,
 StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), LZH/LHA (.lzh, .lha,
 MacLHA's included), uuencoded files (.uu), btoa (.ascii), base64 and files
 mailed as MIME attachments (.b64, .mim -- both forks, where the message

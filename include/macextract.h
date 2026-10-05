@@ -116,6 +116,9 @@ typedef enum UncFormat {
      * several FILES. Joined, never extracted on its own. */
     UNC_FORMAT_MIMESEG,
 
+    /* Brought in scope 2026-10-05; appended for the same ABI reason. */
+    UNC_FORMAT_SQP,           /* .pkg — AppleLink package (SqueezePlay) */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

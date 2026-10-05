@@ -1,7 +1,7 @@
 /* ovlbox.c — a Memory Manager and a Resource Manager the overlay loaders can
  * run against off the Macintosh.
  *
- * WHY THIS EXISTS. The application ships fourteen 'OVLY' images and until
+ * WHY THIS EXISTS. The application ships fifteen 'OVLY' images and until
  * 2026-09-26 no automated test reached one: the images exist only in a
  * Retro68 build, so every Linux suite exercises the decoders as ordinary
  * linked code, and whether an image is found, relocated, kept, released or

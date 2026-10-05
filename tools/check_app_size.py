@@ -8,7 +8,7 @@ one for one, and a tier's budget is FreeMem() minus it
 (tools/run_tiers.py).
 
 "Every byte of this application is resident" was true until 2026-09-25
-and is not any more: the decoders ship as fourteen 'OVLY' images, read at
+and is not any more: the decoders ship as fifteen 'OVLY' images, read at
 launch as one bundle and mostly released as soon as the sniff says what
 the archive is (mac/ovl_load_eager.c). The bundle is 143,072 B and none
 of it is resident while an archive is being extracted — which is the
@@ -53,9 +53,22 @@ import sys
 # rather than absorbed into the tolerance, on the same terms as
 # tools/build_mac.sh's six ratchets, which moved in the same commit; and
 # `run_tiers.py --check` moves no tally in either lane.
-EXPECT = 64512
+# RE-TAKEN 2026-10-05 from 64,512 to 65,536: AppleLink packages, and
+# this is the first format since the overlays landed whose resident cost
+# is not nothing. 666 B of the 1,024 is `src/fmt_sqp_probe.c`, which is
+# resident because the sniffer calls it for every file it is handed; the
+# rest is the release switch's new case, `mac/ovl_shim.c`'s dispatch and
+# the engine's table row. (This read 65,536 for an hour on the day,
+# estimated from the resident `CODE` figure instead of read off the
+# file; the tolerance reported the 128 B rather than failing, which is
+# what it is for, and the number here is `stat` on build/mac now.) The decoder is 1,474 B and is in the new
+# `ovl_sqp` image. What was bought is a `.pkg` recognised by its
+# CONTENT, which Aladdin's own reader never did (FORMATS.md, *AppleLink
+# packages: SqueezePlay*). `run_tiers.py --check` moves no tally in
+# either lane.
+EXPECT = 65664
 TOLERANCE = 2048
-TAKEN = "2026-09-28"
+TAKEN = "2026-10-05"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -90,9 +103,14 @@ TAKEN = "2026-09-28"
 # StuffIt Deluxe 7.0.3's own installer where 80 refused, and 184 of 184
 # in 5.5's (FORMATS.md, *StuffIt 5's method 14*). `run_tiers.py --check`
 # moves no tally in either lane.
-EXPECT_BUNDLE = 153688
+# RE-TAKEN 2026-10-05, 153,688 -> 155,672: the fifteenth image,
+# `ovl_sqp.bin` at 1,972 B, plus the 12 bytes of bundle directory one
+# more image costs. The bundle is not resident, so that part is download
+# and launch read; what the AppleLink format costs the engine's budget is
+# in EXPECT above.
+EXPECT_BUNDLE = 155672
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-03"
+TAKEN_BUNDLE = "2026-10-05"
 
 
 def main():

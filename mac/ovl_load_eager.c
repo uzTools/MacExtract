@@ -1,4 +1,4 @@
-/* ovl_load_eager.c — all fourteen images as ONE resource, read at launch, and
+/* ovl_load_eager.c — all fifteen images as ONE resource, read at launch, and
  * most of it thrown away as soon as the archive says what it is.
  *
  * The lifetime this file implements is the shipped one. `mac/ovl_load_lazy.c`
@@ -164,6 +164,9 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_NOWCOMPRESS: want = OVL_ID_NOW;        crypt = 0; break;
     case UNC_FORMAT_SUPERDISK:   want = OVL_ID_SUPERDISK;  crypt = 0; break;
     case UNC_FORMAT_PACKIT:      want = OVL_ID_PACKIT;     break;
+    /* An AppleLink package cannot be encrypted: the format has no password
+     * anywhere in it, and its own expander never asks for one. */
+    case UNC_FORMAT_SQP:         want = OVL_ID_SQP;        crypt = 0; break;
     case UNC_FORMAT_SIT:         case UNC_FORMAT_SIT5:
         want = OVL_ID_STUFFIT;   break;
     case UNC_FORMAT_ZIP:         want = OVL_ID_EXO;        break;

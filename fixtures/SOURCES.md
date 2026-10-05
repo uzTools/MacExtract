@@ -912,6 +912,12 @@ suite that owns it (TESTING.md).
 | synth-sit-fixhuf.sit | 230ccec1522c0ea3deb1140cacb76c2dae3716cf9d6e5b9e26219ad4000867e8 | 2601 | synthetic:tools/synth_sit6.py |
 | synth-sit-rle90.sit | cdd044dcabffafe20f7dc54c9b9b28b0890330c528543e09cfe37e4e0b9d1b47 | 1287 | synthetic:tools/synth_sit1.py |
 | synth-sit14.sit | 34e589511b0338b9af2f63a891bbc9a448ed2548ab4c85ad5013238e9d6d3bc1 | 1859 | synthetic:tools/synth_sit14.py |
+| synth-sqp-clear.pkg | 50c2e7427b9770e9105cf005fde82f238852ea0e2b8856a176ef22acd238f4da | 28667 | synthetic:tools/synth_sqp.py --case clear |
+| synth-sqp-folder.pkg | 8685c68b16d7ff428b833aff1e59e3e50ceea3cf09bb68e0f16772d2dfdc7dc2 | 2343 | synthetic:tools/synth_sqp.py --case folder |
+| synth-sqp-forks.pkg | 637d2aa7f5bdd3a712d3c0ef1d88aa16e998310f855d4050e3581078fa6eb8d2 | 2397 | synthetic:tools/synth_sqp.py --case forks |
+| synth-sqp-plain.pkg | b1bf268f7f9ba09ae84eef4d4e3dd7a0768e8d294d91b52bc5d346efb3ffb773 | 3437 | synthetic:tools/synth_sqp.py --case plain |
+| synth-sqp-stored.pkg | e972b130de618995f48e010de6e6004b01c84afdd044aed890ebb1325c9254f3 | 4681 | synthetic:tools/synth_sqp.py --case stored |
+| synth-sqp-v0.pkg | 96c34bb8e7973ac830d6a71d3fdec426be186e07313bd6969d939b219ab8789a | 1331 | synthetic:tools/synth_sqp.py --case v0 |
 | synth-uu-mac.uu | e2ac98889d442f3a3053a8c4d7be695c11f3b55accf79659f0c97d1172d9d705 | 3020 | synthetic:tools/synth_uu.py |
 | syserrtable30.sit | d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb | 24496 | http://www.nic.funet.fi/pub/mac/da/syserrtable30.sit |
 | systemidle.sit | 99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca | 18923 | http://www.nic.funet.fi/pub/mac/da/systemidle.sit |

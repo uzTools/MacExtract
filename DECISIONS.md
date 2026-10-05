@@ -333,6 +333,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
 - 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
 - 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
+- 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
 
 ---
 
@@ -20947,3 +20948,173 @@ reach it — and the `goto out` after a failed flush, which is a sink
 write error no mutant can cause. One container only, a bare `.sit`. And
 a mutant is graded by nothing: what is graded is the seed, which
 `run_diff` adjudicates against `unar` on every run.
+
+## 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
+
+The brief was to implement the AppleLink `.pkg` decoder, and it named the
+one thing that would make the codec awkward: **SqueezePlay sets the next
+free code to 256 after a clear where `compress` sets 257, so
+`src/unc_lzw.c` cannot be reused unchanged — choose between a parameter
+and a separate path on measured m68k size.**
+
+**Neither, because the premise is wrong.** `reference/macutils/macunpack/
+de_compress.c` — Unix `compress`'s own decompressor, which this project
+has carried since M0 — reads, at the clear code:
+
+    clear_flg = 1;
+    free_ent = FIRST - 1;
+
+`FIRST` is 257, so `compress` sets **256** there, exactly as the expander
+does at @0x2ae0. What sets 257 is **deark's** rendering of the same
+algorithm (`delzw_clear`, `free_code_search_start = first_dynamic_code`),
+and deark is what `src/unc_lzw.c` was transcribed from. So the claim was
+a fact about this engine's own source, promoted to a fact about
+`compress`, and then recorded as a deviation in the format. It is
+withdrawn (BLOCKERS.md).
+
+The two renderings differ in one thing and it is unobservable: `compress`
+writes an entry into slot 256 on the first code after a clear, with the
+stale pre-clear `oldcode` as its prefix, and no prefix chain can ever
+reach 256 because 256 is consumed as the clear code before any table
+lookup. `unc_lzw.c` writes nothing there and skips the first add instead.
+Both arrive at the same `free_ent` and the same table from the second
+post-clear code onwards.
+
+**So the measured answer to "a parameter or a separate path" is 0 bytes of
+either**, and the call is
+`unc_lzw_init(&z, al, in, 13, 1, clen)` — the configuration ARC method 9
+already asks for, graded by 10 ARC fixtures on every run.
+
+### What made that safe to believe, and it is not the argument above
+
+An argument that two decoders agree is worth what its author's attention
+is worth. What settles it is that **a SqueezePlay fork is a `.Z` file
+without its header**: write `1f 9d` and a mode byte of 13 | 0x80 in front
+of the fork's own bytes and `gzip -dc` decodes it. All four members of the
+two real packages come out byte-identical to the engine's output, and so
+do all 18 LZW forks of the six synthesised packages — including a
+36,000-byte stream that fills the 8,192-entry table twice and therefore
+carries two clear codes, which is the path the withdrawn claim was about.
+
+That is a **second implementation** for the codec, found by asking what
+the codec IS rather than by looking for a program that reads `.pkg`
+files. Nothing reads `.pkg`: `unar`, deark and macunpack have zero hits
+for "applelink" or "squeezeplay" between them. The oracle was one
+`subprocess.run` away the whole time, and it is in `ci.sh` now
+(TESTING.md, *AppleLink packages: SqueezePlay*).
+
+### Three things the reading had wrong, all from routines nobody had read
+
+`tools/derive_sqp.py` graded 4/4 on both packages on 2026-10-05 and three
+of its field assignments were still wrong — which is what a corpus of two
+flat, resource-forkless, under-50-item packages can hide:
+
+- **Record +4 and +16 are the resource fork's compressed length and
+  absolute offset**, the mirror of the data fork's +8 and +12. They were
+  filed as two of "three `u32`s not read by anything", because both are
+  zero in all four real members. `DoWork` @0x714 tests +4 to decide
+  whether there is a second fork at all, and @0x816 writes +16.
+- **The stored flag is bit 1 of the BYTE at +84**, not of a `u16`. The
+  distinction is bit 1 against bit 9, and this corpus cannot tell them
+  apart: all four records hold `0x8000`, so both readings answer "not
+  stored". `btst #1,%a3@(96)` on a memory operand is a byte operation —
+  that is the whole of the evidence.
+- **The resource fork has its own stored bit**, bit 2 of the same byte
+  (`DoWork` @0x96e). Two `bset`/`btst` pairs exist in the binary, one per
+  fork, and a search for them took a minute.
+
+And two facts the reading did not have at all: the header's count is the
+**SQP** directory's, capped at 50 and skipping folders and already-
+compressed types, while the **item** count is the second header's; and a
+version-1 package's HFS directory carries a `u16` level and a `u16` folder
+flag per record, which is a folder TREE. The engine reads both, and a
+package with folders extracts into folders.
+
+**A folder's type and creator are a rectangle, and a first version of the
+decoder reported them.** `AddItems` @0x2378 copies 16 bytes of Finder info
+into record +20 whatever `PBGetCatInfo` left there, so a file's record
+carries an `FInfo` and a folder's a `DInfo` — whose first eight bytes are
+the folder's window rect. The Finder flags survive the difference (both
+structures hold them at +8) and so do the dates, which are one field of one
+union; the type and creator do not, and the engine now leaves them unknown
+for a folder. Nothing would have failed on it: `synth-sqp-folder.pkg`'s
+folders had `TEXT`/`ttxt` in those bytes because the generator put them
+there, and the two real packages have no folder at all. **A generator that
+shares the decoder's reading agrees with it about its mistakes** — which is
+the limit the FORMATS.md table states for all three container paths that
+rest on one.
+
+**The smell is one this file has recorded before and under another name:
+a reading that passes is not a reading that is complete.** The grading
+was real — four members, byte-exact, against a recorded sha256 — and it
+could not have failed on any of the five fields above, because every one
+of them is zero or constant in both specimens. What found them was
+reading the WRITER as well as the reader: `DoSqForward`, `DoItemsForward`
+and `AddItems` say what each field is FOR, and three of them contradicted
+the table.
+
+### The probe, which had to be a file test
+
+`unc_applelink_probe` was removed on 2026-09-27 for tokenizing a
+translator command line, and the item that replaced it asked for a real
+one: an item count, a version byte, eight zero bytes, and a directory
+whose records tile the file to its last byte. That is what
+`src/fmt_sqp_probe.c` does, plus two structural tests the tiling does not
+cover — every name within what a `Str31` holds, and every level between 1
+and one deeper than the item before it, since only a folder can be
+descended into.
+
+**It costs 666 B of 68000 text, resident**, because the sniffer calls it
+for every file it is handed; with the release switch's case, the shim and
+the engine's table row that is **788 B off every extraction's budget on a
+1 MB Mac Plus**, and it is the largest single addition to the shipped
+build since the overlays landed. Two cheaper shapes were measured and
+**both were 6 B worse**: a table of the two forks' field offsets instead
+of the ternaries, and one helper for the two runs of zero bytes instead of
+two loops. A third change — carrying a running record offset instead of
+multiplying — was free, so it was taken for being clearer.
+
+What the 788 B buys is the only thing it could: a `.pkg` recognised by
+its CONTENT. Aladdin's own reader never did that — `PKG Expand
+Translator` matches the extension and its Standard File dialog lists only
+directories — so this engine identifies the format in a way the program
+that invented it could not.
+
+### Its own image, and the count goes back to fifteen
+
+`ovl_sqp` is **1,972 B**, the smallest of the fifteen, and the alternative
+was lodging the decoder in `ovl_packit` — the only other image holding one
+small single-format decoder. Measured, not chosen on taste: an image costs
+12 B of bundle directory and 8 B of block header, so a fifteenth image
+costs 20 B against making every `.pkg` carry PackIt's 2,648 B and every
+`.pit` carry SqueezePlay's 1,972. The build's own rule — one image per
+format family, so the most expensive archive has the least code in memory
+— answers it, and the arithmetic agrees by two orders of magnitude.
+
+A package therefore gets the **largest per-format grant any format has**,
++119,534 B against the control (FORMATS.md, *What each format is granted*),
+which is what the smallest image means. The 666 B probe and the 119 KB
+grant are the two halves of the same trade, in opposite directions.
+
+### What the generator is for, and what it is not
+
+`tools/synth_sqp.py` writes a package per unreached path — a resource
+fork, a stored fork, a stream with two clears, version 0, a folder tree —
+and it is an ENCODER read out of the same binary as the decoder:
+`Compress` @0x27de and `PutCode` @0x28fe, which are `compress`'s
+`compress()` and `output()` with the ratio-watching `cl_block` heuristic
+absent, so the only clear it can emit is the one the full table forces.
+The stored members are not produced by setting a flag: they are
+incompressible bytes, and the writer's own rule at @0x4e2 stores a fork
+when compressing it saved nothing.
+
+**Three of the five paths are therefore graded against this project's own
+reading** — the container has no second reader anywhere — and FORMATS.md
+says so in a table rather than leaving it to be inferred from a green
+run. The clear code and the 13-bit width are the two that `gzip` settles.
+What would close the rest is one run nobody has done: hand a synthesised
+package to `AppleLink Package Translator` 3.0.3 under Mini vMac. Its
+sibling's dialog could not be given one (seven boots, 2026-09-01), but
+that was the 3.5 translator and this is a different program with its own
+interface — and CLAUDE.md's rule about a submenu applies to a dialog too:
+it is worth one attempt.

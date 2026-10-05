@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """images.py — which sources make up each overlay image, read from the BUILD.
 
-`mac/CMakeLists.txt` is where the fourteen images are defined, one
+`mac/CMakeLists.txt` is where the fifteen images are defined, one
 `add_custom_command` each, and it is the only place that list may live: a
 second copy is a host-side test grading images that are not the ones the
 Macintosh runs. So this parses it rather than restating it, and fails loudly
@@ -28,7 +28,7 @@ CMAKE = os.path.join(ROOT, "mac", "CMakeLists.txt")
 # The count is asserted, not derived: an image added to the build and not to
 # the host lane is exactly the drift this file exists to prevent, and a parse
 # that silently finds thirteen would hide it.
-EXPECTED = 14
+EXPECTED = 15
 
 
 def images(path=CMAKE):

@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 937 fixtures in `./ci.sh`.
+byte-exact against the oracle across 943 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -193,7 +193,7 @@ were not. Two things are left, both exposed by those nine archives.
 
 Two items, and both want the same thing: **a Macintosh with a 68020 or
 better, running the shipped binary** (MANUAL_TESTS.md §2 and §6). The
-Linux lane closed what it could on 2026-09-26 — it builds the fourteen
+Linux lane closed what it could on 2026-09-26 — it builds the fifteen
 images, runs the real loaders through a mock Memory and Resource
 Manager, extracts 17 fixtures byte-exact under `qemu-m68k`, and catches
 six deliberate breaks every run (TESTING.md, *The overlay loader, off
@@ -273,46 +273,50 @@ compressed streams. What is left:
 | `sit14_flush`'s window wrap (method 14) | a fork past 256 KB, where the synthetic seed's largest is 17,799 B — the window is sized to the fork, so nothing smaller can wrap it. Reached only by the two real payloads, which no committed suite can touch (TESTING.md, *Fuzzing*, for the mode's other limits) |
 | ARC's Crush | nothing writes it and no implementation exists anywhere (Part 1) |
 
+**AppleLink packages would have joined this list on 2026-10-05** — the
+fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
+`.pkg` is 6 of 943 fixtures and it draws uniformly — so the suite got a lane
+that bends those six directly instead: 300 mutants, a fixed seed, 270 of
+them still sniffing as a package and every one decoding without a sanitizer
+report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a
+property of a decoder, and the cheap answer was a targeted sweep rather than
+a row here.
+
 **Nothing here is known to be hiding a defect** — that is the point:
 before this was measured, it could not be said either way.
 
-## AppleLink `.pkg`: the format is read, and nothing in the engine reads it
+## AppleLink `.pkg`: three container paths no real package has
 
-**The format is SqueezePlay and it is settled.** Aladdin's own expander —
-`AppleLink Package Translator` 3.0.3, in the StuffIt Deluxe **3.0.7**
-installer, 33,300 bytes of 68k with **148 MacsBug symbols** — gives the
-container and the codec, and `tools/derive_sqp.py` grades that reading
-against both real packages: **4 of 4** members expand to their declared
-length, sha256 recorded (FORMATS.md, *AppleLink packages*). Rule #1 is
-satisfied: the citation is a reference implementation, not two specimens.
+**The format extracts since 2026-10-05** (FORMATS.md, *AppleLink packages:
+SqueezePlay*; M56). The two real packages sniff, all four members come out
+byte-exact, six synthesised packages carry the paths those two cannot
+reach, and **`gzip` decodes every LZW fork independently** — a SqueezePlay
+fork is a `.Z` payload without its header, which settled the clear code and
+the 13-bit width against somebody else's program. The 256-vs-257 "deviation
+from `compress`" that was going to need a codec parameter was a claim about
+this engine's own source and is withdrawn (BLOCKERS.md).
 
-What is left is implementation, and one thing the specimens cannot grade:
+What is left is one thing, and it is not a decoder:
 
-- **No decoder in the engine, and a `.pkg` still sniffs as *unknown*.**
-  The removed probe was never a file test (BLOCKERS.md). A real one now
-  has something to test: an item count, a version byte of 1, eight zero
-  bytes, and a directory whose records tile the file to its last byte.
-  **Closed by:** `src/fmt_sqp.c` plus a sniffer, an `'OVLY'` image and a
-  budget row — the ordinary cost of a format, and the codec is mostly
-  `src/unc_lzw.c`, which is already `compress(1)`-compatible with a
-  settable `maxbits` for `.Z`, ARC 8/9, StuffIt method 2 and DiskDoubler
-  method 1. **It cannot be reused unchanged:** SqueezePlay sets the next
-  free code to **256** after a clear where `compress` sets 257, so
-  reusing that decoder as-is would decode the first clear onwards wrongly
-  (FORMATS.md, *AppleLink packages*). **Neither real package contains a
-  clear code** — measured, 0 in all four members — so that deviation is
-  the one fact here no specimen can confirm.
-- **Four paths are read and UNGRADED, and all four want one more file.**
-  Measured over both packages: the **resource fork** (a second stream
-  through the same branch, `DoWork` @0x9f2 — `rlen` is 0 in all four
-  members), the **stored** mode (bit 1 of the record's flags, set in
-  none), the **clear code** (0 occurrences) and **13-bit codes** (the
-  widest reached is 12, the largest table 2,260 of 8,192).
-  **Closed by:** a third package that has a resource fork, a stored
-  member, or enough data to clear the table. Discmaster indexed the two
-  this project has and was not searched again for a third, and "this
-  machine cannot get one" is a claim to re-test before it is filed
-  (CLAUDE.md).
+- **Three container paths are graded against this project's own reading of
+  the one reference implementation, and nothing else.** The **resource
+  fork** (`rlen` is 0 in all four real members), the **stored** mode (set in
+  none), and **version 0 and folders** (both packages are version 1 and
+  flat) are exercised only by `tools/synth_sqp.py`, which is an encoder
+  written from the same binary as the decoder — so a mistake in that reading
+  would make the generator and the engine wrong together, **and one did**:
+  a folder's type and creator are its window rectangle, the generator put
+  `TEXT`/`ttxt` there because the decoder expected them, and the agreement
+  was the only thing checking it (DECISIONS.md 2026-10-05). The codec's two
+  rows do not have this problem; the container has no second reader
+  anywhere, and `unar`, deark and macunpack have never heard of the format.
+  **Closed by:** a third real package with a resource fork, a stored member
+  or a folder — or, cheaper and on this machine, **handing a synthesised
+  package to `AppleLink Package Translator` 3.0.3 under Mini vMac** and
+  seeing what it writes. Its SIBLING could not be given one (seven boots,
+  2026-09-01, `PKG Expand Translator`'s Standard File dialog lists only
+  directories), but that is a different program with its own interface and
+  it is worth one attempt — the same rule CLAUDE.md records for a submenu.
 
 ## StuffIt 2.0: everything it writes, and the one thing left over
 

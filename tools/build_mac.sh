@@ -340,7 +340,14 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # What the bytes bought: the 80 entries of StuffIt Deluxe 7.0.3's own
 # installer and the 71 of 5.5's that this engine listed and refused
 # (DECISIONS.md 2026-10-03).
-UNC_MAC_CODE_DEFAULT=161596
+# RAISED 2026-10-05 to 163,744, the CONTROL ONLY: the AppleLink package
+# decoder (src/fmt_sqp.c, 1,474 B of m68k text) and its resident probe
+# (src/fmt_sqp_probe.c, 666 B), plus the engine's table row and the
+# shim. The SHIPPED build pays the 740 B that is the probe and the
+# dispatch; the decoder itself is in the new `ovl_sqp` image, 1,972 B,
+# read at launch and released for every archive that is not a package
+# (DECISIONS.md 2026-10-05).
+UNC_MAC_CODE_DEFAULT=163744
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -431,7 +438,11 @@ UNC_MAC_CODE_DEFAULT=161596
 # .data and 0 of .bss, so it has nothing to put here. It read 4 B higher
 # in the middle of that work and went back when the decoder's own text
 # changed — rodata alignment, the effect recorded four times above.
-UNC_MAC_A5_DEFAULT=37892
+# RAISED 2026-10-05 from 37,892 to 37,920: +28 B for the AppleLink
+# package format — the engine table's row, its printed name, and the
+# probe's pointer in the sniff order. Measured on the same tree as the
+# code figure above.
+UNC_MAC_A5_DEFAULT=37920
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -531,13 +542,22 @@ UNC_MAC_A5_DEFAULT=37892
 # were refused the day before, each graded against a known plaintext
 # (FORMATS.md, *The three ways 2.0.1 encrypts*). `run_tiers.py --check`
 # is what says whether it cost a fixture.
-UNC_MAC_CODE_EAGER=53224
-UNC_MAC_A5_EAGER=19008
+# RAISED 2026-10-05 by 740 B of code and 36 of A5 for AppleLink
+# packages, and that 740 B is the whole of what the format costs a
+# machine that never opens one: the PROBE is 666 B of it (resident,
+# because the sniffer calls it for every file), and the rest is
+# `mac/ovl_shim.c`'s dispatch and the engine's table row. The decoder
+# is 1,474 B and is in the `ovl_sqp` image, which is released for every
+# archive that is not a package. Two cheaper probe shapes were measured
+# and both were 6 B worse (DECISIONS.md 2026-10-05).
+UNC_MAC_CODE_EAGER=54012
+UNC_MAC_A5_EAGER=19060
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
-UNC_MAC_CODE_LAZY=51848
-UNC_MAC_A5_LAZY=19104
+# +740 and +44 on 2026-10-05 for the same reason as the eager pair.
+UNC_MAC_CODE_LAZY=52588
+UNC_MAC_A5_LAZY=19148
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

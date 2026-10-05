@@ -24,9 +24,13 @@ disagreement check rather than a "truncation must be an error" rule:
     accepts those too, and so do we. The check passes, correctly, and
     says nothing about tar.
   - a format `unar` does not read at all (Alysis SuperDisk!, Now
-    Compress, StuffIt SpaceSaver): it fails on the whole archive too,
-    so its failure is not evidence about the cut one. Those rows can
-    only ever agree by accident of our own exit code.
+    Compress, StuffIt SpaceSaver, and AppleLink packages since
+    2026-10-05): it fails on the whole archive too, so its failure is
+    not evidence about the cut one. Those rows can only ever agree by
+    accident of our own exit code. For AppleLink the engine's own answer
+    is nonetheless asserted, in `tools/run_sqp.py`'s lane 4: the SNIFFER
+    must refuse a cut package — its directory no longer tiles the file —
+    and the walk, reached with `-f`, must report the entry truncated.
   - WHERE the archive was cut. Three fractions are sampled per fixture;
     a hole that only opens at one particular offset will not be found
     by three.
