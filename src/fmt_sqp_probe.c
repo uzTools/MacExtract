@@ -14,16 +14,23 @@
  *     those two and prints an error for anything else), and the eight
  *     bytes after it zero, as they are in both real packages;
  *   - at least one item, and a directory that FITS;
- *   - every record's name no longer than the Str31 field holds, and every
- *     level between 1 and one deeper than the item before it, which is
- *     all a folder tree can do (DoItemsForward @0x1ca2 descends one at a
- *     time);
+ *   - every record's name between 1 and the 31 bytes a Str31 holds — the
+ *     LOWER bound is what keeps a FILE OF ZEROS out, and it is the only
+ *     test here such a file cannot satisfy: 96 zero bytes with two of
+ *     them set pass all the rest, and 198 with four do on the version-1
+ *     path (below, and BLOCKERS.md, *Withdrawn claims*) — and every level
+ *     between 1 and one deeper than the item before it, which is all a
+ *     folder tree can do (DoItemsForward @0x1ca2 descends one at a time);
  *   - and the members TILE: every fork's (offset, compressed length) lies
  *     inside the file, the first starts where the directory ends, the last
  *     ends at the last byte, and their lengths sum to exactly the space
  *     between. Both real packages tile to the byte, and nothing else here
  *     would reject a file whose directory looks plausible and whose bytes
- *     are somebody else's.
+ *     are somebody else's. It is VACUOUS when every compressed length is
+ *     zero — `lo` stays at `fsize`, `hi` at `start` and the sum at
+ *     0 == fsize - start — so a directory that declares no fork at all
+ *     passes it, which is correct for a package of empty files and is
+ *     why the name test has to carry the file of zeros.
  *
  * What it costs a file that is NOT one: ten bytes already in `head`, and a
  * size the host has. The directory walk is reached only by a file that
@@ -39,11 +46,16 @@
  * property of that writer rather than of the format, and an aligned or
  * padded package from some other version would fail it.
  *
- * And what it costs the MACHINE: 666 B of 68000 text, resident, which is
- * 666 B off every extraction's budget on a 1 MB Mac Plus. Two cheaper
+ * And what it costs the MACHINE: 670 B of 68000 text, resident, which is
+ * 670 B off every extraction's budget on a 1 MB Mac Plus. Two cheaper
  * shapes were measured and both were 6 B WORSE — a table of the two forks'
  * field offsets instead of the ternaries, and one helper for the two runs
- * of zero bytes instead of two loops (DECISIONS.md 2026-10-05).
+ * of zero bytes instead of two loops (DECISIONS.md 2026-10-05). It was 666
+ * until the name's lower bound arrived, and that bound is 4 B however it
+ * is written: seven shapes were measured and five land on 670, because
+ * the compiler emits the same `subq.b #1` + `cmpi.b #30` + `bhi` for
+ * every way of spelling the range — while writing that wrap by hand in
+ * 32-bit arithmetic costs 2 B MORE (DECISIONS.md 2026-10-06).
  *
  * Source: at the fields; the rest of the format's provenance is
  * fmt_sqp.c's.
@@ -91,8 +103,9 @@ UncFormat unc_sqp_probe(const uint8_t *head, int32_t len, UncIO *io)
         stride = 90;
         pre = 4;
     }
-    /* An empty package names nothing and is indistinguishable from a
-     * file of zeros, which is why this is a test and not a tolerance. */
+    /* A count of zero locates no record at all, so nothing below could
+     * run. It does NOT keep a file of zeros out — the name test in the
+     * walk is what does that (see the head of this file). */
     if (n < 1) return UNC_FORMAT_UNKNOWN;
     if (base > fsize || n > (fsize - base) / stride)
         return UNC_FORMAT_UNKNOWN;
@@ -113,7 +126,19 @@ UncFormat unc_sqp_probe(const uint8_t *head, int32_t len, UncIO *io)
             if (lv < 1 || lv > allowed) return UNC_FORMAT_UNKNOWN;
             allowed = folder ? lv + 1 : lv;
         }
-        if (r[36] > 31) return UNC_FORMAT_UNKNOWN;
+        /* The name, 1..31 bytes. A record's name is the one the File
+         * Manager returned for a file the writer had just enumerated, so
+         * it is neither longer than the Str31 it was copied into nor
+         * empty.
+         *
+         * Source: `AddItems` @0x22ac points the `ioNamePtr` of its
+         * `CInfoPBRec` (+18, `a5@(-438)`) at a 32-byte buffer it has
+         * just cleared, calls `PBGetCatInfo` @0x22be — `_HFSDispatch`
+         * selector 9, the glue at 0x6500 — and bails on any error but
+         * `fnfErr`; @0x2354 copies that buffer into the node's name
+         * field with `pStrCpy`, which is the field `WrHFSDirectory`
+         * @0x5f2e writes at record+36. */
+        if (r[36] < 1 || r[36] > 31) return UNC_FORMAT_UNKNOWN;
         if (folder) continue;
 
         /* Each fork in turn, by its COMPRESSED length, which is what the

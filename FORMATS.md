@@ -2729,9 +2729,12 @@ code stream (*The codec*, below). `src/fmt_sqp.c` is the decoder,
 `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). The sniffer answers
 *AppleLink package* for **exactly the 6 of 963 corpus files that are
-packages and for nothing else** (re-measured 2026-10-07) — a sweep that can fail in both directions, where
-the one the removed probe rested on could not fail at all, the corpus
-holding neither a package nor a translator script (BLOCKERS.md).
+packages and for nothing else** (re-measured 2026-10-06 over every
+non-`.md` file in `fixtures/`, with the build either side of that day's
+name test, and **no file's answer changed in any format**) — a sweep that
+can fail in both directions, where the one the removed probe rested on
+could not fail at all, the corpus holding neither a package nor a
+translator script (BLOCKERS.md).
 
 **The reference implementation is `AppleLink Package Translator` 3.0.3,
 "Copyright © 1990-1992 Aladdin Systems, Inc."** — `'Othe' 1`, 33,300 bytes
@@ -2820,6 +2823,20 @@ both real packages tile to the byte — but it is a property of that writer
 rather than of the format, and a padded or aligned package from some other
 version would fail it. It is the strongest test available without a magic
 number, and it is the one with a stated cost.
+
+**It is also VACUOUS when every compressed length in the directory is
+zero**, and that is what a file of zeros has: `lo` stays at `fsize`, `hi`
+at `start`, and `sum == fsize - start` holds with both sides at 0. What
+refuses such a file is the **lower bound on a record's name length** —
+1..31, because a record's name is the HFS catalog's own (`AddItems`
+@0x22ac fills `ioNamePtr`, @0x22be is `PBGetCatInfo`, @0x2354 copies it to
+the field `WrHFSDirectory` @0x5f2e writes at record+36). Measured: **53
+records across all 8 real packages, shortest name 7 bytes, none of length
+zero**, and 2 files of zeros plus 2 packages of one empty file are in
+`tools/run_sqp.py`'s lane 4 either side of the test (DECISIONS.md
+2026-10-06, *the directory of empty records*). The probe answered
+*AppleLink package* for a 96-byte file of `01 00` and 94 zeros until that
+day (BLOCKERS.md, *Withdrawn claims*).
 
 **A folder's own record carries no forks and must not be asked for any**:
 `DoItemsReverse` @0x1ecc branches away before `DoWork` for one, so the
@@ -2971,7 +2988,7 @@ by the code width, not by the fork.
 
 **All fourteen packages** — the six synthesised and all eight real ones —
 through the shipped application on an emulated Mac Plus, so the decoder
-reached the machine through its `'OVLY'` image, the 666-byte probe ran in
+reached the machine through its `'OVLY'` image, the resident probe ran in
 the real sniff path, and the File Manager wrote the forks. No host lane
 can show any of that.
 
@@ -4136,9 +4153,23 @@ engine later the same day, fourteen until AppleLink packages arrived on
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,336 B** | 19,056 B | **66,048 B** | **225,280 B** |
-| lazy | `UNC_OVL_LAZY=1` | 52,912 B | 19,136 B | 64,512 B | 223,872 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **164,320 B** | **37,920 B** | 196,608 B | 199,936 B |
+| **eager — SHIPPED** | (default) | **54,340 B** | 19,052 B | **66,048 B** | **225,280 B** |
+| lazy | `UNC_OVL_LAZY=1` | 52,916 B | 19,164 B | 64,512 B | 224,000 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **164,324 B** | **37,916 B** | 196,608 B | 199,936 B |
+
+**Re-measured 2026-10-06**, for the lower bound on an AppleLink record's
+name length — the test that refuses a file of zeros (*AppleLink packages:
+SqueezePlay*): `src/fmt_sqp_probe.c` 666 → **670 B** of text, the SHIPPED
+build **+4 of `CODE` and −4 of A5** and the control the same, so `CODE` +
+A5 is unchanged in both at 73,392 B and 202,240 B, `OVL_SAVED` does not
+move, and nothing comes off any extraction's budget. The LAZY row pays
+**+4 and +28**: the 28 B is `*fill*` under the linker script's
+`. = ALIGN (0x20)` at the head of `.data`, read off the map, because
+`_sdata` lands at 0xcfa4 rather than 0xcfa0 once the text is 4 B longer —
+the same rodata-alignment step recorded five times in `tools/build_mac.sh`,
+here in the one configuration where it steps the wrong way. `run_tiers.py
+--check` moves no tally in either lane (DECISIONS.md 2026-10-06, *the
+directory of empty records*).
 
 **Re-measured 2026-10-06**, for the uu probe's per-document alphabet test
 and DeHQX's part separator (*uuencode: three alphabets*, *BinHex:
@@ -4364,12 +4395,17 @@ a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 The residue and the tier budgets under it are the machine's, taken
 2026-09-27 against a SHIPPED application of 52,972 B of `CODE` and 18,964 B
-of A5. It is 54,012 and 19,060 now (*Three configurations, one tree*), so
-every figure in this table is **1,136 B more generous than the Macintosh now
-is** — 288 B of that is the 2026-09-29 Optimizer work's resident part and
+of A5. It is 54,340 and 19,052 now (*Three configurations, one tree*), so
+every figure in this table is **1,456 B more generous than the Macintosh now
+is** — 288 B of that is the 2026-09-29 Optimizer work's resident part,
 **788 B is the AppleLink package probe**, which is the largest single
-addition to the resident build since the overlays landed; `src/sit_ccube.c`,
-zip's extra fields and StuffIt method 14 added none of it. Not corrected
+addition to the resident build since the overlays landed, and **320 B is
+the zip-behind-a-stub probe** of 2026-10-05; `src/sit_ccube.c`, zip's extra
+fields, StuffIt method 14 and the AppleLink name test of 2026-10-06 added
+none of it, the last of those because its 4 B of `CODE` came out of A5.
+(This read 54,012, 19,060 and **1,136 B** until 2026-10-06, taken before
+that 320 B landed and found by re-measuring the pair in the table above;
+the 60 B neither this list nor the 320 accounts for is unchanged.) Not corrected
 arithmetically, because that is how the floor budget was once made worse;
 it decides nothing at a narrowest margin of 16,490 B, and the place to fix
 it is a run on the machine. **This read "336 B smaller" and "~560 B more

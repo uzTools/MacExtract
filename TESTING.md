@@ -3581,7 +3581,7 @@ python3 tools/derive_sqp.py --witness      # and grade it against the binary
 | 1 | `Iconf Display`'s two members that want one output file | the engine must REFUSE the second entry under `-nr` and name it, and `--forks hidden` must write all six (FORMATS.md, *Two members of one package that want one file*) |
 | 2 | **six synthesised packages** | the bytes `tools/synth_sqp.py` compressed |
 | 3 | every **LZW fork** of all fourteen — 59 real, 18 synthesised | **`gzip -dc`**, over the fork's own bytes with three bytes of `.Z` header in front. Skips cleanly without gzip |
-| 4 | **ten bent packages**, and one cut one | the sniffer must answer `unknown` for each, and the cut one must be reported truncated |
+| 4 | **ten bent packages** and **two files of zeros**, then **two packages of one empty file**, then one cut package | the sniffer must answer `unknown` for the twelve, `AppleLink package` for the two (whose one empty file must also extract), and the cut one must be reported truncated |
 | 5 | **300 mutants** of the six fixtures, a fixed seed | no sanitizer report and no abnormal exit from the ones that still sniff as a package — 270 of 300 do |
 
 **Lane 3 is the one worth understanding.** A SqueezePlay fork is a Unix
@@ -3603,9 +3603,22 @@ engine's refusal of `bullseye π.rsrc` failed the lane, not before.
 **Lane 4 is how a probe with no magic number earns its keep.** The sniffer
 tests a version byte, eight zero bytes, two item counts, every record's name
 length and level, and that the forks tile the file to its last byte; each of
-those is bent in turn and must make it answer `unknown`. The same nine bends
-are in `tests/unit_formats.c` (`test_sqp`) over a 202-byte package built in
-memory, so they run under the sanitizers on every `ci.sh` pass as well.
+those is bent in turn and must make it answer `unknown`. **Ten** of those
+bends are in `tests/unit_formats.c` (`test_sqp`) over a 202-byte package
+built in memory, along with the file of zeros and the empty-member package
+below, so they run under the sanitizers on every `ci.sh` pass as well.
+
+**And since 2026-10-06 it carries four inputs that are not bent packages at
+all**, because bending a valid one can only ask whether each test FIRES —
+every input it produces is a package with one thing wrong, so no bend can
+find a test that is missing (DECISIONS.md 2026-10-06, *the directory of
+empty records*). The four are a 96-byte version-0 **file of zeros** and a
+198-byte version-1 one with four bytes planted, which must be refused, and
+two **packages whose one member is an empty file**, which must be
+recognised and extracted. The version-0 pair is the same 96 bytes either
+way, so between them they isolate the name byte: both cases failed on the
+build of the day before, and `sum > 0` — the obvious fix — passes the
+first pair and fails the second.
 
 **Lane 5 exists because `tools/fuzz.py` cannot reach this decoder.** It
 draws uniformly from the corpus, so a `.pkg` is 6 of 943 manifests, and
@@ -3660,6 +3673,21 @@ Those are not in `ci.sh` and not in `sample.txt`; re-run them from
   long. Removing the ceiling makes the stream's natural end the test, and a
   single flipped byte then reports 1,960 against 1,954 and exits non-zero
   (DECISIONS.md 2026-10-05, *the sample that was read as the table*).
+- **Lane 4's two files of zeros are two of a family, and nothing here
+  enumerates it.** Any file of zeros whose length is `10 + 86n` satisfies the
+  version-0 arithmetic for the `n` in its first byte, and the version-1 path
+  needs four planted bytes for any `n`; the lane holds the smallest of each.
+  What says the rest are refused too is that the name's lower bound is the
+  test they all fail, which is an argument about the probe's source and not
+  something these four inputs measure.
+- **No real package has a member with BOTH forks empty** — 39 files and 14
+  folders across all 8, measured 2026-10-06, of which **17 declare one fork
+  of length zero and none declares two**. That such a package is writable is
+  therefore a
+  **hypothesis**, from the two halves of a record coming from different
+  places (`PBGetCatInfo` for the name, `DoWork` for the lengths), and it is
+  what the lane's two positive controls are built on. If it is ever
+  disproved, `sum > 0` becomes the narrower test and costs 2 B more.
 - **The old probe's pin stays.** `test_applelink` asserts that five
   translator COMMAND lines name nothing — they were sniffed as AppleLink
   packages until 2026-09-27 — and the "0 of 928 fixtures said AppleLink"

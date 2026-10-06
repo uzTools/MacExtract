@@ -473,7 +473,13 @@ UNC_MAC_CODE_DEFAULT=164324
 # which is left standing as slack. CODE + A5 does not move, so
 # OVL_SAVED does not either (TESTING.md, *The sort that dropped what it
 # could not hold*).
-UNC_MAC_A5_DEFAULT=37920
+# LOWERED 2026-10-06 from 37,920 to 37,916, and the SIXTH record of the
+# same effect: the AppleLink probe's name test took src/fmt_sqp_probe.c
+# from 666 to 670 B of text with .data and .bss still 0, the control's
+# CODE rose to the 164,324 ceiling above and its A5 fell 4. CODE + A5
+# does not move, so OVL_SAVED does not either (DECISIONS.md 2026-10-06,
+# *the directory of empty records*).
+UNC_MAC_A5_DEFAULT=37916
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -607,8 +613,14 @@ UNC_MAC_A5_DEFAULT=37920
 # unchanged at 73,392 B, so nothing comes off any extraction's budget —
 # and A5 is a ratchet too, so the eight bytes it gave back are locked in
 # (DECISIONS.md 2026-10-06, *the alphabet nothing here had seen*).
-UNC_MAC_CODE_EAGER=54336
-UNC_MAC_A5_EAGER=19056
+# +4 code and −4 A5 on 2026-10-06, for the lower bound on an AppleLink
+# record's name length — the test that keeps a file of zeros out, which
+# the probe answered "AppleLink package" for until that day. CODE + A5 is
+# unchanged at 73,392 B again, so nothing comes off any extraction's
+# budget, and the four bytes of A5 are locked in by lowering the ceiling
+# with them (DECISIONS.md 2026-10-06, *the directory of empty records*).
+UNC_MAC_CODE_EAGER=54340
+UNC_MAC_A5_EAGER=19052
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -616,8 +628,17 @@ UNC_MAC_A5_EAGER=19056
 # +316 code on 2026-10-05 for the zip-behind-a-stub probe, same as the
 # eager pair; A5 fell 4 B to 19,144 and the ceiling comes down with it.
 # +8 and −8 on 2026-10-06 for the same reason as the eager pair.
-UNC_MAC_CODE_LAZY=52912
-UNC_MAC_A5_LAZY=19136
+# +4 code and +28 A5 on 2026-10-06 for the AppleLink name test, and this
+# configuration is the one that pays for it: the 28 B is `*fill*` under
+# the linker script's `. = ALIGN (0x20)` at the head of `.data`, read off
+# the map, because `_sdata` lands at 0xcfa4 here instead of 0xcfa0 once
+# the text is 4 B longer. The same 4 B of text costs the eager and
+# resident builds nothing at all in CODE + A5 (both pairs above), so this
+# is the alignment effect those ceilings have recorded six times, in the
+# one configuration where it steps the wrong way (DECISIONS.md
+# 2026-10-06, *the directory of empty records*).
+UNC_MAC_CODE_LAZY=52916
+UNC_MAC_A5_LAZY=19164
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

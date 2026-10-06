@@ -3824,10 +3824,38 @@ static void test_sqp(void)
     SQP_BENT("the second header's zero bytes", 10 + 86 + 4, 1);
     SQP_BENT("the level", recat + 1, 2);
     SQP_BENT("the name length, past what a Str31 holds", recat + 4 + 36, 32);
+    SQP_BENT("the name length, to zero, which no HFS name has",
+             recat + 4 + 36, 0);
     SQP_BENT("the compressed length, so the members no longer tile",
              recat + 4 + 11, 5);
     SQP_BENT("the fork's offset", recat + 4 + 15, 199);
 #undef SQP_BENT
+
+    /* A file of ZEROS whose length is 10 + 86n for the n in its first
+     * byte. Every length in it is 0, so the tiling test cannot fail on
+     * it — `lo` stays at EOF, `hi` at the directory's end and the sum at
+     * 0 == fsize - start — and the name's lower bound is the only test
+     * left standing. This was sniffed as a package, and listed as one
+     * 0-byte entry, until 2026-10-06 (DECISIONS.md, *the directory of
+     * empty records*). */
+    memset(bent, 0, sizeof bent);
+    bent[0] = 1;                                /* one version-0 record */
+    test_make_memio(&io, &m, bent, 96);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    /* The same 96 bytes with a NAME in the record is a package — one
+     * member, an empty file — and the pair is what says the probe
+     * refuses a nameless record rather than a forkless one. */
+    bent[10 + 36] = 1;
+    bent[10 + 37] = 'E';
+    test_make_memio(&io, &m, bent, 96);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, bent, 96);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 1 && cap.info[0].name[0] == 'E');
+    CHECK(cap.dlen[0] == 0 && cap.rlen[0] == 0);
+
     /* And one byte short of tiling, from the other end. */
     test_make_memio(&io, &m, pkg, len - 1);
     CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);

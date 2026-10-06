@@ -27,9 +27,13 @@ Five lanes, and they grade different things:
    contains. Skips cleanly without gzip.
 
 4. **Negative controls.** Every test the sniffer makes is bent in turn
-   and must make it answer `unknown`, and a package cut inside a
-   member's stream must be reported per entry rather than extracted
-   quietly. A probe nobody has watched fail is a probe that says yes.
+   and must make it answer `unknown`; two files of ZEROS that satisfy
+   the rest of the arithmetic must too; a package whose one member is an
+   empty FILE must still be recognised, which is what says the zeros are
+   refused for being nameless rather than for being empty; and a package
+   cut inside a member's stream must be reported per entry rather than
+   extracted quietly. A probe nobody has watched fail is a probe that
+   says yes.
 
 5. **Corruption, aimed at the decoder.** `tools/fuzz.py` draws uniformly
    from the corpus, so a `.pkg` is 6 of 951 fixtures and
@@ -349,6 +353,23 @@ def _bend(blob, at, value):
     return bytes(b)
 
 
+def _zeros_v0():
+    """The smallest file of ZEROS the arithmetic accepts: one version-0
+    record, and the directory ends at EOF. Two non-zero bytes."""
+    return bytes([1, 0]) + bytes(94)
+
+
+def _zeros_v1():
+    """The same on the version-1 path, which needs two more bytes
+    planted: the HFS item count and the one record's level. 198 B, of
+    which four are not zero."""
+    b = bytearray(198)
+    b[0], b[1] = 1, 1
+    struct.pack_into(">H", b, 98, 1)        # the HFS directory's count
+    struct.pack_into(">H", b, 108, 1)       # the record's level
+    return bytes(b)
+
+
 def lane_negative(macextract, bad):
     """Every test the sniffer makes, bent in turn. A probe with no magic
     number earns its keep only if each of its tests can reject."""
@@ -383,6 +404,51 @@ def lane_negative(macextract, bad):
                 bad.append("the sniffer still says %r with %s bent — that "
                            "test is not load-bearing" % (OURNAME, what))
 
+        # A file of ZEROS, on both version paths. Every length in it is
+        # 0, so the TILING says nothing at all — `lo` stays at EOF, `hi`
+        # at the directory's end, and the sum is 0 == fsize - start — and
+        # the only test left standing is the name's LOWER bound. The
+        # probe answered "AppleLink package" for both of these until
+        # 2026-10-06 and listed one 0-byte entry called `_`
+        # (BLOCKERS.md, *Withdrawn claims*).
+        for what, z in (("version 0, 96 B", _zeros_v0()),
+                        ("version 1, 198 B", _zeros_v1())):
+            p = os.path.join(tmp, "zeros.pkg")
+            with open(p, "wb") as f:
+                f.write(z)
+            r = run([macextract, "sniff", p])
+            if r.stdout.decode().strip() == OURNAME:
+                bad.append("a file of zeros (%s) sniffs as %r — every "
+                           "length in it is 0, so the tiling test cannot "
+                           "fail on it" % (what, OURNAME))
+
+        # And the POSITIVE control that keeps the test above honest: a
+        # package whose one member is an empty FILE declares no fork
+        # either, tiles just as vacuously, and must still be recognised.
+        # Its version-0 form is 96 bytes — the same length as the file of
+        # zeros, differing in the name field and nothing structural — so
+        # this pair is what says the probe refuses a nameless record
+        # rather than a forkless one. `sum > 0` passes all 8 real
+        # packages and FAILS this (measured, DECISIONS.md 2026-10-06).
+        for v in (0, 1):
+            pkg = S.build([S.item("Empty")], v)
+            p = os.path.join(tmp, "empty.pkg")
+            with open(p, "wb") as f:
+                f.write(pkg)
+            r = run([macextract, "sniff", p])
+            got = r.stdout.decode().strip()
+            if got != OURNAME:
+                bad.append("a version-%d package whose one member is an "
+                           "empty file (%d B) sniffs as %r — Aladdin's "
+                           "writer takes a file's name from the catalog "
+                           "and its lengths from the forks, so an empty "
+                           "one is a package" % (v, len(pkg), got))
+            rc, files, err = extract(macextract, p, os.path.join(tmp, "e%d" % v))
+            if rc != 0 or files.get("Empty") != b"":
+                bad.append("a version-%d package of one empty file came "
+                           "out as %r (exit %d: %s)"
+                           % (v, sorted(files), rc, err[:120]))
+
         # And a cut MEMBER. The sniffer refuses it outright — the
         # directory no longer tiles — so this is the WALK's own answer,
         # which only `-f` reaches: the entry must be reported truncated
@@ -403,8 +469,9 @@ def lane_negative(macextract, bad):
             bad.append("a package cut 200 bytes into its last member "
                        "extracted with exit %d and no truncation reported: %s"
                        % (r.returncode, msg[:200]))
-    print("sqp: lane 4 — %d bent packages rejected by the sniffer, and a cut "
-          "member reported" % len(cases))
+    print("sqp: lane 4 — %d bent packages and 2 files of zeros rejected by "
+          "the sniffer, 2 packages of one empty file still recognised, and a "
+          "cut member reported" % len(cases))
 
 
 # ---------------------------------------------------------------- lane 5

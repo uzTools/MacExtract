@@ -348,6 +348,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
 - 2026-10-07 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
 - 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
+- 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
+- 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
 
 ---
 
@@ -22407,3 +22409,167 @@ Stage-level concurrency — running independent lanes of `ci.sh` at once — was
 not attempted either. With intra-suite pools already saturating both cores it
 would buy little, and it would cost the property that the log reads top to
 bottom.
+
+## 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
+
+**Claim.** `src/fmt_sqp_probe.c` claimed a file whose every fork is empty. A
+**96-byte file of `01 00` followed by 94 zero bytes** sniffed as *AppleLink
+package* and `macextract l` listed one 0-byte entry named `_`; so did a
+198-byte version-1 file of zeros with four bytes planted — the two item
+counts and one record's level. The lower bound on a record's **name length**
+refuses both, measured, and that is the whole of the fix.
+
+**Why the tiling could not catch it.** The tiling test is what makes a
+magic-less probe worth anything: every fork's (offset, compressed length)
+inside the file, the first starting where the directory ends, the last
+ending at EOF, and the lengths summing to exactly the space between. Every
+one of those terms is a comparison against a length the FILE supplies, and
+when all of them are zero the test degenerates: `lo` stays at `fsize`, `hi`
+at `start`, and `sum == fsize - start == 0` holds because both sides are
+zero. A directory of empty records passes it, and the header's own
+arithmetic — `fsize == 10 + 86n` for version 0 — is satisfied by the first
+byte of the file.
+
+The probe's own comment named the wrong test as the guard: *"an empty
+package names nothing and is indistinguishable from a file of zeros, which
+is why this is a test and not a tolerance"*, written against `n < 1`. A
+count of zero locates no record, so nothing downstream runs — but a count of
+ONE is what a file of zeros has in its first byte when the file is 96 bytes
+long. The claim is withdrawn in BLOCKERS.md with what it cost.
+
+**The smell, and it is a new one: ten negative controls derived by bending a
+valid specimen can only show that each test is NECESSARY.** Lane 4 of
+`tools/run_sqp.py` bends every test the sniffer makes, one at a time, on a
+synthesised package and requires `unknown` for each — and all ten passed
+throughout. They had to: bending a positive asks "does this test fire?",
+which is a question about each test in the set. Nothing derived that way can
+ask whether the SET is sufficient, because every input it generates is a
+package with one thing wrong. What finds a missing test is an input that is
+not a package at all and was never derived from one — here, a file of zeros,
+which is the cheapest such input any format has. The lane now carries two.
+
+**Why `sum > 0` is the wrong fix, measured rather than argued.** It is the
+obvious candidate and it refuses both files of zeros, and it passes all 8
+real packages — but it also refuses a package whose one member is an empty
+FILE, and that is a package Aladdin's writer produces. The two halves of a
+record come from different places: `AddItems` takes the name from
+`PBGetCatInfo` and `DoWork` writes each fork's length from what it
+compressed, with 0 and a zero offset for a fork that is not there. Of the
+**39 files in the 8 real packages, 17 already declare one fork of length
+zero** — 8 the data fork (`Iconf Display`'s two `bullseye π` members,
+`MPW Shell`, `SD! Patcher`, four in `SCNPCK3.4.PKG`) and 9 the resource
+fork — and **none declares both**. So nothing in the writer couples a name
+to a length, and a file with neither fork is a record with two zeros in it;
+that no specimen has one is why this is labelled a **hypothesis** in
+TESTING.md rather than a measurement, with what would overturn it. Built and run: the
+`sum > 0` build answers *unknown* for a one-empty-member package in both
+version 0 and version 1. It also costs **672 B** of m68k text against the
+name bound's 670.
+
+**What the name bound rests on.** A record's name is the HFS catalog's own:
+`AddItems` @0x22ac points the `ioNamePtr` of its `CInfoPBRec` (+18) at a
+32-byte buffer it has just cleared, calls `PBGetCatInfo` @0x22be —
+`_HFSDispatch` selector 9, the glue at 0x6500 — bails on any error but
+`fnfErr`, and @0x2354 copies the buffer into the node's name field with
+`pStrCpy`, which is the field `WrHFSDirectory` @0x5f2e writes at record+36.
+That name is the File Manager's answer for a file the writer has just
+enumerated, so it is neither empty nor longer than the `Str31` it is copied
+into: the upper bound the probe already had is half of a range, and the
+lower half was missing. Measured on the
+evidence rather than left at that: **53 records across all 8 real packages,
+shortest name 7 bytes, no zero-length name anywhere**, in the HFS directory
+and in the version-1 SQP directory both.
+
+**What it costs.** `src/fmt_sqp_probe.c` goes from **666 to 670 B** of
+68000 text (`m68k-apple-macos-size` on the object, Retro68 `-Os` with the
+application's own flags). The 4 B is not a shape that can be optimised
+away: **seven shapes were measured**, and the five that read as a range —
+`< 1 || > 31`, `== 0 || > 31`, `!r[36] || > 31`, `> 31 || < 1`, and the
+byte-wise wrap — all land on 670, because the compiler emits the same
+`subq.b #1` + `cmpi.b #30` + `bhi` for each; writing that wrap by hand in
+32-bit arithmetic costs **2 B more**. The application: eager **+4 of `CODE`
+and −4 of A5**, so `CODE` + A5 is unchanged at 73,392 B and nothing comes
+off any extraction's budget; the resident control the same, 202,240 B
+unchanged, so `OVL_SAVED` does not move and `run_tiers.py --check` holds
+every tally (71/71, 67/71, 64/71 resident; 71/71, 69/71, 66/71 shipped). The
+LAZY configuration pays **+4 and +28**, and the 28 is `*fill*` under the
+linker script's `. = ALIGN (0x20)` at the head of `.data` — read off the
+map, because `_sdata` lands at 0xcfa4 once the text is 4 B longer instead of
+0xcfa0. That is the rodata-alignment step this project's ceilings have now
+recorded six times, in the one configuration where it steps the wrong way.
+
+**The control that keeps the new test honest.** A version-0 package whose
+one member is an empty file is **96 bytes — the same length as the file of
+zeros**, with the name field and the Finder info the only difference. Lane 4
+now asserts both: the zeros refused, that package still recognised and its
+one empty file still extracted. A test that refuses namelessness and a test
+that refuses emptiness are indistinguishable on any input but that pair,
+which is why the pair is in the suite rather than the reasoning.
+
+**And the sweep, re-measured both ways.** Every non-`.md` file in
+`fixtures/` — **963** — sniffed with the committed build and with this one:
+**6 answer *AppleLink package*, the same 6 synthesised fixtures by name**,
+and **no file's answer changed at all**, in any format. A probe that is
+narrowed has to be shown not to have narrowed anything else.
+
+## 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
+
+**Claim, carried since 2026-09-01: a Macintosh 128K is out for a measured
+second reason — its largest single block is 63,744 B against 142,152 B of
+`CODE`.** It was true when it was written and it had stopped being true
+eleven days before it was last read. `CODE` 2 is **48,884 B** in the shipped
+v0.37.0 binary, so the segment the Segment Loader refused now fits inside
+that machine's largest block with room to spare (FORMATS.md, *A Macintosh
+128K*).
+
+**Nothing about the machine changed and nothing about the claim was sloppy.**
+What changed is that this project shipped the overlays on 2026-09-25,
+whose entire purpose was to take the decoders out of resident `CODE`, and
+they did: *Overlays* has recorded the new resident pair ever since, in the
+same file, four thousand lines above the section that was still quoting the
+old one. The subtraction nobody did was done by a feature. This is
+2026-09-22's lesson — *a constant derived from a measurement is only as
+current as the measurement* — with the arithmetic performed by the build
+rather than by hand, which is the harder version: there was no stale
+formula to notice, only a term that three files held and the build no
+longer did.
+
+**The verdict held, and that is why it was cheap.** 55,884 B of `CODE`
+resources plus the 19,056 B A5 world is 74,940 B against `ApplLimit −
+ApplZone` = 78,568 B, and the eager loader then asks for the `'OVLY'`
+bundle as ONE 155,916 B block, so a 128K is short by 3,628 B rather than by
+a factor of about two. Nobody's afternoon was spent on the strength of the
+wrong number — unlike 2026-09-01's, which put half a bad instruction in
+MANUAL_TESTS.md §6. **What it cost is the next question.** "Short by a
+factor of two" closes the conversation; "short by 3,628 B, and the fixed
+cost is ~41 KB of shell and A5" is a brief, and *A Macintosh 128K* has had
+the subset builds priced on the same page since the day the wrong figure
+was written.
+
+**The instrument, and why the project's usual one could not settle it.**
+Every `CODE` figure here comes from `m68k-apple-macos-size`, which measures
+`.text`: 54,336 B for the shipped build. What a 128K heap actually holds is
+the `CODE` RESOURCES — 55,884 B across nine of them, including the 1,024 B
+jump table and the per-segment headers the linker's figure does not carry —
+and what the Segment Loader asks for in one block is the largest single
+resource, which no summed figure shows at all. Both numbers were available;
+only one answers the question, and it is the one no ratchet reads. That is
+2026-09-01's `FreeMem` rule a layer along: **ask what the failing code
+requests, then measure that, in the unit it requests it in.** The answer
+came off `dist/MacExtract.bin`'s own resource map, which is the artefact
+that ships rather than anything a build emits on the way.
+
+**How it was found, and what cannot find it.** Two sections of ONE file
+disagreeing by a factor of three — the second mechanism in BLOCKERS.md's
+list, which is written for two files and applies one file in. No checker
+covers this: `check_docs.py` holds figures against each other only where
+one is derived from another by a rule it was taught, and a number
+re-stated in prose in a distant section is not a derivation it can see.
+The same read turned up two more of the same shape, both corrected in
+place — the `'OVLY'` bundle quoted as 143,328 B in two paragraphs of
+*Overlays* while that section's own derivation says 155,916 B, and
+"ships as 211,200 B … v0.35.0" two releases after it stopped being either.
+Three stale figures in one file, all three in sections whose live
+neighbours are re-measured every time a format lands: **a figure is at
+risk exactly where it is quoted rather than derived**, because the
+re-measuring passes walk the tables and not the prose.
