@@ -3965,7 +3965,8 @@ the field, and this engine misses those three. **Every entry this build
 can extract is in the agreeing 16**, so nothing was changed for it
 (OPEN_ITEMS.md has what it would cost).
 
-**The name coupling, re-measured 2026-10-05.** Every `0x2605` field on
+**The name coupling, re-measured 2026-10-05 and re-run unchanged
+2026-10-06.** Every `0x2605` field on
 this disk — the nine specimens' 22 and `NPWritersKit.zip`'s, **23** —
 read off the bytes and compared with the zip's own leaf:
 
@@ -3977,8 +3978,12 @@ read off the bytes and compared with the zip's own leaf:
 | longest FileName, and the field's end within the extra record | 29 B, 46 B — every one of the 23 is the FIRST field, so the streamed reader's 64-byte `exbuf` reaches all of them |
 
 `tools/run_zipit.py` sweeps that coupling on every `ci.sh` run now and
-fails if a divergent FileName ever lands on a method the build reads
-(TESTING.md, *ZipIt's own archives*).
+fails if a divergent FileName ever lands on a method the build reads —
+**0, 8 or 99**, the last added 2026-10-06, and the gate proves it can
+fire before each sweep (TESTING.md, *ZipIt's own archives*). The wrong
+name is already visible in a LISTING of those three Implode entries,
+which is what `l` prints for them; what no build here can produce is a
+FILE under it.
 
 **The conversion is a PREFERENCE, not a version — measured.** ZipIt 1.4's own
 distribution zip and the Japanese 1.x's keep mixed case and spaces —

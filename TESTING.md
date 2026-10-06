@@ -3919,13 +3919,23 @@ Six things run, the last of them over the corpus zips as well:
 6. **The name coupling.** Added 2026-10-05. Every `0x2605` FileName,
    across the nine specimens and every `fixtures/*.zip`, compared with
    the zip's own leaf off the bytes — no `unar`, no engine run — and a
-   divergence that lands on method 0 or 8 is a FAILURE, because that is
-   the day the leaf substitution OPEN_ITEMS.md keeps open starts
-   changing what comes out. **23 fields, 3 divergent, 0 of them
-   decodable** on 2026-10-05, and the count is printed. Made to fail
-   first: one name in a copy of `zipit-1.4` converted the way ZipIt's
-   "dosify filenames" option would have converted it, and the check
-   names the entry and returns non-zero.
+   divergence that lands on a method the engine decodes is a FAILURE,
+   because that is the day the leaf substitution OPEN_ITEMS.md keeps
+   open starts changing what comes out. **23 fields, 3 divergent, 0 of
+   them decodable** on 2026-10-05, re-run unchanged 2026-10-06, and the
+   count is printed. The methods are **0, 8 and 99**, the last since
+   2026-10-06 (DECISIONS.md 2026-10-06, *the gate that had never
+   fired*). **`selftest_coupling` proves it can fail on every
+   invocation**, ahead of the sweep and before any specimen is read:
+   four one-entry zips written by `tools/synth_crypt.py`'s own writer —
+   a divergence at method 0, an agreeing field at method 0, a
+   divergence at method 6 and one at method 99 with WinZip's `0x9901`
+   naming method 8 — asserted at (divergent, reachable) of (1,1),
+   (0,0), (1,0) and (1,1). It replaced a hand mutation of a specimen on
+   2026-10-06 and was itself made to fail two ways: narrowing the
+   criterion back to `(0, 8)` fails the fourth case alone, and blinding
+   `diverging_names` fails three of the four and leaves the agreeing one
+   passing.
 
 **Per-specimen tallies are asserted, and that is the part that matters.**
 `EXPECT` holds entries, one count per field id, and the number of
@@ -3976,6 +3986,15 @@ failures, and moving the `0x2705` flag read by two bytes in
   extension — inside a `.hqx`, or as a `.sea` — carries fields it would
   not see. It prints the number of archives it swept, so a sweep that
   found nothing is visible rather than silent.
+- **Check 6's criterion is a method, not an extraction.** It asks
+  whether the engine decodes the method, not whether a file with the
+  wrong name actually reaches a disk — so it counts a method-99 entry
+  for which no password is supplied, and it would count an entry whose
+  decode fails for some other reason. That direction is deliberate: a
+  false alarm costs one look at one archive and a miss costs the guard.
+  It also means the gate says nothing about the wrong name a LISTING
+  already prints for a refused entry, which is what `l` does today on
+  `Psycho!v1.0ß1.zip`'s three (FORMATS.md, *ZipIt's own archives*).
 
 ## Searching somebody else's index by content (`tools/scan_discmaster.py`, not in `ci.sh`)
 

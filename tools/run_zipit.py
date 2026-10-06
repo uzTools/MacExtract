@@ -50,8 +50,11 @@ instead of going quiet:
      nine and `fixtures/*.zip` both. APPNOTE.TXT 4.6.4 calls the field
      the "full Macintosh filename" and this engine extracts under the
      zip's name instead; the two agree on everything it can decode, and
-     a divergence on method 0 or 8 fails here, because that is the day
-     the substitution OPEN_ITEMS.md keeps open starts mattering.
+     a divergence on a method it decodes fails here, because that is
+     the day the substitution OPEN_ITEMS.md keeps open starts
+     mattering. `selftest_coupling` proves that gate can fail before
+     the sweep is believed — it has returned 0 on every real run since
+     it was written.
 
 **What it cannot see.** The probe's own reasoning: these nine all
 carry a well-formed record, so nothing here can fail on a corroboration
@@ -69,7 +72,9 @@ Nothing here fails when the specimens are absent — it prints what it
 skipped and returns 0, so a fresh clone stays green.
 """
 import argparse
+import contextlib
 import glob
+import io
 import json
 import os
 import shutil
@@ -540,9 +545,27 @@ def grade_wrapped(exe, name, raw_path, fork_path, refused):
 
 def refused_names(ents):
     """The entries this build declines by method, which no fork
-    comparison can reach. Method 0 and 8 are the two it reads."""
+    comparison can reach. Method 0 and 8 are the two it reads from the
+    header; method 99 is WinZip AES and is handled by DECODED_METHODS,
+    which is the criterion the name gate uses — this one stays strict
+    because a fork comparison needs a password as well as a method, and
+    nothing here supplies one."""
     return set(e["name"].rstrip(b"/").decode("mac_roman")
                for e in ents if e["method"] not in (0, 8))
+
+
+# What the name gate counts as reachable. 0 and 8 are the methods
+# `src/fmt_exo.c` decodes off the header; **99** belongs here too and
+# did not until 2026-10-06 — it means "see WinZip's 0x9901 field", and
+# that field's real method is decoded when it is 0 or 8, so an entry at
+# 99 can produce a file under the wrong name while `method not in (0, 8)`
+# calls it refused. Resolving 0x9901 here would make the gate agree
+# exactly; counting 99 in makes it err LOUD instead, which is the right
+# asymmetry for a guard: a false alarm costs one look at one archive, a
+# miss costs the guard. Nothing in the sweep set is at method 99 — 18
+# archives, 170 entries, measured 2026-10-06 — so today it changes no
+# tally, and `selftest_coupling` is what proves it fires at all.
+DECODED_METHODS = (0, 8, 99)
 
 
 def diverging_names(ents):
@@ -582,11 +605,10 @@ def grade_name_coupling(paths):
         if ents is None:
             continue
         arch += 1
-        refused = refused_names(ents)
         fields += sum(1 for e in ents if long_field_name(e) is not None)
         for nm, fname, method in diverging_names(ents):
             diverged += 1
-            if nm in refused:
+            if method not in DECODED_METHODS:
                 continue
             reachable += 1
             print("zipit: %s: %r carries 0x2605 FileName %r and method %d "
@@ -597,6 +619,76 @@ def grade_name_coupling(paths):
           "%d divergent, %d of those on an entry this build decodes"
           % (arch, fields, diverged, reachable))
     return reachable
+
+
+def _coupling_case(method, leaf, fname, extra_first=b""):
+    """A one-entry zip carrying a `0x2605` FileName, for the self-test.
+
+    The field is APPNOTE.TXT 4.6.4's layout and nothing more — '"ZPIT"
+    beLong, FnLen Byte, FileName variable, FileType Byte[4], Creator
+    Byte[4]' — which is the same reading `long_field_name` above and
+    `src/fmt_exo.c` both encode. The archive is written by
+    tools/synth_crypt.py's writer rather than a second one here."""
+    from synth_crypt import _zip        # imported here: only this needs it
+    fn = fname.encode("mac_roman")
+    f2605 = (struct.pack("<HH", 0x2605, 4 + 1 + len(fn) + 8) + b"ZPIT" +
+             bytes([len(fn)]) + fn + b"TEXTttxt")
+    body = b"not read by the gate\n"
+    blob, _ = _zip([(leaf, method, zlib.crc32(body) & 0xFFFFFFFF, len(body),
+                     extra_first + f2605, body)])
+    return blob
+
+
+def selftest_coupling():
+    """Prove the name gate can FAIL, on bytes built here.
+
+    A gate that has never fired is a gate nobody has tested, and this
+    one has returned 0 every run since it was written, because every
+    divergent FileName on this disk is on an Implode entry (FORMATS.md,
+    *ZipIt's own archives*). Four one-entry zips say what it
+    discriminates on: the method, and the two names.
+
+    Returns the number of cases that came out wrong."""
+    aes = struct.pack("<HHH2sBH", 0x9901, 7, 2, b"AE", 3, 8)
+    cases = [
+        # method, zip's leaf, the field's FileName, extra before 0x2605,
+        # expected (divergent, reachable), what it pins
+        (0,  "README", "READ ME", b"", (1, 1),
+         "a divergence on a method the build reads"),
+        (0,  "README", "README",  b"", (0, 0),
+         "a field that agrees is not a divergence"),
+        (6,  "README", "READ ME", b"", (1, 0),
+         "Implode: divergent, and not reachable — the live corpus shape"),
+        (99, "README", "READ ME", aes, (1, 1),
+         "WinZip AES, real method 8 in 0x9901: reachable since 2026-10-06"),
+    ]
+    bad = 0
+    d = tempfile.mkdtemp(prefix="zipit-selftest-")
+    try:
+        for method, leaf, fname, pre, (wdiv, wreach), why in cases:
+            blob = _coupling_case(method, leaf, fname, pre)
+            p = os.path.join(d, "m%d-%s.zip" % (method, fname.replace(" ", "")))
+            with open(p, "wb") as fh:
+                fh.write(blob)
+            ents = walk(blob)
+            gdiv = len(diverging_names(ents)) if ents else -1
+            # The gate under test prints its own sweep line; four of
+            # those ahead of the real one would read as the real one.
+            said = io.StringIO()
+            with contextlib.redirect_stdout(said):
+                greach = grade_name_coupling([p])
+            if (gdiv, greach) != (wdiv, wreach):
+                print("zipit: selftest: method %d, %r vs %r: got (%d, %d), "
+                      "wanted (%d, %d) — %s"
+                      % (method, leaf, fname, gdiv, greach, wdiv, wreach, why))
+                print(said.getvalue(), end="")
+                bad += 1
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    if not bad:
+        print("zipit: selftest ok (%d built cases, the gate fires on %d)"
+              % (len(cases), sum(1 for c in cases if c[4][1])))
+    return bad
 
 
 def main():
@@ -610,10 +702,15 @@ def main():
     paths = [os.path.join(SPECIMENS, n) for n in sorted(EXPECT)]
     have = [p for p in paths if os.path.exists(p)]
 
+    # Never trust a pass this cannot fail: the gate below has returned 0
+    # every run since it was written, so it proves itself first, on
+    # bytes built here and no specimen (CLAUDE.md, *Traps*).
+    nbad = selftest_coupling()
+
     # The name coupling wants neither oracle, so it is swept first and
     # over the corpus zips as well — on a fresh clone it has nothing to
     # read and says so with a count of 0.
-    nbad = grade_name_coupling(
+    nbad += grade_name_coupling(
         have + sorted(glob.glob(os.path.join(REPO, "fixtures", "*.zip"))))
 
     if not have:
