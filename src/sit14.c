@@ -60,6 +60,13 @@
 
 #define SIT14_WINDOW   0x40000u      /* the format's window           */
 #define SIT14_WINMIN   256u
+/* Pending partitions in sit14_sort. The bound is log2 of the largest
+ * alphabet the format has — 308 — so 16 is more than twice what is
+ * needed; it is overridable so that a build can prove the guard above
+ * is not dead code (TESTING.md, *StuffIt method 14*). */
+#ifndef SIT14_SORTSTACK
+#define SIT14_SORTSTACK 16
+#endif
 #define SIT14_LITSYMS  308           /* 256 literals + 52 length codes */
 #define SIT14_OFFSYMS  75
 #define SIT14_LENCODES 52
@@ -113,12 +120,30 @@ static void sit14_ladders(Sit14 *s)
 /* SIT14_Update, from an explicit stack. Sorts `lensort` ascending and
  * carries `order` along with it; equal lengths end up in whatever order
  * this exact partition leaves them, which is what decides the code
- * assignment, so the partition is transcribed and not replaced. */
-static void sit14_sort(uint8_t *key, uint16_t *val, int32_t nsyms)
+ * assignment, so the partition is transcribed and not replaced.
+ *
+ * What is NOT transcribed is which half waits: the reference recurses
+ * into the smaller half and returns before carrying on, and this defers
+ * the LARGER one and loops on the smaller. The array comes out the same
+ * — the two halves are disjoint ranges, so the order they are
+ * partitioned in cannot change either of them, checked over 4,000
+ * random length vectors and every shaped one (DECISIONS.md 2026-10-06,
+ * *the sort that dropped what it could not hold*) — but the stack does
+ * not: deferring the smaller half leaves one pending range per split
+ * and wants 20 of them on the fixture's `ascending-code-lengths` entry,
+ * where deferring the larger one halves the live range every time and
+ * wants at most log2(nsyms). Measured: 7 at nsyms=308 over every shape
+ * tried.
+ *
+ * Source: XADMaster XADStuffItOldHandles.m, SIT14_Update */
+static int sit14_sort(uint8_t *key, uint16_t *val, int32_t nsyms)
 {
-    /* Each pushed range is the smaller half, so the depth cannot pass
-     * log2(nsyms); 16 covers 65,536 symbols against this file's 308. */
-    int32_t stack[16][2];
+    /* A range that will not fit is an ERROR and not a dropped partition.
+     * Dropping one leaves the lengths sorted and the ORDER wrong, which
+     * hands two symbols each other's code: the fixture entry above
+     * decoded wrong from its 26th byte that way, for three days, and
+     * only its own CRC-16 said so. */
+    int32_t stack[SIT14_SORTSTACK][2];
     int32_t top = 0;
     int32_t first = 0, last = nsyms;
 
@@ -142,21 +167,20 @@ static void sit14_sort(uint8_t *key, uint16_t *val, int32_t nsyms)
 
                 i = j + 1;
                 if (last - i <= j - first) {
-                    if (top < 16) {
-                        stack[top][0] = i; stack[top][1] = last; top++;
-                    }
-                    last = j;
-                } else {
-                    if (top < 16) {
-                        stack[top][0] = first; stack[top][1] = j; top++;
-                    }
+                    /* the right half is the smaller: wait on the left */
+                    if (top == SIT14_SORTSTACK) return UNC_ERR_CORRUPT;
+                    stack[top][0] = first; stack[top][1] = j; top++;
                     first = i;
+                } else {
+                    if (top == SIT14_SORTSTACK) return UNC_ERR_CORRUPT;
+                    stack[top][0] = i; stack[top][1] = last; top++;
+                    last = j;
                 }
             } else {
                 ++first;
             }
         }
-        if (top == 0) return;
+        if (top == 0) return UNC_OK;
         top--;
         first = stack[top][0];
         last = stack[top][1];
@@ -178,7 +202,10 @@ static int sit14_build(Sit14 *s, int32_t nsyms, uint16_t *tree)
         s->lensort[i] = s->len[i];
         s->order[i] = (uint16_t)i;
     }
-    sit14_sort(s->lensort, s->order, nsyms);
+    {
+        int err = sit14_sort(s->lensort, s->order, nsyms);
+        if (err != UNC_OK) return err;
+    }
 
     for (i = 0; i < nsyms; i++) s->code[i] = 0;
 

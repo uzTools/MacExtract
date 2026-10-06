@@ -345,6 +345,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the alphabet nothing here had seen) — the program that defines the MU layout was a corpus fixture, and the engine had never read a line of what it writes
 - 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
 - 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
+- 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
 
 ---
 
@@ -22183,3 +22184,94 @@ failed flush** — a sink write error, which no mutant can cause — the
 single container, and the fact that nothing in this lane is
 big-endian. Nothing here is known to be hiding a defect; that is what
 having measured it buys.
+
+## 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
+
+**The window-wrap seed's thousandth sanitizer case found a real
+defect**, three days after method 14 shipped and with the whole
+951-fixture suite green over it: `src/sit14.c:201`, *shift exponent -1
+is negative*. The reproduction is 1,262 bytes and the probe that
+explains it is four lines — `nsyms=308, maxtop=16, dropped=4,
+unsorted_pairs=2`.
+
+**`sit14_sort` is libxad's `SIT14_Update` with the recursion turned
+into a stack, and that transcription changed something nobody was
+looking at.** The reference recurses into the SMALLER half of each
+partition and returns before carrying on, so its nesting halves and is
+bounded by log2(nsyms). The transcription DEFERS the smaller half onto
+a 16-deep stack and loops on the larger — which leaves one pending
+range per split, and the comment above it stated the reference's bound
+as though it were this code's:
+
+> *"Each pushed range is the smaller half, so the depth cannot pass
+> log2(nsyms); 16 covers 65,536 symbols against this file's 308."*
+
+Both halves of that are true. The conclusion is about HOW MANY ranges
+are pending and the premise is about the SIZE of each, and the
+rewrite moved the first without touching the second (BLOCKERS.md).
+
+**And the overflow was silent**, which is the part that cost something.
+`if (top < 16)` dropped the range and carried on. A dropped range
+leaves the lengths SORTED — so every check anyone would think to write
+passes — and leaves the ORDER wrong, and the order is what decides
+which symbol gets which code. So two symbols swap codes and the fork
+decodes to plausible wrong bytes.
+
+**It is reachable by a valid archive, which is the finding rather than
+the UB.** The mutant tripped UBSan, which is a corrupt tree; the
+question that mattered is whether a well-formed one can do it, and the
+answer is yes and easily: of 20,000 Kraft-complete codes drawn at
+random, **15,606 come out with a different order under a 16-deep stack**
+when their lengths are arranged in ascending runs. The committed
+reproduction is the simplest closed form of that found — four codes at
+every length from 3 to 15, plus the four the Kraft sum leaves over at
+15, 56 symbols, 112 bytes of fork — and it is the fixture's fifth entry
+now: the pre-fix engine refuses it with *checksum mismatch* while the
+encoder and `unar` agree on all 112 bytes.
+
+**Why no amount of real data would have found it.** The two Aladdin
+payloads decode 9.3 million symbols between them and every fork of both
+is byte-exact against `unar` — measured on the build that had the
+defect. Their trees stay inside 16 pending ranges. A tree shape is not
+a frequency, so a corpus does not sample it: what found this was an
+ENCODER being asked to write a shape no specimen here had, which is the
+same mechanism as `-lh3-`'s seed and method 14's own existence. The
+generator's own `sit14_sort` is the same quicksort over an unbounded
+Python list, so it agreed with `unar` against us — **three
+implementations, and the two that were not transcribed from a recursion
+were the two that agreed.**
+
+**The fix is which half waits, not a bigger stack.** Deferring the
+LARGER half and looping on the smaller halves the live range every
+time, so pending ranges cannot pass log2(nsyms): **7 at the format's
+largest alphabet**, measured over 4,000 random length vectors and every
+shaped one, against 16 available. The array is identical either way —
+the two halves are disjoint ranges, so the order they are partitioned
+in cannot change either of them, checked by running both disciplines
+over the same 4,000 vectors and comparing keys and order. A bigger
+stack was the other option and is worse: the bound would still be
+unstated, and 308 entries is 2,464 B on a stack whose whole budget is
+4 KB.
+
+**A full stack is an error now, and `ci.sh` proves the error fires.**
+`-DSIT14_SORTSTACK=4` must refuse all five method-14 entries as corrupt
+— 5 of 5, exit 1 — where the default passes them. Nothing an archive
+can contain reaches that guard, so without the knob it would be a
+branch nobody could show working, which is the shape this repository
+calls a test that cannot fail.
+
+**Two instrument defects came out with it, and both are the same
+shape.** `tools/fuzz.py` moved a failing case to `--keep-dir` with
+`os.replace`, which cannot cross a filesystem: `/tmp` and the
+repository are on different devices here, so the harness raised
+`OSError` from inside the failure path and **the FUZZ FAIL line never
+printed**. The one time it had something to report, it crashed instead
+of reporting — and nothing noticed for as long as it has existed,
+because a failure path is only run when there is a failure. It is
+`shutil.move` now. The second is the same thing in the small: the
+first probe of this defect ran `gcov` with the wrong working directory,
+printed *"Cannot open source file"* to a discarded stderr, and wrote a
+four-line `.gcov` with no counts in it — which read exactly like "the
+branch was never executed". **An instrument that fails quietly is
+indistinguishable from a measurement**, and both of these were on the
+path between the defect and somebody seeing it.

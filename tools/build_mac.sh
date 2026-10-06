@@ -466,7 +466,14 @@ UNC_MAC_CODE_DEFAULT=164324
 # +12 on 2026-10-06, with the code ceiling above: rodata alignment under
 # the new text in two files that carry no data of their own, the effect
 # this file has now recorded four times.
-UNC_MAC_A5_DEFAULT=37916
+# +4 on 2026-10-06, and the FIFTH record of the same effect: the
+# method-14 sort fix took src/sit14.c from 2,572 to 2,566 B of text with
+# .data and .bss still 0 (`size`, Retro68 -Os), and the control build's
+# CODE fell by the same 4 — 164,320 against the 164,324 ceiling above,
+# which is left standing as slack. CODE + A5 does not move, so
+# OVL_SAVED does not either (TESTING.md, *The sort that dropped what it
+# could not hold*).
+UNC_MAC_A5_DEFAULT=37920
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

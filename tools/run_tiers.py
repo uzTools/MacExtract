@@ -321,12 +321,12 @@ IMAGES = {
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     26278,
+    "OVL_ID_STUFFIT":     26274,
     "OVL_ID_SQP":         1972,
     "OVL_ID_SUPERDISK":   7056,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 155920
+BUNDLE = 155916
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

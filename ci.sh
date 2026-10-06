@@ -291,6 +291,27 @@ make BUILD=build/lzwlen CFLAGS="-O1 -g -fsanitize=address,undefined,alignment \
 MACEXTRACT=build/lzwlen/macextract sh tests/run_diff.sh \
     || fail "diff tests (LZW length escape)"
 
+echo "=== variant 1d: the method-14 sort stack (forced) ==="
+# sit14_sort defers the larger half of each partition, so the pending
+# ranges cannot pass log2 of the alphabet — 7 at the format's largest,
+# against 16 available — and no archive reaches the guard. A build at 4
+# does, and what the guard has to do is REFUSE the entry: dropping a
+# pending range instead leaves the lengths sorted and the ORDER wrong,
+# which hands two symbols each other's code, and that is how a valid
+# archive decoded wrong from its 26th byte until 2026-10-06 (TESTING.md,
+# *StuffIt method 14*). Skips with no fixtures, like the diff lanes.
+if [ -f fixtures/synth-sit14.sit ]; then
+    make BUILD=build/sit14stack CFLAGS="-O1 -g -DSIT14_SORTSTACK=4" \
+         build/sit14stack/macextract >/dev/null \
+         || fail "method-14 sort-stack build"
+    if ./build/sit14stack/macextract t fixtures/synth-sit14.sit \
+            >/dev/null 2>&1; then
+        fail "a 4-deep method-14 sort stack must refuse the fixture"
+    fi
+    ./build/san/macextract t fixtures/synth-sit14.sit >/dev/null 2>&1 \
+        || fail "the default method-14 sort stack must pass the fixture"
+fi
+
 echo "=== variant 3b: Mac sink (native ASan + big-endian m68k) ==="
 sh tests/run_mac_sink.sh || fail "mac sink tests"
 

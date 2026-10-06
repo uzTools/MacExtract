@@ -39,7 +39,7 @@ WHAT IT CANNOT SEE:
   * Correctness only, on ONE archive. It is not a fuzz run: mutants of
     this seed are `fuzz.py`'s stream generator, shape `sit14-wrap`.
   * Nothing here runs on the Macintosh. `tests/run_mac_sink.sh` carries
-    the 1,859 B fixture, not this archive — a 256 KB window is more than
+    the 2,149 B fixture, not this archive — a 256 KB window is more than
     the 1 MB tier has to spare (OPEN_ITEMS.md).
 """
 import os
@@ -114,7 +114,10 @@ def check_wraps(problems):
     window, winmin = consts["SIT14_WINDOW"], consts["SIT14_WINMIN"]
     ran = 0
     for name, blocks in synth_sit14.cases(wrap=True):
-        script = [it for b, _nested in blocks for it in b]
+        # A block is (script, nested) or (script, nested, litlens) —
+        # unpacking it as a pair is what broke this on the day the
+        # third element landed, and `encode` reads it the same way.
+        script = [it for block in blocks for it in block[0]]
         win, points = flush_points(script, window, winmin)
         wraps = [p for p in points if p[2]]
         ran += 1

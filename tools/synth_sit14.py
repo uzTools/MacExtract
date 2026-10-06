@@ -27,7 +27,7 @@ tools/run_sit14wrap.py and fuzzed as fuzz.py's `sit14-wrap` shape.
 
 Deterministic: same bytes every run (check_docs.py compares the sha256 in
 fixtures/SOURCES.md, which is the DEFAULT output — `--wrap` adds to it
-and must leave those 1,859 bytes alone).
+and must leave those 2,149 bytes alone).
 """
 import argparse
 import hashlib
@@ -254,9 +254,18 @@ def write_tree(bo, lens, nested):
 # A block
 # ---------------------------------------------------------------------------
 
-def write_block(bo, script, nested):
+def write_block(bo, script, nested, litlens=None):
     """`script` is a list of ('lit', byte) and ('match', length, dist).
-    Returns the bytes it expands to."""
+    Returns the bytes it expands to.
+
+    `litlens` overrides the flat literal code with an explicit one — 308
+    code lengths, which have to be a complete prefix code and to cover
+    every symbol the script uses. The flat code below gives every used
+    symbol the SAME length, and a tree of equal lengths is the easy case
+    for the canonical assignment: what it never produces is a tree whose
+    lengths ASCEND over the alphabet in long runs, which is the shape
+    that found the sort defect of 2026-10-06 (DECISIONS.md)."""
+    given = litlens
     litlens = [0] * LITSYMS
     offlens = [0] * OFFSYMS
     for item in script:
@@ -281,7 +290,19 @@ def write_block(bo, script, nested):
             out[i] = width
         return out, used
 
-    litlens, _ = flatten(litlens)
+    if given is None:
+        litlens, _ = flatten(litlens)
+    else:
+        used = [i for i, f in enumerate(litlens) if f]
+        missing = [i for i in used if not given[i]]
+        if missing:
+            raise ValueError("the given code gives no length to symbol(s) %s"
+                             % missing[:8])
+        kraft = sum(2.0 ** -l for l in given if l)
+        if abs(kraft - 1.0) > 1e-9:
+            raise ValueError("the given code is not complete: Kraft sum %r"
+                             % kraft)
+        litlens = list(given)
     offlens, _ = flatten(offlens)
     litcodes = assign_codes(litlens)
     offcodes = assign_codes(offlens)
@@ -327,12 +348,15 @@ def write_block(bo, script, nested):
 
 
 def encode(blocks):
-    """blocks: a list of (script, nested). Returns (stream, decoded)."""
+    """blocks: a list of (script, nested) or (script, nested, litlens).
+    Returns (stream, decoded)."""
     bo = BitOut()
     bo.put(len(blocks), 16)
     out = bytearray()
-    for script, nested in blocks:
-        out += write_block(bo, script, nested)
+    for block in blocks:
+        script, nested = block[0], block[1]
+        litlens = block[2] if len(block) > 2 else None
+        out += write_block(bo, script, nested, litlens)
     bo.align()
     return bo.bytes(), bytes(out)
 
@@ -379,6 +403,39 @@ def wrap_case():
     return script
 
 
+def ascending_code():
+    """A COMPLETE literal code whose lengths ascend over the alphabet:
+    FOUR codes at every length from 3 to 15, and the four the Kraft sum
+    has left over at 15 —
+
+        4*(2^-3 + ... + 2^-15) = 1 - 2^-13,  and  4*2^-15 = 2^-13
+
+    — 56 codes over the 56 lowest literal symbols, every later symbol
+    unused.
+
+    Why this shape and not the flat code every other case here uses:
+    `sit14_build` sorts the lengths with a transcription of libxad's
+    `SIT14_Update`, and how much PENDING work that sort carries depends
+    on the shape of the lengths, not on their number. A flat code needs
+    7 slots; this one asks for 20, and the engine had 16 and dropped the
+    rest — which leaves the lengths sorted and the ORDER wrong, so two
+    symbols get each other's code. This entry decoded wrong from its
+    26th byte until 2026-10-06 and its own CRC-16 is what said so
+    (DECISIONS.md, *the sort that dropped what it could not hold*).
+
+    Every length is 15, so the tree serializer's 5-bit alphabet carries
+    it and no code is longer than the 17 bits the real payloads reach.
+    """
+    lens = []
+    for ln in range(3, 16):
+        lens += [ln] * 4
+    lens += [15] * 4
+    out = [0] * LITSYMS
+    for sym, ln in enumerate(lens):
+        out[sym] = ln
+    return out
+
+
 def cases(wrap=False):
     """One entry per shape, each named for what it is the only subject of."""
     out = []
@@ -412,7 +469,20 @@ def cases(wrap=False):
          + [("match", 20, 128)], True),
     ]))
 
-    # 5. The window wrap, only with --wrap: this entry's fork is 278,896
+    # 5. A tree whose code lengths ASCEND over the alphabet. Nothing
+    #    else here produces one — the flat code every other case uses
+    #    gives all its symbols one length — and the canonical assignment
+    #    sorts the lengths, so the shape of them decides how much
+    #    pending work that sort carries. 40 bytes of fork and 24 slots
+    #    of it (DECISIONS.md 2026-10-06).
+    code = ascending_code()
+    nsym = sum(1 for l in code if l)
+    out.append(("ascending-code-lengths", [
+        ([("lit", i) for i in range(nsym)] +
+         [("lit", i) for i in range(nsym - 1, -1, -1)], False, code),
+    ]))
+
+    # 6. The window wrap, only with --wrap: this entry's fork is 278,896
     #    B and the four above are 18,389 B all told, so it is NOT in the
     #    committed fixture — a 256 KB window is a peak-RAM figure, a
     #    budget-sweep row and a Macintosh tier, and none of those should
@@ -450,8 +520,8 @@ def build(wrap=False):
     each entry's method-14 stream in the file, the same contract
     `synth_crypt.py --ranges` has for ciphertext. A mutator confined to
     those spans corrupts what the DECODER reads and nothing the
-    container checks on the way in: 1,345 B of the 1,859, the rest being
-    an 80-byte banner and four entry headers that refuse the file when a
+    container checks on the way in: 1,529 B of the 2,149, the rest being
+    an 80-byte banner and five entry headers that refuse the file when a
     mutation lands in them. Worth 95.5 % of the decoder's lines to
     98.5 % over 120 cases (TESTING.md, *Fuzzing*)."""
     entries = []

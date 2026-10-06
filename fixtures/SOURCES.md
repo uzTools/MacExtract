@@ -917,7 +917,7 @@ suite that owns it (TESTING.md).
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
 | synth-sit-fixhuf.sit | 230ccec1522c0ea3deb1140cacb76c2dae3716cf9d6e5b9e26219ad4000867e8 | 2601 | synthetic:tools/synth_sit6.py |
 | synth-sit-rle90.sit | cdd044dcabffafe20f7dc54c9b9b28b0890330c528543e09cfe37e4e0b9d1b47 | 1287 | synthetic:tools/synth_sit1.py |
-| synth-sit14.sit | 34e589511b0338b9af2f63a891bbc9a448ed2548ab4c85ad5013238e9d6d3bc1 | 1859 | synthetic:tools/synth_sit14.py |
+| synth-sit14.sit | 6451046c6a7cdf74e3be55ae604b592f2b86719b0ff8d32cb8c32989d88650e4 | 2149 | synthetic:tools/synth_sit14.py |
 | synth-sqp-clear.pkg | 50c2e7427b9770e9105cf005fde82f238852ea0e2b8856a176ef22acd238f4da | 28667 | synthetic:tools/synth_sqp.py --case clear |
 | synth-sqp-folder.pkg | 8685c68b16d7ff428b833aff1e59e3e50ceea3cf09bb68e0f16772d2dfdc7dc2 | 2343 | synthetic:tools/synth_sqp.py --case folder |
 | synth-sqp-forks.pkg | 637d2aa7f5bdd3a712d3c0ef1d88aa16e998310f855d4050e3581078fa6eb8d2 | 2397 | synthetic:tools/synth_sqp.py --case forks |

@@ -127,7 +127,12 @@ TAKEN = "2026-10-05"
 # refused outright — and a posting cut at the separator Peter Lewis's
 # own decoder resumes at (FORMATS.md, *uuencode: three alphabets*).
 # `run_tiers.py --check` moves no tally in either lane.
-EXPECT_BUNDLE = 155920
+# RE-TAKEN 2026-10-06, 155,920 -> 155,916: `ovl_stuffit` 26,278 ->
+# 26,274, the method-14 sort fix of the same day. Resident `CODE` and A5
+# did not move (FORMATS.md, *StuffIt 5's method 14*; TESTING.md, *The
+# sort that dropped what it could not hold*). `run_tiers.py --check`
+# moves no tally in either lane.
+EXPECT_BUNDLE = 155916
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-06"
 

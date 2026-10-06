@@ -884,16 +884,30 @@ anything about the suite.**
    What that does NOT say: a mutant is graded by nothing, here as
    everywhere in this file. What is graded is the seed.
 
+   **And for a year it could not report a failure at all.** The case
+   that fails is moved to `--keep-dir` before the FUZZ FAIL line is
+   printed, and that move was `os.replace`, which cannot cross a
+   filesystem: the cases live under `mkdtemp()` in `/tmp` and
+   `--keep-dir` defaults to the repository, which is a different device
+   here. So the first time that path ran — the method-14 sort defect of
+   2026-10-06 — it raised `OSError` from inside the failure handler and
+   **the line that names the defect never printed**. `shutil.move` now,
+   and checked by running the pre-fix engine until it failed. A failure
+   path only runs when there is a failure, which is exactly why no green
+   run could ever have exercised it (DECISIONS.md 2026-10-06, *the sort
+   that dropped what it could not hold*).
+
    **A sixth generator since 2026-10-05: a NAMED seed, mutated inside
    the ranges its own generator calls compressed.** StuffIt 5's method
    14 is the shape that wanted it. Its only specimen here is
-   `synth_sit14.py`'s 1,859 B among ~950 fixtures, so what generators 1
+   `synth_sit14.py`'s 2,149 B among ~950 fixtures, so what generators 1
    and 2 reach it with is a draw — none in 1,500 cases (DECISIONS.md
    2026-10-03), two or three in 3,000, which enter ten of the decoder's
    eleven functions and leave the nested-tree reader at zero at both
-   seeds. `synth_sit14.py --ranges` reports its four streams, 1,345 B of
-   the file against 514 B of banner and entry headers, and the generator
-   keeps every edit inside them. 3,000 cases:
+   seeds. `synth_sit14.py --ranges` reports its five streams, 1,529 B of
+   the file against 620 B of banner and entry headers, and the generator
+   keeps every edit inside them. 3,000 cases, when the seed was four
+   streams of 1,859 B:
 
    | | seed 11 | seed 12 |
    |---|---|---|
@@ -934,7 +948,9 @@ anything about the suite.**
    and not the format: 17,799 B is the largest fork the four fixture
    shapes happen to decode to, which was read as what the encoder can
    write (BLOCKERS.md, *Withdrawn claims*). 3,000 mixed cases, one
-   build, `--stream-shape sit14` for the before:
+   build, `--stream-shape sit14` for the before (re-measured 2026-10-06
+   on the five-entry fixture and the six-entry wrap seed, which is what
+   the figures below describe):
 
    | | seed 11 | seed 12 | seed 13 |
    |---|---|---|---|
@@ -951,11 +967,11 @@ anything about the suite.**
 
    **And it is reached routinely rather than once.** Over 400
    `--stream-only --stream-shape sit14-wrap` cases the wrap branch runs
-   **202, 212 and 212 times** at seeds 11, 12 and 13, out of 2,962 /
-   3,007 / 3,034 flushes. Those are EXECUTIONS, not cases: a mutant
+   **210, 205 and 202 times** at seeds 11, 12 and 13, out of 3,598 /
+   3,588 / 3,485 flushes. Those are EXECUTIONS, not cases: a mutant
    whose trees still decode runs to the declared 278,896 B with
    arbitrary flush points, so one case can wrap more than once. The
-   unmutated seed wraps exactly once in 13 flushes, which is the scale
+   unmutated seed wraps exactly once in 15 flushes, which is the scale
    to read them against.
 
    **What the two shapes still cannot see.** The `goto out` after a
@@ -967,7 +983,7 @@ anything about the suite.**
    runs on no Macintosh and under no qemu-m68k — its peak heap is
    294,528 B, which one of the two 512 KB tiers refuses — so the wrap
    is a host-only, little-endian measurement. And a mutant is graded by
-   nothing: what is graded is the seeds, the 1,859 B one by `run_diff`
+   nothing: what is graded is the seeds, the 2,149 B one by `run_diff`
    against `unar` and the wrap one by `tools/run_sit14wrap.py`
    (*StuffIt method 14*).
 
@@ -1396,19 +1412,71 @@ Aladdin's own installer payloads, 6.6 MB and 12.4 MB, neither committable
 nor restorable by `harvest.py` (FORMATS.md, *StuffIt 5's method 14*). So
 `tools/synth_sit14.py` writes the shape instead — an ENCODER for the
 format, from the same reading of libxad's `SIT_14` — and
-`fixtures/synth-sit14.sit` (1,859 B) is graded against `unar` by
-`run_diff` like every other fixture, on four entries chosen one per
+`fixtures/synth-sit14.sit` (2,149 B) is graded against `unar` by
+`run_diff` like every other fixture, on five entries chosen one per
 shape: literals across two blocks, the shortest match the ladder can
 state at the overlapping distance 1, extra bits on both ladders plus the
-**longest match the format can code** (16,387 B), and a **nested tree**
-— the code lengths themselves Huffman-coded, which is what 524 of the
-7.0.3 payload's 1,132 tree reads do.
+**longest match the format can code** (16,387 B), a **nested tree** —
+the code lengths themselves Huffman-coded, which is what 524 of the
+7.0.3 payload's 1,132 tree reads do — and, since 2026-10-06, **a tree
+whose code lengths ASCEND over the alphabet** (*The sort that dropped
+what it could not hold*, below).
 
 **Three implementations agree on those bytes**: the Python encoder, this
 engine's decoder, and `unar`. That is what makes the fixture evidence
 rather than a round trip through our own reading — and the agreement
 caught the encoder's first version, which wrote a repeat count without
-the escape value in front of it.
+the escape value in front of it, and then a real defect in the engine
+three days after the decoder shipped.
+
+### The sort that dropped what it could not hold
+
+**The fifth entry failed on the engine the day it was written, and
+`unar` and the encoder agreed with each other about it.** The entry is
+112 bytes and its literal tree is a COMPLETE code whose lengths ascend:
+four codes at every length from 3 to 15, plus the four the Kraft sum
+leaves over at 15, over the 56 lowest symbols. `sit14_build` sorts the
+code lengths with a transcription of libxad's `SIT14_Update`, and the
+transcription deferred the SMALLER half of each partition onto a
+16-deep stack where the reference recurses into it and returns — so
+pending ranges accumulated, this tree asked for 20 of them, and the
+four that did not fit were **silently dropped**. The lengths come out
+sorted anyway; the ORDER does not, and the order is what decides which
+symbol gets which code. The entry decoded wrong from its 26th byte and
+its own CRC-16 is what said so.
+
+Fixed by deferring the LARGER half and looping on the smaller: the live
+range halves every time, so the pending ranges cannot pass log2 of the
+alphabet — **7 at the format's largest, 308, against 16 available**,
+measured over 4,000 random length vectors and every shaped one. The
+array is identical either way, the two halves being disjoint ranges
+(DECISIONS.md 2026-10-06, *the sort that dropped what it could not
+hold*). **-4 B of `ovl_stuffit`, and every stack frame unchanged** —
+`sit14_build` 172 B before and after, so the 360 B chain in FORMATS.md
+stands.
+
+**And a full stack is now an error rather than a dropped range**, which
+`ci.sh`'s variant 1d exercises: a build at `-DSIT14_SORTSTACK=4` must
+REFUSE all five entries as corrupt — measured, 5 of 5, exit 1 — where
+the default build passes them. That is the only lane that reaches the
+guard, because nothing an archive can contain does.
+
+**And the fuzzer's own hit rate on it, measured on the PRE-FIX engine
+with the committed seeds: 1 of 500 `--stream-only` cases at seed 12 and
+0 of 500 at seed 11.** One hit is a weak basis for a rate, and it is
+the only one there is. So what guards this is the fixture entry and not
+the fuzzer: `ci.sh`'s 150-case smoke drew **5** of these cases on its
+last run, which at that rate is a defect of this shape caught about
+once in 200 runs. It took 1,021 cases of a sanitizer run to appear at
+all, and it appeared as UB on a corrupt tree rather than as the wrong
+bytes on a valid one that it really is.
+
+**What none of this says** is whether the two real payloads were ever
+affected. They are byte-exact against `unar` on every fork (FORMATS.md,
+*The two subjects*), measured 2026-10-03 on the engine that had the
+defect, so their trees stayed inside 16 — but that is a fact about two
+files, not about the format, and the shape that does not stay inside it
+is one a valid archive can carry.
 
 **It can fail**, checked the way this repository checks: bending the
 match-length base by one byte in `src/sit14.c` fails this fixture and
@@ -1419,7 +1487,7 @@ fixture covers method 14** — if one did, the bend would have failed two.
 else, so ten truncated and bit-flipped variants of it run under
 ASan+UBSan on every `ci.sh` run. **What that cannot see:** most variants
 of THIS fixture never reach the decoder — the 80-byte StuffIt 5 banner is
-4 % of a 1,859-byte file, so a whole-file mutation usually lands in it
+4 % of a 2,149-byte file, so a whole-file mutation usually lands in it
 and the archive is refused as unrecognised, and a mutated length field
 is refused on the allocation budget.
 
@@ -1454,7 +1522,8 @@ generates the Now Compress shapes the corpus lacks — and graded THREE
 ways: the bytes that went into the encoder, `unar`'s output, and this
 CLI's. All five entries agree byte for byte, 278,896 B included.
 
-**It can fail, three ways, each checked.** `win - a` bent to
+**It can fail, three ways, each checked** (18 checks since the fifth
+fixture entry landed, 15 before). `win - a` bent to
 `win - a - 1` in `src/sit14.c` fails this suite on the `window-wrap`
 entry and nowhere else — first wrong byte at 262,143, the window end —
 and the committed fixture extracts identically under the same bent
@@ -1474,7 +1543,7 @@ is `tools/fuzz_cover.py --detail "StuffIt method 14"`, and
 correctness on ONE archive and nothing else: the mutants of it are
 `fuzz.py`'s `sit14-wrap` stream shape, and nothing in this lane runs on
 the Macintosh or big-endian — `tests/run_mac_sink.sh` carries the
-1,859 B fixture, not this archive.
+2,149 B fixture, not this archive.
 
 **Big-endian, and on the machine.** `tests/run_mac_sink.sh` carries the
 fixture since 2026-10-03, so the decoder also runs under qemu-m68k

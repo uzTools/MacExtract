@@ -2282,10 +2282,15 @@ two files on 7.0.3's and collapses the archives' repeated names — so the
 comparison is over what it does produce. The per-fork CRC-16 is the
 container's own and covers the rest.
 
-**And a fixture that needs neither**: `synth-sit14.sit`, 1,859 B, written
+**And a fixture that needs neither**: `synth-sit14.sit`, 2,149 B, written
 by `tools/synth_sit14.py` — an encoder for the format, from the same
-reading — and graded against `unar` on all four of its entries in every
-`ci.sh` run (TESTING.md).
+reading — and graded against `unar` on all **five** of its entries in
+every `ci.sh` run; it was four and 1,859 B until 2026-10-06, when the
+fifth found a defect in the engine — a 112-byte entry whose literal tree
+is a complete code with ascending lengths, which this engine decoded
+wrong from its 26th byte while the encoder and `unar` agreed with each
+other (TESTING.md, *The sort that dropped what it could not hold*; the
+fix is -4 B of `ovl_stuffit` and +0 of stack).
 
 **And a fifth entry that is not in it**, since 2026-10-06:
 `synth_sit14.py --wrap` adds a fork of **278,896 B for 458 B of
@@ -2324,7 +2329,7 @@ longest code is 17 bits against the 32 the assignment can represent.
 | peak heap, 7.0.3's payload | **276,088 B** — the 256 KB window, 4.7 KB of trees and ladders, and the I/O buffers |
 | peak heap, `synth-sit14.sit` | 65,152 B (its longest fork is 17,799 B, so the window is 32 KB) |
 | peak heap, `synth_sit14.py --wrap` | **294,528 B** (a 278,896 B fork, so the window is the whole 256 KB). Passes at a 409,600 B budget and at 306,376; refused per entry at 210,976, 83,552 B short |
-| `ovl_stuffit` image | 23,670 → **26,278 B**, read at launch and released for every archive that is not a StuffIt one |
+| `ovl_stuffit` image | 23,670 → **26,274 B** (26,278 until the sort fix of 2026-10-06, which is -4 B), read at launch and released for every archive that is not a StuffIt one |
 | resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
 | resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |
 | deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 3,386 B (*Stack*) |
@@ -4120,7 +4125,7 @@ engine later the same day, fourteen until AppleLink packages arrived on
 |---|---|---|---|---|---|
 | **eager — SHIPPED** | (default) | **54,336 B** | 19,056 B | **66,048 B** | **225,280 B** |
 | lazy | `UNC_OVL_LAZY=1` | 52,912 B | 19,136 B | 64,512 B | 223,872 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **164,324 B** | **37,916 B** | 196,608 B | 199,936 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **164,320 B** | **37,920 B** | 196,608 B | 199,936 B |
 
 **Re-measured 2026-10-06**, for the uu probe's per-document alphabet test
 and DeHQX's part separator (*uuencode: three alphabets*, *BinHex:
@@ -4249,7 +4254,7 @@ measured 2026-09-27. The shipped pair is **128,848 B** since 2026-10-06
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **155,920 B** — the fifteen images sum to 155,726 B, so its
+The bundle is **155,916 B** — the fifteen images sum to 155,722 B, so its
 index costs **194 B**: a 4-byte header, 12 bytes of directory per image
 and 10 bytes of padding to 4, which accounts for the whole difference (re-measured
 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw bundle the
@@ -4400,7 +4405,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 155,920 B held against 128,848 B saved. It costs nothing on the tiers
+it — 155,916 B held against 128,848 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which

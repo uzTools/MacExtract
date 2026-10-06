@@ -279,7 +279,7 @@ def now_seeds(tmp):
 # Generators 1 and 2 pick a seed out of the whole corpus, so what the
 # fuzzer reaches is weighted by FILE COUNT and not by what is worth
 # reaching. StuffIt 5's method 14 is the shape that makes this visible:
-# its only specimen here is `synth_sit14.py`'s 1,859 B among ~950
+# its only specimen here is `synth_sit14.py`'s 2,149 B among ~950
 # fixtures, so 1,500 cases entered not one of its eleven functions
 # (DECISIONS.md 2026-10-03) and 3,000 enter ten of them, by about 2.3
 # draws — a sample rather than a property of the format.
@@ -288,7 +288,7 @@ def now_seeds(tmp):
 # measured: 120 cases of this file mutated anywhere reach all eleven
 # functions and 95.5 % of the entry function's lines, confined to the
 # streams 98.5 % (TESTING.md, *Fuzzing*). So the banner argument — 80
-# bytes of 1,859, which refuses the file when a mutation lands in it —
+# bytes of 2,149, which refuses the file when a mutation lands in it —
 # is true per case and much weaker per hundred.
 #
 # The targeting is the same argument the crypt generator's `--ranges`
@@ -340,6 +340,23 @@ def stream_mutate(data, rng, ranges):
         else:              # flip
             buf[rng.randrange(lo, hi)] ^= 1 << rng.randrange(8)
     return bytes(buf)
+
+
+def keep_case(path, keep_dir, name):
+    """Move a failing case out of the scratch directory, ACROSS devices.
+
+    This was `os.replace`, which cannot: the cases live in `mkdtemp()`'s
+    `/tmp` and --keep-dir defaults to the repository, and those are
+    different filesystems on the machine this is written on. So the one
+    time this path had something to report it raised `OSError` from
+    inside the failure handler and the FUZZ FAIL line never printed —
+    the defect of 2026-10-06, found and then nearly lost (DECISIONS.md,
+    *the sort that dropped what it could not hold*). A failure path only
+    runs when there is a failure, which is why it had never been run.
+    """
+    dest = os.path.join(keep_dir, name)
+    shutil.move(path, dest)
+    return dest
 
 
 def stream_seeds(tmp, only=None):
@@ -650,17 +667,15 @@ def main():
                                    timeout=args.timeout)
             except subprocess.TimeoutExpired:
                 bad += 1
-                keep = os.path.join(args.keep_dir,
-                                    f"fuzz-hang-{args.seed}-{i}.bin")
-                os.replace(path, keep)
+                keep = keep_case(path, args.keep_dir,
+                                 f"fuzz-hang-{args.seed}-{i}.bin")
                 print(f"FUZZ HANG at iteration {i}, kept {keep}")
                 continue
             if r.returncode < 0 or r.returncode > 1 or \
                b"Sanitizer" in r.stderr or b"runtime error" in r.stderr:
                 bad += 1
-                keep = os.path.join(args.keep_dir,
-                                    f"fuzz-crash-{args.seed}-{i}.bin")
-                os.replace(path, keep)
+                keep = keep_case(path, args.keep_dir,
+                                 f"fuzz-crash-{args.seed}-{i}.bin")
                 print(f"FUZZ FAIL at iteration {i} "
                       f"(exit {r.returncode}), kept {keep}")
                 print(r.stderr.decode("utf-8", "replace")[:400])
