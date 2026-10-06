@@ -196,6 +196,7 @@ read.
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
 | `zipmeta.py` | **what Aladdin's software does with a MacZip archive's Finder metadata.** `--table` reads the `UnZip Translator`'s extension-to-type table without booting; `--expander` hands StuffIt Expander a four-entry cut of the real archive and reads the volume back |
 | `sitzip.py` | the same question put to the two LATER boxes — **StuffIt Deluxe 5.5 and 7.0.3 Classic, on Mac OS 9, with no installer driven**: the engine, the translators and the application are placed into a plain-HFS System Folder from Linux. `--carbonlib` installs the one thing that cannot be placed — see below |
+| `sitcomment.py` | **the archive that would grade `fmt_sit5.c`'s bit 5** — a StuffIt 5 archive that is encrypted AND commented. `--read` asks both later boxes what they offer for a comment, no emulator; `--probe` launches StuffIt Deluxe 5.5 on Mac OS 9; `--macos86` replays the Mac OS 8.6 boot that is not the route — see below |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
@@ -529,6 +530,70 @@ that reading is in FORMATS.md beside the result. One keyboard primitive
 it relies on that no other harness here uses: **Tab selects the first
 icon in a Finder window by name**, which is how the installer on a disk
 whose contents are unknown gets opened.
+
+## The comment that would grade bit 5 — `sitcomment.py`
+
+    tools/vmac/sitcomment.py --read              no emulator
+    tools/vmac/sitcomment.py --probe -o <dir>    boot, launch Deluxe 5.5
+    tools/vmac/sitcomment.py --macos86 -o <dir>  the boot that is not the route
+
+The specimen wanted is **one archive that is encrypted AND carries an
+archive comment**, because the only place `src/fmt_sit5.c` acts on
+archive-flag bit 5 is the password-hash offset inside the
+`SIT5_ARCH_CRYPTED` branch. Three DropStuff 5.0.1 archives already grade
+bits 7 and 4 (FORMATS.md, *StuffIt 5's RC4*); none is commented.
+
+**`--read` is the part that changed the row, and it boots nothing.**
+OPEN_ITEMS.md had said the only software that can set bit 5 is StuffIt
+Deluxe 5.0.1's comment UI. Both later boxes carry one, and both are
+already assembled into a Mac OS 9 System Folder by `sitzip.py`:
+
+| box | what it offers for a comment |
+|---|---|
+| Deluxe 5.5 | `MENU` 131 *Archive* ▸ `Edit Comment...`, **no Command key**; `STR# 30000` #13 *"Click here to display (and possibly edit) the comments attached to this archive"*, so the archive window has a comments AREA; `aete` declares `comment` and `password` as properties of the archive |
+| Deluxe 7.0.3 Classic | `MENU` 132 *Archive* ▸ `Edit Comment…`, **no Command key**; `aete` declares `comment` on both the archive and the item, `password` on the archive, and a `password` parameter on the `stuff` event itself |
+
+**So the menu is the one route already measured dead** — a keyless menu
+item is not selectable on either guest (*What the pointer cannot
+select*, above) — and the two that are left are the comments AREA, which
+is a click and clicks work, and an Apple event, which is what
+`tools/aetran/` exists for.
+
+**What `--probe` measured, 2026-10-06.** It assembles 5.5 with the
+**application** on the transfer volume instead of `sitzip.py`'s Expander,
+boots, type-selects `stu` and photographs the result — two questions
+`sitzip.py` has never asked, because the Expander is a different program.
+
+- **StuffIt Deluxe 5.5 launches on Mac OS 9.2.** Its splash is drawn and
+  the menu bar is its own — `File Edit View Label Archive Translate
+  Scripts iSupport Help` — so what 9.2 refuses is **5.0.1**, not Deluxe
+  (`probe55/12-launched.png`).
+- **It will not run on an ASSEMBLED installation.** Over the splash:
+  *"This copy of StuffIt Deluxe™ has not been properly installed.
+  Please run the installer again to reinstall StuffIt Deluxe™."* —
+  `STR# 269` *Alerts/Errors* #30.
+- **The alert is a wall, not a nag.** Its OK is the default button, so
+  Return reaches it with no pointer; dismissing it **quits the
+  application** — the menu bar is the Finder's again in
+  `probe55b/14-dismissed.png`, and a ⌘S after it does nothing
+  (`15-stuff.png`). A frame that looks like a dismissed alert and a frame
+  that looks like a quit application are the same frame minus the menu
+  bar, which is the only part of it worth reading.
+
+**So the obstacle moved from an operating system to this project's own
+assembly**, and neither route out needs anything off this machine: place
+whatever `STR# 269` #30 is checking for — the 5.5 payload also carries
+`Aladdin Compression™` (`APPC/ALCO`), `Compression Extension`
+(`FEXT/TFI`), `True Finder Integration™` (`cdev/TFI`), `Magic Menu™`
+(`TFIx/TFI`) and `Text Encoding Converter` (`shlb/encv`), none of which
+`sitzip.DIST["55"]["place"]` places — or drive Aladdin's own installer
+with one of the published 5.x codes already in `spacesaver.CODES`.
+`sitzip.py`'s Expander runs happily on the same volume, so the engine and
+the seventeen translators are not what it is missing.
+
+**What this cannot see.** Which of those pieces the check wants: the
+alert names none of them, and nothing here has disassembled the check.
+Placing all five and re-running answers *whether* but not *which*.
 
 ## Making Now Compress archives with Now Compress — `nowcompress.py`
 
@@ -1688,39 +1753,72 @@ visual), ImageMagick (`import`, `convert`), `xdotool`, `hfsutils`
 (`hformat`/`hmount`/`hcopy`, shipped with Retro68), and a Retro68 toolchain
 in `$RETRO68` or `/opt/Retro68-build/toolchain`.
 
-## Mac OS 8.6 media — fetched 2026-10-06, booted by nothing yet
+## Mac OS 8.6 under QEMU — booted 2026-10-06, and it does not reach Mac OS
 
 **The retail Mac OS 8.6 install CD is on this disk**, and the claim it
-replaces is BLOCKERS.md's *"this machine has no Mac OS install media"*,
-which had stood since 2026-09-27 as the blocker on StuffIt 5's
-encrypted flag bit 5 (OPEN_ITEMS.md). It came off the same host
-`os9.py --setup` already uses, in one 304 MB download:
+replaced is BLOCKERS.md's *"this machine has no Mac OS install media"*,
+which had stood since 2026-09-27 as the blocker on StuffIt 5's encrypted
+flag bit 5 (OPEN_ITEMS.md). It came off the same host `os9.py --setup`
+already uses, in one 304 MB download:
 
     mkdir -p ~/.cache/macextract/macos86 && cd ~/.cache/macextract/macos86
     curl -L -o MacOS8.6.7z \
       "https://archive.org/download/mac-os-8.6-working-iso/MacOS%208.6.7z"
     # sha256 02699210106c8f1251be6648c0827bf4d9696628bee3dfc5d23499ecabb78215
     7z x MacOS8.6.7z            # -> MacOS8.6.iso, 665,600,000 B
-    # sha256 d1be7882f1c37539344a5a42...  (hfsutils opens it)
     hmount MacOS8.6.iso && hdir
 
-**What is measured about it, and what is not.** `file` calls it
-*Macintosh HFS data (bootable)*, the boot blocks open `LK` and name
-`System`, the volume is `Mac OS 8.6` created 1999-04-16, and `hdir`
-lists `System Folder`, `Install Mac OS 8.6`, `Update to Mac OS 8.6`,
-`Utilities` and `CD Extras` — so it is retail install media and not a
-dud. **Nothing has booted it**: whether `qemu-system-ppc -M mac99`
-starts 8.6 at all, whether StuffIt Deluxe 5.0.1 runs on it, and whether
-5.0.1's comment UI sets bit 5 are three separate unmeasured questions,
-in that order. The image is not committed, like every ROM and System
-image here.
+`file` calls it *Macintosh HFS data (bootable)*, the boot blocks open
+`LK` and name `System`, the volume is `Mac OS 8.6` created 1999-04-16,
+and `hdir` lists `System Folder`, `Install Mac OS 8.6`, `Utilities` and
+`CD Extras` — retail install media and not a dud. The image is not
+committed, like every ROM and System image here.
 
-Two more items are on the same host if this one will not boot — a
-1.65 GB **pre-installed 8.6 hard-disk image** (`mac-os-8.6-hd.tar.gz`)
-and the **8.5 retail CD** as a 663 MB `.dmg`
-(`mac-os-8.5-install-cd-691-2017-a`) — so "the media" is not a single
-point of failure any more. 33 Mac OS 8 items and 23 for 8.5/8.6 answer
-`archive.org`'s own search API.
+**It does not boot, and the reason is the firmware.** Four refusals, in
+the order a boot meets them; the first three are preparation and the
+fourth is the wall (DECISIONS.md 2026-10-06, *the platform the ROM would
+not admit to*):
+
+| gate | what it is | measured |
+|---|---|---|
+| no blessed folder | the volume's `drFndrInfo[0]` is **0**, so OpenBIOS's `\\:tbxi` finds nothing. The System Folder's catalog record gives dir ID **989**; writing that at MDB+0x6C blesses it | prepared |
+| no partition map | the file is a bare HFS volume at offset 0. `media=cdrom` and `media=disk` both fail; wrapping it with `mkapmdisk.clone_head` — the donor head from `MacOS9.img`, the Apple_HFS entry repointed — makes OpenBIOS load the ROM | prepared |
+| the ROM's own Forth | **`System Folder:Mac OS ROM`'s `<BOOT-SCRIPT>` refuses the machine itself.** It accepts `/` model `iMac,1`, or compatible containing `powermac1,1` or `powerbook1,1`, and aborts *"this image is not for this platform"* otherwise. QEMU's `mac99` is `PowerMac3,1` and `g3beige` is neither; the one-byte edit `powermac1,1` → `powermac3,1` clears it | prepared |
+| **`MacOS: "/rtas" not found!`** | past those three the ROM's ELF runs and **Mac OS itself stops**: `MacOS: Boot Failure! (0xF3C481F6)`. OpenBIOS implements no `/rtas` node and 8.6's ROM requires one | **the wall** |
+
+**What tells the two ROMs apart is one line of each file's own prologue**,
+and it is why 9.2 boots here and 8.6 cannot: Mac OS 9's `Mac OS ROM`
+(2001-09-25, data fork 2,811,320 B) declares
+`<COMPATIBLE>MacRISC</COMPATIBLE>` and its boot script tests for
+`macrisc` — a family every New World QEMU machine advertises — and it
+asks for no `/rtas`. 8.6's (1999-04-05, 1,945,332 B) names three
+specific 1998–99 machines and wants RTAS. Read either without
+booting:
+
+    hmount MacOS8.6.iso && hcd "System Folder" && hcopy -r ":Mac OS ROM" rom.bin
+    head -c 120 rom.bin                       # the <COMPATIBLE> list
+    # the <BOOT-SCRIPT> section is plain Forth; find it with
+    # `grep -aob "<BOOT-SCRIPT" rom.bin`
+
+**`sitcomment.py --prepare86` builds the three images and `--macos86`
+boots the last of them**, so the wall is two commands and `--machine`
+picks the machine. They live beside the ISO and are not committed:
+`MacOS8.6-blessed.iso` (refusal 1), `MacOS8.6-apm.img` (1–2),
+`MacOS8.6-apm-pm31.img` (1–3) — 2 GB in total, and `--prepare86`
+re-uses whichever already exist.
+
+**What would move it**, and neither is a search: an Open Firmware that
+provides `/rtas` — real hardware, or an OpenBIOS that implements it —
+or a `Mac OS ROM` that boots an 8.6 System without one. **The thing not
+to do is fetch more 8.x media**: two more items are on the same host, a
+1.65 GB pre-installed 8.6 hard-disk image (`mac-os-8.6-hd.tar.gz`) and
+the 8.5 retail CD (`mac-os-8.5-install-cd-691-2017-a`), and nothing
+measured here says a different 8.x image carries a different ROM
+requirement. The pre-installed image is the one with a real chance,
+because whoever built it had to get past this.
+
+**And it is no longer the route to bit 5 either** — that row never
+needed Mac OS 8.6, see `sitcomment.py` below.
 
 ## Mac OS 9
 

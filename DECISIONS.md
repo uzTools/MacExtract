@@ -352,6 +352,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
 - 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
 - 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
+- 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
+- 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
 
 ---
 
@@ -22711,3 +22713,159 @@ against the heredoc and reads neither binary. **The rule is to rebuild `dist/` i
 to `mac/` or `src/`** (CLAUDE.md, Rules); a docs-only change to the
 heredoc is not one, and the binaries staying put is evidence that it was
 not, rather than evidence that `dist/` went stale.
+
+
+## 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
+
+**Claim.** `qemu-system-ppc` does not boot Mac OS 8.6, and the reason is
+that OpenBIOS provides no `/rtas` node. Evidence: with the volume blessed
+and Apple-partitioned and the ROM's platform test satisfied, the ROM's
+ELF runs and prints `MacOS: Boot Failure! (0xF3C481F6)` /
+`MacOS: "/rtas" not found!`. Consequence: the third of the three
+unmeasured steps OPEN_ITEMS.md listed for `fmt_sit5.c`'s bit 5 is never
+reached, and the first is answered no — but the row does not need it
+(*the comment UI that was two boxes later*, below).
+
+### Four gates, and only the last one is about Mac OS
+
+Each was found by looking at the frame rather than at the exit status, and
+three of the four were preparation this repository already had the tools
+for:
+
+| gate | what the screen said | what it was |
+|---|---|---|
+| 1 | `Trying cd:,\\:tbxi...` then `No valid state has been set` | the volume's `drFndrInfo[0]` is **0** — no blessed folder. Its System Folder's catalog record gives dir ID 989 |
+| 2 | the same, as `hd:` | a bare HFS volume with no Apple Partition Map. `mkapmdisk.clone_head` wraps it, and the ROM then LOADS |
+| 3 | `this image is not for this platform` | **the ROM's own Forth**, not OpenBIOS |
+| 4 | `MacOS: "/rtas" not found!` | Mac OS, on firmware that has no RTAS |
+
+**Gate 3 is the one worth transferring.** The message reads like a
+firmware rejection and is not: `System Folder:Mac OS ROM`'s `<BOOT-SCRIPT>`
+is plain Forth in the file's own data fork, and it ends
+
+    ... " powermac1,1" $= r> or >r  " powerbook1,1" $= r> or >r ...
+    0= abort" this image is not for this platform"
+
+so the ROM tests `/` **model** for `iMac,1` and `/` **compatible** for
+`powermac1,1` or `powerbook1,1` — the three New World machines Apple
+shipped in 1998–99 — and QEMU's `mac99` is `PowerMac3,1` (September
+1999) while `g3beige` is neither. Editing the XML `<COMPATIBLE>` tag at
+the head of the same file changed nothing, which is the measurement that
+located the test: **the tag is OpenBIOS's gate and the Forth is the
+ROM's, and only the second one was firing.** One byte — `powermac1,1`
+→ `powermac3,1` — clears it, and 8.6's boot script runs no checksum over
+what it loads where Mac OS 9's runs an adler32 and aborts on a mismatch.
+
+**And the two ROMs differ in exactly the two ways that matter.** Mac OS
+9's (2001-09-25) declares `<COMPATIBLE>MacRISC</COMPATIBLE>`, tests for
+`macrisc`, and asks for no RTAS; 8.6's (1999-04-05) names three machines
+and wants it. That is the whole of why 9.2 has booted here since August
+and 8.6 cannot, and it is readable with `hcopy -r` in ten seconds —
+**on either file, at any point in the last two months.**
+
+### The lesson is about what a "three unmeasured steps" list is for
+
+The row listed three steps in order and said each could end the task.
+That was right, and the thing it did not say is that **step 1 had a
+cause worth measuring whether it passed or failed.** A boot that fails is
+a sequence of refusals, each from a different program, and reading which
+program refused is what separated "8.6 does not boot" — a fact about one
+download, which invites fetching another — from "this firmware has no
+RTAS", which says that three more 8.x images would fail identically and
+that the pre-installed one is the only one with a chance, because
+whoever built it had to get past this.
+
+**Cost: eight boots, about ninety minutes** — four of them spent on
+gates 1 and 2, where the frames were identical and only the device name
+changed, which is the part a `--prepare86` now does in one command so
+nobody pays it twice. The preparation itself was fifteen minutes with
+`mkapmdisk.clone_head`, written for a different problem in August.
+Nothing was spent on the 1.65 GB pre-installed image or the 8.5 CD, and
+that is the saving: without gate 4 the obvious next move was another
+download.
+
+
+## 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
+
+**Claim.** *"The only software that can set bit 5 is StuffIt Deluxe
+5.0.1's comment UI"* is withdrawn. Evidence: StuffIt Deluxe **5.5** and
+**7.0.3 Classic** both carry `Edit Comment…` in their Archive menu and
+both declare `comment` as a scriptable property of the archive — read out
+of their own resource forks, no emulator (`sitcomment.py --read`).
+Consequence: the row never needed Mac OS 8.6, or any system this machine
+does not run; both boxes are already assembled into a Mac OS 9 System
+Folder by `sitzip.py`.
+
+### What the row asserted, and where the answer was
+
+The route column read: the only comment UI is 5.0.1, Mac OS 9.2 refuses
+to run it, the file-system theory is disproved in all four combinations
+(2026-09-27), so the row wants a Mac OS 8.6 boot. Every clause after the
+first is sound. The first is a claim about which PROGRAMS have a feature,
+and the programs it is about were extracted, indexed and `hcopy`-ed onto
+a boot volume on 2026-10-04 for an unrelated question about zip metadata.
+`StuffIt Deluxe™.rsrc` is 1.2 MB in the cache; `MENU` 131 is `Archive`
+and its last item is `Edit Comment...`.
+
+**This repository's own list of mechanisms names this shape twice**, and
+both times on this same row's neighbours: *a route column that asserts an
+absence in the same sentence as the artefact it wants*, and *a claim that
+no specimen exists is a claim about the last search*. The search behind
+"the only comment UI is 5.0.1" was a search for software that can
+COMMENT, run when 5.0.1 was the only Deluxe in reach. Two more arrived
+afterwards for other reasons and nobody re-asked.
+
+### What the later boxes actually offer, and which of it is reachable
+
+| | 5.5 | 7.0.3 |
+|---|---|---|
+| `Edit Comment…` | `MENU` 131, **no Command key** | `MENU` 132, **no Command key** |
+| a comments AREA in the archive window | `STR# 30000` #13, *"Click here to display (and possibly edit) the comments attached to this archive"* | — |
+| `aete` | `comment`, `password` on the archive | `comment` on archive and item, `password` on the archive and on the `stuff` event |
+
+**The menu is the route already measured dead.** A keyless menu item is
+not selectable on either guest — recorded 2026-09-27 on a top-level menu
+under QEMU as well as on Mini vMac's submenus — so `Edit Comment…` is
+out on both boxes, and reading the `MENU` resource is what says so
+without spending a boot discovering it. What is left is the comments
+AREA, which is a click and clicks work, and an Apple event, which is
+`tools/aetran/`'s whole reason for existing: that tool was written
+because a SUBMENU was unreachable, and this is the same obstacle one
+version later.
+
+### The first of those questions was then measured, and it moved the obstacle again
+
+`sitcomment.py --probe`, two boots: **StuffIt Deluxe 5.5 launches on Mac
+OS 9.2.** Its splash is drawn and the menu bar is its own, `Archive`
+included — so what 9.2 refuses is 5.0.1 and not Deluxe. What stops it is
+`STR# 269` #30, *"This copy of StuffIt Deluxe™ has not been properly
+installed"*, and the second boot establishes that this is a **wall and not
+a nag**: the alert's OK is the default button, Return reaches it without a
+pointer, and dismissing it quits the application — the menu bar is the
+Finder's again in the next frame and a ⌘S after it does nothing.
+
+**So the obstacle is now this project's own assembly, and it is local.**
+`sitzip.py` places the engine, its PowerPlug and seventeen translators,
+which is enough for that box's EXPANDER and not for its application; the
+same payload also carries `Aladdin Compression™`, `Compression
+Extension`, `True Finder Integration™`, `Magic Menu™` and a `Text
+Encoding Converter`, and `STR# 269` #34 says the application refuses
+without the last of those by name. Either place what the check wants, or
+drive Aladdin's installer with one of the published 5.x codes already
+sitting in `spacesaver.CODES`. **Neither needs anything off this
+machine** — which is the whole distance this row moved today, from an
+operating system nobody here can boot to a list of files already in the
+cache.
+
+**What is still unmeasured, in order:** which piece `STR# 269` #30 wants;
+whether Stuff will encrypt without a dialog Return cannot reach; and
+whether a comment set through the archive window's comments area lands in
+the ARCHIVE header rather than per entry. Only the last is a question
+about the FORMAT, and the engine's reading of bit 5 stays labelled a
+**hypothesis** until an archive sets it: a comment UI existing is not an
+archive, and neither is an application that launches.
+
+**Cost: nine days of a row filed as blocked on an operating system**,
+and before that a withdrawn file-system theory that cost ninety minutes —
+all of it downstream of one sentence about which programs have a feature,
+written when it was true and never re-read.
