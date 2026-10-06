@@ -1913,8 +1913,20 @@ entries — which is what says the case is not decoration. The control is
 the half that keeps the new rule narrow: a bare `---` with no
 `--- end of part` in front of it is still data and must still fail the
 CRC, so the rule cannot drift into "a line of hyphens is never data".
+**And the resume line's SHAPE, since 2026-10-07, which that case could
+not fail on**: its own resume line is exactly `---`, so it is the one
+shape a too-narrow reading spares. `--- part 2 ---` and `-----` are
+cases of their own now, and both fail against the build of the day
+before — DeHQX's prose says "a line consisting only of '---'" and that
+was transcribed as a length test, which lost everything after a cut
+whose marker carried anything else. The first of those two had read
+correctly BEFORE the separator rule existed, because it holds spaces
+and the garbage rule skips it, so the fix made its own regression
+(DECISIONS.md 2026-10-07, *the line that had to be the whole line*).
 `tools/derive_dehqx.py` is where the sentence itself is checked, and it
-consults `hexbin` on the same posting. **What neither can see is a wild
+consults `hexbin` on the same posting; `tools/derive_hqxgarbage.py` is
+where the second implementation is read, and it grades all three resume
+shapes. **What neither can see is a wild
 posting cut that way**: none of the 204 `.hqx` fixtures carries the
 separator (measured — they are Info-Mac downloads, which are single
 postings), so both build the boundary the documentation describes. The

@@ -354,6 +354,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
 - 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
 - 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
+- 2026-10-07 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
 
 ---
 
@@ -22869,3 +22870,128 @@ archive, and neither is an application that launches.
 and before that a withdrawn file-system theory that cost ninety minutes —
 all of it downstream of one sentence about which programs have a feature,
 written when it was true and never re-read.
+
+
+## 2026-10-07 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
+
+**Claim.** `src/fmt_binhex.c`'s skip of a line with intermediate garbage
+stays macutils'. Evidence: of the three readers OPEN_ITEMS.md named and
+nobody had asked, one has no BinHex decoder at all, one skips a
+CHARACTER and never a line, and one writes a zero-byte file when a data
+line holds one bad character. Consequence: the row stays, with all three
+now named and the method recorded — and the reading paid for itself
+anyway, which is the fifth time in a row.
+
+### What each one answered, and how it was asked
+
+**UUParser 1.72 cannot be asked, and that is measured rather than
+inferred.** Its README offers BinHex parsing as a registered-user
+feature, so the live question was whether the code is in the shareware
+binary and gated. It is not: the binary carries no window of the BinHex
+alphabet that spans one of the alphabet's own gaps, and its help text
+says *"Parse BinHex File ... This function is enabled when your copy of
+UUParser is registered"* beside *"(Version 1.8) Added binhex file
+parsing"*. The feature is a different build, not a flag.
+
+**Run length was the wrong instrument and it cost a pass to find out.**
+The first version of that check looked for the longest run of the
+alphabet and allowed eight characters as coincidence. UUParser carries
+fifteen — `@ABCDEFGHIJKLMN` — because the longest window of the BinHex
+alphabet that is ALSO a plain ascending ASCII span is fifteen
+characters, and the uu table every uu program carries contains it. What
+distinguishes this alphabet is not length but its GAPS: it omits n, o,
+s, t, u, the space and twenty more. **A test for a property that two
+things share is a test of nothing**, and the fix is to test the
+property only one of them has.
+
+**HQXer 1.1 skips a character, not a line**, and its author named his
+own resources so the reading needs no disassembly to start: `8->6` 128
+*"8 to 6 bit table"* is the alphabet and `6->8` 128 *"6 to 8 bit
+table"* is the 256-byte inverse. **That inverse is three-way**: the 64
+values, `0xFE` at exactly five characters — BS, TAB, LF, CR, SPACE —
+and `0xFF` at the other 187. `CODE` 2 branches on the sign bit at
++0x10ec, fetches the next CHARACTER for `0xFE` at +0x1116, and for
+`0xFF` sets error 11 and raises `STR# 129` strings 2, 10 and 9: *"An
+error has occured: / This file / is corrupt."* `GetByte` is a plain
+buffered reader; there is no line-level test anywhere in its path.
+
+**StuffIt Expander 4.0.2 had to be RUN**, because it carries the
+alphabet twice and no inverse table, so nothing static says what it does
+with a bad byte. Three subjects, and the third is the experiment:
+a control; the same file with one line of mail inserted; and the same
+file with **one bad character inserted inside a data line**. A
+line-skipper and a character-skipper both sail through the second —
+which is why the second alone would have been read as a yes. On the
+third, Expander wrote `MacROT13.cpt` at **zero bytes** and never
+produced the `MacROT13` it expands from it, where the control produced
+both.
+
+### The reading found a regression this project had committed the day before
+
+`fmt_binhex.c` gained the DeHQX separator on 2026-10-06, from Peter
+Lewis's prose: *"it ignores the file until it encounters a line
+consisting only of '---'"*. That was transcribed as `n == 3`. HQXer's
+gap loop does something else — it reads three characters, compares each
+with `-`, and on three hits discards the REST of the line and resumes
+— and the difference is not academic:
+
+The middle column is measured and not reasoned: it comes from a build
+with the `--- end of part` test compiled out, which is what "before the
+gap existed" means and is two minutes with `make BUILD=build/pregap`.
+
+| a posting whose resume line reads | before the gap existed | 2026-10-06 | now |
+|---|---|---|---|
+| `---` | CRC error — the line is data | read | read |
+| `--- part 2 ---` | **read** — it holds spaces, so the garbage rule skips it | **everything after the cut lost** | read |
+| `-----` | CRC error — every character is in the alphabet | **everything after the cut lost** | read |
+
+**So the fix made its own regression, in the one case that had been
+working.** `--- part 2 ---` needs no separator rule at all: the garbage
+rule had always skipped it. Narrowing the resume marker to an exact
+three bytes took a file that read and made it lose everything after the
+cut — and the entry fails rather than lying, so the cost is a refusal
+and not a corruption.
+
+**Nothing could see it.** `run_multihqx.py`'s separator case resumes at
+exactly `---`, so the suite's own subject is the one shape the defect
+spares; and its other multipart case uses `--- part 2 of the digest ---`
+as a separator between DOCUMENTS, which never opens a gap because it
+does not begin `--- end of part`. Two cases that look like coverage of
+this rule, and the property neither aggregates is the resume line's
+SHAPE. Both new shapes are in the suite now and both fail on the
+previous build, checked by putting it back.
+
+### Three things worth keeping
+
+**A prose rule and an implementation's rule are different artefacts, and
+the prose is the one that reads like a specification.** "A line
+consisting only of '---'" is a sentence about the common case written by
+an author describing his own program; the program next door reads three
+characters. Where this project has both — and here it has DeHQX's
+documentation and HQXer's code for the same rule — **the narrower
+reading belongs to whichever of them is being quoted, and the
+implementation is the one that has met files.**
+
+**Asking a reader a question it answers the same way for two different
+reasons is not asking it.** Expander's answer to the inserted LINE was
+yes, and a yes there is consistent with the rule and with its opposite.
+It took a third subject — one bad character INSIDE a line — to separate
+them, and that subject is the only one of the three that was worth an
+emulator.
+
+**And the citation did not move, which was the likely outcome and is
+still worth the day.** Five of this row's six rules left because the
+search stopped asking the decoders in `reference/` and asked a writer,
+an author's own program or a manual. The sixth was asked the same way
+and the answer was no three times — but the asking produced a second
+implementation of a DIFFERENT rule, the one committed the day before,
+and it disagreed with the prose in a way that lost every posting whose
+resume marker was not exactly three hyphens. **A negative result on the
+question you asked is not a negative result.**
+
+One honesty note, carried over from the entry this extends: the subject
+is BUILT. None of the 204 `.hqx` fixtures is cut at a part boundary at
+all — they are Info-Mac downloads, which are single postings — so what
+is measured is the boundary two implementations DESCRIBE, and how often
+a posting in the wild is shaped this way is not something this corpus
+can say.

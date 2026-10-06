@@ -99,6 +99,15 @@ had never read a file written with it. It does now. So does the other
 spelling, the one Unix's own uuencode uses for a zero. If a .uu file
 was ever refused here as "not recognized", it is worth another try.
 
+And one more since v0.37.0, and in this download: a .hqx that was
+posted in two halves now opens. Long files were often sent as "part 1
+of 2" and "part 2 of 2", with a line of dashes where they were cut;
+this program used to read the dashes as part of the file and then say
+the file's own checksum was wrong. It now skips over the join. Only
+the dashes were ever the trouble -- a cut marked with ordinary words
+has always been read -- so if a .hqx in two parts was refused for a
+bad checksum, it is worth another try.
+
 One fix since v0.37.0, and in this download: a StuffIt 5 archive made
 with compression method 14 -- the format v0.37.0 added, just below --
 could be refused with a message saying the file's own checksum was

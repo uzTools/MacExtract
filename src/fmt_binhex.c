@@ -156,7 +156,16 @@ static int bh_refill_line(BhDec *d)
         }
 
         /* Mailers eat trailing whitespace; hexbin trims it before
-         * judging the line, so a trimmed line is not "garbage". */
+         * judging the line, so a trimmed line is not "garbage".
+         *
+         * THE TAB IS OURS. `hqx.c` tests `line[n - 1] == ' '` and
+         * nothing else, and a tab is FAIL in its lookup, so a line
+         * ending in one is skipped there and read here. Corrected
+         * 2026-10-07: the sentence above attributed both characters to
+         * a source that states one. What the second one does have is a
+         * second implementation — HQXer 1.1's inverse table marks TAB
+         * skippable ANYWHERE in a line, with BS, LF, CR and the space
+         * (tools/derive_hqxgarbage.py --tables). */
         while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
         if (n == 0) continue;                       /* blank line */
 
@@ -173,9 +182,28 @@ static int bh_refill_line(BhDec *d)
          * dehqxing." tools/derive_dehqx.py checks that sentence and
          * grades a posting cut this way, which this reader failed until
          * 2026-10-06 and macutils' hexbin reads (by the length rule
-         * below, which is still not transcribed). */
+         * below, which is still not transcribed).
+         *
+         * THE RESUME LINE IS A PREFIX, not the whole line, and that is
+         * a second implementation's reading rather than the prose's.
+         * Source: HQXer 1.1 (John Stiles, 1994), `CODE` 2 +0x1baa — its
+         * gap loop reads three characters, compares each with '-', and
+         * on three hits discards the REST of the line and resumes with
+         * the next character. Taking "consisting only of '---'"
+         * literally cost a regression this suite could not see: between
+         * 2026-10-06 and 2026-10-07 a posting whose resume line read
+         * `--- part 2 ---` or `-----` lost everything after the cut —
+         * and the FIRST of those had read correctly before the gap
+         * existed at all, because it holds spaces and the garbage rule
+         * below skips it, so the gap cost a file it had been given
+         * (measured on a build with this test compiled out;
+         * DECISIONS.md 2026-10-07; graded by tools/run_multihqx.py's
+         * three cuts). HQXer is more permissive
+         * still — it scans for three consecutive '-' anywhere, not at a
+         * line start — and the line anchor is kept because nothing here
+         * needs the rest. */
         if (d->in_gap) {
-            if (n == 3 && q[0] == '-' && q[1] == '-' && q[2] == '-')
+            if (n >= 3 && q[0] == '-' && q[1] == '-' && q[2] == '-')
                 d->in_gap = 0;
             continue;
         }

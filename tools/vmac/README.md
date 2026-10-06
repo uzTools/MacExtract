@@ -3778,3 +3778,44 @@ and write it to `$UNC_VMAC_HOME/pkgeng/alink307.bin`, which is where
   the address of their body, not of their name. `spacesaver.macsbug_symbols()`
   returns the name offsets; mapping them to bodies is one loop and getting
   it backwards shifts every citation by one routine.
+
+## Asking StuffIt Expander 4.0.2 about one rule — three runs
+
+`src/fmt_binhex.c`'s last macutils citation is the skip of a LINE with
+intermediate garbage, and Expander 4.0.2 was one of three readers
+OPEN_ITEMS.md named and nobody had asked. It cannot be asked statically
+— it carries the alphabet twice (`DATA` 0, `Eng ` 0) and no inverse
+table, so its reading is built at run time — so it was asked by running
+it, with `expander.py --only expander` over three files built from
+`fixtures/mac-rot13.hqx` (which is John Stiles's own posting of
+MacROT13, and he wrote HQXer):
+
+| subject | what it is | Expander wrote |
+|---|---|---|
+| `control.hqx` | the fixture | `MacROT13.cpt`, **and** `MacROT13` — it expanded the Compact Pro archive too |
+| `garbage.hqx` | one line of mail inserted mid-data | the same two: the `.cpt` is **3,309 B and md5-identical to this engine's**, and `MacROT13` is the 5,594 B application |
+| `midline.hqx` | **one bad character inserted INSIDE a data line** | `MacROT13.cpt` at **0 bytes**, and no `MacROT13` |
+
+**The third file is the whole experiment and the first two are its
+controls.** A reader that skips a bad LINE and one that skips a bad
+CHARACTER both sail through `garbage.hqx`; only a line test loses the
+other 64 characters of a line that holds one bad one. Expander wrote
+nothing at all for it — so it is not macutils' rule, and `fmt_binhex.c`
+keeps the citation (`tools/derive_hqxgarbage.py` has the other two
+readers, which need no emulator).
+
+**Reading the bytes needs `--keep`,** because this harness grades a run
+on the NAMES it produced and says so in its own docstring — *"Whether
+Expander's output is correct"* is in its *What it cannot see*. A name
+is exactly what cannot tell a zero-byte file from a good one, and this
+question is decided by the size:
+
+    tools/vmac/expander.py --only expander --keep <dir> -o <shots> x.hqx
+    hmount <dir>/boot.hfv && hdir -a && hcopy -r ":MacROT13.cpt" out.cpt
+
+**What this cannot see.** Why Expander stopped. The run puts up no
+alert — `expander-3-finished.png` is the bare desktop — and a file that
+was created from the BinHex header and then left empty is consistent
+with "aborted at the bad character" and with "decoded to a buffer and
+refused to commit it". Both are a line test's opposite, which is all
+the question needed; neither is evidence of the other.

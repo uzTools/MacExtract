@@ -220,6 +220,37 @@ def check_posted(macextract, tmp):
         problems.append(f"sep: {len(got)} document(s) with different forks, "
                         f"expected the {len(want)} the single file gives")
 
+    # THE RESUME LINE IS A PREFIX, and these two are the cases the one
+    # above could not see. DeHQX's prose says "a line consisting only of
+    # '---'", which this reader took literally between 2026-10-06 and
+    # 2026-10-07: a posting whose resume line carried anything else —
+    # `--- part 2 ---`, or simply more hyphens — never left the gap and
+    # lost EVERYTHING after the cut. The FIRST of the two had read
+    # correctly before the gap existed — it holds spaces, so the garbage
+    # rule skips it — so the separator fix made its own regression, and
+    # the `sep` case above cannot fail on it because its resume line is
+    # the exact one. HQXer 1.1 is the second implementation and reads
+    # three characters (tools/derive_hqxgarbage.py; DECISIONS.md
+    # 2026-10-07, *the line that had to be the whole line*).
+    for tag, resume in (("decorated", b"--- part 2 ---"),
+                        ("longer", b"-----")):
+        more = os.path.join(tmp, "sep-%s.hqx" % tag)
+        with open(more, "wb") as f:
+            f.write(b"\n".join(lines[:half]) + b"\n")
+            f.write(b"--- end of part 1 of 2 ---\n\n")
+            f.write(b"From: someone\nSubject: " + PARTS[0].encode() +
+                    b" (2/2)\n\n")
+            f.write(resume + b"\n")
+            f.write(b"\n".join(lines[half:]))
+        rc, got = extract(macextract, more)
+        if rc != 0:
+            problems.append("sep-%s: a posting resuming at %r exits %d"
+                            % (tag, resume.decode(), rc))
+        if got != want:
+            problems.append("sep-%s: %d document(s) with different forks, "
+                            "expected the %d the single file gives"
+                            % (tag, len(got), len(want)))
+
     # And the control, which is what says the rule above is the narrow
     # one DeHQX documents rather than "a line of hyphens is not data":
     # "---" with no "--- end of part" before it is still data, and the

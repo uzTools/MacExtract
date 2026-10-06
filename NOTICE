@@ -675,6 +675,20 @@ the file that uses one names the section a fact is in.
     `tools/derive_dehqx.py` reads it out of there with this project's
     own CLI and checks all four sentences it relies on.
 
+  * HQXer 1.1 (John Stiles, 1994, shareware) — for the one thing
+    `src/fmt_binhex.c` takes from a second implementation rather than
+    from the prose beside it: **the resume line of a cut posting is a
+    PREFIX.** DeHQX's documentation says "a line consisting only of
+    '---'"; HQXer's gap loop reads three characters, compares each with
+    '-', and on three hits discards the rest of the line and resumes
+    (`CODE` 2 +0x1baa). Taking the prose literally lost everything after
+    a cut whose resume line read `--- part 2 ---`. Like DeHQX it is not
+    published as source: it is the corpus fixture `hqxer-11.hqx`, and
+    `tools/derive_hqxgarbage.py` reads the branch out of it at the
+    offsets it claims, with this project's own CLI. The same tool
+    records what HQXer does NOT state — it skips a bad CHARACTER and
+    never a line, so macutils keeps the rule below.
+
   * The MacBinary II Standard (revised 7/24/87) and the MacBinary III
     Standard Proposal (December 1996) — for `src/fmt_macbinary.c`: the
     128-byte header, the fork padding, the CRC over bytes 0..123, the
