@@ -54,6 +54,16 @@ had never read a file written with it. It does now. So does the other
 spelling, the one Unix's own uuencode uses for a zero. If a .uu file
 was ever refused here as "not recognized", it is worth another try.
 
+One fix since v0.37.0, and in this download: a StuffIt 5 archive made
+with compression method 14 -- the format v0.37.0 added, just below --
+could be refused with a message saying the file's own checksum was
+wrong, when there was nothing wrong with the file. Whether it happened
+depended on how the archive was laid out inside rather than on anything
+you did, so one .sit would open and the next would not; the Aladdin
+installers v0.37.0 was tested on were among the ones that worked. If a
+method 14 archive was ever refused here as having a bad checksum, it
+opens now.
+
 v0.37.0 opens the last StuffIt archives this program could not: the
 ones made with compression method 14, which StuffIt 5 used and nothing
 else ever wrote. Aladdin's own installers are full of them -- in StuffIt

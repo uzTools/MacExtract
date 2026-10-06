@@ -6,7 +6,8 @@ Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§6) or an account to post from (§7). Each item says what to do,
+hardware (§1–§6), an account to post from (§7) or the call on a release (§8).
+Each item says what to do,
 why nothing here can answer it, and what to record. Nothing below is a known
 failure; it is unverified, which is a different thing.
 
@@ -320,6 +321,32 @@ Rules): they go from the maintainer's own account.
 **What to record.** The issue URL, in `BLOCKERS.md` beside the claim it
 belongs to. If either is rejected or explained upstream, that is a withdrawn
 claim and goes in the same file with what it cost.
+
+---
+
+## 8. A release that is due, and a version number that cannot tell two builds apart
+
+Like §7, this needs no Macintosh — it needs the maintainer. `v0.37.0` was
+tagged 2026-10-04 and `main` is 25 commits past it as of 2026-10-06, while
+`UNC_VERSION` in `include/macextract.h` still reads `0.37.0`. That is
+deliberate: bumping it is step one of cutting a release, and cutting one is the
+maintainer's call (CLAUDE.md, *Cutting a release*). The consequence is that
+`--version`, the application's About box and `dist/README.txt`'s title all read
+`0.37.0` on both builds, so a person holding a download cannot tell which of
+the two they have.
+
+- [ ] **Decide whether v0.38.0 is due.** Four things in this build are not in
+      the published v0.37.0 — `dist/README.txt` names them, each as "since
+      v0.37.0, and in this download" — and one of them is a defect in that
+      release's own headline format: a valid method-14 StuffIt archive can be
+      refused there with `checksum mismatch` (fixed 2026-10-06, commit
+      `741104a`; DECISIONS.md 2026-10-06, *the sort that dropped what it could
+      not hold*). The steps are CLAUDE.md, *Cutting a release*; no session
+      working here takes them unasked.
+
+**What to record.** Nothing, if the answer is "not yet". If it is cut, the tag
+is confirmable from this machine and the release page is not (CLAUDE.md), so
+the page is somebody else's look.
 
 ---
 

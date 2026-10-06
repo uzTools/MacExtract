@@ -351,6 +351,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
 - 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
 - 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
+- 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
 
 ---
 
@@ -22657,3 +22658,56 @@ than a new estimate was already on this disk in the 2026-10-01 delta. The
 substitution was not implemented either: `namebuf`'s 256 B of stack and
 the leaf-is-not-a-path bound are both still what Part 2's row says they
 are, and neither needed re-measuring to decide not to spend them.
+
+## 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
+
+`dist/README.txt` is the release notes verbatim and the only download page
+this project offers (CLAUDE.md). It carried three paragraphs for what had
+been ADDED since the `v0.37.0` tag — self-extracting zip, AppleLink
+packages, UUTool's alphabet — and nothing for what had been REPAIRED, so
+the one defect that reaches a person who already downloaded v0.37.0 was
+the one thing the page did not say. In that build a VALID method-14
+StuffIt archive can be refused with `checksum mismatch` (fixed 2026-10-06,
+*the sort that dropped what it could not hold*), and method 14 IS
+v0.37.0's reason to download: the page's own words for it are "the last
+StuffIt archives this program could not" open.
+
+**The selection bias is the transferable part.** The heredoc gets edited
+when a format is added, because the paragraph is the feature's
+announcement; a fix produces a commit message and a DECISIONS entry, both
+of which are written for whoever maintains this, and the page is the one
+file that is not (CLAUDE.md, *`README.md` is the exception*). v0.34.0's
+entry shows the register was always available — "was refused outright,
+with *file is truncated*, instead of asking you for the password; it now
+asks" — so the gap was habit, not a missing convention. **Ask of any
+repair: would somebody holding the last download want to know?** If yes,
+it is a paragraph, and the existing "Since v0.37.0, and in this download"
+phrasing is what keeps it honest, because the fix is in the committed
+`dist/` and not in the published release.
+
+**`UNC_VERSION` was NOT bumped and the page says nothing about a next
+release.** Bumping is step one of cutting one and that is the maintainer's
+call, every time (CLAUDE.md, *Cutting a release*). So `--version` reads
+`0.37.0` on both builds and cannot distinguish them; the only thing that
+can is the page's per-paragraph wording. A download page is not where a
+plan belongs (*Writing things down*, no plans in status docs), and the
+decision belongs to somebody outside this machine, which is what
+MANUAL_TESTS.md is for — it is now that file's §8, beside §7's two
+written-and-unposted bug reports, which wait on the same person for the
+same reason.
+
+**`dist/MacExtract.bin` and `.dsk` were deliberately left at their
+committed bytes.** `make_dist.sh` rebuilds all three files, but no source
+changed here, and the rebuilt MacBinary differs from the committed one in
+exactly six bytes — the creation and modification dates and the header
+CRC — every one of them inside the 128-byte header, with the payload
+identical. **`ci.sh`'s own staleness check says that is the expected
+difference**: it hashes `tail -c +129` of both files precisely because
+MacBinary stores the dates, so the committed binaries are not stale by the
+one measure this repository has for it, and committing a megabyte of date
+churn into a shared checkout buys nothing. `check_docs.py` check 7, which
+is the layer a change to the heredoc can fail, compares `dist/README.txt`
+against the heredoc and reads neither binary. **The rule is to rebuild `dist/` in the same commit as a change
+to `mac/` or `src/`** (CLAUDE.md, Rules); a docs-only change to the
+heredoc is not one, and the binaries staying put is evidence that it was
+not, rather than evidence that `dist/` went stale.
