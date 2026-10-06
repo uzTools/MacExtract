@@ -13,22 +13,55 @@
  */
 #include "fmt_uu_priv.h"
 /* Used by the probe AND by the decoder, so it lives with the probe —
- * which the uu overlay compiles as well. */
+ * which the uu overlay compiles as well.
+ *
+ * Returns 0 when the line cannot be a data line, else the mask of the
+ * alphabets it fits: UU_TBL_PC, UU_TBL_UNIX, or both. A document is
+ * written with ONE of them, so a caller walking a document ANDs these
+ * masks as it goes and a line that does not fit what the document has
+ * used so far is mail. A line that fits NEITHER is not data at all,
+ * and that is what the probe rests on: an English sentence after a
+ * "begin" line declares 45 bytes and is short enough to be a data
+ * line, and what rejects it is having a space AND lower case.
+ *
+ * Source: UUTool's own two encode tables, `HEXA` 128 "PC" and `HEXA`
+ * 129 "UNIX", read out of the application (tools/derive_mu.py
+ * --tables). "PC" is the standard alphabet, 0x20..0x5f. "UNIX" moves
+ * the low values up past it so that NO value encodes to a space —
+ * 2.0.4 moves 30 of them, to 0x60..0x7d, and 2.3.2 moves 27, to
+ * 0x60..0x7a ("changed UNIX encoding table to ignore {,}", its own
+ * revision log) — and it is the table UUTool uses unless "use
+ * original coding" is set, so its DEFAULT output is not in the
+ * standard alphabet at all. The mask below is the union of both
+ * generations; what matters for telling data from mail is that it
+ * excludes 0x20..0x3a, so prose with a space in it is not data.
+ * UU_SIXB decodes all three tables, the & 0x3f doing the work. */
 int unc_uu_line_is_data(const uint8_t *p, int32_t len)
 {
     int32_t outcount, incount, i;
+    int mask = UU_TBL_ANY;
 
     if (len < 1) return 0;
-    if (p[0] < 0x20 || p[0] > 0x60) return 0;
     outcount = UU_SIXB(p[0]);
     if (outcount == 0 || outcount > 45) return 0;
     incount = ((outcount / 3) + 1) * 4;
     /* Trailing spaces may have been stripped; the line may be short,
-     * never long. Every character must be in the uu alphabet. */
+     * never long. */
     if (len > incount + 1) return 0;
-    for (i = 1; i < len; i++)
-        if (p[i] < 0x20 || p[i] > 0x60) return 0;
-    return 1;
+    /* One unsigned subtraction decides all three questions: the two
+     * alphabets are contiguous ranges inside 0x20..0x7d, so a
+     * character is out of range, above "PC"'s top, or below "UNIX"'s
+     * bottom, and the last two are disjoint. The count character is
+     * judged with the rest — it comes from the same table, and below
+     * 27 the two tables spell it differently. */
+    for (i = 0; i < len; i++) {
+        uint8_t c = (uint8_t)(p[i] - UU_CH_MIN);
+        if (c > (uint8_t)(UU_CH_MAX - UU_CH_MIN)) return 0;
+        if (c > (uint8_t)(UU_PC_MAX - UU_CH_MIN)) mask &= ~UU_TBL_PC;
+        else if (c < (uint8_t)(UU_UNIX_MIN - UU_CH_MIN))
+            mask &= ~UU_TBL_UNIX;
+    }
+    return mask;
 }
 
 UncFormat unc_uu_probe(const uint8_t *head, int32_t len, UncIO *io)

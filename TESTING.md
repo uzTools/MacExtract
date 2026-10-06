@@ -1647,10 +1647,41 @@ byte is a per-entry CRC error and the entry after it still extracts.
 CPython's `binascii`, so the encoding side is not ours either) and
 UUTool's two-fork shape, which macutils' **`hexbin`** then decodes — the
 same arrangement that grades multi-document BinHex, and for the same
-reason: it is the implementation `fmt_uu.c` was transcribed from. Also
+reason: it is a second implementation, reached a different way. Also
 covered: a mail banner in front, several documents in one file, CR line
 endings, and the two ways it must fail (prose containing the word
 "begin" is not an archive; a truncated document is an error).
+
+**All three alphabets, since 2026-10-06.** UUTool writes the standard
+one only when "use original coding" is set; its two "UNIX" tables are
+the default, and this suite generated neither until the day a wild
+specimen showed one (DECISIONS.md 2026-10-06, *the alphabet nothing
+here had seen*). `synth_uu.py` now writes both — `TABLE_UNIX20` and
+`TABLE_UNIX23`, named for the versions whose `HEXA` 129 resources they
+are — and `hexbin` adjudicates the two-fork ones, which it can, its
+own `SIXB` mask reading every table. Two WILD specimens carry the rest
+of the weight: `uu-wild-dictcol.uu` and `uu-wild-terrainman.uu` are in
+the differential suite, and `tools/derive_mu.py --grade` replays both
+with `hexbin` and with the CRCs of the StuffIt archive one of them
+decodes to (FORMATS.md, *uuencode: three alphabets*).
+
+**The alphabet is half of how a data line is told from mail, and the
+pair of cases that says so uses ONE line for both directions.** A
+standard-alphabet data line is inserted into two documents: in a
+standard-alphabet one it is data and the fork grows by its 45 bytes; in
+a UNIX-table one it is mail and is stepped over. Taking the union of
+the alphabets as a single range fails the second — and also fails
+`posted.uu` and `split.uu.001`, where each part carries its own mail
+header, which is how the narrowing earned its place rather than being
+argued for.
+
+**And `prose2.txt`, which is the second of the two ways uuencode must
+fail.** The probe rests on the line after a "begin" line, and an
+English sentence starting with a capital `M` declares 45 bytes and is
+short enough to be a data line; with the alphabets taken as one range
+it sniffed as uuencode. It fits NEITHER table — a space and lower case
+— and that is what the case asserts. It fails against the build of the
+hour before, which is how it got written.
 
 **Chained documents** since 2026-08-27, uuencode having become an
 envelope: a plain document and a UUTool document each holding a
@@ -1671,6 +1702,24 @@ junk line built only of alphabet characters is indistinguishable from
 data, is taken as data, and must come back as a CRC error rather than as
 silence. **Both were run against a build with the line rules removed and
 both fail there** (DECISIONS.md, "Multipart postings").
+
+**Cut at DeHQX's separator, since 2026-10-06, and the control beside
+it.** The one line shape the alphabet rule cannot reject is `---`, which
+is what a posting cut at the separator Peter Lewis's own decoder
+documents resumes at; `run_multihqx.py` now builds that posting and
+asserts it reads exactly what the single file gives. It **failed
+against the build of the hour before** — `checksum mismatch`, 1 of 1
+entries — which is what says the case is not decoration. The control is
+the half that keeps the new rule narrow: a bare `---` with no
+`--- end of part` in front of it is still data and must still fail the
+CRC, so the rule cannot drift into "a line of hyphens is never data".
+`tools/derive_dehqx.py` is where the sentence itself is checked, and it
+consults `hexbin` on the same posting. **What neither can see is a wild
+posting cut that way**: none of the 204 `.hqx` fixtures carries the
+separator (measured — they are Info-Mac downloads, which are single
+postings), so both build the boundary the documentation describes. The
+sentence is first-party and the failure it predicted was real; how
+common such files are is not something this corpus can say.
 
 **What these cannot see.** Neither suite reads a real ArcMac archive:
 `ci.sh` covers the two-fork split with one synthetic stored entry in
@@ -3743,9 +3792,21 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-06 | `format=sit`, deduplicated, ordered by hash — a uniform sample | 10,000 | 8,798 classic StuffIt archives, **0 Optimizer bits** in their first entries |
 | 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,998 entry headers**, and the **5 Optimizer bits** this project has ever seen in the wild, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). Two further entries carry the bit inside one damaged archive, counted twice because it is on two CDs, which `unar` also refuses |
 
+| 2026-10-06 | `detection=626567696e2030*`, `...2036*`, `...2037*` — a file whose first bytes are a uuencode `begin` line, then the TAIL of each candidate read for a ` .finfo` section | 939 | **1** UUTool MU-layout posting, `uu-wild-dictcol.uu`, now a fixture. A second specimen came off the same key by eye, from a Macintosh CD (`uu-wild-terrainman.uu`). The first pass over the same 939 found nothing because the tail range was not honoured — below |
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
 | 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
 | 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |
+
+**A suffix `Range` is not honoured here, and it answers `206`.** The uu
+sweep wanted the END of each candidate, because UUTool's ` .finfo`
+section is the last thing in the file. `Range: bytes=-2048` returns
+`206 Partial Content` with 2,049 bytes **of the head**, so a pass over
+939 files reported 0 hits and looked like a measurement of the world.
+An explicit `bytes=<size-2048>-<size-1>` found the specimen in the same
+939. The positive control that caught it is one request: fetch a tail
+whose last bytes are already known and compare them. Any probe added
+here that reads anything but the head of a file wants that control
+first.
 
 **What the PackIt sweep cannot see** is a MacBinary-wrapped archive:
 `detection=504d61*` reads the first 16 bytes, and

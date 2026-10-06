@@ -342,6 +342,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
 - 2026-10-06 (the Optimizer that was in somebody else's corpus) — the one key that identifies a StuffIt 2.x feature, and the two harness defects between it and the answer
 - 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
+- 2026-10-06 (the alphabet nothing here had seen) — the program that defines the MU layout was a corpus fixture, and the engine had never read a line of what it writes
+- 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
 
 ---
 
@@ -21846,3 +21848,233 @@ then asserts its absence in the same sentence. *The assertion is the
 part to check; the artefact is usually indexed somewhere.* A route
 column is a better place to record WHERE you looked than to record
 that nothing exists.
+
+
+## 2026-10-06 (the alphabet nothing here had seen) — the program that defines the MU layout was a corpus fixture, and the engine had never read a line of what it writes
+
+**Claim.** `src/fmt_uu.c` cited macutils' `hexbin/mu.c` for the UUTool
+"MU" layout and for `mu_convert()`, under a row that said "nothing else
+implements UUTool's MU layout". Evidence: UUTool states the layout three
+ways itself, and it was already in the corpus. Consequence: the file
+sheds its last macutils citation, and the reading found a defect — the
+engine had been refusing every file UUTool writes with its DEFAULT
+settings.
+
+### "Nothing else implements it" was a sentence about READERS
+
+The sweep behind that cell had asked deark, mpack and XADMaster, which
+are all decoders. UUTool is the ENCODER, and Rule #1 asks for a
+reference implementation or a spec without caring which direction it
+runs in: a program that writes a format states it at least as well as
+one that reads it.
+
+**That sentence was already in BLOCKERS.md.** The mechanism list has
+carried it since 2026-09-28 — "a missing specimen and a missing
+implementation are different gaps: for *what does this format write
+where*, the WRITER is a reference implementation under rule #1, and one
+application is easier to get than one of its archives" — and this row
+sat beside it for eight days, in a file whose first instruction is to
+read a live claim next to an already-withdrawn one. It is the second
+time today that a written-down lesson was not applied to the row it
+was about (*the lesson that was written down and then not applied*),
+and the two have the same tell: a route column that asserts an absence
+("nothing else implements") in the same sentence as the artefact it
+wants. The corpus has had the encoder since **M1** —
+`fixtures/uu-tool-24.hqx`, which is also where
+`derived-UUTool-FAT.sit` comes from, both added with the MacBinary
+milestone and twelve milestones before the uu decoder was written — and
+five more Mac uu programs
+beside it (`un-uu-21`, `uu-cat-10`, `uu-parser-172`, `uu-undo-10`,
+`mac-uucode-105`), every one of them fetched years of project-time
+before the citation was ever questioned.
+
+It states the layout three ways, and `tools/derive_mu.py` checks each
+where it sits, across 2.0.4, 2.3.2 and 2.4:
+
+- **its own manual**, as prose — "The data fork of a file is the first
+  part in the encoded text file, bounded by a 'begin' and 'end'
+  statement.  This is followed by the resource fork, and finally finder
+  information". 2.3.2 keeps it in `TEXT` 129; 2.0.4 ships it as a file
+  beside the application. The same document says the mode "is ignored
+  on the Mac side", which is what licenses reading the section tag at a
+  fixed offset;
+- **the literals it writes from**: `DATA` 0 holds `begin 0700 .rsrc\r`,
+  `begin 0700 .finfo\r` and `end\r` whole in 2.0.4 and 2.3.2;
+- **two 64-byte encode tables**, `HEXA` 128 "PC" and `HEXA` 129 "UNIX".
+
+And UUParser 1.72 — a different author, also a corpus fixture — carries
+both of those tables in a code resource, each behind a `0x40` length
+byte. That is what makes the alphabet two implementations rather than
+one.
+
+### The reading found the defect: three alphabets, and we accepted one
+
+"PC" is the standard uuencode alphabet. "UNIX" is not: it moves the low
+values up past `0x5f` so that **no value encodes to a space**, because
+— the manual again — "some electronic mailors reformat white space".
+Two generations shipped: **2.0.4 moves 30 values, to `0x60..0x7d`**, and
+2.1 onwards moves 27, to `0x60..0x7a` ("changed UNIX encoding table to
+ignore {,}", its revision log). It is the DEFAULT; the standard
+alphabet is the "use original coding" checkbox.
+
+Every one of the three satisfies `((c - 0x20) & 0x3f) == value`, which
+is why `UU_SIXB`'s mask reads all of them and why that mask is
+load-bearing rather than defensive — `mu_convert()` has had the same
+mask since 1992 and nothing here had asked what it was for.
+
+What refused the files was not the decoder but the gate in front of it:
+`unc_uu_line_is_data` required every character in `0x20..0x60`, so
+UUTool's default output did not sniff as uuencode at all. Two wild
+specimens, one per generation, now say so in `ci.sh`:
+`uu-wild-dictcol.uu` (the MU layout, 2.0's table, LF endings, a quoted
+name, and mode `0755` in the first line where both sections keep the
+literal `0700`) and `uu-wild-terrainman.uu` (one section, 2.1's table,
+CR endings, an unquoted name). FORMATS.md, *uuencode*, has what grades
+each.
+
+### The union of two alphabets is not one alphabet
+
+The obvious fix — widen the gate to `0x20..0x7d` — breaks the rule it
+is part of. A uu line is told from a line of MAIL by two things, and
+the character set is one of them: with the union taken as a single
+range, `tools/run_uu.py`'s multi-part cases **failed** — `posted.uu`
+and `split.uu.001`, where each part carries its own mail header, read
+those headers as data.
+
+So the alphabet is narrowed per DOCUMENT: `unc_uu_line_is_data` returns
+the mask of the tables a line could have come from, the section walk
+ANDs the masks as it goes, and a line that does not fit what the
+document has used so far is mail. UUTool writes one table per run, so
+nothing legitimate is lost, and `0x20..0x3a` — space, the digits, the
+punctuation of prose — stays outside the UNIX tables, which is what
+makes a mail header fail. The pair of cases in `run_uu.py` asserts both
+directions with the SAME line: a standard-alphabet data line is data in
+a standard-alphabet document and mail in a UNIX-table one.
+
+**And the mask has to be in the RESIDENT half, which was the one
+judgement call here.** It was in the overlay first, with the probe left
+holding the cheap union test, and that cost nothing — until the probe
+was asked about prose. What a uuencode probe rests on is the line AFTER
+a "begin" line, and an English sentence beginning with a capital `M`
+declares 45 bytes and is short enough to be a data line: with the
+alphabets taken as one range, `begin reading at page five` /
+`Mary had a little lamb, her fleece` sniffed as uuencode. What rejects
+it is fitting NEITHER table — it has a space and lower case — so the
+mask is what the probe needs too, and `run_uu.py` carries that file as
+the second of the two ways uuencode must fail. Resident `CODE` +8 B and
+A5 −8 B, measured in all three overlay configurations: `CODE` + A5 is
+73,392 B either side of it, so nothing comes off any extraction's
+budget, and the six ratchets in `tools/build_mac.sh` moved to say so
+(FORMATS.md, *Three configurations, one tree*).
+
+### Two lessons, and the second is about this repository's own suites
+
+**A generator chose the alphabet, and two graders agreed about a shape
+neither had ever seen.** `tools/synth_uu.py` wrote the standard
+alphabet because `binascii.b2a_uu` does; `hexbin` adjudicated it and
+agreed, because its mask reads anything. Two independent
+implementations, byte-exact agreement, and a format feature that the
+only program which writes the format uses BY DEFAULT was missing from
+both sides. "Ask what evidence a tolerance rests on" (CLAUDE.md)
+catches a tolerance that cannot fire; this is its mirror image — a
+tolerance the suite never presented an input for, because the suite
+generated the inputs. The widening is not generator-side only:
+`synth_uu.py` now writes both UNIX tables, and the wild specimens are
+the half the generator cannot reach.
+
+**A ranged probe that is not honoured reads the head and says 206.**
+The sweep for a wild MU specimen fetched the TAIL of each candidate,
+because a `.finfo` section is the last thing in the file.
+`Range: bytes=-2048` returned `206 Partial Content` and 2,049 bytes —
+of the HEAD — so the first pass over 939 files found nothing and
+looked like a measurement. An explicit `bytes=<size-2048>-<size-1>`
+found the specimen in the same 939. The positive control that caught it
+was one line: fetch a tail whose last bytes are already known and
+compare them. **Establish that a probe can see the thing it is looking
+for before believing that it did not find it** — the same rule as "a
+test that passes may not be testing anything", one layer out.
+
+### What it cost
+
+The claim stood from M13 to 2026-10-06. For all of it, `.uu` was listed
+as supported, the suite was green, and the engine could not read the
+default output of the one program that defines the Macintosh shape of
+the format. The row that was supposed to be about a licence was the
+thing that found it: nobody re-reads a decoder that passes, but
+somebody re-reading its CITATIONS opened the encoder.
+
+
+## 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
+
+**Claim.** `src/fmt_binhex.c`'s scan for a second document in one input
+is DeHQX 2.0.1's, not macutils' — and the same documentation describes a
+part separator this engine could not read. Evidence: DeHQX's *How It
+Works*, checked in the corpus fixture by `tools/derive_dehqx.py`, and a
+posting cut that way, which failed before and reads clean now.
+Consequence: one rule off the row, and a per-entry failure fixed.
+
+### The author of the definition wrote a decoder, and it is a fixture
+
+`reference/notes/binhex40_lewis.txt` — Peter N Lewis's "BinHex 4.0
+Definition" — has been this file's source since M2, the BinHex
+milestone. Lewis also wrote **DeHQX**, and `fixtures/dehqx-201.hqx`
+has been in the corpus since **M1**, a milestone earlier, as an archive
+to extract. Its documentation is a design
+document for the two things the definition does not cover, which are
+both about text that has been MAILED:
+
+- "Source file: a file containing (parts of) one or more HQX sources" —
+  and "When it comes to the end of the HQX source, if [sic] checks for
+  the terminating colon, and then continues scanning the file for the
+  next '(This file...'". That is `bh_find_banner`'s unbounded rescan,
+  stated by the format's author, where it had been hexbin.c's
+  `again = 1; goto nexttry`.
+- "If it encounters a line beginning with '--- end of part', it ignores
+  the file until it encounters a line consisting only of '---', at which
+  time it resumes dehqxing."
+
+### The second sentence was not a citation question
+
+**`---` is three characters and every one of them is in the BinHex
+alphabet.** The rule this project uses to tell data from mail is the
+alphabet — it works because the alphabet omits `n`, `o`, `s`, `t`, `u`
+and the space, so prose disqualifies itself in a few characters — and
+the resume line of a cut posting is exactly the line that rule cannot
+see. Measured 2026-10-06: a two-part posting cut at DeHQX's separator
+came back `checksum mismatch`, 1 of 1 entries failed, because those
+three characters were decoded as two bytes of payload. `hexbin` reads
+the same file, by the equal-length half of its rule — the half this
+project declines on purpose, because it can discard a legitimate short
+final line.
+
+So the fix is not hexbin's half. It is DeHQX's rule, which is narrower
+and is a statement about the CONVENTION rather than about line lengths:
+a line beginning `--- end of part` opens a gap, a line that is exactly
+`---` closes it. `tools/run_multihqx.py` asserts it in both directions,
+and the second direction is the one that keeps it narrow: **a bare
+`---` with no separator before it is still data, and the CRC still
+objects.** Without that control the rule would have quietly become "a
+line of hyphens is never data", which is a different and worse rule.
+
+It costs **+0 B resident** — the BinHex decoder lives in `ovl_binhex`
+— and the comparison is spelled out byte by byte rather than against a
+string constant, because a 13-byte literal would have gone into the A5
+world, which is resident for the life of the application and is at its
+ceiling.
+
+### The lesson, which is the same one as this morning's
+
+Five of the six rules on that row have now left, and not one of them
+went to a decoder in `reference/`. They went to a writer (UUTool), to
+an author's own program (DeHQX), to a permissive mail tool (mpack) and
+to a library's line reader (deark). **The row's search space was
+"other unarchivers", and the answer was never in it.** What these
+rules are about is a CONVENTION of posted text, so the sources are the
+programs that posted it and the people who documented doing so.
+
+And the harder half: a citation hunt found a defect again, for the
+second time in a day. Re-reading a decoder's citations means re-reading
+what each rule is FOR, and that is the question a passing suite never
+asks. Both defects were in the same place — the test that tells a data
+line from a line of mail — and in both cases the input that would have
+shown it was a file somebody had actually posted.

@@ -49,7 +49,7 @@ under *Table notes*.
 |---|---|---|---|---|---|
 | MacBinary I/II/III | extract | — | 236 fixtures | 8 KB | full |
 | AppleSingle/Double | extract | — | (unit tests + envelopes) | 8 KB | full |
-| BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts†† | 179 fixtures | 8 KB | full |
+| BinHex 4 (.hqx) | extract | RLE90; several documents in one file, and one document posted in several parts, cut at DeHQX's separator or not†† | 179 fixtures | 8 KB | full |
 | PackIt (.pit) | extract | store, Huffman; **PMa5 and PMa6 decrypted** (an XOR keyed by DES's PC-1, and DES) | 4 fixtures (1 real + 3 synthetic PMa4) | 9 KB | full |
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 229 fixtures‡‡ | 8–76 KB‖ | full |
@@ -70,7 +70,7 @@ under *Table notes*.
 | btoa (`xbtoa`/`.ascii`) | extract | — (base-85 ASCII armour; both the `xbtoa5` and the older `xbtoa Begin` framings)◆ | no corpus file and no second reader: graded against **btoa 5.2.1 itself**, which encodes the subjects `tools/run_btoa.py` decodes, **plus a stream written by Aladdin's own `btoa/atob Translator`** on an emulated Mac (`sitcrypt.py --btoa-send`)◆ | 12 KB | full |
 | base64 (`.b64`, `.mime`) | extract | — (bare, and the `begin-base64`/`====` framing sharutils writes; several documents in one file)◇ | no corpus file and no Macintosh specimen: graded against **deark** and, through the messages that carry it, **munpack 1.6** | 5 KB◇ | full |
 | MIME message (`.mim`, `.eml`) | extract | — (multipart to 4 levels, base64, quoted-printable and 7bit/8bit parts, a uuencoded part pasted into one, **multipart/appledouble**, which carries both forks and the Finder info, and `message/partial` across several files)◇ | no corpus file: graded against **munpack 1.6**, the implementation `src/fmt_mime.c` is transcribed from, over 65 generated cases | 8 KB◇ | full |
-| uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, and documents posted in several parts★★) | 7 generated cases, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` is in the differential suite | 4 KB | full |
+| uuencode (.uu, incl. UUTool) | extract | — (plain uu, UUTool's two-fork "MU" shape, **all three of its alphabets**✦ and documents posted in several parts★★) | 8 generated shapes and 25 cases in `tools/run_uu.py`, the two-fork ones adjudicated by macutils' `hexbin`; `synth-uu-mac.uu` and **two wild specimens** are in the differential suite | 4 KB | full |
 | Alysis SuperDisk! (.X, .x) | extract | **both containers** (record-stream archive and single file); methods 1-4 and 5-8 (a finite-context predictor over a 13- or 16-bit context, with the flag bitmap and/or the literals Huffman-coded), 9 Huffman, 10 SlowFastA and 11 SlowFastB (LZSS); 13 declined per entry, and 20 is an encoder for 11 rather than a method of its own✧✧ | 2 fixtures, 5 forks, adjudicated by the archives' OWN self-extractors on an emulated Mac, + 11 single-file specimens written by Alysis's own control panel (methods 1 and 6) and graded against their inputs, + every method 1..9 through Alysis's own Add-In Modules under qemu-m68k (`tools/sdmodule/`), + 4 record streams written here and read back by an archive's own self-extractor (paths past the cap, and a stored block) | 72–84 KB✧✧ | full |
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
@@ -652,11 +652,27 @@ only of alphabet characters, the per-fork CRC catches instead, as a per-entry
 error rather than as silence. Both halves are asserted in
 `tools/run_multihqx.py`, and both fail against a build with the rule removed.
 
+**One line of that shape is not junk, and it cost a per-entry failure
+until 2026-10-06**: the `---` a posting cut at DeHQX's part separator
+resumes at. All three characters are in the alphabet, so the line read
+as two bytes of data and the fork's CRC objected — measured, and
+`hexbin` reads such a file by the equal-length half this project
+declines. The rule now transcribed is DeHQX 2.0.1's own and narrower
+than hexbin's: a line beginning `--- end of part` opens a gap and a
+line that is exactly `---` closes it, which `tools/derive_dehqx.py`
+checks against the sentence in Peter Lewis's documentation and
+`run_multihqx.py` asserts in both directions — the cut posting reads
+clean, and a bare `---` with no separator before it is still data with
+the CRC still objecting. It costs **+0 B resident**; the BinHex decoder
+is in `ovl_binhex`.
+
 **A `.hqx` file may hold more than one document, and since 2026-08-15 all
 of them are extracted** — the shape comp.binaries.mac produced, several files
 posted in one message. Each document is banner, ':', stream, ':'; the decoder
-looks for the next banner after each one, as
-`reference/macutils/hexbin/hexbin.c` does. A banner with nothing usable after
+looks for the next banner after each one, which is what DeHQX 2.0.1's
+documentation says its own decoder does ("continues scanning the file
+for the next '(This file...'"; `reference/macutils/hexbin/hexbin.c`'s
+`again = 1; goto nexttry` until 2026-10-06). A banner with nothing usable after
 it is an error rather than a quiet stop. Graded by `hexbin` and by the same
 fixtures decoded one at a time (TESTING.md, "Several BinHex documents in one
 file"); the differential suite cannot see this case, because `unar` takes the
@@ -908,6 +924,35 @@ the gain is at the small end — `derived-MacGzip.sit` 76,944 → 13,456 B, and
 on-Mac `derived-Export.sit` 76,984 → 19,640 B.
 
 
+### uuencode: three alphabets, two of them not the standard one ✦
+
+**UUTool encodes with the standard alphabet only when "use original
+coding" is set.** By default it uses its `HEXA` 129 "UNIX" table, which
+moves the low values up past `0x5f` so that no value encodes to a
+space, and that table shipped in two generations:
+
+| table | where it is | values moved up | character range | `(c-0x20)&0x3f` reads it |
+|---|---|---|---|---|
+| "PC" | `HEXA` 128, all versions | 0 | 0x20..0x5f | yes |
+| "UNIX", 2.0.4 | `HEXA` 129 | 30 | 0x3e..0x7d | yes |
+| "UNIX", 2.3.2 and 2.4 | `HEXA` 129 | 27 | 0x3b..0x7a | yes |
+
+Read out of the application by `tools/derive_mu.py --tables`, which
+also finds both of them in UUParser 1.72 (a different author), and
+checks the layout literals and the manual's own statement of the
+section order — **21 witnesses across three versions of UUTool and
+UUParser 1.72, all holding**.
+Until 2026-10-06 this engine refused every line of the two UNIX tables
+(DECISIONS.md 2026-10-06, *the alphabet nothing here had seen*).
+
+**The two wild specimens**, one per generation, both in the
+differential suite since 2026-10-06:
+
+| fixture | shape | graded by |
+|---|---|---|
+| `uu-wild-dictcol.uu` | the MU layout — 5,161 B data fork, 648 B resource fork, `TEXT`/`R*ch` — 2.0.4's table, LF endings, a quoted name, mode `0755` in the first line where both sections keep the literal `0700` | `hexbin`, both forks byte for byte |
+| `uu-wild-terrainman.uu` | one section, 184,340 B, 2.3.2's table, CR endings, an unquoted name (the UNIX naming preference, which replaces the characters the manual calls dangerous) | the StuffIt archive its data fork decodes to: **27 forks out, CRC-checked against the archive's own**. `hexbin` cannot read this one — its `mu()` walks to the first `"` in the begin line and there is none. The posting on that CD is cut, which the manifest asserts |
+
 ### uuencode: a document posted in several parts ★★
 
 **A uu document posted in several parts** joins the same way, and the test
@@ -925,7 +970,8 @@ described, in `tools/run_uu.py`; OPEN_ITEMS.md.
 became "everything StuffIt Expander 4.0.2 expands". Neither occurs in this
 corpus, so every archive under test is generated and handed to a second
 implementation to grade — `unar` for ARC, `hexbin` for the UUTool shape
-(TESTING.md). The methods: 1/2 stored, 3 RLE90, 4 squeeze (a Huffman tree of
+(TESTING.md). **Two wild uuencode specimens joined the corpus on
+2026-10-06**, which is where the three alphabets above came from. The methods: 1/2 stored, 3 RLE90, 4 squeeze (a Huffman tree of
 int16LE node pairs, then RLE90), 5/6/7 crunch (12-bit LZW whose table is
 addressed **by hash rather than by sequence**), 8 (12-bit compress LZW +
 RLE90) and 9 (13-bit compress LZW), the last two over the shared `unc_lzw.c`;
@@ -3410,7 +3456,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 949 fixtures byte-exact against `unar` manifests
+- Differential: 951 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -4062,9 +4108,23 @@ engine later the same day, fourteen until AppleLink packages arrived on
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,328 B** | 19,064 B | **66,048 B** | **225,024 B** |
-| lazy | `UNC_OVL_LAZY=1` | 52,904 B | 19,144 B | 64,512 B | 223,616 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **164,060 B** | **37,924 B** | 196,352 B | 199,680 B |
+| **eager — SHIPPED** | (default) | **54,336 B** | 19,056 B | **66,048 B** | **225,280 B** |
+| lazy | `UNC_OVL_LAZY=1` | 52,912 B | 19,136 B | 64,512 B | 223,872 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **164,324 B** | **37,916 B** | 196,608 B | 199,936 B |
+
+**Re-measured 2026-10-06**, for the uu probe's per-document alphabet test
+and DeHQX's part separator (*uuencode: three alphabets*, *BinHex:
+multipart, in both directions*): the control **+264 B of `CODE` and −8
+of A5**, the SHIPPED build **+8 and −8** — `CODE` + A5 unchanged at
+73,392 B, so nothing comes off any extraction's budget, and both files
+are in an overlay in both shipped lifetimes. `OVL_SAVED` rises by the
+control's 256 B, which is why every row of *What each format is granted*
+rose by exactly that. **The control's two figures also moved 20 B
+between themselves without this table noticing**: it read 164,060 and
+37,924 where `tools/build_mac.sh`'s ratchets — set at the size on the
+day — read 164,080 and 37,904, and `CODE` + A5 was 201,984 B either
+way, which is why nothing failed. The ratchets were right; corrected
+here from the build.
 
 **Re-measured 2026-10-05**, for AppleLink packages (*AppleLink packages:
 SqueezePlay*): the control +2,148 B of `CODE` and +28 of A5, the shipped
@@ -4175,13 +4235,13 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **128,592 B** since 2026-10-05
+measured 2026-09-27. The shipped pair is **128,848 B** since 2026-10-06
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **155,668 B** — the fifteen images sum to 155,476 B, so its
-index costs **192 B**: a 4-byte header, 12 bytes of directory per image and 8
-bytes of padding to 4, which accounts for the whole difference (re-measured
+The bundle is **155,920 B** — the fifteen images sum to 155,726 B, so its
+index costs **194 B**: a 4-byte header, 12 bytes of directory per image
+and 10 bytes of padding to 4, which accounts for the whole difference (re-measured
 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw bundle the
 build writes for `tests/run_overlay_host.sh`; it was 153,688 B against
 153,508 B with fourteen, and the index grew by exactly the 12 bytes of one
@@ -4189,7 +4249,11 @@ more directory entry, because none of the three terms depends on how
 big an image is). It read **143,616 B** here until then, and 724 B
 of index with it: that figure is `ovl_bundle.r.rsrc.bin`, the Rez'd RESOURCE
 FORK around the bundle rather than the bundle (DECISIONS.md 2026-09-26, *the
-fork that was mistaken for its contents*). It is not resident while an archive
+fork that was mistaken for its contents*). **+252 B on 2026-10-06**: `ovl_text` 11,450 -> 11,502 for the uu
+alphabets and `ovl_binhex` 2,392 -> 2,590 for DeHQX's part separator,
+with 2 B of index because one more image is now 2 mod 4. The padding
+term is why the index is not a constant.
+It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 65,664 B `MacExtract.code.bin` and not the download.
 (That figure read 64,768 B until 2026-10-05, when the AppleLink probe
@@ -4264,7 +4328,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 128,592 B of `CODE` and A5 the shipped build does not carry
+which is the 128,848 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -4294,25 +4358,26 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+119,534 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 1,972 B |
-| Now Compress | now, codecs | **+116,568 B** (measured) |
-| SuperDisk! | superdisk, codecs | +114,450 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+111,938 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+108,714 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+105,722 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +104,784 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+103,238 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +95,574 B (arithmetic), and **+105,722 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+92,254 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+85,080 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +82,106 B (arithmetic), **+92,254 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,750 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+119,790 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 1,972 B |
+| Now Compress | now, codecs | **+116,824 B** (measured) |
+| SuperDisk! | superdisk, codecs | +114,706 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+112,194 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+108,970 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+105,978 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +105,040 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+103,494 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +95,830 B (arithmetic), and **+105,978 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+92,510 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+85,336 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +82,362 B (arithmetic), **+92,510 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,746 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
 and then -> 124,640 B with the five ciphers, -> 127,264 B on
-2026-10-03 with method 14 and -> 128,592 B on 2026-10-05 with AppleLink
-packages, so every grant rises with
+2026-10-03 with method 14, -> 128,592 B on 2026-10-05 with AppleLink
+packages and -> 128,848 B on 2026-10-06 with the uu and BinHex rules,
+so every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. The two rows that
 moved differently are the ones whose own image grew — StuffIt's, which
@@ -4325,7 +4390,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 155,668 B held against 128,592 B saved. It costs nothing on the tiers
+it — 155,920 B held against 128,848 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6742,7 +6807,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 949 fixtures byte-exact against `unar`/`macunpack` — bar the one uuencode fixture, which `unar` cannot read at all and whose ground truth is its generator's input, with `hexbin` agreeing |
+| Verification | none published | 951 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 

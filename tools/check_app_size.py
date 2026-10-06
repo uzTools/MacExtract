@@ -117,9 +117,19 @@ TAKEN = "2026-10-05"
 # more image costs. The bundle is not resident, so that part is download
 # and launch read; what the AppleLink format costs the engine's budget is
 # in EXPECT above.
-EXPECT_BUNDLE = 155672
+# RE-TAKEN 2026-10-06, 155,672 -> 155,920: `ovl_text` 11,450 -> 11,502
+# for the two alphabets UUTool actually writes with and `ovl_binhex`
+# 2,392 -> 2,590 for the part separator DeHQX documents, plus 2 B of
+# bundle index because one more image is now 2 mod 4. The SHIPPED
+# build's resident `CODE` moved +8 and its A5 −8, so EXPECT above is
+# untouched and nothing comes off an extraction's budget. What was
+# bought is every file UUTool writes by default — which this engine
+# refused outright — and a posting cut at the separator Peter Lewis's
+# own decoder resumes at (FORMATS.md, *uuencode: three alphabets*).
+# `run_tiers.py --check` moves no tally in either lane.
+EXPECT_BUNDLE = 155920
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-05"
+TAKEN_BUNDLE = "2026-10-06"
 
 
 def main():

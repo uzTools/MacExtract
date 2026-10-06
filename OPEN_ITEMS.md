@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 949 fixtures in `./ci.sh`.
+byte-exact against the oracle across 951 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -245,7 +245,7 @@ preload nothing reaches*).
 | what is left | what would move it |
 |---|---|
 | `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **three boots nobody has done.** No archive in reach sets bit 5 (47 scanned), and the only comment UI is StuffIt Deluxe 5.0.1, which Mac OS 9.2 refuses. **The media stopped being the blocker on 2026-10-06**: the retail Mac OS 8.6 install CD is on this disk, bootable HFS, 665,600,000 B (`tools/vmac/README.md`, *Mac OS 8.6 media*; BLOCKERS.md for the withdrawal). Unmeasured, in order: does `qemu-system-ppc -M mac99` boot 8.6, does 5.0.1 run on it, does its comment UI set bit 5 — the last still a **hypothesis** (DECISIONS.md 2026-09-27, *the file system was never the problem*) |
-| `fmt_binhex.c`, `fmt_uu.c` — macutils' THREE remaining rules about mailed text | **a second reader per rule, and each is blocked differently** — which is why it does not close in one go. Re-checked 2026-10-05, at the two readers named: deark **errors** on an out-of-alphabet character (`modules/binhex.c`, `do_decode_main`) and warns-and-drops one mid-line in uuencode, while mpack keeps the decoded prefix, so none of the three restates the whole-line garbage skip; deark's binhex reads ONE document, bounding its banner search to the first 8,192 bytes, and mpack's second-document handling is a separator inside one part, so neither is a rescan; and nothing else implements UUTool's MU layout. Three of the six are gone: two to mpack on 2026-09-27 and **the line-ending rule plus the unterminated last line to deark's `dbuf_find_line` on 2026-10-05**, which left `unc_internal.h` off this row (DECISIONS.md 2026-10-05, *the negative that was about one rule*). **Our use of all three is graded** — `tools/run_uu.py`'s gapped sets and the multi-part fixtures — so what is stuck is the citation, not the behaviour |
+| `fmt_binhex.c` — macutils' ONE remaining rule about mailed text: the skip of a line with intermediate garbage (`hqx.c`) | **a second reader that states THAT rule.** Re-checked 2026-10-05 at the two obvious ones and neither does: deark **errors** on an out-of-alphabet character (`modules/binhex.c`, `do_decode_main`), and mpack keeps the decoded prefix. Three readers have NOT been asked, and all three are reachable rather than published: UUParser 1.72's BinHex parser (`fixtures/uu-parser-172.hqx`; its README offers it as a registered-user feature, so whether the code is in the shareware binary is unmeasured), HQXer 1.1 (`fixtures/hqxer-11.hqx`), and StuffIt Expander 4.0.2 under emulation, which `tools/vmac/expander.py` already boots. DeHQX is not one of them: its own answer to a cut posting is the named separator, not a line test. Five of the six rules on this row have gone, each to a different source: two to mpack on 2026-09-27, the line-ending rule plus the unterminated last line to deark's `dbuf_find_line` on 2026-10-05 (which took `unc_internal.h` off), `mu_convert()` and the MU layout to **UUTool itself** on 2026-10-06 (which took `fmt_uu.c` off), and **the scan for a second document in one input to DeHQX 2.0.1 on 2026-10-06** — Peter Lewis's own decoder, by the author of the BinHex 4.0 Definition this file already cites, and the corpus fixture `dehqx-201.hqx` (DECISIONS.md 2026-10-06, *the alphabet nothing here had seen*, *the separator that was in the alphabet*). The pattern in all five: the search had asked the DECODERS in `reference/`, and the answer was a writer, an author's own program or a manual. **Our use of the one left is graded** by `tools/run_multihqx.py`'s multi-part postings, so what is stuck is the citation, not the behaviour |
 
 **The template is the `-lh1-` coder** (DECISIONS.md 2026-09-19, *the
 tree that was Yoshizaki's*): faster, smaller and lighter, so it would
@@ -276,7 +276,7 @@ compressed streams. What is left:
 
 **AppleLink packages would have joined this list on 2026-10-05** — the
 fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
-`.pkg` is 6 of 949 fixtures and it draws uniformly — so the suite got a lane
+`.pkg` is 6 of 951 fixtures and it draws uniformly — so the suite got a lane
 that bends those six directly instead: 300 mutants, a fixed seed, 270 of
 them still sniffing as a package and every one decoding without a sanitizer
 report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a

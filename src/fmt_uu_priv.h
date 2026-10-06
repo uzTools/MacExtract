@@ -12,6 +12,21 @@
 #define UU_SCAN_MAX   8192u
 #define UU_SIXB(c) (((c) - 0x20) & 0x3f)
 
+/* UUTool encodes with one of two alphabets, and `unc_uu_line_is_data`
+ * reports which of them a line could have come from. Source: the
+ * application's own `HEXA` 128 "PC" and `HEXA` 129 "UNIX" tables,
+ * read out of UUTool 2.3.2 by tools/derive_mu.py. */
+#define UU_TBL_PC     1     /* value v -> 0x20+v, the standard alphabet */
+#define UU_TBL_UNIX   2     /* the low values moved up past it: 0x3b..0x7d */
+#define UU_TBL_ANY    (UU_TBL_PC | UU_TBL_UNIX)
+/* The two ranges, as the tables give them. "PC" is 0x20..0x5f; the two
+ * UNIX generations together are 0x3b..0x7d. A character outside both is
+ * not a uu character at all. */
+#define UU_CH_MIN     0x20
+#define UU_UNIX_MIN   0x3b  /* below this: "PC" only   */
+#define UU_PC_MAX     0x5f  /* above this: "UNIX" only */
+#define UU_CH_MAX     0x7d
+
 int unc_uu_line_is_data(const uint8_t *line, int32_t len);
 
 #endif

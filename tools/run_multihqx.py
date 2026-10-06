@@ -166,7 +166,9 @@ def check_posted(macextract, tmp):
     the document and the entry came back truncated. Also pinned here is
     the edge of the rule — a junk line built ONLY of alphabet characters
     is indistinguishable from data and is still consumed, which BinHex's
-    per-fork CRC then catches as a per-entry error rather than silence.
+    per-fork CRC then catches as a per-entry error rather than silence —
+    and, since 2026-10-06, the ONE line of that shape that is not junk:
+    the "---" DeHQX's documentation says a cut posting resumes at.
     """
     os.makedirs(tmp, exist_ok=True)
     problems = []
@@ -192,6 +194,44 @@ def check_posted(macextract, tmp):
     if got != want:
         problems.append(f"posted: {len(got)} document(s) with different forks, "
                         f"expected the {len(want)} the single file gives")
+
+    # CUT AT DeHQX'S SEPARATOR, since 2026-10-06. Peter Lewis's own
+    # decoder documents the part boundary a posting is cut at — "a line
+    # beginning with '--- end of part'", then "a line consisting only of
+    # '---'" to resume — and the resume line is the one shape the
+    # alphabet rule cannot reject, every character of "---" being in the
+    # BinHex alphabet. This reader took it as two bytes of data and the
+    # fork's CRC objected, measured 2026-10-06 (DECISIONS.md 2026-10-06,
+    # *the separator that was in the alphabet*). hexbin reads such a
+    # file; tools/derive_dehqx.py has the sentence and the second
+    # implementation.
+    sep = os.path.join(tmp, "sep.hqx")
+    with open(sep, "wb") as f:
+        f.write(b"\n".join(lines[:half]) + b"\n")
+        f.write(b"--- end of part 1\n\n")
+        f.write(b"From: someone\nSubject: " + PARTS[0].encode() +
+                b" (2/2)\n\n")
+        f.write(b"---\n")
+        f.write(b"\n".join(lines[half:]))
+    rc, got = extract(macextract, sep)
+    if rc != 0:
+        problems.append(f"sep: a posting cut at DeHQX's separator exits {rc}")
+    if got != want:
+        problems.append(f"sep: {len(got)} document(s) with different forks, "
+                        f"expected the {len(want)} the single file gives")
+
+    # And the control, which is what says the rule above is the narrow
+    # one DeHQX documents rather than "a line of hyphens is not data":
+    # "---" with no "--- end of part" before it is still data, and the
+    # CRC still objects.
+    lone = os.path.join(tmp, "lone.hqx")
+    with open(lone, "wb") as f:
+        f.write(b"\n".join(lines[:half]) + b"\n---\n" +
+                b"\n".join(lines[half:]))
+    rc, _ = extract(macextract, lone)
+    if rc == 0:
+        problems.append("lone: a bare \"---\" mid-stream was accepted "
+                        "silently; only DeHQX's separator opens a gap")
 
     # The edge: alphabet-only junk cannot be told from data, so it is
     # taken as data and the CRC objects. Silence would be the bug.

@@ -359,7 +359,15 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # way — so CODE + A5 is 201,984 B in the control for the second build
 # running and OVL_SAVED does not move. The SHIPPED build did not move
 # at all: the decoder is in `ovl_packit`, 2,648 -> 2,672 B.
-UNC_MAC_CODE_DEFAULT=164080
+# Raised 2026-10-06 from 164,080 to 164,324: +244 B for the uu and BinHex
+# work of that day — the per-document alphabet test
+# (`unc_uu_line_is_data`) and DeHQX's part separator in
+# `src/fmt_binhex.c`. Both files are in an overlay in both SHIPPED
+# lifetimes, so this is the control carrying what the release does not,
+# and OVL_SAVED rises by the same 256 B that CODE + A5 does here
+# (FORMATS.md, *Three configurations, one tree*). The shipped pair moved
+# +8 of CODE and −8 of A5: net nothing.
+UNC_MAC_CODE_DEFAULT=164324
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -455,7 +463,10 @@ UNC_MAC_CODE_DEFAULT=164080
 # probe's pointer in the sniff order. Measured on the same tree as the
 # code figure above.
 # +4 on 2026-10-05, with the code ceiling above.
-UNC_MAC_A5_DEFAULT=37904
+# +12 on 2026-10-06, with the code ceiling above: rodata alignment under
+# the new text in two files that carry no data of their own, the effect
+# this file has now recorded four times.
+UNC_MAC_A5_DEFAULT=37916
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -582,16 +593,24 @@ UNC_MAC_A5_DEFAULT=37904
 # reads on every file the sniffer rejects and one 4-byte read on a zip,
 # measured. `run_tiers.py --check` is what says whether it cost a
 # fixture.
-UNC_MAC_CODE_EAGER=54328
-UNC_MAC_A5_EAGER=19064
+# +8 code and −8 A5 on 2026-10-06, for the uu probe's per-document
+# alphabet test: what rejects an English sentence that declares 45 bytes
+# is having a space AND lower case in it, and the probe is resident
+# because the sniffer calls it for every file it is handed. CODE + A5 is
+# unchanged at 73,392 B, so nothing comes off any extraction's budget —
+# and A5 is a ratchet too, so the eight bytes it gave back are locked in
+# (DECISIONS.md 2026-10-06, *the alphabet nothing here had seen*).
+UNC_MAC_CODE_EAGER=54336
+UNC_MAC_A5_EAGER=19056
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
 # +740 and +44 on 2026-10-05 for the same reason as the eager pair.
 # +316 code on 2026-10-05 for the zip-behind-a-stub probe, same as the
 # eager pair; A5 fell 4 B to 19,144 and the ceiling comes down with it.
-UNC_MAC_CODE_LAZY=52904
-UNC_MAC_A5_LAZY=19144
+# +8 and −8 on 2026-10-06 for the same reason as the eager pair.
+UNC_MAC_CODE_LAZY=52912
+UNC_MAC_A5_LAZY=19136
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

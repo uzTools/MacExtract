@@ -72,6 +72,15 @@ than about the formats:
     populated for every file.  Every `detection=` sweep below is
     therefore paired with a sweep by extension or format, which is
     reached a different way.
+  * **the END of a file, unless the range is explicit.** A suffix range
+    — `Range: bytes=-2048` — is answered here with `206 Partial
+    Content` and the bytes of the HEAD, so a probe that reads a tail
+    must ask for `bytes=<size-2048>-<size-1>` and must be given a
+    positive control first: one file whose last bytes are already
+    known. A sweep of 939 files reported 0 hits that way and the
+    specimen was in it (TESTING.md, *Searching somebody else's index by
+    content*).
+
   * **anything past Elasticsearch's result window.**  A query with more
     hits than `--pages` × `limit` returns the first page's worth and
     says so; shard it with `sizeMin`/`sizeMax` rather than widening the

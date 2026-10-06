@@ -79,21 +79,27 @@ hand.
                        wrote (tools/derive_sit5crypt.py).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
                        nothing reachable sets.
-  src/fmt_binhex.c,    macutils' hexbin: THREE rules about text that has
-  src/fmt_uu.c         been mailed rather than about an encoding —
-                       mu_convert() and UUTool's MU layout (mu.c), the
-                       skip of a line with intermediate garbage, and
-                       the scan for a second document in one input
-                       (hqx.c, hexbin.c). Two left on 2026-09-27 for
-                       mpack (below), which is permissive: the dispatch
-                       — any amount of preamble skipped looking for
-                       "begin " — and the uu terminator;
-                       `src/fmt_mime.c` carried only the second and is
-                       clear of both references now. A fourth left on
-                       2026-10-05 for deark (below): the line-ending
-                       rule and the unterminated last line, which
-                       dbuf_find_line states for all three terminators
-                       and which deark's own uudecode uses.
+  src/fmt_binhex.c     macutils' hexbin: ONE rule about text that has
+                       been mailed rather than about an encoding — the
+                       skip of a line with intermediate garbage (hqx.c),
+                       which it applies to read a file posted in several
+                       parts. Five rules have left this row. Two on
+                       2026-09-27 for mpack (below), which is
+                       permissive: the dispatch — any amount of
+                       preamble skipped looking for "begin " — and the
+                       uu terminator; `src/fmt_mime.c` carried only the
+                       second and is clear of both references now. A
+                       third on 2026-10-05 for deark (below): the
+                       line-ending rule and the unterminated last line,
+                       which dbuf_find_line states for all three
+                       terminators and which deark's own uudecode uses.
+                       The fourth took `src/fmt_uu.c` off this row
+                       entirely on 2026-10-06: mu_convert() and the MU
+                       layout are UUTool's own (below). And the fifth,
+                       the same day, is the scan for a second document
+                       in one input, which DeHQX 2.0.1's own
+                       documentation states (below) — hexbin.c until
+                       then.
   src/fmt_macbinary.c, four things no specification supports: the
   src/fmt_applesingle.c  MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c     nonzero-date test, the byte-swapped AppleSingle
@@ -307,6 +313,18 @@ This project's decoders are transcriptions/ports of algorithms from:
     both — witnessed at 32 offsets in its `CODE` 1 and then EXECUTED
     under `qemu-m68k` (`tools/derive_pitcrypt.py`). That file owes
     neither reference anything now.
+    **And not hexbin.c's second-document scan since 2026-10-06**:
+    DeHQX 2.0.1 documents it (below), and DeHQX is Peter Lewis's, whose
+    BinHex 4.0 Definition that file is transcribed from.
+    **And not `src/fmt_uu.c` since 2026-10-06**: the MU layout is
+    UUTool's own, stated in UUTool's own manual and written out of
+    literals its `DATA` 0 holds whole, and `mu_convert()`'s transform
+    is mpack's `uudecodeline()` (below) with UUTool's `HEXA` 128 table
+    for the pad character — all of it checked by `tools/derive_mu.py`
+    against three versions of the application and two wild specimens.
+    The claim that only hexbin read the layout had stood since M13
+    while the application itself sat in the corpus as
+    `fixtures/uu-tool-24.hqx` (BLOCKERS.md).
     A build of `macunpack` is also the second oracle for the
     differential test suite (TESTING.md) — test-time only, not linked
     into anything shipped.
@@ -445,6 +463,28 @@ This project's decoders are transcriptions/ports of algorithms from:
     file is an address in a binary this project does not redistribute.
     The archives themselves are fetched by URL, never committed
     (fixtures/SOURCES.md).
+
+  * UUTool, by Bernie Wieser (Octavian Micro Development, 1990-1994),
+    freeware. UUTool is the program that defined the "MU" shape of a
+    uuencoded posting — the data fork, then an optional ` .rsrc`
+    section, then a ` .finfo` section — and until 2026-10-06
+    `src/fmt_uu.c` cited macutils' reader of it for want of anything
+    else. It states the layout itself, three ways: in its own manual
+    ("The data fork of a file is the first part in the encoded text
+    file ... This is followed by the resource fork, and finally finder
+    information"), in the section headers its `DATA` 0 holds as whole
+    literals, and in the two 64-byte encode tables it carries as
+    `HEXA` 128 "PC" and `HEXA` 129 "UNIX". No code was copied; every
+    citation in that file is a resource in a binary this project does
+    not redistribute, and `tools/derive_mu.py` checks each of them
+    where it is claimed to sit, in 2.0.4, 2.3.2 and 2.4. The second
+    one of those tables is also why the engine read nothing UUTool
+    wrote by default until that day (DECISIONS.md 2026-10-06, *the
+    alphabet nothing here had seen*). 2.4 is the corpus fixture
+    `uu-tool-24.hqx`; the two earlier versions are fetched from
+    Macintosh Garden and never committed. UUParser 1.72 (corpus
+    fixture `uu-parser-172.hqx`) carries both tables as well, which is
+    what makes the reading two implementations rather than one.
 
   * The cryptographic primitives five of the encryption schemes need —
     DES, MD5, RC4, SHA-1 and AES — cite the documents that define them,
@@ -615,6 +655,21 @@ the file that uses one names the section a fact is in.
     long, so it cannot on its own say what the alphabet is; Lewis's
     document is also the only one that states the CRC and the rule
     that a run count of zero means a literal 0x90.
+
+  * DeHQX 2.0.1's own documentation (Peter N Lewis, 1991-1993,
+    freeware) — for `src/fmt_binhex.c`'s two rules about text that has
+    been MAILED, since 2026-10-06. Its *How It Works* states the scan
+    for a second document in one input ("When it comes to the end of
+    the HQX source, if [sic] checks for the terminating colon, and then
+    continues scanning the file for the next '(This file...'") and the
+    part separator a cut posting resumes at ("a line beginning with
+    '--- end of part' ... a line consisting only of '---'"), which is
+    the one line shape BinHex's own alphabet cannot reject. It is the
+    same author as the Definition above. Not in `reference/notes/`
+    because it is not published as a document: it ships beside the
+    application inside the corpus fixture `dehqx-201.hqx`, and
+    `tools/derive_dehqx.py` reads it out of there with this project's
+    own CLI and checks all four sentences it relies on.
 
   * The MacBinary II Standard (revised 7/24/87) and the MacBinary III
     Standard Proposal (December 1996) — for `src/fmt_macbinary.c`: the

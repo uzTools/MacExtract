@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "R*ch",
+   "data_sha256": "edad70c6ea53599b41fa6136f7ea79f4d5c25f3169b437c28eebb0562d9d0413",
+   "data_size": 5161,
+   "name": "dictcol-test.tex",
+   "rsrc_sha256": "a9e49b5bb593845a651357033cfc2a8a07a77865ca516e99374388dbf3a0a117",
+   "rsrc_size": 648,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "uu-wild-dictcol.uu",
+ "format": "uuencode",
+ "oracle": "macutils' hexbin on both forks (tools/derive_mu.py --grade)",
+ "sha256": "7bc8683fee6944a65fc8eecea9adbb156dc96a8b449138767e0e0415384ff8ec",
+ "size": 8116
+}

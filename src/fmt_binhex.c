@@ -75,6 +75,7 @@ typedef struct BhDec {
     uint8_t *bp, *bend;   /* what is left of them; equal when none is */
     uint8_t  prev_bits;
     int      eof;         /* saw terminating ':' */
+    int      in_gap;      /* between "--- end of part" and "---" */
     /* RLE layer */
     UncRle90 rle;
     int      err;         /* sticky decoder error */
@@ -91,6 +92,7 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
     d->bp = d->bend = d->batch;
     d->prev_bits = 0;
     d->eof = 0;
+    d->in_gap = 0;
     unc_rle90_init(&d->rle, 1);
     d->llen = d->lpos = 0;
     d->err = UNC_OK;
@@ -157,6 +159,37 @@ static int bh_refill_line(BhDec *d)
          * judging the line, so a trimmed line is not "garbage". */
         while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
         if (n == 0) continue;                       /* blank line */
+
+        /* The part separator a posting is CUT at, which the alphabet
+         * rule below cannot see: the resume line is "---" and every one
+         * of those three characters is in the BinHex alphabet, so it
+         * reads as two bytes of data and the fork's CRC fails.
+         *
+         * Source: DeHQX 2.0.1's own documentation, *How It Works*, by
+         * Peter N Lewis — who wrote the BinHex 4.0 Definition this file
+         * is transcribed from: "If it encounters a line beginning with
+         * '--- end of part', it ignores the file until it encounters a
+         * line consisting only of '---', at which time it resumes
+         * dehqxing." tools/derive_dehqx.py checks that sentence and
+         * grades a posting cut this way, which this reader failed until
+         * 2026-10-06 and macutils' hexbin reads (by the length rule
+         * below, which is still not transcribed). */
+        if (d->in_gap) {
+            if (n == 3 && q[0] == '-' && q[1] == '-' && q[2] == '-')
+                d->in_gap = 0;
+            continue;
+        }
+        if (n >= 15 && q[0] == '-' && q[1] == '-' && q[2] == '-' &&
+            q[3] == ' ' && q[4] == 'e' && q[5] == 'n' && q[6] == 'd' &&
+            q[7] == ' ' && q[8] == 'o' && q[9] == 'f' && q[10] == ' ' &&
+            q[11] == 'p' && q[12] == 'a' && q[13] == 'r' && q[14] == 't') {
+            /* Compared byte by byte rather than against a literal: a
+             * string constant here would be thirteen bytes of A5 world,
+             * which is resident for the life of the application and is
+             * at its ceiling (tools/check_app_size.py). */
+            d->in_gap = 1;
+            continue;
+        }
 
         /* The one pass that judges the line also converts it: what
          * line[] holds from here on is 6-bit values and 0xFE for the
@@ -280,9 +313,15 @@ static int bh_next(BhDec *d)
  * after it: the text between two postings is a whole posting, and in
  * list mode the previous document's own encoded stream has not been
  * consumed, so the distance to the next banner is the size of the file.
- * Source: reference/macutils/hexbin/hexbin.c, which decodes a document
- * and then does `again = 1; goto nexttry` to look for the next header in
- * the same input, its find_header() scanning to EOF.
+ *
+ * Source: DeHQX 2.0.1's own documentation, *How It Works*, by Peter N
+ * Lewis — the author of the BinHex 4.0 Definition above: "When it comes
+ * to the end of the HQX source, if [sic] checks for the terminating
+ * colon, and then continues scanning the file for the next '(This
+ * file...'", and its glossary defines a source file as "a file
+ * containing (parts of) one or more HQX sources". macutils' hexbin.c,
+ * which decodes a document and then does `again = 1; goto nexttry`,
+ * until 2026-10-06 (tools/derive_dehqx.py).
  *
  * Returns UNC_OK or UNC_ERR_FORMAT. */
 static int bh_find_banner(UncBufIn *in, int limited)
@@ -381,6 +420,7 @@ static void bh_reset(BhDec *d)
     d->bp = d->bend = d->batch;
     d->prev_bits = 0;
     d->eof = 0;
+    d->in_gap = 0;
     unc_rle90_init(&d->rle, 1);
     d->err = UNC_OK;
 }

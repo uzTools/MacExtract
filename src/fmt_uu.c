@@ -18,11 +18,22 @@
  *       then): dbuf_find_line ends a line at CR, at LF or at CR+LF and
  *       treats a last line with no terminator as a line, and deark's
  *       own uudecode skips the blank line a CRLF leaves behind.
- *   reference/macutils/hexbin/mu.c      — the UUTool layout: the data
- *       fork's section, then an OPTIONAL " .rsrc" section, then a
- *       " .finfo" section holding the Finder info, each terminated by
- *       a zero-length line and the word "end". SIXB()/mu_convert(),
- *       including the restoration of trailing spaces that mailers eat.
+ *   UUTool, by Bernie Wieser (Octavian Micro Development) — the MU
+ *       layout and both of its alphabets, since 2026-10-06 (macutils'
+ *       hexbin/mu.c until then). The program that WRITES the layout
+ *       states it three ways, and tools/derive_mu.py checks all three
+ *       against three versions of it: its own manual has the order
+ *       ("The data fork of a file is the first part in the encoded
+ *       text file, bounded by a 'begin' and 'end' statement.  This is
+ *       followed by the resource fork, and finally finder
+ *       information"), its DATA 0 holds the section headers it writes
+ *       as whole literals — "begin 0700 .rsrc\r", "begin 0700
+ *       .finfo\r", "end\r" — and its HEXA 128 "PC" and HEXA 129
+ *       "UNIX" resources are the two encode tables. UUParser 1.72, a
+ *       different author, carries both tables too.
+ *   reference/mpack/uudecode.c, uudecodeline() — the 4-for-3 transform
+ *       and the count character that leads each line, which is
+ *       DEC(c) = ((c) - ' ') & 077 there and UU_SIXB() here.
  *
  * Two shapes are read:
  *
@@ -145,7 +156,9 @@ static int uu_readline(UncBufIn *in, uint32_t base, UuLine *l)
 
 /* ------------------------------------------------------------------ */
 /* Line decoding                                                      */
-/* Source: mu_convert() in reference/macutils/hexbin/mu.c.            */
+/* Source: uudecodeline() in reference/mpack/uudecode.c (CMU,         */
+/* permissive) for the transform, and UUTool's own HEXA 128 "PC"      */
+/* table for the padding below (tools/derive_mu.py --tables).         */
 /* ------------------------------------------------------------------ */
 
 
@@ -162,8 +175,15 @@ int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out)
     incount = ((outcount / 3) + 1) * 4;
     if (incount > UU_LINE_MAX) return -1;
 
-    /* "restore lost spaces" — mailers strip trailing whitespace, so a
-     * short line is padded back out to the length its count implies. */
+    /* Mailers strip trailing whitespace, so a short line is padded
+     * back out to the length its count implies. A space is what the
+     * padding has to be because the "PC" table spells the value ZERO
+     * as one, which is also why UUTool's other table exists at all:
+     * "I suggest not using original coding when using UNIX machines,
+     * since some electronic mailors reformat white space" (its manual,
+     * *UUcode preferences*). Under either of the UNIX tables the value
+     * zero is 0x60 instead, and UU_SIXB reads a space as zero there
+     * too, so one pad character serves all three. */
     for (i = 0; i < len && i <= incount; i++) ib[i] = buf[i];
     for (; i <= incount; i++) ib[i] = ' ';
 
@@ -184,6 +204,7 @@ static int32_t uu_decode_line(const UuLine *l, uint8_t *out)
     return unc_uu_decode_line(l->buf, l->len, out);
 }
 
+
 /* Does this line open a section? */
 static int uu_is_begin(const UuLine *l)
 {
@@ -198,10 +219,14 @@ static int uu_is_end(const UuLine *l)
            l->buf[2] == 'd';
 }
 
-/* The section tag of a UUTool continuation line, compared where the
- * reference compares it: mu.c tests line+10 against " .rsrc" and
- * " .finfo" — a fixed offset, because UUTool writes a fixed
- * "begin ### " prefix. */
+/* The section tag of a UUTool continuation line, at the offset the
+ * literal puts it: UUTool's DATA 0 holds "begin 0700 .rsrc\r" and
+ * "begin 0700 .finfo\r" whole, so the tag starts at 10 and begins
+ * with a space. The mode in a continuation line is that literal's and
+ * not the preference's — `uu-wild-dictcol.uu` says 0755 in its first
+ * line and 0700 in both sections — and a Macintosh ignores it either
+ * way ("This is ignored on the Mac side", the manual's *UNIX
+ * Preferences*). */
 static int uu_tag_is(const UuLine *l, const char *tag)
 {
     int32_t i;
@@ -211,9 +236,14 @@ static int uu_tag_is(const UuLine *l, const char *tag)
     return 1;
 }
 
-/* Name out of a begin line. UUTool quotes a Mac name; plain uuencode
- * writes a bare filename. mu.c takes everything after the first '"'
- * and drops the last character. */
+/* Name out of a begin line. UUTool quotes a Mac name when its naming
+ * preference is "Macintosh", where "anything goes" and a space in a
+ * name would otherwise end it; with the PC or UNIX preference it
+ * writes a bare name with the characters it calls dangerous replaced
+ * (its manual, *UUcode preferences*), and so does plain uuencode. Both
+ * wild specimens are here: one of each. So the name is what follows
+ * the first '"' with the closing one dropped, or the rest of the line
+ * past the mode. */
 /* Where the name sits inside a "begin" line. Takes the bytes rather
  * than the UuLine, so it can run over the whole line kept in the host's
  * buffer as well as over the first UU_LINE_MAX of it. */
@@ -284,9 +314,13 @@ typedef struct UuDoc {
 /* Read one section's lines. If sink is non-NULL the payload is written
  * to it as `fork`; otherwise only its length is measured. Stops after
  * the zero-length line and the "end" that follows it — or after a bare
- * "end", which is what encoders other than UUTool write. */
+ * "end", which is what encoders other than UUTool write.
+ *
+ * `*table` is the DOCUMENT's alphabet, narrowed as its lines are read
+ * and carried from one section to the next because UUTool writes every
+ * section of a document with one table (fmt_uu_priv.h). */
 static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
-                      UncFork fork, int write, uint32_t *bytes)
+                      UncFork fork, int write, uint32_t *bytes, int *table)
 {
     uint8_t dec[UU_DEC_MAX];
     int err;
@@ -302,6 +336,7 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
         if (uu_is_end(l)) return UNC_OK;
         {
             int32_t n = uu_decode_line(l, dec);
+            int m;
             if (n == 0) {
                 /* Terminator; the "end" line follows it. */
                 err = uu_readline(in, base, l);
@@ -316,18 +351,26 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
             /* A line that cannot be a data line is MAIL, not data: a
              * file posted in several parts arrives as several messages,
              * each with its own header, and joining them puts that
-             * header in the middle of the stream. Skipping it is what
-             * hexbin does for BinHex (hqx.c, "check line for
-             * intermediate garbage"); here the test is stronger than an
-             * alphabet, because a uu line's first character DECLARES how
-             * many bytes it encodes, so the length has to agree.
+             * header in the middle of the stream. The same thing
+             * macutils' hexbin does for BinHex (hqx.c, "check line for
+             * intermediate garbage", which fmt_binhex.c still cites);
+             * here the test is stronger, because a uu line's first
+             * character DECLARES how many bytes it encodes, so the
+             * length has to agree AND the characters have to be in the
+             * alphabet this document has used so far. Both halves are
+             * load-bearing: with the character test widened to the
+             * union of UUTool's two alphabets and no per-document
+             * narrowing, three cases of mail in mid-stream were read as
+             * data (tools/run_uu.py, the intruder pair).
              *
              * What this cannot do is notice a part that never arrived.
              * uuencode carries no length and no checksum anywhere, so a
              * set missing its MIDDLE part decodes to a short file with
              * nothing to object to. A missing LAST part is still caught:
              * the terminator and "end" live there. OPEN_ITEMS.md. */
-            if (n < 0 || !unc_uu_line_is_data(l->buf, l->len)) continue;
+            m = unc_uu_line_is_data(l->buf, l->len);
+            if (n < 0 || !(m & *table)) continue;
+            *table &= m;
             *bytes += (uint32_t)n;
             if (write) {
                 if (c->sink->write(c->sink->ctx, fork, dec, n) != 0)
@@ -346,6 +389,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
     const uint8_t *nm;
     uint32_t nlen;
     int err;
+    int table = UU_TBL_ANY;      /* which alphabet this document uses */
 
     d->data.present = d->rsrc.present = d->finfo.present = 0;
     d->data.bytes = d->rsrc.bytes = d->finfo.bytes = 0;
@@ -393,7 +437,8 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
         d->name_len = nlen;
     }
 
-    err = uu_section(c, in, base, l, UNC_FORK_DATA, 0, &d->data.bytes);
+    err = uu_section(c, in, base, l, UNC_FORK_DATA, 0, &d->data.bytes,
+                     &table);
     if (err != UNC_OK) return err;
     d->data.present = 1;
     d->end = uu_abs(base, in);
@@ -408,7 +453,8 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
         if (!uu_is_begin(l)) { d->end = mark; return UNC_OK; }
 
         if (uu_tag_is(l, " .rsrc")) {
-            err = uu_section(c, in, base, l, UNC_FORK_RSRC, 0, &d->rsrc.bytes);
+            err = uu_section(c, in, base, l, UNC_FORK_RSRC, 0, &d->rsrc.bytes,
+                             &table);
             if (err != UNC_OK) return err;
             d->rsrc.present = 1;
             d->end = uu_abs(base, in);
@@ -513,6 +559,7 @@ int unc_uu_extract(UncCtx *c)
             if (!c->opt.list_only) {
                 /* Second pass over the same document, this time writing. */
                 uint32_t n;
+                int table = UU_TBL_ANY;
                 if (c->io->seek(c->io->ctx, d.start) < 0) {
                     est = UNC_ERR_IO;
                 } else {
@@ -522,7 +569,7 @@ int unc_uu_extract(UncCtx *c)
                     if (est == UNC_OK && !uu_is_begin(&l)) est = UNC_ERR_CORRUPT;
                     if (est == UNC_OK)
                         est = uu_section(c, &in, d.start, &l, UNC_FORK_DATA,
-                                         !c->opt.test_only, &n);
+                                         !c->opt.test_only, &n, &table);
                     if (est == UNC_OK && d.rsrc.present) {
                         /* Skip to the .rsrc section's own begin line. */
                         for (;;) {
@@ -530,8 +577,10 @@ int unc_uu_extract(UncCtx *c)
                             if (est != UNC_OK) break;
                             if (l.len == 0) { if (l.eof) { est = UNC_ERR_TRUNCATED; break; } continue; }
                             if (uu_is_begin(&l) && uu_tag_is(&l, " .rsrc")) {
-                                est = uu_section(c, &in, d.start, &l, UNC_FORK_RSRC,
-                                                 !c->opt.test_only, &n);
+                                est = uu_section(c, &in, d.start, &l,
+                                                 UNC_FORK_RSRC,
+                                                 !c->opt.test_only, &n,
+                                                 &table);
                                 break;
                             }
                             if (uu_is_begin(&l)) { est = UNC_ERR_CORRUPT; break; }

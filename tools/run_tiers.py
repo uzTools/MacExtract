@@ -255,7 +255,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # TIERS budgets below are now a further 320 B more generous than the
 # Macintosh will be until they are re-taken there (FORMATS.md, *What the
 # zip pair claims, and what it costs*).
-OVL_SAVED = 128592
+OVL_SAVED = 128848
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -311,22 +311,22 @@ OVL_RESIDUE = -666
 # only read so that the lane still runs where Retro68 is not.
 IMAGES = {
     "OVL_ID_ARC":         8120,
-    "OVL_ID_BINHEX":      2392,
+    "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
-    "OVL_ID_CPTDD":      15784,
-    "OVL_ID_CRYPT":      10140,
-    "OVL_ID_EXO":        29252,
+    "OVL_ID_CPTDD":       15784,
+    "OVL_ID_CRYPT":       10140,
+    "OVL_ID_EXO":         29252,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         4938,
     "OVL_ID_PACKIT":      2644,
-    "OVL_ID_SPACESAVER": 16722,
-    "OVL_ID_STUFFIT":    26278,
+    "OVL_ID_SPACESAVER":  16722,
+    "OVL_ID_STUFFIT":     26278,
     "OVL_ID_SQP":         1972,
     "OVL_ID_SUPERDISK":   7056,
-    "OVL_ID_TEXT":       11450,
+    "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 155668
+BUNDLE = 155920
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

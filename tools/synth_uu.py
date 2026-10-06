@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""synth_uu.py — uuencoded fixtures, in both shapes the decoder reads.
+"""synth_uu.py — uuencoded fixtures, in every shape the decoder reads.
 
 The corpus holds no `.uu` (measured 2026-08-15 by innermost format over
 all 805 fixtures), so these are generated. Each shape has its own
@@ -7,10 +7,12 @@ independent adjudicator, which is the point:
 
     plain     `binascii.b2a_uu` writes it (CPython, not our code) and
               the ground truth is the bytes that went in.
-    UUTool    macutils' `hexbin` decodes it — the implementation
-              fmt_uu.c was transcribed from (hexbin/mu.c), so an
-              agreement is between two implementations rather than
-              between a generator and its mirror image.
+    UUTool    macutils' `hexbin` decodes it — a second
+              implementation, so an agreement is between two
+              implementations rather than between a generator and its
+              mirror image. What fmt_uu.c CITES is UUTool itself
+              (tools/derive_mu.py); hexbin is an oracle here, not a
+              source.
 
 Layout of the UUTool shape, from reference/macutils/hexbin/mu.c:
 
@@ -25,34 +27,74 @@ Layout of the UUTool shape, from reference/macutils/hexbin/mu.c:
     `
     end
 
-mu.c compares the section tag at a FIXED offset (line+10), which is why
+The section tag is compared at a FIXED offset (line+10), which is why
 the prefix is exactly "begin 644 " and the tag itself starts with a
-space.
+space — UUTool writes "begin 0700 .rsrc" and the mode is four
+characters (tools/derive_mu.py).
+
+THREE ALPHABETS, and two of them are not the standard one. UUTool
+encodes with its `HEXA` 128 "PC" table (the standard 0x20..0x5f) only
+when "use original coding" is set; by default it uses `HEXA` 129
+"UNIX", which moves the low values up past the standard range so that
+no value encodes to a space. It shipped in two generations — 2.0.4's
+moves 30 values to 0x60..0x7d, 2.3.2's moves 27 to 0x60..0x7a — and
+BOTH are generated here, because a reader that assumes the standard
+alphabet reads nothing UUTool writes by default (DECISIONS.md
+2026-10-06, *the alphabet nothing here had seen*).
 
 Usage:  synth_uu.py <outdir>
 """
 import binascii, os, sys
 
+# Source: UUTool's own `HEXA` 128 and 129 resources, read out of 2.0.4
+# and 2.3.2 by tools/derive_mu.py --tables. `None` is the standard
+# alphabet, which is both `HEXA` 128 and what binascii writes.
+TABLE_PC = None
+TABLE_UNIX20 = 30      # UUTool 2.0.4: values 0..29 -> 0x60..0x7d
+TABLE_UNIX23 = 27      # UUTool 2.3.2: values 0..26 -> 0x60..0x7a
 
-def uu_lines(data):
+
+def encode_char(v, table):
+    """One 6-bit value as the character `table` spells it."""
+    if table is None or v >= table:
+        return 0x20 + v
+    return 0x60 + v
+
+
+def uu_line(chunk, table):
+    """One data line: the count character, then the 4-for-3 groups."""
+    if table is None:
+        return binascii.b2a_uu(chunk).decode('ascii').rstrip('\n')
+    out = [encode_char(len(chunk), table)]
+    pad = chunk + bytes(-len(chunk) % 3)
+    for i in range(0, len(pad), 3):
+        a, b, c = pad[i], pad[i + 1], pad[i + 2]
+        for v in (a >> 2, ((a & 3) << 4) | (b >> 4),
+                  ((b & 15) << 2) | (c >> 6), c & 0x3f):
+            out.append(encode_char(v, table))
+    return bytes(out).decode('ascii')
+
+
+def uu_lines(data, table=TABLE_PC):
     out = []
     for i in range(0, len(data), 45):
-        out.append(binascii.b2a_uu(data[i:i + 45]).decode('ascii').rstrip('\n'))
+        out.append(uu_line(data[i:i + 45], table))
     return out
 
 
-def plain(name, data, mode="644"):
+def plain(name, data, mode="644", table=TABLE_PC):
     lines = ["begin %s %s" % (mode, name)]
-    lines += uu_lines(data)
-    lines.append("`")
+    lines += uu_lines(data, table)
+    lines.append("`")           # value 0 is "`" in all three tables
     lines.append("end")
     return "\n".join(lines) + "\n"
 
 
-def uutool(macname, datafork, rsrcfork, ftype, creator, flags=0):
+def uutool(macname, datafork, rsrcfork, ftype, creator, flags=0,
+           table=TABLE_PC):
     def section(tag, payload):
         lines = ["begin 644 " + tag]
-        lines += uu_lines(payload)
+        lines += uu_lines(payload, table)
         lines.append("`")
         lines.append("end")
         return lines
@@ -107,6 +149,22 @@ def main():
 
     p = os.path.join(out, "synth-uu-mac-nrsrc.uu")
     open(p, "w").write(uutool("Data Only", data, b"", b"TEXT", b"ttxt"))
+    made.append(p)
+
+    # The two alphabets UUTool actually ships with, which is what a
+    # wild specimen turned out to be in (FORMATS.md, *uuencode*).
+    p = os.path.join(out, "synth-uu-mac-unix20.uu")
+    open(p, "w").write(uutool("Unix Table", data, rsrc, b"TEXT", b"ttxt",
+                              table=TABLE_UNIX20))
+    made.append(p)
+
+    p = os.path.join(out, "synth-uu-mac-unix23.uu")
+    open(p, "w").write(uutool("Later Table", data, rsrc, b"TEXT", b"ttxt",
+                              table=TABLE_UNIX23))
+    made.append(p)
+
+    p = os.path.join(out, "synth-uu-plain-unix20.uu")
+    open(p, "w").write(plain("hello.txt", data, table=TABLE_UNIX20))
     made.append(p)
 
     for m in made:
