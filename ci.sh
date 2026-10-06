@@ -194,6 +194,15 @@ python3 tools/run_foreign.py --macextract build/san/macextract \
 # `unar -p`, which is a different implementation of each cipher.
 python3 tools/run_crypt.py --macextract build/san/macextract \
     || fail "decryption tests"
+# StuffIt method 14's window wrap. The committed fixture's four shapes
+# decode to 18,389 B all told and the window is sized to the fork, so
+# `sit14_flush`'s second half is reached by nothing under 0x40000 B of
+# output — which is 458 B of matches to write and a 256 KB window to
+# decode, i.e. a peak-RAM figure and a Macintosh tier the fixture should
+# not be made to move. So the archive is generated here instead and
+# graded three ways, `unar` included (TESTING.md, *StuffIt method 14*).
+python3 tools/run_sit14wrap.py --macextract build/san/macextract \
+    || fail "StuffIt method 14 window wrap"
 # The optimized StuffIt archives, graded by the program that WROTE them:
 # StuffIt Deluxe 2.0.1 under Mini vMac stuffed a text file with `Text 1`
 # enabled and unstuffed it again, and what it hands back is the only

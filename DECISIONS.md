@@ -344,6 +344,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
 - 2026-10-06 (the alphabet nothing here had seen) — the program that defines the MU layout was a corpus fixture, and the engine had never read a line of what it writes
 - 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
+- 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
 
 ---
 
@@ -20957,8 +20958,10 @@ the green as coverage.
 that paragraph is worth less than its figures: the window-wrap half of
 `sit14_flush`, which needs a fork past 256 KB where this seed's largest
 is 17,799 B — the window is sized to the fork, so nothing smaller can
-reach it — and the `goto out` after a failed flush, which is a sink
-write error no mutant can cause. One container only, a bare `.sit`. And
+reach it; **withdrawn 2026-10-06, 458 B of stream decode to 278,896 B
+and a second named seed wraps it** (BLOCKERS.md; 2026-10-06, *the fork
+that was cheaper than the file*) — and the `goto out` after a failed
+flush, which is a sink write error no mutant can cause. One container only, a bare `.sit`. And
 a mutant is graded by nothing: what is graded is the seed, which
 `run_diff` adjudicates against `unar` on every run.
 
@@ -22078,3 +22081,105 @@ what each rule is FOR, and that is the question a passing suite never
 asks. Both defects were in the same place — the test that tells a data
 line from a line of mail — and in both cases the input that would have
 shown it was a file somebody had actually posted.
+
+## 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
+
+**The row said a fork past 256 KB, and read that as a seed past 256
+KB.** `sit14_flush`'s second half — the flush that straddles the end of
+the window — had been filed on 2026-10-05 as out of reach for fuzzing,
+because `sit14_winsize` sizes the window to the fork and the method-14
+seed's largest fork is 17,799 B. Both halves are true. The inference is
+not: **`tools/synth_sit14.py` is an encoder, 17,799 B is what four
+hand-written symbol scripts happen to decode to, and a match ladder
+whose ceiling is 16,387 B turns 458 bytes of stream into 278,896 bytes
+of fork.** Seventeen matches and a literal between each. The file grew
+by 553 bytes.
+
+That is the whole finding, and the smell it answers to is one this file
+already keeps: **a tolerance that rests on our own output cannot fail.**
+17,799 B is not a property of the format or of this machine — it came
+out of a four-case list in our own generator. The other smell is newer
+and worth naming: **a claim that runs two sizes together, where a
+compressor exists precisely because they differ.** "Past 256 KB" was
+read as an obstacle because files that size are what a corpus has or
+has not got; the claim was about forks.
+
+**It is deliberately NOT a fifth entry in the fixture, and that is the
+decision rather than the discovery.** `fixtures/synth-sit14.sit` is
+graded by `run_diff` against `unar`, carried by `run_robustness.py`,
+run under qemu-m68k by `tests/run_mac_sink.sh` and run on four emulated
+tiers. A 278,896 B fork takes its peak heap from 65,152 B to 294,528 B,
+which is more than one of the two 512 KB lanes grants StuffIt 5
+(210,976 B — short by 83,552, measured). So covering one branch would
+have moved a peak-RAM figure, a budget row and a tier tally, and every
+one of those would then be re-measured on an emulator at minutes a run.
+**The branch is worth less than the tallies.** The archive is generated
+in `ci.sh` instead and graded by `tools/run_sit14wrap.py`, which is the
+shape `run_now.py` already has for the Now Compress archives the corpus
+lacks: generated, adjudicated by `unar`, never a fixture.
+
+**A mutant is graded by nothing, so the seed had to be graded.** The
+fuzzer only asks whether a case crashes; what says method 14 is
+*correct* is the seed, adjudicated against `unar`. Adding a second
+named seed that nothing adjudicated would have put an ungraded archive
+in the pool, so the new suite exists to keep that property true: the
+encoder's bytes, `unar`'s and this CLI's agree on all five entries,
+278,896 B included.
+
+**The payload is aperiodic on purpose.** A fork built as one long match
+at distance 4 is period-4, and the wrap splits a flush into 65,496
+bytes from `window + a` and 52 from `window + 0`: a bug that misplaced
+a chunk by any multiple of the period would produce identical bytes and
+`unar` would agree with us about them. The distances cycle and the
+literal in front of each match changes, so the fork has no period under
+4,096 B. **A three-way agreement on a self-similar payload is three
+implementations agreeing about nothing.**
+
+**The suite also asks whether the archive still wraps, because no byte
+comparison can.** An encoder change that shortened the fork, or a
+`SIT14_WINDOW` that grew, would leave all 278,896 bytes agreeing and
+cover nothing — the *aggregate check cannot fail on a property it never
+aggregates* rule, in its cheapest form. So `flush_points` recomputes
+the straddle and reads `SIT14_WINDOW`/`SIT14_WINMIN` out of
+`src/sit14.c` rather than restating them. What it still mirrors by hand
+is the threshold and where the flush is called; that limit is written
+down where the harness is, because a stale mirror would say "wraps"
+while the branch went dark.
+
+**Three ways of failing, checked, because a test that passes may not be
+testing anything.** `win - a` bent to `win - a - 1` fails the suite on
+the `window-wrap` entry and nowhere else, first wrong byte at 262,143 —
+and the *committed fixture extracts identically under the same bent
+build*, which is the other half of the claim: no existing suite covers
+this branch. Ten matches instead of seventeen, and `SIT14_WINDOW` at
+0x80000, each make the suite say the entry no longer wraps.
+
+**The measurement, and why a line delta needs no noise floor.**
+`fuzz_cover.py` at 3,000 mixed cases over one build, `--stream-shape
+sit14` for the before: `sit14_flush` 55.6 → 100 % of lines at seeds 11,
+12 and 13, with every other method-14 function unchanged. The
+instrument's noise floor — thirteen functions in a family between two
+seeds — is about per-family counts of functions never entered, and this
+family reads 0 of 11 both before and after; the only thing that can see
+the change is `--detail`. **A before that is the same number at three
+seeds and an after that is the same number at three seeds is not a
+draw.** Over 400 `--stream-only` cases of the new shape the branch runs
+202, 212 and 212 times — executions, not cases, since a mutant that
+still decodes runs to the declared length with arbitrary flush points,
+and the unmutated seed wraps once in 13 flushes.
+
+**Both shapes stay in the round robin, which costs the first one half
+its cases and nothing else.** The wrap archive is the fixture's four
+entries plus one, so it reaches everything the plain seed reaches —
+measured: every other method-14 function reads the same percentage
+after as before. The plain seed stays because it is the committed
+fixture, byte for byte, and that identity is what makes `run_diff`'s
+verdict transferable to the fuzzer's seed. `--stream-shape` is kept for
+the same reason `--crypt-untargeted` and `--no-weight` are: the before
+and the after of adding a shape come from one build and one instrument.
+
+**What is left of method 14 under fuzzing is the `goto out` after a
+failed flush** — a sink write error, which no mutant can cause — the
+single container, and the fact that nothing in this lane is
+big-endian. Nothing here is known to be hiding a defect; that is what
+having measured it buys.

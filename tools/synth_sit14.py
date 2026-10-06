@@ -17,9 +17,17 @@ each case names the shape it covers rather than depending on what a
 matcher happened to find.
 
     tools/synth_sit14.py -o fixtures/synth-sit14.sit
+    tools/synth_sit14.py --wrap -o seed.sit --ranges seed.ranges
+
+`--wrap` adds a fifth entry whose FORK is 278,896 B, which is the only
+shape that reaches sit14_flush's window wrap — and is NOT the committed
+fixture, because 294,528 B of peak heap is a tier (DECISIONS.md
+2026-10-06, *the fork that was cheaper than the file*). It is graded by
+tools/run_sit14wrap.py and fuzzed as fuzz.py's `sit14-wrap` shape.
 
 Deterministic: same bytes every run (check_docs.py compares the sha256 in
-fixtures/SOURCES.md).
+fixtures/SOURCES.md, which is the DEFAULT output — `--wrap` adds to it
+and must leave those 1,859 bytes alone).
 """
 import argparse
 import hashlib
@@ -337,7 +345,41 @@ def lits(text):
     return [("lit", b) for b in text]
 
 
-def cases():
+def wrap_case():
+    """A fork past the format's window, which is what reaches the second
+    half of sit14.c's `sit14_flush`.
+
+    The window is sized to the FORK (`sit14_winsize`), so a flush can
+    straddle the end of it only once `pos` has passed 0x40000 — and the
+    flush threshold is a quarter of the window, so the flush points sit
+    on multiples of it until a match pushes them off. Seventeen maximum
+    matches do both: the fork is 278,896 B, the flush at 196,648 carries
+    65,548 B, which is 52 B past the end of the window, and decoding
+    goes on for another 16 KB after it.
+    /* Source: src/sit14.c, SIT14_WINDOW/sit14_winsize/sit14_flush,
+       transcribed from libxad SIT_14 */
+
+    It costs 458 B of stream. That is the whole trick: what has to be
+    large is the FORK, and a fork is what a match ladder makes cheap —
+    the shape was filed as out of reach for a seed on the strength of a
+    17,799 B figure that was the largest fork the four shapes above
+    happen to decode to, not a limit of this encoder (BLOCKERS.md,
+    *Withdrawn claims*).
+
+    The distances cycle rather than repeat, and the literal in front of
+    each match changes, so the fork has no period under 4,096 B — a
+    payload periodic in p would hide a wrap that misplaced a multiple of
+    p bytes, i.e. would be graded by `unar` and agree anyway.
+    """
+    script = lits(bytes((i * 13 + 5) & 0xFF for i in range(300)))
+    dists = [4, 301, 16388, 33000]
+    for i in range(17):
+        script.append(("lit", (i * 37 + 1) & 0xFF))
+        script.append(("match", 16387, dists[i % len(dists)]))
+    return script
+
+
+def cases(wrap=False):
     """One entry per shape, each named for what it is the only subject of."""
     out = []
 
@@ -370,6 +412,14 @@ def cases():
          + [("match", 20, 128)], True),
     ]))
 
+    # 5. The window wrap, only with --wrap: this entry's fork is 278,896
+    #    B and the four above are 18,389 B all told, so it is NOT in the
+    #    committed fixture — a 256 KB window is a peak-RAM figure, a
+    #    budget-sweep row and a Macintosh tier, and none of those should
+    #    move to cover a branch (DECISIONS.md 2026-10-06).
+    if wrap:
+        out.append(("window-wrap", [(wrap_case(), False)]))
+
     return out
 
 
@@ -395,7 +445,7 @@ def crc16_arc(data):
     return crc
 
 
-def build():
+def build(wrap=False):
     """Returns (bytes, ranges) — `ranges` being the half-open byte span of
     each entry's method-14 stream in the file, the same contract
     `synth_crypt.py --ranges` has for ciphertext. A mutator confined to
@@ -405,7 +455,7 @@ def build():
     mutation lands in them. Worth 95.5 % of the decoder's lines to
     98.5 % over 120 cases (TESTING.md, *Fuzzing*)."""
     entries = []
-    for name, blocks in cases():
+    for name, blocks in cases(wrap):
         stream, data = encode(blocks)
         entries.append((name, data, stream))
 
@@ -464,12 +514,18 @@ def build():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--out", required=True)
+    ap.add_argument("--wrap", action="store_true",
+                    help="add the fifth shape, a fork past the format's "
+                         "0x40000-byte window — the only one that reaches "
+                         "sit14_flush's wrap. Not the committed fixture: "
+                         "its 278,896-byte fork would move a peak-RAM "
+                         "figure and a Macintosh tier")
     ap.add_argument("--ranges",
                     help="write the method-14 stream ranges of the output "
                          "to this file as JSON, for a mutator that wants "
                          "the decoder and not the container")
     args = ap.parse_args()
-    blob, ranges = build()
+    blob, ranges = build(args.wrap)
     with open(args.out, "wb") as fh:
         fh.write(blob)
     if args.ranges:

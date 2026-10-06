@@ -2287,6 +2287,15 @@ by `tools/synth_sit14.py` — an encoder for the format, from the same
 reading — and graded against `unar` on all four of its entries in every
 `ci.sh` run (TESTING.md).
 
+**And a fifth entry that is not in it**, since 2026-10-06:
+`synth_sit14.py --wrap` adds a fork of **278,896 B for 458 B of
+stream** — seventeen maximum matches — which is the only shape that
+reaches `sit14_flush`'s window wrap, the window being sized to the
+fork. `unar`, this engine and the encoder agree on all 278,896 bytes.
+It stays out of the fixture because of the row below: 294,528 B of peak
+heap is a 512 KB tier, and `tools/run_sit14wrap.py` grades it in `ci.sh`
+without one (TESTING.md, *The fork that wraps the window*).
+
 ### What real streams actually use (instrumented build, 2026-10-03)
 
 | | 7.0.3's payload | 5.5's |
@@ -2314,6 +2323,7 @@ longest code is 17 bits against the 32 the assignment can represent.
 |---|---|
 | peak heap, 7.0.3's payload | **276,088 B** — the 256 KB window, 4.7 KB of trees and ladders, and the I/O buffers |
 | peak heap, `synth-sit14.sit` | 65,152 B (its longest fork is 17,799 B, so the window is 32 KB) |
+| peak heap, `synth_sit14.py --wrap` | **294,528 B** (a 278,896 B fork, so the window is the whole 256 KB). Passes at a 409,600 B budget and at 306,376; refused per entry at 210,976, 83,552 B short |
 | `ovl_stuffit` image | 23,670 → **26,278 B**, read at launch and released for every archive that is not a StuffIt one |
 | resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
 | resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |

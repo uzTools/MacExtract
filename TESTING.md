@@ -925,16 +925,51 @@ anything about the suite.**
    is one of the three quarters. The smoke is a regression guard; the
    figures here come from runs nobody does on every commit.
 
-   **What the targeted mode cannot see** is now a branch and a line:
-   the window-wrap half of `sit14_flush`, which needs a fork past 256
-   KB where this seed's largest is 17,799 B, and the `goto out` on a
-   failed flush, which is a sink write error and nothing a mutant can
-   cause. Both are reached only by the two real payloads, which no
-   committed suite can touch (FORMATS.md, *StuffIt 5's method 14*).
-   The seed also arrives in ONE container, a bare `.sit`: method 14
-   inside MacBinary or BinHex is fuzzed by nothing. And a mutant is
-   graded by nothing — what is graded is the seed, which `run_diff`
-   adjudicates against `unar`.
+   **The window wrap was the first thing that mode could not see, and
+   a SECOND named shape reaches it since 2026-10-06.**
+   `synth_sit14.py --wrap` adds a fifth entry whose FORK is 278,896 B
+   — seventeen maximum matches for 458 B of stream — because the
+   window is sized to the fork, so a flush straddles the end of it
+   only past 0x40000 B of output. What stood in the way was a figure
+   and not the format: 17,799 B is the largest fork the four fixture
+   shapes happen to decode to, which was read as what the encoder can
+   write (BLOCKERS.md, *Withdrawn claims*). 3,000 mixed cases, one
+   build, `--stream-shape sit14` for the before:
+
+   | | seed 11 | seed 12 | seed 13 |
+   |---|---|---|---|
+   | `sit14_flush`, before → after | 55.6 → **100 %** | 55.6 → **100 %** | 55.6 → **100 %** |
+   | every other method-14 function | unchanged | unchanged | unchanged |
+
+   The before is the same 55.6 % at all three seeds and the after the
+   same 100 %, which is how a delta this size clears the noise floor
+   above: that floor is about per-family COUNTS of functions never
+   entered, and the four lines here are one branch of one function
+   that is entered either way. The family reads 0 of 11 never entered
+   before and after, so the only instrument that can see this change
+   is `--detail`.
+
+   **And it is reached routinely rather than once.** Over 400
+   `--stream-only --stream-shape sit14-wrap` cases the wrap branch runs
+   **202, 212 and 212 times** at seeds 11, 12 and 13, out of 2,962 /
+   3,007 / 3,034 flushes. Those are EXECUTIONS, not cases: a mutant
+   whose trees still decode runs to the declared 278,896 B with
+   arbitrary flush points, so one case can wrap more than once. The
+   unmutated seed wraps exactly once in 13 flushes, which is the scale
+   to read them against.
+
+   **What the two shapes still cannot see.** The `goto out` after a
+   failed flush is a sink write error and nothing a mutant can cause;
+   it is reached only by the two real payloads, which no committed
+   suite can touch (FORMATS.md, *StuffIt 5's method 14*). Both seeds
+   arrive in ONE container, a bare `.sit`: method 14 inside MacBinary
+   or BinHex is fuzzed by nothing. The wrap seed is not a fixture and
+   runs on no Macintosh and under no qemu-m68k — its peak heap is
+   294,528 B, which one of the two 512 KB tiers refuses — so the wrap
+   is a host-only, little-endian measurement. And a mutant is graded by
+   nothing: what is graded is the seeds, the 1,859 B one by `run_diff`
+   against `unar` and the wrap one by `tools/run_sit14wrap.py`
+   (*StuffIt method 14*).
 
    **The twelve seeds `method_seeds()` already wrote had the same
    problem, and it was invisible**: they are in the POOL rather than
@@ -970,7 +1005,8 @@ anything about the suite.**
    all, so twelve functions read as absent rather than as unmeasured
    for as long as the tool has existed. Both claims are withdrawn in
    BLOCKERS.md with what they cost. `fuzz_cover.py` now says how many
-   engine functions fall in NO family — 381 of 581, the containers and
+   engine functions fall in NO family — **385 of 586**, re-read
+   2026-10-06 (381 of 581 on 2026-10-05), the containers and
    envelopes it was never a claim about — so the next prefix nobody
    adds a row for is visible instead of silent.
 
@@ -1390,13 +1426,55 @@ is refused on the allocation budget.
 **In `fuzz.py` since 2026-10-05**, as the stream generator: the same
 archive rebuilt as a NAMED seed and mutated only inside the four spans
 `synth_sit14.py --ranges` calls compressed, which is about 110 cases of
-a 3,000-case run. It reaches every function of the decoder and every
-line of it but the window wrap and a sink-write failure, at seeds 11 and
-12 alike (*Fuzzing*, above, for the figures and for what it still cannot
-see). The 2,000-mutant run that measured this first is what found the
-decoder's one real defect — a signed left shift in the canonical code
-assignment, UB on a corrupt tree (DECISIONS.md 2026-10-03) — and a
-pre-existing leak in the CLI's own name-cut notice.
+a 3,000-case run, shared with the wrap shape below since 2026-10-06. It
+reaches every function of the decoder and every line of it but a
+sink-write failure, at seeds 11, 12 and 13 alike (*Fuzzing*, above, for
+the figures and for what it still cannot see). The 2,000-mutant run
+that measured this first is what found the decoder's one real defect —
+a signed left shift in the canonical code assignment, UB on a corrupt
+tree (DECISIONS.md 2026-10-03) — and a pre-existing leak in the CLI's
+own name-cut notice.
+
+### The fork that wraps the window (`tools/run_sit14wrap.py`, in `ci.sh`)
+
+**The four fixture shapes decode to 18,389 B all told, and the window
+is sized to the fork**, so `sit14_flush`'s second half — the flush that
+straddles the end of the window — is reached by nothing under 0x40000 B
+of output. `synth_sit14.py --wrap` writes a fifth entry that does:
+seventeen maximum matches and a literal between each, **278,896 B of
+fork for 458 B of stream**, with one wrap on an in-loop flush and
+another 16 KB decoded after it.
+
+It is **not** in `fixtures/synth-sit14.sit`, and the reason is the
+window: that entry's peak heap is **294,528 B** against the fixture's
+65,152 B, which one of the two 512 KB tiers refuses (FORMATS.md, *What
+each format is granted*). A branch is not worth a tier tally, so the
+archive is generated in `ci.sh` instead — the way `run_now.py`
+generates the Now Compress shapes the corpus lacks — and graded THREE
+ways: the bytes that went into the encoder, `unar`'s output, and this
+CLI's. All five entries agree byte for byte, 278,896 B included.
+
+**It can fail, three ways, each checked.** `win - a` bent to
+`win - a - 1` in `src/sit14.c` fails this suite on the `window-wrap`
+entry and nowhere else — first wrong byte at 262,143, the window end —
+and the committed fixture extracts identically under the same bent
+build, which is the other half of the claim: no other suite covers this
+branch. Shortening the wrap case to ten matches, and growing
+`SIT14_WINDOW` to 0x80000, each make the suite say the entry no longer
+wraps.
+
+**What it cannot see.** The flush SCHEDULE is mirrored in Python
+(`flush_points`), not read from the engine: it takes `SIT14_WINDOW` and
+`SIT14_WINMIN` out of `src/sit14.c` so those cannot drift silently, but
+a change to the threshold — `pos - flushed >= win >> 2` — or to where
+the flush is called would leave the mirror stale, and a stale mirror
+says "wraps" while the branch goes uncovered. What measures the branch
+is `tools/fuzz_cover.py --detail "StuffIt method 14"`, and
+`sit14_flush`'s line percentage is the number to re-read. It is also
+correctness on ONE archive and nothing else: the mutants of it are
+`fuzz.py`'s `sit14-wrap` stream shape, and nothing in this lane runs on
+the Macintosh or big-endian — `tests/run_mac_sink.sh` carries the
+1,859 B fixture, not this archive.
 
 **Big-endian, and on the machine.** `tests/run_mac_sink.sh` carries the
 fixture since 2026-10-03, so the decoder also runs under qemu-m68k

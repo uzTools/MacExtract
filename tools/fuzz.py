@@ -298,8 +298,18 @@ def now_seeds(tmp):
 #
 # Each tool takes `-o` and `--ranges` and writes the same bytes every
 # run, so the coverage is the same wherever this runs.
+#
+# A named shape is (name, tool, filename, args). The second one is the
+# first's archive with a fifth entry whose FORK is 278,896 B: method
+# 14's window is sized to the fork, so `sit14_flush`'s wrap is reached
+# by nothing smaller than 0x40000 B of output, and nothing says a seed
+# has to be large to decode to that — 458 B of matches do it. It is a
+# separate seed rather than a fifth case in the fixture because a 256 KB
+# window is a peak-RAM figure and a Macintosh tier (DECISIONS.md
+# 2026-10-06), and `tools/run_sit14wrap.py` is what grades it.
 STREAM_SEEDS = (
-    ("sit14", "synth_sit14.py", "seed-sit14.sit"),
+    ("sit14", "synth_sit14.py", "seed-sit14.sit", ()),
+    ("sit14-wrap", "synth_sit14.py", "seed-sit14-wrap.sit", ("--wrap",)),
 )
 
 
@@ -332,19 +342,35 @@ def stream_mutate(data, rng, ranges):
     return bytes(buf)
 
 
-def stream_seeds(tmp):
+def stream_seeds(tmp, only=None):
     """One seed per named shape, with the ranges its generator calls
     compressed. A seed whose ranges are empty or outside the file would
     mutate nothing and read exactly like a clean run, so it is a failure
-    here and not a skip — the way a missing cipher seed is."""
+    here and not a skip — the way a missing cipher seed is.
+
+    `only` keeps just the named shapes it lists, so that the before and
+    the after of ADDING a shape come from one build and one instrument,
+    the way --crypt-untargeted and --no-weight do for their changes. A
+    name that matches no shape is a failure: a typo that silently
+    measured the whole set would read as "the new shape buys nothing"."""
     out = []
-    for name, tool, fname in STREAM_SEEDS:
+    shapes = STREAM_SEEDS
+    if only:
+        known = {n for n, _t, _f, _a in STREAM_SEEDS}
+        unknown = [n for n in only if n not in known]
+        if unknown:
+            print("fuzz: no stream shape named %s — have %s"
+                  % (", ".join(unknown), ", ".join(sorted(known))),
+                  file=sys.stderr)
+            return None
+        shapes = tuple(x for x in STREAM_SEEDS if x[0] in only)
+    for name, tool, fname, targs in shapes:
         p = os.path.join(tmp, fname)
         rp = p + ".ranges"
         try:
             subprocess.run([sys.executable,
                             os.path.join(ROOT, "tools", tool),
-                            "-o", p, "--ranges", rp],
+                            "-o", p, "--ranges", rp, *targs],
                            check=True, capture_output=True)
         except (OSError, subprocess.CalledProcessError) as e:
             print("fuzz: cannot write the %s seed: %s" % (name, e),
@@ -465,6 +491,13 @@ def main():
                     help="draw the named method seeds with the same weight "
                          "as any fixture, which is what this did before "
                          "2026-10-05")
+    ap.add_argument("--stream-shape", action="append", default=[],
+                    metavar="NAME", help="use only these named stream "
+                                         "shapes (repeatable): sit14, "
+                                         "sit14-wrap. The default is all "
+                                         "of them; naming one is how the "
+                                         "before and after of adding a "
+                                         "shape come from one build")
     ap.add_argument("--no-stream", action="store_true",
                     help="leave the stream seeds out altogether, which is "
                          "what this did before 2026-10-05")
@@ -497,7 +530,8 @@ def main():
         encrypted = crypt_seeds(tmp, args.crypt_kind)
         if encrypted is None:
             return 1
-        streams = [] if args.no_stream else stream_seeds(tmp)
+        streams = [] if args.no_stream \
+            else stream_seeds(tmp, args.stream_shape)
         if streams is None:
             return 1
         print("fuzz: %d encrypted seeds (%s)"
@@ -570,7 +604,7 @@ def main():
                 # Round robin, not a draw, for the reason the ciphers
                 # are: a twentieth of a 150-case smoke is 5 cases, so a
                 # second named shape would be skipped outright often
-                # enough to matter. There is one today.
+                # enough to matter. There are two since 2026-10-06.
                 _name, src, sranges = streams[nstream % len(streams)]
                 nstream += 1
                 data = cache.setdefault(src, open(src, "rb").read())

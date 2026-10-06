@@ -266,12 +266,14 @@ generator that repairs the checksum it breaks — and **Now Compress is
 the first family with nothing left at all**, since 2026-10-05
 (TESTING.md, *Fuzzing*). **StuffIt 5's method 14 is the second**, since
 the same day, by a generator that mutates a named seed inside its own
-compressed streams. What is left:
+compressed streams — and **so is method 14's window wrap, since
+2026-10-06**, by a second named seed whose fork is 278,896 B for 458 B
+of stream (TESTING.md, *The fork that wraps the window*). What is
+left:
 
 | what | what it wants |
 |---|---|
 | `lzd_reconst` (`-lh2-`'s tree rebuild) | nothing, under fuzzing: it needs 32,768 codes, too large for a seed. The GRADED suite covers it since 2026-09-27 |
-| `sit14_flush`'s window wrap (method 14) | a fork past 256 KB, where the synthetic seed's largest is 17,799 B — the window is sized to the fork, so nothing smaller can wrap it. Reached only by the two real payloads, which no committed suite can touch (TESTING.md, *Fuzzing*, for the mode's other limits) |
 | ARC's Crush | nothing writes it and no implementation exists anywhere (Part 1) |
 
 **AppleLink packages would have joined this list on 2026-10-05** — the
