@@ -64,6 +64,7 @@ REPO = os.path.dirname(HERE)
 
 sys.path.insert(0, HERE)
 from envelopes import layers                            # noqa: E402
+from concurrent import futures                           # noqa: E402
 
 
 def probe(binary, paths):
@@ -96,6 +97,9 @@ def main():
     ap.add_argument("--fixtures", default=os.path.join(REPO, "fixtures"))
     ap.add_argument("--limit", type=int, default=0,
                     help="stop after N fixtures (0 = all of them)")
+    ap.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 1,
+                    help="fixtures walked at once (default: one per CPU). "
+                         "Output does not depend on it.")
     args = ap.parse_args()
 
     if not os.path.exists(args.macextract):
@@ -118,40 +122,49 @@ def main():
         print("run_walk: no fixtures — skipping")
         return 0
 
+    # `--jobs` fixtures at a time, each with its own working directory for
+    # the peeled layers, graded afterwards in the order they were submitted:
+    # every line below is the line the serial loop printed.
+    def peel_and_probe(item):
+        i, n = item
+        path = os.path.join(args.fixtures, n)
+        work = os.path.join(tmp, "w%d" % i)
+        os.mkdir(work)
+        try:
+            chain = layers(args.macextract, path, work)
+            return path, chain, probe(args.probe, chain)
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
     problems = []
     walked = empty = peeled = 0
     tmp = tempfile.mkdtemp()
     try:
-        for n in names:
-            path = os.path.join(args.fixtures, n)
-            work = os.path.join(tmp, "w")
-            os.mkdir(work)
-            try:
-                chain = layers(args.macextract, path, work)
-                peeled += len(chain) - 1
-                for p, row in probe(args.probe, chain).items():
-                    shown = n if p == path else n + " -> " + os.path.basename(p)
-                    if row is None:
-                        problems.append("%s: the probe ran out of memory"
-                                        % shown)
-                        continue
-                    rets, counts, lf, af = row
-                    if counts == "0,0,0":
-                        empty += 1
-                        continue
-                    walked += 1
-                    if lf != "-":
-                        problems.append(
-                            "%s: the listing walk and the extracting walk "
-                            "differ at entry %s (n=%s, ret=%s)"
-                            % (shown, lf, counts, rets))
-                    if af != "-":
-                        problems.append(
-                            "%s: skipping every second entry changed the "
-                            "walk at entry %s (n=%s, ret=%s)"
-                            % (shown, af, counts, rets))
-            finally:
-                shutil.rmtree(work, ignore_errors=True)
+        with futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
+            rowsets = list(ex.map(peel_and_probe, enumerate(names)))
+        for n, (path, chain, rows) in zip(names, rowsets):
+            peeled += len(chain) - 1
+            for p, row in rows.items():
+                shown = n if p == path else n + " -> " + os.path.basename(p)
+                if row is None:
+                    problems.append("%s: the probe ran out of memory"
+                                    % shown)
+                    continue
+                rets, counts, lf, af = row
+                if counts == "0,0,0":
+                    empty += 1
+                    continue
+                walked += 1
+                if lf != "-":
+                    problems.append(
+                        "%s: the listing walk and the extracting walk "
+                        "differ at entry %s (n=%s, ret=%s)"
+                        % (shown, lf, counts, rets))
+                if af != "-":
+                    problems.append(
+                        "%s: skipping every second entry changed the "
+                        "walk at entry %s (n=%s, ret=%s)"
+                        % (shown, af, counts, rets))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

@@ -43,6 +43,7 @@ REPO = os.path.dirname(HERE)
 
 sys.path.insert(0, HERE)
 from envelopes import layers                            # noqa: E402
+from concurrent import futures                           # noqa: E402
 
 MIN_SIZE = 64 * 1024
 MAX_GAP = 32 * 1024
@@ -82,6 +83,9 @@ def main():
     ap.add_argument("--macextract",
                     default=os.path.join(REPO, "build", "macextract"))
     ap.add_argument("--fixtures", default=os.path.join(REPO, "fixtures"))
+    ap.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 1,
+                    help="fixtures measured at once (default: one per CPU). "
+                         "Output does not depend on it.")
     args = ap.parse_args()
 
     # The CLI is tested FIRST and is an error, not a skip: without it this
@@ -106,22 +110,30 @@ def main():
         print("run_ticks: no fixtures — skipping")
         return 0
 
-    # One layer at a time, and the peeled files are removed as soon as
-    # they have been measured: peeling the whole corpus first would put
-    # a second copy of it on disk.
+    # `--jobs` fixtures at a time, and the peeled files are removed as soon
+    # as they have been measured: peeling the whole corpus first would put a
+    # second copy of it on disk, where this keeps one per job. Each job owns
+    # its own working directory, and the rows are collected in the order the
+    # fixtures were submitted, so the grading below is unchanged.
+    def peel_and_measure(item):
+        i, p = item
+        work = os.path.join(tmp, "w%d" % i)
+        os.mkdir(work)
+        try:
+            chain = layers(args.macextract, p, work)
+            return len(chain) - 1, measure(args.probe, chain)
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
     rows = []
     peeled = 0
     tmp = tempfile.mkdtemp()
     try:
-        for p in paths:
-            work = os.path.join(tmp, "w")
-            os.mkdir(work)
-            try:
-                chain = layers(args.macextract, p, work)
-                peeled += len(chain) - 1
-                rows += measure(args.probe, chain)
-            finally:
-                shutil.rmtree(work, ignore_errors=True)
+        with futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
+            for layers_peeled, got in ex.map(peel_and_measure,
+                                             enumerate(paths)):
+                peeled += layers_peeled
+                rows += got
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

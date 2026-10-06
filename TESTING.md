@@ -717,6 +717,19 @@ only part of the restore path that can be checked offline.
 ./ci.sh          # full matrix; must be green before every commit
 ```
 
+**A full run is ~20 minutes** on two cores (measured 2026-10-06, v0.33.0
+corpus). It goes: the three robustness lanes **342 s**, the eight native builds
+**136 s**, the five diff lanes **120 s**, the mac sink **103 s**, the overlay
+host lanes **93 s**, and no other single suite over 55 s. `run_robustness.py`,
+`run_diff.py`, `run_walk.py` and `run_ticks.py` take **`-j/--jobs`**, default
+one per CPU; `ci.sh` exports `MAKEFLAGS=-j$(nproc)` for every `make`, and
+`tests/run_mac_sink.sh` starts its six whole-program compiles together.
+**Nothing about the output depends on `--jobs`** — same cases, same seeds, same
+order, checked byte-for-byte against the serial run, and each of the four
+suites was made to fail under a pool before it was believed. `-j` above the
+core count loses time (DECISIONS.md 2026-10-06, *the twenty-four minutes*,
+has the numbers and what the remaining 20 minutes is made of).
+
 **A suite run by hand needs a `make` first, and `ci.sh` is why.** Its second
 step is `make clean`, which is `rm -rf $(BUILD)` with `BUILD ?= build`; every
 build after it is redirected to `build/san`, `build/ars`, `build/rel`,

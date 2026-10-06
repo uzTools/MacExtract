@@ -13,6 +13,15 @@ cd "$(dirname "$0")"
 
 fail() { echo "CI: FAILED: $*" >&2; exit 1; }
 
+# Every `make` below compiled one object at a time: the eight native builds
+# were 169 s of a 24-minute run on a two-core machine. The Makefile is safe
+# in parallel -- its only ordering is the order-only $(BUILD) prerequisite --
+# so -j is set once here instead of on nine command lines, and `cmake --build`
+# in tools/build_mac.sh already asked for it (DECISIONS.md 2026-10-06, *the
+# twenty-four minutes*).
+MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS
+
 echo "=== documentation invariants ==="
 python3 tools/check_docs.py || fail "documentation checks"
 

@@ -12,6 +12,7 @@ failed: milestones land one format at a time. A manifest whose format
 IS implemented must pass completely.
 """
 import argparse, hashlib, json, os, re, subprocess, sys, tempfile
+from concurrent import futures
 import unicodedata
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -512,6 +513,11 @@ def main():
     ap.add_argument("--all", action="store_true",
                     help="run even not-yet-implemented formats")
     ap.add_argument("-v", "--verbose", action="store_true")
+    ap.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 1,
+                    help="fixtures extracted at once (default: one per CPU). "
+                         "Output does not depend on it: the selection pass, "
+                         "the grading pass and every line printed stay in "
+                         "manifest order.")
     ap.add_argument("--format", help="only fixtures of this lsar format")
     ap.add_argument("--budget", type=int, default=0,
                     help="run under an allocation cap, in bytes: every "
@@ -548,6 +554,14 @@ def main():
     over_budget = 0
     unadj_forks = unadj_fixtures = oos_entries = unadj_masked = 0
     fails = []
+
+    # Three passes where there was one loop: SELECT every fixture this run
+    # grades, extract them `--jobs` at a time, then grade the results in
+    # manifest order. Each fixture was already independent -- check_fixture
+    # owns a temporary directory and prints nothing -- so the only shared
+    # state that had to go was the Finder-flag counter, now summed per
+    # fixture (DECISIONS.md 2026-10-06, *the twenty-four minutes*).
+    work = []
     for mf in manifests:
         with open(os.path.join(mandir, mf)) as f:
             man = json.load(f)
@@ -562,22 +576,40 @@ def main():
             continue
         if not args.all and fmt not in IMPLEMENTED:
             if fmt in DETECT_ONLY:
-                detect_ran += 1
-                bad = check_detect_only(args.macextract, fxpath,
-                                        DETECT_ONLY[fmt])
-                if bad:
-                    detect_bad += 1
-                    print(f"DETECT FAIL {man['fixture']}")
-                    for b in bad:
-                        print(f"    {b}")
-                elif args.verbose:
-                    print(f"detect ok: {man['fixture']} ({fmt})")
+                work.append((man, fmt, "detect"))
                 continue
             skipped_fmt += 1
             continue
+        work.append((man, fmt, "diff"))
+
+    def run_one(item):
+        man, fmt, kind = item
+        if kind == "detect":
+            return check_detect_only(args.macextract,
+                                     os.path.join(FIXDIR, man["fixture"]),
+                                     DETECT_ONLY[fmt])
+        flags = [0]
+        return check_fixture(args.macextract, man, args.verbose,
+                             args.budget, flags) + (flags[0],)
+
+    with futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
+        results = list(ex.map(run_one, work))
+
+    for (man, fmt, kind), result in zip(work, results):
+        if kind == "detect":
+            detect_ran += 1
+            bad = result
+            if bad:
+                detect_bad += 1
+                print(f"DETECT FAIL {man['fixture']}")
+                for b in bad:
+                    print(f"    {b}")
+            elif args.verbose:
+                print(f"detect ok: {man['fixture']} ({fmt})")
+            continue
         ran += 1
-        problems, unadj, masked, declared = check_fixture(
-            args.macextract, man, args.verbose, args.budget, graded_flags)
+        problems, unadj, masked, declared, flags = result
+        graded_flags[0] += flags
         for field in declared:
             ungraded.append((man["fixture"], field))
         unadj_masked += masked

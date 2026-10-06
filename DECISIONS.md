@@ -347,6 +347,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
 - 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
 - 2026-10-07 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
+- 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
 
 ---
 
@@ -22328,3 +22329,81 @@ ways: our decoder against the payload, **CPython's `binascii.a2b_uu` against
 the same bytes** (a second reader, and one that takes either spelling), and
 an assertion that the document really holds a line with a zero and a
 sub-27 value on it — without which the case is the plain case again.
+
+## 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
+
+**Claim.** `./ci.sh` took **23.8 min** and ran almost entirely on one of this
+machine's two cores. Four suites and every `make` now run as wide as there are
+CPUs, and it takes **20.0 min**. Both figures measured the same way, on the
+same machine, with the same corpus; the second run was green.
+
+**Where it went, and where it goes now** — per-command wall clock from a
+`PS4='@@ $EPOCHREALTIME ' bash -x ./ci.sh` trace, bucketed:
+
+| | before | after |
+|---|---|---|
+| robustness, 3 lanes × 9,510 variants | 454 s | 342 s |
+| other python suites (pak 46 s, SpaceSaver 41 s, large zip 35 s, LZH 27 s …) | 268 s | 265 s |
+| 8 native builds | 169 s | 136 s |
+| diff, 5 `run_diff.sh` lanes + 2 forced `run_diff.py` | 154 s | 120 s |
+| mac sink | 115 s | 103 s |
+| overlay host lanes | 86 s | 93 s |
+| walk agreement | 78 s | 55 s |
+| progress-callback coverage | 71 s | 54 s |
+| 4 Retro68 builds (already `-j`) | 31 s | 31 s |
+
+**What two cores are worth here: 1.33×, not 2×.** The robustness lane alone,
+on the same binary and corpus: **148 s at `-j1`, 111 s at `-j2`, 105 s at
+`-j3`, 115 s at `-j4`**. The knee is at the core count and oversubscription
+loses, so the default is `os.cpu_count()`. There is no cgroup quota to blame
+(`cpu.max` reads `max 100000`) — ASan maps shadow memory for every one of these
+processes, which makes the lane a page-fault workload rather than an arithmetic
+one, and page faults do not scale with cores.
+
+**The output is the same output, and it still fails.** Both halves were
+checked, because a pool that quietly dropped cases would look exactly like a
+pool that was fast:
+
+- serial and parallel runs of the full corpus compared byte-for-byte —
+  identical for `run_robustness.py` (9,510/9,510) and `run_diff.py` (951/951).
+  Order is preserved by construction: `ThreadPoolExecutor.map` yields in
+  submission order, so every line prints where the serial loop printed it.
+- each of the four suites was then handed something broken and had to say so:
+  a binary that dies by `SIGSEGV` (9,510 FAILs, `0/9510 clean`), an engine that
+  extracts nothing (951 FAILs), a walk probe reporting a disagreement and a
+  tick probe reporting a silent decoder (1,385 FAILs each). All four exited 1,
+  and in all four the first failure named the alphabetically first fixture.
+
+**The first attempt at that comparison passed without running anything.**
+`/usr/bin/time` does not exist here, so both halves died in the shell, both
+output files were empty, and `diff` called them identical. A comparison whose
+inputs can both be absent cannot fail — the same shape as the two skips that
+hid 10 adjudicated forks (BLOCKERS.md). The second trap, half an hour earlier:
+timestamping each line of `ci.sh` through a pipe gave every line the same
+stamp, because `dash` block-buffers its builtin `echo` when stdout is not a
+tty and flushes at exit. `bash -x` with a clock in `PS4` is what works, and it
+needs no edit to the script being measured.
+
+**What is left is not parallelism, and was deliberately not taken.** An ASan
+spawn on a one-byte input costs **10.1 ms** against **0.68 ms** for the release
+build. The three robustness lanes spawn 28,530 processes, so **~288 s of them
+is `__asan_init`** — around 60 % of what those lanes cost, and nothing to do
+with reading a corrupted archive. Two routes out, both of them product
+decisions rather than tuning:
+
+- *Several variants per process.* `macextract t` takes one archive, so this
+  means either a CLI that takes many (a shipped-surface change) or a batch
+  probe in the shape of `walk_probe`/`tick_probe` — which would stop running
+  the shipped CLI binary at all, and the CLI's own argument and I/O path is
+  part of what 9,510 corrupted inputs exercise. The verdicts need not change:
+  re-running a batch one case at a time pins the culprit, and batches only
+  misbehave when something is already wrong.
+- *`ASAN_OPTIONS=detect_leaks=0`* is 4.7 ms of the 10.1 ms, ~134 s of CPU
+  across the lanes. It is load-bearing: LeakSanitizer exits 23, the suite fails
+  on any status above 2, and a leak on an error path is exactly what a
+  corrupted archive finds. Not switched off.
+
+Stage-level concurrency — running independent lanes of `ci.sh` at once — was
+not attempted either. With intra-suite pools already saturating both cores it
+would buy little, and it would cost the property that the log reads top to
+bottom.
