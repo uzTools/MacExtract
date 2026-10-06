@@ -32,10 +32,25 @@
  * 0x60..0x7a ("changed UNIX encoding table to ignore {,}", its own
  * revision log) — and it is the table UUTool uses unless "use
  * original coding" is set, so its DEFAULT output is not in the
- * standard alphabet at all. The mask below is the union of both
- * generations; what matters for telling data from mail is that it
- * excludes 0x20..0x3a, so prose with a space in it is not data.
- * UU_SIXB decodes all three tables, the & 0x3f doing the work. */
+ * standard alphabet at all.
+ *
+ * And 0x60, which is in the UNIX range as a value of its own, is also
+ * the standard alphabet's OTHER spelling of zero: Unix `uuencode`
+ * writes the value 0 as '`' rather than as a space, so a mailer
+ * stripping trailing whitespace cannot eat it (UU_PC_MAX in
+ * fmt_uu_priv.h carries the citation). It narrows nothing, and the
+ * mask is therefore the union of
+ * three spellings rather than two tables. Requiring 0x20..0x5f of the
+ * "PC" half instead, between 2026-10-06 and 2026-10-07, made every file
+ * BSD and GNU uuencode write unreadable: a line carrying a zero AND a
+ * value under 27 fits neither half, so it was skipped as mail and the
+ * document decoded to nothing, with no checksum anywhere to object
+ * (BLOCKERS.md; DECISIONS.md 2026-10-07).
+ *
+ * What matters for telling data from mail survives that: the UNIX half
+ * excludes 0x20..0x3a and the PC half excludes 0x61..0x7d, so prose
+ * needs only a space and one lower-case letter to fit neither.
+ * UU_SIXB decodes every table, the & 0x3f doing the work. */
 int unc_uu_line_is_data(const uint8_t *p, int32_t len)
 {
     int32_t outcount, incount, i;

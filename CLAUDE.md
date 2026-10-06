@@ -15,7 +15,7 @@ The engine is the product. The Mac app is a thin shell.
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **951-fixture** differential suite against
-`unar` and, where `unar` fails, `macunpack`, plus 9,490 robustness variants.
+`unar` and, where `unar` fails, `macunpack`, plus 9,510 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
 time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
@@ -83,7 +83,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the forty-four smells that keep finding the next one. The cheapest is a
+names the forty-five smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

@@ -32,7 +32,7 @@ Five lanes, and they grade different things:
    quietly. A probe nobody has watched fail is a probe that says yes.
 
 5. **Corruption, aimed at the decoder.** `tools/fuzz.py` draws uniformly
-   from the corpus, so a `.pkg` is 6 of 943 fixtures and
+   from the corpus, so a `.pkg` is 6 of 951 fixtures and
    `tools/fuzz_cover.py` measured the WALK at zero lines after 400 cases
    (the probe reached 83.9 %). This bends the six fixtures directly — a
    fixed seed, so it is the same 300 mutants every run — and requires no

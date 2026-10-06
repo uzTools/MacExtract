@@ -91,6 +91,14 @@ to mean having StuffIt Deluxe and the right add-on. These are
 recognised by what is inside them, which not even Aladdin's own reader
 did: it went by the .pkg on the end of the name.
 
+And also since v0.37.0, and in this download: more uuencoded files open
+than before. UUTool, the Mac program most of these were made with, had
+a setting that shifted the characters it used so that mail programs
+could not damage them -- it was the DEFAULT setting, and this program
+had never read a file written with it. It does now. So does the other
+spelling, the one Unix's own uuencode uses for a zero. If a .uu file
+was ever refused here as "not recognized", it is worth another try.
+
 v0.37.0 opens the last StuffIt archives this program could not: the
 ones made with compression method 14, which StuffIt 5 used and nothing
 else ever wrote. Aladdin's own installers are full of them -- in StuffIt

@@ -160,8 +160,8 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Forty-four**
-mechanisms keep finding the next one — recounted 2026-10-05 twice; the
+and one of those was worth 39/44 → 40/44 at the floor target. **Forty-five**
+mechanisms keep finding the next one — recounted 2026-10-07; the
 sentence said ten when the list had thirty, on 2026-09-26 — and two of them
 need no insight at all:
 
@@ -515,6 +515,14 @@ need no insight at all:
   what a check prints when its subject fails to LOAD**: a pass and an
   empty subject are one output unless something counts the comparisons
   (below).
+- **a classifier whose "no" branch is a SKIP.** Added 2026-10-07:
+  `unc_uu_line_is_data` answers two questions at once — is this a data
+  line, and is this somebody's mail header in mid-stream — so every
+  false negative it gains is skipped quietly instead of reported.
+  Widening such a test is cheap and narrowing it is unfalsifiable from
+  outside, which is the asymmetry to check BEFORE touching one: ask
+  what the old test admitted that the new one does not, and whether
+  anything would say so (the row below, 2026-10-07).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
@@ -672,6 +680,7 @@ line is what makes the next one worth re-testing.
 | **"Nothing has seen a StuffIt 2.x archive this project did not make"** — OPEN_ITEMS.md, 2026-10-02 | **two Giga-ROM CD archives carry a `Text 1`-optimized entry**, at methods 8 and **3**, id 255, resource fork deleted, and both are fixtures since 2026-10-06 (FORMATS.md, *Two optimized archives nobody here made*). The key is the Optimizer bit `0x40` on an entry's method byte — per-ENTRY, so the search is a `Range` scan of entry chains rather than an index lookup: **21,767 headers in 16,727 archives**. **Cost: none to any claim — the item was honest — but the measurement it produced is what the row could not state**: 7 Optimizer bits in 21,767 wild headers, all 7 the same module, so the four reversible Optimizers and five ciphers are rare rather than unlooked-for. Two harness defects on the way, and the dangerous one is the probe's flag bits: they were the PUBLISHED table's, where `0x10` is a folder marker, and this repository had measured on 2026-10-02 that it is `NewDE` (DECISIONS.md 2026-10-06, *the Optimizer that was in somebody else's corpus*) | 2026-10-06 |
 | **"Appendix B lists 'PMa5' twice, so the document cannot name the fourth word and XADMaster is where 'PMa6' comes from"** — `src/fmt_packit.c`, `tools/derive_packit.py` and OPEN_ITEMS.md, since 2026-09-21 | **the document names it.** `reference/notes/packit_unpackit.txt`, the (L)ist command's section: *"PMa6 - compressed and DES encrypted (PACKIT III)"*, two pages before the appendix whose table duplicates `PMa5`. **Cost: nothing measurable, and the mechanism is the point** — the container was derived from appendices B and C in 2026-09-21, so the appendices are what got re-read, and a claim about THE DOCUMENT was made from the part of it the task needed. A document is not one claim. Found by opening the file to quote it while writing up the entry that supersedes it (DECISIONS.md 2026-10-05, *the reference implementation was the fixture's payload*) | 2026-10-05 |
 | **PackIt's `keytr1` "has no other statement at all"** — OPEN_ITEMS.md, *The licence cannot move*, where it had been filed as irreducible, and **"`unar -p` adjudicates" both PackIt ciphers** — TESTING.md, *Decryption* | `keytr1` IS **FIPS 46-3's PC-1**, and the code that applies it is in the corpus: `Packit III 1.3`, a member of the fixture `packit.pit_.bin`, carries both ciphers in its `CODE` 1 and all nine DES tables in its `CODE` 256, and `tools/pitcrypt/pit_run.c` RUNS them under `qemu-m68k`. The second claim was worse than wrong: `unar` is XADMaster, which is where both ciphers were transcribed from, so the only test either had **could not fail on a shared mistake**. **Cost: eight days in Part 1 for one of them** — filed 2026-09-27 as having no route, while the fixture the container derivation was graded against carried the writer — and both ciphers ungraded by anything independent for the fourteen months they have been read. Three archives PackIt's own code encrypted now grade them every run (DECISIONS.md 2026-10-05, *the reference implementation was the fixture's payload*) | 2026-10-05 |
+| **"The uu alphabet is UUTool's two encode tables"** — `src/fmt_uu_priv.h`, `src/fmt_uu_probe.c` and FORMATS.md's *uuencode: three alphabets* table, written 2026-10-06 from the application's own `HEXA` 128 and 129 | **the two tables are right and their union is narrower than the range they replaced.** `0x20..0x60` had been the alphabet since M13; the "PC" half was written as `0x20..0x5f`, and `0x60` is the standard alphabet's OTHER spelling of zero — every Unix `uuencode` since 4.2BSD writes ``` ` ``` for the value 0 so trailing-whitespace stripping cannot eat it, and `reference/mpack/uudecode.c` takes either. A line holding a zero AND a value under 27 then fitted neither half, and "fits neither" is the branch that SKIPS mail in mid-stream. **Cost: one day in which no file written by BSD or GNU `uuencode` was recognised at all, and `-f uuencode` listed one as 0 bytes and wrote an empty file with exit 0** — a silent decode of nothing, in the one format with no checksum anywhere to object. Nothing could fail on it: `synth_uu.py` writes the standard alphabet with `binascii.b2a_uu`, which spells zero as a space, so all four plain cases held one spelling and both wild specimens are UUTool's. The smell is new and is the asymmetry itself: **a classifier whose "no" branch is a skip cannot report a narrowing** (DECISIONS.md 2026-10-07, *the spelling the tables did not have*) | 2026-10-07 |
 
 **"The DD reader's structure is right; it is literal VALUES that are wrong."**
 Written 2026-09-20 about the two forks of `derived-Terrainman_2.0__.sea`

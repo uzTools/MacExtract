@@ -346,6 +346,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
 - 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
 - 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
+- 2026-10-07 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
 
 ---
 
@@ -22275,3 +22276,55 @@ four-line `.gcov` with no counts in it — which read exactly like "the
 branch was never executed". **An instrument that fails quietly is
 indistinguishable from a measurement**, and both of these were on the
 path between the defect and somebody seeing it.
+
+
+## 2026-10-07 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
+
+Reading UUTool's own `HEXA` 128 and 129 resources replaced one range —
+`0x20..0x60`, which this decoder had used since M13 — with two, `0x20..0x5f`
+for the "PC" table and `0x3b..0x7d` for "UNIX", and a per-document mask that
+ANDs them line by line. Both ranges are correct. Their union is not what the
+old constant admitted: **`0x60` is in neither half as the standard
+alphabet's own character**, and `0x60` is how every Unix `uuencode` since
+4.2BSD spells the value ZERO — `ENC(c) = (c) ? ((c) & 077) + ' ' : '`'` —
+so that a mailer stripping trailing whitespace cannot eat it.
+
+The consequence needed two characters on one line. A zero (`` ` ``) cleared
+`UU_TBL_PC`; any value under 27 (`0x20..0x3a`) cleared `UU_TBL_UNIX`; a line
+holding both fitted neither, and the "fits neither" branch is the one that
+skips **mail in mid-stream**. So a classifier narrowing became silent data
+loss: `macextract l` said *format not recognized*, and with `-f uuencode` the
+document listed as **0 bytes and extracted as an empty file, exit 0** —
+uuencode carries no checksum anywhere, so nothing could object. Measured on a
+45-byte payload with three zero bytes: byte-exact before 2026-10-06, empty
+after. The fix is one constant, `UU_PC_MAX` 0x5f → 0x60, which narrows
+nothing in the other direction: `0x60` is already inside the UNIX range, so a
+backtick now fits both halves and prose still needs only a space and one
+lower-case letter to fit neither.
+
+**Two things transfer, and neither is about uuencode.**
+
+**When a test is replaced by a better-sourced model, diff the admitted SET,
+not the citations.** Two authoritative tables are still a narrower claim than
+the range they replace, and the one byte of difference WAS the lost
+capability. Nothing in the reading was wrong; what was missing was the
+subtraction.
+
+**A classifier whose "no" branch means "skip" cannot report a narrowing.**
+The same predicate answers two questions here — *is this a data line?* and
+*is this somebody's mail header?* — and the second reading turns every
+false negative into quiet success. Where a test's negative is a skip rather
+than an error, widening it is cheap and narrowing it is unfalsifiable from
+the outside, which is the asymmetry to check before touching one.
+
+**Why nothing could fail.** `synth_uu.py` writes the standard alphabet with
+`binascii.b2a_uu`, which spells zero as a SPACE, so all four plain cases
+tested one of the two spellings; both wild specimens are UUTool's, where
+`0x60` is a value of its own and legitimately in range. The corpus has had
+eight uu documents for weeks and not one of them could reach it — the
+generator was the model, and the model had a gap in exactly the place the
+decoder did. What grades it now is `synth-uu-plain-classic.uu`, graded three
+ways: our decoder against the payload, **CPython's `binascii.a2b_uu` against
+the same bytes** (a second reader, and one that takes either spelling), and
+an assertion that the document really holds a line with a zero and a
+sub-27 value on it — without which the case is the plain case again.

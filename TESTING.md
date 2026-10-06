@@ -77,6 +77,27 @@
    of images and nothing recomputes them, so re-take them from that function
    rather than by hand.
 
+   **A fourth joined on 2026-10-07: the figures derived from the CORPUS.**
+   Seven sentences across four files state how big the suites and the
+   sniff sweeps are, and all of them were written by hand: two said
+   *"9,490 robustness variants"* against a suite of 951 (`ci.sh` prints
+   9,510) and three said *"955 corpus files"* when there were 963 — the
+   drift of two fixtures arriving, which no check could see because the
+   prose holds no number anything else reads. They are counted the way
+   the harnesses count now: the manifests for the differential suite,
+   ten variants of every manifest whose format is implemented and whose
+   fixture is present for the robustness one (`run_robustness.variants`
+   — four truncations and six bit-flips), and every non-`.md` file in
+   `fixtures/` for the sweeps. Bending each of the three counts must be
+   caught or the run refuses to pass. **What it cannot see:** a figure
+   that is not one of the seven patterns — a reworded sentence reports
+   *"this check has stopped checking"* rather than passing, which is the
+   loud half, but a NEW sentence quoting a corpus size is simply
+   unchecked. And the patterns are anchored on purpose: PROGRESS.md
+   cites *"9,320 robustness variants clean"* as the NAME of a
+   BLOCKERS.md section, and a withdrawn claim's title is not a figure to
+   correct.
+
 0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` since
    2026-09-25): a Python function whose every `return` carries a tuple of
    two or more must never be tested for truthiness, because a tuple is
@@ -1811,6 +1832,25 @@ of the weight: `uu-wild-dictcol.uu` and `uu-wild-terrainman.uu` are in
 the differential suite, and `tools/derive_mu.py --grade` replays both
 with `hexbin` and with the CRCs of the StuffIt archive one of them
 decodes to (FORMATS.md, *uuencode: three alphabets*).
+
+**And the FOURTH spelling, since 2026-10-07**, which is not a UUTool
+table: Unix `uuencode` writes the value zero as `` ` `` and not as a
+space, and `binascii.b2a_uu` — the generator for every plain case here —
+writes the space, so no document in this suite held the other spelling
+until `synth-uu-plain-classic.uu` (`synth_uu.py`, `TABLE_PC_BQ`). It
+carries a BINARY payload on purpose: what the case is for is a line
+holding a zero AND a value under 27, which is what fits neither half of
+the alphabet mask, and `run_uu.py` asserts such a line is there rather
+than trusting the payload to produce one. Graded twice over: against the
+bytes that went in, and by **CPython's `binascii.a2b_uu`**, an
+independent reader that takes either spelling. It fails against the
+build of the day before — `format not recognized`, and 0 bytes when the
+format is forced (BLOCKERS.md).
+
+*What this case cannot see:* whether any WILD document uses the
+spelling. All eight uu documents here are generated or UUTool's, and the
+two wild specimens are UUTool's, so the claim graded is that the reader
+admits the spelling — not that the corpus contains one.
 
 **The alphabet is half of how a data line is told from mail, and the
 pair of cases that says so uses ONE line for both directions.** A
@@ -4500,7 +4540,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 955 archives, and the
+  the population you give it: the corpus is 963 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

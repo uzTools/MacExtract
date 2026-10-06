@@ -80,7 +80,7 @@ explaining itself belongs in DECISIONS.md instead.
 | M61 The decoder whose author wrote the definition | **BinHex's scan for a second document in one input is DeHQX 2.0.1's**, which is `fixtures/dehqx-201.hqx` — in the corpus since M1, by Peter N Lewis, who wrote the BinHex 4.0 Definition `src/fmt_binhex.c` is transcribed from. Its *How It Works* states the rescan in a sentence, and `tools/derive_dehqx.py` checks four of them where they sit. **The same two paragraphs found a per-entry failure**: a posting cut at the part separator DeHQX documents resumes at a line that is exactly `---`, and all three characters are in the BinHex alphabet, so this reader took them as two bytes of data and the fork's CRC objected. The rule transcribed is DeHQX's and narrower than the equal-length half of hexbin's that this project declines: a line beginning `--- end of part` opens a gap, a line that is exactly `---` closes it — **+0 B resident** — with the control beside it that keeps it narrow, a bare `---` still being data with the CRC still objecting. One rule is left on that row | DECISIONS.md 2026-10-06 (*the separator that was in the alphabet*), FORMATS.md (*BinHex: multipart, in both directions*), TESTING.md (*Multipart postings*), BLOCKERS.md, NOTICE, OPEN_ITEMS.md |
 
 **The suite is 951 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,490 robustness variants clean. The Mac shell replays a
+fails, `macunpack`; 9,510 robustness variants clean. The Mac shell replays a
 **71-fixture** sample byte-exact at 4 MB and at the 1 MB floor on System
 6.0.8, at 4 MB and at the 1 MB floor on System 3.0, and on System 7.0.1 —
 the seven Mini vMac sweeps re-run 2026-09-22 with the two UTF-8-named

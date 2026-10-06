@@ -75,7 +75,7 @@ under *Table notes*.
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 955 fixtures (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 963 corpus files (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -936,6 +936,7 @@ space, and that table shipped in two generations:
 | "PC" | `HEXA` 128, all versions | 0 | 0x20..0x5f | yes |
 | "UNIX", 2.0.4 | `HEXA` 129 | 30 | 0x3e..0x7d | yes |
 | "UNIX", 2.3.2 and 2.4 | `HEXA` 129 | 27 | 0x3b..0x7a | yes |
+| the standard alphabet as **Unix `uuencode`** writes it — not a UUTool table | 4.2BSD's `uuencode.c` onwards, and GNU sharutils': `ENC(c) = (c) ? ((c) & 077) + ' ' : '`'` | none, but the value ZERO is `` ` `` rather than a space, so a mailer cannot eat it | 0x20..0x5f **and 0x60** | yes |
 
 Read out of the application by `tools/derive_mu.py --tables`, which
 also finds both of them in UUParser 1.72 (a different author), and
@@ -944,6 +945,18 @@ section order — **21 witnesses across three versions of UUTool and
 UUParser 1.72, all holding**.
 Until 2026-10-06 this engine refused every line of the two UNIX tables
 (DECISIONS.md 2026-10-06, *the alphabet nothing here had seen*).
+
+**The reader admits all four spellings, and a document is narrowed to one
+as its lines are read** (`unc_uu_line_is_data` returns the mask of the
+halves a line fits; `src/fmt_uu_probe.c`). `0x60` belongs to both halves —
+it is a value of its own in the UNIX tables and zero in the standard one —
+so it narrows nothing. Taking the "PC" half as `0x20..0x5f` alone, for one
+day in 2026-10-06, made every file BSD or GNU `uuencode` writes
+unrecognised and, when the format was forced, extracted as an empty file
+with exit 0: the fourth spelling is graded by
+`synth-uu-plain-classic.uu` since 2026-10-07, against CPython's
+`binascii.a2b_uu` as well as against the payload (BLOCKERS.md; TESTING.md,
+*ARC and uuencode*).
 
 **The two wild specimens**, one per generation, both in the
 differential suite since 2026-10-06:
@@ -2715,8 +2728,8 @@ cannot reach; and every LZW fork of all eight is decoded identically by
 code stream (*The codec*, below). `src/fmt_sqp.c` is the decoder,
 `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). The sniffer answers
-*AppleLink package* for **exactly the 6 of 955 fixtures that are packages
-and for nothing else** — a sweep that can fail in both directions, where
+*AppleLink package* for **exactly the 6 of 963 corpus files that are
+packages and for nothing else** (re-measured 2026-10-07) — a sweep that can fail in both directions, where
 the one the removed probe rested on could not fail at all, the corpus
 holding neither a package nor a translator script (BLOCKERS.md).
 

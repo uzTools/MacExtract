@@ -8,7 +8,7 @@
  *
  * Its own image rather than a lodger in another, for the reason the build
  * gives for one image per format family: what a .pkg costs the engine is
- * then the 1,038 B of this image and nothing else (FORMATS.md, *Overlays*;
+ * then the 1,972 B of this image and nothing else (FORMATS.md, *Overlays*;
  * DECISIONS.md 2026-10-05).
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.

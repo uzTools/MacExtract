@@ -18,7 +18,8 @@ its own independent grader, which is the whole point:
 
 Also checked: several documents in one file (the newsgroup shape), a
 mail banner in front, CR line endings, **all three of UUTool's
-alphabets** and the pair of cases that says the alphabet is half of how
+alphabets and the spelling of zero that is Unix `uuencode`'s rather than
+any of them** and the pair of cases that says the alphabet is half of how
 a data line is told from mail, and the two ways this must fail — prose
 containing the word "begin" is not an archive, and a truncated document
 is an error rather than a short file.
@@ -27,6 +28,7 @@ The two WILD specimens are not generated and not here: `tools/run_diff.py`
 grades `uu-wild-dictcol.uu` and `uu-wild-terrainman.uu` when they are in
 `fixtures/`, and `tools/derive_mu.py --grade` replays both.
 """
+import binascii
 import os
 import shutil
 import subprocess
@@ -40,6 +42,7 @@ from synth_wrapped import macbinary                 # noqa: E402
 
 DATA = b"the quick brown fox jumps over the lazy dog.\n" * 30
 RSRC = bytes(range(256)) * 3
+BINARY = bytes(range(256)) * 2
 
 
 def read(p):
@@ -114,10 +117,41 @@ def main():
             "synth-uu-mac-unix20.uu":   {"Unix Table": (DATA, RSRC)},
             "synth-uu-mac-unix23.uu":   {"Later Table": (DATA, RSRC)},
             "synth-uu-plain-unix20.uu": {"hello.txt": (DATA, b"")},
+            # What Unix `uuencode` writes: the standard alphabet with
+            # zero spelled "`" (synth_uu.py, TABLE_PC_BQ).
+            "synth-uu-plain-classic.uu": {"binary.bin": (BINARY, b"")},
         }
         for name, want in cases.items():
             check_ours(macextract, os.path.join(tmp, name), want, problems)
             ran += 1
+
+        # Two things about the classic-spelling case, because the case
+        # is worth exactly what they say. It regressed once and a green
+        # suite could not see it: every generated plain document came
+        # from `binascii.b2a_uu`, which spells zero as a SPACE, so no
+        # fixture here held the other spelling at all (BLOCKERS.md).
+        #
+        #   1. that the document really mixes the two spellings — a zero
+        #      and a value under 27 on ONE line is what fits neither
+        #      half of the alphabet mask, and without such a line this
+        #      case tests nothing the case above it does not;
+        #   2. that CPython reads it, which makes the agreement one
+        #      between two implementations rather than between our
+        #      decoder and our own generator. `binascii.a2b_uu` takes
+        #      either spelling: its own transform is (c - 0x20) & 0x3f.
+        classic = open(os.path.join(tmp, "synth-uu-plain-classic.uu"),
+                       "rb").read().split(b"\n")
+        mixed = [l for l in classic
+                 if 0x60 in l and any(0x20 <= c < 0x3b for c in l)]
+        if not mixed:
+            problems.append("synth-uu-plain-classic.uu: no line holds both "
+                            "spellings, so the case tests nothing")
+        got = b"".join(binascii.a2b_uu(l) for l in classic[1:]
+                       if l and l not in (b"end", b"`"))
+        if got != BINARY:
+            problems.append("synth-uu-plain-classic.uu: CPython's a2b_uu "
+                            "does not read what the generator wrote")
+        ran += 2
 
         if shutil.which("hexbin"):
             check_hexbin(os.path.join(tmp, "synth-uu-mac.uu"),

@@ -19,12 +19,21 @@
 #define UU_TBL_PC     1     /* value v -> 0x20+v, the standard alphabet */
 #define UU_TBL_UNIX   2     /* the low values moved up past it: 0x3b..0x7d */
 #define UU_TBL_ANY    (UU_TBL_PC | UU_TBL_UNIX)
-/* The two ranges, as the tables give them. "PC" is 0x20..0x5f; the two
- * UNIX generations together are 0x3b..0x7d. A character outside both is
- * not a uu character at all. */
+/* The two ranges. "PC" is 0x20..0x5f as UUTool's table gives it, plus
+ * 0x60, which is how every Unix `uuencode` since 4.2BSD spells the
+ * value ZERO so that a mailer stripping trailing whitespace cannot eat
+ * it: ENC(c) = (c) ? ((c) & 077) + ' ' : '`'. The two UNIX generations
+ * together are 0x3b..0x7d, and 0x60 is inside them as a value of its
+ * own, so a backtick narrows nothing and the two spellings of zero both
+ * read as zero under UU_SIXB. A character outside both ranges is not a
+ * uu character at all.
+ * Source: reference/mpack/uudecode.c, which takes ' ' OR '`' as the
+ * zero-length line at st_decode and st_nextlast — the same value, the
+ * two ways encoders write it. Narrowing this to 0x5f on 2026-10-06 cost
+ * every file BSD and GNU uuencode write (BLOCKERS.md). */
 #define UU_CH_MIN     0x20
 #define UU_UNIX_MIN   0x3b  /* below this: "PC" only   */
-#define UU_PC_MAX     0x5f  /* above this: "UNIX" only */
+#define UU_PC_MAX     0x60  /* above this: "UNIX" only */
 #define UU_CH_MAX     0x7d
 
 int unc_uu_line_is_data(const uint8_t *line, int32_t len);

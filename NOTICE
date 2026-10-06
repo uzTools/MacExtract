@@ -424,7 +424,11 @@ This project's decoders are transcriptions/ports of algorithms from:
     `macfile.c` (the applefile entry ids); `src/fmt_mimeseg.c` from
     `handlePartial` (the message/partial parameters, their checks, and
     the reassembly); `src/fmt_b64.c` follows the same from64 alongside
-    deark. Where this project deviates it is
+    deark; and `src/fmt_uu_priv.h` takes from `uudecode.c`'s state
+    machine the one fact UUTool's own encode tables cannot state — that
+    the value ZERO is spelled ' ' OR '`', the two ways encoders write
+    it, which is what the uu alphabet has to admit (BLOCKERS.md, the
+    narrowing of 2026-10-06). Where this project deviates it is
     recorded and reproduced (DECISIONS.md 2026-08-26). A build of
     munpack is also the second oracle for those formats in the test
     suite (TESTING.md, tools/build_mpack.sh): test-time only, never

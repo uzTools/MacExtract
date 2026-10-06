@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Nine of them, all cheap enough to run first in ci.sh:
+Ten of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
    in order. An index nobody regenerates is worse than no index, because it
@@ -53,9 +53,20 @@ Nine of them, all cheap enough to run first in ci.sh:
    is the cheapest claim here to check and the least likely to be
    checked, because the list grows one row at a time and no row is ever
    the one that breaks the number.
+10. The figures derived from the CORPUS: how big the differential and
+   robustness suites are (CLAUDE.md, PROGRESS.md) and how big a
+   population the two sniff sweeps claim 0 false positives over
+   (FORMATS.md, TESTING.md). Counted the way the harnesses count — the
+   manifests, ten variants of each implemented one, and every non-.md
+   file in fixtures/ — because both figures drifted the day two fixtures
+   arrived: "9,490 robustness variants" against 9,510, and "955 corpus
+   files" against 963. Derived prose with nothing deriving it is the
+   same shape as check 8 and check 9, and the third time was 2026-10-07
+   (TESTING.md, *Documentation invariants*).
 """
 
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -567,17 +578,122 @@ def check_smell_count():
     return out
 
 
+# ------------------------------------------------- the corpus's own figures
+# Two figures are DERIVED from the corpus and were written by hand, so both
+# went stale the day two fixtures arrived: CLAUDE.md and PROGRESS.md carried
+# "9,490 robustness variants" against a suite of 951 (ci.sh prints 9,510),
+# and FORMATS.md carried a sniff sweep over "955 corpus files" when there
+# were 963. Neither is measurable from the prose, so neither could fail
+# until now (BLOCKERS.md; DECISIONS.md 2026-10-07).
+#
+# Counted the way the harnesses themselves count, not by a rule of thumb:
+# the differential suite is the manifests (tools/run_diff.py), the
+# robustness suite is ten variants of each manifest whose format is
+# implemented and whose fixture is present (tools/run_robustness.py,
+# `variants`: four truncations and six bit-flips), and the sniff sweeps
+# walk every file in fixtures/ that is not a .md (tools/run_foreign.py).
+CORPUS_FIGURES = [
+    ("CLAUDE.md", r"a \*\*([\d,]+)-fixture\*\* differential suite", "manifests",
+     "the differential suite's size"),
+    ("CLAUDE.md", r"plus ([\d,]+) robustness variants", "robust",
+     "the robustness suite's size"),
+    ("PROGRESS.md", r"\*\*The suite is ([\d,]+) fixtures\*\*", "manifests",
+     "the differential suite's size"),
+    # Anchored: "9,320 robustness variants clean" is the NAME of a
+    # BLOCKERS.md section this file cites, and a withdrawn claim's title
+    # is not a figure to correct.
+    ("PROGRESS.md", r"`macunpack`; ([\d,]+) robustness variants clean",
+     "robust", "the robustness suite's size"),
+    ("FORMATS.md", r"0 false positives in ([\d,]+) corpus files", "files",
+     "the foreign-format sweep's population"),
+    ("FORMATS.md", r"exactly the 6 of ([\d,]+) corpus files", "files",
+     "the AppleLink sweep's population"),
+    ("TESTING.md", r"the corpus is ([\d,]+) files", "files",
+     "the sniff-I/O probe's population"),
+]
+
+
+def _corpus_counts():
+    """manifests, robustness variants and corpus files, or None if the
+    fixtures are not on this disk (a docs-only checkout)."""
+    fixdir = ROOT / "fixtures"
+    mandir = fixdir / "manifests"
+    if not mandir.is_dir():
+        return None
+    mans = sorted(mandir.glob("*.json"))
+    files = [f for f in fixdir.iterdir()
+             if f.is_file() and f.suffix != ".md"]
+    if not mans or not files:
+        return None
+    sys.path.insert(0, str(ROOT / "tools"))
+    try:
+        from run_diff import IMPLEMENTED
+    except Exception as exc:                        # pragma: no cover
+        return ("no IMPLEMENTED from tools/run_diff.py (%s)" % exc)
+    rob = 0
+    for mf in mans:
+        man = json.loads(mf.read_text())
+        if man.get("format") in IMPLEMENTED \
+                and (fixdir / man["fixture"]).exists():
+            rob += 1
+    return {"manifests": len(mans), "robust": rob * 10, "files": len(files)}
+
+
+def check_corpus_figures(counts=None):
+    if counts is None:
+        counts = _corpus_counts()
+    if counts is None:
+        return []                      # no fixtures here: nothing to derive
+    if isinstance(counts, str):
+        return ["check_docs: %s — the corpus figures are unchecked" % counts]
+    out = []
+    for name, pattern, key, shown in CORPUS_FIGURES:
+        text = (ROOT / name).read_text()
+        m = re.search(pattern, text)
+        if not m:
+            out.append("%s: no sentence matching %r — this check has "
+                       "stopped checking %s" % (name, pattern, shown))
+            continue
+        if _n(m.group(1)) != counts[key]:
+            out.append("%s says %s for %s; the corpus has %s. Re-take it "
+                       "rather than editing the number: ./ci.sh prints both "
+                       "suite sizes, and the sweep populations are every "
+                       "file in fixtures/ (CLAUDE.md, *Writing things down*)."
+                       % (name, m.group(1), shown,
+                          "{:,}".format(counts[key])))
+    return out
+
+
+def selftest_corpus():
+    """Establish that it can fail: bend each count and require a report."""
+    counts = _corpus_counts()
+    if counts is None or isinstance(counts, str):
+        return None
+    caught = 0
+    for key in ("manifests", "robust", "files"):
+        bent = dict(counts)
+        bent[key] += 1
+        if check_corpus_figures(bent):
+            caught += 1
+    return caught
+
+
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
                 check_synthetic() + check_target_struct() +
                 check_placeholders() + check_dist_readme() +
                 check_doc_sizes() + check_smell_count() +
-                check_derived_figures())
+                check_derived_figures() + check_corpus_figures())
     caught = selftest_derived()
     if caught != 2:
         problems.append("check_docs: the derived-figure selftest bent two "
                         "figures and %d were caught — it cannot fail, so it "
+                        "is not checking them" % caught)
+    caught = selftest_corpus()
+    if caught is not None and caught != 3:
+        problems.append("check_docs: the corpus-figure selftest bent three "
+                        "counts and %d were caught — it cannot fail, so it "
                         "is not checking them" % caught)
     for p in problems:
         print(p, file=sys.stderr)
