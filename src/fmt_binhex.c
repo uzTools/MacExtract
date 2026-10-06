@@ -107,14 +107,34 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
  * omitting n, o, s, t, u and the space is load-bearing: ordinary prose
  * fails within a few characters.
  *
+ * THIRTEEN readers have been asked for this rule and none states it,
+ * including BinHex 5.0's and DeHQX 2.0.1's — the programs of the man who
+ * made the format and the man who wrote its Definition. Seven of the
+ * thirteen are Macintosh programs with a decoder in them: three answer a
+ * character outside the alphabet by fetching another one, four give up on
+ * the file, and NOT ONE buffers a line in order to judge it. So the rule
+ * is macutils' own, for Usenet, rather than anything the format implies
+ * (tools/derive_hqxgarbage.py; DECISIONS.md 2026-10-06, *the rule that
+ * no Macintosh program has*).
+ *
  * ONE HALF of hexbin's rule is deliberately not transcribed: it also
  * skips any line whose length differs from the first line's, with a
- * look-ahead exception for the last one. That test can discard a
- * legitimate short final line (hexbin ships `-c` to turn it off), and
- * the alphabet half already rejects every header shape measured here.
- * What it would have caught — a junk line built only of alphabet
- * characters — is caught by BinHex's own per-fork CRC instead, as a
- * per-entry error rather than as silence. */
+ * look-ahead exception for the last one.
+ *
+ * The reason is the corpus, not the objection this comment used to give.
+ * It used to say the test can discard a legitimate short final line
+ * (hexbin ships `-c` to turn it off) — and two readers implement the
+ * length test and answer exactly that objection the same way, by
+ * accepting a short line that ends at the ':': StuffIt Commands 5.5's
+ * sniffer and BinHqx 1.02's continuation test. What says to decline it
+ * here is that it is not load-bearing: NO line in any of the 204 `.hqx`
+ * fixtures would be skipped by the length half and kept by the alphabet
+ * half (measured 2026-10-06, tools/derive_hqxgarbage.py --length, whose
+ * scan is shown to fire by injecting one). What the half would have
+ * caught — a junk line built only of alphabet characters, a bare rule of
+ * hyphens being the realistic shape — is taken as data and caught by
+ * BinHex's own per-fork CRC, as a per-entry error rather than as
+ * silence. */
 static int bh_refill_line(BhDec *d)
 {
     for (;;) {
@@ -396,7 +416,14 @@ static int bh_find_banner(UncBufIn *in, int limited)
  * whitespace. Source: binhex40_lewis.txt, which defines <return> to a
  * DECODER as "any sequence of <cr>, <lf>, <tab>, <spc>" — the tab and
  * the space "because some old programs produced these characters" —
- * and then says to skip <return> characters and check for the colon. */
+ * and then says to skip <return> characters and check for the colon.
+ *
+ * Lempereur's own BinHex 5.0 is STRICTER than its Definition here: its
+ * start scan skips characters below 32 and requires the ':' to be the
+ * first one at or above it, so a space or a tab in front of the colon
+ * loses the document there and is read here (`CODE` 1 +0x0522,
+ * tools/derive_hqxgarbage.py --author). The Definition names both
+ * characters, so the Definition is what this follows. */
 static int bh_find_colon(UncBufIn *in)
 {
     int prev = '\n', curr;

@@ -1946,6 +1946,55 @@ postings), so both build the boundary the documentation describes. The
 sentence is first-party and the failure it predicted was real; how
 common such files are is not something this corpus can say.
 
+### `tools/derive_hqxgarbage.py` — thirteen readers, and the half this engine declines
+
+Not in `ci.sh` (it needs fixtures). Eight sections, each skipping cleanly
+when its specimen is absent:
+
+    python3 tools/derive_hqxgarbage.py              all eight
+    python3 tools/derive_hqxgarbage.py --author     BinHex 5.0
+    python3 tools/derive_hqxgarbage.py --lewis      DeHQX 2.0.1's binary
+    python3 tools/derive_hqxgarbage.py --others     five more readers
+    python3 tools/derive_hqxgarbage.py --length     the length half, measured
+    python3 tools/derive_hqxgarbage.py --grade      the subject, every reader here
+
+**109 checks, and the shape of every one is a BYTE at an offset it is
+claimed to sit at** — not a disassembler's label, so a reading that has
+drifted fails instead of being quietly re-derived. Proven able to fail by
+moving one witness two bytes (`FAIL ... want 6bda got e50a`), by
+loosening one table-class count, and by forcing the corpus scan's norm to
+1 so every line is odd. The `--grade` section's instrument is the pair of
+readers that bracket it: `hexbin` skips the junk line and `deark` errors
+on it, so the subject is known to separate a line rule from no rule.
+
+`--length` is the one section that measures this project rather than
+somebody else's program: **0 of 204 `.hqx` fixtures carry a line that
+hexbin's length half would skip and its alphabet half would keep**, which
+is what the decline in `src/fmt_binhex.c` now rests on. It carries its own
+control — an injected line of twenty hyphens, which is alphabet-only and
+not 64 characters — because a scan that finds nothing and cannot fire is
+no evidence at all.
+
+**What it cannot see.** Four things:
+
+- **a reader it cannot reach.** The decoder behind StuffIt Expander 5.5
+  and the StuffIt SDK's `HQXEngine` both carry the alphabet and are not
+  asked here; the osax sections establish only that *StuffIt Commands
+  5.5* has no decoder of its own, not what the Engine does. That is a
+  route left, not a closed one.
+- **anything about frequency.** It says no reader states the rule and
+  that no fixture needs the length half. It cannot say what postings in
+  the wild look like — the 204 fixtures are Info-Mac downloads, which
+  are single postings.
+- **run-time behaviour from a static reading.** Every Macintosh answer
+  here is read out of code, not observed. The one reader that was RUN is
+  StuffIt Expander 4.0.2 (`tools/vmac/README.md`), because its table is
+  built at run time and nothing static says what it does.
+- **the half it measures.** The corpus scan is applied to raw fixture
+  text, not through the decoder, so it is evidence about the files and
+  not about `bh_refill_line`. What grades the engine on the same shapes is
+  `tools/run_multihqx.py`.
+
 **What these cannot see.** Neither suite reads a real ArcMac archive:
 `ci.sh` covers the two-fork split with one synthetic stored entry in
 `tests/unit_formats.c`, which is a regression guard and no more — the

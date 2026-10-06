@@ -155,6 +155,20 @@ both, which is why `tools/run_arcplus.py` consults it and not `unar`,
 and why `fixtures/manifests/derived-ARCDOS.arc.json` is registered by
 that tool rather than built by `make_manifests.py` (TESTING.md).
 
+**BinHex's garbage rule is macutils' own, and the half this engine
+declines is now priced.** Thirteen readers have been asked for a second
+statement of `hqx.c`'s skip of a line with intermediate garbage, and
+**not one of the seven that hold a Macintosh decoder buffers a line in
+order to judge it** — including BinHex 5.0's and DeHQX 2.0.1's, the
+programs of the men who made the format and wrote its Definition. The
+citation stays. The OTHER half, the length test this engine does not
+transcribe, is now declined on a measurement rather than on an
+objection: **0 of 204 `.hqx` fixtures carry a line it would skip and the
+alphabet half would keep** (2026-10-06, `tools/derive_hqxgarbage.py
+--length`, 109 witnesses; DECISIONS.md 2026-10-06, *the rule that no
+Macintosh program has*). One route left, unasked: the StuffIt SDK's own
+`HQXEngine`, in the specimen cache (OPEN_ITEMS.md).
+
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained
 (`reference/notes/DiskCopy42.md`) and the probe is real: a synthetic 800K GCR

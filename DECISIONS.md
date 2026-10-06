@@ -356,6 +356,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
 - 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
 - 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
+- 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
 
 ---
 
@@ -23092,3 +23093,111 @@ harness had indexed** — and, before that, a morning aimed at writing such
 an archive when reading one would have done. **Of the second half:
 three boots, about an hour**, which is what the ORDER actually cost and
 would have cost anyway.
+
+## 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
+
+`src/fmt_binhex.c` keeps one citation to macutils' `hexbin`: the skip of
+a line with intermediate garbage. Five readers had been asked for a
+second statement of it and none gave one; this adds **eight**, chosen by
+the pattern that emptied the other five rules on that row — stop asking
+the decoders in `reference/` and ask a writer, an author's own program,
+or a manual.
+
+**Claim: no Macintosh BinHex reader judges a LINE, so the rule is
+macutils' own invention for Usenet rather than anything the format
+implies.** Evidence: thirteen readers, seven of which are Macintosh
+programs with a decoder in them. Three of the seven answer a character outside the alphabet by
+fetching another one — **BinHex 5.0** (Yves Lempereur, who made the
+format), **Compact Pro 1.51**, and **StuffIt Deluxe 2's own `Binhex4
+Translator`**, whose author named it `DecodeHqx`. Four give up on the
+file — **HQXer 1.1**'s alert, **DeHQX 2.0.1**'s error −7, **BinHqx
+1.02**'s error 127, **StuffIt Expander 4.0.2**'s zero-byte output. Not
+one of the seven buffers a line in order to judge it. Consequence: the
+citation stays and the row keeps its one bullet
+(`tools/derive_hqxgarbage.py`, 109 byte-exact witnesses at the offsets
+they are claimed to sit at).
+
+### Where the readers came from, because the search is the transferable part
+
+Each of the eight was reached from a file this project already had, and
+none needed the network:
+
+- **the two authors.** `binhex-50.hqx` and `dehqx-201.hqx` have been
+  corpus fixtures since M1. The row had been reading *decoders written
+  for Unix*; the men who defined the format wrote Macintosh programs,
+  and both were sitting in `fixtures/`.
+- **DeHQX as a BINARY.** The row said since 2026-10-06 that DeHQX is not
+  a candidate, on the strength of its documentation. That is a claim
+  about prose, so it was re-tested against the code — and held: the
+  author left his Macsbug names in (`INITREADHQX`, `FINDSTART`,
+  `READCOLON`), the table is 256 bytes of `0xFF`, and a character above
+  32 that misses it sets −7 and stops. **A doc-derived claim that
+  survives its binary is worth the hour**: it is the difference between
+  believing the row and knowing it.
+- **a sweep rather than a guess.** Every `.hqx` fixture was extracted
+  and searched for the 64-character alphabet, and the hits — nine
+  files, eight programs — were then classified by whether they hold an INVERSE table.
+  That is the cheap discriminator: an encoder holds the alphabet and no
+  inverse, so `AutoBin 1.0` and `Stuff and Hex 1.0` were ruled out in a
+  minute by their own symbol names (`EncodeDataChar`) rather than read.
+- **the specimen cache, which is not `fixtures/`.** Aladdin's own
+  translator is in `deluxe-2-optional.sit`, downloaded for a StuffIt
+  question months ago and never read for this one. **A cache assembled
+  for one row is corpus for every row.**
+
+### What the asking actually bought: a tolerance that rested on an opinion
+
+`hexbin`'s rule has two halves and this engine transcribes one. The
+comment beside the decline said the length half "can discard a legitimate
+short final line (hexbin ships `-c` to turn it off)" — an objection, not
+evidence, and **the kind of justification that cannot fail.** Two of the
+new readers implement the length test, and both answer that objection the
+same way: a short line is fine when it ends at the `:`. **StuffIt
+Commands 5.5**'s sniffer wants a line of exactly 64 characters, all in
+the alphabet, or shorter and ending in `:`; **BinHqx 1.02** applies the
+same pair to decide whether another document follows. So the objection is
+answered and the decline needed a different reason.
+
+It has one now, and it is a measurement: **no line in any of the 204
+`.hqx` fixtures would be skipped by the length half and kept by the
+alphabet half**, and the scan that says so is shown to fire by injecting
+one (`derive_hqxgarbage.py --length`). What the half would catch is junk
+built only of alphabet characters — a bare rule of hyphens is the
+realistic shape, and one inserted into a fixture does cost that fixture,
+as a per-entry CRC error rather than as silence. That is the engine's
+stated contract for the shape, so nothing changed; what changed is that
+the tolerance is now priced instead of asserted.
+
+**The lesson is the corollary this repository already keeps**: ask what
+evidence a tolerance rests on, and if the answer is an opinion about a
+hypothetical file, go and count the real ones. The count took four
+minutes and replaced a sentence that had stood since the decoder was
+written.
+
+### Two details about the separator, from the authors' own code
+
+Both bear on a rule this engine already implements, and both say the
+implementation is right:
+
+- **DeHQX stores the marker as `--- end of partX`, sixteen characters,
+  and compares the stored length minus one.** So the 15-character prefix
+  this engine matches is the author's own arithmetic, in his own
+  resource, rather than an inference from his prose.
+- **DeHQX's resume test wants `---` then a character of 32 or less**, and
+  a space is 32 — so it reads `--- part 2 ---` and refuses `-----`,
+  where HQXer 1.1 reads both. This engine reads all three and is the
+  union of the two, so the permissive reading taken on 2026-10-06 is
+  bracketed by two implementations rather than chosen.
+
+One difference was found and deliberately not taken: Lempereur's start
+scan requires the opening `:` to be the first character at or above 32 on
+its line, where `bh_find_colon` allows a space or a tab in front of it.
+The Definition names both characters explicitly ("because some old
+programs produced these characters"), so **the Definition wins over the
+author's program when the two disagree** — the program is evidence about
+one implementation, the Definition is the format.
+
+**Cost: an afternoon, and the row's bullet count went from five to
+thirteen without the row moving.** What makes it worth recording is that
+the same afternoon retired an unfalsifiable justification in shipping
+source and confirmed three rules the engine had from single sources.

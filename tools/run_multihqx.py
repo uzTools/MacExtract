@@ -165,10 +165,19 @@ def check_posted(macextract, tmp):
     garbage"), and until 2026-08-15 we did not: the ':' in "From:" ended
     the document and the entry came back truncated. Also pinned here is
     the edge of the rule — a junk line built ONLY of alphabet characters
-    is indistinguishable from data and is still consumed, which BinHex's
-    per-fork CRC then catches as a per-entry error rather than silence —
-    and, since 2026-10-06, the ONE line of that shape that is not junk:
-    the "---" DeHQX's documentation says a cut posting resumes at.
+    is consumed as data, which BinHex's per-fork CRC then catches as a
+    per-entry error rather than silence — and, since 2026-10-06, the ONE
+    line of that shape that is not junk: the "---" DeHQX's documentation
+    says a cut posting resumes at.
+
+    That edge is a choice, not a limit of the format, and the comment
+    here said "indistinguishable from data" until 2026-10-06. It is
+    distinguishable: hexbin's OTHER half skips a line whose length
+    differs from the first's, and two Macintosh readers implement that
+    test. `src/fmt_binhex.c` declines it on a measurement — no line in
+    any of the 204 `.hqx` fixtures needs it — so the consumption below is
+    asserted as intended rather than as unavoidable (DECISIONS.md
+    2026-10-06, *the rule that no Macintosh program has*).
     """
     os.makedirs(tmp, exist_ok=True)
     problems = []
@@ -264,8 +273,10 @@ def check_posted(macextract, tmp):
         problems.append("lone: a bare \"---\" mid-stream was accepted "
                         "silently; only DeHQX's separator opens a gap")
 
-    # The edge: alphabet-only junk cannot be told from data, so it is
-    # taken as data and the CRC objects. Silence would be the bug.
+    # The edge: alphabet-only junk is taken as data by the one half of
+    # hexbin's rule this engine transcribes, and the CRC objects.
+    # Silence would be the bug; the length half that would skip it is
+    # declined on a corpus measurement (the docstring above).
     edged = os.path.join(tmp, "edged.hqx")
     with open(edged, "wb") as f:
         f.write(b"\n".join(lines[:half]) + b"\nAB:CD\n" + b"\n".join(lines[half:]))
