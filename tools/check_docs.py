@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Documentation invariants that would otherwise go stale silently.
 
-Ten of them, all cheap enough to run first in ci.sh:
+Eleven of them, all cheap enough to run first in ci.sh:
 
 1. DECISIONS.md's and FORMATS.md's Contents indexes list every `## ` entry,
    in order. An index nobody regenerates is worse than no index, because it
@@ -61,10 +61,14 @@ Ten of them, all cheap enough to run first in ci.sh:
    file in fixtures/ — because both figures drifted the day two fixtures
    arrived: "9,490 robustness variants" against 9,510, and "955 corpus
    files" against 963. Derived prose with nothing deriving it is the
-   same shape as check 8 and check 9, and the third time was 2026-10-07
+   same shape as check 8 and check 9, and the third time was 2026-10-06
    (TESTING.md, *Documentation invariants*).
+11. DECISIONS.md's entry dates are non-decreasing and none is in the
+   future. The date is half of every citation this repository makes, and
+   22 references across ten files were written a day ahead once.
 """
 
+import datetime
 import hashlib
 import json
 import os
@@ -584,7 +588,7 @@ def check_smell_count():
 # "9,490 robustness variants" against a suite of 951 (ci.sh prints 9,510),
 # and FORMATS.md carried a sniff sweep over "955 corpus files" when there
 # were 963. Neither is measurable from the prose, so neither could fail
-# until now (BLOCKERS.md; DECISIONS.md 2026-10-07).
+# until now (BLOCKERS.md; DECISIONS.md 2026-10-06).
 #
 # Counted the way the harnesses themselves count, not by a rule of thumb:
 # the differential suite is the manifests (tools/run_diff.py), the
@@ -678,13 +682,78 @@ def selftest_corpus():
     return caught
 
 
+# --------------------------------------------- DECISIONS.md's dates are keys
+# Every citation in this repository names an entry by its DATE and title
+# ("DECISIONS.md 2026-10-06, *the sort that dropped what it could not
+# hold*"), and the file is oldest-first. So a wrong date is a wrong
+# citation, silently: 22 references across ten files were written a day
+# AHEAD on 2026-10-06 — two entry headers, their index lines, four source
+# comments and a BLOCKERS row — which also put one entry in front of nine
+# that preceded it (DECISIONS.md 2026-10-06, *the spelling the tables did
+# not have*).
+#
+# What it cannot see: a date that is wrong but neither in the future nor
+# out of order, which is the one shape left. The clock is the authority
+# here, so a future date fails loudly rather than being tolerated — if the
+# machine's clock is what is wrong, that is worth knowing before a commit
+# carries it.
+def _decision_dates():
+    out = []
+    for i, line in enumerate((ROOT / "DECISIONS.md").read_text().split("\n")):
+        m = re.match(r"## (\d{4}-\d{2}-\d{2})", line)
+        if m:
+            out.append((m.group(1), line[:72]))
+    return out
+
+
+def check_decision_dates(dates=None, today=None):
+    if dates is None:
+        dates = _decision_dates()
+    if today is None:
+        today = datetime.date.today().isoformat()
+    out = []
+    if not dates:
+        return ["DECISIONS.md: no dated `## ` entry — this check has stopped "
+                "checking the dates"]
+    for (d, head), (nd, nhead) in zip(dates, dates[1:]):
+        if nd < d:
+            out.append("DECISIONS.md: %s comes after %s — the file is "
+                       "oldest-first and every citation names an entry by its "
+                       "date (%s)" % (nd, d, nhead))
+    for d, head in dates:
+        if d > today:
+            out.append("DECISIONS.md: %s is in the FUTURE (today is %s) — a "
+                       "date is a citation key, so fix the entry, its Contents "
+                       "line and every file that cites it; if the clock is what "
+                       "is wrong, fix that first (%s)" % (d, today, head))
+    return out
+
+
+def selftest_dates():
+    """Establish that it can fail: one date out of order, one ahead."""
+    dates = _decision_dates()
+    if len(dates) < 2:
+        return None
+    caught = 0
+    bent = list(dates)
+    bent[-1] = ("1999-01-01", bent[-1][1])
+    if check_decision_dates(bent):
+        caught += 1
+    bent = list(dates)
+    bent[-1] = ("2999-01-01", bent[-1][1])
+    if check_decision_dates(bent):
+        caught += 1
+    return caught
+
+
 def main():
     fix = "--fix" in sys.argv[1:]
     problems = (check_index(fix) + check_citations() + check_version() +
                 check_synthetic() + check_target_struct() +
                 check_placeholders() + check_dist_readme() +
                 check_doc_sizes() + check_smell_count() +
-                check_derived_figures() + check_corpus_figures())
+                check_derived_figures() + check_corpus_figures() +
+                check_decision_dates())
     caught = selftest_derived()
     if caught != 2:
         problems.append("check_docs: the derived-figure selftest bent two "
@@ -695,6 +764,11 @@ def main():
         problems.append("check_docs: the corpus-figure selftest bent three "
                         "counts and %d were caught — it cannot fail, so it "
                         "is not checking them" % caught)
+    caught = selftest_dates()
+    if caught is not None and caught != 2:
+        problems.append("check_docs: the entry-date selftest bent two dates "
+                        "and %d were caught — it cannot fail, so it is not "
+                        "checking them" % caught)
     for p in problems:
         print(p, file=sys.stderr)
     if problems:

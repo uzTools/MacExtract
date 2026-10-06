@@ -346,7 +346,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
 - 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
 - 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
-- 2026-10-07 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
+- 2026-10-06 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
 - 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
 - 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
 - 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
@@ -354,7 +354,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
 - 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
 - 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
-- 2026-10-07 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
+- 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
 
 ---
 
@@ -22288,7 +22288,7 @@ indistinguishable from a measurement**, and both of these were on the
 path between the defect and somebody seeing it.
 
 
-## 2026-10-07 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
+## 2026-10-06 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
 
 Reading UUTool's own `HEXA` 128 and 129 resources replaced one range —
 `0x20..0x60`, which this decoder had used since M13 — with two, `0x20..0x5f`
@@ -22872,7 +22872,7 @@ all of it downstream of one sentence about which programs have a feature,
 written when it was true and never re-read.
 
 
-## 2026-10-07 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
+## 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
 
 **Claim.** `src/fmt_binhex.c`'s skip of a line with intermediate garbage
 stays macutils'. Evidence: of the three readers OPEN_ITEMS.md named and

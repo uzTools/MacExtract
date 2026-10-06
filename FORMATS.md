@@ -954,7 +954,7 @@ so it narrows nothing. Taking the "PC" half as `0x20..0x5f` alone, for one
 day in 2026-10-06, made every file BSD or GNU `uuencode` writes
 unrecognised and, when the format was forced, extracted as an empty file
 with exit 0: the fourth spelling is graded by
-`synth-uu-plain-classic.uu` since 2026-10-07, against CPython's
+`synth-uu-plain-classic.uu` since 2026-10-06, against CPython's
 `binascii.a2b_uu` as well as against the payload (BLOCKERS.md; TESTING.md,
 *ARC and uuencode*).
 
@@ -6488,7 +6488,15 @@ measured and every decoder was resident. In the shipped v0.37.0 binary it is
 **48,888 B**, and the nine `CODE` resources total **55,888 B** — read off
 `dist/MacExtract.bin`'s own resource map, CORRECTED 2026-10-06 — so the
 segment the Segment Loader could not place now fits inside that machine's
-largest block with room to spare. *Derived, not measured:* 63,744 B was
+largest block with room to spare. **55,888 B is not the 54,340 B this
+document calls `CODE` elsewhere, and the difference is not drift:** that
+one is `build/mac/MacExtract.code.bin`, the image Retro68 links and
+`tools/check_app_size.py` ratchets (*Three configurations, one tree*), while
+this one is the sum of what the resource fork actually carries, which
+includes `CODE` 0's 1,024-byte jump table and six 80-byte segment stubs
+that the image does not. The two differ by 1,548 B, and the heap sum below
+uses the resource figure because resources are what the Segment Loader
+places. *Derived, not measured:* 63,744 B was
 measured against the build of the day, and only a boot settles what this one
 is granted.
 

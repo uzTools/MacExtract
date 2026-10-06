@@ -47,7 +47,7 @@ always written: the standard alphabet with the value ZERO spelled "`"
 instead of a space. `binascii.b2a_uu` does not write it, so it was the
 one spelling no generated case here held — and narrowing the standard
 range to 0x5f for the two tables above made every such file unreadable
-for a day (DECISIONS.md 2026-10-07, *the spelling the tables did not
+for a day (DECISIONS.md 2026-10-06, *the spelling the tables did not
 have*).
 
 Usage:  synth_uu.py <outdir>
@@ -66,7 +66,7 @@ TABLE_UNIX23 = 27      # UUTool 2.3.2: values 0..26 -> 0x60..0x7a
 # GNU sharutils' both spell it ENC(c) = (c) ? ((c) & 077) + ' ' : '`',
 # and mpack's uudecode.c accepts either. `binascii.b2a_uu` writes the
 # space, so this is the one shape CPython cannot generate — and the
-# shape no fixture had until 2026-10-07 (BLOCKERS.md).
+# shape no fixture had until 2026-10-06 (BLOCKERS.md).
 TABLE_PC_BQ = "bq"
 
 

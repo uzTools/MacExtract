@@ -327,8 +327,10 @@ claim and goes in the same file with what it cost.
 ## 8. A release that is due, and a version number that cannot tell two builds apart
 
 Like §7, this needs no Macintosh — it needs the maintainer. `v0.37.0` was
-tagged 2026-10-04 and `main` is 25 commits past it as of 2026-10-06, while
-`UNC_VERSION` in `include/macextract.h` still reads `0.37.0`. That is
+tagged **2026-10-04** and `main` has moved since, while `UNC_VERSION` in
+`include/macextract.h` still reads `0.37.0`. (No count here: it is
+`git rev-list --count v0.37.0..HEAD`, and a number written down would be
+wrong by the next commit.) That is
 deliberate: bumping it is step one of cutting a release, and cutting one is the
 maintainer's call (CLAUDE.md, *Cutting a release*). The consequence is that
 `--version`, the application's About box and `dist/README.txt`'s title all read

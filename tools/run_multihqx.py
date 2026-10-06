@@ -222,8 +222,8 @@ def check_posted(macextract, tmp):
 
     # THE RESUME LINE IS A PREFIX, and these two are the cases the one
     # above could not see. DeHQX's prose says "a line consisting only of
-    # '---'", which this reader took literally between 2026-10-06 and
-    # 2026-10-07: a posting whose resume line carried anything else —
+    # '---'", which this reader took literally for part of 2026-10-06:
+    # a posting whose resume line carried anything else —
     # `--- part 2 ---`, or simply more hyphens — never left the gap and
     # lost EVERYTHING after the cut. The FIRST of the two had read
     # correctly before the gap existed — it holds spaces, so the garbage
@@ -231,7 +231,7 @@ def check_posted(macextract, tmp):
     # the `sep` case above cannot fail on it because its resume line is
     # the exact one. HQXer 1.1 is the second implementation and reads
     # three characters (tools/derive_hqxgarbage.py; DECISIONS.md
-    # 2026-10-07, *the line that had to be the whole line*).
+    # 2026-10-06, *the line that had to be the whole line*).
     for tag, resume in (("decorated", b"--- part 2 ---"),
                         ("longer", b"-----")):
         more = os.path.join(tmp, "sep-%s.hqx" % tag)

@@ -77,7 +77,7 @@
    of images and nothing recomputes them, so re-take them from that function
    rather than by hand.
 
-   **A fourth joined on 2026-10-07: the figures derived from the CORPUS.**
+   **A fourth joined on 2026-10-06: the figures derived from the CORPUS.**
    Seven sentences across four files state how big the suites and the
    sniff sweeps are, and all of them were written by hand: two said
    *"9,490 robustness variants"* against a suite of 951 (`ci.sh` prints
@@ -97,6 +97,19 @@
    cites *"9,320 robustness variants clean"* as the NAME of a
    BLOCKERS.md section, and a withdrawn claim's title is not a figure to
    correct.
+
+   **And a fifth, the same day: DECISIONS.md's entry DATES.** They must
+   be non-decreasing in file order — the file is oldest-first — and none
+   may be in the future. The date is half of every citation this
+   repository makes, so a wrong one is a wrong citation that nothing
+   dereferences: 22 references across ten files were written a day ahead
+   on 2026-10-06, two of them entry headers, four of them source
+   comments, and one of them put an entry in front of nine that preceded
+   it. Bending one date each way must be caught or the run refuses to
+   pass. **What it cannot see:** a date that is wrong but neither in the
+   future nor out of order, which is the one shape left; and it takes
+   the machine's clock as the authority, so if THAT is wrong the check
+   says so loudly rather than quietly agreeing.
 
 0b. **Tuple truth** (`tools/check_tuple_truth.py`, in `ci.sh` since
    2026-09-25): a Python function whose every `return` carries a tuple of
@@ -1846,7 +1859,7 @@ the differential suite, and `tools/derive_mu.py --grade` replays both
 with `hexbin` and with the CRCs of the StuffIt archive one of them
 decodes to (FORMATS.md, *uuencode: three alphabets*).
 
-**And the FOURTH spelling, since 2026-10-07**, which is not a UUTool
+**And the FOURTH spelling, since 2026-10-06**, which is not a UUTool
 table: Unix `uuencode` writes the value zero as `` ` `` and not as a
 space, and `binascii.b2a_uu` — the generator for every plain case here —
 writes the space, so no document in this suite held the other spelling
@@ -1913,7 +1926,7 @@ entries — which is what says the case is not decoration. The control is
 the half that keeps the new rule narrow: a bare `---` with no
 `--- end of part` in front of it is still data and must still fail the
 CRC, so the rule cannot drift into "a line of hyphens is never data".
-**And the resume line's SHAPE, since 2026-10-07, which that case could
+**And the resume line's SHAPE, since 2026-10-06, which that case could
 not fail on**: its own resume line is exactly `---`, so it is the one
 shape a too-narrow reading spares. `--- part 2 ---` and `-----` are
 cases of their own now, and both fail against the build of the day
@@ -1922,7 +1935,7 @@ was transcribed as a length test, which lost everything after a cut
 whose marker carried anything else. The first of those two had read
 correctly BEFORE the separator rule existed, because it holds spaces
 and the garbage rule skips it, so the fix made its own regression
-(DECISIONS.md 2026-10-07, *the line that had to be the whole line*).
+(DECISIONS.md 2026-10-06, *the line that had to be the whole line*).
 `tools/derive_dehqx.py` is where the sentence itself is checked, and it
 consults `hexbin` on the same posting; `tools/derive_hqxgarbage.py` is
 where the second implementation is read, and it grades all three resume

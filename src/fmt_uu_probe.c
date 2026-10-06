@@ -41,11 +41,11 @@
  * fmt_uu_priv.h carries the citation). It narrows nothing, and the
  * mask is therefore the union of
  * three spellings rather than two tables. Requiring 0x20..0x5f of the
- * "PC" half instead, between 2026-10-06 and 2026-10-07, made every file
- * BSD and GNU uuencode write unreadable: a line carrying a zero AND a
+ * "PC" half instead — written and withdrawn the same day, 2026-10-06 —
+ * made every file BSD and GNU uuencode write unreadable: a line carrying a zero AND a
  * value under 27 fits neither half, so it was skipped as mail and the
  * document decoded to nothing, with no checksum anywhere to object
- * (BLOCKERS.md; DECISIONS.md 2026-10-07).
+ * (BLOCKERS.md; DECISIONS.md 2026-10-06).
  *
  * What matters for telling data from mail survives that: the UNIX half
  * excludes 0x20..0x3a and the PC half excludes 0x61..0x7d, so prose

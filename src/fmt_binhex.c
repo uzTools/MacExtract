@@ -161,7 +161,7 @@ static int bh_refill_line(BhDec *d)
          * THE TAB IS OURS. `hqx.c` tests `line[n - 1] == ' '` and
          * nothing else, and a tab is FAIL in its lookup, so a line
          * ending in one is skipped there and read here. Corrected
-         * 2026-10-07: the sentence above attributed both characters to
+         * 2026-10-06: the sentence above attributed both characters to
          * a source that states one. What the second one does have is a
          * second implementation — HQXer 1.1's inverse table marks TAB
          * skippable ANYWHERE in a line, with BS, LF, CR and the space
@@ -190,14 +190,15 @@ static int bh_refill_line(BhDec *d)
          * gap loop reads three characters, compares each with '-', and
          * on three hits discards the REST of the line and resumes with
          * the next character. Taking "consisting only of '---'"
-         * literally cost a regression this suite could not see: between
-         * 2026-10-06 and 2026-10-07 a posting whose resume line read
-         * `--- part 2 ---` or `-----` lost everything after the cut —
+         * literally cost a regression this suite could not see, written
+         * and withdrawn the same day, 2026-10-06: a posting whose resume
+         * line read `--- part 2 ---` or `-----` lost everything after
+         * the cut —
          * and the FIRST of those had read correctly before the gap
          * existed at all, because it holds spaces and the garbage rule
          * below skips it, so the gap cost a file it had been given
          * (measured on a build with this test compiled out;
-         * DECISIONS.md 2026-10-07; graded by tools/run_multihqx.py's
+         * DECISIONS.md 2026-10-06; graded by tools/run_multihqx.py's
          * three cuts). HQXer is more permissive
          * still — it scans for three consecutive '-' anywhere, not at a
          * line start — and the line anchor is kept because nothing here
