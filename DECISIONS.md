@@ -16661,8 +16661,10 @@ the two measured paragraphs above decide the question without it.
 `-mcpu=68020` build would delete libgcc's `__mulsi3`/`__divsi3` calls,
 one of which `sit_arsenic.c` names at ~4 % of an Arsenic run. It is not
 recommended and not open: it is a second binary the floor machine cannot
-run, against a `CODE` size that is already load-bearing at 142,152 B (the
-Macintosh 128K row in OPEN_ITEMS.md Part 1 turns on exactly that number),
+run, against a `CODE` size that was already load-bearing at 142,152 B when
+this was written — 54,340 B resident since the overlays, and that row now
+turns on the heap TOTAL rather than on one segment, which changes the figure
+and not this trade (2026-10-06, *the wall the overlays had already moved*) —
 and **this machine cannot price it** — the tick probe is an emulated Mac
 Plus, so a 68020 build has no timing model here, and instruction counts
 rank rather than price.
@@ -22517,7 +22519,7 @@ narrowed has to be shown not to have narrowed anything else.
 **Claim, carried since 2026-09-01: a Macintosh 128K is out for a measured
 second reason — its largest single block is 63,744 B against 142,152 B of
 `CODE`.** It was true when it was written and it had stopped being true
-eleven days before it was last read. `CODE` 2 is **48,884 B** in the shipped
+eleven days before it was last read. `CODE` 2 is **48,888 B** in the shipped
 v0.37.0 binary, so the segment the Segment Loader refused now fits inside
 that machine's largest block with room to spare (FORMATS.md, *A Macintosh
 128K*).
@@ -22534,8 +22536,8 @@ rather than by hand, which is the harder version: there was no stale
 formula to notice, only a term that three files held and the build no
 longer did.
 
-**The verdict held, and that is why it was cheap.** 55,884 B of `CODE`
-resources plus the 19,056 B A5 world is 74,940 B against `ApplLimit −
+**The verdict held, and that is why it was cheap.** 55,888 B of `CODE`
+resources plus the 19,052 B A5 world is 74,940 B against `ApplLimit −
 ApplZone` = 78,568 B, and the eager loader then asks for the `'OVLY'`
 bundle as ONE 155,916 B block, so a 128K is short by 3,628 B rather than by
 a factor of about two. Nobody's afternoon was spent on the strength of the
@@ -22548,8 +22550,8 @@ was written.
 
 **The instrument, and why the project's usual one could not settle it.**
 Every `CODE` figure here comes from `m68k-apple-macos-size`, which measures
-`.text`: 54,336 B for the shipped build. What a 128K heap actually holds is
-the `CODE` RESOURCES — 55,884 B across nine of them, including the 1,024 B
+`.text`: 54,340 B for the shipped build. What a 128K heap actually holds is
+the `CODE` RESOURCES — 55,888 B across nine of them, including the 1,024 B
 jump table and the per-segment headers the linker's figure does not carry —
 and what the Segment Loader asks for in one block is the largest single
 resource, which no summed figure shows at all. Both numbers were available;

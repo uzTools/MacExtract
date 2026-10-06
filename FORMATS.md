@@ -4325,15 +4325,18 @@ the file, and `check_app_size.py` reported the 128 B difference rather
 than failing on it, exactly as its tolerance is meant to.)
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
-read at launch by the Segment Loader — 183,424 B — and the shipped build
-reads 64,512 B of `CODE` plus the 143,328 B bundle, which is 207,840 B: the
-same read redistributed plus **24,416 B** (DECISIONS.md 2026-09-25, *the
+read at launch by the Segment Loader — 196,608 B — and the shipped build
+reads 66,048 B of `CODE` plus the 155,916 B bundle, which is 221,964 B: the
+same read redistributed plus **25,356 B** (DECISIONS.md 2026-09-25, *the
 overlay launch read was counted as a cost twice*). The download grows by
-24,448 B over the same pair, 211,200 against 186,752, so the read delta and
-the download delta are two numbers **32 B apart** and not one number — and a
+25,344 B over the same pair, 225,280 against 199,936, so the read delta and
+the download delta are two numbers **12 B apart** and not one number — and a
 MacBinary download is quantised to 128 B a fork, so a pair this close is
-inside the padding and needs no further account. All six figures re-taken
-2026-09-28. Both figures read 512 B apart
+inside the padding and needs no further account. All six figures re-derived
+2026-10-06 from *Three configurations, one tree* and the shipped resource
+map, CORRECTED there: they read 183,424 / 64,512 / 143,328 / 207,840 /
+24,416 / 24,448 and 32 B apart, re-taken 2026-09-28 and then left while
+three columns of that table moved under them. Both figures read 512 B apart
 until 2026-09-26, from the bundle's resource fork standing in for the bundle
 (DECISIONS.md 2026-09-26, *the fork that was mistaken for its contents*).
 
@@ -4508,10 +4511,10 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **211,200 B** of MacBinary (`dist/MacExtract.bin`,
-v0.35.0), and since 2026-09-25 that is no longer all resident: **64,512 B** is
+The application ships as **225,280 B** of MacBinary (`dist/MacExtract.bin`,
+v0.37.0), and since 2026-09-25 that is no longer all resident: **66,048 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **143,328 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **155,916 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -6472,17 +6475,29 @@ as the boot shell so nothing else is resident:
 | `CurStackBase` | 106,728 | 499,944 |
 | `FreeMem` | 4,846 | 4,846 |
 | **largest single `NewPtr`** | **63,744** | **424,960** |
-| a 142,152 B block — `CODE` 2 | **refused** | granted |
+| a 142,152 B block — `CODE` 2 as it was that day | **refused** | granted |
 
-**`CODE` 2 is 142,152 B and the machine's largest block is 63,744 B**, so the
-Segment Loader cannot place the segment the engine lives in; the application's
-`CODE` totals 148,780 B against an application heap that cannot exceed
-`ApplLimit − ApplZone` = 78,568 B. That bound is set by the RAM under the
-screen buffer, not by the System, so no smaller System moves it — and CODE is
-the one thing that costs a Macintosh anything here (*What the application
-costs the engine*). A 128K machine is short by a factor of about two before
-any archive is opened, which is why the HD20 question in MANUAL_TESTS.md §6 is
-a question about a **512K** and not about the machine it is named after.
+**The segment was the reason until the overlays landed on 2026-09-25; the heap
+total is the reason now.** `CODE` 2 was 142,152 B when the row above was
+measured and every decoder was resident. In the shipped v0.37.0 binary it is
+**48,888 B**, and the nine `CODE` resources total **55,888 B** — read off
+`dist/MacExtract.bin`'s own resource map, CORRECTED 2026-10-06 — so the
+segment the Segment Loader could not place now fits inside that machine's
+largest block with room to spare. *Derived, not measured:* 63,744 B was
+measured against the build of the day, and only a boot settles what this one
+is granted.
+
+**What does not fit is the sum.** The heap holds those 55,888 B of `CODE`
+resources plus the 19,052 B A5 world — **74,940 B** against an application
+heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
+for every buffer an extraction needs; and the shipped eager loader then asks
+for the `'OVLY'` bundle as ONE **155,916 B** block (*Overlays*). That bound is
+set by the RAM under the screen buffer, not by the System, so no smaller
+System moves it — and CODE is the one thing that costs a Macintosh anything
+here (*What the application costs the engine*). The verdict is unchanged; the
+margin is kilobytes rather than the factor of about two this section claimed
+until 2026-10-06, which is why the HD20 question in MANUAL_TESTS.md §6 is a
+question about a **512K** and not about the machine it is named after.
 
 **What would fit, measured by building it.** The sniff table, the format
 table and the segment scheme table are what reference the decoders, so cutting
@@ -6491,10 +6506,16 @@ build. Static sizes from `m68k-apple-macos-size`, MEASURED 2026-09-01:
 
 | build | code | data + bss | static total |
 |---|---|---|---|
-| shipping | 147,568 | 44,096 | 191,664 |
+| shipping that day — every decoder resident | 147,568 | 44,096 | 191,664 |
 | MacBinary + BinHex + StuffIt classic + Compact Pro + PackIt | 59,944 | 29,112 | 89,056 |
 | MacBinary + BinHex + StuffIt classic | 52,092 | 29,060 | 81,152 |
 | **MacBinary + BinHex** | **34,452** | **23,724** | **58,176** |
+
+The shipping row is that day's and is not today's — the shipped pair is
+54,340 B of `CODE` and 19,052 B of A5 since the overlays (*Three
+configurations, one tree*). **The subset rows are unaffected by them**: a
+build with one format has nothing to overlay, so these are the numbers a
+per-format application would still be measured against (*derived*).
 
 Against ~88 KB between `ApplZone` and the screen buffer, from which the stack
 and every working buffer also come: the two-envelope build leaves ~30 KB for

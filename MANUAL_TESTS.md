@@ -241,9 +241,12 @@ Extraction correctness
 
 **A Macintosh 128K cannot run this and is not what this section asks for.**
 Measured 2026-09-01: the same volume that reaches Standard File on a 512K
-bombs `ID = 03` on a 128K, whose largest single block is 63,744 B against the
-142,152 B of `CODE` the engine lives in (FORMATS.md, *A Macintosh 128K*). The
-machine below is a **512K**, with 512 KB of RAM behind its 64 KB ROM.
+bombs `ID = 03` on a 128K. The reason is CORRECTED 2026-10-06 and the verdict
+is not — it is the heap total rather than one segment, 74,940 B of `CODE`
+resources and A5 world against 78,568 B of application heap, plus a
+155,916 B `'OVLY'` bundle the eager loader asks for in one block (FORMATS.md,
+*A Macintosh 128K*). The machine below is a **512K**, with 512 KB of RAM
+behind its 64 KB ROM.
 
 **Why nothing here can answer it: Mini vMac does not emulate the Hard Disk
 20.** Apple's own *HD 20 Startup* disk boots on the emulated 512Ke and stops
