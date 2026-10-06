@@ -1786,6 +1786,17 @@ not admit to*):
 | the ROM's own Forth | **`System Folder:Mac OS ROM`'s `<BOOT-SCRIPT>` refuses the machine itself.** It accepts `/` model `iMac,1`, or compatible containing `powermac1,1` or `powerbook1,1`, and aborts *"this image is not for this platform"* otherwise. QEMU's `mac99` is `PowerMac3,1` and `g3beige` is neither; the one-byte edit `powermac1,1` → `powermac3,1` clears it | prepared |
 | **`MacOS: "/rtas" not found!`** | past those three the ROM's ELF runs and **Mac OS itself stops**: `MacOS: Boot Failure! (0xF3C481F6)`. OpenBIOS implements no `/rtas` node and 8.6's ROM requires one | **the wall** |
 
+**`os9.Qemu.settle()` cannot be used on a guest that does not boot, and
+it says the opposite.** Its positive signal is `_menubar_present` — mean
+brightness of the top 20 rows above 0.6, which separates the Mac OS 9
+startup splash from a settled desktop — and OpenBIOS's console is black
+text on pale yellow, so it reads **True from the first frame of a guest
+that never left the firmware.** Every 8.6 run here was read off the
+frames for that reason, and `--macos86` screenshots on a fixed interval
+rather than settling. The gate is sound for what it was measured on and
+is a brightness test everywhere else: *a proxy is not the thing*, and
+this is the second guest it has been pointed at.
+
 **What tells the two ROMs apart is one line of each file's own prologue**,
 and it is why 9.2 boots here and 8.6 cannot: Mac OS 9's `Mac OS ROM`
 (2001-09-25, data fork 2,811,320 B) declares
