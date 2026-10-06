@@ -186,10 +186,23 @@ int unc_sit5_extract(UncCtx *c)
      * "has no specimen either" until that day, and three had been in
      * the cache since 2026-08-26 (BLOCKERS.md, *Withdrawn claims*).
      *
-     * Source: reference/XADMaster/XADStuffIt5Parser.m, parse — for
-     * BIT 5 alone, which none of the three sets and which nothing
-     * here can grade. An archive carrying a comment would be the
-     * specimen. docs/formats/stuffit5-container.md. */
+     * BIT 5 IS MEASURED TOO, since 2026-10-06: it marks an archive
+     * COMMENT, and the block it adds is four bytes — the comment's
+     * length and its style scrap's length. The archive that says so is
+     * the `Sample Archive.sit` StuffIt Deluxe 5.5 ships in its own
+     * Tutorial Files, where 100 + 14 + 4 + 204 + 22 is exactly the
+     * offset its header gives for the first entry, and no other block
+     * width closes that sum (FORMATS.md, *StuffIt 5's archive flag
+     * byte, and what bit 5 is*).
+     *
+     * AND THE HASH COMES AFTER BOTH BLOCKS — the `hp += 4` below —
+     * measured the same day on two archives StuffIt Deluxe 7.0.3 wrote
+     * by Apple event, the only two here that set bits 5 and 7 together:
+     * the length byte reads 5 at 100+14+4 and 0 at 100+14, so the shift
+     * is load-bearing (tools/derive_sit5crypt.py).
+     *
+     * Source: reference/XADMaster/XADStuffIt5Parser.m, parse;
+     * docs/formats/stuffit5-container.md. */
     if (hdr[83] & SIT5_ARCH_CRYPTED) {
         uint32_t hp = 100;
         uint8_t hb[8];

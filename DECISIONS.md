@@ -355,6 +355,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
 - 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
 - 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
+- 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
 
 ---
 
@@ -22995,3 +22996,99 @@ all — they are Info-Mac downloads, which are single postings — so what
 is measured is the boundary two implementations DESCRIBE, and how often
 a posting in the wild is shaped this way is not something this corpus
 can say.
+
+
+## 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
+
+**Claim.** *"No archive on this machine sets bit 5 — 47 scanned — so
+nothing here can grade it"* is withdrawn. Evidence: `Tutorial
+Files/Sample Archive.sit`, which **StuffIt Deluxe 5.5 ships inside its
+own installer**, reads `0x30` at the archive flag byte and carries a
+204-byte comment. Consequence: **bit 5 marks an archive comment** and its
+block is four bytes, the comment's length and its style scrap's; the row
+is closed, and so is the ORDER question behind it (FORMATS.md, *StuffIt
+5's archive flag byte, and what bit 5 is*).
+
+### The measurement is one sum, and the alternatives are what make it one
+
+100 + 14 (bit 4's block) + 4 (bit 5's) + 204 (the comment) + 22 (the
+style scrap) = **344**, and 344 is the `firstoffs` the archive's own
+header declares. A block of 0, 2, 6 or 8 bytes misses, and
+`tools/derive_sit5crypt.py` checks each of those separately and fails if
+one of them would close the sum too — the rule this project already
+applied to bit 4's fourteen, where a reading that works is not evidence
+unless the alternatives do not.
+
+**Two independent confirmations came free with the file.** `lsar` prints
+that text as *Archive comment*, so XADMaster's reading and this one agree
+on a real archive rather than on each other; and Aladdin's own StuffIt
+Engine SDK 5.1.2 — in the cache since 2026-09-28 — declares
+`GetArchiveComments(archiveInfo *, Handle *commentText, StScrpHandle
+*commentStyl)`, a text handle and a style handle, which is exactly the
+pair of lengths. Neither was reachable while the claim was that no
+archive existed: **the expensive belief was the absence, not the
+reading.**
+
+### Why the row did not find it
+
+The scan behind *"none of the 47"* ran on **2026-09-27**. On
+**2026-10-04** `sitzip.py --payload 55` extracted 138 files into the
+cache to answer a question about zip metadata, and one of them was that
+archive. On **2026-10-06** `sitcomment.py --read` opened `StuffIt
+Deluxe™.rsrc` **out of that same payload**, one directory up from the
+archive, read a `MENU` resource out of it, and concluded the row needed
+an emulator and an application to drive.
+
+**A scan is a measurement of a corpus at a date.** Quoted afterwards it
+reads as a property of the format, and this project's corpus grows
+constantly and for unrelated reasons — installer payloads, reference
+downloads, emulator output. Re-run a scan rather than re-reading it, and
+re-run it FIRST when the row's named route is an emulator: a hundred-byte
+read over every file on the disk is seconds, and a boot is not
+(BLOCKERS.md, *a scan whose corpus has grown since it ran*).
+
+**What the row got right is the shape of the mistake.** Every obstacle it
+listed was an obstacle to WRITING such an archive — which comment UI,
+which system, which installation — and all were real, and two were
+disproved the same day. What it never listed was an obstacle to FINDING
+one, because finding one had been declared impossible first, and after
+that the only moves left on the board are the expensive ones.
+
+### The second half: hand the application an artefact instead of asking it for one
+
+The found archive settles what bit 5 MEANS and not where the password
+hash goes, because it is not encrypted. That needed an archive setting
+both bits, and three boots produced two of them — `enc-comment-added.sit`
+and `enc-comment-stuffed.sit`, `0xb0`, hash at 118, the unshifted offset
+reading 0 (FORMATS.md). What those boots are worth keeping is the shape
+of what worked:
+
+- **`make` failed and `open` did not.** Three shapes of *make new
+  archive* — `at` an alias of the folder, `at` nothing, and `stuff` with
+  no destination — all answered `-1701`, `errAEDescNotFound`; StuffIt
+  Deluxe 7.0.3 wants an insertion location nothing here had built. An
+  archive already on the volume, opened with `aevt/odoc` and then set,
+  worked on the first attempt. **When an application will not CREATE the
+  artefact, give it one and ask it to CHANGE it** — and this project has
+  six StuffIt 5 archives in a cache directory for exactly that.
+- **A reply of 0 says the term was understood, not that anything was
+  written.** `set password of archive 1` answered 0 and the archive came
+  back byte for byte, because nothing had made StuffIt rewrite it; the
+  same event with an item stuffed in afterwards produced a `0xb0`
+  archive. So the sender reads the artefact itself — `aesit` opens the
+  file and prints byte 83 — and a frame is then evidence about the
+  FORMAT rather than about an event queue.
+- **Most of what the row called a blocker was 5.5's.** 7.0.3 launches on
+  Mac OS 9.2 from the installation this project assembles, has no
+  *"properly installed"* check at all, and takes `comment` and `password`
+  by Apple event. The route that was filed as needing an operating
+  system this machine cannot boot needed a different version of the same
+  application, and that version was already on the disk
+  (`tools/vmac/README.md`, *The archive comment, and bit 5*).
+
+**Cost of the first half: two days of a row filed as needing an emulator
+while the archive that answers it sat in a directory the row's own
+harness had indexed** — and, before that, a morning aimed at writing such
+an archive when reading one would have done. **Of the second half:
+three boots, about an hour**, which is what the ORDER actually cost and
+would have cost anyway.

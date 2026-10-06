@@ -319,8 +319,12 @@ def matches(data, idx, sel):
     return out
 
 
-def assemble(ver, outdir):
-    """Build the boot volume and the transfer volume for one version."""
+def assemble(ver, outdir, extra=()):
+    """Build the boot volume and the transfer volume for one version.
+
+    `extra` is (MacBinary file, name on the volume) pairs to put on the
+    transfer volume beside the application and the subject —
+    `sitcomment.py --specimen` puts its Apple event sender there."""
     d = DIST[ver]
     data, idx = payload(ver)
     os.makedirs(outdir, exist_ok=True)
@@ -396,7 +400,9 @@ def assemble(ver, outdir):
         R.sh(sys.executable, os.path.join(HERE, "mkapmdisk.py"),
              os9.DISK, xfer, "32", VOLUME,
              "--macbinary", "%s:%s" % (appbin, APP_NAME),
-             "--macbinary", "%s:%s" % (sub, SUBJECT_NAME))
+             "--macbinary", "%s:%s" % (sub, SUBJECT_NAME),
+             *[a for p, n in extra
+               for a in ("--macbinary", "%s:%s" % (p, n))])
     return boot, xfer
 
 

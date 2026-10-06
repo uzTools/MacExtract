@@ -196,7 +196,7 @@ read.
 | `maclha.py` | **MacLHA 2.00**, out of the corpus (`derived-MacLHa_2.00.sit`), driven to write a `.lzh` holding a file with a real resource fork — the specimen no MacLHA archive in reach is. `--setup` builds the volume, `--make` drives the application (keyboard where it has a shortcut; its Header and Type menus are HIERARCHICAL and cannot be used here, and nothing needs them because `MacBinary` is already checked), `--check` grades both forks with our CLI. **The Type menu was worth reading anyway, and it is now**: `LHa`, `LHarc`, `None` — `-lh5-`, `-lh1-`, `-lh0-` — so it cannot write an `-lh2-`/`-lh3-` specimen — which `tools/run_lzh.py` grades against LHa's own encoder instead (TESTING.md) — and the inaccessible submenu costs nothing (read out of `MENU` 134 with `hcopy`, no emulator) |
 | `zipmeta.py` | **what Aladdin's software does with a MacZip archive's Finder metadata.** `--table` reads the `UnZip Translator`'s extension-to-type table without booting; `--expander` hands StuffIt Expander a four-entry cut of the real archive and reads the volume back |
 | `sitzip.py` | the same question put to the two LATER boxes — **StuffIt Deluxe 5.5 and 7.0.3 Classic, on Mac OS 9, with no installer driven**: the engine, the translators and the application are placed into a plain-HFS System Folder from Linux. `--carbonlib` installs the one thing that cannot be placed — see below |
-| `sitcomment.py` | **the archive that would grade `fmt_sit5.c`'s bit 5** — a StuffIt 5 archive that is encrypted AND commented. `--read` asks both later boxes what they offer for a comment, no emulator; `--probe` launches StuffIt Deluxe 5.5 on Mac OS 9; `--macos86` replays the Mac OS 8.6 boot that is not the route — see below |
+| `sitcomment.py` | **StuffIt 5's archive flag byte, bit 5** — measured 2026-10-06. `--read` and `--aete` ask both later boxes what they offer for a comment and print their scripting dictionaries, no emulator; `--specimen` boots Mac OS 9 and has `tools/aesit/` drive StuffIt Deluxe 7.0.3 by Apple event into writing an archive that is encrypted AND commented; `--probe` launches 5.5; `--macos86` replays the Mac OS 8.6 boot that is not the route |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
@@ -531,38 +531,109 @@ it relies on that no other harness here uses: **Tab selects the first
 icon in a Finder window by name**, which is how the installer on a disk
 whose contents are unknown gets opened.
 
-## The comment that would grade bit 5 — `sitcomment.py`
+## The archive comment, and bit 5 — `sitcomment.py`
 
     tools/vmac/sitcomment.py --read              no emulator
+    tools/vmac/sitcomment.py --aete              no emulator
+    tools/vmac/sitcomment.py --specimen          boot, drive Deluxe by Apple event
+    tools/vmac/sitcomment.py --read-back <img>   re-read a finished run's volume
     tools/vmac/sitcomment.py --probe -o <dir>    boot, launch Deluxe 5.5
     tools/vmac/sitcomment.py --macos86 -o <dir>  the boot that is not the route
 
-The specimen wanted is **one archive that is encrypted AND carries an
-archive comment**, because the only place `src/fmt_sit5.c` acts on
-archive-flag bit 5 is the password-hash offset inside the
-`SIT5_ARCH_CRYPTED` branch. Three DropStuff 5.0.1 archives already grade
-bits 7 and 4 (FORMATS.md, *StuffIt 5's RC4*); none is commented.
+**Bit 5 is measured, and half of that needed no emulator.** What bit 5
+MEANS was settled by `Tutorial Files/Sample Archive.sit`, which **StuffIt
+Deluxe 5.5 ships inside its own installer** — the payload `sitzip.py
+--payload 55` extracts and the payload `--read` indexes to find a `MENU`
+resource. It sets the bit, carries a 204-byte comment, and its own
+`firstoffs` closes the arithmetic. What needed `--specimen` is the
+ORDER of the password hash and the comment block, which only an archive
+setting bits 5 AND 7 can say: **three boots produced two of them**,
+`enc-comment-added.sit` and `enc-comment-stuffed.sit`, both `0xb0`
+(FORMATS.md, *StuffIt 5's archive flag byte, and what bit 5 is*;
+`tools/derive_sit5crypt.py` grades all six specimens on demand).
 
-**`--read` is the part that changed the row, and it boots nothing.**
-OPEN_ITEMS.md had said the only software that can set bit 5 is StuffIt
-Deluxe 5.0.1's comment UI. Both later boxes carry one, and both are
-already assembled into a Mac OS 9 System Folder by `sitzip.py`:
+**`--read` and `--aete` need no emulator.** `--read` prints what each box
+offers for a comment; `--aete` parses both scripting dictionaries whole —
+the `aete` layout with its strings packed and every other field on a word
+boundary, and it raises rather than printing if a byte is left over,
+because a dictionary read wrongly still looks plausible in every
+four-character code. What they say:
 
-| box | what it offers for a comment |
-|---|---|
-| Deluxe 5.5 | `MENU` 131 *Archive* ▸ `Edit Comment...`, **no Command key**; `STR# 30000` #13 *"Click here to display (and possibly edit) the comments attached to this archive"*, so the archive window has a comments AREA; `aete` declares `comment` and `password` as properties of the archive |
-| Deluxe 7.0.3 Classic | `MENU` 132 *Archive* ▸ `Edit Comment…`, **no Command key**; `aete` declares `comment` on both the archive and the item, `password` on the archive, and a `password` parameter on the `stuff` event itself |
+| box | comment UI | scripting |
+|---|---|---|
+| Deluxe 5.5 | `MENU` 131 *Archive* ▸ `Edit Comment...`, **no Command key**; `STR# 30000` #13, a clickable comments AREA in the archive window | `Arc ` has `comment` (`comm`) and `password` (`pass`), both settable; `SIT!`/`STUF` takes `encrypting`; the Standard Suite has `get` and `set` |
+| Deluxe 7.0.3 Classic | `MENU` 132 *Archive* ▸ `Edit Comment…`, **no Command key** | `ARCH` has `comment` (`COMM`) and `password` (`PASS`), both settable; `STFF`/`stff` takes a `password` directly; `core/setd` is in its `aedt` and **not** in its `aete` |
 
-**So the menu is the one route already measured dead** — a keyless menu
-item is not selectable on either guest (*What the pointer cannot
-select*, above) — and the two that are left are the comments AREA, which
-is a click and clicks work, and an Apple event, which is what
-`tools/aetran/` exists for.
+**The menu is dead on both and the dictionary is not** — a keyless menu
+item is not selectable on either guest (*What the pointer cannot select*,
+below), which is why this is driven by Apple event.
 
-**What `--probe` measured, 2026-10-06.** It assembles 5.5 with the
-**application** on the transfer volume instead of `sitzip.py`'s Expander,
-boots, type-selects `stu` and photographs the result — two questions
-`sitzip.py` has never asked, because the Expander is a different program.
+**`--specimen` sends the events.** `tools/aesit/` is the sender, a
+Retro68 application in aetran.c's shape: the harness drives only the
+Finder, by type-to-select and Cmd-Down, and everything after that happens
+inside the Macintosh, where no coordinate can miss. It launches StuffIt
+Deluxe itself, works through a LADDER of event shapes, writes every
+reply's `errn` to `AEResult` beside itself **after each step**, reads the
+archive's own flag byte back off the disk, and prints it. The transfer
+volume carries the two archives it works on — one commented, one
+encrypted, both Aladdin's own output out of the cache.
+
+**What the ladder does now**, and it is the shape that worked rather than
+the first one tried: open an archive already on the volume with
+`aevt/odoc`, `core/setd` one property on it, close. One phase adds a
+COMMENT to the encrypted `enc-swordfish.sit`; the other adds a PASSWORD
+to the commented `Sample Archive.sit` and then stuffs a file into it.
+Both end at `0xb0` and both are read back off the disk by `aesit`
+itself.
+
+**What the ladder measured, 2026-10-06, three boots:**
+
+- **`make` fails and `open` does not.** Three shapes of *make new
+  archive* — `at` an alias of the folder, no `at` at all, and `stuff`
+  with no destination — all answer **-1701**, `errAEDescNotFound`:
+  7.0.3 wants an insertion location nothing here has built. An archive
+  already on the volume works on the first attempt. **When an
+  application will not CREATE the artefact, hand it one and ask it to
+  CHANGE it.**
+- **A reply of 0 says the term was understood and nothing more.** `set
+  password of archive 1` answers 0 and leaves the archive byte for byte,
+  because nothing made StuffIt rewrite it; the same event followed by a
+  `stuff` produces `0xb0`. This is why `aesit` opens the archive and
+  prints byte 83 rather than reporting the `errn` and stopping.
+- **StuffIt Deluxe 7.0.3 launches on Mac OS 9.2 from an assembled
+  installation**, with its own menu bar and toolbar, and it has **no
+  "properly installed" check at all** — that string is 5.5's `STR# 269`
+  #30 and 7.0.3 has no equivalent. What it does put up is a registration
+  **nag** with *Not Now* and *Register*, and it is a nag: Apple events are
+  handled with it on screen.
+- **`core/setd` works, and only on a resolved object.** With no archive
+  open, `set`, `save` and `close` all answer **-1708** and `stuff into`
+  answers **-1728** — so the -1708 is the object, not a missing handler
+  (`aedt` 129 lists `core/setd` and `core/save`). With an archive open,
+  `set password` answers **0**.
+- **`core/save` answers -1708 to an archive object even so**, and
+  `core/clos` answers 0, so closing is what has to write.
+- **`FlushVol` is enough to read the volume from outside.** `UnmountVol`
+  answers **-47**, `fBsyErr`, while StuffIt Deluxe is running off that
+  same volume — and `hmount` reads it anyway, with every file the run
+  wrote on it.
+- **A Pascal string literal's length byte is not checked by anything.**
+  `"\017Encrypted.sit"` is fifteen for thirteen characters, and the only
+  symptom was the file reading as absent — which is also what a missing
+  file looks like. `aesit` now checks each of its compiled-in names
+  against `sizeof` the literal and says so.
+
+**What this cannot see.** Whether an accepted event changed anything —
+the flag byte is the answer and the `errn` is not. **Bit 6**, which
+nothing on this machine sets. And one application per boot: every
+statement above is about 7.0.3, since 5.5 still stops at `STR# 269` #30
+(*What `--probe` measured*, below).
+
+### What `--probe` measured, 2026-10-06
+
+It assembles 5.5 with the **application** on the transfer volume instead
+of `sitzip.py`'s Expander, boots, type-selects `stu` and photographs the
+result.
 
 - **StuffIt Deluxe 5.5 launches on Mac OS 9.2.** Its splash is drawn and
   the menu bar is its own — `File Edit View Label Archive Translate
@@ -580,20 +651,23 @@ boots, type-selects `stu` and photographs the result — two questions
   that looks like a quit application are the same frame minus the menu
   bar, which is the only part of it worth reading.
 
-**So the obstacle moved from an operating system to this project's own
-assembly**, and neither route out needs anything off this machine: place
-whatever `STR# 269` #30 is checking for — the 5.5 payload also carries
-`Aladdin Compression™` (`APPC/ALCO`), `Compression Extension`
-(`FEXT/TFI`), `True Finder Integration™` (`cdev/TFI`), `Magic Menu™`
-(`TFIx/TFI`) and `Text Encoding Converter` (`shlb/encv`), none of which
+Two routes out, neither needing anything off this machine: place whatever
+the check wants — the 5.5 payload also carries `Aladdin Compression™`
+(`APPC/ALCO`), `Compression Extension` (`FEXT/TFI`), `True Finder
+Integration™` (`cdev/TFI`), `Magic Menu™` (`TFIx/TFI`) and a `Text
+Encoding Converter` (`shlb/encv`), none of which
 `sitzip.DIST["55"]["place"]` places — or drive Aladdin's own installer
 with one of the published 5.x codes already in `spacesaver.CODES`.
-`sitzip.py`'s Expander runs happily on the same volume, so the engine and
-the seventeen translators are not what it is missing.
-
-**What this cannot see.** Which of those pieces the check wants: the
-alert names none of them, and nothing here has disassembled the check.
-Placing all five and re-running answers *whether* but not *which*.
+Placing all five answers *whether* and not *which*, and the disassembly
+got as far as the alert and no further: 5.5 is a fat binary, so its 68K
+`CODE` is readable with the toolchain's own `objdump`, and `CODE` 11 at
+`0x3844` is `{ Alert269(30); <one more call>; return 0; }` — where
+`Alert269` is `CODE` 4 at `0x3b4`, a two-argument wrapper that pushes
+269 under whatever index it is given. **Nothing in `CODE` 11 calls
+`0x3844`**, by absolute or relative branch, so the caller — and with it
+the condition — is in another segment and was not found by searching for
+the address. **7.0.3 needing none of this is why neither route has been
+spent**: the box that runs is the box the events go to.
 
 ## Making Now Compress archives with Now Compress — `nowcompress.py`
 
@@ -1828,8 +1902,8 @@ measured here says a different 8.x image carries a different ROM
 requirement. The pre-installed image is the one with a real chance,
 because whoever built it had to get past this.
 
-**And it is no longer the route to bit 5 either** — that row never
-needed Mac OS 8.6, see `sitcomment.py` below.
+**And it was never the route to bit 5** — that row closed on 2026-10-06
+without it, see `sitcomment.py` below.
 
 ## Mac OS 9
 

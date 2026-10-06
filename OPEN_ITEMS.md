@@ -30,7 +30,11 @@ format that renames nothing is invisible to every index built on names and
 plain to one built on magic. **That one is worth asking twice**: on
 2026-10-06 it emptied a row that had been written in the same entry as
 the lesson, about the one format of the two that never got the magic
-search (BLOCKERS.md).
+search (BLOCKERS.md). A sixth, added the same day when the last StuffIt 5
+row went: **is the corpus the claim was measured on the corpus that is
+here now?** This one grows for unrelated reasons — installer payloads,
+reference downloads, emulator output — so *"none of the 47 scanned"* was
+a fact about 2026-09-27 and false eight days later (BLOCKERS.md).
 
 **Only OPEN items live in part 2.** A closed one moves out rather than being
 annotated: the lesson to DECISIONS.md, the withdrawn claim to BLOCKERS.md,
@@ -244,7 +248,6 @@ preload nothing reaches*).
 
 | what is left | what would move it |
 |---|---|
-| `fmt_sit5.c` — bit 5 of the encrypted archive's flag byte | **one archive that is encrypted AND commented.** Bit 5 is acted on only inside the `SIT5_ARCH_CRYPTED` branch, so the three DropStuff 5.0.1 archives that grade bits 7 and 4 cannot reach it, and none of the 47 archives scanned sets it. **Two of the three obstacles went on 2026-10-06.** Mac OS 8.6 is not the route and does not boot here (BLOCKERS.md; `tools/vmac/README.md`, *Mac OS 8.6 under QEMU*); and 5.0.1 is not the only comment UI — StuffIt Deluxe 5.5 and 7.0.3 Classic both carry `Edit Comment…` and declare `comment` as a scriptable property, and 5.5 launches on Mac OS 9.2 (`tools/vmac/sitcomment.py --read`, `--probe`). **What blocks it now is local**: 5.5 refuses the installation `sitzip.py` assembled, and `Edit Comment…` has no Command key, so the archive window's comments area or an Apple event is the route — both, with what each wants, in DECISIONS.md 2026-10-06, *the comment UI that was two boxes later*. That the bit marks a comment stays a **hypothesis** until an archive sets it |
 | `fmt_binhex.c` — macutils' ONE remaining rule about mailed text: the skip of a line with intermediate garbage (`hqx.c`) | **a second reader that states THAT rule — five have been asked and none does.** deark errors on an out-of-alphabet character and mpack keeps the decoded prefix (2026-10-05); UUParser 1.72 has no BinHex decoder at all, HQXer 1.1 skips a CHARACTER and never a line, and StuffIt Expander 4.0.2 — which had to be RUN — wrote a zero-byte output for one bad character inside a data line where it read an inserted junk LINE perfectly (2026-10-06; `tools/derive_hqxgarbage.py` re-runs all three, `tools/vmac/README.md` has the Expander run). DeHQX is not a candidate: its answer to a cut posting is the separator, not a line test. Five of this row's six rules have gone, each to a different source, and the per-file inventory is NOTICE's. **Our use of the one left is graded** by `tools/run_multihqx.py`'s multi-part postings, so what is stuck is the citation — and the asking was worth more than the citation would have been (DECISIONS.md 2026-10-06, *the line that had to be the whole line*) |
 
 **The template is the `-lh1-` coder** (DECISIONS.md 2026-09-19, *the

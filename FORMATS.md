@@ -2534,6 +2534,72 @@ compatibility with the improved Mac OS file system"* — it predates HFS+, and
 the guest's boot volume is HFS+. DropStuff, installed beside it, runs
 unaffected and shares the same engine. See DECISIONS.md 2026-08-26.
 
+### StuffIt 5's archive flag byte, and what bit 5 is
+
+**Measured 2026-10-06.** Header byte 83 is the archive-level flag byte,
+and the published description of it covers one bit. Every StuffIt 5
+archive on this machine when this was measured — the corpus, both
+installer payloads and the cache, **56** of them — read one of four
+values there:
+
+| byte 83 | archives | what it means |
+|---|---|---|
+| `0x10` | 51 | the 14-byte block alone |
+| `0x90` | 3 | encrypted, with the 14-byte block (*StuffIt 5's RC4*) |
+| `0x30` | 1 | **a comment**, with the 14-byte block |
+| `0x00` | 1 | neither (`fixtures/synth-sit14.sit`, written here) |
+
+`0xb0` — both — is the value nothing here had, and the two archives that
+carry it were written the same day (below).
+
+**Bit 5 marks an archive comment**, and the archive that says so is
+`Sample Archive.sit`, which **StuffIt Deluxe 5.5 ships in its own
+`Tutorial Files`** — Aladdin's own output, with Aladdin's own comment in
+it. The block the bit introduces is **four bytes**, two lengths, and the
+comment follows every other optional block:
+
+| at | bytes | this archive |
+|---|---|---|
+| 100 | the 14-byte block (bit 4) | `002b 0005 0118 0200 0000 0000 0000` |
+| 114 | comment length, u16 | 204 |
+| 116 | style length, u16 | 22 |
+| 118 | the comment, MacRoman | *"This is a sample archive provided for you while learning to use StuffIt Deluxe…"* |
+| 322 | a TextEdit style scrap | one 20-byte `ScrpSTElement`, so 2 + 20 = 22 |
+
+**The arithmetic is the measurement**: 100 + 14 + 4 + 204 + 22 = **344**,
+and 344 is the `firstoffs` the archive's own header declares at byte 94.
+A block of 0, 2, 6 or 8 bytes misses, which is what makes the four
+falsifiable rather than merely consistent — `tools/derive_sit5crypt.py`
+checks each of those alternatives separately and fails if one of them
+would close the sum too. Two independent readings agree: `lsar` prints
+that text as *Archive comment*, and Aladdin's own StuffIt Engine SDK
+5.1.2 declares `GetArchiveComments(archiveInfo *, Handle *commentText,
+StScrpHandle *commentStyl)` — a text handle and a style handle, which is
+exactly the pair of lengths.
+
+**And the hash comes after that block**, which is the last thing
+`fmt_sit5.c` had taken from `XADStuffIt5Parser.m` without a specimen.
+**Measured 2026-10-06** on two archives **StuffIt Deluxe 7.0.3 wrote on
+Mac OS 9.2**, driven by Apple event (`tools/vmac/sitcomment.py
+--specimen`) — the only two anywhere here that set bits 5 and 7 together:
+
+| specimen | made by | byte 83 | hash at | the unshifted offset reads | what this engine returns |
+|---|---|---|---|---|---|
+| `enc-comment-added.sit`, 332 B | `set comment of archive 1` on `enc-swordfish.sit` | `0xb0` | **118** | **0**, not a key length | byte-exact at `-p swordfish` |
+| `enc-comment-stuffed.sit`, 3,154 B | `set password` + `stuff` into `Sample Archive.sit` | `0xb0` | **118** | **0**, not a key length | byte-exact, 3 entries, 2 forks |
+
+118 is 100 + 14 + 4, which is what `fmt_sit5.c` computes; the hash there
+is `51987de839`, MD5(MD5(`swordfish`)[:5])[:5], the same five bytes
+`enc-swordfish.sit` carries; and at 114 — the offset without the comment
+block — the length byte is 0, so **the four-byte shift is load-bearing
+and not merely consistent.** `unar -p` returns the same forks from both.
+
+**Two things the pair adds about bit 4's block.** It is a Pascal string:
+7.0.3 writes `\x0d` and *"••Reserved••"* in it where the 5.5 tutorial
+archive has `002b 0005 0118 0200 0000 0000 0000`. And the style scrap is
+optional — `enc-comment-added.sit` has a 16-byte comment and a style
+length of **0**.
+
 ### StuffIt classic's archive key: ceil(len/8), and neither reference has it
 
 The password is folded into the archive key eight bytes at a time, and

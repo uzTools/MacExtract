@@ -73,10 +73,13 @@ is the right one — sits after the fixed header, behind two optional
 blocks whose presence is flagged by bits 4 and 5 of the same byte; and
 the archive key is MD5 of the password cut to five bytes, with the
 header holding MD5 of THAT, also cut to five. The page says only
-"Encrypted (algorithm used is unknown)". Both readings are
-`XADStuffIt5Parser.m`'s and stay.
+"Encrypted (algorithm used is unknown)".
 
-It has no specimen either: **all 31 corpus archives read `0x10` in that
-byte** and not one is encrypted, so the only StuffIt 5 archives with
-the bit set are the ones `tools/run_crypt.py` synthesises here — which
-were written from the same reading and cannot grade it.
+**All of that is measured** — bit 7, bit 4's fourteen bytes, bit 5's
+four, the MD5-of-MD5 hash, and the ORDER of the hash and the comment
+block — against three archives DropStuff 5.0.1 wrote, one StuffIt Deluxe
+5.5 ships inside its own installer, and two StuffIt Deluxe 7.0.3 wrote
+by Apple event, with no engine and no reference in the loop
+(`tools/derive_sit5crypt.py`; FORMATS.md, *StuffIt 5's RC4* and *StuffIt
+5's archive flag byte, and what bit 5 is*). Bit 6 is still
+`XADStuffIt5Parser.m`'s alone: nothing here sets it.

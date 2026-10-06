@@ -1,63 +1,42 @@
 #!/usr/bin/env python3
-"""sitcomment.py — make the archive that grades `fmt_sit5.c`'s bit 5.
+"""sitcomment.py — StuffIt 5's archive flag byte, bit 5.
 
-The specimen wanted is one file: a StuffIt 5 archive that is **encrypted
-AND carries an archive comment**, because the only place the engine acts
-on archive-flag bit 5 is the password-hash offset inside the
-`SIT5_ARCH_CRYPTED` branch (`src/fmt_sit5.c`). Three DropStuff 5.0.1
-archives already grade bits 7 and 4; none sets bit 5, and nothing here
-had written a comment.
+`src/fmt_sit5.c` reads bit 5 of header byte 83 as "a comment block is
+present", which moves the five-byte password hash four bytes along inside
+the `SIT5_ARCH_CRYPTED` branch. Both halves of that are measured as of
+2026-10-06 and this file is how:
 
-**The route this replaces.** OPEN_ITEMS.md said the only software that
-can set it is StuffIt Deluxe 5.0.1's comment UI, which Mac OS 9.2
-refuses to run, so the row wanted a Mac OS 8.6 boot. Both halves are
-wrong: 8.6 does not boot here for a firmware reason nothing about
-StuffIt can move (`--macos86`, below, and tools/vmac/README.md,
-*Mac OS 8.6 under QEMU*), and 5.0.1 is not the only comment UI. StuffIt
-Deluxe **5.5** and **7.0.3 Classic** both carry `Edit Comment…` in their
-Archive menu, both describe a clickable comments area in the archive
-window, and both declare `comment` as a scriptable property of the
-archive — read out of their own resources, no emulator:
+  * **what the bit means** needed no emulator. `Tutorial Files/Sample
+    Archive.sit`, which StuffIt Deluxe 5.5 ships inside its own
+    installer, reads 0x30 and carries a 204-byte archive comment —
+    `tools/derive_sit5crypt.py` grades it, and the payload it comes from
+    is `tools/vmac/sitzip.py --payload 55`'s.
+  * **where the hash then sits** needed an archive setting bits 5 AND 7,
+    and nothing here had one. `--specimen` boots Mac OS 9.2 and has
+    `tools/aesit/` — a Retro68 Apple event sender in aetran.c's shape —
+    drive StuffIt Deluxe 7.0.3 into writing two.
 
-    sitcomment.py --read            MENU, STR# and aete of both boxes
+    sitcomment.py --read            what each box offers for a comment
+    sitcomment.py --aete            both scripting dictionaries, parsed
+    sitcomment.py --specimen        boot, drive Deluxe, read the volume
+    sitcomment.py --read-back IMG   re-read a finished run's volume
+    sitcomment.py --probe           boot, launch Deluxe 5.5
+    sitcomment.py --prepare86       build the three Mac OS 8.6 images
+    sitcomment.py --macos86         the Mac OS 8.6 boot, for re-testing
 
-Both are already assembled into a Mac OS 9 System Folder by
-`sitzip.py`, whose Expander run works, so the box this needs is one that
-boots here today.
+**The menu is not the route and never was.** `Edit Comment…` has no
+Command key in either later box, and a keyless menu item is not
+selectable on either guest (tools/vmac/README.md, *What the pointer
+cannot select*) — which is why this drives the Finder only, and lets the
+Macintosh do everything after that.
 
-    sitcomment.py --probe -o <dir>      boot, launch Deluxe 5.5, photograph
-    sitcomment.py --prepare86           build the three Mac OS 8.6 images
-    sitcomment.py --macos86 -o <dir>    the Mac OS 8.6 boot, for re-testing
-
-**What `--probe` measured, 2026-10-06.** StuffIt Deluxe 5.5 **launches**
-on Mac OS 9.2 — its own menu bar, `Archive` on it — so what 9.2 refuses
-is 5.0.1 and not Deluxe. It then refuses to RUN on an assembled
-installation: `STR# 269` #30, *"This copy of StuffIt Deluxe™ has not
-been properly installed"*. That is a wall and not a nag — the alert's OK
-is the default button, Return reaches it with no pointer, and dismissing
-it quits the application. `sitzip.py`'s Expander runs on the same
-volume, so the engine and the seventeen translators are not what is
-missing; the same payload carries `Aladdin Compression™`, `Compression
-Extension`, `True Finder Integration™`, `Magic Menu™` and a `Text
-Encoding Converter`, none of them placed, and `STR# 269` #34 names the
-last by itself.
-
-**What is still unmeasured, in order:** which piece the check wants;
-whether Stuff will encrypt without a dialog Return cannot reach; and
-whether a comment lands in the ARCHIVE header rather than per entry.
-
-**What this cannot see.** Which of those pieces `STR# 269` #30 is
-checking for — the alert names none, and nothing here has disassembled
-the check, so placing all five answers *whether* and not *which*. And a
-frame after a launch is not evidence that anything in the application
-works: a dismissed alert and a quit application are the same frame minus
-the menu bar, which is the only part of it worth reading. The menu route
-is separately measured dead on both guests — `Edit Comment…` has no
-Command key in either box, and a keyless menu item is not selectable
-here (tools/vmac/README.md, *What the pointer cannot select*) — so the
-two routes left to a comment are the archive window's comments AREA,
-which is a click, and an Apple event, which is `tools/aetran/`'s
-mechanism.
+**What this cannot see.** Whether an accepted event changed anything: an
+`errn` of 0 says the term was understood and nothing more, so `aesit`
+reads byte 83 back off the archive and prints it. Bit 6, which nothing
+on this machine sets. And one application per boot — everything measured
+through `--specimen` is about 7.0.3, since 5.5 still stops at `STR# 269`
+#30 against an installation this project assembled rather than installed
+(`--probe`; tools/vmac/README.md has what that would take).
 """
 import argparse
 import os
@@ -139,6 +118,140 @@ def _strings(body):
         out.append(body[p + 1:p + 1 + ln].decode("mac_roman", "replace"))
         p += 1 + ln
     return out
+
+
+# ------------------------------------------------- the scripting dictionary
+
+class _AE:
+    """A reader for one 'aete'. Source: Inside Macintosh —
+    Interapplication Communication, *The Terminology Resources*: the
+    'aete' layout, strings packed and every other field on a word
+    boundary. The alignment is what makes it parse to the last byte, and
+    `parse_aete` checks that it does."""
+
+    def __init__(self, b):
+        self.b, self.p = b, 0
+
+    def align(self):
+        if self.p & 1:
+            self.p += 1
+
+    def u16(self):
+        import struct
+        self.align()
+        v = struct.unpack(">H", self.b[self.p:self.p + 2])[0]
+        self.p += 2
+        return v
+
+    def s16(self):
+        import struct
+        self.align()
+        v = struct.unpack(">h", self.b[self.p:self.p + 2])[0]
+        self.p += 2
+        return v
+
+    def ot(self):
+        self.align()
+        v = self.b[self.p:self.p + 4]
+        self.p += 4
+        return v.decode("mac_roman", "replace")
+
+    def ps(self):
+        n = self.b[self.p]
+        v = self.b[self.p + 1:self.p + 1 + n]
+        self.p += 1 + n
+        return v.decode("mac_roman", "replace")
+
+
+def parse_aete(b):
+    """{suites: [...]} — events, classes, properties and enumerations.
+
+    Raises if anything is left over: an 'aete' that does not consume
+    exactly its own length has been parsed wrongly, and a dictionary read
+    wrongly is worse than no dictionary, because every four-character code
+    in it would still look plausible."""
+    r = _AE(b)
+    r.p = 6
+    suites = []
+    for _ in range(r.u16()):
+        s = {"name": r.ps(), "desc": r.ps(), "code": r.ot(),
+             "level": r.s16(), "version": r.s16(),
+             "events": [], "classes": [], "enums": []}
+        for _ in range(r.u16()):
+            e = {"name": r.ps(), "desc": r.ps(), "class": r.ot(),
+                 "id": r.ot()}
+            e["reply"] = (r.ot(), r.ps(), r.u16())
+            e["direct"] = (r.ot(), r.ps(), r.u16())
+            e["params"] = [(r.ps(), r.ot(), r.ot(), r.ps(), r.u16())
+                           for _ in range(r.u16())]
+            s["events"].append(e)
+        for _ in range(r.u16()):
+            c = {"name": r.ps(), "code": r.ot(), "desc": r.ps()}
+            c["props"] = [(r.ps(), r.ot(), r.ot(), r.ps(), r.u16())
+                          for _ in range(r.u16())]
+            c["elems"] = []
+            for _ in range(r.u16()):
+                code = r.ot()
+                c["elems"].append((code, [r.ot() for _ in range(r.u16())]))
+            s["classes"].append(c)
+        for _ in range(r.u16()):          # comparisons
+            r.ps(), r.ot(), r.ps()
+            r.align()
+        for _ in range(r.u16()):
+            code = r.ot()
+            vals = []
+            for _ in range(r.u16()):
+                vals.append((r.ps(), r.ot(), r.ps()))
+                r.align()
+            s["enums"].append((code, vals))
+        suites.append(s)
+    if r.p != len(b):
+        raise ValueError("'aete' left %d of %d bytes unread"
+                         % (len(b) - r.p, len(b)))
+    return {"suites": suites}
+
+
+def read_aete():
+    """Print both boxes' scripting dictionaries. No emulator.
+
+    This is what says the specimen is three events rather than a menu:
+    `comment` and `password` are settable properties of the archive in
+    both boxes, and both declare a `stuff` event. The codes `aesit.c`
+    sends are these."""
+    rc = 0
+    for ver, path in sorted(BOXES.items()):
+        print("=" * 8, "StuffIt Deluxe", ver)
+        if not os.path.exists(path):
+            print("  no payload — run sitzip.py --payload %s" % ver)
+            rc = 1
+            continue
+        for _rid, _name, body in _resources(path).get("aete", []):
+            d = parse_aete(body)
+            for s in d["suites"]:
+                if not s["events"] and not s["classes"]:
+                    continue
+                print("  suite %r (%s)" % (s["name"], s["code"]))
+                for e in s["events"]:
+                    print("    event %-24r %s/%s  direct=%s reply=%s"
+                          % (e["name"], e["class"], e["id"],
+                             e["direct"][0], e["reply"][0]))
+                    for pn, pk, pt, _pd, _pf in e["params"]:
+                        print("        param %-22r %s %s" % (pn, pk, pt))
+                for c in s["classes"]:
+                    if len(c["props"]) == 1 and c["props"][0][1] == "c@#!":
+                        continue          # the plural form of a class
+                    print("    class %-20r %s" % (c["name"], c["code"]))
+                    for pn, pc, pt, _pd, pf in c["props"]:
+                        print("        prop %-24r %s %s%s"
+                              % (pn, pc, pt,
+                                 "" if pf & 0x1000 else "   (read-only)"))
+                    for code, forms in c["elems"]:
+                        print("        elem %s by %s" % (code, forms))
+                for code, vals in s["enums"]:
+                    print("    enum %s: %s"
+                          % (code, ", ".join("%s=%s" % (n, c)
+                                             for n, c, _ in vals)))
+    return rc
 
 
 BOXES = {
@@ -385,6 +498,174 @@ def probe(outdir, args):
           "answers and none of them is 'the screen changed'.")
 
 
+# ------------------------------------------------------- the specimen run
+
+# The two archives `aesit` works on, both written by Aladdin's own
+# software: one carries an archive comment and no password, the other a
+# password and no comment, and either one becomes the specimen if StuffIt
+# Deluxe will add the other half. `comment-sample.sit` is lifted out of
+# StuffIt Deluxe 5.5's own `Tutorial Files` by `sitzip.py --payload 55`;
+# the encrypted three are DropStuff 5.0.1's (FORMATS.md, *StuffIt 5's
+# RC4*).
+SPECIMENS = os.path.join(os.path.dirname(R.VMAC_HOME), "sit5", "specimens")
+SPEC_IN = [("comment-sample.sit", "Comment.sit"),
+           ("enc-swordfish.sit", "Encrypted.sit")]
+SPEC_SUBJECT = (b"The subject one phase adds to an archive, so that setting "
+                b"a password makes StuffIt rewrite it.\r")
+SPEC_TYPE = ("SIT5", "SIT!")        # what 5.5 stamps its own archive with
+
+
+def build_aesit():
+    """Cross-compile the Apple event sender. Returns its MacBinary."""
+    import subprocess
+    src = os.path.join(REPO, "tools", "aesit")
+    build = os.path.join(REPO, "build", "aesit")
+    mb = os.path.join(build, "aesit.bin")
+    chain = os.environ.get("RETRO68") or "/opt/Retro68-build/toolchain"
+    cmakefile = os.path.join(chain, "m68k-apple-macos", "cmake",
+                             "retro68.toolchain.cmake")
+    if not os.path.exists(cmakefile):
+        raise SystemExit("sitcomment: no Retro68 toolchain (set RETRO68); "
+                         "looked for %s" % cmakefile)
+    subprocess.run(["cmake", "-B", build, "-S", src,
+                    "-DCMAKE_TOOLCHAIN_FILE=" + cmakefile],
+                   check=True, capture_output=True)
+    subprocess.run(["cmake", "--build", build], check=True,
+                   capture_output=True)
+    if not os.path.exists(mb):
+        raise SystemExit("sitcomment: aesit did not build")
+    print("sitcomment: built %s (%d B)" % (mb, os.path.getsize(mb)))
+    return mb
+
+
+def specimen(outdir, args):
+    """Boot Mac OS 9, let `aesit` drive StuffIt Deluxe, read the volume.
+
+    The application is launched by `aesit` rather than by the harness, for
+    aetran.c's reason: a coordinate cannot miss if there is no coordinate.
+    All this drives is the Finder, with type-to-select and Cmd-Down."""
+    import sitzip
+    from arcmac import macbinary
+    ver = args.box
+    d = sitzip.DIST[ver]
+    # The name on the volume is the name `aesit.c` has compiled in, and
+    # 5.5's really does carry a trademark sign. `macbinary()` encodes it
+    # to MacRoman 0xAA, which is the byte `kApp55` holds.
+    appname = "StuffIt Deluxe" if ver == "703" else "StuffIt Deluxe\u2122"
+    d["app"] = appname
+    sitzip.APP_NAME = appname
+    os.makedirs(outdir, exist_ok=True)
+
+    # NOT `subject.bin`: `sitzip.assemble` writes its own zip subject to
+    # that name in the same directory, and the one written second wins.
+    extra = [(build_aesit(), "aesit")]
+    for src, leaf in SPEC_IN:
+        p = os.path.join(SPECIMENS, src)
+        if not os.path.exists(p):
+            raise SystemExit("sitcomment: no %s — TESTING.md, "
+                             "*derive_sit5crypt.py*, says where it comes "
+                             "from" % p)
+        mb = os.path.join(outdir, leaf + ".bin")
+        open(mb, "wb").write(macbinary(leaf, SPEC_TYPE[0], SPEC_TYPE[1],
+                                       open(p, "rb").read()))
+        extra.append((mb, leaf))
+    sub = os.path.join(outdir, "aesubject.bin")
+    open(sub, "wb").write(macbinary("Subject", "TEXT", "ttxt", SPEC_SUBJECT))
+    extra.append((sub, "Subject"))
+    boot, xfer = sitzip.assemble(ver, outdir, extra=extra)
+
+    q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
+    try:
+        scratch = os.path.join(outdir, ".settle.png")
+        waited = q.settle(scratch, timeout=args.boot_wait)
+        if waited is None:
+            raise SystemExit("sitcomment: the screen never settled, or "
+                             "qemu exited")
+        print("sitcomment: desktop settled after ~%.0fs" % waited, flush=True)
+
+        def shot(tag, wait=0.0):
+            if wait:
+                time.sleep(wait)
+            p = os.path.join(outdir, tag + ".png")
+            q.shot(p)
+            print("sitcomment: %s" % p, flush=True)
+            return p
+
+        q.key("esc")
+        front = shot("10-finder", wait=2.0)
+        q.key(*sitzip.VOLUME[:3].lower(), "meta_l-down")
+        q.wait_change(front, os9.WINDOW_RECT, scratch, timeout=90.0)
+        vol = shot("11-volume")
+        # `aes` rather than `ae`: a second run finds `AEResult` on the
+        # volume and type-to-select is case-blind.
+        q.key("a", "e", "s", "meta_l-down")
+        frac, secs = q.wait_change(vol, os9.WINDOW_RECT, scratch,
+                                   timeout=args.launch_wait, poll=10.0)
+        print("sitcomment: %.4f changed in %.0fs after launching aesit"
+              % (frac, secs), flush=True)
+        shot("12-aesit")
+        # Nothing after this is driven. `aesit` launches StuffIt Deluxe,
+        # sends its ladder of events and unmounts the volume itself, so
+        # the frames are a record and not a sequence of steps: one every
+        # `--interval` seconds until `--shots` of them, or until the log
+        # says it is done.
+        for i in range(args.shots):
+            shot("%02d-t%04d" % (13 + i, args.interval * (i + 1)),
+                 wait=args.interval)
+    finally:
+        q.close()
+
+    read_back(xfer, outdir)
+
+
+def read_back(xfer, outdir):
+    """Everything the run left on the transfer volume, off the disk image.
+
+    The volume is read rather than the screen for the reason the Mac OS 9
+    tier gives: a frame showing a window is not a file. `aesit` unmounts
+    the volume before it stops, which is what flushes it."""
+    import subprocess
+    import tempfile
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
+    r = subprocess.run(["hmount", xfer, "1"], capture_output=True, env=env,
+                       text=True)
+    if r.returncode:
+        print("sitcomment: hmount %s: %s — the guest never flushed it"
+              % (xfer, r.stderr.strip()))
+        return
+    name = r.stdout.split('"')[1]
+    out = os.path.join(outdir, "volume")
+    os.makedirs(out, exist_ok=True)
+    listing = subprocess.run(["hdir", "-a", name + ":"], capture_output=True,
+                             env=env, text=True).stdout
+    print("sitcomment: the transfer volume now holds:\n" + listing)
+    # `hdir -a` prints kind, type/creator, both fork sizes and a
+    # three-field date before the name, which may itself hold spaces.
+    for line in listing.splitlines():
+        f = line.split(None, 7)
+        if len(f) < 8 or f[0] != "f":
+            continue
+        leaf = f[7]
+        for want, mode in (("AEResult", "-t"), (".sit", "-r")):
+            if want in leaf:
+                dest = os.path.join(out, leaf.replace("/", "_"))
+                subprocess.run(["hcopy", mode, "%s:%s" % (name, leaf), dest],
+                               capture_output=True, env=env)
+    subprocess.run(["humount"], capture_output=True, env=env)
+    log = os.path.join(out, "AEResult")
+    if os.path.exists(log):
+        print("sitcomment: AEResult ---------------------------")
+        print(open(log, "rb").read().decode("mac_roman", "replace")
+              .replace("\r", "\n"))
+        print("---------------------------------------------")
+    else:
+        print("sitcomment: NO AEResult — read the frames: an application "
+              "waiting on a dialog has written every step before it")
+    for f in sorted(os.listdir(out)):
+        print("sitcomment: %s (%d B)"
+              % (f, os.path.getsize(os.path.join(out, f))))
+
+
 APP_NAME = "StuffIt Deluxe"
 
 
@@ -392,8 +673,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--read", action="store_true",
                     help="what each box says about comments; no emulator")
+    ap.add_argument("--aete", action="store_true",
+                    help="both boxes' scripting dictionaries; no emulator")
     ap.add_argument("--probe", action="store_true",
                     help="boot Mac OS 9, launch StuffIt Deluxe 5.5")
+    ap.add_argument("--specimen", action="store_true",
+                    help="boot Mac OS 9 and have aesit drive StuffIt Deluxe")
+    ap.add_argument("--box", default="703", choices=("55", "703"),
+                    help="which StuffIt Deluxe --specimen drives")
+    ap.add_argument("--read-back", metavar="TRANSFER.IMG",
+                    help="re-read a finished run's transfer volume")
     ap.add_argument("--prepare86", action="store_true",
                     help="build the three Mac OS 8.6 images")
     ap.add_argument("--macos86", action="store_true",
@@ -407,6 +696,12 @@ def main():
     args = ap.parse_args()
     if args.read:
         return read_boxes()
+    if args.aete:
+        return read_aete()
+    if args.read_back:
+        return read_back(args.read_back, args.out)
+    if args.specimen:
+        return specimen(args.out, args)
     if args.prepare86:
         return prepare86()
     if args.macos86:
