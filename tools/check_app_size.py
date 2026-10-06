@@ -10,10 +10,13 @@ one for one, and a tier's budget is FreeMem() minus it
 "Every byte of this application is resident" was true until 2026-09-25
 and is not any more: the decoders ship as fifteen 'OVLY' images, read at
 launch as one bundle and mostly released as soon as the sniff says what
-the archive is (mac/ovl_load_eager.c). The bundle is 143,072 B and none
-of it is resident while an archive is being extracted — which is the
-whole point of the build — so it is NOT what this file watches. What it
-watches is the code that cannot go away.
+the archive is (mac/ovl_load_eager.c). The bundle is EXPECT_BUNDLE below
+and none of it is resident while an archive is being extracted — which
+is the whole point of the build — so it is NOT what this file watches.
+What it watches is the code that cannot go away. (This paragraph read
+"143,072 B" until 2026-10-06, a figure correct on 2026-09-26 and
+contradicted by this file's own EXPECT_BUNDLE for ten days; it is named
+rather than repeated now, so there is one place to change.)
 
 Nothing watched that until 2026-09-23, and it showed: the engine grew
 10,112 B between 2026-08-28 and 2026-09-23 without a line of any status

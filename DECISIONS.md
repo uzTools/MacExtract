@@ -350,6 +350,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
 - 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
 - 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
+- 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
 
 ---
 
@@ -22575,3 +22576,84 @@ Three stale figures in one file, all three in sections whose live
 neighbours are re-measured every time a format lands: **a figure is at
 risk exactly where it is quoted rather than derived**, because the
 re-measuring passes walk the tables and not the prose.
+
+## 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
+
+**The task was a judgement, not a patch**, and the answer is that nothing
+should be written. ZipIt's `0x2605` FileName is the name a Macintosh file
+HAD, this engine extracts under the zip's own name instead, and the
+measurement that keeps the substitution parked was re-run rather than
+quoted: **23 fields on this disk, 3 whose FileName differs from the zip's
+leaf, all 3 Zip method 6, 0 on a method this build decodes** (FORMATS.md,
+*ZipIt's own archives*). The row stays open and parked, because a
+substitution whose only observable effect is on entries the build refuses
+is a change with no subject.
+
+**But the gate that keeps that row honest had never fired.** It returns 0
+by construction on every real run — every divergence here is on Implode —
+which is this project's own first trap: *a test that passes may not be
+testing anything*. It was made to fail once, by hand, on a copy of a
+specimen, and that mutation lives nowhere. It does now:
+`selftest_coupling` in `tools/run_zipit.py` builds four one-entry zips
+with `tools/synth_crypt.py`'s writer and asserts what the gate
+discriminates on — the method, and the two names — ahead of the sweep and
+before any specimen is read (TESTING.md, *ZipIt's own archives*). A
+hand mutation is evidence about one afternoon; a built case is evidence
+every run.
+
+**Building the cases found the hole.** The gate asked `method in (0, 8)`,
+"the two the engine reads", which is what `src/fmt_exo.c` reads off the
+*header* — and **method 99 means "read the method out of WinZip's
+`0x9901` field"**, where this engine decodes 0 and 8 as well. So an entry
+at 99 could produce a file under the wrong name while the guard called it
+refused. Nothing in the gate's sweep set is at method 99 — 18 archives,
+170 entries, which is every ZipIt specimen and every `fixtures/*.zip` —
+so the hole has never mattered and closing it moves no tally; the
+self-test is the only thing that can show it closed. It is closed by
+counting 99 as reachable rather than by resolving the field, which makes
+the gate err LOUD: **for a guard, a false alarm costs one look at one
+archive and a miss costs the guard.** That asymmetry is now written into
+what the suite says it cannot see, because a guard that over-reports is a
+different instrument from one that is exact and must be read as one.
+
+**The transferable part is where the hole was.** The criterion was a
+sentence in a docstring — "Method 0 and 8 are the two it reads" — and
+`FORMATS.md`'s Zip row says on its own line that the build reads store,
+deflate, PKWARE's cipher *and WinZip's AES*. The two have disagreed since
+the gate was written. **A guard's criterion is a claim about the code, and
+it belongs in the cross-file contradiction sweep like any other claim**;
+nothing had ever read it as one, because a predicate inside a test reads
+as machinery rather than as an assertion.
+
+**And the cost figure beside it was priced against the wrong wall.** Part
+1's Implode row offered the maintainer one number: ~1.5–2 KB of `CODE`,
+estimated, against 12,460 B of headroom at the tightest tier. The
+headroom is *resident* — `check_app_size.py` says in its own docstring
+that the `'OVLY'` bundle is not what it watches — and `src/fmt_exo.c`,
+which is where an Implode decoder is reached from, is excluded from
+resident `ENGINE_SRC` and built into `ovl_exo` by `mac/CMakeLists.txt`.
+The fixture that sets the 12,460 B is a DiskDoubler archive, which
+releases that image before it allocates anything. The row's other half —
+"a removal delta can be built and an addition cannot" — is false as
+practice: zip's own four Macintosh extra fields were **+2,024 B into that
+same image** on 2026-10-01 for +0 resident `CODE`, +0 of A5 and no tier
+tally moved in either lane, which is a measured precedent for an addition
+of exactly this size in exactly this place. Both corrected in place
+(OPEN_ITEMS.md Part 1; BLOCKERS.md, *Withdrawn claims*).
+
+**This is the second time today a pre-overlay figure was found quoted in
+a live row** — *the wall the overlays had already moved* is the first, and
+the mechanism is identical: 2026-09-25 moved fourteen decoders out of
+resident `CODE`, and every sentence that compares a code size to a heap
+margin written before that day now compares two different budgets. The
+sweep that finds these is not a checker. **It is to ask, of any number a
+document hands to a decision, which budget it is drawn from** — and the
+overlays made that question have two answers where it used to have one.
+
+**What was deliberately NOT done.** No Implode decoder was written, and
+the estimate was not re-estimated. Measuring an addition means building
+it, shipping it is the maintainer's call (CLAUDE.md), and a better number
+than a new estimate was already on this disk in the 2026-10-01 delta. The
+substitution was not implemented either: `namebuf`'s 256 B of stack and
+the leaf-is-not-a-path bound are both still what Part 2's row says they
+are, and neither needed re-measuring to decide not to spend them.
