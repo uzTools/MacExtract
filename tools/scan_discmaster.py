@@ -34,12 +34,18 @@ written from this project's own reading of the format it names:
        `??01` + 28 zeros.  The probe then validates the whole
        directory against the file's own size.
   sit  a classic StuffIt archive, reported when an entry's method byte
-       has the Optimizer bit `0x40` or the encrypted bit `0x80`
+       has the Optimizer bit `0x40`, the encrypted bit `0x80` or the
+       `NewDE` bit `0x10`
        (reference/notes/sit_format_theunarchiver.md, the file-header
        table, for the layout; `src/fmt_sit.c` for the flag bits, which
        that page does not have — **0x10 is `NewDE` and not a folder**,
        measured 2026-10-02, and a folder is the masked value 0x20/0x21).
-       `--walk` follows the entry chain with one request per entry.
+       It names the MODULE, per fork: the Optimizer id at 106/108 and
+       the Encryptor id at 107/109, read only where that fork's own
+       method byte carries the flag and its length is nonzero.
+       `--walk` follows the entry chain; once the window-Range control
+       passes it costs 112 bytes per entry rather than the whole
+       prefix, so a whole archive can be walked.
   dd   a DiskDoubler compressed file, reported with both forks' method
        bytes and lengths (docs/formats/diskdoubler-container.md, *A
        compressed file*).  `--method` keeps only the forks that use one.
@@ -49,6 +55,14 @@ written from this project's own reading of the format it names:
        encrypted block is almost never the first one and a `PMa4`
        block can only be stepped over by decoding it.
 
+**A third key, and it is about an archive's CONTENTS**: the listing
+hands over `meta.fileMeta`, the index's own record of the Mac file type
+and creator of every file INSIDE an archive, for free with every row.
+`--meta-type` keeps only the archives carrying a member of a type named
+on the command line, which is the key the Optimizers need — each module's
+`COMP` accepts exactly one type (`member_types()`, below). Discmaster
+does not index inside a `.sit`, so no query can ask this; the listing can.
+
 Examples — each sweep this tool has actually run is in TESTING.md
 (*Searching somebody else's index by content*):
 
@@ -57,6 +71,14 @@ Examples — each sweep this tool has actually run is in TESTING.md
         --sort size --desc --method 8
     tools/scan_discmaster.py --probe sit --query 'format=sit' --walk 24
     tools/scan_discmaster.py --probe pit --query 'detection=504d61*'
+    # how many a query matches, which the JSON output does not carry
+    tools/scan_discmaster.py --probe sit --count --query 'format=sit&dedup=dedup'
+    # the whole corpus, in shards under the result window, probed only
+    # where a member's type is one an Optimizer accepts
+    tools/scan_discmaster.py --probe sit --shard-under 9000 --sort b3sum \
+        --query 'format=sit&dedup=dedup' --query 'format=sea&dedup=dedup' \
+        --meta-type PNTG --meta-type 8BIM --meta-type FSSD \
+        --bytes 32768 --walk 400
 
 Progress is written to `--state` after every chunk and re-read on the
 next run, so a sweep survives a timeout: run it again and it picks up
@@ -221,6 +243,8 @@ class SitProbe:
         ents, at = [], off + 22
         while at + 112 <= end:
             e = entry(head, at)
+            if not plausible(e):
+                break
             ents.append(e)
             at += 112 + e.get("rclen", 0) + e.get("dclen", 0)
         return {"base": off, "ver": head[off + 14],
@@ -236,6 +260,26 @@ class SitProbe:
 FOLDER_MASK = 0x6F
 
 
+def plausible(e):
+    """Whether a walk has arrived at a FILE HEADER or at the middle of
+    a fork.
+
+    **Measured 2026-10-07**: a NUL inside the Pascal name is the tell.
+    A classic Macintosh file name holds no NUL — `Icon\r` holds a
+    carriage return and is perfectly real, which is why the test is NUL
+    and not "printable" — so an entry whose name does is a step that
+    landed inside compressed data, and every entry after it is also
+    wrong. Of 494 headers walked over the 35 archives the 2026-10-06
+    sweep had flagged, exactly 3 fail this and all 3 are already known
+    bogus: the two `cursors.sit` copies `unar` also refuses, and the
+    one entry that made the earlier sweep report a `NewDE` bit. The
+    five real `Text 1` entries pass. So the walk STOPS here rather than
+    reporting the entry: the declared total at +6 bounds the walk but
+    does not keep it in step.
+    """
+    return "\x00" not in e["name"] and e["name"] != ""
+
+
 def entry(b, at):
     """One file header, as `src/fmt_sit.c` reads it."""
     rm, dm = b[at], b[at + 1]
@@ -248,9 +292,61 @@ def entry(b, at):
     e.update(rlen=u32(b, at + 84), dlen=u32(b, at + 88),
              rclen=u32(b, at + 92), dclen=u32(b, at + 96),
              b106=b[at + 106], b108=b[at + 108],
+             b107=b[at + 107], b109=b[at + 109],
              opt=bool((rm | dm) & 0x40), enc=bool((rm | dm) & 0x80),
              newde=bool((rm | dm) & 0x10))
+    # **An id byte belongs to a FORK, and is read only where that
+    # fork's own method byte carries the flag.** Bytes 106/107 are the
+    # data fork's Optimizer and Encryptor ids, 108/109 the resource
+    # fork's (FORMATS.md, *Where an archive names the module*). The
+    # first tally here keyed a cipher on 107 OR 109 whichever was
+    # nonzero and reported four `DES` entries off byte 107 of archives
+    # whose DATA fork is absent — `dlen` 0, `dmeth` 0 — and whose
+    # encrypted resource fork says 0. A 1.x writer left whatever was in
+    # the buffer at those offsets, which is the same reason the reading
+    # of 46/47 is anchored to the nibble rather than to the bytes being
+    # zero.
+    # **And a fork of length zero went through nothing, whatever its
+    # method byte says** — which is `src/fmt_sit.c`'s own rule (`&&
+    # rlen`, `&& dlen` at the encryption branch) and the other half of
+    # the same mistake: all four spurious `DES` readings were byte 107
+    # of an entry with `dlen` 0.
+    e["forks"] = [f for f in (
+        {"fork": "data", "meth": dm, "len": e["dlen"], "clen": e["dclen"],
+         "opt_id": e["b106"], "enc_id": e["b107"]},
+        {"fork": "rsrc", "meth": rm, "len": e["rlen"], "clen": e["rclen"],
+         "opt_id": e["b108"], "enc_id": e["b109"]})
+        if f["len"] and (f["meth"] & 0xD0)]
+    e["opt"] = any(f["meth"] & 0x40 for f in e["forks"])
+    e["enc"] = any(f["meth"] & 0x90 for f in e["forks"])
+    e["newde"] = any(f["meth"] & 0x10 for f in e["forks"])
     return e
+
+
+# The ENCRYPTOR id, as `src/fmt_sit.c` reads it: the module's resource
+# id is `512 + id` (FORMATS.md, *Where an archive names the module*).
+# Without it an encrypted hit says only THAT it is encrypted, which is
+# all the first sweep could report; with it the hit says WHICH of the
+# five ciphers wrote the fork, and that is the whole question the row
+# asks.
+ENCRYPTORS = {0: "unset", 1: "DES", 2: "PassLock", 3: "NewDEx",
+              4: "StuffItDES (built-in)", 64: "DESex"}
+
+
+def encname(f):
+    """Which cipher a flagged fork is under, by `sit_scheme()`'s rule.
+
+    **The method BIT wins over the id byte**, which is not a detail:
+    `0x10` is `NewDE` built in (measured 2026-10-02, where the
+    published table calls it a folder marker), and the one archive here
+    that carries it — `sitopt/psdes1/NewdeT.sit.bin`, 2.0.1's own
+    output — ALSO carries a stale `1` in the id byte. Reading the id
+    first names that fork `DES`, and a wild `NewDE` fork would have
+    been reported as the one cipher this project has no file for.
+    """
+    if f["meth"] & 0x10:
+        return "NewDE (built in)"
+    return ENCRYPTORS.get(f["enc_id"], "id %d" % f["enc_id"])
 
 
 class DdProbe:
@@ -389,20 +485,87 @@ def search(query, pages, limit):
     return out
 
 
+def member_types(row):
+    """The Mac file TYPES of the files INSIDE an archive, off the index's
+    own `meta.fileMeta` — which the listing hands over for free.
+
+    This is the second content key for an archive, and the only one
+    there is for its CONTENTS: Discmaster does not index inside a
+    `.sit` (measured 2026-10-07 — `detection=PNTG/MPNT` returns 20,000
+    MacPaint documents and not one fileid with `.sit/` in it), so no
+    query can ask for a member.  The listing can, locally.
+
+    It is the key the Optimizers need, because **an Optimizer is a
+    per-file-type preprocessor** and each module's own `COMP` says
+    which type it accepts: `FSSD` for `Sound 1`, `8BIM` for
+    `Photoshop 1` and `JPEG Lossy`, `PNTG` for `MacPaint 1`, `TEXT`
+    for `Text 1` (FORMATS.md, *The module ABI*, read out of the
+    modules).  An archive with no member of an accepted type cannot
+    carry that module's bit.
+    """
+    fm = (row.get("meta") or {}).get("fileMeta") or {}
+    return sorted({v.get("macFileType") for v in fm.values()
+                   if v.get("macFileType")})
+
+
+def count(query):
+    """How many files the index says a query matches — one request.
+
+    The JSON output does not carry a total, so this reads the HTML
+    form, which prints `N match` next to the page it returned.  It is
+    what makes sharding plannable instead of guessed: a query over the
+    result window returns its first page and says nothing.
+    """
+    url = "https://%s/search?%s&limit=1&pageNum=0" % (HOST, query)
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=300) as r:
+        html = r.read().decode("utf-8", "replace")
+    m = re.search(r"([\d,]+) match", html)
+    return int(m.group(1).replace(",", "")) if m else None
+
+
+def size_shards(query, cap, lo=0, hi=1 << 31):
+    """Split a query into `sizeMin`/`sizeMax` shards of at most `cap`
+    hits each, so a corpus larger than Elasticsearch's result window
+    can be listed in full.
+
+    The window is a server-side cap — 10,000 here — and a query past it
+    returns the first page's worth and reports the real total, so the
+    shard boundaries come from `count()` rather than from the rows.
+    Bisection is GEOMETRIC, because file sizes are heavy-tailed: an
+    arithmetic midpoint of 0..2 GB puts every archive in one half.
+    """
+    q = "%s&sizeMin=%d&sizeMax=%d" % (query, lo, hi)
+    n = count(q)
+    print("    shard %d..%d: %s" % (lo, hi, n), flush=True)
+    if n is None or n == 0:
+        return []
+    if n <= cap or hi - lo < 2:
+        return [q]
+    mid = int((max(lo, 1) * hi) ** 0.5) if lo else hi // 64
+    mid = min(max(mid, lo + 1), hi - 1)
+    return size_shards(query, cap, lo, mid) + size_shards(query, cap,
+                                                          mid + 1, hi)
+
+
 class Head:
     """One keep-alive connection, re-made when the server drops it."""
 
     def __init__(self):
         self.conn = None
+        self.window = None          # None until the control below runs
 
-    def get(self, item, fileid, nbytes):
+    def get(self, item, fileid, nbytes, start=0):
+        """`nbytes` from `start`.  `start` is only ever nonzero once
+        `control()` has established that a mid-file range is honoured."""
         path = "/file/%d/%s" % (item, urllib.parse.quote(fileid))
+        rng = "bytes=%d-%d" % (start, start + nbytes - 1)
         for attempt in (0, 1):
             try:
                 if self.conn is None:
                     self.conn = http.client.HTTPSConnection(HOST, timeout=60)
                 self.conn.request("GET", path, headers={
-                    "User-Agent": UA, "Range": "bytes=0-%d" % (nbytes - 1)})
+                    "User-Agent": UA, "Range": rng})
                 return self.conn.getresponse().read()
             except Exception:
                 try:
@@ -413,6 +576,29 @@ class Head:
                 if attempt:
                     return b""
         return b""
+
+    def control(self, item, fileid):
+        """**The positive control a non-head range needs**, run once per
+        process against a file whose head is already in hand.
+
+        A suffix range is NOT honoured here — `Range: bytes=-2048`
+        answers `206` with the bytes of the HEAD, which once made a
+        sweep of 939 files report 0 hits (TESTING.md, *Searching
+        somebody else's index by content*).  So a window range is not
+        believed either until one file says the same bytes twice: read
+        0..511, then read 256..511 and require the second to equal the
+        tail of the first.  Until that passes, a walk pays for the whole
+        prefix of the file it is stepping through."""
+        if self.window is not None:
+            return self.window
+        whole = self.get(item, fileid, 512)
+        if len(whole) >= 512:
+            part = self.get(item, fileid, 256, start=256)
+            self.window = part == whole[256:512]
+        else:
+            self.window = False
+        print("    window Range honoured: %s" % self.window, flush=True)
+        return self.window
 
 
 def url_of(item, fileid):
@@ -426,11 +612,24 @@ def walk_sit(head, item, fileid, probe, first, maxent):
     ents = list(first["entries"])
     end = base + first["total"] if first["total"] >= 22 else None
     at = first["next"]
+    window = head.control(item, fileid)
     while len(ents) < maxent and (end is None or at + 112 <= end):
-        blob = head.get(item, fileid, at + 112)
-        if len(blob) < at + 112:
+        if window:
+            # 112 bytes, not `at` + 112: a prefix fetch per entry makes
+            # a full walk quadratic in the archive's size, which is why
+            # the first sweep could only afford the first few entries.
+            blob = head.get(item, fileid, 112, start=at)
+            if len(blob) < 112:
+                break
+            e = entry(blob, 0)
+            e["at"] = at
+        else:
+            blob = head.get(item, fileid, at + 112)
+            if len(blob) < at + 112:
+                break
+            e = entry(blob, at)
+        if not plausible(e):
             break
-        e = entry(blob, at)
         ents.append(e)
         at += 112 + (e.get("rclen", 0) + e.get("dclen", 0))
     return ents
@@ -463,6 +662,20 @@ def main():
                          "inside the fetched bytes costs no extra request, "
                          "so 8 KB covers several entries of a small archive "
                          "for the same number of round trips")
+    ap.add_argument("--meta-type", action="append", default=[],
+                    help="probe only an archive whose index metadata says "
+                         "it CONTAINS a member of this Mac file type "
+                         "(e.g. PNTG). Repeatable; the key is "
+                         "`member_types()` above")
+    ap.add_argument("--shard-under", type=int, default=0,
+                    help="split each --query into size shards of at most "
+                         "this many hits, so a corpus past the result "
+                         "window is listed in full")
+    ap.add_argument("--max-report", type=int, default=8,
+                    help="sit: flagged entries to print per archive")
+    ap.add_argument("--count", action="store_true",
+                    help="print what the index says each --query matches, "
+                         "and stop")
     ap.add_argument("--state", default=None)
     ap.add_argument("--budget", type=float, default=540.0,
                     help="seconds to spend fetching this run")
@@ -474,10 +687,19 @@ def main():
     if a.bytes:
         probe.need = probe.limit = a.bytes
 
-    state = {"files": {}, "probed": {}, "queries": {}}
+    if a.count:
+        for q in a.query:
+            print("%s -> %s" % (q, count(q)), flush=True)
+        return 0
+
+    state = {"files": {}, "probed": {}, "queries": {}, "types": {}}
     if os.path.exists(state_path):
         state = json.load(open(state_path))
+        state.setdefault("types", {})
+    queries = []
     for q in a.query:
+        queries += size_shards(q, a.shard_under) if a.shard_under else [q]
+    for q in queries:
         full = q + (("&sortBy=%s" % a.sort) if a.sort else "")
         full += "&sortOrderDesc=desc" if a.desc else ""
         if full in state["queries"]:
@@ -487,11 +709,22 @@ def main():
         for r in rows:
             key = "%s/%s" % (r["itemid"], r["fileid"])
             state["files"][key] = r["size"]
+            state["types"][key] = member_types(r)
         state["queries"][full] = len(rows)
         json.dump(state, open(state_path, "w"))
 
     todo = [k for k, sz in state["files"].items()
             if k not in state["probed"] and sz >= a.min_size]
+    if a.meta_type:
+        want = set(a.meta_type)
+        todo = [k for k in todo if want & set(state["types"].get(k) or ())]
+        tally = {t: sum(1 for v in state["types"].values() if t in (v or ()))
+                 for t in sorted(want)}
+        print("member types over the %d listed: %s; %d with no member "
+              "metadata at all"
+              % (len(state["files"]), tally,
+                 sum(1 for v in state["types"].values() if not v)),
+              flush=True)
     print("%d file(s) listed, %d probed, %d to go"
           % (len(state["files"]), len(state["probed"]), len(todo)), flush=True)
 
@@ -544,15 +777,23 @@ def main():
                        if e.get("opt") or e.get("enc")]
             if not flagged:
                 continue
+            # An installer payload can carry two hundred encrypted forks
+            # of the same scheme; the list is a lead, not a manifest.
+            more = len(flagged) - a.max_report
+            flagged = flagged[:a.max_report]
             print("  %s\n    version %d, %d file(s): %s"
                   % (url_of(item, fileid), v["ver"], v["files"],
-                     "; ".join("%r %s%s%s rm %d dm %d ids %d/%d"
-                               % (e["name"], "OPT " if e["opt"] else "",
-                                  "ENC " if e["enc"] else "",
-                                  "NewDE" if e.get("newde") else "",
-                                  e["rmeth"], e["dmeth"], e["b106"],
-                                  e["b108"])
-                               for e in flagged)))
+                     "; ".join("%r %s" % (e["name"], " ".join(
+                         "%s meth %d%s%s%s" % (
+                             f["fork"], f["meth"] & 0x0F,
+                             " OPT id %d" % f["opt_id"]
+                             if f["meth"] & 0x40 else "",
+                             " ENC %s" % encname(f)
+                             if f["meth"] & 0x80 else "",
+                             " NewDE" if f["meth"] & 0x10 else "")
+                         for f in e["forks"]))
+                         for e in flagged)
+                     + (" … and %d more" % more if more > 0 else "")))
         elif a.probe == "pit":
             if not v["encrypted"]:
                 continue
