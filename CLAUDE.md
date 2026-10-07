@@ -44,8 +44,8 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~17.3k tokens** (PROGRESS 7.2k,
-OPEN_ITEMS 7.2k, BLOCKERS' first two sections 2.9k), re-measured 2026-10-07; BLOCKERS'
+That session-start reading is **~17.8k tokens** (PROGRESS 7.2k,
+OPEN_ITEMS 7.6k, BLOCKERS' first two sections 3.0k), re-measured 2026-10-07; BLOCKERS'
 withdrawn-claims archive is another **~64.6k** and is reference, not
 orientation. **Every one of those five figures has been stale twice** — the
 session-start one sat at 7.5k from 2026-08-26 and at 12k from 2026-09-27,

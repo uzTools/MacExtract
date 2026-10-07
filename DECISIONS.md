@@ -358,6 +358,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
 - 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
 - 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
+- 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
 
 ---
 
@@ -23343,3 +23344,56 @@ it worth recording is the shape of the miss: thirteen negative answers
 had made the question feel settled, and the fourteenth reader was in a
 directory this project had filled itself, nine days earlier, for
 something else.
+
+## 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
+
+`StuffIt Engine™ PowerPlug` was opened to confirm it carried the BinHex
+engine `src/fmt_binhex.c` cites. It turned out to be **fourteen
+concatenated PEF containers**, and identifying all fourteen was cheap:
+the SDK ships the same engines as individually NAMED `.shlb` files, so
+matching each container's code section by hash gives Aladdin's own name
+for it rather than a guess.
+
+**Claim: of the thirteen formats on that list, this engine reads twelve,
+and the thirteenth — Private File — was named in neither part of
+OPEN_ITEMS.md.** Evidence: the roll-call
+(`tools/derive_hqxgarbage.py --siblings`), matched by hash, and
+Aladdin's own `DetermineFileType` enumeration quoted verbatim from the
+SDK's technical reference. Consequence: a new Part 2 row, and the scope
+call is the maintainer's — it is a Macintosh format, so the reasoning
+that keeps RAR and 7z out does not reach it.
+
+### Why this is worth doing again, to somebody else's software
+
+This project's format coverage has been judged against its own corpus
+and against `unar` and deark. **A shipping competitor's engine set is a
+third kind of check, and a better one for scope**: it is a list of
+formats somebody thought worth implementing for this platform, written
+by somebody who implemented all of them. It cost an hour and it found
+the one gap three years of corpus work had not, because a format with no
+specimen never appears in a corpus-driven audit — and Private File has
+no specimen here, no `unar` support and no deark module. **The absence
+of evidence was the reason it stayed invisible.**
+
+The identification technique is the transferable part:
+
+- **a bundle of containers is identifiable if the vendor also shipped
+  them loose.** Fourteen hashes against fourteen named files, and the
+  names are the vendor's.
+- **resource IDs can carry the vendor's own numbering.** The 68K
+  engines' `Eng ` ids run 1..12, and the first eight land in
+  `kFileType` order on CompactPro, AppleLinkPackage, ZIP, ARC,
+  UnixCompress, UUCode, MacBinary and TAR. Seven of those eight names
+  are unambiguous, which is what pins the eighth: `CMPEngine` is Unix
+  compress. That is an alignment rather than a reading, and it is
+  labelled as one where it is used.
+- **a format's own error strings describe it when its code will not.**
+  `PFEngine`'s `STR#` 5100 gives per-fork integrity checks, a
+  wrong-password message and *"encrypted with a method that this
+  software does not handle"* — enough to know Private File is a
+  password-encrypted single-file wrapper without decoding a byte of it.
+
+**Cost: an hour, and it was a by-product.** The question asked was
+whether a citation had a disagreeing sibling; the answer was no, and the
+same half-hour of parsing produced a format inventory that outranks this
+project's own.

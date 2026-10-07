@@ -176,7 +176,12 @@ full `StuffIt Engine™` ships the identical module, Expander 5.5 is it
 recompiled, and the two PowerPC builds are the same code, one bundling
 the other byte for byte. The PowerPC pair is checked by its constants
 and two branches rather than read, because this machine has no
-disassembler for it (TESTING.md).
+disassembler for it (TESTING.md). **Taking PowerPlug apart also produced
+a format inventory**: its fourteen containers are the SDK's fourteen
+named PowerPC engines, twelve of the thirteen formats among them are
+read here, and the thirteenth — **Private File** — was named nowhere in
+this repository until 2026-10-07 (OPEN_ITEMS.md; DECISIONS.md
+2026-10-07, *the engine list as a checklist*).
 
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained

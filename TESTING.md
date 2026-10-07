@@ -1970,8 +1970,18 @@ rather than guessed. It also SIMULATES the predicate's branch chain over
 all 256 character values instead of describing it, because the set is
 not the alphabet and a paraphrase would have said it was.
 
-`--siblings` is the control on that citation: Aladdin's other four 5.x
-BinHex decoders, read in case one disagreed. None does — the full
+`--siblings` is the control on that citation, and it carries a second
+thing worth keeping: **the roll-call of `StuffIt Engine™ PowerPlug`'s
+fourteen PEF containers**, each matched by the sha256 of its code
+section against the SDK's own named `.shlb` files, so the names are
+Aladdin's. That list is this project's only external inventory of
+Macintosh archive formats written by somebody who shipped all of them,
+and it is what found Private File missing (OPEN_ITEMS.md). It asserts
+the container COUNT too, so a fifteenth would fail rather than be
+ignored.
+
+The siblings themselves: Aladdin's other four 5.x BinHex decoders, read
+in case one disagreed. None does — the full
 `StuffIt Engine™` ships the identical module, Expander 5.5 is it
 recompiled (every constant, none of the byte signatures), and the two
 PowerPC builds are the same code, the second bundling the first byte for
@@ -1980,16 +1990,17 @@ checked WITHOUT a disassembler, because this machine has none for it:
 the opcode-11 compares at the offsets they sit at, and the two branches
 that make the loop.
 
-**178 checks, and the shape of almost every one is a BYTE at an offset it
+**193 checks, and the shape of almost every one is a BYTE at an offset it
 is claimed to sit at** — not a disassembler's label, so a reading that has
-drifted fails instead of being quietly re-derived. Proven able to fail eight ways:
+drifted fails instead of being quietly re-derived. Proven able to fail ten ways:
 moving one witness two bytes (`FAIL ... want 6bda got e50a`), moving one
 of HQXEngine's the same way, bending one branch in the simulated
 predicate (`accepts 60 characters, extra ['O', 'W', 'g', 'n', 'o']`),
 loosening one table-class count, forcing the corpus scan's norm to 1 so
 every line is odd, and — in the sibling section — moving a PowerPC
-branch target by four, moving a PowerPC compare by four, and negating
-the byte-identity test. The `--grade` section's instrument is the pair of
+branch target by four, moving a PowerPC compare by four, negating the
+byte-identity test, moving one PowerPlug container by four, and bending
+the container count. The `--grade` section's instrument is the pair of
 readers that bracket it: `hexbin` skips the junk line and `deark` errors
 on it, so the subject is known to separate a line rule from no rule.
 

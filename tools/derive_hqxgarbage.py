@@ -1010,6 +1010,72 @@ def pef_code(raw, base=0):
     return None
 
 
+# PowerPlug's fourteen containers, each named by the PPC engine whose
+# code section it carries byte for byte. The roll-call is here because
+# it is this project's only external checklist of Macintosh archive
+# formats written by somebody who shipped all of them: twelve are
+# formats, one is StuffIt creation and one is a CRC helper, and the
+# only format on it this engine does not read is Private File
+# (OPEN_ITEMS.md).
+POWERPLUG = [
+    (0x00000, "UnStuffEnginePPCExt", "StuffIt, expand"),
+    (0x38250, "StuffEnginePPC", "StuffIt, CREATE — out of scope here"),
+    (0x6f440, "SITEnginePPC", "StuffIt"),
+    (0x74e20, "ARCEnginePPC", "ARC"),
+    (0x76900, "CMPEnginePPC", "Unix compress (.Z)"),
+    (0x7d1f0, "CPTEnginePPC", "Compact Pro"),
+    (0x87000, "HQXEnginePPC", "BinHex — the one cited"),
+    (0x915f0, "LHaEnginePPC", "LHa"),
+    (0x9c1b0, "MIMEEnginePPC", "MIME"),
+    (0xb4910, "PFEnginePPC", "Private File — NOT READ HERE"),
+    (0xbdd80, "UUEnginePPC", "uuencode"),
+    (0xc59e0, "ZIPEnginePPC", "Zip"),
+    (0xd16e0, "Seg_JoinEnginePPC", "StuffIt segments"),
+    (0xedf30, "CRCEnginePPC", "not a format: a checksum helper"),
+]
+
+
+def powerplug_roll_call(plug):
+    """Every container in PowerPlug, named by the engine it carries.
+
+    Matched by the sha256 of the code section against the SDK's own
+    named `.shlb` files, so the names are Aladdin's and not a guess."""
+    import hashlib
+    d = os.path.join(SDK_HOME, "Individual Engines", "PPC Shared Libraries")
+    if not os.path.isdir(d):
+        print("  -- the SDK's named PPC engines are not here")
+        return 0, 0
+    known = {}
+    for f in sorted(os.listdir(d)):
+        if not f.endswith(".shlb"):
+            continue
+        c = pef_code(open(os.path.join(d, f), "rb").read())
+        if c:
+            known[hashlib.sha256(c).hexdigest()] = f[:-len(".PPC.shlb")]
+    raw = open(plug, "rb").read()
+    bad = 0
+    for off, name, what in POWERPLUG:
+        c = pef_code(raw, off)
+        got = known.get(hashlib.sha256(c).hexdigest()) if c else None
+        if got == name:
+            print("  ok   PowerPlug +0x%05x is %-19s — %s" % (off, name, what))
+        else:
+            print("  FAIL PowerPlug +0x%05x is %r, not %s" % (off, got, name))
+            bad += 1
+    # and nothing else is in there
+    import re as _re
+    n = len(_re.findall(b"Joy!peff", raw))
+    if n != len(POWERPLUG):
+        print("  FAIL PowerPlug holds %d PEF containers, not %d"
+              % (n, len(POWERPLUG)))
+        bad += 1
+    else:
+        print("  ok   and there are exactly %d containers, so the list is "
+              "the whole of it" % n)
+    return bad, len(POWERPLUG) + 1
+
+
+
 def siblings():
     """Aladdin's other four 5.x BinHex decoders, in case one disagrees.
 
@@ -1119,6 +1185,9 @@ def siblings():
                 print("  FAIL PowerPlug's container at +0x87000 is not the "
                       "same code")
                 bad += 1
+            b, s = powerplug_roll_call(plug)
+            bad += b
+            seen += s
 
     # 5. The client libraries are glue, not decoders: they hold the
     #    alphabet (they report it) and neither the table nor the rule.

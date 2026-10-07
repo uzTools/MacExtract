@@ -245,6 +245,12 @@ licence does not turn on anything that was in this section — that is
 settled — so each row was worth taking only for its own gain: **no
 regression for the licence's sake**.
 
+## Private File (`.pf`): on Aladdin's own engine list, and named nowhere here
+
+| what is left | what would move it |
+|---|---|
+| **Private File**, Aladdin's password-encrypted single-file wrapper, is not extracted, not detected and was not in either part of this file until 2026-10-07 | **a scope decision first, then a specimen.** It was found by taking `StuffIt Engine™ PowerPlug` apart: fourteen PEF containers, each byte-identical to one of the SDK's named PowerPC engines, and **twelve of the thirteen formats among them are read here** — the thirteenth is `PFEnginePPC` (`tools/derive_hqxgarbage.py --siblings` is the roll-call). It is a Macintosh format, so the reasoning that keeps RAR and 7z out (Part 1, *Out by the brief*) does not apply to it. **No oracle exists**: `unar` 1.10.8 does not recognise a `.pf`, deark has no module, and there is no specimen anywhere on this machine or in the corpus (measured 2026-10-07). What a reading would start from is `PFEngine.rsrc`'s `Eng ` 10009, 23,984 bytes of 68K, whose own `STR#` 5100 describes the format — per-fork integrity checks, a wrong-password message, and *"This item was encrypted with a method that this software does not handle"*. A specimen would have to be made the way SpaceSaver's and PackIt's were, by running Aladdin's own code (DECISIONS.md 2026-10-07, *the engine list as a checklist*) |
+
 ## The decoder paths nothing has fuzzed
 
 **Measured by `tools/fuzz_cover.py`** — a coverage build under
