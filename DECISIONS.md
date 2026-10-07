@@ -23835,26 +23835,59 @@ The header had said components are popped "by LENGTH, never by
 re-scanning for a separator" since M0 — stated as a property, never as a
 reason, and the storing is the whole of what a depth limit ever bought.
 
-The uncut length comes back the same way, out of the HOST's long-name
-buffer. Where a host offers none there is nothing to scan, so it is
-tracked while nothing has been cut and GIVEN UP after that — reported as
-0, the documented *"the format cannot say"*. The CLI offers a buffer; the
-Macintosh shell offers none and reads no length, so neither loses
-anything. That is the one capability this trades away, and it is named
-rather than discovered.
+### It should have given bytes back, and at first it did not
 
-### What it cost, and what it gave back
+The first answer was **+376 B of resident `CODE`**, and the reader who
+had asked for the measurement asked the obvious question of it: how can
+removing a check cost that? It cannot, and both explanations I offered
+were true without being the cause.
 
-**376 B of resident `CODE` and 8 of A5** on a 1 MB Mac Plus, against
-12,460 B of headroom at the tightest tier. Nearly all of it is the scan
-and the uncut-length recovery beside it (`unc_util.o` text 6,398 → 6,680),
-the rest Now Compress keeping counts for levels the path could not hold.
+**+202 of it was inlining, not logic.** `path_longbuf` resolves the
+host's buffer, and it had exactly one caller, so the compiler inlined it.
+The new `pop` made it a second caller, which outlined the function AND
+cost its inlined copies in `path_full_add` and `unc_path_leaf`. Resolving
+the buffer once in `unc_path_init` and caching the pointer put all three
+back — and the two of them ended up SMALLER than before. **A function
+that grows when you add a caller is not growing for the reason the diff
+suggests.**
 
-Given back: `UncPath` is 96 B smaller, so every walk frame shrinks and the
-engine's **deepest chain falls 3,386 → 3,310 B**; one public error code,
-one public struct field, two host refusals and a whole failure mode are
-deleted; and an archive now nests as deep as its paths will fit, which on
-the evidence is deeper than any Macintosh will ever be asked for.
+**The rest was the real thing, and it was a design fault rather than a
+cost.** The walker kept the path TWICE — `buf`/`len` as reported, and a
+parallel `full` for the same path uncut — each with its own per-level
+stack of restore points. `UNC_PATH_MAXDEPTH` was sized to bound those
+stacks: it existed because there were two paths, not because 24 was
+anything. Deleting one stack left the other to be reconstructed on every
+pop, which is where the bytes went, and the reconstruction is why `pop`
+briefly went 62 → 270 B.
+
+**The fix was to stop keeping two.** The host's `long_name` buffer is
+already where the uncut path has to end up, and the Linux CLI offers 64
+KB of it, so the walk writes the path THERE and holds one length. That
+deletes `path_full_add` outright — 152 B — and `unc_path_push` comes out
+34 B smaller than before any of this. Per function, against that build:
+
+| | before | after |
+|---|---|---|
+| `path_full_add` | 152 | **0** |
+| `unc_path_push` | 194 | 160 |
+| `unc_path_pop` | 62 | 78 |
+| `unc_path_init` | 30 | 78 |
+| `unc_path_leaf` | 246 | 318 |
+| | | **net −50** |
+
+**−68 B of `CODE` against +4 of A5 in the shipped build, so −64 B
+resident** — and `UncPath` is ~100 B smaller, so every walk frame shrinks
+and the engine's **deepest chain falls 3,386 → 3,310 B**. All six
+ceilings came down. One public error code, one public struct field, two
+host refusals and a whole failure mode are deleted with it, and an
+archive nests as deep as its paths will fit.
+
+**What it narrows**, named rather than discovered: a host that offers no
+`long_name` buffer no longer learns the uncut LENGTH of a path past 255
+bytes — it gets 0, the documented "the format cannot say", where it used
+to get a count kept past the end of a buffer nobody could read. Neither
+host here is such a host: the CLI offers 64 KB and the Macintosh shell
+offers none and reads no length.
 
 **The limit cost more than removing it did.** A day of work rested on it:
 a rule, a suite, a unit test, two emulator runs and a Macintosh

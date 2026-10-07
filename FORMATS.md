@@ -3842,15 +3842,21 @@ walks did there went unmeasured until 2026-10-07, and why three of them
 were misfiling entries (BLOCKERS.md, *what ignoring a refused push
 cost*).
 
-**What removing the limit costs a 1 MB Mac Plus: 376 B resident** — 376 B
-of `CODE` and 8 of A5 in the shipped build, measured on the objects
-before and after, against 12,460 B of headroom at the tightest tier
-(`tools/check_app_size.py`). Nearly all of it is in the walker: popping
-re-scans for the separator and recovers the uncut length from the host's
-buffer, and `unc_util.o`'s text goes 6,398 → 6,680 B. It is paid back in
-STACK, because `UncPath` is 96 B smaller without the arrays — every walk
-frame shrinks and the engine's deepest chain **falls 3,386 → 3,310 B**
-(*Stack*). All six ceilings moved.
+**Removing the limit GAVE BACK 64 B** on a 1 MB Mac Plus — −68 B of
+`CODE` against +4 of A5 — and that is the second answer. The first was
++376, and the difference between them is the finding: the walker was
+keeping the path TWICE, once as reported and once uncut, each with a
+per-level stack of restore points, and `UNC_PATH_MAXDEPTH` existed to
+size those stacks. Dropping one stack left the other to be reconstructed
+on every pop. Writing the uncut path straight into the host's
+`long_name` buffer instead leaves ONE path with ONE length, which
+deletes `path_full_add` entirely (−152 B) and makes `unc_path_push` 34 B
+smaller than it was before any of this.
+
+Per function, against the build before this work: `path_full_add` 152 →
+**0**, `unc_path_push` 194 → 160, `unc_path_pop` 62 → 78,
+`unc_path_init` 30 → 78, `unc_path_leaf` 246 → 318 — **net −50 in the
+walker**. All six ceilings came DOWN.
 
 #### What the DESTINATION actually allows — measured 2026-10-07
 
@@ -3890,8 +3896,8 @@ wrote **49 and 25** and refused 17 entries; this writes 61 and 30, all of
 them where the archive put them (TESTING.md, *The folder-depth limit*).
 
 Stack, `-Os -fstack-usage`, against the build before any of this:
-`unc_dd_extract` 1,028 → 952 B, `unc_now_extract` 1,064 → 884,
-`unc_superdisk_extract` 1,428 → 1,340, `unc_sqp_extract` 516 → 516
+`unc_dd_extract` 1,028 → 952 B, `unc_now_extract` 1,064 → 892,
+`unc_superdisk_extract` 1,428 → 1,344, `unc_sqp_extract` 516 → 516
 (`fmt_sqp.c` already kept its `UncPath` in a heap block). `dd_fork` is
 unchanged at 1,828, and the deepest chain in the engine runs through
 `unc_dd_extract`, so it is **3,386 → 3,310 B** against CLAUDE.md's 4 KB
@@ -4678,14 +4684,14 @@ a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 The residue and the tier budgets under it are the machine's, taken
 2026-09-27 against a SHIPPED application of 52,972 B of `CODE` and 18,964 B
-of A5. It is 54,716 and 19,060 now (*Three configurations, one tree*), so
-every figure in this table is **1,840 B more generous than the Macintosh now
+of A5. It is 54,272 and 19,056 now (*Three configurations, one tree*), so
+every figure in this table is **1,392 B more generous than the Macintosh now
 is** — 288 B of that is the 2026-09-29 Optimizer work's resident part,
 **788 B is the AppleLink package probe**, which is the largest single
 addition to the resident build since the overlays landed, **320 B is
-the zip-behind-a-stub probe** of 2026-10-05, and **376 B is the depth limit
-GOING** on 2026-10-07 — the re-scanning pop that replaced its two fixed
-arrays (*What the DESTINATION actually allows*); `src/sit_ccube.c`, zip's extra
+the zip-behind-a-stub probe** of 2026-10-05, and the depth limit GOING on 2026-10-07 gave **64 B back**, the walker
+having stopped keeping the path twice (*What the DESTINATION actually
+allows*); `src/sit_ccube.c`, zip's extra
 fields, StuffIt method 14 and the AppleLink name test of 2026-10-06 added
 none of it, the last of those because its 4 B of `CODE` came out of A5.
 (This read 54,012, 19,060 and **1,136 B** until 2026-10-06, taken before

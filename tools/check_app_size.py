@@ -79,16 +79,17 @@ import sys
 # terms as tools/build_mac.sh's six ratchets, which moved in the same
 # commit. `run_tiers.py --check` moves no tally in either lane.
 # RE-TAKEN 2026-10-07, 66,048 -> 66,176 for the folder-depth rule and then
-# -> 66,432 the same day when the depth LIMIT went: popping a path
+# -> 65,920 the same day when the depth LIMIT went: popping a path
 # component re-scans for the separator now instead of reading a stored
 # length, which is what let `UncPath`'s two fixed arrays go and with them
 # UNC_PATH_MAXDEPTH, a limit of 24 against a destination that takes 250
-# (FORMATS.md, *What the DESTINATION actually allows*). +376 B of CODE
-# and +8 of A5 against the morning; the bundle moved -68 B, four of the
-# five decoders having lost a per-entry refusal. Re-taken rather than
+# (FORMATS.md, *What the DESTINATION actually allows*). It is SMALLER
+# than before any of this: -68 B of CODE against +4 of A5, because the
+# walker stopped keeping the path twice (tools/build_mac.sh's eager pair
+# has the whole arithmetic, including the +376 it read for an hour). Re-taken rather than
 # absorbed into the tolerance, on the same terms as the entry above and
 # as tools/build_mac.sh's six ratchets. `run_tiers.py --check` moves no tally in either lane.
-EXPECT = 66432
+EXPECT = 65920
 TOLERANCE = 2048
 TAKEN = "2026-10-07"
 

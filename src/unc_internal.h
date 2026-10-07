@@ -702,29 +702,29 @@ static inline int unc_fatal(int err)
 struct UncCtx;
 
 typedef struct UncPath {
+    /* The path is built in ONE buffer and measured by ONE length. Which
+     * buffer depends on the host: a `UncOptions.long_name` big enough to
+     * beat this one is written into directly (the Linux CLI offers 64
+     * KB), so the walk holds the WHOLE path and `len` is its real
+     * length; otherwise this, and `len` stops at UNC_NAME_MAX.
+     *
+     * It was two of each until 2026-10-07 — `buf`/`len` for the path as
+     * reported and a parallel `full` for the path uncut, each with its
+     * own stack of per-level restore points, which is what
+     * `UNC_PATH_MAXDEPTH` was sized to bound. Keeping the second one in
+     * step across a pop without its array cost more than the limit ever
+     * saved; writing the uncut path where the host can already see it
+     * means there is no second one to keep. */
     uint8_t  buf[UNC_NAME_MAX + 1];
+    uint8_t *w;
+    uint32_t wcap;
     uint16_t len;
     int      depth;
-    /* Depth at which a FOLDER name was first cut to fit, 0 for none.
-     * A leaf under it carries a path that is not the archive's even
-     * when the leaf itself fitted. */
+    /* Depth at which a component was first cut to fit, 0 for none. A
+     * leaf under it carries a path that is not the archive's even when
+     * the leaf itself fitted. */
     int      truncdepth;
-    /* The same path UNCUT: its length, saturating at 65,535, and — when
-     * the host offered UncOptions.long_name — its bytes, written there
-     * as the walk descends. `full` is both the length and the write
-     * offset. The context is held for that buffer alone and may be NULL.
-     *
-     * A pop recovers it by scanning that buffer back for the separator,
-     * exactly as `len` is recovered from `buf`. Where the host offered
-     * no buffer there is nothing to scan, so `full` is exact only while
-     * nothing has been cut — after that `fullknown` goes to 0 and the
-     * length is reported as 0, the documented "the format cannot say"
-     * (macextract.h, name_full_len). The CLI offers one; the Macintosh
-     * shell offers none and reads no length. */
-    struct UncCtx *c;
-    uint16_t full;
-    int      fullknown;
-    /* Components with no room left in the path string, not yet come back
+    /* Components the buffer had no room for at all, not yet come back
      * up. Counted rather than flagged because four of the five walks pop
      * by a COUNT — a marker record, or a level counter — so a push that
      * wrote nothing and a pop that still happened left the walk
@@ -732,6 +732,7 @@ typedef struct UncPath {
      * a real folder it was not in (BLOCKERS.md, *what ignoring a refused
      * push cost*). They nest, so one counter is enough. */
     int      lost;
+    struct UncCtx *c;
 } UncPath;
 
 void unc_path_init(UncPath *p, struct UncCtx *c);

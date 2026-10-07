@@ -4811,6 +4811,7 @@ static void test_path_depth(void)
     }
     CHECK(p.depth == 100);
     CHECK(p.len == 199);                      /* 100 names + 99 separators */
+    CHECK(p.w == p.buf);                      /* no host buffer offered */
     CHECK(p.lost == 0);
     CHECK(p.truncdepth == 0);
     CHECK(p.buf[0] == 'a' && p.buf[1] == '/' && p.buf[2] == 'b');
@@ -4850,32 +4851,22 @@ static void test_path_depth(void)
     CHECK(unc_path_push(&p, nm, 31) == UNC_ERR_TRUNCATED);
     CHECK(p.lost == 2);
 
-    /* 5. The UNCUT length is still known, omitted levels included: what
-     *    ran out is room in `buf`, not knowledge of the name, and
-     *    reporting it is the one thing the walker can still do. 255 for
-     *    the eight that fit, then 32 for each of the two that did not,
-     *    then the leaf. `run_names.py` grades this on a real archive —
-     *    it is the 296-byte path the notice has to carry whole. */
+    /* 5. With no host buffer the path stopped at UNC_NAME_MAX and what
+     *    did not fit was never counted, so the length is 0 — the
+     *    documented "the format cannot say" (macextract.h) rather than a
+     *    number for a path nothing here holds. A host that offers a
+     *    buffer gets the whole thing instead; `run_names.py` grades THAT
+     *    on a real archive, through the CLI's 64 KB. */
     unc_entry_clear(&e);
     unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
-    CHECK(e.name_truncated == 1);              /* no host buffer here */
-    CHECK(e.name_full_len == 255 + 32 + 32 + 1 + 8);
+    CHECK(e.name_truncated == 1);
+    CHECK(e.name_full_len == 0);
 
     /* 6. The omissions unwind before the real levels do. */
     unc_path_pop(&p);
     CHECK(p.lost == 1 && p.depth == 8);
     unc_path_pop(&p);
     CHECK(p.lost == 0 && p.depth == 8);
-
-    /* ...and THAT is where the length is given up, because there was no
-     * host buffer to scan it back out of. 0 is the documented "the
-     * format cannot say" rather than a number for a path the walk has
-     * left (macextract.h, name_full_len). */
-    CHECK(p.fullknown == 0);
-    unc_entry_clear(&e);
-    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
-    CHECK(e.name_full_len == 0);
-
     unc_path_pop(&p);
     CHECK(p.depth == 7);
 
