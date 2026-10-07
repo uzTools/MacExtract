@@ -96,6 +96,17 @@ way.
   the MacBinary copy and not the bare `.sit` on the other disc — a
   password for that one would have been useless.
 
+  **And it is the only one of the eight ciphers that has this
+  problem**, which is worth knowing before anyone generalises it.
+  Measured 2026-10-07 from a bare file with no fork anywhere:
+  StuffIt 5's RC4 decrypts (its verifier is MD5 of the archive key, in
+  the header), and so do both of PackIt's, XOR and DES. The remaining
+  three are structural rather than measured — a zip and an ARC are
+  byte streams with no fork to lose, and Compact Pro *"stores NOTHING
+  that verifies a password"* (`src/fmt_cpt.c`), grading a candidate by
+  the entry CRC. `src/unc_crypt.c` and `src/fmt_sit.c` are the only
+  files in the engine that take an `mkey` at all.
+
 - **A fork compressed by a third party's StuffIt COMPRESSOR module
   (method nibble 7) is not decodable here, and the bar is deliberate.**
   StuffIt Deluxe 2.x could hand a fork to an external compressor the
