@@ -672,23 +672,38 @@ static inline int unc_fatal(int err)
 /* Compact Pro do the same job through unc_entry_path_append, which is */
 /* the other half of it and is what unc_path_leaf ends in.             */
 /*                                                                    */
-/* Components are pushed and popped by LENGTH, never by re-scanning    */
-/* for a separator, and there is no recursion anywhere in it.          */
+/* THERE IS NO DEPTH LIMIT, and there is no constant for one. There    */
+/* was: `UNC_PATH_MAXDEPTH`, 24, which three formats "chose             */
+/* independently" — three transcriptions of XADMaster's number — and    */
+/* which two fixed arrays here were sized by. Nothing justified it.     */
+/* Measured 2026-10-07 (`tools/vmac/depthtest/`, FORMATS.md, *What the  */
+/* DESTINATION actually allows*): System 6.0.8 creates 250 levels by    */
+/* dirID and reads all 250 back with noErr, and HFS itself takes 89.    */
+/* The one real limit is the PATH STRING — 255 bytes, which is          */
+/* UNC_NAME_MAX and is also what a classic Str255 full pathname holds.  */
+/* So a push fails only when the string is full, which is the           */
+/* over-long path `truncdepth` already reports and both hosts already   */
+/* shorten. Depth is now bounded only by that: a push writes at least   */
+/* a separator, so `depth` cannot exceed UNC_NAME_MAX + 1.              */
+/*                                                                      */
+/* Components are popped by RE-SCANNING for the separator, which is     */
+/* what removed the arrays. That is unambiguous and not a guess: a '/'  */
+/* inside a component is swapped to ':' on the way in, by this file's   */
+/* own push and leaf, so a '/' in `buf` is always one this walker put   */
+/* there. It was done by stored length until 2026-10-07, and the        */
+/* storing is the whole of what a depth limit ever bought.              */
+/* There is no recursion anywhere in it.                                */
 /* ------------------------------------------------------------------ */
 
-/* All three formats that use this chose 24 independently. Nothing on
- * this disk comes near it — the deepest nesting any archive here has is
- * 4 (FORMATS.md, *How deep anything actually nests*) — and `stack` and
- * `fullstack` below are sized by it, so raising it costs A5 world on a
- * 1 MB Macintosh Plus for a depth no corpus archive reaches. */
-#define UNC_PATH_MAXDEPTH 24
+/* The deepest a path can be when every level costs at least its
+ * separator. Derived, not chosen: it is the one limit there is. */
+#define UNC_PATH_DEPTH_MAX (UNC_NAME_MAX + 1)
 
 struct UncCtx;
 
 typedef struct UncPath {
     uint8_t  buf[UNC_NAME_MAX + 1];
     uint16_t len;
-    uint16_t stack[UNC_PATH_MAXDEPTH];
     int      depth;
     /* Depth at which a FOLDER name was first cut to fit, 0 for none.
      * A leaf under it carries a path that is not the archive's even
@@ -697,52 +712,44 @@ typedef struct UncPath {
     /* The same path UNCUT: its length, saturating at 65,535, and — when
      * the host offered UncOptions.long_name — its bytes, written there
      * as the walk descends. `full` is both the length and the write
-     * offset, so a pop restores the buffer as well as the count. The
-     * context is held for that buffer alone and may be NULL. */
+     * offset. The context is held for that buffer alone and may be NULL.
+     *
+     * A pop recovers it by scanning that buffer back for the separator,
+     * exactly as `len` is recovered from `buf`. Where the host offered
+     * no buffer there is nothing to scan, so `full` is exact only while
+     * nothing has been cut — after that `fullknown` goes to 0 and the
+     * length is reported as 0, the documented "the format cannot say"
+     * (macextract.h, name_full_len). The CLI offers one; the Macintosh
+     * shell offers none and reads no length. */
     struct UncCtx *c;
     uint16_t full;
-    uint16_t fullstack[UNC_PATH_MAXDEPTH];
-    /* How many descents past UNC_PATH_MAXDEPTH have been REFUSED and not
-     * yet come back up. Nonzero means the path this walk is standing on
-     * is shallower than the archive's, so every entry reported from here
-     * is at a path that is not its own.
-     *
-     * It is counted rather than merely flagged because four of the five
-     * walks pop by a COUNT — a marker record, or a level counter — so a
-     * refused push whose pop still happened left the walk SHALLOWER than
-     * it should be and misfiled every entry after it into a real folder
-     * it was not in (BLOCKERS.md, *what ignoring a refused push cost*).
-     * Refusals are strictly nested, so one counter is enough. `int`, like
-     * `depth` and `truncdepth`, and not a saturating narrow field: one
-     * that stuck at its maximum would under-count the pops and quietly
-     * lose the balance it is here to keep. Every push costs a record in
-     * the file, so a 32-bit archive cannot hold enough of them to come
-     * near the top of it. */
-    int lost;
+    int      fullknown;
+    /* Components with no room left in the path string, not yet come back
+     * up. Counted rather than flagged because four of the five walks pop
+     * by a COUNT — a marker record, or a level counter — so a push that
+     * wrote nothing and a pop that still happened left the walk
+     * SHALLOWER than it went down and misfiled every entry after it into
+     * a real folder it was not in (BLOCKERS.md, *what ignoring a refused
+     * push cost*). They nest, so one counter is enough. */
+    int      lost;
 } UncPath;
 
 void unc_path_init(UncPath *p, struct UncCtx *c);
 
 /* The depth the ARCHIVE asked for, which is what a walk comparing its
  * position against a level field in a record must use: `depth` alone
- * stops at UNC_PATH_MAXDEPTH and would then never come back up. */
+ * stops where the string fills and would then never come back up. */
 #define unc_path_askdepth(p) ((p)->depth + (p)->lost)
 
-/* Nonzero when the path is not the archive's because the walk could not
- * descend this far. An entry reported from here is at a PLAUSIBLE but
- * wrong path — unlike a cut name there is nothing in it for a host to
- * notice — so the format reports it with UNC_ERR_TOODEEP rather than
- * letting it be written somewhere nobody asked for. */
-#define unc_path_toodeep(p) ((p)->lost != 0)
-
-/* Descend into `name`. Past UNC_PATH_MAXDEPTH the path is left alone and
- * the refusal is COUNTED (`lost`): the return is UNC_ERR_TOODEEP so a
- * caller can say so per entry, and ignoring it is safe because the
- * matching `unc_path_pop` undoes the refusal rather than a level that
- * was never pushed. Nothing else can fail. */
+/* Descend into `name`. UNC_OK, or UNC_ERR_TRUNCATED when the path string
+ * had no room left for even a separator — the path is then left alone
+ * and the omission is COUNTED, so ignoring the result is safe: the pop
+ * this descent will be matched by undoes it rather than a level that was
+ * really pushed. The entry is reported as truncated either way, which is
+ * what it is. Nothing else can fail. */
 int  unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen);
 
-/* Come back up one level — or undo one refused push, which is the same
+/* Come back up one level — or undo one omitted push, which is the same
  * level as far as the archive is concerned. */
 void unc_path_pop(UncPath *p);
 

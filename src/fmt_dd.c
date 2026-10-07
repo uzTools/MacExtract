@@ -1163,13 +1163,7 @@ static int dd_xorval(const DdFile *f)
 
 /* Emit one file: begin, both forks, end. `at` is where the data fork's
  * compressed bytes start. */
-/* `deep`: the walk could not descend as far as this entry sits, so the
- * path in `e` is its first UNC_PATH_MAXDEPTH levels and not its own. The
- * entry is still offered — a listing that dropped it would make the
- * archive look shorter than it is — and then fails per entry rather than
- * decoding into a folder nobody asked for. */
-static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at,
-                   int deep)
+static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at)
 {
     int sret, err = UNC_OK, ferr;
 
@@ -1177,9 +1171,7 @@ static int dd_emit(UncCtx *c, UncEntryInfo *e, const DdFile *f, uint32_t at,
     if (sret < 0) return UNC_ERR_SINK;
     if (sret > 0) return UNC_OK;
 
-    if (deep) {
-        err = UNC_ERR_TOODEEP;
-    } else if (!c->opt.list_only) {
+    if (!c->opt.list_only) {
         err = dd_fork(c, UNC_FORK_DATA, at, f->datacomp, f->datasize,
                       f->datamethod, f->datadelta, f->datacrc, dd_xorval(f),
                       f->xorsum);
@@ -1210,7 +1202,7 @@ static int dd_archive(UncCtx *c)
         uint32_t magic, datasize, rsrcsize, start;
         uint32_t nlen;
         UncEntryInfo e;
-        int isdir, enddir, sret, deep;
+        int isdir, enddir, sret;
 
         if (c->io->seek(c->io->ctx, at) < 0) return UNC_ERR_IO;
         err = unc_read_full(c->io, hdr, 4);
@@ -1281,11 +1273,6 @@ static int dd_archive(UncCtx *c)
              * from; taking it out of path.buf afterwards would report a
              * name already cut to UNC_NAME_MAX. */
             unc_path_leaf(&path, &e, hdr + 5, nlen);
-            /* Whether THIS folder's own path is representable is asked
-             * before descending into it: the leaf above is built from the
-             * path the walk is standing on, so a folder at the limit is
-             * named correctly and only what is inside it is not. */
-            deep = unc_path_toodeep(&path);
             (void)unc_path_push(&path, hdr + 5, nlen);
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 78);
@@ -1295,16 +1282,13 @@ static int dd_archive(UncCtx *c)
              * skipped a FOLDER rather than a file (2026-08-28). */
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) return UNC_ERR_SINK;
-            if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx,
-                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0)
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0)
                 return UNC_ERR_SINK;
             at = start;
             continue;
         }
 
         unc_path_leaf(&path, &e, hdr + 5, nlen);
-        deep = unc_path_toodeep(&path);
 
         if (unc_get_u16be(hdr + 94) & 0x20) {
             /* Stored in the archive with no file header of its own.
@@ -1331,7 +1315,7 @@ static int dd_archive(UncCtx *c)
             f.datacrc      = unc_get_u16be(hdr + 114);
             f.rsrccrc      = unc_get_u16be(hdr + 116);
             dd_entry_from(&e, &f);
-            if ((err = dd_emit(c, &e, &f, start, deep)) != UNC_OK) return err;
+            if ((err = dd_emit(c, &e, &f, start)) != UNC_OK) return err;
             at = start + datasize + rsrcsize;
             continue;
         }
@@ -1362,7 +1346,7 @@ static int dd_archive(UncCtx *c)
             if (datasize != inner && datasize != inner + 84)
                 return UNC_ERR_CORRUPT;
             dd_entry_from(&e, &f);
-            if ((err = dd_emit(c, &e, &f, start + 84, deep)) != UNC_OK) return err;
+            if ((err = dd_emit(c, &e, &f, start + 84)) != UNC_OK) return err;
             at = start + datasize;
         }
     }
@@ -1383,7 +1367,7 @@ static int dd_archive2(UncCtx *c)
 
     for (;;) {
         uint32_t start = at, totalsize, nlen;
-        int entrytype, dirlevel, sret, deep;
+        int entrytype, dirlevel, sret;
         UncEntryInfo e;
         unc_off_t fsize = c->io->size(c->io->ctx);
 
@@ -1428,23 +1412,19 @@ static int dd_archive2(UncCtx *c)
              * Source: docs/formats/diskdoubler-container.md, "DDA2". */
             if (unc_read_full(c->io, hdr + 46, 16) != UNC_OK) break;
             unc_path_leaf(&path, &e, hdr + 7, nlen);   /* before the push */
-            deep = unc_path_toodeep(&path);
             (void)unc_path_push(&path, hdr + 7, nlen);
             e.is_dir = 1;
             e.create_date = unc_get_u32be(hdr + 54);
             e.mod_date    = unc_get_u32be(hdr + 58);
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) return UNC_ERR_SINK;
-            if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx,
-                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0)
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0)
                 return UNC_ERR_SINK;
             at = start + totalsize;
             continue;
         }
 
         unc_path_leaf(&path, &e, hdr + 7, nlen);
-        deep = unc_path_toodeep(&path);
 
         if ((entrytype & 0xF000) == 0x1000) {
             /* Stored in the archive with no file header of its own.
@@ -1487,7 +1467,7 @@ static int dd_archive2(UncCtx *c)
             f.rsrccrc  = hdr[87];
             f.xorsum   = 1;
             dd_entry_from(&e, &f);
-            if ((err = dd_emit(c, &e, &f, start + 90, deep)) != UNC_OK) return err;
+            if ((err = dd_emit(c, &e, &f, start + 90)) != UNC_OK) return err;
             at = start + totalsize;
             continue;
         }
@@ -1500,8 +1480,7 @@ static int dd_archive2(UncCtx *c)
             DdFile f;
             dd_parse_filehdr(hdr, &f);
             dd_entry_from(&e, &f);
-            if ((err = dd_emit(c, &e, &f, start + 56 + 84, deep)) != UNC_OK)
-                return err;
+            if ((err = dd_emit(c, &e, &f, start + 56 + 84)) != UNC_OK) return err;
         }
         at = start + totalsize;
     }
@@ -1591,8 +1570,6 @@ int unc_dd_extract(UncCtx *c)
             unc_entry_set_name(&e, (const uint8_t *)"diskdoubler", 11);
         }
         dd_entry_from(&e, &f);
-        /* One file, not an archive walk: there is no path to be too
-         * deep for. */
-        return dd_emit(c, &e, &f, hsize, 0);
+        return dd_emit(c, &e, &f, hsize);
     }
 }

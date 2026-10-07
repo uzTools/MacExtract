@@ -710,11 +710,18 @@ int unc_now_extract(UncCtx *c)
 {
     uint8_t hdr[NOW_ENTRY];
     UncPath path;
-    /* Entries still owed at each level, which is Now Compress's own
-     * way of closing a folder and not part of the shared path. */
-    uint32_t owed[UNC_PATH_MAXDEPTH];
-    /* And still owed by all the levels past UNC_PATH_MAXDEPTH together,
-     * which have no slot of their own; see the walk below. */
+    /* Entries still owed at each level, which is Now Compress's own way
+     * of closing a folder and not part of the shared path. One slot per
+     * open level, and the bound is DERIVED rather than chosen: a push
+     * writes at least its separator, so a path that must fit
+     * UNC_NAME_MAX bytes cannot be more than UNC_PATH_DEPTH_MAX levels
+     * deep. It is on the heap because 1 KB is not a thing to put on a
+     * 4 KB call stack, and because this file already allocates per
+     * archive — the array was 24 entries on the stack until 2026-10-07,
+     * sized by a depth limit that should never have existed. */
+    uint32_t *owed = NULL;
+    /* And owed by all the levels the path string had no room for, which
+     * have no slot of their own; see the walk below. */
     uint32_t deepowed = 0;
     NowStream st;
     uint8_t *mem;
@@ -842,11 +849,21 @@ int unc_now_extract(UncCtx *c)
     }
 
     unc_path_init(&path, c);
+    /* One counter per open level. Per archive, like everything else this
+     * walk needs, and checked: without it there is no way to know when a
+     * folder closes, so this is the one allocation here that is fatal
+     * rather than per entry. */
+    owed = (uint32_t *)unc_alloc(c->al, (uint32_t)(UNC_PATH_DEPTH_MAX
+                                                   * sizeof *owed));
+    if (!owed) {
+        unc_free(c->al, mem);
+        return UNC_ERR_MEM;
+    }
 
     while (seen < totalentries) {
         UncEntryInfo e;
         uint32_t nlen, datasize, rsrcsize, datastart, numdir;
-        int flags, sret, deep;
+        int flags, sret;
 
         if (c->io->seek(c->io->ctx, at) < 0) { err = UNC_ERR_IO; break; }
         if (unc_read_full(c->io, hdr, NOW_ENTRY) != UNC_OK) break;
@@ -863,7 +880,6 @@ int unc_now_extract(UncCtx *c)
 
         unc_entry_clear(&e);
         unc_path_leaf(&path, &e, hdr + 1, nlen);
-        deep = unc_path_toodeep(&path);
         e.type         = unc_get_u32be(hdr + 38);
         e.creator      = unc_get_u32be(hdr + 42);
         e.finder_flags = unc_get_u16be(hdr + 46);
@@ -874,9 +890,7 @@ int unc_now_extract(UncCtx *c)
             e.is_dir = 1;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
-            if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx,
-                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0) {
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
                 err = UNC_ERR_SINK;
                 break;
             }
@@ -887,9 +901,7 @@ int unc_now_extract(UncCtx *c)
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
                 int ferr = UNC_OK;
-                if (deep) {
-                    ferr = UNC_ERR_TOODEEP;   /* per entry, like the above */
-                } else if (!c->opt.list_only && (datasize || rsrcsize) &&
+                if (!c->opt.list_only && (datasize || rsrcsize) &&
                     st.inblock == NULL) {
                     ferr = UNC_ERR_MEM;       /* per entry, not per archive */
                 } else if (!c->opt.list_only && (datasize || rsrcsize)) {
@@ -920,15 +932,22 @@ int unc_now_extract(UncCtx *c)
          * many entries follow it; the reference does the same by
          * recursing (parseDirectoryWithParent).
          *
-         * A level past UNC_PATH_MAXDEPTH has no slot of its own, so the
-         * counts of all the refused ones are summed into `deepowed`. The
-         * sum telescopes — every entry is owed by exactly one level, and a
-         * refused folder adds its own count the same way a real one does —
-         * so the chain is exhausted at the same entry a stack of counters
-         * would have exhausted it at. What it cannot say is WHICH refused
-         * level each entry belonged to, which is the thing this walk could
-         * not represent in the first place. */
-        if (unc_path_toodeep(&path)) {
+         * A folder the PATH STRING had no room for opens no level of its
+         * own — `unc_path_push` counts it instead of descending — so it
+         * gets no slot in `owed` and the counts of all such folders are
+         * summed into one. The sum telescopes: every entry is owed by
+         * exactly one level, and a counted folder adds its own count the
+         * way a real one does, so the chain is exhausted at the entry a
+         * stack of counters would have exhausted it at. What one
+         * accumulator cannot say is WHICH of them an entry belonged to,
+         * which is the thing the path could not hold either.
+         *
+         * Without this the counts are simply dropped, and then the walk
+         * closes the folder ABOVE too early and every entry under it is
+         * reported from a path it has already left — measured
+         * 2026-10-07, when deleting it cost `run_names.py` the whole
+         * 296-byte path it grades. */
+        if (unc_path_askdepth(&path) > path.depth) {
             if (deepowed > 0) deepowed--;
         } else if (path.depth > 0 && owed[path.depth - 1] > 0) {
             owed[path.depth - 1]--;
@@ -941,17 +960,18 @@ int unc_now_extract(UncCtx *c)
                 deepowed += numdir;
         }
 
-        /* The refused chain closes first, and the real levels only once it
-         * has: a level whose count ran out while the walk was still below
-         * the limit must wait, or the pop lands on the refusal instead and
-         * the walk comes back up one level short of where it went down. */
-        while (unc_path_toodeep(&path) && deepowed == 0)
+        /* The counted levels close first, and the real ones only once
+         * they have: a level whose count ran out while the walk was
+         * still below them must wait, or the pop lands on a counted
+         * level instead and the walk comes back up one short. */
+        while (unc_path_askdepth(&path) > path.depth && deepowed == 0)
             unc_path_pop(&path);
-        if (!unc_path_toodeep(&path))
+        if (unc_path_askdepth(&path) == path.depth)
             while (path.depth > 0 && owed[path.depth - 1] == 0)
                 unc_path_pop(&path);
     }
 
+    unc_free(c->al, owed);
     unc_free(c->al, mem);
     return err;
 }

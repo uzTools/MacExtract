@@ -61,18 +61,22 @@ def walk(env, mac_dir=(), depth=0, dirs=False):
     name and a path. Found on 2026-08-08, when that fixture joined the
     sample and two of its entries could not be copied off the volume.
     """
-    # The engine carries UNC_PATH_MAXDEPTH (24) levels of folder and refuses
-    # to descend past them (src/unc_internal.h), so no volume this
-    # application wrote can nest deeper than 25 components. This guard is
-    # here to stop a CYCLE, not to bound a tree, so exceeding it raises
-    # rather than returning what it has: it was `depth > 8: return []` until
-    # 2026-10-07, which reported a correct 24-deep volume as 32 files
-    # MISSING ON THE MAC — a harness limit that reads exactly like an
-    # application defect, and silent because nothing in the sample nests
-    # past 6 (BLOCKERS.md, FORMATS.md *How deep anything actually nests*).
-    if depth > 26:
-        raise TooDeep("the volume nests past %d components, which the engine "
-                      "cannot write — a loop, or a harness bug" % depth)
+    # There is no depth limit in the engine and none on a Macintosh, which
+    # creates 250 levels by dirID without an error (FORMATS.md, *What the
+    # DESTINATION actually allows*). What bounds a path is the STRING:
+    # UNC_NAME_MAX is 255 and a level costs at least its separator, so
+    # nothing this application writes can be past 256 components.
+    #
+    # The guard is here to stop a CYCLE, not to bound a tree, so exceeding
+    # it RAISES rather than returning what it has. It was `depth > 8:
+    # return []` until 2026-10-07, which reported a correct 24-deep volume
+    # as 32 files MISSING ON THE MAC — a harness limit that reads exactly
+    # like an application defect, and silent because nothing in the sample
+    # nests past 6. It was then 26 for a few hours, derived from a depth
+    # limit that stopped existing the same day (BLOCKERS.md).
+    if depth > 260:
+        raise TooDeep("the volume nests past %d components, which no path of "
+                      "255 bytes can be — a loop, or a harness bug" % depth)
     out = []
     # -a because hfsutils hides a file whose Finder INVISIBLE bit is set —
     # NOT, as this comment said until 2026-09-22, names beginning with a dot.

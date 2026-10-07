@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""synth_deep.py — archives nested PAST `UNC_PATH_MAXDEPTH`.
+"""synth_deep.py — archives nested past where the engine used to stop.
 
-`unc_path_push` refuses to descend at depth 24. Nothing on this disk
-reaches it: the deepest folder nesting any archive here has is 4, in
-`Sys 7 for MA 2.0.1.pkg` (FORMATS.md, *How deep anything actually
-nests*), so what the five walk sites do at the limit was read from the
-code and never run. This writes the archives that run it.
+There was a depth limit until 2026-10-07 — `UNC_PATH_MAXDEPTH`, 24, which
+three formats "chose independently" and which nothing had measured. A
+Macintosh takes 250 levels (FORMATS.md, *What the DESTINATION actually
+allows*). These nest to 30: past the old limit by six, and past anything
+real by far more, the deepest archive on this disk being 4.
 
 The tree is the same for every format, and it is shaped to tell three
 failures apart rather than just to go deep:
@@ -27,8 +27,8 @@ and a cut NAME cannot be mistaken for a refused push (that question is
 
 What each part catches:
 
-  * `fNN` past 24 report the engine's answer to a path it cannot
-    represent — the subject of the rule.
+  * `fNN` go deeper than any walk here had been run to, which is the
+    whole subject: every one must come back at its own path.
   * `tNN` catch an UNBALANCED POP. Four of the five walks pop by a
     COUNT (a marker record, or a level counter), so a push that was
     refused and a pop that still happens leave the walk shallower than
@@ -61,8 +61,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-MAXDEPTH = 24                 # UNC_PATH_MAXDEPTH, src/unc_internal.h
-DEFAULT_DEPTH = 30            # past it, with room for the overshoot to show
+DEFAULT_DEPTH = 30            # past the limit that used to be at 24
 
 
 def _payload(d, tag):

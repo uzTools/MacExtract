@@ -362,6 +362,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
 - 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
 - 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
+- 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
 
 ---
 
@@ -8101,7 +8102,7 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 304 bytes on the
+**Why not just carry the name.** `UncEntryInfo` is 302 bytes on the
 68000 target (measured, and re-measured every time the struct grew — the
 "280 bytes" that stood in `fmt_lzh.c` was never right, and the "296"
 this entry stated until 2026-09-03 stopped being right a few hours after
@@ -23799,3 +23800,88 @@ rightmost name in `SYMBOLS`. The script's own comment already recorded
 being fixed once for a preceding `#define`; a function-like one was the
 case that fix did not cover. It failed the build loudly, which is what
 that file is built to do.
+
+
+## 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
+
+Three messages, each shorter than the last: *"I thought the path was
+shortened when too long?"*, *"depth isn't a limitation of hfs?"*, and
+*"UNC_PATH_MAXDEPTH shouldn't even exist"*. All three were right, and the
+third is the one that settles the other two.
+
+**The limit was never measured against anything.** `src/unc_internal.h`
+said so in as many words — "all three formats that use this chose 24
+independently" — which is three transcriptions of XADMaster's constant
+read as corroboration. `tools/vmac/depthtest/` asked a Macintosh:
+**250 levels created by dirID and read back, noErr**; 89 on an HFS volume
+from Linux. The only limit anywhere is the full path STRING, 255 bytes,
+which is `UNC_NAME_MAX` and is also what a classic `Str255` pathname
+holds — and the Macintosh shell never even builds one, walking component
+by component with a parent dirID.
+
+### What actually held the limit in place
+
+Not policy: two fixed arrays. `stack[24]` kept the buffer length before
+each push and `fullstack[24]` the uncut length, so that a pop could
+restore them — and an array needs a bound. Everything else followed from
+that one implementation choice, including a public error code, a public
+struct field, a refusal in each of two hosts and a day's work defending
+the behaviour.
+
+**Popping re-scans for the separator now.** That is exact rather than a
+guess: a `/` inside a component is swapped to `:` on the way in, by this
+walker's own push and leaf, so every `/` in the buffer is one it wrote.
+The header had said components are popped "by LENGTH, never by
+re-scanning for a separator" since M0 — stated as a property, never as a
+reason, and the storing is the whole of what a depth limit ever bought.
+
+The uncut length comes back the same way, out of the HOST's long-name
+buffer. Where a host offers none there is nothing to scan, so it is
+tracked while nothing has been cut and GIVEN UP after that — reported as
+0, the documented *"the format cannot say"*. The CLI offers a buffer; the
+Macintosh shell offers none and reads no length, so neither loses
+anything. That is the one capability this trades away, and it is named
+rather than discovered.
+
+### What it cost, and what it gave back
+
+**376 B of resident `CODE` and 8 of A5** on a 1 MB Mac Plus, against
+12,460 B of headroom at the tightest tier. Nearly all of it is the scan
+and the uncut-length recovery beside it (`unc_util.o` text 6,398 → 6,680),
+the rest Now Compress keeping counts for levels the path could not hold.
+
+Given back: `UncPath` is 96 B smaller, so every walk frame shrinks and the
+engine's **deepest chain falls 3,386 → 3,310 B**; one public error code,
+one public struct field, two host refusals and a whole failure mode are
+deleted; and an archive now nests as deep as its paths will fit, which on
+the evidence is deeper than any Macintosh will ever be asked for.
+
+**The limit cost more than removing it did.** A day of work rested on it:
+a rule, a suite, a unit test, two emulator runs and a Macintosh
+verification, all green, none of which could see that the number was
+arbitrary — because every one of them tested behaviour AT the limit
+rather than the limit itself.
+
+### Two things the tests caught that review did not
+
+**Deleting Now Compress's accumulator broke a graded capability.** Its
+tree is implied by per-directory counts, and a folder the path string
+cannot hold gets no slot — so its count has to go somewhere or the walk
+closes the folder ABOVE too early and reports everything under it from a
+path it has already left. `run_names.py` caught it on the 296-byte path
+it grades. The accumulator is the same one the depth limit needed, keyed
+on the string filling instead.
+
+**And the first fix to the leaf was wrong in an interesting way.** I had
+made an omitted push stop advancing the uncut length, on the reasoning
+that a path with components missing cannot have its whole name reported.
+That was true while the components were never counted; once `full` keeps
+counting through an omission, `name_truncated` 2 is honest again and the
+whole path IS available. The rule is not "say less when something is
+missing" but "say exactly what is still known".
+
+`tools/vmac/checkdisk.py`'s volume walk was wrong twice in one day for
+the same reason — a bound copied from the engine's limit rather than from
+the path — and both times it reported a correct volume as files missing
+on the Mac. It is at 260 now, derived from the 255-byte string, and it
+raises rather than truncating.

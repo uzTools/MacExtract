@@ -4786,99 +4786,115 @@ static void test_resfork_find(void)
 }
 
 /* ------------------------------------------------------------------ */
-/* The path walker at UNC_PATH_MAXDEPTH                               */
+/* The path walker, which has no depth limit                          */
 /*                                                                    */
-/* Directly, with no archive: the property lives in unc_path_push /   */
-/* _pop / _leaf and every format inherits it. The suite that drives   */
-/* real archives is tools/run_depth.py; this is the part that can be  */
-/* asserted on the FIELDS rather than through a host's prose, which   */
-/* matters because the reported path of a too-deep entry is cut at    */
-/* UNC_NAME_MAX and so is the same string for all of them.            */
+/* It had one until 2026-10-07 — UNC_PATH_MAXDEPTH, 24, sized two     */
+/* fixed arrays, and was measured against nothing. A Macintosh takes  */
+/* 250 levels (FORMATS.md, *What the DESTINATION actually allows*).   */
+/* The only limit now is the path STRING, and these assert that.      */
 /* ------------------------------------------------------------------ */
 
 static void test_path_depth(void)
 {
     UncPath p;
     UncEntryInfo e;
-    uint8_t nm[4];
+    uint8_t nm[40];
     int i;
 
-    /* 1. The limit, and that a refusal is COUNTED rather than dropped. */
+    /* 1. Depth far past the old limit, with the path exactly right at
+     *    the bottom. One character a level, so 100 levels is 199 bytes
+     *    and the string never fills. */
     unc_path_init(&p, NULL);
-    for (i = 0; i < UNC_PATH_MAXDEPTH; i++) {
+    for (i = 0; i < 100; i++) {
         nm[0] = (uint8_t)('a' + (i % 26));
         CHECK(unc_path_push(&p, nm, 1) == UNC_OK);
     }
-    CHECK(p.depth == UNC_PATH_MAXDEPTH);
-    CHECK(!unc_path_toodeep(&p));
-    for (i = 0; i < 6; i++) {
-        CHECK(unc_path_push(&p, (const uint8_t *)"z", 1) == UNC_ERR_TOODEEP);
-        CHECK(p.depth == UNC_PATH_MAXDEPTH);        /* nothing moved */
-        CHECK(unc_path_askdepth(&p) == UNC_PATH_MAXDEPTH + i + 1);
+    CHECK(p.depth == 100);
+    CHECK(p.len == 199);                      /* 100 names + 99 separators */
+    CHECK(p.lost == 0);
+    CHECK(p.truncdepth == 0);
+    CHECK(p.buf[0] == 'a' && p.buf[1] == '/' && p.buf[2] == 'b');
+
+    /* 2. Popping back up by SCANNING, which is what replaced the arrays.
+     *    Every level has to come back exactly. */
+    for (i = 99; i >= 0; i--) {
+        unc_path_pop(&p);
+        CHECK(p.depth == i);
+        CHECK(p.len == (i ? (uint16_t)(2 * i - 1) : 0));
     }
-    CHECK(unc_path_toodeep(&p));
+    CHECK(p.len == 0 && p.depth == 0);
 
-    /* 2. A leaf down there is flagged. */
-    unc_entry_clear(&e);
-    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
-    CHECK(e.path_too_deep == 1);
-
-    /* 3. Pops are BALANCED: a refused push's pop undoes the refusal and
-     *    not a level that was really pushed. This is the whole reason
-     *    the refusal is counted — four of the five walks pop by a count
-     *    and would otherwise surface one level short per refusal. */
-    for (i = 0; i < 6; i++) unc_path_pop(&p);
-    CHECK(!unc_path_toodeep(&p));
-    CHECK(p.depth == UNC_PATH_MAXDEPTH);
-    unc_entry_clear(&e);
-    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
-    CHECK(e.path_too_deep == 0);
-    for (i = 0; i < UNC_PATH_MAXDEPTH; i++) unc_path_pop(&p);
-    CHECK(p.depth == 0);
-    CHECK(p.len == 0);
-
-    /* 4. A pop with nothing pushed stays at the floor, and does not
-     *    leave a refusal owed to nobody. */
+    /* 3. A '/' inside a component becomes ':' on the way in, which is
+     *    what makes the scan exact rather than a guess: pop must land on
+     *    the separator this walker wrote and not on one from a name. */
+    unc_path_init(&p, NULL);
+    CHECK(unc_path_push(&p, (const uint8_t *)"a", 1) == UNC_OK);
+    CHECK(unc_path_push(&p, (const uint8_t *)"x/y", 3) == UNC_OK);
+    CHECK(p.len == 5 && p.buf[1] == '/' && p.buf[3] == ':');
     unc_path_pop(&p);
-    CHECK(p.depth == 0 && !unc_path_toodeep(&p));
+    CHECK(p.len == 1 && p.depth == 1);        /* back to "a", not to "a/x" */
 
-    /* 5. BOTH limits at once, which is the pair that reported a
-     *    falsehood. With 31-character folder names the path passes
-     *    UNC_NAME_MAX around the eighth level, so `truncdepth` is set
-     *    long before the depth limit is reached — and only then is the
-     *    reporting branch below entered at all. A one-character name
-     *    never reaches it, which is why the first version of this test
-     *    passed against the defect (2026-10-07).
-     *
-     *    Down there the walk holds a path with folders missing from the
-     *    middle of it. That is not this entry's name, so its LENGTH
-     *    describes nothing and `name_truncated` 2 — "the whole name is
-     *    in UncOptions.long_name" — would be a promise the engine
-     *    cannot keep. 0 is the documented "the format cannot say". */
-    {
-        uint8_t wide[31];
-        int k;
-        for (k = 0; k < 31; k++) wide[k] = (uint8_t)'w';
-        unc_path_init(&p, NULL);
-        for (i = 0; i < UNC_PATH_MAXDEPTH; i++) {
-            wide[0] = (uint8_t)('a' + (i % 26));
-            CHECK(unc_path_push(&p, wide, 31) == UNC_OK);
-        }
-        CHECK(p.truncdepth != 0);        /* the path was cut on the way */
-        unc_entry_clear(&e);
-        unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
-        CHECK(e.name_truncated == 1 || e.name_truncated == 2);
-        CHECK(e.name_full_len != 0);     /* representable: a real length */
+    /* 4. The string filling is the ONE failure, and it is counted so the
+     *    pops stay balanced — four of the five walks pop by a count, and
+     *    an uncounted omission misfiles every entry after it (BLOCKERS.md). */
+    unc_path_init(&p, NULL);
+    for (i = 0; i < 40; i++) nm[i] = (uint8_t)'w';
+    for (i = 0; i < 8; i++)
+        CHECK(unc_path_push(&p, nm, 31) == UNC_OK);
+    CHECK(p.len == UNC_NAME_MAX);             /* 8 x 31 + 7 = 255 exactly */
+    CHECK(p.truncdepth == 0);                 /* exactly full is not cut */
+    CHECK(unc_path_push(&p, nm, 31) == UNC_ERR_TRUNCATED);
+    CHECK(p.lost == 1);
+    CHECK(p.depth == 8);                      /* the path did not move */
+    CHECK(unc_path_askdepth(&p) == 9);        /* but the archive's did */
+    CHECK(unc_path_push(&p, nm, 31) == UNC_ERR_TRUNCATED);
+    CHECK(p.lost == 2);
 
-        CHECK(unc_path_push(&p, wide, 31) == UNC_ERR_TOODEEP);
-        unc_entry_clear(&e);
-        unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
-        CHECK(e.path_too_deep == 1);
-        CHECK(e.name_truncated != 2);    /* no whole name is on offer */
-        CHECK(e.name_full_len == 0);     /* and no length that lies */
-    }
+    /* 5. The UNCUT length is still known, omitted levels included: what
+     *    ran out is room in `buf`, not knowledge of the name, and
+     *    reporting it is the one thing the walker can still do. 255 for
+     *    the eight that fit, then 32 for each of the two that did not,
+     *    then the leaf. `run_names.py` grades this on a real archive —
+     *    it is the 296-byte path the notice has to carry whole. */
+    unc_entry_clear(&e);
+    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+    CHECK(e.name_truncated == 1);              /* no host buffer here */
+    CHECK(e.name_full_len == 255 + 32 + 32 + 1 + 8);
+
+    /* 6. The omissions unwind before the real levels do. */
+    unc_path_pop(&p);
+    CHECK(p.lost == 1 && p.depth == 8);
+    unc_path_pop(&p);
+    CHECK(p.lost == 0 && p.depth == 8);
+
+    /* ...and THAT is where the length is given up, because there was no
+     * host buffer to scan it back out of. 0 is the documented "the
+     * format cannot say" rather than a number for a path the walk has
+     * left (macextract.h, name_full_len). */
+    CHECK(p.fullknown == 0);
+    unc_entry_clear(&e);
+    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+    CHECK(e.name_full_len == 0);
+
+    unc_path_pop(&p);
+    CHECK(p.depth == 7);
+
+    /* 7. A component that PARTLY fits is a cut, not an omission: the
+     *    separator is there, so the scan still finds it and the pop is
+     *    exact — only the name is short. `truncdepth` marks it and comes
+     *    back up with it. */
+    unc_path_init(&p, NULL);
+    for (i = 0; i < 7; i++)
+        CHECK(unc_path_push(&p, nm, 31) == UNC_OK);
+    CHECK(p.len == 223 && p.truncdepth == 0);
+    CHECK(unc_path_push(&p, nm, 40) == UNC_OK);   /* 31 of 40 fit */
+    CHECK(p.len == UNC_NAME_MAX);
+    CHECK(p.truncdepth == 8);
+    CHECK(p.lost == 0);                           /* cut, not omitted */
+    unc_path_pop(&p);
+    CHECK(p.depth == 7 && p.len == 223);          /* the scan still works */
+    CHECK(p.truncdepth == 0);                     /* and the cut came back */
 }
-
 
 void run_format_tests(void)
 {

@@ -372,7 +372,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # too — 208 B of the 328 — where the shipped pair pays 120 and keeps
 # the rest in 'OVLY' images (the eager pair below, and DECISIONS.md
 # 2026-10-07).
-UNC_MAC_CODE_DEFAULT=164664
+UNC_MAC_CODE_DEFAULT=164856
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -487,7 +487,7 @@ UNC_MAC_CODE_DEFAULT=164664
 # +24 on 2026-10-07 for the folder-depth rule: the engine's one new
 # message, which the Macintosh report borrows rather than keeping a
 # sentence of its own (DECISIONS.md 2026-10-07).
-UNC_MAC_A5_DEFAULT=37960
+UNC_MAC_A5_DEFAULT=37928
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -652,8 +652,24 @@ UNC_MAC_A5_DEFAULT=37960
 # extraction's budget — and A5 is a ratchet too, so the eight bytes it
 # gave back are locked in (DECISIONS.md 2026-10-07, *the two limits at
 # once*).
-UNC_MAC_CODE_EAGER=54468
-UNC_MAC_A5_EAGER=19084
+# RAISED 2026-10-07, last time that day, by 248 B of code and 8 of A5 —
+# **+376 B against the build before any of this**. What it buys is that THE DEPTH LIMIT IS GONE:
+# `UNC_PATH_MAXDEPTH` was 24, sized two fixed arrays in `UncPath`, and was
+# measured against nothing. A Macintosh creates 250 levels by dirID and
+# reads all 250 back with noErr (`tools/vmac/depthtest/`), so the only
+# limit there ever was is the path STRING at 255 bytes, which is
+# UNC_NAME_MAX. Popping now RE-SCANS for the separator instead of reading
+# a stored length, which is what let the arrays go; nearly all the 160 B
+# is that scan and the uncut-length recovery beside it (`unc_util.o` text
+# 6,398 -> 6,680), the rest being Now Compress keeping its per-level entry
+# counts for levels the path could not hold — without which the walk
+# closes a folder early and reports everything under it from a path it
+# has already left. It is paid back in STACK — UncPath is 96 B smaller, so
+# the engine's deepest chain falls 3,386 -> 3,310 B — and in one public
+# error code, one public struct field and a whole failure mode deleted
+# (DECISIONS.md 2026-10-07, *the limit that was three transcriptions*).
+UNC_MAC_CODE_EAGER=54716
+UNC_MAC_A5_EAGER=19060
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -672,8 +688,8 @@ UNC_MAC_A5_EAGER=19084
 # 2026-10-06, *the directory of empty records*).
 # +120 code and +8 A5 on 2026-10-07 for the folder-depth rule, the same
 # resident pieces as the eager pair above.
-UNC_MAC_CODE_LAZY=53044
-UNC_MAC_A5_LAZY=19196
+UNC_MAC_CODE_LAZY=53292
+UNC_MAC_A5_LAZY=19140
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

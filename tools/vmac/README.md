@@ -2909,32 +2909,7 @@ The box's three click targets are constants measured off `DLOG 133` in
 them if that resource moves** — this is the harness that clicks fixed
 coordinates.
 
-### An entry too deep to place — `interactive.py --report-deep`
-
-    tools/vmac/interactive.py --report-deep --emu mv-4M -o shots fixtures/anything.sit
-
-Ignores the fixture: the archive is generated 30 folders deep by
-`tools/synth_deep.py`, because the deepest thing on this disk nests 4 and
-the engine stops at 24 (FORMATS.md, *How deep anything actually nests*).
-An entry below that limit is OFFERED with the path the engine can
-represent and then refused per entry, and this shell declines it at
-`begin_entry` rather than creating a folder of the archive's inside one it
-was never in.
-
-Three frames and one assertion, the assertion being the saved DOCUMENT:
-all 17 refusal lines, in the engine's own words, ending on the outcome.
-**Output goes to a floppy**, for the reason `--report-utf8`'s does — a
-report saved onto a boot volume this application has just written a
-25-level tree to is on the image and not in its catalog. Measured again
-here on 2026-10-07: the first run photographed a correct box and read no
-document at all.
-
-**It does NOT assert the volume, and cannot**: `hls` will not list the
-root of a volume this build leaves behind, so a folder assertion written
-here found nothing and read as the application's fault. That half is
-`run.py --keep-disks` then `checkdisk.py --fixture` — see below.
-
-### The one line a generated archive cannot make — `interactive.py --report-utf8`
+#### The one line a generated archive cannot make — `interactive.py --report-utf8`
 
     tools/vmac/interactive.py --report-utf8 --emu mv-4M -o shots fixtures/anything.sit
 

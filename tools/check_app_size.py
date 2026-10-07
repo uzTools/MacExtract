@@ -78,15 +78,17 @@ import sys
 # handed. Re-taken rather than absorbed into the tolerance, on the same
 # terms as tools/build_mac.sh's six ratchets, which moved in the same
 # commit. `run_tiers.py --check` moves no tally in either lane.
-# RE-TAKEN 2026-10-07, 66,048 -> 66,176, for the folder-depth rule: an
-# entry nested past UNC_PATH_MAXDEPTH is offered and then refused per
-# entry instead of being written into a folder it was never in. Resident
-# `CODE` moved +120 and A5 +40 in the shipped configuration, and 220 B
-# more is in five 'OVLY' images (EXPECT_BUNDLE below). Re-taken rather
-# than absorbed into the tolerance, on the same terms as the entry above
-# and as tools/build_mac.sh's six ratchets, which moved in the same
-# commit. `run_tiers.py --check` moves no tally in either lane.
-EXPECT = 66176
+# RE-TAKEN 2026-10-07, 66,048 -> 66,176 for the folder-depth rule and then
+# -> 66,432 the same day when the depth LIMIT went: popping a path
+# component re-scans for the separator now instead of reading a stored
+# length, which is what let `UncPath`'s two fixed arrays go and with them
+# UNC_PATH_MAXDEPTH, a limit of 24 against a destination that takes 250
+# (FORMATS.md, *What the DESTINATION actually allows*). +376 B of CODE
+# and +8 of A5 against the morning; the bundle moved -68 B, four of the
+# five decoders having lost a per-entry refusal. Re-taken rather than
+# absorbed into the tolerance, on the same terms as the entry above and
+# as tools/build_mac.sh's six ratchets. `run_tiers.py --check` moves no tally in either lane.
+EXPECT = 66432
 TOLERANCE = 2048
 TAKEN = "2026-10-07"
 
@@ -143,14 +145,14 @@ TAKEN = "2026-10-07"
 # did not move (FORMATS.md, *StuffIt 5's method 14*; TESTING.md, *The
 # sort that dropped what it could not hold*). `run_tiers.py --check`
 # moves no tally in either lane.
-# RE-TAKEN 2026-10-07, 155,916 -> 156,136: +220 B across five images for
-# the folder-depth rule, which is where its per-format half lives rather
-# than resident (`run_tiers.py`'s IMAGES has the per-image figures).
-# Resident `CODE` rose 120 B and A5 40 for the walker and the one new
-# message, which the ratchets in tools/build_mac.sh carry (FORMATS.md,
-# *How deep anything actually nests*). `run_tiers.py --check` moves no
+# RE-TAKEN 2026-10-07, 155,916 -> 156,136 for the folder-depth rule and
+# then -> 156,068 when the depth limit went: four of the five images are
+# smaller than that morning, the per-entry refusal each carried having
+# gone with the limit, and Now Compress's is bigger because its per-level
+# counts must survive a level the path string could not hold. The cost of removing it is resident
+# and in the walker (tools/build_mac.sh's eager pair). `run_tiers.py --check` moves no
 # tally in either lane.
-EXPECT_BUNDLE = 156136
+EXPECT_BUNDLE = 156068
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-07"
 

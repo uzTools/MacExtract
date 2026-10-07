@@ -2795,23 +2795,21 @@ walking a path whose deepest folders are missing from the middle of it —
 and that is driven two ways, both on an emulated Mac Plus at 4 MB under
 System 6.0.8:
 
-| what | how | result |
-|---|---|---|
-| the VOLUME | `run.py --keep-disks` then `checkdisk.py --fixture` | **49 files, 49 forks byte-exact, names included**, 25 folders, deepest `D01/../D25`, on `deep-dd-ddar.dd` and `deep-sqp.pkg` alike |
-| the REPORT | `interactive.py --report-deep` | the saved document holds all 17 lines and ends on the outcome |
+`run.py --keep-disks` then `checkdisk.py --fixture`, on a 30-level
+`deep-sqp.pkg`: **61 files, 61 forks byte-exact off the Out volume, names
+included**, in 30 folders whose deepest entry is `D01/../D30/f30.txt`.
 
-**Both were given a negative control**, which is the only reason either is
-worth quoting. The same `deep-sqp.pkg` through the application of
-2026-10-06 wrote **61 files and 30 folders** on that Macintosh — five
-folders of the archive's created inside one they were never in, with
-twelve files in them — and `checkdisk.py` fails it by name. The report
-line's control is that the sentence *"nested too deep to place"* is not in
-that binary at all, so the assertion cannot pass against an application
-without the rule.
+**The control is the same archive through the two builds that preceded
+it**, which is the only reason the figure is worth quoting. The
+application of 2026-10-06 wrote 61 files and 30 folders with five of the
+archive's folders inside ones they were never in; the folder-depth rule
+that replaced it wrote 49 and 25 and refused 17 entries. `checkdisk.py`
+fails both by name.
 
-`checkdisk.py --fixture` is what made the first of those possible: it
-could only identify a COMMITTED fixture, so a generated subject skipped
-silently.
+`checkdisk.py --fixture` is what made this possible at all: it could only
+identify a COMMITTED fixture, so a generated subject skipped silently. Its
+volume walk also had a silent cap — eight levels, then 26 — and both
+reported a correct volume as files MISSING ON THE MAC (BLOCKERS.md).
 
 It was run against a build of the previous commit before being believed:
 **28 problems across the five formats**, discriminating all three old

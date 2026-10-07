@@ -686,25 +686,43 @@ void unc_path_init(UncPath *p, struct UncCtx *c)
     p->buf[0] = 0;
     p->c = c;
     p->full = 0;
+    p->fullknown = 1;
     p->lost = 0;
+}
+
+/* Where the component that ends at `n` begins, in a '/'-joined path: the
+ * byte after the last separator before it, or 0. This scan is what makes
+ * a stack of lengths unnecessary, and it is exact rather than a guess —
+ * a '/' inside a component is swapped to ':' on the way in, by this
+ * file's own push and leaf, so every '/' here is one this walker wrote. */
+static uint32_t path_back(const uint8_t *buf, uint32_t n)
+{
+    while (n > 0) {
+        n--;
+        if (buf[n] == '/') return n;
+    }
+    return 0;
 }
 
 int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
 {
     uint32_t i;
-    /* Too deep: leave the path alone and COUNT the refusal, so that the
-     * pop this descent will be matched by undoes the refusal instead of
-     * a level that was never pushed. `lost` can only become nonzero at
-     * the limit, and a pop clears it before `depth` moves, so a refusal
-     * while shallower than the limit is impossible — the test is there
-     * to keep it that way. */
-    if (p->depth >= UNC_PATH_MAXDEPTH || p->lost) {
+    /* No room left in the path string for even the separator this level
+     * needs — or an outer level already had none. Leave the path alone
+     * and COUNT it, so the pop this descent will be matched by undoes
+     * the omission instead of a level that was really pushed. */
+    if (p->lost || (p->len && p->len >= UNC_NAME_MAX)) {
         p->lost++;
-        return UNC_ERR_TOODEEP;
+        if (!p->truncdepth) p->truncdepth = p->depth + p->lost;
+        /* The UNCUT path still gains it. What ran out is room in `buf`,
+         * not knowledge of the name — so a host that offered a long
+         * buffer still gets the whole path, which is the one thing this
+         * walker can still give once it cannot give the path itself. */
+        p->full = (uint16_t)path_full_add(p, p->full, name, nlen);
+        return UNC_ERR_TRUNCATED;
     }
-    p->fullstack[p->depth] = p->full;
-    p->stack[p->depth++] = p->len;
-    if (p->len && p->len < UNC_NAME_MAX) p->buf[p->len++] = '/';
+    if (p->len) p->buf[p->len++] = '/';
+    p->depth++;
     for (i = 0; i < nlen && p->len < UNC_NAME_MAX; i++) {
         uint8_t ch = name[i];
         p->buf[p->len++] = (uint8_t)(ch == '/' ? ':' : ch);
@@ -717,10 +735,33 @@ int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
 
 void unc_path_pop(UncPath *p)
 {
-    if (p->lost) { p->lost--; return; }      /* undo a refused push */
+    uint32_t cap = 0;
+    uint8_t *out;
+
+    if (p->lost) {                           /* undo an omitted push */
+        p->lost--;
+        if ((out = path_longbuf(p, &cap)) != NULL && p->full < cap)
+            p->full = (uint16_t)path_back(out, p->full);
+        else
+            p->fullknown = 0;
+        return;
+    }
     if (p->depth > 0) {
-        p->full = p->fullstack[p->depth - 1];
-        p->len = p->stack[--p->depth];
+        /* While nothing has been cut the two lengths are the same path
+         * and lose the same component, so `len` is the whole answer.
+         * Once they differ, the uncut one comes back the same way out of
+         * the HOST's buffer — and where there is none to scan it is
+         * GIVEN UP, rather than left holding the length of a path that
+         * is no longer the one being walked. */
+        int tracked = (p->full == p->len);
+        p->len = (uint16_t)path_back(p->buf, p->len);
+        p->depth--;
+        if (tracked)
+            p->full = p->len;
+        else if ((out = path_longbuf(p, &cap)) != NULL && p->full < cap)
+            p->full = (uint16_t)path_back(out, p->full);
+        else
+            p->fullknown = 0;
     }
     if (p->truncdepth > p->depth) p->truncdepth = 0;
     p->buf[p->len] = 0;
@@ -744,27 +785,17 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
      * leaf would want the length back. */
     want = path_full_add(p, p->full, name, nlen);
     unc_entry_set_path(e, full, n);
-    /* The walk could not descend this far, so `full` above is the path
-     * with its deepest folders missing — reported here rather than only
-     * through end_entry, because a host that declines an entry never
-     * hears that (macextract.h, path_too_deep). */
-    if (p->lost) e->path_too_deep = 1;
     if (i < nlen || p->truncdepth) {
         e->name_truncated = 1;
-        /* `want` and the long buffer describe the path the walk COULD
-         * represent. Where it could not descend, that is a path with
-         * folders missing from the middle of it, so neither is this
-         * entry's name: the length would be a number that describes
-         * nothing, and `name_truncated` 2 would promise a host the whole
-         * name and hand it a shorter real-looking path. 0 is the
-         * documented "the format cannot say" (macextract.h), and the
-         * entry is already failing with UNC_ERR_TOODEEP.
-         *
-         * Measured 2026-10-07 on an archive nested 30 deep whose folder
-         * names are 31 characters, so both limits fire: the CLI printed
-         * `.../D24.../f30.txt` as "the archive's name" for an entry whose
-         * name has six more folders in it. */
-        if (p->lost) {
+        /* The uncut path is still the archive's, components that did not
+         * fit `buf` included, so `name_truncated` 2 is honest and the
+         * length is real — the whole point of carrying it. What it
+         * cannot survive is a POP that had nothing to recover from: no
+         * host buffer and a path already past the cap. `fullknown` goes
+         * to 0 there and the length is reported as 0, the documented
+         * "the format cannot say" (macextract.h), rather than a number
+         * for a path that is no longer the one being walked. */
+        if (!p->fullknown) {
             e->name_full_len = 0;
             return;
         }

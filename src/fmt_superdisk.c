@@ -905,7 +905,7 @@ int unc_superdisk_extract(UncCtx *c)
         uint32_t nlen, dlen, rlen, p;
         UncEntryInfo e;
         unsigned tag;
-        int sret, deep;
+        int sret;
 
         if (unc_read_at(c->io, at, rec, 8) != UNC_OK) { err = UNC_ERR_TRUNCATED; break; }
         tag = rec[0];
@@ -929,7 +929,6 @@ int unc_superdisk_extract(UncCtx *c)
 
         unc_entry_clear(&e);
         unc_path_leaf(&path, &e, rec, nlen);
-        deep = unc_path_toodeep(&path);
 
         if (tag == SD_TAG_DIR) {
             uint8_t info[20];
@@ -940,19 +939,18 @@ int unc_superdisk_extract(UncCtx *c)
             /* A DECLINED entry gets no end_entry — the contract in
              * macextract.h. This walk called it either way until
              * 2026-10-07, which the other four never did: harmless while
-             * the status was always UNC_OK, and the reason a folder's
-             * UNC_ERR_TOODEEP was counted here and nowhere else. */
-            if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx,
-                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0) {
+             * the status was always UNC_OK, and the reason one format's
+             * folder tally disagreed with four others' the moment a
+             * status was not. */
+            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
                 err = UNC_ERR_SINK;
                 break;
             }
-            /* Too deep to descend is COUNTED by the walker, so the
-             * SD_TAG_UPDIR this folder will be closed by undoes the
-             * refusal rather than a level that was never pushed. Ignoring
-             * the refusal here used to misfile every entry after it into
-             * a real folder it was not in (BLOCKERS.md). */
+            /* A push with no room left in the path string is COUNTED by
+             * the walker, so the SD_TAG_UPDIR this folder will be closed
+             * by undoes the omission rather than a level that was really
+             * pushed. Ignoring it here used to misfile every entry after
+             * it into a real folder it was not in (BLOCKERS.md). */
             (void)unc_path_push(&path, rec, nlen);
             at = p + 20;
             continue;
@@ -1000,8 +998,8 @@ int unc_superdisk_extract(UncCtx *c)
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
-                int ferr = deep ? UNC_ERR_TOODEEP : UNC_OK;
-                if (!c->opt.list_only && !deep) {
+                int ferr = UNC_OK;
+                if (!c->opt.list_only) {
                     if (dlen) { sd_out_start(&s, c, UNC_FORK_DATA);
                                 ferr = sd_fork(&s, at, dlen); }
                     if (ferr == UNC_OK && rlen) {

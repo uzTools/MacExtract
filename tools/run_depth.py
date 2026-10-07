@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
-"""run_depth.py — the five path walks must agree at UNC_PATH_MAXDEPTH.
+"""run_depth.py — nesting is bounded by the PATH, and by nothing else.
 
-`unc_path_push` refuses to descend past 24 levels, and the five walks
-that call it used to do three different things about it. What that cost
-is in BLOCKERS.md (*what ignoring a refused push cost*); the rule they
-now share is one sentence:
+The engine had a depth limit until 2026-10-07: `UNC_PATH_MAXDEPTH`, 24,
+which three formats "chose independently" and which sized two fixed
+arrays in `UncPath`. It was never measured against anything. A Macintosh
+creates **250 levels** by dirID and reads all 250 back with noErr
+(`tools/vmac/depthtest/`, FORMATS.md, *What the DESTINATION actually
+allows*); HFS itself takes 89. The one real limit is the path STRING,
+255 bytes, which is `UNC_NAME_MAX` and is also what a classic Str255 full
+pathname holds.
 
-    An entry the walk could not descend to is still OFFERED, with the
-    path it could represent; it carries `path_too_deep`, it fails per
-    entry with UNC_ERR_TOODEEP, and nothing is written for it. An entry
-    the walk COULD represent is reported at exactly its own path,
-    whatever happened deeper in.
+So the rule this applies is now one sentence with no exception in it:
 
-The second half is the one with teeth. Four of the five walks pop by a
-COUNT — a marker record (DiskDoubler's `enddir`, SuperDisk!'s
-`SD_TAG_UPDIR`), a level counter (DDA2), or a per-directory entry count
-(Now Compress) — so a refusal that was not counted left the walk
-shallower than it went down and misfiled everything after it into a real
-folder it was not in. That is silent: the path is plausible, nothing in
-it looks cut, and an aggregate check over names and CRCs cannot see it
-because every byte is right and only the folder is wrong.
+    An archive nests as deep as its paths will fit in UNC_NAME_MAX, and
+    every entry is reported at exactly its own path. A component with no
+    room left is CUT, which is the over-long path both hosts already
+    shorten and report — there is no second failure mode.
 
-The subjects come from `tools/synth_deep.py`, which nests to 30 and puts
-a file at every level on the way down, a TRAILER at every level on the
-way back up, and a sentinel at the root. The trailers are what catch an
-unbalanced pop; see that file for why each part is there.
+The subjects nest to 30, which is past the old limit by six and which no
+real archive comes near: the deepest on this disk is 4. They put a file
+at every level on the way down, a TRAILER at every level on the way back
+up, and a sentinel at the root. The trailers are the assertion with
+teeth — four of the five walks pop by a COUNT, so a push that wrote
+nothing and a pop that still happened leaves the walk shallower than it
+went down and misfiles every entry after it into a real folder it was not
+in, silently, because the path is plausible and nothing in it looks cut
+(BLOCKERS.md, *what ignoring a refused push cost*).
 
 How to re-run it:
 
@@ -32,28 +33,18 @@ How to re-run it:
 
 What this CANNOT see:
 
-  * whether 24 is the right limit, or whether any real archive reaches
-    it. Nothing here does — the deepest nesting on this disk is 4
-    (`tools/measure_depth.py`, FORMATS.md) — so every subject is
-    generated and this suite grades a RULE, not a corpus.
-  * the decoded bytes of a deep entry. Nothing is written for one, by
-    the rule, so there is nothing to compare; what comes out of the
-    representable part is compared by path and by length only.
-  * whether the record shapes are what each application would write.
-    They are the existing `tools/synth_*.py` shapes nested deeper, with
-    those files' own provenance, and SuperDisk! has no second reader off
-    the Macintosh at all.
+  * whether any real archive is ever this deep. None here is, so every
+    subject is generated and this grades a RULE, not a corpus.
+  * what happens past 255 bytes of PATH, which is where the one limit
+    actually bites. `deep-dd-long.dd` reaches it — 31-character folder
+    names fill the string around the eighth level — but a path cut at
+    255 reports the same string for every entry below the cut, so
+    nothing here can attribute a notice to an entry. `test_path_depth`
+    in tests/unit_formats.c asserts that on the fields instead.
   * the two formats that carry a path WITHOUT this walker — StuffIt and
-    Compact Pro go through `unc_entry_path_append` and have no depth
-    limit to reach.
-  * that the engine makes no FALSE claim about a too-deep entry's name.
-    Every deep path collapses to the same 255-byte string here, so a
-    note cannot be attributed to an entry; `test_path_depth` in
-    tests/unit_formats.c asserts that on the fields.
-  * what a host SHOULD do with a path it cannot place. The rule is that
-    the engine must not claim more than it has; whether a host refuses
-    the entry, flattens it or asks the user is the host's, and only the
-    two in this tree are exercised here.
+    Compact Pro go through `unc_entry_path_append`.
+  * the destination's own limits. 30 levels of short names is nothing to
+    ext4 or HFS; `tools/vmac/depthtest/` is what asked them.
 """
 import argparse
 import os
@@ -69,7 +60,6 @@ import synth_deep                                             # noqa: E402
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROW = re.compile(r"^([dfl]) +\S+ +\S+ +\S+ +(.*)$")
 DEPTH = 30
-MAXDEPTH = synth_deep.MAXDEPTH
 
 
 def check(problems, cond, msg):
@@ -123,12 +113,11 @@ def sd_payload(macextract, tmp):
     return inner if r.returncode == 0 and os.path.exists(inner) else None
 
 
-DEEPLINE = re.compile(r"^macextract: (.*): nested too deep to place$")
+CUTNOTE = re.compile(r"^macextract:   (.*)$")
 
 
 def deep_and_cut(macextract, path, tmp, problems):
-    """The two limits at once: a path cut by UNC_NAME_MAX AND deeper than
-    UNC_PATH_MAXDEPTH.
+    """The one limit, reached: a path that fills UNC_NAME_MAX.
 
     An entry that is only too long gets `name_truncated` 2 and the WHOLE
     name through `UncOptions.long_name` — that is the engine's promise and
@@ -140,27 +129,23 @@ def deep_and_cut(macextract, path, tmp, problems):
     with six more folders in it.
 
     **The field-level assertion is `test_path_depth` in
-    tests/unit_formats.c, not here, and that is forced.** A too-deep
-    path is itself cut at UNC_NAME_MAX on the way out, so every deep
-    entry in this subject reports the SAME 255-byte string — and that
-    string is also a shallow entry's. Nothing at this level can attribute
-    a note to an entry, so an assertion written here fired on the
-    collision and not on the defect (2026-10-07). What this does is keep
-    the SUBJECT honest: if it ever stops reaching both limits, the unit
-    test is still right and this file is the one that would quietly stop
-    describing anything.
+    tests/unit_formats.c, not here, and that is forced.** A path cut at
+    UNC_NAME_MAX reports the same 255-byte string for every entry below
+    the cut, and that string is also a shallower entry's. Nothing at
+    this level can attribute a notice to an entry, so an assertion
+    written here fired on the collision and not on the defect
+    (2026-10-07). What this does is keep the SUBJECT honest: if it ever
+    stops reaching the limit, the unit test is still right and this file
+    is the one that would quietly stop describing anything.
     """
     out = os.path.join(tmp, "out-longnames")
     shutil.rmtree(out, ignore_errors=True)
     _failed, err = extract(macextract, path, out)
-    deep = sum(1 for l in err.splitlines() if DEEPLINE.match(l))
-    cut = "did not fit and were shortened" in err
-    check(problems, deep,
-          "ddar-longnames: nothing was reported too deep — this subject "
-          "is meant to reach both limits at once")
-    check(problems, cut,
+    check(problems, "did not fit and were shortened" in err,
           "ddar-longnames: no name was reported cut — this subject is "
-          "meant to reach UNC_NAME_MAX as well")
+          "meant to fill the path string")
+    check(problems, sum(1 for l in err.splitlines() if CUTNOTE.match(l)),
+          "ddar-longnames: the run said nothing about a cut path")
 
 
 def main():
@@ -176,13 +161,7 @@ def main():
     os.makedirs(tmp, exist_ok=True)
     try:
         folders, files = synth_deep.plan(DEPTH)
-        # What a walk that stops at MAXDEPTH levels of folder can place.
-        # A folder AT the limit is named from the path above it, so its own
-        # name is representable and only what is inside it is not.
-        ok_files = set(p for p in files if p.count("/") <= MAXDEPTH)
-        ok_dirs = set(p for p in folders if p.count("/") <= MAXDEPTH)
         declared = len(folders) + len(files)
-        deep = declared - len(ok_files) - len(ok_dirs)
 
         made = synth_deep.write(tmp, DEPTH, sd_payload(a.macextract, tmp))
         if not any(k == "superdisk" for k in made.values()):
@@ -196,52 +175,47 @@ def main():
             rows = listing(a.macextract, path)
             got = [p for _, p in rows]
 
-            # 1. every entry the archive declares is offered, deep or not.
+            # 1. every entry the archive declares is offered.
             check(problems, len(rows) == declared,
                   "%s: %d entries offered, the archive declares %d"
                   % (kind, len(rows), declared))
 
-            # 2. everything representable is at its OWN path. This is what
-            #    an unbalanced pop breaks, and it breaks it silently.
-            missing = sorted((ok_files | ok_dirs) - set(got))
+            # 2. at exactly its OWN path, all 30 levels of it. This is
+            #    what an unbalanced pop breaks, and it breaks it silently.
+            missing = sorted((set(folders) | set(files)) - set(got))
             check(problems, not missing,
-                  "%s: %d representable path(s) not reported, e.g. %s"
-                  % (kind, len(missing), missing[:1]))
+                  "%s: %d path(s) not reported as the archive has them, "
+                  "e.g. %s" % (kind, len(missing), missing[:1]))
 
-            # 3. nothing is reported at a path deeper than the limit.
-            over = [p for p in got if p.count("/") > MAXDEPTH]
-            check(problems, not over,
-                  "%s: %d path(s) past %d levels reported"
-                  % (kind, len(over), MAXDEPTH))
+            # 3. and nothing at a path the archive does not have.
+            extra = sorted(set(got) - (set(folders) | set(files)))
+            check(problems, not extra,
+                  "%s: %d path(s) reported that the archive does not have, "
+                  "e.g. %s" % (kind, len(extra), extra[:1]))
 
-            # 4. the root sentinel is at the ROOT. An over-popped walk can
-            #    still land this one, because unc_path_pop clamps at 0 —
-            #    which is why 2. above is the assertion that matters.
+            # 4. the root sentinel is at the ROOT. unc_path_pop clamps at
+            #    0, so a walk that over-pops by fewer levels than it has
+            #    left still lands this one — 2. is the assertion that bites.
             check(problems, "after.txt" in got,
                   "%s: the root sentinel is not at the root" % kind)
 
-            # 5. extraction fails exactly the entries it could not place,
-            #    and writes exactly the ones it could.
+            # 5. extraction writes every one of them and fails nothing.
             out = os.path.join(tmp, "out-" + os.path.basename(path))
             shutil.rmtree(out, ignore_errors=True)
             failed, err = extract(a.macextract, path, out)
-            check(problems, failed == deep,
-                  "%s: %d entries failed, wanted the %d it cannot place"
-                  % (kind, failed, deep))
+            check(problems, failed == 0,
+                  "%s: %d entries failed; nothing here is past any limit"
+                  % (kind, failed))
             wfiles, wdirs = on_disk(out)
-            check(problems, wfiles == ok_files,
+            check(problems, wfiles == set(files),
                   "%s: wrote %d files, wanted %d (extra %s, missing %s)"
-                  % (kind, len(wfiles), len(ok_files),
-                     sorted(wfiles - ok_files)[:1],
-                     sorted(ok_files - wfiles)[:1]))
-            check(problems, wdirs == ok_dirs,
+                  % (kind, len(wfiles), len(files),
+                     sorted(wfiles - set(files))[:1],
+                     sorted(set(files) - wfiles)[:1]))
+            check(problems, wdirs == set(folders),
                   "%s: created %d folders, wanted %d (extra %s)"
-                  % (kind, len(wdirs), len(ok_dirs),
-                     sorted(wdirs - ok_dirs)[:1]))
-            # 6. and it SAYS so, per entry, in the engine's own words.
-            check(problems, "nested too deep" in err,
-                  "%s: nothing said about an entry it could not place"
-                  % kind)
+                  % (kind, len(wdirs), len(folders),
+                     sorted(wdirs - set(folders))[:1]))
     finally:
         if not a.keep:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -251,9 +225,9 @@ def main():
             print("depth: " + p)
         print("depth: %d problem(s)" % len(problems))
         return 1
-    print("depth: %d formats agree at %d levels — every representable entry "
-          "at its own path, %d deeper ones offered and refused"
-          % (len(made), MAXDEPTH, deep))
+    print("depth: %d formats nest %d levels deep, every entry at its own "
+          "path, nothing refused — the path string is the only limit"
+          % (len(made), DEPTH))
     return 0
 
 

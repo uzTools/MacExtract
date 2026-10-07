@@ -255,6 +255,11 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # TIERS budgets below are now a further 320 B more generous than the
 # Macintosh will be until they are re-taken there (FORMATS.md, *What the
 # zip pair claims, and what it costs*).
+# 2026-10-07 again, the depth limit going: **129,072 -> 128,944**, -128 B.
+# The shipped build grew 160 of code and gave back 32 of A5 for the
+# re-scanning pop; the resident control grew only 48 and gave back 48,
+# because the five decoders it carries each LOST the per-entry refusal.
+# A difference of two numbers moving apart is what this line is.
 # 2026-10-07, the folder-depth rule: **128,848 -> 129,040**, +192 B. The
 # control pays +328 of CODE and +24 of A5 because it carries every decoder
 # resident, the shipped build +120 and +40, and the difference of the two
@@ -266,7 +271,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # make about its name: the resident control carries that in five decoders
 # and the shipped build's CODE + A5 does not move at all (73,552 B either
 # side), so the whole of it is difference.
-OVL_SAVED = 129072
+OVL_SAVED = 129008
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -322,6 +327,14 @@ OVL_RESIDUE = -666
 # only read so that the lane still runs where Retro68 is not.
 # **Five images re-taken 2026-10-07 for the folder-depth rule**, +220 B of
 # bundle in total: CPTDD +52, NOW +118, PACKIT +4, SQP +32, SUPERDISK +16.
+# **And re-taken again the same day when the depth LIMIT went**, -68 B
+# net: CPTDD -72, NOW +22, PACKIT -4, SQP -4, SUPERDISK -14. Four of the
+# five are smaller than they were that morning, the per-entry refusal
+# each carried having gone with the limit; NOW is the one that grew,
+# because its per-level entry counts have to survive a level the path
+# string could not hold (fmt_now.c). The cost
+# of removing the limit is resident, in the walker, not here
+# (tools/build_mac.sh's eager pair).
 # This is where that rule's per-format half lives — the `deep` test and the
 # per-entry UNC_ERR_TOODEEP in each of the five walks — and it is in the
 # images rather than resident on purpose: the shipped build pays 120 B of
@@ -335,19 +348,19 @@ IMAGES = {
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
-    "OVL_ID_CPTDD":       15836,
+    "OVL_ID_CPTDD":       15764,
     "OVL_ID_CRYPT":       10140,
     "OVL_ID_EXO":         29252,
     "OVL_ID_LZH":         9568,
-    "OVL_ID_NOW":         5056,
-    "OVL_ID_PACKIT":      2648,
+    "OVL_ID_NOW":         5078,
+    "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
     "OVL_ID_STUFFIT":     26274,
-    "OVL_ID_SQP":         2004,
-    "OVL_ID_SUPERDISK":   7072,
+    "OVL_ID_SQP":         2000,
+    "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 156136
+BUNDLE = 156068
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

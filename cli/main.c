@@ -618,29 +618,6 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         return 0;
     }
 
-    /* Nested deeper than the engine carries folders, so `name` is its
-     * first UNC_PATH_MAXDEPTH levels with the rest missing from the
-     * MIDDLE of it. Nothing is created and nothing is written: placing it
-     * would put an entry of the archive's in a folder it was never in,
-     * and this filesystem would have held the real path — the limit is
-     * the engine's, not the disk's, which is the whole reason this is a
-     * failure and an over-long NAME is a notice (macextract.h,
-     * path_too_deep).
-     *
-     * Before the fitting below rather than after: a declined entry must
-     * not also be recorded as renamed. It was below it until 2026-10-07,
-     * and the end-of-run notice then said "written as ..." about a folder
-     * this program had refused to create (tools/run_depth.py). Counted
-     * here because a declined entry never reaches end_entry, which is
-     * where every other per-entry failure is counted. */
-    if (info->path_too_deep) {
-        fprintf(stderr, "macextract: %s: %s\n", name,
-                unc_strerror(UNC_ERR_TOODEEP));
-        s->errors++;
-        s->cur_path[0] = 0;
-        return 1;
-    }
-
     /* Fit the name to the filesystem, not to a constant of ours: the
      * engine has already cut it at UNC_NAME_MAX if it had to, and what
      * one directory entry takes is pathconf's answer. Both cuts land

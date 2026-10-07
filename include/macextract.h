@@ -158,19 +158,15 @@ enum {
      * *the disk images that found another home*); the number is not
      * reused, so a caller built against an older header cannot read a
      * new code as that one.                                            */
-    UNC_ERR_MODULE      = -15,  /* needs a StuffIt add-on module (below)  */
-    /* Per entry, and the sibling of UNC_ERR_TOOLARGE: that one is an
-     * entry past this engine's 32-bit reach, this one an entry past its
-     * folder-depth reach. The engine carries 24 levels of folder
-     * (UNC_PATH_MAXDEPTH) and an entry below those is OFFERED — it
-     * appears in a listing, so the archive is never silently short —
-     * with a path that is its first 24 levels and therefore not its own.
-     * It is an error rather than a note because that path is plausible:
-     * a host cannot tell it from a real one, two entries at different
-     * depths can collide in it, and the engine has nothing further to
-     * give a host that would rather place it correctly. Nothing on this
-     * disk reaches 24 (FORMATS.md, *How deep anything actually nests*). */
-    UNC_ERR_TOODEEP     = -16
+    UNC_ERR_MODULE      = -15
+    /* -16 was UNC_ERR_TOODEEP, for an entry nested deeper than the
+     * engine carried folders. It existed for four hours on 2026-10-07
+     * and was deleted the same day: the limit it reported was 24
+     * levels, chosen by nobody, where the destination takes 250
+     * (FORMATS.md, *What the DESTINATION actually allows*). There is no
+     * depth limit now, so nothing can be too deep for one. The number
+     * is not reused, so a caller built against that header cannot read
+     * a new code as that one.                                          */
 };
 
 /* Human-readable message for an error code. */
@@ -368,20 +364,6 @@ typedef struct UncEntryInfo {
      * its own length with it. The bytes themselves are gone: they are
      * never held anywhere, which is the point of the cap. */
     uint16_t name_full_len;
-    /* Set when `name` is NOT this entry's path because the archive nested
-     * it deeper than the engine carries folders: what is in `name` is its
-     * first UNC_PATH_MAXDEPTH levels with the rest of the folders missing
-     * from the MIDDLE of it, so unlike a cut name it is not a prefix of
-     * anything and two entries at different depths can share it.
-     *
-     * It is a field and not only the UNC_ERR_TOODEEP that `end_entry`
-     * reports because a host may DECLINE an entry at `begin_entry` and
-     * then never hear that status — the Linux CLI declines every
-     * directory, having already created it — so a host that places things
-     * needs to know before it decides. Reaching it takes 24 levels of
-     * folder and nothing on this disk has more than 4 (FORMATS.md, *How
-     * deep anything actually nests*). */
-    uint8_t  path_too_deep;
 } UncEntryInfo;
 
 /* ------------------------------------------------------------------ */
