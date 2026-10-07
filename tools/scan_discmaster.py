@@ -118,6 +118,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import zlib
 
 HOST = "discmaster.textfiles.com"
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -479,7 +480,89 @@ class PitProbe:
                 "encrypted": [e for e in out if e.get("encrypted")]}
 
 
-PROBES = {"pkg": PkgProbe, "sit": SitProbe, "dd": DdProbe, "pit": PitProbe}
+class ImplodeProbe:
+    """A zip whose Implode entries are asked WHICH PKZIP 1.x wrote them.
+
+    The question is not "is there an Implode entry" — the index answers
+    that: `detection=504b0304????????0600*` is 1,125,083 files whose
+    first local header is method 6 (measured 2026-10-07). It is whether
+    any of them has the **PKZIP 1.01/1.02 minimum-match-length bug**:
+    those two versions took the minimum match length from the
+    DICTIONARY SIZE rather than from the literal tree's presence
+    (`reference/deark/src/fmtutil-lzh.c`, `params->mml_bug`, whose
+    `detect_implode_mml_bug` decides by decoding twice). That is not a
+    byte anywhere in the file, so no `detection=` token can find one: it
+    is a DECODE outcome, which is why this probe exists.
+    
+    The two rules differ in exactly two of the format's four flag
+    combinations — 8 K with two trees, and 4 K with three — so the
+    narrowing query is `detection=504b0304????02000600*` and
+    `...04000600*`, 4,074 and 4,869 files (measured 2026-10-07). Each
+    entry is decoded both ways and graded by **the CRC-32 the archive
+    itself stored**, which is the same check `tools/run_implode.py`
+    uses and is not this project's opinion about anything.
+
+    The decoder is `tools/synth_implode.py`'s, which shares `sf_codes`
+    and `read_stored_tree` with the generator, so there is one Python
+    reading of APPNOTE.TXT 5.3 here. It wants the whole file, like
+    `pit`: a compressed entry cannot be stepped over without decoding
+    it, and the interesting entry is often not the first.
+
+    What it cannot see: a zip whose first 16 bytes the index did not
+    record, and a bug-capable entry that is not the FIRST entry of its
+    archive — the token is about the first local header. A sweep by
+    `format=zip` reaches those and is the pairing this file's own
+    caveat asks for.
+    """
+    need = 30
+    limit = 4 << 20
+
+    def __call__(self, head, size):
+        import synth_implode as SI
+        if head[:4] != b"PK\x03\x04":
+            return None
+        if len(head) < min(size, self.limit):
+            return "more"
+        d, at, out = head, 0, []
+        try:
+            while at + 30 <= len(d) and d[at:at + 4] == b"PK\x03\x04":
+                (flags, method, _t, _dt, crc, csize, usize, nlen,
+                 elen) = struct.unpack("<HHHHIIIHH", d[at + 6:at + 30])
+                name = d[at + 30:at + 30 + nlen]
+                ds = at + 30 + nlen + elen
+                if csize == 0 or ds + csize > len(d):
+                    break
+                if method == 6 and (flags & 0x6) in (2, 4) and usize:
+                    # The one combination pair where the two readings
+                    # disagree. Both are tried; the stored CRC-32 says
+                    # which generation wrote the entry.
+                    verdict = {}
+                    for tag, mml in (("spec", None),
+                                     ("bug", 3 if (flags & 2) else 2)):
+                        try:
+                            got = SI.decode(d, ds, csize, usize,
+                                            bool(flags & 2), bool(flags & 4),
+                                            mml)
+                            verdict[tag] = (zlib.crc32(got) & 0xFFFFFFFF) == crc
+                        except Exception:     # a damaged entry is not a find
+                            verdict[tag] = False
+                    out.append({"name": name.decode("latin-1", "replace"),
+                                "at": at, "flags": flags, "usize": usize,
+                                "spec": verdict["spec"], "bug": verdict["bug"]})
+                at = ds + csize
+        except Exception:
+            if not out:
+                return None
+        if not out:
+            return None
+        buggy = [e for e in out if e["bug"] and not e["spec"]]
+        return {"entries": out, "buggy": buggy,
+                "undecodable": [e for e in out
+                                if not e["bug"] and not e["spec"]]}
+
+
+PROBES = {"pkg": PkgProbe, "sit": SitProbe, "dd": DdProbe, "pit": PitProbe,
+          "implode": ImplodeProbe}
 
 
 # ---- the index ------------------------------------------------------
@@ -863,6 +946,17 @@ def main():
                          for f in e["forks"]))
                          for e in flagged)
                      + (" … and %d more" % more if more > 0 else "")))
+        elif a.probe == "implode":
+            # Only a BUGGY entry is a finding; everything else is the
+            # tally below, which is the measured negative this sweep is
+            # for.
+            if not v["buggy"]:
+                continue
+            print("  %s\n    **PKZIP 1.01/1.02 MML BUG** — %s"
+                  % (url_of(item, fileid),
+                     "; ".join("%r flags 0x%04x, %d B out"
+                               % (e["name"], e["flags"], e["usize"])
+                               for e in v["buggy"])))
         elif a.probe == "pit":
             if not v["encrypted"]:
                 continue
@@ -879,6 +973,22 @@ def main():
                                % (m["name"], " DIR" if m["folder"] else "",
                                   m["rlen"], m["dlen"], m["flags"])
                                for m in v["members"])))
+    if a.probe == "implode":
+        # The tally IS the result here: a sweep that reports no buggy
+        # entry has to say how many it decided about, or "none found"
+        # cannot be told from "none looked at" (CLAUDE.md, *Traps*).
+        ent = buggy = spec = undec = 0
+        for v in hits.values():
+            ent += len(v["entries"])
+            buggy += len(v["buggy"])
+            undec += len(v["undecodable"])
+            spec += sum(1 for e in v["entries"] if e["spec"])
+        print("implode: %d archive(s) with a bug-capable Implode entry, "
+              "%d such entries: %d follow APPNOTE.TXT 5.3.4, %d need the "
+              "PKZIP 1.01/1.02 rule, %d decode under neither (damaged, or "
+              "a reading this does not have)" % (len(hits), ent, spec,
+                                                 buggy, undec))
+
     left = len(state["files"]) - len(state["probed"])
     if left:
         print("not finished — run again to continue, %d left (%s)"

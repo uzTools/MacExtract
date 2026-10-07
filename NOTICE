@@ -357,6 +357,20 @@ This project's decoders are transcriptions/ports of algorithms from:
     `src/fmt_exo.c` cites for the `.Z` header the decoder sits behind
     — the magic, the maximum code width in the mode byte's low five
     bits, and bit 7 for the clear code.
+    **And since 2026-10-07 `reference/deark/src/fmtutil-lzh.c` is the
+    reference implementation `src/fmt_exo.c`'s Implode decoder (zip
+    method 6) was read beside** — `implode_read_a_tree`,
+    `implode_read_trees` and `decompress_implode_internal`. That file
+    is MIT like the rest of deark's `src/`, and outside the `foreign/`
+    tree whose own licence terms the row above is about. No code was
+    copied: every rule is in APPNOTE.TXT 5.3, which the file cites
+    section by section at the fields, and the reference is what each
+    reading was checked against — including the one thing the
+    specification does not spell out, that a tree must be fully
+    populated, which deark's own comment states in prose. Its fourth
+    parameter, the PKZIP 1.01/1.02 minimum-match-length bug and the
+    decode-twice detection of it, is deliberately NOT implemented
+    (FORMATS.md, *Implode, and what the corpus cannot reach*).
     A build of deark is also the oracle for that method in the test
     suite (TESTING.md, tools/build_deark.sh): test-time only, never
     linked into anything shipped.
@@ -710,6 +724,16 @@ the file that uses one names the section a fact is in.
     account of splitting and spanning. WinZip's AES specification,
     which APPENDIX E of that document names as the published layout of
     the 0x9901 extra field, is fetched beside it.
+    **Since 2026-10-01 it is also the source of the three ZipIt extra
+    fields** — 4.6.4's `0x2605` with its FnLen and FileName, 4.6.5's
+    `0x2705` and 4.6.6's `0x2805` — and **since 2026-10-07 of the
+    whole of Imploding, section 5.3**: the two flag bits that state the
+    dictionary size and the tree count, the three alphabets and their
+    sizes, the minimum match length the literal tree's presence sets,
+    the run-length form a tree is stored in, the construction that
+    turns bit lengths into Shannon-Fano codes, and the token stream.
+    `tools/synth_implode.py` writes the method from the same section,
+    because nothing on this machine else does.
 
   * POSIX.1-2017 (The Open Group Base Specifications Issue 7), the
     `pax` utility page, "ustar Interchange Format" — for

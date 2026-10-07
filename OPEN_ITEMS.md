@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 954 fixtures in `./ci.sh`.
+byte-exact against the oracle across 955 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -61,7 +61,6 @@ has grown before, on request.
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, and there is nothing measured for one to do** | every codec here is integer bit work: the only FP-shaped operation in the engine is Arsenic's two divides per symbol, **0.72 % of the run** against 9.9 % for the linear symbol search beside it (FORMATS.md, *What is still hot*). An FPU is also only available where it is not needed — a 68881 implies a 68020, which already has `DIVU.L`, while the 68000 that pays for `__udivsi3` has none — and the fastest tier reaches no FPU at all, running through the 68LC040 emulator. The formats' own answer to differing CPUs is a decompress-only twin that accepts every CPU, and all of those modules are implemented. A second `-mcpu=68020` build is the adjacent trade and is also out (DECISIONS.md 2026-09-23, *hardware decoding*) |
 | The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has never heard of. The branch `rom64k` guards the trap and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies — and **nobody has run it on one**, so this stays out until hardware says otherwise (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A Macintosh **128K** is out for a measured second reason, CORRECTED 2026-10-06: it is the heap TOTAL, not one segment. The shipped build's `CODE` resources and A5 world come to 74,940 B against `ApplLimit − ApplZone` = 78,568 B, and the eager loader then asks for the `'OVLY'` bundle as one 155,916 B block. The segment that used to be the reason — 142,152 B against a largest single block of 63,744 B — is 48,888 B since the overlays and would now be granted (FORMATS.md, *A Macintosh 128K*) |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| PKZIP 1.x **Implode** (zip method 6) | **named, refused per entry** | **BOTH halves of the premise are gone and the decision is the maintainer's.** It was out as PKZIP 1.x's, older than deflate and carried here only by PC software; an MIT implementation and a stored-CRC oracle for all 7 corpus entries have been on this disk since 2026-09-22 (DECISIONS.md 2026-09-22, *the premise that stopped being true*), and `Psycho!v1.0ß1.zip` is a Macintosh one — three MacBinary entries ZipIt wrote, every one Implode, refused cleanly per entry (FORMATS.md, *ZipIt's own archives*). Adding the method would also want ZipIt's `0x2605` FileName (Part 2). The cost is **~1.5–2 KB of `CODE`, estimated, not measured** — and NOT resident, CORRECTED 2026-10-06: zip's decoder is built into `ovl_exo`, where the nearest comparable addition measured **+2,024 B of image and +0 B of resident `CODE` and A5** with no tier tally moving (DECISIONS.md 2026-10-06, *the gate that had never fired*; BLOCKERS.md for the wall it used to be priced against) |
 | PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
 | Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART was the one exception between 2026-09-09 and 2026-09-25** — a compressed DART expands to an uncompressed one, a codec with no volume in it — and it is out again: what reads a DART is a mounter, and that is MacMount's, so expanding disk images is not this program's job in any form (DECISIONS.md 2026-09-25, *the disk images that found another home*). NDIF and UDIF were prototyped on a branch and never merged, for the same reason |
 | PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
@@ -211,27 +210,13 @@ Part 2; the full per-file inventory is NOTICE's, checked by
 
 ---
 
-## Zip's Macintosh extra fields: what is left after reading them
-
-**The fields are read since 2026-10-01** — type, creator, Finder flags,
-dates, and both forks out of a ZipIt `0x2605` entry (FORMATS.md, *Zip's
-Macintosh extra fields*, has the figures and what grades each one), and
-**graded on nine archives ZipIt itself wrote since 2026-10-04**
-(FORMATS.md, *ZipIt's own archives*), which closed the row that said they
-were not. **A self-extracting one is recognised since 2026-10-05**, which
-closed the row for that. One thing is left.
-
-| what is left | what would close it |
-|---|---|
-| **ZipIt's `0x2605` FileName is not read, and it is the name the Macintosh file HAD** | **a leaf-name substitution in the zip walk.** APPNOTE.TXT 4.6.4 calls it the "full Macintosh filename"; over 20 real `0x2605` entries it agrees with the zip's own name 17 times, and with the MacBinary header's in 16 of the 17 where that header is reachable — and it is the right name in all 20. Where it disagrees, the names had been converted to MS-DOS form on their way into the zip, so `READ ME` extracts as `README` — a space lost from a Macintosh name by a Macintosh unarchiver. **It changes nothing this build can extract, re-measured 2026-10-05 and re-run unchanged 2026-10-06**: all 3 divergent fields of the 23 on this disk are Implode, refused per entry, so the fix is coupled to that decision (Part 1) and worth taking with it rather than alone; `tools/run_zipit.py` fails the day that stops being true, and since 2026-10-06 proves on built bytes that it can (TESTING.md, *ZipIt's own archives*). A LISTING already shows the wrong name for those three — what no build here can produce is a FILE under it. And the field is a leaf, not a path, so in the one archive it touches it would still leave the enclosing `PSYCHO!/` upper-cased — 3 of 4 components (FORMATS.md, *ZipIt's own archives*, has all of it). The cost is the substitution buffer — the name is built from the zip's path and the field's leaf, and `namebuf` is already 256 B of this function's stack, where CLAUDE.md's rule is measured and not assumed |
-
 ## The overlay loader: what no emulator here can answer
 
 Two items, and both want the same thing: **a Macintosh with a 68020 or
 better, running the shipped binary** (MANUAL_TESTS.md §2 and §6). The
 Linux lane closed what it could on 2026-09-26 — it builds the fifteen
 images, runs the real loaders through a mock Memory and Resource
-Manager, extracts 17 fixtures byte-exact under `qemu-m68k`, and catches
+Manager, extracts 20 fixtures byte-exact under `qemu-m68k`, and catches
 six deliberate breaks every run (TESTING.md, *The overlay loader, off
 the Macintosh*).
 
@@ -314,7 +299,7 @@ left:
 
 **AppleLink packages would have joined this list on 2026-10-05** — the
 fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
-`.pkg` is 6 of 954 fixtures and it draws uniformly — so the suite got a lane
+`.pkg` is 6 of 955 fixtures and it draws uniformly — so the suite got a lane
 that bends those six directly instead: 300 mutants, a fixed seed, 270 of
 them still sniffing as a package and every one decoding without a sanitizer
 report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a

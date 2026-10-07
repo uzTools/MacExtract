@@ -1,0 +1,293 @@
+#!/usr/bin/env python3
+"""run_implode.py — zip method 6 (Implode), on streams written here.
+
+`tools/synth_implode.py` is the only thing on this machine that WRITES
+the method, so this is where its output is held to something that is not
+this engine. Four graders per entry, and that is the whole point:
+
+  - **the writer's own plaintext**, which it emits with `--plain`: the
+    bytes it coded, not a decode of what it wrote;
+  - **`unar`**, which implements Implode (it is the corpus's primary
+    oracle and adjudicates 5 of the 7 wild entries);
+  - **deark**, which implements it independently and is the oracle
+    `tools/make_manifests.py` records for the other 2
+    (reference/deark/src/fmtutil-lzh.c, the file src/fmt_exo.c's
+    decoder was read beside);
+  - **the CRC-32 the writer stores**, which `macextract t` checks and is
+    the same check a real PKZIP file is graded by.
+
+Ahead of all four, `synth_implode.py --selftest` holds the code
+construction to **APPNOTE.TXT 5.3.8's own worked example** — the stored
+tree `0x02 0x42 0x01 0x13`, read and written both ways, and the eight
+codes the document prints for it. That is the only check in this file
+that is not downstream of this project's reading of the specification,
+and it was made to fail three ways before it was believed.
+
+An encoder of our own agreeing with our own decoder would prove nothing;
+the two outside readers are what make it ground truth. All four shapes
+the format's flag word can state are written — 4 K and 8 K dictionary
+against two and three Shannon-Fano trees — where the committed fixtures
+reach two of the four and a ZipIt specimen that cannot be committed
+reaches the others (FORMATS.md, *Implode*).
+
+A SECOND lane bends the streams: 240 mutants over a fixed seed, every
+edit confined to the bytes `--ranges` declares compressed, each required
+to exit cleanly with no sanitizer report. `tools/fuzz.py`'s stream
+generator does the same thing in the general run; this one is here so
+that the Implode paths are hammered on every `ci.sh` run rather than
+when the draw happens to pick them.
+
+    tools/run_implode.py --macextract build/san/macextract
+
+**What it cannot see.** Nothing here writes a stream PKZIP 1.01 or 1.02
+would have written: those two took the minimum match length from the
+DICTIONARY SIZE rather than from the literal tree's presence, and deark
+detects that by decoding twice and keeping whichever pass reproduces the
+stored CRC. This writer follows APPNOTE.TXT 5.3.4 and so does the
+engine, so the disagreeing combinations are written the specification's
+way and the bug is UNEXERCISED here (FORMATS.md, *Implode, and what the
+corpus cannot reach*). It also grades no Finder metadata and no fork
+split: a MacBinary payload under an Implode entry is the ZipIt
+specimen's shape, and `tools/run_zipit.py` is what grades that.
+
+Skips cleanly — printing what it skipped, returning 0 — when `unar` or
+deark is missing, so a fresh clone stays green.
+"""
+import argparse
+import json
+import os
+import random
+import shutil
+import subprocess
+import sys
+import tempfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEARK = os.path.join(ROOT, "build", "deark", "deark")
+SYNTH = os.path.join(ROOT, "tools", "synth_implode.py")
+
+SHAPES = ("4k-2trees", "4k-3trees", "8k-2trees", "8k-3trees")
+MUTANTS = 240
+
+
+def write_seed(tmp, only=None):
+    """The archive, its declared compressed spans, and the plaintext."""
+    zp = os.path.join(tmp, "implode.zip")
+    rp = os.path.join(tmp, "implode.ranges")
+    pp = os.path.join(tmp, "implode.plain")
+    cmd = [sys.executable, SYNTH, "-o", zp, "--ranges", rp, "--plain", pp]
+    for n in only or ():
+        cmd += ["--only", n]
+    subprocess.run(cmd, check=True, capture_output=True)
+    with open(rp) as fh:
+        ranges = [tuple(r) for r in json.load(fh)]
+    with open(pp, "rb") as fh:
+        plain = fh.read()
+    return zp, ranges, plain
+
+
+def ours(exe, path, out):
+    os.makedirs(out, exist_ok=True)
+    r = subprocess.run([exe, "x", "-o", out, path],
+                       capture_output=True, timeout=900)
+    if r.returncode != 0:
+        return None, r.stderr.decode("utf-8", "replace").strip()
+    return {n: open(os.path.join(out, n), "rb").read()
+            for n in sorted(os.listdir(out))
+            if not n.endswith(".comment.txt")}, None
+
+
+def theirs_unar(path, out):
+    os.makedirs(out, exist_ok=True)
+    r = subprocess.run(["unar", "-nr", "-D", "-f", "-q", "-o", out, path],
+                       capture_output=True, timeout=900)
+    if r.returncode != 0:
+        return None
+    return {n: open(os.path.join(out, n), "rb").read()
+            for n in sorted(os.listdir(out))}
+
+
+def theirs_deark(path, out):
+    os.makedirs(out, exist_ok=True)
+    r = subprocess.run([DEARK, "-od", out, path],
+                       capture_output=True, timeout=900)
+    text = (r.stdout + r.stderr).decode("utf-8", "replace")
+    if "CRC check failed" in text or "Error" in text:
+        return None, text.strip()
+    got = {}
+    for n in sorted(os.listdir(out)):
+        # deark names each member `output.NNN.NAME`.
+        parts = n.split(".", 2)
+        got[parts[2] if len(parts) == 3 else n] = \
+            open(os.path.join(out, n), "rb").read()
+    return got, None
+
+
+def grade_shapes(exe):
+    """Every shape, against all four graders. Returns failures."""
+    bad = 0
+    tmp = tempfile.mkdtemp(prefix="implode-")
+    try:
+        zp, _ranges, plain = write_seed(tmp)
+        mine, err = ours(exe, zp, os.path.join(tmp, "mine"))
+        if mine is None:
+            print("implode: `x` FAILED on the generated archive (%s)" % err)
+            return 1
+        them = theirs_unar(zp, os.path.join(tmp, "unar"))
+        dk, dkerr = theirs_deark(zp, os.path.join(tmp, "deark"))
+        if dk is None:
+            print("implode: deark refused the generated archive (%s)"
+                  % (dkerr or "no output"))
+            bad += 1
+        # The writer emits the shapes' plaintexts concatenated in order,
+        # which is how it says what it coded rather than what it wrote.
+        at = 0
+        for shape in SHAPES:
+            name = shape + ".txt"
+            got = mine.get(name)
+            if got is None:
+                print("implode: %s: this build produced no such entry" % name)
+                bad += 1
+                continue
+            want = plain[at:at + len(got)]
+            at += len(got)
+            if got != want:
+                print("implode: %s: %d B out, and NOT the %d B the writer "
+                      "coded" % (name, len(got), len(want)))
+                bad += 1
+            if them is not None and them.get(name) != got:
+                print("implode: %s: differs from unar's" % name)
+                bad += 1
+            if dk is not None and dk.get(name) != got:
+                print("implode: %s: differs from deark's" % name)
+                bad += 1
+        if at != len(plain):
+            print("implode: the four entries account for %d of the writer's "
+                  "%d plaintext bytes" % (at, len(plain)))
+            bad += 1
+        # `t` is the CRC-32 check, and it is the grader that needs no
+        # second implementation at all: the writer stored it.
+        r = subprocess.run([exe, "t", zp], capture_output=True, timeout=900)
+        if r.returncode != 0:
+            print("implode: `t` failed the generated archive (%s)"
+                  % r.stderr.decode("utf-8", "replace").strip())
+            bad += 1
+        print("implode: %d shape(s) graded against the writer's plaintext, "
+              "%s, %s and the stored CRC-32"
+              % (len(SHAPES),
+                 "unar" if them is not None else "unar (ABSENT)",
+                 "deark" if dk is not None else "deark (ABSENT)"))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad
+
+
+def bend(blob, ranges, rng):
+    """One mutant: edits confined to the declared compressed spans —
+    bit flips, byte-run overwrites and a cut. The same three
+    `tools/fuzz.py`'s stream generator makes, for the same reason: a
+    Shannon-Fano stream is a tree followed by what it codes, so an edit
+    near the front changes the meaning of everything after it."""
+    buf = bytearray(blob)
+    spans = [(lo, min(hi, len(buf))) for lo, hi in ranges]
+    spans = [s for s in spans if s[0] < s[1]]
+    for _ in range(rng.randrange(1, 9)):
+        if not spans:
+            break
+        lo, hi = spans[rng.randrange(len(spans))]
+        kind = rng.randrange(8)
+        if kind == 0:
+            buf = buf[:rng.randrange(lo, hi)]
+            spans = [(a, min(b, len(buf))) for a, b in spans]
+            spans = [s for s in spans if s[0] < s[1]]
+        elif kind == 1:
+            at = rng.randrange(lo, hi)
+            n = min(rng.randrange(1, 64), hi - at)
+            buf[at:at + n] = bytes(rng.randrange(256) for _ in range(n))
+        else:
+            buf[rng.randrange(lo, hi)] ^= 1 << rng.randrange(8)
+    return bytes(buf)
+
+
+def grade_mutants(exe, n, seed):
+    """Bent streams: a clean exit and no signal, every time."""
+    bad = 0
+    rng = random.Random(seed)
+    tmp = tempfile.mkdtemp(prefix="implode-fuzz-")
+    try:
+        zp, ranges, _plain = write_seed(tmp)
+        with open(zp, "rb") as fh:
+            blob = fh.read()
+        refused = 0
+        for i in range(n):
+            var = bend(blob, ranges, rng)
+            p = os.path.join(tmp, "case.zip")
+            with open(p, "wb") as fh:
+                fh.write(var)
+            try:
+                r = subprocess.run([exe, "t", p], capture_output=True,
+                                   timeout=120)
+            except subprocess.TimeoutExpired:
+                print("implode: mutant %d HUNG" % i)
+                bad += 1
+                continue
+            if r.returncode < 0:
+                print("implode: mutant %d died by signal %d"
+                      % (i, -r.returncode))
+                bad += 1
+                continue
+            text = (r.stdout + r.stderr).decode("utf-8", "replace")
+            if "Sanitizer" in text or "runtime error" in text:
+                print("implode: mutant %d: %s" % (i, text.strip()[:400]))
+                bad += 1
+                continue
+            if r.returncode != 0:
+                refused += 1
+        print("implode: %d bent stream(s) clean, %d of them refused at least "
+              "one entry — seed %d" % (n, refused, seed))
+        # A lane where nothing was ever refused is a lane that bent
+        # nothing: the edits are inside the stream, so the CRC-32 has to
+        # object. (A mutant CAN come out clean — a flip in the padding
+        # bits after the last token changes no output.)
+        if refused == 0:
+            print("implode: NOT ONE mutant was refused, so the edits are "
+                  "not reaching the decoder — the declared ranges are wrong")
+            bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--macextract", default="build/macextract")
+    ap.add_argument("-n", type=int, default=MUTANTS)
+    ap.add_argument("--seed", type=int, default=6)
+    a = ap.parse_args()
+
+    if shutil.which("unar") is None:
+        print("implode: unar not installed — one of the two outside readers "
+              "is absent, so this run proves less")
+    if not os.path.exists(DEARK):
+        print("implode: no %s (sh tools/build_deark.sh) — the other outside "
+              "reader is absent" % os.path.relpath(DEARK, ROOT))
+    # Before anything else, and before any binary is believed: the code
+    # construction against the SPECIFICATION's own worked example. It
+    # needs no oracle, no fixture and no engine, and it is the one check
+    # here that is not downstream of this project's reading of 5.3.8.
+    r = subprocess.run([sys.executable, SYNTH, "--selftest"],
+                       capture_output=True, timeout=120)
+    sys.stdout.write(r.stdout.decode("utf-8", "replace"))
+    sys.stderr.write(r.stderr.decode("utf-8", "replace"))
+    bad = 1 if r.returncode else 0
+    bad += grade_shapes(a.macextract)
+    bad += grade_mutants(a.macextract, a.n, a.seed)
+    if bad:
+        print("implode: %d failure(s)" % bad)
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

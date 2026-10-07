@@ -80,6 +80,11 @@ FAMILIES = [
     ("ARC",               r"^arc_"),
     ("PackIt",            r"^pit_"),
     ("BinHex",            r"^bh_|^unc_binhex_"),
+    # Zip method 6, added 2026-10-07. Spelled out rather than folded
+    # into an exo/zip row for the reason the method-14 row exists: a
+    # family that shares a prefix with a larger one cannot read as
+    # wholly at zero, which is the one signal this tool calls reliable.
+    ("Zip Implode",       r"^imp_|^zip_implode"),
 ]
 
 

@@ -72,7 +72,10 @@ LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
 (`.uu`), btoa (`.ascii`), base64 and MIME mail attachments (`.b64`, `.mim`),
 AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (`.Z`). Resource
 forks, type and creator codes and dates all survive, so an extracted
-application simply runs.
+application simply runs. A zip made by PKZIP 1 in 1989 or 1990 opens too —
+those use a method nothing has written since — and a zip ZipIt made comes
+out under the names the Macintosh files actually had, not the shortened
+MS-DOS ones it may have put in the listing.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name — and a `.hqx` or `.uu`

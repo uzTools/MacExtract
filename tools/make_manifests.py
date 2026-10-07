@@ -373,7 +373,16 @@ DEARK_ID = "deark"
 # for. Everything else it is offered is a CROSS-CHECK against a fork
 # another implementation already graded, where agreement is the whole
 # point and disagreement is reported rather than written down.
-DEARK_METHODS = {"Distilled"}
+# Implode joined on 2026-10-07, when the scope decision brought PKZIP
+# 1.x's method 6 in (DECISIONS.md 2026-10-07, *the oracle that was one
+# line away*). deark decodes all 7 Implode entries of the two PKZIP 1.x
+# fixtures and every one matches the CRC-32 PKZIP ITSELF stored — a
+# check no decoder here can influence, and one that CAN fail: bending a
+# byte of `4acalc.zip` makes deark print "CRC check failed" for that
+# entry and write the bytes anyway. `unar` adjudicates 5 of the 7; the
+# other 2 are the forks it fails with "Attempted to read more data than
+# was available", and they are what this adds.
+DEARK_METHODS = {"Distilled", "Implode"}
 
 
 def deark_id():

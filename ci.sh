@@ -93,6 +93,16 @@ python3 tools/run_uu.py --macextract build/san/macextract || fail "uuencode test
 # per-ENTRY Zip64 escape, which arrives at 2 GB and not at 4.
 python3 tools/run_ziplarge.py --macextract build/san/macextract \
     || fail "large-zip (Zip64 entry count) tests"
+# Zip method 6 (Implode), in scope since 2026-10-07. Nothing on this
+# machine WRITES the method, so `tools/synth_implode.py` is an encoder:
+# the suite generates all four combinations the format's flag word can
+# state and holds each against the writer's own plaintext, `unar`, deark
+# and the stored CRC-32 — two outside readers, because an encoder of
+# ours agreeing with a decoder of ours proves nothing. Plus 240 bent
+# streams, every edit inside the bytes the writer declares compressed.
+# Skips politely without unar or deark.
+python3 tools/run_implode.py --macextract build/san/macextract \
+    || fail "Implode (zip method 6) tests"
 # The other half of the same question: a member over 2 GB is refused per
 # ENTRY, a position over 4 GB ends the walk. Sparse subjects, graded by
 # GNU tar, which has neither limit.

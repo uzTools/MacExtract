@@ -21,16 +21,16 @@
    "rsrc_size": 0
   },
   {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "7fd1c9eb7102d8745cdb7175c8ece415c039604c039caf16eb7c567087703ac4",
+   "data_size": 5645,
    "name": "LAUNCH.TXT",
    "oracle_methods": [
     "Implode"
    ],
    "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
    "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0,
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available"
-   }
+   "rsrc_size": 0
   },
   {
    "data_sha256": "dca653cc793c8581504b2b614e275da9782573882da6ede2d8a64c9840671e09",

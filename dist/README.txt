@@ -30,7 +30,20 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-Since v0.37.0, and in this download: self-extracting zip archives open.
+Since v0.37.0, and in this download: old zip archives open -- the ones
+PKZIP 1 made in 1989 and 1990, with a method called Imploding. Nothing
+has written one since, but plenty are still on download sites and
+CD-ROMs, and ZipIt on the Mac could write them too: a Macintosh zip of
+1994 with both forks intact is what settled it. Those entries used to be
+listed and then skipped; they come out now, with their resource forks,
+types and creators. The same release gives you the name a Macintosh file
+HAD inside a ZipIt archive: ZipIt could be told to convert names to the
+MS-DOS shape -- eight letters, upper case, no spaces -- and it kept the
+real one beside it, so "READ ME" comes out as "READ ME" rather than
+"README". The folder around it keeps whatever the archive called it,
+which is all the archive records for a folder.
+
+Also since v0.37.0, and in this download: self-extracting zip archives open.
 ZipIt made these -- a .sea you double-click, which on a modern Mac of
 the day unpacked itself. The application part is PowerPC code, so on a
 Mac Plus it was simply a file you could not use; the zip behind it was

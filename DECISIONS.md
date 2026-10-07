@@ -364,6 +364,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
 - 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
 - 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
+- 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
 
 ---
 
@@ -23974,3 +23975,176 @@ PRINTS it on the Macintosh screen, which is the probe whose answer
 deleted it (BLOCKERS.md, *Corrected figures*). A constant's deletion is
 a prose job as much as a code one, and the compiler grades only half of
 it.
+
+## 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
+
+**Claim.** Zip method 6 (Implode) is implemented, and ZipIt's `0x2605`
+FileName is the leaf an entry comes out under. The two were one piece of
+work because each was the other's reason to wait: the FileName changed
+nothing extractable while every divergent field on this disk sat on an
+Implode entry, and Implode's case for staying out had been *"not a
+Macintosh method"* while the archive that disproved that was the one
+carrying those three fields.
+
+**What the decision cost, measured, and the estimate it replaces.**
+OPEN_ITEMS.md carried *"~1.5–2 KB of `CODE`, estimated, not measured"*
+for eighteen days. The measurement:
+
+| | before | after | delta |
+|---|---|---|---|
+| resident `CODE`, SHIPPED (eager) | 54,272 | 54,272 | **+0** |
+| A5, SHIPPED | 19,056 | 19,056 | **+0** |
+| resident `CODE`, resident CONTROL | 164,408 | 166,264 | **+1,856** |
+| A5, control | 37,928 | 37,928 | +0 |
+| `ovl_exo` image | 29,252 | 31,176 | **+1,924** |
+| `MacExtract.bin` (the download) | 225,408 | 227,328 | +1,920 |
+
+So the estimate was right about the order and wrong about where: 1,856 B
+is what the method weighs, it is all in a build nothing ships, and the
+release pays 1,924 B of a `'OVLY'` image read at launch and released as
+soon as the sniff says the archive is not a zip. `run_tiers.py --check`
+holds every tally in both lanes — 71/71, 67/71, 64/71 resident and
+71/71, 69/71, 66/71 shipped, the same fixtures by name. The comparable
+precedent is zip's four Macintosh extra fields on 2026-10-01, +2,024 B
+of image against +0 and +0: the second format in a row to land in that
+image for nothing resident, which is what the overlays were for.
+
+**The control's ratchet refused it, and that is the number rather than
+an obstacle.** `tools/build_mac.sh` stopped the resident build at
+"1,856 B over the ceiling" — exactly the figure above, arrived at from
+the other direction, which is the one configuration where this format's
+cost is visible at all. The ceiling is raised with the measurement
+written beside it; the two SHIPPED ceilings do not move by a byte.
+
+**Peak heap does not move either, and the reason is worth keeping.** An
+Implode entry allocates 1,000 B of tables plus the dictionary the flag
+word names — 5,096 B at 4 K and 9,192 at 8 K — against the 11,256 B
+`unc_inflate_raw` takes for a deflated one, measured on the same
+archives. The worst Implode entry is 2,064 B cheaper than any deflated
+one, so no mixture of methods can raise the format's ceiling. So zip's peak is still set by deflate and the format's
+12–54 KB row in FORMATS.md is unchanged: `4acalc.zip` goes 13,477 →
+22,669 B and `synth-exo-zip-deflate.zip` was already 24,863 B. A new
+decoder that does not move a format's ceiling is the uncommon case, and
+it is the dictionary being 4 or 8 KB where deflate's window is 32.
+
+**The one thing the engine's existing canonical coder could not be
+asked to do.** Implode's Shannon-Fano codes and RFC 1951's canonical
+codes are the same code set with the bits complemented — provable
+(`D_k = 2^{l_k} − 1 − C_k` by induction down the length order, and it
+holds on all 24 trees in reach), so `unc_canon_build` plus a
+complementing walk would have been the smaller change. It was not taken,
+and the reason is the induction's base case: the identity needs the code
+to be COMPLETE, and completeness is a property of the stream rather than
+of the format's grammar. Using it would have made a malformed tree
+decode as something rather than as corrupt, and the rule here is to
+transcribe the construction the specification states (APPNOTE.TXT 5.3.8)
+and let a bent tree be a per-entry error. The identity is recorded
+because it is the kind of thing worth not re-deriving, not because
+anything rests on it.
+
+**What no corpus could have graded, and the measurement that says so.**
+Four parameter combinations exist — 4 K or 8 K dictionary against two or
+three Shannon-Fano trees — and the two PKZIP 1.x fixtures hold two of
+them. **The other two are exactly the two where PKZIP 1.01's
+minimum-match-length bug is observable**, and the only subject for them
+on this disk is `Psycho!v1.0ß1.zip`, a specimen that cannot be
+committed. So a build that took the minimum match length from the
+dictionary size instead of from the literal tree's presence passed
+`run_diff.py` over the whole corpus — measured, on that build — and
+failed only the ZipIt specimen. That is a tolerance whose evidence was
+the absence of a file.
+
+The answer is an ENCODER: `tools/synth_implode.py` writes all four
+combinations, because nothing on this machine writes any of them —
+Info-ZIP's `zip` dropped the method before 1.0, `unar` and deark decode
+and do not compress, and PKZIP is a DOS program. One of its four
+entries is a committed fixture now, and with it in the corpus the same
+bent build fails `run_diff.py` on `8k-2trees.txt`. Five separate bends
+of the decoder were each required to fail `tools/run_implode.py` before
+the suite was believed: the minimum-match-length rule, the zero-filled
+window, the length-63 escape, the distance bias and the direction the
+codes are assigned in.
+
+**Graded by two outside readers, not by the generator.** An encoder of
+ours agreeing with a decoder of ours proves nothing, so every shape is
+held against `unar`, against deark, against the plaintext the writer
+says it coded, and against the CRC-32 the writer stored — and the wild
+entries against the CRC-32 **PKZIP itself** stored, which is the check
+no decoder here can influence. Adding `"Implode"` to
+`make_manifests.py`'s `DEARK_METHODS` was the one line DECISIONS.md
+2026-09-22 left undone on purpose; it closed the last two unadjudicated
+forks in those two fixtures before any decoder existed, which is the
+order that makes a new decoder's first run mean something.
+`ORACLE_OUT_OF_SCOPE` is empty for the first time.
+
+**The name gate's criterion inverted, and a gate that changes meaning
+has to be re-proved.** `tools/run_zipit.py` used to ask *"does a
+divergent FileName ever sit on an entry this build can decode?"* — a
+question about a gap, which returned 0 on every run it ever had, because
+all three divergences were Implode. Both halves of that are gone. It now
+asks the opposite and asks it of all 23 fields: the leaf this engine
+LISTS must BE the field's FileName. The negative control is this
+program's own behaviour the day before — a stub that answers with the
+zip's own leaf, which the gate has to fail on, and does, in 3 of 5 built
+cases. 119 of 119 forks are byte-identical to `unar` where it was 113,
+and the suite's only `UNGRADED` declaration is gone.
+
+**What is still wrong, and it is the format's doing.** The field is a
+LEAF. `Psycho!v1.0ß1.zip`'s three entries sit under `PSYCHO!/`, for
+which the archive holds no entry and no field, so that component stays
+upper-cased: 3 of the 4 wrong name components, not 4. Nothing in the
+archive records what the folder was called.
+
+**And the one thing left ungraded was searched for by MAGIC before it
+was filed, which is this project's own rule and the sweep is the
+strongest form of it yet.** The PKZIP 1.01/1.02 bug is not a byte
+anywhere in a file — it is a decode outcome — so no index can be asked
+for one. What an index CAN be asked for is the two flag combinations
+where the two readings disagree, which sit in a zip's first local
+header: `detection=504b0304????02000600*` and `...04000600*` name
+4,074 and 4,869 files. `tools/scan_discmaster.py --probe implode`
+fetches each and decodes every bug-capable entry BOTH ways, graded by
+the CRC-32 the archive itself stored. **800 archives, 19,107
+bug-capable entries: 19,105 follow APPNOTE.TXT 5.3.4, 0 need the other
+rule, and the 2 that decode under neither are two copies of one
+truncated `synchro.zip` that `unar` and deark refuse as well.**
+
+Three things that sweep settled that the row could not have:
+
+- **"No specimen in reach" would have been a claim about a search
+  nobody had run.** It is a measured negative over 19,107 entries now,
+  and the measurement is reproducible from the command line.
+- **The combinations the ZipIt specimen supplies are not rare — they
+  are rare HERE.** 8,943 archives in that index open with one. What the
+  corpus lacked was not a population; it was one committable file, and
+  the generator is what replaces it.
+- **The probe can fail in both directions on files whose answer is
+  already known**, which is what makes the negative worth anything: the
+  7 PC entries are a combination where the two rules COINCIDE and come
+  out CRC-OK either way, and the ZipIt specimen's 3 come out CRC-OK
+  under 5.3.4 and CRC-bad or EOF under the other.
+
+**The refusal that asked for the file was never Implode's, and it is
+left alone.** The brief for this work said to remove or rewrite it. Swept
+— `cli/main.c`'s `sink.unsupported` report, FORMATS.md's zip row,
+`dist/README.txt` and TESTING.md — and the CLI's sentence names no
+method: it fires for any `UNC_ERR_UNSUPPORTED` and ends *"if you can
+share this file, please open an issue"*. It stops firing for method 6 on
+its own (measured: both PKZIP 1.x fixtures now exit 0 under `t`) and
+stays correct for every method still refused — a zip at method 1 prints
+*"method 1 is not supported yet"* and then asks for the file, measured on
+a one-entry Shrink archive built for the purpose. **Removing it would
+have taken a true sentence out of the program for a format it was not
+about.** What DID have to move is the three places the refusal was
+stated as a fact about scope: FORMATS.md's format table, the fixture
+count beside it, and `dist/README.txt`'s release notes, which gains a
+paragraph about old PKZIP 1 zips rather than losing one.
+
+**The stack, measured rather than assumed** (`-Os -fstack-usage`, the
+one-command method in FORMATS.md, *Stack*): `unc_zip_extract` 1,432 →
+1,460 B and `zip_decode` 56 → 132 B, with `namebuf` unchanged at 256 —
+the substitution is built in the buffer that was already there, and in
+the streamed case the directory prefix it copies is already in it. The
+deepest zip chain is 1,836 → 1,940 B and it is still the DEFLATE path;
+Implode's is 1,684. Both far under the 4 KB rule and under the engine's
+own deepest chain.

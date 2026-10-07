@@ -307,9 +307,18 @@ def now_seeds(tmp):
 # separate seed rather than a fifth case in the fixture because a 256 KB
 # window is a peak-RAM figure and a Macintosh tier (DECISIONS.md
 # 2026-10-06), and `tools/run_sit14wrap.py` is what grades it.
+#
+# The third is zip method 6, and it is here for a reason the method-14
+# rows only half share: its generator is the only thing on this machine
+# that WRITES Implode, so a corpus draw can never reach a shape the two
+# PKZIP 1.x fixtures do not already hold. The seed carries all four of
+# the format's flag combinations, 4 K and 8 K dictionary against two and
+# three Shannon-Fano trees, and declares one compressed span per entry
+# (tools/synth_implode.py; FORMATS.md, *Implode*).
 STREAM_SEEDS = (
     ("sit14", "synth_sit14.py", "seed-sit14.sit", ()),
     ("sit14-wrap", "synth_sit14.py", "seed-sit14-wrap.sit", ("--wrap",)),
+    ("implode", "synth_implode.py", "seed-implode.zip", ()),
 )
 
 

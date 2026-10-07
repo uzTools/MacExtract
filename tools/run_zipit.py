@@ -46,27 +46,35 @@ instead of going quiet:
   4. `x` against `unar`: every data and resource fork byte for byte;
   5. and for the four that arrived wrapped, `x` on the whole file
      against `x` on its data fork — the auto-unwrap route;
-  6. every `0x2605` FileName against the zip's own leaf, over these
-     nine and `fixtures/*.zip` both. APPNOTE.TXT 4.6.4 calls the field
-     the "full Macintosh filename" and this engine extracts under the
-     zip's name instead; the two agree on everything it can decode, and
-     a divergence on a method it decodes fails here, because that is
-     the day the substitution OPEN_ITEMS.md keeps open starts
-     mattering. `selftest_coupling` proves that gate can fail before
-     the sweep is believed — it has returned 0 on every real run since
-     it was written.
+  6. every `0x2605` FileName against the name this engine LISTS, over
+     these nine and `fixtures/*.zip` both. APPNOTE.TXT 4.6.4 calls the
+     field the "full Macintosh filename" and `src/fmt_exo.c` has
+     substituted it for the entry's leaf since 2026-10-07, so the
+     assertion is that the substitution happened — on all 23 fields in
+     reach, divergent or not. **The criterion inverted that day**: it
+     used to be "a divergence on a decodable method is an alarm",
+     which was a question about a gap and could not fire while
+     Implode was out of scope. `selftest_coupling` proves the new one
+     can fail, against a stub that answers with the zip's own names —
+     this program's own behaviour the day before.
 
 **What it cannot see.** The probe's own reasoning: these nine all
 carry a well-formed record, so nothing here can fail on a corroboration
 that stopped corroborating — `test_zip_behind_a_stub` in
 tests/unit_formats.c bends each of the five in turn. It compares no
 fork of an entry whose method is out of v1 scope, and UNGRADED below
-names every one with the reason. And it adjudicates no date: `lsar`
+names every one with the reason — **it is EMPTY since 2026-10-07**, when
+method 6 landed and the three entries it held became graded like any
+other. And it adjudicates no date: `lsar`
 reports zip's own MS-DOS stamp where a `0x2605` entry's MacBinary
 header carries two Macintosh ones, so the two are not the same field.
 Check 6 reads these nine and `fixtures/*.zip` and nothing else, so a
 ZipIt archive arriving in the corpus inside a `.hqx` or a `.sea`
-carries fields it never sees; it prints what it swept.
+carries fields it never sees; it prints what it swept. And it grades
+the LEAF only, because the field is a leaf: an enclosing folder with no
+entry and no field of its own keeps whatever the zip called it, which
+is 1 of the 4 wrong name components in `zipit-Psycho_1.0b1.zip` and is
+not a defect this suite can see.
 
 Nothing here fails when the specimens are absent — it prints what it
 skipped and returns 0, so a fresh clone stays green.
@@ -115,13 +123,16 @@ EXPECT = {
 # and the COUNT is checked — a fourth refused entry in this archive, or
 # a refusal in any other, fails here rather than widening the
 # declaration by itself.
-UNGRADED = {
-    "zipit-Psycho_1.0b1.zip":
-        (3, "of 3 entries: Zip method 6 (Implode), refused per entry and out "
-            "of v1 scope (OPEN_ITEMS.md, Part 1). No fork is compared, and "
-            "the MacBinary payload cannot be reached, so neither can the "
-            "type, creator or Finder flags inside it"),
-}
+# **EMPTY as of 2026-10-07**, and kept because it was not. Its one row
+# was `zipit-Psycho_1.0b1.zip` — 3 of 3 entries at Zip method 6
+# (Implode), refused per entry, no fork compared and the MacBinary
+# payload out of reach, so neither the type, the creator nor the Finder
+# flags inside it could be graded either. Method 6 is implemented since
+# that day, so all three entries are now graded like any other: six
+# forks byte-identical to `unar`, and the three names ZipIt's own
+# `0x2605` field states (DECISIONS.md 2026-10-07, *the method that was
+# out for a premise with no halves left*).
+UNGRADED = {}
 
 
 def macbinary_datafork(blob):
@@ -307,29 +318,32 @@ def alias_of(ents, ourname):
     where the two differ, or None.
 
     XADMaster renames a MacBinary entry to the name inside its
-    MacBinary header; this engine keeps the name the zip records. The
-    tolerance is not "ours is right": it holds only while ZipIt's OWN
-    0x2605 FileName — APPNOTE.TXT 4.6.4's "full Macintosh filename" —
-    is one of the two, which is what makes it able to fail."""
+    MacBinary HEADER; this engine uses ZipIt's `0x2605` FileName, which
+    APPNOTE.TXT 4.6.4 calls the "full Macintosh filename". The
+    tolerance is not "ours is right": it holds only while the field is
+    one of the two names in play, which is what makes it able to fail.
+
+    **One of its two branches went on 2026-10-07, and it went because it
+    had become unfireable.** It read "no reachable payload: unar takes
+    the field's name, which must therefore BE the field's name" — true
+    while this engine extracted under the ZIP's name, and vacuous now
+    that it extracts under the field's: where the harness cannot reach
+    the payload, our name and `unar`'s are the same string and
+    `pair_up` never asks. The MacBinary-header case below is the only
+    way the two can still differ, and it is 1 of the 23 fields in reach
+    (FORMATS.md, *ZipIt's own archives*)."""
     for ent in ents:
-        if ent["name"].rstrip(b"/").decode("mac_roman") != ourname:
-            continue
         fname = long_field_name(ent)
-        if fname is None:
+        if not fname:
+            continue
+        raw = ent["name"].rstrip(b"/")
+        cut = raw.rfind(b"/")
+        folder = raw[:cut + 1] if cut >= 0 else b""
+        if (folder + fname.replace(b"/", b":")).decode("mac_roman") != ourname:
+            continue
+        if ent["mb"] is None:
             return None
-        leaf = ent["name"].rstrip(b"/").split(b"/")[-1]
-        folder = ent["name"].rstrip(b"/")[:-len(leaf)]
-        if ent["mb"] is not None:
-            # unar takes the MacBinary name; ours is the zip's, and the
-            # field must back ours.
-            if fname != leaf:
-                return None
-            return (folder + ent["mb"]["name"]).decode("mac_roman")
-        # No reachable payload: unar takes the field's name, which must
-        # therefore BE the field's name and not the zip's.
-        if fname == leaf:
-            return None
-        return (folder + fname).decode("mac_roman")
+        return (folder + ent["mb"]["name"]).decode("mac_roman")
     return None
 
 
@@ -545,41 +559,70 @@ def grade_wrapped(exe, name, raw_path, fork_path, refused):
 
 def refused_names(ents):
     """The entries this build declines by method, which no fork
-    comparison can reach. Method 0 and 8 are the two it reads from the
-    header; method 99 is WinZip AES and is handled by DECODED_METHODS,
-    which is the criterion the name gate uses — this one stays strict
-    because a fork comparison needs a password as well as a method, and
-    nothing here supplies one."""
+    comparison can reach. Stored, Implode and deflate are the three it
+    reads from the header — **6 joined on 2026-10-07**, which emptied
+    this set for `zipit-Psycho_1.0b1.zip` and with it the only UNGRADED
+    declaration this suite had. Method 99 (WinZip AES) stays refused
+    here even though the engine reads it, because a fork comparison
+    needs a password as well as a method and nothing here supplies
+    one."""
     return set(e["name"].rstrip(b"/").decode("mac_roman")
-               for e in ents if e["method"] not in (0, 8))
+               for e in ents if e["method"] not in (0, 6, 8))
 
 
-# What the name gate counts as reachable. 0 and 8 are the methods
-# `src/fmt_exo.c` decodes off the header; **99** belongs here too and
-# did not until 2026-10-06 — it means "see WinZip's 0x9901 field", and
-# that field's real method is decoded when it is 0 or 8, so an entry at
-# 99 can produce a file under the wrong name while `method not in (0, 8)`
-# calls it refused. Resolving 0x9901 here would make the gate agree
-# exactly; counting 99 in makes it err LOUD instead, which is the right
-# asymmetry for a guard: a false alarm costs one look at one archive, a
-# miss costs the guard. Nothing in the sweep set is at method 99 — 18
-# archives, 170 entries, measured 2026-10-06 — so today it changes no
-# tally, and `selftest_coupling` is what proves it fires at all.
-DECODED_METHODS = (0, 8, 99)
+# What a `0x2605` entry must come out as, now that the field is read.
+#
+# **The criterion CHANGED MEANING on 2026-10-07.** Until that day this
+# gate asked a question about a GAP: does a divergent FileName ever sit
+# on an entry this build can decode? — because the engine extracted
+# under the zip's own name, and the day the two stopped agreeing on
+# something reachable was the day a file would come out misnamed. It
+# returned 0 on every real run, because all 3 divergent fields on this
+# disk are on Implode entries and Implode was out of scope.
+#
+# Both halves of that are gone: `src/fmt_exo.c` reads the FileName and
+# substitutes it for the leaf, and it decodes method 6. So the question
+# is now about an INVARIANT, and it is stronger: every `0x2605` field,
+# divergent or not, decodable or not, must be the leaf this engine
+# LISTS the entry under. A listing needs no decoder, so the gate no
+# longer has a notion of a reachable method at all — `DECODED_METHODS`
+# went with the old criterion.
+#
+# `selftest_coupling` proves it can fail, and proves it against the
+# engine as it WAS: a stub that answers with the zip's own names, which
+# is exactly what this program printed the day before.
+
+
+def expected_names(ents):
+    """{the zip's own path: (what it must list as, the field's leaf)}
+    for every entry carrying a `0x2605` FileName.
+
+    APPNOTE.TXT 4.6.4 calls the field the "full Macintosh filename", and
+    it is a LEAF: the enclosing folders keep whatever the zip called
+    them, which is the same rule `src/fmt_exo.c` applies and the reason
+    `PSYCHO!/` stays upper-cased in the one archive where this fires."""
+    out = {}
+    for e in ents:
+        fname = long_field_name(e)
+        if fname is None or not fname:
+            continue
+        raw = e["name"].rstrip(b"/")
+        cut = raw.rfind(b"/")
+        want = (raw[:cut + 1] if cut >= 0 else b"") + fname.replace(b"/", b":")
+        out[raw.decode("mac_roman")] = (want.decode("mac_roman"),
+                                        fname.decode("mac_roman"))
+    return out
 
 
 def diverging_names(ents):
     """Every `0x2605` entry whose FileName is NOT the zip's own leaf.
-
-    APPNOTE.TXT 4.6.4 calls the field the "full Macintosh filename" and
-    this engine extracts under the zip's name instead; the two agree on
-    every entry any build here can decode, and where they do not the
-    method is out of v1 scope. Returns (our name, the field's leaf,
-    method) for each."""
+    Reported rather than asserted: a divergence is the interesting case
+    and the count is what moves when a specimen changes. Returns (the
+    zip's name, the field's leaf, method) for each."""
     out = []
     for e in ents:
         fname = long_field_name(e)
-        if fname is None:
+        if not fname:
             continue
         leaf = e["name"].rstrip(b"/").split(b"/")[-1]
         if fname != leaf:
@@ -588,37 +631,66 @@ def diverging_names(ents):
     return out
 
 
-def grade_name_coupling(paths):
-    """Does a divergent `0x2605` FileName ever sit on an entry this
-    build DECODES? That coupling is why OPEN_ITEMS.md keeps the leaf
-    substitution open instead of taking it, and it was measured by hand
-    once. No oracle and no engine run: the field and the zip's own name
-    both come off the bytes."""
-    arch = fields = diverged = reachable = 0
+def grade_name_coupling(exe, paths):
+    """Every `0x2605` FileName against the name this engine lists.
+
+    One `l` per archive that carries a field, and none at all for one
+    that does not; the expectation comes off the bytes, so the only
+    thing being trusted here is the zip itself."""
+    arch = fields = diverged = graded = bad = 0
     for p in paths:
         try:
             with open(p, "rb") as fh:
-                d = macbinary_datafork(fh.read())
+                raw = fh.read()
         except OSError:
             continue
+        d = macbinary_datafork(raw)
         ents = walk(d)
         if ents is None:
             continue
         arch += 1
-        fields += sum(1 for e in ents if long_field_name(e) is not None)
-        for nm, fname, method in diverging_names(ents):
-            diverged += 1
-            if method not in DECODED_METHODS:
+        want = expected_names(ents)
+        fields += len(want)
+        div = diverging_names(ents)
+        diverged += len(div)
+        if not want:
+            continue
+        # A specimen that arrived MacBinary-wrapped is listed through its
+        # DATA FORK, the way main() grades one: `l` on the envelope lists
+        # the envelope — one entry, the `.sea` itself — which is correct
+        # and is not what this is asking about.
+        subject, tmp = p, None
+        if d is not raw:
+            tmp = tempfile.NamedTemporaryFile(prefix="zipit-names-",
+                                              suffix=".zip", delete=False)
+            tmp.write(d)
+            tmp.close()
+            subject = tmp.name
+        try:
+            rows, err = ours_list(exe, subject)
+        finally:
+            if tmp:
+                os.unlink(tmp.name)
+        if rows is None:
+            print("zipit: %s: `l` FAILED while grading 0x2605 names (%s)"
+                  % (os.path.basename(p), err))
+            bad += 1
+            continue
+        for zipname, (wantname, leaf) in sorted(want.items()):
+            graded += 1
+            if wantname in rows:
                 continue
-            reachable += 1
-            print("zipit: %s: %r carries 0x2605 FileName %r and method %d "
-                  "IS decoded here — the leaf substitution OPEN_ITEMS.md "
-                  "keeps open has become observable"
-                  % (os.path.basename(p), nm, fname, method))
+            bad += 1
+            print("zipit: %s: 0x2605 FileName %r makes the entry %r, and "
+                  "this build lists %s — the field is the name the "
+                  "Macintosh file HAD (APPNOTE.TXT 4.6.4)"
+                  % (os.path.basename(p), leaf, wantname,
+                     "%r" % zipname if zipname in rows
+                     else "neither that nor %r" % zipname))
     print("zipit: %d archive(s) swept for 0x2605 names, %d field(s), "
-          "%d divergent, %d of those on an entry this build decodes"
-          % (arch, fields, diverged, reachable))
-    return reachable
+          "%d divergent, %d name(s) held against the listing"
+          % (arch, fields, diverged, graded))
+    return bad
 
 
 def _coupling_case(method, leaf, fname, extra_first=b""):
@@ -639,55 +711,86 @@ def _coupling_case(method, leaf, fname, extra_first=b""):
     return blob
 
 
-def selftest_coupling():
-    """Prove the name gate can FAIL, on bytes built here.
+OLD_ENGINE_STUB = """#!/usr/bin/env python3
+# The engine as it was before 2026-10-07: a `l --finder` listing that
+# answers with the ZIP's own leaf, which is what this program printed
+# for a 0x2605 entry until the FileName was read. Generated by
+# run_zipit.py's selftest as a NEGATIVE CONTROL: the name gate has to
+# fail on it, or the gate is not grading the substitution.
+import sys, zipfile
+for n in zipfile.ZipFile(sys.argv[-1]).namelist():
+    print("f 21 0 54455854/74747874 0000 %s" % n.rstrip("/"))
+"""
 
-    A gate that has never fired is a gate nobody has tested, and this
-    one has returned 0 every run since it was written, because every
-    divergent FileName on this disk is on an Implode entry (FORMATS.md,
-    *ZipIt's own archives*). Four one-entry zips say what it
-    discriminates on: the method, and the two names.
+
+def selftest_coupling(exe):
+    """Prove the name gate can FAIL, and prove it against the engine as
+    it WAS.
+
+    Three one-entry zips say what the gate discriminates on — the two
+    names, and a field whose declared length does not fit the record it
+    sits in — and each is run TWICE: once against the real binary,
+    which must come out clean, and once against a stub that answers
+    with the zip's own leaf the way this program did the day before the
+    substitution landed, which must come out dirty. A gate that cannot
+    tell those two apart is grading nothing.
 
     Returns the number of cases that came out wrong."""
     aes = struct.pack("<HHH2sBH", 0x9901, 7, 2, b"AE", 3, 8)
     cases = [
         # method, zip's leaf, the field's FileName, extra before 0x2605,
-        # expected (divergent, reachable), what it pins
-        (0,  "README", "READ ME", b"", (1, 1),
-         "a divergence on a method the build reads"),
-        (0,  "README", "README",  b"", (0, 0),
-         "a field that agrees is not a divergence"),
-        (6,  "README", "READ ME", b"", (1, 0),
-         "Implode: divergent, and not reachable — the live corpus shape"),
-        (99, "README", "READ ME", aes, (1, 1),
-         "WinZip AES, real method 8 in 0x9901: reachable since 2026-10-06"),
+        # fields graded, divergences, does the OLD engine fail it,
+        # what it pins
+        (0,  "README", "READ ME", b"", 1, 1, True,
+         "stored: the field is the name, and the zip's own is not"),
+        (6,  "README", "READ ME", b"", 1, 1, True,
+         "Implode, decoded since 2026-10-07 — the live corpus shape"),
+        (0,  "README", "README",  b"", 1, 0, False,
+         "a field that agrees: graded, and the old engine passes it too, "
+         "which is why an agreeing field proves nothing on its own"),
+        (99, "README", "READ ME", aes, 1, 1, True,
+         "WinZip AES, real method 8 in its 0x9901 field"),
+        (8,  "READ ME", "READ ME", b"", 1, 0,  False,
+         "a name with a space on both sides, so the gate is not merely "
+         "preferring whichever of the two has one"),
     ]
     bad = 0
     d = tempfile.mkdtemp(prefix="zipit-selftest-")
     try:
-        for method, leaf, fname, pre, (wdiv, wreach), why in cases:
+        stub = os.path.join(d, "old_engine.py")
+        with open(stub, "w") as fh:
+            fh.write(OLD_ENGINE_STUB)
+        os.chmod(stub, 0o755)
+        for method, leaf, fname, pre, wfields, wdiv, oldfails, why in cases:
             blob = _coupling_case(method, leaf, fname, pre)
-            p = os.path.join(d, "m%d-%s.zip" % (method, fname.replace(" ", "")))
+            p = os.path.join(d, "m%d-%s.zip"
+                             % (method, fname.replace(" ", "_")))
             with open(p, "wb") as fh:
                 fh.write(blob)
             ents = walk(blob)
             gdiv = len(diverging_names(ents)) if ents else -1
-            # The gate under test prints its own sweep line; four of
-            # those ahead of the real one would read as the real one.
+            gfields = len(expected_names(ents)) if ents else -1
+            # The gate prints its own sweep line; one of those per case
+            # ahead of the real one would read as the real one.
             said = io.StringIO()
             with contextlib.redirect_stdout(said):
-                greach = grade_name_coupling([p])
-            if (gdiv, greach) != (wdiv, wreach):
-                print("zipit: selftest: method %d, %r vs %r: got (%d, %d), "
-                      "wanted (%d, %d) — %s"
-                      % (method, leaf, fname, gdiv, greach, wdiv, wreach, why))
+                real = grade_name_coupling(exe, [p])
+                old = grade_name_coupling(stub, [p])
+            got = (gfields, gdiv, real, old > 0)
+            wanted = (wfields, wdiv, 0, oldfails)
+            if got != wanted:
+                print("zipit: selftest: method %d, %r vs %r: got %r, "
+                      "wanted %r (fields, divergent, this build's "
+                      "failures, does the pre-2026-10-07 stub fail) — %s"
+                      % (method, leaf, fname, got, wanted, why))
                 print(said.getvalue(), end="")
                 bad += 1
     finally:
         shutil.rmtree(d, ignore_errors=True)
     if not bad:
-        print("zipit: selftest ok (%d built cases, the gate fires on %d)"
-              % (len(cases), sum(1 for c in cases if c[4][1])))
+        print("zipit: selftest ok (%d built cases; the gate fails the "
+              "pre-substitution stub on %d of them and this build on none)"
+              % (len(cases), sum(1 for c in cases if c[6])))
     return bad
 
 
@@ -705,12 +808,13 @@ def main():
     # Never trust a pass this cannot fail: the gate below has returned 0
     # every run since it was written, so it proves itself first, on
     # bytes built here and no specimen (CLAUDE.md, *Traps*).
-    nbad = selftest_coupling()
+    nbad = selftest_coupling(a.macextract)
 
     # The name coupling wants neither oracle, so it is swept first and
     # over the corpus zips as well — on a fresh clone it has nothing to
     # read and says so with a count of 0.
     nbad += grade_name_coupling(
+        a.macextract,
         have + sorted(glob.glob(os.path.join(REPO, "fixtures", "*.zip"))))
 
     if not have:

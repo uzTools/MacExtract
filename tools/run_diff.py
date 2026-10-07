@@ -222,7 +222,17 @@ def said_unsupported(msg):
 # named here that lsar spells differently would excuse nothing, silently,
 # whereas an unlisted one fails the suite loudly and gets added. Zip
 # reduce/shrink and tar links belong here the day a fixture has one.
-ORACLE_OUT_OF_SCOPE = {"Implode"}
+#
+# **EMPTY as of 2026-10-07**, and kept because it was not: `Implode`
+# left when zip method 6 was implemented, which turned the 7 entries of
+# `4acalc.zip` and `4alnch11.zip` from "graded on their names" into 7
+# forks compared byte for byte — 5 against `unar` and 2 against deark,
+# the two `unar` fails (DECISIONS.md 2026-10-07, *the method that was
+# out for a premise with no halves left*). An empty set is not a dead
+# mechanism: `out_of_scope` below still runs on every entry, and the day
+# a fixture arrives with Shrink or a Reduce in it the line that adds it
+# is here.
+ORACLE_OUT_OF_SCOPE = set()
 
 
 def out_of_scope(entry):

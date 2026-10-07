@@ -1,0 +1,49 @@
+{
+ "entries": [
+  {
+   "data_sha256": "2aabbf5ba142ae56c9345d1b14fe106fe4ebc85adee644b8e2fda90e40f0e32d",
+   "data_size": 4956,
+   "name": "4k-2trees.txt",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "afa9270ebfff90a494ceabf6437e913250d8c114429a23f55774064c55411761",
+   "data_size": 4959,
+   "name": "4k-3trees.txt",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "cbdb0cdbe82722bece7d2d96108c1992717c264f73c1f37845ee5174b6e06f64",
+   "data_size": 9052,
+   "name": "8k-2trees.txt",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "75a1575aeca46cc5796bd366f34363b5aeed85ffac4fbdb4f2a7ecc148b183b6",
+   "data_size": 9055,
+   "name": "8k-3trees.txt",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-exo-zip-implode.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "5381f3ec05bb782df58623883fcc07e12f83ed85a8f41444faa0152258a6935c",
+ "size": 30589
+}

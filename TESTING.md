@@ -515,17 +515,24 @@ whatever it finds inside.
   all 23,987 of them, so on that one fork the argument no longer has to be
   taken on trust.
 - **An entry the oracle names as out of v1 scope is graded on its name and
-  on anything the engine did write — not on its forks**, because the engine
-  produces none (7 entries, all Implode, in the two PKZIP 1.x zips). The
-  day Implode is implemented those 10 forks start being compared with no
-  change to the harness. Until 2026-08-08 the whole FIXTURE was skipped
-  instead, on the strength of our own error message; see "When our engine
-  declines an entry".
-- Do not read "unadjudicated: 11 forks" as 11 defects. It is **11
-  forks across 6 fixtures**, measured 2026-10-07, where two
-  implementations cannot be compared: 4 in the PKZIP 1.x zips and
-  `arcplus712.zip`, where unar failed the entry and Implode is outside
-  v1 scope for us, so **both sides decline**; 4 in the 1995 Now
+  on anything the engine did write — not on its forks.** That tolerance
+  is **unused as of 2026-10-07**: `ORACLE_OUT_OF_SCOPE` held `Implode`
+  and nothing else, and the 7 entries it covered — in the two PKZIP 1.x
+  zips — are compared fork for fork now that method 6 is implemented,
+  with no change to the harness, exactly as this paragraph said they
+  would be. The mechanism stays, and the line that re-fills the set is
+  in `run_diff.py` for the day a fixture arrives with Shrink or a Reduce
+  in it. Until 2026-08-08 the whole FIXTURE was skipped instead, on the
+  strength of our own error message; see "When our engine declines an
+  entry".
+- Do not read "unadjudicated: 9 forks" as 9 defects. It is **9
+  forks across 4 fixtures**, measured 2026-10-07 — it was 11 across 6
+  earlier the same day, until `"Implode"` joined `DEARK_METHODS` and the
+  2 forks `unar` fails in the PKZIP 1.x zips were adjudicated by deark,
+  which took a fixture off the list each
+  — where two implementations cannot be compared: 2 in
+  `arcplus712.zip`, a stored entry whose checksum unar calls wrong, so
+  **both sides decline**; 4 in the 1995 Now
   Compress archive, which the archive's own extractor has graded under
   emulation instead (`nowcompress.py --adjudicate`); and 3 across the
   two wild StuffIt Optimizer fixtures added 2026-10-07, where both
@@ -668,7 +675,10 @@ A per-entry error from `macextract` is tolerated in exactly two cases, and
 - the oracle failed that same entry (it is `unadjudicated`), or
 - the oracle names the entry's compression method as one v1 does not
   implement — `oracle_methods` against `run_diff.py`'s
-  `ORACLE_OUT_OF_SCOPE`, which today holds `Implode` and nothing else.
+  `ORACLE_OUT_OF_SCOPE`, **which is EMPTY since 2026-10-07**: `Implode`
+  was its only member and method 6 is implemented. An empty set is not
+  a dead mechanism — `out_of_scope()` still runs on every entry — but
+  nothing is excused by it today, and that is the stronger state.
 
 **One decline is deliberately NOT eligible, and must never be made so.**
 An entry whose method byte says a StuffIt 2.x Optimizer ran fails
@@ -699,12 +709,13 @@ was skipped whole when every entry our binary reported failed as
 unsupported. Two consequences, both measured on
 2026-08-08:
 
-- it discarded ground truth. `4acalc.zip` and `4alnch11.zip` carry
-  adjudicated hashes for 5 of their 7 entries — `unar` implements Implode
-  and we do not — and none of the 10 forks, nor the names, nor the entry
-  counts were compared. **"even unar fails on them" was true at M8 and
-  false since per-entry manifests landed**, and the disproof was sitting
-  in the manifests themselves.
+- it discarded ground truth. `4acalc.zip` and `4alnch11.zip` carried
+  adjudicated hashes for 5 of their 7 entries — `unar` implemented
+  Implode and this engine did not — and none of the 10 forks, nor the
+  names, nor the entry counts were compared. **"even unar fails on them"
+  was true at M8 and false since per-entry manifests landed**, and the
+  disproof was sitting in the manifests themselves. All 7 are graded
+  fork for fork since 2026-10-07, 5 by `unar` and 2 by deark.
 - it could not fail. A regression that made a *supported* method report
   itself unsupported for a whole archive converted a failure
   into a skip, and the mitigation on record was a printed count for a
@@ -1043,8 +1054,35 @@ anything about the suite.**
    unmutated seed wraps exactly once in 15 flushes, which is the scale
    to read them against.
 
-   **What the two shapes still cannot see.** The `goto out` after a
-   failed flush is a sink write error and nothing a mutant can cause;
+   **A THIRD named shape since 2026-10-07: zip method 6 (Implode).**
+   Here the reason is sharper than method 14's, where a specimen at
+   least existed: nothing on this machine WRITES Implode — Info-ZIP's
+   `zip` dropped it before 1.0, `unar` and deark decode and do not
+   compress, PKZIP is a DOS program — so a corpus draw can never reach
+   a shape the two PKZIP 1.x fixtures do not already hold, however many
+   cases are spent. `tools/synth_implode.py` is an encoder, and its
+   seed carries all four of the combinations the format's flag word can
+   state with one declared compressed span per entry. 3,000 cases, two
+   seeds, `tools/fuzz_cover.py`'s new `Zip Implode` family:
+
+   | | seed 11 | seed 12 |
+   |---|---|---|
+   | of 5 functions, never entered | **0** | **0** |
+   | `imp_build`, `imp_flush`, `imp_read_lengths` | — | **100 % of lines** |
+   | `imp_decode` | — | **88.9 %** |
+   | `zip_implode` | — | **93.8 %** |
+
+   The family reads 0 at both seeds, which is the one signal that tool
+   calls reliable; the lines left are the allocation-failure returns
+   and the two corrupt-tree exits. A dedicated lane bends the same
+   streams on every `ci.sh` run — `tools/run_implode.py`, 240 mutants
+   on a fixed seed, all 240 refusing at least one entry, which is the
+   assertion that the edits are reaching the decoder at all (*Implode*,
+   below). That lane exists for the reason the AppleLink one does: a
+   draw rate is not a property of a decoder.
+
+   **What the two method-14 shapes still cannot see.** The `goto out`
+   after a failed flush is a sink write error and nothing a mutant can cause;
    it is reached only by the two real payloads, which no committed
    suite can touch (FORMATS.md, *StuffIt 5's method 14*). Both seeds
    arrive in ONE container, a bare `.sit`: method 14 inside MacBinary
@@ -2257,7 +2295,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-07 over all 966 corpus files, exactly one sniffs as a MIME
+2026-10-07 over all 967 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -2388,6 +2426,74 @@ the first directory), and lhasa reads two level 0 archives as empty
 because both begin with a `-lhd-` entry whose name is zero bytes long.
 Excusing a grader on a named file is not the same as excusing a format,
 and the file says which is which.
+
+## Implode, zip method 6 (`tools/run_implode.py`, in `ci.sh`)
+
+Added 2026-10-07, with the method. **`tools/synth_implode.py` is an
+ENCODER**, which is unusual here and has one cause: nothing on this
+machine writes method 6. Info-ZIP's `zip` dropped it before 1.0, `unar`
+and deark decode it and neither compresses, PKZIP is a DOS program. So
+the subjects are written from APPNOTE.TXT 5.3 — the same section
+`src/fmt_exo.c` is transcribed from, which is a circularity worth naming
+and is why the graders below are what they are.
+
+**Four graders per entry, two of them outside this project.**
+
+| grader | what it settles |
+|---|---|
+| the writer's own `--plain` output | the bytes it CODED, not a decode of what it wrote |
+| `unar` | an independent implementation of the method |
+| deark | a second one, and the file `src/fmt_exo.c` was read beside (`reference/deark/src/fmtutil-lzh.c`) |
+| the CRC-32 the writer stored | the same check a real PKZIP file is graded by, through `macextract t` |
+
+An encoder of ours agreeing with a decoder of ours proves nothing; the
+two outside readers are what make this ground truth. All four
+combinations the flag word can state are written — 4 K and 8 K
+dictionary against two and three Shannon-Fano trees — and `--only` names
+one.
+
+**One of its entries is a committed fixture**,
+`synth-exo-zip-implode.zip`, so `run_diff.py` grades an Implode stream
+with no specimen present and no oracle at run time. That matters more
+than it sounds: the 4 K/3-tree and 8 K/2-tree combinations are exactly
+the two where PKZIP 1.01's minimum-match-length bug is observable, and
+before the fixture landed a build taking the wrong reading passed
+`run_diff.py` over the whole corpus — measured, on that build — and
+failed only a ZipIt specimen that cannot be committed (FORMATS.md,
+*Implode*).
+
+**A second lane bends the streams**: 240 mutants on a fixed seed, every
+edit confined to the bytes `--ranges` declares compressed, each required
+to exit cleanly with no signal and no sanitizer report. **All 240 refuse
+at least one entry, and that is asserted** — a lane where nothing was
+ever refused would be a lane bending nothing, since an edit inside a
+stream has to make the CRC-32 object.
+
+**It was made to fail five ways before it was believed**, each a
+separate rule of the format: the minimum match length taken from the
+dictionary size instead of the literal tree's presence (which is the
+PKZIP 1.01 bug, and what the corpus alone cannot see), the window filled
+with spaces instead of zeros, the length-63 escape dropped, the distance
+bias off by one, and the Shannon-Fano codes assigned shortest-length
+first. Each fails this suite; the restored decoder passes.
+
+**What it cannot see.**
+
+- **A stream PKZIP 1.01 or 1.02 would have written.** The writer follows
+  APPNOTE 5.3.4 and so does the engine, so the two combinations where
+  the bug is observable are written the specification's way. deark
+  detects the bug by decoding twice and keeping whichever pass
+  reproduces the stored CRC; this engine does not, and such an entry
+  fails its CRC-32 as a per-entry error. UNEXERCISED, and what would
+  change it is a file (FORMATS.md, *Implode*).
+- **No Finder metadata and no fork split.** A MacBinary payload under an
+  Implode entry is the ZipIt specimen's shape; `tools/run_zipit.py`
+  grades that, and this suite's entries are plain text files.
+- **No mutant is graded by anything.** What is graded is the seed. A
+  bent stream is required to come out cleanly, never to come out right.
+- **No Macintosh.** The decoder reaches the machine through `ovl_exo`,
+  and nothing in this suite runs there; what says the image carries it
+  is `run_tiers.py --check-images` and the tier sweeps.
 
 ## Large zips (`tools/run_ziplarge.py`, in `ci.sh`)
 
@@ -3079,6 +3185,16 @@ SINGLE-FILE `.dd` archives — no walk to cut, no way to fail, and the
 check went green against a build with the defect deliberately restored.
 The fixtures are chosen by entry count now.
 
+**Which also means the default sample does not reach every fixture, and
+the Implode one is an example worth naming.** `--per-format 2` picks
+`derived-MUSFMT10.ZIP` and `synth-exo-zip-deflate.zip` for Zip, so
+`synth-exo-zip-implode.zip` is not cut on an ordinary run — it is a
+four-entry archive among eleven zips. Swept deliberately at
+`--per-format 20` on 2026-10-07: **504 cut archives across 16 formats, 0
+silent**, the Implode fixture included. Raising the default would cut
+the 29.7 MB `rexnebular_1_0_0.zip` three more times on every run for
+what one command says once.
+
 **What it cannot see.** A format that CANNOT notice: a tar has no
 directory and no end marker, so a cut tar is indistinguishable from a
 short one — `unar` accepts those too, and the row says nothing about
@@ -3646,7 +3762,7 @@ Four lanes, in one script, ~65 s:
 |---|---|
 | the images | fifteen of them, from `tools/overlay/images.py`'s inventory — which is PARSED out of `mac/CMakeLists.txt`, so a sixteenth image cannot exist in the build and be missing here. It read fourteen until 2026-10-05, when `ovl_sqp` joined and this count had to be raised with it — which is the drift the assertion exists to make loud |
 | the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format, the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, which is relocated a second time by the difference of two addresses |
-| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **19 fixtures, byte-exact, in both lifetimes** |
+| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **20 fixtures, byte-exact, in both lifetimes** — the twentieth is `synth-exo-zip-implode.zip`, added 2026-10-07, which is the only run zip method 6's decoder gets through its own `'OVLY'` image |
 | one per image | eighteen fixtures reaching fourteen of the fifteen images, each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME, AppleLink). Exit status is compared too, and neither build is required to succeed |
 | the SHIPPED images (`--shipped-only`, `ci.sh` variant 3d) | the same loader against the images **Retro68** just built — the bytes `dist/` ships — in both lifetimes: found, relocated at the address they run at, kept, released. This is the only check anywhere on the bundle's own directory and on **30 relocations across six images**, which is what Retro68 emits where the m68k-linux build of the same sources emits 15 in one. They cannot be CALLED here: a Retro68 image entered from an m68k-linux host binary segfaults, measured rather than assumed, so that lane stops at the loader |
 
@@ -4222,26 +4338,43 @@ Six things run, the last of them over the corpus zips as well:
    what is underneath a ZipIt `.sea` is a PEF container with the zip
    behind it. The data-fork side of the comparison is the one step 4 has
    already held against `unar`.
-6. **The name coupling.** Added 2026-10-05. Every `0x2605` FileName,
-   across the nine specimens and every `fixtures/*.zip`, compared with
-   the zip's own leaf off the bytes — no `unar`, no engine run — and a
-   divergence that lands on a method the engine decodes is a FAILURE,
-   because that is the day the leaf substitution OPEN_ITEMS.md keeps
-   open starts changing what comes out. **23 fields, 3 divergent, 0 of
-   them decodable** on 2026-10-05, re-run unchanged 2026-10-06, and the
-   count is printed. The methods are **0, 8 and 99**, the last since
-   2026-10-06 (DECISIONS.md 2026-10-06, *the gate that had never
-   fired*). **`selftest_coupling` proves it can fail on every
-   invocation**, ahead of the sweep and before any specimen is read:
-   four one-entry zips written by `tools/synth_crypt.py`'s own writer —
-   a divergence at method 0, an agreeing field at method 0, a
-   divergence at method 6 and one at method 99 with WinZip's `0x9901`
-   naming method 8 — asserted at (divergent, reachable) of (1,1),
-   (0,0), (1,0) and (1,1). It replaced a hand mutation of a specimen on
-   2026-10-06 and was itself made to fail two ways: narrowing the
-   criterion back to `(0, 8)` fails the fourth case alone, and blinding
-   `diverging_names` fails three of the four and leaves the agreeing one
-   passing.
+6. **The name coupling, and its criterion INVERTED on 2026-10-07.**
+   Added 2026-10-05, when it asked a question about a GAP: every
+   `0x2605` FileName, across the nine specimens and every
+   `fixtures/*.zip`, compared with the zip's own leaf off the bytes, and
+   a divergence landing on a method the engine decodes was a FAILURE —
+   because that was the day the leaf substitution would start changing
+   what came out. It reported **23 fields, 3 divergent, 0 of them
+   decodable** and could not fire, since all three divergences were
+   Implode and Implode was out of scope.
+
+   Both halves of that premise went on 2026-10-07: `src/fmt_exo.c`
+   reads the FileName and substitutes it, and it decodes method 6. So
+   the gate now asserts an INVARIANT instead, and a stronger one —
+   **every `0x2605` field, divergent or not, must be the leaf this
+   engine LISTS the entry under**. A listing needs no decoder, so there
+   is no notion of a reachable method left and `DECODED_METHODS` went
+   with the old criterion. One `l` per archive that carries a field and
+   none at all for one that does not; a MacBinary-wrapped specimen is
+   listed through its data fork, because `l` on the envelope lists the
+   envelope. **23 fields, 3 divergent, 23 names held against the
+   listing**, and the counts are printed.
+
+   **`selftest_coupling` proves the new gate can fail, and proves it
+   against the engine as it WAS.** Five one-entry zips written by
+   `tools/synth_crypt.py`'s own writer — a divergence at method 0, one
+   at method 6, an agreeing field at method 0, a divergence at method 99
+   with WinZip's `0x9901` naming method 8, and a name with a space on
+   both sides so that the gate cannot be merely preferring whichever
+   spelling has one — each run TWICE: against the real binary, which
+   must come out clean, and against a generated stub that answers `l`
+   with the zip's own leaf, which is what this program printed the day
+   before and which the gate must fail on. It does, on the 3 cases where
+   the two names differ, and the two agreeing cases pass both ways —
+   which is why an agreeing field proves nothing on its own. The old
+   selftest asserted `(divergent, reachable)` tuples and was itself made
+   to fail two ways (DECISIONS.md 2026-10-06, *the gate that had never
+   fired*).
 
 **Per-specimen tallies are asserted, and that is the part that matters.**
 `EXPECT` holds entries, one count per field id, and the number of
@@ -4266,27 +4399,30 @@ failures, and moving the `0x2705` flag read by two bytes in
   archive at all is that test's business too (FORMATS.md, *What the zip
   pair claims, and what it costs*).
 - **No fork of an entry whose method is out of scope**, and `UNGRADED`
-  names every one with the reason. Today that is
-  `Psycho!v1.0ß1.zip`'s three Implode entries. The declaration carries
-  the NUMBER, so a fourth refusal there — or a refusal anywhere else —
-  fails.
+  names every one with the reason. **It is EMPTY since 2026-10-07** and
+  is kept because it was not: its one row was
+  `Psycho!v1.0ß1.zip`'s three Implode entries, which are graded like any
+  other now — six forks byte-identical to `unar`, and the fork tally
+  went 113 → **119 of 119**. The declaration still carries the NUMBER,
+  so a refusal anywhere fails.
 - **No date.** `lsar` reports zip's own MS-DOS stamp where a `0x2605`
   entry's MacBinary header carries two Macintosh ones. They are not the
   same field, so agreement between them would mean nothing and
   disagreement would mean nothing either.
-- **Four names `unar` spells differently**, each allowed only while
-  ZipIt's own `0x2605` FileName is one of the two spellings — which is
-  checked, and is what lets the tolerance fail. It is not "ours is
-  right": on three of the four it is `unar` that is right
-  (OPEN_ITEMS.md). **It can only fail in one direction**, which is why
-  check 6 exists: where the entry has a reachable MacBinary payload a
-  dosified zip name makes `unar` and this engine disagree and the
-  tolerance fails, measured; where it has none — the shape all three
-  Implode entries have, measured, and a stored non-MacBinary `0x2605`
-  entry would have, hypothesis — the tolerance takes the field's own
-  name as `unar`'s expected alias and passes with our name wrong
-  (DECISIONS.md 2026-10-05, *a leaf is not a path, and a version is not
-  a preference*).
+- **ONE name `unar` spells differently, where there were four**,
+  allowed only while ZipIt's own `0x2605` FileName is one of the two
+  spellings — which is checked, and is what lets the tolerance fail. The
+  three that went are the dosified ones, where `unar` was right and this
+  engine was not; it extracts under the field's name now and they agree.
+  The survivor is ZipIt 2.2.2's `Drop files here to zip (OS X)`, where
+  XADMaster takes the MacBinary HEADER's name and that name has lost the
+  `(OS X)`. **`alias_of` lost one of its two branches the same day, and
+  it lost it because the branch had become unfireable**: "no reachable
+  payload, so `unar` takes the field's name" was true while this engine
+  used the zip's and is vacuous now that it uses the field's — where the
+  harness cannot reach the payload the two names are the same string and
+  nothing asks (DECISIONS.md 2026-10-05, *a leaf is not a path, and a
+  version is not a preference*).
 - **Check 6 reads `fixtures/*.zip` and the nine specimens, and nothing
   else.** A ZipIt archive arriving in the corpus under another
   extension — inside a `.hqx`, or as a `.sea` — carries fields it would
@@ -4333,6 +4469,7 @@ at a stranger's disk. That check matters more than it sounds:
 | `pkg` | an AppleLink package: the item count, the version, eight zero bytes, then the whole directory validated against the file's own size and tiling | **exactly the 6 synthesised `.pkg` fixtures out of 956 files in `fixtures/`**, and both real packages, which is a test that can fail in both directions |
 | `sit` | a classic StuffIt archive, reported when a fork's method byte carries the Optimizer bit `0x40`, the encrypted bit `0x80` or the `NewDE` bit `0x10` — and, since 2026-10-07, NAMING the module: the Optimizer id at 106/108 and the Encryptor id at 107/109, each read only for the fork whose own method byte carries the flag and whose length is nonzero | the **340** `rLau` archives out of 1,915 files in `fixtures/`, **1,710 file headers**, of which it flags exactly **4** — the two wild optimized archives in both their forms; and over StuffIt Deluxe 2.0.1's own specimens it names all five of that application's ciphers and all five Optimizer ids, each on the right archive, which is a test that can fail in both directions |
 | `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, where it reproduces FORMATS.md's *the biggest method-8 fork in reach is 44,549 B and compresses to 1,230* |
+| `implode` | a zip's Implode entries, each decoded BOTH ways — APPNOTE.TXT 5.3.4's minimum match length and PKZIP 1.01/1.02's — and graded by the CRC-32 the archive itself stored. Added 2026-10-07. Reported only when an entry needs the 1.01/1.02 rule, because that is the one thing the question is about. Wants the whole file. The decoder is `tools/synth_implode.py`'s, shared with the generator so there is one Python reading of 5.3 here | the 10 wild Implode entries on this disk: **7 of them are a combination where the two rules COINCIDE** and come out CRC-OK either way, and the 3 in the ZipIt specimen are the bug-capable pair and come out CRC-OK under 5.3.4 and CRC-bad or EOF under the other — so the probe can fail in both directions, and does, on files whose answer is already known |
 | `pit` | a PackIt archive, walked to the end of its block chain — reported only when a block is `PMa5` or `PMa6`. Added 2026-10-05. It wants the WHOLE file where the other three want 512 bytes, because an encrypted block is almost never the first one and a `PMa4` block can only be stepped over by DECODING it (`tools/derive_packit.py`'s decoder, with every length bounded against the bytes present) | **exactly the 5 PackIt archives out of 962 files in `fixtures/`**, every one of them walking to its `PEnd`, and all 3 encrypted specimens in `specimens/pitcrypt/`, each stopping at its encrypted block — so it can fail in both directions. Its first draft bounded a COMPRESSED entry's decoded size by the bytes left in the file and rejected every archive `tools/synth_pit.py` writes |
 
 **The sweeps that have been run, by key:**
@@ -4348,6 +4485,7 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,987 entry headers**, and the **5 Optimizer bits** this project had seen in the wild up to that day, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). **47 of the 16,727 walks stop early** under the in-step test added 2026-10-07, which is where the 21,767 headers this pair was first reported as became **21,733** — the dropped ones were read out of the middle of a fork, and two of them had been counted as Optimizer bits |
 
 | 2026-10-06 | `detection=626567696e2030*`, `...2036*`, `...2037*` — a file whose first bytes are a uuencode `begin` line, then the TAIL of each candidate read for a ` .finfo` section | 939 | **1** UUTool MU-layout posting, `uu-wild-dictcol.uu`, now a fixture. A second specimen came off the same key by eye, from a Macintosh CD (`uu-wild-terrainman.uu`). The first pass over the same 939 found nothing because the tail range was not honoured — below |
+| 2026-10-07 | `detection=504b0304????02000600*` and `...04000600*` — a zip whose FIRST local header is Implode at one of the two flag combinations where 5.3.4 and the PKZIP 1.01/1.02 reading disagree, in two size bands | **800** probed of 8,943 named (4,074 + 4,869; against 1,125,083 zips whose first entry is method 6 at all, and 6,805,790 zips) | **19,107 bug-capable Implode entries: 19,105 follow APPNOTE.TXT 5.3.4, 0 need the 1.01/1.02 rule, 2 decode under neither** — both entries of two copies of one truncated `synchro.zip` whose central directory is gone, which `unar` and deark refuse too. The bug is not a byte anywhere in a file, so this is the only way to ask: the flags name the candidates and the stored CRC-32 answers (FORMATS.md, *Implode*) |
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
 | 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
 | 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |
@@ -4362,6 +4500,14 @@ An explicit `bytes=<size-2048>-<size-1>` found the specimen in the same
 whose last bytes are already known and compare them. Any probe added
 here that reads anything but the head of a file wants that control
 first.
+
+**What the Implode sweep cannot see** is a bug-capable entry that is not
+the FIRST entry of its archive: the token is about the first local
+header, so an archive whose first entry is stored or deflate is invisible
+to it however many method-6 entries follow. The pairing this file's own
+caveat asks for is a sweep by `format=zip`, which reaches those and is
+not done. It also cannot see a file whose first 16 bytes the index did
+not record.
 
 **What the PackIt sweep cannot see** is a MacBinary-wrapped archive:
 `detection=504d61*` reads the first 16 bytes, and
@@ -4977,7 +5123,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 966 files, and the
+  the population you give it: the corpus is 967 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

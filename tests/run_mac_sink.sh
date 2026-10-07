@@ -27,8 +27,20 @@ FIXTURES="derived-ASCbeep.sit derived-apple.art.sit alpha401.cpt \
           derived-PackIt.pit synth-exo-tar.tar derived-Unzip101.sit \
           derived-BootTime.cpt derived-DigSim_RAM_Circuit.cpt \
           derived-MUSFMT10.ZIP ddtf-dd377ad.dd derived-800saywhat301j.sit \
-          synth-sit14.sit synth-sqp-forks.pkg"
+          synth-sit14.sit synth-sqp-forks.pkg \
+          synth-exo-zip-implode.zip"
 
+# `synth-exo-zip-implode.zip` was added 2026-10-07 with zip method 6, and
+# it is the only big-endian run that decoder gets: the two wild Implode
+# fixtures are PC software with no forks and have never been in this lane,
+# and the one Macintosh Implode archive is a specimen that cannot be
+# committed. Every multi-byte field it reads — the Shannon-Fano trees, the
+# distance operand assembled from two pieces, the dictionary index — is
+# read bit-wise or byte-wise, so an endianness mistake would show here and
+# in `tests/run_overlay_host.sh`, which derives its oracle list from this
+# one and therefore runs it through the real `'OVLY'` loader as well
+# (FORMATS.md, *Implode*).
+#
 # `synth-sqp-forks.pkg` was added 2026-10-05 with AppleLink packages. It is
 # the two-fork case: a member with both forks, one with only a resource fork
 # and one with only a data fork, which is what makes it the right one here —
