@@ -1948,11 +1948,12 @@ common such files are is not something this corpus can say.
 
 ### `tools/derive_hqxgarbage.py` — fourteen readers, and the one that says yes
 
-Not in `ci.sh` (it needs fixtures and a cached specimen). Ten sections,
+Not in `ci.sh` (it needs fixtures and cached specimens). Eleven sections,
 each skipping cleanly when its specimen is absent:
 
-    python3 tools/derive_hqxgarbage.py              all ten
+    python3 tools/derive_hqxgarbage.py              all eleven
     python3 tools/derive_hqxgarbage.py --engine     StuffIt's HQXEngine: THE RULE
+    python3 tools/derive_hqxgarbage.py --siblings   Aladdin's other four 5.x decoders
     python3 tools/derive_hqxgarbage.py --definition the Definition's own sentences
     python3 tools/derive_hqxgarbage.py --author     BinHex 5.0
     python3 tools/derive_hqxgarbage.py --lewis      DeHQX 2.0.1's binary
@@ -1969,14 +1970,26 @@ rather than guessed. It also SIMULATES the predicate's branch chain over
 all 256 character values instead of describing it, because the set is
 not the alphabet and a paraphrase would have said it was.
 
-**146 checks, and the shape of almost every one is a BYTE at an offset it
+`--siblings` is the control on that citation: Aladdin's other four 5.x
+BinHex decoders, read in case one disagreed. None does — the full
+`StuffIt Engine™` ships the identical module, Expander 5.5 is it
+recompiled (every constant, none of the byte signatures), and the two
+PowerPC builds are the same code, the second bundling the first byte for
+byte inside fourteen concatenated PEF containers. The PowerPC half is
+checked WITHOUT a disassembler, because this machine has none for it:
+the opcode-11 compares at the offsets they sit at, and the two branches
+that make the loop.
+
+**178 checks, and the shape of almost every one is a BYTE at an offset it
 is claimed to sit at** — not a disassembler's label, so a reading that has
-drifted fails instead of being quietly re-derived. Proven able to fail five ways:
+drifted fails instead of being quietly re-derived. Proven able to fail eight ways:
 moving one witness two bytes (`FAIL ... want 6bda got e50a`), moving one
 of HQXEngine's the same way, bending one branch in the simulated
 predicate (`accepts 60 characters, extra ['O', 'W', 'g', 'n', 'o']`),
-loosening one table-class count, and forcing the corpus scan's norm to 1
-so every line is odd. The `--grade` section's instrument is the pair of
+loosening one table-class count, forcing the corpus scan's norm to 1 so
+every line is odd, and — in the sibling section — moving a PowerPC
+branch target by four, moving a PowerPC compare by four, and negating
+the byte-identity test. The `--grade` section's instrument is the pair of
 readers that bracket it: `hexbin` skips the junk line and `deark` errors
 on it, so the subject is known to separate a line rule from no rule.
 
@@ -1994,11 +2007,11 @@ nothing and cannot fire is no evidence at all.
 
 **What it cannot see.** Four things:
 
-- **a reader it cannot reach.** `HQXEngine` is asked now; StuffIt
-  Expander 5.5's own binary and the SDK's `StuffIt Engine™` both carry
-  the alphabet and are not. Neither is a route to anything open — the
-  rule has its second implementation — but neither has been read, so
-  "every Aladdin decoder agrees" is not a claim this makes.
+- **what a PowerPC build is doing between its compares.** The two PPC
+  decoders are checked by their constants and two branches, not by
+  being read: there is no PowerPC disassembler on this machine. That is
+  enough to say they are the same source and not enough to say nothing
+  else in them differs.
 - **anything about frequency.** It says no reader states the rule and
   that no fixture needs the length half. It cannot say what postings in
   the wild look like — the 204 fixtures are Info-Mac downloads, which

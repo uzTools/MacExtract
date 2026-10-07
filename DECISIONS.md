@@ -23294,6 +23294,38 @@ This engine reads it. **A second implementation of a rule is not a
 second implementation of the reader around it**, and taking the whole
 reader because it states the rule would have lost a real file.
 
+### The four siblings, read the same day, in case one disagreed
+
+A citation is worth only as much as its sibling that contradicts it, so
+Aladdin's other four 5.x BinHex decoders were read too. **All four
+agree, and three are not even independent:**
+
+- **`StuffIt Engine™` (SDK 5.1)** ships `Eng ` 10000 **byte-identical**
+  to the standalone HQXEngine. The individual engine is the shipped one.
+- **StuffIt Expander 5.5** (November 1999) is the same module
+  recompiled: its A4 base moved 90 bytes and its globals with it, so no
+  byte signature matches — and every constant does, in order. Same
+  63/64, same `:` exception, same gap chain, same `!`..`r`, same 80-byte
+  line buffer, same rewind-and-read-the-next-line. The only real
+  difference is that the character is compared in a register instead of
+  through `%a2@`.
+- **`HQXEnginePPC.PPC.shlb`** is the same source through a PowerPC
+  compiler. There is no PowerPC disassembler on this machine, so what
+  is checked is what does not need one: the opcode-11 compares at the
+  offsets they sit at — 63, 64, `'!'`, `'r'`, 80, CR, LF — and the two
+  branches that make it a loop, `bl 0x702c -> 0x6eb4` (the line reader
+  calls the predicate) and `b 0x7040 -> 0x6fc8` (and loops back).
+- **`StuffIt Engine™ PowerPlug`** turned out to be **fourteen
+  concatenated PEF containers**, and the one at +0x87000 holds that same
+  PowerPC code byte for byte. A file search for the alphabet found it at
+  two offsets in a binary with no section covering either, which is what
+  a concatenation looks like before you know it is one.
+
+The six 68K client libraries hold the alphabet and no table: they report
+the format, the Engine decodes it. **So the answer does not depend on
+which Aladdin artefact is asked** — which is the only thing a sibling
+read can establish, and it is why it was worth the hour.
+
 ### The rule is a departure from the format, and the Definition says so
 
 The last thing the reading settles is the status of the rule itself.

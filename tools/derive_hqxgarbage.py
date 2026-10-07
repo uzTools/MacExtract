@@ -934,6 +934,243 @@ def definition():
     return bad, len(DEFINITION)
 
 
+# ------------------------------------------------------------------
+# The four siblings of the engine cited above, read 2026-10-07 because
+# a citation with a disagreeing sibling is worth knowing about. All
+# four agree, and three of them are the same bytes.
+# ------------------------------------------------------------------
+
+EXP55_ARCHIVE = os.path.join(
+    os.environ.get("UNC_CACHE", os.path.expanduser("~/.cache/macextract")),
+    "exp55", "exp55.bin")
+EXP55_MEMBER = "StuffIt Expander™"
+
+# Expander 5.5 is the same module recompiled: its globals moved and its
+# A4 base went from 0x5bf8 to 0x5c52, so the byte signatures do not
+# match and the CONSTANTS do. These are the predicate and the line
+# reader at Expander 5.5's own offsets.
+EXP55_CODE = [
+    (0x0014, "d1fc00005c52", "addal #23634,%a0        — A4, 90 on from 5.1"),
+    (0x0d8e, "4eba3b64", "jsr %pc@(0x48f4)        — the LINE reader"),
+    (0x0db4, "41ec0218", "lea %a4@(536),%a0       — the table, same offset"),
+    (0x487c, "0c6c003f049c", "cmpiw #63,%a4@(1180)    — the LENGTH half"),
+    (0x4884, "0c6c0040049c", "cmpiw #64,%a4@(1180)"),
+    (0x4894, "0c30003a0000", "cmpib #58,%a0@(0,%d0:w) — or ending at ':'"),
+    (0x48ae, "0440002e", "subiw #46,%d0           — the same gap chain"),
+    (0x48b2, "0c400031", "cmpiw #49,%d0"),
+    (0x48d0, "0c030021", "cmpib #33,%d3           — '!' (in a register "
+     "now, not %a2@)"),
+    (0x48d6, "0c030072", "cmpib #114,%d3          — 'r'"),
+    (0x4928, "14c3", "moveb %d3,%a2@+         — the line buffer"),
+    (0x4932, "0c440050", "cmpiw #80,%d4           — its cap"),
+    (0x4952, "4ebaff1c", "jsr %pc@(0x4870)        — JUDGE THE LINE"),
+    (0x495c, "45ec044c", "lea %a4@(1100),%a2      — REJECTED: rewind"),
+    (0x4960, "60b8", "bras 0x491a             — and read the NEXT LINE"),
+]
+
+# The PowerPC build, as PEF. No disassembler for it on this machine, so
+# what is checked is the one thing that does not need one: the opcode-11
+# compares (cmpwi) at the offsets they sit at, in order, and the two
+# branches that make it a loop. (code-section offset, constant).
+HQXPPC_CMPWI = [
+    (0x6ebc, 63, "the LENGTH half"),
+    (0x6ec8, 64, ""),
+    (0x6f44, 33, "'!'"),
+    (0x6f4c, 114, "'r'"),
+    (0x6ffc, 80, "the line buffer's cap"),
+    (0x7008, 13, "CR ends the line"),
+    (0x7010, 10, "LF ends the line"),
+]
+HQXPPC_BRANCH = [
+    (0x702c, "bl", 0x6eb4, "the line reader CALLS the predicate"),
+    (0x7040, "b", 0x6fc8, "and on a refusal loops back for the next line"),
+]
+SDK_HOME = os.path.join(
+    os.environ.get("UNC_CACHE", os.path.expanduser("~/.cache/macextract")),
+    "sitsdk", "u", "StuffIt SDK™ 5.1")
+
+
+def pef_code(raw, base=0):
+    """The code section of a PEF container at `base`, or None."""
+    b = raw[base:]
+    if b[:8] != b"Joy!peff":
+        return None
+    nsec = int.from_bytes(b[32:34], "big")
+    off = 40
+    for _i in range(nsec):
+        hdr = b[off:off + 28]
+        if len(hdr) < 28:
+            return None
+        packed = int.from_bytes(hdr[16:20], "big")
+        cont = int.from_bytes(hdr[20:24], "big")
+        kind = hdr[24]
+        if kind == 0:
+            return b[cont:cont + packed]
+        off += 28
+    return None
+
+
+def siblings():
+    """Aladdin's other four 5.x BinHex decoders, in case one disagrees.
+
+    None does. Two are literally the same bytes as the engine cited in
+    `src/fmt_binhex.c`, one is it recompiled, and the PowerPC build is
+    the same source through a different compiler."""
+    bad = seen = 0
+
+    # 1. The full StuffIt Engine ships the identical module.
+    path = os.path.join(SDK_HOME, "StuffIt Engine™.rsrc")
+    ours = None
+    rsrc, _d = unpack(HQXENG_ARCHIVE, HQXENG_INSTALLER)   # for the control
+    if os.path.exists(path):
+        from run_sdmodule import resource_data
+        raw = open(path, "rb").read()
+        # the cache keeps these as AppleDouble; the fork is entry id 2
+        if raw[:4] == b"\x00\x05\x16\x07":
+            n = int.from_bytes(raw[24:26], "big")
+            for i in range(n):
+                e = raw[26 + i * 12:38 + i * 12]
+                if int.from_bytes(e[0:4], "big") == 2:
+                    raw = raw[int.from_bytes(e[4:8], "big"):]
+        rs = resource_data(raw)
+        ours = one(rs, "Eng ", 10000)
+    # the standalone engine, out of the archive, as --engine reads it
+    ref = _hqxengine_body()
+    seen += 1
+    if ours is None or ref is None:
+        print("  -- StuffIt Engine™ 5.1: no specimen")
+    elif ours == ref:
+        print("  ok   StuffIt Engine™ 5.1 ships 'Eng ' 10000 BYTE-IDENTICAL "
+              "to the standalone HQXEngine (%d B)" % len(ref))
+    else:
+        print("  FAIL StuffIt Engine™ 5.1's 'Eng ' 10000 differs from the "
+              "standalone engine (%d vs %d B)"
+              % (len(ours), len(ref) if ref else -1))
+        bad += 1
+
+    # 2. StuffIt Expander 5.5 — the same module recompiled.
+    rsrc, _d = unpack(EXP55_ARCHIVE, EXP55_MEMBER)
+    if rsrc is None:
+        print("  -- StuffIt Expander 5.5: no specimen (%s)" % EXP55_ARCHIVE)
+    else:
+        body = one(res(rsrc), "Eng ", 0)
+        if body is None:
+            print("  FAIL Expander 5.5 has no 'Eng ' 0")
+            bad += 1
+            seen += 1
+        else:
+            b, s = witness(body, EXP55_CODE, "5.5 Eng  0")
+            bad += b
+            seen += s
+
+    # 3 and 4. The PowerPC builds.
+    shlb = os.path.join(SDK_HOME, "Individual Engines",
+                        "PPC Shared Libraries", "HQXEnginePPC.PPC.shlb")
+    plug = os.path.join(SDK_HOME, "StuffIt Engine™ PowerPlug")
+    if not os.path.exists(shlb):
+        print("  -- HQXEnginePPC: no specimen")
+    else:
+        code = pef_code(open(shlb, "rb").read())
+        if code is None:
+            print("  FAIL HQXEnginePPC is not a PEF container")
+            bad += 1
+            seen += 1
+        else:
+            for off, want, what in HQXPPC_CMPWI:
+                seen += 1
+                w = int.from_bytes(code[off:off + 4], "big")
+                got = w & 0xFFFF
+                if got >= 0x8000:
+                    got -= 0x10000
+                if (w >> 26) == 11 and got == want:
+                    print("  ok   PPC +0x%04x  cmpwi %-4d%s"
+                          % (off, want, "  — " + what if what else ""))
+                else:
+                    print("  FAIL PPC +0x%04x  is not cmpwi %d (word %08x)"
+                          % (off, want, w))
+                    bad += 1
+            for off, kind, tgt, what in HQXPPC_BRANCH:
+                seen += 1
+                w = int.from_bytes(code[off:off + 4], "big")
+                li = w & 0x03FFFFFC
+                if li & 0x02000000:
+                    li -= 0x04000000
+                ok = ((w >> 26) == 18 and (w & 1) == (1 if kind == "bl" else 0)
+                      and not (w & 2) and off + li == tgt)
+                if ok:
+                    print("  ok   PPC +0x%04x  %-2s 0x%04x — %s"
+                          % (off, kind, tgt, what))
+                else:
+                    print("  FAIL PPC +0x%04x  is not %s 0x%04x (word %08x)"
+                          % (off, kind, tgt, w))
+                    bad += 1
+        # PowerPlug is fourteen PEF containers in one file; the HQX one
+        # is at 0x87000 and its code is the same bytes.
+        seen += 1
+        if not os.path.exists(plug):
+            print("  -- StuffIt Engine™ PowerPlug: no specimen")
+        else:
+            other = pef_code(open(plug, "rb").read(), 0x87000)
+            if code is not None and other == code:
+                print("  ok   StuffIt Engine™ PowerPlug bundles that same "
+                      "PowerPC code BYTE-IDENTICALLY, at +0x87000 of "
+                      "fourteen concatenated PEF containers")
+            else:
+                print("  FAIL PowerPlug's container at +0x87000 is not the "
+                      "same code")
+                bad += 1
+
+    # 5. The client libraries are glue, not decoders: they hold the
+    #    alphabet (they report it) and neither the table nor the rule.
+    libs = os.path.join(SDK_HOME, "Libraries", "68K Libraries")
+    if not os.path.isdir(libs):
+        print("  -- the SDK's 68K libraries are not here")
+    else:
+        for name in sorted(os.listdir(libs)):
+            if not name.endswith(".Lib"):
+                continue
+            seen += 1
+            blob = open(os.path.join(libs, name), "rb").read()
+            tbl = ref[HQXENG_TABLE:HQXENG_TABLE + 116] if ref else b"\xff" * 116
+            if ALPHA in blob and tbl not in blob:
+                print("  ok   %s holds the alphabet and no table: it is "
+                      "client glue, not a decoder" % name[:44])
+            else:
+                print("  FAIL %s does not look like glue" % name)
+                bad += 1
+    return bad, seen
+
+
+def _hqxengine_body():
+    """`Eng ` 10000 out of the SDK archive, the way --engine reads it."""
+    work = tempfile.mkdtemp(prefix="dhg-")
+    try:
+        exe = cli()
+        if exe is None or not os.path.exists(HQXENG_ARCHIVE):
+            return None
+        subprocess.run([exe, "x", "-o", work, HQXENG_ARCHIVE],
+                       capture_output=True)
+        inst = None
+        for dirpath, _d, files in os.walk(work):
+            for f in files:
+                if f == HQXENG_INSTALLER:
+                    inst = os.path.join(dirpath, f)
+        if inst is None:
+            return None
+        out = os.path.join(work, "eng")
+        os.makedirs(out, exist_ok=True)
+        subprocess.run([exe, "x", "-o", out, inst], capture_output=True)
+        for dirpath, _d, files in os.walk(out):
+            for f in files:
+                if f == HQXENG_MEMBER + ".rsrc":
+                    return one(res(open(os.path.join(dirpath, f),
+                                        "rb").read()), "Eng ", 10000)
+        return None
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+
 def length():
     """The HALF of hexbin's rule this engine declines, and the trim it
     keeps, against the corpus.
@@ -1332,13 +1569,14 @@ def main():
     ap.add_argument("--lewis", action="store_true")
     ap.add_argument("--others", action="store_true")
     ap.add_argument("--engine", action="store_true")
+    ap.add_argument("--siblings", action="store_true")
     ap.add_argument("--definition", action="store_true")
     ap.add_argument("--length", action="store_true")
     ap.add_argument("--grade", action="store_true")
     a = ap.parse_args()
     allof = not (a.tables or a.code or a.absent or a.author or a.lewis
-                 or a.others or a.engine or a.definition or a.length
-                 or a.grade)
+                 or a.others or a.engine or a.siblings
+                 or a.definition or a.length or a.grade)
     bad = seen = 0
     for want, fn, head in ((a.tables or allof, tables,
                             "HQXer 1.1 — its two tables and its answer"),
@@ -1356,6 +1594,8 @@ def main():
                             "sniffer, two encoders"),
                            (a.engine or allof, engine,
                             "StuffIt's own HQXEngine — THE RULE, stated"),
+                           (a.siblings or allof, siblings,
+                            "the engine's four siblings — do they agree?"),
                            (a.definition or allof, definition,
                             "the Definition, where this engine leans on it"),
                            (a.length or allof, length,

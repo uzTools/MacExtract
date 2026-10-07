@@ -685,7 +685,10 @@ the file that uses one names the section a fact is in.
     `tools/derive_hqxgarbage.py --engine` opens every layer with this
     project's own CLI and checks 29 witnesses at the offsets it claims.
     Thirteen other readers were asked for this rule first and none
-    states it; what they do instead is recorded in the same tool.
+    states it; what they do instead is recorded in the same tool, as is
+    the agreement of Aladdin's other four 5.x decoders — the full
+    `StuffIt Engine™` ships this module unchanged, StuffIt Expander 5.5
+    is it recompiled, and the two PowerPC builds are the same code.
 
   * The MacBinary II Standard (revised 7/24/87) and the MacBinary III
     Standard Proposal (December 1996) — for `src/fmt_macbinary.c`: the

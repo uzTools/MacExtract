@@ -168,10 +168,15 @@ historical, and that check is why this is not the fourth time a shed
 citation has been recorded while still in the source (*Withdrawn
 claims*). The length half stays untranscribed, now on the Definition's
 own words — *"lines of any length should be accepted"* — with the
-corpus beside it: 0 of 204 `.hqx` fixtures need it. 146 witnesses,
+corpus beside it: 0 of 204 `.hqx` fixtures need it. 178 witnesses,
 `tools/derive_hqxgarbage.py`; DECISIONS.md 2026-10-07, *the engine four
-layers down*. **Not read, and not a route to anything open**: StuffIt
-Expander 5.5's own binary and the SDK's `StuffIt Engine™`.
+layers down*. **The citation has no disagreeing sibling**: Aladdin's
+other four 5.x decoders were read the same day and all four agree — the
+full `StuffIt Engine™` ships the identical module, Expander 5.5 is it
+recompiled, and the two PowerPC builds are the same code, one bundling
+the other byte for byte. The PowerPC pair is checked by its constants
+and two branches rather than read, because this machine has no
+disassembler for it (TESTING.md).
 
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained
