@@ -53,7 +53,6 @@ CARRIES = {
     "fmt_dd.c":         "the DDAR 0x20 raw-fork shape",
     "fmt_arc.c":        "Crunch 5/6/7 and Crush, and the method numbers",
     "unc_crypt.c":      "StuffItDES, StuffIt 5's hash, ARC's garble",
-    "fmt_binhex.c":     "one of macutils hexbin's rules about mailed text",
     "unc_lzah.c":       "the -lh1-/method-5 window preload (resetLZSSHandle)",
     "fmt_macbinary.c":  "the CRC-16/0xA001 fallback and the nonzero-date test",
     "fmt_applesingle.c": "the byte-swapped header",
@@ -66,7 +65,7 @@ CARRIES = {
 # compare against it. Nothing here is borrowed.
 HISTORICAL = {
     "fmt_exo.c", "fmt_exo_probe.c", "fmt_foreign.c", "fmt_superdisk.c",
-    "fmt_uu.c",
+    "fmt_uu.c", "fmt_binhex.c",
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",
     "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c", "fmt_lzh.c",

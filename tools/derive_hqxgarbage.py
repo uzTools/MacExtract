@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
-"""derive_hqxgarbage.py — ask every BinHex reader within reach about
-macutils' last rule, and record which were asked and how.
+"""derive_hqxgarbage.py — fourteen BinHex readers asked about macutils'
+last rule. The fourteenth states it, and the row closes.
 
-`src/fmt_binhex.c` has one citation left to macutils' `hexbin`: the skip
-of a line with intermediate garbage (`hqx.c`, *"Check line for
-intermediate garbage"*), which is what lets it read a file posted in
-several parts, each part carrying its own mail header. Five of that
-row's six rules have gone, each to a different source, and every one of
-them went because the search stopped asking the DECODERS in
-`reference/` and asked a writer, an author's own program or a manual
-(OPEN_ITEMS.md; DECISIONS.md 2026-10-06).
+`src/fmt_binhex.c` judged a whole LINE and skipped it when any character
+could not be data, and cited macutils' `hexbin` for that
+(`hqx.c`, *"Check line for intermediate garbage"*) because nothing else
+known stated it. Five of that row's six rules had already gone, each to
+a different source, and every one went because the search stopped asking
+the decoders in `reference/` and asked a writer, an author's own program
+or a manual (DECISIONS.md 2026-10-06).
 
-**Thirteen readers have now been asked and none states the rule.** It
-stays macutils'. What the asking found instead is below, because it is
-worth more than the citation would have been.
+**The sixth and last went the same way, on 2026-10-07: StuffIt's own
+`HQXEngine` states the rule.** Aladdin's SDK 5.1.2, April 1999, the
+decoder behind StuffIt Expander 5.x — it reads a line into an 80-byte
+buffer, hands it to a predicate, and **when the predicate says no it
+rewinds the buffer and reads the next line**. That is macutils' rule,
+written by somebody else, and `src/fmt_binhex.c` cites it now.
 
+    derive_hqxgarbage.py --engine     THE ANSWER: HQXEngine's line reader
+                                      and its predicate, byte-exact
+    derive_hqxgarbage.py --definition the Definition's own sentences,
+                                      where this engine leans on them
     derive_hqxgarbage.py --tables     HQXer's two tables and its error
                                       strings, at the resources they sit in
-    derive_hqxgarbage.py --code       the branch itself, byte-exact at the
-                                      offsets it is claimed to sit at
+    derive_hqxgarbage.py --code       HQXer's branch, byte-exact
     derive_hqxgarbage.py --absent     UUParser 1.72: the feature is not in
                                       this binary at all
     derive_hqxgarbage.py --author     BinHex 5.0 — Yves Lempereur's own
@@ -27,48 +32,99 @@ worth more than the citation would have been.
                                       documentation beside it
     derive_hqxgarbage.py --others     five more readers in the corpus and
                                       the specimen cache
-    derive_hqxgarbage.py --length     the HALF of hexbin's rule this
-                                      engine declines, against the corpus
+    derive_hqxgarbage.py --length     the HALF this engine declines, and
+                                      the trim it keeps, against the corpus
     derive_hqxgarbage.py --grade      the subject, through every reader on
                                       this machine that is not an emulator
     derive_hqxgarbage.py              all of them, skipping what is absent
 
-**The answer, in one line: a Macintosh reader judges a CHARACTER and
-macutils judges a LINE.** Seven of the thirteen are Macintosh programs
-with a BinHex decoder in them. THREE of those seven answer a character outside the alphabet by
+**HQXEngine, and how it was reached.** It is not a fixture: it is four
+layers inside a download this project already had, and this project's
+own CLI opens every layer —
+
+    sdk512.hqx -> "StuffIt SDK™ 5.1.2 Installer" (a .sit)
+               -> the Installer's DATA FORK is itself a StuffIt archive
+               -> Individual Engines/HQXEngine.rsrc, `Eng ` 10000
+
+The resource sets its own A4 (+0x0010: base + 0x5bf8), so its two
+displacements are derived here rather than guessed: the 116-byte table
+at +24080 is `A4+536` and the alphabet at +24196 is `A4+652`. The decode
+path is **+0x0f00 (RLE) -> +0x0dc4 (4->3) -> +0x0d78 (6-bit) -> +0x4ab0
+(line reader) -> +0x4a30 (predicate)**, and the predicate's verdict
+decides whether the line is served or thrown away (+0x4b1c).
+
+Its predicate is BOTH halves of macutils' rule: a line passes when it is
+**63 or 64 characters, or ends at the `:`**, AND every character is in a
+71-character set. That set is not quite the alphabet — the branch chain
+carves the three runs of non-alphabet characters out of `.`..`_` and
+sends the rest to a plain `!`..`r` range check, so `7 : O W g n o` ride
+along harmlessly (the table maps each to 0xFF). It rejects SPACE and
+TAB. `--engine` simulates the chain over all 256 values rather than
+describing it.
+
+**Two things HQXEngine does NOT state, and what covers them instead.**
+Neither is macutils' either, which is why that citation could go:
+
+  * **the length half.** HQXEngine wants 63 or 64; this engine tests no
+    length at all. The Definition is first-party against it — *"When
+    decoding, lines of any length should be accepted"* — and the corpus
+    agrees: **0 of 204 `.hqx` fixtures carry a line the length half
+    would skip and the alphabet half would keep** (`--length`, whose
+    scan is shown to fire by injecting one).
+  * **the trailing whitespace trim.** HQXEngine does not trim, so a data
+    line a mailer has put a space on is 65 characters, holds a SPACE,
+    and is discarded — it loses the file. This engine trims first, and
+    the Definition is why: *"`<return>` means to the decoder: Any
+    sequence of `<cr>`, `<lf>`, `<tab>`, `<spc>`"*, which names the tab
+    and the space outright. **That corrects "THE TAB IS OURS"**, which
+    stood in `src/fmt_binhex.c` from 2026-10-06 to 2026-10-07: it is
+    Lewis's, in the document this file is transcribed from.
+    `--length` measures it: **`country-song-generator-101.hqx` carries a
+    trailing space on all 2,600 of its data lines**, so the trim is
+    load-bearing on a real corpus file and HQXEngine would read none of
+    it.
+
+**And one thing the Definition settles that neither reader does**: an
+out-of-alphabet character *"indicates an error and the user should be
+notified of such"*. So the line rule is a **departure** from the format
+for the sake of mailed text, not an implementation of it — which is
+exactly why it needed a second implementation to rest on, and now has
+one.
+
+**The twelve that say no.** Seven of the fourteen are Macintosh programs
+with a decoder in them. Three answer a character outside the alphabet by
 fetching another one — BinHex 5.0, Compact Pro 1.51, Aladdin's own
-translator — and FOUR give up on the file: HQXer 1.1's alert, DeHQX
-2.0.1's error -7, BinHqx 1.02's error 127, StuffIt Expander 4.0.2's
-zero-byte output. **Not one of the seven buffers a line in order to
-judge it**, so not one can state the rule — including the two written by
-the men who defined the format. The remaining six are two encoders, two
+Deluxe 2 translator — and four give up on the file: HQXer 1.1's alert,
+DeHQX 2.0.1's error -7, BinHqx 1.02's error 127, StuffIt Expander
+4.0.2's zero-byte output. The remaining six are two encoders, two
 programs whose decoder is somewhere else, and the two Linux readers
-asked in 2026-10-05.
+asked on 2026-10-05. **Aladdin is on both sides of its own answer**: the
+Deluxe 2 translator of 1992 skips a character, the SDK engine of 1999
+skips a line.
 
 **BinHex 5.0** (`fixtures/binhex-50.hqx`, Yves Lempereur, 1992) is the
-author's own program and the strongest no of the twelve. `CODE` 1 builds
-a **128**-byte inverse table filled with `0x80` and writes the 64
-alphabet values into it (+0x0b78); its bit fetcher reads a byte, and on
-a byte with the high bit set (+0x0bd2) or a table miss (+0x0bdc) branches
-back and **fetches another CHARACTER**. There is no line buffer in the
-decode path at all. Its one line-shaped rule is at the START: the
-opening `:` must be the first character with a code of 32 or more on its
-line (+0x0522), which is the Definition's rule read more strictly than
-this engine reads it — `bh_find_colon` allows a space or a tab before it
-because the Definition names both.
+author's own program. `CODE` 1 builds a **128**-byte inverse table
+filled with `0x80` and writes the 64 alphabet values into it (+0x0b78);
+its bit fetcher reads a byte, and on a byte with the high bit set
+(+0x0bd2) or a table miss (+0x0bdc) branches back and **fetches another
+CHARACTER**. There is no line buffer in the decode path at all. Its one
+line-shaped rule is at the START: the opening `:` must be the first
+character with a code of 32 or more on its line (+0x0522), which is the
+Definition's rule read more strictly than this engine reads it —
+`bh_find_colon` allows a space or a tab before it because the Definition
+names both.
 
 **DeHQX 2.0.1** (`fixtures/dehqx-201.hqx`, Peter N Lewis) is asked as a
 BINARY here; `tools/derive_dehqx.py` asks its documentation. OPEN_ITEMS
-has said since 2026-10-06 that DeHQX is not a candidate because its
-answer to a cut posting is the separator rather than a line test — that
-was a claim about its prose, and **the code says the same thing**, which
-is a re-test that held. `INITREADHQX` (+0x35ea, the author left his
-Macsbug names in) builds a **256**-byte table filled with `0xFF`; the
-reader `RB` (+0x398c) skips every character of 32 or less, and on a
-character above 32 that misses the table sets **error -7 and stops**
-(+0x39ee, and again at +0x3bfc on the slow path). So DeHQX neither skips
-the character nor the line: it refuses the file, which is deark's answer
-too.
+said since 2026-10-06 that DeHQX is not a candidate because its answer
+to a cut posting is the separator rather than a line test — that was a
+claim about its prose, and **the code says the same thing**, which is a
+re-test that held. `INITREADHQX` (+0x35ea, the author left his Macsbug
+names in) builds a **256**-byte table filled with `0xFF`; the reader
+`RB` (+0x398c) skips every character of 32 or less, and on a character
+above 32 that misses the table sets **error -7 and stops** (+0x39ee, and
+again at +0x3bfc on the slow path). Which is what his own Definition
+tells a decoder to do.
 
 Two details of DeHQX's separator are worth having, since this engine
 implements it. Its `STR#` 128 holds the marker as `--- end of partX`,
@@ -106,7 +162,8 @@ this changes behaviour.
   * **StuffIt Commands 5.5** (`fixtures/stuffIt-commands-osax-55.hqx`)
     carries no decoder: each of its four `osax` resources uses the
     alphabet exactly ONCE, in a sniffer. That sniffer is the one place
-    in all thirteen readings that is line-shaped, and it uses BOTH halves
+    in all fourteen readings besides HQXEngine's that is line-shaped,
+    and it uses BOTH halves
     of macutils' rule — every character of the first data line must be
     in the alphabet (+0x2a32, ANDed over the whole line) and the line
     must be **64** characters, or shorter and ending in `:` (+0x2a60).
@@ -670,14 +727,225 @@ def others():
     return bad, seen
 
 
+# ------------------------------------------------------------------
+# StuffIt's own HQXEngine — the fourteenth reader, and the one that
+# says YES. SDK 5.1.2, April 1999; the decoder behind StuffIt Expander
+# 5.x. Reached from the download with this project's own CLI:
+#
+#   sdk512.hqx -> "StuffIt SDK™ 5.1.2 Installer" (a .sit)
+#              -> the Installer's DATA FORK is itself a StuffIt archive
+#              -> Individual Engines/HQXEngine.rsrc, resource `Eng ` 10000
+#
+# The resource sets its own A4 at +0x0010: A4 = the resource's base plus
+# 0x5bf8, so the 116-byte table at +24080 is A4+536 and the alphabet at
+# +24196 is A4+652. Every offset below is in the `Eng ` 10000 body.
+# ------------------------------------------------------------------
+
+HQXENG_ARCHIVE = os.path.join(
+    os.environ.get("UNC_CACHE", os.path.expanduser("~/.cache/macextract")),
+    "sitsdk", "sdk512.hqx")
+HQXENG_INSTALLER = "StuffIt SDK™ 5.1.2 Installer"
+HQXENG_MEMBER = "HQXEngine.rsrc"
+HQXENG_A4 = 23544               # 0x5bf8, from the witness below
+HQXENG_TABLE = 24080            # A4 + 536
+
+HQXENG_CODE = [
+    # how the resource finds its own globals, so the two displacements
+    # below are derived rather than guessed
+    (0x0010, "41faffee", "lea %pc@(0x0000),%a0    — the resource's own base"),
+    (0x0014, "d1fc00005bf8", "addal #23544,%a0        — A4 = base + 0x5bf8"),
+    (0x001e, "c18c", "exg %d0,%a4"),
+    # the 6-bit fetcher: it calls a LINE reader, not a byte reader
+    (0x0d7e, "4eba3d30", "jsr %pc@(0x4ab0)        — the LINE reader"),
+    (0x0d9e, "0c430073", "cmpiw #115,%d3          — past the table"),
+    (0x0da2, "6cda", "bges 0xd7e              — fetch another character"),
+    (0x0da4, "41ec0218", "lea %a4@(536),%a0       — the 116-byte table"),
+    (0x0da8, "197030000abc", "moveb %a0@(0,%d3:w),%a4@(2748)"),
+    (0x0dae, "0c2c00ff0abc", "cmpib #-1,%a4@(2748)"),
+    (0x0db4, "67c8", "beqs 0xd7e              — a MISS: fetch another"),
+    # the line reader
+    (0x4abc, "4a6c0aba", "tstw %a4@(2746)         — line mode, set at +0x075e"),
+    (0x4acc, "45ec045c", "lea %a4@(1116),%a2      — THE LINE BUFFER"),
+    (0x4ae4, "14c3", "moveb %d3,%a2@+         — fill it"),
+    (0x4aee, "0c440050", "cmpiw #80,%d4           — its cap"),
+    (0x4af4, "0c43000d", "cmpiw #13,%d3           — CR ends the line"),
+    (0x4afa, "0c43000a", "cmpiw #10,%d3           — LF ends the line"),
+    (0x4b0e, "4ebaff20", "jsr %pc@(0x4a30)        — JUDGE THE WHOLE LINE"),
+    (0x4b14, "6608", "bnes 0x4b1e             — accepted: serve it"),
+    (0x4b18, "45ec045c", "lea %a4@(1116),%a2      — REJECTED: rewind"),
+    (0x4b1c, "60b8", "bras 0x4ad6             — and read the NEXT LINE"),
+    # the predicate, which is both halves of macutils' rule
+    (0x4a3c, "0c6c003f04b2", "cmpiw #63,%a4@(1202)    — the LENGTH half"),
+    (0x4a44, "0c6c004004b2", "cmpiw #64,%a4@(1202)"),
+    (0x4a54, "0c30003a0000", "cmpib #58,%a0@(0,%d0:w) — or a line ending ':'"),
+    (0x4a5c, "7000", "moveq #0,%d0            — wrong length: not data"),
+    (0x4a68, "0440002e", "subiw #46,%d0           — the gap chain, from '.'"),
+    (0x4a8a, "0c120021", "cmpib #33,%a2@          — '!'"),
+    (0x4a90, "0c120072", "cmpib #114,%a2@         — 'r'"),
+    (0x4a96, "7000", "moveq #0,%d0            — the ALPHABET half"),
+    (0x4aa4, "7001", "moveq #1,%d0            — every character passed"),
+]
+
+
+def hqxeng_accepts(c):
+    """HQXEngine's per-character test at +0x4a64, as the branches run.
+
+    It is not "in the alphabet": the chain carves the three runs of
+    non-alphabet characters out of '.'..'_' and sends everything else to
+    a plain '!'..'r' range check, so seven strays ride along. They are
+    harmless — the 116-byte table maps each to 0xFF and the character is
+    skipped — but a reading that called this "the alphabet" would be
+    describing our rule rather than theirs."""
+    if ((c - 46) & 0xFFFF) > 49:
+        return 0x21 <= c <= 0x72
+    if c - 48 < 0:
+        return False                        # '.' '/'
+    if c - 59 < 0:
+        return 0x21 <= c <= 0x72
+    if c - 64 < 0:
+        return False                        # ';' '<' '=' '>' '?'
+    if c - 92 < 0:
+        return 0x21 <= c <= 0x72
+    return False                            # '\\' ']' '^' '_'
+
+
+def engine():
+    """The StuffIt SDK's own HQXEngine: the rule, stated by somebody
+    other than macutils. Fourteen readers in, the first yes."""
+    work = tempfile.mkdtemp(prefix="dhg-")
+    try:
+        exe = cli()
+        if exe is None or not os.path.exists(HQXENG_ARCHIVE):
+            print("  -- StuffIt SDK 5.1.2: no specimen (%s)"
+                  % HQXENG_ARCHIVE)
+            return 0, 0
+        # Two steps, because the Installer is an application whose DATA
+        # FORK is a StuffIt archive; nothing auto-recurses into it.
+        subprocess.run([exe, "x", "-o", work, HQXENG_ARCHIVE],
+                       capture_output=True)
+        inst = None
+        for dirpath, _d, files in os.walk(work):
+            for f in files:
+                if f == HQXENG_INSTALLER:
+                    inst = os.path.join(dirpath, f)
+        if inst is None:
+            print("  FAIL the SDK archive does not hold %r"
+                  % HQXENG_INSTALLER)
+            return 1, 1
+        out = os.path.join(work, "eng")
+        os.makedirs(out, exist_ok=True)
+        subprocess.run([exe, "x", "-o", out, inst], capture_output=True)
+        rsrc = None
+        for dirpath, _d, files in os.walk(out):
+            for f in files:
+                if f == HQXENG_MEMBER + ".rsrc":
+                    rsrc = open(os.path.join(dirpath, f), "rb").read()
+        if rsrc is None:
+            print("  FAIL the Installer does not hold %r" % HQXENG_MEMBER)
+            return 1, 1
+        body = one(res(rsrc), "Eng ", 10000)
+        if body is None:
+            print("  FAIL HQXEngine has no 'Eng ' 10000")
+            return 1, 1
+
+        bad = seen = 0
+        b, s = witness(body, HQXENG_CODE, "Eng  10000")
+        bad += b
+        seen += s
+
+        # The table the fetcher indexes, at the displacement the A4
+        # witness above derives.
+        seen += 1
+        t = body[HQXENG_TABLE:HQXENG_TABLE + 116]
+        values = all(t[ALPHA[i]] == i for i in range(64))
+        low = all(t[c] == 0xFF for c in range(0x21))
+        strays = sum(1 for c in range(0x21, 0x73) if t[c] == 0xFF)
+        if values and low and strays == 18:
+            print("  ok   'Eng ' 10000 +%d (A4+536): 116 entries, the 64 "
+                  "values, 0xFF below '!' and at the 18 strays in range"
+                  % HQXENG_TABLE)
+        else:
+            print("  FAIL that table is not what is claimed (%s/%s/%d)"
+                  % (values, low, strays))
+            bad += 1
+        seen += 1
+        if body.find(ALPHA) == 24196:
+            print("  ok   the alphabet at +24196 (A4+652)")
+        else:
+            print("  FAIL the alphabet is at %r" % body.find(ALPHA))
+            bad += 1
+
+        # What the predicate actually accepts, simulated from the
+        # branches rather than described.
+        seen += 1
+        ok = {c for c in range(256) if hqxeng_accepts(c)}
+        aset = set(ALPHA)
+        extra = sorted(ok - aset)
+        if aset <= ok and len(ok) == 71 and 0x20 not in ok and 0x09 not in ok:
+            print("  ok   its line test accepts all 64 alphabet characters "
+                  "and 7 strays (%s), and rejects SPACE and TAB"
+                  % " ".join(chr(c) for c in extra))
+        else:
+            print("  FAIL the predicate accepts %d characters, extra %r"
+                  % (len(ok), [chr(c) for c in extra]))
+            bad += 1
+        print("  ok   SO: a line that is not 63 or 64 long and does not end "
+              "at ':', or that holds one character outside that set, is "
+              "DISCARDED WHOLE. That is the rule (src/fmt_binhex.c)")
+        return bad, seen
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+
+# What the Definition itself says, where this engine relies on it.
+# Checked verbatim against reference/notes/binhex40_lewis.txt rather
+# than quoted, because these two sentences are now load-bearing: the
+# first is why the length half is declined and the second is why the
+# line rule is a DEPARTURE from the format rather than the format.
+DEFINITION = [
+    (b"<return> means to the decoder:",
+     "the decoder's <return>"),
+    (b"Any sequence of <cr>, <lf>, <tab>, <spc>.",
+     "...is cr, lf, TAB and SPACE — which is the trailing trim"),
+    (b"When decoding, lines of any length should be accepted",
+     "lines of any length: the length half, refused first-party"),
+    (b"any character other than those 64 and the <return> characters "
+     b"indicates an error",
+     "an out-of-alphabet character is an ERROR: the line rule is a "
+     "departure from the format, not the format"),
+]
+
+
+def definition():
+    """The Definition's own sentences, where this engine leans on them."""
+    path = os.path.join(ROOT, "reference", "notes", "binhex40_lewis.txt")
+    if not os.path.exists(path):
+        print("  -- no reference/notes/binhex40_lewis.txt")
+        return 0, 0
+    text = open(path, "rb").read()
+    bad = 0
+    for needle, what in DEFINITION:
+        if needle in text:
+            print("  ok   %s" % what)
+        else:
+            print("  FAIL the Definition does not say %r" % needle)
+            bad += 1
+    return bad, len(DEFINITION)
+
+
 def length():
-    """The HALF of hexbin's rule this engine declines, against the corpus.
+    """The HALF of hexbin's rule this engine declines, and the trim it
+    keeps, against the corpus.
 
     `hqx.c` also skips any line whose length differs from the first
-    line's. `src/fmt_binhex.c` does not transcribe it. The question this
-    answers is not whether the test is right but whether it is
-    load-bearing HERE: a line it would skip that the alphabet half keeps.
-    The scan is shown to fire by injecting one, because a scan that
+    line's, and StuffIt's HQXEngine wants 63 or 64. `src/fmt_binhex.c`
+    transcribes neither, and the Definition is why — "lines of any
+    length should be accepted", checked above. This is the corpus half
+    of the same question, and it also measures the TRIM, which is the
+    other thing a line-judging reader has to get right.
+
+    The scans are shown to fire by injecting a line, because a scan that
     found nothing and could not fire would be no evidence at all."""
     import glob
     alpha = set(ALPHA)
@@ -723,6 +991,41 @@ def length():
     else:
         print("  ok   0 of %d .hqx fixtures carry a line the length half "
               "would skip and the alphabet half would keep" % scanned)
+
+    # THE TRIM, which is the same question from the other side: a line
+    # of data that a mailer has put a space on the end of. We trim it
+    # and read the file; HQXEngine does not trim, so its length test
+    # sees 65 and its character test sees a space, and it discards every
+    # data line in such a file. This counts them.
+    trimmed = []
+    for p in files:
+        raw = open(p, "rb").read()
+        lines = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n")
+        start = next((k for k, l in enumerate(lines)
+                      if l.strip().startswith(b":")), None)
+        if start is None:
+            continue
+        n = 0
+        for k in range(start, len(lines)):
+            core = lines[k].rstrip(b" \t")
+            if not core:
+                continue
+            if all(c in alpha for c in core) and lines[k] != core:
+                n += 1
+            if core.endswith(b":"):
+                break
+        if n:
+            trimmed.append((os.path.basename(p), n))
+    seen += 1
+    if trimmed:
+        print("  ok   the trim is load-bearing: %s"
+              % ", ".join("%s (%d data line(s) with trailing whitespace)" % t
+                          for t in trimmed[:3]))
+        print("       every one of those lines is 65 characters and holds a "
+              "SPACE, so HQXEngine discards it and loses the file")
+    else:
+        print("  NOTE no fixture carries trailing whitespace on a data line, "
+              "so the trim is unexercised by this corpus")
 
     # And the scan can fire: one injected line of hyphens, which is
     # alphabet-only and is not 64 characters long.
@@ -1028,11 +1331,14 @@ def main():
     ap.add_argument("--author", action="store_true")
     ap.add_argument("--lewis", action="store_true")
     ap.add_argument("--others", action="store_true")
+    ap.add_argument("--engine", action="store_true")
+    ap.add_argument("--definition", action="store_true")
     ap.add_argument("--length", action="store_true")
     ap.add_argument("--grade", action="store_true")
     a = ap.parse_args()
     allof = not (a.tables or a.code or a.absent or a.author or a.lewis
-                 or a.others or a.length or a.grade)
+                 or a.others or a.engine or a.definition or a.length
+                 or a.grade)
     bad = seen = 0
     for want, fn, head in ((a.tables or allof, tables,
                             "HQXer 1.1 — its two tables and its answer"),
@@ -1048,8 +1354,12 @@ def main():
                            (a.others or allof, others,
                             "BinHqx, Compact Pro, Aladdin's translator and "
                             "sniffer, two encoders"),
+                           (a.engine or allof, engine,
+                            "StuffIt's own HQXEngine — THE RULE, stated"),
+                           (a.definition or allof, definition,
+                            "the Definition, where this engine leans on it"),
                            (a.length or allof, length,
-                            "the half of the rule this engine declines"),
+                            "the half this engine declines, and the trim"),
                            (a.grade or allof, grade,
                             "the subject, through every reader here")):
         if not want:
@@ -1060,8 +1370,9 @@ def main():
         seen += s
     print("\nderive-hqxgarbage: %d checked, %d failed" % (seen, bad))
     if not bad:
-        print("derive-hqxgarbage: the rule is still macutils' — thirteen "
-              "readers asked, none states it (OPEN_ITEMS.md)")
+        print("derive-hqxgarbage: the rule is StuffIt HQXEngine's too — "
+              "fourteen readers asked, the fourteenth states it, and "
+              "macutils has left src/fmt_binhex.c (NOTICE)")
     return 1 if bad else 0
 
 

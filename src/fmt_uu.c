@@ -353,7 +353,8 @@ static int uu_section(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
              * each with its own header, and joining them puts that
              * header in the middle of the stream. The same thing
              * macutils' hexbin does for BinHex (hqx.c, "check line for
-             * intermediate garbage", which fmt_binhex.c still cites);
+             * intermediate garbage") and StuffIt's own HQXEngine after
+             * it, which is what fmt_binhex.c cites since 2026-10-07;
              * here the test is stronger, because a uu line's first
              * character DECLARES how many bytes it encodes, so the
              * length has to agree AND the characters have to be in the

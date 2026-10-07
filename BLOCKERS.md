@@ -155,19 +155,23 @@ both, which is why `tools/run_arcplus.py` consults it and not `unar`,
 and why `fixtures/manifests/derived-ARCDOS.arc.json` is registered by
 that tool rather than built by `make_manifests.py` (TESTING.md).
 
-**BinHex's garbage rule is macutils' own, and the half this engine
-declines is now priced.** Thirteen readers have been asked for a second
-statement of `hqx.c`'s skip of a line with intermediate garbage, and
-**not one of the seven that hold a Macintosh decoder buffers a line in
-order to judge it** — including BinHex 5.0's and DeHQX 2.0.1's, the
-programs of the men who made the format and wrote its Definition. The
-citation stays. The OTHER half, the length test this engine does not
-transcribe, is now declined on a measurement rather than on an
-objection: **0 of 204 `.hqx` fixtures carry a line it would skip and the
-alphabet half would keep** (2026-10-06, `tools/derive_hqxgarbage.py
---length`, 109 witnesses; DECISIONS.md 2026-10-06, *the rule that no
-Macintosh program has*). One route left, unasked: the StuffIt SDK's own
-`HQXEngine`, in the specimen cache (OPEN_ITEMS.md).
+**`src/fmt_binhex.c` owes macutils nothing, as of 2026-10-07, and
+OPEN_ITEMS' provenance section is empty.** The skip of a line that
+cannot be data is stated by **StuffIt's own `HQXEngine`** (SDK 5.1.2,
+`Eng ` 10000: line buffer +0x4acc, predicate +0x4a30, rewind-and-read-
+the-next-line +0x4b1c), which is what the file cites now; the trailing
+whitespace trim is the Definition's, which names `<tab>` and `<spc>`
+outright. Thirteen readers were asked before it and none stated the
+rule. Mechanically checked, which is the point: `check_provenance.py`
+fails if a `Source:` naming macutils survives in a file listed as
+historical, and that check is why this is not the fourth time a shed
+citation has been recorded while still in the source (*Withdrawn
+claims*). The length half stays untranscribed, now on the Definition's
+own words — *"lines of any length should be accepted"* — with the
+corpus beside it: 0 of 204 `.hqx` fixtures need it. 146 witnesses,
+`tools/derive_hqxgarbage.py`; DECISIONS.md 2026-10-07, *the engine four
+layers down*. **Not read, and not a route to anything open**: StuffIt
+Expander 5.5's own binary and the SDK's `StuffIt Engine™`.
 
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained

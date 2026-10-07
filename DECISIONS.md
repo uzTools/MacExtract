@@ -357,6 +357,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
 - 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
 - 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
+- 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
 
 ---
 
@@ -23201,3 +23202,112 @@ one implementation, the Definition is the format.
 thirteen without the row moving.** What makes it worth recording is that
 the same afternoon retired an unfalsifiable justification in shipping
 source and confirmed three rules the engine had from single sources.
+
+## 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
+
+`src/fmt_binhex.c` judged a whole line and skipped it when any character
+could not be data, and cited macutils' `hexbin` for it because nothing
+else known stated it. Thirteen readers had been asked for a second
+statement and none gave one (2026-10-06, *the rule that no Macintosh
+program has*). The fourteenth does.
+
+**Claim: StuffIt's own `HQXEngine` states macutils' rule, so the
+citation moves and `src/fmt_binhex.c` owes macutils nothing.** Evidence:
+Aladdin's StuffIt Engine SDK 5.1.2 (April 1999), resource `Eng ` 10000 —
+the decoder behind StuffIt Expander 5.x. Its 6-bit fetcher calls a LINE
+reader (+0x0d7e), which fills an 80-byte buffer to the first CR or LF
+(+0x4acc), hands it to a predicate (+0x4a30), and **on a refusal rewinds
+the buffer and reads the next line** (+0x4b1c). Consequence: the row
+leaves OPEN_ITEMS.md, `fmt_binhex.c` leaves NOTICE's inventory and
+`check_provenance.py`'s CARRIES, and **OPEN_ITEMS' provenance section is
+empty for the first time**. 29 byte-exact witnesses,
+`tools/derive_hqxgarbage.py --engine`.
+
+### Why thirteen readings missed it, which is the transferable part
+
+Every one of the thirteen was a program a user runs. HQXEngine is not:
+it is a code resource that an application loads, and the applications
+that load it — StuffIt Expander, DropStuff — carry it rather than
+implement it. **The search had been enumerating programs when the unit
+that holds a format rule is a module.** StuffIt Expander 4.0.2 was even
+asked, by booting a Macintosh and running it, and answered for its own
+1996 engine; the 1999 one two directories away in the same cache says
+something different.
+
+It was also four layers down, and the layers are why a file search did
+not surface it:
+
+    sdk512.hqx -> "StuffIt SDK™ 5.1.2 Installer" (a .sit)
+               -> the Installer's DATA FORK is itself a StuffIt archive
+               -> Individual Engines/HQXEngine.rsrc  -> `Eng ` 10000
+
+This project's own CLI opens every layer, which is the part worth
+keeping: **the corpus is deeper than its file names.** A sweep for the
+BinHex alphabet across `fixtures/` found eight programs; the same sweep
+across `~/.cache/macextract` found the engine, the SDK's shared
+libraries and StuffIt Expander 5.5 — and the cache had held them since
+2026-09-28, downloaded to answer a question about StuffIt 5 archive
+comments. The same cache produced Aladdin's Deluxe 2 translator a day
+earlier. **A cache assembled for one row is corpus for every row**, and
+this is the second row in two days that it closed.
+
+### What the engine settles, and what it does not
+
+Reading it answered two questions the row had been carrying separately.
+
+**It is both halves of hexbin's rule**, not one: a line passes when it
+is 63 or 64 characters, or ends at the `:`, AND every character is in a
+71-value set. So the length test this engine declines now has three
+implementations against it — HQXEngine, StuffIt Commands 5.5 and BinHqx
+1.02 — and declining it needed a better reason than the corpus count
+written down the day before. It has one, and it is first-party: the
+Definition says **"When decoding, lines of any length should be
+accepted"**. The corpus count stands beside it as the local check.
+
+**The predicate's character set is not the alphabet**, which matters
+only because calling it that would have been describing our rule rather
+than theirs. The branch chain carves the three runs of non-alphabet
+characters out of `.`..`_` and sends everything else to a plain `!`..`r`
+range check, so `7 : O W g n o` ride along — harmlessly, since the
+116-byte table maps each to 0xFF and the character is skipped one layer
+down. `--engine` simulates the chain over all 256 values rather than
+paraphrasing it, which is the only way that distinction survives.
+
+### The trim, which HQXEngine does NOT state — and a correction
+
+`bh_refill_line` trims trailing spaces and tabs before judging. This
+comment said **"THE TAB IS OURS"** from 2026-10-06, having gone looking
+for the tab in `hexbin` (which tests `line[n - 1] == ' '` and nothing
+else) instead of in the document the file is transcribed from. The
+Definition names both characters outright: *"`<return>` means to the
+decoder: Any sequence of `<cr>`, `<lf>`, `<tab>`, `<spc>`. (The `<tab>`
+and `<spc>` are required because some old programs produced these
+characters)"*. **It is Lewis's, and it was two lines above a sentence
+this file already quoted.**
+
+That matters beyond attribution, because HQXEngine does not trim — and
+the corpus says what that costs. **`country-song-generator-101.hqx`
+carries a trailing space on all 2,600 of its data lines.** Every one is
+65 characters and holds a SPACE, so it fails both halves of HQXEngine's
+predicate and StuffIt Expander 5.x would discard the file line by line.
+This engine reads it. **A second implementation of a rule is not a
+second implementation of the reader around it**, and taking the whole
+reader because it states the rule would have lost a real file.
+
+### The rule is a departure from the format, and the Definition says so
+
+The last thing the reading settles is the status of the rule itself.
+Lewis's Definition: *"any character other than those 64 and the
+`<return>` characters indicates an error and the user should be notified
+of such."* deark does that, and so does DeHQX 2.0.1 — Lewis's own
+decoder. So skipping the line is **not an implementation of BinHex**; it
+is a departure two independent authors made for the same reason, text
+that has been mailed. That is why it needed a second implementation to
+rest on rather than a reading of the spec, and it is why the comment
+now says so where the rule is.
+
+**Cost: an afternoon, against two days of asking programs.** What makes
+it worth recording is the shape of the miss: thirteen negative answers
+had made the question feel settled, and the fourteenth reader was in a
+directory this project had filled itself, nine days earlier, for
+something else.

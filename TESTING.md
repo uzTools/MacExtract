@@ -1946,42 +1946,59 @@ postings), so both build the boundary the documentation describes. The
 sentence is first-party and the failure it predicted was real; how
 common such files are is not something this corpus can say.
 
-### `tools/derive_hqxgarbage.py` — thirteen readers, and the half this engine declines
+### `tools/derive_hqxgarbage.py` — fourteen readers, and the one that says yes
 
-Not in `ci.sh` (it needs fixtures). Eight sections, each skipping cleanly
-when its specimen is absent:
+Not in `ci.sh` (it needs fixtures and a cached specimen). Ten sections,
+each skipping cleanly when its specimen is absent:
 
-    python3 tools/derive_hqxgarbage.py              all eight
+    python3 tools/derive_hqxgarbage.py              all ten
+    python3 tools/derive_hqxgarbage.py --engine     StuffIt's HQXEngine: THE RULE
+    python3 tools/derive_hqxgarbage.py --definition the Definition's own sentences
     python3 tools/derive_hqxgarbage.py --author     BinHex 5.0
     python3 tools/derive_hqxgarbage.py --lewis      DeHQX 2.0.1's binary
     python3 tools/derive_hqxgarbage.py --others     five more readers
-    python3 tools/derive_hqxgarbage.py --length     the length half, measured
+    python3 tools/derive_hqxgarbage.py --length     the length half and the trim
     python3 tools/derive_hqxgarbage.py --grade      the subject, every reader here
 
-**109 checks, and the shape of every one is a BYTE at an offset it is
-claimed to sit at** — not a disassembler's label, so a reading that has
-drifted fails instead of being quietly re-derived. Proven able to fail by
-moving one witness two bytes (`FAIL ... want 6bda got e50a`), by
-loosening one table-class count, and by forcing the corpus scan's norm to
-1 so every line is odd. The `--grade` section's instrument is the pair of
+`--engine` is the one `src/fmt_binhex.c` now cites. It opens four layers
+with this project's own CLI — `sdk512.hqx`, a `.sit`, an Installer whose
+DATA FORK is itself a `.sit`, then `Individual Engines/HQXEngine.rsrc` —
+and checks 29 witnesses in `Eng ` 10000, including the instruction that
+sets the resource's own A4, so the two table displacements are derived
+rather than guessed. It also SIMULATES the predicate's branch chain over
+all 256 character values instead of describing it, because the set is
+not the alphabet and a paraphrase would have said it was.
+
+**146 checks, and the shape of almost every one is a BYTE at an offset it
+is claimed to sit at** — not a disassembler's label, so a reading that has
+drifted fails instead of being quietly re-derived. Proven able to fail five ways:
+moving one witness two bytes (`FAIL ... want 6bda got e50a`), moving one
+of HQXEngine's the same way, bending one branch in the simulated
+predicate (`accepts 60 characters, extra ['O', 'W', 'g', 'n', 'o']`),
+loosening one table-class count, and forcing the corpus scan's norm to 1
+so every line is odd. The `--grade` section's instrument is the pair of
 readers that bracket it: `hexbin` skips the junk line and `deark` errors
 on it, so the subject is known to separate a line rule from no rule.
 
-`--length` is the one section that measures this project rather than
-somebody else's program: **0 of 204 `.hqx` fixtures carry a line that
-hexbin's length half would skip and its alphabet half would keep**, which
-is what the decline in `src/fmt_binhex.c` now rests on. It carries its own
-control — an injected line of twenty hyphens, which is alphabet-only and
-not 64 characters — because a scan that finds nothing and cannot fire is
-no evidence at all.
+`--length` is the one section that measures this project's corpus rather
+than somebody else's program, and it measures two things. **0 of 204
+`.hqx` fixtures carry a line that the length half would skip and the
+alphabet half would keep** — the local check beside the Definition's own
+refusal of that half, which `--definition` asserts verbatim. And **one
+fixture carries a trailing space on all 2,600 of its data lines**
+(`country-song-generator-101.hqx`), so the trim is load-bearing on a real
+file; HQXEngine does not trim and would discard every one of those lines.
+The first scan carries its own control — an injected line of twenty
+hyphens, alphabet-only and not 64 characters — because a scan that finds
+nothing and cannot fire is no evidence at all.
 
 **What it cannot see.** Four things:
 
-- **a reader it cannot reach.** The decoder behind StuffIt Expander 5.5
-  and the StuffIt SDK's `HQXEngine` both carry the alphabet and are not
-  asked here; the osax sections establish only that *StuffIt Commands
-  5.5* has no decoder of its own, not what the Engine does. That is a
-  route left, not a closed one.
+- **a reader it cannot reach.** `HQXEngine` is asked now; StuffIt
+  Expander 5.5's own binary and the SDK's `StuffIt Engine™` both carry
+  the alphabet and are not. Neither is a route to anything open — the
+  rule has its second implementation — but neither has been read, so
+  "every Aladdin decoder agrees" is not a claim this makes.
 - **anything about frequency.** It says no reader states the rule and
   that no fixture needs the length half. It cannot say what postings in
   the wild look like — the 204 fixtures are Info-Mac downloads, which

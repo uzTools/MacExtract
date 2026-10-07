@@ -100,41 +100,50 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
 
 /* Read the next line and decide whether it belongs to the document.
  *
- * Source: reference/macutils/hexbin/hqx.c, which checks each line "for
- * intermediate garbage" and skips the whole line when it finds any —
- * that is what lets it read a file posted in several parts, each part
- * carrying its own mail header, and it is why the BinHex alphabet
- * omitting n, o, s, t, u and the space is load-bearing: ordinary prose
- * fails within a few characters.
+ * A line that cannot be data is skipped WHOLE, which is what lets this
+ * read a file posted in several parts, each part carrying its own mail
+ * header. It is why the BinHex alphabet omitting n, o, s, t, u and the
+ * space is load-bearing: ordinary prose fails within a few characters.
  *
- * THIRTEEN readers have been asked for this rule and none states it,
- * including BinHex 5.0's and DeHQX 2.0.1's — the programs of the man who
- * made the format and the man who wrote its Definition. Seven of the
- * thirteen are Macintosh programs with a decoder in them: three answer a
- * character outside the alphabet by fetching another one, four give up on
- * the file, and NOT ONE buffers a line in order to judge it. So the rule
- * is macutils' own, for Usenet, rather than anything the format implies
- * (tools/derive_hqxgarbage.py; DECISIONS.md 2026-10-06, *the rule that
- * no Macintosh program has*).
+ * Source: StuffIt's own `HQXEngine`, Aladdin's StuffIt Engine SDK 5.1.2
+ * (April 1999), resource `Eng ` 10000 — the decoder behind StuffIt
+ * Expander 5.x. Its 6-bit fetcher calls a LINE reader (+0x0d7e), which
+ * fills an 80-byte buffer to the first CR or LF (+0x4acc), hands it to a
+ * predicate (+0x4b0e), and on a refusal REWINDS THE BUFFER AND READS THE
+ * NEXT LINE (+0x4b1c). The predicate (+0x4a30) wants a line of 63 or 64
+ * characters, or one ending at the ':', with every character in a
+ * 71-value set that holds all 64 of the alphabet and rejects SPACE and
+ * TAB. Not published as source: it is four layers inside `sdk512.hqx`,
+ * and tools/derive_hqxgarbage.py --engine opens every layer with this
+ * project's own CLI and checks 29 witnesses at the offsets they are
+ * claimed to sit at.
+ *
+ * macutils' hexbin states the same rule (hqx.c, "Check line for
+ * intermediate garbage") and is where this was first transcribed from.
+ * It is no longer cited: thirteen readers were asked for a second
+ * statement of it and none gave one, the fourteenth did, and nothing
+ * here is hexbin's alone any more (NOTICE; DECISIONS.md 2026-10-07,
+ * *the engine four layers down*).
+ *
+ * THE RULE IS A DEPARTURE FROM THE FORMAT, not an implementation of it,
+ * and the Definition says so in as many words: "any character other than
+ * those 64 and the <return> characters indicates an error and the user
+ * should be notified of such" (binhex40_lewis.txt). deark and DeHQX
+ * 2.0.1 — Lewis's own decoder — both do exactly that. Two readers depart
+ * for mailed text in the same direction, which is what this rests on.
  *
  * ONE HALF of hexbin's rule is deliberately not transcribed: it also
  * skips any line whose length differs from the first line's, with a
- * look-ahead exception for the last one.
- *
- * The reason is the corpus, not the objection this comment used to give.
- * It used to say the test can discard a legitimate short final line
- * (hexbin ships `-c` to turn it off) — and two readers implement the
- * length test and answer exactly that objection the same way, by
- * accepting a short line that ends at the ':': StuffIt Commands 5.5's
- * sniffer and BinHqx 1.02's continuation test. What says to decline it
- * here is that it is not load-bearing: NO line in any of the 204 `.hqx`
- * fixtures would be skipped by the length half and kept by the alphabet
- * half (measured 2026-10-06, tools/derive_hqxgarbage.py --length, whose
- * scan is shown to fire by injecting one). What the half would have
- * caught — a junk line built only of alphabet characters, a bare rule of
- * hyphens being the realistic shape — is taken as data and caught by
- * BinHex's own per-fork CRC, as a per-entry error rather than as
- * silence. */
+ * look-ahead exception for the last one, and HQXEngine's 63-or-64 is the
+ * same test. The Definition refuses it first-party — "When decoding,
+ * lines of any length should be accepted" — and the corpus agrees: NO
+ * line in any of the 204 `.hqx` fixtures would be skipped by the length
+ * half and kept by the alphabet half (measured 2026-10-06,
+ * tools/derive_hqxgarbage.py --length, whose scan is shown to fire by
+ * injecting one). What the half would have caught — a junk line built
+ * only of alphabet characters, a bare rule of hyphens being the
+ * realistic shape — is taken as data and caught by BinHex's own per-fork
+ * CRC, as a per-entry error rather than as silence. */
 static int bh_refill_line(BhDec *d)
 {
     for (;;) {
@@ -175,17 +184,32 @@ static int bh_refill_line(BhDec *d)
             q = d->line;
         }
 
-        /* Mailers eat trailing whitespace; hexbin trims it before
-         * judging the line, so a trimmed line is not "garbage".
+        /* Mailers put whitespace on the end of a line, so it is
+         * trimmed before the line is judged and a trimmed line is not
+         * "garbage".
          *
-         * THE TAB IS OURS. `hqx.c` tests `line[n - 1] == ' '` and
-         * nothing else, and a tab is FAIL in its lookup, so a line
-         * ending in one is skipped there and read here. Corrected
-         * 2026-10-06: the sentence above attributed both characters to
-         * a source that states one. What the second one does have is a
-         * second implementation — HQXer 1.1's inverse table marks TAB
-         * skippable ANYWHERE in a line, with BS, LF, CR and the space
-         * (tools/derive_hqxgarbage.py --tables). */
+         * Source: binhex40_lewis.txt — "<return> means to the decoder:
+         * Any sequence of <cr>, <lf>, <tab>, <spc>. (The <tab> and <spc>
+         * are required because some old programs produced these
+         * characters)". Both characters are named by the format's own
+         * Definition, so trailing ones are a line ending and not data.
+         *
+         * THE TAB IS NOT OURS, corrected 2026-10-07: this comment said
+         * it was from 2026-10-06, having looked for it in hexbin (which
+         * tests `line[n - 1] == ' '` and nothing else) rather than in
+         * the document this file is transcribed from. HQXer 1.1 is a
+         * second implementation — its inverse table marks TAB skippable
+         * ANYWHERE in a line, with BS, LF, CR and the space
+         * (tools/derive_hqxgarbage.py --tables).
+         *
+         * The trim is load-bearing, and on a real file:
+         * country-song-generator-101.hqx carries a trailing space on all
+         * 2,600 of its data lines. StuffIt's HQXEngine does not trim, so
+         * every one of those lines is 65 characters long and holds a
+         * SPACE — it fails both halves of that engine's predicate and
+         * the whole file is discarded, line by line. A rule and its
+         * second implementation are not the same reader
+         * (tools/derive_hqxgarbage.py --length). */
         while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
         if (n == 0) continue;                       /* blank line */
 

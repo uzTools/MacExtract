@@ -79,27 +79,6 @@ hand.
                        wrote (tools/derive_sit5crypt.py).
   src/fmt_dd.c         the `DDAR` 0x20 raw-fork shape, four offsets
                        nothing reachable sets.
-  src/fmt_binhex.c     macutils' hexbin: ONE rule about text that has
-                       been mailed rather than about an encoding — the
-                       skip of a line with intermediate garbage (hqx.c),
-                       which it applies to read a file posted in several
-                       parts. Five rules have left this row. Two on
-                       2026-09-27 for mpack (below), which is
-                       permissive: the dispatch — any amount of
-                       preamble skipped looking for "begin " — and the
-                       uu terminator; `src/fmt_mime.c` carried only the
-                       second and is clear of both references now. A
-                       third on 2026-10-05 for deark (below): the
-                       line-ending rule and the unterminated last line,
-                       which dbuf_find_line states for all three
-                       terminators and which deark's own uudecode uses.
-                       The fourth took `src/fmt_uu.c` off this row
-                       entirely on 2026-10-06: mu_convert() and the MU
-                       layout are UUTool's own (below). And the fifth,
-                       the same day, is the scan for a second document
-                       in one input, which DeHQX 2.0.1's own
-                       documentation states (below) — hexbin.c until
-                       then.
   src/fmt_macbinary.c, four things no specification supports: the
   src/fmt_applesingle.c  MacBinary CRC-16/0xA001 fallback and its
   src/fmt_sitseg.c     nonzero-date test, the byte-swapped AppleSingle
@@ -689,7 +668,24 @@ the file that uses one names the section a fact is in.
     records what HQXer does NOT state — it skips a bad CHARACTER and
     never a line — and the same of the twelve other readers asked,
     including Yves Lempereur's own BinHex 5.0 and DeHQX's binary. None
-    of the thirteen judges a line, so macutils keeps the rule below.
+    of the fourteen judges a line except HQXEngine below, which is
+    where the rule went.
+
+  * StuffIt's own `HQXEngine`, Aladdin's StuffIt Engine SDK 5.1.2 (April
+    1999), resource `Eng ` 10000 — for `src/fmt_binhex.c`'s **skip of a
+    line that cannot be data**, the rule this project transcribed from
+    macutils' `hexbin` and cited to it until 2026-10-07. HQXEngine is
+    the decoder behind StuffIt Expander 5.x and it states the same rule
+    in code: a line is read into an 80-byte buffer, judged whole, and on
+    a refusal the buffer is rewound and the next line read (`Eng ` 10000
+    +0x4ab0, +0x4a30, +0x4b1c). Not published as source and not a
+    corpus fixture: it is four layers inside `sdk512.hqx` — a `.sit`,
+    then an Installer whose DATA FORK is itself a `.sit`, then
+    `Individual Engines/HQXEngine.rsrc` — and
+    `tools/derive_hqxgarbage.py --engine` opens every layer with this
+    project's own CLI and checks 29 witnesses at the offsets it claims.
+    Thirteen other readers were asked for this rule first and none
+    states it; what they do instead is recorded in the same tool.
 
   * The MacBinary II Standard (revised 7/24/87) and the MacBinary III
     Standard Proposal (December 1996) — for `src/fmt_macbinary.c`: the
