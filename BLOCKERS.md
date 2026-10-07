@@ -1994,6 +1994,26 @@ a harness can click is not the same list.
 
 ### Corrected figures and superseded write-ups
 
+- **"Nothing in the corpus is encrypted."** Written 2026-08-23 and
+  re-counted twice as the corpus grew — 903 fixtures, then 961 — and the
+  measurement behind it was always `lsar -j`'s `XADIsEncrypted`, 0 for
+  every entry. **Withdrawn 2026-10-07**: `fixtures/sitcrypt-wild-F7Menus.sit.bin`
+  is encrypted, and that flag is still 0 for every fixture including it,
+  because **`unar` cannot see StuffIt 2.x's `NewDE` bit** — method byte
+  `0x12` it reports as `StuffItCompressionMethod: 18`,
+  `XADCompressionName: "Compress"`, no flag at all, and then fails the
+  entry *"Error on decrunching"*. Measured on the fixture and on 2.0.1's
+  own `NewdeT.sit.bin`, against `0x8D` on the same specimens, which does
+  set the flag. The bit it is blind to is the same `0x10` the published
+  table calls a folder marker, so this is the published misreading
+  arriving one layer down, in the instrument rather than in a parser.
+  **Cost: nothing yet — the claim was true when written and no decision
+  rested on it** — but it is the shape that matters: a corpus-wide
+  negative measured through somebody else's flag is a claim about the
+  flag. Corrected in place in FORMATS.md (*Encryption*), TESTING.md
+  (*Decryption*) and `tools/run_crypt.py`, which all three stated it
+  separately.
+
 - **`fuzz_cover.py`'s noise floor: "seeds 11 and 12 over an identical
   build differ by up to five functions in a family."** Measured
   2026-09-27, corrected 2026-10-05 to **thirteen** — ARC 0 against 13,

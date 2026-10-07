@@ -239,11 +239,16 @@ class SitProbe:
         # though it were a file header. Measured 2026-10-06, after a
         # deep sweep reported four Optimizer entries whose names were
         # English prose out of the middle of a fork.
-        end = min(len(head), off + total) if total >= 22 else len(head)
+        aend = off + total if total >= 22 else None
+        # Two different bounds, and conflating them rejects the last
+        # entry of every archive: `end` is where the FETCHED bytes run
+        # out, `aend` is where the archive says it ends. An entry's
+        # forks legitimately extend past the bytes in hand.
+        end = min(len(head), aend) if aend else len(head)
         ents, at = [], off + 22
         while at + 112 <= end:
             e = entry(head, at)
-            if not plausible(e):
+            if not plausible(e, aend):
                 break
             ents.append(e)
             at += 112 + e.get("rclen", 0) + e.get("dclen", 0)
@@ -260,32 +265,52 @@ class SitProbe:
 FOLDER_MASK = 0x6F
 
 
-def plausible(e):
+def plausible(e, end=None):
     """Whether a walk has arrived at a FILE HEADER or at the middle of
     a fork.
 
-    **Measured 2026-10-07**: a NUL inside the Pascal name is the tell.
-    A classic Macintosh file name holds no NUL — `Icon\r` holds a
-    carriage return and is perfectly real, which is why the test is NUL
-    and not "printable" — so an entry whose name does is a step that
-    landed inside compressed data, and every entry after it is also
-    wrong. Of 494 headers walked over the 35 archives the 2026-10-06
-    sweep had flagged, exactly 3 fail this and all 3 are already known
-    bogus: the two `cursors.sit` copies `unar` also refuses, and the
-    one entry that made the earlier sweep report a `NewDE` bit. The
-    five real `Text 1` entries pass. So the walk STOPS here rather than
-    reporting the entry: the declared total at +6 bounds the walk but
-    does not keep it in step.
+    **The declared total at +6 bounds the walk but does not keep it in
+    step**: one wrong length and every entry after it is read out of
+    compressed data. Three tests, each with a measured false-positive
+    rate over the **1,216 file headers in `fixtures/`**, which are
+    known good:
+
+      * the name-length byte is **1..31**, 31 being the longest name
+        HFS has and what `src/fmt_sit.c` itself clamps to. 0 of 1,710.
+      * the name holds **no NUL**. 0 of 1,710 — and note that a weaker
+        test does not survive this corpus: *"no control byte"* rejects
+        **44** real headers, names made of tabs and `\x01`, so the
+        obvious tightening would have silently dropped them.
+      * the entry and both its forks **fit inside the declared total**.
+        0 of 1,710.
+
+    Of the headers the 2026-10-06 sweep's archives yield, exactly the
+    already-known-bogus ones fail: the two `cursors.sit` copies `unar`
+    also refuses, the entry that made that sweep report a `NewDE` bit,
+    and `SternSounds3.sit`, whose second "entry" asks for a 3.1 GB fork
+    out of a 206 KB archive. Every real `Text 1`, `MacPaint 1` and
+    `Sound 1` entry passes.
     """
-    return "\x00" not in e["name"] and e["name"] != ""
+    # `len(name)` is the fallback for a state file written before the
+    # raw length byte was kept; mac_roman is one character per byte, so
+    # it is exact up to the 63 the name is clamped at.
+    nl = e.get("nl", len(e["name"]))
+    if nl > 31 or nl == 0 or "\x00" in e["name"]:
+        return False
+    if end is not None:
+        nxt = e["at"] + 112 + e.get("rclen", 0) + e.get("dclen", 0)
+        if nxt > end or nxt <= e["at"]:
+            return False
+    return True
 
 
 def entry(b, at):
     """One file header, as `src/fmt_sit.c` reads it."""
     rm, dm = b[at], b[at + 1]
-    nl = min(b[at + 2], 63)
-    e = {"at": at, "rmeth": rm, "dmeth": dm,
-         "name": b[at + 3:at + 3 + nl].decode("mac_roman", "replace")}
+    nl = b[at + 2]
+    e = {"at": at, "rmeth": rm, "dmeth": dm, "nl": nl,
+         "name": b[at + 3:at + 3 + min(nl, 63)].decode("mac_roman",
+                                                       "replace")}
     if (rm & FOLDER_MASK) in (0x20, 0x21):
         e["folder"] = "start" if (rm & FOLDER_MASK) == 0x20 else "end"
         return e
@@ -472,9 +497,7 @@ def search(query, pages, limit):
     for page in range(pages):
         url = ("https://%s/search?%s&limit=%d&pageNum=%d&outputAs=json"
                % (HOST, query, limit, page))
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=300) as r:
-            rows = json.loads(r.read().decode("utf-8", "replace"))
+        rows = json.loads(fetch(url).decode("utf-8", "replace"))
         fresh = [x for x in rows if (x["itemid"], x["fileid"]) not in seen]
         seen.update((x["itemid"], x["fileid"]) for x in fresh)
         out += fresh
@@ -508,6 +531,38 @@ def member_types(row):
                    if v.get("macFileType")})
 
 
+def save(state, path):
+    """Write the state atomically.
+
+    **A `SIGTERM` in the middle of `json.dump` leaves a truncated file**,
+    which is how 70,869 listed rows were lost on 2026-10-07: a run inside
+    a shell timeout was killed mid-write and the next run could not parse
+    what it had saved. The temp-file-and-rename costs nothing and a long
+    listing cannot be re-done cheaply.
+    """
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(state, f)
+    os.replace(tmp, path)
+
+
+def fetch(url, tries=4):
+    """One GET, retried — a sweep that lists 200 pages must survive a
+    transient DNS failure, which this machine produces (measured
+    2026-10-07, mid-listing, `Temporary failure in name resolution`)."""
+    for attempt in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return r.read()
+        except Exception as exc:
+            if attempt == tries - 1:
+                raise
+            print("    retry %d: %s" % (attempt + 1, exc), flush=True)
+            time.sleep(5 * (attempt + 1))
+    return b""
+
+
 def count(query):
     """How many files the index says a query matches — one request.
 
@@ -517,9 +572,7 @@ def count(query):
     result window returns its first page and says nothing.
     """
     url = "https://%s/search?%s&limit=1&pageNum=0" % (HOST, query)
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=300) as r:
-        html = r.read().decode("utf-8", "replace")
+    html = fetch(url).decode("utf-8", "replace")
     m = re.search(r"([\d,]+) match", html)
     return int(m.group(1).replace(",", "")) if m else None
 
@@ -628,7 +681,7 @@ def walk_sit(head, item, fileid, probe, first, maxent):
             if len(blob) < at + 112:
                 break
             e = entry(blob, at)
-        if not plausible(e):
+        if not plausible(e, end):
             break
         ents.append(e)
         at += 112 + (e.get("rclen", 0) + e.get("dclen", 0))
@@ -692,18 +745,34 @@ def main():
             print("%s -> %s" % (q, count(q)), flush=True)
         return 0
 
-    state = {"files": {}, "probed": {}, "queries": {}, "types": {}}
+    state = {"files": {}, "probed": {}, "queries": {}, "types": {},
+             "shards": {}}
     if os.path.exists(state_path):
         state = json.load(open(state_path))
         state.setdefault("types", {})
+    t_start = time.time()
     queries = []
     for q in a.query:
-        queries += size_shards(q, a.shard_under) if a.shard_under else [q]
+        if not a.shard_under:
+            queries.append(q)
+            continue
+        # The shard boundaries are cached: they cost a count request
+        # each, and a listing long enough to need shards is also long
+        # enough to be resumed several times.
+        sh = state.setdefault("shards", {})
+        if q not in sh:
+            sh[q] = size_shards(q, a.shard_under)
+            save(state, state_path)
+        queries += sh[q]
     for q in queries:
         full = q + (("&sortBy=%s" % a.sort) if a.sort else "")
         full += "&sortOrderDesc=desc" if a.desc else ""
         if full in state["queries"]:
             continue
+        if time.time() - t_start > a.budget:
+            print("listing not finished — %d/%d queries done, run again"
+                  % (len(state["queries"]), len(queries)), flush=True)
+            return 0
         print("query %s" % full, flush=True)
         rows = search(full, a.pages, a.limit)
         for r in rows:
@@ -711,7 +780,7 @@ def main():
             state["files"][key] = r["size"]
             state["types"][key] = member_types(r)
         state["queries"][full] = len(rows)
-        json.dump(state, open(state_path, "w"))
+        save(state, state_path)
 
     todo = [k for k, sz in state["files"].items()
             if k not in state["probed"] and sz >= a.min_size]
@@ -729,7 +798,7 @@ def main():
           % (len(state["files"]), len(state["probed"]), len(todo)), flush=True)
 
     head = Head()
-    t0, done = time.time(), 0
+    t0, done = t_start, 0
     for key in todo:
         if time.time() - t0 > a.budget:
             break
@@ -751,9 +820,9 @@ def main():
         state["probed"][key] = got or False
         done += 1
         if done % 200 == 0:
-            json.dump(state, open(state_path, "w"))
+            save(state, state_path)
             print("  %d probed, %.0f s" % (done, time.time() - t0), flush=True)
-    json.dump(state, open(state_path, "w"))
+    save(state, state_path)
 
     hits = {k: v for k, v in state["probed"].items() if v and "err" not in v}
     print("%d probed this run; %d/%d read; %d match the probe"

@@ -14,8 +14,8 @@ The engine is the product. The Mac app is a thin shell.
 **M0–M62 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
-a copy of it. The engine passes a **951-fixture** differential suite against
-`unar` and, where `unar` fails, `macunpack`, plus 9,510 robustness variants.
+a copy of it. The engine passes a **954-fixture** differential suite against
+`unar` and, where `unar` fails, `macunpack`, plus 9,540 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
 time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —

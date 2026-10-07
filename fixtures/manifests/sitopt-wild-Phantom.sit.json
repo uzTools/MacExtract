@@ -1,0 +1,23 @@
+{
+ "entries": [
+  {
+   "creator": "SFX!",
+   "finder_flags": 256,
+   "name": "Phantom",
+   "oracle_methods": [
+    "LZAH"
+   ],
+   "rsrc_sha256": "985634314037a238b9a43a5e618888b39f90153c7bd8cd3f670ad3b51ba96011",
+   "rsrc_size": 470,
+   "type": "FSSD",
+   "unadjudicated": {
+    "data": "Wrong checksum"
+   }
+  }
+ ],
+ "fixture": "sitopt-wild-Phantom.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "213d0d735d661c8cf23a57cb5f594ded966074c5a1148bdcc234428eb6c1fef7",
+ "size": 233900
+}

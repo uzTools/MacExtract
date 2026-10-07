@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """run_crypt.py — decryption, adjudicated by `unar` and by Info-ZIP.
 
-Five formats here can encrypt an entry and nothing in the corpus does:
-`lsar -j` over all 903 fixtures reports XADIsEncrypted 0 for every one
-(2026-08-23). So every archive in this suite is generated, and every one
-is required to agree THREE ways, exactly as the ARC suite is:
+Five formats here can encrypt an entry and **one corpus fixture does**,
+since 2026-10-07: `sitcrypt-wild-F7Menus.sit.bin`, whose password
+nobody published, so it grades a refusal rather than a decryption
+(FORMATS.md, *The one wild archive here that is encrypted* — which also
+has why `lsar -j` still reports `XADIsEncrypted` 0 for every fixture
+including that one). Every archive that is DECRYPTED here is generated,
+and every one is required to agree THREE ways, exactly as the ARC suite
+is:
 
   1. the bytes that went into the generator;
   2. what `unar -p` (or `unzip -P`) extracts — a different
@@ -201,6 +205,133 @@ def check_encinfo(_macextract, problems, tmp):
                             % (os.path.basename(path), got, want))
     print("encinfo: %d case(s) checked, including %d part(s) of a spanned set"
           % (len(cases), len(cases) - 2))
+
+
+# ---------------------------------------------------------------------
+# The one WILD encrypted archive in the corpus.
+#
+# Everything else in this suite is generated or came out of an emulator
+# here. `fixtures/sitcrypt-wild-F7Menus.sit.bin` is a MacBinary-wrapped
+# version-1 StuffIt archive stamped 1991-06-03 whose single entry's
+# resource fork carries method byte 0x12 — `NewDE` over method 2 —
+# found 2026-10-07 by walking wild archives' entry chains (TESTING.md,
+# *Searching somebody else's index by content*).
+#
+# **Its password is not published**, and nobody's is: of the 27 disc
+# images with a wild encrypted classic StuffIt archive on them, the one
+# read-me that addresses the question says the author mailed a password
+# on payment. So this fixture grades a REFUSAL, and the refusal has two
+# different branches which the same bytes reach depending on whether
+# the resource fork came with them.
+WILD_SIT = "sitcrypt-wild-F7Menus.sit.bin"
+
+
+def macbinary_forks(path):
+    data = open(path, "rb").read()
+    dl = int.from_bytes(data[83:87], "big")
+    rl = int.from_bytes(data[87:91], "big")
+    off = 128 + ((dl + 127) // 128) * 128
+    return data[128:128 + dl], data[off:off + rl]
+
+
+def check_wild_sit(macextract, problems, tmp):
+    """Returns the number of cases run, 0 if the fixture is absent."""
+    path = os.path.join(ROOT, "fixtures", WILD_SIT)
+    if not os.path.exists(path):
+        print("run_crypt: no %s — the one wild encrypted archive is not "
+              "graded (fixtures/SOURCES.md)" % WILD_SIT)
+        return 0
+    arc, rsrc = macbinary_forks(path)
+
+    # The header, because the published table would make this entry a
+    # FOLDER: it calls 0x10 the folder marker, and a folder carries no
+    # fork. This one declares 5,944 bytes of resource fork.
+    hdr = arc[22:22 + 112]
+    if hdr[0] != 0x12:
+        problems.append("wild sit: the entry's resource method byte is "
+                        "0x%02x, and this fixture is here for 0x12 — the "
+                        "`NewDE` bit over method 2" % hdr[0])
+    if int.from_bytes(hdr[84:88], "big") != 5944:
+        problems.append("wild sit: the entry declares %d B of resource "
+                        "fork, not 5,944"
+                        % int.from_bytes(hdr[84:88], "big"))
+    # The key material the scheme needs is the ARCHIVE's own 'MKey'
+    # resource, and until this fixture that was measured on three
+    # archives StuffIt Deluxe 3.5.1 wrote here. A 1991 archive carries
+    # one too.
+    if b"MKey" not in rsrc:
+        problems.append("wild sit: no 'MKey' in the archive's resource "
+                        "fork, so the branch this fixture is for is not "
+                        "the branch it reaches")
+
+    # 1. Through the envelope, the resource fork comes with it, the
+    #    'MKey' is readable and the engine asks for a password.
+    ran = 0
+    for n, (label, args) in enumerate((("no password", ()),
+                                       ("wrong password",
+                                        ("-p", "notthepassword")))):
+        # A fresh directory per case: the envelope's payload IS written
+        # — the inner archive is what failed — so the second run would
+        # otherwise meet the first run's files and report a name clash
+        # instead of the refusal.
+        out = os.path.join(tmp, "wildsit%d" % n)
+        os.makedirs(out, exist_ok=True)
+        r = run([macextract, "x", "-o", out, path] + list(args))
+        msg = r.stderr.decode("utf-8", "replace")
+        if r.returncode == 0:
+            problems.append("wild sit (%s): accepted" % label)
+        if "wrong password, or none given" not in msg:
+            problems.append("wild sit (%s): expected 'wrong password, or "
+                            "none given', got %r" % (label, msg.strip()[:160]))
+        # and nothing that could be the decrypted fork
+        for root, _d, files in os.walk(out):
+            for f in files:
+                if os.path.getsize(os.path.join(root, f)) == 5944:
+                    problems.append("wild sit (%s): a 5,944-byte fork was "
+                                    "written, which is the plaintext this "
+                                    "cannot have" % label)
+        ran += 1
+
+    # 2. The same archive WITHOUT its resource fork — which is how it
+    #    sits on a Unix disk — reaches the other branch, and that one is
+    #    the engine saying WHY: the 'MKey' is not in the stream at all,
+    #    so there is no password that could work and none is asked for.
+    raw = os.path.join(tmp, "wild-noforks.sit")
+    open(raw, "wb").write(arc)
+    r = run([macextract, "t", raw])
+    msg = r.stderr.decode("utf-8", "replace")
+    if r.returncode == 0:
+        problems.append("wild sit (no resource fork): accepted")
+    if "encrypted by a scheme we cannot read" not in msg:
+        problems.append("wild sit (no resource fork): expected 'encrypted "
+                        "by a scheme we cannot read', got %r"
+                        % msg.strip()[:160])
+    ran += 1
+
+    # 3. The oracle, asserted for what it cannot do: `unar` does not
+    #    know the bit, reads the fork as plain LZW and fails on the
+    #    ciphertext, and `lsar -j` sets no encryption flag. If either
+    #    ever changes, this is where it is noticed.
+    if shutil.which("unar"):
+        o = os.path.join(tmp, "wild-unar")
+        os.makedirs(o, exist_ok=True)
+        r = run(["unar", "-D", "-f", "-q", "-k", "hidden", "-e",
+                 "macintosh", "-o", o, path])
+        out_txt = (r.stdout + r.stderr).decode("utf-8", "replace")
+        if "Error on decrunching" not in out_txt:
+            problems.append("`unar` no longer fails with 'Error on "
+                            "decrunching' on the wild encrypted archive: %r"
+                            % out_txt.strip()[-160:])
+        ran += 1
+    if shutil.which("lsar"):
+        r = run(["lsar", "-j", path])
+        if b"XADIsEncrypted" in r.stdout:
+            problems.append("`lsar` now reports XADIsEncrypted on the wild "
+                            "archive — it used to be blind to the `NewDE` "
+                            "bit, and FORMATS.md's corpus claim rests on "
+                            "that")
+        ran += 1
+    return ran
 
 
 def main():
@@ -604,6 +735,7 @@ def main():
             print("run_crypt: no `arc` at %s — the garble is still graded, "
                   "on the archive synth_crypt.py garbles itself" % ARC_BIN)
         check_encinfo(macextract, problems, tmp)
+        ran += check_wild_sit(macextract, problems, tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

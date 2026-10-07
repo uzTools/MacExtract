@@ -75,7 +75,7 @@ under *Table notes*.
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 963 corpus files (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 966 corpus files (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -1943,17 +1943,77 @@ refuse the archive, measured.
 pair `sitopt-wild-*.sea.bin` → `derived-*.sit` exercises the envelope
 chain as well.
 
-**What is still only this project's own output** is the four REVERSIBLE
-Optimizers and all five ciphers: 21,767 wild entry headers carry five
-Optimizer bits, in three archives, and every one is `Text 1`'s
-(OPEN_ITEMS.md).
+**What is still only this project's own output** is `Photoshop 1`,
+`JPEG Lossy` and all five ciphers — `Sound 1` and `MacPaint 1` left
+that list on 2026-10-07, below (OPEN_ITEMS.md).
+
+### Two more, and these the engine UNDOES — found 2026-10-07
+
+The three above are `Text 1`'s sentinel 255, where the archive's bytes
+ARE the file and nothing is reversed. These two carry modules this
+engine undoes, on bytes nobody here wrote, and they came off one 1993
+CD-ROM collection by a sweep that asked the index what each archive
+CONTAINS (TESTING.md, *Searching somebody else's index by content*):
+
+| fixture | the optimized entry | module | method under the bit | 106/108 | data CRC | `rlen` |
+|---|---|---|---|---|---|---|
+| `sitopt-wild-Phantom.sit` | `Phantom`, 366,189 B | **`Sound 1`**, id 1 | 5 | 1/0 | **`6325`** | 470, kept |
+| `sitopt-wild-DNAnalyze.sit` | `DNANAL Key Commands`, 12,992 B | **`MacPaint 1`**, id 4 | 5 | 4/0 | **`ffff`** | 0, deleted |
+
+**The key is visible in the fixtures themselves.** `unar` records
+`DNANAL Key Commands` as type **`PNTG`**, creator `PANT`, and `Phantom`
+as type **`FSSD`** — which are exactly the types `MacPaint 1` and
+`Sound 1` compare against in their own `COMP` resources, and exactly
+what the sweep selected on.
+
+**The CRC rule holds on somebody else's archives.** *What a module
+gives back* says an exactly reversible module leaves the ORIGINAL
+file's CRC-16 and an inexact one writes `ffff`; measured until now only
+on 2.0.1's own output, and here are both, in two archives from a disc
+pressed in 1993.
+
+**`Sound 1` is adjudicated three ways, none of them this engine.** The
+archive's own CRC-16 is `6325`, which is the CRC of the RESTORED bytes
+and **not** of the optimized ones (`f35b`), so the format itself tells
+the two apart — **and catches the oracle with it**: `unar` decodes
+method 5 correctly, hands back what the module left and fails the entry
+*"Wrong checksum"*. The running sum over those same bytes is
+byte-for-byte what this engine writes; and clearing the Optimizer bit and the id — repairing
+the header's own CRC at 110 so the entry is still well formed — makes
+`t` fail with a checksum mismatch, which is what makes the first of the
+three evidence about the filter rather than about the decoder
+(`tools/run_sitopt.py`).
+
+**`MacPaint 1` has no oracle anywhere, and is graded anyway.** `unar`
+FAILS that entry — *"Attempted to read more data than was
+available"* — and `macunpack` skips it — *"Unknown stuffit flags: 0
+65"* — so this engine is the only one of the three that produces
+anything at all, and both manifests record the two optimized forks as
+unadjudicated while `run_diff.py` grades every other fork byte for
+byte. What grades the rebuild is
+MacPaint's own shape: 12,992 B as the header declares, the first 512 of
+them the zeros this engine writes where the module threw the header
+away, and the rest decoding as **720 PackBits rows of exactly 72 bytes
+with nothing left over** — 576 x 720, the geometry
+`reference/deark/modules/macpaint.c` also names. deark reads the result
+back and warns about nothing; with the 512 bytes removed, or filled
+with noise, it reports an unrecognised version and an image short of
+51,840, so the silence is evidence rather than tolerance. The picture
+is a legible keyboard-command chart.
+
+**And one archive carries both kinds**: `TC.DNA`, beside it in
+`DNAnalyze`, is `Text 1` — id 255, method **3** under the bit, and a
+real CRC, because for 255 the archive's bytes are the file. Nothing
+this project made has the two together.
 
 ### The version byte, across 16,727 wild archives
 
 The published table calls the byte at +14 *"Version (meaning not quite
 clear)"*. Measured 2026-10-06 over 16,727 classic StuffIt archives read
 by `tools/scan_discmaster.py`: **14,030 carry 2, 2,600 carry 1 and 97
-carry 6 — and nothing else.** Every 6 is an `ST65` archive, StuffIt
+carry 6 — and nothing else.** A further **927** archives, drawn
+2026-10-07 by their CONTENTS rather than uniformly, add 466 twos, 460
+ones and one six and **still nothing else**. Every 6 is an `ST65` archive, StuffIt
 InstallerMaker 6.5's magic, so the byte tracks the writer rather than
 the container: 1 is 1.5.1's, 2 is everything from 2.0 on, and 6 arrives
 with that installer. **It does not identify StuffIt 2.x**, which is why
@@ -1966,7 +2026,9 @@ values their controls carry — so undoing the delta is verified by the
 archive itself. Where it is not, the field reads **`ffff`**: both forks
 of the `MacPaint 1` entry and the data fork of the `JPEG Lossy` one.
 So an optimized entry that cannot be restored exactly **carries no
-checksum at all**, which is the format saying so.
+checksum at all**, which is the format saying so. **Both halves hold on
+archives nobody here wrote**, since 2026-10-07 (*Two more, and these
+the engine UNDOES*).
 
 **`Sound 1` and `Photoshop 1` cost six lines and no risk.** The filter
 is in `unc_fork_flush`, ahead of the checksum, so the CRC is taken over
@@ -2381,11 +2443,24 @@ nothing else.
 **In scope since 2026-08-23.** **Eight** ciphers across **six** formats —
 the table below has always had eight rows, and the sentence over it said
 seven across five until it was counted on 2026-09-26 — and one thing to
-know before the table: **nothing in the corpus is encrypted.**
-Measured, not assumed — `lsar -j` over all **961** fixtures reports
-`XADIsEncrypted` 0 for every entry, re-run 2026-10-05 at that count after
-sitting at 903 since 2026-08-23 — so every archive that exercises
-any of this is generated by `tools/synth_crypt.py`,
+know before the table: **the corpus holds exactly one encrypted entry,
+and the oracle cannot see that it is one.**
+
+Until 2026-10-07 the claim here was *"nothing in the corpus is
+encrypted"*, measured with `lsar -j` over every fixture: `XADIsEncrypted`
+0 for every entry, 903 fixtures on 2026-08-23 and 961 on 2026-10-05.
+That flag is still 0 everywhere — and
+`fixtures/sitcrypt-wild-F7Menus.sit.bin` is encrypted. **`unar` does not
+know StuffIt 2.x's `NewDE` bit**: method byte `0x12` it reports as
+`StuffItCompressionMethod: 18`, `XADCompressionName: "Compress"`, no
+encryption flag at all, and extraction fails with *"Error on
+decrunching"* — measured 2026-10-07 on the fixture AND on 2.0.1's own
+`NewdeT.sit.bin`, where `0x8D` on the same specimens does set
+`XADIsEncrypted`. So the old claim was a fact about the oracle's flag
+wearing the clothes of a fact about the corpus, and the bit it is blind
+to is the same `0x10` the published table calls a folder marker. Every
+OTHER archive that exercises any of this is generated by
+`tools/synth_crypt.py`,
 `tools/synth_cpt.py`, `zip -P` or `arc g<password>`, and graded by
 `unar -p` where a second implementation exists. Four of the eight have
 better than that: archives the original software wrote or enciphered
@@ -2625,6 +2700,53 @@ at every length.
 Under eight characters all three agree, which is why this went
 unnoticed: it is the length a person picks when testing.
 
+### The one wild archive here that is encrypted — found 2026-10-07
+
+`fixtures/sitcrypt-wild-F7Menus.sit.bin`, a MacBinary-wrapped
+**version-1** StuffIt archive stamped 1991-06-03, one entry, resource
+fork only, method byte **`0x12`** — `NewDE` over method 2 — 5,944 B
+down to 4,440, CRC-16 `5650`, no encryptor id. The same method byte
+StuffIt Deluxe 2.0.1 writes with `NewDE™` armed, on a file nobody here
+made.
+
+**It disproves the published reading by existing.** If `0x10` were the
+folder marker the published table calls it, this entry would be a
+folder and could not carry a 5,944-byte resource fork. It does
+(*Where an archive names the module*, measured 2026-10-02 the other
+way round, on 2.0.1's own output).
+
+**And it carries an `MKey`.** The key derivation needs the ARCHIVE's
+own `'MKey'` resource, which is in its resource fork and not in the
+stream — a layout measured until now on the three archives StuffIt
+Deluxe 3.5.1 wrote here under Mini vMac. This one, from 1991, has one
+too, in 318 bytes of resource fork beside `sitr` and `NuNV`.
+
+**So the same bytes reach two different refusals, and both are right.**
+Through the MacBinary envelope the resource fork comes with them, the
+`MKey` is readable, and the engine asks for a password and reports
+*"wrong password, or none given"*. The archive alone — which is how it
+sits on a Unix disk, forkless — reaches *"encrypted by a scheme we
+cannot read"*, because without the `MKey` there is no password that
+could work and asking for one would be a lie.
+
+**A REFUSAL is the ceiling, and the reason is on the disc.** The
+read-me beside this archive says *"The 'Commercial Finder 7
+Menus!.sit' Stuffit file is an encrypted archive… When you upgrade,
+I'll send you a password"* — so the password was mailed to buyers and
+was never on the CD. The text content of all **27** disc images
+carrying a wild encrypted classic StuffIt archive was searched for one
+and none turned up; that index ORs the words of a quoted phrase rather
+than matching it, so this is **a negative that was looked for, not
+one that is proved**. The five 2.x ciphers stay in OPEN_ITEMS.md's row
+for decryption, and what this fixture grades is in `tools/run_crypt.py`
+(TESTING.md, *Decryption*).
+
+**The oracle is worse than silent on it**: `lsar` lists the entry as an
+ordinary `Compress` fork and `unar` fails with *"Error on
+decrunching"*, having tried to LZW-decode the enciphered bytes. Both
+are asserted, so if `unar` ever learns the bit this repository finds
+out.
+
 ### Compact Pro's cipher: read out of the application, and graded by it
 
 This is the one format here whose encryption no second implementation
@@ -2794,10 +2916,11 @@ cannot reach; and every LZW fork of all eight is decoded identically by
 code stream (*The codec*, below). `src/fmt_sqp.c` is the decoder,
 `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). The sniffer answers
-*AppleLink package* for **exactly the 6 of 963 corpus files that are
-packages and for nothing else** (re-measured 2026-10-06 over every
-non-`.md` file in `fixtures/`, with the build either side of that day's
-name test, and **no file's answer changed in any format**) — a sweep that
+*AppleLink package* for **exactly the 6 of 966 corpus files that are
+packages and for nothing else** (re-measured 2026-10-07 over every
+non-`.md` file in `fixtures/`; on 2026-10-06 with the build either side
+of that day's name test, and **no file's answer changed in any
+format**) — a sweep that
 can fail in both directions, where the one the removed probe rested on
 could not fail at all, the corpus holding neither a package nor a
 translator script (BLOCKERS.md).
@@ -3567,20 +3690,22 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 951 fixtures byte-exact against `unar` manifests
+- Differential: 954 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
   the number it actually ran, plus two figures that must be read with it:
-  **8 forks across 4 fixtures are oracle-unadjudicated** (2026-09-22,
-  when the 8 in damaged MacBinary were graded from the container's own
-  arithmetic and one came back, deark having stopped asserting an empty
-  resource fork on an entry it failed the CRC of;
-  15 across 11 before that, and this said 16 across 10
+  **11 forks across 6 fixtures are oracle-unadjudicated** (2026-10-07,
+  when the two wild Optimizer fixtures added 3 that both oracles fail;
+  8 across 4 from 2026-09-22, when the 8 in damaged MacBinary were
+  graded from the container's own arithmetic and one came back, deark
+  having stopped asserting an empty resource fork on an entry it failed
+  the CRC of; 15 across 11 before that, and this said 16 across 10
   while the suite printed 23 across 12, which is what a stale figure
   looks like) — both implementations decline every
   one of them, so the engine's own CRC-16
-  is the only byte-exact check; 8 more were compared
+  is the only byte-exact check, except the 3 newest, which
+  `tools/run_sitopt.py` grades three other ways; 8 more were compared
   with DiskDoubler's own expander on an emulated Mac and agree with the
   resource header's OS-stamped bytes masked, which `run_diff.py` reports
   as its own line — and **7 entries are compressed with a method the

@@ -360,6 +360,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
 - 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
 - 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
+- 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
 
 ---
 
@@ -23472,3 +23473,90 @@ somebody outside this machine, ask what the emulator would have to be
 handed, and search for the file by its bytes"* — has already deleted two
 of its items. One leg of the search is unfinished and the Garden may
 simply be up tomorrow, so asking a person now would be premature.
+
+## 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
+
+**The row.** Four reversible Optimizers and five ciphers were graded
+only on archives StuffIt Deluxe 2.0.1 wrote here under Mini vMac:
+authentic bytes, one subject per module, every subject chosen here.
+`Text 1` had left that list on 2026-10-06 when two Giga-ROM archives
+turned up carrying it, found by walking 16,727 wild archives' entry
+chains. The widening was supposed to be more archives.
+
+**It was not more archives. It was a better question.** The Optimizer
+bit is 22 bytes into an archive and no index records it, so the sweep
+had to fetch every candidate — and at a hit rate of 5 bits in 21,733
+headers, "more archives" means hours per hit. But **an Optimizer is a
+per-file-type preprocessor**, and each module's own `COMP` names the
+one type it accepts: `FSSD`, `8BIM`, `PNTG`, `TEXT` (FORMATS.md, *The
+module ABI*). An archive with no member of that type cannot carry that
+module's bit.
+
+**And the index already knew what was inside every archive.** Not as a
+search field — `detection=PNTG/MPNT` returns twenty thousand MacPaint
+documents and not one of them is inside a `.sit`, because Discmaster
+does not recurse into one. It is in the LISTING: every row carries
+`meta.fileMeta`, the Mac type and creator of each file in the archive,
+free with the page that was being fetched anyway. So the whole corpus
+could be listed — 196,139 deduplicated archives, sharded by size under
+Elasticsearch's result window — and **954 of them probed instead of
+196,139**. Two carried a module nobody here had seen: `Sound 1` and
+`MacPaint 1`, on a disc pressed in 1993.
+
+**The lesson is the shape of the question.** The first sweep searched
+for the FLAG and could only afford a sample. The second searched for
+the PRECONDITION of the flag, which something else had already
+indexed. *When the thing you want is not indexed, ask what must be true
+of a file that has it, and whether THAT is.*
+
+**Three readings had to be wrong first, and all three are the same
+mistake.** The probe was taught to name the module, and:
+
+- it keyed the cipher on byte 107 OR 109, whichever was nonzero, and
+  reported four `DES` entries — the one cipher this project has no file
+  for — off byte 107 of entries whose **data fork is not there**:
+  `dlen` 0, `dmeth` 0, and the encrypted resource fork's own id 0. An
+  id byte belongs to a FORK. `src/fmt_sit.c` has the rule and the
+  probe did not.
+- it read the id before the method bit, which names a `NewDE` fork
+  `DES`: 2.0.1's own `NewdeT.sit.bin` carries the `0x10` bit AND a
+  stale `1` in the id byte, so the bit must win — which is what
+  `sit_scheme()` does.
+- its walk had no in-step test, only the declared total, so one wrong
+  length put it inside a fork and everything after was read out of
+  compressed data.
+
+That third one is where the care went, because the obvious fix is
+wrong. The tests that survived are measured against the 1,710 file
+headers in `fixtures/`: name-length 1..31 (0 false positives), no NUL
+in the name (0), and the entry plus both forks fitting inside the
+declared total (0). **The obvious fourth — "no control byte in the
+name" — rejects 44 real headers**, names made of tabs and `\x01`, and
+an `Icon\r` is a perfectly ordinary Macintosh file. A test that looks
+tighter and is measured against nothing would have silently dropped
+them.
+
+**What grades a module nothing else implements.** `Sound 1` came out
+adjudicated three ways, none of them this engine: the archive's own
+CRC-16 matches the RESTORED bytes and not the optimized ones; the
+running sum over what `unar` hands back is byte-for-byte this engine's
+output; and clearing the bit, with the header's own CRC repaired, makes
+the same `t` fail. `MacPaint 1` has no oracle at all — `unar` fails the entry outright
+and `macunpack` skips it — so what grades it is
+**MacPaint's own geometry**: 720 PackBits rows of exactly 72 bytes,
+nothing left over, with `deark` reading the result back silently and
+complaining about the same artwork without its header. *An unreachable
+oracle is not the end of grading; the format itself is an oracle, and
+so is a reader that can be made to complain.*
+
+**The ciphers did not move, and the reason is now measured rather than
+assumed.** The same walks found wild encrypted forks in 27 disc images
+— 354 `StuffItDES (built-in)`, 201 with the id unset, and **8 forks
+with the `NewDE` bit in 4 archives**, which is one of the five modules
+in the row. No password for any of them was found: the text
+content of all 27 disc images was searched and the one read-me that
+speaks to the question says *"When you upgrade, I'll send you a
+password"* — a negative looked for rather than proved, because that
+index ORs the words of a quoted phrase instead of matching it. So a wild `NewDE` archive is a fixture that grades a
+REFUSAL (FORMATS.md, *Encryption*), not a decryption, and the row keeps
+the five ciphers with that reason attached.

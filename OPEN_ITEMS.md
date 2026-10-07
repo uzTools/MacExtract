@@ -304,13 +304,15 @@ a 1.5.1-compatible archive, a folder, and a **self-extracting archive**
 (FORMATS.md, *What an Optimizer did to the fork*, *The three ways 2.0.1
 encrypts*; TESTING.md, the sitopt suite's 28 archives).
 
-**`Text 1` stopped being one of them on 2026-10-06**: two Giga-ROM CD
-archives carry an entry it optimized, at methods 8 and 3, with the 255
-marker and the deleted resource fork, and both are fixtures
-(FORMATS.md, *Two optimized archives nobody here made*). What is left
-is narrower than the row this replaces, and the search that narrowed it
-is worth not repeating:
+**Three of the five Optimizers have stopped being ones.** `Text 1`
+left on 2026-10-06 (two Giga-ROM archives, methods 8 and 3, the 255
+marker — FORMATS.md, *Two optimized archives nobody here made*), and
+`Sound 1` and `MacPaint 1` left on 2026-10-07, each in a fixture off a
+1993 CD-ROM collection and each graded by something that is not this
+engine's output (FORMATS.md, *Two more, and these the engine UNDOES*).
+What is left:
 
 | what is left | what would close it |
 |---|---|
-| **the four REVERSIBLE Optimizers and all five ciphers are graded only on archives this project made** — `Sound 1`, `Photoshop 1`, `JPEG Lossy`, `MacPaint 1`, `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **a wild archive carrying one.** The sweep has been run: **21,767 entry headers in 16,727 archives**, two keys, **5 Optimizer bits in 3 archives, every one `Text 1`'s**, 38 encrypted, 8 `NewDE` (TESTING.md, *Searching somebody else's index by content*). So they are rare, not absent; the widening is more archives or deeper walks by the same key. A wild ENCRYPTED archive grades a refusal rather than a decryption unless its password is published beside it |
+| **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a wild archive carrying one.** Both modules accept type `8BIM` and nothing else, and **21 archives in the whole index hold an `8BIM` member** — out of 196,139 classic StuffIt archives listed, all 954 with a member of an accepted type walked, 16,413 headers (TESTING.md, *Searching somebody else's index by content*). None of the 21 carries their bit. The widening left is a key that does not depend on the index having recorded the member's type: 10,452 of the 196,139 carry no member metadata at all |
+| **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **a wild archive carrying one, with a published password.** The bit is found: **8 forks carry `NewDE`'s `0x10`, in 4 wild files and 3 distinct archives**, one of them a fixture; every other wild encrypted fork is 3.x's built-in scheme (354 with id 4, 201 with the id unset). **No password was found** beside any of them — the one read-me that speaks to it says the author mailed one on payment, and the search over all 27 disc images is a negative that was looked for rather than proved — so a wild encrypted archive grades a REFUSAL, which `sitcrypt-wild-F7Menus.sit.bin` now does (FORMATS.md, *The one wild archive here that is encrypted*) |

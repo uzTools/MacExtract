@@ -183,11 +183,362 @@ def extract(cli, arc, out, extra=()):
     return r.returncode, r.stdout + r.stderr
 
 
+# ---------------------------------------------------------------------
+# The two wild archives carrying a REVERSIBLE Optimizer.
+#
+# Everything the lanes below grade is StuffIt Deluxe 2.0.1's own output
+# under Mini vMac: authentic bytes, but one subject per module, chosen
+# here. These two are fixtures off a 1993 CD-ROM collection, found
+# 2026-10-07 by asking the index what each archive CONTAINS rather than
+# what it is called — an Optimizer accepts exactly one Mac file type, so
+# an archive with no member of that type cannot carry that module's bit
+# (TESTING.md, *Searching somebody else's index by content*).
+#
+# **Both optimized forks defeat both oracles**, so their manifests
+# record those two forks as unadjudicated and `run_diff.py` grades
+# everything else: `unar` fails `DNANAL Key Commands` with *"Attempted
+# to read more data than was available"* and `Phantom` with **"Wrong
+# checksum"** — the archive's own CRC-16 catching the oracle, because
+# that field is over the RESTORED bytes — and `macunpack` skips both
+# (*"Unknown stuffit flags: 0 65"*, *"5 45"*). What grades the two
+# forks themselves is below, and none of it is this engine's own
+# output.
+WILD_PHANTOM = "sitopt-wild-Phantom.sit"
+WILD_DNA = "sitopt-wild-DNAnalyze.sit"
+DEARK = os.path.join(REPO, "build", "deark", "deark")
+
+
+def crc16_arc(data, crc=0):
+    """CRC-16/ARC, the one a StuffIt entry header carries at 100/102 and
+    at 110 (reference/notes/StuffIt.md; `unc_crc16_arc`)."""
+    for b in data:
+        crc ^= b
+        for _ in range(8):
+            crc = (crc >> 1) ^ (0xA001 if crc & 1 else 0)
+    return crc
+
+
+def find_entry(blob, name):
+    """One file header out of a raw classic StuffIt archive, by name."""
+    at = 22
+    while at + 112 <= len(blob):
+        nl = min(blob[at + 2], 63)
+        if blob[at + 3:at + 3 + nl].decode("mac-roman") == name:
+            return at, blob[at:at + 112]
+        # **A folder marker carries no fork**, and its length fields
+        # hold whatever the writer left there — stepping by them walks
+        # into the middle of the first file's data (`src/fmt_sit.c`,
+        # SIT_FOLDER_MASK).
+        if (blob[at] & 0x6F) in (0x20, 0x21) or \
+                (blob[at + 1] & 0x6F) in (0x20, 0x21):
+            at += 112
+            continue
+        at += 112 + int.from_bytes(blob[at + 92:at + 96], "big") \
+            + int.from_bytes(blob[at + 96:at + 100], "big")
+    return None, None
+
+
+def pntg_rows(data):
+    """How many rows of exactly 72 bytes a MacPaint document's PackBits
+    stream decodes to, and whether it is consumed exactly.
+
+    Source: MacPaint's published layout — 576x720 one bit deep, so 72
+    bytes per row and 720 rows, each row PackBits-compressed; the same
+    `MACPAINT_WIDTH`/`MACPAINT_HEIGHT` as
+    `reference/deark/modules/macpaint.c`. It is an INDEPENDENT check on
+    a rebuild nothing else here can grade: 720 rows that each close at
+    exactly 72 bytes, with no byte left over, is a property of the
+    artwork being intact, not of the engine having written something.
+    """
+    p, rows = 512, 0
+    while p < len(data) and rows < 10000:
+        row = 0
+        while row < 72 and p < len(data):
+            n = data[p]
+            p += 1
+            if n < 128:
+                row += n + 1
+                p += n + 1
+            else:
+                row += 257 - n
+                p += 1
+        if row != 72:
+            return rows, len(data) - p, "row %d closed at %d bytes" % (rows,
+                                                                       row)
+        rows += 1
+    return rows, len(data) - p, None
+
+
+def deark_warnings(path, out):
+    """What `deark` says about a MacPaint document, or None if it is not
+    built. A warning line is the signal: on a correct rebuild it emits
+    none, and on the same artwork with its 512-byte header removed or
+    filled with noise it reports an unrecognised version and an image
+    that decompressed short of 720 x 72."""
+    if not os.path.exists(DEARK):
+        return None
+    os.makedirs(out, exist_ok=True)
+    r = subprocess.run([DEARK, "-od", out, "-m", "macpaint", path],
+                       capture_output=True, text=True, timeout=300)
+    return [l for l in (r.stdout + r.stderr).splitlines()
+            if l.startswith("Warning:")]
+
+
+def wild_reversible(cli, work):
+    """Grade the two wild archives. Returns (problems, graded)."""
+    bad, graded = [], 0
+    unar = shutil.which("unar")
+
+    # ---- `Sound 1`, id 1, on an archive nobody here wrote -----------
+    path = os.path.join(FIXTURES, WILD_PHANTOM)
+    if os.path.exists(path):
+        graded += 1
+        blob = open(path, "rb").read()
+        at, hdr = find_entry(blob, "Phantom")
+        if hdr is None:
+            bad.append("%s: no entry called 'Phantom'" % WILD_PHANTOM)
+        else:
+            dm = hdr[1]
+            dcrc = int.from_bytes(hdr[102:104], "big")
+            if not (dm & 0x40) or (dm & 0x0F) != 5:
+                bad.append("Phantom: data method byte 0x%02x, and the "
+                           "Optimizer bit over method 5 is what this "
+                           "fixture is for" % dm)
+            if hdr[106] != 1 or hdr[108] != 0:
+                bad.append("Phantom: optimizer ids %d/%d, and `Sound 1` "
+                           "is 1 on the data fork alone"
+                           % (hdr[106], hdr[108]))
+            if int.from_bytes(hdr[88:92], "big") != 366189:
+                bad.append("Phantom: the data fork is not the declared "
+                           "366,189 B")
+            if int.from_bytes(hdr[84:88], "big") != 470:
+                bad.append("Phantom: `Sound 1` keeps the resource fork "
+                           "and this one declares %d B"
+                           % int.from_bytes(hdr[84:88], "big"))
+            if dcrc == 0xFFFF:
+                bad.append("Phantom: the data CRC is 0xffff, and an "
+                           "exactly reversible module leaves the "
+                           "ORIGINAL file's")
+
+            # The archive's own CRC-16 is the oracle: it is taken over
+            # the RESTORED bytes, so `t` passing is the format itself
+            # saying the delta came out right.
+            r = subprocess.run([cli, "t", path], capture_output=True,
+                               text=True, timeout=600)
+            if r.returncode != 0:
+                bad.append("Phantom: `t` failed, so the archive's own "
+                           "CRC-16 rejects the restored bytes: %s"
+                           % (r.stdout + r.stderr).strip()[:120])
+
+            # **And that test can fail.** Clear the Optimizer bit and
+            # the id, repair the header's own CRC-16 at 110 so the
+            # entry is still well formed, and the same `t` must report a
+            # checksum mismatch — which is what makes the line above
+            # evidence about the filter rather than about the decoder.
+            off = at
+            f = bytearray(blob)
+            f[off + 1] &= ~0x40
+            f[off + 106] = 0
+            f[off + 110:off + 112] = crc16_arc(
+                bytes(f[off:off + 110])).to_bytes(2, "big")
+            fpath = os.path.join(work, "phantom-nofilter.sit")
+            open(fpath, "wb").write(bytes(f))
+            r = subprocess.run([cli, "t", fpath], capture_output=True,
+                               text=True, timeout=600)
+            if r.returncode == 0 or "checksum" not in (r.stdout + r.stderr):
+                bad.append("Phantom: with the `Sound 1` filter switched "
+                           "off the archive still passes `t`, so `t` "
+                           "passing says nothing about the filter")
+
+            out = os.path.join(work, "wild-phantom")
+            rc, msg = extract(cli, path, out)
+            got = os.path.join(out, "Phantom")
+            if rc != 0 or not os.path.exists(got):
+                bad.append("%s did not extract: %s"
+                           % (WILD_PHANTOM, msg.strip()[:120]))
+            elif unar:
+                # A SECOND implementation, and it is the module's
+                # OUTPUT: `unar` decodes method 5 and hands back what
+                # `Sound 1` left, because it does not know the module.
+                # The running sum over those bytes is the whole of what
+                # the 'DCMP' does (src/unc_internal.h, UncForkOut.delta),
+                # and it must land on the same file this engine wrote.
+                u = os.path.join(work, "wild-phantom-unar")
+                os.makedirs(u, exist_ok=True)
+                r = subprocess.run([unar, "-nr", "-D", "-f", "-k",
+                                    "hidden", "-e", "macintosh", "-o", u,
+                                    path], capture_output=True, timeout=600)
+                said = (r.stdout + r.stderr).decode("utf-8", "replace")
+                # **The archive's CRC-16 catches the oracle**, which is
+                # the clearest statement there is that the restored
+                # bytes are the file: `unar` decodes method 5 correctly
+                # and fails the entry on the checksum, because the
+                # field is over what the module was given rather than
+                # what it left.
+                if "Wrong checksum" not in said:
+                    bad.append("Phantom: `unar` no longer fails on the "
+                               "checksum — it used to, which is the "
+                               "format telling the oracle it is wrong: %s"
+                               % said.strip()[-160:])
+                up = os.path.join(u, "Phantom")
+                ours = open(got, "rb").read()
+                if not os.path.exists(up):
+                    bad.append("Phantom: `unar` wrote no data fork")
+                else:
+                    opt = open(up, "rb").read()
+                    acc, want = 0, bytearray(len(opt))
+                    for i, b in enumerate(opt):
+                        acc = (acc + b) & 0xFF
+                        want[i] = acc
+                    if opt == ours:
+                        bad.append("Phantom: `unar`'s bytes and ours are "
+                                   "the same, so nothing undid the delta")
+                    if bytes(want) != ours:
+                        bad.append("Phantom: the running sum over "
+                                   "`unar`'s bytes is not what this "
+                                   "engine wrote")
+                    if crc16_arc(ours) != dcrc:
+                        bad.append("Phantom: the archive's CRC-16 is not "
+                                   "the CRC of the restored bytes")
+                    if crc16_arc(opt) == dcrc:
+                        bad.append("Phantom: the archive's CRC-16 also "
+                                   "matches the OPTIMIZED bytes, so it "
+                                   "cannot tell the two apart")
+
+    # ---- `MacPaint 1`, id 4, beside a `Text 1` in one archive -------
+    path = os.path.join(FIXTURES, WILD_DNA)
+    if os.path.exists(path):
+        graded += 1
+        blob = open(path, "rb").read()
+        # Two kinds of optimized entry in one archive, which nothing
+        # this project made has: one the module can undo and one that
+        # is the sentinel 255.
+        for name, meth, oid, crcff in (("DNANAL Key Commands", 5, 4, True),
+                                       ("TC.DNA", 3, 255, False)):
+            _at, hdr = find_entry(blob, name)
+            if hdr is None:
+                bad.append("%s: no entry called %r" % (WILD_DNA, name))
+                continue
+            dm = hdr[1]
+            dcrc = int.from_bytes(hdr[102:104], "big")
+            if not (dm & 0x40) or (dm & 0x0F) != meth:
+                bad.append("%s: data method byte 0x%02x, wanted the "
+                           "Optimizer bit over method %d" % (name, dm, meth))
+            if hdr[106] != oid or hdr[108] != 0:
+                bad.append("%s: optimizer ids %d/%d, wanted %d/0"
+                           % (name, hdr[106], hdr[108], oid))
+            # **The CRC field says which kind an entry is**, and here it
+            # says so on an archive nobody here wrote: 0xffff where the
+            # module cannot be undone exactly, the original file's CRC
+            # where the bytes in the archive ARE the file.
+            if crcff and dcrc != 0xFFFF:
+                bad.append("%s: the data CRC is 0x%04x, and an entry "
+                           "`MacPaint 1` optimized carries no checksum"
+                           % (name, dcrc))
+            if not crcff and dcrc == 0xFFFF:
+                bad.append("%s: the data CRC is 0xffff, and a `Text 1` "
+                           "entry's bytes ARE the file" % name)
+        _at, hdr = find_entry(blob, "DNANAL Key Commands")
+        if hdr is not None and int.from_bytes(hdr[84:88], "big") != 0:
+            bad.append("DNANAL Key Commands: a resource fork is declared "
+                       "and `MacPaint 1` deletes it")
+
+        out = os.path.join(work, "wild-dna")
+        rc, msg = extract(cli, path, out)
+        got = os.path.join(out, "DNAnalyze", "DNANAL Key Commands")
+        if rc != 0 or not os.path.exists(got):
+            bad.append("%s did not extract: %s"
+                       % (WILD_DNA, msg.strip()[:160]))
+        else:
+            if "MacPaint 1" not in msg or "NOT the original file" not in msg:
+                bad.append("DNANAL Key Commands: the user was not told "
+                           "the entry is a rebuild: %s" % msg.strip()[:160])
+            if os.path.exists(got + ".rsrc"):
+                bad.append("DNANAL Key Commands: a resource fork was "
+                           "written and `MacPaint 1` deletes it")
+            d = open(got, "rb").read()
+            if len(d) != 12992:
+                bad.append("DNANAL Key Commands: %d B, and the header "
+                           "declares 12,992" % len(d))
+            elif d[:512] != b"\0" * 512:
+                bad.append("DNANAL Key Commands: the 512 bytes this "
+                           "engine writes in place of the header are not "
+                           "zero")
+            rows, left, why = pntg_rows(d)
+            if why or rows != 720 or left != 0:
+                bad.append("DNANAL Key Commands: the rebuild is not a "
+                           "MacPaint document — %d rows, %d bytes over "
+                           "(%s)" % (rows, left, why))
+            # deark, an independent reader, must have NOTHING to say
+            # about it — and must complain about the same artwork with
+            # its header removed, or the silence means nothing.
+            w = deark_warnings(got, os.path.join(work, "dk-ok"))
+            if w is None:
+                print("run_sitopt: build/deark/deark absent — the "
+                      "MacPaint rebuild is not read back by a second "
+                      "implementation (tools/build_deark.sh)")
+            else:
+                if w:
+                    bad.append("DNANAL Key Commands: deark warns about "
+                               "the rebuild: %s" % "; ".join(w)[:160])
+                nohdr = os.path.join(work, "nohdr.pntg")
+                open(nohdr, "wb").write(d[512:])
+                if not deark_warnings(nohdr, os.path.join(work, "dk-bad")):
+                    bad.append("deark says nothing about the artwork "
+                               "WITHOUT its header either, so its "
+                               "silence about the rebuild is not "
+                               "evidence")
+            if unar:
+                # **The oracle appears for what it cannot do.** `unar`
+                # FAILS this entry — the manifest records the fork as
+                # unadjudicated for that reason — while reading every
+                # other entry in the archive perfectly well. The
+                # manifest is static, so the live check is here: if
+                # `unar` ever learns the module, this is where it is
+                # noticed.
+                u = os.path.join(work, "wild-dna-unar")
+                os.makedirs(u, exist_ok=True)
+                r = subprocess.run([unar, "-nr", "-D", "-f", "-k",
+                                    "hidden", "-e", "macintosh", "-o", u,
+                                    path], capture_output=True, timeout=600)
+                said = (r.stdout + r.stderr).decode("utf-8", "replace")
+                if "Attempted to read more data than was available" \
+                        not in said:
+                    bad.append("`unar` no longer fails on the MacPaint "
+                               "entry — it used to, so this fixture may "
+                               "now have an oracle: %s"
+                               % said.strip()[-160:])
+                for rel in ("DNANALYZE Docs", "Schwindinger 1987",
+                            "TC.DNA"):
+                    a = os.path.join(out, "DNAnalyze", rel)
+                    b = os.path.join(u, "DNAnalyze", rel)
+                    if not (os.path.exists(a) and os.path.exists(b)):
+                        bad.append("%s: missing from one of the two "
+                                   "extractions" % rel)
+                    elif open(a, "rb").read() != open(b, "rb").read():
+                        bad.append("%s: this engine and `unar` disagree "
+                                   "on an entry no module touched" % rel)
+    return bad, graded
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--macextract",
                     default=os.path.join(REPO, "build", "macextract"))
     args = ap.parse_args()
+
+    # The wild fixtures need no specimens, so they are graded BEFORE
+    # the gate below: a fresh clone that has restored `fixtures/` and
+    # has never booted an emulator still grades them.
+    wild_work = tempfile.mkdtemp(prefix="sitopt-wild-")
+    try:
+        wild_bad, wild_graded = wild_reversible(args.macextract, wild_work)
+    finally:
+        shutil.rmtree(wild_work, ignore_errors=True)
+    if wild_graded < 2:
+        print("run_sitopt: %d of 2 wild reversible-Optimizer fixtures "
+              "present — the rest is not graded (fixtures/SOURCES.md)"
+              % wild_graded)
 
     need = [os.path.join(MADE, n + ".sit.bin")
             for n in ("Plain", "Optimized", "OptBetter")] + [UNSTUFFED]
@@ -196,13 +547,18 @@ def main():
                                               "Painting.bin")]
     missing = [p for p in need if not os.path.exists(p)]
     if missing:
-        print("run_sitopt: no specimens (%s) — skipped; "
-              "tools/vmac/sitopt.py makes them"
+        print("run_sitopt: no specimens (%s) — 2.0.1's own archives are "
+              "skipped; tools/vmac/sitopt.py makes them"
               % os.path.basename(missing[0]))
-        return 0
+        for p in wild_bad:
+            print("run_sitopt: %s" % p)
+        print("run_sitopt: %d wild archive(s) carrying a reversible "
+              "Optimizer graded, %d problem(s)"
+              % (wild_graded, len(wild_bad)))
+        return 1 if wild_bad else 0
 
     ref_data, ref_rsrc = forks(UNSTUFFED)
-    problems = []
+    problems = list(wild_bad)
     work = tempfile.mkdtemp(prefix="sitopt-grade-")
     try:
         # 1. the control
@@ -876,8 +1232,9 @@ def main():
         print("run_sitopt: %s" % p)
     print("run_sitopt: 28 archive(s) StuffIt Deluxe 2.0.1 wrote — all five "
           "Optimizers — graded against its own unstuffer and its own "
-          "Engine, plus 2 optimized archives nobody here made, "
-          "%d problem(s)" % len(problems))
+          "Engine, plus 4 optimized archives nobody here made, %d of them "
+          "carrying a module this engine UNDOES, %d problem(s)"
+          % (wild_graded, len(problems)))
     return 1 if problems else 0
 
 

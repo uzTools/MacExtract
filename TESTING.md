@@ -502,13 +502,16 @@ whatever it finds inside.
   change to the harness. Until 2026-08-08 the whole FIXTURE was skipped
   instead, on the strength of our own error message; see "When our engine
   declines an entry".
-- Do not read "unadjudicated: 8 forks" as 8 defects. It is **8 forks
-  across 4 fixtures**, measured 2026-09-22, where two implementations
-  cannot be compared: 4 in the PKZIP 1.x zips and `arcplus712.zip`,
-  where unar failed the entry and Implode is outside v1 scope for us,
-  so **both sides decline**; and 4 in the 1995 Now Compress archive,
-  which the archive's own extractor has graded under emulation instead
-  (`nowcompress.py --adjudicate`). It was **23 across 12** until deark
+- Do not read "unadjudicated: 11 forks" as 11 defects. It is **11
+  forks across 6 fixtures**, measured 2026-10-07, where two
+  implementations cannot be compared: 4 in the PKZIP 1.x zips and
+  `arcplus712.zip`, where unar failed the entry and Implode is outside
+  v1 scope for us, so **both sides decline**; 4 in the 1995 Now
+  Compress archive, which the archive's own extractor has graded under
+  emulation instead (`nowcompress.py --adjudicate`); and 3 across the
+  two wild StuffIt Optimizer fixtures added 2026-10-07, where both
+  oracles fail the optimized fork and the lane in `tools/run_sitopt.py`
+  grades it three other ways (*StuffIt 2.0's Optimizers*, above). It was **23 across 12** until deark
   was offered resource forks and the 6 empty ones of
   `derived-INTRECHO.pak` closed, **15 across 11** until the 8 in damaged
   MacBinary were graded from the container itself (*The container's own
@@ -1354,6 +1357,41 @@ lane grades the six header bytes a manifest does not record (FORMATS.md,
 makes it fail twice and the engine refuse the archive, measured
 2026-10-06. How they were found is *Searching somebody else's index by
 content*, below.
+
+**And since 2026-10-07 there is a lane for the two wild archives whose
+module this engine UNDOES** — `sitopt-wild-Phantom.sit` (`Sound 1`) and
+`sitopt-wild-DNAnalyze.sit` (`MacPaint 1`). It runs BEFORE the specimen
+gate, so a fresh clone that has restored `fixtures/` and never booted
+an emulator still grades them. **Both optimized forks defeat both
+oracles**, so each manifest records that one fork as unadjudicated and
+`run_diff.py` grades the rest byte for byte: `unar` fails
+`DNANAL Key Commands` with *"Attempted to read more data than was
+available"* and `Phantom` with *"Wrong checksum"* — the archive's own
+CRC-16 catching the oracle, because that field is over the restored
+bytes — and `macunpack` skips both. What the lane asserts about the two
+forks themselves is three things none of which is this engine's own
+output, and the measurements are in FORMATS.md, *Two more, and these
+the engine UNDOES*:
+
+* `Sound 1`: the archive's own CRC-16 over the RESTORED bytes, which
+  does not match the optimized ones; the running sum over what `unar`
+  hands back, byte for byte; and **the same `t` failing** once the
+  Optimizer bit and the id are cleared and the header's own CRC at 110
+  repaired — without that line, `t` passing would be a fact about the
+  decoder rather than about the filter.
+* `MacPaint 1`: 12,992 B as declared, a 512-byte header of zeros, and
+  **720 PackBits rows of exactly 72 bytes with nothing left over**;
+  plus `deark` reading it back with no warning, asserted together with
+  `deark` DOES warn about the same artwork with its header removed.
+  Without that second half the silence would be tolerance.
+* both: `unar`'s own failure text is asserted LIVE, because a
+  manifest's unadjudicated reason is static — if the oracle ever learns
+  the modules, this is where it is noticed.
+
+**Measured able to fail**: with `sit_opt_decodable` returning
+`SIT_OPTDEC_ASIS` for both modules, the lane reports both fixtures,
+and the rest of the suite reports `OptPaint`, `OptPhoto` and
+`OptSound` as well.
 
 Ten assertions over twenty-eight archives 2.0.1 wrote, in fourteen runs
 — which between them are **everything that application writes with what
@@ -2968,12 +3006,30 @@ interpolated position for the purpose (`unc_progress_at`).
 
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 
-Added 2026-08-23, when decryption came into scope. **Nothing in the
-corpus is encrypted** — `lsar -j` over all **961** fixtures reports
-`XADIsEncrypted` 0 for every entry (re-counted 2026-10-05; it read 903
-from 2026-08-23 while the corpus grew under it) — so this suite writes every archive
-it grades, and the whole design is about not grading a decoder against a
-generator that shares its reading.
+Added 2026-08-23, when decryption came into scope. **Every archive this
+suite DECRYPTS, it also writes** — and the whole design is about not
+grading a decoder against a generator that shares its reading. The
+corpus has held exactly one encrypted entry since 2026-10-07, and
+`lsar -j` still reports `XADIsEncrypted` 0 for every fixture including
+that one, because the oracle is blind to the bit it uses (FORMATS.md,
+*Encryption*, for the measurement and what the claim used to say).
+
+**That one is wild, and what it grades is a refusal.** No password for
+it is published anywhere, so `sitcrypt-wild-F7Menus.sit.bin` asserts
+five things instead: the entry's method byte is `0x12` and it declares
+5,944 bytes of resource fork, which is what a folder — the published
+reading of `0x10` — cannot have; the archive's resource fork carries an
+`MKey`, measured until then only on three archives 3.5.1 wrote here;
+through the envelope the engine reports *"wrong password, or none
+given"* with no password and with a wrong one, and writes no
+5,944-byte fork either time; **forkless it reports "encrypted by a
+scheme we cannot read" instead**, which is the branch that says why —
+without the `MKey` no password could work; and `unar` fails with
+*"Error on decrunching"* while `lsar` sets no flag, asserted so that an
+oracle which learns the bit is noticed here. **Measured able to fail**:
+an engine built without the `SIT_NEWDE` term in its encryption test
+reports all three branches as a corrupt archive — which is `unar`'s
+symptom exactly — and the lane reports three problems.
 
 Two of the eight ciphers need no generator here: **`zip -P`** writes the
 PKWARE-cipher fixtures (stored and deflated) and **`arc g<password>`**
@@ -4140,7 +4196,7 @@ at a stranger's disk. That check matters more than it sounds:
 | probe | what it accepts | established before the sweep |
 |---|---|---|
 | `pkg` | an AppleLink package: the item count, the version, eight zero bytes, then the whole directory validated against the file's own size and tiling | **exactly the 6 synthesised `.pkg` fixtures out of 956 files in `fixtures/`**, and both real packages, which is a test that can fail in both directions |
-| `sit` | a classic StuffIt archive, reported when an entry's method byte carries the Optimizer bit `0x40` or the encrypted bit `0x10` | the 336 `rLau` archives in `fixtures/` — **none** of which sets either bit, which is why the sweep was worth running |
+| `sit` | a classic StuffIt archive, reported when a fork's method byte carries the Optimizer bit `0x40`, the encrypted bit `0x80` or the `NewDE` bit `0x10` — and, since 2026-10-07, NAMING the module: the Optimizer id at 106/108 and the Encryptor id at 107/109, each read only for the fork whose own method byte carries the flag and whose length is nonzero | the **340** `rLau` archives out of 1,915 files in `fixtures/`, **1,710 file headers**, of which it flags exactly **4** — the two wild optimized archives in both their forms; and over StuffIt Deluxe 2.0.1's own specimens it names all five of that application's ciphers and all five Optimizer ids, each on the right archive, which is a test that can fail in both directions |
 | `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, where it reproduces FORMATS.md's *the biggest method-8 fork in reach is 44,549 B and compresses to 1,230* |
 | `pit` | a PackIt archive, walked to the end of its block chain — reported only when a block is `PMa5` or `PMa6`. Added 2026-10-05. It wants the WHOLE file where the other three want 512 bytes, because an encrypted block is almost never the first one and a `PMa4` block can only be stepped over by DECODING it (`tools/derive_packit.py`'s decoder, with every length bounded against the bytes present) | **exactly the 5 PackIt archives out of 962 files in `fixtures/`**, every one of them walking to its `PEnd`, and all 3 encrypted specimens in `specimens/pitcrypt/`, each stopping at its encrypted block — so it can fail in both directions. Its first draft bounded a COMPRESSED entry's decoded size by the bytes left in the file and rejected every archive `tools/synth_pit.py` writes |
 
@@ -4151,8 +4207,10 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-06 | `detection=<n>01` + 14 zero bytes, n = 1…50 except 7, deduplicated | 1,443 | **36** AppleLink packages |
 | 2026-10-06 | `extension=.pkg&family=unknown`, deduplicated | 2,641 | 13 more, **49** in all, 7 of them version 0 |
 | 2026-10-06 | `detection=abcd0054*&sizeMin=40000`, deduplicated | 2,046 | all 2,046 are DiskDoubler compressed files, carrying **612 method-8 forks** up to 6,212,378 B of coder output; two became fixtures and pinned the 0xfff0 block size (FORMATS.md, *Method 8's Huffman block*) |
-| 2026-10-06 | `format=sit`, deduplicated, ordered by hash — a uniform sample | 10,000 | 8,798 classic StuffIt archives, **0 Optimizer bits** in their first entries |
-| 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,998 entry headers**, and the **5 Optimizer bits** this project has ever seen in the wild, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). Two further entries carry the bit inside one damaged archive, counted twice because it is on two CDs, which `unar` also refuses |
+| 2026-10-07 | `format=sit` AND `format=sea`, deduplicated, **sharded by size under the result window** — `--shard-under`, so the whole index rather than its first 10,000 | **196,139** | the listing's own `meta.fileMeta` is read for free: **21** of those archives hold a member of type `8BIM`, **521** an `FSSD` and **423** a `PNTG` — the three types the four reversible Optimizers accept — and **10,452** carry no member metadata at all |
+| 2026-10-07 | those **954** archives, walked entry by entry over window `Range`s (`--bytes 32768 --walk 400`) | 954 | **927** classic StuffIt archives, **16,413 file headers**, 4,283 folder markers, 1 walk that left the chain — and **two Optimizer bits of a kind this project had never seen**: `Sound 1` and `MacPaint 1`, each in one archive, both now fixtures (FORMATS.md, *Two more, and these the engine UNDOES*). **0** encrypted forks |
+| 2026-10-06 | `format=sit`, deduplicated, ordered by hash — a uniform sample | 10,000 | 8,798 classic StuffIt archives, **8,746 entry headers**, **0 Optimizer bits** |
+| 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,987 entry headers**, and the **5 Optimizer bits** this project had seen in the wild up to that day, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). **47 of the 16,727 walks stop early** under the in-step test added 2026-10-07, which is where the 21,767 headers this pair was first reported as became **21,733** — the dropped ones were read out of the middle of a fork, and two of them had been counted as Optimizer bits |
 
 | 2026-10-06 | `detection=626567696e2030*`, `...2036*`, `...2037*` — a file whose first bytes are a uuencode `begin` line, then the TAIL of each candidate read for a ` .finfo` section | 939 | **1** UUTool MU-layout posting, `uu-wild-dictcol.uu`, now a fixture. A second specimen came off the same key by eye, from a Macintosh CD (`uu-wild-terrainman.uu`). The first pass over the same 939 found nothing because the tail range was not honoured — below |
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
@@ -4185,6 +4243,58 @@ marker, which carries no method byte at all. First-entry-only saw
 8,798 archives and 0 hits; 8 KB saw 12,998 headers in 7,929 archives
 and 7.
 
+**A third key, and it is about an archive's CONTENTS.** The listing
+hands over `meta.fileMeta` — the index's own record of the Mac file
+type of every file INSIDE each archive — free with every row, and
+**Discmaster does not index inside a `.sit`**: `detection=PNTG/MPNT`
+returns twenty thousand MacPaint documents and not one `fileid` with
+`.sit/` in it (measured 2026-10-07), so no query can ask for a member
+and the listing can. It is the key the Optimizers needed, because an
+Optimizer accepts exactly ONE Mac file type, out of its own `COMP`:
+`FSSD` for `Sound 1`, `8BIM` for `Photoshop 1` and `JPEG Lossy`,
+`PNTG` for `MacPaint 1`, `TEXT` for `Text 1` (FORMATS.md, *The module
+ABI*). An archive with no member of that type cannot carry that
+module's bit — so 954 archives out of 196,139 are worth a request, and
+two of them carried a module nobody here had seen in the wild.
+
+**Its positive control is the only one there is**: all three wild
+`Text 1` archives contain a `TEXT` member, and the member is the
+optimized entry itself. **What it cannot see** is an archive whose
+members the index did not record — **10,452 of 196,139, 5.3 %** — and
+an Optimizer run over a file whose type the module accepts but the
+index read differently.
+
+**`format=sea` is a second population the first sweep never touched**:
+17,798 files dexvert calls *Self Extracting Stuffit Archive*, against
+`format=sit`'s 175,810. Both are in the 196,139 above, and **those
+three figures are not meant to add up**: `dedup` keeps one row per
+content hash WITHIN one query, and this sweep is 36 of them, so the
+union over file PATHS is larger than any single query's count —
+48,824 of the 196,139 share a name and a size with another row. The
+union is what the probe costs a request each for, which is why it is
+the number reported; neither whole-corpus count is.
+
+**Three tests keep a walk IN STEP, and the fourth would have been
+wrong.** The declared total at +6 bounds a walk but does not keep it
+aligned: one wrong length and every entry after it is read out of
+compressed data. Each test was measured against the 1,710 file headers
+in `fixtures/`, which are known good — the name-length byte is 1..31
+(0 false positives), the name holds no NUL (0), and the entry and both
+its forks fit inside the declared total (0). **The obvious fourth,
+*"the name holds no control byte"*, rejects 44 real headers** — names
+made of tabs and `\x01` — so it was dropped. The three between them
+reject exactly the already-known-bogus walks: the two `cursors.sit`
+copies `unar` also refuses, the entry that made the 2026-10-06 sweep
+report a `NewDE` bit, and `SternSounds3.sit`, whose second "entry"
+asks for a 3.1 GB fork out of a 206 KB archive.
+
+**A window `Range` is honoured here, and it has the control the suffix
+range earned.** Read 0..511, then 256..511, and require the second to
+equal the tail of the first; it passes, so a walk costs 112 bytes per
+entry instead of the whole prefix. That is what makes walking a whole
+archive affordable — 16,413 headers out of 954 archives, against the
+924 a prefix-fetching walk read from the same set.
+
 **Two harness defects on the way, both of the kind that produces
 findings rather than failures.** The walk had no END: it stepped
 through the archive's declared total size and read compressed data as
@@ -4196,6 +4306,17 @@ encrypted bit is `0x80` (`src/fmt_sit.c`). The first version of the
 probe reported encrypted-folder markers as encrypted entries. *A probe
 written from the published description, in a repository that has
 measured the same bytes, is written from the wrong source.*
+
+**And a third, 2026-10-07, the same shape one layer in.** The probe
+learned to name the cipher and keyed it on byte 107 OR 109, whichever
+was nonzero — and reported four `DES` entries, the one cipher this
+project has no file for, off byte 107 of entries whose DATA FORK IS NOT
+THERE: `dlen` 0, `dmeth` 0, the encrypted resource fork's own id 0. An
+id byte belongs to a fork, and `src/fmt_sit.c` reads it only where that
+fork carries the flag and has a length (`&& rlen`, `&& dlen`). The same
+pass also had the id beating the method BIT, which would have named a
+wild `NewDE` fork `DES`: 2.0.1's own `NewdeT.sit.bin` carries the
+`0x10` bit AND a stale `1` in the id byte.
 
 **Both keys were needed, and the pair is the method.** The hex token
 cannot see a version-0 package — version 0 puts a zero byte where the
@@ -4715,7 +4836,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 963 files, and the
+  the population you give it: the corpus is 966 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is
