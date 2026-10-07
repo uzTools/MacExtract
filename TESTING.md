@@ -2728,6 +2728,76 @@ found an archive with a comment — a case the suite had never met in
 three weeks. A sweep sampled this way cannot be said to cover a
 property; it can only be said to have met one.
 
+## The folder-depth limit (`tools/synth_deep.py`, `tools/run_depth.py`, in `ci.sh`)
+
+Added 2026-10-07. `unc_path_push` refuses to descend past
+`UNC_PATH_MAXDEPTH` (24) and five walks call it; what each did about the
+refusal had never been run, because **nothing on this disk nests deeper
+than 4** (FORMATS.md, *How deep anything actually nests*, measured with
+`tools/measure_depth.py`). Three of the five were misfiling entries
+(BLOCKERS.md, *what ignoring a refused push cost*).
+
+The rule the suite applies is one sentence: an entry the walk could not
+descend to is still OFFERED, with the path it could represent, carrying
+`path_too_deep` and failing per entry with `UNC_ERR_TOODEEP`, and nothing
+is written for it; an entry the walk COULD represent is reported at
+exactly its own path, whatever happened deeper in.
+
+The subjects are generated, one per walk — DDAR, DDA2, Now Compress,
+AppleLink package, SuperDisk! — by nesting 30 deep through the existing
+`tools/synth_*.py` builders, so no field is invented that those files did
+not already have provenance for. Folder names are three characters, which
+keeps a 30-deep path inside `UNC_NAME_MAX`: depth is then the only
+variable, and a cut NAME cannot be mistaken for a refused push (that
+question is `run_names.py`'s, on `synth_sd.nest()`'s 31-character names).
+
+**The tree's shape is the finding.** A file at every level on the way down
+says where descending stopped. A **trailer at every level on the way back
+up** catches an unbalanced pop, which is the failure that matters: four of
+the five walks pop by a count, so a refusal that was not counted surfaces
+the walk one level short and every entry after it is reported inside a
+real folder it is not in. And a sentinel at the root catches the case
+where the arithmetic cancels — `unc_path_pop` clamps at depth 0, so a walk
+that over-pops by fewer levels than it has left still lands the sentinel
+correctly. **An assertion built on the sentinel alone passes on all five
+broken walks**, which is why the trailers are there.
+
+Six assertions per format: every declared entry offered; every
+representable path reported as its own; no path past 24 levels reported;
+the root sentinel at the root; extraction failing exactly the entries it
+cannot place and writing exactly the ones it can; and the engine saying so
+in words.
+
+It was run against a build of the previous commit before being believed:
+**28 problems across the five formats**, discriminating all three old
+behaviours — DiskDoubler offering 48 of 91 entries, Now Compress and
+SuperDisk! reporting 24 representable paths wrongly and writing 61 files
+where 49 belong, AppleLink packages writing 12 files to a flattened path.
+
+What this CANNOT see:
+
+  * whether 24 is the right limit, or whether any real archive reaches
+    it. Nothing here does, by six times, so this grades a RULE and not a
+    corpus. `tools/measure_depth.py` is what measures the corpus, and
+    what would notice if a specimen ever arrived that nests deeper.
+  * the decoded bytes of a deep entry. Nothing is written for one, by the
+    rule, so there is nothing to compare; the representable part is
+    compared by path and by length, not byte for byte — that is
+    `run_diff.py`'s subject on the ordinary fixtures.
+  * whether these record shapes are what each application would write.
+    They are the existing builders' shapes nested deeper, and for
+    SuperDisk! there is no second reader off the Macintosh at all
+    (`tools/synth_sd.py`).
+  * the two formats that carry a path WITHOUT this walker. StuffIt and
+    Compact Pro go through `unc_entry_path_append` and have no depth
+    limit to reach, so none of this applies to them — and nothing here
+    tests what they do instead.
+  * the Macintosh shell's half of the rule. `path_too_deep` stops it
+    creating the folder, and that line has been read and not run: an
+    archive nested past 24 has never been put in front of the
+    application on an emulated Mac (OPEN_ITEMS.md, *The folder-depth rule
+    on the Macintosh: read, not run*).
+
 ## The three walks agree (`tools/walk_probe.c`, `tools/run_walk.py`, in `ci.sh`)
 
 Added 2026-08-28. Every other suite here compares the OUTPUT of one

@@ -667,6 +667,19 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     }
 
     if (info->is_dir) {
+        /* A folder whose path the engine could not represent is NOT
+         * created: the path is its first UNC_PATH_MAXDEPTH levels, so
+         * creating it would put a folder of the archive's inside one it
+         * was never in. Counted here because a declined entry never
+         * reaches end_entry, which is where a file's UNC_ERR_TOODEEP is
+         * counted (macextract.h, path_too_deep). */
+        if (info->path_too_deep) {
+            fprintf(stderr, "macextract: %s: %s; not created\n", name,
+                    unc_strerror(UNC_ERR_TOODEEP));
+            s->errors++;
+            s->cur_path[0] = 0;
+            return 1;
+        }
         mkdirs_for(s->cur_path);
         mkdir(s->cur_path, 0777);
         return 1;

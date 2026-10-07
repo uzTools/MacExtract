@@ -255,6 +255,16 @@ python3 tools/run_zipit.py --macextract build/san/macextract \
 python3 tools/run_sqp.py --macextract build/san/macextract \
     || fail "AppleLink package (SqueezePlay) tests"
 
+# The one rule all five path walks share, at the one place they used to
+# disagree: a folder nested past UNC_PATH_MAXDEPTH. Three of them misfiled
+# every entry after a refused push into a real folder it was not in, which
+# no name-or-CRC check can see because every byte is right and only the
+# folder is wrong; two threw the rest of the archive away. Generated —
+# nothing in the corpus nests deeper than 4 levels against a limit of 24
+# (tools/measure_depth.py).
+python3 tools/run_depth.py --macextract build/san/macextract \
+    || fail "folder-depth limit tests"
+
 echo "=== variant 1b: sampled inverse BWT (forced, + budget) ==="
 # The Arsenic decoder falls back to a sampled occurrence index when the
 # 4-bytes-per-byte transform vector does not fit. It is chosen by an

@@ -361,6 +361,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
 - 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
 - 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
+- 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
 
 ---
 
@@ -8100,12 +8101,12 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 302 bytes on the
-68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
-never right, the "296" this entry stated until 2026-09-03 stopped
-being right a few hours after it was written — 2026-09-03, *the struct
-that grew after it was measured* — 298 became 300 on 2026-09-22
-with `name_utf8`, and 302 on 2026-09-28 with the two module fields)
+**Why not just carry the name.** `UncEntryInfo` is 304 bytes on the
+68000 target (measured, and re-measured every time the struct grew — the
+"280 bytes" that stood in `fmt_lzh.c` was never right, and the "296"
+this entry stated until 2026-09-03 stopped being right a few hours after
+it was written, 2026-09-03, *the struct that grew after it was
+measured*; FORMATS.md, *Name limits*, carries the figure)
 and it travels on a 4 KB call stack.
 A name field big
 enough for zip's own maximum would be 65,535 bytes. The cap is the
@@ -23560,3 +23561,159 @@ password"* — a negative looked for rather than proved, because that
 index ORs the words of a quoted phrase instead of matching it. So a wild `NewDE` archive is a fixture that grades a
 REFUSAL (FORMATS.md, *Encryption*), not a decryption, and the row keeps
 the five ciphers with that reason attached.
+
+
+## 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
+
+`unc_path_push` refuses to descend past `UNC_PATH_MAXDEPTH` (24), and five
+walks call it. They did three different things about the refusal:
+DiskDoubler's two containers returned it as `UNC_ERR_CORRUPT`, Now
+Compress descended only on success, and AppleLink packages and SuperDisk!
+cast it to `(void)`. The header said that was all fine — *"NOTHING
+changed, so a caller that would rather carry on than fail may ignore the
+result"*.
+
+**The claim was about the PUSH, and the bug is in the POP.** Four of the
+five walks come back up by a COUNT, not by asking how deep they are: an
+`enddir` record (DDAR), a level counter (DDA2), an `SD_TAG_UPDIR` marker
+(SuperDisk!), a per-directory entry count (Now Compress). A push that was
+refused still gets its matching pop, and that pop takes a level the walk
+really is standing in. So the walk comes back up one level short for
+every refusal, and keeps going: not "the entries land under the parent"
+but *every entry after the deep folder is reported inside a real folder
+it is not in*. Only AppleLink packages escaped it, because their pop is
+`while (depth >= level)` — absolute, from the record's own level field,
+and therefore self-correcting. BLOCKERS.md has the measured numbers and
+what the words cost.
+
+**That failure is invisible to everything this project already runs.** The
+path it produces is plausible, nothing in it looks cut, and every decoded
+byte is correct — so a differential suite comparing names and CRCs passes,
+and so does an aggregate over file counts and summed CRCs (CLAUDE.md's
+rule about what a harness cannot see, earned once already on the gzip/.Z
+fallback name). What sees it is asking a DIFFERENT question: not "is this
+entry right" but "is this entry where the archive put it".
+
+### The rule, argued on what comes out of the archive
+
+Three candidates, measured on a generated 30-deep archive of 91 entries
+(`tools/synth_deep.py`) because nothing in the corpus nests past 4
+(FORMATS.md, *How deep anything actually nests*):
+
+| rule | what the user gets |
+|---|---|
+| refuse the archive (DiskDoubler's) | **48 of 91 entries**, and a correct archive called corrupt. The walk stops at the deep folder and everything after it — including 24 entries at paths it could have represented perfectly — is never offered |
+| emit, do not descend (Now Compress's intent) | all 91, and **24 of them silently in the wrong folder**, 12 files written where nobody asked and 5 folders created inside a sibling branch |
+| emit, do not descend, and FAIL the ones it cannot place | all 91 offered, **49 at their own paths**, 17 refused out loud, nothing written anywhere wrong |
+
+The third is what shipped. It is CLAUDE.md's per-entry-error rule — an
+allocation failure is per entry, never per archive, and an unrepresentable
+path is the same shape of problem — and it is what `truncdepth` already
+does for the related case of a name too long to fit: a path the engine
+could not represent is REPORTED, not guessed at.
+
+**Losing entries is better than misfiling them, and both are worse than
+saying so.** The middle row is the one worth arguing about, because it
+looks the most generous: everything comes out. But a file written into a
+folder it was never in is a file the user cannot find and cannot know is
+misplaced, and two entries from different depths flatten onto the same
+path and collide. The first row at least fails loudly — it just throws
+away 43 entries to do it.
+
+### Why the walker counts refusals instead of flagging them
+
+`UncPath` gained one `int`, `lost`: the number of refused descents not yet
+come back up. `unc_path_push` increments it instead of touching the path;
+`unc_path_pop` decrements it *before* it would pop anything real. That is
+what makes the refusal safe to ignore — the claim the old contract made
+without earning it — because now the pop a refused push will be matched by
+undoes the refusal rather than a level that was pushed.
+
+A counter and not a flag, because refusals nest: six levels past the limit
+need six pops before the walk is back where it belongs. It is an `int` and
+not a narrow saturating field for the same reason the count exists at all
+— a counter that stuck at its maximum would under-count the pops and
+quietly lose the balance it is there to keep. Every push costs a record in
+the file, so a 32-bit archive cannot hold enough of them to wrap it.
+
+With that, four of the five walks needed no arithmetic at all: three now
+ignore the refusal honestly, and AppleLink packages compare against
+`unc_path_askdepth()` — depth plus refusals — instead of `depth`, which
+otherwise pins at 24 and never comes back up.
+
+**Now Compress needed real work, because its tree is implied by counts
+rather than marked.** Each directory says how many entries follow it, and
+a refused level has no slot in `owed[]` to put its count in. The counts of
+all the refused levels are therefore summed into one accumulator: the sum
+telescopes — every entry is owed by exactly one level, and a refused
+folder adds its own count the way a real one does — so the chain is
+exhausted at the same entry a stack of counters would have exhausted it
+at. What a single counter cannot say is WHICH refused level each entry
+belonged to, which is precisely the thing the walk could not represent.
+The two pop loops are ordered, and that order is load-bearing: a real
+level whose count ran out while the walk was still below the limit has to
+wait, or its pop lands on the refusal instead and the walk surfaces one
+level short — the original bug, reintroduced.
+
+### The field, and the host that never hears the error
+
+`UNC_ERR_TOODEEP` (-16) is the sibling of `UNC_ERR_TOOLARGE`: that one is
+an entry past this engine's 32-bit reach, this one an entry past its
+folder-depth reach. Both are per entry; `unc_fatal()` is a whitelist, so a
+new code is non-fatal by construction.
+
+It is not enough on its own. **A host may decline an entry at
+`begin_entry` and then never hear its status** — the Linux CLI declines
+every directory, having already created it, which is why a too-deep folder
+was counted for SuperDisk! and nowhere else on the first pass. So the fact
+also travels on `UncEntryInfo.path_too_deep`, read at `begin_entry`, which
+is exactly where `name_truncated` already lives and for the same reason.
+Both hosts now refuse to create such a folder.
+
+That first pass is also what turned up a six-week-old contract violation:
+`fmt_superdisk.c` called `end_entry` whether or not `begin_entry` had
+declined the entry, which the other four never did. Harmless while the
+status was always `UNC_OK` — and the reason one format's tally disagreed
+with four others' the moment a status was not.
+
+### What it cost
+
+**160 B resident on a 1 MB Mac Plus** in the shipped configuration — 120 B
+of `CODE`, 40 B of A5 for the one new message — because the five decoders
+are in `'OVLY'` images and only the walker, the message and the shell's
+refusal are resident. The Macintosh report borrows the engine's sentence
+rather than keeping one of its own, which is `RepFailed`'s reasoning about
+`UNC_ERR_MODULE` applied again: a string literal in `mac/` is A5 .rodata
+for a case nothing in the corpus reaches. Shortening the message from
+"nested too deep for this engine to place" to "nested too deep to place"
+gave back 16 of those bytes.
+
+The deepest chain in the engine goes **3,386 → 3,406 B** against
+CLAUDE.md's 4 KB, all of it the +20 B on `unc_dd_extract`; FORMATS.md
+(*How deep anything actually nests*) has every frame. `UncEntryInfo` is
+302 → **304** bytes, one byte of struct costing two of size for the sixth
+time.
+
+**`UNC_PATH_MAXDEPTH` stayed at 24.** `stack` and `fullstack` are sized by
+it, so raising it buys A5 world for a depth nothing on this disk comes
+within six times of.
+
+### What the generator is for, and the one it broke
+
+`tools/synth_deep.py` writes the same tree for all five formats, and its
+shape is the finding: a file at every level on the way down says where
+descending stopped, a TRAILER at every level on the way back up catches
+the unbalanced pop, and a sentinel at the root catches the case where the
+arithmetic cancels. That last one is why the trailers exist — `unc_path_pop`
+clamps at depth 0, so a walk that over-pops by fewer levels than it has
+left still lands the root sentinel correctly, and an assertion built only
+on the sentinel would have passed on all five broken walks.
+
+Adding two function-like macros next to the `UncPath` field they read
+broke `tools/overlay/mkforwards.py`, which took the leftmost `unc_name(`
+in a chunk and so matched the macro instead of the prototype behind it —
+`unc_path_push` went missing from the host vector. It now takes the
+rightmost name in `SYMBOLS`. The script's own comment already recorded
+being fixed once for a preceding `#define`; a function-like one was the
+case that fix did not cover. It failed the build loudly, which is what
+that file is built to do.

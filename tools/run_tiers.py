@@ -255,7 +255,14 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # TIERS budgets below are now a further 320 B more generous than the
 # Macintosh will be until they are re-taken there (FORMATS.md, *What the
 # zip pair claims, and what it costs*).
-OVL_SAVED = 128848
+# 2026-10-07, the folder-depth rule: **128,848 -> 129,040**, +192 B. The
+# control pays +328 of CODE and +24 of A5 because it carries every decoder
+# resident, the shipped build +120 and +40, and the difference of the two
+# is what moves. NOT compensated, on the same terms as the rows above: the
+# three TIERS budgets below are now a further 192 B more generous than the
+# Macintosh will be until they are re-taken there (FORMATS.md, *How deep
+# anything actually nests*).
+OVL_SAVED = 129040
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -309,24 +316,34 @@ OVL_RESIDUE = -666
 # build whenever it is present (check_images below), so this table cannot
 # drift silently while the toolchain is installed; it is stated rather than
 # only read so that the lane still runs where Retro68 is not.
+# **Five images re-taken 2026-10-07 for the folder-depth rule**, +220 B of
+# bundle in total: CPTDD +52, NOW +118, PACKIT +4, SQP +32, SUPERDISK +16.
+# This is where that rule's per-format half lives — the `deep` test and the
+# per-entry UNC_ERR_TOODEEP in each of the five walks — and it is in the
+# images rather than resident on purpose: the shipped build pays 120 B of
+# CODE and 40 of A5 for the walker and the message, and these 220 B are
+# read at launch and released as soon as the sniff says what the archive is
+# (FORMATS.md, *How deep anything actually nests*). NOW is the largest
+# because its tree is implied by counts rather than marked, so it carries
+# an accumulator and two ordered pop loops instead of one test.
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
-    "OVL_ID_CPTDD":       15784,
+    "OVL_ID_CPTDD":       15836,
     "OVL_ID_CRYPT":       10140,
     "OVL_ID_EXO":         29252,
     "OVL_ID_LZH":         9568,
-    "OVL_ID_NOW":         4938,
-    "OVL_ID_PACKIT":      2644,
+    "OVL_ID_NOW":         5056,
+    "OVL_ID_PACKIT":      2648,
     "OVL_ID_SPACESAVER":  16722,
     "OVL_ID_STUFFIT":     26274,
-    "OVL_ID_SQP":         1972,
-    "OVL_ID_SUPERDISK":   7056,
+    "OVL_ID_SQP":         2004,
+    "OVL_ID_SUPERDISK":   7072,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 155916
+BUNDLE = 156136
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

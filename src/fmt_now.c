@@ -713,6 +713,9 @@ int unc_now_extract(UncCtx *c)
     /* Entries still owed at each level, which is Now Compress's own
      * way of closing a folder and not part of the shared path. */
     uint32_t owed[UNC_PATH_MAXDEPTH];
+    /* And still owed by all the levels past UNC_PATH_MAXDEPTH together,
+     * which have no slot of their own; see the walk below. */
+    uint32_t deepowed = 0;
     NowStream st;
     uint8_t *mem;
     uint32_t totalentries, seen = 0, at = 24;
@@ -843,7 +846,7 @@ int unc_now_extract(UncCtx *c)
     while (seen < totalentries) {
         UncEntryInfo e;
         uint32_t nlen, datasize, rsrcsize, datastart, numdir;
-        int flags, sret;
+        int flags, sret, deep;
 
         if (c->io->seek(c->io->ctx, at) < 0) { err = UNC_ERR_IO; break; }
         if (unc_read_full(c->io, hdr, NOW_ENTRY) != UNC_OK) break;
@@ -860,6 +863,7 @@ int unc_now_extract(UncCtx *c)
 
         unc_entry_clear(&e);
         unc_path_leaf(&path, &e, hdr + 1, nlen);
+        deep = unc_path_toodeep(&path);
         e.type         = unc_get_u32be(hdr + 38);
         e.creator      = unc_get_u32be(hdr + 42);
         e.finder_flags = unc_get_u16be(hdr + 46);
@@ -870,7 +874,9 @@ int unc_now_extract(UncCtx *c)
             e.is_dir = 1;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
-            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
+            if (sret == 0 &&
+                c->sink->end_entry(c->sink->ctx,
+                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0) {
                 err = UNC_ERR_SINK;
                 break;
             }
@@ -881,7 +887,9 @@ int unc_now_extract(UncCtx *c)
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
                 int ferr = UNC_OK;
-                if (!c->opt.list_only && (datasize || rsrcsize) &&
+                if (deep) {
+                    ferr = UNC_ERR_TOODEEP;   /* per entry, like the above */
+                } else if (!c->opt.list_only && (datasize || rsrcsize) &&
                     st.inblock == NULL) {
                     ferr = UNC_ERR_MEM;       /* per entry, not per archive */
                 } else if (!c->opt.list_only && (datasize || rsrcsize)) {
@@ -910,18 +918,38 @@ int unc_now_extract(UncCtx *c)
          * Source: docs/formats/now-compress.md, *The archive layer* —
          * a directory is flagged by bit 0x10 at +36 and says at +82 how
          * many entries follow it; the reference does the same by
-         * recursing (parseDirectoryWithParent). */
-        if (path.depth > 0 && owed[path.depth - 1] > 0)
+         * recursing (parseDirectoryWithParent).
+         *
+         * A level past UNC_PATH_MAXDEPTH has no slot of its own, so the
+         * counts of all the refused ones are summed into `deepowed`. The
+         * sum telescopes — every entry is owed by exactly one level, and a
+         * refused folder adds its own count the same way a real one does —
+         * so the chain is exhausted at the same entry a stack of counters
+         * would have exhausted it at. What it cannot say is WHICH refused
+         * level each entry belonged to, which is the thing this walk could
+         * not represent in the first place. */
+        if (unc_path_toodeep(&path)) {
+            if (deepowed > 0) deepowed--;
+        } else if (path.depth > 0 && owed[path.depth - 1] > 0) {
             owed[path.depth - 1]--;
+        }
 
-        /* Too deep to descend leaves the entries under the parent, which
-         * is what this walk did before the push was shared and is not
-         * the same as refusing the archive. */
-        if ((flags & 0x10) && unc_path_push(&path, hdr + 1, nlen) == UNC_OK)
-            owed[path.depth - 1] = numdir;
+        if (flags & 0x10) {
+            if (unc_path_push(&path, hdr + 1, nlen) == UNC_OK)
+                owed[path.depth - 1] = numdir;
+            else
+                deepowed += numdir;
+        }
 
-        while (path.depth > 0 && owed[path.depth - 1] == 0)
+        /* The refused chain closes first, and the real levels only once it
+         * has: a level whose count ran out while the walk was still below
+         * the limit must wait, or the pop lands on the refusal instead and
+         * the walk comes back up one level short of where it went down. */
+        while (unc_path_toodeep(&path) && deepowed == 0)
             unc_path_pop(&path);
+        if (!unc_path_toodeep(&path))
+            while (path.depth > 0 && owed[path.depth - 1] == 0)
+                unc_path_pop(&path);
     }
 
     unc_free(c->al, mem);

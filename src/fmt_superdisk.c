@@ -905,7 +905,7 @@ int unc_superdisk_extract(UncCtx *c)
         uint32_t nlen, dlen, rlen, p;
         UncEntryInfo e;
         unsigned tag;
-        int sret;
+        int sret, deep;
 
         if (unc_read_at(c->io, at, rec, 8) != UNC_OK) { err = UNC_ERR_TRUNCATED; break; }
         tag = rec[0];
@@ -929,15 +929,30 @@ int unc_superdisk_extract(UncCtx *c)
 
         unc_entry_clear(&e);
         unc_path_leaf(&path, &e, rec, nlen);
+        deep = unc_path_toodeep(&path);
 
         if (tag == SD_TAG_DIR) {
             uint8_t info[20];
             if (unc_read_at(c->io, p, info, 20) != UNC_OK) { err = UNC_ERR_TRUNCATED; break; }
             e.is_dir = 1;
-            if (c->sink->begin_entry(c->sink->ctx, &e) < 0) { err = UNC_ERR_SINK; break; }
-            if (c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) { err = UNC_ERR_SINK; break; }
-            /* Too deep to descend leaves the entries under the parent,
-             * which is what this walk did before the push was shared. */
+            sret = c->sink->begin_entry(c->sink->ctx, &e);
+            if (sret < 0) { err = UNC_ERR_SINK; break; }
+            /* A DECLINED entry gets no end_entry — the contract in
+             * macextract.h. This walk called it either way until
+             * 2026-10-07, which the other four never did: harmless while
+             * the status was always UNC_OK, and the reason a folder's
+             * UNC_ERR_TOODEEP was counted here and nowhere else. */
+            if (sret == 0 &&
+                c->sink->end_entry(c->sink->ctx,
+                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0) {
+                err = UNC_ERR_SINK;
+                break;
+            }
+            /* Too deep to descend is COUNTED by the walker, so the
+             * SD_TAG_UPDIR this folder will be closed by undoes the
+             * refusal rather than a level that was never pushed. Ignoring
+             * the refusal here used to misfile every entry after it into
+             * a real folder it was not in (BLOCKERS.md). */
             (void)unc_path_push(&path, rec, nlen);
             at = p + 20;
             continue;
@@ -985,8 +1000,8 @@ int unc_superdisk_extract(UncCtx *c)
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             if (sret == 0) {
-                int ferr = UNC_OK;
-                if (!c->opt.list_only) {
+                int ferr = deep ? UNC_ERR_TOODEEP : UNC_OK;
+                if (!c->opt.list_only && !deep) {
                     if (dlen) { sd_out_start(&s, c, UNC_FORK_DATA);
                                 ferr = sd_fork(&s, at, dlen); }
                     if (ferr == UNC_OK && rlen) {

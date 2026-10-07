@@ -367,7 +367,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # and OVL_SAVED rises by the same 256 B that CODE + A5 does here
 # (FORMATS.md, *Three configurations, one tree*). The shipped pair moved
 # +8 of CODE and −8 of A5: net nothing.
-UNC_MAC_CODE_DEFAULT=164324
+# +328 of CODE on 2026-10-07 for the folder-depth rule. This control
+# carries every decoder resident, so it pays for the per-format half
+# too — 208 B of the 328 — where the shipped pair pays 120 and keeps
+# the rest in 'OVLY' images (the eager pair below, and DECISIONS.md
+# 2026-10-07).
+UNC_MAC_CODE_DEFAULT=164652
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -479,7 +484,10 @@ UNC_MAC_CODE_DEFAULT=164324
 # CODE rose to the 164,324 ceiling above and its A5 fell 4. CODE + A5
 # does not move, so OVL_SAVED does not either (DECISIONS.md 2026-10-06,
 # *the directory of empty records*).
-UNC_MAC_A5_DEFAULT=37916
+# +24 on 2026-10-07 for the folder-depth rule: the engine's one new
+# message, which the Macintosh report borrows rather than keeping a
+# sentence of its own (DECISIONS.md 2026-10-07).
+UNC_MAC_A5_DEFAULT=37940
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -619,8 +627,26 @@ UNC_MAC_A5_DEFAULT=37916
 # unchanged at 73,392 B again, so nothing comes off any extraction's
 # budget, and the four bytes of A5 are locked in by lowering the ceiling
 # with them (DECISIONS.md 2026-10-06, *the directory of empty records*).
-UNC_MAC_CODE_EAGER=54340
-UNC_MAC_A5_EAGER=19052
+# RAISED 2026-10-07 by 120 B of code and 40 of A5 for the folder-depth rule: an entry nested
+# past UNC_PATH_MAXDEPTH is OFFERED with the path the engine can
+# represent, carries `path_too_deep`, and fails per entry with
+# UNC_ERR_TOODEEP instead of being written into a folder it was never in.
+# In THIS configuration the five decoders are in 'OVLY' images, so what
+# is resident is the walker (`unc_path_push`/`pop`/`leaf`), the engine's
+# message, and the Macintosh shell's refusal to create the folder — the
+# per-format plumbing is overlay bytes and comes off no budget.
+# What the bytes bought: the five path walks agreed for the first time.
+# Three of them used to MISFILE every entry after a refused push into a
+# real folder — silently, because the path is plausible and nothing in it
+# looks cut — and the other two threw away the rest of the archive,
+# 43 entries of 91 on the subject that measures it. Nothing in the corpus
+# reaches 24 levels; the deepest is 4 (FORMATS.md, *How deep anything
+# actually nests*), so this is 160 B against a limit no fixture meets, and
+# 1.3% of the 12,460 B the narrowest 512 KB fixture has spare
+# (tools/check_app_size.py). `run_tiers.py --check` is what says whether
+# it cost a fixture (DECISIONS.md 2026-10-07).
+UNC_MAC_CODE_EAGER=54460
+UNC_MAC_A5_EAGER=19092
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -637,8 +663,10 @@ UNC_MAC_A5_EAGER=19052
 # is the alignment effect those ceilings have recorded six times, in the
 # one configuration where it steps the wrong way (DECISIONS.md
 # 2026-10-06, *the directory of empty records*).
-UNC_MAC_CODE_LAZY=52916
-UNC_MAC_A5_LAZY=19164
+# +120 code and +8 A5 on 2026-10-07 for the folder-depth rule, the same
+# resident pieces as the eager pair above.
+UNC_MAC_CODE_LAZY=53036
+UNC_MAC_A5_LAZY=19172
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

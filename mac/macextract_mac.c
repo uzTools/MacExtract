@@ -1723,6 +1723,26 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
     s->bufErr = 0;
 #endif
 
+    /* Nested deeper than the engine carries folders: the path in `nm` is
+     * its first UNC_PATH_MAXDEPTH levels, with the rest of them missing
+     * from the MIDDLE of it, so walking it would put this entry in a
+     * folder of the archive's that it was never in. Refused here and not
+     * at end_entry, which a declined entry never reaches (macextract.h,
+     * path_too_deep). The sentence is the engine's own, which is resident
+     * either way — a literal here would be A5 .rodata for a case nothing
+     * in the corpus reaches (RepFailed, UNC_ERR_MODULE, has the same
+     * reasoning). */
+    if (info->path_too_deep) {
+        if (RepNew(1)) {
+            RepCatBytes(nm, nlen);
+            RepMarkBreak();
+            RepCat(" ");
+            RepCat(unc_strerror(UNC_ERR_TOODEEP));
+        }
+        s->errors++;
+        return 1;
+    }
+
     /* Walk the '/'-separated engine path, creating directories. */
     for (i = 0; i <= nlen; i++) {
         if (i == nlen || nm[i] == '/') {

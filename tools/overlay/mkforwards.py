@@ -134,12 +134,24 @@ def declarations(root):
         # last semicolon, so it can carry a #define or an enum with it, and
         # anchoring at the start silently skipped four prototypes that were
         # preceded by one.
-        m = re.search(r"(unc_\w+)\s*\((.*)\)$", chunk)
-        if not m:
+        #
+        # And the RIGHTMOST name, not the first: a chunk carrying a
+        # FUNCTION-LIKE #define has two `unc_name(` in it, the macro's comes
+        # first, and taking that one hid the prototype behind it completely —
+        # `unc_path_push` went missing the day `unc_path_toodeep` was defined
+        # above it (2026-10-07). A missing symbol fails the build loudly, so
+        # this was never silent; it was just confusing.
+        m = None
+        for cand in re.finditer(r"(unc_\w+)\s*\(", chunk):
+            if not chunk.endswith(")"):
+                break
+            name = cand.group(1)
+            if name in SYMBOLS and name not in out:
+                m = cand
+        if m is None:
             continue
-        name, args = m.group(1), m.group(2)
-        if name not in SYMBOLS or name in out:
-            continue
+        name = m.group(1)
+        args = chunk[m.end():-1]
         ret = return_type(chunk[:m.start()])
         if ret is None:
             return None, "cannot find a return type for %s in %r" % (

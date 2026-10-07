@@ -207,7 +207,7 @@ int unc_sqp_extract(UncCtx *c)
         const uint8_t *r = rec + pre;
         uint32_t dlen, rlen, dclen, rclen, doff, roff;
         uint32_t level = 1;
-        int folder = 0, nlen, sret, eerr;
+        int folder = 0, nlen, sret, eerr, deep;
 
         if (unc_read_at(c->io, base + stride * i, rec, (int32_t)stride)
                 != UNC_OK) {
@@ -226,11 +226,18 @@ int unc_sqp_extract(UncCtx *c)
          * (CalculateFolderSize @0x113c), so the path is a stack of
          * names indexed by level. Its own record's lengths are never
          * read by the expander — DoItemsReverse @0x1ecc branches away
-         * before DoWork — and they are not read here either. */
-        while (path->depth >= (int)level) unc_path_pop(path);
+         * before DoWork — and they are not read here either.
+         *
+         * The comparison is against the depth the ARCHIVE asked for and
+         * not against `path->depth`, which stops at UNC_PATH_MAXDEPTH:
+         * read the other way a package nested past the limit never comes
+         * back up, and every item after it stays pinned at the deepest
+         * path the walk reached. */
+        while (unc_path_askdepth(path) >= (int)level) unc_path_pop(path);
 
         unc_entry_clear(&e);
         unc_path_leaf(path, &e, r + SQP_NAME + 1, (uint32_t)nlen);
+        deep = unc_path_toodeep(path);
         /* The 16 bytes at +20 are whatever PBGetCatInfo left in
          * ioFlFndrInfo, which `AddItems` @0x2378 copies whole — so for a
          * FILE they are an FInfo and for a FOLDER a DInfo, where the
@@ -252,7 +259,9 @@ int unc_sqp_extract(UncCtx *c)
             e.is_dir = 1;
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
-            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
+            if (sret == 0 &&
+                c->sink->end_entry(c->sink->ctx,
+                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0) {
                 err = UNC_ERR_SINK;
                 break;
             }
@@ -278,8 +287,9 @@ int unc_sqp_extract(UncCtx *c)
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; break; }
         if (sret > 0) continue;
-        if (c->opt.list_only) {
-            if (c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
+        if (c->opt.list_only || deep) {
+            if (c->sink->end_entry(c->sink->ctx,
+                                   deep ? UNC_ERR_TOODEEP : UNC_OK) < 0) {
                 err = UNC_ERR_SINK;
                 break;
             }

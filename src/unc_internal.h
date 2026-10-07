@@ -676,7 +676,11 @@ static inline int unc_fatal(int err)
 /* for a separator, and there is no recursion anywhere in it.          */
 /* ------------------------------------------------------------------ */
 
-/* All three formats that use this chose 24 independently. */
+/* All three formats that use this chose 24 independently. Nothing on
+ * this disk comes near it — the deepest nesting any archive here has is
+ * 4 (FORMATS.md, *How deep anything actually nests*) — and `stack` and
+ * `fullstack` below are sized by it, so raising it costs A5 world on a
+ * 1 MB Macintosh Plus for a depth no corpus archive reaches. */
 #define UNC_PATH_MAXDEPTH 24
 
 struct UncCtx;
@@ -698,17 +702,48 @@ typedef struct UncPath {
     struct UncCtx *c;
     uint16_t full;
     uint16_t fullstack[UNC_PATH_MAXDEPTH];
+    /* How many descents past UNC_PATH_MAXDEPTH have been REFUSED and not
+     * yet come back up. Nonzero means the path this walk is standing on
+     * is shallower than the archive's, so every entry reported from here
+     * is at a path that is not its own.
+     *
+     * It is counted rather than merely flagged because four of the five
+     * walks pop by a COUNT — a marker record, or a level counter — so a
+     * refused push whose pop still happened left the walk SHALLOWER than
+     * it should be and misfiled every entry after it into a real folder
+     * it was not in (BLOCKERS.md, *what ignoring a refused push cost*).
+     * Refusals are strictly nested, so one counter is enough. `int`, like
+     * `depth` and `truncdepth`, and not a saturating narrow field: one
+     * that stuck at its maximum would under-count the pops and quietly
+     * lose the balance it is here to keep. Every push costs a record in
+     * the file, so a 32-bit archive cannot hold enough of them to come
+     * near the top of it. */
+    int lost;
 } UncPath;
 
 void unc_path_init(UncPath *p, struct UncCtx *c);
 
-/* Descend into `name`. UNC_ERR_CORRUPT at UNC_PATH_MAXDEPTH with
- * NOTHING changed, so a caller that would rather carry on than fail
- * may ignore the result — which is what two of the three formats do,
- * landing the entries under the parent instead of refusing the
- * archive. */
+/* The depth the ARCHIVE asked for, which is what a walk comparing its
+ * position against a level field in a record must use: `depth` alone
+ * stops at UNC_PATH_MAXDEPTH and would then never come back up. */
+#define unc_path_askdepth(p) ((p)->depth + (p)->lost)
+
+/* Nonzero when the path is not the archive's because the walk could not
+ * descend this far. An entry reported from here is at a PLAUSIBLE but
+ * wrong path — unlike a cut name there is nothing in it for a host to
+ * notice — so the format reports it with UNC_ERR_TOODEEP rather than
+ * letting it be written somewhere nobody asked for. */
+#define unc_path_toodeep(p) ((p)->lost != 0)
+
+/* Descend into `name`. Past UNC_PATH_MAXDEPTH the path is left alone and
+ * the refusal is COUNTED (`lost`): the return is UNC_ERR_TOODEEP so a
+ * caller can say so per entry, and ignoring it is safe because the
+ * matching `unc_path_pop` undoes the refusal rather than a level that
+ * was never pushed. Nothing else can fail. */
 int  unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen);
 
+/* Come back up one level — or undo one refused push, which is the same
+ * level as far as the archive is concerned. */
 void unc_path_pop(UncPath *p);
 
 /* The full path of a leaf, without disturbing the stack. Where the path

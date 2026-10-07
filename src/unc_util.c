@@ -686,12 +686,22 @@ void unc_path_init(UncPath *p, struct UncCtx *c)
     p->buf[0] = 0;
     p->c = c;
     p->full = 0;
+    p->lost = 0;
 }
 
 int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
 {
     uint32_t i;
-    if (p->depth >= UNC_PATH_MAXDEPTH) return UNC_ERR_CORRUPT;
+    /* Too deep: leave the path alone and COUNT the refusal, so that the
+     * pop this descent will be matched by undoes the refusal instead of
+     * a level that was never pushed. `lost` can only become nonzero at
+     * the limit, and a pop clears it before `depth` moves, so a refusal
+     * while shallower than the limit is impossible — the test is there
+     * to keep it that way. */
+    if (p->depth >= UNC_PATH_MAXDEPTH || p->lost) {
+        p->lost++;
+        return UNC_ERR_TOODEEP;
+    }
     p->fullstack[p->depth] = p->full;
     p->stack[p->depth++] = p->len;
     if (p->len && p->len < UNC_NAME_MAX) p->buf[p->len++] = '/';
@@ -707,6 +717,7 @@ int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
 
 void unc_path_pop(UncPath *p)
 {
+    if (p->lost) { p->lost--; return; }      /* undo a refused push */
     if (p->depth > 0) {
         p->full = p->fullstack[p->depth - 1];
         p->len = p->stack[--p->depth];
@@ -733,6 +744,11 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
      * leaf would want the length back. */
     want = path_full_add(p, p->full, name, nlen);
     unc_entry_set_path(e, full, n);
+    /* The walk could not descend this far, so `full` above is the path
+     * with its deepest folders missing — reported here rather than only
+     * through end_entry, because a host that declines an entry never
+     * hears that (macextract.h, path_too_deep). */
+    if (p->lost) e->path_too_deep = 1;
     if (i < nlen || p->truncdepth) {
         e->name_truncated = 1;
         e->name_full_len = (uint16_t)want;

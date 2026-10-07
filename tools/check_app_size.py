@@ -78,9 +78,17 @@ import sys
 # handed. Re-taken rather than absorbed into the tolerance, on the same
 # terms as tools/build_mac.sh's six ratchets, which moved in the same
 # commit. `run_tiers.py --check` moves no tally in either lane.
-EXPECT = 66048
+# RE-TAKEN 2026-10-07, 66,048 -> 66,176, for the folder-depth rule: an
+# entry nested past UNC_PATH_MAXDEPTH is offered and then refused per
+# entry instead of being written into a folder it was never in. Resident
+# `CODE` moved +120 and A5 +40 in the shipped configuration, and 220 B
+# more is in five 'OVLY' images (EXPECT_BUNDLE below). Re-taken rather
+# than absorbed into the tolerance, on the same terms as the entry above
+# and as tools/build_mac.sh's six ratchets, which moved in the same
+# commit. `run_tiers.py --check` moves no tally in either lane.
+EXPECT = 66176
 TOLERANCE = 2048
-TAKEN = "2026-10-05"
+TAKEN = "2026-10-07"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -135,9 +143,16 @@ TAKEN = "2026-10-05"
 # did not move (FORMATS.md, *StuffIt 5's method 14*; TESTING.md, *The
 # sort that dropped what it could not hold*). `run_tiers.py --check`
 # moves no tally in either lane.
-EXPECT_BUNDLE = 155916
+# RE-TAKEN 2026-10-07, 155,916 -> 156,136: +220 B across five images for
+# the folder-depth rule, which is where its per-format half lives rather
+# than resident (`run_tiers.py`'s IMAGES has the per-image figures).
+# Resident `CODE` rose 120 B and A5 40 for the walker and the one new
+# message, which the ratchets in tools/build_mac.sh carry (FORMATS.md,
+# *How deep anything actually nests*). `run_tiers.py --check` moves no
+# tally in either lane.
+EXPECT_BUNDLE = 156136
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-06"
+TAKEN_BUNDLE = "2026-10-07"
 
 
 def main():
