@@ -1438,8 +1438,13 @@ Skipping CR instead — which is what the code did until 2026-08-23 — turns
 such a file into a single line that no header matches (*BLOCKERS.md*,
 withdrawn claims).
 
-**No corpus file, and no second reader.** `xbtoa` appears in none of
-the 903 fixtures, `unar` does not recognise the format and macutils
+**No GRADED corpus file, and no second reader.** Re-measured
+2026-10-07 over all 966 corpus files: one sniffs as btoa and it is
+`synth-os9-btoa.btoa`, written here for the Mac OS 9 tier's
+one-boot-per-format sample and carrying no manifest, so nothing in the
+differential suite is one. (The sentence said "none of the 903
+fixtures" from 2026-08-23 until today, which stopped being true when
+that file landed.) `unar` does not recognise the format and macutils
 never had it — so the grading is the original implementation itself.
 `tools/fetch_references.sh` fetches btoa 5.2.1 (Paul Rutter, Joe Orost
 and Stefan Parmark, 1996, from `archive.debian.org`), `src/fmt_btoa.c`
@@ -1556,9 +1561,12 @@ for a generated file, so `run.py` reports FAIL and the grid is the
 result, the same way SuperDisk!'s two archives are read
 (`tools/vmac/README.md`).
 
-**No corpus file.** The sniff sweep claims none of the 940 fixture
-files, so every generated case is graded by two other implementations —
-munpack 1.6 and deark (TESTING.md, *base64 and MIME*).
+**No GRADED corpus file.** Re-measured 2026-10-07 over all 966 corpus
+files: one sniffs as a MIME message and none as base64, and that one is
+`synth-os9-mime.mim`, written here for the Mac OS 9 tier and carrying no
+manifest. So every case the differential suite sees is generated, and
+graded by two other implementations — munpack 1.6 and deark (TESTING.md,
+*base64 and MIME*).
 
 **A message a Macintosh wrote — 2026-08-29, 18/18.** mpack's own
 Macintosh port is in `reference/mpack`, so the specimen was made rather
@@ -3287,7 +3295,10 @@ opened by p7zip, so the subject is known to be a real archive before the probe
 is asked about it; synthetic Zoo, ARJ and Cabinet headers identified by
 **deark**; and every corroborating field spoiled in turn, each of those
 negatives mutation-tested against a probe with that field removed. **0 false
-positives across the 940 fixtures.**
+positives across the 966 corpus files**, re-established on every `ci.sh`
+run — with the corpus's one deliberate `RAR`, which the Mac OS 9 tier
+needs to raise its alert with, CHECKED rather than excused
+(`tools/run_foreign.py`).
 
 **RAR and RAR 5 are the two with no oracle in `ci.sh`** — nothing here writes
 one, deark has no module for them, and p7zip will not identify a stub it
@@ -3822,8 +3833,11 @@ under a name that was not the archive's.
 
 **Measured 2026-10-07** with `tools/measure_depth.py`, over every archive
 in `fixtures/` and every cached specimen, envelopes peeled. Depth is the
-number of enclosing folders, so a leaf at an archive's root is 0, and
-`UNC_PATH_MAXDEPTH` is **24**.
+number of enclosing folders, so a leaf at an archive's root is 0. There
+is no depth limit to compare these against: `UNC_PATH_MAXDEPTH` was 24
+for four hours on 2026-10-07 and is **deleted** — what bounds nesting
+now is the path STRING at `UNC_NAME_MAX`, which eight 31-character
+folders already fill (*What the DESTINATION actually allows*, below).
 
 | format | walks with `unc_path_push` | archives | entries | deepest | where |
 |---|---|---|---|---|---|
@@ -3860,9 +3874,10 @@ walker**. All six ceilings came DOWN.
 
 #### What the DESTINATION actually allows — measured 2026-10-07
 
-`UNC_PATH_MAXDEPTH` is 24 because "all three formats that use this chose 24
-independently" (`src/unc_internal.h`). Nothing had ever asked what a
-Macintosh allows. `tools/vmac/depthtest/` asks, on System 6.0.8 on an
+`UNC_PATH_MAXDEPTH` was 24 because "all three formats that use this chose 24
+independently" (`src/unc_internal.h`) — three transcriptions of one
+XADMaster constant read as corroboration. Nothing had ever asked what a
+Macintosh allows, and the answer is why the constant no longer exists. `tools/vmac/depthtest/` asks, on System 6.0.8 on an
 emulated Mac Plus, by the two routes a file is reached through:
 
 | route | deepest | the error that ended it |
@@ -3893,7 +3908,8 @@ keeping, because they are what the limit cost: the application of
 2026-10-06 wrote **61 files and 30 folders** and five of the archive's
 folders were inside ones they were never in; the rule that replaced it
 wrote **49 and 25** and refused 17 entries; this writes 61 and 30, all of
-them where the archive put them (TESTING.md, *The folder-depth limit*).
+them where the archive put them (TESTING.md, *Folder nesting, and the
+limit that was deleted*).
 
 Stack, `-Os -fstack-usage`, against the build before any of this:
 `unc_dd_extract` 1,028 → 952 B, `unc_now_extract` 1,064 → 892,
@@ -7191,7 +7207,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 951 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
+| Verification | none published | 954 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 

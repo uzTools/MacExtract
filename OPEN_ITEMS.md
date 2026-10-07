@@ -314,7 +314,7 @@ left:
 
 **AppleLink packages would have joined this list on 2026-10-05** — the
 fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
-`.pkg` is 6 of 951 fixtures and it draws uniformly — so the suite got a lane
+`.pkg` is 6 of 954 fixtures and it draws uniformly — so the suite got a lane
 that bends those six directly instead: 300 mutants, a fixed seed, 270 of
 them still sniffing as a package and every one decoding without a sanitizer
 report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a

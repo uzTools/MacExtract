@@ -92,11 +92,30 @@
    caught or the run refuses to pass. **What it cannot see:** a figure
    that is not one of the seven patterns — a reworded sentence reports
    *"this check has stopped checking"* rather than passing, which is the
-   loud half, but a NEW sentence quoting a corpus size is simply
-   unchecked. And the patterns are anchored on purpose: PROGRESS.md
-   cites *"9,320 robustness variants clean"* as the NAME of a
-   BLOCKERS.md section, and a withdrawn claim's title is not a figure to
-   correct.
+   loud half. The patterns are anchored on purpose: PROGRESS.md cites
+   *"9,320 robustness variants clean"* as the NAME of a BLOCKERS.md
+   section, and a withdrawn claim's title is not a figure to correct.
+
+   **Seven named sentences was the wrong unit, corrected 2026-10-07.**
+   They are still held — a sentence that disappears reports *"this check
+   has stopped checking"* — and beside them the same three counts are
+   now scanned as a CLASS: any figure in a per-kind window next to
+   "fixtures", "robustness variants" or "corpus files", in the five
+   files a session reads as current, must be today's count or be
+   DECLARED historical in `CORPUS_HISTORICAL` with the measurement it
+   belongs to. That found six the seven could not, three of which had
+   stopped being true rather than merely current (DECISIONS.md
+   2026-10-07, *the seven sentences that were not the class*).
+
+   The window is what makes it usable: `fixtures` is scanned in
+   900..1,200, because "the 1993 fixture" is a year and "115 fixtures"
+   is one format's corpus. **What it cannot see:** a figure outside the
+   window, a corpus-size claim phrased without any of those three
+   words, and BLOCKERS.md, which is excluded on purpose — every row
+   there is a withdrawn claim quoting the corpus it was measured
+   against, and those figures are the point of the row. It is proved
+   able to fail two ways: moving all three derived counts must report,
+   and a planted sentence quoting a near-miss figure must report.
 
    **And a fifth, the same day: DECISIONS.md's entry DATES.** They must
    be non-decreasing in file order — the file is oldest-first — and none
@@ -2237,9 +2256,11 @@ nothing in `ci.sh` replays it.
 
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
-Added 2026-08-26. The corpus has neither: no `.mim`, no `.b64` and no
-saved mail message — the sniff sweep claims none of the 940 fixture
-files. So every case is generated, and a generated case graded by its
+Added 2026-08-26. The differential suite has neither: re-measured
+2026-10-07 over all 966 corpus files, exactly one sniffs as a MIME
+message and none as base64, and that one — `synth-os9-mime.mim` — is
+written here for the Mac OS 9 tier and has no manifest. So every case
+is generated, and a generated case graded by its
 own generator proves nothing (*ARC and uuencode*, DECISIONS.md). Two
 other implementations grade instead:
 
@@ -2728,12 +2749,15 @@ found an archive with a comment — a case the suite had never met in
 three weeks. A sweep sampled this way cannot be said to cover a
 property; it can only be said to have met one.
 
-## The folder-depth limit (`tools/synth_deep.py`, `tools/run_depth.py`, in `ci.sh`)
+## Folder nesting, and the limit that was deleted (`tools/synth_deep.py`, `tools/run_depth.py`, in `ci.sh`)
 
-Added 2026-10-07. `unc_path_push` refuses to descend past
-`UNC_PATH_MAXDEPTH` (24) and five walks call it; what each did about the
-refusal had never been run, because **nothing on this disk nests deeper
-than 4** (FORMATS.md, *How deep anything actually nests*, measured with
+Added 2026-10-07, when `unc_path_push` still refused to descend past
+`UNC_PATH_MAXDEPTH` (24). **That constant is gone the same day** and the
+suite outlived it: a push is refused now only when the path STRING has
+no room left (`UNC_NAME_MAX`), which is the same five walks reaching the
+same refusal by a different route, so every case below still grades what
+it graded. What each walk did about a refusal had never been run, because
+**nothing on this disk nests deeper than 4** (FORMATS.md, *How deep anything actually nests*, measured with
 `tools/measure_depth.py`). Three of the five were misfiling entries
 (BLOCKERS.md, *what ignoring a refused push cost*).
 

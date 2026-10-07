@@ -52,7 +52,7 @@ What this CANNOT see:
     For SuperDisk! there is no second reader off the Macintosh at all
     (`tools/synth_sd.py`).
   * anything about `unc_entry_path_append`, which is how StuffIt and
-    Compact Pro carry a path. They have no `UNC_PATH_MAXDEPTH`.
+    Compact Pro carry a path. They never had `UNC_PATH_MAXDEPTH`.
 """
 import argparse
 import os

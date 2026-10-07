@@ -617,6 +617,82 @@ CORPUS_FIGURES = [
 ]
 
 
+# The same three counts, scanned as a CLASS rather than at seven named
+# sentences. Naming them was the first design and it missed six: two
+# stale denominators, three claims that had stopped being true when the
+# Mac OS 9 tier's fixtures landed, and one table cell — none of which
+# were among the seven (DECISIONS.md 2026-10-07, *the seven sentences
+# that were not the class*).
+#
+# A window per kind, so that what is matched is a CORPUS-SIZE claim and
+# not a year ("the 1993 fixture's Huffman-only block") or a per-format
+# count ("115 fixtures" of the DiskDoubler corpus).
+CORPUS_WINDOW = {"manifests": (900, 1200), "robust": (9000, 12000),
+                 "files": (900, 1200)}
+CORPUS_SCAN = ("CLAUDE.md", "PROGRESS.md", "OPEN_ITEMS.md", "FORMATS.md",
+               "TESTING.md")
+# BLOCKERS.md is deliberately NOT scanned: every row in it is a
+# withdrawn claim with the corpus size it was measured against, and a
+# withdrawal's figures are the point of the row.
+#
+# Each entry below is a figure that is HISTORICAL — it states what the
+# corpus was when some measurement was taken, and the claim it carries
+# is dated with it. Anything in the window that is neither today's count
+# nor declared here FAILS, so a new sentence quoting an old count has to
+# be looked at.
+CORPUS_HISTORICAL = {
+    # One entry per (file, kind, figure); it covers every occurrence of
+    # that figure in that file. Each was read before it was declared.
+    ("PROGRESS.md", "robust", 9320):
+        "the NAME of a BLOCKERS.md section, cited; a withdrawn claim's "
+        "title is not a figure to correct",
+    ("OPEN_ITEMS.md", "manifests", 933):
+        "the MacBinary 0xA001 fallback, measured 2026-09-28 and dated "
+        "in the sentence",
+    ("OPEN_ITEMS.md", "robust", 9330):
+        "the same 2026-09-28 measurement",
+    ("FORMATS.md", "manifests", 903):
+        "`lsar -j`'s XADIsEncrypted sweep, 2026-08-23, beside the "
+        "2026-10-05 re-run in the same sentence",
+    ("FORMATS.md", "manifests", 937):
+        "the largest zip in the corpus (2026-08-25) and the suite size "
+        "the overlay trade was argued against; both claims are dated",
+    ("FORMATS.md", "manifests", 948):
+        "the fixtures compared byte-identical against the previous "
+        "binary on that day's build",
+    ("FORMATS.md", "manifests", 929):
+        "the population the MacBinary-probe-first measurement was taken "
+        "over, 2026-08-24",
+    ("FORMATS.md", "robust", 9320):
+        "the truncation work of 2026-08-29, and BLOCKERS.md's section "
+        "name twice",
+    ("FORMATS.md", "files", 955):
+        "the sniff-I/O probe's population, measured 2026-10-05 and "
+        "stated as such in the table",
+    ("TESTING.md", "robust", 9490):
+        "quoted as the figure that WAS wrong, in the write-up of the "
+        "check that caught it",
+    ("TESTING.md", "files", 955):
+        "the same write-up, quoting what three sentences said",
+    ("TESTING.md", "robust", 9320):
+        "BLOCKERS.md's section name, and the 2026-08-29 run",
+    ("TESTING.md", "manifests", 943):
+        "four dated statements about earlier runs: the hex form, the "
+        "largest zip, the longest name, and the envelope sweep",
+    ("TESTING.md", "manifests", 932):
+        "the 2026-09-22 fork tally and the truncation suite's own count "
+        "on that day",
+    ("TESTING.md", "manifests", 950):
+        "approximate, '~950 fixtures', in the fuzz-weight arithmetic",
+    ("TESTING.md", "manifests", 933):
+        "the suite size when variant 1 and the no-fork lane were "
+        "written up",
+    ("TESTING.md", "manifests", 928):
+        "the AppleLink false-positive figure that stood until "
+        "2026-09-27, quoted as withdrawn",
+}
+
+
 def _corpus_counts():
     """manifests, robustness variants and corpus files, or None if the
     fixtures are not on this disk (a docs-only checkout)."""
@@ -706,6 +782,56 @@ def _decision_dates():
     return out
 
 
+def check_corpus_class(counts=None):
+    """Every corpus-size claim in the status files, not seven of them."""
+    if counts is None:
+        counts = _corpus_counts()
+    if counts is None or isinstance(counts, str):
+        return []
+    rx = re.compile(r"([\d,]{3,})[- ](fixtures?|robustness variants|"
+                    r"corpus files|corpus fixtures|corpus archives)\b")
+    rx2 = re.compile(r"corpus is ([\d,]{3,}) files")
+    def kindof(word):
+        if word.startswith("fixture"):
+            return "manifests"
+        if word.startswith("robust"):
+            return "robust"
+        return "files"
+    out = []
+    for name in CORPUS_SCAN:
+        for lineno, line in enumerate(
+                (ROOT / name).read_text().split("\n"), 1):
+            hits = [(m.group(1), kindof(m.group(2))) for m in rx.finditer(line)]
+            hits += [(m.group(1), "files") for m in rx2.finditer(line)]
+            for shown, kind in hits:
+                n = _n(shown)
+                lo, hi = CORPUS_WINDOW[kind]
+                if not (lo <= n <= hi) or n == counts[kind]:
+                    continue
+                if (name, kind, n) in CORPUS_HISTORICAL:
+                    continue
+                out.append(
+                    "%s:%d says %s for a corpus of %s. Either it is today's "
+                    "figure — re-take it, do not edit it — or it is a "
+                    "historical one, in which case say WHEN it was measured "
+                    "and add it to CORPUS_HISTORICAL in this file with that "
+                    "reason. Six were wrong when this check was written as "
+                    "seven named sentences instead of a scan."
+                    % (name, lineno, shown, "{:,}".format(counts[kind])))
+    return out
+
+
+def selftest_corpus_class():
+    """Establish that it can fail: a planted stale figure must report."""
+    counts = _corpus_counts()
+    if counts is None or isinstance(counts, str):
+        return None
+    bent = dict(counts)
+    for kind in ("manifests", "robust", "files"):
+        bent[kind] = counts[kind] + 3      # every live figure now "stale"
+    return 1 if check_corpus_class(bent) else 0
+
+
 def check_decision_dates(dates=None, today=None):
     if dates is None:
         dates = _decision_dates()
@@ -753,7 +879,7 @@ def main():
                 check_placeholders() + check_dist_readme() +
                 check_doc_sizes() + check_smell_count() +
                 check_derived_figures() + check_corpus_figures() +
-                check_decision_dates())
+                check_corpus_class() + check_decision_dates())
     caught = selftest_derived()
     if caught != 2:
         problems.append("check_docs: the derived-figure selftest bent two "
@@ -764,6 +890,11 @@ def main():
         problems.append("check_docs: the corpus-figure selftest bent three "
                         "counts and %d were caught — it cannot fail, so it "
                         "is not checking them" % caught)
+    caught = selftest_corpus_class()
+    if caught is not None and caught != 1:
+        problems.append("check_docs: the corpus-class selftest moved every "
+                        "count and nothing was reported — it cannot fail, so "
+                        "it is not scanning anything")
     caught = selftest_dates()
     if caught is not None and caught != 2:
         problems.append("check_docs: the entry-date selftest bent two dates "

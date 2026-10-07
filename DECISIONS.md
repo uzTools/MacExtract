@@ -363,6 +363,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
 - 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
 - 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
+- 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
 
 ---
 
@@ -23918,3 +23919,58 @@ the same reason — a bound copied from the engine's limit rather than from
 the path — and both times it reported a correct volume as files missing
 on the Mac. It is at 260 now, derived from the 255-byte string, and it
 raises rather than truncating.
+
+
+## 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
+
+`check_docs.py` check 10 was written on 2026-10-06 after two corpus
+figures went stale under a green suite. It derives the three counts the
+way the harnesses derive them — the manifests, ten variants of each
+implemented manifest, every non-`.md` file in `fixtures/` — and holds
+them against **seven named sentences**. It worked: all seven were
+correct the next day, and two of them were only correct because the
+check had failed and somebody re-took them.
+
+Seven was the wrong unit. Scanning for the SHAPE instead — a figure in a
+per-kind window beside the words "fixtures", "robustness variants" or
+"corpus files" — found six more in the same five files:
+
+- `FORMATS.md`'s *Verification* row and `OPEN_ITEMS.md`'s fuzz-draw
+  sentence, both still at 951 against 954 manifests;
+- `FORMATS.md`'s foreign-probe sweep at 940 against 966 corpus files,
+  a claim `ci.sh` re-establishes on every run;
+- and three that had stopped being TRUE rather than merely current.
+  *"No corpus file"* for btoa, for MIME and for base64 was measured in
+  August and September; today the corpus holds `synth-os9-btoa.btoa`,
+  `synth-os9-mime.mim` and `synth-os9-rar.rar`, written HERE for the Mac
+  OS 9 tier's one-boot-per-format sample. They carry no manifest, so the
+  differential suite still sees none of those formats and the
+  conclusion ("every case is generated, so grade it by two other
+  implementations") stands — but the sentence that justified it did not,
+  and the three files have been in `fixtures/` since September.
+
+**The transferable part is the asymmetry.** A check that enumerates the
+claims it holds can only hold the ones whose staleness somebody has
+already thought about; the ones that rot are the ones nobody is thinking
+about, which is the same set the enumeration misses. Scanning the class
+inverts that: everything in the shape is held, and what is deliberately
+historical has to be DECLARED. Seventeen figures are declared in the
+checker now, each with the measurement it belongs to, and the list is
+itself a readable record of which numbers are dated.
+
+**What made the class scannable was a window per kind**, and that is the
+part that nearly did not work: `fixtures` in 900..1,200 rather than any
+number, because FORMATS.md says "the 1993 fixture's Huffman-only block"
+about a year and TESTING.md counts 115 fixtures of one corpus and 204 of
+one format. A scan with no window reports those forever, which is how a
+check gets switched off.
+
+**Also corrected here, from the same review**, and both the same shape
+one layer down: `UncOptions.long_name`'s own comment promised a length
+the walker had stopped keeping four hours earlier, and
+`UNC_PATH_MAXDEPTH` was deleted from the code while six places went on
+describing it in the present tense — including the emulator probe that
+PRINTS it on the Macintosh screen, which is the probe whose answer
+deleted it (BLOCKERS.md, *Corrected figures*). A constant's deletion is
+a prose job as much as a code one, and the compiler grades only half of
+it.

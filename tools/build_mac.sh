@@ -372,7 +372,17 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # too — 208 B of the 328 — where the shipped pair pays 120 and keeps
 # the rest in 'OVLY' images (the eager pair below, and DECISIONS.md
 # 2026-10-07).
-UNC_MAC_CODE_DEFAULT=164408
+# RAISED 2026-10-07, 164,408 -> 166,264, by **1,856 B of CODE and 0 of
+# A5** for zip method 6 (Implode). This is the whole price of the
+# format, and it is paid HERE and nowhere else: `src/fmt_exo.c` is in
+# `ovl_exo`, so the eager and lazy pairs below do not move by a single
+# byte and nothing comes off any extraction's budget. The image is
+# 29,252 -> 31,176 B (run_tiers.py's IMAGES) and the download 225,408 ->
+# 227,328 B. The standing estimate for this format was "~1.5-2 KB of
+# CODE, estimated, never measured"; 1,856 B of a build nothing ships is
+# what it turned out to be (DECISIONS.md 2026-10-07, *the method that
+# was out for a premise with no halves left*; FORMATS.md, *Implode*).
+UNC_MAC_CODE_DEFAULT=166264
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -627,10 +637,13 @@ UNC_MAC_A5_DEFAULT=37928
 # unchanged at 73,392 B again, so nothing comes off any extraction's
 # budget, and the four bytes of A5 are locked in by lowering the ceiling
 # with them (DECISIONS.md 2026-10-06, *the directory of empty records*).
-# RAISED 2026-10-07 by 120 B of code and 40 of A5 for the folder-depth rule: an entry nested
-# past UNC_PATH_MAXDEPTH is OFFERED with the path the engine can
-# represent, carries `path_too_deep`, and fails per entry with
-# UNC_ERR_TOODEEP instead of being written into a folder it was never in.
+# RAISED 2026-10-07 by 120 B of code and 40 of A5 for the folder-depth rule,
+# then LOWERED again the same day when the limit it enforced was deleted
+# (below). What that rule did, while it existed: an entry nested past
+# UNC_PATH_MAXDEPTH was OFFERED with the path the engine could represent,
+# carried `path_too_deep` and failed per entry with UNC_ERR_TOODEEP instead
+# of being written into a folder it was never in. The constant, the flag and
+# the error code are all gone; a component with no room left is CUT now.
 # In THIS configuration the five decoders are in 'OVLY' images, so what
 # is resident is the walker (`unc_path_push`/`pop`/`leaf`), the engine's
 # message, and the Macintosh shell's refusal to create the folder — the

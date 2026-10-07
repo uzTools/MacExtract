@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """measure_depth.py — the deepest FOLDER nesting any archive here reaches.
 
-`UNC_PATH_MAXDEPTH` is 24 and `unc_path_push` refuses to go past it.
-Whether that limit is reachable by anything on this disk is a question
-about the corpus, not about the code, so it is measured rather than
-argued: this lists every archive with `macextract l` and counts the
+Written on 2026-10-07 to ask whether `UNC_PATH_MAXDEPTH` (24) was
+reachable by anything on this disk. It was not, and the constant is
+deleted the same day — what bounds nesting now is the path STRING at
+`UNC_NAME_MAX`, which eight 31-character folders already fill. The
+question the answer serves has not changed: how deep the corpus actually
+goes is about the corpus and not about the code, so it is measured
+rather than argued: this lists every archive with `macextract l` and counts the
 separators in the deepest path the listing prints.
 
 Depth here is the number of enclosing FOLDERS, which is the quantity

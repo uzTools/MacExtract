@@ -2321,3 +2321,54 @@ a harness can click is not the same list.
   master in place and never hashing it. Fixed: the published SHA-1 is verified
   before every run and the master is copied to a throwaway
   (`tools/vmac/README.md`).
+
+- **Six corpus figures the seven-sentence check could not see.**
+  `check_docs.py` check 10 was written on 2026-10-06 to hold corpus-size
+  figures against counts taken the way the harnesses take them, and it
+  named seven sentences. It worked at all seven. **Corrected 2026-10-07
+  by scanning the CLASS instead**: `FORMATS.md`'s *Verification* row and
+  `OPEN_ITEMS.md`'s fuzz-draw sentence were still at 951 against 954
+  manifests; `FORMATS.md`'s foreign-probe sweep was at 940 against 966
+  corpus files; and three sentences in `FORMATS.md` and `TESTING.md` had
+  stopped being TRUE rather than merely current — *"no corpus file"* for
+  btoa and for MIME, measured today as one each, both the Mac OS 9
+  tier's own unmanifested fixtures (`synth-os9-btoa.btoa`,
+  `synth-os9-mime.mim`, beside the deliberate `synth-os9-rar.rar`). The
+  scan takes a window per kind, so a year or a per-format count is not
+  mistaken for a corpus size, and 17 historical figures are declared in
+  the checker with the measurement each belongs to. **Cost: nothing
+  measurable — every one was a denominator or a "none of them" — and the
+  lesson is the shape:** a check that names the sentences it holds is a
+  spot-check of the claims somebody remembered, and the sentences that
+  rot are the ones nobody is thinking about (DECISIONS.md 2026-10-07,
+  *the seven sentences that were not the class*).
+
+- **`UncOptions.long_name`'s own documentation promised a length the
+  walker had stopped keeping.** The field's comment said a NULL buffer
+  *"costs nothing and loses only the text: the length is still reported
+  in `name_full_len`"*, and the walker rewrite of 2026-10-07 made that
+  false for a PATH — it builds the uncut path in the host's buffer, so
+  without one there is nothing to measure and `name_full_len` is 0. The
+  commit that changed it said so in its message and did not sweep the
+  header. **Corrected 2026-10-07** at the field and at `name_full_len`,
+  which had attributed 0 to one cause when there are now two. **Cost:
+  the public contract was wrong for the hours between, and no host here
+  reads that length — the CLI takes the text, the Mac shell takes
+  neither.** Also stated there now: `long_name_cap` above 65,536 is not
+  supported, because `UncPath.len` is 16-bit. Measured, not inferred: at
+  a 1 MB buffer the length wraps 65,535 → 31 at the 2,048th component
+  and the walk rewrites the host's buffer from its start. The CLI passes
+  exactly 65,536, which is safe by one byte.
+
+- **`UNC_PATH_MAXDEPTH` was deleted from the code and left standing in
+  the prose.** Six places still described it in the present tense after
+  2026-10-07 removed it: `FORMATS.md` twice, `TESTING.md`'s suite
+  section and its title, `ci.sh`'s lane comment,
+  `tools/measure_depth.py`'s premise, `tools/build_mac.sh`'s ceiling
+  note (which also still described `path_too_deep` and
+  `UNC_ERR_TOODEEP`, both deleted with it), and
+  `tools/vmac/depthtest/main.c`, which PRINTED *"UNC_PATH_MAXDEPTH is
+  24"* onto the Macintosh screen — the probe whose own answer deleted
+  the constant. **Cost: nothing yet** — all of it was corrected the same
+  day — but an instrument that reports a constant that does not exist is
+  the shape that makes a future measurement unreadable.

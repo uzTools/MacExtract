@@ -360,9 +360,11 @@ typedef struct UncEntryInfo {
     uint8_t  name_truncated;   /* 0 = whole; 1 = cut; 2 = cut, and the
                                 * WHOLE name is in UncOptions.long_name */
     /* How long the name was BEFORE it was cut, saturating at 65,535, or
-     * 0 where the format cannot say — a name cut by a line buffer took
-     * its own length with it. The bytes themselves are gone: they are
-     * never held anywhere, which is the point of the cap. */
+     * 0 where it cannot be said. Two causes: a name cut by a line
+     * buffer took its own length with it, and a PATH cut because the
+     * host offered no `long_name` buffer for the walk to build the
+     * uncut one in (see that field). The bytes themselves are gone:
+     * they are never held anywhere, which is the point of the cap. */
     uint16_t name_full_len;
 } UncEntryInfo;
 
@@ -495,8 +497,19 @@ typedef struct UncOptions {
      * it (raw bytes, NUL-terminated, cut only at `long_name_cap`)
      * wherever the format still holds it when the cut is made;
      * `name_truncated` is then 2 rather than 1. NULL, and the classic
-     * Mac shell passes NULL, costs nothing and loses only the text: the
-     * length is still reported in `name_full_len`.
+     * Mac shell passes NULL, costs nothing and loses the text — and,
+     * since 2026-10-07, the LENGTH of an over-long PATH as well:
+     * `name_full_len` is 0 there. The walk builds the uncut path in
+     * THIS buffer, so without one there is no uncut path to measure,
+     * and a count maintained past the end of a buffer nobody can read
+     * is not a number any host here has asked for (the Mac shell reads
+     * none). A name cut by a LINE buffer — uuencode's, MIME's — is
+     * unaffected: those report their length as they always did.
+     * `long_name_cap` above 65,536 is NOT supported: the walk's length
+     * is 16-bit, so a larger buffer is filled correctly to 64 KB and
+     * then silently rewritten from its start. The Linux CLI passes
+     * exactly 65,536 (DECISIONS.md 2026-10-07, *what the header was
+     * still promising*).
      * A NON-NULL pointer is WRITTEN in the formats that walk folders
      * (DiskDoubler, SuperDisk!, Now Compress) for every path component,
      * cut or not — the uncut path accumulates here. So a host that has

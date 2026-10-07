@@ -256,12 +256,13 @@ python3 tools/run_sqp.py --macextract build/san/macextract \
     || fail "AppleLink package (SqueezePlay) tests"
 
 # The one rule all five path walks share, at the one place they used to
-# disagree: a folder nested past UNC_PATH_MAXDEPTH. Three of them misfiled
+# disagree: a folder the path string has no room for (and, for four hours
+# on 2026-10-07, one past UNC_PATH_MAXDEPTH, since deleted). Three of them misfiled
 # every entry after a refused push into a real folder it was not in, which
 # no name-or-CRC check can see because every byte is right and only the
 # folder is wrong; two threw the rest of the archive away. Generated —
-# nothing in the corpus nests deeper than 4 levels against a limit of 24
-# (tools/measure_depth.py).
+# nothing in the corpus nests deeper than 4 levels, and a 255-byte path
+# takes at least 8 (tools/measure_depth.py).
 python3 tools/run_depth.py --macextract build/san/macextract \
     || fail "folder-depth limit tests"
 

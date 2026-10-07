@@ -1,8 +1,10 @@
 /*
  * depthtest — how deep classic System software will actually nest folders.
  *
- * `UNC_PATH_MAXDEPTH` is 24 and the engine refuses to descend past it. That
- * number was chosen, not derived: three formats "chose 24 independently"
+ * `UNC_PATH_MAXDEPTH` WAS 24 and the engine refused to descend past it —
+ * this probe is what deleted it, so the constant no longer exists and the
+ * engine has no depth limit at all. That number was chosen, not derived:
+ * three formats "chose 24 independently"
  * (src/unc_internal.h) and nothing had ever asked what the destination
  * allows. The HFS VOLUME FORMAT allows at least 89 levels, measured with
  * hfsutils on Linux — but hfsutils is not a Macintosh, and the question
@@ -158,7 +160,9 @@ int main(void)
     Say("\pdeepest READ BY PATHNAME   ", (long)deepestPath);
     Say("\p  and the error that ended it ", (long)pathErr);
     Say("\p  that pathname's length   ", (long)path[0]);
-    Say("\pUNC_PATH_MAXDEPTH is       ", 24L);
+    /* The engine's own limit, for comparison — 0 since 2026-10-07,
+     * when this probe's answer deleted UNC_PATH_MAXDEPTH. */
+    Say("\pthe engine's depth limit   ", 0L);
 
     for (;;) SystemTask();
     return 0;
