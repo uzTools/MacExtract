@@ -11,7 +11,7 @@ Two kinds of thing live here, and they are kept apart on purpose:
 
 **Not** BLOCKERS.md, which records investigations that went wrong and the
 claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 951 fixtures in `./ci.sh`.
+byte-exact against the oracle across 954 fixtures in `./ci.sh`.
 
 Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
 DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
@@ -77,6 +77,24 @@ the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
 way.
 
 ## Limits of the formats themselves
+
+- **An encrypted classic StuffIt archive that has lost its RESOURCE
+  FORK cannot be decrypted, at any password, by anything.** The block
+  that verifies a password is the archive's own `'MKey'` resource — in
+  its resource fork, not in the stream — so a `.sit` copied onto a
+  file system without forks is missing the key material, and this
+  engine says *"encrypted by a scheme we cannot read"* rather than
+  asking for a password it could not use. Measured 2026-10-07 over all
+  three schemes: `NewDE` and StuffIt Deluxe 3.5.1's built-in both
+  refuse forkless with the right password and both decrypt byte-exact
+  once the fork is beside them; `PassLock` is the exception and needs
+  nothing, because it enciphers nothing (FORMATS.md, *Encryption*).
+  **The fork counts as present** in a MacBinary or BinHex envelope, or
+  as the `NAME.rsrc` / `._NAME` sidecar this CLI writes when it takes
+  one off (`load_mkey`, `cli/main.c`). **What would change it:**
+  nothing in the format. This is why `sitcrypt-wild-F7Menus.sit.bin` is
+  the MacBinary copy and not the bare `.sit` on the other disc — a
+  password for that one would have been useless.
 
 - **A fork compressed by a third party's StuffIt COMPRESSOR module
   (method nibble 7) is not decodable here, and the bar is deliberate.**
