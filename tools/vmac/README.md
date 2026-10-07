@@ -1702,6 +1702,33 @@ over a `macextract x -nr --forks hidden` of the same payload. Both archives
 matched at 4 MB and at 1 MB on 2026-08-20; the numbers are in FORMATS.md,
 "SuperDisk! on the Mac".
 
+## How deep a Macintosh will nest — `depthtest/`
+
+What `UNC_PATH_MAXDEPTH` should have been measured against before it was
+chosen. Build it by hand like `memtest` and `traptest`, put it on a
+THROWAWAY boot volume as the shell, and read the numbers off the screen —
+it creates folders on the volume it booted from:
+
+    cmake -B build/depthtest -S tools/vmac/depthtest \
+          -DCMAKE_TOOLCHAIN_FILE=$RETRO68/m68k-apple-macos/cmake/retro68.toolchain.cmake
+    cmake --build build/depthtest
+    mkboot.py $V/System6.hfv build/depthtest/DepthTest.bin /tmp/depth.hfv \
+              --app-name DepthTest
+    $V/mv-4M/minivmac -r $V/vMac.ROM /tmp/depth.hfv
+
+Two numbers, because there are two routes to a file and only one has a
+string in it: `PBDirCreateSync` with a parent dirID per level, which is
+what the shell's `EnsureDir` does and which reached **250 levels with
+noErr** — the probe's own loop cap — and `PBGetCatInfo` given a full
+`Volume:a:b:...` pathname, which stops at **49 levels of four characters**
+because a `Str255` holds 254 bytes of it. FORMATS.md (*What the
+DESTINATION actually allows*) has the table.
+
+**What it cannot see:** anything above 250, which is where the loop stops
+rather than where the Mac does; and whether the FINDER can navigate what
+the File Manager will create, which is a different question and not one
+the shell needs an answer to, since it never asks the Finder to.
+
 ## The yardstick — `expander.py`
 
 **Every other Mac Plus figure this project publishes is absolute, and absolute

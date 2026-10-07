@@ -3854,6 +3854,29 @@ must NOT make about its name, which is +8 of `CODE` and −8 of A5 in the
 shipped build — CODE + A5 unchanged, so nothing more comes off any
 extraction's budget.
 
+#### What the DESTINATION actually allows — measured 2026-10-07
+
+`UNC_PATH_MAXDEPTH` is 24 because "all three formats that use this chose 24
+independently" (`src/unc_internal.h`). Nothing had ever asked what a
+Macintosh allows. `tools/vmac/depthtest/` asks, on System 6.0.8 on an
+emulated Mac Plus, by the two routes a file is reached through:
+
+| route | deepest | the error that ended it |
+|---|---|---|
+| **created by dirID** — `PBDirCreateSync` with a parent id per level, which is what `EnsureDir` does | **250** | **noErr**: it reached the probe's own loop cap, not a limit |
+| read back by dirID | **250** | noErr |
+| read by full **pathname** — `PBGetCatInfo` given `Volume:a:b:...` | **49**, at 254 bytes | noErr: a `Str255` cannot say more |
+
+**Classic System software has no depth limit.** The only limit is the full
+path STRING at 255 bytes, and the Macintosh shell never builds one — it
+walks component by component with a parent dirID. The HFS volume format
+agrees: 89 levels created, unmounted and walked back down with hfsutils on
+Linux, which then crashed on a double-free of its own at 97.
+
+So 24 is the engine's alone, and it is not derived from anything. What
+follows from that is OPEN_ITEMS.md, *The depth limit that nothing
+justifies*.
+
 **It runs on a Macintosh, and since 2026-10-07 it is graded there.** On an
 emulated Mac Plus at 4 MB under System 6.0.8, `deep-dd-ddar.dd` and
 `deep-sqp.pkg` each come off the Out volume as **49 files, 49 forks
