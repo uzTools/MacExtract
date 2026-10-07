@@ -4330,6 +4330,12 @@ missed something.
 `n = 7` is excluded from the hex sweep for the same reason version 0 is:
 `0701` + zeros is 612,514 files.
 
+**The listings are kept**, in `~/.cache/macextract/discmaster/`
+(60 MB), because re-listing the whole StuffIt corpus is about 25
+minutes of requests and the member types in it answer questions no
+further fetch can. `--state` points there; the tool resumes from
+whatever it finds.
+
 **What the tool cannot see**, both about the index rather than the
 formats: a file whose first 16 bytes the index did not record — which is
 why every `detection=` sweep above is paired with one reached a
