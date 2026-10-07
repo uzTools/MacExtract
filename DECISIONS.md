@@ -359,6 +359,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
 - 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
 - 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
+- 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
 
 ---
 
@@ -23397,3 +23398,77 @@ The identification technique is the transferable part:
 whether a citation had a disagreeing sibling; the answer was no, and the
 same half-hour of parsing produced a format inventory that outranks this
 project's own.
+
+## 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
+
+Private File turned up on 2026-10-07 in Aladdin's own fourteen-engine
+list (*the engine list as a checklist*) and was named in neither part of
+OPEN_ITEMS.md. **The scope call was made the same day: it is in.**
+
+**Claim: nothing in Part 1's reasoning ever reached it.** Part 1 keeps
+RAR, 7z, bzip2, xz, Cabinet, Zoo, ar, cpio and ARJ out on one ground —
+*"none is a Macintosh archive format, none carries a resource fork"* —
+and Private File is a Macintosh format that wraps both forks. It was not
+excluded; it was **unnamed**, which is a different thing and the reason
+it needed a decision rather than a defence.
+
+### What the engine gives for free, and what it does not
+
+`PFEngine.rsrc`'s `Eng ` 10009 is 23,984 bytes of 68K and was read far
+enough to price the work:
+
+- a **full MD5** — the init words at +0x1254 and the sine table at
+  +0x156e;
+- a **CRC-32** table, poly `0xedb88320`, at +0x5494;
+- **no DES tables anywhere** — not IP, FP, PC-1, the S boxes or E.
+
+So this engine already owns the primitives (`unc_crypt.c` has both), and
+**StuffItDES is not involved**, which is worth knowing because Aladdin's
+other encrypted format uses it and the natural assumption would have been
+that this one does too.
+
+What is NOT established is the cipher that MD5 keys. StuffIt 5's
+RC4-under-MD5(password) is the obvious guess; it is **a hypothesis** and
+labelled as one, because the 255/256 loops that looked like an RC4
+key schedule turned out on disassembly to be return-value checks around
+Toolbox dialog traps. A cipher cannot be confirmed without a file to
+decrypt, which makes the specimen the whole of the item rather than the
+first step of it.
+
+### The specimen hunt, and why it is recorded rather than summarised
+
+CLAUDE.md says *"this machine cannot get one" is a claim to re-test
+before it is filed* — two OPEN_ITEMS rows were downloaded on 2026-09-26
+after being filed as unobtainable. So the hunt was done BEFORE filing,
+and what it is worth depends on distinguishing its three legs:
+
+- **archive.org — searched, nothing.** Title and combined-term queries.
+- **Discmaster — searched, and the negative is strong for a reason worth
+  reusing.** Its format vocabulary is a dropdown of **3,287** entries
+  built from its own detectors, and **Private File is not among them**.
+  That is not "no results"; it is "this index cannot recognise the
+  format", which is a different and more durable fact. `extension=pf`
+  does return 20 files and not one is Aladdin's — the extension is
+  shared with Amiga text files, CAZIP, TTComp and MS Compress.
+- **Macintosh Garden — NOT searched.** `macintoshgarden.org` did not
+  respond at all (status 000), and the `old.mac.gdn` mirror 404s on
+  search paths because it serves downloads only. **This leg is
+  unfinished, not negative**, and the row says so. Filing it as a
+  negative would have been the exact error the rule above exists to
+  prevent.
+
+**A control is what makes the first two legs mean anything.** A Discmaster
+query for `file=private` returned zero rows, which looked like a result
+and was a wrong field name — `format=sit` returned five rows and the
+form's own HTML gave `file`, `extension` and `format`. The tool beside
+this one warns about precisely that shape: *"pageNum=1 on a one-page
+result returns an EMPTY array rather than an error"*. **An index that
+answers an unknown question with silence will answer a wrong question
+with silence too**, so the control came first and the four zeros before
+it were discarded.
+
+**No MANUAL_TESTS entry.** That file's own lesson — *"before asking
+somebody outside this machine, ask what the emulator would have to be
+handed, and search for the file by its bytes"* — has already deleted two
+of its items. One leg of the search is unfinished and the Garden may
+simply be up tomorrow, so asking a person now would be premature.

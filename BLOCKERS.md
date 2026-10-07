@@ -180,8 +180,12 @@ disassembler for it (TESTING.md). **Taking PowerPlug apart also produced
 a format inventory**: its fourteen containers are the SDK's fourteen
 named PowerPC engines, twelve of the thirteen formats among them are
 read here, and the thirteenth — **Private File** — was named nowhere in
-this repository until 2026-10-07 (OPEN_ITEMS.md; DECISIONS.md
-2026-10-07, *the engine list as a checklist*).
+this repository until 2026-10-07 and **is in scope as of that day**
+(OPEN_ITEMS.md; DECISIONS.md 2026-10-07, *the engine list as a
+checklist* and *the format that was neither in nor out*). Its whole
+item is a specimen: the reading is in hand — MD5 and CRC-32 in
+`PFEngine`, no DES — and three sources were searched before it was
+filed, one of which, Macintosh Garden, could not be reached at all.
 
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained
