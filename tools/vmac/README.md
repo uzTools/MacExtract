@@ -2536,6 +2536,22 @@ forks, an 8-bit `spinning brain ƒ` folder, a MacRoman `Appé`, and a
 copy named `archive.sit` — the name the Mac saw — because gzip and .Z derive
 their output name from the archive's filename.
 
+**`--fixture PATH` names an archive that is not in `fixtures/`**, repeatable.
+It matches by CONTENT like the automatic route, so naming the wrong file
+identifies nothing; without it a run over a GENERATED subject skips with
+"cannot identify the fixture", which is what every `tools/synth_*.py`
+archive did until 2026-10-07.
+
+**Its volume walk stopped at eight levels until the same day, silently.**
+`walk()` returned `[]` past depth 8, so a correct 24-level volume came back
+as 32 files MISSING ON THE MAC — a harness limit that reads exactly like an
+application defect, and invisible because nothing in the sample nests past
+6. The guard is now at 26, which no volume this engine wrote can reach, and
+it RAISES instead of returning what it has. `walk(dirs=True)` adds the
+FOLDERS, which the comparison does not want and an assertion about a folder
+that must not exist does: without it that assertion is a lookup in a set of
+file paths and cannot fail.
+
 **It has to know what the Mac does to a name, and since 2026-09-22 that is
 two rules rather than one** (`tools/vmac_check.py`, `mac_component`): every
 component is fitted to 31 characters with its extension KEPT, and a StuffIt
@@ -2865,6 +2881,31 @@ The box's three click targets are constants measured off `DLOG 133` in
 `mac/macextract.r` (`REPORT_OK`, `REPORT_SAVE`, `REPORT_DOWN`). **Re-measure
 them if that resource moves** — this is the harness that clicks fixed
 coordinates.
+
+### An entry too deep to place — `interactive.py --report-deep`
+
+    tools/vmac/interactive.py --report-deep --emu mv-4M -o shots fixtures/anything.sit
+
+Ignores the fixture: the archive is generated 30 folders deep by
+`tools/synth_deep.py`, because the deepest thing on this disk nests 4 and
+the engine stops at 24 (FORMATS.md, *How deep anything actually nests*).
+An entry below that limit is OFFERED with the path the engine can
+represent and then refused per entry, and this shell declines it at
+`begin_entry` rather than creating a folder of the archive's inside one it
+was never in.
+
+Three frames and one assertion, the assertion being the saved DOCUMENT:
+all 17 refusal lines, in the engine's own words, ending on the outcome.
+**Output goes to a floppy**, for the reason `--report-utf8`'s does — a
+report saved onto a boot volume this application has just written a
+25-level tree to is on the image and not in its catalog. Measured again
+here on 2026-10-07: the first run photographed a correct box and read no
+document at all.
+
+**It does NOT assert the volume, and cannot**: `hls` will not list the
+root of a volume this build leaves behind, so a folder assertion written
+here found nothing and read as the application's fault. That half is
+`run.py --keep-disks` then `checkdisk.py --fixture` — see below.
 
 ### The one line a generated archive cannot make — `interactive.py --report-utf8`
 

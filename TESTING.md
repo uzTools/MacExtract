@@ -2768,6 +2768,51 @@ the root sentinel at the root; extraction failing exactly the entries it
 cannot place and writing exactly the ones it can; and the engine saying so
 in words.
 
+### Both limits at once
+
+A sixth subject, `deep-dd-long.dd`, is the same tree with 31-character
+folder names, so a path passes `UNC_NAME_MAX` around the eighth level and
+an entry past 24 is name-cut AND unplaceable. That pair is where the
+engine claimed a whole name it did not have (BLOCKERS.md).
+
+**Its assertion is `test_path_depth` in `tests/unit_formats.c` and not
+here**, which is forced rather than chosen: a too-deep path is itself cut
+at 255 bytes, so every deep entry reports the same string and so does a
+shallow one — nothing at the CLI's level can attribute a note to an entry,
+and a check written here fired on that collision instead of the defect.
+What this suite does with the subject is keep it honest: if it stops
+reaching both limits, it says so.
+
+The unit test was rewritten before it was believed. Its first version
+pushed one-character folder names, never set `truncdepth`, never entered
+the reporting branch, and passed with the fix reverted.
+
+### And on a Macintosh — run 2026-10-07
+
+The Linux suite grades the engine and the CLI. The Macintosh shell has its
+own half of the rule — it declines the entry at `begin_entry` rather than
+walking a path whose deepest folders are missing from the middle of it —
+and that is driven two ways, both on an emulated Mac Plus at 4 MB under
+System 6.0.8:
+
+| what | how | result |
+|---|---|---|
+| the VOLUME | `run.py --keep-disks` then `checkdisk.py --fixture` | **49 files, 49 forks byte-exact, names included**, 25 folders, deepest `D01/../D25`, on `deep-dd-ddar.dd` and `deep-sqp.pkg` alike |
+| the REPORT | `interactive.py --report-deep` | the saved document holds all 17 lines and ends on the outcome |
+
+**Both were given a negative control**, which is the only reason either is
+worth quoting. The same `deep-sqp.pkg` through the application of
+2026-10-06 wrote **61 files and 30 folders** on that Macintosh — five
+folders of the archive's created inside one they were never in, with
+twelve files in them — and `checkdisk.py` fails it by name. The report
+line's control is that the sentence *"nested too deep to place"* is not in
+that binary at all, so the assertion cannot pass against an application
+without the rule.
+
+`checkdisk.py --fixture` is what made the first of those possible: it
+could only identify a COMMITTED fixture, so a generated subject skipped
+silently.
+
 It was run against a build of the previous commit before being believed:
 **28 problems across the five formats**, discriminating all three old
 behaviours — DiskDoubler offering 48 of 91 entries, Now Compress and
@@ -2792,11 +2837,9 @@ What this CANNOT see:
     Compact Pro go through `unc_entry_path_append` and have no depth
     limit to reach, so none of this applies to them — and nothing here
     tests what they do instead.
-  * the Macintosh shell's half of the rule. `path_too_deep` stops it
-    creating the folder, and that line has been read and not run: an
-    archive nested past 24 has never been put in front of the
-    application on an emulated Mac (OPEN_ITEMS.md, *The folder-depth rule
-    on the Macintosh: read, not run*).
+  * anything about a tier. These runs are at 4 MB on System 6.0.8; what
+    a 1 MB or 512 KB machine does with a 25-level tree is not asked, and
+    no tier sample holds one.
 
 ## The three walks agree (`tools/walk_probe.c`, `tools/run_walk.py`, in `ci.sh`)
 

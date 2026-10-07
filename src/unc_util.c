@@ -751,6 +751,23 @@ void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
     if (p->lost) e->path_too_deep = 1;
     if (i < nlen || p->truncdepth) {
         e->name_truncated = 1;
+        /* `want` and the long buffer describe the path the walk COULD
+         * represent. Where it could not descend, that is a path with
+         * folders missing from the middle of it, so neither is this
+         * entry's name: the length would be a number that describes
+         * nothing, and `name_truncated` 2 would promise a host the whole
+         * name and hand it a shorter real-looking path. 0 is the
+         * documented "the format cannot say" (macextract.h), and the
+         * entry is already failing with UNC_ERR_TOODEEP.
+         *
+         * Measured 2026-10-07 on an archive nested 30 deep whose folder
+         * names are 31 characters, so both limits fire: the CLI printed
+         * `.../D24.../f30.txt` as "the archive's name" for an entry whose
+         * name has six more folders in it. */
+        if (p->lost) {
+            e->name_full_len = 0;
+            return;
+        }
         e->name_full_len = (uint16_t)want;
         out = path_longbuf(p, &cap);
         if (out && want < cap) {         /* every byte of it is in there */

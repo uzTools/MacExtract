@@ -4785,6 +4785,101 @@ static void test_resfork_find(void)
           == UNC_ERR_FORMAT);
 }
 
+/* ------------------------------------------------------------------ */
+/* The path walker at UNC_PATH_MAXDEPTH                               */
+/*                                                                    */
+/* Directly, with no archive: the property lives in unc_path_push /   */
+/* _pop / _leaf and every format inherits it. The suite that drives   */
+/* real archives is tools/run_depth.py; this is the part that can be  */
+/* asserted on the FIELDS rather than through a host's prose, which   */
+/* matters because the reported path of a too-deep entry is cut at    */
+/* UNC_NAME_MAX and so is the same string for all of them.            */
+/* ------------------------------------------------------------------ */
+
+static void test_path_depth(void)
+{
+    UncPath p;
+    UncEntryInfo e;
+    uint8_t nm[4];
+    int i;
+
+    /* 1. The limit, and that a refusal is COUNTED rather than dropped. */
+    unc_path_init(&p, NULL);
+    for (i = 0; i < UNC_PATH_MAXDEPTH; i++) {
+        nm[0] = (uint8_t)('a' + (i % 26));
+        CHECK(unc_path_push(&p, nm, 1) == UNC_OK);
+    }
+    CHECK(p.depth == UNC_PATH_MAXDEPTH);
+    CHECK(!unc_path_toodeep(&p));
+    for (i = 0; i < 6; i++) {
+        CHECK(unc_path_push(&p, (const uint8_t *)"z", 1) == UNC_ERR_TOODEEP);
+        CHECK(p.depth == UNC_PATH_MAXDEPTH);        /* nothing moved */
+        CHECK(unc_path_askdepth(&p) == UNC_PATH_MAXDEPTH + i + 1);
+    }
+    CHECK(unc_path_toodeep(&p));
+
+    /* 2. A leaf down there is flagged. */
+    unc_entry_clear(&e);
+    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+    CHECK(e.path_too_deep == 1);
+
+    /* 3. Pops are BALANCED: a refused push's pop undoes the refusal and
+     *    not a level that was really pushed. This is the whole reason
+     *    the refusal is counted — four of the five walks pop by a count
+     *    and would otherwise surface one level short per refusal. */
+    for (i = 0; i < 6; i++) unc_path_pop(&p);
+    CHECK(!unc_path_toodeep(&p));
+    CHECK(p.depth == UNC_PATH_MAXDEPTH);
+    unc_entry_clear(&e);
+    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+    CHECK(e.path_too_deep == 0);
+    for (i = 0; i < UNC_PATH_MAXDEPTH; i++) unc_path_pop(&p);
+    CHECK(p.depth == 0);
+    CHECK(p.len == 0);
+
+    /* 4. A pop with nothing pushed stays at the floor, and does not
+     *    leave a refusal owed to nobody. */
+    unc_path_pop(&p);
+    CHECK(p.depth == 0 && !unc_path_toodeep(&p));
+
+    /* 5. BOTH limits at once, which is the pair that reported a
+     *    falsehood. With 31-character folder names the path passes
+     *    UNC_NAME_MAX around the eighth level, so `truncdepth` is set
+     *    long before the depth limit is reached — and only then is the
+     *    reporting branch below entered at all. A one-character name
+     *    never reaches it, which is why the first version of this test
+     *    passed against the defect (2026-10-07).
+     *
+     *    Down there the walk holds a path with folders missing from the
+     *    middle of it. That is not this entry's name, so its LENGTH
+     *    describes nothing and `name_truncated` 2 — "the whole name is
+     *    in UncOptions.long_name" — would be a promise the engine
+     *    cannot keep. 0 is the documented "the format cannot say". */
+    {
+        uint8_t wide[31];
+        int k;
+        for (k = 0; k < 31; k++) wide[k] = (uint8_t)'w';
+        unc_path_init(&p, NULL);
+        for (i = 0; i < UNC_PATH_MAXDEPTH; i++) {
+            wide[0] = (uint8_t)('a' + (i % 26));
+            CHECK(unc_path_push(&p, wide, 31) == UNC_OK);
+        }
+        CHECK(p.truncdepth != 0);        /* the path was cut on the way */
+        unc_entry_clear(&e);
+        unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+        CHECK(e.name_truncated == 1 || e.name_truncated == 2);
+        CHECK(e.name_full_len != 0);     /* representable: a real length */
+
+        CHECK(unc_path_push(&p, wide, 31) == UNC_ERR_TOODEEP);
+        unc_entry_clear(&e);
+        unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+        CHECK(e.path_too_deep == 1);
+        CHECK(e.name_truncated != 2);    /* no whole name is on offer */
+        CHECK(e.name_full_len == 0);     /* and no length that lies */
+    }
+}
+
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -4816,6 +4911,7 @@ void run_format_tests(void)
     test_foreign();
     test_spacesaver();
     test_spacesaver_alg4();
+    test_path_depth();
     test_spacesaver_preset();
     test_superdisk();
     test_superdisk_single();

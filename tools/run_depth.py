@@ -46,6 +46,14 @@ What this CANNOT see:
   * the two formats that carry a path WITHOUT this walker — StuffIt and
     Compact Pro go through `unc_entry_path_append` and have no depth
     limit to reach.
+  * that the engine makes no FALSE claim about a too-deep entry's name.
+    Every deep path collapses to the same 255-byte string here, so a
+    note cannot be attributed to an entry; `test_path_depth` in
+    tests/unit_formats.c asserts that on the fields.
+  * what a host SHOULD do with a path it cannot place. The rule is that
+    the engine must not claim more than it has; whether a host refuses
+    the entry, flattens it or asks the user is the host's, and only the
+    two in this tree are exercised here.
 """
 import argparse
 import os
@@ -115,6 +123,46 @@ def sd_payload(macextract, tmp):
     return inner if r.returncode == 0 and os.path.exists(inner) else None
 
 
+DEEPLINE = re.compile(r"^macextract: (.*): nested too deep to place$")
+
+
+def deep_and_cut(macextract, path, tmp, problems):
+    """The two limits at once: a path cut by UNC_NAME_MAX AND deeper than
+    UNC_PATH_MAXDEPTH.
+
+    An entry that is only too long gets `name_truncated` 2 and the WHOLE
+    name through `UncOptions.long_name` — that is the engine's promise and
+    `run_names.py` grades it. An entry that is also too deep has no whole
+    name to give: what the walk holds is the path with folders missing
+    from the middle of it. Offering THAT as the whole name is a falsehood
+    a host cannot detect, and the engine did it until 2026-10-07 — the
+    CLI printed `.../D24.../f30.txt` as "the archive's name" for an entry
+    with six more folders in it.
+
+    **The field-level assertion is `test_path_depth` in
+    tests/unit_formats.c, not here, and that is forced.** A too-deep
+    path is itself cut at UNC_NAME_MAX on the way out, so every deep
+    entry in this subject reports the SAME 255-byte string — and that
+    string is also a shallow entry's. Nothing at this level can attribute
+    a note to an entry, so an assertion written here fired on the
+    collision and not on the defect (2026-10-07). What this does is keep
+    the SUBJECT honest: if it ever stops reaching both limits, the unit
+    test is still right and this file is the one that would quietly stop
+    describing anything.
+    """
+    out = os.path.join(tmp, "out-longnames")
+    shutil.rmtree(out, ignore_errors=True)
+    _failed, err = extract(macextract, path, out)
+    deep = sum(1 for l in err.splitlines() if DEEPLINE.match(l))
+    cut = "did not fit and were shortened" in err
+    check(problems, deep,
+          "ddar-longnames: nothing was reported too deep — this subject "
+          "is meant to reach both limits at once")
+    check(problems, cut,
+          "ddar-longnames: no name was reported cut — this subject is "
+          "meant to reach UNC_NAME_MAX as well")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -142,6 +190,9 @@ def main():
 
         for path in sorted(made):
             kind = made[path]
+            if kind == "ddar-longnames":
+                deep_and_cut(a.macextract, path, tmp, problems)
+                continue
             rows = listing(a.macextract, path)
             got = [p for _, p in rows]
 

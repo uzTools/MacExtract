@@ -287,18 +287,6 @@ it (DECISIONS.md 2026-10-07, *the engine list as a checklist*).
 | **Private File is not extracted, not detected and has no fixture.** It is the one format on Aladdin's own fourteen-engine list that this engine does not read; the other twelve do, and the fourteenth container is a CRC helper (`tools/derive_hqxgarbage.py --siblings`) | **a specimen, and it is the whole of the item.** The reading is in hand: `PFEngine.rsrc`'s `Eng ` 10009, 23,984 bytes of 68K, carries a **full MD5** (init words at +0x1254, the sine table at +0x156e) and a **CRC-32 table** (poly `0xedb88320`, +0x5494) and **no DES tables at all** — measured 2026-10-07, so this engine's existing MD5 and CRC-32 are the primitives and StuffItDES is not involved. Its own `STR#` 5100 describes the format: per-fork integrity checks, a wrong-password message, and *"This item was encrypted with a method that this software does not handle"*. **What is NOT established is the cipher keyed by that MD5** — StuffIt 5's RC4-under-MD5(password) is the obvious guess and it is a HYPOTHESIS, not a finding, and it cannot become one without a file to grade against |
 | **Specimen hunt, re-tested 2026-10-07** — the three sources this project uses, so the next attempt starts after them rather than before | **archive.org**: no Aladdin Private File item (title and combined-term searches). **Discmaster**: its format vocabulary is 3,287 entries and **has no Private File detector**, so a content search cannot find one; `extension=pf` returns 20 files and every one is Amiga, CAZIP, TTComp or MS Compress. **Macintosh Garden: not searched** — `macintoshgarden.org` did not respond at all from here (status 000) and the `old.mac.gdn` mirror 404s on search paths, serving downloads only. **That leg is unfinished, not negative**, and it is the one to retry. The fallback is the route SpaceSaver's and PackIt's specimens took: obtain the Private File application and run it under emulation |
 
-## The folder-depth rule on the Macintosh: read, not run
-
-Added 2026-10-07 with the rule itself. An entry nested past
-`UNC_PATH_MAXDEPTH` is refused per entry and the Macintosh shell declines
-to create its folder (`macextract_mac.c`, on `UncEntryInfo.path_too_deep`).
-Both hosts are graded on Linux by `tools/run_depth.py`; only one of them
-has run.
-
-| what is left | what would move it |
-|---|---|
-| **The Macintosh shell's refusal has never executed.** The line is three statements and the engine side is the same code the CLI drives, so this is low risk — but it is a path READ and not run, which is the category this file exists to keep honest. Nothing in the corpus reaches 24 levels (FORMATS.md, *How deep anything actually nests*), so no tier run has ever touched it | put one of `tools/synth_deep.py`'s archives on the sample volume and extract it under Mini vMac, checking the report line and that the flattened folder is absent. The harness exists (`tools/vmac/run.py` with a built volume, TESTING.md); what is needed is the fixture added to a sample and one run. It is NOT a MANUAL_TESTS item — no hardware and no outside account is involved |
-
 ## The decoder paths nothing has fuzzed
 
 **Measured by `tools/fuzz_cover.py`** — a coverage build under

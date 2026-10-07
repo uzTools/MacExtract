@@ -23698,6 +23698,88 @@ time.
 it, so raising it buys A5 world for a depth nothing on this disk comes
 within six times of.
 
+### Run on a Macintosh, 2026-10-07
+
+The shell's half of the rule is its own code — it declines the entry at
+`begin_entry`, because a host that declines never hears `end_entry`'s
+status — so the Linux suite cannot reach it. Two routes, both at 4 MB on
+System 6.0.8, and the numbers are FORMATS.md's.
+
+**Neither is worth quoting without its negative control, and both have
+one.** The volume route is graded against the application of 2026-10-06 on
+the same package: 61 files and 30 folders where the new one writes 49 and
+25, and `checkdisk.py` fails it by name. The report route's control is
+cheaper and stronger — the sentence *"nested too deep to place"* is not in
+that binary at all, so no unfixed application can make that assertion pass.
+
+**The report phase asserts the document and NOT the volume, and that is a
+limitation rather than a choice.** `hls` will not list the root of a volume
+the interactive build leaves behind, which `phase_report_utf8` had already
+recorded; an assertion about folders written there found nothing and read
+as the application's fault. The volume is `checkdisk.py`'s subject and the
+document is this phase's, which is the same division `--report-utf8` makes
+for the same reason.
+
+The output goes to a floppy for that phase's other known reason: a report
+saved onto a boot volume this application has just written a 25-level tree
+to is on the image and not in its catalog. The first run photographed a
+correct box and read no document — the 2026-09-22 finding reproducing on a
+different cause of the same catalog state.
+
+**Two harness defects surfaced, and both were of the kind that reads as an
+application defect.** `checkdisk.py`'s volume walk returned `[]` past eight
+levels, so a correct 24-level volume came back as 32 files missing on the
+Mac; and it could only identify a COMMITTED fixture, so a generated subject
+skipped silently. Both are in BLOCKERS.md and `tools/vmac/README.md`. The
+second one is the more interesting: an instrument that skips rather than
+fails is one nobody notices has stopped measuring — which is why
+`--fixture` matches by content and not by the name it was given.
+
+### The two limits at once, and the whole name that was not one
+
+Asked after the rule shipped: *"I thought the path was shortened when too
+long?"* It is, and the two are not the same failure.
+
+**Shorten where the DESTINATION cannot hold it; refuse where only the
+ENGINE cannot.** A name too long for HFS is shortened, numbered if it
+collides, and reported — the disk could not have held it either way. A
+path too deep is refused, because 24 is OUR limit: ext4 and HFS both nest
+far past it, so writing the entry anywhere would put it in a folder the
+archive never had, and `macextract.h` already said a host that could place
+it correctly should treat our limit as a per-entry failure. The other half
+of the difference is recoverability: for a long name the engine hands over
+the whole thing through `UncOptions.long_name`, so the host can decide;
+for a deep path there is nothing to hand over, because `fullstack` has no
+slot past 24 and the uncut path stops being tracked.
+
+**Where both fire, the engine was claiming a whole name it did not have.**
+`unc_path_leaf` set `name_full_len` from the uncut path and `name_truncated`
+2 — *"the WHOLE name is in UncOptions.long_name"* — without asking whether
+the walk had got that far. Measured on an archive nested 30 deep whose
+folder names are 31 characters, so a path passes UNC_NAME_MAX around the
+eighth level: the CLI printed `.../D24.../f30.txt` as "the archive's name"
+for an entry with six more folders in it. Now `name_full_len` is 0, the
+documented *"the format cannot say"*, and 2 is never reached.
+
+The CLI had the same shape of error one layer up: it recorded the cut
+note BEFORE the refusal, so the end-of-run notice said "written as ..."
+about a folder it had declined to create. The refusal moved above the
+fitting block.
+
+**Both were found by one question, and neither by a suite** — which is the
+part worth keeping. Three suites run over these archives and all three
+were green: the rule is about what the engine SAYS, and a differential
+suite compares what it WRITES.
+
+**The test for it had to be rewritten before it was believed.** The first
+`test_path_depth` pushed one-character folder names, so `truncdepth` was
+never set, the reporting branch was never entered, and it passed against
+the defect with the fix reverted. With 31-character names it fails. The
+assertion cannot live in `run_depth.py` at all: a too-deep path is itself
+cut at UNC_NAME_MAX, so every deep entry reports the same 255-byte string
+and that string is also a shallow entry's — a check written there fired on
+the collision rather than the defect.
+
 ### What the generator is for, and the one it broke
 
 `tools/synth_deep.py` writes the same tree for all five formats, and its

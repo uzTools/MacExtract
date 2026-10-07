@@ -42,8 +42,18 @@ def hfs(env, *argv):
     return subprocess.run(argv, capture_output=True, env=env)
 
 
-def walk(env, mac_dir=(), depth=0):
+class TooDeep(Exception):
+    """The volume walk went deeper than the engine can write."""
+
+
+def walk(env, mac_dir=(), depth=0, dirs=False):
     """Every file on the mounted volume, as tuples of MacRoman components.
+
+    With `dirs`, every FOLDER too. Off by default, because the comparison
+    this file makes is against a Linux extraction's files; a caller that
+    needs to assert a folder was NOT created has to ask for them, and one
+    that forgets gets a set no folder can ever be in — which is an
+    assertion that cannot fail (CLAUDE.md).
 
     Components, not a joined string: '/' is a legal character in an HFS
     filename (`mw/68k•unshar π` in derived-unshar_1.11_folder.sit) and ':'
@@ -51,8 +61,18 @@ def walk(env, mac_dir=(), depth=0):
     name and a path. Found on 2026-08-08, when that fixture joined the
     sample and two of its entries could not be copied off the volume.
     """
-    if depth > 8:
-        return []
+    # The engine carries UNC_PATH_MAXDEPTH (24) levels of folder and refuses
+    # to descend past them (src/unc_internal.h), so no volume this
+    # application wrote can nest deeper than 25 components. This guard is
+    # here to stop a CYCLE, not to bound a tree, so exceeding it raises
+    # rather than returning what it has: it was `depth > 8: return []` until
+    # 2026-10-07, which reported a correct 24-deep volume as 32 files
+    # MISSING ON THE MAC — a harness limit that reads exactly like an
+    # application defect, and silent because nothing in the sample nests
+    # past 6 (BLOCKERS.md, FORMATS.md *How deep anything actually nests*).
+    if depth > 26:
+        raise TooDeep("the volume nests past %d components, which the engine "
+                      "cannot write — a loop, or a harness bug" % depth)
     out = []
     # -a because hfsutils hides a file whose Finder INVISIBLE bit is set —
     # NOT, as this comment said until 2026-09-22, names beginning with a dot.
@@ -82,7 +102,9 @@ def walk(env, mac_dir=(), depth=0):
         name = entry[:-1] if isdir or entry.endswith("*") else entry
         rel = mac_dir + (unicodedata.normalize("NFC", name),)
         if isdir:
-            out += walk(env, rel, depth + 1)
+            if dirs:
+                out.append(rel)
+            out += walk(env, rel, depth + 1, dirs)
         else:
             out.append(rel)
     return out
@@ -93,8 +115,15 @@ def mac_path(comps, folder=False):
     return ":" + ":".join(comps) + (":" if folder else "")
 
 
-def fixture_of(indsk, env):
-    """Which fixture was this run? The In volume holds it as `archive.sit`."""
+def fixture_of(indsk, env, candidates=None):
+    """Which fixture was this run? The In volume holds it as `archive.sit`.
+
+    `candidates` are extra paths to match before `fixtures/` — a GENERATED
+    subject is in no committed directory, so without them a run over one
+    skips, which is what every `tools/synth_*.py` archive did here until
+    2026-10-07. The match is still by CONTENT: naming a file that is not
+    the one on the disk identifies nothing.
+    """
     if hfs(env, "hmount", indsk).returncode != 0:
         return None
     got = hfs(env, "hcopy", "-r", "archive.sit", "/tmp/.checkdisk-archive").returncode
@@ -102,15 +131,17 @@ def fixture_of(indsk, env):
     if got != 0:
         return None
     want = open("/tmp/.checkdisk-archive", "rb").read()
-    for f in os.listdir(os.path.join(REPO, "fixtures")):
-        p = os.path.join(REPO, "fixtures", f)
+    pool = list(candidates or [])
+    fixdir = os.path.join(REPO, "fixtures")
+    pool += [os.path.join(fixdir, f) for f in os.listdir(fixdir)]
+    for p in pool:
         if os.path.isfile(p) and os.path.getsize(p) == len(want):
             if open(p, "rb").read() == want:
                 return p
     return None
 
 
-def check(rundir):
+def check(rundir, candidates=None):
     workhome = os.path.join(rundir, ".hfshome")
     os.makedirs(workhome, exist_ok=True)
     env = dict(os.environ, HOME=workhome)
@@ -119,14 +150,17 @@ def check(rundir):
     if not (os.path.exists(outdsk) and os.path.exists(indsk)):
         return None, f"{rundir}: no out.dsk/in.dsk"
 
-    fixture = fixture_of(indsk, env)
+    fixture = fixture_of(indsk, env, candidates)
     if fixture is None:
         return None, f"{rundir}: cannot identify the fixture from in.dsk"
     name = os.path.basename(fixture)
 
     if hfs(env, "hmount", outdsk).returncode != 0:
         return False, f"{name}: the Out volume will not mount"
-    names = walk(env)
+    try:
+        names = walk(env)
+    except TooDeep as e:
+        return False, f"{name}: {e}"
 
     ref = os.path.join(rundir, "linux-out")
     subprocess.run(["rm", "-rf", ref], check=False)
@@ -232,10 +266,22 @@ def check(rundir):
 
 
 def main():
-    dirs = sys.argv[1:] or ["."]
+    args = sys.argv[1:]
+    # --fixture PATH, repeatable: an archive to match the In volume against
+    # besides the committed ones. For a generated subject.
+    cands, dirs = [], []
+    i = 0
+    while i < len(args):
+        if args[i] == "--fixture" and i + 1 < len(args):
+            cands.append(args[i + 1])
+            i += 2
+        else:
+            dirs.append(args[i])
+            i += 1
+    dirs = dirs or ["."]
     npass = nfail = nskip = 0
     for d in sorted(dirs):
-        ok, detail = check(d.rstrip("/"))
+        ok, detail = check(d.rstrip("/"), cands)
         if ok is None:
             nskip += 1
             print(f"SKIP  {detail}")

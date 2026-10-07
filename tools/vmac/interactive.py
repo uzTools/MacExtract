@@ -490,8 +490,10 @@ def accept_destination(mac, pause=3.0):
 SFPUT_DRIVE = (337 + 30, 181 + 30)
 
 
-def volume_names(img):
+def volume_names(img, dirs=False):
     """Every file on an HFS image, as checkdisk.py's component tuples.
+
+    With `dirs`, the folders as well — see `checkdisk.walk`.
 
     Not `hls -1` split on whitespace: a Mac filename contains spaces
     ("Demo Manual V1.6" is three fields, one name), may begin with a dot,
@@ -503,7 +505,7 @@ def volume_names(img):
     try:
         if CD.hfs(env, "hmount", img).returncode != 0:
             raise SystemExit(f"interactive: {img} will not mount")
-        names = set(CD.walk(env))
+        names = set(CD.walk(env, dirs=dirs))
         CD.hfs(env, "humount")
         return names
     finally:
@@ -610,6 +612,25 @@ def report_archive(path):
     raw[at] ^= 0x01                    # one bit: its checksum, nothing else
     open(path, "wb").write(bytes(raw))
     shutil.rmtree(tmp, ignore_errors=True)
+
+
+def deep_archive(path):
+    """An archive nested past `UNC_PATH_MAXDEPTH`, for the one report line
+    nothing in the corpus can reach.
+
+    The engine carries 24 levels of folder and nothing on this disk nests
+    past 4 (FORMATS.md, *How deep anything actually nests*), so an entry
+    below the limit — whose path the engine cannot represent and therefore
+    refuses to place — can only be generated. `tools/synth_deep.py` writes
+    the tree and says what each part of it is for; this takes the
+    DiskDoubler one because the report is the same whatever walk found the
+    entry, and `DDAR` is the cheapest of the five to build.
+    """
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import synth_dd                                          # noqa: E402
+    import synth_deep                                        # noqa: E402
+    open(path, "wb").write(
+        synth_dd.build_ddar(synth_deep.dd_tree(DEEP_DEPTH, synth_dd)))
 
 
 def volume_text(img, name):
@@ -842,6 +863,124 @@ def phase_report(args, appbin, workdir, shot):
             print(f"interactive: the report names {n}, the volume does not")
     ok = not missing
     print("interactive: report " + ("COMPLETE" if ok else "WRONG"))
+    return ok
+
+
+# How deep `--report-deep` nests, and the path the report must name. The
+# engine stops descending at UNC_PATH_MAXDEPTH (24), so `D25` is the last
+# folder it can name and `f25.txt` — inside `D25`, which it could not
+# descend into — is the first entry whose path it cannot represent.
+DEEP_DEPTH = 30
+DEEP_FLAT = "/".join("D%02d" % i for i in range(1, 25))
+
+
+def phase_report_deep(args, appbin, workdir, shot):
+    """The report line for an entry nested deeper than the engine can place.
+
+    The other half of the folder-depth rule, and the half no automated
+    suite on Linux can reach: `tools/run_depth.py` grades the ENGINE and
+    the CLI, and the Macintosh shell has its own refusal — it declines the
+    entry at begin_entry rather than walking a path whose deepest folders
+    are missing from the middle of it (macextract.h, `path_too_deep`).
+
+    Three frames and one assertion. The frames are the box, the box
+    scrolled, and the box after Save as Text. The assertion is the SAVED
+    DOCUMENT, read back off the volume the Mac wrote it to: it must name
+    the entries the engine could not place, in the engine's own words, and
+    end on the outcome. A photograph of a box full of text cannot fail; a
+    missing line in that file can.
+
+    **The other half of the rule — that the flattened folder is NOT
+    created — is not asserted here, and cannot be.** `hls` will not list
+    the root of a volume this build leaves behind, the same hfsutils
+    limitation `phase_report_utf8` records for the same reason: `hcopy`
+    fetches the document by name and a listing comes back EMPTY (measured
+    again 2026-10-07, on this phase, against a volume that held the tree
+    correctly — an assertion written here on folders found nothing and
+    read as the application's fault). That half is `run.py --keep-disks`
+    then `checkdisk.py --fixture`, which compares the whole Out volume
+    against the Linux extraction: 49 files and 25 folders, where the
+    application of 2026-10-06 wrote 61 and 30 (TESTING.md, *The
+    folder-depth limit*).
+
+    Ignores the fixture argument — the archive is generated.
+    """
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-deep.hfv")
+    arch = os.path.join(workdir, "deep.dd")
+    deep_archive(arch)
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin, bootimg,
+         "--data", f"{arch}:archive.sit")
+    # Extract to a FLOPPY and not beside the archive, for the reason
+    # `phase_report_utf8` does: a report saved onto a boot volume this
+    # application has just written a deep tree to is on the image and not
+    # in its catalog, so the host cannot read it (DECISIONS.md 2026-09-22,
+    # *the file that was on the disk and not in the catalog*). Measured
+    # again here on 2026-10-07 — 49 files across 25 levels put that volume
+    # in the same state, and the first run of this phase read NO saved
+    # report off it while photographing a correct box.
+    destdsk = os.path.join(workdir, "dest.dsk")
+    R.make_floppy(destdsk, "Dest", size_kb=1440)
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir, extra=(destdsk,))
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        # Standard File opens on the last-inserted volume, the empty
+        # floppy; drive back to the boot volume for the archive.
+        mac.click(*SF_DRIVE)
+        time.sleep(2.0)
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        time.sleep(3.0)
+        mac.click(*SFPUT_DRIVE)                # ...and away to the floppy
+        time.sleep(1.5)
+        accept_destination(mac, pause=1.0)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "deep-1-box.png")
+
+        for _ in range(6):
+            mac.click(*REPORT_DOWN)
+            time.sleep(0.4)
+        time.sleep(1.5)
+        shot(mac, "deep-2-scrolled.png")
+
+        mac.click(*REPORT_SAVE)
+        time.sleep(4.0)
+        mac.key("Return")
+        time.sleep(5.0)
+        shot(mac, "deep-3-saved.png")
+
+        mac.click(*REPORT_OK)
+        time.sleep(3.0)
+        time.sleep(FLUSH_WAIT)
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    lines = volume_text(destdsk, "Extraction Report")
+    missing = []
+    if lines is None:
+        print("interactive: NO saved report on the volume")
+        return False
+    for l in lines:
+        print("interactive: report | " + l)
+
+    # The engine's own sentence, which this shell borrows rather than
+    # keeping a literal of its own (macextract_mac.c says why).
+    want = DEEP_FLAT + "/f25.txt nested too deep to place"
+    if not any(want in l for l in lines):
+        missing.append(want)
+    if "Extraction finished." not in lines[-1]:
+        missing.append("<the outcome, on the last line of the document>")
+    for m in missing:
+        print("interactive: NOT in the saved report: " + m)
+
+    ok = not missing
+    print("interactive: report-deep " + ("COMPLETE" if ok else "WRONG"))
     return ok
 
 
@@ -2160,6 +2299,13 @@ def main():
                          "photograph the report box, scroll it, save it as "
                          "a document, and read that document back off the "
                          "volume. Ignores the fixture argument.")
+    ap.add_argument("--report-deep", action="store_true",
+                    help="the report line for an entry nested deeper than "
+                         "the engine carries folders: extract a generated "
+                         "archive 30 levels deep, read the saved report back "
+                         "off the volume, and check that the flattened "
+                         "folder was NOT created. Ignores the fixture "
+                         "argument; nothing in the corpus nests past 4.")
     ap.add_argument("--report-utf8", action="store_true",
                     help="the report line a generated archive cannot make: "
                          "a StuffIt 5 archive whose names are UTF-8 and "
@@ -2236,6 +2382,14 @@ def main():
     if args.report:
         try:
             ok = phase_report(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.report_deep:
+        try:
+            ok = phase_report_deep(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

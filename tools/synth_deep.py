@@ -89,15 +89,28 @@ def plan(depth):
 # DiskDoubler, both containers: a tree for tools/synth_dd.py
 # ------------------------------------------------------------------
 
-def dd_tree(depth, mod):
+def _fold(d, namelen):
+    """A folder's name, padded to `namelen` characters."""
+    nm = "D%02d" % d
+    return nm + "x" * (namelen - len(nm)) if namelen > len(nm) else nm
+
+
+def dd_tree(depth, mod, namelen=3):
     """`mod` is the synth_dd or synth_now module — both take the same
-    {folder,file} tree."""
+    {folder,file} tree.
+
+    `namelen` pads the folder names. At 31 — the longest an HFS name can
+    be — a path passes UNC_NAME_MAX around depth 8, so BOTH limits fire
+    and the entries past 24 are name-cut as well as unplaceable. That
+    pair is the one combination that reported a falsehood: the engine
+    offered the flattened path as `name_truncated` 2, telling the host it
+    had the whole name (DECISIONS.md 2026-10-07)."""
     def level(d):
         kids = [mod.file("f%02d.txt" % d, data=_payload(d, "file"))]
         if d < depth:
             kids.append(level(d + 1))
         kids.append(mod.file("t%02d.txt" % d, data=_payload(d, "trailer")))
-        return mod.folder("D%02d" % d, kids)
+        return mod.folder(_fold(d, namelen), kids)
     return [level(1), mod.file("after.txt", data=b"at the root\n")]
 
 
@@ -159,6 +172,15 @@ def write(outdir, depth=DEFAULT_DEPTH, sd_payload=None):
     with open(p, "wb") as fh:
         fh.write(synth_now.build_archive(dd_tree(depth, synth_now)))
     made[p] = "now"
+
+    # The same tree with 31-character folder names, so a path is cut by
+    # UNC_NAME_MAX long before the depth limit is reached and an entry
+    # past 24 meets both. One format is enough: what it grades is
+    # `unc_path_leaf`, which all five share.
+    p = os.path.join(outdir, "deep-dd-long.dd")
+    with open(p, "wb") as fh:
+        fh.write(synth_dd.build_ddar(dd_tree(depth, synth_dd, namelen=31)))
+    made[p] = "ddar-longnames"
 
     p = os.path.join(outdir, "deep-sqp.pkg")
     with open(p, "wb") as fh:

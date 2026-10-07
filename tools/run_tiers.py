@@ -262,7 +262,11 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # three TIERS budgets below are now a further 192 B more generous than the
 # Macintosh will be until they are re-taken there (FORMATS.md, *How deep
 # anything actually nests*).
-OVL_SAVED = 129040
+# +32 on 2026-10-07, same day, for the claim a too-deep entry must not
+# make about its name: the resident control carries that in five decoders
+# and the shipped build's CODE + A5 does not move at all (73,552 B either
+# side), so the whole of it is difference.
+OVL_SAVED = 129072
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

@@ -3843,13 +3843,27 @@ were misfiling entries (BLOCKERS.md, *what ignoring a refused push
 cost*).
 
 **What the rule costs a 1 MB Mac Plus: 160 B resident**, measured on the
-objects before and after — 120 B of `CODE` and 40 B of the A5 world (the
+objects before and after — 128 B of `CODE` and 32 B of the A5 world (the
 engine's one new message) in the shipped eager configuration, where the
 five decoders are in `'OVLY'` images and only the walker, the message and
 the Macintosh shell's refusal are resident. The resident control pays
-328 B of `CODE` and 24 of A5 because it carries every decoder; the lazy
-configuration pays 120 and 8. All six ceilings moved
-(`tools/build_mac.sh`).
+340 B of `CODE` and 44 of A5 because it carries every decoder; the lazy
+configuration pays 128 and 32. All six ceilings moved twice
+(`tools/build_mac.sh`): the second time for the claim a too-deep entry
+must NOT make about its name, which is +8 of `CODE` and −8 of A5 in the
+shipped build — CODE + A5 unchanged, so nothing more comes off any
+extraction's budget.
+
+**It runs on a Macintosh, and since 2026-10-07 it is graded there.** On an
+emulated Mac Plus at 4 MB under System 6.0.8, `deep-dd-ddar.dd` and
+`deep-sqp.pkg` each come off the Out volume as **49 files, 49 forks
+byte-exact, names included** (`checkdisk.py --fixture`), in **25 folders**
+whose deepest is `D01/../D25` — the last the engine can name. The saved
+end-of-run report holds all **17** refusals and ends on the outcome
+(`interactive.py --report-deep`). The control is the application of
+2026-10-06 on the same package: **61 files and 30 folders**, five of the
+archive's folders created inside one they were never in with twelve files
+in them (TESTING.md, *The folder-depth limit*).
 
 Stack, `-Os -fstack-usage`: `unc_path_push` 28 → 32 B, `unc_dd_extract`
 1,028 → 1,048, `unc_now_extract` 1,064 → 1,076, `unc_superdisk_extract`
@@ -4530,7 +4544,7 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **129,040 B** since 2026-10-07
+measured 2026-09-27. The shipped pair is **129,072 B** since 2026-10-07
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
@@ -4629,7 +4643,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 129,040 B of `CODE` and A5 the shipped build does not carry
+which is the 129,072 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -4637,7 +4651,7 @@ a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 The residue and the tier budgets under it are the machine's, taken
 2026-09-27 against a SHIPPED application of 52,972 B of `CODE` and 18,964 B
-of A5. It is 54,460 and 19,092 now (*Three configurations, one tree*), so
+of A5. It is 54,468 and 19,084 now (*Three configurations, one tree*), so
 every figure in this table is **1,616 B more generous than the Macintosh now
 is** — 288 B of that is the 2026-09-29 Optimizer work's resident part,
 **788 B is the AppleLink package probe**, which is the largest single
@@ -4665,26 +4679,28 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+119,950 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 1,972 B |
-| Now Compress | now, codecs | **+116,898 B** (measured) |
-| SuperDisk! | superdisk, codecs | +114,882 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+112,386 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+109,158 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+106,118 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +105,232 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+103,686 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +95,970 B (arithmetic), and **+106,118 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+92,702 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+85,532 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +82,554 B (arithmetic), **+92,702 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,770 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+119,982 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 1,972 B |
+| Now Compress | now, codecs | **+116,930 B** (measured) |
+| SuperDisk! | superdisk, codecs | +114,914 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+112,418 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+109,190 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+106,150 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +105,264 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+103,718 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +96,002 B (arithmetic), and **+106,150 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+92,734 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+85,564 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +82,586 B (arithmetic), **+92,734 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,738 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
 and then -> 124,640 B with the five ciphers, -> 127,264 B on
 2026-10-03 with method 14, -> 128,592 B on 2026-10-05 with AppleLink
 packages, -> 128,848 B on 2026-10-06 with the uu and BinHex rules and
--> 129,040 B on 2026-10-07 with the folder-depth rule,
+-> 129,040 B on 2026-10-07 with the folder-depth rule and
+-> 129,072 B the same day with the claim it must not make about a
+name,
 so every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. The two rows that
@@ -4698,7 +4714,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 156,136 B held against 129,040 B saved. It costs nothing on the tiers
+it — 156,136 B held against 129,072 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
