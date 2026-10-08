@@ -330,3 +330,22 @@ What is left:
 |---|---|
 | **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a wild archive carrying one.** Both modules accept type `8BIM` and nothing else, and **21 archives in the whole index hold an `8BIM` member** — out of 196,139 classic StuffIt archives listed, all 954 with a member of an accepted type walked, 16,413 headers (TESTING.md, *Searching somebody else's index by content*). None of the 21 carries their bit. The widening left is a key that does not depend on the index having recorded the member's type: 10,452 of the 196,139 carry no member metadata at all |
 | **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **a wild archive carrying one, with a published password.** The bit is found: **8 forks carry `NewDE`'s `0x10`, in 4 wild files and 3 distinct archives**, one of them a fixture; every other wild encrypted fork is 3.x's built-in scheme (354 with id 4, 201 with the id unset). **No password was found** beside any of them — the one read-me that speaks to it says the author mailed one on payment, and the search over all 27 disc images is a negative that was looked for rather than proved — so a wild encrypted archive grades a REFUSAL, which `sitcrypt-wild-F7Menus.sit.bin` now does (FORMATS.md, *The one wild archive here that is encrypted*) |
+
+## Implode: the generator's streams that PKZIP 1.01/1.02 cannot read
+
+**PKUNZIP 1.01 and 1.02 refuse all six shapes `tools/synth_implode.py`
+writes, on CRC**, the two shapes where both minimum-match-length rules
+agree included. They read all 50 entries PKZIP 1.10 writes and all of
+`PKZ101.EXE`, and PKUNZIP 1.10 reads the four conforming shapes
+(measured 2026-10-08, `tools/pkzip_writers.py`). So the generator emits
+something no PKZIP writer does, which the 1.0x readers decode
+differently. *Hypothesis, unreduced:* nothing yet says which feature.
+Until it is found, the `4k-3trees-mmlbug` and `8k-2trees-mmlbug` lanes
+in `tools/run_implode.py` grade deark's model of 1.01/1.02, and not
+1.01/1.02 itself (DECISIONS.md 2026-10-08, *the key that survives and
+has nothing to separate*).
+
+| what is left | what would close it |
+|---|---|
+| **the feature PKUNZIP 1.0x reads differently** | **reduce one generated stream until PKUNZIP 1.01 accepts it**: literals only, then one match, and so on. Then make the generator avoid that feature, or record it as a third difference between the readings |
+| **`8k-2trees-mmlbug` has no authentic reader** | **once the above is closed, PKUNZIP 1.01 under DOSBox grades both `-mmlbug` shapes.** That is the writer's own reader, and it would be the first program other than deark to grade the 8 K/two-tree half |

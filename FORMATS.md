@@ -4455,6 +4455,18 @@ programs' behaviour, and the source is
 two-combination predicate from `reference/deark/modules/zip.c`'s
 `could_have_mml_bug` (NOTICE).
 
+**Measured on the programs themselves since 2026-10-08**, under DOSBox
+(`tools/pkzip_writers.py`). PKUNZIP 1.01 and 1.02 read by the second
+column and 1.10 by the first: on `PKZ101.EXE`'s three bug entries and on
+a 1989 conforming `CPUTEST.ZIP`, each fails exactly the entries of the
+other reading. **The shipped WRITERS never use the two bold rows.** In
+PKZIP 1.01, 1.02 and 1.10 alike, the dictionary size follows the tree
+count: 0 of 138 Implode entries over 50 inputs, and 0 of about 170 more by
+hand. So their own output decodes the same under either rule, and
+`PKZ101.EXE`'s three entries come from a writer that is none of them
+(DECISIONS.md 2026-10-08, *the key that survives and has nothing to
+separate*).
+
 #### Where the second attempt goes, which was the design problem
 
 deark decodes the entry twice and keeps whichever pass reproduces the
@@ -4491,7 +4503,12 @@ reproduces the stored CRC-32, the bytes were good and the rule was wrong
 desynchronised decode produces — and the archive goes back to unsettled
 so the next ambiguous entry probes for itself. The entry itself is still
 lost: its bytes have reached the sink, which is the whole reason the
-verdict is settled before the first byte. Graded on a three-entry mixed
+verdict is settled before the first byte. A verdict per *version made by*
+would keep it within PKZIP's own line, because 1.10 keeps the 0x000a
+stamps of records it did not write (measured 2026-10-08). It is not
+built. The shipped writers above make no archive for it to act on, and
+the one real 1.0x-plus-1.10 archive, `PKZ101.EXE` after `PKZIP 1.10 -a`,
+already extracts in full. Graded on a three-entry mixed
 archive, bug-written first: the settling entry and the one after the
 refusal both come out byte-exact, and the cost of the assumption is one
 entry (TESTING.md, *Implode*, lane 4).
@@ -4518,7 +4535,7 @@ entry (TESTING.md, *Implode*, lane 4).
 | combination | subject | graded by |
 |---|---|---|
 | **0x0004 — 4 K, three trees** | **authentic**: three entries of `pkz101.exe`, PKZIP 1.01's own distribution — `README.DOC` 873 B, `ORDER.DOC` 4,607 B, `OMBUDSMN.ASP` 595 B | the CRC-32 PKZIP stored, and deark, through the fixture's own manifest in `run_diff.py` on every run |
-| **0x0002 — 8 K, two trees** | **generator only.** Nothing authentic on this disk is 8 K with two trees AND written by the bug: the one real 8 K/2-tree entry anywhere in reach is `PSYCHO!/Psycho!`, and ZipIt wrote it to 5.3.4 | `tools/synth_implode.py`'s `8k-2trees-mmlbug`, with **deark as the second reader** and `unar` as a negative control required to refuse it, in `tools/run_implode.py` on every run |
+| **0x0002 — 8 K, two trees** | **generator only.** Nothing authentic on this disk is 8 K with two trees AND written by the bug: the one real 8 K/2-tree entry anywhere in reach is `PSYCHO!/Psycho!`, and ZipIt wrote it to 5.3.4 | `tools/synth_implode.py`'s `8k-2trees-mmlbug`, with **deark as the second reader** and `unar` as a negative control required to refuse it, in `tools/run_implode.py` on every run. **Not PKUNZIP 1.01/1.02**, which refuse every generated stream, the two agreeing shapes included (OPEN_ITEMS.md) |
 
 A stream written and read by this repository grades nothing, which is
 why deark is not optional on that lane: it implements the rule, finds it

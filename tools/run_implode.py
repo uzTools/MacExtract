@@ -368,9 +368,13 @@ def grade_mixed(exe):
     that is what makes it affordable — 19.4 bug-capable entries per
     archive in the sweep's population. It is also an assumption about
     writers, and the measured part is narrower than the assumption: no
-    archive of the 1,537 swept on 2026-10-08 mixes. A zip is appendable
-    and PKZIP 1.1 wrote Implode too, so this lane holds what happens
-    when one does.
+    archive of the 1,537 swept on 2026-10-08 mixes. A zip is appendable,
+    so this lane holds what happens when one does. PKZIP itself does not
+    make this shape: run under DOSBox, 1.10 adding to a 1.0x archive
+    keeps the old stamps but writes no disagreeing combination of its
+    own, and the current build extracts that real archive in full
+    (tools/pkzip_writers.py). The shape needs two writers that BOTH
+    write those combinations, and none is on this disk.
 
     What it asserts, in the order it matters:
       1. the entry that SETTLED the archive comes out;

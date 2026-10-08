@@ -368,6 +368,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
 - 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
 - 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
+- 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
 
 ---
 
@@ -24437,10 +24438,14 @@ turn a failure into a success, because the entry's bytes have already
 reached the sink and `begin_entry` is called once per entry.
 
 **What this does not do is rescue that entry**, and it should not
-pretend to: the only way would be buffering a fork, which is out on
-`usize` being 32 bits, or a sink contract that allows a restart, which
-is a public API change nobody has asked for. One entry of a mixed
-archive is the price, and now it is only one.
+pretend to. Two ways out were priced here: buffering a fork, which is
+out on `usize` being 32 bits, and a sink contract that allows a restart,
+which is a public API change nobody has asked for. A third — settling
+the verdict once per *version made by* value instead of once per archive
+— was not priced here, and was tested against PKZIP itself the same day:
+the key holds, and no archive in reach gives it anything to separate
+(*the key that survives and has nothing to separate*, below). One entry
+of a mixed archive is the price, and now it is only one.
 
 **The transferable part.** A scope decision carries an assumption about
 the world, and the measurement behind it is almost always narrower than
@@ -24451,3 +24456,81 @@ distinct from what writers are known to do; and if the assumption is
 wrong, is the damage bounded by anything? Here the first answer was
 "more than we assumed" and the second was "no" — and bounding it cost
 one probe on a path that was already failing.
+
+
+## 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
+
+**The hypothesis.** The entry *the writer a zip is allowed to have twice*
+still loses could be kept by settling the minimum-match-length verdict
+once per *version made by* value rather than once per archive. PKZIP
+1.01/1.02 stamp 0x000a and 1.10 stamps 0x000b (*the stub is the writer's
+signature*), so a 1.0x archive that 1.10 later added to would carry two
+verdicts, and each would be settled by its own first entry. That holds
+only if 1.10 keeps the stamps of the records it did not write. Our own
+encoder cannot answer that, because it would be grading our rule with our
+own output. So the writers were run: the three `PKZIP.EXE` binaries from
+their own distributions, headless under DOSBox. `tools/pkzip_writers.py`
+re-runs all of it in about 30 s.
+
+**The stamps survive. Measured.** When 1.10 adds (`-a`), updates (`-u`)
+or freshens (`-f`) a 1.02 archive, every 1.02 record stays 0x000a and
+only 1.10's own records are 0x000b. When 1.02 adds to a 1.10 archive, the
+same happens in reverse. When 1.10 adds to `PKZ101.EXE` itself, all
+thirteen of 1.01's records keep 0x000a, the three bug entries among them.
+So within PKZIP's own line the key separates the two readings.
+
+**And there is nothing for it to separate. Measured.** None of the three
+writers ever writes a combination where the two rules disagree. In each
+of them the dictionary size follows the tree count: 8 K with three
+trees, 4 K with two. Over the script's 50 inputs (every file of the
+three distributions and eleven generated shapes), each version wrote 31
+entries at 4 K/two trees, 15 at 8 K/three and 4 stored, the same split
+from all three. About 170 more inputs run by hand moved nothing, under
+`PKNO386`, an explicit `-ex`, and 350–500 KB of memory taken by
+`loadfix`. Two inputs show this is a property of these writers and not
+of the data:
+
+- `PKZ101.EXE`'s own three 4 K/three-tree entries come back at 4 K/two
+  trees from every version.
+- `CPUTEST.ZIP` (Simtel, 1989) was written by a spec-1.1 MS-DOS writer
+  at 8 K/two trees and 4 K/three. Its two files also come back at
+  4 K/two trees.
+
+So in a 1.0x archive that 1.10 added to, the 1.10 entries are
+unambiguous and pay nothing, and the current build already extracts the
+one real such archive in full: `PKZ101.EXE` plus PKZIP 1.10 `-a`, 15
+entries, with the three bug entries and the appended one compared byte
+for byte. **A lane on that archive cannot fail on the current build**,
+and that was the condition for building the change, so it was not built
+and nothing was costed: there was no case to cost it against. **The
+only case that would reopen it** is a mixed archive in which BOTH
+writers wrote disagreeing combinations. One example: an Info-ZIP-era
+writer (0x030a, which wrote 28,896 of the 29,799 bug-capable entries in
+the 2026-10-08 sweep) adding to an archive built by 1.0x. None is on
+this disk.
+
+**The rule itself is measured, on the READERS.** PKUNZIP 1.01 and 1.02
+fail both entries of `CPUTEST.ZIP` on CRC and pass all of `PKZ101.EXE`.
+PKUNZIP 1.10 passes `CPUTEST.ZIP` and fails exactly `README.DOC`,
+`ORDER.DOC` and `OMBUDSMN.ASP`. Until today, "PKZIP 1.01/1.02's reading"
+rested on deark and one file. Now it rests on the programs themselves,
+and so does the fix in 1.1. What wrote PKZ101.EXE's three entries is
+none of the shipped writers. *Hypothesis:* an internal build that did
+not yet tie the two parameters together. Nothing on this disk can test
+that.
+
+**Found on the way, and filed rather than chased.** PKUNZIP 1.01 and
+1.02 refuse every stream `tools/synth_implode.py` writes, including the
+two shapes where both rules agree, but read all 50 entries PKZIP 1.10
+wrote. PKUNZIP 1.10 reads the four conforming shapes. So the generator
+emits something no PKZIP writer does, which 1.0x decodes differently.
+Until that is reduced, the two `-mmlbug` shapes are "what deark's model
+of 1.01/1.02 reads", not "what 1.01/1.02 read" (OPEN_ITEMS.md).
+
+**Transferable.** A key that exists is half a fix. The other half is a
+case for it to act on, and the writer's output histogram says whether
+that case exists. Running the writer was cheaper than reasoning about
+it. Fifteen seconds of DOSBox answered the restamping question, and also
+answered whether these writers could make the shape at all, which nobody
+had asked. The readers came with them: the writer's own
+reader is an oracle for the writer's own rule.

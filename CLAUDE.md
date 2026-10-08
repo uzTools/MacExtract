@@ -44,10 +44,10 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~20.1k tokens** (PROGRESS 8.5k,
-OPEN_ITEMS 7.9k, BLOCKERS' first two sections 3.8k), re-estimated
-2026-10-08 after PKZIP 1.01's minimum match length landed; BLOCKERS'
-withdrawn-claims archive is another **~70.8k** and is reference, not
+That session-start reading is **~20.6k tokens** (PROGRESS 8.5k,
+OPEN_ITEMS 8.2k, BLOCKERS' first two sections 3.8k), re-estimated
+2026-10-08 after the per-writer verdict was tested and filed; BLOCKERS'
+withdrawn-claims archive is another **~71.6k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are
 each file's bytes over the 3.93 bytes per token the 2026-10-07 figures

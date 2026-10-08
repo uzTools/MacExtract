@@ -4,10 +4,14 @@
 **An encoder, because nothing here is one.** Zip method 6 is in scope
 since 2026-10-07 and the whole of what the corpus holds is 10 entries
 across three archives — 7 in the two PKZIP 1.x fixtures and 3 in a
-ZipIt specimen that cannot be committed. No tool on this machine
-WRITES the method: Info-ZIP's `zip` dropped it before 1.0, `unar` and
-deark decode it and neither compresses, and PKZIP itself is a DOS
-program. So the shapes a fixture cannot reach are written here.
+ZipIt specimen that cannot be committed. No Linux tool WRITES the
+method: Info-ZIP's `zip` dropped it before 1.0, and `unar` and deark
+decode it but neither compresses. PKZIP 1.01, 1.02 and 1.10 do write it
+here, under DOSBox (`tools/pkzip_writers.py`, since 2026-10-08), but
+only at 4 K/two trees and 8 K/three, never at a combination where the
+two minimum-match-length rules disagree. So the shapes a fixture cannot
+reach are written here. PKUNZIP 1.01/1.02 refuse every stream this
+writes, the agreeing shapes included (OPEN_ITEMS.md).
 
 What that buys, and each of the three is a different thing:
 

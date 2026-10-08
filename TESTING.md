@@ -4373,10 +4373,37 @@ bug-capable entry at all and 1.10 is where *version made by* turns from
 ZIP spec 1.0 into 1.1. How the three were found is the sweep table above
 and DECISIONS.md 2026-10-08, *the stub is the writer's signature*.
 
-**What this set cannot see:** it has no runner of its own. The two files
+**What this set cannot see:** nothing in `ci.sh` reads it. The two files
 left in it are graded by `tools/scan_discmaster.py --probe implode`
-against the CRC-32 they store, when that is run by hand; nothing in
-`ci.sh` reads them.
+against the CRC-32 they store, when that is run by hand.
+
+**Their programs, run (`tools/pkzip_writers.py`, since 2026-10-08, by
+hand):**
+
+    tools/pak.py --setup                    # DOSBox, no root
+    tools/fetch_specimens.py --only implode
+    tools/pkzip_writers.py --macextract build/rel/macextract
+
+This takes `PKZIP.EXE` and `PKUNZIP.EXE` out of all three distributions
+(`PKZ101.EXE` from `fixtures/`) and runs them headless under DOSBox,
+about 30 s in all. It prints three things:
+
+1. the Implode combinations each writer chooses over 50 inputs;
+2. every record's *version made by* after one version updates an archive
+   another wrote (`-a`, `-u`, `-f`, both directions, and `PKZ101.EXE`
+   itself);
+3. what each PKUNZIP makes of `PKZ101.EXE`, of 1.10's output, and of the
+   six generated shapes.
+
+It has a positive control in its own output: `PKZ101.EXE`'s three bug
+entries print as `DISAGREE`, so step 1 is able to report a writer that
+uses those combinations. **What it cannot see:** writers other than these
+three shipped binaries, which includes whatever wrote `PKZ101.EXE`'s own
+entries. A zero from step 1 is a fact about those binaries on those
+inputs. Step 3 cannot say WHY 1.0x refuses a generated stream, because
+it refuses the agreeing shapes as well (OPEN_ITEMS.md). Results:
+DECISIONS.md 2026-10-08, *the key that survives and has nothing to
+separate*.
 
 ## ZipIt's own archives (`tools/run_zipit.py`, in `ci.sh`)
 
