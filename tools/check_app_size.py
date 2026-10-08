@@ -153,9 +153,21 @@ TAKEN = "2026-10-07"
 # counts must survive a level the path string could not hold. The cost of removing it is resident
 # and in the walker (tools/build_mac.sh's eager pair). `run_tiers.py --check` moves no
 # tally in either lane.
-EXPECT_BUNDLE = 156068
+# RE-TAKEN 2026-10-08, 156,068 -> 158,600, and it is TWO changes rather
+# than one because the first was MISSED: `ovl_exo` 29,252 -> 31,176 for
+# zip method 6 on 2026-10-07 raised the bundle 1,924 B and this constant
+# was left where it was, while FORMATS.md's *Overlays* and its launch-read
+# sum were both corrected the same day. So this check spent a day
+# reporting a growth it should have been holding — it WARNS on the bundle
+# rather than failing, 1,924 B being inside TOLERANCE_BUNDLE, which is
+# exactly the shape of "a test that passes may not be testing anything".
+# The second 608 B is `ovl_exo` 31,176 -> 31,784 for PKZIP 1.01/1.02's
+# minimum match length (FORMATS.md, *Implode*). Resident `CODE` and A5
+# do not move for either, in either shipped configuration, and
+# `run_tiers.py --check` moves no tally in either lane.
+EXPECT_BUNDLE = 158600
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-07"
+TAKEN_BUNDLE = "2026-10-08"
 
 
 def main():

@@ -479,6 +479,23 @@ def deark_err_name(raw):
     return deark_name(_DEARK_ESC.sub(sub, raw))
 
 
+# A fixture deark identifies as something OTHER than the archive it
+# holds, and the module to name for it. One entry, and it is the
+# self-extracting zip: given `pkz101.exe` deark runs its `exe` module,
+# recognises a DOS EXE and writes the embedded zip out as ONE file —
+# which adjudicates nothing, because the forks wanted are the zip's
+# members. `-m zip` reaches them, and `deark -m zip` on that file
+# extracts all 13 (FORMATS.md, *Implode*).
+#
+# **Not a default and not a fallback.** Naming the module per fixture is
+# what keeps this from becoming "if the first run matched nothing, try
+# again differently", which would quietly re-identify any fixture whose
+# names failed to match for some other reason — and matching is the one
+# thing in this function that has been wrong before (the folder-separator
+# mangling, 2026-09-22).
+DEARK_MODULE = {"pkz101.exe": "zip"}
+
+
 def deark_forks(fixture_path, tmp):
     """member name -> {"data": bytes, "rsrc": bytes}, as deark reads it.
 
@@ -491,9 +508,12 @@ def deark_forks(fixture_path, tmp):
     resource forks at all. Matching is by name, and a name that appears
     twice in an archive is refused by the caller.
     """
+    cmd = [DEARK, "-od", tmp, "-o", "m"]
+    mod = DEARK_MODULE.get(os.path.basename(fixture_path))
+    if mod:
+        cmd += ["-m", mod]
     try:
-        r = subprocess.run([DEARK, "-od", tmp, "-o", "m",
-                            os.path.abspath(fixture_path)],
+        r = subprocess.run(cmd + [os.path.abspath(fixture_path)],
                            capture_output=True, timeout=600)
     except subprocess.TimeoutExpired:
         return None

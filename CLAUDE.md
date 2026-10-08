@@ -11,11 +11,11 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M63 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M64 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
-a copy of it. The engine passes a **955-fixture** differential suite against
-`unar` and, where `unar` fails, `macunpack`, plus 9,550 robustness variants.
+a copy of it. The engine passes a **956-fixture** differential suite against
+`unar` and, where `unar` fails, `macunpack`, plus 9,560 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
 time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
@@ -44,13 +44,15 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~18.8k tokens** (PROGRESS 7.8k,
-OPEN_ITEMS 7.7k, BLOCKERS' first two sections 3.3k), re-measured 2026-10-07
-after Implode landed — the total barely moved, because the two sections
-OPEN_ITEMS lost to that work are about what PROGRESS and BLOCKERS gained
-by it; BLOCKERS'
-withdrawn-claims archive is another **~68.8k** and is reference, not
-orientation. **Every one of those five figures has been stale twice** — the
+That session-start reading is **~20.1k tokens** (PROGRESS 8.5k,
+OPEN_ITEMS 7.9k, BLOCKERS' first two sections 3.8k), re-estimated
+2026-10-08 after PKZIP 1.01's minimum match length landed; BLOCKERS'
+withdrawn-claims archive is another **~70.8k** and is reference, not
+orientation. **Those five figures are an ESTIMATE and the earlier ones
+were measured**: no tokenizer is installed here any more, so they are
+each file's bytes over the 3.93 bytes per token the 2026-10-07 figures
+imply. Read them as ±5 %, and re-take them with a tokenizer when there
+is one. **Every one of those five figures has been stale twice** — the
 session-start one sat at 7.5k from 2026-08-26 and at 12k from 2026-09-27,
 each time while the files grew under it, and `tools/check_docs.py`'s slack
 is a quarter, so drift hides until it is large. Re-measure them when you

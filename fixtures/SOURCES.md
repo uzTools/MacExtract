@@ -808,6 +808,7 @@ suite that owns it (TESTING.md).
 | picmeup.sit | e145a4d77af73ab7b257ec59a9045bf0baaa1a443884d147ac527161c98c51e6 | 44800 | http://www.nic.funet.fi/pub/mac/appl/picmeup.sit |
 | pict-to-pict.hqx | dbc47ca731fd0193fd90b8c31060298d035c71e01e1cbae03c2afb510807d89b | 10511 | http://www.nic.funet.fi/index/info-mac/cmp/pict-to-pict.hqx |
 | pkgtranslator.sit | db42f459776c3bc5de3f9228da482cf7c9377788705fcbcc75a9cc17cc29348a | 40064 | http://www.nic.funet.fi/pub/mac/arcers/pkgtranslator.sit |
+| pkz101.exe | f36d9551c1917a7990db2b4582191656d748179ea2bd15499294388e9c4fa458 | 131517 | https://discmaster.textfiles.com/file/32597/Disc.iso/ansi/x3t9/area02/pkz101.exe |
 | playground.sea | ae9fef554876285d951ca19f358eb23580af74b64ae074572dbb34abf1574969 | 85760 | http://www.nic.funet.fi/pub/mac/games/playground.sea |
 | pmailmac.sea | 2698c114dc096fa90e80f831f9a48154fc2aeff789044adefd4d537eb45f35c0 | 138135 | http://www.nic.funet.fi/pub/mac/comm/pmailmac.sea |
 | pointingdevice.sit | f14ebedf90b40b3a0154393cacc9835bf778307225fde12c6cb5377459115a87 | 7680 | http://www.nic.funet.fi/pub/mac/cdev/pointingdevice.sit |

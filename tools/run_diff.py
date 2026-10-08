@@ -30,6 +30,12 @@ IMPLEMENTED = {
     "StuffIt": "StuffIt",                  # M5/M6
     "StuffIt 5": "StuffIt 5",              # M7
     "Zip": "Zip",                          # M8
+    # A zip behind a code stub. `lsar` names the STUB and this engine
+    # names the archive, which is the one case in this table where the
+    # two differ about a format both read — recognised here since
+    # 2026-10-05, and the fixture is PKZIP 1.01's own distribution
+    # self-extractor (FORMATS.md, *What the zip pair claims*, *Implode*).
+    "Self-extracting Zip": "Zip",
     "Gzip": "Gzip",
     "Tar": "Tar",
     "Compress": "Unix compress",

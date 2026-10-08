@@ -25,6 +25,16 @@ What that buys, and each of the three is a different thing:
      `--only` names one, so a combination the corpus does not reach can
      be made rather than waited for, and FORMATS.md says which those
      are rather than letting a green run imply coverage.
+  4. **Streams PKZIP 1.01 and 1.02 would have written**, since
+     2026-10-08: those two took the minimum match length from the
+     DICTIONARY SIZE rather than from the literal tree's presence, and
+     `8k-2trees-mmlbug` and `4k-3trees-mmlbug` are the only two
+     combinations where that is observable at all. One of the two is
+     carried by a real file — `fixtures/pkz101.exe`, PKZIP 1.01's own
+     distribution, three entries at 4 K/three trees — and **the other
+     is not: nothing authentic on this disk is 8 K with two trees**,
+     so for that half this writer is the only subject there is and
+     deark is its second reader (FORMATS.md, *Implode*).
 
 **Graded by two implementations, not by this engine.** `unar` and deark
 both read method 6; `tools/run_implode.py` requires both to agree with
@@ -225,14 +235,23 @@ TEXT = (b"the quick brown fox jumps over the lazy dog, and the dog "
         b"did not mind at all.\n")
 
 
-def encode(dictsize, three, body_out):
+def encode(dictsize, three, body_out, mml=None):
     """One Implode stream, and the bytes it decodes to.
 
     `body_out` is appended to as tokens are emitted, so the caller gets
     the plaintext this stream IS rather than having to decode it — and
-    `run_implode.py` then holds two other implementations to it."""
+    `run_implode.py` then holds two other implementations to it.
+
+    `mml` overrides the minimum match length. The default is 5.3.4's —
+    3 where a literal tree is stored, 2 where it is not — and the
+    override is what writes a stream PKZIP 1.01 or 1.02 wrote, which
+    took it from the DICTIONARY SIZE instead. The flag word is
+    identical either way, which is why the two readings can disagree at
+    all: nothing in the entry says which was used, so the stored CRC-32
+    is the only thing that can answer (FORMATS.md, *Implode*)."""
     lowbits = 7 if dictsize == 8192 else 6
-    mml = 3 if three else 2
+    if mml is None:
+        mml = 3 if three else 2
 
     # 5.3.5: the length alphabet is 64 values, mml..mml+63.
     # 5.3.6: the distance alphabet is 64 values, the upper 6 bits.
@@ -409,17 +428,36 @@ def decode(data, pos, clen, usize, flag8k, flag3trees, mml=None):
 
 # --- the zip --------------------------------------------------------
 
-# (name, dictionary, three trees). All four combinations, because the
-# point of writing them is that a fixture reaches only some: the two
-# PKZIP 1.x fixtures are 4K/2-tree and 8K/3-tree, and 8K/2-tree and
-# 4K/3-tree come only from a ZipIt specimen that cannot be committed
-# (FORMATS.md, *Implode, and what the corpus cannot reach*).
+# (name, dictionary, three trees, minimum match length or None for
+# 5.3.4's). All four combinations, because the point of writing them is
+# that a fixture reaches only some: the two PKZIP 1.x fixtures are
+# 4K/2-tree and 8K/3-tree, and 8K/2-tree and 4K/3-tree come only from a
+# ZipIt specimen that cannot be committed (FORMATS.md, *Implode, and
+# what the corpus cannot reach*).
 SHAPES = (
-    ("4k-2trees", 4096, False),
-    ("4k-3trees", 4096, True),
-    ("8k-2trees", 8192, False),
-    ("8k-3trees", 8192, True),
+    ("4k-2trees", 4096, False, None),
+    ("4k-3trees", 4096, True, None),
+    ("8k-2trees", 8192, False, None),
+    ("8k-3trees", 8192, True, None),
 )
+
+# PKZIP 1.01 and 1.02's reading: the minimum match length comes from the
+# DICTIONARY SIZE — 3 at 8 K, 2 at 4 K — rather than from the literal
+# tree's presence. Only these two combinations can tell the two readings
+# apart; with both flag bits set or neither, both rules name the same
+# length and a stream is the same stream.
+#
+# NOT in SHAPES, and that is deliberate: a zip has ONE writer, and both
+# this engine and deark settle the question per ARCHIVE from the first
+# bug-capable entry. An archive holding a 5.3.4 entry and a 1.01 entry
+# at once is a thing no writer makes, and putting one in the committed
+# fixture would have made the suite grade a decision nobody has to take.
+# `run_implode.py` writes these two into an archive of their own.
+BUGSHAPES = (
+    ("8k-2trees-mmlbug", 8192, False, 3),
+    ("4k-3trees-mmlbug", 4096, True, 2),
+)
+ALLSHAPES = SHAPES + BUGSHAPES
 
 DOS_DATE = 0x1421          # 1990-01-01, matching synth_exo.py's MTIME
 DOS_TIME = 0x0000
@@ -478,12 +516,12 @@ def selftest():
     # so this cannot catch a wrong reading of 5.3.8 — the example above
     # is what does that — but it does catch a wrong WRITING of the
     # token stream, which the example cannot reach.
-    for name, dictsize, three in SHAPES:
+    for name, dictsize, three, mml in ALLSHAPES:
         body = bytearray()
-        stream = encode(dictsize, three, body)
+        stream = encode(dictsize, three, body, mml)
         try:
             got = decode(stream, 0, len(stream), len(body),
-                         dictsize == 8192, three)
+                         dictsize == 8192, three, mml)
         except Exception as e:                            # noqa: BLE001
             print("synth_implode: %s does not read back: %s" % (name, e),
                   file=sys.stderr)
@@ -493,11 +531,33 @@ def selftest():
             print("synth_implode: %s reads back %d B, coded %d"
                   % (name, len(got), len(body)), file=sys.stderr)
             bad += 1
+    # **A bug stream that also reads back under 5.3.4 would grade
+    # nothing**, so that is asserted rather than assumed. Each of the two
+    # is read with the minimum match length the SPECIFICATION's rule
+    # gives its flag word, and is required to come out wrong or not at
+    # all. (It cannot be an accident either way: the lengths this writer
+    # codes are mml-relative, so every match in the stream shifts by one
+    # byte.)
+    for name, dictsize, three, mml in BUGSHAPES:
+        body = bytearray()
+        stream = encode(dictsize, three, body, mml)
+        try:
+            got = decode(stream, 0, len(stream), len(body),
+                         dictsize == 8192, three)     # 5.3.4's reading
+        except Exception:                                 # noqa: BLE001
+            continue                      # refused, which is a failure
+        if got == bytes(body):
+            print("synth_implode: %s reads back IDENTICALLY under "
+                  "APPNOTE 5.3.4's minimum match length, so it is not a "
+                  "subject for the 1.01/1.02 rule at all" % name,
+                  file=sys.stderr)
+            bad += 1
     if not bad:
         print("synth_implode: selftest ok (APPNOTE.TXT 5.3.8's worked "
-              "example, %d codes, the stored form both ways, and all %d "
-              "shapes round-tripped)"
-              % (len(APPNOTE_EXAMPLE_CODES), len(SHAPES)))
+              "example, %d codes, the stored form both ways, all %d "
+              "shapes round-tripped, and both PKZIP 1.01/1.02 shapes "
+              "refused by 5.3.4's rule)"
+              % (len(APPNOTE_EXAMPLE_CODES), len(ALLSHAPES)))
     return bad
 
 
@@ -509,7 +569,12 @@ def main():
     ap.add_argument("--ranges", help="write the compressed byte spans "
                                      "here as JSON, for tools/fuzz.py")
     ap.add_argument("--only", action="append", default=[], metavar="SHAPE",
-                    help="one or more of: " + ", ".join(s[0] for s in SHAPES))
+                    help="one or more of: "
+                         + ", ".join(s[0] for s in ALLSHAPES)
+                         + ". The default is the four 5.3.4 shapes; the "
+                           "two `-mmlbug` ones are only written when "
+                           "named, because they belong in an archive of "
+                           "their own")
     ap.add_argument("--plain", help="write the concatenated plaintext of "
                                     "every entry here, for a grader")
     ap.add_argument("--selftest", action="store_true",
@@ -525,23 +590,23 @@ def main():
 
     shapes = SHAPES
     if a.only:
-        known = {s[0] for s in SHAPES}
+        known = {s[0] for s in ALLSHAPES}
         bad = [n for n in a.only if n not in known]
         if bad:
             print("synth_implode: no shape named %s — have %s"
                   % (", ".join(bad), ", ".join(sorted(known))),
                   file=sys.stderr)
             return 1
-        shapes = tuple(s for s in SHAPES if s[0] in a.only)
+        shapes = tuple(s for s in ALLSHAPES if s[0] in a.only)
 
     blob = bytearray()
     ranges = []
     central = bytearray()
     plain = bytearray()
     nent = 0
-    for name, dictsize, three in shapes:
+    for name, dictsize, three, mml in shapes:
         body = bytearray()
-        stream = encode(dictsize, three, body)
+        stream = encode(dictsize, three, body, mml)
         fn = ("%s.txt" % name).encode("ascii")
         # 5.3.2 and 5.3.3: bit 1 is the dictionary size, bit 2 the tree
         # count. Nothing else is set — no data descriptor, no

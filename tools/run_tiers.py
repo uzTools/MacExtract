@@ -281,7 +281,16 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # Macintosh will be until they are re-taken there — which is why the
 # gain is also subtracted again by the image, one format at a time, in
 # granted() (FORMATS.md, *Implode*).
-OVL_SAVED = 130864
+# **+608 on 2026-10-08, 130,864 -> 131,472, for PKZIP 1.01/1.02's
+# minimum match length** (*Implode*), and it is the same shape as the
+# row above: the control's CODE rises 166,264 -> 166,884 and its A5
+# FALLS 12 B, while the shipped build's CODE and A5 do not move at all
+# in either configuration, so the whole of it is difference. What ships
+# pays the image (31,176 -> 31,784 B, IMAGES below) and nothing
+# resident. Not compensated, on the same terms as every row above
+# (DECISIONS.md 2026-10-08, *the second attempt that had nowhere to
+# go*).
+OVL_SAVED = 131472
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -360,7 +369,7 @@ IMAGES = {
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15764,
     "OVL_ID_CRYPT":       10140,
-    "OVL_ID_EXO":         31176,
+    "OVL_ID_EXO":         31784,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
@@ -370,7 +379,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 157992
+BUNDLE = 158600
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -367,10 +367,21 @@ This project's decoders are transcriptions/ports of algorithms from:
     section by section at the fields, and the reference is what each
     reading was checked against — including the one thing the
     specification does not spell out, that a tree must be fully
-    populated, which deark's own comment states in prose. Its fourth
-    parameter, the PKZIP 1.01/1.02 minimum-match-length bug and the
-    decode-twice detection of it, is deliberately NOT implemented
-    (FORMATS.md, *Implode, and what the corpus cannot reach*).
+    populated, which deark's own comment states in prose.
+    **Its fourth parameter is implemented since 2026-10-08**: PKZIP
+    1.01 and 1.02 took the minimum match length from the DICTIONARY
+    SIZE, which no specification states, so the reading is
+    `fmtutil_decompress_zip_implode`'s `params->mml_bug` branch and
+    nothing else — and the two flag combinations where it is
+    observable are `reference/deark/modules/zip.c`'s
+    `could_have_mml_bug`, which `src/fmt_exo.c` cites at the predicate.
+    The archive-wide policy settled from the first bug-capable entry is
+    that file's `d->mml_bug_policy` as well. deark decides by decoding
+    the entry twice and keeping whichever pass reproduces the stored
+    CRC-32; this engine cannot keep a pass, because it streams each
+    fork to the sink as it decodes, so it decodes with no output and
+    keeps the ANSWER (FORMATS.md, *Implode*; DECISIONS.md 2026-10-08,
+    *the second attempt that had nowhere to go*).
     A build of deark is also the oracle for that method in the test
     suite (TESTING.md, tools/build_deark.sh): test-time only, never
     linked into anything shipped.

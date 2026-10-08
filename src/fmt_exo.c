@@ -47,6 +47,12 @@ typedef struct ExoSink {
     /* The first 128 bytes, captured for the header peek. */
     uint8_t *head;
     uint32_t headgot;
+    /* Decode and CRC but write NOTHING, for the Implode
+     * minimum-match-length probe (zip_imp_dry, below). Distinct from
+     * `UncOptions.test_only`, which is the user asking for the same
+     * thing over a whole archive: this one is the engine's own and
+     * lasts one pass. */
+    uint8_t  dry;
 } ExoSink;
 
 static int exo_emit(void *ctx, const uint8_t *p, int32_t n)
@@ -66,6 +72,13 @@ static int exo_emit(void *ctx, const uint8_t *p, int32_t n)
             n--;
         }
         return s->headgot < 128 ? UNC_OK : UNC_ERR_SINK;
+    }
+    /* A probe pass: the CRC-32 is accumulated by the decoder itself, so
+     * there is nothing for this to do but count. One test, ahead of the
+     * split walk, because a probe never splits. */
+    if (s->dry) {
+        s->pos += (uint32_t)n;
+        return UNC_OK;
     }
     if (!s->split) {
         s->pos += (uint32_t)n;
@@ -109,7 +122,7 @@ static void exo_sink_init(ExoSink *s, UncCtx *c)
 {
     s->c = c; s->failed = 0; s->split = 0; s->pos = 0;
     s->ds = s->de = s->rs = s->re = 0;
-    s->head = NULL; s->headgot = 0;
+    s->head = NULL; s->headgot = 0; s->dry = 0;
 }
 
 static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
@@ -537,18 +550,22 @@ static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
  * `implode_read_a_tree`, `implode_read_trees` and
  * `decompress_implode_internal`.
  *
- * A fourth parameter exists in that reference and is NOT implemented
- * here: PKZIP 1.01/1.02 took the minimum match length from the
- * DICTIONARY SIZE instead, which disagrees with 5.3.4 in exactly the
- * two flag combinations where the two rules differ, and deark detects it
- * by decoding the entry twice and keeping whichever pass reproduces the
- * stored CRC-32. Such an entry fails its CRC-32 here as a per-entry
- * error, which is the honest answer for a rule this engine does not
- * have. A specimen that carries it IS in reach since 2026-10-08 —
- * PKZIP 1.01's own PKZ101.EXE, three entries of thirteen
- * (tools/specimens/implode.tsv; FORMATS.md, *The specimen that carries
- * the bug*) — so what is missing is the reading and no longer the
- * subject. */
+ * A FOURTH parameter is not in the flag word and not in the stream: it
+ * is the WRITER. PKZIP 1.01 and 1.02 took the minimum match length from
+ * the DICTIONARY SIZE instead of from the literal tree's presence — 3
+ * at 8 K and 2 at 4 K — which disagrees with 5.3.4 in exactly the two
+ * combinations where the two readings differ (bit 1 set alone, and bit
+ * 2 set alone). `mmlbug` selects it, and which of the two an archive
+ * wants is settled by decoding one entry with no output and comparing
+ * the stored CRC-32 (zip_imp_dry, below).
+ *
+ * Source: reference/deark/src/fmtutil-lzh.c (MIT),
+ * `fmtutil_decompress_zip_implode` — `cctx->implode_min_match_len =
+ * cctx->implode_8k_buffer ? 3 : 2` under `params->mml_bug`, against
+ * `cctx->implode_3_trees ? 3 : 2` without it. No specification states
+ * the buggy rule: it is a reading of two programs' behaviour, and
+ * PKZIP 1.01's own distribution is what grades it here (the fixture
+ * `pkz101.exe`; FORMATS.md, *Implode*). */
 
 /* The RLE nibble carries a bit length MINUS ONE, so 16 is the longest
  * code the format can state. Source: zip_appnote.txt 5.3.7. */
@@ -717,7 +734,7 @@ static int imp_flush(const uint8_t *win, uint32_t dict, uint32_t from,
 }
 
 static int zip_implode(UncCtx *c, UncBufIn *in, uint32_t flags, uint32_t usize,
-                       uint32_t *crc,
+                       uint32_t *crc, uint32_t mmlbug,
                        int (*emit)(void *, const uint8_t *, int32_t),
                        void *ectx)
 {
@@ -727,7 +744,10 @@ static int zip_implode(UncCtx *c, UncBufIn *in, uint32_t flags, uint32_t usize,
     uint32_t dict = (flags & 0x0002u) ? IMP_DICT_8K : IMP_DICT_4K;
     uint32_t lowbits = (flags & 0x0002u) ? 7u : 6u;
     int three = (flags & 0x0004u) != 0;
-    uint32_t mml = three ? 3u : 2u;
+    /* 5.3.4's rule, or PKZIP 1.01/1.02's — see the fourth parameter in
+     * the comment above this file's Implode section. */
+    uint32_t mml = mmlbug ? (dict == IMP_DICT_8K ? 3u : 2u)
+                          : (three ? 3u : 2u);
     uint32_t mask, thresh, pos = 0, flushed = 0;
     int err;
 
@@ -857,7 +877,7 @@ out:
  * caller compares against the directory's. */
 static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
                       uint32_t flags, uint32_t usize, uint32_t *crc,
-                      uint8_t *obuf, uint32_t ocap)
+                      uint32_t mmlbug, uint8_t *obuf, uint32_t ocap)
 {
     uint32_t produced = 0;
     int est;
@@ -866,7 +886,7 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
         /* Implode's three parameters are in the flag word, not in the
          * stream, which is why this is the one method that needs it
          * (zip_implode, above). */
-        return zip_implode(c, in, flags, usize, crc, zip_emit, es);
+        return zip_implode(c, in, flags, usize, crc, mmlbug, zip_emit, es);
     }
 
     if (method == 0) {
@@ -935,8 +955,18 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
     unc_bufin_init(&in, c->io, NULL, iobuf, iocap);
     in.limit = csize;
     /* 128 is asked for and the error that the stream holds more is
-     * discarded: what is being tested is whether 128 bytes came out. */
-    (void)zip_decode(c, &in, &es, method, flags, usize, &crc, obuf, ocap);
+     * discarded: what is being tested is whether 128 bytes came out.
+     *
+     * The `mmlbug` argument is 0 — 5.3.4's minimum match length — and
+     * the probe that would say otherwise has not run yet: it is inside
+     * the extract branch, after begin_entry, and this call is what
+     * decides what begin_entry is TOLD. So a PKZIP 1.01-written entry
+     * carrying a ZipIt `0x2605` field would have its first 128 bytes
+     * read under the wrong rule and simply not look like a MacBinary
+     * header. ZipIt is a Macintosh program and PKZIP 1.01 a DOS one,
+     * so nothing can carry both; UNEXERCISED, and said here rather
+     * than measured. */
+    (void)zip_decode(c, &in, &es, method, flags, usize, &crc, 0, obuf, ocap);
     if (es.headgot != 128) return 0;
     if (!unc_macbinary_probe(mb, 128, 0)) return 0;
     {
@@ -948,6 +978,76 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
         if (dlen > usize || rlen > usize || rs + rlen > usize) return 0;
     }
     return 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Which minimum match length an archive's writer used                */
+/* ------------------------------------------------------------------ */
+
+/* The two combinations where 5.3.4's rule and PKZIP 1.01/1.02's
+ * disagree: bit 1 set alone (8 K, two trees — 2 by the specification,
+ * 3 by the bug) and bit 2 set alone (4 K, three trees — 3 against 2).
+ * With both set or neither, the two rules name the same length and
+ * nothing here runs.
+ *
+ * Source: reference/deark/src/fmtutil-lzh.c's caller,
+ * reference/deark/modules/zip.c `could_have_mml_bug` —
+ * `(bit_flags & 0x6)==2 || (bit_flags & 0x6)==4`. */
+static int zip_imp_ambig(uint32_t flags)
+{
+    return (flags & 0x0006u) == 0x0002u || (flags & 0x0006u) == 0x0004u;
+}
+
+/* Decode one Implode entry under `mmlbug` with NO output and compare
+ * the CRC-32 the central directory stored.
+ *
+ *   1  the entry reproduces that CRC-32 under this reading
+ *   0  it does not — a wrong reading, or a corrupt entry
+ *  <0  the engine error that ends the walk: the user cancelled, the
+ *      sink died, or the file is unreadable. Returned as itself rather
+ *      than as one sentinel, so a cancellation does not come out as an
+ *      I/O failure.
+ *
+ * A local header this cannot read is 0 and not an error: the ordinary
+ * decode below seeks to the same place a moment later and reports it
+ * per entry, which is what it did before this probe existed.
+ *
+ * Same shape as zip_mb_peek above, and for the same reason: this engine
+ * streams each fork to the sink as it decodes, so by the time a CRC-32
+ * mismatch is known the host has the bytes. The only place a second
+ * reading can be tried is BEFORE the first byte is emitted, which makes
+ * a probe pass the price of the rule (DECISIONS.md 2026-10-08, *the
+ * second attempt that had nowhere to go*).
+ *
+ * Progress goes through `c->ps` rather than NULL, unlike zip_mb_peek's
+ * 128 bytes: a probe decodes a whole entry, and on a Macintosh a decode
+ * that does not tick freezes the dialog and puts Cancel out of reach. */
+static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                       uint32_t flags, uint32_t csize, uint32_t usize,
+                       uint32_t wantcrc, uint32_t mmlbug,
+                       uint8_t *iobuf, uint32_t iocap,
+                       uint8_t *obuf, uint32_t ocap)
+{
+    uint8_t lh[30];
+    UncBufIn in;
+    ExoSink es;
+    uint32_t crc = UNC_CRC32_INIT;
+    int err;
+
+    if (zip_seek(c, part, lhoffs) != UNC_OK ||
+        unc_read_full(c->io, lh, 30) != UNC_OK) return 0;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
+    if (zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
+                    unc_get_u16le(lh + 28)) != UNC_OK) return 0;
+
+    exo_sink_init(&es, c);
+    es.dry = 1;
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+    in.limit = csize;
+    err = zip_decode(c, &in, &es, 6, flags, usize, &crc, mmlbug,
+                     obuf, ocap);
+    if (unc_fatal(err)) return err;
+    return err == UNC_OK && ~crc == wantcrc;
 }
 
 /* The value a central-directory field carries when the real one is in
@@ -1294,6 +1394,18 @@ int unc_zip_extract(UncCtx *c)
     ZipScan scan;
     uint32_t i;
     int err = UNC_OK;
+    /* Which minimum match length this archive's Implode entries were
+     * written with: -1 not settled yet, 0 APPNOTE.TXT 5.3.4's reading,
+     * 1 PKZIP 1.01/1.02's. Per ARCHIVE and not per entry, because a zip
+     * has one writer and because that is what makes the probe
+     * affordable — the pass below is paid once, not 19 times, on an
+     * archive of the shape PKZIP's own distribution has (FORMATS.md,
+     * *Implode*, for the figures).
+     *
+     * Source for the architecture: reference/deark/modules/zip.c
+     * `d->mml_bug_policy`, which is likewise archive-wide and set from
+     * the first bug-capable member. */
+    int imppol = -1;
 
     /* Where the end-of-central-directory record may be. A whole archive
      * ends where the file does; a segmented one ends where its LAST
@@ -1749,6 +1861,44 @@ int unc_zip_extract(UncCtx *c)
                      * name/extra lengths may differ from the CD's). */
                     uint8_t lh[30];
                     int attempt = 0;
+
+                    /* Settle the minimum match length before a byte of
+                     * this entry reaches the sink, which is the only
+                     * moment a second reading can be tried at all
+                     * (zip_imp_dry, above).
+                     *
+                     * 5.3.4 is probed FIRST and a match ends it, so a
+                     * conforming archive pays one probe pass and a
+                     * conforming entry at an unambiguous combination
+                     * pays nothing. The 1.01/1.02 reading is adopted
+                     * only on positive evidence — it reproduced the
+                     * stored CRC-32 where 5.3.4 did not — and if
+                     * NEITHER does, the verdict stays unsettled: the
+                     * entry is corrupt rather than informative, it
+                     * falls through to the ordinary decode under 5.3.4
+                     * and fails with the status that decode gives it,
+                     * and the next entry gets to settle the archive.
+                     *
+                     * Not for an ENCRYPTED entry: the probe runs before
+                     * `unc_password` and must not ask twice, and the
+                     * cipher would have to be re-keyed per pass. Such
+                     * an entry is decoded under 5.3.4 as before. */
+                    if (method == 6 && imppol < 0 && zip_imp_ambig(flags) &&
+                        !(flags & 0x0001) && usize != UNC_SIZE_UNKNOWN &&
+                        usize != 0) {
+                        int r = zip_imp_dry(c, startdisk, lhoffs, flags,
+                                            csize, usize, wantcrc, 0,
+                                            iobuf, iocap, obuf, ocap);
+                        if (r < 0) { est = r; goto entry_done; }
+                        if (r) imppol = 0;
+                        else {
+                            r = zip_imp_dry(c, startdisk, lhoffs, flags,
+                                            csize, usize, wantcrc, 1,
+                                            iobuf, iocap, obuf, ocap);
+                            if (r < 0) { est = r; goto entry_done; }
+                            if (r) imppol = 1;
+                        }
+                    }
                   retry_entry:
                     est = zip_seek(c, startdisk, lhoffs);
                     if (est != UNC_OK) {
@@ -1803,7 +1953,7 @@ int unc_zip_extract(UncCtx *c)
                             in.limit = csize - overhead;
                             in.crypt = cr;
                             est = zip_decode(c, &in, &es, aesmethod, flags,
-                                             usize, &crc, obuf, ocap);
+                                             usize, &crc, 0, obuf, ocap);
                             if (est == UNC_OK) {
                                 /* The ten bytes after the data are the
                                  * authentication code, and they are what
@@ -1859,7 +2009,7 @@ int unc_zip_extract(UncCtx *c)
                                 if (est == UNC_OK)
                                     est = zip_decode(c, &in, &es, method,
                                                      flags, usize, &crc,
-                                                     obuf, ocap);
+                                                     0, obuf, ocap);
                                 if (est == UNC_OK &&
                                     ~crc != wantcrc)
                                     est = UNC_ERR_CRC;
@@ -1869,8 +2019,18 @@ int unc_zip_extract(UncCtx *c)
                         if (est == UNC_OK) {
                             unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
                             in.limit = csize;
+                            /* The archive's verdict, applied to every
+                             * Implode entry and not only to the
+                             * bug-capable ones: at the two combinations
+                             * where the readings coincide the flag makes
+                             * no difference, so there is nothing to
+                             * gate. Unsettled (-1) means 5.3.4, which
+                             * is also what a corrupt first entry
+                             * leaves. */
                             est = zip_decode(c, &in, &es, method, flags,
-                                             usize, &crc, obuf, ocap);
+                                             usize, &crc,
+                                             imppol > 0 ? 1u : 0u,
+                                             obuf, ocap);
                         }
                         if (est == UNC_OK &&
                             ~crc != wantcrc)

@@ -366,6 +366,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
 - 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
 - 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
+- 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
 
 ---
 
@@ -24223,3 +24224,164 @@ finished in the same time as one that only read their directories.
 Status: FORMATS.md, *The specimen that carries the bug*; the sweeps:
 TESTING.md, *Searching somebody else's index by content*; the withdrawn
 claim and its cost: BLOCKERS.md.
+
+
+## 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
+
+**Claim.** Zip method 6 entries written by PKZIP 1.01 and 1.02 decode
+correctly. Those two versions took the minimum match length from the
+DICTIONARY SIZE where APPNOTE.TXT 5.3.4 takes it from the literal tree's
+presence, and which of the two readings an archive wants is settled by
+decoding one of its entries with no output and comparing the stored
+CRC-32. Figures: FORMATS.md, *The minimum match length PKZIP 1.01 and
+1.02 used*.
+
+**The rule was the easy half. The design problem was where the second
+attempt goes.** deark decodes the entry TWICE and keeps whichever pass
+reproduces the CRC-32, and this engine cannot copy that shape: it streams
+each fork to the sink as it decodes, so at the moment a mismatch is known
+the host has the bytes. Three shapes were priced before one was written,
+and the two that lost are worth recording because each loses to something
+structural rather than to a number being large:
+
+- **Emit, fail the entry, retry it.** This is the cheap shape — no extra
+  pass on anything — and it is out on the SINK CONTRACT, not on cost.
+  `begin_entry` is documented as *"called once per entry before any
+  writes"* and carries no restart; the CLI refuses to write over a file
+  that is already there, which is a deliberate per-entry error and not an
+  oversight; and the Macintosh shell CREATES the file inside
+  `begin_entry`. So the shape needs a new public contract — a restart, or
+  a "discard what I gave you" — for a rule that affects two flag
+  combinations of one method. **An API change is a decision to write
+  down, not one to slip in**, and the answer is no.
+- **Buffer the fork and emit on success.** Out on the FORMAT's own bound
+  rather than on a corpus figure: `usize` is 32 bits, so there is no
+  ceiling to size a buffer by. The largest Implode fork in reach happens
+  to be 64,544 B against a zip whose entire peak-RAM row is 12–54 KB at a
+  1 MB floor, which is the illustration; the argument is that a streaming
+  engine that buffers one fork has stopped being one.
+
+**What makes the surviving shape cheap is not the shape, it is the
+scope.** A probe pass is a whole extra decode, and the sweep that found
+the specimen also measured the population it would be paid on: 29,799
+bug-capable entries across 1,537 archives, 19.4 per archive. Settling the
+question per ENTRY would therefore cost about nineteen times what
+settling it per ARCHIVE does — and per archive is right for a reason
+better than arithmetic, which is that a zip has one writer. deark's own
+`d->mml_bug_policy` is archive-wide for the same reason, so this is the
+reference's architecture and not a shortcut taken here. The result: an
+entry at an unambiguous combination pays nothing, and a conforming
+archive pays ONE probe pass of its FIRST bug-capable entry, once, however
+many it has.
+
+**Three smaller orderings, each with a reason:**
+
+- **5.3.4 is probed first and a match ends it.** deark probes the bug
+  first and falls back; the costs are identical in both the conforming
+  and the buggy case, and spec-first is one pass cheaper in the one case
+  they differ — an entry with no matches at all, where both readings
+  succeed. The tie-break is the same either way: the specification wins.
+- **The 1.01/1.02 reading is adopted only on positive evidence.** It has
+  to reproduce the stored CRC-32 where 5.3.4 did not. A rule inferred
+  from a failure would make every corrupt entry at those combinations
+  re-label the whole archive.
+- **"Neither reading works" leaves the verdict UNSETTLED and falls
+  through to an ordinary 5.3.4 decode.** Short-circuiting there was the
+  obvious optimisation — the probe has already proved the entry cannot
+  reach its CRC-32 under either rule, so the third pass can only fail —
+  and it was not taken, because the status a corrupt entry reports would
+  have changed: a truncated stream reports *truncated* today and would
+  have reported a checksum failure, and `run_truncation.py` and
+  `run_robustness.py` both grade what a cut archive does. The price is
+  one extra pass on an entry that was going to fail anyway, and the gain
+  is that nothing about a failing entry's behaviour moves. Leaving the
+  verdict unsettled also means a corrupt FIRST entry does not lock the
+  archive into the wrong reading, which deark's shape does.
+
+**The subject is a fixture, and the difference that makes is not
+tidiness.** `PKZ101.EXE` had been a specimen since the day before, with a
+pinned URL, a sha256 and six Discmaster items carrying identical bytes —
+`tools/specimens/implode.tsv` said in as many words that it was
+fixture-eligible, and the only thing holding it there was that no decoder
+implemented the rule. As a fixture it is graded by `run_diff.py` on every
+`ci.sh` run instead of by a lane that skips when a cache is cold. **And
+it catches something the generator cannot**: a probe that asks only
+*"did the decode finish?"* instead of comparing the CRC-32 passes
+`run_implode.py` and FAILS this fixture, because `README.DOC` under
+5.3.4 decodes to the right LENGTH and the wrong bytes where the generated
+8 K/2-tree stream runs out of input instead. That bend was built and run;
+it is one of five, and the fifth is below.
+
+Two things the fixture needed that are worth not re-deriving. **deark
+identifies it as a DOS EXE**, extracts the embedded zip as one member and
+adjudicates nothing, so `make_manifests.py` needs `-m zip` named for it —
+one entry in a `DEARK_MODULE` table, deliberately not a fallback, because
+"if the first run matched nothing, try again differently" would quietly
+re-identify any fixture whose names failed to match for some other
+reason, and name matching is the one thing in that function that has been
+wrong before. And **`lsar` names the STUB where this engine names the
+archive**, so `run_diff.py`'s `IMPLEMENTED` needed `"Self-extracting
+Zip": "Zip"` — the only row in that table where the two disagree about a
+format both read.
+
+**One of the two combinations is still the generator's alone, and
+FORMATS.md says so rather than letting a green run imply otherwise.**
+All three authentic bug entries are at 4 K with three trees. Nothing on
+this disk is 8 K with two trees AND written by the bug — the one real
+8 K/2-tree entry anywhere in reach is a ZipIt specimen written to 5.3.4 —
+so for that half `tools/synth_implode.py` is the only subject there is,
+with deark as the second reader and `unar` as a negative control required
+to REFUSE it. A stream written and read by this repository grades nothing;
+a stream this repository writes that deark reads back byte for byte and
+`unar` cannot read at all grades the rule.
+
+**The generated pair is written one archive per shape, and that was a
+correction.** The first version put both in one archive, which made only
+the first of them a subject — the verdict is per archive, so the second
+entry rides on the first one's answer. Worse, WHICH one was first decided
+what a bent build got away with: the CRC-ignoring bend above is invisible
+when the 8 K/2-tree stream leads. One archive each removes the ordering
+from the question.
+
+**The bend nothing caught, and it is the cost axis.** Five bends of the
+new code were built and run. Four fail a suite — the rule keyed on the
+tree count instead of the dictionary size, the probe ignoring the stored
+CRC-32, the probe adopting the buggy reading where 5.3.4 matched, and the
+two-combination predicate narrowed to nothing. The fifth — that predicate
+WIDENED to every Implode entry — passes everything, because it changes no
+output at all and only how many passes run. **No lane in `ci.sh` counts a
+decode pass**, so the claim that an unambiguous combination pays nothing
+rests on two instruments outside it: callgrind `Ir`, and `read` + `lseek`
+counted with `strace`, which is the axis a Macintosh actually pays since
+each `UncIO.read` there is a `SetFPos` + `FSRead` pair. Both say +0 on
+two real zips with no ambiguous entry. The probe ORDER is in the same
+class: inverting it is correct and costs one pass.
+
+**What was deliberately not done: an ENCRYPTED ambiguous entry.** The
+probe runs before `unc_password` and must not ask for a password twice,
+and the cipher would have to be re-keyed per pass. Such an entry is
+decoded under 5.3.4 exactly as it was before, so nothing regresses; it is
+a corner no file in reach occupies, and it is named in the source rather
+than measured. The same is true of `zip_mb_peek`, which reads an entry's
+first 128 bytes under 5.3.4 to decide whether it is a MacBinary payload:
+a PKZIP 1.01-written entry carrying a ZipIt `0x2605` field would be
+misread there, and ZipIt is a Macintosh program where PKZIP 1.01 is a DOS
+one, so nothing can carry both.
+
+**Two stale figures fell out of the way, from one cause.** Raising the
+`'OVLY'` bundle's size led to `tools/check_app_size.py`'s
+`EXPECT_BUNDLE`, which was still 156,068 — the value from before
+`ovl_exo` grew 1,924 B on 2026-10-07. That check WARNS on the bundle
+rather than failing (1,924 B is inside its tolerance), so it spent a day
+reporting a growth it should have been holding, and nothing went red.
+The same omission left FORMATS.md's launch-read paragraph quoting a
+difference of 25,860 B that its own terms no longer gave: 222,468 −
+196,608, the sum before that image grew. The bundle figure and the sum
+were corrected that day and the difference was not. **The single
+difference is now gone from that paragraph rather than corrected** — its
+base has not been re-derived from the resource map since 2026-10-06, and
+the two terms are quoted so the subtraction is the reader's, which is
+the remedy that section had already applied once to a pair of build
+sizes. *The mechanism was a constant that three places quote and one
+place checks, with the check's tolerance wide enough to absorb the
+change.*

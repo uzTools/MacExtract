@@ -39,16 +39,31 @@ when the draw happens to pick them.
 
     tools/run_implode.py --macextract build/san/macextract
 
-**What it cannot see.** Nothing here writes a stream PKZIP 1.01 or 1.02
-would have written: those two took the minimum match length from the
-DICTIONARY SIZE rather than from the literal tree's presence, and deark
-detects that by decoding twice and keeping whichever pass reproduces the
-stored CRC. This writer follows APPNOTE.TXT 5.3.4 and so does the
-engine, so the disagreeing combinations are written the specification's
-way and the bug is UNEXERCISED here (FORMATS.md, *Implode, and what the
-corpus cannot reach*). It also grades no Finder metadata and no fork
-split: a MacBinary payload under an Implode entry is the ZipIt
-specimen's shape, and `tools/run_zipit.py` is what grades that.
+A THIRD lane, since 2026-10-08: **the two streams PKZIP 1.01 and 1.02
+would have written**, in an archive of their own. Those two versions
+took the minimum match length from the DICTIONARY SIZE rather than from
+the literal tree's presence, which is observable in exactly two of the
+four combinations — and `8k-2trees-mmlbug` is the one of those two that
+**no authentic file on this disk carries**, so for that half this writer
+is the only subject there is. Graded the same way, with one addition and
+one subtraction:
+
+  - **deark is the second reader**, and it is not optional here the way
+    it is above: it implements the rule, finds it by its own
+    double-decode, and must agree byte for byte.
+  - **`unar` must REFUSE both**, which is this lane's negative control.
+    XADMaster has only 5.3.4's reading, so a stream it accepts was never
+    the bug's; it fails these two exactly as it fails the three real
+    ones in `fixtures/pkz101.exe`.
+
+The authentic half is graded by `run_diff.py` through that fixture's own
+manifest on every run, so this lane is the backstop for one combination
+and the only subject for the other — FORMATS.md, *Implode*, says which
+is which rather than letting a green run imply both.
+
+**What it cannot see.** No Finder metadata and no fork split: a
+MacBinary payload under an Implode entry is the ZipIt specimen's shape,
+and `tools/run_zipit.py` is what grades that.
 
 Skips cleanly — printing what it skipped, returning 0 — when `unar` or
 deark is missing, so a fresh clone stays green.
@@ -182,6 +197,89 @@ def grade_shapes(exe):
     return bad
 
 
+BUGSHAPES = ("4k-3trees-mmlbug", "8k-2trees-mmlbug")
+
+
+def grade_bugshapes(exe):
+    """The PKZIP 1.01/1.02 minimum match length, on streams written that
+    way. Returns failures.
+
+    **One archive per shape**, not one archive holding both, and the
+    reason is what the suite can see. Both this engine and deark settle
+    the question per ARCHIVE from the first bug-capable entry, so in a
+    two-entry archive only the first one is ever the subject — and which
+    of the two it is changes what a bent build gets away with. Written
+    one at a time, each shape has to settle its own archive: a probe that
+    ignores the stored CRC-32 is then caught by `4k-3trees-mmlbug`, whose
+    stream decodes to the right LENGTH and the wrong bytes under 5.3.4's
+    reading, where `8k-2trees-mmlbug` runs out of stream instead and so
+    is refused for a reason that has nothing to do with the CRC.
+    """
+    bad = 0
+    for shape in BUGSHAPES:
+        name = shape + ".txt"
+        tmp = tempfile.mkdtemp(prefix="implode-bug-")
+        try:
+            zp, _ranges, plain = write_seed(tmp, only=(shape,))
+            mine, err = ours(exe, zp, os.path.join(tmp, "mine"))
+            if mine is None:
+                print("implode: `x` FAILED on %s's archive (%s) — this build "
+                      "has APPNOTE 5.3.4's minimum match length and only "
+                      "that one" % (shape, err))
+                bad += 1
+                continue
+            got = mine.get(name)
+            if got is None:
+                print("implode: %s: this build produced no such entry" % name)
+                bad += 1
+                continue
+            if got != plain:
+                print("implode: %s: %d B out, and NOT the %d B the writer "
+                      "coded" % (name, len(got), len(plain)))
+                bad += 1
+            # deark is not optional on this lane the way it is above: it
+            # is the only other implementation of the rule, and it finds
+            # it by its own double-decode rather than being told.
+            dk, dkerr = theirs_deark(zp, os.path.join(tmp, "deark"))
+            if dk is None:
+                if os.path.exists(DEARK):
+                    print("implode: deark refused %s's archive (%s), and it "
+                          "is the reader that implements this rule"
+                          % (shape, dkerr or "no output"))
+                    bad += 1
+            elif dk.get(name) != got:
+                print("implode: %s: differs from deark's" % name)
+                bad += 1
+            # The stored CRC-32, which is the grader a real PKZIP file
+            # gets and the one no decoder here can influence.
+            r = subprocess.run([exe, "t", zp], capture_output=True,
+                               timeout=900)
+            if r.returncode != 0:
+                print("implode: `t` failed %s's archive (%s)"
+                      % (shape, r.stderr.decode("utf-8", "replace").strip()))
+                bad += 1
+            # The negative control, and it is what says this stream is
+            # the BUG's rather than one more ordinary one: XADMaster has
+            # 5.3.4's reading and nothing else, so it has to refuse this
+            # entry — the way it refuses the three real ones in
+            # `fixtures/pkz101.exe`.
+            if shutil.which("unar") is not None:
+                if theirs_unar(zp, os.path.join(tmp, "unar")) is not None:
+                    print("implode: unar ACCEPTED %s's archive, so that "
+                          "stream is not the bug's — the writer wrote "
+                          "5.3.4's minimum match length after all" % shape)
+                    bad += 1
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    print("implode: %d PKZIP 1.01/1.02 shape(s) graded against the writer's "
+          "plaintext, %s and the stored CRC-32, one archive each, with %s"
+          % (len(BUGSHAPES),
+             "deark" if os.path.exists(DEARK) else "deark (ABSENT)",
+             "unar refusing every one" if shutil.which("unar")
+             else "unar ABSENT"))
+    return bad
+
+
 def bend(blob, ranges, rng):
     """One mutant: edits confined to the declared compressed spans —
     bit flips, byte-run overwrites and a cut. The same three
@@ -283,6 +381,7 @@ def main():
     sys.stderr.write(r.stderr.decode("utf-8", "replace"))
     bad = 1 if r.returncode else 0
     bad += grade_shapes(a.macextract)
+    bad += grade_bugshapes(a.macextract)
     bad += grade_mutants(a.macextract, a.n, a.seed)
     if bad:
         print("implode: %d failure(s)" % bad)

@@ -43,6 +43,16 @@ real one beside it, so "READ ME" comes out as "READ ME" rather than
 "README". The folder around it keeps whatever the archive called it,
 which is all the archive records for a folder.
 
+Also since v0.37.0, and in this download: the OLDEST of those zips open
+too. PKZIP 1.01 and 1.02, from 1989, had a bug in how they wrote some
+files, and a zip made by one of them could be refused here with a
+message saying the file's own checksum was wrong -- when there was
+nothing wrong with the file. PKZIP's own 1989 download is one of them:
+three of the thirteen files inside it. It is read correctly now, and so
+is anything else those two versions wrote. Nothing else changed: every
+other zip is read exactly as before, and a zip that really is damaged
+still says so.
+
 Also since v0.37.0, and in this download: self-extracting zip archives open.
 ZipIt made these -- a .sea you double-click, which on a modern Mac of
 the day unpacked itself. The application part is PowerPC code, so on a

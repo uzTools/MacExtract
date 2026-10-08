@@ -382,7 +382,19 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # CODE, estimated, never measured"; 1,856 B of a build nothing ships is
 # what it turned out to be (DECISIONS.md 2026-10-07, *the method that
 # was out for a premise with no halves left*; FORMATS.md, *Implode*).
-UNC_MAC_CODE_DEFAULT=166264
+# RAISED 2026-10-08, 166,264 -> 166,932, by **668 B of CODE and 4 of A5**
+# for PKZIP 1.01/1.02's minimum match length: the rule itself is one
+# ternary, and the rest is the probe that decides which of the two
+# readings an archive wants — a decode of ONE entry with no output,
+# graded by the CRC-32 the archive stored. Paid here and nowhere else
+# again: `src/fmt_exo.c` is in `ovl_exo`, so the eager and lazy pairs
+# below do not move by a byte, the image is 31,176 -> 31,832 B
+# (run_tiers.py's IMAGES) and the download 227,328 -> 227,968 B. What
+# the bytes bought: three entries of PKZIP 1.01's own distribution,
+# refused with a checksum error the day before, come out byte-exact
+# (DECISIONS.md 2026-10-08, *the second attempt that had nowhere to
+# go*; FORMATS.md, *Implode*).
+UNC_MAC_CODE_DEFAULT=166884
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -497,7 +509,14 @@ UNC_MAC_CODE_DEFAULT=166264
 # +24 on 2026-10-07 for the folder-depth rule: the engine's one new
 # message, which the Macintosh report borrows rather than keeping a
 # sentence of its own (DECISIONS.md 2026-10-07).
-UNC_MAC_A5_DEFAULT=37928
+# LOWERED 2026-10-08, 37,928 -> 37,916, by PKZIP 1.01/1.02's minimum
+# match length: the control's A5 falls 12 B while its CODE rises 620,
+# rodata crossing between the two columns under changed text — the same
+# effect the six records above are about. Lowered on the terms a ratchet
+# is raised on, at the size on the day, so the 12 B cannot be spent
+# later by accident. The two shipped pairs do not move in either column
+# (DECISIONS.md 2026-10-08).
+UNC_MAC_A5_DEFAULT=37916
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

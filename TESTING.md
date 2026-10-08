@@ -2295,7 +2295,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-07 over all 967 corpus files, exactly one sniffs as a MIME
+2026-10-08 over all 968 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -2462,6 +2462,31 @@ before the fixture landed a build taking the wrong reading passed
 failed only a ZipIt specimen that cannot be committed (FORMATS.md,
 *Implode*).
 
+**A THIRD lane, since 2026-10-08: the two shapes PKZIP 1.01 and 1.02
+would have written.** Those versions took the minimum match length from
+the DICTIONARY SIZE rather than from the literal tree's presence, which
+is observable in exactly two of the four combinations, and the generator
+writes both — `8k-2trees-mmlbug` and `4k-3trees-mmlbug`. Graded the same
+way with one addition and one subtraction:
+
+- **deark is not optional on this lane.** It is the only other
+  implementation of the rule, it finds it by its own double-decode
+  rather than being told, and it must agree byte for byte.
+- **`unar` must REFUSE both**, which is the negative control. XADMaster
+  has 5.3.4's reading and nothing else, so a generated stream it accepts
+  was never the bug's; it fails these two exactly as it fails the three
+  real ones in `fixtures/pkz101.exe`.
+
+**One archive per shape, and that is load-bearing.** Both this engine
+and deark settle the question per ARCHIVE from the first bug-capable
+entry, so in a two-entry archive only the first is a subject — and which
+one leads decides what a bent build gets away with. Written one at a
+time, each shape settles its own archive.
+
+`synth_implode.py --selftest` also requires each bug shape to come out
+WRONG or not at all under 5.3.4's reading, because a stream that reads
+back identically either way would grade nothing.
+
 **A second lane bends the streams**: 240 mutants on a fixed seed, every
 edit confined to the bytes `--ranges` declares compressed, each required
 to exit cleanly with no signal and no sanitizer report. **All 240 refuse
@@ -2471,23 +2496,37 @@ stream has to make the CRC-32 object.
 
 **It was made to fail five ways before it was believed**, each a
 separate rule of the format: the minimum match length taken from the
-dictionary size instead of the literal tree's presence (which is the
-PKZIP 1.01 bug, and what the corpus alone cannot see), the window filled
-with spaces instead of zeros, the length-63 escape dropped, the distance
-bias off by one, and the Shannon-Fano codes assigned shortest-length
-first. Each fails this suite; the restored decoder passes.
+dictionary size instead of the literal tree's presence, the window
+filled with spaces instead of zeros, the length-63 escape dropped, the
+distance bias off by one, and the Shannon-Fano codes assigned
+shortest-length first. Each fails this suite; the restored decoder
+passes.
+
+**And five more on 2026-10-08, for the rule that chooses between the two
+minimum match lengths — four of which a suite catches and one of which
+nothing here does.** Caught: the 1.01/1.02 reading keyed on the tree
+count instead of the dictionary size; the probe ignoring the stored
+CRC-32 and asking only whether the decode finished; the probe adopting
+the 1.01/1.02 reading where 5.3.4 had matched; and the two-combination
+predicate narrowed to nothing. NOT caught: that predicate WIDENED to
+every Implode entry, which changes no output and only how many decode
+passes run. **No lane in `ci.sh` counts a decode pass**, so the claim
+that an unambiguous combination pays nothing is held by callgrind `Ir`
+and by `read` + `lseek` counted with `strace`, both in FORMATS.md
+(*The minimum match length PKZIP 1.01 and 1.02 used*) and neither in
+this suite. The probe ORDER is in the same class.
 
 **What it cannot see.**
 
-- **A stream PKZIP 1.01 or 1.02 would have written.** The writer follows
-  APPNOTE 5.3.4 and so does the engine, so the two combinations where
-  the bug is observable are written the specification's way. deark
-  detects the bug by decoding twice and keeping whichever pass
-  reproduces the stored CRC; this engine does not, and such an entry
-  fails its CRC-32 as a per-entry error. Still UNEXERCISED by this
-  suite — but no longer for want of a file: `PKZ101.EXE` carries three
-  such entries and is in `tools/specimens/implode.tsv` since 2026-10-08
-  (FORMATS.md, *The specimen that carries the bug*).
+- **Which half of the 1.01/1.02 rule is authentic.** The lane above
+  grades BOTH disagreeing combinations, but only one of them has a real
+  file behind it anywhere: all three authentic bug entries are 4 K with
+  three trees, in the `pkz101.exe` fixture, and **8 K with two trees is
+  this project's own encoder alone** with deark as its second reader. A
+  green run here must not be read as saying both halves have a wild
+  subject (FORMATS.md, *Which half is graded by a real file*).
+- **How many decode passes anything takes.** See the bend that nothing
+  caught, above.
 - **No Finder metadata and no fork split.** A MacBinary payload under an
   Implode entry is the ZipIt specimen's shape; `tools/run_zipit.py`
   grades that, and this suite's entries are plain text files.
@@ -4278,29 +4317,42 @@ no version of SpaceSaver ever wrote. The unit tests also carry what no
 specimen here has: a resource fork whose stream is written BEFORE the data
 fork's, which is what the header's offsets are for.
 
-## PKZIP's own distributions (`tools/specimens/implode.tsv`, not in `ci.sh`)
+## PKZIP's own distributions (`tools/specimens/implode.tsv`, two of three in `ci.sh`)
 
 Added 2026-10-08. Three self-extractors, fetched and hash-checked like
-every other specimen set and graded by nothing yet, because no decoder
-here implements the rule they are about:
+every other specimen set:
 
     tools/fetch_specimens.py --only implode
     tools/fetch_specimens.py --only implode --check
 
     ~/.cache/macextract/vmac/specimens/implode/
 
-`PKZ101.EXE` is the only file this project has ever held that carries
-PKZIP 1.01/1.02's minimum-match-length bug — three entries of thirteen,
-adjudicated by deark and by the CRC-32 PKZIP stored. `PKZ102.EXE` and
-`PKZ110.EXE` are the two negative controls. The figures and the proof
-are FORMATS.md, *The specimen that carries the bug*; how it was found is
-the sweep table above and DECISIONS.md 2026-10-08, *the stub is the
-writer's signature*.
+**`PKZ101.EXE` left this set the same day and is the fixture
+`pkz101.exe`**, with a pinned URL, a sha256 and a manifest, so
+`run_diff.py` grades all thirteen of its entries on every `ci.sh` run —
+the three that need PKZIP 1.01's minimum match length included. It is
+the only file this project has ever held that carries that rule, and a
+specimen lane skips when a cache is cold where a fixture does not
+(FORMATS.md, *The fixture that carries the bug*; DECISIONS.md
+2026-10-08, *the second attempt that had nowhere to go*). Two things its
+manifest needed: **deark had to be told `-m zip`**, because it
+identifies the file as a DOS EXE and writes the embedded zip out as one
+member otherwise (`make_manifests.py`'s `DEARK_MODULE`, its only entry
+and deliberately not a fallback), and **`run_diff.py`'s `IMPLEMENTED`
+needed `"Self-extracting Zip": "Zip"`** — `lsar` names the stub where
+this engine names the archive, which is the only row in that table where
+the two disagree about a format both read.
 
-**What this set cannot see yet:** anything. It is a set of files with a
-recorded answer and no runner, which is deliberate — the answer was
-recorded first so that the first decoder to implement the rule can be
-graded by something it did not shape.
+`PKZ102.EXE` and `PKZ110.EXE` stay specimens, because they are the
+negative controls and a control does not need a manifest: 1.02 writes no
+bug-capable entry at all and 1.10 is where *version made by* turns from
+ZIP spec 1.0 into 1.1. How the three were found is the sweep table above
+and DECISIONS.md 2026-10-08, *the stub is the writer's signature*.
+
+**What this set cannot see:** it has no runner of its own. The two files
+left in it are graded by `tools/scan_discmaster.py --probe implode`
+against the CRC-32 they store, when that is run by hand; nothing in
+`ci.sh` reads them.
 
 ## ZipIt's own archives (`tools/run_zipit.py`, in `ci.sh`)
 
@@ -5164,7 +5216,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 967 files, and the
+  the population you give it: the corpus is 968 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

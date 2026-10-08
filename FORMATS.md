@@ -55,7 +55,7 @@ under *Table notes*.
 | Compact Pro (.cpt) | extract | RLE, LZH+RLE; **encrypted entries decrypted**, from a reading of the application that the application then graded, both directions (*Compact Pro's cipher*, below); the archive **comment** is saved rather than dropped | 108 fixtures | 24 KB | full |
 | StuffIt classic (.sit) | extract | 0 store, 1 RLE90*, 2 LZW, 3 Huffman, 5 LZAH, 6 fixed Huffman‡, 8 MW, 13 LZSS+Huffman; **encrypted forks decrypted** (StuffItDES, and the 'MKey' resource — *Encryption*, below); **all five 2.0 Optimizers undone** — `Sound 1`, `Photoshop 1` and `Text 1` exactly, `MacPaint 1` and `JPEG Lossy` as valid documents, the second of them byte-exact against what 2.0.1 itself restores (*What an Optimizer did to the fork*, below) | 229 fixtures‡‡ | 8–76 KB‖ | full |
 | StuffIt 5 (.sit) | extract | 0, 13, **14** (*Method 14*, below), 15 Arsenic; **encrypted forks decrypted** (RC4 under MD5(password)) | 31 fixtures + 1 synthetic, and the two installer payloads outside the corpus (*Method 14*) | 0.13–2.03 MB† | 24 of 32 fixtures extract FULLY; the rest refuse per entry |
-| Zip | extract | store, **Implode (method 6, PKZIP 1.x) since 2026-10-07** (*Implode*, below), deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream — **and since 2026-10-07 that field's FileName is the leaf an entry comes out under** (*Zip's Macintosh extra fields*, below). **A zip BEHIND something else** — a self-extracting archive, whose first bytes are code — is recognised since 2026-10-05, from the end-of-central-directory record the sniffer was already scanning for (*What the zip pair claims, and what it costs*, below) | 9 fixtures (2 of them PKZIP 1.x, whose 7 Implode entries are graded fork for fork since 2026-10-07 — `unar` adjudicates 5 and deark the 2 it fails), plus 3 synthetic, one of which is the Implode generator's (*Implode*, below). **Three carry the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none, plus `MrTs_Paint_Folder.zip` and `NPWritersKit.zip`, the first real ZipIt archives here — seven more are specimens (*Zip's Macintosh extra fields*, *ZipIt's own archives*) | 12–54 KB¶ | full |
+| Zip | extract | store, **Implode (method 6, PKZIP 1.x) since 2026-10-07** (*Implode*, below), deflate, **PKWARE's cipher and WinZip's AES** (128/192/256); other methods and PKWARE strong encryption are per-entry errors; the archive **comment** is saved rather than dropped (*The archive comment*, below); and since 2026-10-01 the **Macintosh extra fields** — type, creator, Finder flags and dates off Info-ZIP's `0x334d` and ZipIt's `0x2705`/`0x2805`, and BOTH FORKS out of a ZipIt `0x2605` entry, whose data is a MacBinary stream — **and since 2026-10-07 that field's FileName is the leaf an entry comes out under** (*Zip's Macintosh extra fields*, below). **A zip BEHIND something else** — a self-extracting archive, whose first bytes are code — is recognised since 2026-10-05, from the end-of-central-directory record the sniffer was already scanning for (*What the zip pair claims, and what it costs*, below) | 10 fixtures (3 of them PKZIP 1.x, whose 19 Implode entries are graded fork for fork — `unar` adjudicates 11 and deark the 8 it fails; the third is **`pkz101.exe`, PKZIP 1.01's own distribution, a fixture since 2026-10-08**, and three of its entries need the minimum match length that version's bug produced), plus 3 synthetic, one of which is the Implode generator's (*Implode*, below). **Three carry the Macintosh extra fields since 2026-10-04**: `rexnebular_1_0_0.zip`, a real MacZip archive of 29.7 MB, with type/creator and Finder flags graded on all 22 entries and the dates on none, plus `MrTs_Paint_Folder.zip` and `NPWritersKit.zip`, the first real ZipIt archives here — seven more are specimens (*Zip's Macintosh extra fields*, *ZipIt's own archives*) | 12–54 KB¶ | full |
 | Gzip | extract | deflate | 3 fixtures | 51 KB | full |
 | Unix compress (.Z) | extract | LZW ≤16 bit | 4 fixtures | 219 KB§ | full |
 | Tar (ustar/v7) | extract | — (links reported unsupported) | 3 fixtures (2 real 1990 v7 tars) + unit tests | 8 KB | full |
@@ -76,7 +76,7 @@ under *Table notes*.
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
-| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 967 corpus files (*Archives named but not extracted*, below) | — | — |
+| RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 968 corpus files (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
 
@@ -1440,7 +1440,7 @@ such a file into a single line that no header matches (*BLOCKERS.md*,
 withdrawn claims).
 
 **No GRADED corpus file, and no second reader.** Re-measured
-2026-10-07 over all 967 corpus files: one sniffs as btoa and it is
+2026-10-08 over all 968 corpus files: one sniffs as btoa and it is
 `synth-os9-btoa.btoa`, written here for the Mac OS 9 tier's
 one-boot-per-format sample and carrying no manifest, so nothing in the
 differential suite is one. (The sentence said "none of the 903
@@ -2925,8 +2925,8 @@ cannot reach; and every LZW fork of all eight is decoded identically by
 code stream (*The codec*, below). `src/fmt_sqp.c` is the decoder,
 `src/fmt_sqp_probe.c` the sniffer, `tools/run_sqp.py` the suite
 (TESTING.md, *AppleLink packages: SqueezePlay*). The sniffer answers
-*AppleLink package* for **exactly the 6 of 967 corpus files that are
-packages and for nothing else** (re-measured 2026-10-07 over every
+*AppleLink package* for **exactly the 6 of 968 corpus files that are
+packages and for nothing else** (re-measured 2026-10-08 over every
 non-`.md` file in `fixtures/`; on 2026-10-06 with the build either side
 of that day's name test, and **no file's answer changed in any
 format**) — a sweep that
@@ -3296,7 +3296,7 @@ opened by p7zip, so the subject is known to be a real archive before the probe
 is asked about it; synthetic Zoo, ARJ and Cabinet headers identified by
 **deark**; and every corroborating field spoiled in turn, each of those
 negatives mutation-tested against a probe with that field removed. **0 false
-positives across the 967 corpus files**, re-established on every `ci.sh`
+positives across the 968 corpus files**, re-established on every `ci.sh`
 run — with the corpus's one deliberate `RAR`, which the Mac OS 9 tier
 needs to raise its alert with, CHECKED rather than excused
 (`tools/run_foreign.py`).
@@ -3702,7 +3702,7 @@ no more than that, and matches on all 26 identity bytes anyway.
 
 ## Hardening
 
-- Differential: 955 fixtures byte-exact against `unar` manifests
+- Differential: 956 fixtures byte-exact against `unar` manifests
   (both forks + type/creator + Finder flags), `./ci.sh` — 107 of them since 2026-08-21,
   the DiskDoubler corpus, whose manifests are built from the files it was
   made from rather than from a decoder (TESTING.md). `run_diff.py` prints
@@ -4335,7 +4335,7 @@ implementation each reading was checked against (NOTICE).
 | the download, `MacExtract.bin` | 225,408 → 227,328 B |
 | peak heap, per Implode ENTRY | **5,096 B at a 4 K dictionary and 9,192 B at 8 K** — 1,000 B of `ImpState` (the three decode tables, their symbol runs and the length scratch) plus the dictionary the flag word names, in two allocations so a refusal is one failure |
 | zip's peak-RAM row | **unchanged at 12–54 KB**: `unc_inflate_raw` takes 11,256 B for a deflated entry — 2,064 B MORE than Implode's worst — so deflate still sets the ceiling whatever an archive mixes. `4acalc.zip` goes 13,477 → 22,669 B against `synth-exo-zip-deflate.zip`'s 24,863, and the archive that sets the 54 KB end of the row is `NPWritersKit.zip` at 53,297 B, where the central directory is what costs |
-| stack | `unc_zip_extract` 1,432 → 1,460 B, `zip_decode` 56 → 132 B, `namebuf` unchanged at 256. The deepest zip chain is 1,836 → **1,940 B** and is still the DEFLATE path; Implode's is 1,684 (*Stack*, for the method) |
+| stack | `unc_zip_extract` 1,432 → 1,460 B, `zip_decode` 56 → 132 B, `namebuf` unchanged at 256. The deepest zip chain went 1,836 → **1,940 B** and was still the DEFLATE path on that day; Implode's own was 1,684. **Both moved again on 2026-10-08 and the record changed limbs** — *Stack* has today's |
 | tier tallies | `run_tiers.py --check` moves none: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped, the same fixtures by name |
 
 The standing estimate was **"~1.5–2 KB of `CODE`, estimated, never
@@ -4349,8 +4349,11 @@ paid by a build nothing ships.
 |---|---|
 | the 7 entries of `4acalc.zip` and `4alnch11.zip` | **`unar` for 5 and deark for 2**, fork for fork on every `ci.sh` run. The 2 are the ones `unar` fails with *"Attempted to read more data than was available"*; adding `"Implode"` to `make_manifests.py`'s `DEARK_METHODS` adjudicated them, and it was done BEFORE any decoder existed so that the first run meant something. `ORACLE_OUT_OF_SCOPE` in `run_diff.py` is empty for the first time |
 | the 3 entries of `Psycho!v1.0ß1.zip` | **`unar`**, all six forks byte-identical, in `tools/run_zipit.py` (*ZipIt's own archives*). A specimen, so not in `ci.sh`'s fixture set |
+| the 13 entries of `PKZ102.EXE` and the 15 of `PKZ110.EXE` | the stored CRC-32, through `tools/specimens/implode.tsv`. They are the NEGATIVE controls and stay specimens: 1.02 writes no bug-capable entry at all and 1.10 is where *version made by* turns from spec 1.0 into 1.1 |
 | all 10 wild entries | **the CRC-32 PKZIP and ZipIt themselves stored**, which is the check no decoder here can influence |
 | four shapes nothing wild holds | **`unar`, deark, the writer's own plaintext and the stored CRC-32**, in `tools/run_implode.py` on every run. `tools/synth_implode.py` is an ENCODER, because nothing on this machine writes the method — Info-ZIP's `zip` dropped it before 1.0, `unar` and deark decode and do not compress, PKZIP is a DOS program. One of its entries is the fixture `synth-exo-zip-implode.zip` |
+| the 13 entries of `pkz101.exe` | **`unar` for 7 and deark for 6**, fork for fork on every `ci.sh` run — a committed fixture since 2026-10-08, PKZIP 1.01's own distribution self-extractor. Three of the six are the minimum-match-length entries and three are ones `unar` fails with *"Attempted to read more data than was available"* at a combination where the two readings coincide (*The fixture that carries the bug*, below) |
+| two more shapes nothing wild holds, since 2026-10-08 | **deark, the writer's own plaintext and the stored CRC-32**, with `unar` as a NEGATIVE control required to refuse both — the two combinations PKZIP 1.01/1.02's reading is observable in, written that way, one archive each (*The minimum match length PKZIP 1.01 and 1.02 used*, below) |
 | bent streams | **240 mutants on a fixed seed** in `run_implode.py`, every edit confined to the bytes the writer declares compressed, each required to exit cleanly with no sanitizer report; plus the 10 whole-archive variants per fixture of `run_robustness.py` and the three cut points of `run_truncation.py`. `tools/fuzz.py` carries the generator as its third named stream seed, and `fuzz_cover.py` reads the decoder's five functions at **0 never entered** at two seeds, 88.9–100 % of lines (TESTING.md, *Fuzzing*) |
 
 **The suite can fail, established by bending the decoder five ways** —
@@ -4360,13 +4363,17 @@ one fails `run_implode.py`; the restored decoder passes.
 
 ### What the corpus exercises, and what is UNEXERCISED
 
-**Measured 2026-10-07** over all 10 wild entries — 27,238 literals and
-20,247 matches — because a green run over two PC archives would
-otherwise imply coverage it does not have.
+**Measured 2026-10-07** over the 10 wild entries in reach that day —
+27,238 literals and 20,247 matches — because a green run over two PC
+archives would otherwise imply coverage it does not have. **The
+population grew on 2026-10-08**, by the 12 Implode entries of the
+`pkz101.exe` fixture; the counts below are 2026-10-07's and have not
+been re-taken over it, and the one row that CHANGES is the first, which
+is the row this table exists for.
 
 | parameter | combinations | where |
 |---|---|---|
-| dictionary × tree count | **all four** | 4 K/2 trees: `4ACALC.EXE`, `CALC.TXT`, `4ALAUNCH.EXE`, `THREED.VBX`. 8 K/3 trees: `REGCALC.TXT`, `4ALAUNCH.HLP`, `LAUNCH.TXT`. **8 K/2 trees: `PSYCHO!/Psycho!` alone.** **4 K/3 trees: `PSYCHO!/READ ME` and `PSYCHO!/Sample` alone** |
+| dictionary × tree count | **all four** | 4 K/2 trees: `4ACALC.EXE`, `CALC.TXT`, `4ALAUNCH.EXE`, `THREED.VBX`, and `pkz101.exe`'s six. 8 K/3 trees: `REGCALC.TXT`, `4ALAUNCH.HLP`, `LAUNCH.TXT`, and `pkz101.exe`'s three. **4 K/3 trees: `PSYCHO!/READ ME` and `PSYCHO!/Sample` until 2026-10-08, and `pkz101.exe`'s `README.DOC`, `ORDER.DOC` and `OMBUDSMN.ASP` since — which is the first time a COMMITTED fixture reaches this combination at all.** **8 K/2 trees: `PSYCHO!/Psycho!` alone, and it is a specimen** — no fixture holds a wild one, and that is why the generator writes it (*Which half is graded by a real file*, above) |
 | the literal tree present / absent | both | coupled to the tree count by the format (APPNOTE 5.3.3), so the four rows above cover it; 8 raw bits per literal in the 2-tree half |
 | minimum match length 2 and 3 | both | the same coupling (5.3.4) |
 | the length-63 escape, 8 more bits | **249 matches** | every archive but `CALC.TXT`, `LAUNCH.TXT` and `PSYCHO!/READ ME` |
@@ -4381,25 +4388,20 @@ the four combinations by itself. The two it supplies are also the only
 two where the parameter below is observable, which is the part worth
 knowing.
 
-**UNEXERCISED by the fixture suite, and it is one thing: PKZIP 1.01 and
-1.02's minimum-match-length bug — but a specimen that carries it is in
-hand since 2026-10-08.** Those two versions took the minimum match
-length from the DICTIONARY SIZE rather than from the literal tree's
-presence, and deark implements both readings and chooses by decoding the
-entry twice and keeping whichever pass reproduces the stored CRC-32
-(`could_have_mml_bug`, `detect_implode_mml_bug`; its comment says *"I
-only know of PKZ101.EXE"*, and that is the file). The two rules differ
-in exactly the 8 K/2-tree and 4 K/3-tree combinations, which is why this
-is measurable at all: a build here taking the dictionary-size reading
-passes `run_diff.py` over the whole corpus and fails only the ZipIt
-specimen — measured, on that build. This engine follows 5.3.4, so such
-an entry fails its CRC-32 as a per-entry error. Since the committed
-generator's `8k-2trees.txt` landed, the fixture suite catches the wrong
-reading too.
+**Nothing on the format's own axes is unexercised, and the one thing
+that WAS — PKZIP 1.01 and 1.02's minimum match length — is implemented
+and graded since 2026-10-08** (*The minimum match length PKZIP 1.01 and
+1.02 used*, below). It was the last UNEXERCISED line here, and until
+that day a build taking the dictionary-size reading passed
+`run_diff.py` over the whole corpus and failed only a ZipIt specimen —
+measured, on that build. Two things catch it now, and each catches
+something the other does not: the generator's `8k-2trees.txt`, since
+2026-10-07, and the fixture `pkz101.exe`, since 2026-10-08.
 
-### The specimen that carries the bug
+### The fixture that carries the bug
 
-**Measured 2026-10-08.** `PKZ101.EXE`, PKZIP 1.01's own July 1989
+**Measured 2026-10-08, and a committed fixture the same day**:
+`pkz101.exe` — PKZIP 1.01's own July 1989
 distribution self-extractor, 131,517 B,
 sha256 `f36d9551c1917a7990db2b4582191656d748179ea2bd15499294388e9c4fa458`,
 freely re-fetchable from six Discmaster items — two of them pinned in
@@ -4413,15 +4415,17 @@ signature*.
 | bug-capable entries (flags 0x0004 — 4 K dictionary, three trees) | **3**: `README.DOC` 873 B, `ORDER.DOC` 4,607 B, `OMBUDSMN.ASP` 595 B |
 | …decoding to the stored CRC-32 under 5.3.4 | **0** |
 | …under the dictionary-size rule | **3**, and the bytes are identical to deark's output for all three |
-| what adjudicates it | **deark**, which reports `MML bug detection: 1` and extracts all 13 clean. `unar` fails the same 3 with *"Wrong checksum"*, Info-ZIP `unzip` with *"bad CRC"*, and this engine with *"checksum mismatch"* — `t` says *3 of 13 entries failed* |
-| the other 9 Implode entries | flags 0x0000, 0x0006, 0x8000 and 0x8006 — combinations where the two rules coincide — and this engine extracts all 9 and the stored entry today |
+| what adjudicates it | **deark**, which reports `MML bug detection: 1` and extracts all 13 clean — and it needs `-m zip`, because it identifies the file as a DOS EXE and writes the embedded zip out as one member otherwise (`make_manifests.py`'s `DEARK_MODULE`, its only entry). `unar` fails the 3 with *"Wrong checksum"* and 3 MORE with *"Attempted to read more data than was available"*, Info-ZIP `unzip` fails the 3 with *"bad CRC"* |
+| the other 9 Implode entries | flags 0x0000, 0x0006, 0x8000 and 0x8006 — combinations where the two rules coincide. This engine extracted all 9 and the stored entry before the rule landed, and refused the 3 with *"checksum mismatch"*; it extracts **13 of 13** since 2026-10-08 |
+| the manifest | **7 forks by `unar`, 6 by deark**, every entry adjudicated and nothing `unadjudicated` — so `run_diff.py` grades all 13 on every `ci.sh` run. The three bug entries' hashes are deark's, and the engine's output is byte-identical to them |
+| what it grades that nothing else here can | a probe that ignores the stored CRC-32. `README.DOC` under 5.3.4 decodes to the right LENGTH and the wrong bytes, so a probe that only asks *"did the decode finish?"* settles on 5.3.4 and refuses the entry — the generated `8k-2trees-mmlbug` runs out of stream instead and is refused for a reason that is not the CRC. Measured: that bend passes `run_implode.py` and fails this fixture |
 
-**What it would grade** if it became a fixture: the dictionary-size
-reading on three streams nothing on this machine wrote, against the
-CRC-32 PKZIP itself stored, with deark as a second oracle. It is
-fixture-eligible rather than a fixture because no decoder here
-implements the rule yet; until one does, all it can grade is that the
-engine refuses those three entries per entry and extracts the other ten.
+**Why it is a fixture and not a specimen.** Everything a fixture needs
+was already recorded: a pinned URL, a sha256, and six Discmaster items
+carrying the identical bytes. `tools/specimens/implode.tsv` said in as
+many words that it was fixture-eligible, and the only reason it was not
+one was that no decoder here implemented the rule. A specimen lane skips
+when a cache is cold; a fixture is graded on every run.
 
 **Two negative controls are in the same table, and they are what makes
 the find mean something.** `PKZ102.EXE` is the OTHER buggy version and
@@ -4429,6 +4433,97 @@ writes **no bug-capable entry at all** — every one of its 13 Implode
 entries is at 0x8000 or 0x8006, where the rules coincide. `PKZ110.EXE`
 is the version that fixed the bug, and it is where *version made by*
 turns from ZIP spec **1.0** into **1.1** (below).
+
+### The minimum match length PKZIP 1.01 and 1.02 used
+
+**Implemented 2026-10-08.** Those two versions took the minimum match
+length from the DICTIONARY SIZE — 3 at 8 K, 2 at 4 K — where APPNOTE.TXT
+5.3.4 takes it from the literal tree's presence. The two readings differ
+in exactly two of the four parameter combinations, and agree in the other
+two:
+
+| flags | dictionary × trees | 5.3.4 | PKZIP 1.01/1.02 |
+|---|---|---|---|
+| 0x0000 | 4 K, two trees | 2 | 2 |
+| **0x0002** | **8 K, two trees** | **2** | **3** |
+| **0x0004** | **4 K, three trees** | **3** | **2** |
+| 0x0006 | 8 K, three trees | 3 | 3 |
+
+No specification states the second column: it is a reading of two
+programs' behaviour, and the source is
+`reference/deark/src/fmtutil-lzh.c`'s `params->mml_bug` branch, with the
+two-combination predicate from `reference/deark/modules/zip.c`'s
+`could_have_mml_bug` (NOTICE).
+
+#### Where the second attempt goes, which was the design problem
+
+deark decodes the entry twice and keeps whichever pass reproduces the
+stored CRC-32. **This engine cannot keep a pass**: it streams each fork
+to the sink as it decodes, so by the time a CRC-32 mismatch is known the
+host has been handed the bytes. Three shapes, all three priced before
+one was written:
+
+| shape | what it costs | verdict |
+|---|---|---|
+| **1. decode with no output, compare the stored CRC-32, then decode again for real** | one extra decode of ONE entry per archive (below) | **taken** |
+| 2. emit, fail the entry, retry it | an API change, and the hosts have already acted. `include/macextract.h`'s Sink says `begin_entry` is *"called once per entry before any writes"* and carries no restart; the CLI's `sink_open_fork` refuses to write over a file that is already there; the Macintosh shell CREATES the file inside `begin_entry` (`MyHCreate`, `sink_begin_inner`). So a retry means a new sink contract, for a rule that affects two flag combinations | **out** |
+| 3. buffer the fork and emit only on success | `usize` is a 32-bit field, so the bound is the format's and not a corpus figure; the largest Implode fork in reach is `THREED.VBX` at **64,544 B**, against a zip whose whole peak-RAM row is **12–54 KB** and a 1 MB floor. One buffer would exceed the format's entire budget | **out** |
+
+**What makes shape 1 affordable is that the verdict is per ARCHIVE, not
+per entry** — which is deark's architecture (`d->mml_bug_policy`), taken
+for the same reason: a zip has one writer. 5.3.4 is probed FIRST and a
+match ends it, so a conforming archive pays ONE probe pass of its first
+bug-capable entry and nothing after that, and an entry at an unambiguous
+combination pays nothing at all. Per-entry detection would be **19.4×
+the passes** on the population the sweep measured — 29,799 bug-capable
+entries across 1,537 archives.
+
+#### What it costs
+
+| | |
+|---|---|
+| resident `CODE` and A5, SHIPPED | **+0 and +0**, in both the eager and the lazy configuration — every byte is in `ovl_exo` |
+| the `ovl_exo` image | 31,176 → **31,784 B**, +608 |
+| resident `CODE` in the resident CONTROL | 166,264 → **166,884 B**, +620; A5 37,928 → **37,916 B**, −12 |
+| the download, `MacExtract.bin` | 227,328 → **227,840 B** |
+| what a zip or a tar pays on a tier | **nothing, to the byte.** `OVL_SAVED` rose 608 B and the `ovl_exo` image rose 608 B, so the three rows of *What each format is granted* that hold that image do not move. On 2026-10-07 the same three FELL 68 B, which is why the sign of that exception is worth reading each time |
+| peak heap | **unchanged to the byte** on six zips — `pkz101.exe` 23,200, `4acalc.zip` 22,669, `4alnch11.zip` 22,730, `synth-exo-zip-implode.zip` 22,700, `synth-exo-zip-deflate.zip` 24,863, `NPWritersKit.zip` 53,297. A probe allocates the same `ImpState` and window the real decode does and frees them before it, so the two passes never coexist; deflate's 11,256 B still sets zip's 12–54 KB row |
+| stack | `-Os -fstack-usage` (*Stack*): `unc_zip_extract` 1,460 → **1,468 B**, and `zip_decode` 132 → **56 B** because `zip_implode` stopped being inlined into it and is its own 112 B frame now, beside `zip_imp_dry`'s 172. **The deepest chain through zip FELL, 1,940 → 1,900 B**, and the limb holding the record changed: it was deflate (`unc_zip_extract` → `zip_decode` → `unc_inflate_raw` → `inflate` → `inflate_table`, 348 B of it zlib's), which is 1,872 B now, and it is the PROBE path that is deepest. An ordinary Implode entry's chain is 1,684 → 1,728 B. Far under the 4 KB rule and under the engine's own deepest chain |
+| I/O, `read` + `lseek` counted with `strace -c` | `4acalc.zip` 8 + 15 → **8 + 15**, `4alnch11.zip` 17 + 17 → **17 + 17** — **+0 and +0, which is the measurement that says an unambiguous combination pays nothing**. `synth-exo-zip-implode.zip` 13 + 17 → 15 + 19, `pkz101.exe` 36 + 36 → 36 + **40**: the probe's re-read of a 537-byte entry is inside buffers stdio already had |
+| instructions, callgrind `Ir` | `pkz101.exe` 21,154,978 → **21,457,500, +1.43 %** — and it extracts three more entries than it did. `synth-exo-zip-implode.zip` 5,364,267 → 6,709,029, **+25.1 %**, which is the worst case in miniature: four entries, two of them ambiguous, so one probe decodes a quarter of the archive's output. `4acalc.zip` −0.39 % and `4alnch11.zip` −0.42 % — code layout, not a gain: neither holds an ambiguous entry and the +0 reads beside them say so |
+| tier tallies | `run_tiers.py --check` moves none: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped, the same fixtures by name |
+
+#### Which half is graded by a real file, and which by this project's own encoder
+
+**Not both, and a green run must not be read as saying so.**
+
+| combination | subject | graded by |
+|---|---|---|
+| **0x0004 — 4 K, three trees** | **authentic**: three entries of `pkz101.exe`, PKZIP 1.01's own distribution — `README.DOC` 873 B, `ORDER.DOC` 4,607 B, `OMBUDSMN.ASP` 595 B | the CRC-32 PKZIP stored, and deark, through the fixture's own manifest in `run_diff.py` on every run |
+| **0x0002 — 8 K, two trees** | **generator only.** Nothing authentic on this disk is 8 K with two trees AND written by the bug: the one real 8 K/2-tree entry anywhere in reach is `PSYCHO!/Psycho!`, and ZipIt wrote it to 5.3.4 | `tools/synth_implode.py`'s `8k-2trees-mmlbug`, with **deark as the second reader** and `unar` as a negative control required to refuse it, in `tools/run_implode.py` on every run |
+
+A stream written and read by this repository grades nothing, which is
+why deark is not optional on that lane: it implements the rule, finds it
+by its own double-decode rather than being told, and must agree byte for
+byte. `unar` has 5.3.4's reading and nothing else, so a generated stream
+it ACCEPTS was never the bug's — that is the control, and it fails both
+generated shapes exactly as it fails the three real ones.
+
+#### What the suites cannot see, measured by bending the decoder five ways
+
+| bend | caught by |
+|---|---|
+| the 1.01/1.02 rule keyed on the tree count instead of the dictionary size | `run_implode.py` (both shapes) **and** `pkz101.exe` |
+| the probe ignores the stored CRC-32 and asks only whether the decode finished | `run_implode.py` (`4k-3trees-mmlbug`) **and** `pkz101.exe` |
+| the probe adopts the 1.01/1.02 reading where 5.3.4 MATCHED | `run_implode.py`, on the four conforming shapes |
+| the two-combination predicate narrowed to nothing — the rule removed | `run_implode.py` (both shapes) **and** `pkz101.exe` |
+| the two-combination predicate WIDENED to every Implode entry | **nothing.** It changes no output — a conforming entry's probe matches under 5.3.4 either way — only how many passes run |
+
+**So the cost axis is the blind spot, and it is measured rather than
+asserted**: the `Ir` and `strace` rows above are what hold it, and no
+lane in `ci.sh` counts a decode pass. The same is true of the probe
+ORDER: inverting it leaves every output identical and costs one extra
+pass on a conforming archive.
 
 ### Searching for it: three keys, and the one that worked
 
@@ -4628,9 +4723,22 @@ engine later the same day, fourteen until AppleLink packages arrived on
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,272 B** | 19,056 B | **65,920 B** | **227,328 B** |
-| lazy | `UNC_OVL_LAZY=1` | 52,848 B | 19,136 B | 64,512 B | 225,920 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **166,264 B** | **37,928 B** | 198,656 B | 201,984 B |
+| **eager — SHIPPED** | (default) | **54,272 B** | 19,056 B | **65,920 B** | **227,840 B** |
+| lazy | `UNC_OVL_LAZY=1` | 52,848 B | 19,136 B | 64,512 B | 226,560 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **166,884 B** | **37,916 B** | 199,296 B | 202,624 B |
+
+**Re-measured 2026-10-08**, for **PKZIP 1.01/1.02's minimum match
+length** (*Implode*): the control **+620 B of `CODE` and −12 of A5** —
+rodata crossing between the columns under changed text, the seventh
+record of that effect here — and both SHIPPED configurations **+0 and
++0** in either column. `ovl_exo` goes 31,176 → **31,784 B** and the
+download 227,328 → **227,840 B**, so what a 1 MB Mac Plus pays for the
+rule is nothing at all, even if the archive IS a zip or a tar: the
+image grew by exactly what `OVL_SAVED` did, so the three `ovl_exo` rows
+of *What each format is granted* do not move either. `run_tiers.py --check` moves no tally in
+either lane: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71
+shipped, the same fixtures by name (DECISIONS.md 2026-10-08, *the second
+attempt that had nowhere to go*).
 
 **Re-measured 2026-10-07**, for **zip method 6 (Implode)** (*Implode*):
 the control **+1,856 B of `CODE` and +0 of A5**, and the SHIPPED build
@@ -4796,11 +4904,11 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **130,864 B** since 2026-10-07
+measured 2026-09-27. The shipped pair is **131,472 B** since 2026-10-08
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **157,992 B** — the fifteen images sum to 157,796 B, so its
+The bundle is **158,600 B** — the fifteen images sum to 158,404 B, so its
 index costs **196 B**: a 4-byte header, 12 bytes of directory per image
 and 12 bytes of padding to 4, which accounts for the whole difference
 (re-measured 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw
@@ -4820,7 +4928,14 @@ with 2 B of index because one more image is now 2 mod 4. The padding
 term is why the index is not a constant. **+1,924 B on 2026-10-07**:
 `ovl_exo` 29,252 -> 31,176 for zip method 6, with the index unmoved at
 196 B — that image was already 0 mod 4 and its growth is too, so this
-is the change the padding term does nothing for.
+is the change the padding term does nothing for. **+608 B on
+2026-10-08**: the same image 31,176 -> 31,784 for PKZIP 1.01/1.02's
+minimum match length, the index unmoved again for the same reason.
+**`tools/check_app_size.py`'s `EXPECT_BUNDLE` was left at 156,068 on
+2026-10-07** while this figure and the sum below were both raised, so
+that check spent a day reporting a 1,924 B growth it should have been
+holding — it warns rather than fails on the bundle, which is why
+nothing went red. Raised to 158,600 in the same commit as this.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 65,664 B `MacExtract.code.bin` and not the download.
@@ -4834,10 +4949,18 @@ the file, and `check_app_size.py` reported the 128 B difference rather
 than failing on it, exactly as its tolerance is meant to.)
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
-read at launch by the Segment Loader — 196,608 B — and the shipped build
-reads 66,400 B of `CODE` plus the 157,992 B bundle, which is 224,392 B: the
-same read redistributed plus **25,860 B** (DECISIONS.md 2026-09-25, *the
-overlay launch read was counted as a cost twice*). The download grows by
+read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
+and the shipped build reads 66,400 B of `CODE` plus the **158,600 B**
+bundle, which is **225,000 B** (DECISIONS.md 2026-09-25, *the overlay
+launch read was counted as a cost twice*). **The single difference this
+paragraph used to quote is gone, and it is gone because it went stale
+twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
+before `ovl_exo` grew 1,924 B on 2026-10-07, when the bundle and the sum
+were both corrected and the difference was not. The base has not been
+re-derived from the resource map since 2026-10-06 either, so the two
+terms are quoted and the subtraction is the reader's, the same remedy
+this section already applied to the pair of build sizes above. The
+download grows by
 25,728 B over the same pair, 225,664 against 199,936, so the read delta and
 the download delta are two numbers **132 B apart** and not one number — and a
 MacBinary download is quantised to 128 B a fork, so a pair this close is
@@ -4899,7 +5022,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 130,864 B of `CODE` and A5 the shipped build does not carry
+which is the 131,472 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -4926,7 +5049,7 @@ it is a run on the machine. **This read "336 B smaller" and "~560 B more
 generous" until 2026-10-02**, two figures that could not both be the gap
 between the same pair of builds; the two sizes are quoted above now so the
 subtraction is the reader's.
-Every figure in it is that sum, re-taken 2026-10-07 (twice) against the current
+Every figure in it is that sum, re-taken 2026-10-08 against the current
 `OVL_SAVED` and images — the ten marked *(measured)* are the formats with a
 fixture in the Mac sample, so `run_tiers.py --shipped` confirms the tally
 at that budget; the five marked otherwise are the same sum with no fixture
@@ -4936,17 +5059,17 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+121,778 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
-| Now Compress | now, codecs | **+118,700 B** (measured) |
-| SuperDisk! | superdisk, codecs | +116,720 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+114,210 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+110,986 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+108,014 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +107,056 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+105,510 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +97,866 B (arithmetic), and **+108,014 B** where the directory says no entry is encrypted (measured) |
+| **AppleLink package** | **sqp, codecs** | **+122,386 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
+| Now Compress | now, codecs | **+119,308 B** (measured) |
+| SuperDisk! | superdisk, codecs | +117,328 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+114,818 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+111,594 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+108,622 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +107,664 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+106,118 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +98,474 B (arithmetic), and **+108,622 B** where the directory says no entry is encrypted (measured) |
 | Tar | exo, codecs | **+92,602 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,356 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,964 B** (measured) |
 | Zip, spanned zip | exo, ciphers, codecs | +82,454 B (arithmetic), **+92,602 B** unencrypted (measured) |
 | every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,802 B** (measured) |
 
@@ -4962,14 +5085,23 @@ the same day for **zip method 6**, which is the largest single move
 this figure has made since AppleLink packages and is the clearest:
 +1,856 B in the control and +0 in the shipped build, every byte of it
 difference (DECISIONS.md 2026-10-07, *the method that was out for a
-premise with no halves left*).
+premise with no halves left*). And -> **131,472 B** on 2026-10-08 for
+PKZIP 1.01/1.02's minimum match length, +608 in the control and +0 in
+the shipped build, the same shape again (DECISIONS.md 2026-10-08, *the
+second attempt that had nowhere to go*).
 So every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. **The exception is
-the three rows holding `ovl_exo`**, which fell 68 B: that image grew
+the three rows holding `ovl_exo`**, and on 2026-10-07 they FELL 68 B:
+that image grew
 1,924 B for the same change, which is 68 more than the gain, so a zip
-or a tar is the one layer method 6 costs anything at all — 68 B off a
-92,670 B grant, against the 1,856 B every other format gained. The two rows that
+or a tar was the one layer method 6 cost anything at all — 68 B off a
+92,670 B grant, against the 1,856 B every other format gained. **On
+2026-10-08 the same three rows did not move at all** where everything
+else rose 608: that image grew 608 for the minimum-match-length rule,
+which is exactly the gain, so the exception belongs to the change and
+not to the row — and a zip or a tar pays that rule nothing, to the
+byte, on every tier. The two rows that
 moved differently are the ones whose own image grew — StuffIt's, which
 took 4,592 B of C-Cube, and every row holding the crypt image, which
 took 856 B of CBC. Nothing in the shipped build's resident size moved
@@ -4980,7 +5112,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 157,992 B held against 130,864 B saved. It costs nothing on the tiers
+it — 158,600 B held against 131,472 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5034,10 +5166,12 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **225,280 B** of MacBinary (`dist/MacExtract.bin`,
-v0.37.0), and since 2026-09-25 that is no longer all resident: **66,048 B** is
+The application ships as **227,840 B** of MacBinary (`dist/MacExtract.bin`,
+re-read 2026-10-08 off the committed file rather than off the v0.37.0 tag it
+used to name), and since 2026-09-25 that is no longer all resident:
+**65,920 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **157,992 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **158,600 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -5629,13 +5763,20 @@ and the call graph comes from the relocations in the linked objects
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 | largest frame in the SHELL | — | **1,480 B** (`ExtractOne`) |
 
-Zip's own chain, re-measured 2026-10-07 for Implode and the `0x2605`
-leaf substitution (*Implode*): `unc_zip_extract` 1,432 → **1,460 B**,
-`zip_decode` 56 → **132 B**, and `namebuf` unchanged at 256 — the
-substituted name is built in the buffer that was already there. The
-deepest chain through the format is 1,836 → **1,940 B** and is still the
-DEFLATE path (`unc_zip_extract` → `zip_decode` → `unc_inflate_raw` →
-`inflate` → `inflate_table`); Implode's is 1,684.
+Zip's own chain, re-measured **2026-10-08** for PKZIP 1.01/1.02's
+minimum match length (*Implode*), and it is the first change to this
+format that made the deepest chain SHORTER: `unc_zip_extract` 1,460 →
+**1,468 B** and `zip_decode` 132 → **56 B**, because `zip_implode`
+stopped being inlined into it and is its own 112 B frame now. So the
+deflate path — `unc_zip_extract` → `zip_decode` → `unc_inflate_raw`
+(108) → `inflate` (88) → `inflate_table` (152) — falls 1,940 →
+**1,872 B** and stops being the deepest, and the record goes to the
+MINIMUM-MATCH-LENGTH PROBE at **1,900 B**: `unc_zip_extract` →
+`zip_imp_dry` (172) → `zip_decode` → `zip_implode` → `imp_flush` (60) →
+`exo_emit` (32). An ordinary Implode entry's chain is 1,684 →
+**1,728 B**. `namebuf` is unchanged at 256. (It read 1,432 / 56 / 1,836
+before 2026-10-07, when Implode and the `0x2605` leaf substitution
+landed.)
 
 #### What the stack actually uses, measured two ways
 
@@ -7030,7 +7171,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **157,992 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **158,600 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the
@@ -7431,7 +7572,7 @@ with this archive."*
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
 | System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
-| Verification | none published | 955 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
+| Verification | none published | 956 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, LGPL-2.1-or-later |
 | Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
 
