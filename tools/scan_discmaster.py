@@ -513,17 +513,40 @@ class ImplodeProbe:
     archive — the token is about the first local header. A sweep by
     `format=zip` reaches those and is the pairing this file's own
     caveat asks for.
+
+    **Two keys were added 2026-10-08, and the first one found the
+    specimen.** A self-extracting archive's first 16 bytes are an
+    `MZ` executable header, so no `detection=` token reaches it however
+    the flags fall — and PKZIP 1.01's own distribution, `PKZ101.EXE`,
+    is one. `zip_start()` below finds the zip behind the code, which is
+    what the engine has done since 2026-10-05, and a sweep by FILENAME
+    is how the candidates are named. The second is
+    `central_vermade()`: the central directory's "version made by",
+    which says ZIP spec **1.0** for PKZIP 1.01 and 1.02 and **1.1** for
+    1.10 — measured off those three versions' own distributions, so it
+    separates the two buggy releases from the one that fixed it.
     """
     need = 30
     limit = 4 << 20
 
     def __call__(self, head, size):
         import synth_implode as SI
-        if head[:4] != b"PK\x03\x04":
+        whole = len(head) >= min(size, self.limit)
+        at0 = zip_start(head)
+        if at0 is None:
+            # **An `MZ` prefix cannot be settled by a prefix.** A
+            # self-extractor's first local header is behind however much
+            # code the stub is, so `need` bytes never contain it and
+            # returning None here reports a sweep that decoded NOTHING as
+            # a clean negative — which is exactly what the first run of
+            # this key did (CLAUDE.md, *Traps*: a test that passes may
+            # not be testing anything).
+            if head[:2] in (b"MZ", b"ZM") and not whole:
+                return "more"
             return None
-        if len(head) < min(size, self.limit):
+        if not whole:
             return "more"
-        d, at, out = head, 0, []
+        d, at, out = head, at0, []
         try:
             while at + 30 <= len(d) and d[at:at + 4] == b"PK\x03\x04":
                 (flags, method, _t, _dt, crc, csize, usize, nlen,
@@ -559,6 +582,78 @@ class ImplodeProbe:
         return {"entries": out, "buggy": buggy,
                 "undecodable": [e for e in out
                                 if not e["bug"] and not e["spec"]]}
+
+
+def zip_start(d):
+    """Where a zip's first local header is: 0, or past a self-extractor.
+
+    `PK\x03\x04` at offset 0 is a plain zip.  A self-extracting archive
+    is a DOS `MZ` executable with the zip appended — the shape PKWARE's
+    own `ZIP2EXE` writes — and this engine has recognised one since
+    2026-10-05 (FORMATS.md, *What the zip pair claims*).  The index
+    cannot: the 16 bytes it recorded are the EXE's.
+
+    The signature is taken only after an `MZ`, and only where the local
+    header behind it is self-consistent, so a `PK\x03\x04` that happens
+    to fall inside compressed data is not read as one.
+    """
+    if d[:4] == b"PK\x03\x04":
+        return 0
+    if d[:2] not in (b"MZ", b"ZM"):
+        return None
+    at = d.find(b"PK\x03\x04")
+    if at < 0 or at + 30 > len(d):
+        return None
+    nlen, elen = struct.unpack("<HH", d[at + 26:at + 30])
+    if at + 30 + nlen + elen > len(d):
+        return None
+    return at
+
+
+def central_vermade(head, item, fileid, size, tail=4096):
+    """A zip's central-directory "version made by", off the END of the
+    file — the key `detection=` cannot carry.
+
+    APPNOTE.TXT 4.4.2: the low byte is the ZIP specification version
+    times ten, the high byte the host system.  **PKZIP 1.01 and 1.02
+    write 1.0 and PKZIP 1.10 writes 1.1** — measured 2026-10-08 off
+    `PKZ101.EXE`, `PKZ102.EXE` and `PKZ110.EXE` themselves (FORMATS.md,
+    *Implode*) — so the field separates the two releases that have the
+    minimum-match-length bug from the one that does not, and from every
+    2.x writer at 2.0.
+
+    Two Range reads at worst and one in the common case, against the
+    whole file the decode stage costs.  `start` is nonzero, so this is
+    behind `Head.control()`: a suffix range is answered here with the
+    bytes of the HEAD (TESTING.md, *Searching somebody else's index by
+    content*).  The central directory's offset is believed only
+    relative to where the EOCD says the directory ends, so a zip behind
+    a self-extractor's code is read at the right place too.
+    """
+    if not head.control(item, fileid):
+        return None
+    n = min(tail, size)
+    if n < 22:
+        return None
+    blob = head.get(item, fileid, n, start=size - n)
+    if len(blob) < 22:
+        return None
+    j = blob.rfind(b"PK\x05\x06")
+    if j < 0 or j + 20 > len(blob):
+        return None
+    cdsize, cdoff = struct.unpack("<II", blob[j + 12:j + 20])
+    base = (size - n + j) - cdsize - cdoff      # a self-extractor's code
+    at = base + cdoff
+    if at < 0 or at + 46 > size:
+        return None
+    lo = size - n
+    if at >= lo and at + 46 <= lo + len(blob):
+        rec = blob[at - lo:at - lo + 46]
+    else:
+        rec = head.get(item, fileid, 46, start=at)
+    if len(rec) < 46 or rec[:4] != b"PK\x01\x02":
+        return None
+    return struct.unpack("<H", rec[4:6])[0]
 
 
 PROBES = {"pkg": PkgProbe, "sit": SitProbe, "dd": DdProbe, "pit": PitProbe,
@@ -803,6 +898,13 @@ def main():
                          "it CONTAINS a member of this Mac file type "
                          "(e.g. PNTG). Repeatable; the key is "
                          "`member_types()` above")
+    ap.add_argument("--vermade", action="append", type=int, default=[],
+                    help="implode: probe only an archive whose central "
+                         "directory says this ZIP specification version "
+                         "(10 = 1.0, which is PKZIP 1.01/1.02; 11 = 1.10). "
+                         "Repeatable. Two Range reads instead of the whole "
+                         "file, so it is the cheap narrowing "
+                         "(`central_vermade()` above)")
     ap.add_argument("--shard-under", type=int, default=0,
                     help="split each --query into size shards of at most "
                          "this many hits, so a corpus past the result "
@@ -829,10 +931,11 @@ def main():
         return 0
 
     state = {"files": {}, "probed": {}, "queries": {}, "types": {},
-             "shards": {}}
+             "shards": {}, "vermade": {}}
     if os.path.exists(state_path):
         state = json.load(open(state_path))
         state.setdefault("types", {})
+        state.setdefault("vermade", {})
     t_start = time.time()
     queries = []
     for q in a.query:
@@ -887,6 +990,21 @@ def main():
             break
         item, fileid = key.split("/", 1)
         item, size = int(item), state["files"][key]
+        if a.vermade:
+            # The cheap key first: read the directory at the END and skip
+            # the whole-file fetch unless the writer's own version is one
+            # of the asked-for ones.  The answer is kept whatever it was,
+            # so the tally below can say what the corpus is made of
+            # rather than only what survived the filter.
+            if key in state["vermade"]:
+                vm = state["vermade"][key]
+            else:
+                vm = central_vermade(head, item, fileid, size)
+                state["vermade"][key] = vm
+            if vm is None or (vm & 0xFF) not in a.vermade:
+                state["probed"][key] = False
+                done += 1
+                continue
         blob = head.get(item, fileid, min(probe.need, max(size, 16)))
         if not blob:
             state["probed"][key] = {"err": "no bytes"}
@@ -983,6 +1101,16 @@ def main():
             buggy += len(v["buggy"])
             undec += len(v["undecodable"])
             spec += sum(1 for e in v["entries"] if e["spec"])
+        if a.vermade:
+            hist = {}
+            for vm in state["vermade"].values():
+                k = "unreadable" if vm is None else "%d.%d/host %d" % (
+                    (vm & 0xFF) // 10, (vm & 0xFF) % 10, vm >> 8)
+                hist[k] = hist.get(k, 0) + 1
+            print("version made by, over %d directory read(s): %s"
+                  % (len(state["vermade"]),
+                     ", ".join("%s: %d" % kv for kv in sorted(hist.items()))),
+                  flush=True)
         print("implode: %d archive(s) with a bug-capable Implode entry, "
               "%d such entries: %d follow APPNOTE.TXT 5.3.4, %d need the "
               "PKZIP 1.01/1.02 rule, %d decode under neither (damaged, or "

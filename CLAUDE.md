@@ -49,7 +49,7 @@ OPEN_ITEMS 7.7k, BLOCKERS' first two sections 3.3k), re-measured 2026-10-07
 after Implode landed — the total barely moved, because the two sections
 OPEN_ITEMS lost to that work are about what PROGRESS and BLOCKERS gained
 by it; BLOCKERS'
-withdrawn-claims archive is another **~68.4k** and is reference, not
+withdrawn-claims archive is another **~68.8k** and is reference, not
 orientation. **Every one of those five figures has been stale twice** — the
 session-start one sat at 7.5k from 2026-08-26 and at 12k from 2026-09-27,
 each time while the files grew under it, and `tools/check_docs.py`'s slack
@@ -122,6 +122,12 @@ All of these cost real time here:
   stdout, so a companion `until grep -q "CI exit" ci.log` waits forever. Put it
   inside — `{ ./ci.sh; echo "CI exit $?"; } > ci.log 2>&1` — or let a
   backgrounded command notify on exit by itself.
+- **`stdbuf` and ASan do not mix, and the failure names the wrong thing.**
+  `stdbuf -oL ./ci.sh` sets `LD_PRELOAD` for every child, so the first
+  sanitizer binary refuses to start — *"ASan runtime does not come first in
+  initial library list"* — and `ci.sh` reports `FAILED: unit tests
+  (sanitizers)` on a tree that is green. Run `ci.sh` with no wrapper; the
+  sentinel-inside-the-redirect form below is all the line buffering it needs.
 - **Backgrounded processes lose network access here.** A detached download or
   probe stalls in `poll()` with no error; run anything that talks to the
   network in the foreground, in chunks that fit the timeout.

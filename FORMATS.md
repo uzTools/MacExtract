@@ -4381,47 +4381,99 @@ the four combinations by itself. The two it supplies are also the only
 two where the parameter below is observable, which is the part worth
 knowing.
 
-**UNEXERCISED, and it is one thing: PKZIP 1.01 and 1.02's
-minimum-match-length bug.** Those two versions took the minimum match
+**UNEXERCISED by the fixture suite, and it is one thing: PKZIP 1.01 and
+1.02's minimum-match-length bug — but a specimen that carries it is in
+hand since 2026-10-08.** Those two versions took the minimum match
 length from the DICTIONARY SIZE rather than from the literal tree's
 presence, and deark implements both readings and chooses by decoding the
 entry twice and keeping whichever pass reproduces the stored CRC-32
 (`could_have_mml_bug`, `detect_implode_mml_bug`; its comment says *"I
-only know of PKZ101.EXE"*). The two rules differ in exactly the 8 K/2-tree
-and 4 K/3-tree combinations, which is why this is measurable at all: a
-build here taking the dictionary-size reading passes `run_diff.py` over
-the whole corpus and fails only the ZipIt specimen — measured, on that
-build. This engine follows 5.3.4, so such an entry fails its CRC-32 as a
-per-entry error. Since the committed generator's `8k-2trees.txt` landed,
-the fixture suite catches the wrong reading too.
+only know of PKZ101.EXE"*, and that is the file). The two rules differ
+in exactly the 8 K/2-tree and 4 K/3-tree combinations, which is why this
+is measurable at all: a build here taking the dictionary-size reading
+passes `run_diff.py` over the whole corpus and fails only the ZipIt
+specimen — measured, on that build. This engine follows 5.3.4, so such
+an entry fails its CRC-32 as a per-entry error. Since the committed
+generator's `8k-2trees.txt` landed, the fixture suite catches the wrong
+reading too.
 
-**And "no specimen in reach" is not what was filed, because it was
-searched for by MAGIC first.** The bug is not a byte anywhere in a file
-— it is a decode outcome, so no index can be asked for one directly.
-What an index CAN be asked for is the two flag combinations where the
-two rules disagree, which live in a zip's first local header:
-`detection=504b0304????02000600*` is **4,074** files and
-`...04000600*` is **4,869** (Discmaster, 2026-10-07; 1,125,083 files
-have a method-6 first entry and 6,805,790 are zips at all). Both ways
-were then run against **the CRC-32 each archive itself stored** —
-`tools/scan_discmaster.py --probe implode`, which fetches the file and
-decodes every bug-capable entry twice:
+### The specimen that carries the bug
+
+**Measured 2026-10-08.** `PKZ101.EXE`, PKZIP 1.01's own July 1989
+distribution self-extractor, 131,517 B,
+sha256 `f36d9551c1917a7990db2b4582191656d748179ea2bd15499294388e9c4fa458`,
+freely re-fetchable from six Discmaster items — two of them pinned in
+`tools/specimens/implode.tsv`, byte-identical. Why the earlier search
+missed it is DECISIONS.md 2026-10-08, *the stub is the writer's
+signature*.
 
 | | |
 |---|---|
-| archives probed | **800**, in two size bands |
-| bug-capable Implode entries in them | **19,107** |
-| …following APPNOTE.TXT 5.3.4 | **19,105** |
-| …needing the PKZIP 1.01/1.02 rule | **0** |
-| …decoding under neither | **2**, both entries of two copies of one truncated `synchro.zip` whose central directory is gone — `unar` says *"Attempted to read more data than was available"*, deark *"central directory not found"* and this engine *"file is truncated"*, so all three agree the file and not the reading is what is missing |
+| entries | **13**: 12 Implode and 1 stored |
+| bug-capable entries (flags 0x0004 — 4 K dictionary, three trees) | **3**: `README.DOC` 873 B, `ORDER.DOC` 4,607 B, `OMBUDSMN.ASP` 595 B |
+| …decoding to the stored CRC-32 under 5.3.4 | **0** |
+| …under the dictionary-size rule | **3**, and the bytes are identical to deark's output for all three |
+| what adjudicates it | **deark**, which reports `MML bug detection: 1` and extracts all 13 clean. `unar` fails the same 3 with *"Wrong checksum"*, Info-ZIP `unzip` with *"bad CRC"*, and this engine with *"checksum mismatch"* — `t` says *3 of 13 entries failed* |
+| the other 9 Implode entries | flags 0x0000, 0x0006, 0x8000 and 0x8006 — combinations where the two rules coincide — and this engine extracts all 9 and the stored entry today |
 
-**What would change it:** a file, and the search for one is now a
-measured negative over 19,107 entries rather than an absence of
-specimens. The 8,943 archives that query names are also what says the
-two combinations the ZipIt specimen supplies are not rare in the wild —
-only rare HERE (DECISIONS.md 2026-10-07, *the method that was out for a
-premise with no halves left*; TESTING.md, *Searching somebody else's
-index by content*).
+**What it would grade** if it became a fixture: the dictionary-size
+reading on three streams nothing on this machine wrote, against the
+CRC-32 PKZIP itself stored, with deark as a second oracle. It is
+fixture-eligible rather than a fixture because no decoder here
+implements the rule yet; until one does, all it can grade is that the
+engine refuses those three entries per entry and extracts the other ten.
+
+**Two negative controls are in the same table, and they are what makes
+the find mean something.** `PKZ102.EXE` is the OTHER buggy version and
+writes **no bug-capable entry at all** — every one of its 13 Implode
+entries is at 0x8000 or 0x8006, where the rules coincide. `PKZ110.EXE`
+is the version that fixed the bug, and it is where *version made by*
+turns from ZIP spec **1.0** into **1.1** (below).
+
+### Searching for it: three keys, and the one that worked
+
+**Measured 2026-10-07 and 2026-10-08.** The bug is not a byte anywhere
+in a file — it is a decode outcome — so every key here names
+CANDIDATES and the stored CRC-32 answers, through
+`tools/scan_discmaster.py --probe implode`.
+
+| key | what it names | archives probed | bug-capable entries | by 5.3.4 | by the bug |
+|---|---|---|---|---|---|
+| **the PKSFX 1.01/1.02 stub**, `detection=4d5a98001f000b002000c10affff0a0e*` — the first 16 bytes of a self-extractor those two versions built, identical in 1.01 and 1.02 and different in 1.10 | **5,576** files, 1,323 deduplicated | **1,323**, all of them | **12** | 0 | **12**, in 4 archives, every one a copy of `PKZ101.EXE` |
+| `detection=504b0304????02000600*` and `...04000600*` — a zip whose FIRST local header is Implode at one of the two disagreeing combinations | 8,943 files (4,074 + 4,869), 3,821 deduplicated; against 1,125,083 zips whose first entry is method 6 at all and 6,805,790 zips | 800 on 2026-10-07, then **1,537 of 3,821** on 2026-10-08 under the version filter below, after reading all 3,821 directories | 19,107, then **29,799** | 19,105, then **29,795** | **0** |
+| the same two tokens with `tsMin=1989&tsMax=1990` — PKZIP 1.1's era and everything before it | 975 | **975** | **3,543** | 3,543 | **0** |
+
+The 4 that decode under neither rule are two copies of one truncated
+`synchro.zip` and two more whose central directory is likewise gone;
+`unar` and deark refuse those as well.
+
+**The central directory's *version made by* is a writer key, and it
+needs the host byte.** APPNOTE.TXT 4.4.2 puts the ZIP specification
+version in the low byte and the host system in the high one, and
+`central_vermade()` reads it over two HTTP `Range`s instead of the whole
+file. Measured off the three distributions themselves: PKZIP **1.01 and
+1.02 write 1.0**, PKZIP **1.10 writes 1.1**. Over the 3,821
+deduplicated plain-zip candidates:
+
+| version made by | archives |
+|---|---|
+| spec 1.0, host 3 (Unix) | **1,467** |
+| spec 1.0, host 0 (MS-DOS) — **the PKZIP 1.01/1.02 fingerprint** | **10** |
+| spec 1.0, other hosts (2, 6, 7) | 61 |
+| spec 1.1, host 0 | 919 |
+| spec 1.1, host 3 | 25 |
+| spec 2.0, host 0 | 1,111 |
+| spec 2.0 / 3.2, host 7 | 161 |
+| spec 0.0–0.9 | 57 |
+| directory unreadable | 10 |
+
+So the key narrows 3,821 to **10** — and all 25 bug-capable entries in
+those 10 follow 5.3.4, so none of them is PKZIP 1.01's or 1.02's output
+whatever the field says. **That is what explains the 2026-10-07
+negative**: the plain-zip population at these flag combinations is
+overwhelmingly PKZIP 1.10 and 2.x, which do not have the bug, and the
+two versions that do are reached through their self-extractors
+(TESTING.md, *Searching somebody else's index by content*).
 
 **Also UNEXERCISED, and smaller:** a `0x2605` FileName containing a `/`.
 The engine applies the classic `/`→`:` swap to the field's leaf, which

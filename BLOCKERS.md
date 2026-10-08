@@ -2016,6 +2016,30 @@ a harness can click is not the same list.
   (DECISIONS.md 2026-10-05, *a leaf is not a path, and a version is not
   a preference*).
 
+- **"Nothing in reach was written by those two versions"** — PKZIP
+  1.01/1.02's minimum-match-length bug, filed 2026-10-07 in
+  `src/fmt_exo.c`'s decoder header and in FORMATS.md, *Implode*, as a
+  measured negative over 19,107 bug-capable entries. **Withdrawn
+  2026-10-08**: `PKZ101.EXE`, PKZIP 1.01's own July 1989 distribution,
+  has three entries that decode to the stored CRC-32 only under the
+  dictionary-size rule, and 1,323 of its kind are in the same index the
+  negative came from. deark says `MML bug detection: 1`; `unar` and
+  Info-ZIP `unzip` fail the same three on CRC and so does this engine.
+  **Cost: one day, and that is the whole of it** — because the negative
+  was written as a result *of a named key* rather than as a fact about
+  the world, so re-testing it meant adding a key and never meant
+  re-opening the question. The claim it actually displaced is the
+  smaller one in the same paragraph, *"a rule this corpus cannot
+  grade"*: the corpus could not, and a specimen table can, and the
+  difference is one `detection=` token. **Why it survived:** the key
+  that was used asks which files COULD carry the bug — a flag
+  combination, which is a property of the archive — and the question is
+  which files WERE WRITTEN BY 1.01, which is a property of the writer.
+  The writer signs a self-extractor in its stub's `MZ` header, and a
+  self-extractor is invisible to every `PK\x03\x04` token there is
+  (DECISIONS.md 2026-10-08, *the stub is the writer's signature*;
+  FORMATS.md, *The specimen that carries the bug*).
+
 ### Corrected figures and superseded write-ups
 
 - **"No zip written by PKZIP 1.01 or 1.02 is in reach, so its
@@ -2031,7 +2055,11 @@ a harness can click is not the same list.
   deark refuse as well. **Cost: nothing, which is the point of doing it
   in this order** — and what it bought is that the 8,943 figure says the
   combinations are not rare in the WORLD, only here, so what the corpus
-  lacked was a committable file and not a population (FORMATS.md,
+  lacked was a committable file and not a population. **The conclusion
+  drawn from it did not survive, and is withdrawn above**: the sweep was
+  extended to all 3,821 deduplicated candidates on 2026-10-08 — 29,795
+  by the specification, still 0 by the bug — and a key for the WRITER
+  rather than for the archive found a specimen the same day (FORMATS.md,
   *Implode*; TESTING.md, *Searching somebody else's index by content*).
 
 - **FORMATS.md's *Three configurations, one tree* table, all six

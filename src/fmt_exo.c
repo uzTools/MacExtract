@@ -542,10 +542,13 @@ static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
  * DICTIONARY SIZE instead, which disagrees with 5.3.4 in exactly the
  * two flag combinations where the two rules differ, and deark detects it
  * by decoding the entry twice and keeping whichever pass reproduces the
- * stored CRC-32. Nothing in reach was written by those two versions
- * (FORMATS.md, *Implode*), so such an entry fails its CRC-32 here as a
- * per-entry error, which is the honest answer for a rule this corpus
- * cannot grade. */
+ * stored CRC-32. Such an entry fails its CRC-32 here as a per-entry
+ * error, which is the honest answer for a rule this engine does not
+ * have. A specimen that carries it IS in reach since 2026-10-08 —
+ * PKZIP 1.01's own PKZ101.EXE, three entries of thirteen
+ * (tools/specimens/implode.tsv; FORMATS.md, *The specimen that carries
+ * the bug*) — so what is missing is the reading and no longer the
+ * subject. */
 
 /* The RLE nibble carries a bit length MINUS ONE, so 16 is the longest
  * code the format can state. Source: zip_appnote.txt 5.3.7. */

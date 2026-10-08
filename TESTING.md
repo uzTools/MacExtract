@@ -2484,8 +2484,10 @@ first. Each fails this suite; the restored decoder passes.
   the bug is observable are written the specification's way. deark
   detects the bug by decoding twice and keeping whichever pass
   reproduces the stored CRC; this engine does not, and such an entry
-  fails its CRC-32 as a per-entry error. UNEXERCISED, and what would
-  change it is a file (FORMATS.md, *Implode*).
+  fails its CRC-32 as a per-entry error. Still UNEXERCISED by this
+  suite — but no longer for want of a file: `PKZ101.EXE` carries three
+  such entries and is in `tools/specimens/implode.tsv` since 2026-10-08
+  (FORMATS.md, *The specimen that carries the bug*).
 - **No Finder metadata and no fork split.** A MacBinary payload under an
   Implode entry is the ZipIt specimen's shape; `tools/run_zipit.py`
   grades that, and this suite's entries are plain text files.
@@ -4276,6 +4278,30 @@ no version of SpaceSaver ever wrote. The unit tests also carry what no
 specimen here has: a resource fork whose stream is written BEFORE the data
 fork's, which is what the header's offsets are for.
 
+## PKZIP's own distributions (`tools/specimens/implode.tsv`, not in `ci.sh`)
+
+Added 2026-10-08. Three self-extractors, fetched and hash-checked like
+every other specimen set and graded by nothing yet, because no decoder
+here implements the rule they are about:
+
+    tools/fetch_specimens.py --only implode
+    tools/fetch_specimens.py --only implode --check
+
+    ~/.cache/macextract/vmac/specimens/implode/
+
+`PKZ101.EXE` is the only file this project has ever held that carries
+PKZIP 1.01/1.02's minimum-match-length bug — three entries of thirteen,
+adjudicated by deark and by the CRC-32 PKZIP stored. `PKZ102.EXE` and
+`PKZ110.EXE` are the two negative controls. The figures and the proof
+are FORMATS.md, *The specimen that carries the bug*; how it was found is
+the sweep table above and DECISIONS.md 2026-10-08, *the stub is the
+writer's signature*.
+
+**What this set cannot see yet:** anything. It is a set of files with a
+recorded answer and no runner, which is deliberate — the answer was
+recorded first so that the first decoder to implement the rule can be
+graded by something it did not shape.
+
 ## ZipIt's own archives (`tools/run_zipit.py`, in `ci.sh`)
 
 Added 2026-10-04. Until that day every subject for ZipIt's three
@@ -4469,7 +4495,7 @@ at a stranger's disk. That check matters more than it sounds:
 | `pkg` | an AppleLink package: the item count, the version, eight zero bytes, then the whole directory validated against the file's own size and tiling | **exactly the 6 synthesised `.pkg` fixtures out of 956 files in `fixtures/`**, and both real packages, which is a test that can fail in both directions |
 | `sit` | a classic StuffIt archive, reported when a fork's method byte carries the Optimizer bit `0x40`, the encrypted bit `0x80` or the `NewDE` bit `0x10` — and, since 2026-10-07, NAMING the module: the Optimizer id at 106/108 and the Encryptor id at 107/109, each read only for the fork whose own method byte carries the flag and whose length is nonzero | the **340** `rLau` archives out of 1,915 files in `fixtures/`, **1,710 file headers**, of which it flags exactly **4** — the two wild optimized archives in both their forms; and over StuffIt Deluxe 2.0.1's own specimens it names all five of that application's ciphers and all five Optimizer ids, each on the right archive, which is a test that can fail in both directions |
 | `dd` | a DiskDoubler compressed file, with both forks' methods and lengths | the 67 DiskDoubler headers in `fixtures/`, where it reproduces FORMATS.md's *the biggest method-8 fork in reach is 44,549 B and compresses to 1,230* |
-| `implode` | a zip's Implode entries, each decoded BOTH ways — APPNOTE.TXT 5.3.4's minimum match length and PKZIP 1.01/1.02's — and graded by the CRC-32 the archive itself stored. Added 2026-10-07. Reported only when an entry needs the 1.01/1.02 rule, because that is the one thing the question is about. Wants the whole file. The decoder is `tools/synth_implode.py`'s, shared with the generator so there is one Python reading of 5.3 here | the 10 wild Implode entries on this disk: **7 of them are a combination where the two rules COINCIDE** and come out CRC-OK either way, and the 3 in the ZipIt specimen are the bug-capable pair and come out CRC-OK under 5.3.4 and CRC-bad or EOF under the other — so the probe can fail in both directions, and does, on files whose answer is already known |
+| `implode` | a zip's Implode entries, each decoded BOTH ways — APPNOTE.TXT 5.3.4's minimum match length and PKZIP 1.01/1.02's — and graded by the CRC-32 the archive itself stored. Added 2026-10-07. Reported only when an entry needs the 1.01/1.02 rule, because that is the one thing the question is about. Wants the whole file. The decoder is `tools/synth_implode.py`'s, shared with the generator so there is one Python reading of 5.3 here. **Since 2026-10-08 it also reads a zip BEHIND CODE** (`zip_start()`), which is what found the specimen, and `--vermade` filters by the central directory's writer version over two `Range`s before paying for the whole file (`central_vermade()`) | the 10 wild Implode entries on this disk: **7 of them are a combination where the two rules COINCIDE** and come out CRC-OK either way, and the 3 in the ZipIt specimen are the bug-capable pair and come out CRC-OK under 5.3.4 and CRC-bad or EOF under the other — so the probe can fail in both directions, and does, on files whose answer is already known. Since 2026-10-08 also the three `tools/specimens/implode.tsv` self-extractors: **3 flagged in `PKZ101.EXE` and 0 in `PKZ102.EXE` and `PKZ110.EXE`**, and `central_vermade()` has its own control — the three files' own directories, read over the network, against bytes already in hand |
 | `pit` | a PackIt archive, walked to the end of its block chain — reported only when a block is `PMa5` or `PMa6`. Added 2026-10-05. It wants the WHOLE file where the other three want 512 bytes, because an encrypted block is almost never the first one and a `PMa4` block can only be stepped over by DECODING it (`tools/derive_packit.py`'s decoder, with every length bounded against the bytes present) | **exactly the 5 PackIt archives out of 962 files in `fixtures/`**, every one of them walking to its `PEnd`, and all 3 encrypted specimens in `specimens/pitcrypt/`, each stopping at its encrypted block — so it can fail in both directions. Its first draft bounded a COMPRESSED entry's decoded size by the bytes left in the file and rejected every archive `tools/synth_pit.py` writes |
 
 **The sweeps that have been run, by key:**
@@ -4486,6 +4512,9 @@ at a stranger's disk. That check matters more than it sounds:
 
 | 2026-10-06 | `detection=626567696e2030*`, `...2036*`, `...2037*` — a file whose first bytes are a uuencode `begin` line, then the TAIL of each candidate read for a ` .finfo` section | 939 | **1** UUTool MU-layout posting, `uu-wild-dictcol.uu`, now a fixture. A second specimen came off the same key by eye, from a Macintosh CD (`uu-wild-terrainman.uu`). The first pass over the same 939 found nothing because the tail range was not honoured — below |
 | 2026-10-07 | `detection=504b0304????02000600*` and `...04000600*` — a zip whose FIRST local header is Implode at one of the two flag combinations where 5.3.4 and the PKZIP 1.01/1.02 reading disagree, in two size bands | **800** probed of 8,943 named (4,074 + 4,869; against 1,125,083 zips whose first entry is method 6 at all, and 6,805,790 zips) | **19,107 bug-capable Implode entries: 19,105 follow APPNOTE.TXT 5.3.4, 0 need the 1.01/1.02 rule, 2 decode under neither** — both entries of two copies of one truncated `synchro.zip` whose central directory is gone, which `unar` and deark refuse too. The bug is not a byte anywhere in a file, so this is the only way to ask: the flags name the candidates and the stored CRC-32 answers (FORMATS.md, *Implode*) |
+| 2026-10-08 | `detection=4d5a98001f000b002000c10affff0a0e*` — **the PKSFX 1.01/1.02 stub's own DOS EXE header**, the first 16 bytes of every self-extractor those two versions built. A key for the WRITER and not for the archive, which is the question this one turned out to be | **1,323** probed of 5,576 named, deduplicated | **12 bug-capable entries, every one of them written by the bug and none by 5.3.4** — in 4 archives, all four copies of `PKZIP 1.01`'s own `PKZ101.EXE`. The specimen; `tools/specimens/implode.tsv` (FORMATS.md, *The specimen that carries the bug*) |
+| 2026-10-08 | the two 2026-10-07 flag tokens again, deduplicated to 3,821, with **every central directory read** for its *version made by* (`--vermade 10`, two `Range`s per file) and only the ZIP-spec-1.0 writers fetched whole | 3,821 directories read, **1,537** archives fetched and decoded | **29,799 bug-capable entries: 29,795 by 5.3.4, 0 by the bug, 4 by neither.** And the histogram that explains it: only **10 of 3,821** say MS-DOS + spec 1.0, the fingerprint PKZIP 1.01 and 1.02 write; 1,467 are Unix/1.0, 919 MS-DOS/1.1 and 1,111 spec 2.0 (FORMATS.md, *Implode*, for the whole table) |
+| 2026-10-08 | the same two tokens with `tsMin=1989&tsMax=1990` — PKZIP 1.1's own era and everything before it, which is the weakest of the three keys and was run to say so | 975 | **3,543 bug-capable entries, 3,543 by 5.3.4, 0 by the bug.** A date is not a writer |
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
 | 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
 | 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |
@@ -4508,6 +4537,18 @@ to it however many method-6 entries follow. The pairing this file's own
 caveat asks for is a sweep by `format=zip`, which reaches those and is
 not done. It also cannot see a file whose first 16 bytes the index did
 not record.
+
+**It could not see a SELF-EXTRACTOR either, and that is where the
+specimen was.** A zip behind code has an `MZ` header in its first 16
+bytes, so no token about `PK\x03\x04` reaches one however the flags
+fall — and the stub's own header is a token, which is the key that found
+`PKZ101.EXE` (DECISIONS.md 2026-10-08, *the stub is the writer's
+signature*). **The first run of that key reported 0 and had decoded
+nothing**: the probe is handed `need` bytes first and only asks for the
+whole file when it says `"more"`, and 30 bytes of an `MZ` file contain no
+local header, so it returned "not a zip" 1,323 times. Establishing that
+the probe can FAIL is the control this file already asks for; what was
+missing was establishing that it had run.
 
 **What the PackIt sweep cannot see** is a MacBinary-wrapped archive:
 `detection=504d61*` reads the first 16 bytes, and

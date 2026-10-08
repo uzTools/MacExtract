@@ -23,6 +23,11 @@ beside this script record size, sha256 and URL for every one.
   zipit       9 archives ZipIt itself wrote — five self-extracting, four
               a plain `.zip`. `tools/run_zipit.py` grades them
               (TESTING.md).
+  implode     PKZIP 1.01's, 1.02's and 1.10's own distribution
+              self-extractors. `PKZ101.EXE` is the only file this
+              project has ever held that carries the PKZIP 1.01/1.02
+              minimum-match-length bug; the other two are the negative
+              controls (FORMATS.md, *Implode*).
 
 How they were found, and how to find more, is DECISIONS.md 2026-09-26
 (the magic in somebody else's index).
@@ -41,10 +46,11 @@ SETS = {
     "spacesaver": ("spacesaver.tsv", "spacesaver"),
     "applelink":  ("applelink.tsv", "applelink"),
     "zipit":      ("zipit.tsv", "zipit"),
+    "implode":    ("implode.tsv", "implode"),
 }
 # `run_spacesaver.py` wants NAME.ss and NAME.ss.orig beside each other.
 SUFFIX = {"ss": ".ss", "orig": ".ss.orig", "pkg": "",
-          "sea": ".sea", "zip": ".zip"}
+          "sea": ".sea", "zip": ".zip", "sfx": ".exe"}
 
 
 def table(name):

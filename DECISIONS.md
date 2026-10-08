@@ -365,6 +365,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
 - 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
 - 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
+- 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
 
 ---
 
@@ -24148,3 +24149,77 @@ the streamed case the directory prefix it copies is already in it. The
 deepest zip chain is 1,836 → 1,940 B and it is still the DEFLATE path;
 Implode's is 1,684. Both far under the 4 KB rule and under the engine's
 own deepest chain.
+
+
+## 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
+
+**The question changed and the key did not.** On 2026-10-07 the search
+for a zip carrying PKZIP 1.01/1.02's minimum-match-length bug was run by
+the only key the index seemed to offer: the two flag combinations where
+APPNOTE 5.3.4 and the buggy rule disagree, which live in a zip's first
+local header and are therefore a hex token over the first 16 bytes. That
+named 8,943 files, 800 were probed, and 19,105 of 19,107 bug-capable
+entries came out by the specification with none by the bug. The figure
+was filed as a measured negative and it was one — but of the wrong
+population. **Flag combinations are a property of the ARCHIVE; the bug is
+a property of the WRITER**, and the two questions have different keys.
+
+**A writer key existed and was sitting in the file this project was
+looking for.** `PKZ101.EXE` is PKZIP 1.01's own distribution, a
+self-extracting archive, and its first 16 bytes are the PKSFX stub's DOS
+`MZ` header: `4d5a98001f000b002000c10affff0a0e`. Those bytes are
+identical in 1.01's and 1.02's stub and different in 1.10's, so the token
+names **5,576 files in the index, every one of them built by a version
+that has the bug** — where no token about `PK\x03\x04` can see a
+self-extractor at all, because the bytes it indexes are the executable's.
+1,323 deduplicated, all probed: 12 bug-capable entries, **12 by the bug
+and 0 by the specification**, in four copies of `PKZ101.EXE`. Three
+oracles agree on the three entries — deark reports `MML bug detection: 1`
+and its output matches the stored CRC-32, `unar` and Info-ZIP `unzip`
+both fail those three on CRC, and so does this engine.
+
+**What makes this worth transferring is not the file, it is the shape of
+the key.** This repository's own habit is to search by content rather
+than by name, and `detection=` over the first 16 bytes is how that has
+been done eight times. The first 16 bytes of a file are not always the
+format's — when a format can be WRAPPED, they belong to the wrapper, and
+the wrapper is usually written by one program and therefore has one
+signature. A stub, a MacBinary header, a `begin` line: each is a key for
+whoever produced it, and that is a different and sometimes better
+question than a key for the payload.
+
+**The second key is real and was not enough.** The central directory's
+*version made by* (APPNOTE 4.4.2) is the field a writer stamps itself
+into, and it is at the END of the file, which is why no `detection=`
+token carries it; `central_vermade()` reads it over two HTTP `Range`s for
+the price of 4 KB instead of the whole archive. Measured off the three
+distributions themselves, PKZIP 1.01 and 1.02 write ZIP spec **1.0** and
+1.10 writes **1.1** — a clean discriminator between the versions that
+have the bug and the one that fixed it. Over the 3,821 deduplicated
+plain-zip candidates it narrows to 1,537 worth fetching, and the
+histogram is what finally explains the 2026-10-07 negative: 919 of them
+are MS-DOS/1.1 and 1,111 are spec 2.0, and **only 10 carry MS-DOS +
+spec 1.0**. The lesson about the field is that the LOW byte alone is not
+the key — 1,467 of the 1.0-spec archives are host 3, Unix, and were
+written by Info-ZIP-era tools that never had the bug. A version without
+a platform is half a fingerprint.
+
+**And the third key was run in order to say it is worthless.** A date
+filter, 1989 to 1990, names 975 archives at the bug-capable
+combinations; all 3,543 of their entries follow 5.3.4. An era contains
+every writer that was alive in it.
+
+**The run that reported 0 and had decoded nothing.** The first sweep of
+the stub key printed `0 match the probe` over all 1,323 files and looked
+like a clean negative on a key that had just been designed. It was not:
+the sweep hands a probe `need` bytes and refetches the whole file only
+when the probe answers `"more"`, and 30 bytes of an `MZ` file contain no
+local header, so `zip_start()` returned "not a zip" every time. **The
+probe had been controlled for its ability to FAIL — on four files whose
+answers were known — and not for its ability to RUN inside the harness
+that calls it.** Those are two different controls and this one needed
+both; the tell was that a sweep over 1,151 files with a 150 KB mean had
+finished in the same time as one that only read their directories.
+Status: FORMATS.md, *The specimen that carries the bug*; the sweeps:
+TESTING.md, *Searching somebody else's index by content*; the withdrawn
+claim and its cost: BLOCKERS.md.
