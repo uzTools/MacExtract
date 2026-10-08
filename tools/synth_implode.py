@@ -447,17 +447,34 @@ SHAPES = (
 # apart; with both flag bits set or neither, both rules name the same
 # length and a stream is the same stream.
 #
-# NOT in SHAPES, and that is deliberate: a zip has ONE writer, and both
-# this engine and deark settle the question per ARCHIVE from the first
-# bug-capable entry. An archive holding a 5.3.4 entry and a 1.01 entry
-# at once is a thing no writer makes, and putting one in the committed
-# fixture would have made the suite grade a decision nobody has to take.
-# `run_implode.py` writes these two into an archive of their own.
+# NOT in SHAPES, and that is deliberate: both this engine and deark
+# settle the question per ARCHIVE from the first bug-capable entry, so a
+# committed fixture holding both readings would make the differential
+# suite grade that decision rather than the decoder. `run_implode.py`
+# writes these two into an archive of their own.
 BUGSHAPES = (
     ("8k-2trees-mmlbug", 8192, False, 3),
     ("4k-3trees-mmlbug", 4096, True, 2),
 )
 ALLSHAPES = SHAPES + BUGSHAPES
+
+# --mixed: one archive carrying BOTH readings, bug-written entry first,
+# at the same ambiguous flag combination. No writer is known to make one
+# — no archive of 1,537 in the 2026-10-08 sweep mixes — but a zip is
+# appendable and PKZIP 1.1 wrote Implode too, so it is a shape the
+# format allows and the engine has to behave sanely on. The order is
+# fixed and load-bearing: the FIRST entry settles the archive, so a
+# bug-written first entry is what leaves the two after it inheriting a
+# verdict that is wrong about them. Graded by `run_implode.py`'s fourth
+# lane against each entry's own stored CRC-32, which is the only oracle
+# available here: deark settles per archive as well, so it gets the same
+# entries wrong (DECISIONS.md 2026-10-08, *the writer a zip is allowed
+# to have twice*).
+MIXEDSHAPES = (
+    ("mixed-bug", 4096, True, 2),
+    ("mixed-spec", 4096, True, None),
+    ("mixed-spec2", 4096, True, None),
+)
 
 DOS_DATE = 0x1421          # 1990-01-01, matching synth_exo.py's MTIME
 DOS_TIME = 0x0000
@@ -577,6 +594,11 @@ def main():
                            "their own")
     ap.add_argument("--plain", help="write the concatenated plaintext of "
                                     "every entry here, for a grader")
+    ap.add_argument("--mixed", action="store_true",
+                    help="write MIXEDSHAPES instead: one archive carrying "
+                         "both readings, the bug-written entry first, so "
+                         "the two after it inherit a verdict that is wrong "
+                         "about them")
     ap.add_argument("--selftest", action="store_true",
                     help="hold the code construction to APPNOTE.TXT "
                          "5.3.8's own worked example and stop")
@@ -588,7 +610,7 @@ def main():
     if not a.output:
         ap.error("-o/--output is required (or --selftest)")
 
-    shapes = SHAPES
+    shapes = MIXEDSHAPES if a.mixed else SHAPES
     if a.only:
         known = {s[0] for s in ALLSHAPES}
         bad = [n for n in a.only if n not in known]
@@ -603,6 +625,7 @@ def main():
     ranges = []
     central = bytearray()
     plain = bytearray()
+    bodies = []
     nent = 0
     for name, dictsize, three, mml in shapes:
         body = bytearray()
@@ -628,6 +651,7 @@ def main():
                                0, 0, 0, lhoffs)
         central += fn
         plain += body
+        bodies.append((name, bytes(body)))
         nent += 1
 
     cdoffs = len(blob)
@@ -640,6 +664,14 @@ def main():
     if a.ranges:
         with open(a.ranges, "w") as fh:
             json.dump([list(r) for r in ranges], fh)
+    if a.mixed and a.plain:
+        # The mixed lane grades per ENTRY, and its three bodies differ
+        # (the minimum match length changes the matches the encoder can
+        # take), so the concatenation is useless to it: write one file
+        # per entry beside the path given.
+        for name, body in bodies:
+            with open("%s.%s" % (a.plain, name), "wb") as fh:
+                fh.write(body)
     if a.plain:
         with open(a.plain, "wb") as fh:
             fh.write(plain)

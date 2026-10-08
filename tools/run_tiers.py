@@ -290,7 +290,7 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # resident. Not compensated, on the same terms as every row above
 # (DECISIONS.md 2026-10-08, *the second attempt that had nowhere to
 # go*).
-OVL_SAVED = 131472
+OVL_SAVED = 131632
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -369,7 +369,7 @@ IMAGES = {
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15764,
     "OVL_ID_CRYPT":       10140,
-    "OVL_ID_EXO":         31784,
+    "OVL_ID_EXO":         31936,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
@@ -379,7 +379,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 158600
+BUNDLE = 158752
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

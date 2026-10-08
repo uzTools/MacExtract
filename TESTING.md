@@ -2516,8 +2516,32 @@ and by `read` + `lseek` counted with `strace`, both in FORMATS.md
 (*The minimum match length PKZIP 1.01 and 1.02 used*) and neither in
 this suite. The probe ORDER is in the same class.
 
+**A FOURTH lane, since 2026-10-08: one archive carrying BOTH readings**,
+the bug-written entry first, which is the shape the per-archive verdict
+is wrong about. `synth_implode.py --mixed` writes it — three entries at
+the same ambiguous combination — and the lane asserts the three things
+that matter in order: the entry that SETTLED the archive comes out; the
+next one, which inherited a verdict wrong about it, is refused AS A
+CHECKSUM failure and not as the truncation a desynchronised decode
+reports; and the one after that comes out, because the verdict went back
+to unsettled and probed for itself. The oracle is each entry's own
+stored CRC-32, written by the generator from the plaintext it coded:
+deark cannot be one here, because it settles per archive as well and gets
+the same entries wrong. It fails two ways on the build of that morning —
+two entries refused instead of one, and both called truncated.
+
+No writer is known to make such an archive: none of the 1,537 swept on
+2026-10-08 mixes. The lane exists because a zip is appendable and the
+FORMAT allows one, which is a different question from what writers do
+(DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*).
+
 **What it cannot see.**
 
+- **Whether a MIXED archive exists anywhere.** Lane 4's subject is
+  generated, and the sweep that looked for one was keyed on the two
+  flag combinations rather than on writers mixing; what it establishes
+  is 0 of 1,537 archives, not 0 in the world. The lane grades the
+  engine's behaviour on the shape, not the shape's existence.
 - **Which half of the 1.01/1.02 rule is authentic.** The lane above
   grades BOTH disagreeing combinations, but only one of them has a real
   file behind it anywhere: all three authentic bug entries are 4 K with

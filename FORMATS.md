@@ -4470,13 +4470,31 @@ one was written:
 | 3. buffer the fork and emit only on success | `usize` is a 32-bit field, so the bound is the format's and not a corpus figure; the largest Implode fork in reach is `THREED.VBX` at **64,544 B**, against a zip whose whole peak-RAM row is **12–54 KB** and a 1 MB floor. One buffer would exceed the format's entire budget | **out** |
 
 **What makes shape 1 affordable is that the verdict is per ARCHIVE, not
-per entry** — which is deark's architecture (`d->mml_bug_policy`), taken
-for the same reason: a zip has one writer. 5.3.4 is probed FIRST and a
-match ends it, so a conforming archive pays ONE probe pass of its first
-bug-capable entry and nothing after that, and an entry at an unambiguous
-combination pays nothing at all. Per-entry detection would be **19.4×
-the passes** on the population the sweep measured — 29,799 bug-capable
-entries across 1,537 archives.
+per entry** — which is deark's architecture (`d->mml_bug_policy`). 5.3.4
+is probed FIRST and a match ends it, so a conforming archive pays ONE
+probe pass of its first bug-capable entry and nothing after that, and an
+entry at an unambiguous combination pays nothing at all. Per-entry
+detection would be **19.4× the passes** on the population the sweep
+measured — 29,799 bug-capable entries across 1,537 archives.
+
+**That scope assumes one writer per archive, and what is MEASURED is
+narrower than the assumption:** none of those 1,537 archives mixes the
+two readings, every one of the 29,799 entries having been classified
+individually (2026-10-08). A zip is appendable and PKZIP 1.1 wrote
+Implode as well, so the format allows an archive that does — deark's
+choice is the same one and is not evidence about writers. **So it is
+bounded instead of relied on, since 2026-10-08:** an entry that
+INHERITED the verdict and failed under it gets one probe under the other
+reading, paid only on an entry that has already failed. If that one
+reproduces the stored CRC-32, the bytes were good and the rule was wrong
+— reported as a checksum failure rather than as the truncation a
+desynchronised decode produces — and the archive goes back to unsettled
+so the next ambiguous entry probes for itself. The entry itself is still
+lost: its bytes have reached the sink, which is the whole reason the
+verdict is settled before the first byte. Graded on a three-entry mixed
+archive, bug-written first: the settling entry and the one after the
+refusal both come out byte-exact, and the cost of the assumption is one
+entry (TESTING.md, *Implode*, lane 4).
 
 #### What it costs
 
@@ -4485,7 +4503,7 @@ entries across 1,537 archives.
 | resident `CODE` and A5, SHIPPED | **+0 and +0**, in both the eager and the lazy configuration — every byte is in `ovl_exo` |
 | the `ovl_exo` image | 31,176 → **31,784 B**, +608 |
 | resident `CODE` in the resident CONTROL | 166,264 → **166,884 B**, +620; A5 37,928 → **37,916 B**, −12 |
-| the download, `MacExtract.bin` | 227,328 → **227,840 B** |
+| the download, `MacExtract.bin` | 227,328 → **227,840 B**, and → **228,096 B** with the recovery |
 | what a zip or a tar pays on a tier | **nothing, to the byte.** `OVL_SAVED` rose 608 B and the `ovl_exo` image rose 608 B, so the three rows of *What each format is granted* that hold that image do not move. On 2026-10-07 the same three FELL 68 B, which is why the sign of that exception is worth reading each time |
 | peak heap | **unchanged to the byte** on six zips — `pkz101.exe` 23,200, `4acalc.zip` 22,669, `4alnch11.zip` 22,730, `synth-exo-zip-implode.zip` 22,700, `synth-exo-zip-deflate.zip` 24,863, `NPWritersKit.zip` 53,297. A probe allocates the same `ImpState` and window the real decode does and frees them before it, so the two passes never coexist; deflate's 11,256 B still sets zip's 12–54 KB row |
 | stack | `-Os -fstack-usage` (*Stack*): `unc_zip_extract` 1,460 → **1,468 B**, and `zip_decode` 132 → **56 B** because `zip_implode` stopped being inlined into it and is its own 112 B frame now, beside `zip_imp_dry`'s 172. **The deepest chain through zip FELL, 1,940 → 1,900 B**, and the limb holding the record changed: it was deflate (`unc_zip_extract` → `zip_decode` → `unc_inflate_raw` → `inflate` → `inflate_table`, 348 B of it zlib's), which is 1,872 B now, and it is the PROBE path that is deepest. An ordinary Implode entry's chain is 1,684 → 1,728 B. Far under the 4 KB rule and under the engine's own deepest chain |
@@ -4723,7 +4741,7 @@ engine later the same day, fourteen until AppleLink packages arrived on
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,272 B** | 19,056 B | **65,920 B** | **227,840 B** |
+| **eager — SHIPPED** | (default) | **54,272 B** | 19,056 B | **65,920 B** | **228,096 B** |
 | lazy | `UNC_OVL_LAZY=1` | 52,848 B | 19,136 B | 64,512 B | 226,560 B |
 | resident — the control | `UNC_OVL_RESIDENT=1` | **166,884 B** | **37,916 B** | 199,296 B | 202,624 B |
 
@@ -4732,7 +4750,7 @@ length** (*Implode*): the control **+620 B of `CODE` and −12 of A5** —
 rodata crossing between the columns under changed text, the seventh
 record of that effect here — and both SHIPPED configurations **+0 and
 +0** in either column. `ovl_exo` goes 31,176 → **31,784 B** and the
-download 227,328 → **227,840 B**, so what a 1 MB Mac Plus pays for the
+download 227,328 → **227,840 B** and then → **228,096 B**, so what a 1 MB Mac Plus pays for the
 rule is nothing at all, even if the archive IS a zip or a tar: the
 image grew by exactly what `OVL_SAVED` did, so the three `ovl_exo` rows
 of *What each format is granted* do not move either. `run_tiers.py --check` moves no tally in
@@ -4904,11 +4922,11 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **131,472 B** since 2026-10-08
+measured 2026-09-27. The shipped pair is **131,632 B** since 2026-10-08
 (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **158,600 B** — the fifteen images sum to 158,404 B, so its
+The bundle is **158,752 B** — the fifteen images sum to 158,556 B, so its
 index costs **196 B**: a 4-byte header, 12 bytes of directory per image
 and 12 bytes of padding to 4, which accounts for the whole difference
 (re-measured 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw
@@ -4935,7 +4953,7 @@ minimum match length, the index unmoved again for the same reason.
 2026-10-07** while this figure and the sum below were both raised, so
 that check spent a day reporting a 1,924 B growth it should have been
 holding — it warns rather than fails on the bundle, which is why
-nothing went red. Raised to 158,600 in the same commit as this.
+nothing went red. Raised to 158,752 in the same commit as this.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 65,664 B `MacExtract.code.bin` and not the download.
@@ -4950,7 +4968,7 @@ than failing on it, exactly as its tolerance is meant to.)
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
-and the shipped build reads 66,400 B of `CODE` plus the **158,600 B**
+and the shipped build reads 66,400 B of `CODE` plus the **158,752 B**
 bundle, which is **225,000 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
@@ -5022,7 +5040,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 131,472 B of `CODE` and A5 the shipped build does not carry
+which is the 131,632 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5059,19 +5077,19 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+122,386 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
-| Now Compress | now, codecs | **+119,308 B** (measured) |
-| SuperDisk! | superdisk, codecs | +117,328 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+114,818 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+111,594 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+108,622 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +107,664 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+106,118 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +98,474 B (arithmetic), and **+108,622 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+92,602 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,964 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +82,454 B (arithmetic), **+92,602 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,802 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+122,546 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
+| Now Compress | now, codecs | **+119,468 B** (measured) |
+| SuperDisk! | superdisk, codecs | +117,488 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+114,978 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+111,754 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+108,782 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +107,824 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+106,278 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +98,634 B (arithmetic), and **+108,782 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+92,610 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+88,124 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +82,462 B (arithmetic), **+92,610 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,794 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5085,7 +5103,7 @@ the same day for **zip method 6**, which is the largest single move
 this figure has made since AppleLink packages and is the clearest:
 +1,856 B in the control and +0 in the shipped build, every byte of it
 difference (DECISIONS.md 2026-10-07, *the method that was out for a
-premise with no halves left*). And -> **131,472 B** on 2026-10-08 for
+premise with no halves left*). And -> **131,632 B** on 2026-10-08 for
 PKZIP 1.01/1.02's minimum match length, +608 in the control and +0 in
 the shipped build, the same shape again (DECISIONS.md 2026-10-08, *the
 second attempt that had nowhere to go*).
@@ -5112,7 +5130,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 158,600 B held against 131,472 B saved. It costs nothing on the tiers
+it — 158,752 B held against 131,632 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5166,12 +5184,12 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **227,840 B** of MacBinary (`dist/MacExtract.bin`,
+The application ships as **228,096 B** of MacBinary (`dist/MacExtract.bin`,
 re-read 2026-10-08 off the committed file rather than off the v0.37.0 tag it
 used to name), and since 2026-09-25 that is no longer all resident:
 **65,920 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **158,600 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **158,752 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -7171,7 +7189,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **158,600 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **158,752 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the

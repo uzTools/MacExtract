@@ -356,6 +356,94 @@ def grade_mutants(exe, n, seed):
     return bad
 
 
+# ---------------------------------------------------------------- lane 4
+MIXED = ("mixed-bug", "mixed-spec", "mixed-spec2")
+
+
+def grade_mixed(exe):
+    """An archive carrying BOTH readings, which is the shape the
+    per-archive verdict is wrong about. Returns failures.
+
+    The verdict is settled once, from the first bug-capable entry, and
+    that is what makes it affordable — 19.4 bug-capable entries per
+    archive in the sweep's population. It is also an assumption about
+    writers, and the measured part is narrower than the assumption: no
+    archive of the 1,537 swept on 2026-10-08 mixes. A zip is appendable
+    and PKZIP 1.1 wrote Implode too, so this lane holds what happens
+    when one does.
+
+    What it asserts, in the order it matters:
+      1. the entry that SETTLED the archive comes out;
+      2. the next one, which inherited a verdict wrong about it, is
+         REFUSED — its bytes have already reached the sink and
+         begin_entry is called once per entry, so it cannot be rescued —
+         and refused as a CHECKSUM failure, not as the truncation a
+         desynchronised decode reports;
+      3. the one AFTER that comes out, because the verdict went back to
+         unsettled and the entry probed for itself. This is the whole
+         point: the assumption costs one entry, not the rest of the
+         archive.
+
+    The oracle is each entry's own stored CRC-32, computed by the writer
+    from the plaintext it coded. deark cannot be one here: it settles per
+    archive as well, so it gets the same entries wrong.
+
+    It fails on the build of 2026-10-08: two entries refused instead of
+    one, both reported as truncated, and no third-entry output.
+    """
+    bad = 0
+    tmp = tempfile.mkdtemp(prefix="implode-mixed-")
+    try:
+        zp = os.path.join(tmp, "mixed.zip")
+        pp = os.path.join(tmp, "plain")
+        subprocess.run([sys.executable, SYNTH, "--mixed", "-o", zp,
+                        "--plain", pp], check=True, capture_output=True)
+        want = {n: open("%s.%s" % (pp, n), "rb").read() for n in MIXED}
+        out = os.path.join(tmp, "mine")
+        os.makedirs(out, exist_ok=True)
+        r = subprocess.run([exe, "x", "-o", out, zp],
+                           capture_output=True, timeout=900)
+        err = r.stderr.decode("utf-8", "replace")
+        got = {}
+        for n in MIXED:
+            fp = os.path.join(out, n + ".txt")
+            if os.path.exists(fp):
+                got[n] = open(fp, "rb").read()
+        if got.get("mixed-bug") != want["mixed-bug"]:
+            print("implode: mixed-bug.txt did not come out, and it is the "
+                  "entry that settles the archive — the verdict never "
+                  "reached the 1.01/1.02 reading")
+            bad += 1
+        if got.get("mixed-spec") == want["mixed-spec"]:
+            print("implode: mixed-spec.txt came out whole, so this build "
+                  "does not settle the minimum match length per archive at "
+                  "all and lane 3 should have failed first")
+            bad += 1
+        elif "checksum mismatch" not in err:
+            print("implode: mixed-spec.txt was refused, but not as a "
+                  "checksum failure: %r. Its bytes are not short; the rule "
+                  "was wrong" % err.strip()[:120])
+            bad += 1
+        if got.get("mixed-spec2") != want["mixed-spec2"]:
+            print("implode: mixed-spec2.txt did not come out, so a verdict "
+                  "that was wrong about ONE entry was carried into the rest "
+                  "of the archive")
+            bad += 1
+        if r.returncode == 0:
+            print("implode: the mixed archive exited 0, and one of its "
+                  "entries cannot be recovered — that entry has to be "
+                  "reported")
+            bad += 1
+        if not bad:
+            print("implode: 1 mixed archive — the entry that settles it and "
+                  "the one after the refusal both come out, the inherited "
+                  "verdict costs exactly the one entry it was wrong about, "
+                  "and that one is a checksum failure")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -382,6 +470,7 @@ def main():
     bad = 1 if r.returncode else 0
     bad += grade_shapes(a.macextract)
     bad += grade_bugshapes(a.macextract)
+    bad += grade_mixed(a.macextract)
     bad += grade_mutants(a.macextract, a.n, a.seed)
     if bad:
         print("implode: %d failure(s)" % bad)

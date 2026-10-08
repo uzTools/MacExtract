@@ -367,6 +367,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
 - 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
 - 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
+- 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
 
 ---
 
@@ -24266,10 +24267,12 @@ scope.** A probe pass is a whole extra decode, and the sweep that found
 the specimen also measured the population it would be paid on: 29,799
 bug-capable entries across 1,537 archives, 19.4 per archive. Settling the
 question per ENTRY would therefore cost about nineteen times what
-settling it per ARCHIVE does — and per archive is right for a reason
-better than arithmetic, which is that a zip has one writer. deark's own
-`d->mml_bug_policy` is archive-wide for the same reason, so this is the
-reference's architecture and not a shortcut taken here. The result: an
+settling it per ARCHIVE does, and deark's own `d->mml_bug_policy` is
+archive-wide too, so the scope is the reference's architecture and not a
+shortcut taken here. What it assumes — one writer per archive — is wider
+than anything measured, and that gap was closed on 2026-10-08 by
+bounding it rather than by arguing for it (*the writer a zip is allowed
+to have twice*, below). The result: an
 entry at an unambiguous combination pays nothing, and a conforming
 archive pays ONE probe pass of its FIRST bug-capable entry, once, however
 many it has.
@@ -24385,3 +24388,66 @@ the remedy that section had already applied once to a pair of build
 sizes. *The mechanism was a constant that three places quote and one
 place checks, with the check's tolerance wide enough to absorb the
 change.*
+
+
+## 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
+
+The minimum-match-length verdict is settled once per ARCHIVE, from its
+first bug-capable entry, because a probe is a whole extra decode and the
+population it is paid on holds 19.4 bug-capable entries per archive
+(*the second attempt had nowhere to go*, above). The scope is deark's as
+well. What it ASSUMES is that a zip has one writer, and that was written
+into four files as the reason rather than as an assumption.
+
+**It is wider than the measurement.** What the sweeps establish is that
+no archive of the 1,537 swept mixes the two readings — and they
+establish it well, because every one of the 29,799 bug-capable entries
+was classified individually rather than by its archive. What they cannot
+establish is the general claim: a zip is appendable, PKZIP 1.1 wrote
+Implode as well as fixing the bug, and an archive updated across that
+boundary is a shape the FORMAT allows whatever any writer did. deark
+settling per archive is not evidence either — it is one implementation's
+choice, and this repository has withdrawn "three implementations chose
+the same constant" as corroboration once already (`UNC_PATH_MAXDEPTH`).
+
+**Measured consequence, on a three-entry archive this project's own
+encoder wrote — bug-written entry first, two conforming ones after it,
+all at the same ambiguous combination:**
+
+| build | what came out |
+|---|---|
+| 2026-10-08 morning | entry 1; entries 2 and 3 BOTH refused, both *"file is truncated"* |
+| before the reading existed | entries 2 and 3; entry 1 refused, *"checksum mismatch"* |
+| this | entries 1 and 3; entry 2 refused, *"checksum mismatch"* |
+
+So the assumption was costing the whole remainder of an archive, and the
+diagnosis was wrong twice over: nothing is truncated — a stream decoded
+under the other reading desynchronises and runs out of input, which is
+what the engine reported as a short file.
+
+**The bound is one probe, paid only on an entry that has already
+failed.** If an entry INHERITED the verdict and failed under it, decode
+it once more with no output under the other reading. If that reproduces
+the stored CRC-32 the bytes were good and the rule was wrong: report a
+checksum failure, and set the archive back to UNSETTLED so the next
+ambiguous entry probes for itself. Three properties make it affordable
+and honest at once — it cannot fire on an archive with one writer, it
+cannot fire on an entry that settled the verdict itself, and it cannot
+turn a failure into a success, because the entry's bytes have already
+reached the sink and `begin_entry` is called once per entry.
+
+**What this does not do is rescue that entry**, and it should not
+pretend to: the only way would be buffering a fork, which is out on
+`usize` being 32 bits, or a sink contract that allows a restart, which
+is a public API change nobody has asked for. One entry of a mixed
+archive is the price, and now it is only one.
+
+**The transferable part.** A scope decision carries an assumption about
+the world, and the measurement behind it is almost always narrower than
+the sentence it gets written down as — "a zip has one writer" against
+"no archive of 1,537 mixes". Two useful questions follow from that, and
+they are cheaper than being right: what does the FORMAT allow, as
+distinct from what writers are known to do; and if the assumption is
+wrong, is the damage bounded by anything? Here the first answer was
+"more than we assumed" and the second was "no" — and bounding it cost
+one probe on a path that was already failing.

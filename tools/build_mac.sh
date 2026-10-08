@@ -389,12 +389,24 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # graded by the CRC-32 the archive stored. Paid here and nowhere else
 # again: `src/fmt_exo.c` is in `ovl_exo`, so the eager and lazy pairs
 # below do not move by a byte, the image is 31,176 -> 31,832 B
-# (run_tiers.py's IMAGES) and the download 227,328 -> 227,968 B. What
+# (run_tiers.py's IMAGES) and the download 227,328 -> 227,840 B — this
+# read 227,968 until 2026-10-08, against a committed dist/ of 227,840
+# and FORMATS.md's own figure, so it was one block out. What
 # the bytes bought: three entries of PKZIP 1.01's own distribution,
 # refused with a checksum error the day before, come out byte-exact
 # (DECISIONS.md 2026-10-08, *the second attempt that had nowhere to
 # go*; FORMATS.md, *Implode*).
-UNC_MAC_CODE_DEFAULT=166884
+# RAISED 2026-10-08 again, 166,884 -> 167,036, by 152 B: the recovery that
+# bounds a wrong per-archive verdict to the entry it was wrong about —
+# one probe under the other reading, on an entry that has ALREADY failed,
+# and the archive back to unsettled afterwards. Paid in `ovl_exo` and not
+# resident: the shipped pair is unmoved at 54,272 and 19,056, the image
+# goes 31,784 -> 31,936 B and the bundle 158,600 -> 158,752. What the
+# bytes bought: a mixed archive costs the one entry whose verdict was
+# wrong instead of every entry after it, measured on a three-entry
+# subject (DECISIONS.md 2026-10-08, *the writer a zip is allowed to have
+# twice*; TESTING.md, *Implode*, lane 4).
+UNC_MAC_CODE_DEFAULT=167036
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -516,7 +528,17 @@ UNC_MAC_CODE_DEFAULT=166884
 # is raised on, at the size on the day, so the 12 B cannot be spent
 # later by accident. The two shipped pairs do not move in either column
 # (DECISIONS.md 2026-10-08).
-UNC_MAC_A5_DEFAULT=37916
+# RAISED 2026-10-08, 37,916 -> 37,924, by the recovery that bounds a wrong
+# per-archive minimum-match-length verdict to the entry it was wrong about
+# (DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*).
+# Attributed as far as the image allows: of the 126 .data and .bss symbols,
+# exactly one moved — `_sdata`, 46 -> 54 B — and no named object grew, which
+# is the `.data` ALIGN padding this file already records twice under changed
+# text rather than a table anyone can point at. The SHIPPED pair does not
+# move in either column: `src/fmt_exo.c` is in `ovl_exo`, so what grew there
+# is the image (+152 B) and not one byte of what a 1 MB Mac Plus keeps
+# resident.
+UNC_MAC_A5_DEFAULT=37924
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

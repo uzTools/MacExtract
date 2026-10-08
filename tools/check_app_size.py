@@ -165,7 +165,7 @@ TAKEN = "2026-10-07"
 # minimum match length (FORMATS.md, *Implode*). Resident `CODE` and A5
 # do not move for either, in either shipped configuration, and
 # `run_tiers.py --check` moves no tally in either lane.
-EXPECT_BUNDLE = 158600
+EXPECT_BUNDLE = 158752
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-08"
 

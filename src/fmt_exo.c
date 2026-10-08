@@ -1396,11 +1396,19 @@ int unc_zip_extract(UncCtx *c)
     int err = UNC_OK;
     /* Which minimum match length this archive's Implode entries were
      * written with: -1 not settled yet, 0 APPNOTE.TXT 5.3.4's reading,
-     * 1 PKZIP 1.01/1.02's. Per ARCHIVE and not per entry, because a zip
-     * has one writer and because that is what makes the probe
-     * affordable — the pass below is paid once, not 19 times, on an
-     * archive of the shape PKZIP's own distribution has (FORMATS.md,
-     * *Implode*, for the figures).
+     * 1 PKZIP 1.01/1.02's. Per ARCHIVE and not per entry, which is what
+     * makes the probe affordable — the pass below is paid once, not 19
+     * times, on an archive of the shape PKZIP's own distribution has
+     * (FORMATS.md, *Implode*, for the figures).
+     *
+     * That scope ASSUMES one writer per archive, and the assumption is
+     * wider than the measurement behind it: no archive of the 1,537
+     * swept on 2026-10-08 mixes the two readings (29,799 bug-capable
+     * entries, classified per entry), but a zip is appendable and
+     * PKZIP 1.1 wrote Implode too, so the format allows one that does.
+     * It is BOUNDED rather than relied on — see the recovery below,
+     * where an inherited verdict that turns out wrong costs the entry
+     * it was wrong about and not the rest of the archive.
      *
      * Source for the architecture: reference/deark/modules/zip.c
      * `d->mml_bug_policy`, which is likewise archive-wide and set from
@@ -1861,6 +1869,10 @@ int unc_zip_extract(UncCtx *c)
                      * name/extra lengths may differ from the CD's). */
                     uint8_t lh[30];
                     int attempt = 0;
+                    /* Did THIS entry settle the archive's verdict, or
+                     * did it inherit one? Only an inherited verdict can
+                     * be wrong about the entry in front of it. */
+                    int settled_here = 0;
 
                     /* Settle the minimum match length before a byte of
                      * this entry reaches the sink, which is the only
@@ -1890,13 +1902,13 @@ int unc_zip_extract(UncCtx *c)
                                             csize, usize, wantcrc, 0,
                                             iobuf, iocap, obuf, ocap);
                         if (r < 0) { est = r; goto entry_done; }
-                        if (r) imppol = 0;
+                        if (r) { imppol = 0; settled_here = 1; }
                         else {
                             r = zip_imp_dry(c, startdisk, lhoffs, flags,
                                             csize, usize, wantcrc, 1,
                                             iobuf, iocap, obuf, ocap);
                             if (r < 0) { est = r; goto entry_done; }
-                            if (r) imppol = 1;
+                            if (r) { imppol = 1; settled_here = 1; }
                         }
                     }
                   retry_entry:
@@ -2035,6 +2047,40 @@ int unc_zip_extract(UncCtx *c)
                         if (est == UNC_OK &&
                             ~crc != wantcrc)
                             est = UNC_ERR_CRC;
+                        /* An INHERITED verdict that was wrong about this
+                         * entry: the archive mixes writers after all.
+                         * Settling per archive assumes it does not, and
+                         * what is measured is narrower than that — no
+                         * archive of 1,537 mixes (FORMATS.md, *Implode*)
+                         * — so the assumption is bounded here instead of
+                         * being relied on. One probe pass, paid only on
+                         * an entry that has ALREADY failed: if the other
+                         * reading reproduces the stored CRC-32, then the
+                         * bytes were good and the rule was wrong, which
+                         * is a CRC failure and not the truncation the
+                         * desynchronised decode reported; and the
+                         * archive's verdict goes back to unsettled so
+                         * the next ambiguous entry probes for itself
+                         * rather than inheriting the same mistake.
+                         *
+                         * The entry itself is still lost: its bytes have
+                         * reached the sink, and begin_entry is called
+                         * once per entry (macextract.h, *Sink*), which
+                         * is the whole reason the verdict is settled
+                         * before the first byte. What this bounds is the
+                         * REST of the archive (DECISIONS.md 2026-10-08,
+                         * *the writer a zip is allowed to have twice*).
+                         */
+                        if (est != UNC_OK && method == 6 && !settled_here &&
+                            imppol >= 0 && zip_imp_ambig(flags) &&
+                            !(flags & 0x0001) &&
+                            usize != UNC_SIZE_UNKNOWN && usize != 0) {
+                            int r = zip_imp_dry(c, startdisk, lhoffs, flags,
+                                                csize, usize, wantcrc,
+                                                imppol > 0 ? 0u : 1u,
+                                                iobuf, iocap, obuf, ocap);
+                            if (r > 0) { est = UNC_ERR_CRC; imppol = -1; }
+                        }
                     }
                 }
             }
