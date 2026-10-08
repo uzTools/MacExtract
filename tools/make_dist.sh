@@ -98,6 +98,14 @@ is anything else those two versions wrote. Nothing else changed: every
 other zip is read exactly as before, and a zip that really is damaged
 still says so.
 
+Also since v0.37.0, and in this download: zips that use Shrinking, the
+other method of PKZIP's first years, open too. Most such zips came from
+PCs, but a Macintosh made them as well -- an EndNote style from 1993 is
+the one that was found -- and they turn up on Mac CD-ROMs by the
+hundred. Reducing, older still and rarer, is NOT read, and will not
+be: no Macintosh program is known to have written it. Those entries are
+skipped and the rest of the archive still comes out; deark reads them.
+
 Also since v0.37.0, and in this download: self-extracting zip archives open.
 ZipIt made these -- a .sea you double-click, which on a modern Mac of
 the day unpacked itself. The application part is PowerPC code, so on a

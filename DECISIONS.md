@@ -369,6 +369,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
 - 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
 - 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
+- 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
 
 ---
 
@@ -24534,3 +24535,71 @@ it. Fifteen seconds of DOSBox answered the restamping question, and also
 answered whether these writers could make the shape at all, which nobody
 had asked. The readers came with them: the writer's own
 reader is an oracle for the writer's own rule.
+
+## 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
+
+**Claim.** Zip method 1, Shrink, is implemented. Methods 2–5, Reduce,
+are out by the brief (OPEN_ITEMS.md, Part 1). Both had been refused one
+entry at a time, with a CLI line promising "not supported yet", and
+neither part of OPEN_ITEMS.md mentioned them. Implode was in the same
+state before 2026-10-07.
+
+**The question was who WROTE them, and a shelf does not answer it.**
+The content search (FORMATS.md, *Shrink*) found 96,193 files whose first
+entry is shrunk. 141 distinct ones sit somewhere a Macintosh user would
+meet them: on the HFS side of a disc, inside a `.sit`, under `pub/mac/`.
+Read as "Mac zips use Shrink", that is a landslide. It is not one. 139 of the
+141 say MS-DOS or Unix in *version made by*, one is truncated before its
+directory, and the files inside are `.EXE`, `.COM` and `.DLL` in folders
+called `Windows`. That is the same lesson as *a date is not a writer*
+(*the stub is the writer's signature*). The host byte separates the
+two, and it found **one** archive written on a Macintosh: `BBA.zip`,
+with ZipIt's 3.2 signature. Reduce, counted the same way, has 5 on Mac
+media and 0 from a Mac writer. So the split follows the criterion that
+admitted Implode: a Macintosh program wrote it. One archive is a thin
+case. It is the case the brief set ("if real Mac zips use these
+methods"), and the 141 DOS zips on Mac CDs are what a user with those
+CDs would actually open.
+
+**The oracle was the wrong source, and the stored CRC is what said
+so.** The obvious transcription was XADMaster's, as for most of this
+engine. `XADZipShrinkHandle.m` turns code 256,2 into `ClearLZWTable`,
+a FULL clear. PKZIP's partial clear keeps every code that is another
+code's parent, so `unar` fails 270 of 2,247 wild entries with "Error on
+decrunching". A decoder transcribed from it would have passed every
+oracle comparison `unar` can make, and failed one entry in eight on real
+files. deark's `fmtutil-lzw.c` matches the stored CRC-32 on 2,247 of
+2,247, and that is why it is the source. **Choose a reference by
+grading it against the archives' own checksums before transcribing
+it.** Agreement with a second implementation tells you nothing when the
+second one has the same gap.
+
+**Two rules that read as defensive are load-bearing.** A code naming a
+free slot is the string about to be defined (1,799 entries). A walk
+that reaches a freed slot stands in the previous string's first byte
+and continues up the old code (1 entry, `MM.COM`). That entry comes out
+CRC-bad without it. Each rule has a fixture that fails when the rule is
+bent (FORMATS.md, *Shrink*, *What grades it*).
+
+**Where it lives was decided by the 68000, not by the design.** It was
+written beside Implode in `src/fmt_exo.c`, and `ovl_exo` stopped
+linking: `-mpcrel` code reaches its data through 16-bit PC-relative
+offsets, and the image had crossed 32 KB. Nothing had recorded that an
+image has a ceiling. It moved to `src/unc_lzw.c`, so into the codecs
+image every format keeps. A codecs-only format's grant rises 36 B, and
+a zip's falls 64. The cost is spread differently, and that is the price
+of the limit, written down rather than discovered by the next format.
+`ovl_exo` has about 730 B left.
+
+**The table is three bytes a slot because the fourth was measured.** A
+separate kind byte took `dream`'s peak to 47,286 B. Codes are 13 bits,
+so "in use" and the partial clear's mark fit in the parent word, and
+the peak is 39,094 B. Two of the corollaries in CLAUDE.md apply here.
+The table is sized from the compressed length, as `unc_lzw.c`'s
+compress table is. And the transient-free fixed allocation was kept,
+because here too the table IS the allocation.
+
+**The CLI stops asking for what it will not use.** A Reduce entry now
+says it is Reduce and out of scope, and the closing request for a
+specimen is made only for methods that are merely missing. It names
+deark, the one reader measured to read it.

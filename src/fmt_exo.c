@@ -1,6 +1,6 @@
 /*
  * fmt_exo.c — the exogenous formats: gzip (.gz), Unix compress (.Z),
- * tar, and zip (store, Implode and deflate).
+ * tar, and zip (store, Shrink, Implode and deflate).
  *
  * These are byte-oriented Unix/PC formats, and every one of them has a
  * specification of its own. Those are what is cited, here and at each
@@ -871,6 +871,15 @@ out:
     return err;
 }
 
+/* Zip method 1, Shrink, is LZW and lives with the other LZW in
+ * unc_lzw.c — in the codecs image on a Macintosh, because this image is
+ * at the 32 KB a 68000's 16-bit PC-relative references reach
+ * (FORMATS.md, *Shrink*). This only adapts the emit. */
+static int zip_put(void *ctx, const uint8_t *p, uint32_t n)
+{
+    return exo_emit(ctx, p, (int32_t)n);
+}
+
 /* Decode one entry's data from a reader already positioned at it (and,
  * for an encrypted entry, already past the twelve-byte encryption
  * header and reading through a cipher). Accumulates the CRC-32 the
@@ -888,6 +897,9 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
          * (zip_implode, above). */
         return zip_implode(c, in, flags, usize, crc, mmlbug, zip_emit, es);
     }
+    if (method == 1)
+        return unc_shrink_decode(c->al, in, usize, crc, obuf, ocap,
+                                 zip_put, es);
 
     if (method == 0) {
         uint32_t left = usize;
@@ -1849,15 +1861,17 @@ int unc_zip_extract(UncCtx *c)
                      * there is not one (or it is a version or a key
                      * length this does not read). */
                     est = UNC_ERR_ENCRYPTED;
-                } else if (aesmethod != 0 && aesmethod != 6 &&
-                           aesmethod != 8) {
-                    /* Stored, Implode and deflate. Method 6 joined on
-                     * 2026-10-07 (DECISIONS.md, *the method that was
-                     * out for a premise with no halves left*); every
-                     * other method the format has ever had — Shrink,
-                     * the four Reduces, DCL Implode, bzip2, LZMA,
-                     * PPMd, Zstandard — is a per-entry refusal, and so
-                     * is a method number nothing has defined. */
+                } else if (aesmethod != 0 && aesmethod != 1 &&
+                           aesmethod != 6 && aesmethod != 8) {
+                    /* Stored, Shrink, Implode and deflate. Method 6
+                     * joined on 2026-10-07 (DECISIONS.md, *the method
+                     * that was out for a premise with no halves left*)
+                     * and method 1 on 2026-10-08 (DECISIONS.md, *the
+                     * method a Macintosh wrote once*); every other
+                     * method the format has ever had — the four
+                     * Reduces, DCL Implode, bzip2, LZMA, PPMd,
+                     * Zstandard — is a per-entry refusal, and so is a
+                     * method number nothing has defined. */
                     est = UNC_ERR_UNSUPPORTED;
                 } else if (z64err != UNC_OK) {
                     /* Zip64 states this entry's size or position past

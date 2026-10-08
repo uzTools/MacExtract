@@ -2295,7 +2295,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-08 over all 968 corpus files, exactly one sniffs as a MIME
+2026-10-08 over all 971 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -4618,6 +4618,7 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-08 | `detection=4d5a98001f000b002000c10affff0a0e*` — **the PKSFX 1.01/1.02 stub's own DOS EXE header**, the first 16 bytes of every self-extractor those two versions built. A key for the WRITER and not for the archive, which is the question this one turned out to be | **1,323** probed of 5,576 named, deduplicated | **12 bug-capable entries, every one of them written by the bug and none by 5.3.4** — in 4 archives, all four copies of `PKZIP 1.01`'s own `PKZ101.EXE`. The specimen; `tools/specimens/implode.tsv` (FORMATS.md, *The specimen that carries the bug*) |
 | 2026-10-08 | the two 2026-10-07 flag tokens again, deduplicated to 3,821, with **every central directory read** for its *version made by* (`--vermade 10`, two `Range`s per file) and only the ZIP-spec-1.0 writers fetched whole | 3,821 directories read, **1,537** archives fetched and decoded | **29,799 bug-capable entries: 29,795 by 5.3.4, 0 by the bug, 4 by neither.** And the histogram that explains it: only **10 of 3,821** say MS-DOS + spec 1.0, the fingerprint PKZIP 1.01 and 1.02 write; 1,467 are Unix/1.0, 919 MS-DOS/1.1 and 1,111 spec 2.0 (FORMATS.md, *Implode*, for the whole table) |
 | 2026-10-08 | the same two tokens with `tsMin=1989&tsMax=1990` — PKZIP 1.1's own era and everything before it, which is the weakest of the three keys and was run to say so | 975 | **3,543 bug-capable entries, 3,543 by 5.3.4, 0 by the bug.** A date is not a writer |
+| 2026-10-08 | `detection=504b0304????????MM00*` for MM = 01…05 — a zip whose FIRST local header is Shrink or one of the Reduces; the same key at 06 reproduces the 1,125,083 above, and 75 of 75 sampled hits carry the method byte they were listed for. Not through `scan_discmaster.py`: listed with `size_shards`, then each row's `idMeta` and path classified | **109,207** (96,193 Shrink; 117 / 143 / 43 / 12,711 Reduce 1–4) | **146 distinct in a Macintosh context, 1 written on one** — `BBA.zip`, Shrink, now a fixture; Reduce 0. The 146 and 200 random Shrink zips decoded: 2,247 entries, all CRC-correct under deark's reading, 270 of them failed by `unar` (FORMATS.md, *Shrink*) |
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
 | 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
 | 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |
@@ -5267,7 +5268,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 968 files, and the
+  the population you give it: the corpus is 971 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

@@ -406,7 +406,17 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # wrong instead of every entry after it, measured on a three-entry
 # subject (DECISIONS.md 2026-10-08, *the writer a zip is allowed to have
 # twice*; TESTING.md, *Implode*, lane 4).
-UNC_MAC_CODE_DEFAULT=167036
+# RAISED 2026-10-08 a third time, 167,036 -> 168,200, by 1,164 B for zip
+# method 1, Shrink, which joined the scope the same day. Paid in the
+# images and not resident: the shipped pair is unmoved, `ovl_codecs` goes
+# 6,404 -> 7,520 B, `ovl_exo` 31,936 -> 32,036, the bundle 158,752 ->
+# 159,968 and the download 228,096 -> 229,248. The decoder is in
+# `src/unc_lzw.c` and so in the CODECS image, not in `ovl_exo` beside the
+# zip reader that calls it, because `ovl_exo` would not link: past 32 KB
+# a 68000 `-mpcrel` image's 16-bit PC-relative references stop reaching
+# (FORMATS.md, *Shrink*; DECISIONS.md 2026-10-08, *the method a
+# Macintosh wrote once*).
+UNC_MAC_CODE_DEFAULT=168200
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

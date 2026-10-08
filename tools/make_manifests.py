@@ -382,7 +382,13 @@ DEARK_ID = "deark"
 # entry and write the bytes anyway. `unar` adjudicates 5 of the 7; the
 # other 2 are the forks it fails with "Attempted to read more data than
 # was available", and they are what this adds.
-DEARK_METHODS = {"Distilled", "Implode"}
+# Shrink joined on 2026-10-08 for the same reason and a sharper one:
+# XADMaster performs Shrink's PARTIAL clear (code 256 then 2) as a full
+# one, so `unar` fails with "Error on decrunching" on every entry that
+# has one — 270 of 2,247 wild entries — while deark decodes all 2,247 to
+# the CRC-32 the archive stored (DECISIONS.md 2026-10-08, *the method a
+# Macintosh wrote once*).
+DEARK_METHODS = {"Distilled", "Implode", "Shrink"}
 
 
 def deark_id():

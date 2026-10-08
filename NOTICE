@@ -357,6 +357,14 @@ This project's decoders are transcriptions/ports of algorithms from:
     `src/fmt_exo.c` cites for the `.Z` header the decoder sits behind
     — the magic, the maximum code width in the mode byte's low five
     bits, and bit 7 for the clear code.
+    **And since 2026-10-08 the same file's `DE_LZWFMT_ZIPSHRINK` paths
+    are the source of zip method 1, Shrink, in `src/unc_lzw.c`** — the
+    escape code and its two commands in `delzw_process_code`,
+    `delzw_partial_clear`, `delzw_find_first_free_entry`, and the two
+    cases `delzw_process_data_code` and `delzw_emit_code` handle for a
+    code whose slot is free. No code was copied. XADMaster's
+    `XADZipShrinkHandle.m` is NOT a source: it performs the partial
+    clear as a full one, and `unar` fails every entry that has one.
     **And since 2026-10-07 `reference/deark/src/fmtutil-lzh.c` is the
     reference implementation `src/fmt_exo.c`'s Implode decoder (zip
     method 6) was read beside** — `implode_read_a_tree`,

@@ -165,7 +165,13 @@ TAKEN = "2026-10-07"
 # minimum match length (FORMATS.md, *Implode*). Resident `CODE` and A5
 # do not move for either, in either shipped configuration, and
 # `run_tiers.py --check` moves no tally in either lane.
-EXPECT_BUNDLE = 158752
+# RE-TAKEN 2026-10-08 again, 158,752 -> 159,968, for zip method 1
+# (Shrink): `ovl_codecs` 6,404 -> 7,520 and `ovl_exo` 31,936 -> 32,036.
+# The decoder is in the codecs image because `ovl_exo` would not link
+# past 32 KB (FORMATS.md, *Shrink*). Resident `CODE` and A5 do not move
+# in either shipped configuration, and `run_tiers.py --check` moves no
+# tally in either lane.
+EXPECT_BUNDLE = 159968
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-08"
 

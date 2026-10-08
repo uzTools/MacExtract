@@ -290,7 +290,18 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # resident. Not compensated, on the same terms as every row above
 # (DECISIONS.md 2026-10-08, *the second attempt that had nowhere to
 # go*).
-OVL_SAVED = 131632
+# **+1,152 on 2026-10-08, 131,632 -> 132,784, for zip method 1
+# (Shrink)**, the same shape again: the control's CODE rises 167,036 ->
+# 168,200 and its A5 falls 12 B, and the shipped build's 54,272 + 19,056
+# do not move. What ships pays two images instead of one — `ovl_codecs`
+# 6,404 -> 7,520 and `ovl_exo` 31,936 -> 32,036 — because the decoder
+# could not go in `ovl_exo` and is in `src/unc_lzw.c` (FORMATS.md,
+# *Shrink*). Every format keeps the codecs image, so a grant moves by
+# +1,152 - 1,116 = +36 B where only that one changed, and by -64 B for
+# the formats that keep `ovl_exo` as well, and for an envelope, which
+# keeps the whole bundle. Not compensated, on the same terms as every
+# row above.
+OVL_SAVED = 132784
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -366,10 +377,10 @@ IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
-    "OVL_ID_CODECS":      6404,
+    "OVL_ID_CODECS":      7520,
     "OVL_ID_CPTDD":       15764,
     "OVL_ID_CRYPT":       10140,
-    "OVL_ID_EXO":         31936,
+    "OVL_ID_EXO":         32036,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
@@ -379,7 +390,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 158752
+BUNDLE = 159968
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

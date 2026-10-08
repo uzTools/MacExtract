@@ -1,0 +1,253 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "74e8a33625c7f9ef0db0fa2331addbc57f8464f9c3006a59a583b0db1832d244",
+   "data_size": 27658,
+   "name": "COLOR.COM",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "4d44a2f379990ce2b0fa7193d29392203262890deb891715e4de2ee227ea66ab",
+   "data_size": 388,
+   "name": "CONFIG.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "1b7af93230033a798dd538a609727859fe2127b776329cd992af5f568bef5d7d",
+   "data_size": 388,
+   "name": "COPY.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a8176c1943287124babd745b9bf81f71f77ddbfdd9ecfb3f8aa58386ddeb08db",
+   "data_size": 194,
+   "name": "CREATE.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "361f474b184f7c3abd70405e02f6c4ea817b30e4ca5592bff13d4e1463e07dcb",
+   "data_size": 582,
+   "name": "LIST.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "129c21b6dee82dddef7499d15dd54ffe8ee9274e5fc45bfae6ed4db0d0ae62aa",
+   "data_size": 388,
+   "name": "LOAD.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "7a273df5fbd77a8dcfae68dabe346d06d4311da3d1c517eec14b717bd4482a7d",
+   "data_size": 2,
+   "name": "MAGIC.CFG",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "a2de05130cdd228952728c0c53d2e064d20b63e6b0407f92ca739dfe97a791cf",
+   "data_size": 16384,
+   "name": "MAGIC.PIC",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "538c50d6b53e3c0e9c14d75cd5d32cfc3d215b0cb2db9d2673c87ea38c6a8a3e",
+   "data_size": 21792,
+   "name": "MAGLIB",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "75472754ebb6481051a4773eef4c70c277ebf339c61ce72772c2eeae0f82bad6",
+   "data_size": 194,
+   "name": "MAIN.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "dc98706b5b0e15186ebad0084e4b08af0147d994f27014405ec68b9b323a0579",
+   "data_size": 53,
+   "name": "MENU.BAT",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "0dc6c074e779a7cc7ca699435897a535593d61f0b24799932300526b433b25b1",
+   "data_size": 48128,
+   "name": "MM.000",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "10ca99ee80f3e658c9f0bade2e8d9923a38f08711f198cf2e00c7e8ac06f9711",
+   "data_size": 26469,
+   "name": "MM.COM",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "949803e16dead03b3877ed030d7ef1ea28004e260ce20e11d4078a950691283d",
+   "data_size": 789,
+   "name": "PRINTER.COM",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "bc668823893f03aa16597dacf5817d8169b9a1b0231abac8f7ed97d72dacff37",
+   "data_size": 332,
+   "name": "READ.ME",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "2a436c82548b8184c83a82d5d320e91e7b76fb64d24c9b55305834d492dace47",
+   "data_size": 3100,
+   "name": "REGISTER.ME",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fb349cb8156f33cd5260e66dfcc53cf421d153e962c61d889be9875f11fbe116",
+   "data_size": 194,
+   "name": "ROOM.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "60e917a85624251e160decd6e8131c3a3898571e48a89ed4b4765c784c587bc1",
+   "data_size": 194,
+   "name": "SAVE.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "f5c7439e8a0a6318e5df825957877a6e59fb9bf742c5be1bfe5f00ac341b4183",
+   "data_size": 16384,
+   "name": "SHARE.PIC",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "12d3a4efa6646b3ece4782f70033b9785bf0d167b553c43e22579b031cea5c4d",
+   "data_size": 4,
+   "name": "VERSION",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "ce35d71027239e10f1c121d1e5761ed6d604e1b82d56240814dd3432aa511e09",
+   "data_size": 5074,
+   "name": "VSDOC.PAS",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "da70a132aff97db6218f1646629271f4c8539de4bbc595090734c69fbf990cc4",
+   "data_size": 194,
+   "name": "WALL.PAN",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "49ecf5fe89805e359a35d1099360c6b60aeb45fc590b9e24571e6f8dc608d0d8",
+   "data_size": 766,
+   "name": "X.DEF",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "shrink-wild-dream.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "72c8d96599ab16675bb9ca122092fc4119f57adc76e0f48939ccf22e99437542",
+ "size": 90101
+}

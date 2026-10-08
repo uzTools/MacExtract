@@ -1313,6 +1313,15 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
                     UncPutRun put, void *pctx);
 
+/* Zip method 1, Shrink: LZW whose table is partially cleared rather than
+ * reset (unc_lzw.c). Decodes `usize` bytes from `in` — whose `limit`, if
+ * set, sizes the table — staging them in `obuf`, which must hold at
+ * least 8,192 B: one string can be that long. Adds them to `*crc` and
+ * hands them to `emit`. */
+int unc_shrink_decode(UncAlloc *al, UncBufIn *in, uint32_t usize,
+                      uint32_t *crc, uint8_t *obuf, uint32_t ocap,
+                      UncPutRun emit, void *ectx);
+
 /* Arsenic (method 15) core, in sit_arsenic.c. Writes into the fork
  * writer directly, and has it keep the CRC-32 the stream ends with:
  * `f` comes back set to UNC_CK_CRC32, flushed, and checked. It used to

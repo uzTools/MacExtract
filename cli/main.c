@@ -373,10 +373,25 @@ typedef struct {
     int         inexact;        /* entries an Optimizer left INEXACT   */
     int         unsupported;    /* entries whose METHOD this build lacks */
     int         unsup_method;   /* the first such method, for the message */
+    int         outscope;       /* ...of which out of scope by DECISION */
+    UncFormat   fmt;            /* what is being extracted, for that test */
     /* For envelope auto-unwrap: shape of what was extracted. */
     int         file_count, dir_count;
     char        last_ok_path[PATHBUF];
 } DiskSink;
+
+/* A method this program will not read, as opposed to one it does not
+ * read YET: OPEN_ITEMS.md, Part 1, *Out by the brief*. Asking for a
+ * specimen of one would be asking for nothing. Zip's Reduce (methods 2
+ * to 5) is the one: no Macintosh wrote it (DECISIONS.md 2026-10-08,
+ * *the method a Macintosh wrote once*). A zip reached as a plain
+ * NAME.001 split is UNC_FORMAT_SPLIT here and still gets the "yet"
+ * wording: this layer never learns what the parts joined into. */
+static int method_out_of_scope(UncFormat fmt, unsigned m)
+{
+    return (fmt == UNC_FORMAT_ZIP || fmt == UNC_FORMAT_ZIPSEG) &&
+           m >= 2 && m <= 5;
+}
 
 /* Render a type/creator code for the listing. High bytes are MacRoman
  * (decoded to UTF-8 like filenames); whitespace-class bytes become '?'
@@ -909,14 +924,20 @@ static int sink_end(void *ctx, int status)
              * not state one. */
             unsigned m = s->cur.method_data ? s->cur.method_data
                                             : s->cur.method_rsrc;
-            if (!s->unsupported) s->unsup_method = (int)m;
-            s->unsupported++;
-            if (m)
-                fprintf(stderr, "macextract: %s: method %u is not supported "
-                                "yet\n", name, m);
-            else
-                fprintf(stderr, "macextract: %s: %s\n", name,
-                        unc_strerror(status));
+            if (method_out_of_scope(s->fmt, m)) {
+                s->outscope++;
+                fprintf(stderr, "macextract: %s: method %u is Reduce, which "
+                                "this program does not read\n", name, m);
+            } else {
+                if (!s->unsupported) s->unsup_method = (int)m;
+                s->unsupported++;
+                if (m)
+                    fprintf(stderr, "macextract: %s: method %u is not "
+                                    "supported yet\n", name, m);
+                else
+                    fprintf(stderr, "macextract: %s: %s\n", name,
+                            unc_strerror(status));
+            }
         } else if (status == UNC_ERR_ENCRYPTED &&
                    s->cur.module_kind == UNC_MODULE_ENCRYPTOR &&
                    module_name(UNC_MODULE_ENCRYPTOR, s->cur.module_id)) {
@@ -2186,6 +2207,7 @@ nextlayer:
              split_part_offered(file, partargs, nparts)))
             fmt = UNC_FORMAT_SPLIT;
     }
+    sink.fmt = fmt;
 
     /* --only names the entries the user can SEE. A layer this run is
      * about to unwrap is not one of them: it holds one file on the way
@@ -2705,6 +2727,19 @@ nextlayer:
                 "issue — a specimen\n"
                 "macextract: is exactly what is needed to add support.\n");
     }
+    if (sink.outscope)
+        /* Said once, and without the request above: a specimen of a
+         * method that is out by decision changes nothing. deark is the
+         * reader named because it is the one measured to read it — unar
+         * and Info-ZIP UnZip 6.00 both refuse the same entries. */
+        fprintf(stderr,
+                "macextract: %d entr%s use%s Reduce (zip methods 2-5), which "
+                "this program\n"
+                "macextract: does not read: no Macintosh program is known "
+                "to have written\n"
+                "macextract: it. deark reads it.\n",
+                sink.outscope, sink.outscope == 1 ? "y" : "ies",
+                sink.outscope == 1 ? "s" : "");
     sink_report_cuts(&sink);
     /* A selector that matched nothing is a typo, and a typo must not
      * extract nothing and exit 0. */

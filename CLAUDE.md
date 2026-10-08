@@ -11,11 +11,11 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M64 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M65 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
-a copy of it. The engine passes a **956-fixture** differential suite against
-`unar` and, where `unar` fails, `macunpack`, plus 9,560 robustness variants.
+a copy of it. The engine passes a **959-fixture** differential suite against
+`unar` and, where `unar` fails, `macunpack`, plus 9,590 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
 time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
@@ -44,9 +44,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~20.6k tokens** (PROGRESS 8.5k,
-OPEN_ITEMS 8.2k, BLOCKERS' first two sections 3.8k), re-estimated
-2026-10-08 after the per-writer verdict was tested and filed; BLOCKERS'
+That session-start reading is **~21.0k tokens** (PROGRESS 8.8k,
+OPEN_ITEMS 8.4k, BLOCKERS' first two sections 3.8k), re-estimated
+2026-10-08 after Shrink came in and Reduce was filed out; BLOCKERS'
 withdrawn-claims archive is another **~71.6k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are

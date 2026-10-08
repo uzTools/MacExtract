@@ -1,0 +1,191 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "e45d19ed93838a2ae4c87e64c7d600a39d0c71613cd7aae77d1207d34c109241",
+   "data_size": 13184,
+   "name": "BEYOND.000",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "bbc7d66250609661abf0a730cab7fb130686a8924bf3dba076f9713e07f2b16d",
+   "data_size": 76672,
+   "name": "BEYOND.001",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "027cebd42a699c521cab1f80a8c67c3c73667aa82c96e86211d22c84e652f9df",
+   "data_size": 30922,
+   "name": "BEYOND.COM",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5656f25715162d892250ea68f219e065ad629ed0e7fda893ad47e66e7a1abfaf",
+   "data_size": 1411,
+   "name": "FILES.TXT",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e0950cf803836e59bc0a81b43ac168eb15e6a8c14d3777df350dd162ad8861a3",
+   "data_size": 29,
+   "name": "HELP.BAT",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d75d91e3b5d882f364addf262d8fe21a1a1b33e1aa4da96cff6b3ca2f8cda47c",
+   "data_size": 961,
+   "name": "HELP.TXT",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "da941c4c04de65c016b5d2f61e5f387e6fe752531ee51187fed7edf892049837",
+   "data_size": 38,
+   "name": "INSTRUCT.BAT",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "13c15309293f07523986dcc309da0eb61bc7fbfc3163902b33c6a1da8c184fee",
+   "data_size": 6072,
+   "name": "INSTRUCT.TXT",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "ade438ee34ce1ab49d2929d1c2d01063687ea7dec61b10f3c45073a0d4231cd9",
+   "data_size": 26624,
+   "name": "KINGDOM.000",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "f893a1a051bc585eccdd8407d062cffe862c0583ade3ca6f2297dc501a1672e8",
+   "data_size": 47214,
+   "name": "KINGDOM.COM",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "d2dba73e733d25c7bcde8527eb093147e386ddf27fd0a533a6abf1132c18765e",
+   "data_size": 34020,
+   "name": "LINE",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fa8acd69d5a9baf560931139d8ee8fdd1acf04807b10a3286dd9e2aff99c0f16",
+   "data_size": 384,
+   "name": "MORE.COM",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "dc02b98231783e0dbe889a2035ccb7afcea452286a0dee53ef95663eee415f27",
+   "data_size": 231,
+   "name": "README",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "e11b044c57ddcdda2a1cfda5a6287d659f12353f84a44b518fdebd96e75bc12d",
+   "data_size": 18557,
+   "name": "ROOMS1",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "d0893a53775473d2023f1ce6c35b941c74d889dc84d21e7e1e3708ccf8fa1f40",
+   "data_size": 18557,
+   "name": "ROOMS2",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "12e61845962960b6c25351da3275e4322bbec27dd498428d15d0316cc88cc63b",
+   "data_size": 20485,
+   "name": "SPECIAL1",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "8da4a51489a34c83651f82bb8dd47201453600912239e1fa4d055a133c96e3fe",
+   "data_size": 20485,
+   "name": "SPECIAL2",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "shrink-wild-titanic.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "36da01a0137fa5bf71b38c4becfb0ee45db1ad980c460dccfbeda9395ddd6ad9",
+ "size": 172972
+}

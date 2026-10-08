@@ -1,0 +1,29 @@
+{
+ "entries": [
+  {
+   "data_sha256": "16d9aff64e576e619ce1456f410b09b436bb8328e9b5d9af6e24efef9be442f6",
+   "data_size": 3290,
+   "name": "BBA.STY",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "4098e73d28c72f29ed7933f82c8f2fa93870c58baf3aa75993c8173625ad307d",
+   "data_size": 410,
+   "name": "BBA.TXT",
+   "oracle_methods": [
+    "Shrink"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "shrink-wild-BBA.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "5db866de2f251c8c62761fcd2a279444ddac20e4a06c1f6a48d71dbbcb6cd6c4",
+ "size": 1273
+}
