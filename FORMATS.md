@@ -5835,11 +5835,17 @@ drops 17 % of it, and counting every `.text`/`.rodata` input section gives
 
 ### Budget
 
-**What a 1 MB Mac Plus actually leaves the engine is 634,620 B** — measured
-**2026-10-09** with `run.py --mem 1M -D UNC_OVL_RESIDENT -D UNC_AT_BUDGET`,
-which reports `FreeMem()` at **655,100 B** and the shell's reserve at a flat
-20 KB. It was 653,532/674,012 B on 2026-09-27 and 648,250/668,730 B on
-2026-09-22.
+**What a 1 MB Mac Plus actually leaves the engine is 634,364 B** — measured
+on the evening of **2026-10-09** with `run.py --mem 1M -D UNC_OVL_RESIDENT -D
+UNC_AT_BUDGET`, which reports `FreeMem()` at **654,844 B** and the shell's
+reserve at a flat 20 KB. It was 634,620/655,100 B that morning,
+653,532/674,012 B on 2026-09-27 and 648,250/668,730 B on 2026-09-22.
+
+**All three fell by the identical 256 B within 2026-10-09** (→ 634,364 here,
+205,476 and 110,076 on the 512Ke), which is what the control build's
+`CODE` + A5 grew between the two re-takes (207,760 → 208,016 B).
+`tools/run_tiers.py` had derived exactly those three figures before the
+machine was booted, so its `TIERS` are measurements again.
 
 **All three fell by the identical 18,912 B between 2026-09-27 and
 2026-10-09** (→ 634,620 here, 205,732 and 110,332 on the 512Ke), the
@@ -7247,7 +7253,8 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 **A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 70/72 under
 System 3.0** (**2026-10-09**, `sys30.py --emu mv-512Ke`, the v0.37.0 source,
 `shrink-wild-titanic.zip` passing at 38,807 B; 69/71 on 2026-09-25 on the
-v0.33.0 binary; **67/71 on 2026-09-22 with every decoder resident**, and the two the
+v0.33.0 binary; **68/72 with every decoder resident on 2026-10-09** and 67/71 on
+2026-09-22, and the two the
 overlays recover are `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`
 — this tier is the only one where the mechanism opens an archive rather than
 just granting heap, *Overlays*. Before that: 66/69 on 2026-08-31 and on
@@ -7263,19 +7270,18 @@ allocation strategy reaches it on a machine this size.
 **The two that the overlays recovered** were failing for a reason the
 mechanism does answer: `derived-a2basic.dmg.sit` needs 240,898 B in one block
 and `derived-Cool_Tools__.sit` 242,464 B, against a resident build's
-205,732 B budget — a shortfall of ~35 KB and ~37 KB (~16 KB and ~18 KB at
+205,476 B budget — a shortfall of ~35 KB and ~37 KB (~16 KB and ~18 KB at
 2026-09-27's 224,644), and the shipped build grants 82–105 KB more
 (*Overlays*). `derived-Cool_Tools__.sit` was new to the
 SAMPLE rather than to the engine, joining the Mac list on 2026-09-22 for its
 UTF-8 names.
 
-**The budget is 205,732 B**, measured **2026-10-09**: a 226,212 B free heap
-read off the machine (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D
-UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
-20,480 B reserve — 18,912 B under 2026-09-27's **224,644 B**, the same
-fall as both other tiers (*Budget*). `tools/run_tiers.py` asserts it at
-**205,604 B**, this measurement less the 128 B the control build grew the
-same day, DERIVED and not re-measured (`TIERS_MACHINE` holds the sum). It read 224,108 B earlier that day, **219,362 B** from 2026-09-22, and before
+**The budget is 205,476 B**, measured on the evening of **2026-10-09**: a
+225,956 B free heap read off the machine (`sys30.py --emu mv-512Ke -D
+UNC_OVL_RESIDENT -D UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`)
+less the flat 20,480 B reserve, and the figure `tools/run_tiers.py` asserts.
+It was **205,732 B** that morning, 256 B more, the same fall as both other
+tiers (*Budget*); 18,912 B under 2026-09-27's **224,644 B** before that. It read 224,108 B earlier on 2026-09-27, **219,362 B** from 2026-09-22, and before
 that **197,728 B** — taken 2026-08-31 and never re-taken across the stack cut and a month of decoder
 work; under the quarter rule before that it was 163,656 B. This tier's figure
 was PREDICTED before the first 2026-09-27 run: the floor and System 6 tiers had
@@ -7283,15 +7289,16 @@ both risen 4,746 B that morning, so this one was expected at 224,108 B and was
 (*Budget*); all three then rose another 536 B together with the AppleLink
 probe's removal.
 
-**67/71 was the ceiling for a RESIDENT build, and it was a property of these
-four archives against that build's budget.** `tools/run_tiers.py` applies
-the same rule on Linux and reproduces that tier fixture for fixture — and
+**68/72 is the ceiling for a RESIDENT build (67/71 before `shrink-wild-titanic.zip`
+joined), and it is a property of these four archives against that build's
+budget.** `tools/run_tiers.py` applies the same rule on Linux and reproduces
+that tier fixture for fixture, by name, on both 2026-09-22 and 2026-10-09 — and
 with a budget per format (*What each format is granted*) it reproduces the
 shipped build's **70/72** here too, refusing the same two by name. The
 minimum budget each one needs, bisected on 2026-09-22 — and the first two are
 what the overlay build now clears (the ratios against 2026-10-09's budget):
 
-| fixture | needs | of which | against 205,732 B (the measurement) |
+| fixture | needs | of which | against 205,476 B (the measurement) |
 |---|---|---|---|
 | `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.17x |
 | `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.18x |
@@ -7325,20 +7332,21 @@ archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
 **The same machine under System 6.0.8 manages 66/72 on the shipped build**
-(**2026-10-09**, below; 66/71 on 2026-09-27) **and 64/71 with every decoder resident**
-(`run.py --emu mv-512Ke --system System6.hfv`, **2026-09-22**; 63/69 on
+(**2026-10-09**, below; 66/71 on 2026-09-27) **and 63/72 with every decoder resident**
+(`run.py --emu mv-512Ke --system System6.hfv`, **2026-10-09**, the nine
+`run_tiers.py` named; 64/71 on 2026-09-22, 63/69 on
 2026-09-04, 58/69 before the stack was cut to 12 KB, which this tier's
 "unchanged" note had not accounted for — the reserve going flat could not
 help it, and the stack did),
 and **System 3.0's failures are a strict subset of System 6's.** The difference is the SYSTEM HEAP and
-nothing else: free heap when extraction starts is **226,212 B** under System
-3.0 against **130,812 B** under System 6.0.8 (both 2026-10-09), a gap of
-95,400 B — **the same gap to the byte the fifth time the pair has been
+nothing else: free heap when extraction starts is **225,956 B** under System
+3.0 against **130,556 B** under System 6.0.8 (both 2026-10-09, evening), a gap of
+95,400 B — **the same gap to the byte the sixth time the pair has been
 taken**, against System files of 181,913 B and 1,221,287 B. The Finder is not part of it —
 launching an application unloads it, measured at **12 bytes** between a System
 6.0.8 boot-shell launch and a double-click launch from a booted Finder.
 
-**64/71 is the resident build's. The shipped build is 66/71, MEASURED
+**64/71 was the resident build's then. The shipped build is 66/71, MEASURED
 2026-09-27** on the v0.34.0 binary (`run.py --emu mv-512Ke --system
 System6.hfv --list sample.txt`) — and it is the one number in this file that
 was PREDICTED before it was run. `tools/run_tiers.py --tier sys6-512K
@@ -7390,9 +7398,11 @@ System 6 refuses and System 3.0 does not was `popper-1.7.tar.Z`,
 from 2026-09-04, when the stack cut took it down from six, to the
 resident build's last run on 2026-09-22. The SHIPPED build on 2026-10-09
 differs by four — `a2ps.V4.3.tar.Z`, `derived-Cool_Tools__.sit`,
-`derived-a2basic.dmg.sit` and `popper-1.7.tar.Z` — and the resident model at
-today's bases by five, which no machine has run (*Floor target
-verification*, the tables). On
+`derived-a2basic.dmg.sit` and `popper-1.7.tar.Z` — and the RESIDENT build
+the same evening by five: `popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea`,
+`derived-Troi-ClipSave-Plug-in1.1.sit`, `derived-Terrainman_2.0__.sea` and
+`derived-LHA_Expander_1.0.3.sea`, the last two new since 2026-09-22 and both
+by the 18.9 KB the control grew (*Budget*). On
 `derived-Troi-ClipSave-Plug-in1.1.sit` the
 two systems are 11 entries at 163,332 B against 6 entries at 89,613 B. The
 1986 system leaves the engine **95,400 B** more than System 6 does — the

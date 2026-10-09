@@ -24927,7 +24927,11 @@ the bases were read against, and `--check-saved` fails when the build
 moves. The term nothing checked is now checked by the same line that
 checked the other one. The resident `EXPECT` tallies were re-pinned from
 the model (72, 68, 63) and say so: no resident build has run on a
-machine since 2026-09-22.
+machine since 2026-09-22. The same evening it did, on all three, and
+returned 72, 68 and 63 refusing exactly the fixtures the model named;
+`EXPECT` asserts those names since. The bases, re-taken in the same
+session, had fallen the 256 B the control grew in between, to the byte,
+as `TIERS` had derived. (The docs said 128 B, the last of three steps.)
 
 **Transferable.** For a derived figure, list its inputs and ask which
 of them something re-takes. Here the checked input was the less

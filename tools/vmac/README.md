@@ -27,12 +27,12 @@ flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
 System6.hfv` is **66/72** (2026-10-09, one fixture fewer than `run_tiers.py`
 predicted on a stale base; 66/71 on 2026-09-27, the tier it predicted
 before anything ran it; 64/71 on 2026-09-22 with
-every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). The resident budgets measured are **205,732 B** and
-**110,332 B**, both re-taken on the machine 2026-10-09 with the floor's;
-`tools/run_tiers.py` asserts each 128 B lower for the control's growth the
-same day (derived). It reproduces the SHIPPED tiers on Linux fixture for
-fixture; its resident tallies are the model's alone, since no resident
-build has run on those machines after 2026-09-22.
+every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). With every decoder resident
+(`-D UNC_OVL_RESIDENT`) the two are **68/72** and **63/72** (2026-10-09).
+The resident budgets measured are **205,476 B** and **110,076 B**, re-taken
+on the machine 2026-10-09 evening with the floor's. `tools/run_tiers.py`
+reproduces both lanes on all three tiers on Linux, fixture for fixture and
+by name.
 
 **A true Macintosh 512K — `mv-512K`, a 64 KB ROM — boots, and this
 application bombs on it.** It cannot read HFS, which is the whole of the

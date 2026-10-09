@@ -2825,17 +2825,17 @@ The resident lane asserted every tally Mini vMac agreed with for that
 build — on 2026-09-22, all three: 71/71 at the 1 MB floor target, 67/71
 on a 512 KB Macintosh under System 3.0 and 64/71 on the same machine
 under System 6.0.8, the same four and seven fixtures by name. Since
-2026-10-09 it asserts the model's **72/72, 68/72 and 63/72** at budgets
-re-taken on the machine that day (634,620, 205,732 and 110,332 B
-measured; asserted 128 B lower for the control's growth the same day,
-derived, and held to the machine by `TIERS_MACHINE`); no
-resident build has run on those machines since. All three budgets were re-taken twice on 2026-09-27 — +4,746 B
+2026-10-09 it asserts **72/72, 68/72 and 63/72 BY NAME**, which the
+resident build returned on all three machines that evening, refusing the
+same four and nine fixtures the lane names, at budgets re-taken in the
+same session (634,364, 205,476 and 110,076 B; `TIERS_MACHINE` holds each
+plus the control it was read against). All three budgets were re-taken twice on 2026-09-27 — +4,746 B
 and then +536 B, the three moving together each time — and no tally moved
 (FORMATS.md, *Budget*). The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
 assertable the same day, when its budget was re-taken. A tally that moves is
-a memory regression or a memory win; either way the number in `EXPECT`
-is meant to be changed deliberately.
+a memory regression or a memory win; either way the names in `EXPECT`
+are meant to be changed deliberately.
 
 The shipped lane asserts all three tiers a machine has run — **72/72 at
 the floor target, 70/72 at System 3.0 / 512 KB and 66/72 at System 6.0.8

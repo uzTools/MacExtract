@@ -21,10 +21,10 @@ sample (2026-09-25), and what stands in for them is below the table.
 |---|---|
 | System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71**, v0.33.0 |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **72/72**, 2026-10-09 |
-| System 3.0, **512 KB** Macintosh 512Ke | **70/72**, 2026-10-09 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. It was 67/71 with every decoder resident: the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
+| System 3.0, **512 KB** Macintosh 512Ke | **70/72**, 2026-10-09 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
 | System 6.0.8, 4 MB Mac Plus | **71/71**, v0.33.0 |
 | System 6.0.8, **1 MB** — the RAM floor | **72/72**, 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid); no memory-budget refusals remain |
-| System 6.0.8, **512 KB** Macintosh 512Ke | **66/72**, 2026-10-09 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*) |
+| System 6.0.8, **512 KB** Macintosh 512Ke | **66/72**, 2026-10-09 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09) |
 | System 7.0.1, 4 MB | **71/71**, v0.33.0 |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
 

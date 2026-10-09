@@ -37,8 +37,8 @@ Both are swept in seconds:
 Each prints one line per refusal with the shortfall, and the tally. The
 resident lane reproduced all three tiers exactly when a resident build
 last ran on them (2026-09-22) — 71/71, 67/71 and 64/71, the same four and
-seven fixtures by name; at the budgets re-taken 2026-10-09 it says 72/72,
-68/72 and 63/72. The shipped lane reproduces all three tiers a machine
+seven fixtures by name — and again on 2026-10-09: 72/72, 68/72 and 63/72,
+the same four and nine, which it asserts by name from that day. The shipped lane reproduces all three tiers a machine
 ran on 2026-10-09: 72/72 at the floor target, **70/72** at System 3.0 /
 512 KB and **66/72** at System 6.0.8 / 512 KB, refusing the same
 fixtures by name — after the budgets were re-taken, because on the stale
@@ -132,8 +132,8 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (205476, "System 3.0, Macintosh 512Ke (226,212 B free)"),
-    "sys6-512K": (110076, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
+    "sys3-512K": (205476, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (110076, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
     "floor-1M":  (634364, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
@@ -163,6 +163,10 @@ TIERS = {
 # +136 and A5 -8 when DiskDoubler stopped re-reading its own buffer and
 # MacLHA's peek and uuencode's scan stopped counting twice (DECISIONS.md
 # 2026-10-09, *DiskDoubler read every block six times*).
+# **MEASURED the same evening, and the 256 B landed to the byte** on all
+# three machines: 205,476, 110,076 and 634,364 B, `FreeMem()` 225,956,
+# 130,556 and 654,844 B, against this control. So TIERS is a machine
+# measurement again, and not a derivation.
 TIERS_CONTROL = 208016     # build/mac-resident, CODE + A5, 2026-10-09
 
 # What the MACHINE measured: each budget plus the control it was read
@@ -172,9 +176,9 @@ TIERS_CONTROL = 208016     # build/mac-resident, CODE + A5, 2026-10-09
 # a reader to move TIERS_CONTROL and nothing tied the two together). Only
 # a re-take on the machine changes these.
 TIERS_MACHINE = {
-    "sys3-512K": 413492,   # 205,732 + 207,760, measured 2026-10-09
-    "sys6-512K": 318092,   # 110,332 + 207,760
-    "floor-1M":  842380,   # 634,620 + 207,760
+    "sys3-512K": 413492,   # 205,476 + 208,016, measured 2026-10-09 (and
+    "sys6-512K": 318092,   # 110,076 + 208,016   205,732 + 207,760 that
+    "floor-1M":  842380,   # 634,364 + 208,016   morning: the same sums)
 }
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
@@ -223,7 +227,7 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 
 # What the RESIDENT lane asserts: every tier an emulator has independently
 # agreed with for that build, which since 2026-09-22 is all three. Each
-# matches the machine fixture for fixture — `floor-1M` 71/71, `sys3-512K`
+# matched the machine fixture for fixture that day — `floor-1M` 71/71, `sys3-512K`
 # 67/71 (the same four names), `sys6-512K` 64/71 (the same seven).
 # `sys6-512K` was a diagnostic until that day because it read 59/69 where the
 # machine said 58 and later 63; it is asserted now, because the disagreement
@@ -239,9 +243,24 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # every tier, so each tally rose one.
 # 65 -> 63 at sys6-512K the same day, with TIERS re-taken 16,888 B lower:
 # `derived-Terrainman_2.0__.sea` and `derived-LHA_Expander_1.0.3.sea` fall
-# out. That is the model's, at budgets read off the machine; no RESIDENT
-# build has been swept there since 2026-09-22.
-EXPECT = {"floor-1M": 72, "sys3-512K": 68, "sys6-512K": 63}
+# out. That was the model's until the same evening, when the resident build
+# ran the sample on all three machines and refused exactly these fixtures.
+#
+# BY NAME since then, as the shipped lane is, and for the same reason: a
+# count cannot fail on two different refusals.
+EXPECT = {
+    "floor-1M": (),
+    "sys3-512K": ("derived-Cool_Tools__.sit",
+                  "derived-Library_ISBN_Barcoder.sit",
+                  "derived-a2basic.dmg.sit", "synth-dd-m5.dd"),
+    "sys6-512K": ("derived-Cool_Tools__.sit", "derived-Expand_Now_1.0.1.sea",
+                  "derived-LHA_Expander_1.0.3.sea",
+                  "derived-Library_ISBN_Barcoder.sit",
+                  "derived-Terrainman_2.0__.sea",
+                  "derived-Troi-ClipSave-Plug-in1.1.sit",
+                  "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
+                  "synth-dd-m5.dd"),
+}
 
 # ---------------------------------------------------------------------------
 # The shipped build's model: a budget per tier PER FORMAT.
@@ -862,11 +881,14 @@ def main():
                 if fails is None:
                     return 1
                 got = len(fixtures) - len(fails)
+                ok = sorted(f[0] for f in fails) == sorted(want)
                 print("run_tiers: resident %-11s %d/%d pass at %d bytes%s"
                       % (tier, got, len(fixtures), TIERS[tier][0],
-                         "" if got == want else "   EXPECTED %d" % want))
+                         "" if ok else "   EXPECTED %d, refusing %s"
+                         % (len(fixtures) - len(want),
+                            ", ".join(want) or "nothing")))
                 report(fails, "     ")
-                bad += got != want
+                bad += not ok
             for tier in sorted(TIERS):
                 fails = sweep_shipped(a.macextract, fixtures, TIERS[tier][0],
                                       a.fixtures, keep, fmts, tmp)
