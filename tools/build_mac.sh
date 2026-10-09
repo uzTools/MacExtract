@@ -431,7 +431,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # eager pair is unmoved, `ovl_codecs` 7,520 -> 7,628 and `ovl_exo` 32,036
 # -> 32,056 — and a crafted stream of clears had ~17 minutes of a Mac
 # Plus between ticks without them (FORMATS.md, *Shrink*).
-UNC_MAC_CODE_DEFAULT=169880
+# RAISED the same day, 169,880 -> 169,908, +28: zip's two dry passes put
+# `done` back after they decode, so the progress bar counts an entry once
+# (DECISIONS.md 2026-10-09, *the bar that counted the peek*); `ovl_exo`
+# 32,056 -> 32,084 when shipped, the eager pair unmoved.
+UNC_MAC_CODE_DEFAULT=169908
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -570,7 +574,9 @@ UNC_MAC_CODE_DEFAULT=169880
 # RAISED the same day to 37,976, +12, as the code ceiling above fell 12:
 # the total is unmoved, and of the 126 .data and .bss symbols none changed
 # size — the `.data` ALIGN padding stepping under shorter text, as above.
-UNC_MAC_A5_DEFAULT=37976
+# RAISED the same day to 37,980, +4, with the code ceiling's +28: again no
+# data symbol changed size (all 126 compared), so alignment.
+UNC_MAC_A5_DEFAULT=37980
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

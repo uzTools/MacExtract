@@ -1360,9 +1360,12 @@ static void test_zip_behind_a_stub(void)
  * ticks for: the counts below are 0 without the per-clear tick. */
 #define SHR_TICK_OUT 131u
 static long shr_ticks, shr_cancel_at;
+static uint32_t shr_overrun;    /* the most `done` ever exceeded `total` */
 static int shr_tick(void *ctx, uint32_t done, uint32_t total)
 {
-    (void)ctx; (void)done; (void)total;
+    (void)ctx;
+    if (done > total && done - total > shr_overrun)
+        shr_overrun = done - total;
     return ++shr_ticks != shr_cancel_at;
 }
 
@@ -1447,8 +1450,13 @@ static void test_zip_shrink_ticks(void)
         cap_make(&sk, &cap);
         shr_ticks = 0;
         shr_cancel_at = -1;
+        shr_overrun = 0;
         CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, &pg, NULL)
               == UNC_OK);
+        /* The peek reads the entry once and the decode again; only one
+         * of them may count toward the bar, or a ZipIt archive reads
+         * 100 % halfway through (152 % here until 2026-10-09). */
+        CHECK(shr_overrun == 0);
         CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
         CHECK(cap.dlen[0] == SHR_TICK_OUT &&
               memcmp(cap.data[0], plain, SHR_TICK_OUT) == 0);

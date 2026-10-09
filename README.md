@@ -235,8 +235,9 @@ Small ones are fine — half the StuffIt 5 archives tested fit in 512 KB — but
 big block will not, and there is nothing the application can do about it: the
 size was chosen when the archive was made, on a machine with memory to spare.
 Those entries are skipped with a message and the rest of the archive still
-comes out. Every other format tested fits in 512 KB. With 1 MB the question
-does not arise.
+comes out. A few other large archives need more than 512 KB too — a
+DiskDoubler file packed with its heaviest method, and on System 6 some big
+`.tar.Z` and StuffIt archives. With 1 MB the question does not arise.
 
 On System 3.0 the Open dialog does not close on Command-period — that system's
 Standard File ignores it. Click Cancel instead. System 6 and later are

@@ -281,7 +281,7 @@ TEXT = (b"the quick brown fox jumps over the lazy dog, and the dog "
         b"did not mind at all.\n")
 
 
-def encode(dictsize, three, body_out, mml=None):
+def encode(dictsize, three, body_out, mml=None, quirks=False):
     """One Implode stream, and the bytes it decodes to.
 
     `body_out` is appended to as tokens are emitted, so the caller gets
@@ -294,7 +294,13 @@ def encode(dictsize, three, body_out, mml=None):
     took it from the DICTIONARY SIZE instead. The flag word is
     identical either way, which is why the two readings can disagree at
     all: nothing in the entry says which was used, so the stored CRC-32
-    is the only thing that can answer (FORMATS.md, *Implode*)."""
+    is the only thing that can answer (FORMATS.md, *Implode*).
+
+    `quirks` writes the two features PKUNZIP 1.01/1.02 read differently
+    from 5.3 and every other shape avoids: a fill at distance operand 0,
+    and a FLAT 8-bit literal tree, so 0x80 and 0xFF have 8-bit codes.
+    Both are valid 5.3 that no PKZIP writer emits; QUIRKSHAPES says why
+    the shape exists."""
     if mml is None:
         mml = 3 if three else 2
     L = lambda bs: [("L", b) for b in bs]
@@ -311,6 +317,9 @@ def encode(dictsize, three, body_out, mml=None):
     # never codes at distance one*). Two literals and a match one byte
     # further back give the same fill, and every PKZIP reader reads it.
     toks += L(b"==") + [("M", 1, mml + 40)]
+    if quirks:
+        # The same fill at operand 0, and every high byte as a literal.
+        toks += L(b"=") + [("M", 0, mml + 40)] + L(bytes(range(0x80, 0x100)))
     # The escape: a length past 63 + mml, so eight more bits follow.
     toks += L(TEXT) + [("M", len(TEXT) - 1, mml + 63 + 7)]
     # Enough literals to pass the dictionary, so the window wraps and a
@@ -325,7 +334,8 @@ def encode(dictsize, three, body_out, mml=None):
     # literal tree is PKZIP's own, deepened to 16 bits (literal_lengths).
     return encode_tokens(dictsize, three, toks, body_out, mml,
                          lenlen=skewed_lengths(64),
-                         litlen=literal_lengths() if three else None)
+                         litlen=(flat_lengths(256, 8) if quirks
+                                 else literal_lengths() if three else None))
 
 
 def encode_tokens(dictsize, three, tokens, body_out, mml=None,
@@ -520,7 +530,18 @@ BUGSHAPES = (
     ("8k-2trees-mmlbug", 8192, False, 3),
     ("4k-3trees-mmlbug", 4096, True, 2),
 )
-ALLSHAPES = SHAPES + BUGSHAPES
+# What the four SHAPES gave up on 2026-10-09 to be readable by PKUNZIP
+# 1.01/1.02 (`encode`): a fill at distance operand 0, and short codes for
+# bytes 0x80 and up. Both are valid 5.3, unar and deark read both, and the
+# engine must too — so this shape keeps them under test, graded by
+# `run_implode.py` against unar, deark and the writer's own plaintext. NOT
+# in SHAPES, so neither the committed fixture nor `pkzip_writers.py`'s
+# PKUNZIP lane sees it: PKUNZIP 1.01 is KNOWN to misread it.
+QUIRKSHAPES = (
+    ("8k-3trees-5.3only", 8192, True, None),
+)
+QUIRKS = {s[0] for s in QUIRKSHAPES}
+ALLSHAPES = SHAPES + BUGSHAPES + QUIRKSHAPES
 
 # --mixed: one archive carrying BOTH readings, bug-written entry first,
 # at the same ambiguous flag combination. No writer is known to make one
@@ -610,10 +631,11 @@ def selftest():
     # token stream, which the example cannot reach.
     for name, dictsize, three, mml in ALLSHAPES:
         body = bytearray()
-        stream = encode(dictsize, three, body, mml)
+        stream = encode(dictsize, three, body, mml, quirks=name in QUIRKS)
+        ops = []
         try:
             got = decode(stream, 0, len(stream), len(body),
-                         dictsize == 8192, three, mml)
+                         dictsize == 8192, three, mml, matches=ops)
         except Exception as e:                            # noqa: BLE001
             print("synth_implode: %s does not read back: %s" % (name, e),
                   file=sys.stderr)
@@ -622,6 +644,21 @@ def selftest():
         if got != bytes(body):
             print("synth_implode: %s reads back %d B, coded %d"
                   % (name, len(got), len(body)), file=sys.stderr)
+            bad += 1
+        # The two features PKUNZIP 1.01/1.02 misread: absent from every
+        # shape PKUNZIP grades, present in the one that exists to keep
+        # them under test — asserted both ways, so a change to the token
+        # list cannot quietly move either (DECISIONS.md 2026-10-09, *the
+        # run PKZIP never codes at distance one*).
+        op0 = sum(1 for d, _l in ops if d == 0)
+        short_hi = three and any(
+            l <= 8 for l in read_stored_tree(stream, 0, 256)[0][0x80:])
+        if (name in QUIRKS) != bool(op0) or (name in QUIRKS) != bool(short_hi):
+            print("synth_implode: %s has %d operand-0 match(es) and %s 8-bit "
+                  "codes for bytes 0x80 and up — %s" % (
+                      name, op0, "some" if short_hi else "no",
+                      "it exists to have both" if name in QUIRKS else
+                      "PKUNZIP 1.01/1.02 misread both"), file=sys.stderr)
             bad += 1
     # **A bug stream that also reads back under 5.3.4 would grade
     # nothing**, so that is asserted rather than assumed. Each of the two
@@ -648,8 +685,9 @@ def selftest():
         print("synth_implode: selftest ok (APPNOTE.TXT 5.3.8's worked "
               "example, %d codes, the stored form both ways, PKZIP's "
               "literal tree stored back byte for byte, all %d "
-              "shapes round-tripped, and both PKZIP 1.01/1.02 shapes "
-              "refused by 5.3.4's rule)"
+              "shapes round-tripped, operand 0 and short high-byte codes "
+              "only where they are meant to be, and both PKZIP 1.01/1.02 "
+              "shapes refused by 5.3.4's rule)"
               % (len(APPNOTE_EXAMPLE_CODES), len(ALLSHAPES)))
     return bad
 
@@ -705,7 +743,7 @@ def main():
     nent = 0
     for name, dictsize, three, mml in shapes:
         body = bytearray()
-        stream = encode(dictsize, three, body, mml)
+        stream = encode(dictsize, three, body, mml, quirks=name in QUIRKS)
         fn = ("%s.txt" % name).encode("ascii")
         # 5.3.2 and 5.3.3: bit 1 is the dictionary size, bit 2 the tree
         # count. Nothing else is set — no data descriptor, no

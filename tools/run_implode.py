@@ -202,6 +202,40 @@ def grade_shapes(exe):
     return bad
 
 
+def grade_quirks(exe):
+    """The shape that keeps what the four SHAPES gave up to be readable by
+    PKUNZIP 1.01/1.02: a fill at distance operand 0 and 8-bit codes for
+    bytes 0x80 and up (synth_implode.py, QUIRKSHAPES). Valid 5.3 that no
+    PKZIP writes, read by unar and deark — so held against both and the
+    writer's plaintext. Returns failures."""
+    bad = 0
+    tmp = tempfile.mkdtemp(prefix="implode-q-")
+    try:
+        zp, _ranges, plain = write_seed(tmp, only=("8k-3trees-5.3only",))
+        name = "8k-3trees-5.3only.txt"
+        mine, err = ours(exe, zp, os.path.join(tmp, "mine"))
+        if mine is None or mine.get(name) != plain:
+            print("implode: %s: not the writer's plaintext (%s)"
+                  % (name, err or "differs"))
+            bad += 1
+        them = theirs_unar(zp, os.path.join(tmp, "unar"))
+        dk, _dkerr = theirs_deark(zp, os.path.join(tmp, "deark"))
+        if them is not None and them.get(name) != plain:
+            print("implode: %s: unar does not read it as written" % name)
+            bad += 1
+        if dk is not None and dk.get(name) != plain:
+            print("implode: %s: deark does not read it as written" % name)
+            bad += 1
+        if not bad:
+            print("implode: operand 0 and 8-bit high-byte codes graded "
+                  "against the writer's plaintext, %s and %s"
+                  % ("unar" if them is not None else "unar (ABSENT)",
+                     "deark" if dk is not None else "deark (ABSENT)"))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad
+
+
 BUGSHAPES = ("4k-3trees-mmlbug", "8k-2trees-mmlbug")
 
 
@@ -606,6 +640,7 @@ def main():
     sys.stderr.write(r.stderr.decode("utf-8", "replace"))
     bad = 1 if r.returncode else 0
     bad += grade_shapes(a.macextract)
+    bad += grade_quirks(a.macextract)
     bad += grade_bugshapes(a.macextract)
     bad += grade_mixed(a.macextract)
     bad += grade_passes(a.macextract)

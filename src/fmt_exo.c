@@ -958,7 +958,8 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
     uint8_t lh[30];
     UncBufIn in;
     ExoSink es;
-    uint32_t crc = UNC_CRC32_INIT;
+    uint32_t crc = UNC_CRC32_INIT, done0;
+    int err;
 
     if (usize < 128 || usize == UNC_SIZE_UNKNOWN) return 0;
     if (zip_seek(c, part, lhoffs) != UNC_OK ||
@@ -984,9 +985,13 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
      * header. ZipIt is a Macintosh program and PKZIP 1.01 a DOS one,
      * so nothing can carry both; UNEXERCISED, and said here rather
      * than measured. */
-    if (zip_decode(c, &in, &es, method, flags, usize, &crc, 0, obuf,
-                   ocap) == UNC_ERR_ABORTED)
-        return UNC_ERR_ABORTED;
+    done0 = c->ps.done;
+    err = zip_decode(c, &in, &es, method, flags, usize, &crc, 0, obuf, ocap);
+    /* The entry is read again by the decode proper, which counts it; this
+     * pass ticks so Cancel answers, but must not count, or the bar passes
+     * 100 % on every ZipIt entry. */
+    c->ps.done = done0;
+    if (err == UNC_ERR_ABORTED) return UNC_ERR_ABORTED;
     if (es.headgot != 128) return 0;
     if (!unc_macbinary_probe(mb, 128, 0)) return 0;
     {
@@ -1052,6 +1057,7 @@ static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
     UncBufIn in;
     ExoSink es;
     uint32_t crc = UNC_CRC32_INIT;
+    uint32_t done0;
     int err;
 
     if (zip_seek(c, part, lhoffs) != UNC_OK ||
@@ -1064,8 +1070,10 @@ static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
     es.dry = 1;
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = csize;
+    done0 = c->ps.done;
     err = zip_decode(c, &in, &es, 6, flags, usize, &crc, mmlbug,
                      obuf, ocap);
+    c->ps.done = done0;          /* counted once, by the decode proper */
     if (unc_fatal(err)) return err;
     return err == UNC_OK && ~crc == wantcrc;
 }

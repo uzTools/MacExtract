@@ -238,64 +238,22 @@ being "needs a machine nobody has" and become two runs somebody can do.
 Short of them, read every tier sweep with the `-D UNC_AT_BUDGET` probe
 fields (`wa`, `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
-## What is still somebody else's and could stop being
+## Progress that passes 100 %
 
-**Nothing: this section is empty as of 2026-10-07.** Its last row was
-`src/fmt_binhex.c`'s skip of a line that cannot be data, cited to
-macutils' `hexbin` until StuffIt's own `HQXEngine` was read and found to
-state the same rule (NOTICE; DECISIONS.md 2026-10-07, *the engine four
-layers down*). Fourteen readers were asked for that one; the other
-thirteen are recorded in `tools/derive_hqxgarbage.py`.
+**Measured 2026-10-09**, the day `tools/run_ticks.py` first compared
+`bytes_done` with the total: **66 layers in 73 rows of the corpus run report
+progress past the archive's own size**, so a Macintosh's bar reads 100 %
+with work left — DiskDoubler's `ddtf-ddpro411dd1.dd` reaches 17.6 times its
+5,193 B. No byte is wrong and Cancel still answers. `run_ticks.py` holds
+each at its measured overrun (`KNOWN_OVERRUN`), fails on any other, and
+says when one shrinks. Zip's two dry passes had the same fault and were
+fixed that day (DECISIONS.md 2026-10-09, *the bar that counted the peek*).
 
-**The per-file inventory is NOTICE's**, in *What is still somebody
-else's, in full*, and `tools/check_provenance.py` checks it on every
-`ci.sh` run — a file that gains a citation fails, and so does one that
-sheds its last. This section held a second copy until 2026-09-27, the
-two disagreed, and that is how a live citation in `src/fmt_sit.c` came
-to be recorded as shed in three documents at once (BLOCKERS.md). **A new
-row here is a bug until `check_provenance.py` agrees with it.**
-
-**What has no route at all is Part 1**, *The licence cannot move*. The
-licence does not turn on anything that was in this section — that is
-settled — so each row was worth taking only for its own gain: **no
-regression for the licence's sake**.
-
-## The decoder paths nothing has fuzzed
-
-**Measured by `tools/fuzz_cover.py`** — a coverage build under
-`fuzz.py`, which is the only instrument here that distinguishes a
-decoder that ran from one that never did. Read the per-family counts
-with its noise floor in mind: two seeds over one build have differed by
-thirteen functions in a family (TESTING.md, *Fuzzing*).
-
-Most of what this section listed on 2026-09-27 was closed the same day
-and the next — `-lh2-`, `-lh3-`, DiskDoubler 3/4/5/7 and Now Compress's
-coders all reach their decoders now, by seeds, by a fixture, and by a
-generator that repairs the checksum it breaks — and **Now Compress is
-the first family with nothing left at all**, since 2026-10-05
-(TESTING.md, *Fuzzing*). **StuffIt 5's method 14 is the second**, since
-the same day, by a generator that mutates a named seed inside its own
-compressed streams — and **so is method 14's window wrap, since
-2026-10-06**, by a second named seed whose fork is 278,896 B for 458 B
-of stream (TESTING.md, *The fork that wraps the window*). What is
-left:
-
-| what | what it wants |
+| what | what would close it |
 |---|---|
-| `lzd_reconst` (`-lh2-`'s tree rebuild) | nothing, under fuzzing: it needs 32,768 codes, too large for a seed. The GRADED suite covers it since 2026-09-27 |
-| ARC's Crush | nothing writes it and no implementation exists anywhere (Part 1) |
-
-**AppleLink packages would have joined this list on 2026-10-05** — the
-fuzzer measured `unc_sqp_extract` at zero lines after 400 cases, because a
-`.pkg` is 6 of 959 fixtures and it draws uniformly — so the suite got a lane
-that bends those six directly instead: 300 mutants, a fixed seed, 270 of
-them still sniffing as a package and every one decoding without a sanitizer
-report (TESTING.md, *AppleLink packages: SqueezePlay*). A draw rate is not a
-property of a decoder, and the cheap answer was a targeted sweep rather than
-a row here.
-
-**Nothing here is known to be hiding a defect** — that is the point:
-before this was measured, it could not be said either way.
+| **DiskDoubler**, every `ddtf-*.dd`, `sources.*` and `.sea` row (`DD Expand`, `LHA Expander`, `Terrainman`, `DandStoQIF2` — all four sniff as DiskDoubler), measured on the DDn method: its code, literal and length streams are stored apart and the decoder reseeks between them, each reseek refilling a whole 4 KB buffer that is counted whether it is used or not (180,792 B read off a 5,193 B archive, 67 seeks, measured with `strace`) | count what the decoder CONSUMES rather than what a refill reads, or a high-water mark of the file position — an engine-wide choice, because every `UncBufIn` counts at refill. Price it in 68000 `CODE` before choosing; the reseeking itself is the format's and is a separate, slower question (Mac reads) |
+| **MacLHA's payload peek** (`lhasa-maclha-l1_lh5.lzh`, `lhasa-maclha-l2_lh1.lzh`): the zip shape exactly, an entry decoded for 128 bytes and then again — a HYPOTHESIS from the shape, not traced | save and restore `c->ps.done` around the peek, as `zip_mb_peek` does since 2026-10-09 |
+| **uuencode**, `uu-wild-terrainman.uu` at 99.9 % over and `uu-wild-dictcol.uu`: the scan for the `begin` line and the decode both count — a HYPOTHESIS, not traced | the same restore around the scan |
 
 ## StuffIt 2.0: the modules that are still only this project's own output
 
@@ -316,7 +274,7 @@ What is left:
 
 | what is left | what would close it |
 |---|---|
-| **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a wild archive carrying one.** Both modules accept type `8BIM` and nothing else, and **21 archives in the whole index hold an `8BIM` member** — out of 196,139 classic StuffIt archives listed, all 954 with a member of an accepted type walked, 16,413 headers (TESTING.md, *Searching somebody else's index by content*). None of the 21 carries their bit. **The other 10,452 — the ones the index recorded no member metadata for — were walked by content on 2026-10-09: 6,432 classic archives, 166,970 file headers, neither bit** (TESTING.md, the same section), so every archive the index lists as classic StuffIt has now been asked by one key or the other; 112 of those walks stop before the archive's declared end |
+| **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a wild archive carrying one, from outside this index** — every archive it lists as classic StuffIt has now been asked, so no search here has a population left except re-walking the 112 walks that stopped early. Both modules accept type `8BIM` and nothing else, and **21 archives in the whole index hold an `8BIM` member** — out of 196,139 classic StuffIt archives listed, all 954 with a member of an accepted type walked, 16,413 headers (TESTING.md, *Searching somebody else's index by content*). None of the 21 carries their bit. **The other 10,452 — the ones the index recorded no member metadata for — were walked by content on 2026-10-09: 6,432 classic archives, 166,970 file headers, neither bit** (TESTING.md, the same section), so every archive the index lists as classic StuffIt has now been asked by one key or the other; 112 of those walks stop before the archive's declared end |
 | **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **a wild archive carrying one, with a published password.** The bit is found: **8 forks carry `NewDE`'s `0x10`, in 4 wild files and 3 distinct archives**, one of them a fixture; every other wild encrypted fork is 3.x's built-in scheme (354 with id 4, 201 with the id unset). **No password was found** beside any of them — the one read-me that speaks to it says the author mailed one on payment, and the search over all 27 disc images is a negative that was looked for rather than proved — so a wild encrypted archive grades a REFUSAL, which `sitcrypt-wild-F7Menus.sit.bin` now does (FORMATS.md, *The one wild archive here that is encrypted*). The 10,452 no-metadata archives of 2026-10-09 add **no** `NewDE` bit and no `DES`, `DESex` or `PassLock` id |
 | **the engine names a cipher off bytes InstallerMaker 1.0.3 wrote** — `NewDEx` and "a scheme we cannot read" for two forks of an archive whose other eleven are 3.x's built-in scheme (FORMATS.md, *Where an archive names the module*; a hypothesis) | **the archive decrypted**: if `Viewer Engine™` and `Shortcut™` open under the same password as their siblings, ids are not what InstallerMaker writes at 107/109 and `sit_scheme()` should not trust them on a method-13 fork. The updater installs without asking for one (hypothesis), so its key is in its own `CODE`; it is on Discmaster, `13620/Info_Mac_1994-01.iso/User Interface/General/Shortcut 1.5.3 Update` |
 

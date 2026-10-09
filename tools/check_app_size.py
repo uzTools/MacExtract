@@ -188,8 +188,9 @@ TAKEN = "2026-10-09"
 # `ovl_crypt` -4 (RC4's indices in registers). -> 161,712 the same day:
 # `ovl_stuffit` -24, the Private File footer read through unc_read_full.
 # -> 161,840 the same day: `ovl_codecs` +108 and `ovl_exo` +20, a tick per
-# Shrink partial clear and a Cancel the zip peek returns.
-EXPECT_BUNDLE = 161840
+# Shrink partial clear and a Cancel the zip peek returns. -> 161,868:
+# `ovl_exo` +28, zip's dry passes putting the progress count back.
+EXPECT_BUNDLE = 161868
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 

@@ -1680,14 +1680,17 @@ a HYPOTHESIS, 2026-10-09.** Two copies of Aladdin's *Shortcut 1.5.3 Update*
 (Info-Mac 1994-01; Eagle's Nest disc 1), an `APPL`/`STi0` whose data fork is
 a version-2 archive with an `MKey` beside it: all 13 forks are `0x8d`, method
 13 under the built-in scheme, and 11 carry 0 at 106..109 — but `Shortcut™`
-carries 5 / 3 at 106 / 109 and `Viewer Engine™` 6 / 5. Method 13 is
+carries 5 / 3 at 107 / 109 — the bytes `sit_scheme()` reads for the data
+and resource forks — and `Viewer Engine™` 6 / 5 (CORRECTED 2026-10-09:
+this read "106 / 109"). Method 13 is
 *"unknown method"* to 2.0.1 (STR# 261, above), so no 2.x module wrote those
 forks; that the bytes are installer-private rather than ids stays a
 hypothesis until the archive decrypts. **The engine believes them**
 (`macextract x`, measured): with the `MKey`, `Viewer Engine™` is refused as
 *"encrypted by a scheme we cannot read"* while its ten encrypted siblings
-ask for a password; forkless, `Shortcut™` is reported as encrypted by
-`NewDEx`. OPEN_ITEMS.md, *StuffIt 2.0*, has what would settle it.
+ask for a password; without the `MKey` beside it (the archive's own
+resource fork gone), `Shortcut™` is reported as encrypted by `NewDEx`.
+What `Shortcut™` does WITH the `MKey` was not recorded. OPEN_ITEMS.md, *StuffIt 2.0*, has what would settle it.
 
 ### What Aladdin's own output says — measured 2026-09-28
 
@@ -4773,8 +4776,8 @@ extension `.zip`), and the one that is really a zip is Implode.
 | what | against |
 |---|---|
 | the 42 entries of the three fixtures | **`unar` for 29 and deark for 13**, fork for fork on every `ci.sh` run. The 13 are every entry with a PARTIAL clear: XADMaster's `XADZipShrinkHandle.m` performs it as a full clear, and `unar` fails each with *"Error on decrunching"*. `"Shrink"` joined `make_manifests.py`'s `DEARK_METHODS`; `ORACLE_OUT_OF_SCOPE` stays empty |
-| **2,246** wild entries in **345** archives, 2026-10-08 — the 146 above (141 whose first entry is Shrink and 5 whose first entry is a Reduce) and 200 drawn at random from the 42,604 distinct method-1 zips under 400 KB, **one of which, `gtrbites.zip`, was also one of the 146** | **the CRC-32 the archive stored**, entry by entry: a Python transcription of the same deark paths **2,246 of 2,246**, and the C decoder **2,246 of 2,246**, re-run 2026-10-09 on the working set, which had survived in `/tmp` and is now under `~/.cache/macextract/discmaster/shrink/2026-10-08/`. Six encrypted entries are not graded. **This row read "2,232 of 2,244" and "3 UNEXPLAINED" until then, and the 3 were the comparison's, not the decoder's**: the C run listed entries with Python's `zipfile`, which refuses two RISC OS zips over Acorn's `0x4341` extra field (`txt2pdf.zip`, 13 entries; `020408`, 2), and it counted `Thief35.zip`'s 12, which the transcription never read — 2,247 − 15 + 12 = 2,244. Both counted `gtrbites.zip`'s one entry twice. `Thief35.zip`'s directory points 1,024 B past ten of its twelve entries; the engine and `unar` both refuse the archive before any entry |
-| **1,965** wild entries in **346** archives, 2026-10-09 — the same 146, by `scan_discmaster.py --mac-context`, and 200 drawn with `--seed 20261009` from the 42,579 distinct method-1 zips under 400 KiB that are not among them; the URLs, SHA-256s and files are in `~/.cache/macextract/discmaster/shrink/` (`manifest.tsv`, TESTING.md) | **the stored CRC-32, entry by entry, both decoders**: the transcription **1,954**, the engine **1,952 of the 1,953 it reaches**. The 2 the engine does not reach are `Thief35.zip`'s, the ten others there being the transcription's failures. The 1 both fail is `DEASE.EXE` in `DEASE4-2.ZIP`, which deark's own binary and `unar` fail too — deark, the transcription and the engine all stop at output byte 26,864 of 330,296. No single-bit flip in the 21,206 compressed bytes before that point restores the stored CRC-32, the archive's other entry decodes, and the index has no second copy: **damaged, a HYPOTHESIS** |
+| **2,246** wild entries in **345** archives, 2026-10-08 — the 146 above (141 whose first entry is Shrink and 5 whose first entry is a Reduce) and 200 drawn at random from the 42,604 distinct method-1 zips under 400 KB, **one of which, `gtrbites.zip`, was also one of the 146** | **the CRC-32 the archive stored**, entry by entry: a Python transcription of the same deark paths **2,246 of 2,246**, and the C decoder **2,246 of 2,246**, re-run 2026-10-09 on the working set, which had survived in `/tmp` and is now under `~/.cache/macextract/discmaster/shrink/2026-10-08/`. **What the 2,246 is**: the 345 files' central directories hold 2,252 Shrink entries outside `Thief35.zip`, six of them encrypted and not graded (counted off the cached files 2026-10-09). `Thief35.zip` is OUTSIDE this row — its directory cannot be walked — and INSIDE the next one, which counts by local header. **This row read "2,232 of 2,244" and "3 UNEXPLAINED" until then, and the 3 were the comparison's, not the decoder's**: the C run listed entries with Python's `zipfile`, which refuses two RISC OS zips over Acorn's `0x4341` extra field (`txt2pdf.zip`, 13 entries; `020408`, 2), and it counted `Thief35.zip`'s 12, which the transcription never read — 2,247 − 15 + 12 = 2,244. Both counted `gtrbites.zip`'s one entry twice. `Thief35.zip`'s directory points 1,024 B past ten of its twelve entries; the engine and `unar` both refuse the archive before any entry |
+| **1,965** wild entries in **346** archives, 2026-10-09 — the same 146, by `scan_discmaster.py --mac-context`, and 200 drawn with `--seed 20261009` from the 42,579 distinct method-1 zips under 400 KiB that are not among them; the URLs, SHA-256s and files are in `~/.cache/macextract/discmaster/shrink/` (`manifest.tsv`, TESTING.md) | **the stored CRC-32, entry by entry, both decoders**: the transcription **1,954**, the engine **1,952 of the 1,953 it reaches**. The **12** the engine does not reach are all `Thief35.zip`'s: it refuses that archive before any entry. The transcription, walking local headers, reaches all 12 and fails 10 of them, so its 1,954 is 1,965 less those 10 and `DEASE.EXE`. The 1 both fail is `DEASE.EXE` in `DEASE4-2.ZIP`, which deark's own binary and `unar` fail too — deark, the transcription and the engine all stop at output byte 26,864 of 330,296. No single-bit flip in the 21,206 compressed bytes before that point restores the stored CRC-32, the archive's other entry decodes, and the index has no second copy: **damaged, a HYPOTHESIS** |
 | two bends of the decoder | the free-slot walk made an error fails `shrink-wild-dream.zip` and nothing else; the partial clear made a full one fails `dream` and `titanic` — so each rule has a fixture that needs it |
 
 | fixture | what it pins |
@@ -4799,8 +4802,8 @@ follows; 0 in 2,246. And no fuzzer has a Shrink seed.
 | | |
 |---|---|
 | resident `CODE` and A5, SHIPPED | **+0 and +0** |
-| the images | `ovl_codecs` 6,404 → 7,520 → **7,628 B**; `ovl_exo` 31,936 → 32,036 → **32,056 B** for the method guard and the adapter. The second step is 2026-10-09's: +76 B in `unc_shrink_decode` and the forward to `unc_progress_at` for a tick per partial clear, +20 in `unc_zip_extract` for the peek's Cancel (*What a crafted stream costs*, below). (31,936 is the minimum-match-length rule's 31,784 plus 152 B for the mixed-archive recovery of the same day — DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*) |
-| resident CONTROL | `CODE` 167,036 → 168,200 B, A5 −12; **+96 on 2026-10-09** for the tick and the Cancel, 169,784 → **169,880 B**, A5 +0 |
+| the images | `ovl_codecs` 6,404 → 7,520 → **7,628 B**; `ovl_exo` 31,936 → 32,036 → 32,056 → **32,084 B** for the method guard and the adapter (the last +28 for the dry passes' progress). The second step is 2026-10-09's: +76 B in `unc_shrink_decode` and the forward to `unc_progress_at` for a tick per partial clear, +20 in `unc_zip_extract` for the peek's Cancel (*What a crafted stream costs*, below). (31,936 is the minimum-match-length rule's 31,784 plus 152 B for the mixed-archive recovery of the same day — DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*) |
+| resident CONTROL | `CODE` 167,036 → 168,200 B, A5 −12; **+96 on 2026-10-09** for the tick and the Cancel, 169,784 → 169,880 B, A5 +0; **+28 and +4** the same day when zip's dry passes stopped counting progress, → **169,908 B** (*the bar that counted the peek*, DECISIONS.md 2026-10-09) |
 | the download | 228,096 → **229,248 B**; 231,424 → **231,552 B** on 2026-10-09 |
 | peak heap per Shrink ENTRY | **3 B per table slot**, sized from the compressed length — 257 + bits/9, at most 8,192 slots, **24,576 B**. `shrink-wild-BBA.zip` peaks at 18,474 B, `dream` at **39,094 B**, `titanic` at 38,777: above deflate's 24,863, inside zip's 12–54 KB row. A separate kind byte made it 4 B a slot and 47,286 B |
 | stack | `unc_shrink_decode` is a **120 B** frame since 2026-10-09's tick (116 before) and the Shrink chain **1,672 B**, under the Implode probe's 1,896 (*Stack*). Written in `src/fmt_exo.c` first, it was inlined into `zip_decode` and took that frame 56 → 140 B, which every deflate and Implode chain runs through |
@@ -4812,7 +4815,7 @@ follows; 0 in 2,246. And no fuzzer has a Shrink seed.
 image is `-mpcrel` code for a 68000, whose PC-relative references are 16
 bits, and with the decoder in `src/fmt_exo.c` the image link failed —
 `relocation truncated to fit: R_68K_PC16 against g_ovl_fns` — at about
-33 KB. `ovl_exo` is at **32,056 B**, so roughly **710 B** is left before
+33 KB. `ovl_exo` is at **32,084 B**, so roughly **680 B** is left before
 the next zip feature has to go elsewhere too (the exact reach depends on
 where the linker puts `g_ovl_fns`; HYPOTHESIS beyond the one failure).
 
@@ -5018,13 +5021,17 @@ engine later the same day, fourteen until AppleLink packages arrived on
 |---|---|---|---|---|---|
 | **eager — SHIPPED** | (default) | **54,640 B** | 19,088 B | **66,432 B** | **231,552 B** |
 | lazy | `UNC_OVL_LAZY=1` | 53,216 B | 19,200 B | 64,896 B | 230,272 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **169,880 B** | **37,976 B** | 202,368 B | 205,696 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **169,908 B** | **37,980 B** | 202,368 B | 205,696 B |
 
 **Re-measured 2026-10-09, for Shrink's tick per partial clear** and the
 zip peek's Cancel (*Shrink*, *What a crafted stream costs*): both
 SHIPPED configurations **+0 and +0**, the control **+96 B of `CODE`**,
 A5 +0, and the images `ovl_codecs` 7,520 → **7,628 B** and `ovl_exo`
-32,036 → **32,056 B**; every download +128.
+32,036 → **32,056 B**; every download +128. Then **+28 of control
+`CODE` and +4 of A5** (alignment; no data symbol moved) when zip's dry
+passes stopped counting progress, `ovl_exo` → **32,084 B**, the shipped
+pair and the download unmoved (DECISIONS.md 2026-10-09, *the bar that
+counted the peek*).
 
 **Re-measured 2026-10-09, for Private File** (*Private File*), each
 configuration against HEAD built the same way: both SHIPPED
@@ -5223,11 +5230,11 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **134,128 B** since 2026-10-09's
+measured 2026-09-27. The shipped pair is **134,160 B** since 2026-10-09's
 Shrink tick (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **161,840 B** — the fifteen images sum to 161,644 B, so its
+The bundle is **161,868 B** — the fifteen images sum to 161,672 B, so its
 index costs **196 B**: a 4-byte header, 12 bytes of directory per image
 and 12 bytes of padding to 4, which accounts for the whole difference
 (re-measured 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw
@@ -5260,7 +5267,7 @@ nothing went red. Raised to 158,752 in the same commit as this, to
 after that day's trims,
 the index unmoved at 196 B (*Private File*) — and to 161,712 the same
 day, `ovl_stuffit` −24 for the footer read through `unc_read_full`,
-and to 161,840 the same day, `ovl_codecs` +108 and `ovl_exo` +20 for
+and to 161,868 the same day (`ovl_exo` +28, zip's dry passes putting the progress count back), after 161,840 for `ovl_codecs` +108 and `ovl_exo` +20 for
 Shrink's tick and the zip peek's Cancel (*Shrink*), the index unmoved.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
@@ -5277,7 +5284,7 @@ than failing on it, exactly as its tolerance is meant to.)
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
 and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
-re-derived since) plus the **161,840 B** bundle, which is **228,240 B** (DECISIONS.md 2026-09-25, *the overlay
+re-derived since) plus the **161,868 B** bundle, which is **228,268 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5348,7 +5355,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 134,128 B of `CODE` and A5 the shipped build does not carry
+which is the 134,160 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5356,8 +5363,10 @@ a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 **The tier budgets under it were re-taken on the machine 2026-10-09**
 against the current application (*Budget*), and the model's per-format
-budgets then land within 40 B of the machine's own on tar, StuffIt and
-`.Z` (System 6.0.8 / 512Ke, read off the probe build). Before that they
+budget for `.Z` then lands within 40 B of the machine's own — ONE data
+point, `a2ps.V4.3.tar.Z` on System 6.0.8 / 512Ke, and itself derived: the
+machine's 81,938 B is a2ps's 86,080 B peak less the 4,142 B shortfall
+it was refused by, against the model's 81,978. Before that they
 were 2026-09-27's, taken against a SHIPPED application of 52,972 B of
 `CODE` and 18,964 B of A5 — 54,640 and 19,088 by 2026-10-09 (*Three
 configurations, one tree*) — and this paragraph counted that as **1,792 B**
@@ -5384,7 +5393,8 @@ generous" until 2026-10-02**, two figures that could not both be the gap
 between the same pair of builds; the two sizes are quoted above now so the
 subtraction is the reader's.
 Every figure in it is that sum, re-taken 2026-10-09 against the current
-`OVL_SAVED` and images — the ten marked *(measured)* are the formats with a
+`OVL_SAVED` and images — the ten marked *(measured)* are the model's sums
+for formats whose TALLY the machine confirmed, not budgets read off it; they are the formats with a
 fixture in the Mac sample, so `run_tiers.py --shipped` confirms the tally
 at that budget; the five marked otherwise are the same sum with no fixture
 to take them on. `tools/run_tiers.py --shipped` is where it is applied
@@ -5393,19 +5403,19 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+123,818 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
-| Now Compress | now, codecs | **+120,740 B** (measured) |
-| SuperDisk! | superdisk, codecs | +118,760 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+116,250 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+112,922 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+110,054 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +109,096 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+107,446 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +99,802 B (arithmetic), and **+110,054 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+93,762 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,652 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +83,510 B (arithmetic), **+93,762 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,386 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+123,850 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
+| Now Compress | now, codecs | **+120,772 B** (measured) |
+| SuperDisk! | superdisk, codecs | +118,792 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+116,282 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+112,954 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+110,086 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +109,128 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+107,478 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +99,834 B (arithmetic), and **+110,086 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+93,766 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,684 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +83,514 B (arithmetic), **+93,766 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,382 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5442,7 +5452,11 @@ two StuffIt rows and the envelope row rose 24. And -> **134,128 B**
 the same day for Shrink's tick per partial clear and the zip peek's
 Cancel, +96 in the control and +0 in the shipped build: the bytes are
 in `ovl_codecs` (+108) and `ovl_exo` (+20), so every row FELL 12, the
-three holding `ovl_exo` 32, and the envelope row 32 (*Shrink*).
+three holding `ovl_exo` 32, and the envelope row 32 (*Shrink*). And ->
+**134,160 B** the same day, +32 in the control (`CODE` +28, A5 +4 of
+alignment) when zip's dry passes stopped counting progress, `ovl_exo`
++28: every row rose 32, the three holding `ovl_exo` and the envelope
+row 4.
 So every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. **The exception is
@@ -5466,7 +5480,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 161,840 B held against 134,128 B saved. It costs nothing on the tiers
+it — 161,868 B held against 134,160 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5525,7 +5539,7 @@ re-read 2026-10-09 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
 **66,432 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **161,840 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **161,868 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -5816,11 +5830,13 @@ which reports `FreeMem()` at **655,100 B** and the shell's reserve at a flat
 20 KB. It was 653,532/674,012 B on 2026-09-27 and 648,250/668,730 B on
 2026-09-22.
 
-**All three fell by the identical 16,888 B between 2026-09-27 and
+**All three fell by the identical 18,912 B between 2026-09-27 and
 2026-10-09** (→ 634,620 here, 205,732 and 110,332 on the 512Ke), the
 control build's growth over those two weeks. Only 2,024 B of it had been
-carried into `tools/run_tiers.py`, by derivation, so its shipped lane
-over-granted every format by ~16.5 KB until the re-take (BLOCKERS.md,
+carried into `tools/run_tiers.py`, by derivation, so its bases were
+**16,888 B** above the machine's and its shipped lane over-granted every
+format by that much until the re-take (CORRECTED 2026-10-09: this read
+"fell by 16,888 B", which is the gap from `TIERS`, not the fall) (BLOCKERS.md,
 *Withdrawn claims*; DECISIONS.md 2026-10-09, *the base nobody re-took*).
 
 **All three tier budgets were re-taken twice on 2026-09-27, and each time all
@@ -7245,9 +7261,10 @@ UTF-8 names.
 **The budget is 205,732 B**, measured **2026-10-09**: a 226,212 B free heap
 read off the machine (`sys30.py --emu mv-512Ke -D UNC_OVL_RESIDENT -D
 UNC_AT_BUDGET`, slots swapped per `tools/vmac/README.md`) less the flat
-20,480 B reserve, and the figure `tools/run_tiers.py` asserts this tier at —
-16,888 B under 2026-09-27's **224,644 B**, the same fall as both other tiers
-(*Budget*). It read 224,108 B earlier that day, **219,362 B** from 2026-09-22, and before
+20,480 B reserve — 18,912 B under 2026-09-27's **224,644 B**, the same
+fall as both other tiers (*Budget*). `tools/run_tiers.py` asserts it at
+**205,604 B**, this measurement less the 128 B the control build grew the
+same day, DERIVED and not re-measured (`TIERS_MACHINE` holds the sum). It read 224,108 B earlier that day, **219,362 B** from 2026-09-22, and before
 that **197,728 B** — taken 2026-08-31 and never re-taken across the stack cut and a month of decoder
 work; under the quarter rule before that it was 163,656 B. This tier's figure
 was PREDICTED before the first 2026-09-27 run: the floor and System 6 tiers had
@@ -7263,7 +7280,7 @@ shipped build's **70/72** here too, refusing the same two by name. The
 minimum budget each one needs, bisected on 2026-09-22 — and the first two are
 what the overlay build now clears (the ratios against 2026-10-09's budget):
 
-| fixture | needs | of which | against 205,732 B |
+| fixture | needs | of which | against 205,732 B (the measurement) |
 |---|---|---|---|
 | `derived-a2basic.dmg.sit` | **240,898 B** | one 205,020 B BWT block — the entry's whole 205,019 B output in a single block — plus the walk state | 1.17x |
 | `derived-Cool_Tools__.sit` | **242,464 B** | one block of the same shape, over a 206,582-byte resource fork | 1.18x |
@@ -7356,11 +7373,15 @@ tier is unchanged at 58/69" until 2026-09-04, which was a claim about the
 tier drawn from an argument about one of the two changes. The stack cut lands
 on every machine (BLOCKERS.md, *Withdrawn claims*).
 **A kilobyte of application costs the engine a kilobyte here too**, now that
-the reserve is a constant rather than a fraction. The
-three fixtures System 6 refuses and System 3.0 does not are
-`popper-1.7.tar.Z`, `derived-Expand_Now_1.0.1.sea` and
-`derived-Troi-ClipSave-Plug-in1.1.sit` — the same three since 2026-09-04,
-when the stack cut took it down from six. On
+the reserve is a constant rather than a fraction. What
+System 6 refuses and System 3.0 does not was `popper-1.7.tar.Z`,
+`derived-Expand_Now_1.0.1.sea` and `derived-Troi-ClipSave-Plug-in1.1.sit`
+from 2026-09-04, when the stack cut took it down from six, to the
+resident build's last run on 2026-09-22. The SHIPPED build on 2026-10-09
+differs by four — `a2ps.V4.3.tar.Z`, `derived-Cool_Tools__.sit`,
+`derived-a2basic.dmg.sit` and `popper-1.7.tar.Z` — and the resident model at
+today's bases by five, which no machine has run (*Floor target
+verification*, the tables). On
 `derived-Troi-ClipSave-Plug-in1.1.sit` the
 two systems are 11 entries at 163,332 B against 6 entries at 89,613 B. The
 1986 system leaves the engine **95,400 B** more than System 6 does — the
@@ -7564,7 +7585,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **161,840 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **161,868 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the

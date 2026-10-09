@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (205636, "System 3.0, Macintosh 512Ke (226,212 B free)"),
-    "sys6-512K": (110236, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
-    "floor-1M":  (634524, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (205604, "System 3.0, Macintosh 512Ke (226,212 B free)"),
+    "sys6-512K": (110204, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
+    "floor-1M":  (634492, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -154,10 +154,25 @@ TIERS = {
 # OVL_SAVED was the only term of base + OVL_SAVED that anything checked,
 # and a sum whose terms are kept current at different rates is wrong by
 # exactly the term nobody re-takes.
-# **Lowered by 96 B the same day, DERIVED and not re-measured**: the
-# control's CODE grew 169,784 -> 169,880 for Shrink's tick per partial
-# clear and the zip peek's Cancel (FORMATS.md, *Shrink*), A5 unmoved.
-TIERS_CONTROL = 207856     # build/mac-resident, CODE + A5, 2026-10-09
+# **Raised by 96 B the same day, and TIERS lowered by the same 96, DERIVED
+# and not re-measured**: the control's CODE grew 169,784 -> 169,880 for
+# Shrink's tick per partial clear and the zip peek's Cancel (FORMATS.md,
+# *Shrink*), A5 unmoved. **And by 32 more, same terms**: CODE +28 and A5
+# +4 when zip's dry passes stopped counting progress (DECISIONS.md
+# 2026-10-09, *the bar that counted the peek*).
+TIERS_CONTROL = 207888     # build/mac-resident, CODE + A5, 2026-10-09
+
+# What the MACHINE measured: each budget plus the control it was read
+# against, which a change to the application cannot move — so moving
+# TIERS_CONTROL without moving TIERS by the same amount fails
+# --check-saved, which it did not until 2026-10-09 (the message below told
+# a reader to move TIERS_CONTROL and nothing tied the two together). Only
+# a re-take on the machine changes these.
+TIERS_MACHINE = {
+    "sys3-512K": 413492,   # 205,732 + 207,760, measured 2026-10-09
+    "sys6-512K": 318092,   # 110,332 + 207,760
+    "floor-1M":  842380,   # 634,620 + 207,760
+}
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
 # resident CODE the zip Macintosh extra fields added to the CONTROL build
@@ -352,7 +367,10 @@ EXPECT = {"floor-1M": 72, "sys3-512K": 68, "sys6-512K": 63}
 # forward it now calls) and the zip peek's Cancel (+20, `ovl_exo`); the
 # shipped build does not move. TIERS fell by the same 96, so a grant moves
 # by minus what of those two images it keeps.
-OVL_SAVED = 134128
+# **+32 the same day, 134,128 -> 134,160**: the control's CODE +28 and A5
+# +4 when zip's dry passes stopped counting progress; `ovl_exo` +28, the
+# shipped build unmoved.
+OVL_SAVED = 134160
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -439,7 +457,7 @@ IMAGES = {
     "OVL_ID_CODECS":      7628,
     "OVL_ID_CPTDD":       15764,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         32056,
+    "OVL_ID_EXO":         32084,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
@@ -449,7 +467,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 161840
+BUNDLE = 161868
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -613,10 +631,16 @@ def check_saved(ship=os.path.join(REPO, "build", "mac"),
     which then read as part of the residue. A difference of two builds can be
     checked, so it is.
     """
+    for t, (base, _desc) in TIERS.items():
+        if base + TIERS_CONTROL != TIERS_MACHINE[t]:
+            raise SystemExit(
+                "run_tiers: TIERS[%s] + TIERS_CONTROL is %d B and the machine "
+                "measured %d B —\n  move TIERS by exactly what "
+                "TIERS_CONTROL moved, or re-take both on the machine."
+                % (t, base + TIERS_CONTROL, TIERS_MACHINE[t]))
     a, b = code_and_a5(control), code_and_a5(ship)
     if a is None or b is None:
-        return ("OVL_SAVED not checked (no m68k size tool, or build/mac and "
-                "build/mac-resident are not both built)")
+        return None
     if a - b != OVL_SAVED:
         raise SystemExit(
             "run_tiers: OVL_SAVED is %d B and the builds say %d B —\n"
@@ -793,7 +817,14 @@ def main():
         print("run_tiers: %s" % check_images())
         return 0
     if a.check_saved:
-        print("run_tiers: %s" % check_saved())
+        # Asked for by name, so not being able to check is a failure: ci.sh
+        # runs this after both builds, and a step that cannot fail is not
+        # a check.
+        r = check_saved()
+        if r is None:
+            raise SystemExit("run_tiers: --check-saved needs build/mac, "
+                             "build/mac-resident and the m68k size tool")
+        print("run_tiers: %s" % r)
         return 0
     if not a.tier and not a.budget and not a.check:
         ap.error("give --tier, --budget or --check")
@@ -805,7 +836,10 @@ def main():
     if a.shipped or a.check:
         fmts, keep = formats(), keep_sets()
         print("run_tiers: %s" % check_images())
-        print("run_tiers: %s" % check_saved())
+        print("run_tiers: %s" % (check_saved() or
+                                 "OVL_SAVED not checked (no m68k size tool, "
+                                 "or build/mac and build/mac-resident are "
+                                 "not both built)"))
         tmp = tempfile.mkdtemp(prefix="run_tiers.")
     try:
         if a.check:

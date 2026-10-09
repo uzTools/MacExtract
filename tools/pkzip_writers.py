@@ -53,6 +53,10 @@ it is evidence about the minimum match length only because step 4 shows
 the generator's streams hold no other token 1.01/1.02 misread, and only
 for as long as the generator keeps it that way. It is not in `ci.sh`:
 DOSBox is not a build dependency.
+
+Every step's answer is ASSERTED, from what DECISIONS.md records, and the
+run exits 1 on any difference; until 2026-10-09 it printed counts and
+exited 0 whatever they said, so a changed row was caught only by a reader.
 """
 import argparse
 import os
@@ -182,6 +186,20 @@ def generated(r):
     return out
 
 
+# Which PKUNZIP versions (1.01, 1.02, 1.10) FAIL each subject of steps 3
+# and 4 — DECISIONS.md 2026-10-09, *the run PKZIP never codes at distance
+# one*. A subject absent here must pass in all three.
+FAILS = {
+    "MIX.ZIP": ("110",),                       # 3 entries, below
+    "G2.ZIP": ("101", "102"), "G3.ZIP": ("101", "102"),     # 4K/3T, 8K/2T
+    "G4.ZIP": ("110",), "G5.ZIP": ("110",),                 # the -mmlbug pair
+    "M00.ZIP": ("101", "102"), "M10.ZIP": ("101", "102"),   # operand 0
+    "L801.ZIP": ("101",),                      # 0x80, an 8-bit code
+    "LFF1.ZIP": ("101", "102", "110"),         # 0xFF, an 8-bit code
+}
+MIX_110_BAD = 3     # README.DOC, ORDER.DOC, OMBUDSMN.ASP
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--macextract", default=os.path.join(REPO, "build", "rel", "macextract"))
@@ -192,6 +210,7 @@ def main():
         if not os.path.exists(p):
             sys.exit("pkzip_writers: %s missing (tools/fetch_specimens.py --only implode)" % p)
 
+    problems = []
     top = tempfile.mkdtemp(prefix="pkzw-")
     work = os.path.join(top, "c")
     os.mkdir(work)
@@ -220,10 +239,14 @@ def main():
             c = combo(meth, fl)
             tally[c] = tally.get(c, 0) + 1
             disagree += "DISAGREE" in c
+        tt = tokens_and_trees(os.path.join(work, "W%s.ZIP" % v))
         print("PKZIP %s over %d inputs: %s; %d matches, %d at distance operand 0; "
               "%d literal trees, %d of them PKZIP_LITERAL_TREE" % (
                   (v, len(inputs), ", ".join("%s %d" % kv for kv in sorted(tally.items())))
-                  + tokens_and_trees(os.path.join(work, "W%s.ZIP" % v))))
+                  + tt))
+        if tt[0] == 0 or tt[1] != 0 or tt[2] == 0 or tt[3] != tt[2]:
+            problems.append("PKZIP %s: operand 0 or a literal tree other "
+                            "than PKZIP_LITERAL_TREE" % v)
 
     # 2. who restamps whom
     open(os.path.join(work, "ADD.TXT"), "wb").write(b"added by another version\r\n" * 200)
@@ -245,6 +268,16 @@ def main():
         print("%s: %s" % (what, ", ".join(
             "%s 0x%04x %s" % (n, vm, combo(m, f)) for n, vm, m, f in recs
             if z != "MIX" or vm != 0x000a or "DISAGREE" in combo(m, f))))
+        # Each record keeps the stamp of the version that wrote it.
+        for n, vm, _m, _f in recs:
+            later = "ADD.TXT" in n or "GT20" in n
+            if z == "B":
+                want = 0x000a if later else 0x000b
+            else:
+                want = 0x000b if later else 0x000a
+            if vm != want:
+                problems.append("%s: %s stamped 0x%04x, not 0x%04x"
+                                % (what, n, vm, want))
 
     out = os.path.join(top, "mixout")
     rc = subprocess.run([a.macextract, "x", "-o", out, os.path.join(work, "MIX.ZIP")],
@@ -257,6 +290,10 @@ def main():
     print("macextract on PKZ101.EXE + 1.10: exit %d, %d of 4 checked entries byte-exact"
           % (rc, same))
     print("disagreeing combinations written by the shipped binaries: %d" % disagree)
+    if rc != 0 or same != 4:
+        problems.append("macextract on the mixed PKZ101.EXE")
+    if disagree:
+        problems.append("a shipped PKZIP wrote a disagreeing combination")
 
     # 3. what each version's READER does with the other readings. Our own
     # generator's streams go in too, with version-needed lowered to 1.0
@@ -305,10 +342,24 @@ def main():
         for v in DISTS:
             log = open(os.path.join(work, "%s.T%s" % (z[:-4], v[2])), "rb").read()
             log = log.decode("latin-1")
-            row.append("%s %d ok/%d bad" % (v, log.count(" OK"), log.count("fails CRC")))
+            ok, bad = log.count(" OK"), log.count("fails CRC")
+            row.append("%s %d ok/%d bad" % (v, ok, bad))
+            # A log with neither word is PKUNZIP saying something else —
+            # refusing the archive unread, say — and is a failure too.
+            fails = v in FAILS.get(z, ())
+            if ok + bad == 0 or bool(bad) != fails or \
+                    (z == "MIX.ZIP" and v == "110" and bad != MIX_110_BAD):
+                problems.append("PKUNZIP %s on %s: %d ok/%d bad, expected %s"
+                                % (v, what, ok, bad,
+                                   "a failure" if fails else "no failure"))
         print("PKUNZIP on %s: %s" % (what, ", ".join(row)))
     shutil.rmtree(top)
+    for p in problems:
+        print("pkzip_writers: FAIL %s" % p)
+    print("pkzip_writers: %s" % ("%d problem(s)" % len(problems)
+                                 if problems else "every answer as recorded"))
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

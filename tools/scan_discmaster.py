@@ -909,8 +909,9 @@ WALK_WINDOW = 4096
 
 
 def walk_sit(head, item, fileid, probe, first, maxent):
-    """Follow a StuffIt entry chain past the bytes already fetched, one
-    request per entry."""
+    """Follow a StuffIt entry chain past the bytes already fetched, a 4 KB
+    window per request where the server allows ranges (several headers a
+    request), one request per entry where it does not."""
     base = first["base"]
     ents = list(first["entries"])
     end = base + first["total"] if first["total"] >= 22 else None

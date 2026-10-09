@@ -17,10 +17,11 @@
  * one number per fixture, and a suite that can fail on it.
  *
  * Prints one line per file:
- *   <path> ret=<n> ticks=<n> max_gap=<bytes> size=<bytes>
+ *   <path> ret=<n> ticks=<n> max_gap=<bytes> overrun=<bytes> size=<bytes>
  *
  * `max_gap` is the largest jump in `bytes_done` between consecutive
  * ticks — the interval the contract in include/macextract.h bounds.
+ * `overrun` is how far `bytes_done` ever passed a known total.
  * tools/run_ticks.py applies the rule; this only measures.
  */
 #include <stdio.h>
@@ -56,11 +57,17 @@ static int p_end(void *ctx, int status) { (void)ctx; (void)status; return 0; }
 static void *p_alloc(void *ctx, uint32_t n) { (void)ctx; return malloc(n); }
 static void  p_free(void *ctx, void *ptr)   { (void)ctx; free(ptr); }
 
-static uint32_t ticks, last_done, max_gap;
+static uint32_t ticks, last_done, max_gap, overrun;
 
 static int p_tick(void *ctx, uint32_t done, uint32_t total)
 {
-    (void)ctx; (void)total;
+    (void)ctx;
+    /* How far `done` ever ran past `total`: a pass that reads input the
+     * decode proper reads again must not count it twice, or the bar
+     * fills early and sits at 100 % (DECISIONS.md 2026-10-09, *the bar
+     * that counted the peek*). */
+    if (total != UNC_SIZE_UNKNOWN && done > total && done - total > overrun)
+        overrun = done - total;
     if (ticks) {
         uint32_t gap = done > last_done ? done - last_done : 0;
         if (gap > max_gap) max_gap = gap;
@@ -96,10 +103,11 @@ int main(int argc, char **argv)
         al.ctx = NULL; al.alloc = p_alloc; al.free = p_free;
         prog.ctx = NULL; prog.tick = p_tick;
 
-        ticks = 0; last_done = 0; max_gap = 0;
+        ticks = 0; last_done = 0; max_gap = 0; overrun = 0;
         ret = unc_extract(&io, &sink, &al, &prog, NULL);
-        printf("%s ret=%d ticks=%lu max_gap=%lu size=%ld\n",
-               argv[i], ret, (unsigned long)ticks, (unsigned long)max_gap, len);
+        printf("%s ret=%d ticks=%lu max_gap=%lu overrun=%lu size=%ld\n",
+               argv[i], ret, (unsigned long)ticks, (unsigned long)max_gap,
+               (unsigned long)overrun, len);
         fclose(pio.f);
     }
     return 0;

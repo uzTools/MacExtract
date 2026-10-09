@@ -377,6 +377,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
 - 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
 - 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
+- 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
 
 ---
 
@@ -24821,7 +24822,10 @@ rule it was written to: 1.01 and 1.02 read both `-mmlbug` shapes and
 refuse the 5.3.4 shapes at the two disagreeing combinations, and 1.10
 does the reverse. So the 1.01/1.02 rule is graded by 1.01/1.02 itself,
 by hand, for the 8 K/two-tree half too, which until now had deark alone
-(`tools/pkzip_writers.py`, which keeps every case below as a probe).
+(`tools/pkzip_writers.py`, which keeps the pass or failure of each
+minimal case below and its control, asserted since 2026-10-09 — not the
+bytes PKUNZIP wrote, the per-value sweep or the two 9-bit trees, which
+were observed by hand and are not re-checkable from the repository).
 
 **1. A match at distance operand 0.** Minimal case: eight literals and
 one match of length 2 at operand 0. 1.01 and 1.02 fail it on CRC, 1.10
@@ -24960,13 +24964,42 @@ sweep does not depend on `/tmp` surviving.
 **A slow path found by reading is priced before it is fixed, and the
 price decided both halves differently.** The partial clear is O(table)
 per 18 bits of input, so a crafted 100 KB stream holds a Mac Plus for
-hours. That cost is the format's, and deark pays it too, so nothing
+hours — an ESTIMATE, from 68000 instruction counts at ~0.5 M a second,
+and instructions are not cycles (FORMATS.md, *What a crafted stream
+costs*). That cost is the format's, and deark pays it too, so nothing
 cheap removes it. What a fix CAN buy is a working Cancel. Ticks had come
 only from the reader, ~17 minutes apart, and a tick per clear (+76 B in
-the codecs image) brings that to ~0.3 s. The peek's double decode is
+the codecs image) brings that to ~0.3 s, both on the same estimate. The peek's double decode is
 up to 8 KB of real work per ZipIt Shrink entry, and 0 such entries
 exist, so that half was left alone. Its no-progress pass was fixed
 instead (+20 B), because only that half changes what a user can do.
 Lowering the clear's walk bound was measured on paper at a factor of
 ~3 for an attacker who adapts, which is not a bound, and was not built.
+
+
+## 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
+
+**Claim, measured.** Zip's two dry passes — the 128-byte MacBinary peek
+on a ZipIt entry and the minimum-match-length probe — read the entry
+through `c->ps`, so each counted input the decode proper then counted
+again: 152 % on a unit test's ZipIt archive, so a Macintosh's bar would
+sit at 100 % for half the run. The peek was given `c->ps` the same day
+so that Cancel could answer during it, which was right; counting was
+the side effect. Both now restore `done` afterwards: they still tick,
+and only the decode proper counts.
+
+**The check is what was missing, not the fix.** `tools/run_ticks.py` had
+graded since 2026-08-28 that every archive ticks and that no gap passes
+32 KB, and never that `done` stays under `total`. Asked, it named **75
+layers**: the two zips this fixes, and 73 rows (66 distinct layers) of
+DiskDoubler, MacLHA's peek and uuencode that predate it by months. A
+DiskDoubler DDn archive of 5,193 B reports 96 KB done, because its
+decoder reseeks between separately stored streams and every reseek
+refills — and counts — a 4 KB buffer. Those are a ratchet now
+(`KNOWN_OVERRUN`) and an open item with a route (OPEN_ITEMS.md,
+*Progress that passes 100 %*), not part of this fix: counting consumption
+rather than refills is an engine-wide change with a 68000 price, and the
+repo's own rule is that the second problem gets measured rather than
+handed the first one's answer. **An aggregate that is never compared
+with its bound is not checked by the lane that collects it.**
 
