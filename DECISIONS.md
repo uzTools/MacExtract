@@ -373,6 +373,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
 - 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
 - 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
+- 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
 
 ---
 
@@ -24680,7 +24681,8 @@ for one it only compares.
 **Then the reader itself, priced before it was changed.** Two candidate
 savings were measured and only one was worth taking. `tools/m68kprof.py`
 over a 256 KB file put **RC4 at 65 % and CRC-32 at 32 %** of 8.5 M
-68000 instructions; the file reads were ~2 % and MD5 0.05 %. So
+68000 instructions (8.0 M after the first change below, which FORMATS.md
+quotes); the file reads were ~2 % and MD5 0.05 %. So
 computing MD5 twice per extraction, which looked wasteful, is not worth a
 resident host-vector slot to avoid, and the guess that I/O would
 dominate was wrong. Two changes went in:
@@ -24775,4 +24777,30 @@ three texts of 8,959 B and over, all with three trees, and its five
 program files, up to 31,342 B, are all 4 K with two. If that is its
 rule, 0x0002 is a shape it may never have written either. That rests
 on one archive.
+
+
+## 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
+
+**Claim, measured.** Private File's reader read its 12-byte footer with
+one bare `io->read` and called anything short a truncation. `UncIO`
+allows a short read before EOF (`include/macextract.h`), so a valid file
+came out in full, both forks, and was then reported *file is truncated*
+— reproduced with an I/O capped at 7 bytes, by a review. Fixed by
+`unc_read_full`, the helper every other fixed-size read already uses:
+`ovl_stuffit` −24 B, the shipped pair unmoved.
+
+**The bug was the small part.** Neither host this project has ever
+returns a short read — a `FILE *` and `FSRead` both fill the request —
+so half of the I/O contract had never been exercised by any suite in
+the project's life, and every fixed-size read in the engine was correct
+by inspection only. The CLI's `UNC_SHORT_READ` and `tools/run_shortread.py`
+send the short reads now: **959 fixtures at 1 B per read, and the
+decryption and Private File suites whole, agree with uncapped** — so
+this was the only one (TESTING.md, *Short reads*).
+
+**And the first green run of that lane graded nothing**: it ran against
+a sanitizer build linked before the hook, which ignored the variable and
+matched itself 959 times. The CLI announces the cap now and the lane
+refuses a binary that does not. **An environment hook is an input the
+binary may not read; a harness that sets one has to see it was read.**
 

@@ -19,6 +19,8 @@
  * UNC_TRACE_ALLOC=1 in the environment prints every allocation and every
  * budget refusal with the live total, which is how a tier's peak is read
  * apart into its pieces (TESTING.md, *The tiers a budget predicts*).
+ * UNC_SHORT_READ=<n> caps every read at n bytes (TESTING.md, *Short
+ * reads*).
  *
  * The CLI is the only place libc I/O and malloc are used; the engine
  * sees callbacks only.
@@ -64,10 +66,18 @@ static unc_off_t file_size_off(const struct stat *st, const char *path)
     return (unc_off_t)st->st_size;
 }
 
+/* UNC_SHORT_READ=<n> caps every read at n bytes. `UncIO` allows a short
+ * read before EOF, and a file-backed host never returns one, so without
+ * this no suite exercises the engine's half of that contract
+ * (TESTING.md, *Short reads*). Set once in main(). */
+static int32_t fio_read_cap;
+
 static int32_t fio_read(void *ctx, void *buf, int32_t len)
 {
     FileIO *io = (FileIO *)ctx;
-    size_t r = fread(buf, 1, (size_t)len, io->f);
+    size_t r;
+    if (fio_read_cap > 0 && len > fio_read_cap) len = fio_read_cap;
+    r = fread(buf, 1, (size_t)len, io->f);
     if (r == 0 && ferror(io->f)) return -1;
     return (int32_t)r;
 }
@@ -2032,6 +2042,13 @@ int main(int argc, char **argv)
     int nonly = 0, onlymiss = 0;
 
     memset(only_hit, 0, sizeof only_hit);
+    if (getenv("UNC_SHORT_READ")) {
+        fio_read_cap = (int32_t)atol(getenv("UNC_SHORT_READ"));
+        /* Said, so a harness can tell a binary that honours the cap from
+         * one that predates it and passes every comparison by ignoring it. */
+        fprintf(stderr, "macextract: every read capped at %ld B\n",
+                (long)fio_read_cap);
+    }
 
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
                       strcmp(argv[1], "-V") == 0)) {

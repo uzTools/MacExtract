@@ -165,9 +165,8 @@ int unc_pf_extract(UncCtx *c)
         if (est == UNC_OK)
             est = pf_fork(c, &w->cr, UNC_FORK_RSRC, rlen, w->buf,
                           UNC_IOBUF, &rcrc);
-        if (est == UNC_OK &&
-            c->io->read(c->io->ctx, foot, (int32_t)PF_FOOT) != (int32_t)PF_FOOT)
-            est = UNC_ERR_TRUNCATED;
+        if (est == UNC_OK)
+            est = unc_read_full(c->io, foot, (int32_t)PF_FOOT);
         if (est == UNC_OK &&
             (unc_get_u32be(foot + 4) != dcrc || unc_get_u32be(foot + 8) != rcrc))
             est = UNC_ERR_CRC;

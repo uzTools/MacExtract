@@ -4624,12 +4624,45 @@ synthetic cases, the positive control included.
 export build, which keys with five — and derivations or ciphers other
 than MD5 and RC4, which the reader refuses because nothing writes them.
 With no specimens it says so and runs the refusals alone, so a fresh
-clone stays green and grades none of the reading.
+clone stays green and grades none of the reading. **A partial set
+fails** since 2026-10-09, and so does a specimen with no subject: both
+were skipped until then, so the lane could lose its only check against
+PF Encrypt's own output one file at a time and stay green (measured:
+one specimen moved aside, and the lane named it).
 
 **The Macintosh side is `tools/vmac/interactive.py --privatefile`**,
 not in `ci.sh`: the shipped application extracts the `Forked` specimen
 on System 6.0.8, answering its password dialog wrongly once, and both
 forks are read back off the volume.
+
+## Short reads (`tools/run_shortread.py`, in `ci.sh`)
+
+Added 2026-10-09. `UncIO` lets a read return fewer bytes than asked
+before EOF, and neither host here ever does — a `FILE *` and `FSRead`
+both return the whole request — so until then no suite had sent the
+engine a short read. The CLI's `UNC_SHORT_READ=<n>` caps every read at
+n bytes and says so on stderr; this extracts every present fixture
+capped at **1 B** and uncapped and requires the same exit status,
+messages, names and bytes, then runs `run_crypt.py` and
+`run_privatefile.py` whole under the cap, because a fixture that needs
+a password fails identically both ways and proves nothing.
+
+    python3 tools/run_shortread.py --macextract build/macextract [--cap 1]
+
+**It found one defect before it existed**: Private File's footer was one
+bare `io->read`, so a valid file came out in full and was then called
+truncated (DECISIONS.md 2026-10-09, *the read nothing sent short*). **Made
+to fail before it was believed**, three ways: the footer fix reverted
+(the Private File suite fails under the cap), `unc_read_full` bent to
+give up on a short read (953 of 959 fixtures fail), and a binary built
+before the hook (refused outright — the CLI's announcement is what tells
+a binary that honours the cap from one that passes by ignoring it, and
+the first run of this lane was exactly that, green on a stale build).
+959 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
+
+**What it cannot see**: a decoder that is right under any cap and slow
+under a small one — nothing times the calls — and the Macintosh host,
+which never honours the variable.
 
 ## Searching somebody else's index by content (`tools/scan_discmaster.py`, not in `ci.sh`)
 

@@ -261,6 +261,12 @@ python3 tools/run_zipit.py --macextract build/san/macextract \
 # skips cleanly with none (TESTING.md).
 python3 tools/run_privatefile.py --macextract build/san/macextract \
     || fail "Private File tests"
+# Short reads. `UncIO` allows them and no host here returns one, so the
+# CLI's UNC_SHORT_READ caps every read at 1 B and every fixture must
+# extract exactly as it does uncapped; the decryption and Private File
+# suites run whole under the same cap (TESTING.md, *Short reads*).
+python3 tools/run_shortread.py --macextract build/san/macextract \
+    || fail "short-read tests"
 # AppleLink packages. Nothing else on earth reads the container — not
 # `unar`, not deark, not macunpack — so three different oracles stand in:
 # the sha256 tools/derive_sqp.py recorded from an independent reading of

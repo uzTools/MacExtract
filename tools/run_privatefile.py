@@ -29,7 +29,9 @@ and a Private File holding more than one item, which PF Encrypt makes as
 one StuffIt archive and so reads like any other.
 
 With no specimens it says so and runs the refusals alone, so a fresh
-clone stays green.
+clone stays green. A PARTIAL set is a failure, and so is a specimen whose
+subject is unknown: a lane that skipped them could lose its only check
+against Private File's own output one file at a time and stay green.
 """
 import argparse
 import glob
@@ -59,8 +61,8 @@ def subjects():
     return {n: (d, r, pw) for n, _t, _c, d, r, pw in m.SUBJECTS}
 
 
-def run(mx, *args):
-    return subprocess.run([mx] + list(args), capture_output=True)
+def run(mx, *args, env=None):
+    return subprocess.run([mx] + list(args), capture_output=True, env=env)
 
 
 def readf(p):
@@ -74,12 +76,15 @@ def grade_specimens(mx, problems):
         print("run_privatefile: no specimens in %s — "
               "tools/vmac/privatefile.py --make makes them" % SPECIMENS)
         return 0
+    seen = set(os.path.basename(p)[:-len(".pf.bin")] for p in found)
+    for name in sorted(set(subj) - seen):
+        problems.append("no specimen for subject %s, where %d others are "
+                        "present" % (name, len(seen)))
     n = 0
     for p in found:
         name = os.path.basename(p)[:-len(".pf.bin")]
         if name not in subj:
-            print("run_privatefile: %s: no subject named %s, skipped"
-                  % (p, name))
+            problems.append("%s: no subject named %s" % (p, name))
             continue
         data, rsrc, pw = subj[name]
         out = tempfile.mkdtemp(prefix="pf-")
@@ -120,10 +125,10 @@ def refusals(mx, problems):
         good = S.encode("Inner", b"TEXT", b"ttxt", b"plain\r" * 300,
                         b"fork" * 40, b"letmein")
 
-        def case(label, blob, args, want_rc, want_err=None):
+        def case(label, blob, args, want_rc, want_err=None, env=None):
             p = os.path.join(tmp, label + ".pf")
             open(p, "wb").write(blob)
-            r = run(mx, *(list(args) + [p]))
+            r = run(mx, *(list(args) + [p]), env=env)
             err = r.stderr.decode(errors="replace")
             if (r.returncode != 0) != (want_rc != 0) or \
                     (want_err and want_err not in err):
@@ -133,6 +138,12 @@ def refusals(mx, problems):
         # The positive control first: a refusal case that cannot fail
         # proves nothing (CLAUDE.md, Traps).
         case("good", good, ("t", "-p", "letmein"), 0)
+        # `UncIO` allows a short read before EOF and a file never returns
+        # one, so the CLI's UNC_SHORT_READ is the only way to send one.
+        # The footer was read with one bare call until 2026-10-09, and this
+        # case failed on that build: both forks out, then "truncated".
+        case("shortread", good, ("t", "-p", "letmein"), 0,
+             env=dict(os.environ, UNC_SHORT_READ="7"))
         case("wrongpw", good, ("t", "-p", "letmeout"), 1, "wrong password")
         # A refused password and then the right one, through --ask: the
         # record is decrypted in place and re-read for each password

@@ -190,8 +190,9 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_BTOA:        case UNC_FORMAT_BASE64:
     case UNC_FORMAT_SITSEG:      case UNC_FORMAT_DDSEG:
     case UNC_FORMAT_SPLIT:       case UNC_FORMAT_MIMESEG:
-    /* Private File too: its reader is resident and wants only the ciphers,
-     * but what it decrypts is a StuffIt archive, unwrapped next. */
+    /* Private File too: its reader is in the StuffIt image and its key
+     * setup in the ciphers', and what it decrypts is a StuffIt archive,
+     * unwrapped next — so nothing in the bundle can be released yet. */
     case UNC_FORMAT_PRIVATEFILE:
         return;
     default:

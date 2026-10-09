@@ -422,8 +422,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # the same 368 B of probe, shims and table row they pay (eager pair,
 # below). LOWERED the same day to 169,796, -20: RC4's indices kept in
 # registers and the reader's record kept once, both in images when
-# shipped and so resident only here.
-UNC_MAC_CODE_DEFAULT=169796
+# shipped and so resident only here. LOWERED again to 169,784, -12: the
+# Private File footer read through unc_read_full rather than a bare call
+# (DECISIONS.md 2026-10-09, *the read nothing sent short*).
+UNC_MAC_CODE_DEFAULT=169784
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -559,7 +561,10 @@ UNC_MAC_CODE_DEFAULT=169796
 # base of 37,912 (this ceiling had 12 B of slack) — the eager pair's 32 B
 # and 32 of `.data` alignment, which steps the other way there.
 # LOWERED the same day to 37,964, -12, with the code ceiling above.
-UNC_MAC_A5_DEFAULT=37964
+# RAISED the same day to 37,976, +12, as the code ceiling above fell 12:
+# the total is unmoved, and of the 126 .data and .bss symbols none changed
+# size — the `.data` ALIGN padding stepping under shorter text, as above.
+UNC_MAC_A5_DEFAULT=37976
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

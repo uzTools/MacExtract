@@ -185,8 +185,9 @@ TAKEN = "2026-10-09"
 # check) and `ovl_crypt` 10,140 -> 10,248 (`unc_crypt_pf`, MD5 then RC4).
 # What it costs the engine's budget is in EXPECT above. -> 161,736 the
 # same day: `ovl_stuffit` -12 (the reader keeps its record once) and
-# `ovl_crypt` -4 (RC4's indices in registers).
-EXPECT_BUNDLE = 161736
+# `ovl_crypt` -4 (RC4's indices in registers). -> 161,712 the same day:
+# `ovl_stuffit` -24, the Private File footer read through unc_read_full.
+EXPECT_BUNDLE = 161712
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 
