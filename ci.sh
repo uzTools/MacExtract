@@ -489,6 +489,6 @@ UNC_AT_OVERLAY=1 UNC_OVL_RESIDENT=1 UNC_MAC_BUILD_DIR=build/mac-resident \
 # figures*). It is the difference of the two builds above, so it can be
 # graded, and this is the first point in the run where both exist.
 python3 tools/run_tiers.py --check-saved \
-    || fail "OVL_SAVED no longer matches build/mac and build/mac-resident"
+    || fail "OVL_SAVED or TIERS_CONTROL no longer matches build/mac and build/mac-resident"
 
 echo "CI: all green"

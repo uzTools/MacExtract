@@ -146,6 +146,10 @@ derived-PCCTS.tar                          # 286720 B
 synth-exo-zip-deflate.zip                  # 3709 B
 synth-exo-zip-store.zip                    # 8384 B
 derived-MUSFMT10.ZIP                       # 171960 B
+# Shrink (zip method 1) joined 2026-10-09: until then no Macintosh had run
+# the decoder. 13-bit codes, a table filled to slot 8,191, partial clears at
+# every width; 38,777 B peak, against dream.zip's 39,094 (FORMATS.md, *Shrink*).
+shrink-wild-titanic.zip                    # 172972 B
 
 # ARC and uuencode (M13, 2026-08-15). Neither format occurs in the
 # corpus, so both are generated: tools/synth_arc.py and tools/synth_uu.py.

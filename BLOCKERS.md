@@ -10,159 +10,57 @@ DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and Linux
 CLI were never affected by anything in this file. The Retro68 Mac shell runs
 and extracts byte-exact on every system the project claims:
 
-The sample is **71 fixtures** since 2026-09-22, when the two StuffIt 5
-archives whose names are UTF-8 joined it. Every figure below was taken on
-**v0.33.0** on 2026-09-25 — the release that made the decoders `'OVLY'`
-images and dropped DART — **except System 6.0.8 at the 1 MB floor, which is
-v0.34.0's** (2026-09-26). `dist/` has been rebuilt once since that run, so no
-tier has run exactly the bytes it now holds; what stands in for all seven is
-below the table.
+The sample is **72 fixtures** since 2026-10-09, when
+`shrink-wild-titanic.zip` joined it — the first Shrink archive a Macintosh
+has run. **Four tiers were re-run that day on the v0.37.0 source** (the
+`dist/` binary less a comment): both 1 MB floors and both 512 KB machines.
+The 4 MB tiers and System 7.0.1 are **v0.33.0's** figures on the 71-fixture
+sample (2026-09-25), and what stands in for them is below the table.
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71** |
-| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **71/71** |
-| System 3.0, **512 KB** Macintosh 512Ke | **69/71** — two per-entry memory refusals, not failures. It was 67/71 with every decoder resident: the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
-| System 6.0.8, 4 MB Mac Plus | **71/71** |
-| System 6.0.8, **1 MB** — the RAM floor | **71/71**, re-run on **v0.34.0** 2026-09-26; no memory-budget refusals remain, and DiskDoubler method 5's 396 KB allocation succeeds here |
-| System 7.0.1, 4 MB | **71/71** |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71**, v0.33.0 |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **72/72**, 2026-10-09 |
+| System 3.0, **512 KB** Macintosh 512Ke | **70/72**, 2026-10-09 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. It was 67/71 with every decoder resident: the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
+| System 6.0.8, 4 MB Mac Plus | **71/71**, v0.33.0 |
+| System 6.0.8, **1 MB** — the RAM floor | **72/72**, 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid); no memory-budget refusals remain |
+| System 6.0.8, **512 KB** Macintosh 512Ke | **66/72**, 2026-10-09 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*) |
+| System 7.0.1, 4 MB | **71/71**, v0.33.0 |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
 
-**One tier re-run, six carried on an argument.** The shipping binary has
-moved four times since the 2026-09-25 sweeps — a one-predicate fix in
-`src/fmt_arc.c`, where an ARC entry whose garbled stream ran short was refused
-without the password being tried; the Compact Pro segment identity check,
-which costs **24 B of resident code** and so takes 24 B off every tier's
-budget; and `unc_applelink_probe`'s removal on 2026-09-27, which gives 496 B
-back and puts **536 B onto every tier's budget** (*Withdrawn claims*).
-**System 6.0.8 at the 1 MB floor was re-run on the v0.34.0 binary: 71/71,
-2026-09-26** (FORMATS.md, *Floor target verification*). The other six
-tiers were not, and what stands in for them is measured rather than asserted:
-the ARC predicate is reachable only AFTER an entry's decode has failed, so
-every entry that extracts takes the identical path, and the sample's three
-ARC-family archives are not garbled; the segment check can only ever REFUSE a
-file, and no fixture in the sample is a Compact Pro segment; and 24 B is two
-orders of magnitude under the narrowest margin between any passing layer's
-demand and its budget anywhere in the sample, which is **16,490 B**
-(re-measured 2026-09-27 at the re-taken budgets; `tools/run_tiers.py`, whose
-shipped lane `ci.sh` asserts every run). The removed probe could only ever
-NAME a file, and none of the 71 sampled fixtures opens with the token it
-required (measured 2026-09-27), so no sampled format changed; and a change
-that only frees memory cannot turn a pass into a refusal. *One measurement
-and an argument — not seven re-runs.*
+**Three tiers carried on an argument, and its number is withdrawn.** Ten
+changes from 2026-09-26 to 2026-10-09 were each argued not to move any
+tally because their cost sat under "the narrowest margin between any
+passing layer's demand and its budget", **16,490 B**. That margin was
+`a2ps.V4.3.tar.Z`'s, on System 6.0.8 / 512 KB, computed by a model whose
+base drifted 16,888 B from 2026-09-28 on, most of it after 2026-10-02 — and `a2ps` was refused there
+when a machine next ran it (*Withdrawn claims*). The four tiers re-run on
+2026-10-09 replace the argument for themselves. **For the two 4 MB tiers
+and System 7.0.1 what stands is the per-change evidence, all measured,
+which never rested on the margin**: the ARC password predicate is reached
+only after a decode has failed; the Compact Pro segment check can only
+refuse, and no sampled fixture is a segment; the AppleLink probe's
+removal (−496 B) changes what **0 of the 71 sampled fixtures** sniff
+as, and its return (+788 B), the zip pair's probe (+320 B), the
+AppleLink name test (±0) and Private File (+400 B) each change it for
+**0 corpus fixtures** that are not that format; and Implode, PKZIP 1.01's minimum match and Shrink cost resident
+`CODE` and A5 **+0** (FORMATS.md, *Three configurations, one tree* and
+each format's *What it costs*). Those machines have 3 MB more RAM than the
+floor, whose narrowest passing margin is **334,240 B**
+(`run_tiers.py`, 2026-10-09). **Not covered**: whatever only a 4 MB
+budget reaches — Arsenic picks its strategy from what it is granted — on
+the current binary.
 
-**And it moved a fourth time on 2026-10-05, in the other direction: the
-AppleLink package probe costs the shipped build 788 B of resident code and
-A5**, which is 788 B off every tier's budget and the largest single
-addition since the overlays landed (FORMATS.md, *Three configurations, one
-tree*). **No tier was re-run for it**, and what stands in for them is the
-same shape of argument as above: the probe can only ever NAME a file, none
-of the 71 sampled fixtures is a package or passes the version-and-eight-
-zero-bytes test that precedes its directory walk (measured — 0 of the 71,
-and across the whole corpus only the 6 fixtures that ARE packages sniff
-as one; this read *"0 of 943 fixtures"* until 2026-10-06, which
-contradicted FORMATS.md's 6 of 955 and meant the 71), and 788 B is twenty times under the narrowest
-margin between any passing layer's demand and its budget anywhere in the
-sample, which is **16,490 B**. `run_tiers.py --check` moves no tally in
-either lane at the re-taken figures: 71/71, 67/71, 64/71 resident and
-71/71, 69/71, 66/71 shipped, the same fixtures by name. What that argument
-does NOT cover is a `.pkg` on the machine: no Macintosh has run one, and
-the format is not in `sample.txt` (OPEN_ITEMS.md).
+**On no Macintosh**: an AppleLink `.pkg`, a self-extracting zip (none is
+committable, `tools/specimens/zipit.tsv`) and an Implode archive — none is
+in `sample.txt`. **Shrink has run** since 2026-10-09:
+`shrink-wild-titanic.zip` is byte-exact on all four tiers re-run, at
+38,807 B of peak heap against 38,777 on Linux. **Private File has run**
+through the application's password dialog on System 6.0.8, at 4 MB and
+at the 1 MB floor (both 2026-10-09) — a wrong password refused, then both
+forks byte-exact (`tools/vmac/interactive.py --privatefile --emu mv-1M-1x`);
+not on the 512 KB machines.
 
-**And a fifth time on 2026-10-05, also in the other direction: the zip
-pair's probe costs the shipped build 316 B of resident code and 4 B of
-A5**, so that a zip behind a self-extractor's code stub is recognised
-(FORMATS.md, *What the zip pair claims, and what it costs*). **No tier
-was re-run**, and the argument is stronger than the shape above because
-the first leg of it is a measurement rather than a property: **0 of the
-955 corpus files changes the format it sniffs as**, so no sampled
-fixture reaches a different decoder, and the three zips in `sample.txt`
-pay one extra four-byte read each. 320 B is fifty times under the
-narrowest margin between any passing layer's demand and its budget
-anywhere in the sample, which is **16,490 B**. `run_tiers.py --check`
-moves no tally in either lane. What the argument does NOT cover is a
-self-extracting zip on the machine: none is in `sample.txt`, because
-none is committable (five specimens, `tools/specimens/zipit.tsv`), so
-the format runs on a Macintosh only as the plain zips already there do.
-
-**And it did not move at all on 2026-10-06**, for the AppleLink name
-test: +4 B of `CODE` and −4 of A5 in the shipped build and in the
-control alike, so `CODE` + A5 is unchanged in both and there is no tier
-argument to make (FORMATS.md, *Three configurations, one tree*). **0 of
-the 963 corpus files changes the format it sniffs as**, measured either
-side of it, and `run_tiers.py --check` moves no tally in either lane.
-
-**Nor on 2026-10-07, for zip method 6 (Implode)**, and this is the
-cleanest case of the shape yet: the shipped build's resident `CODE` and
-A5 do not move by a byte, because every one of the 1,856 B the method
-weighs is in the `ovl_exo` image (29,252 → 31,176 B), which is read at
-launch and released for any archive that is not a zip or a tar. So the
-only tier argument to make is about that image, and it is arithmetic:
-the three `ovl_exo` rows of *What each format is granted* lose 68 B —
-the image grew 68 B more than `OVL_SAVED` did — against a narrowest
-margin of **16,490 B**, and `run_tiers.py --check` moves no tally in
-either lane (71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71
-shipped, the same fixtures by name). **Peak heap does not move either**:
-an Implode entry allocates 5,096 B at a 4 K dictionary and 9,192 at 8 K,
-against inflate's 11,256, so deflate set zip's ceiling whatever an
-archive mixed — until Shrink, whose heaviest fixture entry peaks at
-39,094 B (FORMATS.md, *Implode* and *Shrink*; this read *"still sets"*
-until 2026-10-09). What the argument does
-NOT cover is an Implode archive on the machine: none is in
-`sample.txt`, the two PKZIP 1.x fixtures having never been sampled
-there, so no Macintosh has run the decoder.
-
-**And nor on 2026-10-08, for PKZIP 1.01/1.02's minimum match length**
-(FORMATS.md, *The minimum match length PKZIP 1.01 and 1.02 used*): the
-shipped build's resident `CODE` and A5 do not move by a byte in EITHER
-configuration, eager or lazy, because every one of the 608 B this costs
-is in the `ovl_exo` image (31,176 → 31,784 B). So the tier argument is
-again about that image alone and again arithmetic: the three `ovl_exo`
-rows of *What each format is granted* DO NOT MOVE where every other row
-rises 608, the image having grown exactly what `OVL_SAVED` did — where
-2026-10-07's fell 68, which is what says the exception belongs to the
-change and not to the row (FORMATS.md, *What each format is granted*).
-**CORRECTED 2026-10-09**: this paragraph read 668 B, 31,832 and a 16 B
-rise against 672 until then, a pre-trim measurement FORMATS.md had
-already replaced. `run_tiers.py
---check` moves no tally in either lane (71/71, 67/71, 64/71 resident and
-71/71, 69/71, 66/71 shipped, the same fixtures by name). **Peak heap and
-the stack do not move either, and both are measured rather than
-argued**: the probe pass allocates the same `ImpState` and window the
-real decode does and frees them before it starts, so the two never
-coexist — identical high-water marks to the byte on six zips. **The stack
-is the one thing that DID move**, and it moved the right way: the
-deepest chain through zip falls 1,940 → **1,900 B** and the limb holding
-the record changes from deflate to the probe itself, because
-`zip_implode` stopped being inlined into `zip_decode` (FORMATS.md,
-*Stack*). What the argument does NOT cover is the same thing it
-did not cover on 2026-10-07: no Implode archive is in `sample.txt`, so
-no Macintosh has run the decoder, with or without this rule.
-
-**Nor on 2026-10-08 for zip method 1 (Shrink)**: +0 and +0 of resident
-`CODE` and A5 in both shipped configurations, every byte in `ovl_codecs`
-(6,404 → 7,520 B) and `ovl_exo` (+100 B). `ovl_codecs` is kept by EVERY
-format, so the rows of *What each format is granted* rose only 36 B and
-the three holding `ovl_exo` fell 64, as did the envelope row — against
-the narrowest margin of **16,490 B**. `run_tiers.py --check` moves no
-tally in either lane. **Peak heap DID move**: `shrink-wild-dream.zip`
-peaks at 39,094 B against deflate's 24,863, inside zip's 12–54 KB row
-(FORMATS.md, *Shrink*). Not covered: no Shrink archive is in
-`sample.txt`, so no Macintosh has run the decoder.
-
-**And it moved on 2026-10-09, for Private File: 400 B of resident `CODE`
-and A5 off every tier's budget** (+368 and +32 — the probe, two shims
-and a table row; FORMATS.md, *Private File*), the first resident cost
-since the AppleLink probe. **No tier was re-run for the tally**, and the
-argument is the established one: **no fixture in the corpus changes the
-format it sniffs as**, so no sampled archive reaches a different
-decoder, and 400 B is forty times under the narrowest margin of
-**16,490 B**; `run_tiers.py --check` moves no tally in either lane.
-**What a Macintosh has run is the format itself**: the shipped
-application extracted the `Forked` specimen on System 6.0.8, a wrong
-password first, both forks byte-exact (`tools/vmac/interactive.py
---privatefile`). Not covered: a Private File at the 1 MB floor, and on
-the 512 KB machines.
 Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
@@ -271,8 +169,8 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Forty-seven**
-mechanisms keep finding the next one — recounted 2026-10-06; the
+and one of those was worth 39/44 → 40/44 at the floor target. **Forty-eight**
+mechanisms keep finding the next one — recounted 2026-10-09; the
 sentence said ten when the list had thirty, on 2026-09-26 — and three of them
 need no insight at all (the third is the scan at the end of the list):
 
@@ -656,12 +554,20 @@ need no insight at all (the third is the scan at the end of the list):
   **Ask what input a negative lane cannot construct**, and for a
   magic-less probe start with the all-zero file of the right length (the
   row below, 2026-10-06).
+- **a sum whose terms are kept current at different rates.** Added
+  2026-10-09: the shipped tier model is a measured base plus `OVL_SAVED`,
+  and CI re-checked `OVL_SAVED` against the builds on every run while
+  nothing checked the base. Each term was right when written; the sum
+  drifted 16,888 B and a refused fixture read as a pass. **For every
+  derived figure, ask which of its inputs something re-takes** — the one
+  nothing does is where the error is (the row below, 2026-10-09).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"No tier moves: the cost is under the narrowest margin, 16,490 B"** — this file's Status, once per change from 2026-09-26 to 2026-10-09, ten times, and `run_tiers.py --check` agreeing each time | the System 6.0.8 / 512 KB sweep of 2026-10-09: **66/72 where the model said 67**, refusing `a2ps.V4.3.tar.Z` 4,142 B short — the very layer that margin was measured on. `TIERS` had been lowered once (2,024 B, 2026-10-01) while `OVL_SAVED` rose 117,040 → 134,032 with the control build; all three bases re-taken on the machine came back **16,888 B lower**, identical on three machines, and the model then reproduces all three tiers by name. **Cost: one fixture refused on a 512 KB System 6 machine for an unknown part of two weeks with every check green**, and ten tier arguments resting on one number. `TIERS_CONTROL` now fails `--check-saved` when the control moves (DECISIONS.md 2026-10-09, *the base nobody re-took*) | 2026-10-09 |
 | **"Removing the depth limit costs 376 B of resident `CODE`, nearly all of it the re-scanning pop that replaced the two fixed arrays"** — `tools/build_mac.sh`'s eager pair, FORMATS.md and a commit message, all written the same hour | a reader asking how removing a check could cost that. It could not. **202 B was `path_longbuf` being OUTLINED** the moment `pop` became a second caller — the function itself plus the inlined copies it cost two others — which caching the pointer in `unc_path_init` put back, leaving both of those SMALLER than before. The remainder was not a cost but a design fault: the walker kept the path TWICE, once as reported and once uncut, each with a per-level stack, and `UNC_PATH_MAXDEPTH` existed to size those stacks. Writing the uncut path straight into the host's `long_name` buffer leaves ONE path with ONE length, deletes `path_full_add` (152 B) outright and makes `unc_path_push` 34 B smaller than before any of this: **−68 B of CODE, −64 B resident**, and the deepest chain falls 3,386 → 3,310 B. **Cost: nothing but the hour, because the number was challenged before it was believed** — three explanations were offered for it and every one was true and none was the cause. A size figure that has an explanation is not the same as a size figure that has been attributed, and `nm --size-sort` per function is what tells them apart | 2026-10-07 |
 | **"Components are pushed and popped by LENGTH, never by re-scanning for a separator"** — `src/unc_internal.h`'s description of the path walker since M0, and the reason `UncPath` carried two fixed arrays, which is the reason `UNC_PATH_MAXDEPTH` existed to size them | it was a property, never a reason. A `/` inside a component is swapped to `:` on the way in by this walker's own push and leaf, so every `/` in the buffer is one it wrote and a backward scan is EXACT. Both arrays are gone and the depth limit with them; nesting is now bounded by the path STRING, which is the only limit a Macintosh has either (`tools/vmac/depthtest/`: **250 levels, noErr**). **Cost: the sentence held for seven weeks and nothing in it was false** — what it cost is everything that was built on the constant it justified, which is a rule, a suite, a unit test, two emulator runs and a Macintosh verification, all green, none of which could see that 24 was chosen by nobody. A design note that states WHAT without WHY is a constraint nobody re-opens | 2026-10-07 |
 | **"24 levels is the ENGINE's limit and not the destination's, so an entry below it must be refused rather than placed — a host that could hold the real path is why our limit is a failure and an over-long NAME is a notice"** — `include/macextract.h`'s `path_too_deep`, DECISIONS.md 2026-10-07, and the whole justification for the folder-depth rule shipped that day | the premise was right and USELESS, because it was never the question. `tools/vmac/depthtest/` on System 6.0.8: **250 levels created by dirID and read back, noErr** — the probe's own loop cap, not a limit — against 49 by full pathname, where a `Str255` runs out at 254 bytes. HFS took 89 from Linux. **Classic System software has no depth limit at all; the only limit anywhere is the path STRING, which is `UNC_NAME_MAX` already.** So 24 is not a trade-off against the destination, it is three transcriptions of somebody else's constant — and the rule refuses paths every host it has could hold. **Cost: a day's work built on a premise nobody measured**, and the measurement is one probe of 150 lines that could have been written first. It was asked for by a reader in one sentence — *"depth isn't a limitation of hfs?"* — after three suites, two emulator runs and a Macintosh verification had all gone green around it. **A number three files agree on is still not a measurement** | 2026-10-07 |

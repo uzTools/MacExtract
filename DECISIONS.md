@@ -375,6 +375,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
 - 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
 - 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
+- 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
 
 ---
 
@@ -24880,3 +24881,49 @@ every reader agrees, not when the first difference is found. The tree
 PKZIP stores was invisible to every question asked about its *flags*.
 A table a writer always emits is a fact about the writer, and the same
 DOSBox session that asked about flags could have shown it.
+
+## 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
+
+**What happened.** `shrink-wild-titanic.zip` joined `sample.txt` and four
+tiers were re-run on the current source. Three matched `run_tiers.py
+--shipped` by name. System 6.0.8 on a 512Ke came back 66/72 where the
+model said 67: `a2ps.V4.3.tar.Z`'s compress layer was granted 81,938 B
+and needed 86,080, the same peak it reaches on every other tier.
+
+**Why the model missed it.** A shipped budget is `TIERS` (the control
+build's budget, read off the machine) plus `OVL_SAVED` (control less
+shipped `CODE` + A5) less what the format keeps. When the control grows
+by G and the shipped build by S, the right move is `TIERS` −G and
+`OVL_SAVED` +(G−S): net −S, which is the shipped build's own growth. CI
+re-checked `OVL_SAVED` against the two builds on every run
+(`--check-saved`), so the +(G−S) always landed, while `TIERS` was lowered
+once by derivation (2,024 B, 2026-10-01) and otherwise left alone. From
+2026-10-02, as Implode, Shrink, Private File and the zip work went into
+the control, every per-format budget the lane printed rose by what
+should have come off. The `-D UNC_OVL_RESIDENT -D UNC_AT_BUDGET` probe
+settled it in three boots: all three bases 16,888 B lower, identical
+across both systems and both RAM sizes, which is the one-for-one
+signature of application size and nothing else. At those bases the model
+reproduces all three tiers by name and puts `a2ps` 4,070 B short against
+the machine's 4,142.
+
+**Why nothing else caught it.** Every tier argument from 2026-09-26 on
+compared a change's cost with "the narrowest margin, 16,490 B". That
+margin came from the same model, so it moved with the error and could
+not detect it. *A tolerance measured by the instrument it is meant to
+protect is our own output again* (CLAUDE.md). The sample also had no
+fixture the change itself needed: the argument was always about other
+fixtures' headroom, so the first fixture to lose it was the first sign.
+
+**What changed.** `TIERS_CONTROL` pins the control build's `CODE` + A5
+the bases were read against, and `--check-saved` fails when the build
+moves. The term nothing checked is now checked by the same line that
+checked the other one. The resident `EXPECT` tallies were re-pinned from
+the model (72, 68, 63) and say so: no resident build has run on a
+machine since 2026-09-22.
+
+**Transferable.** For a derived figure, list its inputs and ask which
+of them something re-takes. Here the checked input was the less
+important one: `OVL_SAVED` is a difference of two builds and cheap to
+check, while the base needs an emulator, so the cheap check was the one
+that got automated. That is the usual direction of this failure.

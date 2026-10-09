@@ -17,10 +17,12 @@ detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **959-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,590 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
-6.0.8, each at 4 MB and at the 1 MB RAM floor** (71/71 sampled fixtures every
-time), on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
-**22/22** there — all six re-run 2026-09-25 on the **v0.33.0** binary, which
-also takes the **512 KB** machine from 67/71 to **69/71**. The
+6.0.8, each at 4 MB and at the 1 MB RAM floor** — **72/72** sampled fixtures
+at 1 MB on both, re-run 2026-10-09 on the v0.37.0 source, and 71/71 at
+4 MB — on System 7.0.1, and on Mac OS 9.2 under QEMU including HFS+ —
+**22/22** there; the 4 MB, System 7 and Mac OS 9 runs are 2026-09-25's on
+the **v0.33.0** binary. The **512 KB** machine is **70/72** under System
+3.0 and **66/72** under System 6.0.8 (2026-10-09). The
 same 22/22 on 2026-09-22 was the resident build; the 21/21 before it, on 2026-09-04,
 is the run that found a `UncOptions` field the shell had never assigned,
 which had bombed three formats there, and gained Now Compress (DECISIONS.md
@@ -44,10 +46,10 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~21.3k tokens** (PROGRESS 9.1k,
-OPEN_ITEMS 7.8k, BLOCKERS' first two sections 4.3k), re-estimated
-2026-10-09 after OPEN_ITEMS lost its Implode-generator item; BLOCKERS'
-withdrawn-claims archive is another **~71.6k** and is reference, not
+That session-start reading is **~19.6k tokens** (PROGRESS 9.1k,
+OPEN_ITEMS 7.8k, BLOCKERS' first two sections 2.6k), re-estimated
+2026-10-09 after BLOCKERS' Status lost its chain of tier arguments; BLOCKERS'
+withdrawn-claims archive is another **~72.0k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are
 each file's bytes over the 3.93 bytes per token the 2026-10-07 figures
@@ -88,7 +90,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the forty-seven smells that keep finding the next one. The cheapest is a
+names the forty-eight smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

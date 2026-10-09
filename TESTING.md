@@ -2821,12 +2821,13 @@ budget for every envelope layer. Neither replaces the other: the first
 grades the engine's allocation behaviour against a fixed ceiling, and
 the second predicts what a user's Macintosh refuses.
 
-The resident lane asserts every tally Mini vMac agreed with for that
-build, which since 2026-09-22 is all three: **71/71 at the 1 MB floor
-target** (653,532 B), **67/71 on a 512 KB Macintosh under System 3.0**
-(224,644 B) and **64/71 on the same machine under System 6.0.8**
-(129,244 B) — the same four and seven fixtures, by name, that the
-machines refuse. All three budgets were re-taken twice on 2026-09-27 — +4,746 B
+The resident lane asserted every tally Mini vMac agreed with for that
+build — on 2026-09-22, all three: 71/71 at the 1 MB floor target, 67/71
+on a 512 KB Macintosh under System 3.0 and 64/71 on the same machine
+under System 6.0.8, the same four and seven fixtures by name. Since
+2026-10-09 it asserts the model's **72/72, 68/72 and 63/72** at budgets
+re-taken on the machine that day (634,620, 205,732 and 110,332 B); no
+resident build has run on those machines since. All three budgets were re-taken twice on 2026-09-27 — +4,746 B
 and then +536 B, the three moving together each time — and no tally moved
 (FORMATS.md, *Budget*). The fourth arrived 2026-09-22 with
 `derived-Cool_Tools__.sit`, which needs 242,464 B; the third tier became
@@ -2834,9 +2835,9 @@ assertable the same day, when its budget was re-taken. A tally that moves is
 a memory regression or a memory win; either way the number in `EXPECT`
 is meant to be changed deliberately.
 
-The shipped lane asserts all three tiers a machine has run — **71/71 at
-the floor target, 69/71 at System 3.0 / 512 KB and 66/71 at System 6.0.8
-/ 512 KB** — and it asserts the REFUSED FIXTURES BY NAME rather than a
+The shipped lane asserts all three tiers a machine has run — **72/72 at
+the floor target, 70/72 at System 3.0 / 512 KB and 66/72 at System 6.0.8
+/ 512 KB**, all 2026-10-09 — and it asserts the REFUSED FIXTURES BY NAME rather than a
 tally, because a tier that refuses two different fixtures and still
 counts 69 is exactly what a count cannot fail on. The third joined
 2026-09-27, and it is the one this lane PREDICTED before any machine ran
@@ -2854,18 +2855,25 @@ DECISIONS.md 2026-09-26, *a budget per format, and one per layer*).
 
 - **The budget's own currency, which is the limit that has actually
   bitten.** Each figure is `FreeMem() - 20,480` measured on the machine
-  (FORMATS.md, *Budget*), so it moves when the application's size does,
-  and this file cannot notice. **All three were stale on 2026-09-22** —
-  the two 512 KB constants by 21,666 B each — and re-taking them is what
-  made this file reproduce every tier. The shipped lane inherits every
-  one of them, since a per-format budget is one of these plus what the
-  release gives back.
+  (FORMATS.md, *Budget*), so it moves when the application's size does.
+  **All three were stale on 2026-09-22** — the two 512 KB constants by
+  21,666 B each — **and again on 2026-10-09, by 16,888 B each**, which
+  cost an unpredicted refusal (BLOCKERS.md, *Withdrawn claims*). The
+  shipped lane inherits every one of them, since a per-format budget is
+  one of these plus what the release gives back. **Since 2026-10-09
+  `--check-saved` fails when the control build's `CODE` + A5 leaves
+  `TIERS_CONTROL`**, the size the bases were read against; what it still
+  cannot see is a change the size does not show — a different System,
+  emulator or ROM, or growth that lands in slack (the 2026-09-22 32 B
+  that arrived as half of 64).
 - **Whether a Compact Pro or zip archive holds an encrypted entry.** The
   shell asks `unc_archive_encrypted` and drops the ciphers on a definite
   NO; that walk is not reachable from the CLI, so the shipped lane keeps
-  them for those two formats always and grants 9,808 B less than the
-  machine does. It decides nothing: the narrowest margin on any Compact
-  Pro or zip layer in the sample is 147,262 B, re-measured 2026-09-27.
+  them for those two formats always and grants 10,252 B less than the
+  machine does (`ovl_crypt` and its handle; measured on the System 6.0.8
+  512Ke 2026-10-09, a zip granted what a tar is). It decides nothing: the
+  narrowest margin on any Compact Pro or zip layer in the sample is
+  138,989 B, re-measured 2026-10-09.
 - **Fragmentation.** A budget is one number; the Memory Manager also has
   to find one PIECE that big, which the shell reports separately
   ("Memory is too broken up"). Nothing here models it. **No disagreement

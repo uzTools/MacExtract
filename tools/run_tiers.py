@@ -35,14 +35,15 @@ Both are swept in seconds:
     tools/run_tiers.py --check-saved     # OVL_SAVED against the two builds
 
 Each prints one line per refusal with the shortfall, and the tally. The
-resident lane reproduces all three tiers exactly — 71/71, 67/71 and
-64/71, the same four and seven fixtures by name that the emulators
-refuse — and held every one of them when the budgets were re-taken on
-2026-09-27. The shipped lane reproduces all three tiers a machine has
-run: 71/71 at the floor target, **69/71** at System 3.0 / 512 KB and
-**66/71** at System 6.0.8 / 512 KB, refusing the same fixtures by name;
-the last of those it PREDICTED before anything ran it (FORMATS.md,
-*512 KB machines*).
+resident lane reproduced all three tiers exactly when a resident build
+last ran on them (2026-09-22) — 71/71, 67/71 and 64/71, the same four and
+seven fixtures by name; at the budgets re-taken 2026-10-09 it says 72/72,
+68/72 and 63/72. The shipped lane reproduces all three tiers a machine
+ran on 2026-10-09: 72/72 at the floor target, **70/72** at System 3.0 /
+512 KB and **66/72** at System 6.0.8 / 512 KB, refusing the same
+fixtures by name — after the budgets were re-taken, because on the stale
+ones it said 67/72 and passed `a2ps.V4.3.tar.Z` (FORMATS.md, *512 KB
+machines*).
 
 How the shipped lane gets a budget per format
 ---------------------------------------------
@@ -69,18 +70,21 @@ What it CANNOT see, and why the emulator stays
 - **The budget itself, which is the one that has actually bitten.** It
   is `FreeMem() - 20,480` measured on the machine (FORMATS.md,
   *Budget*), so every constant here goes stale the moment the
-  application's size does, and this file cannot notice. All three were
+  application's size does. `--check-saved` notices since 2026-10-09, when
+  all three were 16,888 B stale (TIERS_CONTROL); it cannot notice a new
+  System, emulator or ROM. All three were also
   stale on 2026-09-22 — two by 21,666 B — and the one-fixture
   System 6.0.8 / 512 KB disagreement that had been filed under
   fragmentation below was this, entirely.
 - **Whether a Compact Pro or zip archive is encrypted.** The shell asks
   `unc_archive_encrypted` and releases the ciphers on a definite NO;
   that walk is not reachable from the CLI, so this lane keeps them for
-  those two formats always and grants 9,808 B LESS than the machine
-  does. Deliberately pessimistic, and it decides nothing: the narrowest
-  margin on any Compact Pro or zip layer in the sample is 147,262 B
+  those two formats always and grants 10,252 B LESS than the machine
+  does (measured 2026-10-09: on the System 6.0.8 512Ke a zip with
+  nothing encrypted is granted what a tar is). Deliberately pessimistic, and it decides nothing: the narrowest
+  margin on any Compact Pro or zip layer in the sample is 138,989 B
   (`derived-MUSFMT10.ZIP` at System 6.0.8 / 512 KB, re-measured
-  2026-09-27).
+  2026-10-09 at the re-taken budgets).
 - **Fragmentation.** The budget is one number; the Memory Manager also
   has to find ONE piece that big. The Mac shell reports that case
   separately (`gShortPiece`, "Memory is too broken up"), and nothing
@@ -128,10 +132,29 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (222620, "System 3.0, Macintosh 512Ke (245,124 B free)"),
-    "sys6-512K": (127220, "System 6.0.8, Macintosh 512Ke (149,724 B free)"),
-    "floor-1M":  (651508, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (205732, "System 3.0, Macintosh 512Ke (226,212 B free)"),
+    "sys6-512K": (110332, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
+    "floor-1M":  (634620, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
+
+# RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
+# UNC_AT_BUDGET`, derived-PCCTS.tar), and all three had fallen by the
+# identical 16,888 B. They had been lowered once since 2026-09-27, by the
+# 2,024 B derived below, while OVL_SAVED — which --check-saved keeps
+# current — rose 117,040 -> 134,032 as the control build grew. The shipped
+# lane is base + OVL_SAVED, so every per-format budget it printed from
+# 2026-10-02 to this re-take was ~16.5 KB too generous, and the System 6.0.8
+# 512Ke sweep that day refused `a2ps.V4.3.tar.Z`, which the stale model
+# passed (BLOCKERS.md, *Withdrawn claims*). **A control-build change moves
+# this table one for one; re-take it, or lower it by the control's growth,
+# whenever --check-saved makes you move OVL_SAVED.**
+#
+# So the control's size those budgets were read against is pinned, and
+# --check-saved (in ci.sh) fails when the control build moves away from it:
+# OVL_SAVED was the only term of base + OVL_SAVED that anything checked,
+# and a sum whose terms are kept current at different rates is wrong by
+# exactly the term nobody re-takes.
+TIERS_CONTROL = 207760     # build/mac-resident, CODE + A5, 2026-10-09
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
 # resident CODE the zip Macintosh extra fields added to the CONTROL build
@@ -190,8 +213,14 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 # pinning it. 69 -> 71 on 2026-09-22: the sample gained the two StuffIt 5
 # fixtures whose names are UTF-8, and `derived-Cool_Tools__.sit` needs
 # 242,464 B, so it is a 512 KB refusal on both systems. Nothing that was
-# passing stopped.
-EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
+# passing stopped. 71 -> 72 on 2026-10-09: `shrink-wild-titanic.zip`
+# joined, the first Shrink archive on a Macintosh; at 38,777 B it passes
+# every tier, so each tally rose one.
+# 65 -> 63 at sys6-512K the same day, with TIERS re-taken 16,888 B lower:
+# `derived-Terrainman_2.0__.sea` and `derived-LHA_Expander_1.0.3.sea` fall
+# out. That is the model's, at budgets read off the machine; no RESIDENT
+# build has been swept there since 2026-09-22.
+EXPECT = {"floor-1M": 72, "sys3-512K": 68, "sys6-512K": 63}
 
 # ---------------------------------------------------------------------------
 # The shipped build's model: a budget per tier PER FORMAT.
@@ -224,7 +253,9 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # substitute for that measurement — subtracting from a stale one is how the
 # floor budget was once made worse (DECISIONS.md 2026-09-22, *the fold, on a
 # Macintosh*) — and it decides nothing: the narrowest margin between a
-# passing layer's demand and its budget is 16,490 B.
+# passing layer's demand and its budget is 16,490 B. **WITHDRAWN
+# 2026-10-09**: that margin was a2ps's, and by then the uncompensated drift
+# had grown to 16.9 KB and taken it — TIERS above, re-taken that day.
 # 2026-10-01: 117,664 -> 119,680 with zip's Macintosh extra fields in.
 # The whole +2,016 is the gap widening rather than anything new being
 # saved — the control took +2,024 B of resident CODE and the shipped
@@ -337,13 +368,15 @@ OVL_HANDLE = 8
 # 2026-09-27, *the residue that was two numbers*).
 #
 # DROPPING IT CHANGES NO PREDICTION, because the narrowest margin between a
-# passing layer's demand and its budget is **16,490 B** across the three tiers
-# this lane now asserts — `a2ps.V4.3.tar.Z`'s compress layer at System 6.0.8 /
-# 512 KB, which needs 86,048 B of 102,538 — and 50,174 B if the 512 KB System 6
-# tier is left out (re-measured 2026-09-27 by bisecting every layer of all 71
-# fixtures at the re-taken budgets; it was 13,028 B and 46,712 B at the
-# 2026-09-22 ones. DECISIONS.md 2026-09-26, *a budget per format, and one per
-# layer*).
+# passing layer's demand and its budget is **29,613 B** across the three tiers
+# this lane asserts — `popper-1.7.tar.Z`'s compress layer at System 3.0 /
+# 512 KB, which needs 147,765 B of 177,378 — and 29,749 B on System 6.0.8 /
+# 512 KB, gzip's layer (re-measured 2026-10-09 by bisecting every layer of
+# all 72 fixtures at the re-taken budgets). It was 16,490 B on 2026-09-27,
+# held by `a2ps.V4.3.tar.Z`, which the machine has refused since — so the
+# nearest fixtures are now on the OTHER side: `synth-dd-m5.dd` is 1,130 B
+# short at System 3.0 / 512 KB and a2ps 4,070 B short at System 6.0.8.
+# (DECISIONS.md 2026-09-26, *a budget per format, and one per layer*.)
 OVL_RESIDUE = -666
 
 # The fifteen images and the bundle they are read as, in bytes, measured
@@ -425,7 +458,10 @@ BUNDLE = 161712
 EXPECT_SHIPPED = {
     "floor-1M": (),
     "sys3-512K": ("derived-Library_ISBN_Barcoder.sit", "synth-dd-m5.dd"),
-    "sys6-512K": ("derived-Cool_Tools__.sit", "derived-Library_ISBN_Barcoder.sit",
+    # a2ps.V4.3.tar.Z joined 2026-10-09: the machine refused it (66/72) where
+    # this lane, on a base 16,888 B stale, had passed it (TIERS above).
+    "sys6-512K": ("a2ps.V4.3.tar.Z",
+                  "derived-Cool_Tools__.sit", "derived-Library_ISBN_Barcoder.sit",
                   "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
                   "synth-dd-m5.dd"),
 }
@@ -581,7 +617,16 @@ def check_saved(ship=os.path.join(REPO, "build", "mac"),
             "format's budget by the difference."
             % (OVL_SAVED, a - b, os.path.relpath(control, REPO), a,
                os.path.relpath(ship, REPO), b))
-    return ("OVL_SAVED agrees with %s less %s (%d B)"
+    if a != TIERS_CONTROL:
+        raise SystemExit(
+            "run_tiers: %s is %d B of CODE + A5 and TIERS was measured "
+            "against %d B —\n  every budget in TIERS moves one for one "
+            "with the control. Re-take them on\n  the machine (-D "
+            "UNC_OVL_RESIDENT -D UNC_AT_BUDGET), or lower all three by "
+            "the\n  growth and say so, then move TIERS_CONTROL."
+            % (os.path.relpath(control, REPO), a, TIERS_CONTROL))
+    return ("OVL_SAVED agrees with %s less %s (%d B), and TIERS was taken "
+            "against this control"
             % (os.path.relpath(control, REPO), os.path.relpath(ship, REPO),
                OVL_SAVED))
 

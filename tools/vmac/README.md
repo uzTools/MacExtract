@@ -20,13 +20,15 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **69/71** on the shipped build (2026-09-25; 67/71 with every
+mv-512Ke` is **70/72** on the shipped build (2026-10-09; 69/71 on
+2026-09-25, 67/71 with every
 decoder resident, 66/69 before the sample grew, 65/69 before the reserve went
 flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
-System6.hfv` is **66/71** (2026-09-27, the shipped v0.34.0 build, the tier
-`run_tiers.py` predicted before anything ran it; 64/71 on 2026-09-22 with
-every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). The resident budgets are **224,644 B** and
-**129,244 B**, both re-taken on the machine 2026-09-27 with the floor's;
+System6.hfv` is **66/72** (2026-10-09, one fixture fewer than `run_tiers.py`
+predicted on a stale base; 66/71 on 2026-09-27, the tier it predicted
+before anything ran it; 64/71 on 2026-09-22 with
+every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). The resident budgets are **205,732 B** and
+**110,332 B**, both re-taken on the machine 2026-10-09 with the floor's;
 `tools/run_tiers.py` reproduces both tiers on Linux fixture for fixture, and
 the one that never matched was the budget and not the model.
 
@@ -3770,8 +3772,8 @@ crossings into other images (the key setup into `ovl_crypt`, the reader
 itself in `ovl_stuffit`) and the envelope unwrap into the StuffIt archive
 inside are run by the shipped application. Wrong password first, then
 `hushnow`; both forks of `Forked` are read back off the volume. Verified
-on System 6.0.8 on 2026-10-09: refused, asked again, both forks
-byte-exact.
+on System 6.0.8 on 2026-10-09 at 4 MB and, with `--emu mv-1M-1x`, at the
+1 MB floor: refused, asked again, both forks byte-exact.
 
 **The resource fork is compared with bytes 16..127 masked**, as every
 on-Mac harness does: the first run compared it raw and failed on the
