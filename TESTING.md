@@ -2507,18 +2507,14 @@ shortest-length first. Each fails this suite; the restored decoder
 passes.
 
 **And five more on 2026-10-08, for the rule that chooses between the two
-minimum match lengths — four of which a suite catches and one of which
-nothing here does.** Caught: the 1.01/1.02 reading keyed on the tree
-count instead of the dictionary size; the probe ignoring the stored
-CRC-32 and asking only whether the decode finished; the probe adopting
-the 1.01/1.02 reading where 5.3.4 had matched; and the two-combination
-predicate narrowed to nothing. NOT caught: that predicate WIDENED to
-every Implode entry, which changes no output and only how many decode
-passes run. **No lane in `ci.sh` counts a decode pass**, so the claim
-that an unambiguous combination pays nothing is held by callgrind `Ir`
-and by `read` + `lseek` counted with `strace`, both in FORMATS.md
-(*The minimum match length PKZIP 1.01 and 1.02 used*) and neither in
-this suite. The probe ORDER is in the same class.
+minimum match lengths, and a sixth on 2026-10-09.** Caught on the bytes:
+the 1.01/1.02 reading keyed on the tree count instead of the dictionary
+size; the probe ignoring the stored CRC-32 and asking only whether the
+decode finished; the probe adopting the 1.01/1.02 reading where 5.3.4
+had matched; and the two-combination predicate narrowed to nothing.
+Caught only by lane 5's pass count: that predicate WIDENED to every
+Implode entry, and the probe ORDER inverted — neither changes a byte
+(FORMATS.md, *What the suites cannot see*).
 
 **A FOURTH lane, since 2026-10-08: one archive carrying BOTH readings**,
 the bug-written entry first, which is the shape the per-archive verdict
@@ -2539,6 +2535,21 @@ No writer is known to make such an archive: none of the 1,537 swept on
 FORMAT allows one, which is a different question from what writers do
 (DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*).
 
+**A FIFTH lane, since 2026-10-09: how many times each entry is
+DECODED.** `x` runs under the CLI's `UNC_TRACE_ALLOC`, and a pass is
+counted as zip_implode's two allocations — its state, then the 4 or
+8 KB window — which a probe makes exactly as the real decode does; the
+lane also requires every window to follow the same state size, so an
+unrelated 4 KB buffer cannot pass for a decode. The denominator is
+Python's `zipfile`, counting method-6 entries with a non-empty size.
+Extra passes asserted exactly: **0** on the two unambiguous generated
+shapes and on `4acalc.zip` and `4alnch11.zip`, **1** on the four
+conforming shapes, **2** on `pkz101.exe`, **4** on the mixed archive.
+The fixtures are skipped when absent, `pkz101.exe` with a message. No
+engine change and nothing compiled for the test. It fails on the two
+bends above that no byte comparison sees, and on nothing else of the
+six.
+
 **What it cannot see.**
 
 - **Whether a MIXED archive exists anywhere.** Lane 4's subject is
@@ -2553,8 +2564,11 @@ FORMAT allows one, which is a different question from what writers do
   this project's own encoder alone** with deark as its second reader. A
   green run here must not be read as saying both halves have a wild
   subject (FORMATS.md, *Which half is graded by a real file*).
-- **How many decode passes anything takes.** See the bend that nothing
-  caught, above.
+- **Which reading a decode pass used, or what a pass costs.** Lane 5
+  counts passes; a build probing the same reading twice counts the same
+  as one probing both, and is caught by lanes 3 and 4 on the bytes.
+  What a pass costs is callgrind `Ir` and `strace`, in FORMATS.md
+  (*The minimum match length PKZIP 1.01 and 1.02 used*).
 - **No Finder metadata and no fork split.** A MacBinary payload under an
   Implode entry is the ZipIt specimen's shape; `tools/run_zipit.py`
   grades that, and this suite's entries are plain text files.

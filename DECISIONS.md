@@ -24362,7 +24362,10 @@ rests on two instruments outside it: callgrind `Ir`, and `read` + `lseek`
 counted with `strace`, which is the axis a Macintosh actually pays since
 each `UncIO.read` there is a `SetFPos` + `FSRead` pair. Both say +0 on
 two real zips with no ambiguous entry. The probe ORDER is in the same
-class: inverting it is correct and costs one pass.
+class: inverting it is correct and costs one pass. **Corrected
+2026-10-09: both are caught now**, by `run_implode.py`'s fifth lane,
+which counts passes through the CLI's existing allocation trace — no
+engine hook was needed, because a pass is its own pair of allocations.
 
 **What was deliberately not done: an ENCRYPTED ambiguous entry.** The
 probe runs before `unc_password` and must not ask for a password twice,

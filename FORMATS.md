@@ -4629,7 +4629,7 @@ byte. `unar` has 5.3.4's reading and nothing else, so a generated stream
 it ACCEPTS was never the bug's — that is the control, and it fails both
 generated shapes exactly as it fails the three real ones.
 
-#### What the suites cannot see, measured by bending the decoder five ways
+#### What the suites cannot see, measured by bending the decoder six ways
 
 | bend | caught by |
 |---|---|
@@ -4637,13 +4637,16 @@ generated shapes exactly as it fails the three real ones.
 | the probe ignores the stored CRC-32 and asks only whether the decode finished | `run_implode.py` (`4k-3trees-mmlbug`) **and** `pkz101.exe` |
 | the probe adopts the 1.01/1.02 reading where 5.3.4 MATCHED | `run_implode.py`, on the four conforming shapes |
 | the two-combination predicate narrowed to nothing — the rule removed | `run_implode.py` (both shapes) **and** `pkz101.exe` |
-| the two-combination predicate WIDENED to every Implode entry | **nothing.** It changes no output — a conforming entry's probe matches under 5.3.4 either way — only how many passes run |
+| the two-combination predicate WIDENED to every Implode entry | `run_implode.py`'s pass count, since 2026-10-09: **+1 where 0 is right** on the two unambiguous generated shapes, `4acalc.zip` and `4alnch11.zip`. No output changes — a conforming entry's probe matches under 5.3.4 either way |
+| the probe ORDER inverted — 1.01/1.02 asked first | `run_implode.py`'s pass count, since 2026-10-09: **+2 where 1 is right** on the four conforming shapes, **+1 where 2 is right** on `pkz101.exe`. No output changes; the mixed archive's total is +4 either way, so it alone would not catch this one |
 
-**So the cost axis is the blind spot, and it is measured rather than
-asserted**: the `Ir` and `strace` rows above are what hold it, and no
-lane in `ci.sh` counts a decode pass. The same is true of the probe
-ORDER: inverting it leaves every output identical and costs one extra
-pass on a conforming archive.
+**The last two were caught by nothing until 2026-10-09**, because both
+change only how many times an entry is decoded and no lane counted that.
+Measured on a build of each: every byte-comparing lane passed, and the
+pass count failed. The count asserts the passes exactly, not a ceiling
+(TESTING.md, *Implode*, lane 5). It cannot see WHICH reading a pass used;
+lanes 3 and 4 hold that on the bytes. The `Ir` and `strace` rows above
+are still the cost of a pass, which the count does not price.
 
 ### Searching for it: three keys, and the one that worked
 

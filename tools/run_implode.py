@@ -61,6 +61,11 @@ manifest on every run, so this lane is the backstop for one combination
 and the only subject for the other — FORMATS.md, *Implode*, says which
 is which rather than letting a green run imply both.
 
+A FIFTH lane, since 2026-10-09: **how many times each entry is
+decoded**, counted through the CLI's `UNC_TRACE_ALLOC` and asserted
+exactly per archive (`grade_passes`). Two bends of the probe change no
+byte and only that count, and this is the only lane that sees them.
+
 **What it cannot see.** No Finder metadata and no fork split: a
 MacBinary payload under an Implode entry is the ZipIt specimen's shape,
 and `tools/run_zipit.py` is what grades that.
@@ -448,6 +453,122 @@ def grade_mixed(exe):
     return bad
 
 
+# ---------------------------------------------------------------- lane 5
+def implode_entries(path):
+    """How many entries a decode pass can run on: method 6 with a
+    non-empty size. Read by Python's own zipfile, not by this engine, so
+    the denominator of the count below is not downstream of it."""
+    import zipfile
+    with zipfile.ZipFile(path) as z:
+        return sum(1 for i in z.infolist()
+                   if i.compress_type == 6 and i.file_size > 0)
+
+
+def count_passes(exe, path, out):
+    """Implode decode passes `x` runs on `path`, real and probe alike,
+    or (None, why).
+
+    Counted through the CLI's `UNC_TRACE_ALLOC`, which prints every
+    allocation: a pass is zip_implode's two — its `ImpState`, then the
+    window the flags name, 4,096 or 8,192 B — and a probe allocates
+    exactly what the real decode does (FORMATS.md, *Implode*, *What it
+    costs*, the peak-heap row). No engine change, and nothing compiled
+    for the test: the hook is the allocator callback the host owns."""
+    os.makedirs(out, exist_ok=True)
+    env = dict(os.environ, UNC_TRACE_ALLOC="1")
+    r = subprocess.run([exe, "x", "-o", out, path], capture_output=True,
+                       timeout=900, env=env)
+    sizes = []
+    for line in r.stderr.decode("utf-8", "replace").splitlines():
+        f = line.split()
+        if len(f) >= 2 and f[0] == "alloc":
+            sizes.append(int(f[1]))
+    heads = [sizes[i - 1] for i in range(1, len(sizes))
+             if sizes[i] in (4096, 8192)]
+    # The state's size is whatever this build makes it; what is asserted
+    # is that every window followed the SAME one, so an unrelated 4 KB
+    # buffer cannot pass for a decode.
+    if len(set(heads)) > 1:
+        return None, ("windows follow allocations of %s B, not one "
+                      "state size" % sorted(set(heads)))
+    return len(heads), None
+
+
+def grade_passes(exe):
+    """How many times each entry is DECODED. Returns failures.
+
+    Every other lane here compares bytes, and two bends of the
+    minimum-match-length probe change no byte at all: widening the
+    two-combination predicate to every Implode entry, and probing the
+    1.01/1.02 reading before 5.3.4's. A conforming entry matches under
+    5.3.4 whichever way round it is asked, so both only add passes —
+    which nothing in `ci.sh` counted until this lane (FORMATS.md,
+    *Implode*, *What the suites cannot see*). So the extra passes are
+    asserted exactly, per archive, over what Python's zipfile says the
+    archive holds:
+
+      - **0** on a zip with no ambiguous entry: the probe never runs;
+      - **1** on a conforming archive: 5.3.4 is asked first and matches;
+      - **2** on `fixtures/pkz101.exe`: 5.3.4 fails, the bug's reading
+        matches, and the archive is settled for its other two;
+      - **4** on the mixed archive: 2 to settle, 1 recovery probe on the
+        entry the inherited verdict was wrong about, 1 more to settle
+        again.
+
+    **What it cannot see**: WHICH reading a pass used. A build that
+    probed the same reading twice would count the same as one that
+    probed both — but it would fail lanes 3 and 4 on the bytes.
+    """
+    bad = 0
+    n = 0
+    tmp = tempfile.mkdtemp(prefix="implode-passes-")
+    try:
+        subjects = []
+        for sub, only, label, extra in (
+                ("unamb", ("4k-2trees", "8k-3trees"),
+                 "the two unambiguous shapes", 0),
+                ("conf", None, "the four conforming shapes", 1)):
+            os.makedirs(os.path.join(tmp, sub))
+            zp, _r, _p = write_seed(os.path.join(tmp, sub), only=only)
+            subjects.append((label, zp, extra))
+        for fx in ("4acalc.zip", "4alnch11.zip"):
+            fp = os.path.join(ROOT, "fixtures", fx)
+            if os.path.exists(fp):
+                subjects.append((fx, fp, 0))
+        fp = os.path.join(ROOT, "fixtures", "pkz101.exe")
+        if os.path.exists(fp):
+            subjects.append(("pkz101.exe", fp, 2))
+        else:
+            print("implode: no fixtures/pkz101.exe — the bug-written "
+                  "archive's pass count is not asserted this run")
+        mz = os.path.join(tmp, "mixed.zip")
+        subprocess.run([sys.executable, SYNTH, "--mixed", "-o", mz,
+                        "--plain", os.path.join(tmp, "mixed.plain")],
+                       check=True, capture_output=True)
+        subjects.append(("the mixed archive", mz, 4))
+        for i, (label, path, extra) in enumerate(subjects):
+            entries = implode_entries(path)
+            got, why = count_passes(exe, path,
+                                    os.path.join(tmp, "out%d" % i))
+            if got is None:
+                print("implode: %s: cannot count passes (%s)" % (label, why))
+                bad += 1
+                continue
+            if got != entries + extra:
+                print("implode: %s: %d decode pass(es) over %d Implode "
+                      "entries, %+d extra where %d is right"
+                      % (label, got, entries, got - entries, extra))
+                bad += 1
+            n += 1
+        if not bad:
+            print("implode: %d archive(s), every decode pass counted — "
+                  "the probe's extra passes are exactly what the verdict "
+                  "rule prices" % n)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -475,6 +596,7 @@ def main():
     bad += grade_shapes(a.macextract)
     bad += grade_bugshapes(a.macextract)
     bad += grade_mixed(a.macextract)
+    bad += grade_passes(a.macextract)
     bad += grade_mutants(a.macextract, a.n, a.seed)
     if bad:
         print("implode: %d failure(s)" % bad)
