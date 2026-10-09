@@ -371,6 +371,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
 - 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
 - 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
+- 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
 
 ---
 
@@ -24710,3 +24711,25 @@ rediscovers them**, and this one rediscovered it in a run.
 **Not supported, by decision:** derivation 0 and cipher 0, which PFEngine
 accepts and no writer here produces. They are named and refused per
 entry; reading them would be inventing them.
+
+## 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
+
+**Claim (an ESTIMATE, from the MC68000 timing table; nothing timed):**
+RC4's keystream loop is ~178 cycles a byte as GCC compiles the C today,
+and ~104 hand-written. The difference is a trick GCC does not use. If an
+index register's upper byte is cleared once, `add.b` wraps it at 256 for
+free, and `(d8,An,Dn.w)` addresses the table with it directly. GCC
+instead zero-extends every index with `andi.l #255` (16 cycles each,
+twice a byte) and reloads through `lea`.
+
+**C cannot be coaxed into it, measured.** 16-bit indices masked with
+`& 0xff` and a pointer walk, the usual way to steer GCC, compiled to 25
+instructions a byte against today's 19: worse, with the table pointer
+reloaded from the stack each byte. So the gain needs real assembly.
+
+**Filed, not written, by the maintainer's call:** a 68000-only path
+beside the C one is the engine's first, and x86 CI cannot grade it. The
+candidates are collected in OPEN_ITEMS.md (*Hand-written 68000
+assembly*) to be built, tested under `qemu-m68k` and timed on the tick
+probe in one pass.
+

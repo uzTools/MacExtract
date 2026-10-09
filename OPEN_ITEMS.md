@@ -337,3 +337,24 @@ has nothing to separate*).
 |---|---|
 | **the feature PKUNZIP 1.0x reads differently** | **reduce one generated stream until PKUNZIP 1.01 accepts it**: literals only, then one match, and so on. Then make the generator avoid that feature, or record it as a third difference between the readings |
 | **`8k-2trees-mmlbug` has no authentic reader** | **once the above is closed, PKUNZIP 1.01 under DOSBox grades both `-mmlbug` shapes.** That is the writer's own reader, and it would be the first program other than deark to grade the 8 K/two-tree half |
+
+## Hand-written 68000 assembly: candidates, held for one VM pass
+
+**Not started, by decision (2026-10-09).** The engine is portable C99
+and has no assembly. The maintainer's call is to collect the loops where
+hand assembly beats what GCC emits, and then build, test and time them
+together in one pass, rather than one at a time. Every figure below is
+an ESTIMATE from the MC68000 timing table and none has been timed on a
+machine (DECISIONS.md 2026-10-09, *what GCC will not do with an
+index*).
+
+| candidate | C today | assembly sketch | what would close it |
+|---|---|---|---|
+| **RC4's keystream loop** (`unc_crypt_apply`, `UNC_CRYPT_RC4`; Private File and StuffIt 5's encrypted forks) | 19 instructions, ~178 cycles a byte | 10 instructions, ~104 cycles: index registers cleared once, so `add.b` wraps at 256 and `(d8,An,Dn.w)` addresses the table with no `andi.l #255`; `eor.b Dn,(An)+`; `dbf` | the shared prerequisites below, then the 68000 path beside the C one under `#ifdef __mc68000__`, graded and timed |
+
+**Prerequisites for the pass**, once for every row:
+
+| what | why |
+|---|---|
+| **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py` and whatever suites cover the other rows | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
+| **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe (tools/vmac/README.md) is what prices a change here, and today it cannot reach any cipher |
