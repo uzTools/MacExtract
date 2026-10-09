@@ -79,6 +79,11 @@ Examples — each sweep this tool has actually run is in TESTING.md
         --query 'format=sit&dedup=dedup' --query 'format=sea&dedup=dedup' \
         --meta-type PNTG --meta-type 8BIM --meta-type FSSD \
         --bytes 32768 --walk 400
+    # a working set to grade offline, KEPT: whole files by SHA-256, the
+    # state as the manifest — the Shrink sweep of 2026-10-09 (TESTING.md)
+    tools/scan_discmaster.py --probe keep --keep-dir files --state mac.json \
+        --mac-context --dedup --shard-under 9000 \
+        --query 'detection=504b0304????????0100*'
 
 Progress is written to `--state` after every chunk and re-read on the
 next run, so a sweep survives a timeout: run it again and it picks up
@@ -109,9 +114,11 @@ than about the formats:
     page count, because the window is a server-side cap.
 """
 import argparse
+import hashlib
 import http.client
 import json
 import os
+import random
 import re
 import struct
 import sys
@@ -664,8 +671,59 @@ def central_vermade(head, item, fileid, size, tail=4096):
     return struct.unpack("<H", rec[4:6])[0]
 
 
+class KeepProbe:
+    """Not a test: the WHOLE file, kept under `--keep-dir` by its SHA-256,
+    and a manifest line for it in the state.
+
+    Added 2026-10-09 because the Shrink sweep of 2026-10-08 graded 2,247
+    entries and kept nothing, so when its two decoders disagreed by
+    three entries nobody could say which three (FORMATS.md, *Shrink*,
+    *What grades it*). A sweep that is going to be graded offline keeps
+    its working set; the state's `probed` map is then the list of URLs
+    and hashes, and `--keep-dir` the files.
+    """
+    need = 64 << 20
+    limit = 64 << 20
+    keep_dir = None
+
+    def __call__(self, head, size):
+        if len(head) != size:
+            return {"err": "short read %d of %d" % (len(head), size)}
+        sha = hashlib.sha256(head).hexdigest()
+        path = os.path.join(self.keep_dir, sha)
+        if not os.path.exists(path):
+            with open(path + ".tmp", "wb") as f:
+                f.write(head)
+            os.replace(path + ".tmp", path)
+        return {"sha256": sha, "size": size}
+
+
+MAC_CONTAINER = re.compile(r"\.(sit|sea|cpt|hqx|toast|dmg)(/|;|$)", re.I)
+MAC_PATH = re.compile(r"(info-mac|infomac|apprentice|pub/mac|/mac/|^mac/"
+                      r"|macintosh)", re.I)
+
+
+def mac_context(fileid, meta):
+    """Whether a listed file sits somewhere a Macintosh user meets it.
+
+    Any of: a Mac type/creator other than `TEXT/hscd` (what an ISO 9660
+    file read on a Mac gets); a path inside a `.sit`, `.sea`, `.cpt`,
+    `.hqx`, `.toast` or `.dmg`; an Info-Mac, Apprentice, `pub/mac` or
+    `mac/` path, or one naming Macintosh. This is the test behind
+    FORMATS.md's *Shrink* census, written down 2026-10-09: over the
+    2026-10-09 listing it gives 141 distinct Shrink-first and 5
+    Reduce-first archives, the census's own counts. **The disc's NAME is
+    not a key**: `\\bmac` on the item name added five more, two of them
+    the `pc/` side of a MacFormat disc and one *The Games Machine*.
+    """
+    t, c = meta.get("type"), meta.get("creator")
+    if t and (t, c) != ("TEXT", "hscd"):
+        return True
+    return bool(MAC_CONTAINER.search(fileid) or MAC_PATH.search(fileid))
+
+
 PROBES = {"pkg": PkgProbe, "sit": SitProbe, "dd": DdProbe, "pit": PitProbe,
-          "implode": ImplodeProbe}
+          "implode": ImplodeProbe, "keep": KeepProbe}
 
 
 # ---- the index ------------------------------------------------------
@@ -927,6 +985,23 @@ def main():
     ap.add_argument("--count", action="store_true",
                     help="print what the index says each --query matches, "
                          "and stop")
+    ap.add_argument("--keep-dir", default=None,
+                    help="keep: where the whole files go, by SHA-256")
+    ap.add_argument("--mac-context", action="store_true",
+                    help="probe only a file in a Macintosh context "
+                         "(`mac_context()` above)")
+    ap.add_argument("--dedup", action="store_true",
+                    help="probe one file per b3sum, the first by key")
+    ap.add_argument("--max-size", type=int, default=0,
+                    help="skip a listed file this size or larger")
+    ap.add_argument("--exclude-state", action="append", default=[],
+                    help="skip any b3sum another state file listed AND "
+                         "probed, so two draws do not overlap")
+    ap.add_argument("--sample", type=int, default=0,
+                    help="probe this many, drawn with --seed from what the "
+                         "filters leave; the draw is kept in the state, so "
+                         "a resumed run finishes the same draw")
+    ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--state", default=None)
     ap.add_argument("--budget", type=float, default=540.0,
                     help="seconds to spend fetching this run")
@@ -937,6 +1012,11 @@ def main():
     probe = PROBES[a.probe]()
     if a.bytes:
         probe.need = probe.limit = a.bytes
+    if a.probe == "keep":
+        if not a.keep_dir:
+            ap.error("keep needs --keep-dir")
+        os.makedirs(a.keep_dir, exist_ok=True)
+        probe.keep_dir = a.keep_dir
 
     if a.count:
         for q in a.query:
@@ -944,11 +1024,12 @@ def main():
         return 0
 
     state = {"files": {}, "probed": {}, "queries": {}, "types": {},
-             "shards": {}, "vermade": {}}
+             "shards": {}, "vermade": {}, "meta": {}}
     if os.path.exists(state_path):
         state = json.load(open(state_path))
         state.setdefault("types", {})
         state.setdefault("vermade", {})
+        state.setdefault("meta", {})
     t_start = time.time()
     queries = []
     for q in a.query:
@@ -978,6 +1059,10 @@ def main():
             key = "%s/%s" % (r["itemid"], r["fileid"])
             state["files"][key] = r["size"]
             state["types"][key] = member_types(r)
+            im = r.get("idMeta") or {}
+            state["meta"][key] = {"b3sum": r.get("b3sum"),
+                                  "type": im.get("macFileType"),
+                                  "creator": im.get("macFileCreator")}
         state["queries"][full] = len(rows)
         save(state, state_path)
 
@@ -993,6 +1078,39 @@ def main():
               % (len(state["files"]), tally,
                  sum(1 for v in state["types"].values() if not v)),
               flush=True)
+    if a.max_size:
+        todo = [k for k in todo if state["files"][k] < a.max_size]
+    if a.mac_context:
+        todo = [k for k in todo
+                if mac_context(k.split("/", 1)[1], state["meta"].get(k, {}))]
+    if a.dedup or a.exclude_state:
+        seen = set()
+        for k in sorted(state["probed"]):
+            seen.add(state["meta"].get(k, {}).get("b3sum"))
+        for path in a.exclude_state:
+            other = json.load(open(path))
+            seen.update(other["meta"].get(k, {}).get("b3sum")
+                        for k in other["probed"])
+        keep = []
+        for k in sorted(todo):
+            b = state["meta"].get(k, {}).get("b3sum") or k
+            if b in seen:
+                continue
+            if a.dedup:
+                seen.add(b)
+            keep.append(k)
+        todo = keep
+    if a.sample:
+        if "draw" not in state:
+            pool = sorted(todo)
+            state["draw"] = {"seed": a.seed, "pool": len(pool),
+                             "keys": random.Random(a.seed).sample(
+                                 pool, min(a.sample, len(pool)))}
+            save(state, state_path)
+        drawn = set(state["draw"]["keys"])
+        todo = [k for k in state["draw"]["keys"] if k not in state["probed"]]
+        print("draw: %d of %d, seed %d" % (len(drawn), state["draw"]["pool"],
+                                          state["draw"]["seed"]), flush=True)
     print("%d file(s) listed, %d probed, %d to go"
           % (len(state["files"]), len(state["probed"]), len(todo)), flush=True)
 
@@ -1089,6 +1207,9 @@ def main():
                      "; ".join("%r flags 0x%04x, %d B out"
                                % (e["name"], e["flags"], e["usize"])
                                for e in v["buggy"])))
+        elif a.probe == "keep":
+            print("  %s %s %d" % (v["sha256"], url_of(item, fileid),
+                                  v["size"]))
         elif a.probe == "pit":
             if not v["encrypted"]:
                 continue
@@ -1141,7 +1262,7 @@ def main():
                   sum(1 for v in hits.values() if v["entries"]), ent, spec,
                                                  buggy, undec))
 
-    left = len(state["files"]) - len(state["probed"])
+    left = sum(1 for k in todo if k not in state["probed"])
     if left:
         print("not finished — run again to continue, %d left (%s)"
               % (left, state_path))

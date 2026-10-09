@@ -376,6 +376,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
 - 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
 - 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
+- 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
 
 ---
 
@@ -24575,11 +24576,12 @@ CDs would actually open.
 so.** The obvious transcription was XADMaster's, as for most of this
 engine. `XADZipShrinkHandle.m` turns code 256,2 into `ClearLZWTable`,
 a FULL clear. PKZIP's partial clear keeps every code that is another
-code's parent, so `unar` fails 270 of 2,247 wild entries with "Error on
+code's parent, so `unar` fails 270 of 2,246 wild entries with "Error on
 decrunching". A decoder transcribed from it would have passed every
 oracle comparison `unar` can make, and failed one entry in eight on real
-files. deark's `fmtutil-lzw.c` matches the stored CRC-32 on 2,247 of
-2,247, and that is why it is the source. **Choose a reference by
+files. deark's `fmtutil-lzw.c` matches the stored CRC-32 on 2,246 of
+2,246 (2,247 until 2026-10-09, one entry counted twice — *the three
+entries that were the harness's*), and that is why it is the source. **Choose a reference by
 grading it against the archives' own checksums before transcribing
 it.** Agreement with a second implementation tells you nothing when the
 second one has the same gap.
@@ -24927,3 +24929,44 @@ of them something re-takes. Here the checked input was the less
 important one: `OVL_SAVED` is a difference of two builds and cheap to
 check, while the base needs an emulator, so the cheap check was the one
 that got automated. That is the usual direction of this failure.
+
+## 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
+
+**Claim.** The Shrink row's "2,247 against 2,244, 3 UNEXPLAINED" was
+never about the decoder. The transcription and the engine agree on all
+2,246 distinct entries of the 2026-10-08 sweep, entry by entry, and on
+the 1,953 a fresh 346-archive draw gives both (FORMATS.md, *Shrink*,
+*What grades it*).
+
+**Two totals are only comparable if they count the same things.** The
+transcription walked central directories itself. It could not parse
+`Thief35.zip`, so it skipped those 12 entries. The C comparison let
+Python's `zipfile` list entries. That module reads Thief35, but it
+refuses two RISC OS zips over Acorn's `0x4341` extra field (15
+entries). So 2,247 − 15 + 12 = 2,244, and there was no three. Both
+harnesses also counted one archive twice, because the random draw
+re-picked a Mac-context zip. A difference between two decoders'
+totals is first a question about the two denominators. Comparing
+per-entry verdicts keyed by archive and name would have caught it on
+day one, and that is how it was run this time.
+
+**"Was not kept" was a claim about a directory nobody had looked in.**
+The working set was in `/tmp` the whole time, with the scripts and the
+per-entry tables. That is BLOCKERS.md's *cannot get one* smell applied
+to this machine's own disk. `scan_discmaster.py --probe keep` now
+writes the files and a manifest under the cache on purpose, so the next
+sweep does not depend on `/tmp` surviving.
+
+**A slow path found by reading is priced before it is fixed, and the
+price decided both halves differently.** The partial clear is O(table)
+per 18 bits of input, so a crafted 100 KB stream holds a Mac Plus for
+hours. That cost is the format's, and deark pays it too, so nothing
+cheap removes it. What a fix CAN buy is a working Cancel. Ticks had come
+only from the reader, ~17 minutes apart, and a tick per clear (+76 B in
+the codecs image) brings that to ~0.3 s. The peek's double decode is
+up to 8 KB of real work per ZipIt Shrink entry, and 0 such entries
+exist, so that half was left alone. Its no-progress pass was fixed
+instead (+20 B), because only that half changes what a user can do.
+Lowering the clear's walk bound was measured on paper at a factor of
+~3 for an attacker who adapts, which is not a bound, and was not built.
+

@@ -417,11 +417,11 @@ UNC_HOT int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want)
  *   - a code naming a FREE slot is not an error. It is the string about
  *     to be defined — the old code's string plus its own first byte —
  *     which lands in the first free slot, whatever number the code
- *     said. 1,799 of 2,247 wild entries take this path.
+ *     said. 1,798 of 2,246 wild entries take this path.
  *   - a walk that reaches a FREE slot emits the previous string's first
  *     byte for it and carries on up the OLD code's string. A partial
  *     clear can free the old code itself, and the next string is then
- *     defined on a parent that no longer exists. 1 of 2,247 entries
+ *     defined on a parent that no longer exists. 1 of 2,246 entries
  *     needs it, and comes out CRC-bad without it.
  *
  * XADMaster's XADZipShrinkHandle.m is NOT the source, and is the reason
@@ -579,8 +579,17 @@ int unc_shrink_decode(UncAlloc *al, UncBufIn *in, uint32_t usize,
         if (esc) {
             esc = 0;
             if (code == 1 && width < 13u) width++;
-            else if (code == 2) { shr_partial_clear(&t, top);
-                                  next = SHR_FIRST; }
+            else if (code == 2) {
+                shr_partial_clear(&t, top);
+                next = SHR_FIRST;
+                /* A tick per clear: two walks of the table for 18 bits
+                 * of input, so a stream of nothing else spends ~17
+                 * minutes of a Mac Plus between the reader's 8 KB
+                 * ticks, and Cancel with it (FORMATS.md, *Shrink*). */
+                if (in->ps &&
+                    (err = unc_progress_at(in->ps, in->ps->done)) != UNC_OK)
+                    break;
+            }
             else { err = UNC_ERR_CORRUPT; break; }
             continue;
         }

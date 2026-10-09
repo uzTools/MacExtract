@@ -935,11 +935,16 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
  * are what the entry IS, and an entry is offered to the sink with both
  * of them set. MacLHA pays the same price for the same reason and in
  * the same way — decode the entry, stop at 128 bytes, then decode it
- * again properly (fmt_lzh.c, *MacLHA's payload*). One header's worth
- * of output, once per 0x2605 entry.
+ * again properly (fmt_lzh.c, *MacLHA's payload*). Not one header's
+ * worth of decoding but one EMIT's: the decode stops at the first call
+ * that completes the 128 bytes, and Shrink and stored entries call it
+ * once per 8 KB of output. A stream that emits nothing decodes whole,
+ * so the peek ticks through `c->ps` like zip_imp_dry, and a Cancel
+ * there is returned (FORMATS.md, *Shrink*).
  *
  * Returns 1 and fills `mb` when the 128 bytes are a MacBinary header
- * whose fork spans fit inside the entry. An ENCRYPTED entry is left
+ * whose fork spans fit inside the entry, UNC_ERR_ABORTED when the user
+ * cancelled, and 0 otherwise. An ENCRYPTED entry is left
  * alone: the peek would have to derive the key and burn a password
  * attempt before the entry proper, and no ZipIt archive is in reach to
  * say whether one exists. It comes out as a single data fork, which is
@@ -964,10 +969,11 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
 
     exo_sink_init(&es, c);
     es.head = mb;
-    unc_bufin_init(&in, c->io, NULL, iobuf, iocap);
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     in.limit = csize;
     /* 128 is asked for and the error that the stream holds more is
      * discarded: what is being tested is whether 128 bytes came out.
+     * A Cancel is not discarded: it is the user's, not the stream's.
      *
      * The `mmlbug` argument is 0 — 5.3.4's minimum match length — and
      * the probe that would say otherwise has not run yet: it is inside
@@ -978,7 +984,9 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
      * header. ZipIt is a Macintosh program and PKZIP 1.01 a DOS one,
      * so nothing can carry both; UNEXERCISED, and said here rather
      * than measured. */
-    (void)zip_decode(c, &in, &es, method, flags, usize, &crc, 0, obuf, ocap);
+    if (zip_decode(c, &in, &es, method, flags, usize, &crc, 0, obuf,
+                   ocap) == UNC_ERR_ABORTED)
+        return UNC_ERR_ABORTED;
     if (es.headgot != 128) return 0;
     if (!unc_macbinary_probe(mb, 128, 0)) return 0;
     {
@@ -1818,9 +1826,11 @@ int unc_zip_extract(UncCtx *c)
          * and what the entry is called for is inside its header. */
         mbok = 0;
         mbds = mbde = mbrs = mbre = 0;
-        if (mbin && !e.is_dir && !(flags & 0x0001) &&
-            zip_mb_peek(c, startdisk, lhoffs, method, flags, csize, usize,
-                        mb, iobuf, iocap, obuf, ocap)) {
+        sret = mbin && !e.is_dir && !(flags & 0x0001)
+             ? zip_mb_peek(c, startdisk, lhoffs, method, flags, csize, usize,
+                           mb, iobuf, iocap, obuf, ocap) : 0;
+        if (sret < 0) { err = sret; break; }
+        if (sret) {
             uint32_t sec  = unc_get_u16be(mb + 120);
             uint32_t dlen = unc_get_u32be(mb + 83);
             uint32_t rlen = unc_get_u32be(mb + 87);

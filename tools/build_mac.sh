@@ -425,7 +425,13 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # shipped and so resident only here. LOWERED again to 169,784, -12: the
 # Private File footer read through unc_read_full rather than a bare call
 # (DECISIONS.md 2026-10-09, *the read nothing sent short*).
-UNC_MAC_CODE_DEFAULT=169784
+# RAISED the same day, 169,784 -> 169,880, +96: Shrink ticks after every
+# partial clear (+76 in `unc_shrink_decode`) and the zip peek returns a
+# Cancel (+20 in `unc_zip_extract`). Both in images when shipped — the
+# eager pair is unmoved, `ovl_codecs` 7,520 -> 7,628 and `ovl_exo` 32,036
+# -> 32,056 — and a crafted stream of clears had ~17 minutes of a Mac
+# Plus between ticks without them (FORMATS.md, *Shrink*).
+UNC_MAC_CODE_DEFAULT=169880
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

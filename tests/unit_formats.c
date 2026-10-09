@@ -1350,6 +1350,120 @@ static void test_zip_behind_a_stub(void)
     }
 }
 
+/* A Shrink entry that is nothing but partial clears ticks once per
+ * clear — the zip peek's decode too, which until 2026-10-09 had no
+ * progress state at all — and a Cancel inside the peek ends the archive
+ * before the entry is begun. Each clear walks the table twice for 18
+ * bits of input, so a crafted 100 KB stream is ~3 hours of a Mac Plus;
+ * before this its only ticks were the reader's, ~17 minutes apart
+ * (FORMATS.md, *Shrink*). 373 bytes here, which the reader alone never
+ * ticks for: the counts below are 0 without the per-clear tick. */
+#define SHR_TICK_OUT 131u
+static long shr_ticks, shr_cancel_at;
+static int shr_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    (void)ctx; (void)done; (void)total;
+    return ++shr_ticks != shr_cancel_at;
+}
+
+static uint32_t zip_shrink_clears(uint8_t *out, int zipit)
+{
+    static const char *name = "c";
+    uint8_t *d = out + 31;                  /* past the local header */
+    uint32_t acc = 0, bits = 0, n = 0, crc, cd, eocd, ex = zipit ? 18 : 0;
+    uint8_t plain[SHR_TICK_OUT];
+    int i;
+
+    for (i = 0; i < 331; i++) {
+        /* 'A', then 100 escapes of code 2 (partial clear), then 130
+         * more 'A's: 131 bytes, because the peek skips an entry
+         * shorter than a MacBinary header. Codes are 9 bits, LSB
+         * first. */
+        uint32_t code = i == 0 || i > 200 ? 65u : (i & 1) ? 256u : 2u;
+        acc |= code << bits;
+        bits += 9;
+        while (bits >= 8) { d[n++] = (uint8_t)acc; acc >>= 8; bits -= 8; }
+    }
+    if (bits) d[n++] = (uint8_t)acc;
+    memset(plain, 'A', sizeof plain);
+    crc = unc_crc32(0xFFFFFFFFu, plain, SHR_TICK_OUT) ^ 0xFFFFFFFFu;
+
+    memset(out, 0, 31);
+    memcpy(out, "PK\x03\x04", 4);
+    out[4] = 10;
+    out[8] = 1;                             /* method 1, Shrink */
+    put32le(out + 14, crc);
+    put32le(out + 18, n);
+    put32le(out + 22, SHR_TICK_OUT);
+    out[26] = 1;
+    out[30] = (uint8_t)name[0];
+
+    cd = 31 + n;
+    memset(out + cd, 0, 47 + ex + 22);
+    memcpy(out + cd, "PK\x01\x02", 4);
+    out[cd + 10] = 1;
+    put32le(out + cd + 16, crc);
+    put32le(out + cd + 20, n);
+    put32le(out + cd + 24, SHR_TICK_OUT);
+    out[cd + 28] = 1;
+    out[cd + 30] = (uint8_t)ex;
+    out[cd + 46] = (uint8_t)name[0];
+    if (zipit) {
+        /* APPNOTE.TXT 4.6.4: 'ZPIT', FnLen, FileName, fdType,
+         * fdCreator. The entry is not MacBinary, so the peek decodes
+         * it and says no — which is the decode being measured. */
+        uint8_t *x = out + cd + 47;
+        put16le(x, 0x2605);
+        put16le(x + 2, 14);
+        memcpy(x + 4, "ZPIT\x01" "cTEXTttxt", 14);
+    }
+    eocd = cd + 47 + ex;
+    memcpy(out + eocd, "PK\x05\x06", 4);
+    out[eocd + 8] = 1; out[eocd + 10] = 1;
+    put32le(out + eocd + 12, eocd - cd);
+    put32le(out + eocd + 16, cd);
+    return eocd + 22;
+}
+
+static void test_zip_shrink_ticks(void)
+{
+    uint8_t arc[512], plain[SHR_TICK_OUT];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncProgress pg;
+    uint32_t len;
+    int zipit;
+
+    test_make_alloc(&al);
+    memset(plain, 'A', sizeof plain);
+    memset(&pg, 0, sizeof pg);
+    pg.tick = shr_tick;
+    for (zipit = 0; zipit < 2; zipit++) {
+        len = zip_shrink_clears(arc, zipit);
+        test_make_memio(&io, &m, arc, len);
+        cap_make(&sk, &cap);
+        shr_ticks = 0;
+        shr_cancel_at = -1;
+        CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, &pg, NULL)
+              == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.dlen[0] == SHR_TICK_OUT &&
+              memcmp(cap.data[0], plain, SHR_TICK_OUT) == 0);
+        CHECK(shr_ticks >= (zipit ? 200 : 100));
+    }
+    /* Cancelled at the first tick, which is the peek's. */
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    shr_ticks = 0;
+    shr_cancel_at = 1;
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, &pg, NULL)
+          == UNC_ERR_ABORTED);
+    CHECK(cap.count == 0 && shr_ticks == 1);
+}
+
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
  * cover the decoders (tools/run_lzh.py, fixtures/manifests); what a
  * whole archive cannot isolate is covered here: every method byte the
@@ -4904,6 +5018,7 @@ void run_format_tests(void)
     test_zip();
     test_zip_comment();
     test_zip_behind_a_stub();
+    test_zip_shrink_ticks();
     test_lzh_probe();
     test_cptseg_probe();
     test_lzh_extract();

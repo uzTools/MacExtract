@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (205732, "System 3.0, Macintosh 512Ke (226,212 B free)"),
-    "sys6-512K": (110332, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
-    "floor-1M":  (634620, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (205636, "System 3.0, Macintosh 512Ke (226,212 B free)"),
+    "sys6-512K": (110236, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
+    "floor-1M":  (634524, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -154,7 +154,10 @@ TIERS = {
 # OVL_SAVED was the only term of base + OVL_SAVED that anything checked,
 # and a sum whose terms are kept current at different rates is wrong by
 # exactly the term nobody re-takes.
-TIERS_CONTROL = 207760     # build/mac-resident, CODE + A5, 2026-10-09
+# **Lowered by 96 B the same day, DERIVED and not re-measured**: the
+# control's CODE grew 169,784 -> 169,880 for Shrink's tick per partial
+# clear and the zip peek's Cancel (FORMATS.md, *Shrink*), A5 unmoved.
+TIERS_CONTROL = 207856     # build/mac-resident, CODE + A5, 2026-10-09
 
 # DERIVED, not re-measured, 2026-10-01: all three fell by 2,024 B — the
 # resident CODE the zip Macintosh extra fields added to the CONTROL build
@@ -344,7 +347,12 @@ EXPECT = {"floor-1M": 72, "sys3-512K": 68, "sys6-512K": 63}
 # stopped keeping its record twice (DECISIONS.md 2026-10-09, *the
 # specimen was one search away*); the shipped
 # build does not move, both changes being in images.
-OVL_SAVED = 134032
+# **+96 the same day, 134,032 -> 134,128**: the control's CODE +96 for
+# Shrink's tick per partial clear (+76, `ovl_codecs` +108 with the
+# forward it now calls) and the zip peek's Cancel (+20, `ovl_exo`); the
+# shipped build does not move. TIERS fell by the same 96, so a grant moves
+# by minus what of those two images it keeps.
+OVL_SAVED = 134128
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -422,14 +430,16 @@ OVL_RESIDUE = -666
 # for its reader, which lodges in the StuffIt image, and +108 B for the
 # MD5-then-RC4 key setup in the cipher one. Then -12 and -4 the same
 # day: the reader's record kept once, and RC4's indices in registers.
+# **CODECS +108 and EXO +20 the same day** for a tick per Shrink partial
+# clear and a Cancel the zip peek returns (FORMATS.md, *Shrink*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
-    "OVL_ID_CODECS":      7520,
+    "OVL_ID_CODECS":      7628,
     "OVL_ID_CPTDD":       15764,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         32036,
+    "OVL_ID_EXO":         32056,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
@@ -439,7 +449,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 161712
+BUNDLE = 161840
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
