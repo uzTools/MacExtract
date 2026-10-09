@@ -70,10 +70,12 @@ static int pf_fork(UncCtx *c, UncCrypt *cr, UncFork fork, uint32_t size,
     return UNC_OK;
 }
 
+/* The record is decrypted in place, and read again from the file for
+ * each password tried: a second copy kept encrypted would be 308 B of
+ * heap for every extraction, to save one read per WRONG password. */
 typedef struct PfWork {
     UncCrypt cr;
-    uint8_t  rec[PF_REC];       /* the file record, still encrypted   */
-    uint8_t  plain[PF_REC];     /* and under the password being tried */
+    uint8_t  rec[PF_REC];       /* the file record, under the password tried */
     uint8_t  buf[UNC_IOBUF];
 } PfWork;
 
@@ -111,25 +113,25 @@ int unc_pf_extract(UncCtx *c)
     if (unc_get_u16be(hdr + 6) != 1 || unc_get_u16be(hdr + 8) != 1 ||
         keylen == 0 || keylen > 16)
         est = UNC_ERR_ENCRYPTED;
-    else if (unc_read_at(c->io, PF_HDR, w->rec, (int32_t)PF_REC) != UNC_OK)
-        est = UNC_ERR_TRUNCATED;
     else for (;;) {
-        uint32_t i;
         est = unc_password(c, attempt > 0);
         if (est != UNC_OK) break;
-        for (i = 0; i < PF_REC; i++) w->plain[i] = w->rec[i];
+        if (unc_read_at(c->io, PF_HDR, w->rec, (int32_t)PF_REC) != UNC_OK) {
+            est = UNC_ERR_TRUNCATED;
+            break;
+        }
         unc_crypt_pf(&w->cr, c->pw, c->pwlen, keylen);
         /* The Macintosh build keys through an overlay, and one that could
          * not be loaded leaves no cipher: say so, rather than read the
          * record as plaintext and call every password wrong. */
         if (w->cr.kind == UNC_CRYPT_NONE) { est = UNC_ERR_MEM; break; }
-        unc_crypt_apply(&w->cr, w->plain, PF_REC, 0);
-        if (unc_get_u32be(w->plain) == PF_MAGIC) break;
+        unc_crypt_apply(&w->cr, w->rec, PF_REC, 0);
+        if (unc_get_u32be(w->rec) == PF_MAGIC) break;
         attempt++;
     }
 
     if (est == UNC_OK) {
-        const uint8_t *r = w->plain;
+        const uint8_t *r = w->rec;
         dlen = unc_get_u32be(r + 292);
         rlen = unc_get_u32be(r + 296);
         if (r[4]) unc_entry_set_name(&e, r + 5, r[4]);

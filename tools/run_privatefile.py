@@ -134,6 +134,15 @@ def refusals(mx, problems):
         # proves nothing (CLAUDE.md, Traps).
         case("good", good, ("t", "-p", "letmein"), 0)
         case("wrongpw", good, ("t", "-p", "letmeout"), 1, "wrong password")
+        # A refused password and then the right one, through --ask: the
+        # record is decrypted in place and re-read for each password
+        # tried, so this is the path that breaks if the re-read goes.
+        p = os.path.join(tmp, "retry.pf")
+        open(p, "wb").write(good)
+        r = subprocess.run([mx, "t", "--ask", p], input=b"letmeout\nletmein\n",
+                           capture_output=True)
+        if r.returncode != 0 or b"wrong, try again" not in r.stdout + r.stderr:
+            problems.append("retry: rc %d, %r" % (r.returncode, r.stderr))
         case("nopw", good, ("t",), 1, "wrong password")
         flipped = bytearray(good)
         flipped[400] ^= 1                  # inside the data fork

@@ -1045,17 +1045,27 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
         }
         break;
 
-    case UNC_CRYPT_RC4:
+    case UNC_CRYPT_RC4: {
+        /* The two indices are copied out for the loop and written back
+         * once. Through the struct they were loaded and stored on every
+         * byte, because `buf` is a uint8_t * and may alias them, so the
+         * compiler could not keep them in registers: 21 68000
+         * instructions a byte, measured with tools/m68kprof.py, and this
+         * loop is two thirds of decrypting a Private File (DECISIONS.md
+         * 2026-10-09). */
+        uint8_t *s = cr->s;
+        uint8_t si = cr->si, sj = cr->sj;
         for (i = 0; i < len; i++) {
-            uint8_t t;
-            cr->si = (uint8_t)(cr->si + 1);
-            cr->sj = (uint8_t)(cr->sj + cr->s[cr->si]);
-            t = cr->s[cr->si];
-            cr->s[cr->si] = cr->s[cr->sj];
-            cr->s[cr->sj] = t;
-            buf[i] ^= cr->s[(uint8_t)(cr->s[cr->si] + cr->s[cr->sj])];
+            uint8_t t = s[++si];
+            sj = (uint8_t)(sj + t);
+            s[si] = s[sj];
+            s[sj] = t;
+            buf[i] ^= s[(uint8_t)(t + s[si])];
         }
+        cr->si = si;
+        cr->sj = sj;
         break;
+    }
 
     case UNC_CRYPT_CPT:
         for (i = 0; i < len; i++) {

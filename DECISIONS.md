@@ -24672,6 +24672,32 @@ compares fields with small constants should compare bytes**: the
 accessor is right for a field the code reads as a number, and wasteful
 for one it only compares.
 
+**Then the reader itself, priced before it was changed.** Two candidate
+savings were measured and only one was worth taking. `tools/m68kprof.py`
+over a 256 KB file put **RC4 at 65 % and CRC-32 at 32 %** of 8.5 M
+68000 instructions; the file reads were ~2 % and MD5 0.05 %. So
+computing MD5 twice per extraction, which looked wasteful, is not worth a
+resident host-vector slot to avoid, and the guess that I/O would
+dominate was wrong. Two changes went in:
+
+- **RC4's indices live in locals for the loop.** Through the struct they
+  were loaded and stored on every byte: `buf` is a `uint8_t *` and may
+  alias them, so GCC could not keep them in registers. 21 → 19
+  instructions a byte, and the four that went were `d16(An)` memory
+  accesses — **roughly 15 % off RC4 by the 68000 timing table, an
+  ESTIMATE**: the tick probe's autotest build cannot supply a password.
+  StuffIt 5's encrypted forks share the loop and gain the same.
+- **The record is decrypted in place** and read again for each password
+  tried, instead of kept encrypted beside its decrypted copy: peak heap
+  5,696 → **5,392 B**, for one 308 B read per WRONG password. The lane
+  gained the retry case that path needs, and it fails when the re-read
+  is removed.
+
+Both are in `'OVLY'` images in the shipped build, which therefore did
+not move; both images got smaller (`ovl_stuffit` −12, `ovl_crypt` −4).
+**What was left alone**: the loop's two `andi.l #255` zero-extensions,
+16 cycles each, which only hand-written assembly would remove.
+
 **The Macintosh application's first run "failed", and the harness was
 wrong.** Both forks came out at the right length and the resource fork
 differed in bytes 48..125 — the file's own name, which the Macintosh

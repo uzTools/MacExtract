@@ -308,7 +308,11 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # File is an envelope and keeps the whole bundle, so its grant is the
 # bundle's; for every other format the grant moves by +1,280 less
 # whatever of `ovl_stuffit` (+1,676) and `ovl_crypt` (+108) it keeps.
-OVL_SAVED = 134064
+# **-32 the same day, 134,064 -> 134,032**: the control's CODE -20 and
+# A5 -12 when RC4's indices left the struct for the loop and the reader
+# stopped keeping its record twice (DECISIONS.md 2026-10-09); the shipped
+# build does not move, both changes being in images.
+OVL_SAVED = 134032
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -382,25 +386,26 @@ OVL_RESIDUE = -666
 # an accumulator and two ordered pop loops instead of one test.
 # **STUFFIT and CRYPT re-taken 2026-10-09 for Private File**: +1,676 B
 # for its reader, which lodges in the StuffIt image, and +108 B for the
-# MD5-then-RC4 key setup in the cipher one.
+# MD5-then-RC4 key setup in the cipher one. Then -12 and -4 the same
+# day: the reader's record kept once, and RC4's indices in registers.
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      7520,
     "OVL_ID_CPTDD":       15764,
-    "OVL_ID_CRYPT":       10248,
+    "OVL_ID_CRYPT":       10244,
     "OVL_ID_EXO":         32036,
     "OVL_ID_LZH":         9568,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     27950,
+    "OVL_ID_STUFFIT":     27938,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 161752
+BUNDLE = 161736
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

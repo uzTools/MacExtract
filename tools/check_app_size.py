@@ -183,8 +183,10 @@ TAKEN = "2026-10-09"
 # RE-TAKEN 2026-10-09, 159,968 -> 161,752, for Private File: `ovl_stuffit`
 # 26,274 -> 27,950 (the reader, and its probe again for the reader's own
 # check) and `ovl_crypt` 10,140 -> 10,248 (`unc_crypt_pf`, MD5 then RC4).
-# What it costs the engine's budget is in EXPECT above.
-EXPECT_BUNDLE = 161752
+# What it costs the engine's budget is in EXPECT above. -> 161,736 the
+# same day: `ovl_stuffit` -12 (the reader keeps its record once) and
+# `ovl_crypt` -4 (RC4's indices in registers).
+EXPECT_BUNDLE = 161736
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 
