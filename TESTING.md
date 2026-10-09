@@ -4731,6 +4731,7 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-06 | `detection=abcd0054*&sizeMin=40000`, deduplicated | 2,046 | all 2,046 are DiskDoubler compressed files, carrying **612 method-8 forks** up to 6,212,378 B of coder output; two became fixtures and pinned the 0xfff0 block size (FORMATS.md, *Method 8's Huffman block*) |
 | 2026-10-07 | `format=sit` AND `format=sea`, deduplicated, **sharded by size under the result window** — `--shard-under`, so the whole index rather than its first 10,000 | **196,139** | the listing's own `meta.fileMeta` is read for free: **21** of those archives hold a member of type `8BIM`, **521** an `FSSD` and **423** a `PNTG` — the three types the four reversible Optimizers accept — and **10,452** carry no member metadata at all |
 | 2026-10-07 | those **954** archives, walked entry by entry over window `Range`s (`--bytes 32768 --walk 400`) | 954 | **927** classic StuffIt archives, **16,413 file headers**, 4,283 folder markers, 1 walk that left the chain — and **two Optimizer bits of a kind this project had never seen**: `Sound 1` and `MacPaint 1`, each in one archive, both now fixtures (FORMATS.md, *Two more, and these the engine UNDOES*). **0** encrypted forks |
+| 2026-10-09 | the **10,452** of those 196,139 the index recorded NO member metadata for — `--no-meta`, the key that does not depend on the index having read the member's type — walked to the end of every chain (`--bytes 32768 --walk 100000`) | 10,452 | **6,432** classic StuffIt archives, **166,970 file headers**, 101,443 folder markers; 4,020 are not classic StuffIt (1,793 of them named `.sitx`); **112 walks stop short of the archive's declared end**, and what is past that point is not seen. **0 `Photoshop 1` or `JPEG Lossy` bits, and 0 `NewDE`, `DES`, `DESex` or `PassLock` forks.** 2 Optimizer bits, both `Text 1` (255), on the two `.help` files of `PresPro199#3` (Eagle's Nest disc 2), a module already closed. 6,911 encrypted forks in 143 archives: 6,794 id 4, 113 id unset — and **2 read as `NewDEx` and 2 as id 5**, all in two copies of one InstallerMaker 1.0.3 updater whose every fork is method 13 under the built-in scheme with an `MKey` (FORMATS.md, *Where an archive names the module*). Controls: the probe names ids 2 and 3 and all five ciphers over StuffIt Deluxe 2.0.1's own specimens, and the 911 no-metadata archives earlier sweeps had walked come out with the same flags, all 9 flagged ones included |
 | 2026-10-06 | `format=sit`, deduplicated, ordered by hash — a uniform sample | 10,000 | 8,798 classic StuffIt archives, **8,746 entry headers**, **0 Optimizer bits** |
 | 2026-10-06 | the same, `tsMax=19921231` — 2.x's own era — at `--bytes 8192` | 8,000 | 7,929 archives, **12,987 entry headers**, and the **5 Optimizer bits** this project had seen in the wild up to that day, in 3 archives and every one `Text 1`'s, two of them now fixtures (FORMATS.md, *Two optimized archives nobody here made*). **47 of the 16,727 walks stop early** under the in-step test added 2026-10-07, which is where the 21,767 headers this pair was first reported as became **21,733** — the dropped ones were read out of the middle of a fork, and two of them had been counted as Optimizer bits |
 
@@ -4812,9 +4813,10 @@ two of them carried a module nobody here had seen in the wild.
 **Its positive control is the only one there is**: all three wild
 `Text 1` archives contain a `TEXT` member, and the member is the
 optimized entry itself. **What it cannot see** is an archive whose
-members the index did not record — **10,452 of 196,139, 5.3 %** — and
-an Optimizer run over a file whose type the module accepts but the
-index read differently.
+members the index did not record — **10,452 of 196,139, 5.3 %**, swept
+separately by `--no-meta` on 2026-10-09 (the table above) — and an
+Optimizer run over a file whose type the module accepts but the index
+read differently.
 
 **`format=sea` is a second population the first sweep never touched**:
 17,798 files dexvert calls *Self Extracting Stuffit Archive*, against

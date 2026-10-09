@@ -44,8 +44,11 @@ written from this project's own reading of the format it names:
        the Encryptor id at 107/109, read only where that fork's own
        method byte carries the flag and its length is nonzero.
        `--walk` follows the entry chain; once the window-Range control
-       passes it costs 112 bytes per entry rather than the whole
-       prefix, so a whole archive can be walked.
+       passes it reads a 4 KB window at a time and takes every header
+       inside it, rather than the whole prefix, so a whole archive can
+       be walked: 34 requests for a 652-entry archive the per-header
+       walk took 652 for, with the same 652 headers (2026-10-09).
+       `--no-meta` keeps the archives `--meta-type` cannot reach.
   dd   a DiskDoubler compressed file, reported with both forks' method
        bytes and lengths (docs/formats/diskdoubler-container.md, *A
        compressed file*).  `--method` keeps only the forks that use one.
@@ -902,6 +905,9 @@ def url_of(item, fileid):
     return "https://%s/file/%d/%s" % (HOST, item, urllib.parse.quote(fileid))
 
 
+WALK_WINDOW = 4096
+
+
 def walk_sit(head, item, fileid, probe, first, maxent):
     """Follow a StuffIt entry chain past the bytes already fetched, one
     request per entry."""
@@ -910,15 +916,23 @@ def walk_sit(head, item, fileid, probe, first, maxent):
     end = base + first["total"] if first["total"] >= 22 else None
     at = first["next"]
     window = head.control(item, fileid)
+    chunk, cstart = b"", 0
     while len(ents) < maxent and (end is None or at + 112 <= end):
         if window:
-            # 112 bytes, not `at` + 112: a prefix fetch per entry makes
-            # a full walk quadratic in the archive's size, which is why
-            # the first sweep could only afford the first few entries.
-            blob = head.get(item, fileid, 112, start=at)
-            if len(blob) < 112:
-                break
-            e = entry(blob, 0)
+            # A window from `at`, not `at` + 112 from 0: a prefix fetch
+            # per entry makes a full walk quadratic in the archive's
+            # size, which is why the first sweep could only afford the
+            # first few entries. And a WINDOW rather than 112 bytes,
+            # because folder markers and small entries sit back to back:
+            # one request per header could not finish an archive of a
+            # few thousand entries inside a run (2026-10-09, the
+            # no-metadata sweep's 95 walks past 400 entries).
+            if not (cstart <= at and at + 112 <= cstart + len(chunk)):
+                chunk, cstart = head.get(item, fileid, WALK_WINDOW,
+                                         start=at), at
+                if len(chunk) < 112:
+                    break
+            e = entry(chunk, at - cstart)
             e["at"] = at
         else:
             blob = head.get(item, fileid, at + 112)
@@ -964,6 +978,11 @@ def main():
                          "it CONTAINS a member of this Mac file type "
                          "(e.g. PNTG). Repeatable; the key is "
                          "`member_types()` above")
+    ap.add_argument("--no-meta", action="store_true",
+                    help="probe only an archive the index recorded NO "
+                         "member metadata for — the population "
+                         "--meta-type cannot reach (10,452 of the 196,139 "
+                         "of 2026-10-07)")
     ap.add_argument("--vermade", action="append", type=int, default=[],
                     help="implode: probe only an archive whose central "
                          "directory says this ZIP specification version "
@@ -1078,6 +1097,8 @@ def main():
               % (len(state["files"]), tally,
                  sum(1 for v in state["types"].values() if not v)),
               flush=True)
+    if a.no_meta:
+        todo = [k for k in todo if not state["types"].get(k)]
     if a.max_size:
         todo = [k for k in todo if state["files"][k] < a.max_size]
     if a.mac_context:

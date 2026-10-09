@@ -1675,6 +1675,20 @@ five `104..109` "exceptions" counted before this reading are two
 **version-1** archives with stale bytes and ordinary methods; there is
 nothing left to explain.
 
+**InstallerMaker 1.0.3 writes nonzero bytes here that are not module ids —
+a HYPOTHESIS, 2026-10-09.** Two copies of Aladdin's *Shortcut 1.5.3 Update*
+(Info-Mac 1994-01; Eagle's Nest disc 1), an `APPL`/`STi0` whose data fork is
+a version-2 archive with an `MKey` beside it: all 13 forks are `0x8d`, method
+13 under the built-in scheme, and 11 carry 0 at 106..109 — but `Shortcut™`
+carries 5 / 3 at 106 / 109 and `Viewer Engine™` 6 / 5. Method 13 is
+*"unknown method"* to 2.0.1 (STR# 261, above), so no 2.x module wrote those
+forks; that the bytes are installer-private rather than ids stays a
+hypothesis until the archive decrypts. **The engine believes them**
+(`macextract x`, measured): with the `MKey`, `Viewer Engine™` is refused as
+*"encrypted by a scheme we cannot read"* while its ten encrypted siblings
+ask for a password; forkless, `Shortcut™` is reported as encrypted by
+`NewDEx`. OPEN_ITEMS.md, *StuffIt 2.0*, has what would settle it.
+
 ### What Aladdin's own output says — measured 2026-09-28
 
 **The reading is confirmed, and one line of it was wrong.** StuffIt Deluxe
