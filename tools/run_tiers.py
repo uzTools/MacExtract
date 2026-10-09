@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (205604, "System 3.0, Macintosh 512Ke (226,212 B free)"),
-    "sys6-512K": (110204, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
-    "floor-1M":  (634492, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (205476, "System 3.0, Macintosh 512Ke (226,212 B free)"),
+    "sys6-512K": (110076, "System 6.0.8, Macintosh 512Ke (130,812 B free)"),
+    "floor-1M":  (634364, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -159,8 +159,11 @@ TIERS = {
 # Shrink's tick per partial clear and the zip peek's Cancel (FORMATS.md,
 # *Shrink*), A5 unmoved. **And by 32 more, same terms**: CODE +28 and A5
 # +4 when zip's dry passes stopped counting progress (DECISIONS.md
-# 2026-10-09, *the bar that counted the peek*).
-TIERS_CONTROL = 207888     # build/mac-resident, CODE + A5, 2026-10-09
+# 2026-10-09, *the bar that counted the peek*). **And by 128 more**: CODE
+# +136 and A5 -8 when DiskDoubler stopped re-reading its own buffer and
+# MacLHA's peek and uuencode's scan stopped counting twice (DECISIONS.md
+# 2026-10-09, *DiskDoubler read every block six times*).
+TIERS_CONTROL = 208016     # build/mac-resident, CODE + A5, 2026-10-09
 
 # What the MACHINE measured: each budget plus the control it was read
 # against, which a change to the application cannot move — so moving
@@ -370,7 +373,11 @@ EXPECT = {"floor-1M": 72, "sys3-512K": 68, "sys6-512K": 63}
 # **+32 the same day, 134,128 -> 134,160**: the control's CODE +28 and A5
 # +4 when zip's dry passes stopped counting progress; `ovl_exo` +28, the
 # shipped build unmoved.
-OVL_SAVED = 134160
+# **+128 the same day, 134,160 -> 134,288**: the control's CODE +136 and
+# A5 -8 for DiskDoubler's buffer reuse and the MacLHA and uuencode
+# progress counts; `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
+# shipped build unmoved. No tally moved on either lane.
+OVL_SAVED = 134288
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -400,8 +407,9 @@ OVL_HANDLE = 8
 # 512 KB, gzip's layer (re-measured 2026-10-09 by bisecting every layer of
 # all 72 fixtures at the re-taken budgets). It was 16,490 B on 2026-09-27,
 # held by `a2ps.V4.3.tar.Z`, which the machine has refused since — so the
-# nearest fixtures are now on the OTHER side: `synth-dd-m5.dd` is 1,130 B
-# short at System 3.0 / 512 KB and a2ps 4,070 B short at System 6.0.8.
+# nearest fixtures are now on the OTHER side: `synth-dd-m5.dd` is 1,274 B
+# short at System 3.0 / 512 KB (1,130 until `ovl_cptdd` grew 144 B the same
+# day, DERIVED: its demand did not move) and a2ps 4,070 B short at System 6.0.8.
 # (DECISIONS.md 2026-09-26, *a budget per format, and one per layer*.)
 OVL_RESIDUE = -666
 
@@ -450,24 +458,28 @@ OVL_RESIDUE = -666
 # day: the reader's record kept once, and RC4's indices in registers.
 # **CODECS +108 and EXO +20 the same day** for a tick per Shrink partial
 # clear and a Cancel the zip peek returns (FORMATS.md, *Shrink*).
+# **CPTDD +144, LZH +18 and TEXT +8 the same day**: DiskDoubler moves its
+# cursor inside the buffer it already has instead of re-reading it, and
+# MacLHA's peek and uuencode's scan stop counting input twice
+# (DECISIONS.md 2026-10-09, *DiskDoubler read every block six times*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      7628,
-    "OVL_ID_CPTDD":       15764,
+    "OVL_ID_CPTDD":       15908,
     "OVL_ID_CRYPT":       10244,
     "OVL_ID_EXO":         32084,
-    "OVL_ID_LZH":         9568,
+    "OVL_ID_LZH":         9586,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
     "OVL_ID_STUFFIT":     27914,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
-    "OVL_ID_TEXT":        11502,
+    "OVL_ID_TEXT":        11510,
 }
-BUNDLE = 161868
+BUNDLE = 162040
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

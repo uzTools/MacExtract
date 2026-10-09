@@ -927,6 +927,7 @@ int unc_lzh_extract(UncCtx *c)
     uint8_t *iobuf;
     uint32_t iocap = UNC_IOBUF;
     uint32_t pos = 0;
+    uint32_t done0;
     int err = UNC_OK, any = 0;
 
     iobuf = (uint8_t *)unc_alloc(c->al, iocap);
@@ -1005,7 +1006,9 @@ int unc_lzh_extract(UncCtx *c)
              * the sink is switched off for the duration. */
             lzh_out_start(&o, c, obuf, 0);
             e.origsize = 128;
+            done0 = c->ps.done;
             (void)lzh_decode(c, &e, &o, iobuf, iocap);
+            c->ps.done = done0;  /* counted once, by the decode proper */
             e.origsize = want;
             if (unc_fork_pos(&o) == 128) {
                 uint32_t k;

@@ -48,84 +48,16 @@ from concurrent import futures                           # noqa: E402
 MIN_SIZE = 64 * 1024
 MAX_GAP = 32 * 1024
 
-# Progress that runs past the archive's size, measured 2026-10-09 when this
-# lane first looked: (name, size) -> how far past, in bytes. A RATCHET, not
-# a tolerance: a layer not listed fails at any overrun, a listed one fails
-# if it grows, and one that shrinks or clears is reported so the entry can
-# come down. None is a wrong byte. DiskDoubler's DDn reseeks between its
-# separately stored streams and counts every 4 KB refill (measured); MacLHA's
-# payload peek and uuencode's scan are each a pass whose input the decode
-# reads again (hypotheses from the shape) — OPEN_ITEMS.md, *Progress that
-# passes 100 %*. Zip's two dry passes had the same fault and were fixed
-# the day the lane found them.
-KNOWN_OVERRUN = {
-    ('DD Expand.sea', 123399): 188718,
-    ('DandStoQIF2.sea', 30562): 10398,
-    ('LHA Expander 1.0.3.sea', 79182): 241080,
-    ('Terrainman 2.0 ƒ.sea', 167771): 602277,
-    ('ddtf-dd377ad-testfile.PICT', 6964): 1228,
-    ('ddtf-dd377ad-testfile.TIF', 6264): 1928,
-    ('ddtf-dd377ad.dd', 16848): 24112,
-    ('ddtf-dd377ads-testfile.PICT', 6376): 1816,
-    ('ddtf-dd377ads-testfile.TIF', 5700): 2492,
-    ('ddtf-dd377ads.dd', 15616): 25344,
-    ('ddtf-dd377dda.dd', 7153): 17423,
-    ('ddtf-dd377ddb.dd', 6842): 20044,
-    ('ddtf-ddpro411ad1-prompt.sea', 15918): 25042,
-    ('ddtf-ddpro411ad1-testfile.PICT', 6964): 1228,
-    ('ddtf-ddpro411ad1-testfile.TIF', 6264): 1928,
-    ('ddtf-ddpro411ad1.dd', 15918): 25042,
-    ('ddtf-ddpro411ad1.sea', 15918): 25042,
-    ('ddtf-ddpro411ad2-prompt.sea', 14686): 26274,
-    ('ddtf-ddpro411ad2-testfile.PICT', 6376): 1816,
-    ('ddtf-ddpro411ad2-testfile.TIF', 5700): 2492,
-    ('ddtf-ddpro411ad2.dd', 14686): 26274,
-    ('ddtf-ddpro411ad2.sea', 14686): 26274,
-    ('ddtf-ddpro411dd1-prompt.sea', 5193): 91207,
-    ('ddtf-ddpro411dd1-testfile.PICT', 2093): 6866,
-    ('ddtf-ddpro411dd1-testfile.TIF', 1410): 7147,
-    ('ddtf-ddpro411dd1.dd', 5193): 91207,
-    ('ddtf-ddpro411dd1.sea', 5193): 91207,
-    ('ddtf-ddpro411dd2-prompt.sea', 4854): 83254,
-    ('ddtf-ddpro411dd2-testfile.PICT', 1777): 6819,
-    ('ddtf-ddpro411dd2-testfile.TIF', 1389): 7015,
-    ('ddtf-ddpro411dd2.dd', 4854): 83254,
-    ('ddtf-ddpro411dd2.sea', 4854): 83254,
-    ('ddtf-ddpro411dd3-prompt.sea', 4779): 81778,
-    ('ddtf-ddpro411dd3-testfile.PICT', 1743): 6634,
-    ('ddtf-ddpro411dd3-testfile.TIF', 1349): 7458,
-    ('ddtf-ddpro411dd3.dd', 4779): 81778,
-    ('ddtf-ddpro411dd3.sea', 4779): 81778,
-    ('derived-DD_Expand.sea', 123399): 188718,
-    ('derived-DandStoQIF2.sea', 30562): 10398,
-    ('derived-LHA_Expander_1.0.3.sea', 79182): 241080,
-    ('derived-Terrainman_2.0__.sea', 167771): 602277,
-    ('lhasa-maclha-l1_lh5.lzh', 7094): 1098,
-    ('lhasa-maclha-l2_lh1.lzh', 7290): 902,
-    ('sources.dd377.ad.dd', 12194): 20781,
-    ('sources.dd377.ad.dd', 16848): 24112,
-    ('sources.dd377.ads.dd', 15616): 25344,
-    ('sources.dd377.dda.dd', 7153): 17423,
-    ('sources.dd377.ddb.dd', 6842): 20044,
-    ('sources.ddpro11.ad1.dd', 12194): 22165,
-    ('sources.ddpro11.ad1.dd', 15918): 25042,
-    ('sources.ddpro11.ad1.prompt.sea', 15918): 25042,
-    ('sources.ddpro11.ad1.sea', 15918): 25042,
-    ('sources.ddpro11.ad2.dd', 14686): 26274,
-    ('sources.ddpro11.ad2.prompt.sea', 14686): 26274,
-    ('sources.ddpro11.ad2.sea', 14686): 26274,
-    ('sources.ddpro11.dd1.dd', 5193): 91207,
-    ('sources.ddpro11.dd1.prompt.sea', 5193): 91207,
-    ('sources.ddpro11.dd1.sea', 5193): 91207,
-    ('sources.ddpro11.dd2.dd', 4854): 83254,
-    ('sources.ddpro11.dd2.prompt.sea', 4854): 83254,
-    ('sources.ddpro11.dd2.sea', 4854): 83254,
-    ('sources.ddpro11.dd3.dd', 4779): 81778,
-    ('sources.ddpro11.dd3.prompt.sea', 4779): 81778,
-    ('sources.ddpro11.dd3.sea', 4779): 81778,
-    ('uu-wild-dictcol.uu', 8116): 4096,
-    ('uu-wild-terrainman.uu', 254084): 253952,
-}
+# Progress that runs past the archive's size: (name, size) -> how far past,
+# in bytes. A RATCHET, not a tolerance: a layer not listed fails at any
+# overrun, a listed one fails if it grows, and one that shrinks or clears
+# is reported so the entry can come down. EMPTY since 2026-10-09: the 66
+# layers it held when this lane first looked — DiskDoubler re-reading its
+# own buffer, MacLHA's peek and uuencode's scan counting input the decode
+# read again — were each fixed in the format (DECISIONS.md 2026-10-09,
+# *the bar that counted the peek*, and *DiskDoubler read every block six
+# times*).
+KNOWN_OVERRUN = {}
 
 
 def measure(probe, paths):

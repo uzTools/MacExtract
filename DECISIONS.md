@@ -378,6 +378,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
 - 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
 - 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
+- 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
 
 ---
 
@@ -24995,11 +24996,99 @@ layers**: the two zips this fixes, and 73 rows (66 distinct layers) of
 DiskDoubler, MacLHA's peek and uuencode that predate it by months. A
 DiskDoubler DDn archive of 5,193 B reports 96 KB done, because its
 decoder reseeks between separately stored streams and every reseek
-refills — and counts — a 4 KB buffer. Those are a ratchet now
-(`KNOWN_OVERRUN`) and an open item with a route (OPEN_ITEMS.md,
-*Progress that passes 100 %*), not part of this fix: counting consumption
+refills — and counts — a 4 KB buffer. Those were a ratchet
+(`KNOWN_OVERRUN`) and an open item with a route, closed the same day
+(*DiskDoubler read every block six times*, below), not part of this fix: counting consumption
 rather than refills is an engine-wide change with a 68000 price, and the
 repo's own rule is that the second problem gets measured rather than
 handed the first one's answer. **An aggregate that is never compared
 with its bound is not checked by the lane that collects it.**
+
+## 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
+
+**Claim, measured.** All 66 layers `tools/run_ticks.py` held in
+`KNOWN_OVERRUN` now finish at or under the archive's size, and the table
+is empty. Three causes, each traced to its line under gdb on a `-O0`
+probe before anything was changed:
+
+- **MacLHA** (`fmt_lzh.c`): the 128-byte peek that decides whether the
+  payload is MacBinary decodes the entry through `c->ps`, and the decode
+  proper counts it again: 11,157 B counted on 7,094 B. A dry pass, so
+  it got `zip_mb_peek`'s fix: `done` saved and put back.
+- **uuencode** (`fmt_uu.c`): `uu_scan_doc` reads a whole document to
+  learn its fork sizes before `begin_entry`, then the writing pass seeks
+  back and reads it again, so `uu-wild-terrainman.uu` counted itself
+  twice. Also a dry pass, and the search for the next `begin` line
+  re-reads the tail the previous pass had buffered. Progress is now
+  pinned to the position each pass starts from: `base + pos` before the
+  search, `base + d.start` before the writing pass.
+- **DiskDoubler** (`fmt_dd.c`) was **two causes**, and the open item had
+  named one. `ddtf-dd377ad.dd` has no DDn fork at all and still counted
+  43.6 KB on 16,848 B: no fork's `UncBufIn` had a `limit`, so each 4 KB
+  refill read into the next fork, and that fork's own reader counted the
+  same bytes again. DDn added the reseeks: six per block, each a
+  `seek` + `unc_bufin_init` that threw away a buffer which nearly always
+  held the target already, because a block's three streams lie back to
+  back. Each fork's reader is now limited to its compressed length, and
+  `ddn_seek` moves the cursor when the target is inside the buffer or
+  just past its end. It goes to the file only when the target is not.
+
+**The two engine-wide options were priced as asked, and neither was
+needed.** All four builds come from one tree. The shipped (eager) 68000
+build, callgrind over the 972 fixtures in one probe process (base
+10,233,708,156 Ir), and the tick lane:
+
+| | resident CODE / A5 | 'OVLY' images | callgrind Ir | tick lane |
+|---|---|---|---|---|
+| A: count consumed (the old buffer, at refill) | +12 / +20 | +0 | −27,363 | **FAILS**: 64 of 66 clear, uuencode untouched (a whole-file re-read is consumption), and 77 fewer archives tick (1,134 → 1,057), two of them 259 KB (`MacburgerHelper.sit`) and so over the lane's 64 KB floor, which is what fails: no tick, so Cancel is out of reach |
+| B: high-water mark (one `tell` per `unc_bufin_init`, not per refill) | +128 / +0 | +0 | +528,682 (`ftell`) | passes, all 66 clear |
+| C: in the formats (chosen) | **+0 / +0** | `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8 | +50,754 | passes, all 66 clear |
+
+A also loses partly-consumed buffers whenever a reader is abandoned, and
+fixing that would need a release call in every reader. B costs resident
+code, which comes off every extraction. It leaves DiskDoubler's reads
+untouched. It also hides the fault the lane exists for: under a high-water
+mark a second pass sits at 100 % for its whole length without ever
+exceeding the total. C's +146 B in `ovl_cptdd` is `ddn_seek` +72 and
+`dd_fork` +74, per function at the overlay's flags. That image is
+released once the sniff has named the format.
+
+**x86 callgrind is the wrong instrument for C, and the Macintosh says
+so.** C's +50,754 Ir is `dd_fork` +741k against libc's read path −600k
+or more. On x86 the bigger `ddn_seek` is outlined and the hot loop's
+codegen moves: the variant with buffer reuse removed pays the same
++100k on the DDn fixture. Marking `ddn_seek` `inline` takes that fixture
+below base on x86, and leaves the 68000 overlay **byte-identical**, so
+it is kept. On the Mac (`run.py --emu mv-4M-1x -D UNC_AT_TIMING`,
+`ddtf-ddpro411dd1.dd`, System 6, each run twice and identical to the
+tick):
+
+| | total | FSRead | FSWrite | rest of the File Manager | remainder (engine) |
+|---|---|---|---|---|---|
+| base | 707 | 15 | 7 | 36 | 649 |
+| C | 698 | 2 | 1 | 39 | 656 |
+
+The remainder's +7 is inside what the per-call rounding of 113 reads
+can move between columns. The total is the robust figure: **−9 ticks,
+−1.3 %**.
+
+**The read count was the same fault, so no wider window was needed.**
+The open item asked separately whether a wider window per DDn stream
+would cut the 180 KB of reads. It would have widened a buffer that was
+being thrown away. Measured with `strace` through the CLI
+(`t -nr ddtf-ddpro411dd1.dd`): **113 reads, 179,695 B and 65 seeks
+before; 3 reads, 6,025 B and 29 seeks after**, on a 5,193 B file. On a
+Macintosh each read is a `SetFPos` + `FSRead`.
+
+**One consequence, accepted:** 36 small DiskDoubler layers that ticked
+before no longer tick at all (1,134 ticking → 1,098). Every one is under 8 KB (largest 7,153 B),
+below the pump's step. They ticked only because their input was
+counted more than once.
+
+**The transferable part:** an open item's diagnosis is a hypothesis
+about the population as well as the cause. "DDn reseeks" was true of
+the one archive it was measured on, and the same overrun on AD-only
+archives, already in the table, disproved it as the whole story.
+Pricing two engine-wide answers before tracing every row would have
+priced the wrong question.
 

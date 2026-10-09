@@ -3362,14 +3362,21 @@ and reports one that shrinks so the entry can come down. The first run
 named 75 layers: zip's two dry passes, fixed that day — `NPWritersKit.zip`
 and the Implode generator's fixture, which is what the lane fails on when
 the fix is reverted (measured) — and 73 rows of DiskDoubler, MacLHA and
-uuencode, held at their measured figures (OPEN_ITEMS.md, *Progress that
-passes 100 %*; DECISIONS.md 2026-10-09, *the bar that counted the peek*).
-The bar on a Macintosh caps at 100 %, so nothing else here saw it.
+uuencode, held at their measured figures and fixed the same day, so
+`KNOWN_OVERRUN` is empty and any overrun fails (DECISIONS.md 2026-10-09,
+*the bar that counted the peek* and *DiskDoubler read every block six
+times*). Reverting the uuencode fix alone fails both `uu-wild-*` rows
+(measured). The bar on a Macintosh caps at 100 %, so nothing else here
+saw it.
 
 **What it cannot see:** how long a gap takes. It counts input bytes, so a
 decoder that spends a minute inside one 8 KB step passes — Arsenic's
 sampled inverse BWT is exactly that shape, and it reports its own
-interpolated position for the purpose (`unc_progress_at`).
+interpolated position for the purpose (`unc_progress_at`). **Nor a bar
+that goes backwards, or one that sits below 100 % with no work left:**
+only the excess over the total is graded. uuencode's scan ticks up to the
+end of a document and its writing pass then starts again from the
+`begin` line, by design.
 
 ## Decryption (`tools/run_crypt.py`, in `ci.sh`)
 

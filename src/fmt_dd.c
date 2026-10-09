@@ -636,6 +636,7 @@ typedef struct DdnState {
     uint8_t  *lit;          /* offsets, then literals, per block */
     uint32_t  litcap;
     uint32_t  base;         /* absolute offset of the entry's data */
+    uint32_t  end;          /* and of the byte after its last */
     uint32_t  origin;       /* absolute offset the buffer was re-based at:
                              * unc_bufin_tell() counts from the last init,
                              * and this decoder addresses the file. */
@@ -691,11 +692,23 @@ static int ddn_read_code(const DdnState *st, UncCanon *out, UncBufIn *in,
     return unc_canon_build(out, lenbuf, numcodes);
 }
 
-static int ddn_seek(DdnState *st, UncCtx *c, UncBufIn *in, uint8_t *iobuf,
-                    uint32_t iocap, uint32_t abs)
+static inline int ddn_seek(DdnState *st, UncCtx *c, UncBufIn *in,
+                           uint8_t *iobuf, uint32_t iocap, uint32_t abs)
 {
+    /* The three streams of a block lie back to back, so nearly every
+     * target is already in the buffer, or just past it: move the cursor
+     * rather than read the bytes again. Reading them again was 113 reads
+     * and 179,695 B on a 5,193 B archive, and progress counted every one
+     * (DECISIONS.md 2026-10-09, *DiskDoubler read every block six times*). */
+    uint32_t lo = st->origin + in->lenfed - in->len;
+    if (abs >= lo && abs <= st->origin + in->lenfed) {
+        in->pos = abs - lo;
+        return UNC_OK;
+    }
+    if (abs - st->base > st->end - st->base) return UNC_ERR_CORRUPT;
     if (c->io->seek(c->io->ctx, abs) < 0) return UNC_ERR_IO;
     unc_bufin_init(in, c->io, &c->ps, iobuf, iocap);
+    in->limit = st->end - abs;
     st->origin = abs;
     return UNC_OK;
 }
@@ -939,6 +952,7 @@ static int dd_fork_cpt(UncCtx *c, UncFork fork, uint32_t complen,
     {
         UncBufIn in;
         unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+        in.limit = complen;
         for (i = 0; i < 16; i++) {
             int b = unc_bufin_next(&in);
             if (b < 0) { unc_free(c->al, mem); return in.err; }
@@ -1015,6 +1029,7 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
     mem = (uint8_t *)unc_alloc(c->al, iocap + ocap + dd_extra(m, uncomplen));
     if (!mem) return UNC_ERR_MEM;
     unc_bufin_init(&in, c->io, &c->ps, mem, iocap);
+    in.limit = complen;   /* the next fork's bytes are its own reader's */
     dd_out_start(&o, c, fork, uncomplen, mem + iocap, ocap,
                  delta == 1 ? 1u : 0u);
     work = mem + iocap + ocap;
@@ -1061,7 +1076,8 @@ static int dd_fork(UncCtx *c, UncFork fork, uint32_t at, uint32_t complen,
         st.wmask = wsize - 1;
         st.lit = NULL;
         st.litcap = 0;
-        st.base = at;
+        st.base = st.origin = at;
+        st.end = at + complen;
         err = dd_ddn(&o, c, &st, &in, mem, iocap);
         unc_free(c->al, st.lit);
         break;

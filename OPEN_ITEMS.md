@@ -238,23 +238,6 @@ being "needs a machine nobody has" and become two runs somebody can do.
 Short of them, read every tier sweep with the `-D UNC_AT_BUDGET` probe
 fields (`wa`, `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
-## Progress that passes 100 %
-
-**Measured 2026-10-09**, the day `tools/run_ticks.py` first compared
-`bytes_done` with the total: **66 layers in 73 rows of the corpus run report
-progress past the archive's own size**, so a Macintosh's bar reads 100 %
-with work left — DiskDoubler's `ddtf-ddpro411dd1.dd` reaches 17.6 times its
-5,193 B. No byte is wrong and Cancel still answers. `run_ticks.py` holds
-each at its measured overrun (`KNOWN_OVERRUN`), fails on any other, and
-says when one shrinks. Zip's two dry passes had the same fault and were
-fixed that day (DECISIONS.md 2026-10-09, *the bar that counted the peek*).
-
-| what | what would close it |
-|---|---|
-| **DiskDoubler**, every `ddtf-*.dd`, `sources.*` and `.sea` row (`DD Expand`, `LHA Expander`, `Terrainman`, `DandStoQIF2` — all four sniff as DiskDoubler), measured on the DDn method: its code, literal and length streams are stored apart and the decoder reseeks between them, each reseek refilling a whole 4 KB buffer that is counted whether it is used or not (180,792 B read off a 5,193 B archive, 67 seeks, measured with `strace`) | count what the decoder CONSUMES rather than what a refill reads, or a high-water mark of the file position — an engine-wide choice, because every `UncBufIn` counts at refill. Price it in 68000 `CODE` before choosing; the reseeking itself is the format's and is a separate, slower question (Mac reads) |
-| **MacLHA's payload peek** (`lhasa-maclha-l1_lh5.lzh`, `lhasa-maclha-l2_lh1.lzh`): the zip shape exactly, an entry decoded for 128 bytes and then again — a HYPOTHESIS from the shape, not traced | save and restore `c->ps.done` around the peek, as `zip_mb_peek` does since 2026-10-09 |
-| **uuencode**, `uu-wild-terrainman.uu` at 99.9 % over and `uu-wild-dictcol.uu`: the scan for the `begin` line and the decode both count — a HYPOTHESIS, not traced | the same restore around the scan |
-
 ## StuffIt 2.0: the modules that are still only this project's own output
 
 **Everything StuffIt Deluxe 2.0.1 writes with what was in its box is

@@ -500,6 +500,7 @@ int unc_uu_extract(UncCtx *c)
     UuDoc d;
     int err = UNC_OK, any = 0;
     uint32_t pos = 0;
+    uint32_t base = c->ps.done;
 
     l.over = c->opt.long_name;
     l.over_cap = c->opt.long_name_cap;
@@ -514,7 +515,11 @@ int unc_uu_extract(UncCtx *c)
         int sret, est = UNC_OK;
         int found = 0;
 
-        /* Find the next begin line. */
+        /* Find the next begin line. Every pass here re-reads input an
+         * earlier one buffered, so progress is pinned to the position
+         * each starts from: the scan below ticks, so Cancel answers,
+         * and only the writing pass counts. */
+        c->ps.done = base + pos;
         if (c->io->seek(c->io->ctx, pos) < 0) { err = UNC_ERR_IO; break; }
         unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
         l.eof = 0;
@@ -561,6 +566,7 @@ int unc_uu_extract(UncCtx *c)
                 /* Second pass over the same document, this time writing. */
                 uint32_t n;
                 int table = UU_TBL_ANY;
+                c->ps.done = base + d.start;
                 if (c->io->seek(c->io->ctx, d.start) < 0) {
                     est = UNC_ERR_IO;
                 } else {
