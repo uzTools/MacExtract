@@ -546,7 +546,7 @@ class ImplodeProbe:
             return None
         if not whole:
             return "more"
-        d, at, out = head, at0, []
+        d, at, out, walked = head, at0, [], {}
         try:
             while at + 30 <= len(d) and d[at:at + 4] == b"PK\x03\x04":
                 (flags, method, _t, _dt, crc, csize, usize, nlen,
@@ -555,6 +555,13 @@ class ImplodeProbe:
                 ds = at + 30 + nlen + elen
                 if csize == 0 or ds + csize > len(d):
                     break
+                # Every local header walked, by method and flags: an
+                # archive with no bug-capable entry is still a decided
+                # archive, and a sweep has to be able to say how many it
+                # decided about (TESTING.md, *Searching somebody else's
+                # index by content*: a "0 found" that had decoded nothing).
+                k = "%d/%04x" % (method, flags & 0x6 if method == 6 else 0)
+                walked[k] = walked.get(k, 0) + 1
                 if method == 6 and (flags & 0x6) in (2, 4) and usize:
                     # The one combination pair where the two readings
                     # disagree. Both are tried; the stored CRC-32 says
@@ -574,12 +581,13 @@ class ImplodeProbe:
                                 "spec": verdict["spec"], "bug": verdict["bug"]})
                 at = ds + csize
         except Exception:
-            if not out:
+            if not out and not walked:
                 return None
         if not out:
-            return None
+            return {"entries": [], "buggy": [], "undecodable": [],
+                    "walked": walked} if walked else None
         buggy = [e for e in out if e["bug"] and not e["spec"]]
-        return {"entries": out, "buggy": buggy,
+        return {"entries": out, "buggy": buggy, "walked": walked,
                 "undecodable": [e for e in out
                                 if not e["bug"] and not e["spec"]]}
 
@@ -905,6 +913,11 @@ def main():
                          "Repeatable. Two Range reads instead of the whole "
                          "file, so it is the cheap narrowing "
                          "(`central_vermade()` above)")
+    ap.add_argument("--host", action="append", type=int, default=[],
+                    help="implode, with --vermade: also require this host "
+                         "byte (0 = MS-DOS). A version without a platform "
+                         "is half a fingerprint: 1,467 of the spec-1.0 "
+                         "directories of 2026-10-08 were Unix")
     ap.add_argument("--shard-under", type=int, default=0,
                     help="split each --query into size shards of at most "
                          "this many hits, so a corpus past the result "
@@ -1001,7 +1014,8 @@ def main():
             else:
                 vm = central_vermade(head, item, fileid, size)
                 state["vermade"][key] = vm
-            if vm is None or (vm & 0xFF) not in a.vermade:
+            if (vm is None or (vm & 0xFF) not in a.vermade
+                    or (a.host and vm >> 8 not in a.host)):
                 state["probed"][key] = False
                 done += 1
                 continue
@@ -1096,7 +1110,10 @@ def main():
         # entry has to say how many it decided about, or "none found"
         # cannot be told from "none looked at" (CLAUDE.md, *Traps*).
         ent = buggy = spec = undec = 0
+        walked = {}
         for v in hits.values():
+            for k, n in (v.get("walked") or {}).items():
+                walked[k] = walked.get(k, 0) + n
             ent += len(v["entries"])
             buggy += len(v["buggy"])
             undec += len(v["undecodable"])
@@ -1111,10 +1128,17 @@ def main():
                   % (len(state["vermade"]),
                      ", ".join("%s: %d" % kv for kv in sorted(hist.items()))),
                   flush=True)
+        if walked:
+            print("local headers walked, by method/flags, in %d archive(s): "
+                  "%s" % (sum(1 for v in hits.values() if v.get("walked")),
+                          ", ".join("%s: %d" % kv
+                                    for kv in sorted(walked.items()))),
+                  flush=True)
         print("implode: %d archive(s) with a bug-capable Implode entry, "
               "%d such entries: %d follow APPNOTE.TXT 5.3.4, %d need the "
               "PKZIP 1.01/1.02 rule, %d decode under neither (damaged, or "
-              "a reading this does not have)" % (len(hits), ent, spec,
+              "a reading this does not have)" % (
+                  sum(1 for v in hits.values() if v["entries"]), ent, spec,
                                                  buggy, undec))
 
     left = len(state["files"]) - len(state["probed"])

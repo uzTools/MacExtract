@@ -372,6 +372,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
 - 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
 - 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
+- 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
 
 ---
 
@@ -24735,4 +24736,43 @@ beside the C one is the engine's first, and x86 CI cannot grade it. The
 candidates are collected in OPEN_ITEMS.md (*Hand-written 68000
 assembly*) to be built, tested under `qemu-m68k` and timed on the tick
 probe in one pass.
+
+
+## 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
+
+**Claim, measured.** No real archive written with the 1.01/1.02 rule at
+0x0002 (8 K, two trees) was found. The search went through the
+population that wrote the bug. **151,924 Implode entries in 19,278 zips
+whose directory says MS-DOS + spec 1.0** were each fetched whole and
+walked, and every one is at 0x0000 or 0x0006. So the 0x0002 half stays
+graded by `tools/synth_implode.py` and deark (FORMATS.md, *Which half is
+graded by a real file*). The sweeps are in TESTING.md, *Searching
+somebody else's index by content*.
+
+**The 2026-10-08 keys had excluded that population, by construction.**
+The flag tokens name archives whose first entry is ALREADY at a
+disagreeing combination. *The key that survives* measured that no
+shipped PKZIP writes one, so those tokens can only select other
+writers: 10 of their 3,821 directories said MS-DOS/1.0. A key that does
+not mention the flags, *version needed* 1.0 plus a first member dated
+1988–1989, gets **19,299 of 48,948** (39 %). Inside that output the
+histogram is the DOSBox result again, at scale. **A key that names the
+answer can only find writers who give it.** To learn whether a writer
+ever produces a shape, select on the writer and count the shapes.
+
+**PKZIP 1.01 for OS/2 narrows the hypothesis.** `PKZ101_2.ZIP` and
+`PKZ101-S.EXE` are the same release, both dated 1989-07-21, and they
+carry the same `ORDER.DOC` (4,607 B) and `OMBUDSMN.ASP` (595 B) as
+`PKZ101.EXE`. There both are at **0x0000**; in the DOS package both are
+at 0x0004. So the program that wrote the three bug entries wrote ONLY
+the DOS distribution, and PKWARE's other package that day came from a
+writer that tied dictionary size to tree count. *Hypothesis, still
+unreduced:* a pre-release build. A CompuServe message of 1989-05-29
+(`pkz100.txt`) quotes Phil Katz testing a *"PKZIP 1.0 Alpha"*, which
+fits but does not establish it. Inside `PKZ101.EXE` the bug writer
+used 4 K for every entry up to 4,607 B. Its only 8 K entries are the
+three texts of 8,959 B and over, all with three trees, and its five
+program files, up to 31,342 B, are all 4 K with two. If that is its
+rule, 0x0002 is a shape it may never have written either. That rests
+on one archive.
 
