@@ -3776,7 +3776,7 @@ byte-exact.
 **The resource fork is compared with bytes 16..127 masked**, as every
 on-Mac harness does: the first run compared it raw and failed on the
 file's own name, which the Macintosh stamps into that system-reserved
-range (DECISIONS.md 2026-10-09).
+range (DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
 ### Replaying the segment work — `segcheck.py`
 

@@ -104,8 +104,10 @@ margin of **16,490 B**, and `run_tiers.py --check` moves no tally in
 either lane (71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71
 shipped, the same fixtures by name). **Peak heap does not move either**:
 an Implode entry allocates 5,096 B at a 4 K dictionary and 9,192 at 8 K,
-against inflate's 11,256, so deflate still sets zip's ceiling whatever an
-archive mixes (FORMATS.md, *Implode*). What the argument does
+against inflate's 11,256, so deflate set zip's ceiling whatever an
+archive mixed — until Shrink, whose heaviest fixture entry peaks at
+39,094 B (FORMATS.md, *Implode* and *Shrink*; this read *"still sets"*
+until 2026-10-09). What the argument does
 NOT cover is an Implode archive on the machine: none is in
 `sample.txt`, the two PKZIP 1.x fixtures having never been sampled
 there, so no Macintosh has run the decoder.
@@ -113,13 +115,16 @@ there, so no Macintosh has run the decoder.
 **And nor on 2026-10-08, for PKZIP 1.01/1.02's minimum match length**
 (FORMATS.md, *The minimum match length PKZIP 1.01 and 1.02 used*): the
 shipped build's resident `CODE` and A5 do not move by a byte in EITHER
-configuration, eager or lazy, because every one of the 668 B this costs
-is in the `ovl_exo` image (31,176 → 31,832 B). So the tier argument is
+configuration, eager or lazy, because every one of the 608 B this costs
+is in the `ovl_exo` image (31,176 → 31,784 B). So the tier argument is
 again about that image alone and again arithmetic: the three `ovl_exo`
-rows of *What each format is granted* RISE 16 B where every other row
-rises 672, the image having grown 16 B less than `OVL_SAVED` did —
-the opposite sign to 2026-10-07's 68 B fall, which is what says the
-exception belongs to the change and not to the row. `run_tiers.py
+rows of *What each format is granted* DO NOT MOVE where every other row
+rises 608, the image having grown exactly what `OVL_SAVED` did — where
+2026-10-07's fell 68, which is what says the exception belongs to the
+change and not to the row (FORMATS.md, *What each format is granted*).
+**CORRECTED 2026-10-09**: this paragraph read 668 B, 31,832 and a 16 B
+rise against 672 until then, a pre-trim measurement FORMATS.md had
+already replaced. `run_tiers.py
 --check` moves no tally in either lane (71/71, 67/71, 64/71 resident and
 71/71, 69/71, 66/71 shipped, the same fixtures by name). **Peak heap and
 the stack do not move either, and both are measured rather than
@@ -133,6 +138,31 @@ the record changes from deflate to the probe itself, because
 *Stack*). What the argument does NOT cover is the same thing it
 did not cover on 2026-10-07: no Implode archive is in `sample.txt`, so
 no Macintosh has run the decoder, with or without this rule.
+
+**Nor on 2026-10-08 for zip method 1 (Shrink)**: +0 and +0 of resident
+`CODE` and A5 in both shipped configurations, every byte in `ovl_codecs`
+(6,404 → 7,520 B) and `ovl_exo` (+100 B). `ovl_codecs` is kept by EVERY
+format, so the rows of *What each format is granted* rose only 36 B and
+the three holding `ovl_exo` fell 64, as did the envelope row — against
+the narrowest margin of **16,490 B**. `run_tiers.py --check` moves no
+tally in either lane. **Peak heap DID move**: `shrink-wild-dream.zip`
+peaks at 39,094 B against deflate's 24,863, inside zip's 12–54 KB row
+(FORMATS.md, *Shrink*). Not covered: no Shrink archive is in
+`sample.txt`, so no Macintosh has run the decoder.
+
+**And it moved on 2026-10-09, for Private File: 400 B of resident `CODE`
+and A5 off every tier's budget** (+368 and +32 — the probe, two shims
+and a table row; FORMATS.md, *Private File*), the first resident cost
+since the AppleLink probe. **No tier was re-run for the tally**, and the
+argument is the established one: **no fixture in the corpus changes the
+format it sniffs as**, so no sampled archive reaches a different
+decoder, and 400 B is forty times under the narrowest margin of
+**16,490 B**; `run_tiers.py --check` moves no tally in either lane.
+**What a Macintosh has run is the format itself**: the shipped
+application extracted the `Forked` specimen on System 6.0.8, a wrong
+password first, both forks byte-exact (`tools/vmac/interactive.py
+--privatefile`). Not covered: a Private File at the 1 MB floor, and on
+the 512 KB machines.
 Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
 (*Real-hardware verification* and the tier sections after it); how to re-run
@@ -226,7 +256,8 @@ this repository until 2026-10-07, came into scope that day and **reads
 since 2026-10-09**, so all thirteen do: three files Private File 2.0
 itself wrote decrypt byte-exact, RC4 under MD5(password) as the
 hypothesis had it (FORMATS.md, *Private File*; DECISIONS.md 2026-10-07,
-*the engine list as a checklist*, and 2026-10-09).
+*the engine list as a checklist*, and 2026-10-09, *the specimen was one
+search away*).
 
 **Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
 never detected, for want of a reference. One was obtained

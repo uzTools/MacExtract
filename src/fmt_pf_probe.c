@@ -23,7 +23,8 @@ UncFormat unc_pf_probe(const uint8_t *head, int32_t len, UncIO *io)
      * still a Private File, and is named here so the entry can say so.
      * Written as byte compares rather than through unc_get_u16be: the
      * 68000 rebuilds every big-endian field with shifts before comparing
-     * it, which made this probe 222 B (DECISIONS.md 2026-10-09). */
+     * it, which made this probe 222 B (DECISIONS.md 2026-10-09, *the
+     * specimen was one search away*). */
     if (head[0] != 'C' || head[1] != 'S' || head[2] != 'I' || head[3] != 'T')
         return UNC_FORMAT_UNKNOWN;
     if ((head[4] | head[6] | head[8]) != 0 || head[5] != 2 ||

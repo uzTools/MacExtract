@@ -769,7 +769,8 @@ UNC_MAC_A5_DEFAULT=37976
 # moved for that reason. **The probe was 222 B on the first commit**:
 # written through unc_get_u16be, the 68000 rebuilt every field with
 # shifts before comparing it with a small constant, and byte compares
-# took it to 186 (DECISIONS.md 2026-10-09). What was bought: the last
+# took it to 186 (DECISIONS.md 2026-10-09, *the specimen was one
+# search away*). What was bought: the last
 # format on Aladdin's own engine list, graded byte-exact on three files
 # Private File 2.0 wrote (FORMATS.md, *Private File*).
 # `run_tiers.py --check` is what says whether it cost a fixture.

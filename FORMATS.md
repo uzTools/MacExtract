@@ -3278,7 +3278,7 @@ under Mini vMac from subjects whose bytes and passwords are fixed
 forks**, through every layer, on every `ci.sh` run where they are present
 (`tools/run_privatefile.py`; TESTING.md, *Private File*). Measured, all of
 it; the reading was taken off the code first and graded on the files
-after (DECISIONS.md 2026-10-09).
+after (DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
 | subject | forks | password | `.pf` | inside |
 |---|---|---|---|---|
@@ -3346,7 +3346,7 @@ it moved into `ovl_stuffit` for that reason. **The probe was 222 B on the
 first commit and is 186**: written through `unc_get_u16be`, the 68000
 rebuilt every field with shifts before comparing it with a small
 constant; byte compares took 36 B off it, and the shipped build's total
-from 464 B to 400 (tools/build_mac.sh, DECISIONS.md 2026-10-09).
+from 464 B to 400 (tools/build_mac.sh, DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
 ## Archives named but not extracted
 
@@ -4754,7 +4754,7 @@ extension `.zip`), and the one that is really a zip is Implode.
 | what | against |
 |---|---|
 | the 42 entries of the three fixtures | **`unar` for 29 and deark for 13**, fork for fork on every `ci.sh` run. The 13 are every entry with a PARTIAL clear: XADMaster's `XADZipShrinkHandle.m` performs it as a full clear, and `unar` fails each with *"Error on decrunching"*. `"Shrink"` joined `make_manifests.py`'s `DEARK_METHODS`; `ORACLE_OUT_OF_SCOPE` stays empty |
-| 2,247 wild entries in 346 archives — the 146 above and 200 drawn at random from the 42,604 distinct method-1 zips under 400 KB | **the CRC-32 the archive stored**, through a Python transcription of the same deark paths: 2,247 of 2,247. The C decoder: **2,232 of 2,244**, and the 12 are every entry of `Thief35.zip`, whose directory points past the end of the file — the engine and `unar` both refuse the archive before any entry |
+| 2,247 wild entries in 346 archives — the 146 above (141 whose first entry is Shrink and 5 whose first entry is a Reduce) and 200 drawn at random from the 42,604 distinct method-1 zips under 400 KB | **the CRC-32 the archive stored**, through a Python transcription of the same deark paths: 2,247 of 2,247. The C decoder: **2,232 of 2,244**, and the 12 are every entry of `Thief35.zip`, whose directory points past the end of the file — the engine and `unar` both refuse the archive before any entry. **The 3 entries between 2,247 and 2,244 are UNEXPLAINED**: the sweep's working set was not kept, so which three the C run did not reach cannot be re-derived here |
 | two bends of the decoder | the free-slot walk made an error fails `shrink-wild-dream.zip` and nothing else; the partial clear made a full one fails `dream` and `titanic` — so each rule has a fixture that needs it |
 
 | fixture | what it pins |
@@ -4774,7 +4774,7 @@ follows; 0 in 2,247. And no fuzzer has a Shrink seed.
 | | |
 |---|---|
 | resident `CODE` and A5, SHIPPED | **+0 and +0** |
-| the images | `ovl_codecs` 6,404 → **7,520 B**; `ovl_exo` 31,936 → **32,036 B** for the method guard and the adapter |
+| the images | `ovl_codecs` 6,404 → **7,520 B**; `ovl_exo` 31,936 → **32,036 B** for the method guard and the adapter. (31,936 is the minimum-match-length rule's 31,784 plus 152 B for the mixed-archive recovery of the same day — DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*) |
 | resident CONTROL | `CODE` 167,036 → **168,200 B**, A5 −12 |
 | the download | 228,096 → **229,248 B** |
 | peak heap per Shrink ENTRY | **3 B per table slot**, sized from the compressed length — 257 + bits/9, at most 8,192 slots, **24,576 B**. `shrink-wild-BBA.zip` peaks at 18,474 B, `dream` at **39,094 B**, `titanic` at 38,777: above deflate's 24,863, inside zip's 12–54 KB row. A separate kind byte made it 4 B a slot and 47,286 B |

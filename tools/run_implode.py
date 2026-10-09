@@ -491,7 +491,7 @@ def count_passes(exe, path, out):
     if len(set(heads)) > 1:
         return None, ("windows follow allocations of %s B, not one "
                       "state size" % sorted(set(heads)))
-    return len(heads), None
+    return len(heads), r.returncode
 
 
 def grade_passes(exe):
@@ -535,6 +535,9 @@ def grade_passes(exe):
             fp = os.path.join(ROOT, "fixtures", fx)
             if os.path.exists(fp):
                 subjects.append((fx, fp, 0))
+            else:
+                print("implode: no fixtures/%s — its pass count is not "
+                      "asserted this run" % fx)
         fp = os.path.join(ROOT, "fixtures", "pkz101.exe")
         if os.path.exists(fp):
             subjects.append(("pkz101.exe", fp, 2))
@@ -545,6 +548,9 @@ def grade_passes(exe):
         subprocess.run([sys.executable, SYNTH, "--mixed", "-o", mz,
                         "--plain", os.path.join(tmp, "mixed.plain")],
                        check=True, capture_output=True)
+        # The exit each subject should end with, so a count taken off a
+        # run that crashed part-way is not read as a count: the mixed
+        # archive loses exactly one entry (lane 4), everything else none.
         subjects.append(("the mixed archive", mz, 4))
         for i, (label, path, extra) in enumerate(subjects):
             entries = implode_entries(path)
@@ -552,6 +558,12 @@ def grade_passes(exe):
                                     os.path.join(tmp, "out%d" % i))
             if got is None:
                 print("implode: %s: cannot count passes (%s)" % (label, why))
+                bad += 1
+                continue
+            want_rc = 1 if path == mz else 0
+            if why != want_rc:
+                print("implode: %s: exit %d where %d is right, so the "
+                      "count is not of a whole run" % (label, why, want_rc))
                 bad += 1
                 continue
             if got != entries + extra:

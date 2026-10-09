@@ -520,9 +520,10 @@ whatever it finds inside.
   and nothing else, and the 7 entries it covered — in the two PKZIP 1.x
   zips — are compared fork for fork now that method 6 is implemented,
   with no change to the harness, exactly as this paragraph said they
-  would be. The mechanism stays, and the line that re-fills the set is
-  in `run_diff.py` for the day a fixture arrives with Shrink or a Reduce
-  in it. Until 2026-08-08 the whole FIXTURE was skipped instead, on the
+  would be. The mechanism stays. **Shrink did not need it**: its
+  fixtures arrived on 2026-10-08 and the entries `unar` fails went to
+  deark through `DEARK_METHODS` instead, so the set stayed empty; a
+  Reduce, which is out by the brief, is the case it is kept for. Until 2026-08-08 the whole FIXTURE was skipped instead, on the
   strength of our own error message; see "When our engine declines an
   entry".
 - Do not read "unadjudicated: 9 forks" as 9 defects. It is **9
@@ -2545,8 +2546,13 @@ Python's `zipfile`, counting method-6 entries with a non-empty size.
 Extra passes asserted exactly: **0** on the two unambiguous generated
 shapes and on `4acalc.zip` and `4alnch11.zip`, **1** on the four
 conforming shapes, **2** on `pkz101.exe`, **4** on the mixed archive.
-The fixtures are skipped when absent, `pkz101.exe` with a message. No
-engine change and nothing compiled for the test. It fails on the two
+The fixtures are skipped when absent, each with a message (the two
+plain zips silently until 2026-10-09). **Each subject's exit status is
+asserted too** — 1 on the mixed archive, which loses one entry by
+design, 0 elsewhere — since 2026-10-09, so a count off a run that died
+part-way is not read as a count: a wrapper exiting 139 after
+`pkz101.exe` failed exactly that subject. No engine change and nothing
+compiled for the test. It fails on the two
 bends above that no byte comparison sees, and on nothing else of the
 six.
 
@@ -4715,10 +4721,10 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-08 | `detection=4d5a98001f000b002000c10affff0a0e*` — **the PKSFX 1.01/1.02 stub's own DOS EXE header**, the first 16 bytes of every self-extractor those two versions built. A key for the WRITER and not for the archive, which is the question this one turned out to be | **1,323** probed of 5,576 named, deduplicated | **12 bug-capable entries, every one of them written by the bug and none by 5.3.4** — in 4 archives, all four copies of `PKZIP 1.01`'s own `PKZ101.EXE`. The specimen; `tools/specimens/implode.tsv` (FORMATS.md, *The specimen that carries the bug*) |
 | 2026-10-08 | the two 2026-10-07 flag tokens again, deduplicated to 3,821, with **every central directory read** for its *version made by* (`--vermade 10`, two `Range`s per file) and only the ZIP-spec-1.0 writers fetched whole | 3,821 directories read, **1,537** archives fetched and decoded | **29,799 bug-capable entries: 29,795 by 5.3.4, 0 by the bug, 4 by neither.** And the histogram that explains it: only **10 of 3,821** say MS-DOS + spec 1.0, the fingerprint PKZIP 1.01 and 1.02 write; 1,467 are Unix/1.0, 919 MS-DOS/1.1 and 1,111 spec 2.0 (FORMATS.md, *Implode*, for the whole table) |
 | 2026-10-08 | the same two tokens with `tsMin=1989&tsMax=1990` — PKZIP 1.1's own era and everything before it, which is the weakest of the three keys and was run to say so | 975 | **3,543 bug-capable entries, 3,543 by 5.3.4, 0 by the bug.** A date is not a writer |
+| 2026-10-08 | `detection=504b0304????????MM00*` for MM = 01…05 — a zip whose FIRST local header is Shrink or one of the Reduces; the same key at 06 reproduces the 1,125,083 above, and 75 of 75 sampled hits carry the method byte they were listed for. Not through `scan_discmaster.py`: listed with `size_shards`, then each row's `idMeta` and path classified | **109,207** (96,193 Shrink; 117 / 143 / 43 / 12,711 Reduce 1–4) | **146 distinct in a Macintosh context, 1 written on one** — `BBA.zip`, Shrink, now a fixture; Reduce 0. The 146 and 200 random Shrink zips decoded: 2,247 entries, all CRC-correct under deark's reading, 270 of them failed by `unar` (FORMATS.md, *Shrink*) |
 | 2026-10-09 | `detection=504b03040a00????MM00??????YY*` for MM = 06, 00, 01 and YY = 12, 13 — a zip whose FIRST local header says *version needed* 1.0, is Implode, stored or Shrink at ANY flags, and carries a DOS date in 1989; then `--vermade 10 --host 0`, so only MS-DOS + spec 1.0 directories are fetched whole. The flag tokens above select archives AT the disagreeing combinations, which no shipped PKZIP writes, so they had excluded PKZIP 1.0x's own output (10 of 3,821); this key is that output — **8,462 of 22,063 directories say MS-DOS/1.0** | **22,063**, deduplicated, every directory read | **8,452 archives decoded, 99,951 local headers walked, 68,855 Implode entries — every one at 0x0000 or 0x0006, 0 bug-capable.** 10 MS-DOS/1.0 archives walked nothing (truncated, or a first header the walk refused) |
 | 2026-10-09 | the same key with YY = 10, 11 — a first member dated 1988, the year before PKZIP 1.0's alpha (below) | **26,885**, every directory read | **10,826 archives decoded, 124,380 local headers, 83,069 Implode entries, 0 bug-capable**; 11 walked nothing. The two date keys together: **151,924 Implode entries in 19,278 MS-DOS/1.0 archives, none at 0x0002 or 0x0004.** YY = 14, 15 (1990) is not run |
 | 2026-10-09 | by NAME, `q=pkz100`, `q=pkz101`, `q=pkz090` — PKWARE's own 1989 distributions, which a stub key misses when they are not self-extractors | 16 | the four `PKZ101.EXE` copies again (three byte-different, same 13 records, one with a `READ_1ST.EXE` appended), and **`PKZ101_2.ZIP` ×5 and `PKZ101-S.EXE` — PKZIP 1.01 for OS/2, the same release-day documents written at 0x0000 and 0x0006 only**: `ORDER.DOC` and `OMBUDSMN.ASP`, at 0x0004 in the DOS package, are at 0x0000 there (DECISIONS.md 2026-10-09, *the writer's own output was the population the flags excluded*). And `pkz100.txt`, a CompuServe message of 1989-05-29 quoting Phil Katz on *"PKZIP 1.0 Alpha"* |
-| 2026-10-08 | `detection=504b0304????????MM00*` for MM = 01…05 — a zip whose FIRST local header is Shrink or one of the Reduces; the same key at 06 reproduces the 1,125,083 above, and 75 of 75 sampled hits carry the method byte they were listed for. Not through `scan_discmaster.py`: listed with `size_shards`, then each row's `idMeta` and path classified | **109,207** (96,193 Shrink; 117 / 143 / 43 / 12,711 Reduce 1–4) | **146 distinct in a Macintosh context, 1 written on one** — `BBA.zip`, Shrink, now a fixture; Reduce 0. The 146 and 200 random Shrink zips decoded: 2,247 entries, all CRC-correct under deark's reading, 270 of them failed by `unar` (FORMATS.md, *Shrink*) |
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
 | 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
 | 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |

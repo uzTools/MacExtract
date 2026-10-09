@@ -310,7 +310,8 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # whatever of `ovl_stuffit` (+1,676) and `ovl_crypt` (+108) it keeps.
 # **-32 the same day, 134,064 -> 134,032**: the control's CODE -20 and
 # A5 -12 when RC4's indices left the struct for the loop and the reader
-# stopped keeping its record twice (DECISIONS.md 2026-10-09); the shipped
+# stopped keeping its record twice (DECISIONS.md 2026-10-09, *the
+# specimen was one search away*); the shipped
 # build does not move, both changes being in images.
 OVL_SAVED = 134032
 
