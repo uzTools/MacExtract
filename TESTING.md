@@ -2475,8 +2475,10 @@ writes both — `8k-2trees-mmlbug` and `4k-3trees-mmlbug`. Graded the same
 way with one addition and one subtraction:
 
 - **deark is not optional on this lane.** It is the only other
-  implementation of the rule, it finds it by its own double-decode
-  rather than being told, and it must agree byte for byte.
+  implementation of the rule that `ci.sh` can run (PKUNZIP 1.01 and
+  1.02 read both shapes under DOSBox, by hand: *Their programs, run*),
+  it finds it by its own double-decode rather than being told, and it
+  must agree byte for byte.
 - **`unar` must REFUSE both**, which is the negative control. XADMaster
   has 5.3.4's reading and nothing else, so a generated stream it accepts
   was never the bug's; it fails these two exactly as it fails the three
@@ -4410,24 +4412,32 @@ hand):**
 
 This takes `PKZIP.EXE` and `PKUNZIP.EXE` out of all three distributions
 (`PKZ101.EXE` from `fixtures/`) and runs them headless under DOSBox,
-about 30 s in all. It prints three things:
+about 20 s in all. It prints four things:
 
-1. the Implode combinations each writer chooses over 50 inputs;
+1. the Implode combinations each writer chooses over 51 inputs, how many
+   of its matches are at distance operand 0, and how many of its literal
+   trees are `synth_implode.PKZIP_LITERAL_TREE`;
 2. every record's *version made by* after one version updates an archive
    another wrote (`-a`, `-u`, `-f`, both directions, and `PKZ101.EXE`
    itself);
 3. what each PKUNZIP makes of `PKZ101.EXE`, of 1.10's output, and of the
-   six generated shapes.
+   six generated shapes — so **PKUNZIP 1.01 and 1.02 grade both
+   `-mmlbug` shapes**, and 1.10 is their negative control;
+4. what each PKUNZIP makes of the minimal cases it reads differently
+   from APPNOTE 5.3, each beside a control.
 
 It has a positive control in its own output: `PKZ101.EXE`'s three bug
 entries print as `DISAGREE`, so step 1 is able to report a writer that
 uses those combinations. **What it cannot see:** writers other than these
 three shipped binaries, which includes whatever wrote `PKZ101.EXE`'s own
 entries. A zero from step 1 is a fact about those binaries on those
-inputs. Step 3 cannot say WHY 1.0x refuses a generated stream, because
-it refuses the agreeing shapes as well (OPEN_ITEMS.md). Results:
-DECISIONS.md 2026-10-08, *the key that survives and has nothing to
-separate*.
+inputs. Step 3 reports a CRC per archive, not which token failed: it
+grades the minimum match length only because step 4's features are
+absent from the generator's streams, and nothing but this script checks
+that they stay absent. Not in `ci.sh`, so a change to the generator is
+not graded by a PKUNZIP until this is run. Results: DECISIONS.md
+2026-10-08, *the key that survives and has nothing to separate*, and
+2026-10-09, *the run PKZIP never codes at distance one*.
 
 ## ZipIt's own archives (`tools/run_zipit.py`, in `ci.sh`)
 

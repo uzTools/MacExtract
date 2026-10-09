@@ -44,10 +44,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~21.6k tokens** (PROGRESS 9.1k,
-OPEN_ITEMS 8.2k, BLOCKERS' first two sections 4.3k), re-estimated
-2026-10-09 after BLOCKERS' status gained the Shrink and Private File
-tier paragraphs; BLOCKERS'
+That session-start reading is **~21.3k tokens** (PROGRESS 9.1k,
+OPEN_ITEMS 7.8k, BLOCKERS' first two sections 4.3k), re-estimated
+2026-10-09 after OPEN_ITEMS lost its Implode-generator item; BLOCKERS'
 withdrawn-claims archive is another **~71.6k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are

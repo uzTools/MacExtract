@@ -374,6 +374,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
 - 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
 - 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
+- 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
 
 ---
 
@@ -24532,8 +24533,9 @@ that.
 two shapes where both rules agree, but read all 50 entries PKZIP 1.10
 wrote. PKUNZIP 1.10 reads the four conforming shapes. So the generator
 emits something no PKZIP writer does, which 1.0x decodes differently.
-Until that is reduced, the two `-mmlbug` shapes are "what deark's model
-of 1.01/1.02 reads", not "what 1.01/1.02 read" (OPEN_ITEMS.md).
+Reduced on 2026-10-09 to two features, both now avoided, and since then
+1.01 and 1.02 read both `-mmlbug` shapes themselves (*the run PKZIP
+never codes at distance one*).
 
 **Transferable.** A key that exists is half a fix. The other half is a
 case for it to act on, and the writer's output histogram says whether
@@ -24804,3 +24806,77 @@ matched itself 959 times. The CLI announces the cap now and the lane
 refuses a binary that does not. **An environment hook is an input the
 binary may not read; a harness that sets one has to see it was read.**
 
+
+## 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
+
+**Claim, measured.** PKUNZIP 1.01 and 1.02 refused every stream
+`tools/synth_implode.py` wrote (*the key that survives and has nothing to
+separate*). The streams were cut down token by token under DOSBox until
+1.01 read them. That found **two features, not one**, and the generator
+now avoids both. Each of the six shapes is now read by the PKUNZIP whose
+rule it was written to: 1.01 and 1.02 read both `-mmlbug` shapes and
+refuse the 5.3.4 shapes at the two disagreeing combinations, and 1.10
+does the reverse. So the 1.01/1.02 rule is graded by 1.01/1.02 itself,
+by hand, for the 8 K/two-tree half too, which until now had deark alone
+(`tools/pkzip_writers.py`, which keeps every case below as a probe).
+
+**1. A match at distance operand 0.** Minimal case: eight literals and
+one match of length 2 at operand 0. 1.01 and 1.02 fail it on CRC, 1.10
+reads it, and the same fill at operand 1 is read by all three. 1.01's
+output for `abcdefgh` plus (0, 6) is `abcdefghh` and then five zeros. In
+a window that already holds data, the output is the first byte right and
+then each stale byte twice (`c s0 s0 s2 s2 …`). *Hypothesis, unreduced:*
+that is a forward copy two bytes at a time, which cannot repeat a byte
+when the source is only one byte behind. Where in 1.01's buffer the
+stale bytes come from does not fit one simple ring, and it was not
+chased. **No PKZIP writer emits operand 0**: 1.01, 1.02 and 1.10 wrote
+105,658–105,962 matches over 51 inputs, including 20 KB of zeros and long
+single-byte runs, and none was at operand 0. 1.01 codes a run of zeros
+as length-320 matches at operand 319, reaching back into the zero
+window. The generator's one-byte fill is now two literals and a match
+at operand 1.
+
+**2. A literal tree that gives a high byte a short code.** Minimal case:
+one literal 0x80 under a flat 8-bit literal tree. 1.01 writes 0x00 and
+loses its place in the stream, and 1.02 and 1.10 read it. One literal
+0xFF under the same tree comes out 0x00 from **all three**, 1.10
+included, with sync kept. The controls, the same bytes under PKZIP's own
+literal tree, are read by all three. Per value, 1.01 fails every byte
+0x80 and up whose code is 8 bits or fewer, under three different trees,
+and none whose code is longer. *Hypothesis, unreduced:* a decode table
+indexed by 8 bits holds the symbol in a signed byte, with a negative
+entry meaning "longer code". In 1.01 any byte 0x80 and up would look
+negative; in 1.02 and 1.10 only 0xFF would.
+
+**Why no PKZIP file ever showed it: PKZIP stores one literal tree.**
+Every three-tree entry the three shipped writers made, 15 of 15 from
+each, stores the same 99 bytes, whatever the input. One input was
+French-style text in which é is roughly one byte in six, and é still got
+12 bits while 'v', half as common, got 8. In that table every byte 0x80
+and up has 12 or 13 bits. Only `PKZ101.EXE`'s own entries, from a build
+none of these three reproduces, carry trees of their own. The generator
+now stores that table (`PKZIP_LITERAL_TREE`). Its first eight 12-bit
+codes, all for bytes below 0x80, are re-split into a chain 10…16, 16,
+so a 256-value literal tree still states a 16-bit code. All three
+PKUNZIPs read every byte value under it, and read the generated streams.
+
+**What this changes about 1.01's reading, beyond the minimum match
+length.** It is a third and a fourth difference from 5.3, and both are
+in the READER: unar, deark and this engine read both features to 5.3,
+and PKUNZIP 1.10 reads operand 0. Neither reaches a file PKZIP wrote,
+because its writers never produce either. So nothing in `src/` changes:
+an operand-0 match or a short high-byte code in a stranger's zip was
+written by something else, and 5.3 is what that writer meant. **Found
+and not reduced:** two hand-built literal trees that put 128 bytes at 9
+bits are misread by all three PKUNZIPs on many byte values. unar and
+deark read them, and the generator's trees are not affected (measured
+per value). That is recorded, not explained.
+
+**Transferable.** A reader's refusal of a whole stream says nothing
+about which rule it disagrees with. Cutting the stream down did, and in
+under two seconds per DOSBox run. The second feature only appeared once
+the first was fixed, and only in the 1.01 column: a reduction ends when
+every reader agrees, not when the first difference is found. The tree
+PKZIP stores was invisible to every question asked about its *flags*.
+A table a writer always emits is a fact about the writer, and the same
+DOSBox session that asked about flags could have shown it.

@@ -10,8 +10,10 @@ decode it but neither compresses. PKZIP 1.01, 1.02 and 1.10 do write it
 here, under DOSBox (`tools/pkzip_writers.py`, since 2026-10-08), but
 only at 4 K/two trees and 8 K/three, never at a combination where the
 two minimum-match-length rules disagree. So the shapes a fixture cannot
-reach are written here. PKUNZIP 1.01/1.02 refuse every stream this
-writes, the agreeing shapes included (OPEN_ITEMS.md).
+reach are written here. Each shape is read by the PKUNZIP whose rule
+it was written to: 1.01 and 1.02 read the 1.01/1.02 shapes, 1.10 the
+5.3.4 ones (DECISIONS.md 2026-10-09, *the run PKZIP never codes at
+distance one*).
 
 What that buys, and each of the three is a different thing:
 
@@ -37,8 +39,10 @@ What that buys, and each of the three is a different thing:
      carried by a real file — `fixtures/pkz101.exe`, PKZIP 1.01's own
      distribution, three entries at 4 K/three trees — and **the other
      is not: nothing authentic on this disk is 8 K with two trees**,
-     so for that half this writer is the only subject there is and
-     deark is its second reader (FORMATS.md, *Implode*).
+     so for that half this writer is the only subject there is. deark
+     is its second reader in `ci.sh`, and PKUNZIP 1.01 and 1.02 read it
+     under DOSBox by hand (`tools/pkzip_writers.py`; FORMATS.md,
+     *Implode*).
 
 **Graded by two implementations, not by this engine.** `unar` and deark
 both read method 6; `tools/run_implode.py` requires both to agree with
@@ -220,6 +224,43 @@ def skewed_lengths(nsyms, maxlen=16):
     return out
 
 
+# The literal tree PKZIP 1.01, 1.02 and 1.10 store in EVERY three-tree
+# entry they write, whatever the input: a fixed table, in 5.3.7's stored
+# form. Source: measured with tools/pkzip_writers.py, which checks that
+# each writer still stores exactly these bytes (15 of 15 three-tree
+# entries from each of the three over its 51 inputs, 2026-10-09;
+# DECISIONS.md 2026-10-09, *the run PKZIP never codes at distance one*).
+# Every byte 0x80 and up has a 12- or 13-bit code in it, and that is
+# load-bearing. Under a tree that gives such a byte 8 bits or fewer,
+# PKUNZIP 1.01 decodes it as 0x00 and loses its place in the stream;
+# under one that gives 0xFF 8 bits or fewer, 1.02 and 1.10 decode that
+# byte as 0x00 as well. unar and deark read those trees to 5.3.8, so
+# only a PKUNZIP can tell. The generator's three-tree shapes store this
+# tree re-split to reach 16 bits (`literal_lengths`).
+PKZIP_LITERAL_TREE = bytes.fromhex(
+    "610a7b07061b06bb0c4b0309070b090b0907160708060506070605360716170b"
+    "0a06080a0b050615040617050a08050615060a25060807180a070a080b070b04"
+    "250425040a06040514050934070617091a2bfcfcfcfbfbfb0c0b2c0b2c0b3c0b"
+    "2c2bac")
+
+
+def literal_lengths():
+    """The literal tree the three-tree shapes store: PKZIP_LITERAL_TREE
+    with its first eight 12-bit codes, all for bytes below 0x80, re-split
+    into the chain 10, 11, ..., 16, 16. Eight 12-bit codes fill exactly
+    the subtree that chain fills, so the tree stays complete, every byte
+    0x80 and up keeps its 12 or 13 bits, and a 256-value alphabet states
+    a 16-bit code, which one wild literal tree does (FORMATS.md, *What
+    the corpus exercises*). Every PKUNZIP reads it, each byte value on
+    its own and the generator's streams (measured 2026-10-09)."""
+    lengths = read_stored_tree(PKZIP_LITERAL_TREE, 0, 256)[0]
+    twelve = [v for v in range(0x80) if lengths[v] == 12][:8]
+    for v, l in zip(twelve, (10, 11, 12, 13, 14, 15, 16, 16)):
+        lengths[v] = l
+    assert sum(2 ** (16 - l) for l in lengths) == 2 ** 16
+    return lengths
+
+
 # --- one entry's stream ---------------------------------------------
 
 # The tokens every shape emits, in order. Chosen for what each one
@@ -229,7 +270,8 @@ def skewed_lengths(nsyms, maxlen=16):
 #                           8 raw bits
 #   (dist, length)          the ordinary match
 #   a length of 63 + MML    5.3.9's escape, where 8 more bits follow
-#   a match at distance 0   overlapping its own output, one byte wide
+#   a match at operand 1    overlapping its own output: a one-byte fill
+#                           coded two bytes wide, as PKZIP codes one
 #   a match reaching back
 #     past the start        5.3.9's "assume ... filled with zeros"
 #   a match at the largest
@@ -253,25 +295,60 @@ def encode(dictsize, three, body_out, mml=None):
     identical either way, which is why the two readings can disagree at
     all: nothing in the entry says which was used, so the stored CRC-32
     is the only thing that can answer (FORMATS.md, *Implode*)."""
+    if mml is None:
+        mml = 3 if three else 2
+    L = lambda bs: [("L", b) for b in bs]
+    # A match before anything has been written: 5.3.9's zeros.
+    toks = [("M", dictsize - 1, mml + 4)] + L(TEXT)
+    # An ordinary match: the whole of TEXT again.
+    toks += [("M", len(TEXT) - 1, len(TEXT))]
+    # An overlapping one-byte run, which is how a long fill is coded.
+    # **At distance operand 1, never 0.** PKUNZIP 1.01 and 1.02 decode an
+    # operand-0 match as its first byte and then garbage, where 5.3.9,
+    # PKUNZIP 1.10, unar and deark repeat the byte; and no PKZIP writer
+    # emits operand 0 at all, 1.01, 1.02 or 1.10 (Source: measured with
+    # tools/pkzip_writers.py, DECISIONS.md 2026-10-09, *the run PKZIP
+    # never codes at distance one*). Two literals and a match one byte
+    # further back give the same fill, and every PKZIP reader reads it.
+    toks += L(b"==") + [("M", 1, mml + 40)]
+    # The escape: a length past 63 + mml, so eight more bits follow.
+    toks += L(TEXT) + [("M", len(TEXT) - 1, mml + 63 + 7)]
+    # Enough literals to pass the dictionary, so the window wraps and a
+    # match crosses its end.
+    toks += L(bytes((i * 37 + 11) & 0xFF for i in range(dictsize + 300)))
+    toks += [("M", dictsize - 1, 200)] + L(b"end.\n")
+    # The distance tree is flat — six bits a code, which is complete
+    # over 64 values and makes a match's operand arithmetic readable.
+    # The length tree is given the full spread up to a 16-bit code
+    # instead, so that one tree per entry drives the decoder's walk over
+    # its whole range and the other drives the one-length case. The
+    # literal tree is PKZIP's own, deepened to 16 bits (literal_lengths).
+    return encode_tokens(dictsize, three, toks, body_out, mml,
+                         lenlen=skewed_lengths(64),
+                         litlen=literal_lengths() if three else None)
+
+
+def encode_tokens(dictsize, three, tokens, body_out, mml=None,
+                  lenlen=None, litlen=None):
+    """Any token list as one Implode stream: ("L", byte) is a literal and
+    ("M", dist, length) a match, `dist` being the APPNOTE operand (the
+    match starts dist+1 bytes back) and `length` the real length. Trees
+    left out are flat. `tools/pkzip_writers.py` builds its minimal
+    cases with this."""
     lowbits = 7 if dictsize == 8192 else 6
     if mml is None:
         mml = 3 if three else 2
 
     # 5.3.5: the length alphabet is 64 values, mml..mml+63.
     # 5.3.6: the distance alphabet is 64 values, the upper 6 bits.
-    # The distance tree is flat — six bits a code, which is complete
-    # over 64 values and makes a match's operand arithmetic readable.
-    # The length tree is given the full spread up to a 16-bit code
-    # instead, so that one tree per entry drives the decoder's walk over
-    # its whole range and the other drives the one-length case.
     distlen = flat_lengths(64, 6)
-    lenlen = skewed_lengths(64)
+    lenlen = lenlen or flat_lengths(64, 6)
     lencode = sf_codes(lenlen)
     distcode = sf_codes(distlen)
     header = bytearray()
     litcode = None
     if three:
-        litlen = skewed_lengths(256)
+        litlen = litlen or flat_lengths(256, 8)
         litcode = sf_codes(litlen)
         header += store_tree(litlen)
     header += store_tree(lenlen)
@@ -279,19 +356,17 @@ def encode(dictsize, three, body_out, mml=None):
 
     bits = BitOut()
     out = bytearray()
-
-    def literal(b):
-        bits.bit(1)
-        if litcode is not None:
-            c, n = litcode[b]
-            bits.code(c, n)
-        else:
-            bits.raw(b, 8)
-        out.append(b)
-
-    def match(dist, length):
-        """`dist` is the APPNOTE operand: the match starts dist+1 bytes
-        back. `length` is the real length, mml..mml+63+255."""
+    for t in tokens:
+        if t[0] == "L":
+            bits.bit(1)
+            if litcode is not None:
+                c, n = litcode[t[1]]
+                bits.code(c, n)
+            else:
+                bits.raw(t[1], 8)
+            out.append(t[1])
+            continue
+        _, dist, length = t
         assert 0 <= dist < dictsize
         assert mml <= length <= mml + 63 + 255
         bits.bit(0)
@@ -312,28 +387,6 @@ def encode(dictsize, three, body_out, mml=None):
         for i in range(length):
             at = start + i
             out.append(0 if at < 0 else out[at])
-
-    # A match before anything has been written: 5.3.9's zeros.
-    match(dictsize - 1, mml + 4)
-    for b in TEXT:
-        literal(b)
-    # An ordinary match: the whole of TEXT again.
-    match(len(TEXT) - 1, len(TEXT))
-    # An overlapping one-byte run, which is how a long fill is coded.
-    literal(ord("="))
-    match(0, mml + 40)
-    # The escape: a length past 63 + mml, so eight more bits follow.
-    for b in TEXT:
-        literal(b)
-    match(len(TEXT) - 1, mml + 63 + 7)
-    # Enough literals to pass the dictionary, so the window wraps and a
-    # match crosses its end.
-    filler = bytes((i * 37 + 11) & 0xFF for i in range(dictsize + 300))
-    for b in filler:
-        literal(b)
-    match(dictsize - 1, 200)
-    for b in b"end.\n":
-        literal(b)
 
     body_out += out
     return bytes(header) + bits.done()
@@ -369,7 +422,8 @@ class BitIn:
         return v
 
 
-def decode(data, pos, clen, usize, flag8k, flag3trees, mml=None):
+def decode(data, pos, clen, usize, flag8k, flag3trees, mml=None,
+           matches=None):
     """One Implode stream back to its bytes. The inverse of `encode`, and
     it shares this file's `sf_codes` and `read_stored_tree` with it so
     that there is ONE Python reading of 5.3 here rather than two.
@@ -381,6 +435,10 @@ def decode(data, pos, clen, usize, flag8k, flag3trees, mml=None):
     is how `tools/scan_discmaster.py`'s `implode` probe asks a stranger's
     zip which generation wrote it, and how deark's own
     `detect_implode_mml_bug` decides.
+
+    `matches`, if a list, gets each match's (distance operand, length)
+    appended, which is how `tools/pkzip_writers.py` reads what a PKZIP
+    writer chose to code.
 
     Used by `--selftest` to round-trip every shape this file writes, and
     by that probe. NOT by the engine, which is `src/fmt_exo.c`."""
@@ -421,6 +479,8 @@ def decode(data, pos, clen, usize, flag8k, flag3trees, mml=None):
             dist = (code(disttree) << lowbits) | lo
             lc = code(lentree)
             mlen = mml + 63 + br.raw(8) if lc == 63 else mml + lc
+            if matches is not None:
+                matches.append((dist, mlen))
             start = len(out) - 1 - dist
             if start < -dictsize:
                 raise ValueError("distance past the dictionary")
@@ -522,6 +582,17 @@ def selftest():
               "bytes back: %r" % (store_tree(list(APPNOTE_EXAMPLE_LENGTHS)),),
               file=sys.stderr)
         bad += 1
+    # PKZIP's own literal tree, stored again by this file's writer, must
+    # come back as PKZIP's own bytes: a real writer's run splitting.
+    pk = read_stored_tree(PKZIP_LITERAL_TREE, 0, 256)[0]
+    if store_tree(pk) != PKZIP_LITERAL_TREE:
+        print("synth_implode: PKZIP's literal tree does not store back as "
+              "its own %d bytes" % len(PKZIP_LITERAL_TREE), file=sys.stderr)
+        bad += 1
+    if sum(2 ** (16 - l) for l in pk) != 2 ** 16:
+        print("synth_implode: PKZIP's literal tree is not complete",
+              file=sys.stderr)
+        bad += 1
     codes = sf_codes(list(APPNOTE_EXAMPLE_LENGTHS))
     for v, printed in enumerate(APPNOTE_EXAMPLE_CODES):
         want = int(printed[::-1], 2)        # un-reverse 5.3.8's step 3
@@ -575,7 +646,8 @@ def selftest():
             bad += 1
     if not bad:
         print("synth_implode: selftest ok (APPNOTE.TXT 5.3.8's worked "
-              "example, %d codes, the stored form both ways, all %d "
+              "example, %d codes, the stored form both ways, PKZIP's "
+              "literal tree stored back byte for byte, all %d "
               "shapes round-tripped, and both PKZIP 1.01/1.02 shapes "
               "refused by 5.3.4's rule)"
               % (len(APPNOTE_EXAMPLE_CODES), len(ALLSHAPES)))

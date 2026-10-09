@@ -24,6 +24,14 @@ reader of ours:
      place the 1.01/1.02 rule is observable in a shipped program,
      because step 1 finds their writers never use a combination where
      it matters.
+  4. **What PKUNZIP reads differently from 5.3, in minimal cases**, each
+     beside a control that differs in the one feature: a match at
+     distance operand 0, which no PKZIP writer emits (step 1 counts
+     them) and which 1.01/1.02 decode as its first byte and then
+     garbage; and a literal 0x80 or 0xFF with an 8-bit code, which no
+     PKZIP literal tree gives either (step 1 checks that every one they
+     store is `synth_implode.PKZIP_LITERAL_TREE`). DECISIONS.md
+     2026-10-09, *the run PKZIP never codes at distance one*.
 
     tools/pak.py --setup                    # DOSBox, no root
     tools/fetch_specimens.py --only implode
@@ -39,11 +47,12 @@ none of these three reproduces, nor whatever wrote the spec-1.1 MS-DOS
 archives in the wild at those combinations (`CPUTEST.ZIP`, below in the
 entry); those writers are not on this disk. A run that reports no
 disagreeing combination is a fact about these three binaries on these
-inputs, not about PKZIP. Step 3 cannot tell WHY PKUNZIP 1.01/1.02
-refuse a generated stream: they refuse all six shapes, including the two
-where both rules agree, so that column is not evidence about the minimum
-match length (OPEN_ITEMS.md). It is not in `ci.sh`: DOSBox is not a
-build dependency.
+inputs, not about PKZIP; so is a count of zero operand-0 matches. Step 3
+reports a pass or a CRC failure per archive, not which token failed:
+it is evidence about the minimum match length only because step 4 shows
+the generator's streams hold no other token 1.01/1.02 misread, and only
+for as long as the generator keeps it that way. It is not in `ci.sh`:
+DOSBox is not a build dependency.
 """
 import argparse
 import os
@@ -53,9 +62,11 @@ import struct
 import subprocess
 import sys
 import tempfile
+import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pak  # noqa: E402
+import synth_implode  # noqa: E402
 
 SHAPES = ["4k-2trees", "8k-3trees", "4k-3trees", "8k-2trees",
           "4k-3trees-mmlbug", "8k-2trees-mmlbug"]
@@ -84,6 +95,47 @@ def central(path):
         out.append((d[p + 46:p + 46 + nl].decode("latin-1"), vm, meth, fl))
         p += 46 + nl + xl + cl
     return out
+
+
+def tokens_and_trees(path):
+    """(matches, matches at distance operand 0, literal trees stored,
+    of which `synth_implode.PKZIP_LITERAL_TREE`) over a zip's Implode
+    entries, read with `synth_implode.decode`. PKZIP 1.x writes no data
+    descriptor, so the local headers are walked in order.
+    Source: APPNOTE.TXT 4.3.7 (local header), 5.3.7 (a stored tree, its
+    first byte the count less one), 5.3.9 (the token stream)."""
+    d = open(path, "rb").read()
+    p, ops, lit, pk = 0, [], 0, 0
+    while d[p:p + 4] == b"PK\x03\x04":
+        fl, meth = struct.unpack("<HH", d[p + 6:p + 10])
+        cs, us = struct.unpack("<II", d[p + 18:p + 26])
+        nl, xl = struct.unpack("<HH", d[p + 26:p + 30])
+        s = p + 30 + nl + xl
+        if meth == 6:
+            synth_implode.decode(d, s, cs, us, bool(fl & 2), bool(fl & 4),
+                                 matches=ops)
+            if fl & 4:
+                lit += 1
+                pk += d[s:s + d[s] + 2] == synth_implode.PKZIP_LITERAL_TREE
+        p = s + cs
+    return len(ops), sum(1 for dist, _ in ops if dist == 0), lit, pk
+
+
+def one_entry(path, dictsize, three, tokens, litlen=None):
+    """A zip of one Implode entry coded from `tokens`, version needed
+    1.0 so PKUNZIP 1.0x reads it. Source: APPNOTE.TXT 4.3.7, 4.3.12, 4.3.16."""
+    body = bytearray()
+    stream = synth_implode.encode_tokens(dictsize, three, tokens, body,
+                                         litlen=litlen)
+    fl = (2 if dictsize == 8192 else 0) | (4 if three else 0)
+    crc = zlib.crc32(bytes(body)) & 0xFFFFFFFF
+    loc = struct.pack("<IHHHHHIIIHH", 0x04034B50, 10, fl, 6, 0, 0x1421, crc,
+                      len(stream), len(body), 5, 0) + b"T.DAT" + stream
+    cen = struct.pack("<IHHHHHHIIIHHHHHII", 0x02014B50, 10, 10, fl, 6, 0,
+                      0x1421, crc, len(stream), len(body), 5, 0, 0, 0, 0, 0,
+                      0) + b"T.DAT"
+    open(path, "wb").write(loc + cen + struct.pack(
+        "<IHHHHIIH", 0x06054B50, 0, 0, 1, 1, len(cen), len(loc), 0))
 
 
 def combo(meth, fl):
@@ -168,8 +220,10 @@ def main():
             c = combo(meth, fl)
             tally[c] = tally.get(c, 0) + 1
             disagree += "DISAGREE" in c
-        print("PKZIP %s over %d inputs: %s" % (
-            v, len(inputs), ", ".join("%s %d" % kv for kv in sorted(tally.items()))))
+        print("PKZIP %s over %d inputs: %s; %d matches, %d at distance operand 0; "
+              "%d literal trees, %d of them PKZIP_LITERAL_TREE" % (
+                  (v, len(inputs), ", ".join("%s %d" % kv for kv in sorted(tally.items())))
+                  + tokens_and_trees(os.path.join(work, "W%s.ZIP" % v))))
 
     # 2. who restamps whom
     open(os.path.join(work, "ADD.TXT"), "wb").write(b"added by another version\r\n" * 200)
@@ -223,8 +277,27 @@ def main():
                 d[i + at:i + at + len(val)] = val
                 i = d.find(sig, i + 1)
         open(z, "wb").write(d)
+    # 4. the minimal cases, each beside its control, at the two
+    # combinations where both minimum-match-length rules agree
+    lits = [("L", b) for b in b"abcdefgh"]
+    pktree = synth_implode.read_stored_tree(synth_implode.PKZIP_LITERAL_TREE, 0, 256)[0]
+    flat = synth_implode.flat_lengths(256, 8)
+    minimal = []
+    for ds, three in ((4096, False), (8192, True)):
+        mml = 3 if three else 2
+        for dist, what in ((0, "operand 0"), (1, "operand 1, the control")):
+            z = "M%d%d.ZIP" % (three, dist)
+            one_entry(os.path.join(work, z), ds, three, lits + [("M", dist, mml + dist)],
+                      pktree if three else None)
+            minimal.append((z, "8 literals + %s match, %dK/%dT"
+                            % (what, ds // 1024, 2 + three)))
+    for b in (0x80, 0xFF):
+        for tree, what in ((flat, "an 8-bit code"), (pktree, "PKZIP's tree, the control")):
+            z = "L%02X%d.ZIP" % (b, tree is flat)
+            one_entry(os.path.join(work, z), 8192, True, [("L", b)], tree)
+            minimal.append((z, "literal 0x%02X, %s, 8K/3T" % (b, what)))
     subjects = [("MIX.ZIP", "PKZ101.EXE"), ("W110.ZIP", "PKZIP 1.10's output")] + \
-        [("G%d.ZIP" % i, "synth " + sh) for i, sh in enumerate(SHAPES)]
+        [("G%d.ZIP" % i, "synth " + sh) for i, sh in enumerate(SHAPES)] + minimal
     dosbox(work, ["PU%s.EXE -t %s > %s.T%s" % (v, z, z[:-4], v[2])
                   for z, _ in subjects for v in DISTS])
     for z, what in subjects:
