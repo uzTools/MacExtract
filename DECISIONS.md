@@ -379,6 +379,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
 - 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
 - 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
+- 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
 
 ---
 
@@ -25096,3 +25097,51 @@ archives, already in the table, disproved it as the whole story.
 Pricing two engine-wide answers before tracing every row would have
 priced the wrong question.
 
+
+## 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
+
+**The question.** `sit_scheme()` reads bytes 107/109 of a StuffIt entry as
+encryptor-module ids and, on the two forks of Aladdin's *Shortcut 1.5.3
+Update* that carry 5/3 and 6/5 there, routes one to `NewDEx` and refuses the
+other as *"a scheme we cannot read"* while the archive's other eleven forks —
+all method 13, id 0 — ask for a password under the built-in scheme
+(FORMATS.md, *Where an archive names the module*). The hypothesis is that those
+bytes are installer-private, not ids, and that all thirteen forks are the
+built-in scheme under one shared password. To settle it the archive has to
+decrypt, and the password *"installs without asking"*, so the key is a constant
+the installer carries.
+
+**The oracle, which needs no password guess.** An encrypted StuffIt classic
+archive carries an eight-byte `'MKey'` resource that verifies the key, and the
+check is independent of the fork cipher (the schemes share the archive key and
+differ only in the transform). So the MKey decides a candidate directly — and
+not only a candidate *password*: it decides a candidate eight-byte **archive
+key**, the value the password folds into. That turns recovery into a
+fixed-width search: slide an 8-byte window over anything and keep the offsets
+that verify. `tools/sit_mkey_oracle.py` is the oracle, self-testing; the hot
+loop translated to C (StuffItDES with a byte-reversal table, `verify_ak`
+only) scans a 12 MB dump in a few seconds. The updater's MKey is
+`4d87bcb0c49abe53`.
+
+**Where the key is, and is not.** The updater runs under Mini vMac (boot-shell
+build, `mkboot.py --app-name`): it paints the InstallerMaker 1.0.3 splash, then
+a license pane, then an SFGetFile destination picker. Reading Mini vMac's own
+process memory (`/proc/<pid>/mem`) at the splash, at the license and across the
+destination dialog — **45 dumps** in all — and scanning every one for the
+archive key found **nothing**. The password is not a plaintext string in the
+uncompressed resources either, and the installer's engine lives in compressed
+`ADCR` resources no reference here decodes. The reading: the archive key is
+computed **lazily, when extraction starts**, not at launch — so a dump has to
+be taken *during decrypt*, and the destination picker is before it. Completing
+that picker is its own obstacle: it is a plain folder navigator whose "Open"
+only ever descends, and this updater may want the prior Shortcut present to
+update; driving it to the extract step was not solved here.
+
+**The transferable part.** *"Its key is in its own CODE"* was half right and
+the wrong half to act on: the key exists as a constant, but it reaches a
+byte-addressable form only at decrypt time, and a verifier that checks the
+derived key rather than the password is what makes a memory image answer the
+question. The install-UI step is what remains; the instrument for the moment it
+is reached is built and checked (OPEN_ITEMS.md, *StuffIt 2.0*). The updater is
+kept at `~/.cache/macextract/specimens/shortcut-updater/` so the next attempt
+starts at the install, not at Discmaster.
