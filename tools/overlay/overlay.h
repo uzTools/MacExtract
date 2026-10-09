@@ -60,6 +60,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_PASSWORD          21
 #define OVL_RESFORK_FIND      22
 #define OVL_CRYPT_FREE        23  /* give the key-setup table back */
+#define OVL_CRYPT_PF          24  /* Private File: RC4 under MD5(password) */
 
 /* The SpaceSaver overlay — a DECODER rather than a cipher, and the first
  * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
@@ -131,6 +132,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_TAR_EXTRACT        48
 #define OVL_CODEC_EXPORTS      49
 #define OVL_SQP_EXTRACT        50
+#define OVL_PF_EXTRACT         51
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

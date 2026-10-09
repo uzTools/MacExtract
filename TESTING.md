@@ -827,10 +827,11 @@ anything about the suite.**
    ~3 s.
 
    **One seed per cipher since 2026-09-26, and every one of the eight is
-   reached.** `synth_crypt.py` writes nine shapes — StuffIt classic's
+   reached.** `synth_crypt.py` writes ten shapes — StuffIt classic's
    DES, StuffIt 5's RC4, PackIt's XOR and DES, Compact Pro's, ARC's
-   garble, PKWARE's zip cipher, and WinZip AES at 256 and at 128 bits,
-   which is two shapes for one cipher because the key schedules differ —
+   garble, PKWARE's zip cipher, WinZip AES at 256 and at 128 bits,
+   which is two shapes for one cipher because the key schedules differ,
+   and since 2026-10-09 Private File's MD5-keyed RC4 (`tools/synth_pf.py`) —
    all of them in Python, with nothing installed. `zip -P`, `7z` and
    Debian's `arc` write three of them for real and are the ORACLES for
    those in `run_crypt.py`, but none can be the fuzzer's encoder: one
@@ -845,7 +846,7 @@ anything about the suite.**
    (DECISIONS.md 2026-09-26).
 
    Two things about how the cases are drawn. The seeds are taken **round
-   robin**, not at random: a quarter of 150 is 37 cases over nine shapes,
+   robin**, not at random: a quarter of 150 is 37 cases over ten shapes,
    and drawing them would leave one shape untouched about a fifth of the
    time. And half the flips land anywhere in the seed while half
    land inside the bytes the reader hands to a cipher, which
@@ -863,7 +864,9 @@ anything about the suite.**
    word password in stderr" scored `sit-des` 31/40 when the truth was
    **0** — and `t` never descends into the MacBinary a StuffIt archive
    arrives in, which is why the crypt cases EXTRACT. 30 mutants a shape,
-   seed 11, 2026-09-26:
+   seed 11, 2026-09-26 (the `pf` row 2026-10-09; like the WinZip one, its
+   site keys every password tried, before the record says whether it was
+   the right one):
 
    | shape | the site that is reaching it | flips anywhere | as shipped |
    |---|---|---|---|
@@ -877,6 +880,7 @@ anything about the suite.**
    | `zip-aes` | `unc_crypt_winzip_aes` | 27 | **30** |
    | `zip-aes128` | `unc_crypt_winzip_aes` | 23 | **29** |
    | `zip-aes` | `aes_encrypt_block` | 26 | **29** |
+   | `pf` | `unc_crypt_pf` | 27 | **29** |
 
    The first column of figures is `--untargeted`, which mutates the way
    this did before the ranges existed; it is kept so that the before and
@@ -2071,7 +2075,7 @@ fourteen PEF containers**, each matched by the sha256 of its code
 section against the SDK's own named `.shlb` files, so the names are
 Aladdin's. That list is this project's only external inventory of
 Macintosh archive formats written by somebody who shipped all of them,
-and it is what found Private File missing (OPEN_ITEMS.md). It asserts
+and it is what found Private File missing (DECISIONS.md 2026-10-07, *the engine list as a checklist*; it reads since 2026-10-09). It asserts
 the container COUNT too, so a fifteenth would fail rather than be
 ignored.
 
@@ -4566,6 +4570,52 @@ failures, and moving the `0x2705` flag read by two bytes in
   It also means the gate says nothing about the wrong name a LISTING
   already prints for a refused entry, which is what `l` does today on
   `Psycho!v1.0ß1.zip`'s three (FORMATS.md, *ZipIt's own archives*).
+
+## Private File (`tools/run_privatefile.py`, in `ci.sh`)
+
+Added 2026-10-09. Nothing else reads a Private File, so **the writer is
+the grader**: files Aladdin Private File 2.0's `PF Encrypt™` encrypted
+under Mini vMac from subjects whose bytes and passwords are fixed in
+`tools/vmac/privatefile.py` (FORMATS.md, *Private File*).
+
+    tools/vmac/privatefile.py --make NAME        an emulator run, ~6 min
+    python3 tools/run_privatefile.py --macextract build/macextract
+
+The specimens land outside the repository with the others:
+
+    ~/.cache/macextract/vmac/specimens/privatefile/NAME/SUBJECT.pf.bin
+
+Two halves:
+
+1. **Every specimen, graded.** `x -p` through every layer — MacBinary,
+   Private File, then the StuffIt archive PF Encrypt makes before it
+   encrypts — and both forks of the result compared with the subject's
+   bytes. The same file unwrapped once by hand must then refuse a wrong
+   password and list under the name its record holds.
+2. **Refusals, which a specimen cannot show.** Files written by
+   `tools/synth_pf.py` — this project's own reading, which grades
+   nothing about the format and is used for nothing else — must be
+   refused the way a user should meet each: a wrong password and none
+   at all (*wrong password*), a flipped data byte (*checksum
+   mismatch*: both CRCs are of the plaintext), a header naming a
+   derivation nothing writes (*encrypted by a scheme we cannot read*),
+   and a file one byte short (not claimed). A positive control runs
+   first.
+
+**It was made to fail before it was believed**: a reader with the key
+length forced to 16 failed all three specimens and both decrypting
+synthetic cases, the positive control included.
+
+**What it cannot see**: a 16-byte key — the one writer here is the
+export build, which keys with five — and derivations or ciphers other
+than MD5 and RC4, which the reader refuses because nothing writes them.
+With no specimens it says so and runs the refusals alone, so a fresh
+clone stays green and grades none of the reading.
+
+**The Macintosh side is `tools/vmac/interactive.py --privatefile`**,
+not in `ci.sh`: the shipped application extracts the `Forked` specimen
+on System 6.0.8, answering its password dialog wrongly once, and both
+forks are read back off the volume.
 
 ## Searching somebody else's index by content (`tools/scan_discmaster.py`, not in `ci.sh`)
 

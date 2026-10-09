@@ -1960,6 +1960,112 @@ def phase_password(args, appbin, workdir, shot):
     return bad == 0
 
 
+def read_forks(image, name, workdir):
+    """(data, rsrc) of a file in the root of an HFS image, or None."""
+    out = os.path.join(workdir, "forks-read.bin")
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        if CD.hfs(env, "hmount", image).returncode != 0:
+            return None
+        got = CD.hfs(env, "hcopy", "-m", b":" + name, out.encode())
+        if got.returncode != 0:
+            listing = CD.hfs(env, "hls", "-a", "-l").stdout.decode("mac_roman")
+            print("interactive: not on the volume, which holds:\n" + listing)
+        CD.hfs(env, "humount")
+        if got.returncode != 0:
+            return None
+        b = open(out, "rb").read()
+        dl = int.from_bytes(b[83:87], "big")
+        rl = int.from_bytes(b[87:91], "big")
+        roff = 128 + (dl + 127) // 128 * 128
+        return b[128:128 + dl], b[roff:roff + rl]
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+
+
+def phase_privatefile(args, appbin, workdir, shot):
+    """Does the APPLICATION read a Private File — the one format whose
+    reader keys its cipher through the crypt overlay's own entry
+    (`OVL_CRYPT_PF`) and whose payload is a second archive?
+
+    The specimen is one Aladdin's PF Encrypt™ wrote under Mini vMac
+    (tools/vmac/privatefile.py), from the `Forked` subject: both forks,
+    password `hushnow`. Answered wrongly once, as `--password` does,
+    and graded on the host: both forks of `Forked`, read off the volume,
+    against the bytes that subject was made of.
+    """
+    import glob
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "privatefile", os.path.join(HERE, "privatefile.py"))
+    pf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pf)
+    subj = {n: (d, r, pw) for n, _t, _c, d, r, pw in pf.SUBJECTS}
+    found = sorted(glob.glob(os.path.join(pf.SPECIMENS, "*",
+                                          "Forked.pf.bin")))
+    if not found:
+        raise SystemExit("interactive: no Forked.pf.bin specimen — "
+                         "tools/vmac/privatefile.py --make makes one")
+    data, rsrc, password = subj["Forked"]
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-pf.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+         bootimg, "--macbin", f"{found[-1]}:Forked.pf")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        shot(mac, "pf-1-sfgetfile.png")
+        # Second row, as in --password: the invisible `Desktop` file
+        # sorts first.
+        mac.click(SF_FIRST_ROW[0], SF_FIRST_ROW[1] + SF_ROW_HEIGHT)
+        mac.key("Return")
+        time.sleep(3.0)
+        shot(mac, "pf-2-destination.png")
+        mac.key("Return")
+        time.sleep(8.0)
+        shot(mac, "pf-3-asked.png")
+        for ch in "wrongone":
+            mac.key(ch)
+        mac.key("Return")
+        time.sleep(4.0)
+        shot(mac, "pf-4-asked-again.png")
+        for ch in password:
+            mac.key(ch)
+        mac.key("Return")
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "pf-5-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    got = read_forks(os.path.join(workdir, "boot.hfv"), b"Forked", workdir)
+    # Bytes 16..127 of a resource fork are restamped by the Macintosh as
+    # it writes one, and every on-Mac harness masks them (DECISIONS.md,
+    # M10; tools/vmac_check.py). This subject's fork is not a resource
+    # map, so the first run here read the system's stamp — the file's
+    # own name at byte 48 — as a decoding error.
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import vmac_check as VC                                   # noqa: E402
+    ok = (got is not None and got[0] == data and
+          VC.mask_reserved(got[1]) == VC.mask_reserved(rsrc))
+    if got is not None and not ok:
+        print("interactive: Forked came out data %d B (%s), rsrc %d B (%s)"
+              % (len(got[0]), got[0] == data, len(got[1]),
+                 VC.mask_reserved(got[1]) == VC.mask_reserved(rsrc)))
+        for tag, b in (("data", got[0]), ("rsrc", got[1])):
+            open(os.path.join(args.outdir, "Forked.got." + tag), "wb").write(b)
+    print("interactive: Private File "
+          + ("WORKS — both forks byte-exact (resource fork outside the "
+             "system-reserved 16..127)" if ok else "FAILED"))
+    return ok
+
+
 def phase_drop(args, appbin, workdir, shot):
     """Does the FINDER hand a dropped document to this application?
 
@@ -2155,6 +2261,12 @@ def main():
                          "Ignores the fixture argument: the archive is "
                          "generated, because nothing in the corpus is "
                          "encrypted.")
+    ap.add_argument("--privatefile", action="store_true",
+                    help="extract a Private File that PF Encrypt wrote "
+                         "(tools/vmac/privatefile.py), answering the "
+                         "password dialog wrongly once, and check both "
+                         "forks of the result on the host. Ignores the "
+                         "fixture argument.")
     ap.add_argument("--report", action="store_true",
                     help="the end-of-run report phase: extract a generated "
                          "archive whose names cannot be written as they "
@@ -2262,6 +2374,14 @@ def main():
     if args.password:
         try:
             ok = phase_password(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.privatefile:
+        try:
+            ok = phase_privatefile(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

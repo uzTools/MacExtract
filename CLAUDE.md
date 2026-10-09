@@ -11,7 +11,7 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M65 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M66 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts, and the rest of that table is named-only or
 detect-only by decision — that table is the count, and this file does not keep
 a copy of it. The engine passes a **959-fixture** differential suite against
@@ -44,9 +44,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~21.0k tokens** (PROGRESS 8.8k,
-OPEN_ITEMS 8.4k, BLOCKERS' first two sections 3.8k), re-estimated
-2026-10-08 after Shrink came in and Reduce was filed out; BLOCKERS'
+That session-start reading is **~20.7k tokens** (PROGRESS 9.1k,
+OPEN_ITEMS 7.8k, BLOCKERS' first two sections 3.8k), re-estimated
+2026-10-09 after Private File came in and left OPEN_ITEMS; BLOCKERS'
 withdrawn-claims archive is another **~71.6k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are

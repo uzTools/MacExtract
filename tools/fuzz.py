@@ -56,7 +56,7 @@ MAGICS = [
 # nothing copyrighted and nothing installed is needed: the coverage is the
 # same wherever this runs. TESTING.md, *What the fuzzer cannot see*.
 CRYPT_KINDS = ["sit-des", "sit5-rc4", "packit-xor", "packit-des", "cpt",
-               "arc-garble", "zip-crypt", "zip-aes", "zip-aes128"]
+               "arc-garble", "zip-crypt", "zip-aes", "zip-aes128", "pf"]
 CRYPT_PW = "swordfish"
 
 
@@ -580,7 +580,7 @@ def main():
         nstream = 0
         for i in range(args.iterations):
             # A quarter of the run is the ciphers, because they are a
-            # quarter of nothing otherwise: nine encrypted seeds among
+            # quarter of nothing otherwise: ten encrypted seeds among
             # ~950 fixtures would be drawn about once in 150.
             if args.stream_only:
                 kind = 5
@@ -613,8 +613,8 @@ def main():
                     kind = 5
             if kind == 3:
                 # Round robin, not a random choice: a quarter of 150 is
-                # 37 cases and there are nine shapes to get through, so
-                # drawing them would leave one of the nine unfuzzed
+                # 37 cases and there are ten shapes to get through, so
+                # drawing them would leave one of the ten unfuzzed
                 # about a fifth of the time.
                 src, cranges = encrypted[ncrypt % len(encrypted)]
                 ncrypt += 1

@@ -416,7 +416,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # a 68000 `-mpcrel` image's 16-bit PC-relative references stop reaching
 # (FORMATS.md, *Shrink*; DECISIONS.md 2026-10-08, *the method a
 # Macintosh wrote once*).
-UNC_MAC_CODE_DEFAULT=168200
+# RAISED 2026-10-09, 168,200 -> 169,852, by 1,652 B for Aladdin Private
+# File: here the reader is resident too, so this is the whole of it —
+# 1,248 B of reader that the shipped builds keep in `ovl_stuffit`, and
+# the same 404 B of probe, shims and table row they pay (eager pair,
+# below).
+UNC_MAC_CODE_DEFAULT=169852
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -548,7 +553,10 @@ UNC_MAC_CODE_DEFAULT=168200
 # move in either column: `src/fmt_exo.c` is in `ovl_exo`, so what grew there
 # is the image (+152 B) and not one byte of what a 1 MB Mac Plus keeps
 # resident.
-UNC_MAC_A5_DEFAULT=37924
+# RAISED 2026-10-09, 37,924 -> 37,972: +60 B for Private File against a
+# base of 37,912 (this ceiling had 12 B of slack), the same 60 B as the
+# eager pair below.
+UNC_MAC_A5_DEFAULT=37972
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -739,8 +747,22 @@ UNC_MAC_A5_DEFAULT=37924
 # Paid in stack as well: `UncPath` is ~100 B smaller and the engine's
 # deepest chain falls 3,386 -> 3,310 B (DECISIONS.md 2026-10-07, *the
 # limit that was three transcriptions*).
-UNC_MAC_CODE_EAGER=54272
-UNC_MAC_A5_EAGER=19056
+# RAISED 2026-10-09 by 404 B of code and 60 of A5 for Aladdin Private File
+# (`.pf`), measured against HEAD built the same way: **464 B off every
+# extraction's budget on a 1 MB Mac Plus.** Of the code, 222 B is the
+# probe, resident because the sniffer calls it for every file; 80 B the
+# shim that keys RC4 from MD5 in the crypt image (`unc_crypt_pf`); 46 B
+# the one that dispatches the reader; the rest the release switch's case
+# and alignment. The A5 is the engine's table row and name, one sniff
+# slot and two host-vector slots (`unc_crypt_apply`, `unc_crypt_pf`, so
+# the reader can reach the cipher from `ovl_stuffit`). The reader is
+# 1,248 B and is in `ovl_stuffit` — it was resident on the first build,
+# at +1,652, and moved for that reason. What was bought: the last
+# format on Aladdin's own engine list, graded byte-exact on three files
+# Private File 2.0 wrote (FORMATS.md, *Private File*).
+# `run_tiers.py --check` is what says whether it cost a fixture.
+UNC_MAC_CODE_EAGER=54676
+UNC_MAC_A5_EAGER=19116
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -759,8 +781,10 @@ UNC_MAC_A5_EAGER=19056
 # 2026-10-06, *the directory of empty records*).
 # +120 code and +8 A5 on 2026-10-07 for the folder-depth rule, the same
 # resident pieces as the eager pair above.
-UNC_MAC_CODE_LAZY=52848
-UNC_MAC_A5_LAZY=19136
+# +404 code and +60 A5 on 2026-10-09 for Private File, the same resident
+# pieces as the eager pair above.
+UNC_MAC_CODE_LAZY=53252
+UNC_MAC_A5_LAZY=19196
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

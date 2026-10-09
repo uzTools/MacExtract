@@ -865,6 +865,18 @@ int unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
     return UNC_OK;
 }
 
+/* Private File: RC4 keyed by the first `keylen` bytes of MD5(password).
+ * Source: PF Encrypt™ 2.0, CODE 4, CCrypt::Encrypt — MD5::Update over the
+ * password's bytes, GetDigest, then RC4::SetKey(digest, keylen) (fmt_pf.c
+ * has the rest of the format). */
+void unc_crypt_pf(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                  uint16_t keylen)
+{
+    uint8_t digest[16];
+    unc_md5(pw, pwlen, digest);
+    unc_crypt_rc4(cr, digest, keylen > 16 ? 16 : keylen);
+}
+
 /* StuffIt classic. Three keys are involved: the ARCHIVE key, iterated
  * out of the password; the archive IV, which is the 'MKey' resource
  * decrypted under it (and which also verifies the password); and the

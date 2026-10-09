@@ -467,6 +467,22 @@ This project's decoders are transcriptions/ports of algorithms from:
     binary. The installer is fetched, never committed
     (tools/vmac/README.md, *The AppleLink package expander*).
 
+  * Aladdin Private File 2.0 (Aladdin Systems, Inc., 1996-1997), and
+    the `PFEngine` of Aladdin's StuffIt Engine SDK 5.1.2. No public
+    specification of the `.pf` format exists and no other
+    implementation of it does either, so `src/fmt_pf.c` and
+    `src/fmt_pf_probe.c` were written from the format's own 68k writer
+    — `CODE` 4 of `PF Encrypt™`, whose MacsBug symbols name every
+    routine cited (`CCrypt::MakeHeader`, `MakeFileInfo`, `MakeFooter`,
+    `Encrypt`, `MD5`, `RC4::SetKey`, `RC4::Crypt`, `ACLCRC32`) — and
+    the acceptance tests of PFEngine's `Eng ` 10009, then graded on
+    three files that writer produced under emulation. No code was
+    copied; every citation is an address in a binary this project does
+    not redistribute. The ciphers it names are MD5 and RC4, which this
+    engine already carried for StuffIt 5, with their sources below.
+    The application is fetched, never committed (tools/vmac/README.md,
+    *Making a Private File*).
+
   * Alysis SuperDisk! / Disk Expander (Alysis Software Corporation,
     1991-1992). No public specification of this format exists and no
     other implementation of it does either, so `src/fmt_superdisk.c`

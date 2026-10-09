@@ -170,6 +170,15 @@ int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
     return (int)OVL_CALL(OVL_CRYPT_SIT, &g);
 }
 
+void unc_crypt_pf(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                  uint16_t keylen)
+{
+    OverlayEntry e = ovl_entry(); OvlArgs g;
+    if (!e) { cr->kind = UNC_CRYPT_NONE; return; }
+    g.obj = cr; g.in = pw; g.len = pwlen; g.extra = keylen;
+    OVL_CALL(OVL_CRYPT_PF, &g);
+}
+
 int unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                        const uint8_t hash[UNC_SIT5_KEYLEN],
                        uint8_t out[UNC_SIT5_KEYLEN])
@@ -371,6 +380,16 @@ int unc_sit5_extract(UncCtx *c)
     e = ovl_image(OVL_ID_STUFFIT);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_SIT5_EXTRACT, c, NULL);
+}
+
+/* Private File: a reader with no codecs, in the StuffIt image beside the
+ * archive it always decrypts to. Its cipher calls cross to the crypt image
+ * through the resident shims above, as StuffIt 5's do. */
+int unc_pf_extract(UncCtx *c)
+{
+    OverlayEntry e = ovl_image(OVL_ID_STUFFIT);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_PF_EXTRACT, c, NULL);
 }
 
 /* Zip. Probe resident; decoder from the bundle. */

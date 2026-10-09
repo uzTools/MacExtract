@@ -221,6 +221,10 @@ void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen);
 int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                         const uint8_t hash[UNC_SIT5_KEYLEN],
                         uint8_t out[UNC_SIT5_KEYLEN]);
+/* Private File: RC4 under the first `keylen` (1..16) bytes of
+ * MD5(password). */
+void unc_crypt_pf(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                  uint16_t keylen);
 /* `scheme` picks what the FORK is encrypted with — the key derivation
  * above it is the same for all three, measured 2026-10-02 on archives
  * StuffIt Deluxe 2.0.1 and 3.5.1 wrote (FORMATS.md, *The three ways
@@ -1170,6 +1174,8 @@ int unc_packit_extract(UncCtx *c);
 
 UncFormat unc_sqp_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_sqp_extract(UncCtx *c);
+UncFormat unc_pf_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_pf_extract(UncCtx *c);
 UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cpt_extract(UncCtx *c);
 UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);

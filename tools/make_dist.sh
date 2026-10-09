@@ -122,6 +122,13 @@ to mean having StuffIt Deluxe and the right add-on. These are
 recognised by what is inside them, which not even Aladdin's own reader
 did: it went by the .pkg on the end of the name.
 
+Also since v0.37.0, and in this download: Private File (.pf) opens.
+Aladdin sold Private File in 1996 and 1997 to lock a file with a
+password before mailing it, and until now only Aladdin's own software
+could open one. You are asked for the password, as for any encrypted
+archive, and you get the original file back, both forks, type and
+creator; a wrong password is refused rather than turned into rubbish.
+
 And also since v0.37.0, and in this download: more uuencoded files open
 than before. UUTool, the Mac program most of these were made with, had
 a setting that shifted the characters it used so that mail programs

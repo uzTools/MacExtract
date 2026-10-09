@@ -106,6 +106,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_binhex\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit5\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_pf\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_arsenic\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit14\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_ccube\\.c$")
@@ -577,6 +578,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/sit14.c
             ${ENGINE_DIR}/src/sit_arsenic.c
             ${ENGINE_DIR}/src/sit_ccube.c
+            ${ENGINE_DIR}/src/fmt_pf.c
+            ${ENGINE_DIR}/src/fmt_pf_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_stuffit.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
@@ -588,6 +591,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/sit14.c
             ${ENGINE_DIR}/src/sit_arsenic.c
             ${ENGINE_DIR}/src/sit_ccube.c
+            ${ENGINE_DIR}/src/fmt_pf.c
+            ${ENGINE_DIR}/src/fmt_pf_probe.c
             ${OVL_DEPS})
 
 add_custom_command(

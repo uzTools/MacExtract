@@ -70,7 +70,8 @@ DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
 (`.uu`), btoa (`.ascii`), base64 and MIME mail attachments (`.b64`, `.mim`),
-AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (`.Z`). Resource
+Aladdin Private File (`.pf`), AppleSingle/AppleDouble, zip, gzip, tar and
+Unix compress (`.Z`). Resource
 forks, type and creator codes and dates all survive, so an extracted
 application simply runs. A zip made by PKZIP 1 in 1989 or 1990 opens too —
 those use a method nothing has written since — and a zip ZipIt made comes
@@ -91,7 +92,7 @@ it. `macextract` carries the table those files need, so a lone floppy is
 enough.
 
 **Password-protected archives** are opened too — StuffIt, StuffIt 5, Compact
-Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. The Mac
+Pro, PackIt, Private File, zip (the old cipher and WinZip's AES) and ARC. The Mac
 application asks when it reaches an entry that needs one; on Linux it is `-p`.
 One catch, and it is the format's rather than ours: an encrypted StuffIt
 archive keeps half its key in the file's resource fork, so a copy that lost
@@ -138,7 +139,8 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | DiskDoubler (`.dd`) | 🔴 | ✅ | 🔴 | ✅ |
 | Now Compress and Alysis SuperDisk! | 🔴 | 🔴 | 🔴 | ✅ |
 | RAR, ARJ and bzip2 | 🔴 | ✅ bzip2 only | ✅ | 🔴 |
-| Private File (`.pf`) and self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
+| Private File (`.pf`) | 🔴 | ✅ | ✅ | ✅ |
+| Self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
 | A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt sets split across floppies | ✅ with the add-on | ✅ | ✅ | ✅ |
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |

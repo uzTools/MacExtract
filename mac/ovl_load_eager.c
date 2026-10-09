@@ -190,6 +190,9 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_BTOA:        case UNC_FORMAT_BASE64:
     case UNC_FORMAT_SITSEG:      case UNC_FORMAT_DDSEG:
     case UNC_FORMAT_SPLIT:       case UNC_FORMAT_MIMESEG:
+    /* Private File too: its reader is resident and wants only the ciphers,
+     * but what it decrypts is a StuffIt archive, unwrapped next. */
+    case UNC_FORMAT_PRIVATEFILE:
         return;
     default:
         /* A format with no overlay of its own — or one this table has not

@@ -68,6 +68,7 @@ SITES = [
     ("zip-aes",    "unc_crypt_winzip_aes"),
     ("zip-aes128", "unc_crypt_winzip_aes"),
     ("zip-aes",    "aes_encrypt_block"),
+    ("pf",         "unc_crypt_pf"),
 ]
 
 

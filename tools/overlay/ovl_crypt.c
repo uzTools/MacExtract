@@ -78,6 +78,10 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
                                       ((const uint8_t **)g->out)[0],
                                       ((const uint8_t **)g->out)[1],
                                       (int)g->pos);
+    case OVL_CRYPT_PF:
+        unc_crypt_pf((UncCrypt *)g->obj, (const uint8_t *)g->in,
+                     (uint16_t)g->len, (uint16_t)g->extra);
+        return 0;
     case OVL_CRYPT_SIT5_KEY:
         return (int32_t)unc_crypt_sit5_key((const uint8_t *)g->in,
                                            (uint16_t)g->len,

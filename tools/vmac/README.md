@@ -200,6 +200,7 @@ read.
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
+| `privatefile.py` | **Aladdin Private File 2.0 encrypts known files**: `--fetch` takes the application out of its installer with no installer run, `--make NAME` boots System 7.0.1 with it in `Startup Items` and writes the three specimens `tools/run_privatefile.py` grades — see below |
 
 `tools/quickdraw-repro/` is a sibling that reuses `mkboot.py` and this
 directory's `Display`/emulator plumbing to answer one narrow question about
@@ -3638,6 +3639,40 @@ Four things it measured, each of which cost a step:
   `xbtoa5`, which is the half of the decoder the Unix reference only
   reaches with `-o` (FORMATS.md, *btoa*).
 
+### Making a Private File — `privatefile.py`
+
+    tools/vmac/privatefile.py --fetch            download, and unpack the application
+    tools/vmac/privatefile.py --probe            boot and photograph the picker
+    tools/vmac/privatefile.py --make t2          encrypt the subjects, lift the results
+
+`private_file_2.0.sit` comes off Macintosh Garden's mirror; its
+`Aladdin Private File Installer` is an InstallerMaker application whose
+DATA FORK is a StuffIt archive this engine opens, so **no installer is
+driven**. `PF Encrypt™` inside it is 68K with its cipher in its own
+`CODE` 4 — no StuffIt Engine, no extension, and pre-registered — and goes
+onto a copy of `Sys7.img` in `System Folder:Startup Items`, so the
+Finder launches it at boot. The subjects sit at the volume's root.
+
+The walk, per subject: *File ▸ Encrypt…* by mouse; its own picker (not
+Standard File), which opens in the APPLICATION's folder, so **Desktop**
+and a double-click on the volume; the subject's row; **Add**;
+**Encrypt**; the password; Return; the password again in *"Please
+re-enter your new password"*; Return. Then *File ▸ Quit*, *Special ▸
+Shut Down*, and every file on the root that was not put there comes off
+as MacBinary into `$UNC_VMAC_HOME/specimens/privatefile/TAG/`.
+
+Three things each cost a run:
+
+- **A Command key before any click never arrives.** No window manager
+  gives the emulator focus, so the first ⌘E went nowhere; the first
+  action is a menu pick by mouse, which clicks the window.
+- **Passwords under six characters are not accepted.** OK stays dimmed
+  (`cmpi.b #6`, CODE 4 @0x3e76) and Return does nothing — the first
+  `--make` typed `abc`, then typed it again into the same field.
+- **Subjects are encrypted last row first.** A finished `X.pf` lands
+  beside `X` and sorts after it, so encrypting row 0 first would move
+  every row below it.
+
 ### Asking Compact Pro about its own cipher — `cptcrypt.py`
 
     tools/vmac/cptcrypt.py --explore     photograph each step
@@ -3724,6 +3759,24 @@ driven too, and ends by reading the extracted bytes off the volume and
 comparing them, so the phase fails on its own rather than on somebody
 reading a screenshot. Verified on System 6.0.8: both asks, the second
 one saying "That password was refused", and every entry byte-exact.
+
+### A Private File through the application — `interactive.py --privatefile`
+
+    tools/vmac/interactive.py --privatefile -o shots fixtures/anything.bin
+
+The same walk as `--password` over a file Private File 2.0 wrote — the
+`Forked` specimen `privatefile.py --make` lifted — so the reader's two
+crossings into other images (the key setup into `ovl_crypt`, the reader
+itself in `ovl_stuffit`) and the envelope unwrap into the StuffIt archive
+inside are run by the shipped application. Wrong password first, then
+`hushnow`; both forks of `Forked` are read back off the volume. Verified
+on System 6.0.8 on 2026-10-09: refused, asked again, both forks
+byte-exact.
+
+**The resource fork is compared with bytes 16..127 masked**, as every
+on-Mac harness does: the first run compared it raw and failed on the
+file's own name, which the Macintosh stamps into that system-reserved
+range (DECISIONS.md 2026-10-09).
 
 ### Replaying the segment work — `segcheck.py`
 

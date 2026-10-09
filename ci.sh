@@ -253,6 +253,14 @@ python3 tools/ssmodule/run_ssmodule.py --macextract build/san/macextract \
 # with no specimens (TESTING.md).
 python3 tools/run_zipit.py --macextract build/san/macextract \
     || fail "ZipIt tests"
+# Aladdin Private File. Nothing else reads it, so the grader is the
+# writer: files Private File 2.0 encrypted under Mini vMac from subjects
+# whose bytes and passwords are fixed, extracted through every layer and
+# compared fork by fork. The refusals (wrong password, flipped byte,
+# truncation, an unwritten method) run without specimens; the grading
+# skips cleanly with none (TESTING.md).
+python3 tools/run_privatefile.py --macextract build/san/macextract \
+    || fail "Private File tests"
 # AppleLink packages. Nothing else on earth reads the container — not
 # `unar`, not deark, not macunpack — so three different oracles stand in:
 # the sha256 tools/derive_sqp.py recorded from an independent reading of

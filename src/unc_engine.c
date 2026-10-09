@@ -77,6 +77,9 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_BASE64,      "base64",              1, 1, unc_b64_extract },
     { UNC_FORMAT_MIME,        "MIME message",        1, 0, unc_mime_extract },
     { UNC_FORMAT_SQP,         "AppleLink package",   1, 0, unc_sqp_extract },
+    /* An envelope: one file in, one file out — and the file PF Encrypt
+     * puts in is always a StuffIt archive it made first (fmt_pf.c). */
+    { UNC_FORMAT_PRIVATEFILE, "Private File",        1, 1, unc_pf_extract },
     /* Named, never extracted (src/fmt_foreign.c). */
     { UNC_FORMAT_RAR,         "RAR",                 0, 0, NULL },
     { UNC_FORMAT_RAR5,        "RAR 5",               0, 0, NULL },
@@ -173,6 +176,10 @@ static const UncProbe unc_sniff_order[] = {
     unc_packit_probe,
     unc_gzip_probe,
     unc_compressz_probe,
+    /* 'CSIT' and a version word, confirmed by a second 'CSIT' twelve
+     * bytes from the end. Neither StuffIt probe above can take one: their
+     * magics are 'SIT!' and the StuffIt 5 banner (fmt_pf.c). */
+    unc_pf_probe,
     /* The PC-side archives, all of them a constant at a fixed offset, so
      * the whole set costs a handful of byte compares on a buffer already
      * read. They sit with the other magic numbers and ahead of

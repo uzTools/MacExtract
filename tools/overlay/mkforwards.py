@@ -48,7 +48,7 @@ unc_read_full unc_crc16_arc unc_crc16_xmodem unc_progress_at
 unc_readline unc_crypt_packit_des unc_crypt_packit_xor unc_crypt_rc4
 unc_crypt_sit unc_crypt_sit5_key unc_crypt_free unc_entry_long_name
 unc_zip_scan_eocd unc_skip unc_crypt_zip unc_crypt_winzip_aes
-unc_hmac_final
+unc_hmac_final unc_crypt_apply unc_crypt_pf
 """.split()
 
 HEADERS = ("src/unc_internal.h", "include/macextract.h")

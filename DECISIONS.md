@@ -370,6 +370,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
 - 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
 - 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
+- 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
 
 ---
 
@@ -24603,3 +24604,70 @@ because here too the table IS the allocation.
 says it is Reduce and out of scope, and the closing request for a
 specimen is made only for methods that are merely missing. It names
 deark, the one reader measured to read it.
+
+## 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
+
+**Claim.** Aladdin Private File (`.pf`) extracts, graded byte-exact on
+three files Private File 2.0 itself wrote under Mini vMac (FORMATS.md,
+*Private File*). The 2026-10-07 hypothesis — RC4 keyed by MD5 of the
+password — was right, and is a finding now rather than a guess.
+
+**The leg that was "unfinished, not negative" was the one that had it.**
+Macintosh Garden's search answered over plain `http://` the first time
+it was retried: *Aladdin Private File 2.0*, `private_file_2.0.sit`, on
+the `old.mac.gdn` mirror with a browser user agent. The 2026-10-07
+entry refused to file that leg as a negative, and this is what that
+refusal was worth. Nothing about the search was clever; it was simply
+the one not yet done.
+
+**No installer was walked.** `Aladdin Private File Installer` is an
+InstallerMaker application whose data fork is a StuffIt archive, and
+this engine already opens those — so `PF Encrypt™` came out of it on
+Linux in one command. Its cipher is in its own `CODE` 4, so it needs
+no StuffIt Engine and no extension, and it is pre-registered. Put in
+`Startup Items` on a copy of the System 7.0.1 image, it launches at
+boot. **Before driving an installer, ask whether its payload is a
+format already read here**.
+
+**The writer was read before it was run, and the run graded the
+reading.** `CODE` 4 kept its MacsBug names, so the layout came off the
+disassembly in an hour: an 18-byte clear header, a 308-byte record
+under one RC4 stream, both forks under a second, and a clear 12-byte
+footer with two CRC-32s. The first file the emulator produced matched
+it to the byte — the header was exactly the predicted
+`CSIT 0002 0001 0001 0005 0000 00000000`. Three things only the run
+could say:
+
+- **The key is five bytes**, not sixteen: `GetEncryptionKeySize` reads
+  `'KSiz'` 128 and falls back to 5, and the shipped application has no
+  `'KSiz'`. The reading had both; the file chose.
+- **The payload is never the file.** PF Encrypt Stuffs the subject
+  first and encrypts `Forked.sit`. So Private File became an ENVELOPE —
+  one file in, one file out, unwrapped by `x` like MacBinary — and its
+  reader went into the StuffIt `'OVLY'` image, beside the archive it
+  always yields.
+- **Passwords under six characters are refused by the writer**, which
+  cost the first run and changed nothing in the reader.
+
+**Where the reader lives was measured, not designed.** Resident, the
+first build cost the shipped application **+1,652 B of `CODE`**,
+more than twice what AppleLink packages did. Split like every other
+decoder — probe resident, reader in an image — it costs **+404 B of
+`CODE` and +60 of A5**: the probe, two shims and the table row. The
+reader needed two host-vector slots to reach the cipher from the
+StuffIt image, and the key setup (MD5, then RC4) went into the crypt
+image as `unc_crypt_pf`, so MD5 stays where it already was. No tier
+tally moves (tools/build_mac.sh, the eager pair).
+
+**The Macintosh application's first run "failed", and the harness was
+wrong.** Both forks came out at the right length and the resource fork
+differed in bytes 48..125 — the file's own name, which the Macintosh
+writes into a resource fork's system-reserved bytes 16..127. Every
+on-Mac harness masks that range since M10; the new phase did not, and
+the subject's fork is not a resource map, so the stamp landed on
+subject bytes. **A new harness inherits the old ones' masks or it
+rediscovers them**, and this one rediscovered it in a run.
+
+**Not supported, by decision:** derivation 0 and cipher 0, which PFEngine
+accepts and no writer here produces. They are named and refused per
+entry; reading them would be inventing them.

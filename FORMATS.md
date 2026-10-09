@@ -22,6 +22,7 @@ under *Table notes*.
 - StuffIt 5's method 14
 - Encryption
 - AppleLink packages: SqueezePlay, read out of Aladdin's own expander
+- Private File: Aladdin's encrypted single file
 - Archives named but not extracted
 - Envelope auto-unwrap
 - Segmented archives (multi-part sets)
@@ -77,6 +78,7 @@ under *Table notes*.
 | StuffIt SpaceSaver (`SPSV`) | extract | **every method the format has**: 0 stored, 1 and 2 (the "Original" LZSS pair), 3 "Alg 3" (Huffman + LZ77), 4 "Alg 4" — the last two starting their window loaded with a preset dictionary that ships inside SpaceSaver✦✦ | **48 files SpaceSaver itself wrote**, harvested 2026-09-26 off Apple Developer, MacTech, Apprentice, Info-Mac and HyperLib CD-ROMs; **46 of them decode byte-exact against the uncompressed original** on an earlier pressing of the same disc (`tools/fetch_specimens.py`, `tools/run_spacesaver.py`), plus 2,784 corrupted variants. Before them: **Aladdin's own compressors run under `qemu-m68k` and 44 forks they wrote read back byte-exact** (`tools/ssmodule/`, 2026-08-25), a synthetic round-trip and unit tests✦✦ | 4 KB stored, 8 KB method 1, 84 KB method 2, 41 KB method 3, **36 KB** for what SpaceSaver writes (measured on a Mac Plus); 68 KB is the ceiling the width byte allows. The dictionary is 9.7 KB of static data, not heap | full |
 | LZH / LHA (.lzh, .lha) | extract | -lh0- store, -lh1- (LHarc's adaptive Huffman, shared with StuffIt method 5), **-lh2- (both codes adaptive, the position tree growing with the output)**, **-lh3- (static, rebuilt per block)**, -lh4-/-lh5-/-lh6-/-lh7- (static Huffman over a 4/8/32/64 KB window), -lhd- directories, LArc's -lz4-/-lz5-/-lzs-; header levels 0, 1, 2 and 3; **MacLHA's MacBinary payload unwrapped into two forks**; every method the format has except PMarc✵ | 8 fixtures (1 real Amiga archive + 7 of lhasa's) + **182 archives from fourteen writers**, each graded against `unar` and against lhasa, + 12 sets written by LHa 1.14i itself, + 15 -lh2- and 6 -lh3- entries generated for the purpose✵ | 4–74 KB✵ | full |
 | AppleLink package (.pkg) | extract | LZW (Unix `compress` at 13 bits) and stored, both forks, versions 0 and 1, folders★★★★ | **67 forks of 8 real packages** — every path the format has — against `derive_sqp.py`'s independent reading and each record's own declared length, 4 of them against a recorded sha256, + 6 synthesised packages (22 forks) in the differential suite, + **every LZW fork decoded by `gzip` through a `.Z` header**★★★★ | 8–41 KB★★★★ | full |
+| Private File (.pf) | extract (envelope) | RC4 under the first 5 (export build) or up to 16 bytes of MD5(password); the payload is the StuffIt archive PF Encrypt makes first | no corpus file and no other reader: **3 files Private File 2.0 itself wrote**, graded byte-exact through every layer against the subjects that went in (*Private File*, below) | 6 KB | full |
 | RAR, RAR 5, 7-Zip, xz, bzip2, Cabinet, Zoo, ar/.deb, cpio, ARJ, Zstandard, lzip, lrzip, WIM, Apple Archive | **named only**, never extracted | — | archives written here by bzip2, xz, 7z, cpio and ar and confirmed by p7zip, and **Apple Archives written and re-read by libNeoAppleArchive** in all four shapes; real RAR, RAR 5 and CAB out of libarchive's test suite; synthetic Zoo, ARJ and Cabinet identified by deark; 0 false positives in 971 corpus files (*Archives named but not extracted*, below) | — | — |
 
 ## Table notes
@@ -3266,6 +3268,81 @@ with a control that succeeded (DECISIONS.md 2026-09-01, *the package that
 cannot be handed over*). `tools/vmac/spacesaver.py --pkg` re-derives its
 command parser, with four witnesses that fail against a different build.
 
+## Private File: Aladdin's encrypted single file
+
+**It extracts since 2026-10-09, and the writer is the grader.** Nothing
+else reads the format — not `unar`, deark or macunpack — so the specimens
+are three files **Aladdin Private File 2.0's own `PF Encrypt™`** wrote
+under Mini vMac from subjects whose bytes and passwords are fixed
+(`tools/vmac/privatefile.py`), and all three come out **byte-exact in both
+forks**, through every layer, on every `ci.sh` run where they are present
+(`tools/run_privatefile.py`; TESTING.md, *Private File*). Measured, all of
+it; the reading was taken off the code first and graded on the files
+after (DECISIONS.md 2026-10-09).
+
+| subject | forks | password | `.pf` | inside |
+|---|---|---|---|---|
+| `Alpha` | 593 B data | `swordfish` (9) | 825 B | `Alpha.sit`, 487 B |
+| `Forked` | 400 B data + 608 B resource | `hushnow` (7) | 734 B | `Forked.sit`, 396 B |
+| `Gamma` | 0 B data + 608 B resource | `correct-horse-battery` (21) | 713 B | `Gamma.sit`, 375 B |
+
+### The layout
+
+| offset | bytes | what | |
+|---|---|---|---|
+| 0 | 18 | `'CSIT'`, version 2, key derivation 1, cipher 1, key length, s16 0, u32 0 | clear |
+| 18 | 308 | `'CSIT'`, Str255 name, FInfo, FXInfo, data length, resource length, created, modified | RC4, its own stream |
+| 326 | data + resource | the two forks, one after the other | RC4, a second stream |
+| end − 12 | 12 | `'CSIT'`, CRC-32 of the data fork, CRC-32 of the resource fork | clear |
+
+The key is the first *key length* bytes of **MD5 of the password's bytes**
+(no length byte, no terminator), and both RC4 streams start fresh under it.
+A wrong password is known only by the record not decrypting to `'CSIT'`.
+Both CRCs are of the **plaintext**, reflected `0xEDB88320`, **started at 0
+and never inverted** — `unc_crc32` as it stands. The `.pf` is a data fork
+alone, typed `CSIT`/`CSIT`.
+
+**What is inside is never the file you encrypted.** `PF Encrypt™` Stuffs
+it first, into a StuffIt archive named after it (`Forked.sit`,
+`SITD`/`SIT!`), and encrypts that. So a Private File is an **envelope**
+here — one file in, one file out, and `x` carries on into the archive
+(*Envelope auto-unwrap*) — and its reader is in the StuffIt `'OVLY'`
+image, beside the archive it always becomes.
+
+**The key length is 5 in every file here, because the build is the export
+one.** `GetEncryptionKeySize` reads resource `'KSiz'` 128 and falls back to
+5, and Aladdin's shipped `PF Encrypt™` has no `'KSiz'`; its own blurb
+says the domestic build used all 16. The reader takes the length from the
+header, 1 to 16, so a domestic file needs nothing new — but **no 16-byte
+file has been seen**, and that is the one claim in this section a
+specimen has not graded.
+
+**What is accepted is what PFEngine accepts** (StuffIt Engine 5.1's
+`Eng ` 10009, its decrypt path): magic, version exactly 2, derivation and
+cipher each at most 1, the s16 at most 0. PFEngine also has paths for
+derivation 0 (the password's own bytes as key material) and cipher 0. No
+writer here produces either, so **they are named and refused per entry**
+(*"encrypted by a scheme we cannot read"*) rather than read by guesswork.
+
+**PF Encrypt will not take a password under six characters**: it dims OK
+(`cmpi.b #6`, CODE 4 @0x3e76). The reader does not enforce that, since
+nothing about the file depends on it.
+
+### What it costs
+
+| | |
+|---|---|
+| resident `CODE`, shipped (eager) build | **+404 B**: the probe 222, the key-setup shim 80, the reader's dispatch 46, the rest the release switch and alignment |
+| A5 | **+60 B**: the engine's table row and name, a sniff slot, two host-vector slots |
+| so, off every extraction's budget | **464 B**, and `run_tiers.py --check` moves no tally on any tier |
+| `ovl_stuffit` / `ovl_crypt` | +1,712 B / +108 B (the reader / MD5-then-RC4) |
+| peak heap | **5,696 B on all three**, constant by construction: one block holding the RC4 state, the record twice and one 4 KB I/O buffer, nothing sized by the input |
+| deepest stack chain | **678 B**: `unc_pf_extract` 412 → `unc_crypt_pf` 42 → `unc_md5` 120 → `md5_block` 104 |
+| sniffing a file that is not one | six header bytes already read; a file that passes them pays one 4-byte read for the footer. **no file in `fixtures/` and none of 4,342 cached specimens** changed its answer |
+
+The reader was resident on the first build and cost **+1,652 B** there;
+it moved into `ovl_stuffit` for that reason (tools/build_mac.sh).
+
 ## Archives named but not extracted
 
 **Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
@@ -3355,12 +3432,14 @@ missing was the search, not the reference (BLOCKERS.md).
 
 `macextract x` unwraps chained envelopes by content sniffing
 (never by extension): MacBinary, BinHex, AppleSingle/Double, gzip, .Z,
-base64, btoa and uuencode layers that yield exactly one file are
+base64, btoa, uuencode and **Private File** layers that yield exactly one file are
 recursively extracted and the intermediate deleted (`-nr` disables;
 depth ≤ 8). MIME is deliberately not on that list (DECISIONS.md
 2026-08-26 and 2026-08-27). Verified chains: `.sit.bin`, `.sit.hqx`,
 `.tar.Z` (tools/run_unwrap.py, in CI), `Subject.MBin.ascii` and a
-uuencoded MacBinary document (tools/run_btoa.py, tools/run_uu.py).
+uuencoded MacBinary document (tools/run_btoa.py, tools/run_uu.py), and
+`Forked.pf.bin` → `Forked.pf` → `Forked.sit` → `Forked`, both forks
+(tools/run_privatefile.py).
 
 A **StuffIt segment** is an envelope too, and joins that list: the
 parts are joined, the file inside comes out, and if that file is an
@@ -4850,9 +4929,18 @@ engine later the same day, fourteen until AppleLink packages arrived on
 
 | build | switch | resident `CODE` | A5 | `MacExtract.code.bin` | `MacExtract.bin` |
 |---|---|---|---|---|---|
-| **eager — SHIPPED** | (default) | **54,272 B** | 19,056 B | **65,920 B** | **229,248 B** |
-| lazy | `UNC_OVL_LAZY=1` | 52,848 B | 19,136 B | 64,512 B | 227,968 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **168,200 B** | **37,912 B** | 200,576 B | 203,904 B |
+| **eager — SHIPPED** | (default) | **54,676 B** | 19,116 B | **66,432 B** | **231,552 B** |
+| lazy | `UNC_OVL_LAZY=1` | 53,252 B | 19,196 B | 65,024 B | 230,272 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **169,852 B** | **37,972 B** | 202,368 B | 205,696 B |
+
+**Re-measured 2026-10-09, for Private File** (*Private File*), each
+configuration against HEAD built the same way: both SHIPPED
+configurations **+404 B of `CODE` and +60 of A5** — the first format
+since AppleLink packages to cost them resident bytes — and the control
+**+1,652 and +60**, the difference being the 1,248 B reader that the
+shipped builds keep in `ovl_stuffit` (26,274 → **27,986 B**), with
+`ovl_crypt` 10,140 → **10,248 B** and the download 229,248 →
+**231,552 B**.
 
 **Re-measured 2026-10-08 again, for zip method 1** (*Shrink*): the
 control **+1,164 B of `CODE` and −12 of A5**, both SHIPPED
@@ -5038,11 +5126,11 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **132,784 B** since 2026-10-08's
-Shrink (*Three configurations, one tree*); the probe pair has not been re-measured,
+measured 2026-09-27. The shipped pair is **134,032 B** since 2026-10-09's
+Private File (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **159,968 B** — the fifteen images sum to 159,772 B, so its
+The bundle is **161,788 B** — the fifteen images sum to 161,592 B, so its
 index costs **196 B**: a 4-byte header, 12 bytes of directory per image
 and 12 bytes of padding to 4, which accounts for the whole difference
 (re-measured 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw
@@ -5069,11 +5157,13 @@ minimum match length, the index unmoved again for the same reason.
 2026-10-07** while this figure and the sum below were both raised, so
 that check spent a day reporting a 1,924 B growth it should have been
 holding — it warns rather than fails on the bundle, which is why
-nothing went red. Raised to 158,752 in the same commit as this, and to
-159,968 on 2026-10-08 for Shrink (*Shrink*).
+nothing went red. Raised to 158,752 in the same commit as this, to
+159,968 on 2026-10-08 for Shrink (*Shrink*), and to 161,788 on
+2026-10-09 for Private File — `ovl_stuffit` +1,712 and `ovl_crypt` +108,
+the index unmoved at 196 B (*Private File*).
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
-therefore watches the 65,664 B `MacExtract.code.bin` and not the download.
+therefore watches the 66,432 B `MacExtract.code.bin` and not the download.
 (That figure read 64,768 B until 2026-10-05, when the AppleLink probe
 raised it, and 64,512 B until 2026-10-01, which was the
 ratchet's EXPECT rather than the build's size — 256 B inside its
@@ -5085,8 +5175,8 @@ than failing on it, exactly as its tolerance is meant to.)
 
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
-and the shipped build reads 66,400 B of `CODE` plus the **159,968 B**
-bundle, which is **226,368 B** (DECISIONS.md 2026-09-25, *the overlay
+and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
+re-derived since) plus the **161,788 B** bundle, which is **228,188 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5157,7 +5247,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 132,784 B of `CODE` and A5 the shipped build does not carry
+which is the 134,032 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5165,9 +5255,10 @@ a 496 B change to the application**, which is what makes it a figure rather
 than a leftover (DECISIONS.md 2026-09-27, *the residue that was two numbers*).
 The residue and the tier budgets under it are the machine's, taken
 2026-09-27 against a SHIPPED application of 52,972 B of `CODE` and 18,964 B
-of A5. It is 54,272 and 19,056 now (*Three configurations, one tree*), so
-every figure in this table is **1,392 B more generous than the Macintosh now
-is** — 288 B of that is the 2026-09-29 Optimizer work's resident part,
+of A5. It is 54,676 and 19,116 now (*Three configurations, one tree*), so
+every figure in this table is **1,856 B more generous than the Macintosh now
+is** — **464 B of that is Private File** (2026-10-09: its probe and two
+shims; *Private File*), 288 B is the 2026-09-29 Optimizer work's resident part,
 **788 B is the AppleLink package probe**, which is the largest single
 addition to the resident build since the overlays landed, **320 B is
 the zip-behind-a-stub probe** of 2026-10-05, and the depth limit GOING on 2026-10-07 gave **64 B back**, the walker
@@ -5184,7 +5275,7 @@ it is a run on the machine. **This read "336 B smaller" and "~560 B more
 generous" until 2026-10-02**, two figures that could not both be the gap
 between the same pair of builds; the two sizes are quoted above now so the
 subtraction is the reader's.
-Every figure in it is that sum, re-taken 2026-10-08 against the current
+Every figure in it is that sum, re-taken 2026-10-09 against the current
 `OVL_SAVED` and images — the ten marked *(measured)* are the formats with a
 fixture in the Mac sample, so `run_tiers.py --shipped` confirms the tally
 at that budget; the five marked otherwise are the same sum with no fixture
@@ -5194,19 +5285,19 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+122,582 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
-| Now Compress | now, codecs | **+119,504 B** (measured) |
-| SuperDisk! | superdisk, codecs | +117,524 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+115,014 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+111,790 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+108,818 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +107,860 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+106,314 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +98,670 B (arithmetic), and **+108,818 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+92,546 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+88,160 B** (measured) |
-| Zip, spanned zip | exo, ciphers, codecs | +82,398 B (arithmetic), **+92,546 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−27,858 B** (measured) |
+| **AppleLink package** | **sqp, codecs** | **+123,830 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the fifteen images at 2,000 B |
+| Now Compress | now, codecs | **+120,752 B** (measured) |
+| SuperDisk! | superdisk, codecs | +118,772 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+116,262 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+112,930 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+110,066 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +109,108 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+107,454 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +99,810 B (arithmetic), and **+110,066 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+93,794 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,588 B** (measured) |
+| Zip, spanned zip | exo, ciphers, codecs | +83,538 B (arithmetic), **+93,794 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,430 B** (measured) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5228,6 +5319,12 @@ day for **zip method 1**, +1,152 in the control and +0 in the shipped
 build — the first change in this list to put its image bytes in
 `ovl_codecs`, which EVERY format keeps, so the rows rose only 36 B and
 the three holding `ovl_exo` fell 64, as did the envelope row (*Shrink*).
+And -> **134,032 B** on 2026-10-09 for **Private File**, +1,652 in the
+control and +404 in the shipped build, so +1,248 B is the reader the
+images hold: the rows rose 1,248, the three keeping the cipher image
+1,140, and the two StuffIt rows and the envelope row FELL 572, because
+`ovl_stuffit` grew 1,712 B and `ovl_crypt` 108 to hold it (*Private
+File*).
 So every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. **The exception is
@@ -5251,7 +5348,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 159,968 B held against 132,784 B saved. It costs nothing on the tiers
+it — 161,788 B held against 134,032 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5305,12 +5402,12 @@ this table's successor rows quote. Summing per object also overstates
 what SHIPS, because `--gc-sections` drops what nothing calls: the linked
 figure is `tools/code_map.py`'s, below.
 
-The application ships as **229,248 B** of MacBinary (`dist/MacExtract.bin`,
-re-read 2026-10-08 off the committed file rather than off the v0.37.0 tag it
-used to name), and since 2026-09-25 that is no longer all resident:
-**65,920 B** is
+The application ships as **231,552 B** of MacBinary (`dist/MacExtract.bin`,
+re-read 2026-10-09 off the build `tools/make_dist.sh` copies), and since
+2026-09-25 that is no longer all resident:
+**66,432 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **159,968 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **161,788 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -7315,7 +7412,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **159,968 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **161,788 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the

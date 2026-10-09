@@ -1014,9 +1014,9 @@ def pef_code(raw, base=0):
 # code section it carries byte for byte. The roll-call is here because
 # it is this project's only external checklist of Macintosh archive
 # formats written by somebody who shipped all of them: twelve are
-# formats, one is StuffIt creation and one is a CRC helper, and the
-# only format on it this engine does not read is Private File
-# (OPEN_ITEMS.md).
+# formats, one is StuffIt creation and one is a CRC helper, and this
+# engine reads all twelve formats — Private File, the last, since
+# 2026-10-09 (FORMATS.md, *Private File*).
 POWERPLUG = [
     (0x00000, "UnStuffEnginePPCExt", "StuffIt, expand"),
     (0x38250, "StuffEnginePPC", "StuffIt, CREATE — out of scope here"),
@@ -1027,7 +1027,7 @@ POWERPLUG = [
     (0x87000, "HQXEnginePPC", "BinHex — the one cited"),
     (0x915f0, "LHaEnginePPC", "LHa"),
     (0x9c1b0, "MIMEEnginePPC", "MIME"),
-    (0xb4910, "PFEnginePPC", "Private File — NOT READ HERE"),
+    (0xb4910, "PFEnginePPC", "Private File"),
     (0xbdd80, "UUEnginePPC", "uuencode"),
     (0xc59e0, "ZIPEnginePPC", "Zip"),
     (0xd16e0, "Seg_JoinEnginePPC", "StuffIt segments"),

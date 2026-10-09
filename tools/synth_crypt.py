@@ -789,8 +789,19 @@ def build_cpt(password):
 
 # ---------------------------------------------------------------------------
 
+def build_pf(password):
+    """An Aladdin Private File, from tools/synth_pf.py — this project's
+    own reading, graded on files Private File 2.0 wrote (FORMATS.md,
+    *Private File*). Everything between the clear header and the clear
+    footer is ciphertext: the record, then both forks."""
+    import synth_pf as PF                                     # noqa: E402
+    blob = PF.encode("Secret", b"TEXT", b"ttxt",
+                     b"Private File seed.\r" * 40, b"fork" * 30, password)
+    return blob, [(18, len(blob) - 12)]
+
+
 KINDS = ["sit-des", "sit5-rc4", "packit-xor", "packit-des", "cpt",
-         "arc-garble", "zip-crypt", "zip-aes", "zip-aes128"]
+         "arc-garble", "zip-crypt", "zip-aes", "zip-aes128", "pf"]
 
 
 def build(kind, password):
@@ -814,6 +825,8 @@ def build(kind, password):
         blob, ranges = build_zip_aes(password)
     elif kind == "zip-aes128":
         blob, ranges = build_zip_aes(password, 16)
+    elif kind == "pf":
+        blob, ranges = build_pf(password)
     else:
         blob, ranges = build_packit(password, kind == "packit-des")
     return blob, ranges, None

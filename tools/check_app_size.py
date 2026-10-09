@@ -89,9 +89,18 @@ import sys
 # has the whole arithmetic, including the +376 it read for an hour). Re-taken rather than
 # absorbed into the tolerance, on the same terms as the entry above and
 # as tools/build_mac.sh's six ratchets. `run_tiers.py --check` moves no tally in either lane.
-EXPECT = 65920
+# RE-TAKEN 2026-10-09, 65,920 -> 66,432, for Aladdin Private File
+# (`.pf`). Resident `CODE` +404 and A5 +60 in the shipped build: the probe
+# (222 B — the sniffer calls it for every file), the shim that keys the
+# cipher in the crypt image (80 B), the one that dispatches the reader
+# (46 B), and the engine's table row and name. The reader itself is in
+# `ovl_stuffit`, beside the StuffIt archive a Private File always
+# decrypts to. Re-taken rather than absorbed into the tolerance, on the
+# same terms as tools/build_mac.sh's six ratchets, which moved in the
+# same commit. `run_tiers.py --check` moves no tally in either lane.
+EXPECT = 66432
 TOLERANCE = 2048
-TAKEN = "2026-10-07"
+TAKEN = "2026-10-09"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -171,9 +180,13 @@ TAKEN = "2026-10-07"
 # past 32 KB (FORMATS.md, *Shrink*). Resident `CODE` and A5 do not move
 # in either shipped configuration, and `run_tiers.py --check` moves no
 # tally in either lane.
-EXPECT_BUNDLE = 159968
+# RE-TAKEN 2026-10-09, 159,968 -> 161,788, for Private File: `ovl_stuffit`
+# 26,274 -> 27,986 (the reader, and its probe again for the reader's own
+# check) and `ovl_crypt` 10,140 -> 10,248 (`unc_crypt_pf`, MD5 then RC4).
+# What it costs the engine's budget is in EXPECT above.
+EXPECT_BUNDLE = 161788
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-08"
+TAKEN_BUNDLE = "2026-10-09"
 
 
 def main():
