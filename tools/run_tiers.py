@@ -301,13 +301,14 @@ EXPECT = {"floor-1M": 71, "sys3-512K": 67, "sys6-512K": 64}
 # the formats that keep `ovl_exo` as well, and for an envelope, which
 # keeps the whole bundle. Not compensated, on the same terms as every
 # row above.
-# **+1,248 on 2026-10-09, 132,784 -> 134,032, for Aladdin Private File**:
-# the control's CODE +1,652 and A5 +60, the shipped build's +404 and +60,
-# so what the images hold is the 1,248 B reader (in `ovl_stuffit`). A
-# Private File is an envelope and keeps the whole bundle, so its grant is
-# the bundle's; for every other format the grant moves by +1,248 less
-# whatever of `ovl_stuffit` (+1,712) and `ovl_crypt` (+108) it keeps.
-OVL_SAVED = 134032
+# **+1,280 on 2026-10-09, 132,784 -> 134,064, for Aladdin Private File**:
+# the control's CODE +1,616 and A5 +64, the shipped build's +368 and +32,
+# so the images hold the 1,248 B reader (in `ovl_stuffit`) and the rest is
+# `.data` alignment stepping differently in the two builds. A Private
+# File is an envelope and keeps the whole bundle, so its grant is the
+# bundle's; for every other format the grant moves by +1,280 less
+# whatever of `ovl_stuffit` (+1,676) and `ovl_crypt` (+108) it keeps.
+OVL_SAVED = 134064
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -379,7 +380,7 @@ OVL_RESIDUE = -666
 # (FORMATS.md, *How deep anything actually nests*). NOW is the largest
 # because its tree is implied by counts rather than marked, so it carries
 # an accumulator and two ordered pop loops instead of one test.
-# **STUFFIT and CRYPT re-taken 2026-10-09 for Private File**: +1,712 B
+# **STUFFIT and CRYPT re-taken 2026-10-09 for Private File**: +1,676 B
 # for its reader, which lodges in the StuffIt image, and +108 B for the
 # MD5-then-RC4 key setup in the cipher one.
 IMAGES = {
@@ -394,12 +395,12 @@ IMAGES = {
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     27986,
+    "OVL_ID_STUFFIT":     27950,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11502,
 }
-BUNDLE = 161788
+BUNDLE = 161752
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

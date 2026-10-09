@@ -24652,12 +24652,25 @@ could say:
 **Where the reader lives was measured, not designed.** Resident, the
 first build cost the shipped application **+1,652 B of `CODE`**,
 more than twice what AppleLink packages did. Split like every other
-decoder — probe resident, reader in an image — it costs **+404 B of
-`CODE` and +60 of A5**: the probe, two shims and the table row. The
+decoder — probe resident, reader in an image — it costs **+368 B of
+`CODE` and +32 of A5**: the probe, two shims and the table row. The
 reader needed two host-vector slots to reach the cipher from the
 StuffIt image, and the key setup (MD5, then RC4) went into the crypt
 image as `unc_crypt_pf`, so MD5 stays where it already was. No tier
 tally moves (tools/build_mac.sh, the eager pair).
+
+**The probe was the outlier, and the first commit shipped it at 222 B.**
+The maintainer asked why a format test and two hooks cost 464 B. The
+shims were ordinary — 80 B against 72 for their siblings, 46 B against
+56 — but the probe was larger than StuffIt classic's while testing less.
+Its fields went through `unc_get_u16be`, and on a 68000 that rebuilds
+each big-endian field with shifts before comparing it with a constant
+of 0, 1 or 2. Comparing the bytes themselves (`head[4] | head[6] |
+head[8]` zero, then three byte compares) made it 186 B. The total fell
+to 400 B, with 28 B of A5 coming back as alignment. **A probe that
+compares fields with small constants should compare bytes**: the
+accessor is right for a field the code reads as a number, and wasteful
+for one it only compares.
 
 **The Macintosh application's first run "failed", and the harness was
 wrong.** Both forks came out at the right length and the resource fork
