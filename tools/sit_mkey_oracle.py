@@ -43,10 +43,11 @@ The MKey is given with `--mkey HEX16`, or read off an archive with
 `'MKey'` resource (Inside Macintosh: More Macintosh Toolbox, "Resource File
 Format" — the layout `unc_resfork_find` in `src/unc_crypt.c` reads).
 
-Run with no arguments for the self-test. It grades `verify_*` against the
-three archives StuffIt Deluxe 3.5.1 wrote under Mini vMac
-(`tools/vmac/sitcrypt.py`; the specimen cache), whose MKeys came from
-Aladdin's DES and not from this project's: the right password must verify,
+Run with no arguments for the self-test. It grades `verify_*` against
+four MKeys Aladdin's software wrote — the three archives StuffIt Deluxe
+3.5.1 wrote under Mini vMac (`tools/vmac/sitcrypt.py`) and the Shortcut
+1.5.3 updater (the specimen cache) — which came from Aladdin's DES and not
+from this project's, and grades the compiled scanner and `unfold()` too: the right password must verify,
 a password one character off must not, the archive key must verify and one
 bit off it must not, and a scan must find it in a blob and find nothing in
 a blob without it. Without the specimens it says so and grades only the

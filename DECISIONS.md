@@ -22150,7 +22150,9 @@ graded by `run_diff` against `unar`, carried by `run_robustness.py`,
 run under qemu-m68k by `tests/run_mac_sink.sh` and run on four emulated
 tiers. A 278,896 B fork takes its peak heap from 65,152 B to 294,528 B,
 which is more than one of the two 512 KB lanes grants StuffIt 5
-(210,976 B — short by 83,552, measured). So covering one branch would
+(210,976 B — short by 83,552, measured; at the bases re-taken 2026-10-09
+both 512 KB lanes refuse it, 197,864 and 293,264 B, short by 96,664 and
+1,264 — FORMATS.md, *StuffIt 5's method 14*). So covering one branch would
 have moved a peak-RAM figure, a budget row and a tier tally, and every
 one of those would then be re-measured on an emulator at minutes a run.
 **The branch is worth less than the tallies.** The archive is generated
@@ -25112,7 +25114,8 @@ any file is written (2026-10-10, *the installer's own key*; BLOCKERS.md).
 
 **The question.** `sit_scheme()` reads bytes 107/109 of a StuffIt entry as
 encryptor-module ids and, on the two forks of Aladdin's *Shortcut 1.5.3
-Update* that carry 5/3 and 6/5 there, routes one to `NewDEx` and refuses the
+Update* that carry 5/3 and 6/5 at 106/109 (empty data forks, so only 109
+is read), routes one to `NewDEx` and refuses the
 other as *"a scheme we cannot read"* while the archive's other eleven forks —
 all method 13, id 0 — ask for a password under the built-in scheme
 (FORMATS.md, *Where an archive names the module*). The hypothesis is that those
@@ -25142,22 +25145,18 @@ process memory (`/proc/<pid>/mem`) at the splash, at the license and across the
 destination dialog — **45 dumps** in all — and scanning every one for the
 archive key found **nothing**. The password is not a plaintext string in the
 uncompressed resources either, and the installer's engine lives in compressed
-`ADCR` resources no reference here decodes. The reading, a HYPOTHESIS from
-that negative: the archive key is computed **lazily, when extraction
-starts**, not at launch — so a dump has to
-be taken *during decrypt*, and the destination picker is before it. Completing
-that picker is its own obstacle: it is a plain folder navigator whose "Open"
-only ever descends, and this updater may want the prior Shortcut present to
-update; driving it to the extract step was not solved here.
+`ADCR` resources no reference here decodes. **The reading drawn here, and
+WITHDRAWN the next day**: that the archive key is computed lazily, when
+extraction starts. The "destination picker" was not a folder navigator but
+Standard File asking for the installed Shortcut, and until it had one the
+installer never derived the key; given a stand-in, the key was in memory
+before any file was written (2026-10-10, *the installer's own key*).
 
-**The transferable part.** *"Its key is in its own CODE"* was half right and
-the wrong half to act on: the key exists as a constant, but it reaches a
-byte-addressable form only at decrypt time, and a verifier that checks the
-derived key rather than the password is what makes a memory image answer the
-question. The install-UI step is what remains; the instrument for the moment it
-is reached is built and checked (OPEN_ITEMS.md, *StuffIt 2.0*). The updater is
-kept at `~/.cache/macextract/specimens/shortcut-updater/` so the next attempt
-starts at the install, not at Discmaster.
+**The transferable part.** A verifier that checks the derived key rather
+than the password is what lets a memory image answer the question, and it
+held. The inference from 45 empty dumps did not: an absence in memory said
+the program had not reached the key, not WHEN it would — the same shape as
+a timeout read as a measurement (BLOCKERS.md, *Withdrawn claims*).
 
 ## 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
 

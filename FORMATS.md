@@ -1657,7 +1657,13 @@ against the second of each pair — which is the encryptor id, and **4 is the
 built-in scheme that replaced the modules**: the three archives StuffIt Deluxe
 3.5.1 wrote here (*Encryption*, below) carry `07 03 00 04 00 04` at 104..109.
 The application hardcodes the name **DES** for encryptor id 1, a module this
-project has no file for.
+project has no file for. **"Replaced" is a HYPOTHESIS**: that 3.x writes
+only its built-in scheme rests on those three archives and on no DES,
+`DESex` or `PassLock` fork among the 166,970 walked headers of
+2026-10-09/10, not on reading 3.x's code. It is load-bearing since
+2026-10-10, because `sit_enc_id` ignores 107/109 on a method-13 fork: a
+3.x method-13 fork that a DES module really did encrypt would be read
+with the built-in cipher and fail its CRC.
 
 **The 2.0.1 method names, from the same pane** (STR# 261): 0 no compression,
 1 RLE, 2 LZW, 3 and **9** Huffman, 5 LZ-H, 6 FHF, **7 an external Compressor
@@ -1676,8 +1682,8 @@ five `104..109` "exceptions" counted before this reading are two
 nothing left to explain.
 
 **InstallerMaker 1.0.3 writes nonzero bytes here that are not module ids —
-measured 2026-10-10.** Aladdin's *Shortcut 1.5.3 Update* (Info-Mac 1994-01;
-Eagle's Nest disc 1) is an `APPL`/`STi0` whose data fork is a version-2
+measured 2026-10-10.** Aladdin's *Shortcut 1.5.3 Update* (on Info-Mac 1994-01, Eagle's Nest disc
+1 and HyperLib 1994-1 CD2) is an `APPL`/`STi0` whose data fork is a version-2
 archive with an `MKey` beside it: all 13 forks are `0x8d`, method 13, and
 11 carry 0 at 106..109. `Shortcut™` carries **5 / 3** at **106 / 109** and
 `Viewer Engine™` **6 / 5** (CORRECTED 2026-10-10: 2026-10-09 had changed
@@ -1698,16 +1704,18 @@ in `src/fmt_sit.c`); `tools/run_crypt.py` grades the archive against the
 installer's output.
 
 **The thirteenth fork, `Read Us First!/Shortcut 1.5 Addendum`, is
-damaged in its compressed stream, and no decoder is at fault — measured
-2026-10-10:**
+broken in its compressed stream, and no decoder is at fault — measured
+2026-10-10.** That it was DAMAGED, rather than written bad by
+InstallerMaker in 1994, is a HYPOTHESIS: the copies below agree, so
+nothing here can tell the two apart.
 
 | | |
 |---|---|
-| three decoders | this engine, `unar` and Aladdin's installer write the same 210,162 B (Aladdin's differs only in the reserved header bytes 74..125), and all three fail the stored CRC-16 `634e` — ours computes `6ff1` |
+| three decoders | this engine, `unar` and Aladdin's installer agree on the first 210,162 B — the declared length — except the reserved header bytes 74..125, and all three fail the stored CRC-16 `634e` (ours computes `6ff1`); the installer writes **238,917 B** in all, carrying on past the length, where this engine stops with an error after 19,431 B more (measured off the installer's own copy, 2026-10-10) |
 | where it breaks | the resource data chains through 160 records to output offset **159,173**, mid-text (*"…kept in this file. Extensions"*), then turns to LZ-shaped noise; the bytes the header calls the map at 206,785 are noise too |
-| the stream | every other fork in the archive emits the end symbol `0x140` exactly at its declared length; this one has used 67,650 of its ~74,056 compressed bytes there and decodes **19,431 B** more, with no end symbol, into an error. The desync is near compressed byte 55,208, data-fork offset ~288,770. Aladdin's installer decodes past the length too, which is its 238,917 B |
+| the stream | every other fork in the archive emits the end symbol `0x140` exactly at its declared length; this one has used 67,650 of its 74,056 compressed bytes there (the fork is 74,072 B with its 16-byte encryption trailer) and decodes **19,431 B** more, with no end symbol, into an error. The desync is near compressed byte 55,208, data-fork offset ~288,770 |
 | the copies | Info-Mac 1994-01 and HyperLib 1994-1 CD2 carry the same data fork, byte for byte (SHA-1 `a7cc9ccc…`), so the damage is upstream of both pressings |
-| one bit? | **no**: flipping each of the fork's 592,576 bits passes the CRC six times, and all six are collisions — none ends at `0x140` or yields a map that parses (DECISIONS.md 2026-10-10, *the six repairs that were a 16-bit check*) |
+| one bit? | **no**: flipping each of the fork's 592,576 bits passes the CRC six times — about what a 16-bit check predicts, ~8 once the flips that cannot reach it are excluded (past byte 67,650 or failing the decode) — and all six are collisions — none ends at `0x140` or yields a map that parses (DECISIONS.md 2026-10-10, *the six repairs that were a 16-bit check*) |
 
 ### What Aladdin's own output says — measured 2026-09-28
 
@@ -2449,7 +2457,7 @@ longest code is 17 bits against the 32 the assignment can represent.
 |---|---|
 | peak heap, 7.0.3's payload | **276,088 B** — the 256 KB window, 4.7 KB of trees and ladders, and the I/O buffers |
 | peak heap, `synth-sit14.sit` | 65,152 B (its longest fork is 17,799 B, so the window is 32 KB) |
-| peak heap, `synth_sit14.py --wrap` | **294,528 B** (a 278,896 B fork, so the window is the whole 256 KB). Passes at a 409,600 B budget and at 306,376; refused per entry at 210,976, 83,552 B short |
+| peak heap, `synth_sit14.py --wrap` | **294,528 B** (a 278,896 B fork, so the window is the whole 256 KB). Passes at a 409,600 B budget; refused per entry at both 512 KB tiers' StuffIt 5 grants, 293,264 and 197,864 B, short by 1,264 and 96,664 (CORRECTED 2026-10-10: this read "passes at 306,376; refused at 210,976, 83,552 B short", the bases before 2026-10-09's re-take) |
 | `ovl_stuffit` image | 23,670 → **26,274 B** (26,278 until the sort fix of 2026-10-06, which is -4 B), read at launch and released for every archive that is not a StuffIt one |
 | resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
 | resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |
@@ -5451,9 +5459,9 @@ budget per format, and one per layer*).
 | ARC | arc, ciphers, codecs | **+107,606 B** (measured) |
 | Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +99,818 B (arithmetic), and **+110,070 B** where the directory says no entry is encrypted (measured) |
 | Tar | exo, codecs | **+93,894 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,788 B** (measured; −24 B on 2026-10-10 with `ovl_stuffit`) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,788 B** (measured; the −24 B of 2026-10-10 with `ovl_stuffit` is arithmetic, no tier re-run) |
 | Zip, spanned zip | exo, ciphers, codecs | +83,642 B (arithmetic), **+93,894 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,450 B** (measured; −24 B on 2026-10-10 with the bundle) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,450 B** (measured; the −24 B of 2026-10-10 with the bundle is arithmetic, no tier re-run) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`

@@ -3443,10 +3443,11 @@ corrupt*, *a scheme we cannot read*, and both forks absent. Without the
 specimen it skips and says so. Beside it in `ci.sh`, `tools/sit_mkey_oracle.py`'s
 self-test grades the archive-key oracle on the four MKeys Aladdin's
 software wrote, and grades `tools/sit_akscan.c` against the Python
-verifier. Six mutations of the scanner and one of `unfold()` each fail it:
-answering yes to every window, skipping odd windows, skipping even
-windows, dropping the last window, comparing two bytes instead of four,
-and decrypting where it should encrypt. **It cannot see** a fault shared
+verifier. Five mutations of the scanner and one of `unfold()` each fail
+it: answering yes to every window, skipping odd windows, skipping even
+windows, dropping the last window and comparing two bytes instead of four;
+and `unfold()` encrypting where it should decrypt (re-measured
+2026-10-10: it fails on pw8 and the updater). **It cannot see** a fault shared
 by both scanners, since they verify with the same algorithm; the MKeys
 Aladdin's software wrote are what grade that.
 
