@@ -21,10 +21,12 @@ bytes out. That is the whole point of the harness.
 2026-09-28, and every step below is the same either way. Each dialog
 this harness drives is drawn over a FINDER menu bar (look at
 `specimens/sitcrypt/pw8/04-new-dialog.png`), because ⌘N and ⌘S here
-belong to Aladdin's Finder extension; the 3.5.1 application does not
-launch on this image at all. It makes no difference to the archives,
-and all the difference to anyone who comes here wanting a dialog only
-the application has (BLOCKERS.md, withdrawn claims).
+belong to Aladdin's Finder extension. The 3.5.1 application does
+launch on this image, by a double-click on its icon and not by ⌘O
+(`sitopt.launch351`; `sitenc351.py` drives it). It makes no difference
+to the archives, and all the difference to anyone who comes here
+wanting a dialog only the application has (BLOCKERS.md, withdrawn
+claims).
 
     tools/vmac/sitcrypt.py --map        photograph the application's menus
     tools/vmac/sitcrypt.py              make the archive and read it back

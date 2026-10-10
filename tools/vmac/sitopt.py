@@ -58,8 +58,13 @@ What this CANNOT see:
   driven both ways by `--dcmpdata` and rebuilds a valid document;
   nothing has run `Sound 1`, `Photoshop 1` or `JPEG Lossy`, and `Text
   1` has no `DCMP` to run.
-- **whether 3.5.1 would use a 2.0 module.** `--install351` puts `Text 1`
-  in both places 3.5 might look; that application does not launch here.
+- **whether 3.5.1 would use a 2.0 Optimizer.** `--install351` puts
+  `Text 1` in both places 3.5 might look, and the application DOES launch
+  — by a double-click, `launch351` (BLOCKERS.md, withdrawn 2026-10-10).
+  Nothing has opened its Optimizers dialog; its script answers `Enable
+  Optimizer` with *"No longer supported"*, measured with no Optimizer
+  installed (`sitenc351.py`). Encryptor modules it does not use at all
+  (FORMATS.md, *Where an archive names the module*).
 - **the 512 KB machine.** It boots `mv-4M`: the resource fork alone is
   423 KB.
 """
@@ -930,7 +935,8 @@ def phase_options(args):
     """Try to open `Magic ▸ StuffIt Options ▸`, which is a SUBMENU.
 
     Everything else is exhausted: 2.0.1's application checks its serial
-    number, 3.5.1's has never launched here either, and Magic Menu's
+    number, 3.5.1's was believed not to launch (it does, by a
+    double-click — BLOCKERS.md, withdrawn 2026-10-10), and Magic Menu's
     control panel is an on/off switch (its DITL -4064 is "No Magic",
     "Help" and a version string). The Addendum puts the Optimizers
     dialog in the application's Options menu or in a Stuff dialog, and

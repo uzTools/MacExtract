@@ -3423,12 +3423,28 @@ resource fork too; our CLI is given the bare `.sit` and finds the same
 resource in the sidecar file it writes itself.
 
 **StuffIt classic is graded by StuffIt Deluxe 3.5.1** when the emulator
-has been run: `tools/vmac/sitcrypt.py` has the application encrypt a
+has been run: `tools/vmac/sitcrypt.py` has its Magic Menu encrypt a
 known file under a chosen password and keeps the archive — as
 MacBinary, because the password verifier is in the archive's resource
 fork. Three are kept, with passwords of 8, 9 and 17 characters, and
 those lengths are not decoration: they are what showed that the fold
 count is ceil(len/8) and that neither reference implements it.
+
+**The 3.5.1 application's own ciphers are graded too** (added
+2026-10-10): `tools/vmac/sitenc351.py --script` has it stuff a known
+file with each cipher word its script language has (`des`, `newde`,
+`encrypt`, and `encrypt` after `Set encryptor "NewDEx"`), with 2.0's
+three Encryptor modules installed, plus an unencrypted control.
+`check_sit351` decrypts each one to the subject's two forks, refuses a
+wrong password through `x` (`t` and `l` act on the MacBinary envelope
+alone, so a `t` exits 0 with any password), and **asserts the header**:
+method 13 on both forks and encryptor id 4 at 107/109, which is the
+measurement `sit_enc_id` rests on (FORMATS.md, *Where an archive names
+the module*). **Measured able to fail**: one archive's byte 109 set to 1
+with its header CRC fixed gives one problem, the id, while it still
+decrypts under the current rule; a wrong password in `made.json` gives
+three. **It cannot see** what any other 3.x build writes — 3.5.1 is the
+only one here. Without the specimens it skips and says so.
 
 **One wild StuffIt classic archive is graded by the installer that
 carries it** (added 2026-10-10): Aladdin's *Shortcut 1.5.3 Update*, from

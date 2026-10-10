@@ -3551,11 +3551,9 @@ What these CANNOT see:
 StuffIt Deluxe 3.5.1 (installed by `spacesaver.py --install351`) writes
 StuffIt classic archives with passwords, and this drives it: File ▸ New,
 Archive ▸ Stuff… with **Encrypt with password** ticked, then the
-password twice. **Those menus are MAGIC MENU's, in the Finder** — the
-application itself has never launched on this machine, here or
-anywhere else in this tree (BLOCKERS.md, withdrawn claims, 2026-09-28).
-It changes nothing about the archives and everything about what else
-this image can be asked to do. The archive comes off as MacBinary because the
+password twice. **Those menus are MAGIC MENU's, in the Finder**: ⌘O
+does not launch the application on this image, and a double-click does
+(`sitenc351.py`, below; BLOCKERS.md, withdrawn claims, 2026-10-10). The archive comes off as MacBinary because the
 verifier — `'MKey'` 0 — is in its RESOURCE fork.
 
 It exists because the archive key's fold count was a standing
@@ -3642,6 +3640,40 @@ Four things it measured, each of which cost a step:
 - **It writes the OLDER framing.** `xbtoa Begin` … `xbtoa End`, not
   `xbtoa5`, which is the half of the decoder the Unix reference only
   reaches with `-o` (FORMATS.md, *btoa*).
+
+### The 3.5.1 APPLICATION, and its ciphers — `sitenc351.py`
+
+    tools/vmac/sitenc351.py --install [--plain]   2.0's Encryptors added
+    tools/vmac/sitenc351.py --probe --tag probe1  menus and Preferences
+    tools/vmac/sitenc351.py --script --tag script2
+    tools/vmac/sitenc351.py --script --variants --answers 4 --tag variants1
+
+The image is `ssinstalled.hfv` plus `PassLock`, `NewDEx` and `DESex` in
+`{system}Encryptors:` and `Extensions:Aladdin:Encryptors:`, a subject and
+two scripts. `--script` launches the application, ticks *Script* in
+Preferences' *Menus* box (off by default, so ⌘E does nothing until it
+is), runs the script with ⌘E, types the password into every dialog,
+quits and shuts down, then prints each archive's header and the status
+file and writes `made.json` for `tools/run_crypt.py`. What it measured is
+FORMATS.md's, *Where an archive names the module*. Three things it will
+teach you, each of which cost a run:
+
+- **⌘O does not launch it; a double-click does** (`sitopt.launch351`).
+  Three ⌘O runs were written up as "does not launch" (BLOCKERS.md).
+- **The Script checkbox wants its LABEL clicked**, at (300, 273); a click
+  on the box at (282, 272) left it clear and the preview menu bar in the
+  dialog unchanged, which is the way to tell.
+- **Quit before Shut Down.** With the application frontmost there is no
+  Special menu, the click at Shut Down's position does nothing, and the
+  image is never flushed — `script1` came back unmountable.
+
+What this CANNOT see:
+
+- **any 3.x but 3.5.1**, or a third party's Encryptor module.
+- **the Optimizers dialog.** The script answers `Enable Optimizer` with
+  *"No longer supported"*, measured with no Optimizer installed.
+- **the Apple-event route**, which is not driven: its `stuff` takes only
+  the boolean `encryption`, so it cannot name a cipher.
 
 ### Making a Private File — `privatefile.py`
 

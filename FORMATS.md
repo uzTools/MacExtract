@@ -1656,14 +1656,32 @@ base of the header it is reading from and so pins all six:
 against the second of each pair — which is the encryptor id, and **4 is the
 built-in scheme that replaced the modules**: the three archives StuffIt Deluxe
 3.5.1 wrote here (*Encryption*, below) carry `07 03 00 04 00 04` at 104..109.
-The application hardcodes the name **DES** for encryptor id 1, a module this
-project has no file for. **"Replaced" is a HYPOTHESIS**: that 3.x writes
-only its built-in scheme rests on those three archives and on no DES,
-`DESex` or `PassLock` fork among the 166,970 walked headers of
-2026-10-09/10, not on reading 3.x's code. It is load-bearing since
-2026-10-10, because `sit_enc_id` ignores 107/109 on a method-13 fork: a
-3.x method-13 fork that a DES module really did encrypt would be read
-with the built-in cipher and fail its CRC.
+It is **2.0.1's** Get Info (STR# 261) that names encryptor id 1 **DES**, and
+that cipher is built into 2.0.1, not a module (BLOCKERS.md, withdrawn
+2026-10-02).
+
+**"Replaced" is MEASURED, on 3.5.1** (2026-10-10, `tools/vmac/sitenc351.py`).
+With 2.0's `PassLock`, `NewDEx` and `DESex` in `{system}Encryptors:` and in
+`Extensions:Aladdin:Encryptors:`, the 3.5.1 application was asked for every
+cipher it can name:
+
+| asked for | 3.5.1 wrote / said |
+|---|---|
+| script `with better des`, `… newde`, `… encrypt` | `8d`/`8d`, **4 / 4** at 107/109, all three decrypting with the one password |
+| `Set encryptor "NewDEx"`, then `… encrypt` | *"< Optimizers, compressors and encryptors: No longer supported. >"* (STR# 256), then 4 / 4 |
+| `Enable Optimizer "Text 1"` | the same message |
+| `… encryptor "NewDEx"` / `"DESex"` / `"PassLock"` | *"No archive: NewDEx"* — read as an archive name; nothing stuffed |
+| Preferences, *Default Stuffing Settings* | two checkboxes, Compression and Encryption; no cipher list |
+| the Stuff dialog | *Encrypt with password*, a checkbox |
+
+The Apple-event `stuff` has only the boolean `encryption` (its `aete`), and
+3.5.1's module folders (STR# 267) are Help, Viewers, Optimizers,
+Translators, Aladdin, Preferences and Extensions, where 2.0.1's include
+`Compressors` and `Encryptors`. So no 3.5.1 route writes an id other than
+4 beside method 13, and `sit_enc_id`, which ignores 107/109 on a method-13
+fork, reads everything 3.5.1 can write; `tools/run_crypt.py` asserts the
+4 on each of those archives. **Not measured**: 3.0.x, 3.5.0, StuffIt Lite
+3.x and the 4.x line, none of which is on this machine.
 
 **The 2.0.1 method names, from the same pane** (STR# 261): 0 no compression,
 1 RLE, 2 LZW, 3 and **9** Huffman, 5 LZ-H, 6 FHF, **7 an external Compressor

@@ -362,6 +362,94 @@ SHORTCUT_WANT = {
 SHORTCUT_DAMAGED = "Read Us First!/Shortcut 1.5 Addendum"
 
 
+def sit_file_headers(sit):
+    """The 112-byte file-entry headers of a StuffIt classic archive,
+    folder markers skipped — the walk `tools/vmac/sitopt.py` prints."""
+    out = []
+    if sit[:4] != b"SIT!" or sit[10:14] != b"rLau":
+        return out
+    pos, total = 22, int.from_bytes(sit[6:10], "big")
+    while pos + 112 <= min(len(sit), total):
+        h = sit[pos:pos + 112]
+        if (h[1] & 0x6F) in (0x20, 0x21):
+            pos += 112
+            continue
+        out.append(h)
+        pos += 112 + int.from_bytes(h[92:96], "big") + \
+            int.from_bytes(h[96:100], "big")
+    return out
+
+
+def check_sit351(macextract, problems):
+    """StuffIt Deluxe 3.5.1 asked for every cipher it can name, with
+    2.0's NewDEx, DESex and PassLock installed (tools/vmac/sitenc351.py).
+
+    `sit_enc_id` ignores the encryptor id on a method-13 fork, which is
+    safe only while nothing writes a real id there (FORMATS.md, *Where an
+    archive names the module*). These are the archives that measured it:
+    `des`, `newde`, `encrypt`, and `encrypt` after `Set encryptor`, all
+    of them method 13 and id 4. So the header is asserted as well as the
+    bytes — a re-run whose 3.5.1 writes anything else beside method 13 is
+    exactly the archive that would overturn the rule, and fails here.
+    Returns the number of cases run."""
+    import json
+    root = os.path.join(os.environ.get("UNC_VMAC_HOME",
+                        os.path.expanduser("~/.cache/macextract/vmac")),
+                        "specimens", "sitenc351")
+    ran = 0
+    for tag in sorted(os.listdir(root)) if os.path.isdir(root) else []:
+        meta = os.path.join(root, tag, "made.json")
+        if not os.path.exists(meta):
+            continue
+        m = json.load(open(meta))
+        sub = m["subject"]
+        want = {sub["name"]: bytes.fromhex(sub["data"]),
+                sub["name"] + ".rsrc": bytes.fromhex(sub["rsrc"])}
+        for name in m["encrypted"] + m["plain"]:
+            arch = os.path.join(root, tag, name)
+            label = "stuffit deluxe 3.5.1 %s/%s" % (tag, name)
+            if not os.path.exists(arch):
+                problems.append("%s: missing" % label)
+                continue
+            enc = name in m["encrypted"]
+            heads = sit_file_headers(macbinary_forks(arch)[0])
+            if len(heads) != 1:
+                problems.append("%s: %d file entries, wanted 1"
+                                % (label, len(heads)))
+            for h in heads:
+                for fork, meth, eid in (("rsrc", h[0], h[109]),
+                                        ("data", h[1], h[107])):
+                    if meth & 0x0F != 13 or bool(meth & 0x80) != enc:
+                        problems.append("%s: %s fork method 0x%02x"
+                                        % (label, fork, meth))
+                    if eid != (4 if enc else 0):
+                        problems.append("%s: %s fork encryptor id %d — "
+                                        "3.5.1 wrote 4 when measured"
+                                        % (label, fork, eid))
+            check_one(label, arch, want, m["password"] if enc else "",
+                      macextract, problems, oracle=False)
+            ran += 1
+            if enc:
+                # Through `x`: `t` and `l` act on the MacBinary envelope
+                # alone, so a `t` with any password at all exits 0 here.
+                out = tempfile.mkdtemp()
+                try:
+                    r = run([macextract, "x", "-o", out, "-p", "nope", arch])
+                    msg = r.stderr.decode("utf-8", "replace")
+                    if r.returncode == 0 or "wrong password" not in msg \
+                            or extracted(out, sub["name"]) is not None:
+                        problems.append("%s: a wrong password was not "
+                                        "refused (%r)" % (label,
+                                                          msg.strip()[:120]))
+                finally:
+                    shutil.rmtree(out, ignore_errors=True)
+                ran += 1
+    if not ran:
+        print("run_crypt: no StuffIt Deluxe 3.5.1 cipher specimens in %s "
+              "— tools/vmac/sitenc351.py --script writes them" % root)
+    return ran
+
+
 def check_installermaker(macextract, problems, tmp):
     """Returns the number of cases run, 0 if the specimen is absent."""
     import hashlib
@@ -673,6 +761,7 @@ def main():
         if not seen:
             print("run_crypt: no StuffIt Deluxe specimens in %s — "
                   "tools/vmac/sitcrypt.py writes them" % sitdir)
+        ran += check_sit351(macextract, problems)
 
         # ---- Compact Pro, against archives IT wrote -------------------
         # No second implementation of this cipher exists anywhere, so

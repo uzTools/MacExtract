@@ -383,6 +383,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
 - 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
 - 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
+- 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
 
 ---
 
@@ -19322,7 +19323,9 @@ already recorded the same wall for 3.5.1 and for 4.0 in the file next door.
 `sitcrypt.py` says it drives StuffIt Deluxe 3.5.1. It does not: every dialog
 in its successful runs is **Magic Menu's**, over a Finder menu bar, and the
 3.5.1 application does not launch here either. Nothing in this project has
-ever launched a StuffIt Deluxe application. That cost the encryption work
+ever launched a StuffIt Deluxe application (WITHDRAWN 2026-10-10: those
+attempts were ⌘O, and a double-click launched it that same day —
+BLOCKERS.md). That cost the encryption work
 nothing — it only ever needed the archives — and it costs three runs to
 anyone who arrives wanting a dialog the application alone has, which is
 exactly what happened here. **A description of how a WORKING harness works is
@@ -25264,3 +25267,34 @@ none produced a resource map that parses.
 - No engine change: the CRC already refuses the entry, and the end
   symbol would only refuse it a second way.
 
+## 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
+
+**Claim (measured).** StuffIt Deluxe 3.5.1 writes encryptor id 4 beside
+method 13 whatever it is asked for, and has no route to a 2.x module, so
+`sit_enc_id` ignoring 107/109 on a method-13 fork costs nothing on
+anything 3.5.1 wrote (FORMATS.md, *Where an archive names the module*).
+
+**Evidence.** `tools/vmac/sitenc351.py`: with 2.0's three Encryptors
+installed in both candidate folders, the script words `des`, `newde` and
+`encrypt` each wrote 4 / 4. `Set encryptor` and `Enable Optimizer` were
+answered *"No longer supported"*. The Preferences dialog and the Stuff
+dialog offer a checkbox and nothing else. The static read pointed the
+same way first: 3.5.1's folder list has no `Encryptors`, where 2.0.1's
+does. That string list was the cheap half; the run was what could have
+come out the other way.
+
+**Transferable.**
+- **A scope hypothesis about what a program writes is settled by asking
+  the program for the thing, not by counting its absence in the wild.**
+  166,970 walked headers without a module id said nothing about whether
+  3.5.1 *could* write one. One script that asks for each cipher by name
+  did, in two runs.
+- **"Does not launch" has to record how it was launched.** The 2026-09-28
+  write-up said three attempts failed and left out that all three were ⌘O.
+  The double-click that worked the same day went into a code comment
+  fifty lines away, and every status file kept the wrong version for
+  twelve days (BLOCKERS.md, withdrawn claims).
+- **No engine change.** The narrowing this would have needed (reading the
+  id again on any method-13 fork that is not InstallerMaker's) has
+  nothing to protect. The lane now asserts the 4, so a 3.x archive that
+  says otherwise fails there first.
