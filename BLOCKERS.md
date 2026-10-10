@@ -169,8 +169,8 @@ detect-only — disk images are out of scope for v1.
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Forty-eight**
-mechanisms keep finding the next one — recounted 2026-10-09; the
+and one of those was worth 39/44 → 40/44 at the floor target. **Forty-nine**
+mechanisms keep finding the next one — recounted 2026-10-10; the
 sentence said ten when the list had thirty, on 2026-09-26 — and three of them
 need no insight at all (the third is the scan at the end of the list):
 
@@ -561,12 +561,19 @@ need no insight at all (the third is the scan at the end of the list):
   drifted 16,888 B and a refused fixture read as a pass. **For every
   derived figure, ask which of its inputs something re-takes** — the one
   nothing does is where the error is (the row below, 2026-10-09).
+- **a negative taken before the subject reached the state the claim is
+  about.** Added 2026-10-10: 45 memory dumps without a key were read as
+  *when* an installer computes it, while the installer had never accepted
+  a target and so never got that far. **Before a negative says anything
+  about the subject, show the subject was in the state that would have
+  produced a positive** (the row below, 2026-10-10).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"The Shortcut updater's archive key is folded only when extraction starts"**, and its picker *"a folder navigator whose Open only descends"* — DECISIONS.md 2026-10-09, OPEN_ITEMS.md, `tools/sit_mkey_oracle.py`; labelled a hypothesis | the picker was the updater asking where the installed **Shortcut** is: a Standard File list filtered on `cdev`/`Cut!`, empty because no such file existed, and the code that filters it was decompressed in the same 45 dumps. A 373-byte stand-in with a `cdev` resource gets past it, and the key is then in memory **before any file is written**, from the restart alert onward (DECISIONS.md 2026-10-10, *the installer's own key*). **Cost: a day, and the next attempt aimed at the wrong thing** — timing dumps for "during extraction" when the obstacle was the installer's own target check | 2026-10-10 |
 | **"No tier moves: the cost is under the narrowest margin, 16,490 B"** — this file's Status, once per change from 2026-09-26 to 2026-10-09, ten times, and `run_tiers.py --check` agreeing each time | the System 6.0.8 / 512 KB sweep of 2026-10-09: **66/72 where the model said 67**, refusing `a2ps.V4.3.tar.Z` 4,142 B short — the very layer that margin was measured on. `TIERS` had been lowered once (2,024 B, 2026-10-01) while `OVL_SAVED` rose 117,040 → 134,032 with the control build; all three bases re-taken on the machine came back **16,888 B lower**, identical on three machines, and the model then reproduces all three tiers by name. **Cost: one fixture refused on a 512 KB System 6 machine for an unknown part of two weeks with every check green**, and ten tier arguments resting on one number. `TIERS_CONTROL` now fails `--check-saved` when the control moves (DECISIONS.md 2026-10-09, *the base nobody re-took*) | 2026-10-09 |
 | **"Removing the depth limit costs 376 B of resident `CODE`, nearly all of it the re-scanning pop that replaced the two fixed arrays"** — `tools/build_mac.sh`'s eager pair, FORMATS.md and a commit message, all written the same hour | a reader asking how removing a check could cost that. It could not. **202 B was `path_longbuf` being OUTLINED** the moment `pop` became a second caller — the function itself plus the inlined copies it cost two others — which caching the pointer in `unc_path_init` put back, leaving both of those SMALLER than before. The remainder was not a cost but a design fault: the walker kept the path TWICE, once as reported and once uncut, each with a per-level stack, and `UNC_PATH_MAXDEPTH` existed to size those stacks. Writing the uncut path straight into the host's `long_name` buffer leaves ONE path with ONE length, deletes `path_full_add` (152 B) outright and makes `unc_path_push` 34 B smaller than before any of this: **−68 B of CODE, −64 B resident**, and the deepest chain falls 3,386 → 3,310 B. **Cost: nothing but the hour, because the number was challenged before it was believed** — three explanations were offered for it and every one was true and none was the cause. A size figure that has an explanation is not the same as a size figure that has been attributed, and `nm --size-sort` per function is what tells them apart | 2026-10-07 |
 | **"Components are pushed and popped by LENGTH, never by re-scanning for a separator"** — `src/unc_internal.h`'s description of the path walker since M0, and the reason `UncPath` carried two fixed arrays, which is the reason `UNC_PATH_MAXDEPTH` existed to size them | it was a property, never a reason. A `/` inside a component is swapped to `:` on the way in by this walker's own push and leaf, so every `/` in the buffer is one it wrote and a backward scan is EXACT. Both arrays are gone and the depth limit with them; nesting is now bounded by the path STRING, which is the only limit a Macintosh has either (`tools/vmac/depthtest/`: **250 levels, noErr**). **Cost: the sentence held for seven weeks and nothing in it was false** — what it cost is everything that was built on the constant it justified, which is a rule, a suite, a unit test, two emulator runs and a Macintosh verification, all green, none of which could see that 24 was chosen by nobody. A design note that states WHAT without WHY is a constraint nobody re-opens | 2026-10-07 |

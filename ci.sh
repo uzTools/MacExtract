@@ -213,6 +213,10 @@ python3 tools/run_foreign.py --macextract build/san/macextract \
 # `unar -p`, which is a different implementation of each cipher.
 python3 tools/run_crypt.py --macextract build/san/macextract \
     || fail "decryption tests"
+# The archive-key oracle and its compiled scanner (tools/sit_akscan.c),
+# which read the Shortcut updater's key off an emulated Mac's memory:
+# graded against the Python verifier and Aladdin's own MKeys.
+python3 tools/sit_mkey_oracle.py || fail "StuffIt MKey oracle"
 # StuffIt method 14's window wrap. The committed fixture's four shapes
 # decode to 18,389 B all told and the window is sized to the fork, so
 # `sit14_flush`'s second half is reached by nothing under 0x40000 B of

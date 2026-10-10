@@ -441,7 +441,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # and uuencode's scan stop counting input twice (DECISIONS.md 2026-10-09,
 # *DiskDoubler read every block six times*). In images when shipped:
 # `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the eager pair unmoved.
-UNC_MAC_CODE_DEFAULT=170044
+# RAISED 2026-10-10, 170,044 -> 170,056, +12, with the A5 ceiling's -12:
+# a method-13 fork's encryptor id is not read (DECISIONS.md 2026-10-10,
+# *the installer's own key*). The total is unmoved; the A5 side was not
+# attributed per symbol. `ovl_stuffit` +24 when shipped, the eager pair
+# unmoved.
+UNC_MAC_CODE_DEFAULT=170056
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -583,7 +588,8 @@ UNC_MAC_CODE_DEFAULT=170044
 # RAISED the same day to 37,980, +4, with the code ceiling's +28: again no
 # data symbol changed size (all 126 compared), so alignment.
 # LOWERED the same day to 37,972, -8, with the code ceiling's +136.
-UNC_MAC_A5_DEFAULT=37972
+# LOWERED 2026-10-10 to 37,960, -12, with the code ceiling's +12.
+UNC_MAC_A5_DEFAULT=37960
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

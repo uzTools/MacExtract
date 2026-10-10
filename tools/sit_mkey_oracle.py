@@ -20,19 +20,23 @@ Two ways in:
   * `--pw STRING`     — test a password string.
   * `--ak HEX16`      — test a raw 8-byte archive key (the value the writer
                         folds the password into; `0123456789abcdef` xored and
-                        StuffItDES-encrypted once per 8 password bytes).
-  * `--scan FILE`     — slide an 8-byte window over FILE and report every
+                        StuffItDES-encrypted once per 8 password bytes, under
+                        ONE schedule keyed by `0123456789abcdef`). A key that
+                        verifies is also unfolded: a password of up to eight
+                        characters is `D(key) ^ 0123456789abcdef`, and is
+                        printed when that is seven-bit text.
+  * `--scan FILE...`  — slide an 8-byte window over each FILE and report every
                         offset whose bytes verify as the archive key. This is
                         how to read the key off a memory image of a running
                         self-installing archive (InstallerMaker writes one that
                         installs WITHOUT prompting, so the key is a constant in
-                        its code): the archive key is computed lazily, at
-                        decrypt time, a HYPOTHESIS: 45 dumps from its splash,
-                        licence and destination dialog did not contain it
-                        (DECISIONS.md 2026-10-09, *the key is folded at decrypt
-                        time, not at launch*). In Python this is ~1 ms a
-                        window, so a multi-megabyte dump wants a compiled
-                        scanner, which is not in the repository.
+                        its code). It reads the key of Aladdin's Shortcut 1.5.3
+                        Update off Mini vMac's memory once the installer has
+                        accepted its target, and not before (DECISIONS.md
+                        2026-10-10, *the installer's own key*). The scan is
+                        `tools/sit_akscan.c`, built on demand with `cc` and
+                        graded by the self-test; Python is ~1 ms a window and
+                        is the fallback only.
 
 The MKey is given with `--mkey HEX16`, or read off an archive with
 `--from FILE`: a MacBinary file or a bare resource fork, walked to its
@@ -53,6 +57,7 @@ import argparse
 import json
 import os
 import struct
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -103,12 +108,65 @@ def mkey_from(path):
     raise ValueError("no 'MKey' resource in %s" % path)
 
 
+def unfold(ak):
+    """The password of up to eight characters that folds to `ak`, or None.
+    One fold is `E(0123456789abcdef ^ pw)` under the schedule keyed by
+    `0123456789abcdef` (`unc_crypt_sit`, which never re-keys inside the
+    loop), so it inverts; a longer password folds twice or more and does
+    not. The writer keeps seven bits of each byte and pads with zeros,
+    which is what decides "a password" here."""
+    iv = bytes.fromhex("0123456789abcdef")
+    p = bytes(a ^ b for a, b in
+              zip(sitdes_crypt(ak, sitdes_setkey(iv), False), iv))
+    pw = p.rstrip(b"\0")
+    if not pw or b"\0" in pw or any(c > 0x7f for c in pw):
+        return None
+    return pw if sit_archive_key(pw) == ak else None
+
+
 def scan(blob, mkey):
     """Every offset in `blob` whose next 8 bytes are the archive key."""
     hits = []
     for i in range(len(blob) - 7):
         if verify_archive_key(blob[i:i + 8], mkey):
             hits.append((i, blob[i:i + 8]))
+    return hits
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AKSCAN = os.path.join(ROOT, "build", "sit_akscan")
+
+
+def akscan_bin():
+    """tools/sit_akscan.c, built when absent or older than its sources."""
+    srcs = [os.path.join(ROOT, f) for f in
+            ("tools/sit_akscan.c", "src/unc_crypt.c", "src/unc_util.c",
+             "src/crypt_tables.h")]
+    if os.path.exists(AKSCAN) and all(os.path.getmtime(AKSCAN) >=
+                                      os.path.getmtime(f) for f in srcs):
+        return AKSCAN
+    os.makedirs(os.path.dirname(AKSCAN), exist_ok=True)
+    r = subprocess.run(["cc", "-std=c99", "-O2", "-I" + os.path.join(ROOT,
+                        "include"), srcs[0], srcs[2], "-o", AKSCAN],
+                       capture_output=True)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr.decode("utf-8", "replace"))
+        return None
+    return AKSCAN
+
+
+def scan_files(paths, mkey):
+    """(path, offset, key) for every hit, through the compiled scanner."""
+    exe = akscan_bin()
+    if exe is None:
+        raise RuntimeError("tools/sit_akscan.c did not build")
+    r = subprocess.run([exe, mkey.hex()] + list(paths), capture_output=True,
+                       check=True)
+    hits = []
+    for line in r.stdout.decode("utf-8", "surrogateescape").splitlines():
+        # "AKEY <path> off=<n> <hex>"; the path may hold spaces.
+        head, off, key = line.rsplit(" ", 2)
+        hits.append((head[len("AKEY "):], int(off[4:]), bytes.fromhex(key)))
     return hits
 
 
@@ -131,9 +189,51 @@ def _grade(label, pw, mkey, bad):
                      ([h[0] for h in scan(b"....." + ak + b"garbage", mkey)]
                       == [5], "a scan finds it at its offset"),
                      (scan(b"....." + wrongak + b"garbage" * 4, mkey) == [],
-                      "a scan of a blob without it finds nothing")):
+                      "a scan of a blob without it finds nothing"),
+                     (len(pw) > 8 or unfold(ak) == pw,
+                      "the archive key unfolds to the password")):
         if not ok:
             bad.append("%s: %s — FAILED" % (label, what))
+    _grade_compiled(label, ak, wrongak, mkey, bad)
+
+
+def _grade_compiled(label, ak, wrongak, mkey, bad):
+    """The compiled scanner against the Python verifier. One small blob
+    holds the key at an even and an odd offset and in its last window,
+    and the two scans must agree on it window for window; one megabyte
+    of hash-generated bytes holds the key one bit off and must yield
+    nothing. A scanner that skipped windows, stopped a window short,
+    found everything — or checked fewer than the four bytes the verifier
+    compares, which the megabyte would show as some sixteen false hits
+    at two bytes — fails one of the three."""
+    import hashlib
+    import tempfile
+    filler = b"".join(hashlib.sha256(b"%d" % i).digest()
+                      for i in range(1 << 15))           # 1 MiB, aperiodic
+    with tempfile.TemporaryDirectory() as d:
+        good, near = os.path.join(d, "with key"), os.path.join(d, "near")
+        small = filler[:300] + ak + filler[300:451] + ak + filler[451:600] + ak
+        open(good, "wb").write(small)
+        open(near, "wb").write(filler[:301] + wrongak + filler[301:])
+        try:
+            hits = scan_files([good], mkey)
+            far = scan_files([near], mkey)
+        except Exception as e:                       # noqa: BLE001
+            bad.append("%s: the compiled scanner did not run — FAILED (%s)"
+                       % (label, str(e)[:200]))
+            return
+        py = [(good, o, k) for o, k in scan(small, mkey)]
+        for ok, what, got in (
+                (hits == [(good, 300, ak), (good, 459, ak), (good, 616, ak)],
+                 "the compiled scan finds it at 300, 459 and in the last "
+                 "window, and nowhere else", hits),
+                (hits == py, "the compiled scan agrees with the Python one, "
+                 "window for window", hits),
+                (far == [], "the compiled scan of a megabyte without it "
+                 "finds nothing", far)):
+            if not ok:
+                bad.append("%s: %s — FAILED (%d hits, first %r)"
+                           % (label, what, len(got), got[:2]))
 
 
 def _selftest():
@@ -147,6 +247,14 @@ def _selftest():
         pw = json.load(open(meta))["password"].encode("mac_roman")
         _grade("StuffIt Deluxe 3.5.1, %s" % tag, pw, mkey_from(arch), bad)
         real += 1
+    # The key read off Aladdin's own installer under Mini vMac: its MKey
+    # came from Aladdin's DES and the key from the installer's memory.
+    upd = os.path.join(os.path.expanduser("~/.cache/macextract"),
+                       "specimens", "shortcut-updater",
+                       "Shortcut 1.5.3 Update.rsrc")
+    if os.path.exists(upd):
+        _grade("Shortcut 1.5.3 Update", b"PeekAB00", mkey_from(upd), bad)
+        real += 1
     pw = b"swordfish"
     mkey, _ak, _iv = sit_mkey_and_iv(pw)
     _grade("synthetic", pw, mkey, bad)
@@ -155,9 +263,9 @@ def _selftest():
     if bad:
         return 1
     if real:
-        print("self-test OK: %d archive(s) StuffIt Deluxe 3.5.1 wrote, and "
-              "the synthetic round trip — six checks each, three of them "
-              "negative" % real)
+        print("self-test OK: %d archive(s) Aladdin's software wrote, and "
+              "the synthetic round trip — ten checks each, four of them "
+              "negative and three on the compiled scanner" % real)
     else:
         print("self-test OK on the synthetic round trip ONLY: no StuffIt "
               "Deluxe specimens in %s, and the synthetic MKey shares this "
@@ -172,7 +280,8 @@ def main():
                     help="read the MKey off a MacBinary file or resource fork")
     ap.add_argument("--pw", help="password string to test")
     ap.add_argument("--ak", help="raw 8-byte archive key, 16 hex chars")
-    ap.add_argument("--scan", help="file to slide an 8-byte window over")
+    ap.add_argument("--scan", nargs="+", metavar="FILE",
+                    help="files to slide an 8-byte window over")
     args = ap.parse_args()
 
     if not (args.pw or args.ak or args.scan):
@@ -193,11 +302,22 @@ def main():
         print("MATCH" if ok else "no", repr(args.pw))
     if args.ak is not None:
         ak = bytes.fromhex(args.ak)
-        print("MATCH" if verify_archive_key(ak, mkey) else "no", ak.hex())
+        ok = verify_archive_key(ak, mkey)
+        print("MATCH" if ok else "no", ak.hex())
+        if ok:
+            pw = unfold(ak)
+            print("password", repr(pw.decode("mac_roman")) if pw else
+                  "longer than eight characters, or not text")
     if args.scan is not None:
-        blob = open(args.scan, "rb").read()
-        for off, k in scan(blob, mkey):
-            print(f"AKEY off={off} {k.hex()}")
+        if akscan_bin() is not None:
+            for path, off, k in scan_files(args.scan, mkey):
+                print(f"AKEY {path} off={off} {k.hex()}")
+        else:
+            print("sit_mkey_oracle: no compiled scanner; Python, ~1 ms a "
+                  "window", file=sys.stderr)
+            for path in args.scan:
+                for off, k in scan(open(path, "rb").read(), mkey):
+                    print(f"AKEY {path} off={off} {k.hex()}")
 
 
 if __name__ == "__main__":

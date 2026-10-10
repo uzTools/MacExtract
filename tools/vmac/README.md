@@ -3784,22 +3784,28 @@ range (DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
 ### Reading a running application's memory — the Shortcut updater probe
 
-    tools/vmac/mkboot.py --app-name NAME ...   # boot straight into the app
-    # then, with Mini vMac running, read its process image:
-    #   /proc/<captured minivmac pid>/mem, at the offsets /proc/<pid>/maps
-    #   gives for its heap, and scan the dump:
-    tools/sit_mkey_oracle.py --mkey 4d87bcb0c49abe53 --scan dump.bin
+    # the dumper must be Mini vMac's PARENT: Yama (ptrace_scope 1) lets only
+    # an ancestor read /proc/<pid>/mem, and a detached reader gets EACCES.
+    # Launch the emulator from the process that will dump it, read
+    # /proc/<pid>/maps for the readable regions, copy them out, then:
+    tools/sit_mkey_oracle.py --mkey 4d87bcb0c49abe53 --scan dump*.bin
+    tools/sit_mkey_oracle.py --mkey 4d87bcb0c49abe53 --ak <hit>  # confirm
 
-Used once, 2026-10-09, on Aladdin's *Shortcut 1.5.3 Update* (kept at
-`~/.cache/macextract/specimens/shortcut-updater/`): 45 dumps across its
-splash, licence and destination dialog, none holding the archive key
-(DECISIONS.md 2026-10-09, *the key is folded at decrypt time, not at
-launch*). Capture the emulator's pid when you start it — never `pgrep` or
-`pkill` by name (CLAUDE.md, *Traps*). **What it cannot see:** a key the
-application has not yet computed, which is why a negative here says only
-that the dump was taken too early; and the Python scan is ~1 ms a window,
-so a multi-megabyte dump wants a compiled scanner, which is not in the
-repository.
+`--scan` runs `tools/sit_akscan.c` (built on demand; ~6 s per 12 MB dump),
+and `--ak` unfolds a password of up to eight characters from a key that
+verifies. Used on Aladdin's *Shortcut 1.5.3 Update* (kept at
+`~/.cache/macextract/specimens/shortcut-updater/`, with what it installed
+in `installed/`): System 7.0.1 at 4 MB, the updater in `Startup Items`,
+and a stand-in `Shortcut™` (`cdev`/`Cut!`, with a non-empty `cdev`
+resource) in `Control Panels`. Without that stand-in the updater opens a
+Standard File list filtered on `cdev`/`Cut!` and goes no further. With it,
+the updater shows Install, a restart warning (Return), *"Install software
+as:"* (Return) and extracts. The key is in every dump from the restart
+warning onward (DECISIONS.md 2026-10-10, *the installer's own key*). The
+System 7 Standard File popup at (172, 65) opens on a mouse-down; drag to
+an item and release. **What it cannot see:** a key the application has not
+computed yet, so a negative says only that the dump was too early; and a
+key kept only as an expanded DES schedule, never as eight bytes.
 
 ### Replaying the segment work — `segcheck.py`
 

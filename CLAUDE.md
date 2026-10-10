@@ -46,9 +46,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~19.2k tokens** (PROGRESS 9.1k,
-OPEN_ITEMS 7.4k, BLOCKERS' first two sections 2.7k), re-estimated
-2026-10-10; BLOCKERS' withdrawn-claims archive is another **~72.2k** and is reference, not
+That session-start reading is **~18.9k tokens** (PROGRESS 9.1k,
+OPEN_ITEMS 7.1k, BLOCKERS' first two sections 2.7k), re-estimated
+2026-10-10; BLOCKERS' withdrawn-claims archive is another **~72.5k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are
 each file's bytes over the 3.93 bytes per token the 2026-10-07 figures
@@ -89,7 +89,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the forty-eight smells that keep finding the next one. The cheapest is a
+names the forty-nine smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**: two status files disagreeing is a disproof
 nobody has collected yet. A constant in the peak-RAM matrix is another —
 data-driven allocations vary with their input, so one that does not is usually

@@ -192,7 +192,8 @@ TAKEN = "2026-10-09"
 # `ovl_exo` +28, zip's dry passes putting the progress count back.
 # -> 162,040: `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
 # progress count put right in DiskDoubler, MacLHA and uuencode.
-EXPECT_BUNDLE = 162040
+# -> 162,064: `ovl_stuffit` +24, a method-13 fork's encryptor id unread.
+EXPECT_BUNDLE = 162064
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 

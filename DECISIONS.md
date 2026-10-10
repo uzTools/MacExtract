@@ -381,6 +381,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
 - 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
 - 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
+- 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
 
 ---
 
@@ -25104,8 +25105,9 @@ priced the wrong question.
 
 ## 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
 
-**Status: the title is a HYPOTHESIS**, inferred from 45 dumps that held no
-key; no dump taken during extraction has been scanned.
+**Status: WITHDRAWN 2026-10-10.** The 45 dumps were taken while the
+installer had no target; once it accepts one, the key is in memory before
+any file is written (2026-10-10, *the installer's own key*; BLOCKERS.md).
 
 **The question.** `sit_scheme()` reads bytes 107/109 of a StuffIt entry as
 encryptor-module ids and, on the two forks of Aladdin's *Shortcut 1.5.3
@@ -25128,8 +25130,8 @@ key**, the value the password folds into. That turns recovery into a
 fixed-width search: slide an 8-byte window over anything and keep the offsets
 that verify. `tools/sit_mkey_oracle.py` is the oracle, self-testing; the hot
 loop translated to C (StuffItDES with a byte-reversal table, `verify_ak`
-only) scanned a 12 MB dump in a few seconds; that translation was not
-committed, and the Python scan is ~1 ms a window. The updater's MKey is
+only) scanned a 12 MB dump in a few seconds; it was committed on
+2026-10-10 as `tools/sit_akscan.c`, and the Python scan is ~1 ms a window. The updater's MKey is
 `4d87bcb0c49abe53`.
 
 **Where the key is, and is not.** The updater runs under Mini vMac (boot-shell
@@ -25178,3 +25180,60 @@ StuffIt's headers carry one for free.
 **Consequence.** The two StuffIt 2.0 rows in OPEN_ITEMS.md have no
 population left in reach here. What would close them is a file from
 somebody who has one.
+
+## 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
+
+**Claim (measured).** Bytes 106..109 of a method-13 fork are not module
+ids when InstallerMaker 1.0.3 wrote them. Aladdin's *Shortcut 1.5.3
+Update* carries 3 and 5 at byte 109 on two of its thirteen forks. All
+thirteen decrypt under the built-in scheme and the password `PeekAB00`,
+and twelve pass their CRC; the Addendum is damaged in the archive itself.
+Under the standard resource-header mask, the six files compared are byte
+for byte what the installer wrote to an emulated disk, these two
+included (FORMATS.md, *Where an archive names the module*).
+`sit_scheme()` no longer reads the id on a method-13 fork.
+
+**What stood in the way was a question, not a destination.** The
+updater's "destination picker" was Standard File asking where the
+installed Shortcut is. The list was empty because it filters on
+`cdev`/`Cut!` and the volume had no such file. Its pre-flight hook
+(`IBeg`, compressed with `ADCR` in the file) does that filtering, and the
+hook is plain 68000 code in the RAM dumps, already decompressed. It calls
+`FindFolder('ctrl')`, looks for `Shortcut™`, falls back to searching by
+creator, opens the file's resources and accepts it if its first `cdev`
+resource is non-empty (a `GetHandleSize` test). A 373-byte stand-in with a
+`vers` and a 16-byte `cdev`, placed in System 7.0.1's Control Panels, is
+found without a dialog, and the installer goes on to Install, a restart
+warning, *"Install software as:"* and extraction. System 7 was used
+because the hook asks for the Control Panels folder; whether 6.0.8 would
+also work with this stand-in was not tried. The earlier stand-in, with no
+`cdev` resource, made the updater quit silently on both systems.
+
+**When the key exists.** A launcher that stays alive as Mini vMac's parent
+dumped the emulator's memory from the Install click to the end. Yama
+(`ptrace_scope` 1) lets only an ancestor read `/proc/<pid>/mem`, and a
+detached dumper got `EACCES`. Results:
+- every one of the 30 dumps kept from the restart alert and the save
+  dialog, and all 120 taken during extraction, holds `78a51a6ffd3a3ea4`
+  at two offsets, and `--ak` verifies it against the MKey;
+- 16 dumps sampled from the run where the stand-in was rejected hold no
+  key.
+So the key is computed once the installer has a target, and before any
+file is written. Reading it as a decrypt-time fold was wrong (BLOCKERS.md).
+
+**The password came back with the key.** StuffIt classic folds the
+password under one schedule, keyed by `0123456789abcdef` and never
+re-keyed inside the loop. For eight characters or fewer that fold is a
+single DES encryption, so `D(key) ^ 0123456789abcdef` gives back the
+password. That is `unfold()` in `tools/sit_mkey_oracle.py`, which also
+grades `tools/sit_akscan.c`, the compiled scanner, against the Python
+verifier.
+
+**Transferable.**
+- An empty Standard File list is a filter, and the filter is code that
+  can be read. The hook was in the dumps already taken for something
+  else.
+- A second oracle came free with the experiment: the installer that
+  carries the key also extracts, so letting it finish graded the engine
+  against Aladdin's own decoder.
+

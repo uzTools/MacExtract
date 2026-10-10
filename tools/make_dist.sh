@@ -146,6 +146,16 @@ the dashes were ever the trouble -- a cut marked with ordinary words
 has always been read -- so if a .hqx in two parts was refused for a
 bad checksum, it is worth another try.
 
+And another since v0.37.0, and in this download: two files in an Aladdin
+installer that used to be refused now open. Installers built with
+Aladdin's InstallerMaker can leave stray numbers in their archive where
+StuffIt 2.0 recorded which encryption add-on it used, and this program
+believed them: in Aladdin's own Shortcut 1.5.3 updater, two of its
+thirteen files came out as "damaged" or "encrypted by a scheme we
+cannot read" when they were neither. Those numbers are now ignored
+where StuffIt 2.0 could never have written them, and both files come
+out byte for byte as Aladdin's installer itself writes them.
+
 One fix since v0.37.0, and in this download: a StuffIt 5 archive made
 with compression method 14 -- the format v0.37.0 added, just below --
 could be refused with a message saying the file's own checksum was

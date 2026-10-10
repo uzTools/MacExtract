@@ -481,6 +481,9 @@ OVL_RESIDUE = -666
 # cursor inside the buffer it already has instead of re-reading it, and
 # MacLHA's peek and uuencode's scan stop counting input twice
 # (DECISIONS.md 2026-10-09, *DiskDoubler read every block six times*).
+# **STUFFIT +24 B 2026-10-10**: a method-13 fork's encryptor id is not
+# read (DECISIONS.md 2026-10-10, *the installer's own key*); a helper
+# function and a clear-in-place came out at +24 and +36.
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
@@ -493,12 +496,12 @@ IMAGES = {
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     27914,
+    "OVL_ID_STUFFIT":     27938,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11510,
 }
-BUNDLE = 162040
+BUNDLE = 162064
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

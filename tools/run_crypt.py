@@ -334,6 +334,99 @@ def check_wild_sit(macextract, problems, tmp):
     return ran
 
 
+# Aladdin's Shortcut 1.5.3 Update: an InstallerMaker 1.0.3 application
+# whose data fork is a StuffIt archive of thirteen method-13 forks under
+# the built-in scheme, two of which carry stray bytes at 109 — 3, which
+# is `NewDEx`'s id, and 5, which is nobody's. The password is the
+# archive key read off the running installer under Mini vMac and
+# unfolded (DECISIONS.md 2026-10-10, *the installer's own key*). The
+# hashes are of what the INSTALLER wrote to the emulated disk —
+# SHA-256 of the data fork, and of the resource fork with the reserved
+# header bytes 16..127 zeroed (vmac_check.mask_reserved), because the
+# Resource Manager rewrites those once it has opened the file.
+SHORTCUT_DIR = os.path.join(os.path.expanduser("~/.cache/macextract"),
+                            "specimens", "shortcut-updater")
+SHORTCUT_PW = "PeekAB00"
+SHORTCUT_WANT = {
+    # name: (rsrc byte 109, data sha256[:16], masked rsrc sha256[:16])
+    "Shortcut™": (3, None, "3d74ebe7525795c9"),
+    "Viewer Engine™": (5, None, "c948c560e4bd56ba"),
+    "Aladdin/Viewers/PICT Viewer": (0, None, "975166b87fc27f0c"),
+    "Aladdin/Viewers/Text Viewer": (0, None, "d747131608808968"),
+    "Read Us First!/Shortcut Read Me": (0, "2050ce83c97c78f9", None),
+    "Read Us First!/What's New in Shortcut 1.5.3":
+        (0, "7d7929405c3ded8f", "357d523f2e30dfdf"),
+}
+# Damaged in the archive itself: Aladdin's installer says "may be
+# damaged" of it and writes 238,917 B against the 210,162 declared.
+SHORTCUT_DAMAGED = "Read Us First!/Shortcut 1.5 Addendum"
+
+
+def check_installermaker(macextract, problems, tmp):
+    """Returns the number of cases run, 0 if the specimen is absent."""
+    import hashlib
+    from vmac_check import mask_reserved
+    from synth_wrapped import macbinary
+    data_p = os.path.join(SHORTCUT_DIR, "Shortcut 1.5.3 Update")
+    if not (os.path.exists(data_p) and os.path.exists(data_p + ".rsrc")):
+        print("run_crypt: no Shortcut 1.5.3 Update in %s — the "
+              "InstallerMaker archive is not graded" % SHORTCUT_DIR)
+        return 0
+    arc = open(data_p, "rb").read()
+    # The case is only a test of the stray ids while the archive still
+    # carries them, so walk the headers and say so if it does not.
+    seen, p = {}, 22
+    while p + 112 <= len(arc):
+        h = arc[p:p + 112]
+        rc, dc = (int.from_bytes(h[92:96], "big"),
+                  int.from_bytes(h[96:100], "big"))
+        if h[0] & 0x6f in (0x20, 0x21):
+            p += 112
+            continue
+        seen[h[3:3 + h[2]].decode("mac_roman")] = (h[0], h[109])
+        p += 112 + rc + dc
+    for name, (rid, _d, _r) in SHORTCUT_WANT.items():
+        base = name.split("/")[-1]
+        if rid and seen.get(base) != (0x8d, rid):
+            problems.append("shortcut updater: %s is (method, byte 109) "
+                            "%r, not (0x8d, %d)" % (name, seen.get(base), rid))
+    # MacBinary, so the 'MKey' comes with it.
+    mb = os.path.join(tmp, "shortcut-update.bin")
+    open(mb, "wb").write(macbinary(
+        "Shortcut Update", arc, open(data_p + ".rsrc", "rb").read(),
+        ftype=b"APPL", creator=b"STi0"))
+    out = os.path.join(tmp, "shortcut-out")
+    os.makedirs(out)
+    r = run([macextract, "x", "-o", out, "-p", SHORTCUT_PW, mb])
+    msg = r.stderr.decode("utf-8", "replace")
+    # One failure, the damaged one, and it must be reported as such.
+    if "1 of 13 entries failed" not in msg or \
+            SHORTCUT_DAMAGED + ": checksum mismatch" not in msg:
+        problems.append("shortcut updater: expected only %s to fail, "
+                        "with a checksum mismatch; got %r"
+                        % (SHORTCUT_DAMAGED, msg.strip()[:300]))
+
+    def digest(path, rsrc):
+        if not os.path.exists(path):
+            return "absent"
+        b = open(path, "rb").read()
+        return hashlib.sha256(mask_reserved(b) if rsrc else b).hexdigest()[:16]
+    ran = 0
+    for name, (_rid, dsum, rsum) in SHORTCUT_WANT.items():
+        f = os.path.join(out, *name.split("/"))
+        for label, path, want, rsrc in (("data", f, dsum, False),
+                                        ("rsrc", f + ".rsrc", rsum, True)):
+            if want is None:
+                continue
+            got = digest(path, rsrc)
+            if got != want:
+                problems.append("shortcut updater: %s %s fork is %s, "
+                                "Aladdin's installer wrote %s"
+                                % (name, label, got, want))
+            ran += 1
+    return ran
+
+
 def main():
     macextract = os.path.join(ROOT, "build", "macextract")
     args = sys.argv[1:]
@@ -736,6 +829,7 @@ def main():
                   "on the archive synth_crypt.py garbles itself" % ARC_BIN)
         check_encinfo(macextract, problems, tmp)
         ran += check_wild_sit(macextract, problems, tmp)
+        ran += check_installermaker(macextract, problems, tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

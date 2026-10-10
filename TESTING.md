@@ -3430,6 +3430,26 @@ fork. Three are kept, with passwords of 8, 9 and 17 characters, and
 those lengths are not decoration: they are what showed that the fold
 count is ceil(len/8) and that neither reference implements it.
 
+**One wild StuffIt classic archive is graded by the installer that
+carries it** (added 2026-10-10): Aladdin's *Shortcut 1.5.3 Update*, from
+the specimen cache, extracted with the password read off its own memory.
+`check_installermaker` hashes six files against what the installer wrote
+to an emulated disk: the data fork as written, the resource fork with
+bytes 16..127 masked. It expects exactly one failure, the Addendum's CRC,
+and checks that the two forks with stray bytes at 109 still carry 3 and 5,
+so it is still testing what it is for. **Measured able to fail**: the
+engine before `sit_enc_id` gives three problems — *archive structure is
+corrupt*, *a scheme we cannot read*, and both forks absent. Without the
+specimen it skips and says so. Beside it in `ci.sh`, `tools/sit_mkey_oracle.py`'s
+self-test grades the archive-key oracle on the four MKeys Aladdin's
+software wrote, and grades `tools/sit_akscan.c` against the Python
+verifier. Six mutations of the scanner and one of `unfold()` each fail it:
+answering yes to every window, skipping odd windows, skipping even
+windows, dropping the last window, comparing two bytes instead of four,
+and decrypting where it should encrypt. **It cannot see** a fault shared
+by both scanners, since they verify with the same algorithm; the MKeys
+Aladdin's software wrote are what grade that.
+
 **PackIt's two ciphers are graded by PackIt III 1.3**, the generation
 that wrote every `PMa5` and `PMa6` block there has ever been, which is
 inside the fixture `packit.pit_.bin` (1.0 to 1.2 are not here, so the

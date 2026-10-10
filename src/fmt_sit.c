@@ -187,6 +187,20 @@ static int sit_scheme(unsigned meth, unsigned id)
         return UNC_SIT_SCHEME_DES;
     return UNC_SIT_SCHEME_FEEDBACK;
 }
+
+/* The id is read only where a module could have written it. Method 13
+ * is "unknown method" to 2.0.1 (STR# 261), so no 2.x module wrote a
+ * method-13 fork, and 3.x's own scheme is the built-in one. InstallerMaker
+ * 1.0.3 leaves other values there: measured 2026-10-10 on Aladdin's
+ * Shortcut 1.5.3 Update, whose `Shortcut™` carries 3 (`NewDEx`) and
+ * `Viewer Engine™` 5 at 109, and both decrypt under the built-in scheme
+ * and the password their eleven siblings take, byte for byte what
+ * Aladdin's own installer writes (FORMATS.md, *Where an archive names
+ * the module*). */
+#define SIT_METH_LZH 13
+#define sit_enc_id(meth, id) \
+    (((meth) & 0x0f) == SIT_METH_LZH ? SIT_ENC_UNSET : (unsigned)(id))
+
 /* All six this engine knows what to do with: 0 (the field unset) and 4
  * (3.5's built-in feedback); 1 and 64, which are `DES` and `DESex`;
  * 3, `NewDEx`; and 2, `PassLock`, which enciphers nothing. An id
@@ -1401,13 +1415,15 @@ int unc_sit_extract(UncCtx *c)
                                 (rmeth & SIT_NEWDE)) && rlen;
                     int denc = ((dmeth & SIT_ENCRYPTED) ||
                                 (dmeth & SIT_NEWDE)) && dlen;
+                    unsigned rid = sit_enc_id(rmeth, hdr[109]);
+                    unsigned did = sit_enc_id(dmeth, hdr[107]);
 
                     est = UNC_OK;
                     /* A scheme we do not implement is refused as such,
                      * rather than decrypted into rubbish and reported
                      * as a corrupt archive (SIT_ENC_STUFFITDES). */
-                    if ((renc && !sit_enc_known(hdr[109])) ||
-                        (denc && !sit_enc_known(hdr[107])))
+                    if ((renc && !sit_enc_known(rid)) ||
+                        (denc && !sit_enc_known(did)))
                         est = UNC_ERR_ENCRYPTED;
 
                     /* `PassLock` enciphers nothing, so the sixteen key
@@ -1415,17 +1431,17 @@ int unc_sit_extract(UncCtx *c)
                      * password is asked for — the entry decodes as it
                      * would unprotected, and the host is told that is
                      * what happened. */
-                    if (renc && hdr[109] == SIT_ENC_PASSLOCK) {
+                    if (renc && rid == SIT_ENC_PASSLOCK) {
                         rc -= 16;
                         renc = 0;
                     }
-                    if (denc && hdr[107] == SIT_ENC_PASSLOCK) {
+                    if (denc && did == SIT_ENC_PASSLOCK) {
                         dc -= 16;
                         denc = 0;
                     }
                     if (est == UNC_OK && renc) {
                         est = sit_fork_crypt(c, cr, start, rcomp,
-                                             sit_scheme(rmeth, hdr[109]));
+                                             sit_scheme(rmeth, rid));
                         if (est == UNC_OK) rc -= 16;
                     }
                     if (est == UNC_OK)
@@ -1437,7 +1453,7 @@ int unc_sit_extract(UncCtx *c)
                                        renc ? cr : NULL);
                     if (est == UNC_OK && denc) {
                         est = sit_fork_crypt(c, cr, start + rcomp, dcomp,
-                                             sit_scheme(dmeth, hdr[107]));
+                                             sit_scheme(dmeth, did));
                         if (est == UNC_OK) dc -= 16;
                     }
                     if (est == UNC_OK)

@@ -1676,21 +1676,29 @@ five `104..109` "exceptions" counted before this reading are two
 nothing left to explain.
 
 **InstallerMaker 1.0.3 writes nonzero bytes here that are not module ids —
-a HYPOTHESIS, 2026-10-09.** Two copies of Aladdin's *Shortcut 1.5.3 Update*
-(Info-Mac 1994-01; Eagle's Nest disc 1), an `APPL`/`STi0` whose data fork is
-a version-2 archive with an `MKey` beside it: all 13 forks are `0x8d`, method
-13 under the built-in scheme, and 11 carry 0 at 106..109 — but `Shortcut™`
-carries 5 / 3 at 107 / 109 — the bytes `sit_scheme()` reads for the data
-and resource forks — and `Viewer Engine™` 6 / 5 (CORRECTED 2026-10-09:
-this read "106 / 109"). Method 13 is
-*"unknown method"* to 2.0.1 (STR# 261, above), so no 2.x module wrote those
-forks; that the bytes are installer-private rather than ids stays a
-hypothesis until the archive decrypts. **The engine believes them**
-(`macextract x`, measured): with the `MKey`, `Viewer Engine™` is refused as
-*"encrypted by a scheme we cannot read"* while its ten encrypted siblings
-ask for a password; without the `MKey` beside it (the archive's own
-resource fork gone), `Shortcut™` is reported as encrypted by `NewDEx`.
-What `Shortcut™` does WITH the `MKey` was not recorded. OPEN_ITEMS.md, *StuffIt 2.0*, has what would settle it.
+measured 2026-10-10.** Aladdin's *Shortcut 1.5.3 Update* (Info-Mac 1994-01;
+Eagle's Nest disc 1) is an `APPL`/`STi0` whose data fork is a version-2
+archive with an `MKey` beside it: all 13 forks are `0x8d`, method 13, and
+11 carry 0 at 106..109. `Shortcut™` carries **5 / 3** at **106 / 109** and
+`Viewer Engine™` **6 / 5** (CORRECTED 2026-10-10: 2026-10-09 had changed
+this to "107 / 109", and 104..109 read `07 00 05 00 00 03`); both have an
+empty data fork, so only 109 is read. With the password the installer
+carries, `PeekAB00`, read off its own memory (DECISIONS.md 2026-10-10,
+*the installer's own key*), **both decrypt under the built-in scheme**, and
+under the standard resource-header mask both forks are byte for byte what
+the installer itself wrote to an emulated disk:
+
+| | 109 | the engine before | with 109 ignored on method 13 |
+|---|---|---|---|
+| `Shortcut™` | 3 | *archive structure is corrupt* (`NewDEx`) | 276,998 B, CRC-16 good, = Aladdin's |
+| `Viewer Engine™` | 5 | *encrypted by a scheme we cannot read* | 78,014 B, CRC-16 good, = Aladdin's |
+
+So `sit_scheme()` does not read 107/109 on a method-13 fork (`sit_enc_id`
+in `src/fmt_sit.c`); `tools/run_crypt.py` grades the archive against the
+installer's output. The thirteenth fork, `Read Us First!/Shortcut 1.5
+Addendum`, is damaged in the archive: the engine reports a CRC mismatch,
+and Aladdin's installer warns *"may be damaged"* and writes 238,917 B
+against the 210,162 declared.
 
 ### What Aladdin's own output says — measured 2026-09-28
 
@@ -2442,7 +2450,9 @@ The window is sized to the fork rather than always 256 KB, by
 `sit13_winsize`'s argument (*StuffIt classic: method 13's window*), so a
 small fork pays for a small window. A fork that wants the whole 256 KB is
 refused per entry at the two 512 KB tiers, where StuffIt 5's granted
-budget is 306,376 B and 210,976 B (*What each format is granted*);
+budget is 293,264 B and 197,864 B (*What each format is granted*;
+CORRECTED 2026-10-10 from 306,376 and 210,976, which were the bases before
+2026-10-09's re-take);
 `run_tiers.py --check` moves no tally on either lane.
 
 ### Run on a Macintosh, 2026-10-03
@@ -5021,7 +5031,13 @@ engine later the same day, fourteen until AppleLink packages arrived on
 |---|---|---|---|---|---|
 | **eager — SHIPPED** | (default) | **54,640 B** | 19,088 B | **66,432 B** | **231,808 B** |
 | lazy | `UNC_OVL_LAZY=1` | 53,216 B | 19,200 B | 64,896 B | 230,400 B |
-| resident — the control | `UNC_OVL_RESIDENT=1` | **170,044 B** | **37,972 B** | 202,496 B | 205,824 B |
+| resident — the control | `UNC_OVL_RESIDENT=1` | **170,056 B** | **37,960 B** | 202,496 B | 205,824 B |
+
+**Re-measured 2026-10-10, for the method-13 encryptor id that is not
+read** (*Where an archive names the module*): both SHIPPED configurations
+**+0 and +0**, the control **+12 B of `CODE` and −12 of A5**, `ovl_stuffit`
+27,914 → **27,938 B**; no download changed size, and `run_tiers.py
+--check` moves no tally on either lane.
 
 **Re-measured 2026-10-09, for Shrink's tick per partial clear** and the
 zip peek's Cancel (*Shrink*, *What a crafted stream costs*): both
@@ -5049,7 +5065,9 @@ keep in `ovl_stuffit` (26,274 → **27,938 B**), with `ovl_crypt`
 10,140 → **10,244 B** and the download 229,248 → **231,424 B**. The
 same day the footer read went through `unc_read_full` (*Private File*):
 the shipped pair unmoved, the control −12 of `CODE` and +12 of A5 (no
-data object changed size; `.data` alignment), `ovl_stuffit` **27,914 B**.
+data object changed size; `.data` alignment), `ovl_stuffit` **27,914 B**,
+and **27,938 B** on 2026-10-10 for the method-13 id that is not read
+(*Where an archive names the module*).
 
 **Re-measured 2026-10-08 again, for zip method 1** (*Shrink*): the
 control **+1,164 B of `CODE` and −12 of A5**, both SHIPPED
@@ -5239,8 +5257,9 @@ measured 2026-09-27. The shipped pair is **134,288 B** since 2026-10-09's
 DiskDoubler buffer reuse (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **162,040 B** — the fifteen images sum to 161,842 B, so its
-index costs **198 B**: a 4-byte header, 12 bytes of directory per image
+The bundle is **162,064 B** — the fifteen images sum to 161,866 B, so its
+index costs **198 B** (+24 B on 2026-10-10, `ovl_stuffit`, the index
+unmoved): a 4-byte header, 12 bytes of directory per image
 and 14 bytes of padding to 4, which accounts for the whole difference
 (CORRECTED 2026-10-10: it read 161,844 and 196 B after `ovl_lzh` went
 9,568 → 9,586, which is 0 → 2 mod 4)
@@ -5277,7 +5296,8 @@ day, `ovl_stuffit` −24 for the footer read through `unc_read_full`,
 and to 161,868 the same day (`ovl_exo` +28, zip's dry passes putting the progress count back), after 161,840 for `ovl_codecs` +108 and `ovl_exo` +20 for
 Shrink's tick and the zip peek's Cancel (*Shrink*), the index unmoved,
 and to 162,040 the same day: `ovl_cptdd` +144, `ovl_lzh` +18 and
-`ovl_text` +8 for the progress count put right in those three formats.
+`ovl_text` +8 for the progress count put right in those three formats,
+and to 162,064 on 2026-10-10 for `ovl_stuffit` +24.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 66,432 B `MacExtract.code.bin` and not the download.
@@ -5293,7 +5313,7 @@ than failing on it, exactly as its tolerance is meant to.)
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
 and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
-re-derived since) plus the **162,040 B** bundle, which is **228,440 B** (DECISIONS.md 2026-09-25, *the overlay
+re-derived since) plus the **162,064 B** bundle, which is **228,464 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5422,9 +5442,9 @@ budget per format, and one per layer*).
 | ARC | arc, ciphers, codecs | **+107,606 B** (measured) |
 | Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +99,818 B (arithmetic), and **+110,070 B** where the directory says no entry is encrypted (measured) |
 | Tar | exo, codecs | **+93,894 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,812 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+87,788 B** (measured; −24 B on 2026-10-10 with `ovl_stuffit`) |
 | Zip, spanned zip | exo, ciphers, codecs | +83,642 B (arithmetic), **+93,894 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,426 B** (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,450 B** (measured; −24 B on 2026-10-10 with the bundle) |
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5493,7 +5513,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 162,040 B held against 134,288 B saved. It costs nothing on the tiers
+it — 162,064 B held against 134,288 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5552,7 +5572,7 @@ re-read 2026-10-09 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
 **66,432 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **162,040 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **162,064 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -7608,7 +7628,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **162,040 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **162,064 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the
