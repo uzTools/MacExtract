@@ -178,7 +178,7 @@
 /* under half a second on a 70-second run.                             */
 /* ------------------------------------------------------------------ */
 #ifdef UNC_AT_TIMING
-static long gTkRun, gTkRead, gTkWrite, gTkMeta;
+static long gTkRun, gTkRead, gTkWrite, gTkMeta, gTkBack;
 #define TK_T0        long tk0_ = TickCount()
 #define TK_ADD(acc)  ((acc) += TickCount() - tk0_)
 #else
@@ -3941,16 +3941,31 @@ static OSErr FindVolWait(ConstStr255Param want, short *vref)
  * by reading a fork back through the File Manager. Comparing this against a
  * host-side CRC of the same fork tells whether a mismatch is the decoder
  * writing wrong bytes (on-Mac CRC already wrong) or the harness ferrying
- * them wrong (on-Mac CRC right, host CRC wrong). */
+ * them wrong (on-Mac CRC right, host CRC wrong).
+ *
+ * Table-driven, the table built bit at a time on first use from the same
+ * polynomial. Bit at a time over every byte was 47.7 s of a 52 s MacBinary
+ * run at 7 MHz, where the archive itself is 1.5 s (FORMATS.md, *Measured on
+ * a 7 MHz Mac Plus*). The table is the harness's own, not the engine's
+ * unc_crc32, so the check stays independent of the code it is checking. */
 static uint32_t at_crc32_update(uint32_t crc, const uint8_t *p, long n)
 {
-    long i; int k;
-    crc = ~crc;
-    for (i = 0; i < n; i++) {
-        crc ^= p[i];
-        for (k = 0; k < 8; k++)
-            crc = (crc >> 1) ^ (0xEDB88320u & (uint32_t)(-(int32_t)(crc & 1)));
+    static uint32_t tab[256];
+    static Boolean built;
+    long i;
+    if (!built) {
+        int b, k;
+        for (b = 0; b < 256; b++) {
+            uint32_t c = (uint32_t)b;
+            for (k = 0; k < 8; k++)
+                c = (c >> 1) ^ (0xEDB88320u & (uint32_t)(-(int32_t)(c & 1)));
+            tab[b] = c;
+        }
+        built = true;
     }
+    crc = ~crc;
+    for (i = 0; i < n; i++)
+        crc = tab[(crc ^ p[i]) & 0xFF] ^ (crc >> 8);
     return ~crc;
 }
 
@@ -4641,6 +4656,7 @@ int main(void)
         long totalDataLen = 0, totalRsrcLen = 0;
         uint32_t vals[8];
         int e;
+        TK_T0;
         for (e = 0; e < gATnrec; e++) {
             uint32_t dc = 0, rc = 0; long dl = 0, rl = 0;
 #ifndef UNC_AT_NOCRC   /* skip the read-back to isolate write vs read crashes */
@@ -4650,6 +4666,7 @@ int main(void)
             sumDataCRC += dc; totalDataLen += dl;
             sumRsrcCRC += rc; totalRsrcLen += rl;
         }
+        TK_ADD(gTkBack);   /* the harness's own read-back, not the archive */
         vals[0] = (uint32_t)gATnrec;
         vals[1] = (uint32_t)ret;
         vals[2] = (uint32_t)errors;
@@ -4734,12 +4751,13 @@ int main(void)
         }
 #endif
 #ifdef UNC_AT_TIMING
-        /* Overwrite four of the eight slots, the way UNC_AT_BUDGET and
+        /* Overwrite five of the eight slots, the way UNC_AT_BUDGET and
          * UNC_AT_META do: the GRID is the channel the Mini vMac harness
          * reads, and a probe build is not graded on its CRCs. Ticks, 60 Hz.
-         * The file report keeps all twelve for anything that can read it. */
+         * Slot 7 is the read-back below RunExtract, which the wall clock
+         * includes and gTkRun does not; the file report keeps all thirteen. */
         {
-            uint32_t tv[12];
+            uint32_t tv[13];
             int k;
             for (k = 0; k < 8; k++) tv[k] = vals[k];
             tv[8]  = (uint32_t)gTkRun;     /* the whole extraction        */
@@ -4747,12 +4765,14 @@ int main(void)
             tv[10] = (uint32_t)gTkWrite;   /* FSWrite, both forks         */
             tv[11] = (uint32_t)gTkMeta;    /* create, SetEOF, close,      */
                                            /* FlushVol, catalog           */
+            tv[12] = (uint32_t)gTkBack;    /* the read-back + CRC above   */
             vals[3] = tv[8];
             vals[4] = tv[9];
             vals[5] = tv[10];
             vals[6] = tv[11];
+            vals[7] = tv[12];              /* peak heap stays in the file */
             at_report(vals, 8);
-            at_report_file(tv, 12);
+            at_report_file(tv, 13);
         }
 #else
         at_report(vals, 8);
