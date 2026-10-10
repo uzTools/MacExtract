@@ -3135,9 +3135,27 @@ Icon coordinates live in `FINDER_ICONS`, per system, `archive` alongside
 control drag moves up there rather than down.
 
 **What it cannot see.** It photographs; it reads nothing off the volume. A
-launch proves the Finder accepted the drop, not that the application was told
-WHICH file — nothing in the application reads `AppParmHandle`, so that half
-cannot be tested until the receiving code exists.
+launch proves the Finder accepted the drop; `drop-7` is what says the
+application was told WHICH file, since it has read `AppParmHandle` from
+2026-08-31 (this paragraph said it did not until 2026-10-10).
+
+### Who a double-click goes to — `deskclaim.py`
+
+    deskclaim.py fixtures/derived-ScrollbarPattern.sit -o /tmp/c --expect refused
+    deskclaim.py ... --claim --expect open                  # Desktop APPL entry
+    deskclaim.py ... --app-creator 'SIT!' --expect handed   # retag the app
+    deskclaim.py ... --system Sys30.img --app-creator 'SIT!' --expect handed
+
+Double-clicks a `SIT!` archive in the Finder, after optionally adding a
+`SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
+bundle with `--bundle`) or retagging the application file's creator. **It
+grades the DIALOG in `claim-3-launched.png`, not the volume**: a launch that
+was not handed the file shows the Open dialog, the run's Return opens the
+archive from it, and the entries land anyway — the first version passed on
+exactly that. Results are DECISIONS.md 2026-10-10, *the double-click that
+goes by the application's creator*. **What it cannot see:** which of two
+applications under one creator wins (no StuffIt is on these volumes), and
+System 7, whose list is `Desktop DB`.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

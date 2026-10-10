@@ -385,6 +385,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
 - 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
 - 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table halved it and the tick probe now bills the read-back
+- 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
 
 ---
 
@@ -25340,3 +25341,45 @@ right one of the two files.
   interactive application, timed against Expander with no read-back,
   reads 56 s for `derived-EmpireBuilderDemo.sit`; the autotest reads
   61 s now and read 119 s before.
+
+## 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
+
+The question was a companion application that makes double-clicked archives
+open in MacExtract on System 6 and earlier, by writing MacExtract into the
+Finder's `Desktop` file under other applications' creators.
+
+**Claim (measured, System 6.0.8; one case on System 3.0).** The System 6
+Finder hands a double-clicked document to the launched application only when
+the document's creator is the APPLICATION FILE's own creator. Which
+application launches is the `Desktop` file's business; whether it gets the
+document is not.
+
+**Evidence.** `tools/vmac/deskclaim.py`, one boot each, a `SIT!/SIT!`
+archive double-clicked, graded on which dialog the application opened:
+
+| `Desktop` file | application file's creator | result |
+|---|---|---|
+| stock | `MExt` | the Finder refuses: *"could not be opened/printed (the application is busy or missing)"* |
+| + `APPL` entry `SIT!` → MacExtract | `MExt` | MacExtract launches, **no document** — its Open dialog |
+| + that entry and a bundle filed under `SIT!` | `MExt` | the same |
+| stock, archive's creator `MExt` | `MExt` | handed over — the first System 6 double-click of a MacExtract document ever measured |
+| + the `SIT!` entry | `SIT!` | handed over |
+| **stock** | **`SIT!`** | **handed over**, and on System 3.0 the same |
+
+The Finder registered the retagged application under `SIT!` by itself
+(`APPL` after the run). Its `BNDL` still names `MExt`, so it draws the
+generic application icon; nothing in `mac/` reads its own creator.
+
+**Consequence.** The companion does not need to write the `Desktop` file:
+what hands an archive to MacExtract is an application FILE whose creator is
+the archive's. One file has one creator, so covering `SIT!`, `CPCT` and the
+rest takes one file per creator — whole copies of MacExtract (~230 KB each),
+or a small stub per creator that relaunches MacExtract with the document,
+which is untested. Still open: which application wins when StuffIt is on the
+same volume. The `APPL` list holds newest first and allows duplicates (`MACS`
+three times), so "the last one the Finder saw" is a hypothesis, not a
+finding. System 7 keeps the list in `Desktop DB`, and nothing here wrote one.
+
+**Transferable.** The first version of the probe graded on the volume and
+passed the run that handed over nothing: the harness's own Return opened the
+archive from the Open dialog. A launch and a handover end in the same files.
