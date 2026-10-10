@@ -12,49 +12,34 @@ and extracts byte-exact on every system the project claims:
 
 The sample is **72 fixtures** since 2026-10-09, when
 `shrink-wild-titanic.zip` joined it — the first Shrink archive a Macintosh
-has run. **Four tiers were re-run that day on the v0.37.0 source** (the
-`dist/` binary less a comment): both 1 MB floors and both 512 KB machines.
-The 4 MB tiers and System 7.0.1 are **v0.33.0's** figures on the 71-fixture
-sample (2026-09-25), and what stands in for them is below the table.
+has run. **Every Mini vMac tier has run it on the v0.37.0 source**: both
+1 MB floors and both 512 KB machines on 2026-10-09 (the `dist/` binary less
+a comment), the two 4 MB tiers and System 7.0.1 on 2026-10-10 (`dist/`'s
+payload rebuilds byte-identical). Each 2026-10-10 sweep was paired with a
+`-D UNC_AT_BUDGET` sweep read field by field (`tools/vmac/README.md`, *Why
+an entry is refused*): no refusal, no first-entry error, no image wanted
+after its release and no failed keep on any of the 216 runs.
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **71/71**, v0.33.0 |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **72/72**, 2026-10-10 |
 | System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **72/72**, 2026-10-09 |
 | System 3.0, **512 KB** Macintosh 512Ke | **70/72**, 2026-10-09 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
-| System 6.0.8, 4 MB Mac Plus | **71/71**, v0.33.0 |
+| System 6.0.8, 4 MB Mac Plus | **72/72**, 2026-10-10 |
 | System 6.0.8, **1 MB** — the RAM floor | **72/72**, 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid); no memory-budget refusals remain |
 | System 6.0.8, **512 KB** Macintosh 512Ke | **66/72**, 2026-10-09 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09) |
-| System 7.0.1, 4 MB | **71/71**, v0.33.0 |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture |
+| System 7.0.1, 4 MB | **72/72**, 2026-10-10 — the only tier with a code-cache flush route: `_HWPriv` called on all 72, once per kept image plus the bundle fixup |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-09-25, v0.33.0 |
 
-**Three tiers carried on an argument, and its number is withdrawn.** Ten
-changes from 2026-09-26 to 2026-10-09 were each argued not to move any
-tally because their cost sat under "the narrowest margin between any
-passing layer's demand and its budget", **16,490 B**. That margin was
-`a2ps.V4.3.tar.Z`'s, on System 6.0.8 / 512 KB, computed by a model whose
-base drifted 16,888 B from 2026-09-28 on, most of it after 2026-10-02 — and `a2ps` was refused there
-when a machine next ran it (*Withdrawn claims*). The four tiers re-run on
-2026-10-09 replace the argument for themselves. **For the two 4 MB tiers
-and System 7.0.1 what stands is the per-change evidence, all measured,
-which never rested on the margin**: the ARC password predicate is reached
-only after a decode has failed; the Compact Pro segment check can only
-refuse, and no sampled fixture is a segment; the AppleLink probe's
-removal (−496 B) changes what **0 of the 71 sampled fixtures** sniff
-as, and its return (+788 B), the zip pair's probe (+320 B), the
-AppleLink name test (±0) and Private File (+400 B) each change it for
-**0 corpus fixtures** that are not that format; and Implode, PKZIP 1.01's minimum match and Shrink cost resident
-`CODE` and A5 **+0** (FORMATS.md, *Three configurations, one tree* and
-each format's *What it costs*). Those machines have 3 MB more RAM than the
-floor, whose narrowest passing margin is **334,240 B**
-(`run_tiers.py`, 2026-10-09). **Not covered**: whatever only a 4 MB
-budget reaches — Arsenic picks its strategy from what it is granted — on
-the current binary.
+The heaviest 4 MB allocations are the same to the byte on all three 4 MB
+tiers — the Arsenic transform table, 1,353,789 B for
+`derived-Library_ISBN_Barcoder.sit` — and 44 B under the Linux engine at the
+budget each Mac granted (FORMATS.md, *System 7 tier*).
 
 **On no Macintosh**: an AppleLink `.pkg`, a self-extracting zip (none is
 committable, `tools/specimens/zipit.tsv`) and an Implode archive — none is
 in `sample.txt`. **Shrink has run** since 2026-10-09:
-`shrink-wild-titanic.zip` is byte-exact on all four tiers re-run, at
+`shrink-wild-titanic.zip` is byte-exact on all seven Mini vMac tiers, at
 38,807 B of peak heap against 38,777 on Linux. **Private File has run**
 through the application's password dialog on System 6.0.8, at 4 MB and
 at the 1 MB floor (both 2026-10-09) — a wrong password refused, then both

@@ -6940,7 +6940,7 @@ forks are methods 2 and 3, which is what its profile has always shown
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 71-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 72-fixture sample spanning all
 seventeen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -6948,7 +6948,10 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**71/71 byte-exact PASS on the v0.33.0 binary**, 2026-09-25, and 71/71
+**72/72 byte-exact PASS on the v0.37.0 source**, 2026-10-10 (the
+`dist/` application rebuilt byte-identical; 507 files, 6,846,866 data
+and 3,458,384 resource-fork bytes), with `shrink-wild-titanic.zip` in.
+71/71 on the v0.33.0 binary, 2026-09-25, and 71/71
 earlier the same day on the build before DART left it (and 71/71 on
 **2026-09-22** with every decoder resident, the sweep that put the UTF-8 fold
 on a Macintosh for the first time: the sample gained
@@ -7044,7 +7047,9 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**71/71 byte-exact PASS at 4 MB on the v0.33.0 binary**, 2026-09-25 (and
+**72/72 byte-exact PASS at 4 MB on the v0.37.0 source**, 2026-10-10,
+engine peak identical to System 6.0.8 and System 3.0 at 4 MB on every
+fixture (71/71 on the v0.33.0 binary, 2026-09-25, and
 **71/71 on 2026-09-22** with every decoder resident, the sweep
 that added the two UTF-8-named StuffIt 5 fixtures, so the fold has now run
 under the Process Manager too; 69/69 on **2026-08-26**, re-run for M37's
@@ -7080,10 +7085,12 @@ fixtures:
 
 | fixture | System 7, 4 MB | System 6, 1 MB |
 |---|---|---|
-| `derived-a2basic.dmg.sit` | 1,031,525 B (transform table) | 560,589 B (sampled index) |
-| `derived-Library_ISBN_Barcoder.sit` | 1,682,142 B (transform table) | 614,134 B (sampled index) |
+| `derived-a2basic.dmg.sit` | 829,041 B (transform table) | 703,565 B (sampled index) |
+| `derived-Library_ISBN_Barcoder.sit` | 1,353,789 B (transform table) | 644,858 B (sampled index) |
 
-Given room, the decoder takes the fast table and spends 1.0 and 1.6 MB on it.
+The 4 MB column is 2026-10-10's and the 1 MB column 2026-10-09's (*Floor
+target verification*). Given room, the decoder takes the fast table and
+spends 0.8 and 1.35 MB on it.
 Given a 1 MB machine, the table's allocation fails and it takes the sampled
 index instead. Nothing selects this but the allocator saying no, and both
 columns are byte-exact.
@@ -7278,8 +7285,8 @@ and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for t
 
 The oldest system a Macintosh Plus can boot, and the one it shipped with in
 January 1986: System Tools 1.0, an 800K HFS floppy. **72/72 byte-exact PASS
-at 1 MB on the v0.37.0 source, 2026-10-09**, `shrink-wild-titanic.zip`
-included; 71/71 at 1 MB on the v0.33.0 binary, 2026-09-25 — and 71/71 at 1 MB and at
+at 1 MB on the v0.37.0 source, 2026-10-09, and 72/72 at 4 MB on the same
+source, 2026-10-10**, `shrink-wild-titanic.zip` included; 71/71 at 1 MB on the v0.33.0 binary, 2026-09-25 — and 71/71 at 1 MB and at
 4 MB on **2026-09-22** with every decoder resident (the 4 MB figure was 69/69
 on 2026-08-30, two fixtures behind until that sweep) — the same committed
 sample and the same on-Mac CRC-32 read-back as every row above, replayed by
@@ -7295,13 +7302,16 @@ an application launches, measured at **12 bytes** of difference on System
 No tier here has a Finder in memory while the engine works.
 
 The four heaviest allocations, as the Mac itself reports them (the 1 MB
-column 2026-10-09's; the 4 MB column is from an earlier run, not re-taken):
+column 2026-10-09's, the 4 MB column 2026-10-10's; the 4 MB figures are
+the same to the byte on System 6.0.8 and System 7.0.1). At 4 MB
+`derived-Cool_Tools__.sit` is second, 848,721 B; it is not a row because
+no 1 MB figure for it has been recorded since the 2026-09-22 resident build:
 
 | fixture | 4 MB peak | 1 MB peak | out |
 |---|---|---|---|
-| `derived-Library_ISBN_Barcoder.sit` | 1,683,101 B | 644,858 B | 34 files, 641,115 B |
-| `derived-a2basic.dmg.sit` | 1,032,484 B | 703,565 B | 205,019 B |
-| `derived-Troi-ClipSave-Plug-in1.1.sit` | 661,221 B | 530,656 B | 13 files, 796,486 B |
+| `derived-Library_ISBN_Barcoder.sit` | 1,353,789 B | 644,858 B | 34 files, 641,115 B |
+| `derived-a2basic.dmg.sit` | 829,041 B | 703,565 B | 205,019 B |
+| `derived-Troi-ClipSave-Plug-in1.1.sit` | 530,656 B | 530,656 B | 13 files, 796,486 B |
 | `synth-dd-m5.dd` | 405,520 B | 405,520 B | 1,145 B |
 
 The largest output on the tier is `derived-XferIt_1.5b4.sea`, 948,175 B across
