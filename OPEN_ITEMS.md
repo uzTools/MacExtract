@@ -260,6 +260,23 @@ What is left:
 | **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a file from somebody who has one. No source in reach is left**: every archive Discmaster lists as classic StuffIt — 196,139 — has been asked by one key or the other, and none carries either bit (ids 2 and 3). Both modules accept type `8BIM` only; the 21 archives with an `8BIM` member, the 10,452 the index recorded no members for, and on 2026-10-10 the 112 of those whose walks had stopped early — re-walked to the declared end, every unread byte searched for a header whose own CRC checks — carry neither (TESTING.md, *Searching somebody else's index by content*). 24 of the 112 declare **38 MB** more than the index holds, and those bytes are not on this machine's side of the network |
 | **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **an encrypted archive and its password, from somebody who has both. No source in reach is left**: the same 196,139 archives, the 112 re-walked on 2026-10-10 included, hold no `DES`, `DESex` or `PassLock` fork, and the only `NewDE` bits are **8 forks in 3 distinct wild archives** with no password found beside any of them — the one read-me that speaks to it says the author mailed one on payment, a negative looked for rather than proved (DECISIONS.md 2026-10-07, *the key was what the archive CONTAINED*) — so a wild encrypted archive grades a REFUSAL, which `sitcrypt-wild-F7Menus.sit.bin` does (FORMATS.md, *The one wild archive here that is encrypted*). Every other wild encrypted fork is 3.x's built-in scheme |
 
+## Where a copy's seconds go on a Mac Plus
+
+**Unexplained, not investigated (filed 2026-10-10).** The two formats
+that are a copy take minutes' worth of a Mac Plus for a few hundred KB:
+`kermitut9test.bin` (MacBinary, 304 KB) **52 s** and `derived-PCCTS.tar`
+(287 KB) **46 s**, wall clock with boot excluded (FORMATS.md, *Measured
+on a 7 MHz Mac Plus*). Even at half that — the ratio the tick probe has
+shown against this clock on two fixtures — it is ~650 cycles a byte. The
+engine's share is `unc_copy_fork`: read, hand the bytes to the sink,
+bump progress, with no checksum over a MacBinary fork. That leaves the
+shell's sink, the File Manager, the progress dialog, or the clock itself,
+and nothing here says which.
+
+| what would close it | why |
+|---|---|
+| **one tick-probe run (`-D UNC_AT_TIMING`) on each of the two fixtures** | the probe bills File Manager reads, writes and create/close by kind and leaves the engine as the remainder (FORMATS.md, *What -O3 is worth, and where*); on EmpireBuilder the File Manager was 1.5 % of the run, so either a copy is different or the wall clock is |
+
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09).** The engine is portable C99
