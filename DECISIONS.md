@@ -380,6 +380,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
 - 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
 - 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
+- 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
 
 ---
 
@@ -25145,3 +25146,25 @@ question. The install-UI step is what remains; the instrument for the moment it
 is reached is built and checked (OPEN_ITEMS.md, *StuffIt 2.0*). The updater is
 kept at `~/.cache/macextract/specimens/shortcut-updater/` so the next attempt
 starts at the install, not at Discmaster.
+
+## 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
+
+**Claim (measured).** The 112 StuffIt walks the 2026-10-09 sweep left short
+of their declared end were three different stops reported as one figure: 88
+at a header `plausible()` rejects, 24 at a header past the end of the file
+the index holds, and fetches that came back short. Only the first kind has
+bytes left to read, and reading them by plausibility alone gave **2,571
+"flagged headers"** with Optimizer and Encryptor ids spread evenly over
+0..255. That is the signature of compressed data, not of a module.
+
+**What made it a count.** `src/fmt_sit.c` refuses any entry whose header
+CRC-16 at +110 fails, so a header the engine would read always carries one.
+All 2,835 headers in `fixtures/` and 2.0.1's specimens pass it, and the same
+unread bytes then held 12,255 headers that check, none of them flagged
+(TESTING.md, the 2026-10-10 row). A plausibility test can say where to look.
+Only a test the bytes can fail can say that nothing is there, and
+StuffIt's headers carry one for free.
+
+**Consequence.** The two StuffIt 2.0 rows in OPEN_ITEMS.md have no
+population left in reach here. What would close them is a file from
+somebody who has one.

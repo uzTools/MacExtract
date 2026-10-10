@@ -49,6 +49,10 @@ written from this project's own reading of the format it names:
        be walked: 34 requests for a 652-entry archive the per-header
        walk took 652 for, with the same 652 headers (2026-10-09).
        `--no-meta` keeps the archives `--meta-type` cannot reach.
+       `--resync` goes on past a header that is not one, and every
+       header it reports out of those bytes has passed its own CRC-16
+       (`resync_sit()`); `--keys` re-probes a list out of an earlier
+       state, which is how the 112 early stops of 2026-10-09 were re-walked.
   dd   a DiskDoubler compressed file, reported with both forks' method
        bytes and lengths (docs/formats/diskdoubler-container.md, *A
        compressed file*).  `--method` keeps only the forks that use one.
@@ -82,6 +86,10 @@ Examples — each sweep this tool has actually run is in TESTING.md
         --query 'format=sit&dedup=dedup' --query 'format=sea&dedup=dedup' \
         --meta-type PNTG --meta-type 8BIM --meta-type FSSD \
         --bytes 32768 --walk 400
+    # re-walk the walks an earlier sweep stopped short, past the stop
+    tools/scan_discmaster.py --probe sit --keys short112.keys \
+        --seed-state dm-nometa.json --state short112.json \
+        --bytes 32768 --walk 100000 --resync
     # a working set to grade offline, KEPT: whole files by SHA-256, the
     # state as the manifest — the Shrink sweep of 2026-10-09 (TESTING.md)
     tools/scan_discmaster.py --probe keep --keep-dir files --state mac.json \
@@ -315,11 +323,32 @@ def plausible(e, end=None):
     return True
 
 
+def crc16_arc(b):
+    """CRC-16/ARC, `src/unc_util.c`'s: reflected 0x8005, init 0. Check
+    value 0xBB3D over "123456789"."""
+    c = 0
+    for x in b:
+        c ^= x
+        for _ in range(8):
+            c = (c >> 1) ^ 0xA001 if c & 1 else c >> 1
+    return c
+
+
+def hcrc_ok(b, at):
+    """**Whether a header's own CRC-16 at +110 checks**, which
+    `src/fmt_sit.c` requires of every entry before it reads one — so a
+    header that fails it is one the engine would refuse, and a header
+    read out of compressed data passes it once in 65,536."""
+    return (at + 112 <= len(b)
+            and crc16_arc(b[at:at + 110]) == u16(b, at + 110))
+
+
 def entry(b, at):
     """One file header, as `src/fmt_sit.c` reads it."""
     rm, dm = b[at], b[at + 1]
     nl = b[at + 2]
     e = {"at": at, "rmeth": rm, "dmeth": dm, "nl": nl,
+         "hcrc": hcrc_ok(b, at),
          "name": b[at + 3:at + 3 + min(nl, 63)].decode("mac_roman",
                                                        "replace")}
     if (rm & FOLDER_MASK) in (0x20, 0x21):
@@ -908,17 +937,38 @@ def url_of(item, fileid):
 WALK_WINDOW = 4096
 
 
-def walk_sit(head, item, fileid, probe, first, maxent):
+def walk_sit(head, item, fileid, probe, first, maxent, size=None,
+             resync=False):
     """Follow a StuffIt entry chain past the bytes already fetched, a 4 KB
     window per request where the server allows ranges (several headers a
-    request), one request per entry where it does not."""
+    request), one request per entry where it does not.
+
+    **Why a walk stopped is recorded in `first["stop"]`**, because "short
+    of the declared end" covers three different things that the
+    2026-10-09 sweep reported as one figure, 112: a header that is not
+    one (`implausible`), a header that would lie past the FILE's own end
+    (`past-file` — the index holds fewer bytes than the archive
+    declares), and a fetch that came back short (`short-read`, which is
+    the network and not the archive). With `resync`, an `implausible`
+    stop is followed by `resync_sit()` below."""
     base = first["base"]
     ents = list(first["entries"])
     end = base + first["total"] if first["total"] >= 22 else None
-    at = first["next"]
+    if ents:
+        last = ents[-1]
+        at = last["at"] + 112 + last.get("rclen", 0) + last.get("dclen", 0)
+    else:
+        at = first["next"]
     window = head.control(item, fileid)
     chunk, cstart = b"", 0
-    while len(ents) < maxent and (end is None or at + 112 <= end):
+    stop = None
+    while len(ents) < maxent and (end is None or at < end):
+        if size is not None and at + 112 > size:
+            stop = "past-file"
+            break
+        if end is not None and at + 112 > end:
+            stop = "implausible"        # a tail too short to be a header
+            break
         if window:
             # A window from `at`, not `at` + 112 from 0: a prefix fetch
             # per entry makes a full walk quadratic in the archive's
@@ -932,19 +982,100 @@ def walk_sit(head, item, fileid, probe, first, maxent):
                 chunk, cstart = head.get(item, fileid, WALK_WINDOW,
                                          start=at), at
                 if len(chunk) < 112:
+                    stop = "short-read"
                     break
             e = entry(chunk, at - cstart)
             e["at"] = at
         else:
             blob = head.get(item, fileid, at + 112)
             if len(blob) < at + 112:
+                stop = "short-read"
                 break
             e = entry(blob, at)
         if not plausible(e, end):
+            stop = "implausible"
             break
         ents.append(e)
         at += 112 + (e.get("rclen", 0) + e.get("dclen", 0))
+    if stop is None and len(ents) >= maxent and end is not None and at < end:
+        stop = "walk-cap"
+    first["stop"] = {"why": stop, "at": at} if stop else None
+    if stop == "implausible" and resync and end is not None:
+        first["resync"] = resync_sit(head, item, fileid, at, end, size)
+        ents += first["resync"].get("entries", [])
     return ents
+
+
+RESYNC_LIMIT = 16 << 20
+
+
+def chain(b, p, stop):
+    """The plausible headers from `p` in `b`, in step, and where the
+    chain arrives: at `stop` exactly, past the bytes in hand, or at a
+    header that is not one."""
+    out = []
+    while p + 112 <= len(b) and p < stop:
+        e = entry(b, p)
+        if not plausible(e, stop):
+            return out, p, "implausible"
+        out.append(e)
+        p += 112 + e.get("rclen", 0) + e.get("dclen", 0)
+    if p == stop:
+        return out, p, "end"
+    return out, p, "off-bytes"
+
+
+def resync_sit(head, item, fileid, at, end, size):
+    """**Where a stopped walk picks up again**, if anywhere: the rest of
+    the archive fetched in ONE request, then the first offset past the
+    stop from which a chain of plausible headers lands EXACTLY on the
+    declared end. Landing on the end to the byte is the test, because
+    `plausible()` alone accepts a header out of the middle of a fork now
+    and then (TESTING.md, *Searching somebody else's index by content*,
+    the in-step tests) and a chain out of compressed data that also
+    totals to the right end is not one of those. Added 2026-10-10 for
+    the 112 walks of 2026-10-09 that stopped early.
+
+    It also reports, as `loose`, every offset in the unread bytes where a
+    plausible header's own CRC-16 checks (`hcrc_ok()`), chained or not.
+    That one IS a count: without the CRC, the first run over the 112
+    reported 2,571 flagged "headers", their ids spread evenly over
+    0..255, which is what compressed data looks like."""
+    stop = min(end, size) if size else end
+    want = stop - at
+    if want > RESYNC_LIMIT:
+        return {"err": "rest of %d B is past the limit" % want}
+    rest = head.get(item, fileid, want, start=at)
+    if len(rest) < want:
+        return {"err": "short read %d of %d" % (len(rest), want)}
+    rel_end = end - at
+    found = None
+    loose = []
+    for p in range(1, len(rest) - 111):
+        nl = rest[p + 2]
+        if not 1 <= nl <= 31:
+            continue
+        e = entry(rest, p)
+        if not plausible(e, rel_end):
+            continue
+        if e["hcrc"]:
+            # Every plausible header whose own CRC checks, flagged or
+            # not and chained or not: what the engine would accept as an
+            # entry anywhere in the bytes the walk did not read.
+            loose.append({"at": at + p, "name": e["name"],
+                          "forks": e.get("forks", [])})
+        if found is None:
+            ents, q, how = chain(rest, p, rel_end)
+            if how == "end" or (how == "off-bytes" and end > stop
+                                and len(ents) >= 3):
+                found = (p, ents, how)
+    if found is None:
+        return {"gap": len(rest), "loose": loose}
+    p, ents, how = found
+    for e in ents:
+        e["at"] += at
+    return {"skipped": p, "resumed_at": at + p, "how": how,
+            "entries": ents, "loose": loose}
 
 
 def main():
@@ -1022,12 +1153,26 @@ def main():
                          "filters leave; the draw is kept in the state, so "
                          "a resumed run finishes the same draw")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--keys", default=None,
+                    help="probe exactly the `item/fileid` keys in this "
+                         "file, one a line, with their listing rows copied "
+                         "out of --seed-state; no --query is run. For "
+                         "re-probing a subset an earlier sweep flagged")
+    ap.add_argument("--seed-state", default=None,
+                    help="with --keys: the state file the keys were "
+                         "listed in")
+    ap.add_argument("--resync", action="store_true",
+                    help="sit: where a walk stops at a header that is not "
+                         "one, fetch the rest of the archive and look for "
+                         "where the chain resumes (`resync_sit()` above)")
     ap.add_argument("--state", default=None)
     ap.add_argument("--budget", type=float, default=540.0,
                     help="seconds to spend fetching this run")
     a = ap.parse_args()
-    if not a.query:
-        ap.error("name at least one --query")
+    if not a.query and not a.keys:
+        ap.error("name at least one --query, or --keys")
+    if a.keys and not a.seed_state:
+        ap.error("--keys needs --seed-state")
     state_path = a.state or "/tmp/discmaster-%s.json" % a.probe
     probe = PROBES[a.probe]()
     if a.bytes:
@@ -1050,6 +1195,14 @@ def main():
         state.setdefault("types", {})
         state.setdefault("vermade", {})
         state.setdefault("meta", {})
+    if a.keys:
+        seed = json.load(open(a.seed_state))
+        for k in open(a.keys, encoding="utf-8").read().splitlines():
+            if k and k not in state["files"]:
+                state["files"][k] = seed["files"][k]
+                state["types"][k] = seed["types"].get(k)
+                state["meta"][k] = seed["meta"].get(k, {})
+        save(state, state_path)
     t_start = time.time()
     queries = []
     for q in a.query:
@@ -1098,7 +1251,7 @@ def main():
               % (len(state["files"]), tally,
                  sum(1 for v in state["types"].values() if not v)),
               flush=True)
-    if a.no_meta:
+    if a.no_meta and not a.keys:
         todo = [k for k in todo if not state["types"].get(k)]
     if a.max_size:
         todo = [k for k in todo if state["files"][k] < a.max_size]
@@ -1171,7 +1324,8 @@ def main():
             if got == "more":
                 got = None
         if got and a.probe == "sit" and a.walk > 1:
-            got["entries"] = walk_sit(head, item, fileid, probe, got, a.walk)
+            got["entries"] = walk_sit(head, item, fileid, probe, got, a.walk,
+                                      size=size, resync=a.resync)
         state["probed"][key] = got or False
         done += 1
         if done % 200 == 0:
@@ -1248,6 +1402,31 @@ def main():
                                % (m["name"], " DIR" if m["folder"] else "",
                                   m["rlen"], m["dlen"], m["flags"])
                                for m in v["members"])))
+    if a.probe == "sit" and a.walk > 1:
+        # Why each walk ended, so "short of the declared end" is a
+        # breakdown and not one figure (`walk_sit()` above).
+        why, rs = {}, {}
+        for v in hits.values():
+            w = (v.get("stop") or {}).get("why") or "end"
+            why[w] = why.get(w, 0) + 1
+            r = v.get("resync")
+            if r is not None:
+                k = ("error" if "err" in r else "no chain" if "gap" in r
+                     else "resumed, " + r["how"])
+                rs[k] = rs.get(k, 0) + 1
+        print("walks, by how they ended: %s"
+              % ", ".join("%s: %d" % kv for kv in sorted(why.items())))
+        if rs:
+            print("resync: %s" % ", ".join("%s: %d" % kv
+                                          for kv in sorted(rs.items())))
+            nloose = sum(len((v.get("resync") or {}).get("loose", ()))
+                         for v in hits.values())
+            nflag = sum(1 for v in hits.values()
+                        for e in (v.get("resync") or {}).get("loose", ())
+                        if any(f["meth"] & 0xD0 for f in e["forks"]))
+            print("headers whose own CRC checks, anywhere in the unread "
+                  "bytes, chained or not: %d, %d of them flagged"
+                  % (nloose, nflag))
     if a.probe == "implode":
         # The tally IS the result here: a sweep that reports no buggy
         # entry has to say how many it decided about, or "none found"

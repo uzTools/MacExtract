@@ -47,9 +47,8 @@ an open item.
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
 That session-start reading is **~19.1k tokens** (PROGRESS 9.1k,
-OPEN_ITEMS 7.3k, BLOCKERS' first two sections 2.6k), re-estimated
-2026-10-09 after OPEN_ITEMS shed *Progress that passes 100 %*, closed
-that day; BLOCKERS' withdrawn-claims archive is another **~72.2k** and is reference, not
+OPEN_ITEMS 7.4k, BLOCKERS' first two sections 2.6k), re-estimated
+2026-10-10; BLOCKERS' withdrawn-claims archive is another **~72.2k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are
 each file's bytes over the 3.93 bytes per token the 2026-10-07 figures
