@@ -273,10 +273,14 @@ index*).
 | candidate | C today | assembly sketch | what would close it |
 |---|---|---|---|
 | **RC4's keystream loop** (`unc_crypt_apply`, `UNC_CRYPT_RC4`; Private File and StuffIt 5's encrypted forks) | 19 instructions, ~178 cycles a byte | 10 instructions, ~104 cycles: index registers cleared once, so `add.b` wraps at 256 and `(d8,An,Dn.w)` addresses the table with no `andi.l #255`; `eor.b Dn,(An)+`; `dbf` | the shared prerequisites below, then the 68000 path beside the C one under `#ifdef __mc68000__`, graded and timed |
+| **CRC-32** (`unc_crc32`; zip, gzip, StuffIt 5, Compact Pro, Private File — a third of Private File's instructions, FORMATS.md *What it costs*) | 8 instructions, ~111 cycles a byte | 7 instructions, ~77: the same cleared-index trick — `moveq #0` then `move.b (An)+` loads the index, `add.w` twice scales it, `(d8,An,Dn.w)` reads the table; no `andi.l #255` | as RC4's row |
+| **CRC-16/XMODEM** (`unc_crc16_xmodem`; BinHex, MacBinary, PackIt) | 9 instructions, ~115 cycles a byte | 8 instructions, ~67: `rol.w #8` puts the high byte where the index wants it and the low byte where `crc << 8` wants it, so one 22-cycle rotate replaces two 22-cycle shifts; `clr.b`, then the cleared-index table read | as RC4's row |
+| **CRC-16/ARC** (`unc_crc16_arc`, `UNC_HOT`; StuffIt 1.5–4 forks) | 9 instructions, ~92 cycles a byte | 7 instructions, ~63: the cleared-index table read, one `lsr.w #8` | as RC4's row |
+| **Arsenic's sampled-index scan** (`ars_index_next`, the inner `do { i++; } while (block[i] != c)`; every StuffIt 5 entry on a 1 MB machine whose block outgrows the transform table — 842 s for the ISBN fixture, FORMATS.md *StuffIt 5 / Arsenic at 1x*) | 3 instructions, ~32 cycles a byte: `addq.l`, `cmp.b (d8,An,Dn.l)`, `bne` | ~16 cycles a byte: `cmp.b (An)+,Dn` with the sentinel ending the run, unrolled four times on `beq.s` not taken; `i` recovered from the pointer once per scan | as RC4's row, plus the `UNC_ARS_FORCE_SAMPLED` build in the `qemu-m68k` lane; its share of a run today is not measured (it was 77 % before the sentinel) |
 
 **Prerequisites for the pass**, once for every row:
 
 | what | why |
 |---|---|
-| **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py` and whatever suites cover the other rows | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
+| **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py`, the differential suite (every CRC row) and a `UNC_ARS_FORCE_SAMPLED` build (the scan) | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
 | **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe (tools/vmac/README.md) is what prices a change here, and today it cannot reach any cipher |
