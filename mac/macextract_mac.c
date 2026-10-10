@@ -4792,8 +4792,15 @@ int main(void)
             bv[11] = (uint32_t)(long)gRelFmt;
             bv[12] = (uint32_t)(long)gFlushHas;
             bv[13] = (uint32_t)(long)gFlushCalls;
-            at_report_file(bv, 14);   /* first: the host kills the */
-            at_report(vals, 8);       /* emulator once the grid shows */
+            /* File first, then eject In, then the grid: the host kills
+             * the emulator once the grid shows, and Mini vMac flushes its
+             * buffered writes to an image on eject and not before — without
+             * it the report reached in.dsk on System 7.0.1 and on neither
+             * System 3.0 nor 6.0.8 (2026-10-10; tools/vmac/README.md, *A
+             * run that drives the FINDER*). */
+            at_report_file(bv, 14);
+            (void)Eject(NULL, gATreportVol);
+            at_report(vals, 8);
         }
 #else
         at_report(vals, 8);

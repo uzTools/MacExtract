@@ -2739,7 +2739,10 @@ grid has no slot left for `e1` (first per-entry status) or the overlay
 diagnostics `wa kf rf fc fn` (`mac/ovl_load.h`), so the autotest writes them
 to the report FILE on `In` after the eight grid values, and `run.py`,
 `sys30.py` and `os9.py --autotest` print them per fixture as
-`[e1= wa= kf= rf= fc= fn= bg= short= why= free0=]`. On a healthy run `wa`
+`[e1= wa= kf= rf= fc= fn= bg= short= why= free0=]`. The probe build
+ejects `In` after writing the file, because Mini vMac flushes an image on
+eject and the host kills it at the grid: without the eject the file reached
+`in.dsk` on System 7.0.1 only (2026-10-10). On a healthy run `wa`
 (the image id wanted after the release), `kf`, `short` and `why` are 0; `rf`
 is the `UncFormat` the release kept for, 0 when no layer released (an
 envelope keeps the bundle); `fc` is the flush route (0 none, 1 `_HWPriv`,
