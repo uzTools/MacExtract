@@ -25041,7 +25041,8 @@ probe before anything was changed:
 
 **The two engine-wide options were priced as asked, and neither was
 needed.** All four builds come from one tree. The shipped (eager) 68000
-build, callgrind over the 972 fixtures in one probe process (base
+build, callgrind over every file in `fixtures/` in one probe process (972
+on that run; 959 of them have a manifest) (base
 10,233,708,156 Ir), and the tick lane:
 
 | | resident CODE / A5 | 'OVLY' images | callgrind Ir | tick lane |
@@ -25055,8 +25056,10 @@ fixing that would need a release call in every reader. B costs resident
 code, which comes off every extraction. It leaves DiskDoubler's reads
 untouched. It also hides the fault the lane exists for: under a high-water
 mark a second pass sits at 100 % for its whole length without ever
-exceeding the total. C's +146 B in `ovl_cptdd` is `ddn_seek` +72 and
-`dd_fork` +74, per function at the overlay's flags. That image is
+exceeding the total. C's `ovl_cptdd` +144 is `ddn_seek` +72 and `dd_fork` +74 per function at
+the overlay's flags, +146; the 2 B between the per-function sum and the
+image is not attributed (CORRECTED 2026-10-10: this called it +146 B in
+`ovl_cptdd`). That image is
 released once the sniff has named the format.
 
 **x86 callgrind is the wrong instrument for C, and the Macintosh says
@@ -25101,6 +25104,9 @@ priced the wrong question.
 
 ## 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
 
+**Status: the title is a HYPOTHESIS**, inferred from 45 dumps that held no
+key; no dump taken during extraction has been scanned.
+
 **The question.** `sit_scheme()` reads bytes 107/109 of a StuffIt entry as
 encryptor-module ids and, on the two forks of Aladdin's *Shortcut 1.5.3
 Update* that carry 5/3 and 6/5 there, routes one to `NewDEx` and refuses the
@@ -25114,14 +25120,16 @@ the installer carries.
 
 **The oracle, which needs no password guess.** An encrypted StuffIt classic
 archive carries an eight-byte `'MKey'` resource that verifies the key, and the
-check is independent of the fork cipher (the schemes share the archive key and
-differ only in the transform). So the MKey decides a candidate directly — and
+check precedes any fork (that every scheme shares the archive key is not
+established; the self-test grades the 3.5.1 built-in scheme on three of
+Aladdin's own archives since 2026-10-10). So the MKey decides a candidate directly — and
 not only a candidate *password*: it decides a candidate eight-byte **archive
 key**, the value the password folds into. That turns recovery into a
 fixed-width search: slide an 8-byte window over anything and keep the offsets
 that verify. `tools/sit_mkey_oracle.py` is the oracle, self-testing; the hot
 loop translated to C (StuffItDES with a byte-reversal table, `verify_ak`
-only) scans a 12 MB dump in a few seconds. The updater's MKey is
+only) scanned a 12 MB dump in a few seconds; that translation was not
+committed, and the Python scan is ~1 ms a window. The updater's MKey is
 `4d87bcb0c49abe53`.
 
 **Where the key is, and is not.** The updater runs under Mini vMac (boot-shell
@@ -25131,8 +25139,9 @@ process memory (`/proc/<pid>/mem`) at the splash, at the license and across the
 destination dialog — **45 dumps** in all — and scanning every one for the
 archive key found **nothing**. The password is not a plaintext string in the
 uncompressed resources either, and the installer's engine lives in compressed
-`ADCR` resources no reference here decodes. The reading: the archive key is
-computed **lazily, when extraction starts**, not at launch — so a dump has to
+`ADCR` resources no reference here decodes. The reading, a HYPOTHESIS from
+that negative: the archive key is computed **lazily, when extraction
+starts**, not at launch — so a dump has to
 be taken *during decrypt*, and the destination picker is before it. Completing
 that picker is its own obstacle: it is a plain folder navigator whose "Open"
 only ever descends, and this updater may want the prior Shortcut present to
@@ -25150,9 +25159,10 @@ starts at the install, not at Discmaster.
 ## 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
 
 **Claim (measured).** The 112 StuffIt walks the 2026-10-09 sweep left short
-of their declared end were three different stops reported as one figure: 88
-at a header `plausible()` rejects, 24 at a header past the end of the file
-the index holds, and fetches that came back short. Only the first kind has
+of their declared end were two different stops reported as one figure: 88
+at a header `plausible()` rejects and 24 at a header past the end of the
+file the index holds. Fetches that came back short are a third kind of stop
+the sweep can make, and none of the 112 was one once re-run. Only the first kind has
 bytes left to read, and reading them by plausibility alone gave **2,571
 "flagged headers"** with Optimizer and Encryptor ids spread evenly over
 0..255. That is the signature of compressed data, not of a module.

@@ -4804,7 +4804,7 @@ follows; 0 in 2,246. And no fuzzer has a Shrink seed.
 | resident `CODE` and A5, SHIPPED | **+0 and +0** |
 | the images | `ovl_codecs` 6,404 → 7,520 → **7,628 B**; `ovl_exo` 31,936 → 32,036 → 32,056 → **32,084 B** for the method guard and the adapter (the last +28 for the dry passes' progress). The second step is 2026-10-09's: +76 B in `unc_shrink_decode` and the forward to `unc_progress_at` for a tick per partial clear, +20 in `unc_zip_extract` for the peek's Cancel (*What a crafted stream costs*, below). (31,936 is the minimum-match-length rule's 31,784 plus 152 B for the mixed-archive recovery of the same day — DECISIONS.md 2026-10-08, *the writer a zip is allowed to have twice*) |
 | resident CONTROL | `CODE` 167,036 → 168,200 B, A5 −12; **+96 on 2026-10-09** for the tick and the Cancel, 169,784 → 169,880 B, A5 +0; **+28 and +4** the same day when zip's dry passes stopped counting progress, → **169,908 B** (*the bar that counted the peek*, DECISIONS.md 2026-10-09) |
-| the download | 228,096 → **229,248 B**; 231,424 → **231,552 B** on 2026-10-09 |
+| the download | 228,096 → 229,248 B; 231,424 → 231,552 B on 2026-10-09 (the download today is FORMATS' *Three configurations, one tree*) |
 | peak heap per Shrink ENTRY | **3 B per table slot**, sized from the compressed length — 257 + bits/9, at most 8,192 slots, **24,576 B**. `shrink-wild-BBA.zip` peaks at 18,474 B, `dream` at **39,094 B**, `titanic` at 38,777: above deflate's 24,863, inside zip's 12–54 KB row. A separate kind byte made it 4 B a slot and 47,286 B |
 | stack | `unc_shrink_decode` is a **120 B** frame since 2026-10-09's tick (116 before) and the Shrink chain **1,672 B**, under the Implode probe's 1,896 (*Stack*). Written in `src/fmt_exo.c` first, it was inlined into `zip_decode` and took that frame 56 → 140 B, which every deflate and Implode chain runs through |
 | tier tallies | `run_tiers.py --check` moves none: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped. **Nor on 2026-10-09** for the tick: 72/72, 68/72, 63/72 resident and 72/72, 70/72, 66/72 shipped, the same fixtures by name; every grant falls 12 B and the three holding `ovl_exo` 32 |
@@ -5239,9 +5239,11 @@ measured 2026-09-27. The shipped pair is **134,288 B** since 2026-10-09's
 DiskDoubler buffer reuse (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **162,040 B** — the fifteen images sum to 161,844 B, so its
-index costs **196 B**: a 4-byte header, 12 bytes of directory per image
-and 12 bytes of padding to 4, which accounts for the whole difference
+The bundle is **162,040 B** — the fifteen images sum to 161,842 B, so its
+index costs **198 B**: a 4-byte header, 12 bytes of directory per image
+and 14 bytes of padding to 4, which accounts for the whole difference
+(CORRECTED 2026-10-10: it read 161,844 and 196 B after `ovl_lzh` went
+9,568 → 9,586, which is 0 → 2 mod 4)
 (re-measured 2026-10-05 for `ovl_sqp`, the fifteenth image, off the raw
 bundle the build writes for `tests/run_overlay_host.sh`; it was 153,688 B
 against 153,508 B with fourteen, and the index grew by exactly the 12 bytes

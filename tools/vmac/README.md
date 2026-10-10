@@ -3782,6 +3782,25 @@ on-Mac harness does: the first run compared it raw and failed on the
 file's own name, which the Macintosh stamps into that system-reserved
 range (DECISIONS.md 2026-10-09, *the specimen was one search away*).
 
+### Reading a running application's memory — the Shortcut updater probe
+
+    tools/vmac/mkboot.py --app-name NAME ...   # boot straight into the app
+    # then, with Mini vMac running, read its process image:
+    #   /proc/<captured minivmac pid>/mem, at the offsets /proc/<pid>/maps
+    #   gives for its heap, and scan the dump:
+    tools/sit_mkey_oracle.py --mkey 4d87bcb0c49abe53 --scan dump.bin
+
+Used once, 2026-10-09, on Aladdin's *Shortcut 1.5.3 Update* (kept at
+`~/.cache/macextract/specimens/shortcut-updater/`): 45 dumps across its
+splash, licence and destination dialog, none holding the archive key
+(DECISIONS.md 2026-10-09, *the key is folded at decrypt time, not at
+launch*). Capture the emulator's pid when you start it — never `pgrep` or
+`pkill` by name (CLAUDE.md, *Traps*). **What it cannot see:** a key the
+application has not yet computed, which is why a negative here says only
+that the dump was taken too early; and the Python scan is ~1 ms a window,
+so a multi-megabyte dump wants a compiled scanner, which is not in the
+repository.
+
 ### Replaying the segment work — `segcheck.py`
 
     tools/vmac/segcheck.py --list

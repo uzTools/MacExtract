@@ -5,12 +5,15 @@ Every encrypted StuffIt classic archive carries an eight-byte `'MKey'`
 resource in its resource fork that VERIFIES a password: the reader decrypts
 the MKey under the password-derived ARCHIVE KEY to an IV, then checks that
 encrypting the IV's first four bytes (with a trailing 00 00 00 04) reproduces
-its last four (`unc_crypt_sit`, `src/unc_crypt.c`; FORMATS.md, *Encryption*).
+its last four. Source: `unc_crypt_sit` in `src/unc_crypt.c`, which cites
+XADStuffItDESHandle.m keyForPasswordData:entryKey:MKey: and FIPS 46-3, and
+is graded on every `ci.sh` run against the three archives StuffIt Deluxe
+3.5.1 wrote (`tools/run_crypt.py`); FORMATS.md, *Encryption*.
 
-That check is an ORACLE, and it is independent of the fork cipher — the three
-schemes (built-in feedback, `DES`, `NewDE`) share the archive key and the MKey
-verifier and differ only in the fork transform. So the MKey alone decides
-whether a candidate password, OR a raw eight-byte archive key, is the one.
+That check is an ORACLE: the MKey alone decides whether a candidate
+password, OR a raw eight-byte archive key, is the one, before any fork is
+read. Whether every scheme that names the MKey uses it this way is NOT
+established here — the 3.5.1 built-in scheme is what the self-test grades.
 
 Two ways in:
 
@@ -24,23 +27,32 @@ Two ways in:
                         self-installing archive (InstallerMaker writes one that
                         installs WITHOUT prompting, so the key is a constant in
                         its code): the archive key is computed lazily, at
-                        decrypt time, so the dump must be taken while the
-                        installer is extracting — a dump from its splash or its
-                        destination dialog does NOT contain it
+                        decrypt time, a HYPOTHESIS: 45 dumps from its splash,
+                        licence and destination dialog did not contain it
                         (DECISIONS.md 2026-10-09, *the key is folded at decrypt
-                        time, not at launch*). The C translation in that entry
-                        is the one to use on a multi-megabyte dump; this scan is
-                        for small blobs.
+                        time, not at launch*). In Python this is ~1 ms a
+                        window, so a multi-megabyte dump wants a compiled
+                        scanner, which is not in the repository.
 
-The MKey is given with `--mkey HEX16`; `tools/sit_mkey_oracle.py --mkey ... x`
-reads it off an archive's resource fork with `macextract`'s own loader if you
-prefer, but the eight bytes are easiest lifted straight from the fork.
+The MKey is given with `--mkey HEX16`, or read off an archive with
+`--from FILE`: a MacBinary file or a bare resource fork, walked to its
+`'MKey'` resource (Inside Macintosh: More Macintosh Toolbox, "Resource File
+Format" — the layout `unc_resfork_find` in `src/unc_crypt.c` reads).
 
-Run with no arguments for the self-test, which builds an MKey for a known
-password with `tools/synth_crypt.py` and recovers it three ways.
+Run with no arguments for the self-test. It grades `verify_*` against the
+three archives StuffIt Deluxe 3.5.1 wrote under Mini vMac
+(`tools/vmac/sitcrypt.py`; the specimen cache), whose MKeys came from
+Aladdin's DES and not from this project's: the right password must verify,
+a password one character off must not, the archive key must verify and one
+bit off it must not, and a scan must find it in a blob and find nothing in
+a blob without it. Without the specimens it says so and grades only the
+synthetic round trip, which shares this project's DES and so cannot catch
+a fault in it.
 """
 import argparse
+import json
 import os
+import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -62,6 +74,35 @@ def verify_password(pw, mkey):
     return verify_archive_key(sit_archive_key(pw), mkey)
 
 
+def mkey_from(path):
+    """The 8-byte 'MKey' out of a MacBinary file or a bare resource fork.
+    Source: Inside Macintosh: More Macintosh Toolbox, "Resource File Format"
+    (header: data and map offsets; map +24: type-list offset; type entry:
+    type, count-1, reference-list offset; reference: id, name offset,
+    attributes + 24-bit data offset), the layout `unc_resfork_find` reads;
+    MacBinary II for the fork lengths at 83 and 87."""
+    d = open(path, "rb").read()
+    fork = d
+    if len(d) >= 128 and d[0] == 0 and 1 <= d[1] <= 63:
+        dlen, rlen = struct.unpack(">II", d[83:91])
+        at = 128 + ((dlen + 127) & ~127)
+        fork = d[at:at + rlen]
+    doff, moff = struct.unpack(">II", fork[0:8])
+    tl = moff + struct.unpack(">H", fork[moff + 24:moff + 26])[0]
+    ntypes = struct.unpack(">H", fork[tl:tl + 2])[0] + 1
+    for t in range(ntypes):
+        e = tl + 2 + 8 * t
+        rtype, n1, rl = struct.unpack(">4sHH", fork[e:e + 8])
+        if rtype == b"MKey":
+            ref = tl + rl
+            off = int.from_bytes(fork[ref + 5:ref + 8], "big")
+            ln = struct.unpack(">I", fork[doff + off:doff + off + 4])[0]
+            if ln != 8:
+                raise ValueError("'MKey' is %d bytes, not 8" % ln)
+            return fork[doff + off + 4:doff + off + 12]
+    raise ValueError("no 'MKey' resource in %s" % path)
+
+
 def scan(blob, mkey):
     """Every offset in `blob` whose next 8 bytes are the archive key."""
     hits = []
@@ -71,34 +112,79 @@ def scan(blob, mkey):
     return hits
 
 
+SPECIMENS = os.path.join(os.environ.get(
+    "UNC_VMAC_HOME", os.path.expanduser("~/.cache/macextract/vmac")),
+    "specimens", "sitcrypt")
+
+
+def _grade(label, pw, mkey, bad):
+    """The five checks, on one (password, MKey) pair."""
+    ak = sit_archive_key(pw)
+    near = pw[:-1] + bytes([pw[-1] ^ 1])
+    wrongak = bytes([ak[0] ^ 1]) + ak[1:]
+    for ok, what in ((verify_password(pw, mkey), "the password verifies"),
+                     (not verify_password(near, mkey),
+                      "a password one character off does not"),
+                     (verify_archive_key(ak, mkey), "the archive key verifies"),
+                     (not verify_archive_key(wrongak, mkey),
+                      "the archive key one bit off does not"),
+                     ([h[0] for h in scan(b"....." + ak + b"garbage", mkey)]
+                      == [5], "a scan finds it at its offset"),
+                     (scan(b"....." + wrongak + b"garbage" * 4, mkey) == [],
+                      "a scan of a blob without it finds nothing")):
+        if not ok:
+            bad.append("%s: %s — FAILED" % (label, what))
+
+
 def _selftest():
+    bad = []
+    real = 0
+    for tag in sorted(os.listdir(SPECIMENS)) if os.path.isdir(SPECIMENS) else []:
+        meta = os.path.join(SPECIMENS, tag, "made.json")
+        arch = os.path.join(SPECIMENS, tag, "Secret.sit.bin")
+        if not (os.path.exists(meta) and os.path.exists(arch)):
+            continue
+        pw = json.load(open(meta))["password"].encode("mac_roman")
+        _grade("StuffIt Deluxe 3.5.1, %s" % tag, pw, mkey_from(arch), bad)
+        real += 1
     pw = b"swordfish"
-    mkey, ak, _iv = sit_mkey_and_iv(pw)
-    assert verify_password(pw, mkey), "password check failed"
-    assert not verify_password(b"wrong", mkey), "false positive on bad password"
-    assert verify_archive_key(ak, mkey), "archive-key check failed"
-    blob = b"....." + ak + b"garbage"
-    hits = scan(blob, mkey)
-    assert hits and hits[0][0] == 5, f"scan failed: {hits}"
-    print("self-test OK: password, archive key and scan all recover",
-          f"mkey={mkey.hex()}")
+    mkey, _ak, _iv = sit_mkey_and_iv(pw)
+    _grade("synthetic", pw, mkey, bad)
+    for b in bad:
+        print("sit_mkey_oracle: " + b)
+    if bad:
+        return 1
+    if real:
+        print("self-test OK: %d archive(s) StuffIt Deluxe 3.5.1 wrote, and "
+              "the synthetic round trip — six checks each, three of them "
+              "negative" % real)
+    else:
+        print("self-test OK on the synthetic round trip ONLY: no StuffIt "
+              "Deluxe specimens in %s, and the synthetic MKey shares this "
+              "project's DES, so a fault in it cannot show" % SPECIMENS)
+    return 0
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--mkey", help="archive 'MKey' resource, 16 hex chars")
+    ap.add_argument("--from", dest="src", metavar="FILE",
+                    help="read the MKey off a MacBinary file or resource fork")
     ap.add_argument("--pw", help="password string to test")
     ap.add_argument("--ak", help="raw 8-byte archive key, 16 hex chars")
     ap.add_argument("--scan", help="file to slide an 8-byte window over")
     args = ap.parse_args()
 
     if not (args.pw or args.ak or args.scan):
-        _selftest()
-        return
+        return _selftest()
 
-    if not args.mkey:
-        sys.exit("--mkey is required with --pw/--ak/--scan")
-    mkey = bytes.fromhex(args.mkey)
+    if args.src:
+        mkey = mkey_from(args.src)
+        print("MKey", mkey.hex())
+    elif args.mkey:
+        mkey = bytes.fromhex(args.mkey)
+    else:
+        sys.exit("--mkey or --from is required with --pw/--ak/--scan")
     if len(mkey) != 8:
         sys.exit("--mkey must be 16 hex chars (8 bytes)")
 
@@ -115,4 +201,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
