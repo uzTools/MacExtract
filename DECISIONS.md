@@ -384,6 +384,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
 - 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
 - 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
+- 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table halved it and the tick probe now bills the read-back
 
 ---
 
@@ -25298,3 +25299,44 @@ come out the other way.
   id again on any method-13 fork that is not InstallerMaker's) has
   nothing to protect. The lane now asserts the 4, so a 3.x archive that
   says otherwise fails there first.
+
+## 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table halved it and the tick probe now bills the read-back
+
+**Claim (measured).** On the 7 MHz tier, the autotest build's read-back
+was 92 % and 83 % of the two copy-only fixtures' extract wall, and
+FORMATS.md's "the extract column is the archive alone" was wrong for
+every row of that table (FORMATS.md, *Measured on a 7 MHz Mac Plus*).
+
+**Evidence.** `run.py --emu mv-4M-1x --poll 3 -D UNC_AT_TIMING`, with a
+new `gTkBack` bracket around the read-back loop in grid slot 7:
+
+| fixture | `gTkRun` | read-back, bit at a time | read-back, table | extract wall, before → after |
+|---|---|---|---|---|
+| `kermitut9test.bin` | 90 ticks (1.5 s) | 2,860 ticks (47.7 s) | 341 ticks (5.7 s) | 52 s → 9 s |
+| `derived-PCCTS.tar` | 459 ticks (7.7 s) | 2,286 ticks (38.1 s) | 325 ticks (5.4 s) | 46 s → 15 s |
+
+`at_crc32_update` is now table-driven, the table built bit at a time on
+first use from the same polynomial and kept separate from the engine's
+`unc_crc32`. Graded: 72/72 at 4 MB and 72/72 at 1 MB on System 6.0.8,
+and all fifteen `timing.txt` rows byte-exact at 1x. Shown able to fail:
+one entry XORed by 1 (`tab[0x5A]`) failed both fixtures, on the CRC slot
+only. Autotest build only, so `dist/` did not change. DECISIONS.md
+2026-09-20 (*the window that was already the staging buffer*) had
+already said the read-back was most of a method-13 run; that was the
+right one of the two files.
+
+**Transferable.**
+- **A clock that stops on a painted result times everything before the
+  paint.** "Boot is split off" was true and was read as "so the rest is
+  the archive"; nobody asked what else ran between `RunExtract` and the
+  grid. The tick probe's own bracket had the answer since 2026-08-30 —
+  it is half of every wall figure the -O3 section compared it with —
+  and the ratio was written down twice as a fact about the clocks.
+- **A harness's cost is proportional to what it checks, so it distorts
+  the comparison as well as the totals.** Compact Pro and DiskDoubler
+  halved; `derived-Export.sit` did not move. A per-row correction from
+  any one fixture would have been wrong for the others.
+- **An independent clock agreed once the harness was out.** The
+  interactive application, timed against Expander with no read-back,
+  reads 56 s for `derived-EmpireBuilderDemo.sit`; the autotest reads
+  61 s now and read 119 s before.

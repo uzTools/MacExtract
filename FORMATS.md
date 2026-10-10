@@ -6638,42 +6638,48 @@ re-try without a newer toolchain.
 ## Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
 
 `run.py --emu mv-4M-1x` separates boot from extraction — the application
-paints its "alive" grid before touching a disk — so the extract column is the
-archive alone. The set is `tools/vmac/timing.txt`: one fixture per format,
-chosen large rather than typical, so each figure is an upper bound a user can
-plan around. **Thirteen rows re-measured 2026-08-30**, on the shipping
-`UNC_HOT` build (*What -O3 is worth, and where*, below): StuffIt 141 s → 119 s,
-Compact Pro 333 s → 321 s, DiskDoubler 142 s → 135 s, PackIt 20 s → 18 s, and
-the rest within a poll of what they were. `popper-1.7.tar.Z` moved from
-`--poll 20` to `--poll 3` and reads the same 40 s through the finer ruler.
-**Both Arsenic rows were re-run on 2026-09-20** — they had stood since
-2026-08-28 under a note that `sit_arsenic.c` carried no `UNC_HOT` and
-nothing had looked. After the week's Arsenic work: a2basic 542 →
-**321 s** and ISBN 722 → **542 s**, both byte-exact, and both columns
-of each in *StuffIt 5 / Arsenic at 1x* below, which has what moved
-them.
+paints its "alive" grid before touching a disk — so the extract column is
+the archive **plus the autotest build's read-back**: after `RunExtract`
+returns, the harness reads every fork back through the File Manager and
+CRC-32s it before painting the grid the clock stops on. The set is
+`tools/vmac/timing.txt`: one fixture per format, chosen large rather than
+typical, so each figure is an upper bound a user can plan around.
+**All fifteen rows re-measured 2026-10-10**, byte-exact, after that CRC
+went from bit at a time to a table.
+
+**Corrected 2026-10-10: this paragraph said the column was "the archive
+alone", and it was not.** The tick probe (`-D UNC_AT_TIMING`, slot 7 the
+read-back) measured the old bit-at-a-time CRC at 2,860 of
+`kermitut9test.bin`'s ~52 s and 2,286 ticks of `derived-PCCTS.tar`'s
+~46 s, against 90 and 459 ticks for the extraction itself; the table CRC
+brings the read-back to 341 and 325 ticks (DECISIONS.md 2026-10-10, *the
+clock that was timing its own check*). Every row before this date
+carried that cost, in proportion to its OUTPUT — Compact Pro and
+DiskDoubler halved — so the dated figures in the paragraphs below are
+on the old harness and compare only with each other.
 
 **Every figure is quantised to the poll interval**, which is why the poll is a
 column: the harness timestamps at poll instants at both ends, so a row is
-accurate to ±one poll however reproducible it looks.
+accurate to ±one poll however reproducible it looks. **A read-back of ~5 s
+per 300 KB of output is still in every row** (measured, the two ticks above).
 
-| Fixture | Format | In | Extract | Poll |
-|---|---|---|---|---|
-| `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s |
-| `derived-PackIt.pit` | PackIt | 62 KB | 18 s | 3 s |
-| `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 24 s | 3 s |
-| `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 31 s | 3 s |
-| `popper-1.7.tar.Z` | compress | 59 KB | 40 s | 3 s |
-| `derived-PCCTS.tar` | Tar | 287 KB | 46 s | 3 s |
-| `kermitut9test.bin` | MacBinary | 304 KB | 52 s | 3 s |
-| `PCCTS.tar.gz` | gzip | 64 KB | 58 s | 3 s |
-| `macburger-helper.hqx` | BinHex | 306 KB | 83 s | 3 s |
-| `derived-MUSFMT10.ZIP` | Zip | 172 KB | 110 s | 3 s |
-| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 110 s | 3 s |
-| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **119 s** | 3 s |
-| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 251 s | 3 s |
-| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 321 s | 20 s |
-| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 542 s | 20 s |
+| Fixture | Format | In | Extract | was | Poll |
+|---|---|---|---|---|---|
+| `derived-Export.sit` | StuffIt | 1.6 KB | 3 s | 3 s | 3 s |
+| `kermitut9test.bin` | MacBinary | 304 KB | **9 s** | 52 s | 3 s |
+| `derived-PackIt.pit` | PackIt | 62 KB | 9 s | 18 s | 3 s |
+| `derived-KeyGraphics.sit` | StuffIt 5 | 4.6 KB | 15 s | 24 s | 3 s |
+| `popper-1.7.tar.Z` | compress | 59 KB | 15 s | 40 s | 3 s |
+| `derived-PCCTS.tar` | Tar | 287 KB | **15 s** | 46 s | 3 s |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | 62 KB | 18 s | 31 s | 3 s |
+| `PCCTS.tar.gz` | gzip | 64 KB | 21 s | 58 s | 3 s |
+| `derived-MUSFMT10.ZIP` | Zip | 172 KB | 43 s | 110 s | 3 s |
+| `macburger-helper.hqx` | BinHex | 306 KB | 46 s | 83 s | 3 s |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 278 KB | **61 s** | 119 s | 3 s |
+| `derived-MacPass390.sea` | DiskDoubler | 156 KB | 61 s | 110 s | 3 s |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | 285 KB | 122 s | 251 s | 3 s |
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | 153 KB | 281 s | 321 s | 20 s |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | 202 KB | 461 s | 542 s | 20 s |
 
 **There is no boot column, because this harness cannot measure boot.** It
 reports the first poll at which the grid is visible, so every fixture reads
@@ -6698,8 +6704,8 @@ got faster and the table was not re-run. It is **83 s since 2026-09-20**,
 re-measured on the same command after the BinHex line reader (*Decode
 cost*, above) — and that row had read 107 s while this paragraph read
 104 s, which is one poll's disagreement nobody had collected; the row is
-the measurement and the number above is it. The other rows still carry
-the dates above them.
+the measurement and the number above is it — 46 s on the 2026-10-10
+harness.
 
 **Two rows were measured at `--poll 20` because `--poll 3` mis-read them**,
 which was a harness defect and was fixed the same day — the grid's sync word
@@ -6716,11 +6722,17 @@ extract time only, on a purpose-built 1 MB 1x emulator (`build_mv mv-1M-1x
 
 | Fixture | Output | 4 MB — transform table | 1 MB — sampled index | ratio |
 |---|---|---|---|---|
-| `derived-a2basic.dmg.sit` | 205,019 B | **321 s** (peak 829,041 B) | **522 s** (peak 476,933 B) | 1.62x |
-| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **542 s** (peak 1,353,789 B) | **842 s** (peak 644,858 B) | 1.55x |
+| `derived-a2basic.dmg.sit` | 205,019 B | **281 s** (peak 829,041 B) | **341 s** (peak 703,565 B) | 1.21x |
+| `derived-Library_ISBN_Barcoder.sit` | 641,115 B | **461 s** (peak 1,353,789 B) | **742 s** (peak 644,858 B) | 1.61x |
 
-**The fallback costs 1.55x to 1.62x, and Arsenic is still the slow one.**
-Five and a half minutes for a 205 KB output is what the *fast* path costs a
+**All four cells re-measured 2026-10-10**, byte-exact, on the
+table-driven read-back CRC (*Measured on a 7 MHz Mac Plus*, above); the
+dated figures in the paragraphs below are the bit-at-a-time harness's.
+The a2basic 1 MB peak had read 476,933 B here while the 1 MB tier table
+and the peak matrix read 703,565 B, which is what the run gave.
+
+**The fallback costs 1.21x to 1.61x, and Arsenic is still the slow one.**
+Nearly five minutes for a 205 KB output is what the *fast* path costs a
 7 MHz 68000; before 2026-08-07 a 1 MB machine could not extract either entry
 at all. The ratio widens with block fill, and neither the x86 ratio nor one
 fixture scaled by output size predicts these — DECISIONS.md 2026-08-07 for
@@ -6796,11 +6808,11 @@ unexplained.
 and extraction is seconds.** A stripped System 6.0.8 reaches the application in
 about 10 s; everything in this table then extracts in under five. The one
 larger 1x measurement that exists — `derived-EmpireBuilderDemo.sit`, 278 KB in
-and 417 KB out — took **~134 s**. So a few kilobytes is instant, a quarter of a
-megabyte is a couple of minutes.
+and 417 KB out — took **~134 s** then, 61 s on the 2026-10-10 harness. So a
+few kilobytes is instant, a quarter of a megabyte is about a minute.
 
-**The large BinHex is not an anomaly.** `macburger-helper.hqx` simply takes
-150 s; the rate is very non-uniform (16% of the input in the first seven
+**The large BinHex is not an anomaly.** `macburger-helper.hqx` simply took
+150 s then (46 s in the table above); the rate is very non-uniform (16% of the input in the first seven
 minutes, the last 205 KB in a hundred seconds), which is what made the
 timeouts chosen for it mislead three times. BLOCKERS.md.
 
@@ -6863,10 +6875,12 @@ method 8 runs the same functions and is −47.0 % of Linux `Ir` on
 `ddtf-dd377ddb.dd`. The 8,735-tick row was re-measured on the later tree
 before the fused build was timed against it and came back 8,735 exactly,
 which is what the two figures may be compared across. The whole-run tick
-count is about half the 321 s the wall-clock table above carries for this
+count was about half the 321 s the wall-clock table then carried for this
 fixture — the same ratio the EmpireBuilder rows show between the tick probe
-and the screenshot clock — so the tiers were not re-run and the relative
-figure is the one to read (DECISIONS.md 2026-09-19, *the seventh that was
+and the screenshot clock, and the other half was the harness's
+bit-at-a-time read-back (measured 2026-10-10, *Measured on a 7 MHz Mac
+Plus* above) — so the tiers were not re-run and the relative figure is
+the one to read (DECISIONS.md 2026-09-19, *the seventh that was
 measured* and *the byte that went to two places at once*).
 
 **LZH was fused the same way, later the same day**, over

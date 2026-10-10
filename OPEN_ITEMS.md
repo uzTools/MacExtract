@@ -260,32 +260,6 @@ What is left:
 | **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a file from somebody who has one. No source in reach is left**: every archive Discmaster lists as classic StuffIt — 196,139 — has been asked by one key or the other, and none carries either bit (ids 2 and 3). Both modules accept type `8BIM` only; the 21 archives with an `8BIM` member, the 10,452 the index recorded no members for, and on 2026-10-10 the 112 of those whose walks had stopped early — re-walked to the declared end, every unread byte searched for a header whose own CRC checks — carry neither (TESTING.md, *Searching somebody else's index by content*). 24 of the 112 declare **38 MB** more than the index holds, and those bytes are not on this machine's side of the network |
 | **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **an encrypted archive and its password, from somebody who has both. No source in reach is left**: the same 196,139 archives, the 112 re-walked on 2026-10-10 included, hold no `DES`, `DESex` or `PassLock` fork, and the only `NewDE` bits are **8 forks in 3 distinct wild archives** with no password found beside any of them — the one read-me that speaks to it says the author mailed one on payment, a negative looked for rather than proved (DECISIONS.md 2026-10-07, *the key was what the archive CONTAINED*) — so a wild encrypted archive grades a REFUSAL, which `sitcrypt-wild-F7Menus.sit.bin` does (FORMATS.md, *The one wild archive here that is encrypted*). Every other wild encrypted fork is 3.x's built-in scheme |
 
-## Where a copy's seconds go on a Mac Plus
-
-**Unexplained, not investigated (filed 2026-10-10); a hypothesis below.**
-The two formats that are a copy take minutes' worth of a Mac Plus for a
-few hundred KB: `kermitut9test.bin` (MacBinary, 304 KB) **52 s** and
-`derived-PCCTS.tar` (287 KB) **46 s** (FORMATS.md, *Measured on a 7 MHz
-Mac Plus*), ~1,300 cycles a byte. The engine's share is `unc_copy_fork`:
-read, hand the bytes to the sink, bump progress, with no checksum over a
-MacBinary fork.
-
-**Hypothesis: most of it is the harness, not the extraction.** After
-`RunExtract` returns, the autotest build reads every output fork back
-through the File Manager and CRC-32s it BIT AT A TIME
-(`at_crc32_update` in `mac/macextract_mac.c`: eight shift-and-mask
-iterations a byte, a few hundred cycles), and only then paints the grid
-the wall clock stops on. DECISIONS.md 2026-09-20 (*the window that was
-already the staging buffer*) already says "the read-back is most of"
-one method-13 run's wall clock — while FORMATS.md says that table's
-extract column "is the archive alone". Those two disagree.
-
-| what would close it | why |
-|---|---|
-| **one tick-probe run (`-D UNC_AT_TIMING`) on each of the two fixtures** | `gTkRun` brackets `RunExtract` alone and bills the File Manager by kind (FORMATS.md, *What -O3 is worth, and where*), so wall minus ticks is the read-back |
-| **then correct FORMATS.md's wall-clock table or its "archive alone" sentence**, whichever the run disproves | a user-facing time that includes a test harness's CRC overstates what the shipping application takes |
-| **a table-driven CRC in `at_crc32_update`**, if the read-back is the bulk | harness only, not shipped; it would make every wall-clock row cheaper to take and closer to what a user waits |
-
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09).** The engine is portable C99
