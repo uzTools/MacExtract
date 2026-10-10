@@ -20,8 +20,8 @@ The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor, and on System 7.0.1** —
 **72/72** sampled fixtures on all five, on the v0.37.0 source (the floors
 2026-10-09, the 4 MB tiers and System 7.0.1 2026-10-10) — and on Mac OS
-9.2 under QEMU including HFS+ — **22/22** there, 2026-09-25's on the
-**v0.33.0** binary. The **512 KB** machine is **70/72** under System
+9.2 under QEMU — **22/22** there, 2026-10-10, on the same source; HFS+
+as a destination is an earlier run's (FORMATS.md, *Onto HFS+*). The **512 KB** machine is **70/72** under System
 3.0 and **66/72** under System 6.0.8 (2026-10-09). The
 same 22/22 on 2026-09-22 was the resident build; the 21/21 before it, on 2026-09-04,
 is the run that found a `UncOptions` field the shell had never assigned,
@@ -46,9 +46,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~22.4k tokens** (PROGRESS 9.1k,
-OPEN_ITEMS 10.7k, BLOCKERS' first two sections 2.7k), re-estimated
-2026-10-10; BLOCKERS' withdrawn-claims archive is another **~72.5k** and is reference, not
+That session-start reading is **~22.0k tokens** (PROGRESS 9.1k,
+OPEN_ITEMS 10.4k, BLOCKERS' first two sections 2.5k), re-estimated
+2026-10-10; BLOCKERS' withdrawn-claims archive is another **~72.9k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are
 each file's bytes over the 3.93 bytes per token the 2026-10-07 figures

@@ -7734,16 +7734,23 @@ and the only one where the 68k binary does not run on a 68k CPU: Mac OS 9.2 on
 emulated PowerPC executes it through the **68LC040 emulator** built into the
 system. Nothing above System 7 had ever run it.
 
-**22/22 in ONE sweep on the binary that ships**, re-run **2026-09-25** on the
-v0.33.0 binary (and earlier the same day on the overlay build before DART left
-it) (`os9.py --autotest`, the route a
-build switch can reach; its two scoring defects were fixed the same day —
-`tools/vmac/README.md`, *`--autotest` scored three healthy fixtures*). The
-same 22/22 was measured on 2026-09-22 with every decoder resident — every
-fixture of `os9sample.txt` in one run, each in its own boot, on the source
-`dist/` was last built from. Until that run the figure was 22
-across two builds and two days, which is why it was taken: 21 fixtures
-on 2026-09-04 and `derived-800saywhat301j.sit` on 2026-09-22, the latter
+**22/22 in ONE sweep on each of two routes, on the v0.37.0 source**,
+2026-10-10. `--launch` runs the interactive application, which rebuilt
+byte-identical to `dist/`'s payload, and its totals are the table's below;
+`--autotest` runs the autotest build onto a plain-HFS `Out` and reads the
+report file as well as the volume. The two differ on one row: the
+autotest extracts one layer, so `export-hc.hqx` comes back as the
+1,615-byte `Export.sit` rather than the 6,944 bytes inside it. A
+`-D UNC_AT_BUDGET` sweep of the same 22 read every field
+(`tools/vmac/README.md`, *Why an entry is refused*): `e1`, `wa`, `kf`, the
+shortfall and the refusal reason 0 on all 22, and `fc=1` — the 68LC040
+emulator offers `_HWPriv`, called once for the bundle and once per kept
+image. Before that: 22/22 on the v0.33.0 binary, 2026-09-25 (`--autotest`,
+the route a build switch can reach; its two scoring defects were fixed the
+same day — `tools/vmac/README.md`, *`--autotest` scored three healthy
+fixtures*), and on 2026-09-22 with every decoder resident. Until that
+run the figure was 22 across two builds and two days: 21 fixtures on
+2026-09-04 and `derived-800saywhat301j.sit` on 2026-09-22, the latter
 also predating the 1990 DiskDoubler header. No fixture moved.
 **21/21 as of 2026-09-04**, re-run on the build that zeroes `UncOptions` —
 a fix that costs the smallest machine nothing: **147,548 B of code before,
@@ -7794,11 +7801,8 @@ master image:
 | `synth-os9-rar.rar` | RAR: must REFUSE | 0 | — | — | ✅ declined, and Linux declines the same file; the alert is photographed |
 
 **22/22**, 71 files, 941,756 data bytes and 452,596 resource-fork bytes
-compared, **all of it in one sweep on 2026-09-22** (20/20 and 51 files
-before Now Compress joined). The run before it was 21 fixtures on
-2026-09-04 plus one on 2026-09-22, two builds — so this is the first
-time the tier's figure has come from a single binary, and that binary is
-the one in `dist/`.
+compared, **all of it in one `--launch` sweep on 2026-10-10**, the same
+totals as 2026-09-22's (20/20 and 51 files before Now Compress joined).
 
 **That fixture found two things in the HARNESS and nothing in the
 application** (DECISIONS.md 2026-09-22, *the fold, on a Macintosh*). The

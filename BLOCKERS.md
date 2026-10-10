@@ -15,10 +15,11 @@ The sample is **72 fixtures** since 2026-10-09, when
 has run. **Every Mini vMac tier has run it on the v0.37.0 source**: both
 1 MB floors and both 512 KB machines on 2026-10-09 (the `dist/` binary less
 a comment), the two 4 MB tiers and System 7.0.1 on 2026-10-10 (`dist/`'s
-payload rebuilds byte-identical). Each 2026-10-10 sweep was paired with a
-`-D UNC_AT_BUDGET` sweep read field by field (`tools/vmac/README.md`, *Why
-an entry is refused*): no refusal, no first-entry error, no image wanted
-after its release and no failed keep on any of the 216 runs.
+payload rebuilds byte-identical), and Mac OS 9.2 the same day. Each
+2026-10-10 sweep was paired with a `-D UNC_AT_BUDGET` sweep read field by
+field (`tools/vmac/README.md`, *Why an entry is refused*): no refusal, no
+first-entry error, no image wanted after its release and no failed keep on
+any of the 238 runs.
 
 | tier | result |
 |---|---|
@@ -29,7 +30,7 @@ after its release and no failed keep on any of the 216 runs.
 | System 6.0.8, **1 MB** — the RAM floor | **72/72**, 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid); no memory-budget refusals remain |
 | System 6.0.8, **512 KB** Macintosh 512Ke | **66/72**, 2026-10-09 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09) |
 | System 7.0.1, 4 MB | **72/72**, 2026-10-10 — the only tier with a code-cache flush route: `_HWPriv` called on all 72, once per kept image plus the bundle fixup |
-| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-09-25, v0.33.0 |
+| Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-10-10, through the interactive application (`--launch`, byte-identical to `dist/`) and the autotest build alike |
 
 The heaviest 4 MB allocations are the same to the byte on all three 4 MB
 tiers — the Arsenic transform table, 1,353,789 B for
