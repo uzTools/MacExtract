@@ -409,6 +409,40 @@ def check_interleave(vals):
                    + "; ".join(which) + f" over {rounds} rounds")
 
 
+BUDGET_FIELDS = ("e1", "wa", "kf", "rf", "fc", "fn")
+
+
+def budget_probe(indsk):
+    """The `-D UNC_AT_BUDGET` fields the grid has no slot for, read from the
+    report file the autotest writes on the In volume: e1 (first per-entry
+    status), then wa kf rf fc fn (mac/ovl_load.h). Grid slots 1, 3, 7 and 5
+    are the shortfall, FreeMem at start, the budget and the refusal reason.
+    Returns a printable string, or None when there is no 14-value report —
+    which is what a build without the overlay fields writes."""
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    rep = os.path.join(home, "report")
+    try:
+        if subprocess.run(["hmount", indsk], capture_output=True,
+                          env=env).returncode != 0:
+            return None
+        c = subprocess.run(["hcopy", "-r", "report", rep],
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], capture_output=True, env=env)
+        if c.returncode != 0:
+            return None
+        b = open(rep, "rb").read()
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    u32 = lambda o: int.from_bytes(b[o:o + 4], "big")
+    if len(b) < 12 or b[:4] != b"UNCR" or u32(8) < 14:
+        return None
+    v = [signed32(u32(12 + 4 * i)) for i in range(14)]
+    out = [f"{k}={v[8 + i]}" for i, k in enumerate(BUDGET_FIELDS)]
+    out += [f"bg={v[7]}", f"short={v[1]}", f"why={v[5]}", f"free0={v[3]}"]
+    return " ".join(out)
+
+
 def check(fixture, png, manifest_dir, expect=False):
     """Cross-check the on-screen grid against the Linux engine's output.
 
@@ -576,6 +610,9 @@ def main():
             else:
                 ok, detail = check(fixture, png, manifest_dir, args.expect)
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
+            if "UNC_AT_BUDGET" in args.defines and vals is not None:
+                probe = budget_probe(os.path.join(workdir, "in.dsk"))
+                detail = f"[{probe or 'no probe report'}] {detail}"
             timing = ""
             if boot is not None and extract is not None:
                 timing = f" [boot {boot:.0f}s + extract {extract:.0f}s]"

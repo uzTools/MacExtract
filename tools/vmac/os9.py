@@ -1631,6 +1631,12 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
                        "end of a run (screenshots in " + workdir + ")"]
 
     vals, recs = read_report(rep)
+    if len(vals) >= 14:                  # -D UNC_AT_BUDGET: run.budget_probe
+        sv = [R.signed32(v) for v in vals]
+        lines.append("probe: " + " ".join(
+            [f"{k}={sv[8 + i]}" for i, k in enumerate(R.BUDGET_FIELDS)] +
+            [f"bg={sv[7]}", f"short={sv[1]}", f"why={sv[5]}",
+             f"free0={sv[3]}"]))
     nfiles, ret, errors, sdc, sdl, src, srl, peak = vals[:8]
     ret = ret - (1 << 32) if ret >= (1 << 31) else ret
     for code, what in ((-1001, 'no volume named "In"'),

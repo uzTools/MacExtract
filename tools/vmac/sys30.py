@@ -90,8 +90,11 @@ def _dclick(env, ox, oy, x, y):
                    env=env, capture_output=True)
 
 
-def run_one(fixture, bootimg, emu_dir, png, timeout, poll):
-    """Boot, click the application into life, and wait for its grid."""
+def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False):
+    """Boot, click the application into life, and wait for its grid.
+
+    With `probe`, also returns run.py's budget_probe() of the In volume,
+    read after the emulator is gone and before the disks are."""
     work = tempfile.mkdtemp(prefix="sys30-")
     boot = os.path.join(work, "boot.hfv")
     indsk = os.path.join(work, "in.dsk")
@@ -126,7 +129,7 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll):
             print(f"sys30: the emulator window never appeared for "
                   f"{os.path.basename(fixture)} — reported as NOGRID",
                   flush=True)
-            return None, time.time() - started
+            return None, time.time() - started, None
         ox, oy = _origin(dpy, env)
         time.sleep(DESKTOP_WAIT)
         _dclick(env, ox, oy, *VOL_ICON)     # open the boot volume
@@ -150,8 +153,10 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll):
         except subprocess.TimeoutExpired:
             proc.kill()
         dpy.close()
+        fields = (R.budget_probe(indsk) if probe and vals is not None
+                  else None)
         shutil.rmtree(work, ignore_errors=True)
-    return vals, time.time() - started
+    return vals, time.time() - started, fields
 
 
 def main():
@@ -201,8 +206,9 @@ def main():
         for fixture in fixtures:
             base = os.path.basename(fixture)
             png = os.path.join(a.outdir, base + ".png")
-            vals, secs = run_one(fixture, bootimg, emu_dir, png,
-                                 a.timeout, a.poll)
+            probe = "UNC_AT_BUDGET" in a.defines
+            vals, secs, fields = run_one(fixture, bootimg, emu_dir, png,
+                                         a.timeout, a.poll, probe)
             man = os.path.join(manifests, base + ".json")
             if vals is None:
                 verdict = "NOGRID"
@@ -218,6 +224,8 @@ def main():
                      man, png], capture_output=True, text=True)
                 verdict = "PASS" if r.returncode == 0 else "FAIL"
                 detail = (r.stdout + r.stderr).strip().replace("\n", " ")
+            if probe and vals is not None:
+                detail = f"[{fields or 'no probe report'}] {detail}"
             npass += verdict == "PASS"
             nbad += verdict in ("FAIL", "NOGRID")
             print(f"{verdict:7s} {base:45s} {secs:5.1f}s  {detail}", flush=True)

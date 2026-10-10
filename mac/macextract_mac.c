@@ -4774,6 +4774,27 @@ int main(void)
             at_report(vals, 8);
             at_report_file(tv, 13);
         }
+#elif defined(UNC_AT_BUDGET) && defined(UNC_AT_OVERLAY)
+        /* The six fields the completion alert carries and the grid has no
+         * slot for — e1, then wa kf rf fc fn (mac/ovl_load.h) — go in the
+         * FILE only, after the eight grid values. Without them a sweep is
+         * read by its tally alone; run.py and sys30.py print them. */
+        {
+            extern short gFirstEntryErr;
+            extern short gWantedAfterRelease, gKeepFail, gRelFmt;
+            extern short gFlushHas, gFlushCalls;
+            uint32_t bv[14];
+            int k;
+            for (k = 0; k < 8; k++) bv[k] = vals[k];
+            bv[8]  = (uint32_t)(long)gFirstEntryErr;
+            bv[9]  = (uint32_t)(long)gWantedAfterRelease;
+            bv[10] = (uint32_t)(long)gKeepFail;
+            bv[11] = (uint32_t)(long)gRelFmt;
+            bv[12] = (uint32_t)(long)gFlushHas;
+            bv[13] = (uint32_t)(long)gFlushCalls;
+            at_report_file(bv, 14);   /* first: the host kills the */
+            at_report(vals, 8);       /* emulator once the grid shows */
+        }
 #else
         at_report(vals, 8);
         at_report_file(vals, 8);

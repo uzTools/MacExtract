@@ -2734,6 +2734,19 @@ block if a re-run needs them.
 It reports FAIL by construction, because the overwritten slots no longer match
 the oracle. **Read the numbers, not the verdict.**
 
+**The completion alert's fields reach a sweep too** (since 2026-10-10). The
+grid has no slot left for `e1` (first per-entry status) or the overlay
+diagnostics `wa kf rf fc fn` (`mac/ovl_load.h`), so the autotest writes them
+to the report FILE on `In` after the eight grid values, and `run.py`,
+`sys30.py` and `os9.py --autotest` print them per fixture as
+`[e1= wa= kf= rf= fc= fn= bg= short= why= free0=]`. On a healthy run `wa`
+(the image id wanted after the release), `kf`, `short` and `why` are 0; `rf`
+is the `UncFormat` the release kept for, 0 when no layer released (an
+envelope keeps the bundle); `fc` is the flush route (0 none, 1 `_HWPriv`,
+2 `FlushCodeCache`) and `fn` its calls. **What it cannot see:** `rf` is the
+last releasing layer's only, and `bg`/`short` the last budget's — a
+`.sit.hqx` re-takes one per layer.
+
 **Pair it with `-D UNC_OVL_RESIDENT` to get a budget that can be subtracted
 from another.** The switch is not free — it costs the eager configuration
 400 B of `CODE` + A5 and the control 304 B — so a budget read here is that
