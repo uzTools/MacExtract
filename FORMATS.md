@@ -1695,10 +1695,19 @@ the installer itself wrote to an emulated disk:
 
 So `sit_scheme()` does not read 107/109 on a method-13 fork (`sit_enc_id`
 in `src/fmt_sit.c`); `tools/run_crypt.py` grades the archive against the
-installer's output. The thirteenth fork, `Read Us First!/Shortcut 1.5
-Addendum`, is damaged in the archive: the engine reports a CRC mismatch,
-and Aladdin's installer warns *"may be damaged"* and writes 238,917 B
-against the 210,162 declared.
+installer's output.
+
+**The thirteenth fork, `Read Us First!/Shortcut 1.5 Addendum`, is
+damaged in its compressed stream, and no decoder is at fault — measured
+2026-10-10:**
+
+| | |
+|---|---|
+| three decoders | this engine, `unar` and Aladdin's installer write the same 210,162 B (Aladdin's differs only in the reserved header bytes 74..125), and all three fail the stored CRC-16 `634e` — ours computes `6ff1` |
+| where it breaks | the resource data chains through 160 records to output offset **159,173**, mid-text (*"…kept in this file. Extensions"*), then turns to LZ-shaped noise; the bytes the header calls the map at 206,785 are noise too |
+| the stream | every other fork in the archive emits the end symbol `0x140` exactly at its declared length; this one has used 67,650 of its ~74,056 compressed bytes there and decodes **19,431 B** more, with no end symbol, into an error. The desync is near compressed byte 55,208, data-fork offset ~288,770. Aladdin's installer decodes past the length too, which is its 238,917 B |
+| the copies | Info-Mac 1994-01 and HyperLib 1994-1 CD2 carry the same data fork, byte for byte (SHA-1 `a7cc9ccc…`), so the damage is upstream of both pressings |
+| one bit? | **no**: flipping each of the fork's 592,576 bits passes the CRC six times, and all six are collisions — none ends at `0x140` or yields a map that parses (DECISIONS.md 2026-10-10, *the six repairs that were a 16-bit check*) |
 
 ### What Aladdin's own output says — measured 2026-09-28
 

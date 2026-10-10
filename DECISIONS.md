@@ -382,6 +382,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
 - 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
 - 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
+- 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
 
 ---
 
@@ -25236,4 +25237,31 @@ verifier.
 - A second oracle came free with the experiment: the installer that
   carries the key also extracts, so letting it finish graded the engine
   against Aladdin's own decoder.
+
+## 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
+
+**Claim (measured).** The Shortcut updater's Addendum is damaged in its
+compressed stream, and no single flipped bit explains it (FORMATS.md,
+*Where an archive names the module*). Three decoders agree byte for
+byte, Aladdin's own included, so the fault is in the bytes, not a reader.
+
+**The search said otherwise six times.** Every bit of the 74,072-byte
+fork was flipped in turn, and `macextract t` passed the entry six times.
+A positive control found a planted single-bit error in a healthy fork,
+and only that one flip, so the harness worked. The six were chance: a
+16-bit CRC passes one candidate in 65,536, and 592,576 candidates
+predict about nine. None of the six ended at the end symbol `0x140`, and
+none produced a resource map that parses.
+
+**Transferable.**
+- A checksum grades a search only while the search is smaller than the
+  checksum's range. Past that, a pass is the expected outcome and not
+  evidence.
+- What decided it was structure the format already carries. Method 13
+  ends every healthy fork with `0x140` at exactly the declared length,
+  12 of 12 here, and a resource fork's map points at itself. Those are
+  free and cannot pass by accident at this scale. This is the
+  2026-10-10 header-CRC entry's lesson, met from the other side.
+- No engine change: the CRC already refuses the entry, and the end
+  symbol would only refuse it a second way.
 
