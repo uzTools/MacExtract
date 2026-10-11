@@ -1105,6 +1105,17 @@ static long  gRepMore;              /* lines there was no room for */
 static struct { long dir; uint32_t hash; } gDirMemo[kDirMemo];
 static short gDirMemoN;
 
+/* Set when a TOP-LEVEL folder this run made found gDirMemo full. A folder
+ * at the top that is already on the disk and not in the memo is numbered
+ * `~1` rather than descended into, so extracting the same archive twice
+ * gives a second folder instead of `~1` files inside the first
+ * (DECISIONS.md 2026-10-11, *the folder that is already there*) — but a
+ * top folder the memo had no room for would read the same on its second
+ * visit and be numbered too: one archive folder split in two. So once
+ * that has happened, the top merges for the rest of the run, as before.
+ * One flag rather than a table of its own: a table was 64 B of A5. */
+static Boolean gTopLost;
+
 static void RepReset(void)
 {
     gRepN = 0;
@@ -1112,6 +1123,7 @@ static void RepReset(void)
     gRepCur = -1;
     gRepMore = 0;
     gDirMemoN = 0;
+    gTopLost = false;
 }
 
 /* Start a line. `urgent` is a failure, which may take from the reserve. */
@@ -1552,11 +1564,17 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
  * that a folder went into one this run had made for another name after
  * all, which is what happens past `~99`.
  *
- * A directory THIS RUN DID NOT MAKE is descended into, still: a folder
- * the user already had, or one an earlier run left, must take this
- * archive's files rather than sprout a `~1` beside it. */
+ * A directory THIS RUN DID NOT MAKE is descended into below the top
+ * level: inside a folder this run made, nothing else can be there. At
+ * the TOP (`top`), it is numbered instead — a folder the user already
+ * had, or one an earlier run left, gets a `~1` beside it, and the files
+ * inside keep their own names. Until 2026-10-11 it was descended into
+ * there too, and a second extraction of one archive put `name~1` files
+ * through the first one's tree (DECISIONS.md 2026-10-11, *the folder
+ * that is already there*). */
 static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
-                       long *dirID, int *isNew, int *merged, int *numbered)
+                       int top, long *dirID, int *isNew, int *merged,
+                       int *numbered)
 {
     Str63 base;
     int attempt;
@@ -1575,6 +1593,7 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
         if (err == noErr) {
             *dirID = created;
             *isNew = 1;
+            if (top && gDirMemoN >= kDirMemo) gTopLost = true;
             return noErr;
         }
         if (err != dupFNErr) return err;
@@ -1589,6 +1608,8 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
             return err;                  /* a FILE holds the name */
         *dirID = pb.dirInfo.ioDrDirID;
         seen = (uint32_t)RepDirKnown(*dirID, hash);
+        if (top && seen == 0 && !gTopLost)
+            seen = 1;                    /* already there: not ours */
         if (seen != 1) return noErr;     /* not ours, or the same folder */
         /* Ours, under another name: a different folder. Number it —
          * unless the numbers have run out, where merging is what is
@@ -1740,7 +1761,8 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
             } else {
                 int isNew = 0, merged = 0, numbered = 0;
                 uint32_t h = DirHash(nm + start, i - start);
-                OSErr derr = EnsureDir(s->vRefNum, dir, comp, h, &dir,
+                OSErr derr = EnsureDir(s->vRefNum, dir, comp, h,
+                                       dir == s->rootDirID, &dir,
                                        &isNew, &merged, &numbered);
                 if (derr != noErr) {
                     if (derr == dskFulErr) return -1;   /* the run is over */
@@ -3476,8 +3498,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 for (i = 0; i < stemlen; i++) famStem[i] = name[i + 1];
                 famStemLen = stemlen;
                 famSplit = SplitPartOf(famStem, stemlen, name) >= 1;
-                famZip = !famSplit &&
-                         ZipFamPartOf(famStem, stemlen, name) != 0;
+                famZip = famSplit ? 0
+                                  : ZipFamPartOf(famStem, stemlen, name);
             }
         }
         segOK = unc_segment_describe(&pio, &desc) == UNC_OK;
@@ -3491,6 +3513,18 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             famSplit = 0;
             famZip = 0;
         }
+        /* And a ".zip" is a set only if it SAYS so. The name makes it the
+         * LAST member of a family, which is where a spanned zip keeps its
+         * part count — but every ordinary zip is called that too, and its
+         * end record says "disk 0". Taken on the name alone, every plain
+         * .zip opened here failed as "This archive has more parts" from
+         * 2026-08-14 to 2026-10-11, and no emulated tier could see it: the
+         * harness always named the archive "archive.sit". Found on an
+         * LC475 (DECISIONS.md 2026-10-11, *the zip that was a set of
+         * one*). A ".zNN" is still placed by name: nothing in it can say. */
+        if (famZip == kZipFamLast &&
+            !(segOK && desc.scheme == UNC_FORMAT_ZIPSEG))
+            famZip = 0;
         if (famSplit || famZip || segOK) {
             sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
             segScratch = NewPtr((Size)unc_segment_scratch_size());
@@ -4317,6 +4351,41 @@ static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
 }
 #endif
 
+/* The archive's NAME on the "In" volume: the first file in its root
+ * called "archive.<something>", or "archive.sit" when there is none.
+ * Until 2026-10-11 it was always "archive.sit", and that hid a whole
+ * class of defect: the shell dispatches on the name's extension before
+ * it reads a byte (a ".zip" is tried as the last part of a spanned set),
+ * so every zip the emulator ran went in as a ".sit" and the path a real
+ * user's "Reduce.zip" takes had never executed. run.py --as picks the
+ * name. */
+static Str63 gATName = "\parchive.sit";
+
+static void at_pick_archive(short vol)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    short idx, i;
+    long z;
+
+    for (idx = 1; idx < 512; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        nm[0] = 0;
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = vol;
+        pb.hFileInfo.ioDirID = fsRtDirID;
+        pb.hFileInfo.ioFDirIndex = idx;
+        if (PBGetCatInfoSync(&pb) != noErr) return;
+        if (pb.hFileInfo.ioFlAttrib & 0x10) continue;          /* a folder */
+        if (nm[0] < 9 || nm[1] != 'a' || nm[2] != 'r' || nm[3] != 'c' ||
+            nm[4] != 'h' || nm[5] != 'i' || nm[6] != 'v' || nm[7] != 'e' ||
+            nm[8] != '.')
+            continue;
+        for (i = 0; i <= (short)nm[0]; i++) gATName[i] = nm[i];
+        return;
+    }
+}
+
 static void at_fail(int code)
 {
     uint32_t vals[8];
@@ -4363,6 +4432,7 @@ int main(void)
      * the grid is the only channel off this machine, so a setup failure has
      * to travel down it too. */
     if (FindVolWait("\pIn", &inVol) != noErr)   at_fail(kAtNoInVol);
+    at_pick_archive(inVol);
 
     /* The file report goes to the INPUT volume, deliberately. It is the one
      * the harness built, so the harness knows it can read it; the output
@@ -4398,7 +4468,7 @@ int main(void)
         int i;
         prog.ctx = NULL;
         prog.tick = at_cancel_tick;
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          &prog, &entries, &errors, NULL);
         at_count_dir(outVol, fsRtDirID, &files, &dirs);
@@ -4457,7 +4527,7 @@ int main(void)
         for (i = 0; i < 8; i++) vals[i] = 0;
 
         /* Pass A: the control. Nothing touches the volume while it runs. */
-        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+        if (MyOpenFork(inVol, fsRtDirID, gATName, fsRdPerm, 0,
                        &ref) == noErr) {
             for (;;) {
                 long cnt = (long)sizeof rbuf;
@@ -4474,7 +4544,7 @@ int main(void)
         /* Pass B: the same read, with catalog-changing writes in between.
          * A fresh file every round, on the volume being read from — the
          * shape an extraction has when output lands beside the archive. */
-        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+        if (MyOpenFork(inVol, fsRtDirID, gATName, fsRdPerm, 0,
                        &ref) == noErr) {
             for (;;) {
                 long cnt = (long)sizeof rbuf;
@@ -4516,7 +4586,7 @@ int main(void)
          * interleave disturbs, this is the case that would either suffer from
          * it or be immune to it, and either answer is worth having before
          * writing the replacement. */
-        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+        if (MyOpenFork(inVol, fsRtDirID, gATName, fsRdPerm, 0,
                        &ref) == noErr) {
             long pos = 0;
             for (;;) {
@@ -4604,7 +4674,7 @@ int main(void)
         wdRef = wpb.ioVRefNum;                /* the WD refNum, as SFGetFile returns */
 
         /* dirID 0 with a working-directory refNum: exactly ExtractOne(). */
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          wdRef, 0, inVol, fsRtDirID,
                          NULL, &entries, &errors, NULL);
 
@@ -4630,16 +4700,28 @@ int main(void)
         UncProgress prog;
         prog.ctx = NULL;
         prog.tick = at_prog_tick;
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          &prog, &entries, &errors, NULL);
     }
 #else
     {
         TK_T0;
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          NULL, &entries, &errors, NULL);
+#ifdef UNC_AT_TWICE
+        /* The same archive again, into the same folder, as a user does
+         * who opens it twice: what the second run makes of the first
+         * run's folders. A probe, not a grade — the grid counts both
+         * runs' files and FAILs by construction; read the Out disk
+         * (run.py --keep-disks). RepReset is what ExtractOne does
+         * before every archive. */
+        RepReset();
+        ret = RunExtract(inVol, fsRtDirID, gATName,
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         NULL, &entries, &errors, NULL);
+#endif
         TK_ADD(gTkRun);
     }
 #endif
@@ -5753,10 +5835,10 @@ int main(void)
          * usable prompt item, which is why the two are told apart by
          * POSITION below. DECISIONS.md, 2026-08-09. */
         /* A document the Finder handed over takes the place of the
-         * Open dialog, one per pass: dropping three archives extracts
-         * three, and the loop falls back to Standard File when the
-         * list runs out rather than quitting, so the application is
-         * still there to be given another file. */
+         * Open dialog, one per pass, and the loop falls back to Standard
+         * File when the list runs out. Since 2026-10-11 the shipped
+         * (eager) build quits after the first archive it extracts, below,
+         * so of three dropped archives one is extracted. */
         if (!DropNext(&reply.vRefNum, reply.fName)) {
 #ifdef UNC_AT_STACK
             SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
@@ -5803,6 +5885,17 @@ int main(void)
          * and plain volume refNums on System 6; dirID 0 is correct for
          * either (FORMATS.md, the working-directory row). */
         ExtractOne(reply.vRefNum, 0, reply.fName, dest.vRefNum, 0);
+#ifdef UNC_AT_OVERLAY
+        /* The decoders this archive did not need are gone, and reading
+         * them again is a disk access the eager lifetime exists to avoid.
+         * Offering Standard File again offered what could not be done:
+         * on an LC475 a .sit opened after a .cpt failed. So the
+         * application quits, and the next archive starts a fresh launch
+         * (DECISIONS.md 2026-10-11, *one archive per launch*). An archive
+         * that never got as far as a release — not an archive, could
+         * not be opened — still comes back here. */
+        { extern int ovl_spent(void); if (ovl_spent()) break; }
+#endif
     }
     return 0;
 }

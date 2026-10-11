@@ -1,7 +1,9 @@
 # MANUAL_TESTS.md — what only a person outside this machine can settle
 
-**Status: none of it has been done.** No physical Macintosh has ever run this
-application. Everything the repository claims was observed under emulation —
+**Status: one session, on one machine.** The maintainer's LC 475 (68LC040,
+System 7.6.1, 12 MB) ran `dist/` v0.39.0 on 2026-10-11 (§2, §4); it found
+a zip defect no tier could see, fixed the same day (BLOCKERS.md). Nothing
+older has run it. Everything else the repository claims was observed under emulation —
 Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation is
 evidence, not proof.
 
@@ -148,7 +150,14 @@ Toolbox revisions, sometimes a different CPU.
 - [ ] **System 7 with MultiFinder in the background.** Start a long extraction
       and switch to another application: it must stay responsive and the
       extraction must finish (the `WaitNextEvent` path).
-- [ ] **The `SIZE` partition on a small machine.** 4 MB preferred / 400 KB
+**Done on the LC 475, 2026-10-11:** launch, nine archives in five formats
+with no bomb (StuffIt 5 with 45 entries in 29 s), and a 400 KB partition
+refusing one StuffIt 5 entry "at least 136K" short. Not done: MultiFinder
+switching, which the application gives no way to reach (OPEN_ITEMS.md,
+*What the LC 475 found*); counts and names were checked by eye, the bytes
+not at all — extract onto an AppleShare volume next time, and they can be.
+
+- [ ] **The `SIZE` partition on a small machine.** 2 MB preferred / 400 KB
       minimum is in `mac/macextract.r`. Set the application's memory low in Get
       Info and confirm a large Arsenic entry is refused per entry with an
       alert, rather than the application failing to launch.
@@ -169,16 +178,6 @@ Verified under QEMU only, through the 68LC040 emulator.
 - [ ] **8-bit MacRoman names on screen.** The bytes are checked everywhere; how
       they *look* above System 6 is not. `derived-Education7.1.cpt` has a
       `spinning brain ƒ` folder and PackIt's synthetic fixtures have `Appé`.
-- [ ] **The application's icon at 16 COLOURS.** `icl4` and `ics4` are the two
-      members of the icon family that nothing here can display, and it is a
-      hard limit rather than a missing step (measured 2026-08-27): the QEMU
-      `mac99` guest offers exactly one colour depth — its Monitors control
-      panel lists "Millions" and greys out "Grays" — and booted at
-      `-g 1024x768x4` it does not reach the Finder at all, stopping in
-      OpenBIOS. Mini vMac is a 1-bit Mac Plus. So the 1-bit and 8-bit members
-      are photographed (DECISIONS.md 2026-08-24, *the icon*) and the 4-bit
-      pair needs a screen set to 16 colours on real hardware, or an emulator
-      with a 4-bit video mode.
 
 ## 4. The interactive application, on any real machine
 
@@ -189,6 +188,14 @@ Cmd-., partial-output cleanup, the result alert, and an extracted `APPL`
 launching (`tools/vmac/interactive.py --e2e`). Re-doing it by hand is worth one
 pass per machine, because a person notices what a screenshot comparison does
 not.
+
+**Done on the LC 475, 2026-10-11, all as expected unless named:** launch,
+Cancel to the Finder, the Cancel button mid-run, the 31-character cut,
+a `.cpt` tree, a `.hqx` and a `.bin`, a truncated `.sit`, a non-archive.
+Named: Cmd-. on an AZERTY keyboard (OPEN_ITEMS.md, *What the LC 475
+found*); a second archive in the same launch, and the same archive
+twice, both changed by decision the same day (DECISIONS.md 2026-10-11,
+*one archive per launch*, *the folder that is already there*).
 
 Launch and UI
 - [ ] Application launches; SFGetFile appears immediately.
@@ -223,8 +230,11 @@ Extraction correctness
       confirms the resource fork is intact.
 - [ ] A file whose name contains `/`: it appears with the `/` in the Finder
       (the engine's `:` substitution undone).
-- [ ] Extract the same archive twice into the same folder: `name~1` copies, no
-      overwrite, no crash.
+- [ ] Extract the same archive twice into the same folder: a top-level
+      folder comes out as `Folder~1` with the files inside under their own
+      names, a top-level file as `name~1`; no overwrite, no crash.
+- [ ] Extract an archive: the application quits afterwards (the shipped
+      build). Dropping two archives on its icon extracts the first.
 - [ ] An archive with a member name over 31 characters (zip or tar): truncated
       to 31, extraction completes.
 - [ ] A truncated `.sit`: per-entry error alert, application stays alive.
@@ -326,25 +336,23 @@ claim and goes in the same file with what it cost.
 
 ## 8. A release that is due, and a version number that cannot tell two builds apart
 
-Like §7, this needs no Macintosh — it needs the maintainer. `v0.37.0` was
-tagged **2026-10-04** and `main` has moved since, while `UNC_VERSION` in
-`include/macextract.h` still reads `0.37.0`. (No count here: it is
-`git rev-list --count v0.37.0..HEAD`, and a number written down would be
-wrong by the next commit.) That is
-deliberate: bumping it is step one of cutting a release, and cutting one is the
-maintainer's call (CLAUDE.md, *Cutting a release*). The consequence is that
-`--version`, the application's About box and `dist/README.txt`'s title all read
-`0.37.0` on both builds, so a person holding a download cannot tell which of
-the two they have.
+Like §7, this needs no Macintosh — it needs the maintainer. `v0.39.0` is
+the newest tag, and `main` has moved since while `UNC_VERSION` in
+`include/macextract.h` still reads `0.39.0` — deliberately, since bumping
+it is step one of a release (CLAUDE.md, *Cutting a release*). So
+`--version` and `dist/README.txt`'s title read `0.39.0` on both builds;
+the application has no About box, and a person holding a download tells
+them apart only by its date. (No count of commits here: it is `git
+rev-list --count v0.39.0..HEAD`, and a number written down would be wrong
+by the next commit.)
 
-- [ ] **Decide whether v0.38.0 is due.** Four things in this build are not in
-      the published v0.37.0 — `dist/README.txt` names them, each as "since
-      v0.37.0, and in this download" — and one of them is a defect in that
-      release's own headline format: a valid method-14 StuffIt archive can be
-      refused there with `checksum mismatch` (fixed 2026-10-06, commit
-      `741104a`; DECISIONS.md 2026-10-06, *the sort that dropped what it could
-      not hold*). The steps are CLAUDE.md, *Cutting a release*; no session
-      working here takes them unasked.
+- [ ] **Decide whether the next release is due.** The published v0.39.0
+      refuses every plain `.zip` on a Macintosh as *"This archive has more
+      parts"* — in the release whose headline is a zip method — and
+      `main` has the fix (DECISIONS.md 2026-10-11, *the zip that was a set
+      of one*). `dist/README.txt` names what is new "since v0.39.0, and in
+      this download". The steps are CLAUDE.md's; no session working here
+      takes them unasked.
 
 **What to record.** Nothing, if the answer is "not yet". If it is cut, the tag
 is confirmable from this machine and the release page is not (CLAUDE.md), so

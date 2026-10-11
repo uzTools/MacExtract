@@ -80,3 +80,9 @@ OverlayEntry ovl_image_q(short id, int expected)
 }
 
 OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
+
+/* Nothing is ever given back, so any format can still be opened. */
+int ovl_spent(void)
+{
+    return 0;
+}

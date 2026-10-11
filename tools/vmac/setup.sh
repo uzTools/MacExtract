@@ -155,6 +155,13 @@ ROM128_SHA=13fe8312cf6167a2bb4351297b48cc1ee29c523b788e58270434742bfeda864c
 fetch "$ROM512_URL" Mac512K.ROM "$ROM512_SHA"
 fetch "$ROM128_URL" Mac128K.ROM "$ROM128_SHA"
 
+# The Macintosh II ROM (800K v2, checksum 9779D2C4 — Mini vMac 36.04's
+# kRomCheckSum1 for `-m II`), for the two COLOUR machines below and
+# `colouricon.py`: the only tier here that draws a 16- or 256-colour Finder.
+ROMII_URL="https://archive.org/download/mac_rom_archive_-_as_of_8-19-2011/mac_rom_archive_-_as_of_8-19-2011.zip/9779D2C4%20-%20MacII%20(800k%20v2).ROM"
+ROMII_SHA=97f2a22bdb8972bfcc1f16aff1ebbe157887c26787a1c81747a9842fa7b97a06
+fetch "$ROMII_URL" MacII.ROM "$ROMII_SHA"
+
 # ---- build the emulators --------------------------------------------------
 # Mini vMac's setup tool emits a shell script that writes the config headers
 # and a Makefile; -speed a is "all out" (see run.py --speed for why the
@@ -253,5 +260,26 @@ else
     [ -x mv-128K/minivmac ] || { echo "setup: failed to build mv-128K" >&2; exit 1; }
     echo "built mv-128K/minivmac"
 fi
+
+# Two Macintosh IIs, 8 MB, at 16 and 256 colours (`-depth` 2 and 3). The
+# depth is fixed at build time, so each is its own binary. They need a System
+# that runs on a Mac II, which nothing above fetches: tools/vmac/README.md,
+# *A colour Finder*, says where the one used came from.
+build_mvII() {  # build_mvII <dir> <depth>
+    if [ -x "$1/minivmac" ]; then echo "have $1/minivmac"; return 0; fi
+    rm -rf "$1"
+    mkdir -p "$1"
+    tar xzf minivmac.src.tgz -C "$1" --strip-components=1
+    ( cd "$1"
+      gcc -o setup_t setup/tool.c
+      ./setup_t -t lx64 -m II -depth "$2" -mem 8M -speed a -as 0 -bg 1 \
+                -sound 0 -magnify 0 -drives 6 -n "macextract-$1" > setup.sh
+      bash setup.sh >/dev/null
+      make >/dev/null 2>&1 )
+    [ -x "$1/minivmac" ] || { echo "setup: failed to build $1" >&2; exit 1; }
+    echo "built $1/minivmac"
+}
+build_mvII mv-II16 2
+build_mvII mv-II256 3
 
 echo "setup: ready in $VMAC_HOME"

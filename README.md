@@ -245,7 +245,8 @@ real archives, byte for byte, both forks. The Macintosh application is checked t
 same way *while running on* an emulated Mac Plus, a System 7 machine and a
 Mac OS 9 machine — not only on Linux.
 
-No physical Macintosh has ever run it. Emulation is evidence, not proof.
+One physical Macintosh has run it so far: an LC 475 under System 7.6.1.
+Nothing older has, and emulation is evidence, not proof.
 
 ## Where things are written down
 

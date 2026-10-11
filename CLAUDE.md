@@ -32,9 +32,9 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~9.2k tokens** (PROGRESS 4.2k,
-OPEN_ITEMS 3.5k, BLOCKERS' first two sections 1.5k); BLOCKERS'
-withdrawn-claims archive is another **~73.9k** and is reference, not
+That session-start reading is **~9.1k tokens** (PROGRESS 4.2k,
+OPEN_ITEMS 3.2k, BLOCKERS' first two sections 1.7k); BLOCKERS'
+withdrawn-claims archive is another **~74.3k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-11; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you
@@ -58,7 +58,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the fifty smells that keep finding the next one. The cheapest is a
+names the fifty-one smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**. Another is a constant in the peak-RAM matrix:
 data-driven allocations vary with their input, so one that does not is
 usually a declared ceiling nobody questioned.
@@ -162,4 +162,4 @@ long they will be waiting.
 - **Show the application.** Screenshots live in `docs/screens/` and come from `tools/vmac/interactive.py` — real frames, not mockups. Re-take them when the UI changes, and **look at each one before committing it**: the harness clicks fixed coordinates and will photograph the wrong window.
 - **Every command in it must be run before it ships.**
 - **Round the numbers.** "16 minutes", not "966 s".
-- **Keep the honesty, drop the hedging.** "No physical Macintosh has ever run it" stays; the hypotheses behind an unexplained 40 seconds do not.
+- **Keep the honesty, drop the hedging.** "Nothing older has" stays; the hypotheses behind an unexplained 40 seconds do not.

@@ -106,32 +106,38 @@ checked by `tools/check_provenance.py`.
 
 # Part 2 — Open items
 
-## The overlay loader: what no emulator here can answer
+## What the LC 475 found that is not fixed
 
-Two items, and both want the same thing: **a Macintosh with a 68020 or
-better, running the shipped binary** (MANUAL_TESTS.md §2 and §6). The
-Linux lane closed what it could on 2026-09-26 — it builds every
-image, runs the real loaders through a mock Memory and Resource
-Manager, extracts 20 fixtures byte-exact under `qemu-m68k`, and catches
-six deliberate breaks every run (TESTING.md, *The overlay loader, off
-the Macintosh*).
+The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
+§2, §4). Each is measured on that machine and nowhere else.
 
-- **No tier with a CPU cache has ever run it.** The flush at both fixup
-  sites is correct by documentation and unverified by measurement: Mini
-  vMac is a 68000, the 68LC040 Emulator is documented to ignore the
-  request, and the host lane has no cache — it proves the call is
-  reached, which is a different claim. `fc=1 fn=4` on System 7.0.1 says
-  the route exists and fired; whether it is NEEDED, only hardware says.
-- **The shipped bytes RUN only on the emulator.** The host lane LOADS
-  them since 2026-09-26 (`--shipped-only`, `ci.sh` variant 3d, all 30
-  relocations across six images at the addresses they run at), but no
-  host lane can EXECUTE a Retro68 image — entered from an m68k-linux
-  binary it segfaults, measured.
+- **Cmd-. does nothing on a French (AZERTY) keyboard.** The period
+  needs Shift there, and the shell compares the event's character with
+  `'.'` (`mac/macextract_mac.c`, the progress pump). *Hypothesis*: with
+  Command down, that key does not report a period — Apple's technote on
+  international canceling is about this case, and it has not been read
+  here. The Cancel button works. Closing it starts with that technote,
+  and is priced in bytes like any shell change.
+- **There is no way to switch out of the application on System 7.**
+  It has no menu bar at all, so the Process Manager has nowhere to put
+  the Application menu, and the `SIZE` flag `canBackground` buys
+  nothing a user can reach. Closing it needs a menu bar, priced at the
+  floor.
+- **The time estimate steps backwards for a tick**, on StuffIt 5 (the
+  bar never does). Not looked into.
 
-**The maintainer has working hardware as of 2026-09-27**, so these stop
-being "needs a machine nobody has" and become two runs somebody can do.
-Short of them, read every tier sweep with the `-D UNC_AT_BUDGET` probe
-fields (`wa`, `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
+## The overlay loader: whether the flush is needed
+
+**The shipped bytes have run on silicon**: an LC 475 (68LC040) under
+System 7.6.1 extracted nine archives in five formats on 2026-10-11,
+no bomb (BLOCKERS.md, *Status*). What that run cannot say is whether the
+flush at both fixup sites is NEEDED, because it ran with the flush in
+place: a CPU-cache machine running a build WITHOUT `ovl_flush_code`
+would answer it — a wrong byte or a crash there, and none here, says
+the call is load-bearing. The cache state on that machine was the
+7.6.1 default, not checked (*hypothesis*: on). Short of that run, read
+every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`, `kf`,
+`rf`, `fc`, `fn`) rather than on the tally alone.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 

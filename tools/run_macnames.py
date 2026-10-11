@@ -172,12 +172,12 @@ def path_folder_case(sink, tmp, problems):
 
 def folder_again_case(sink, tmp, problems):
     """The same archive extracted TWICE into the same destination. A
-    folder that is already on the volume is not this run's to number —
-    it is the user's, or the last run's — so the second run descends
-    into it and the FILES inside are what gets numbered. Numbering the
-    folder instead would spray `~1` over the first run's work, and a
-    user who extracts an archive twice has said nothing about wanting
-    two copies of its folders."""
+    top-level folder that is already on the volume is numbered like a
+    file, and the files inside the new one keep their names: the second
+    run is a second copy, beside the first, not `~1` files sprayed
+    through it. The maintainer's call on 2026-10-11, reversing the merge
+    this case asserted before (DECISIONS.md 2026-10-11, *the folder that
+    is already there*). The rename is reported, as every numbering is."""
     base = "H" * HFS
     tree = [synth_dd.folder(base + "folder",
                             [synth_dd.file("x.txt", data=b"in it\n")])]
@@ -187,11 +187,13 @@ def folder_again_case(sink, tmp, problems):
     run(sink, p, out)
     got, rc, rep = run(sink, p, out)
     check(problems, rc == 0, "diragain: exit was %d" % rc)
-    check(problems, sorted(got) == [base + "/x.txt", base + "/x~1.txt"],
-          "diragain: wrote %r, wanted one folder holding both runs' files"
-          % sorted(got))
-    check(problems, not any(l.startswith("Folder ") for l in rep),
-          "diragain: a folder that was already there was reported: %r" % rep)
+    check(problems, sorted(got) == [base + "/x.txt",
+                                    "H" * (HFS - 2) + "~1/x.txt"],
+          "diragain: wrote %r, wanted a second folder, numbered, holding "
+          "the file under its own name" % sorted(got))
+    check(problems, rep == ["Folder " + base + "folder renamed to "
+                            + "H" * (HFS - 2) + "~1"],
+          "diragain: the numbered folder must be reported, once: %r" % rep)
     return 1
 
 

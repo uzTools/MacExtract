@@ -393,6 +393,10 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
 - 2026-10-11 (the digest our own oracle could not compute) — `message/partial`'s two wrong anchors: `Content-MD5` catches both once mpack computes MD5, and the check was declined for its size
 - 2026-10-11 (the constant was a square) — asking 2.0.1 for every combination instead of searching for a stranger's
+- 2026-10-11 (the zip that was a set of one) — every plain `.zip` opened on a Macintosh failed as "more parts", for two months, and the first real machine found it in one session
+- 2026-10-11 (one archive per launch) — the eager overlay lifetime cannot open a second format, so the application quits after an archive instead of offering one
+- 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
+- 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
 
 ---
 
@@ -25745,3 +25749,122 @@ resident `CODE` and A5 unchanged; peak RAM unchanged at 256x256 and
   over the specimen (chroma 128) cannot fail, which is *a test that
   passes may not be testing anything* one level down: the test did not
   pass vacuously, the pipeline did.
+
+## 2026-10-11 (the zip that was a set of one) — every plain `.zip` opened on a Macintosh failed as "more parts", for two months, and the first real machine found it in one session
+
+**Claim.** From 2026-08-14 to this fix, the application refused every
+ordinary zip whose name ended in `.zip` with *"This archive has more
+parts. Find them and try again."* Measured on the maintainer's LC475
+under System 7.6.1 (`08 Reduce.zip`, `09 Shrink.zip`, from a clean
+launch, repeatably), then reduced: the same bytes under `run.py --as
+archive.zip` give `ret = -11` (`UNC_ERR_SEGMENTED`) on System 7.0.1 and
+PASS under the harness's old name. With the fix both pass, and
+`interactive.py --named zip` still joins a real spanned set.
+
+**Mechanism.** The shell decides by NAME first that a file is part of a
+family (`ZipFamPartOf`), so that part 1 of a split `.sit` is not read as
+a truncated archive (2026-08-10). `.zip` is the name of a spanned set's
+LAST part, so every `.zip` went to `SegDescribeLast`, which asks the
+file's end record for a part count — and an ordinary zip's says
+"disk 0", which `unc_zipseg_describe` rightly calls not-a-set. The
+failure was then reported as a missing part. The Linux CLI never had
+it: it decides by the sniffed format and uses the name only to find
+siblings. A `.zip` is now a set member only if its own record says so;
+a `.zNN` is still placed by name, because nothing in it can say.
+
+**Why nothing caught it.** Every Macintosh tier opens the fixture as
+`archive.sit` (`run.py`'s `ARCHIVE_NAME`; `compat9.py` names zips `z1`,
+`z2`), so no emulated run had ever opened a file called `*.zip`, and the
+path a user's zip takes had never executed. `run.py --as NAME` now
+chooses the name, and the autotest opens the first root file called
+`archive.*`. **What the tiers still cannot see:** every other extension
+the shell dispatches on by name (`.NNN`, `.zNN`, the gzip/.Z fallback
+name) is reached only when a run asks for it with `--as`.
+
+**Transferable.** A harness that renames its input to one constant has
+removed a dimension of the input space, and the code that branches on
+that dimension is untested however many fixtures pass. The fixture
+count said 964; the number of distinct names the Macintosh code had
+seen was one.
+
+## 2026-10-11 (one archive per launch) — the eager overlay lifetime cannot open a second format, so the application quits after an archive instead of offering one
+
+**Claim.** On the LC475, a `.sit` opened after a `.cpt` in the same
+launch failed. That is the eager lifetime working as written:
+`ovl_release_if_unwanted` gives back every image the first archive's
+format cannot want and never reloads (`mac/ovl_load_eager.c`), yet the
+main loop went back to Standard File as if any archive could follow.
+
+**Decision, the maintainer's.** Quit, rather than reload: a reload is a
+disk access after the archive is chosen, which on a one-drive machine
+is the floppy swap the eager lifetime exists to avoid. `ovl_spent()`
+reports that a release happened, and the interactive loop stops after
+that archive. An archive that never reached a release — not an
+archive, could not be opened, destination cancelled — still returns to
+Standard File. The lazy and resident builds answer 0 and keep looping.
+**Cost:** of several archives dropped on the icon at once, the first is
+extracted and the rest are not; the Finder has to hand them over again.
+
+## 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
+
+**Claim.** Extracting `derived-Library_ISBN_Barcoder.sit` twice into one
+folder on the LC475 put 34 `name~1` files through the first run's tree
+(its report lists them). That was by decision: since 2026-09-03 a
+folder this run did not make was descended into, "rather than sprout a
+`~1` beside it".
+
+**Decision, the maintainer's, reversing that one.** At the TOP of the
+extraction, a folder already on the disk is numbered `~1` like a file,
+and nothing inside it needs renaming; below the top, nothing can be
+there that this run did not make, so the old rule is untouched. The
+top-level folders a run made are kept in a table of their own
+(`gTopMade`, 16 ids) because the general one (`gDirMemo`) can fill, and
+a top folder it forgot would be numbered on its second visit — one
+archive folder split in two. When the small table is full the top
+merges as before. Measured with the probe build `-D UNC_AT_TWICE`
+(the same archive twice in one launch) on System 7.0.1:
+`derived-Jobs_Quote.sit` gives `Jobs Quote` and `Jobs Quote~1`, four
+files each under their own names.
+
+## 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
+
+**Claim.** Selected on the LC 475, the application's colour icon darkened
+only its white; the cyan box and the orange block kept their shade. The
+cause is documented, not inferred: *"only the 34 colors shown in Figure
+8-23 get darkened when a color icon is selected"* (Macintosh Human
+Interface Guidelines, ch. 8, *Selection mechanism for color icons*). Of
+the nine indices `icl8` used, the five carrying the box and the block
+were outside the 34 — 240 of the 1,024 pixels in the box's mid-tone
+alone. The figure prints no values; they are from Kreative Korp's MoCCP
+(`gpl/AppleIconColors.gpl`), whose `MacOS8Bit.gpl` also confirmed the
+generator's palette model on all 256 entries — the "reconstructed, not
+transcribed" caveat it carried since 2026-08-24 is withdrawn as a caveat,
+because it is now checked.
+
+**Change.** `make_icon.py` takes every 8-bit tone from the 34 through
+`icon8()`, which asserts membership: cyan 153/255/255, 0/153/255 and
+102/102/204, orange 255/204/153, 255/102/51 and 221/0/0. Two old cyan
+tones map to one Apple blue, so the dark tone moved to Apple's
+periwinkle to keep three.
+
+**Seen selected, under emulation** — Mini vMac as a Macintosh II under
+System 7.5.5 (`tools/vmac/colouricon.py`), v0.39.0's application against
+this one, Apple's SimpleText beside each. At 256 colours the old icon
+darkens its white sheet and nothing else, which is the LC 475's report
+reproduced; the new one darkens all over, as SimpleText does
+(`docs/screens/0c-icon-selected-256.png`). **At 16 colours there was
+nothing to fix**: every selected icon, SimpleText's included, is drawn in
+flat grey, old and new alike (`0d-icon-selected-16.png`). The "16 colours"
+in the open item was this session's reading of the maintainer's note,
+which listed the depths the icon looks right at; it was never measured.
+Not seen on silicon, nor under 7.6.1.
+
+**The generator had stopped being the source.** `macextract_icons.r`
+says "edit the script, not the hex", and has since gained a `'****'`
+FREF, its BNDL entry and both `'vers'` by hand. Regenerated whole, the
+file lost all of them — 102 lines, caught in the diff. The new members
+were spliced in, and the script now says so at its top.
+
+**Transferable.** "Generated, do not edit" is a claim about a file like
+any other, and it decays the first time somebody edits it anyway. Diff a
+regeneration before trusting it.

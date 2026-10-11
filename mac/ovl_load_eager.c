@@ -241,3 +241,11 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     ReleaseResource(gBundle);
     gBundle = NULL;
 }
+
+/* Tried and gone is released: nothing else sets gBundle back to NULL.
+ * A bundle that never loaded reads as spent too, and that is right — with
+ * no images, no format can be opened a second time either. */
+int ovl_spent(void)
+{
+    return gBundleTried && gBundle == NULL;
+}

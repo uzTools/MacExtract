@@ -41,6 +41,20 @@ more room than in v0.38.0, while a zip, or anything still inside a
 BinHex or MacBinary wrapper, has about 1.6 KB less. No test archive
 changed whether it fits.
 
+Since v0.39.0, and in this download, four things found on the first
+real Macintosh to run it, an LC 475. A zip whose name ends in ".zip" --
+which is nearly every zip -- was refused on a Macintosh with "This
+archive has more parts"; it opens now, and so do the Reduce and Shrink
+zips the paragraph above is about. Opening an archive that is already
+extracted next to it no longer puts "~1" copies inside the first
+folder: you get a second folder, "Name~1", with the files under their
+own names. And MacExtract now quits after an archive. It reads all its
+decoders from disk once, at launch, and keeps only the ones the archive
+needs; a second archive in another format could not be opened, so it
+no longer offers you one. Open MacExtract again for the next archive.
+And its icon, in 256 colours or more, now darkens all over when you
+select it, as Apple's own do; it used to darken only its white.
+
 v0.38.0, before it, opened the zip archives of PKZIP's first years, and
 two formats only Aladdin's own software ever read.
 
@@ -318,10 +332,11 @@ is what StuffIt Expander 4.0.2 takes on the same machine and the same file. If
 an entry genuinely will not fit, that entry is skipped with a message and the
 rest of the archive still extracts.
 
-Verified on emulators only: System 3.0, System 6.0.8 and System 7.0.1 on a Mac
+Verified on emulators: System 3.0, System 6.0.8 and System 7.0.1 on a Mac
 Plus under Mini vMac, and Mac OS 9.2 on emulated PowerPC, where every
-extraction is checked byte for byte against the same engine on Linux. No
-physical Macintosh has ever run it. Worth knowing before you commit a floppy
-to it.
+extraction is checked byte for byte against the same engine on Linux. One
+physical Macintosh has run it: an LC 475 under System 7.6.1, which found
+the zip fault above. Nothing older than that has, so a Mac Plus is still
+untested on real hardware -- worth knowing before you commit a floppy to it.
 
 License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.

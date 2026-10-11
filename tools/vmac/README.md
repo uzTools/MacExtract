@@ -2580,6 +2580,36 @@ combinations of boot volume and application volume, so the trigger is Mac OS
 9.2 (BLOCKERS.md, *Withdrawn claims*). The volume is kept anyway: the next
 HFS-versus-HFS+ question costs one relaunch instead of an afternoon.
 
+## A colour Finder — `colouricon.py`
+
+**Mini vMac is not only a Plus.** `-m II` emulates a Macintosh II, and
+`-depth` fixes its colour depth at build time: `setup.sh` builds `mv-II16`
+(16 colours) and `mv-II256` (256) on `MacII.ROM`. It is the one tier here
+that draws `icl4`/`ics4` — which this file and MANUAL_TESTS.md called
+impossible until 2026-10-11 (BLOCKERS.md, *Withdrawn claims*) — and the
+one that shows an icon SELECTED in colour.
+
+The stock `Sys7.img` will not start it: it is a "Minimal" Plus install.
+The System used is an installed **System 7.5.5** volume, Macintosh
+Repository item 73348, *Mac OS 7.5.5 for Mini vMac*:
+`macosinstall755.rar`, 27,594,360 B, SHA-256
+`14f511e3adf0599c36f2ca1b5d6de110b91cb4cc66374c5e328069de720a9d26`,
+holding a 100 MB `macosinstall755.dsk`. The page's download is a form
+POST (`download.php?u=0&id=65475&go=1` with its hidden `d` and
+`via_http=1`, and the session cookie), so `setup.sh` does not fetch it.
+Copy the `.dsk` per run, `hdel "Desktop DB" "Desktop DF"` so the Finder
+reads the icon afresh, and `hcopy -m dist/MacExtract.bin :MacExtract`. Then:
+
+    colouricon.py --emu mv-II256 run.img shot \
+        c:474,355 w:40 d:598,45 w:8 s c:330,255 s c:202,200 s
+
+dismisses the "not shut down properly" alert, opens the volume, and
+photographs it plain, with MacExtract selected and with SimpleText
+selected. The coordinates are that volume's, measured off its frames.
+What it cannot see is in the script's docstring; the results are
+DECISIONS.md 2026-10-11, *the icon that did not darken*, and
+`docs/screens/0c-icon-selected-256.png`, `0d-icon-selected-16.png`.
+
 ## Checking a run off the disk instead of off the screen
 
 `run.py` reads its result from the framebuffer: the application paints a grid
@@ -2686,6 +2716,16 @@ Check that its numbers actually moved before believing them.
 
 Results are not repeated here; each line says where they live.
 
+**`run.py --as NAME` chooses the archive's NAME on the In floppy**, which
+was always `archive.sit` before 2026-10-11, and the autotest opens the
+first root file called `archive.*`. The shell dispatches on the
+extension before it reads a byte, so a name is an input like any other:
+`--as archive.zip` is what found every plain zip failing (DECISIONS.md
+2026-10-11, *the zip that was a set of one*). **What it cannot see:**
+the sweeps still run under the default, so a path reached only by
+another extension (`.NNN`, `.zNN`, the gzip/.Z fallback name) is tested
+only when somebody asks for it.
+
 | switch | answers | where the result is |
 |---|---|---|
 | `UNC_OVL_LAZY` | the OTHER overlay lifetime: one image per format, read when a format turns out to want it, instead of the shipped bundle-at-launch. Changes the BUILD rather than adding a probe, and every harness can pass it because it is a boolean | FORMATS.md, *Overlays* |
@@ -2698,6 +2738,7 @@ Results are not repeated here; each line says where they live.
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
 | `UNC_AT_WD` | is `SFReply.vRefNum` handled as a System 7 working directory | DECISIONS.md 2026-08-01 |
 | `UNC_AT_CANCEL` | does an aborted entry leave anything behind | BLOCKERS.md, MANUAL_TESTS.md checklist |
+| `UNC_AT_TWICE` | what a second extraction of the same archive into the same folder makes of the first one's folders. FAILs by construction — the grid counts both runs; read the Out disk with `--keep-disks` and `hls -R` | DECISIONS.md 2026-10-11, *the folder that is already there* |
 | `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | yes — BLOCKERS.md; two things must be right before the test means anything: the pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES, since a path between rows disturbs nothing. `UNC_VMAC_PARK` overrides the parking position |
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |

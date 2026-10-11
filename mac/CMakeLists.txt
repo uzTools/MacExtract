@@ -458,6 +458,9 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # unchanged, so this proves the same-volume case
                        # byte-exact rather than assuming it.
                        $<$<BOOL:$ENV{UNC_AT_SAMEVOL}>:-DUNC_AT_SAMEVOL>
+                       # UNC_AT_TWICE: the same archive extracted twice into
+                       # one folder; read the Out disk, not the grid.
+                       $<$<BOOL:$ENV{UNC_AT_TWICE}>:-DUNC_AT_TWICE>
                        # UNC_AT_NOHIDECURSOR: draw the result grid WITHOUT
                        # hiding the cursor first, to test the claim that the
                        # cursor's saved background stamps over the grid.

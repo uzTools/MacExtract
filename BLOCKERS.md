@@ -24,6 +24,7 @@ error, late image or failed keep on any of the 238 runs.
 | System 6.0.8, **1 MB** — the RAM floor | **74/74**: the 72 on 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid), `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11; no memory-budget refusals remain |
 | System 6.0.8, **512 KB** Macintosh 512Ke | **68/74**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09; not run on the two newest) — ten since 2026-10-11, DERIVED: `derived-DD_Expand.sea` is 436 B short after `JPEG Lossy`'s +704 B to the control |
 | System 7.0.1, 4 MB | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
+| **Macintosh LC 475, real** (68LC040, System 7.6.1, 12 MB) — the first silicon | **9/11 on `dist/` v0.39.0**, 2026-10-11, by the maintainer: `.cpt`, StuffIt 1.5, methods 13 and 14, StuffIt 5 (to 45 entries, 29 s), MacBinary and BinHex, no bomb; counts and names checked by eye, not bytes. The two zips failed and were a shell defect every tier was blind to, fixed and re-run under emulation only (DECISIONS.md 2026-10-11, *the zip that was a set of one*). Truncated and non-archive files refused as designed |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-10-10, through the interactive application (`--launch`, byte-identical to `dist/`) and the autotest build alike |
 
 The heaviest 4 MB allocation is the same to the byte on all three 4 MB
@@ -95,7 +96,7 @@ named Private File, which reads since 2026-10-09 (DECISIONS.md 2026-10-07,
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Fifty**
+and one of those was worth 39/44 → 40/44 at the floor target. **Fifty-one**
 mechanisms keep finding the next one — recounted 2026-10-11; the
 sentence said ten when the list had thirty, on 2026-09-26 — and three of them
 need no insight at all (the third is the scan at the end of the list):
@@ -499,12 +500,20 @@ need no insight at all (the third is the scan at the end of the list):
   fixture was. It needed 401,408 B, 180 KB more. **A floor or a ceiling
   bounds the answer and is not it; binary-search the real figure before
   arguing from one** (the row below, 2026-10-11).
+- **a harness that gives every input the same name.** Added 2026-10-11:
+  every Macintosh tier opened its fixture as `archive.sit`, so code that
+  branches on the name's extension had run on one name, and every plain
+  `.zip` failed on the first real machine. **Ask which property of the
+  input the harness holds constant**, and look for code that branches on
+  it (the row below, 2026-10-11).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"The 16-colour icons are a hard limit: nothing here can display them"** — MANUAL_TESTS.md §3 and DECISIONS.md 2026-08-24, *the icon*, "measured 2026-08-27" against QEMU's one depth and "Mini vMac is a 1-bit Mac Plus" | **Mini vMac's own `-m II -depth 2`**: a Macintosh II at 16 colours, built from the source `setup.sh` already fetched, on a ROM in the collection it already downloads. It drew `icl4` and a selected icon on 2026-10-11 (`tools/vmac/colouricon.py`). **Cost: six weeks of the item filed as needing hardware, and it took the first real machine's report to make anyone look** — the measurement was of two TOOLS, and the sentence was about the machine (DECISIONS.md 2026-10-11, *the icon that did not darken*) | 2026-10-11 |
+| **"The Macintosh application opens zip archives"** — README.md's zip row and every release note since zip came in, implied by the zip fixtures passing every Mini vMac tier | **the maintainer's LC 475**, 2026-10-11: `Reduce.zip` and `Shrink.zip` both refused with *"This archive has more parts"* from a clean launch. Reduced under emulation to the NAME: the same bytes fail as `archive.zip` and pass as `archive.sit`, the only name any tier had used. **Cost: every plain `.zip` opened on a Macintosh failed from 2026-08-14 (`739c6814`) until this fix, through every release in between including v0.39.0, whose headline was a zip method** (DECISIONS.md 2026-10-11, *the zip that was a set of one*) | 2026-10-11 |
 | **`run_crypt.py`'s *"sit-des by an unimplemented encryptor"* grades the refusal of an encryptor id this engine does not implement** — the case since 2026-10-02, bent to id 3 | **id 3 is `NewDEx`, implemented the same day, and the copy had no resource fork**: with no `'MKey'` every id is refused identically, so the case passed whatever the id check did. Given its fork and id 5 it fails when the check is removed. **Cost: the third-party-encryptor refusal had no test that could fail for nine days** (DECISIONS.md 2026-10-11, *the constant was a square*) | 2026-10-11 |
 | **"A tile row is 7 segments = 21 MCUs = 336 pixels"**, and with it *"`src/sit_ccube.c` decodes `JPEG Lossy` byte-exactly against what 2.0.1 restores"* — FORMATS.md, *What an Optimizer did to the fork*, `src/sit_ccube.c` and `tools/ccube/decode.py`, 2026-09-30 to 2026-10-02, measured on two 256x256 documents of grey content | **33 more documents 2.0.1 optimized and restored itself** (`tools/vmac/sitcombo.py`, 2026-10-11): the engine was right on the 2 the module declined, **silently wrong on 5** — exit 0, *"rebuilt"*, a 512x128 image 134 levels off on average — and refused the other 26. The row is **(w + 39) / 40 segments**, read out of C3a+0x4366; colour is interpolated and converted at CCOD+0xd98's precision, which grey content cannot see; grey, HSL, HSB, multichannel and CMYK are several TIFFs. **Cost: every release from v0.36.0 to v0.39.0 wrote garbage under the document's name for any `JPEG Lossy` entry not 256 pixels wide or not grey, with no checksum to catch it** — the module stores `ffff`. **Why it survived:** a constant that never varied because its input never did — both subjects were the same size and both were pencil on white (DECISIONS.md 2026-10-11, *the constant was a square*) | 2026-10-11 |
 | **"Height at +4, width at +6"** of the `JPEG Lossy` header — `tools/ccube/decode.py`, 2026-09-30 | **width at +4**: a 400x300 document says `0190 012c`. **Cost: nothing shipped read it until the rewrite, which got it wrong once and failed every non-square specimen** — the second time in one day a square subject hid an axis | 2026-10-11 |

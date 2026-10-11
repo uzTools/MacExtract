@@ -70,6 +70,13 @@ OverlayEntry ovl_image_q(short id, int expected);
 void ovl_preload(void);
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
 
+/* Nonzero once a release has given decoders back. Eager never reloads, so
+ * from then on this run can open only archives of the format it kept, and
+ * the interactive application quits after the archive instead of offering
+ * Standard File again (DECISIONS.md 2026-10-11, *one archive per launch*).
+ * Lazy and resident: always 0. */
+int ovl_spent(void);
+
 /* The codec vector lives in the shim, which plants it; the eager release
  * invalidates it because the copy it keeps is at a different address. */
 void ovl_codecs_invalidate(void);

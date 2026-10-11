@@ -3224,10 +3224,10 @@ files (DECISIONS.md, *a folder is a name too*):
   most archives a user downloads have, and the shape that used to merge
   in silence;
 - **the same archive extracted TWICE into one destination**, where the
-  folder must be descended into and the FILES numbered. It is what stops
-  a numbering rule from spraying `~1` over the last run's work, and it
-  fails on the one-line change that treats a directory this run did not
-  make as somebody else's;
+  top-level folder already there is numbered `~1` and the file inside the
+  new one keeps its name — the maintainer's rule since 2026-10-11, which
+  reversed the merge this case asserted before; it failed on the old
+  rule before it was rewritten;
 - **101 folders whose names shorten alike**, where the numbering runs out
   at `~99` and the hundred-and-first merges, is reported as *combined
   with*, and keeps its file;

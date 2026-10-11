@@ -518,11 +518,22 @@ def main():
                          "UNC_ERR_ABORTED (-8), rather than failing every "
                          "remaining entry. It reports FAIL by construction "
                          "-- read the numbers, not the verdict.")
+    ap.add_argument("--as", dest="as_name", default=None, metavar="NAME",
+                    help="the fixture's name on the In floppy (default "
+                         f"{ARCHIVE_NAME}). Must begin 'archive.': the app "
+                         "opens the first such file. The shell dispatches "
+                         "on the extension before it reads a byte, so "
+                         "'--as archive.zip' runs a path the default name "
+                         "never reaches")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     metavar="UNC_...",
                     help="extra build switch for the application, e.g. "
                          "-D UNC_MAC_STAGE_WRITES (repeatable)")
     args = ap.parse_args()
+    if args.as_name is not None:
+        if not args.as_name.startswith("archive.") or len(args.as_name) > 31:
+            ap.error("--as wants a name beginning 'archive.', 31 bytes at most")
+        globals()["ARCHIVE_NAME"] = args.as_name
 
     extras = []
     for spec in args.extra_file:

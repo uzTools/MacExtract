@@ -455,7 +455,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # and mode (DECISIONS.md 2026-10-11, *the constant was a square*); A5
 # fell 24 to 37,984 and its ceiling is left. Shipped, all of it is in
 # `ovl_stuffit`, 27,938 -> 28,614 B, the eager pair unmoved.
-UNC_MAC_CODE_DEFAULT=171952
+# RAISED 2026-10-11 to 172,048, +96, for the LC 475's zip and top-folder
+# fixes (the eager pair above names the pieces): ExtractOne +38, sink_begin
+# +58. No overlay here, so nothing quits. A5 unmoved at 37,984: `gTopLost`'s
+# byte went into padding.
+UNC_MAC_CODE_DEFAULT=172048
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -822,8 +826,20 @@ UNC_MAC_A5_DEFAULT=38008
 # asking for it (+20), 68 B by symbol and 12 of alignment between
 # functions; the A5 is a fourth keep slot's 6 B and `_sdata` padding. What it buys: 2,064 B back in every format that is
 # not zip, measured on `ovl_codecs` 8,468 -> 6,404 (FORMATS.md, *Reduce*).
-UNC_MAC_CODE_EAGER=54720
-UNC_MAC_A5_EAGER=19104
+# +140 code and +4 A5 on 2026-10-11 for three defects the first real
+# Macintosh found, an LC 475, measured against HEAD built the same way:
+# **144 B off every extraction's budget on a 1 MB Mac Plus.** By symbol:
+# +38 in ExtractOne, where RunExtract is inlined — a `.zip` is a set only
+# if its own end record says so, or every plain zip failed as "more
+# parts"; +58 in sink_begin, where EnsureDir is inlined — a top-level
+# folder already on the disk is numbered rather than merged into, and the
+# A5 is its one flag, `gTopLost`, after a 16-entry table (+64 A5) was cut;
+# +34 to quit after an archive whose decoders were released (ovl_spent 24,
+# main 10), after its own 4-byte flag was cut; 10 of alignment
+# (DECISIONS.md 2026-10-11, *the zip that was a set of one*, *the folder
+# that is already there*, *one archive per launch*).
+UNC_MAC_CODE_EAGER=54860
+UNC_MAC_A5_EAGER=19108
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -848,8 +864,13 @@ UNC_MAC_A5_EAGER=19104
 # other way in this one.
 # +56 code and +8 A5 on 2026-10-11 for `ovl_zipold`, the shim half of the
 # eager pair's change (this lifetime has no release to teach).
-UNC_MAC_CODE_LAZY=53272
-UNC_MAC_A5_LAZY=19208
+# +120 code and -24 A5 on 2026-10-11 for the LC 475's three fixes, the
+# same pieces as the eager pair above: ExtractOne +38, sink_begin +58,
+# main +10, ovl_spent +4 (here it only answers 0), 10 of alignment. The
+# A5 FELL despite `gTopLost`'s byte: `.data` alignment stepped back, and
+# the ceiling comes down with it.
+UNC_MAC_CODE_LAZY=53392
+UNC_MAC_A5_LAZY=19184
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

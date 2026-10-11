@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (203556, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (108156, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (632444, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (203460, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (108060, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (632348, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -173,7 +173,9 @@ TIERS = {
 # **Lowered by 704 B more the same day, DERIVED**: the control's CODE +728
 # and A5 -24 for `JPEG Lossy` at every width and mode (DECISIONS.md
 # 2026-10-11, *the constant was a square*); the shipped pair unmoved.
-TIERS_CONTROL = 209936     # build/mac-resident, CODE + A5, 2026-10-11
+# **Lowered by 96 more the same day, DERIVED**: the control's CODE +96
+# for the LC 475's zip and top-folder fixes, A5 unmoved (tools/build_mac.sh).
+TIERS_CONTROL = 210032     # build/mac-resident, CODE + A5, 2026-10-11
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -423,7 +425,11 @@ EXPECT = {
 # mode, the control's CODE +728 and A5 -24 and the shipped pair +0; all
 # of it is `ovl_stuffit`'s +676, so a StuffIt archive's grant falls 676 B
 # less 28 of alignment and every other format's is unmoved.
-OVL_SAVED = 136112
+# **-48 the same day, -> 136,064**: the LC 475's fixes, the control's CODE
+# +96 against the shipped build's CODE +140 and A5 +4 — the shipped build
+# also quits after an archive, which the control has no overlay to need
+# (DECISIONS.md 2026-10-11, *one archive per launch*).
+OVL_SAVED = 136064
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
