@@ -16,6 +16,9 @@ whether the launched application is handed the FILE, or merely started.
         --doc-icon TYPE       ...and an FREF and icon for document type TYPE
         --doc-icn FILE        ...that icon, not the application's inverted
         --doc-ics FILE        ...and that small icon
+        --stub FILE           a real stub in a helpers folder, MacExtract
+                              untouched at the root
+        --multifinder         System 6 under MultiFinder
         --app-folder NAME     put the application in a folder never opened
                               (moves the archive's icon: --archive-at X,Y)
         --invisible           set the application's invisible bit
@@ -395,6 +398,15 @@ def main():
     ap.add_argument("--doc-ics", metavar="FILE",
                     help="with --doc-icn, the 64-byte 'ics#' to go with it "
                          "(make_archive_icon.py --ics)")
+    ap.add_argument("--stub", metavar="FILE",
+                    help="a real stub (companion/make_stub.py): MacExtract "
+                         "goes at the root UNTOUCHED, and this goes in "
+                         "--app-folder (default 'MacExtract Helpers')")
+    ap.add_argument("--multifinder", action="store_true",
+                    help="System 6: put MultiFinder, DA Handler, "
+                         "Backgrounder and Finder Startup back in the System "
+                         "Folder (look for the menu bar's application icon "
+                         "in claim-1 to know MultiFinder ran)")
     ap.add_argument("--app-folder",
                     help="put the application in this folder at the root, "
                          "which the run never opens")
@@ -419,6 +431,10 @@ def main():
     args = ap.parse_args()
     if args.stub_bundle and not args.app_creator:
         ap.error("--stub-bundle needs --app-creator")
+    if args.stub and (args.app_creator or args.stub_bundle):
+        ap.error("--stub carries its own creator and bundle")
+    if args.stub and not args.app_folder:
+        args.app_folder = "MacExtract Helpers"
 
     I.calibrate(args.system)
     icons = I.FINDER_ICONS[args.system]
@@ -458,11 +474,30 @@ def main():
             finally:
                 fh.close()
 
+        if args.multifinder:
+            # The stock boot blocks already name MultiFinder (their field
+            # at 0x5A) with the shell field left at Finder, so nothing is
+            # patched: what decides is the Finder's Set Startup choice,
+            # kept in `Finder Startup` (hypothesis, which claim-1 settles).
+            for n in ("MultiFinder", "DA Handler", "Backgrounder",
+                      "Finder Startup"):
+                tmp = os.path.join(work, n + ".bin")
+                hfs_get(stock, "System Folder:" + n, tmp)
+                bh = MB.HFS(boot)
+                try:
+                    bh.run("hcopy", "-m", tmp, bh.path("System Folder", n))
+                finally:
+                    bh.close()
         hfs = MB.HFS(boot)
         try:
             where = hfs.path(APP_NAME)
             dirid = ROOT_DIRID
-            if args.app_folder:
+            if args.stub:
+                hfs.run("hmkdir", hfs.path(args.app_folder))
+                where = hfs.path(args.app_folder, "SIT! Helper")
+                hfs.run("hcopy", "-m", args.stub, where)
+                dirid = dir_id(hfs, hfs.path(), args.app_folder)
+            elif args.app_folder:
                 hfs.run("hmkdir", hfs.path(args.app_folder))
                 hfs.run("hrename", where, hfs.path(args.app_folder, APP_NAME))
                 where = hfs.path(args.app_folder, APP_NAME)
@@ -481,7 +516,7 @@ def main():
                 hfs_get(stock, "Desktop", desk)
                 mb = open(desk, "rb").read()
                 if args.claim:
-                    mb = desktop_claim(mb, b"SIT!", dirid, APP_NAME.encode(),
+                    mb = desktop_claim(mb, b"SIT!", dirid, where.rsplit(":", 1)[1].encode("mac_roman"),
                                        bundle=args.bundle)
                 open(desk, "wb").write(mb)
                 hfs.run("hcopy", "-m", desk, hfs.path("Desktop"))

@@ -129,6 +129,17 @@ def packed(g, w):
     return bytes(out)
 
 
+def resources():
+    """The family as raw resource data, by type — for a tool that writes
+    resource forks itself rather than through Rez (companion/make_stub.py)."""
+    i32, i16, m32, m16, f32, f16, t32, t16 = family()
+    raw = lambda rows: bytes.fromhex("".join(rows))
+    return {b"ICN#": packed(i32.g, 32) + packed(m32, 32),
+            b"ics#": packed(i16.g, 16) + packed(m16, 16),
+            b"icl4": raw(M.hex4(f32, 32, 32)), b"ics4": raw(M.hex4(f16, 16, 16)),
+            b"icl8": raw(M.hex8(t32, 32, 32)), b"ics8": raw(M.hex8(t16, 16, 16))}
+
+
 def emit(rid, i32, i16, m32, m16, f32, f16, t32, t16):
     B, H = M.block, M.to_hex
     return f"""/* MacExtract - the ARCHIVE document icon, for the stubs that claim

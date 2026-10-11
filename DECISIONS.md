@@ -397,6 +397,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (one archive per launch) — the eager overlay lifetime cannot open a second format, so the application quits after an archive instead of offering one
 - 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
 - 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
+- 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
 
 ---
 
@@ -25874,3 +25875,55 @@ were spliced in, and the script now says so at its top.
 **Transferable.** "Generated, do not edit" is a claim about a file like
 any other, and it decays the first time somebody edits it anyway. Diff a
 regeneration before trusting it.
+
+## 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
+
+**Claim (measured, System 6.0.8 under the Finder and under MultiFinder,
+and System 3.0).** A stub whose creator is `SIT!`, in `MacExtract
+Helpers` beside an UNCHANGED MacExtract, is launched by the Finder for a
+double-clicked `SIT!` archive and starts MacExtract, which is handed the
+archive: it opens on its destination dialog and extracts. The Segment
+Loader keeps the Finder information (`AppParmHandle`) across a `_Launch`
+from the stub to MacExtract — the hypothesis the stub was written to
+test, which held on every system tried.
+
+**Evidence.** `tools/vmac/deskclaim.py --stub`, the stub from
+`companion/make_stub.py`, one boot each, graded on the dialog:
+
+| system | stub registered by | result |
+|---|---|---|
+| 6.0.8, Finder | a desktop rebuild, from the stub's own bundle | handed, entries on the volume |
+| 6.0.8, Finder — control, the stub claiming `ZZZZ` | a rebuild | refused (the Finder's alert) |
+| 6.0.8, MultiFinder (its icon in the menu bar) | a rebuild | handed |
+| 3.0 | the companion's `Desktop` entry | handed |
+
+The rebuilt `Desktop` file holds `SIT!` → `SIT! Helper` beside `MExt` →
+`MacExtract`, and the archive is drawn with the stub's archive icon.
+
+**How it works.** `companion/stub/stub.c`: the folder above its own, from
+`GetAppParms`, `PBGetFCBInfo` and `PBGetCatInfo`; MacExtract in it by type
+`APPL` and creator `MExt`, not by name; that folder made the default with
+`PBOpenWD` and `SetVol`; then the original `_Launch` form, a name pointer
+and a configuration word — Multiverse.h's `reserved1`/`reserved2`, with
+`launchBlockID` 0 — leaving `AppParmHandle` alone. An alert says so when
+MacExtract is not there or does not start. It is 7,424 bytes as MacBinary,
+most of it Retro68's runtime; the "1-2 KB" estimated before it existed was
+wrong. One build serves every creator: `make_stub.py` sets the creator and
+`hasBundle`, and writes a `BNDL` owned by that creator, its signature,
+`FREF`s for itself and for the creator's document types, MacExtract's icon
+family for the stub and the archive icon family for the documents.
+
+**Two wrong first attempts, both caught by a frame.** The stub was first
+built `onlyBackground` — a faceless background application — read off the
+`SIZE` bytes before any boot. And MultiFinder was first started by writing
+it into the boot blocks' shell field, which stopped the boot at an empty
+alert; the stock boot blocks already name it in their field at 0x5A with
+the shell left at `Finder`, and copying back `MultiFinder`, `DA Handler`,
+`Backgrounder` and `Finder Startup` is what starts it.
+
+**Consequence.** The companion needs no change to MacExtract: it writes
+these stubs, one per creator, into a folder beside MacExtract, and their
+`Desktop` entries. Not yet measured: System 7, which keeps its list in
+`Desktop DB` and may hand a non-high-level-event application its
+documents differently; which application wins when StuffIt is on the
+same disk; and more than one archive double-clicked at once.

@@ -3238,7 +3238,10 @@ it into a folder the run never opens, giving it a bundle filed under its
 new creator (`--stub-bundle`, the shape a stub would have; `--doc-icon
 TYPE` adds a document icon for TYPE to it), deleting the
 `Desktop` file so the Finder rebuilds it at boot (`--no-desktop`), or
-putting the archive on a second floppy. **It grades the DIALOG in
+putting the archive on a second floppy. `--stub FILE` boots a REAL stub
+(`companion/make_stub.py`) in `MacExtract Helpers` beside an untouched
+MacExtract, and `--multifinder` puts System 6's MultiFinder back and
+starts it. **It grades the DIALOG in
 `claim-3-launched.png`, not the volume**: a launch that was not handed the
 file shows the Open dialog, the run's Return opens the archive from it,
 and the entries land anyway — the first version passed on exactly that.
@@ -3249,7 +3252,8 @@ like. **`--app-folder` moves the archive's icon**: read its position off
 `--want`, not derived, so a run needs no `build/rel` CLI and can share the
 machine with `./ci.sh`. Results are DECISIONS.md 2026-10-10, *the
 double-click that goes by the application's creator*, and 2026-10-11,
-*where the stubs can live*. **What it cannot see:** which of two
+*where the stubs can live*, and *the stub that hands it on*. **What it
+cannot see:** which of two
 applications under one creator wins (no StuffIt is on these volumes), and
 System 7, whose list is `Desktop DB`.
 
