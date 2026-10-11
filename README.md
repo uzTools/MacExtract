@@ -10,7 +10,7 @@ Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
-One 180K application on an 800K floppy, an open carton lettered EXTRACT, drawn
+One 230K application on an 800K floppy, an open carton lettered EXTRACT, drawn
 for 1-bit, 16-colour and 256-colour screens:
 
 ![The floppy image open on a System 6 desktop, holding one item: MacExtract](docs/screens/0-icon.png)
@@ -152,54 +152,26 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
-\*\* **A zip made by MacZip — the Macintosh port of Info-ZIP's `zip` —
-carries the Finder's type and creator, and StuffIt throws them away.** The StuffIt on hand here — Expander
-3.5.2 with UnZip Translator 3.5, 1994 — works them out from the
-filename instead, off a built-in table of nineteen extensions: `.TXT`
-becomes `TEXT/ttxt`, `.DOC` becomes `TEXT/MSWD`, and anything it does
-not recognise becomes `TEXT/ttxt` too. Over the Rex Nebular archive on
-Macintosh Garden, whose uploader used MacZip, three files that should
-come back `TEXT/MSWD` come back `TEXT/ttxt`. There is no `.dsk` row in
-that table either, which is why the nine disk images in it lose the
-`DDim/DDp+` that tells DiskCopy what they are. It also quietly
-converts line endings, so a text file is 720 bytes where the archive
-holds 739. MacExtract reads what the archive actually stored.
-
-The other three 🔴 are read out of the code rather than run. **Deluxe
-5.5.1 and 7.0.3 both came out after the field was published**, so being
-newer was the thing worth checking — and both do it the same way 3.5.2
-does. 5.5's zip reader has no table of its own; the engine behind it
-carries one of 234 extensions. 7.0.3's is a separate PowerPC plug-in.
-Neither contains the two bytes that identify the field anywhere a
-comparison could use them, and a comparison is exactly where those
-bytes would have to appear. Expander 4.0.2's 🔴 is a different fact
-again: on its own it cannot open a zip at all, so it has nothing to
-preserve. Only 3.5.2 was actually run over an archive.
-
-\*** **The bar is what StuffIt Deluxe 2.0 writes with what was in its
-box** — the five Optimizers, the two ciphers built into the
-application, the two encryptor modules on its optional disk, and
-`PassLock`, which turns out to encipher nothing at all. Every one of
-them is undone here, each graded against an archive 2.0.1 itself wrote
-under an emulator. A *third party's* compression plug-in is outside
-that bar: none shipped in the box, this project has never seen one, and
-if any exist the files will have to come from somebody who has them.
-The 🔴 is 2.0's own Engine, which refuses an entry its Optimizers
-touched — *"Please use StuffIt Deluxe instead"* — and what the two
-later Deluxes do with these archives has not been measured here.
-
 \* **One rare kind of StuffIt entry comes back changed, and MacExtract
-says so.** StuffIt Deluxe 2.0 (1990) could run a small plug-in called an
-*Optimizer* over a file before compressing it, and no StuffIt since has
-opened those archives. MacExtract opens **all five** Aladdin shipped. A
-file `Sound 1` or `Photoshop 1` touched comes back byte for byte. One
-`Text 1` touched comes back tidied — which is what StuffIt Deluxe hands
-back too, since the plug-in threw the rest away. A painting `MacPaint 1`
-touched comes back with the picture intact and a blank header, and a
-photograph the `JPEG Lossy` one touched comes back softened: both lost
-something before the archive was ever written, and nothing can bring it
-back. Whenever a file is not exactly the one that was archived,
+says so.** StuffIt Deluxe 2.0 (1990) could run a plug-in called an
+*Optimizer* over a file before compressing it, and no later StuffIt opens
+those archives. MacExtract opens all five Aladdin shipped. Files `Sound 1`
+or `Photoshop 1` touched come back byte for byte; `Text 1`, `MacPaint 1`
+and `JPEG Lossy` threw something away before the archive was written, so
+those files come back tidied, with a blank header, or softened — and
 MacExtract tells you which file and why.
+
+\*\* **A zip made by MacZip carries the Finder's type and creator, and
+StuffIt throws them away**, guessing from the filename instead — so a Word
+document can come back belonging to TeachText, and a disk image loses what
+tells DiskCopy it is one. MacExtract reads what the archive stored. That was
+seen by running the older Expander 3.5.2 over a real MacZip archive; the three
+🔴 in the table come from reading those programs' code.
+
+\*\*\* **Everything StuffIt Deluxe 2.0 wrote with what was in its box** —
+five Optimizers and five ciphers — each checked against an archive 2.0.1
+itself made. What the two later Deluxes do with these archives has not been
+tested.
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:
@@ -211,14 +183,9 @@ same archives on the same disk, and timed by the same instrument:
 | 250 KB Compact Pro | **2¼ minutes** | 2½ minutes |
 | 300 KB BinHex with a StuffIt archive inside | **4½ minutes** | 7 minutes |
 
-Choosing between them on speed alone gives you nothing to choose by. Times are
-to the nearest few seconds, and both wrote the same files — which is what makes
-them comparable at all. Expander 4.0.2 is the only one that could be timed: 5.5.1
-needs a 68020 and 7.0.3 a PowerPC, so neither will run on the Mac Plus these
-figures are taken on. The full capability table and the unrounded figures are
-in [FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2",
-"The paid box", "The last classic box" and "Timed on the same Mac Plus" inside
-it.
+Both wrote the same files. Only Expander 4.0.2 could be timed — the two
+Deluxes will not run on a Mac Plus. Unrounded figures and the full table are in
+[FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2".
 
 ## What you need, and how long you will wait
 
@@ -276,8 +243,8 @@ build/macextract x secret.sit -p hunter2 # password-protected
 
 ## Is it any good?
 
-It is checked against [The Unarchiver](https://theunarchiver.com/) on 932 real
-archives, byte for byte, both forks. The Macintosh application is checked the
+It is checked against [The Unarchiver](https://theunarchiver.com/) on over 900
+real archives, byte for byte, both forks. The Macintosh application is checked the
 same way *while running on* an emulated Mac Plus, a System 7 machine and a
 Mac OS 9 machine — not only on Linux.
 
