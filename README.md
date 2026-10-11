@@ -127,11 +127,11 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | | Expander 4.0.2 (free, System 6) | Deluxe 5.5.1 (paid, last for 68k) | Deluxe 7.0.3 Classic (paid, last for Mac OS 9) | MacExtract |
 |---|---|---|---|---|
 | Oldest Mac it runs on | System 6.0.5 | System 7.1.1 (7.5.3 recommended), probably a 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
-| StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅* |
+| StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on, System 7 only | ✅ | ✅ | ✅ |
-| Type and creator in a zip made by MacZip | 🔴 ** | 🔴 ** | 🔴 ** | ✅ |
+| Type and creator in a zip made by MacZip | 🔴 * | 🔴 * | 🔴 * | ✅ |
 | StuffIt SpaceSaver | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
 | AppleLink packages (`.pkg`) | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
@@ -146,31 +146,25 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
 | An archive that arrived as several mail messages | BinHex postings only, not MIME | BinHex postings only, not MIME | 🔴 | ✅ |
 | Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
-| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 one of the ten *** | 🔴 two of the ten | 🔴 none | ✅*** |
+| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 one of the ten ** | 🔴 two of the ten | 🔴 none | ✅** |
 | Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
-\* **One rare kind of StuffIt entry comes back changed, and MacExtract
-says so.** StuffIt Deluxe 2.0 (1990) could run a plug-in called an
-*Optimizer* over a file before compressing it, and no later StuffIt opens
-those archives. MacExtract opens all five Aladdin shipped. Files `Sound 1`
-or `Photoshop 1` touched come back byte for byte; `Text 1`, `MacPaint 1`
-and `JPEG Lossy` threw something away before the archive was written, so
-those files come back tidied, with a blank header, or softened — and
-MacExtract tells you which file and why.
-
-\*\* **A zip made by MacZip carries the Finder's type and creator, and
+\* **A zip made by MacZip carries the Finder's type and creator, and
 StuffIt throws them away**, guessing from the filename instead — so a Word
 document can come back belonging to TeachText, and a disk image loses what
 tells DiskCopy it is one. MacExtract reads what the archive stored. That was
 seen by running the older Expander 3.5.2 over a real MacZip archive; the three
 🔴 in the table come from reading those programs' code.
 
-\*\*\* **Everything StuffIt Deluxe 2.0 wrote with what was in its box** —
+\*\* **Everything StuffIt Deluxe 2.0 wrote with what was in its box** —
 five Optimizers and five ciphers — each checked against an archive 2.0.1
-itself made. All three StuffIts were run on the same archives. Expander 4.0.2
+itself made. Three Optimizers — `Text 1`, `MacPaint 1`
+and `JPEG Lossy` — threw something away before the archive was written, so
+those files come back tidied, with a blank header, or softened, and MacExtract
+says which file and why. All three StuffIts were run on the same archives. Expander 4.0.2
 opens only the `Text 1` one; 5.5.1 decrypts two of the ciphers and, for every
 Optimizer, hands back a damaged file with a warning; 7.0.3 opens none.
 
