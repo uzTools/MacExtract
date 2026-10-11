@@ -391,6 +391,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
 - 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
 - 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
+- 2026-10-11 (the digest our own oracle could not compute) — `message/partial`'s two wrong anchors: `Content-MD5` catches both once mpack computes MD5, and the check was declined for its size
 
 ---
 
@@ -25610,3 +25611,44 @@ address register every byte; a rewrite with fewer live values bought 63
 ticks for 34 B. Shrink's double walk of each string is an estimate of a
 few percent, in the code the free-slot rule runs through. Both are in
 FORMATS.md with their figures, not done.
+
+## 2026-10-11 (the digest our own oracle could not compute) — `message/partial`'s two wrong anchors: `Content-MD5` catches both once mpack computes MD5, and the check was declined for its size
+
+**The item named the check, and the check would have refused every good
+set.** OPEN_ITEMS.md said `Content-MD5` "disagrees here" on both wrong
+anchors. It disagreed on the RIGHT one as well: `9wUjvhRTvxJ5PathZdghuA==`
+is not the MD5 of `MacROT13.cpt` (`dO2NH00wvu2hojPgtDVU+w==`). mpack's
+`md5.h` declares `UINT4` as `unsigned long`, which was 32 bits on every
+machine mpack was written for, the 68000 included, and is 64 on this one,
+so `build/mpack/mpack` wrote `eZncdejaZIxnJ+E3xbd4Aw==` for `abc` where
+RFC 1321 gives `kAFQmDzST7DWlj99KOF/cg==`. munpack, built the same way,
+agreed, so the oracle pair never warned on its own messages and could
+not fail on a digest. The 68000 port does compute MD5:
+`tools/vmac/macmime.py` has asserted since 2026-08-29 that the
+Macintosh-written specimen's digest equals Python's.
+`tools/build_mpack.sh` now edits that one line of its copy and rebuilds
+any mpack whose `abc` is wrong.
+
+**The mechanism was the format's, not the joiner's.** With both programs
+fixed, munpack on the concatenated anchor writes the byte-identical
+929 B this engine does, and warns. Part 1's body runs to the end of its
+file; the OPEN_ITEMS hypothesis holds, and there is no joiner defect.
+
+**The check was built, priced and declined.** Graded on base64 parts
+(mpack hashes quoted-printable and unencoded bodies in their CRLF form),
+it failed both anchors per entry, passed the good set, and passed
+`run_mime.py` and the unit tests on x86 and under `qemu-m68k`. An image
+cannot call another, so it needed an MD5 of its own in `ovl_text`:
+**+1,446 B**, resident +0 shipped, +784 in the control, which cost that
+lane `derived-DD_Expand.sea` at 512 KB. Against that: a header that
+nothing here has seen outside mpack's own output, and a corpus with no
+MIME file this project did not write. The maintainer's call: too many
+bytes for something that may never be used. It is not kept as a branch:
+the numbers are FORMATS.md's (*`message/partial`*), the decision
+OPEN_ITEMS.md's (*Out by the brief*).
+
+**Transferable.** An oracle built from the same source as its partner
+cannot grade what both get wrong the same way — two programs agreeing
+is one measurement when they share a bug. And the population a check
+serves is a number to take before the check is built, not after: the
+size was measured to the byte while the use was never measured at all.

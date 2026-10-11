@@ -2320,7 +2320,12 @@ other implementations grade instead:
 
 - **munpack 1.6** (CMU), which `src/fmt_mime.c` is transcribed from,
   built out of `reference/mpack` by `tools/build_mpack.sh`. It reads
-  the same message and has to produce the same bytes.
+  the same message and has to produce the same bytes. **Its `md5.h` is
+  edited in the copy** — `UINT4` from `unsigned long` to `unsigned int` —
+  because built LP64 both programs compute something that is not MD5,
+  and agree about it; the script rebuilds any mpack whose digest of
+  `abc` is not RFC 1321's (DECISIONS.md 2026-10-11, *the digest our own
+  oracle could not compute*).
 - **deark**, an independent base64 implementation, built by
   `tools/build_deark.sh` — already the third oracle for ARC 0x0b.
 

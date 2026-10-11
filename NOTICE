@@ -457,8 +457,9 @@ This project's decoders are transcriptions/ports of algorithms from:
     narrowing of 2026-10-06). Where this project deviates it is
     recorded and reproduced (DECISIONS.md 2026-08-26). A build of
     munpack is also the second oracle for those formats in the test
-    suite (TESTING.md, tools/build_mpack.sh): test-time only, never
-    linked into anything shipped.
+    suite (TESTING.md, tools/build_mpack.sh), with one line of the
+    copy's `md5.h` changed so that its MD5 is MD5 on a 64-bit host:
+    test-time only, never linked into anything shipped.
 
   * AppleLink Package Translator 3.0.3 (Aladdin Systems, Inc.,
     1990-1992). No public specification of the AppleLink `.pkg`

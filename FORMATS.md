@@ -3697,6 +3697,26 @@ A missing part is REFUSED, before anything is written: the set counts
 its parts, which is what a uuencoded posting missing one cannot do
 (OPEN_ITEMS.md, part 1).
 
+**An anchor that is not a part comes out wrong, with exit 0** — measured
+2026-10-11 on mpack's three-part set of `MacROT13.cpt` (3,309 B), the
+real parts beside the anchor, `x -nr`:
+
+| anchor | this engine | munpack |
+|---|---|---|
+| any real part | 3,309 B, exit 0 | the same |
+| the three parts concatenated into one file | 929 B, exit 0 | the byte-identical 929 B, and *"corrupted in transit"* |
+| part 1 with a line of text appended | 3,328 B, exit 0 | 3,327 B, *"Premature EOF"* and *"corrupted in transit"* |
+
+The joiner takes the anchor's whole tail as part 1's body, the other
+parts' headers included, and munpack reads it the same way. munpack's
+warning is the enclosed message's `Content-MD5`. Checking it here was
+built and caught both, at **+1,446 B** of `ovl_text` (an image cannot
+call the cipher one's MD5), +0 resident shipped, +784 B in the control —
+and not taken, for a header nothing here has seen outside mpack's own
+output (OPEN_ITEMS.md, *Out by the brief*). The one-byte gap on the last
+row is an unpadded final group, which munpack drops and `unc_b64_flush`
+keeps.
+
 **Joined on a Mac Plus, 2026-08-29**, at 4 MB and at the 1 MB floor:
 four `message/partial` files named nothing alike, carrying a
 `multipart/appledouble`, become one Macintosh file with both forks —
@@ -8487,8 +8507,14 @@ each part.
 | encrypted Compact Pro | ❌ no prompt: *"Unable to decompress this archive because the file is password protected."* | ❌ the same sentence, word for word; an empty folder | ❌ no prompt: *"(Unspecified StuffIt Engine internal error). Error #17999"*; one empty file |
 | `message/partial`, part 1 opened | ❌ nothing, no alert | ❌ *"Decoding was incomplete because there appears to be a missing segment."*, and an empty `MacROT13.cpt` | ❌ nothing, no alert |
 | `message/partial`, all three opened together | not tried | ❌ *"Unable to find the first part of the multiple-part archive "rot13.mime.02"."*, then error −43; nothing written | ❌ nothing, no alert |
-| the same payload as ONE mpack message | ❌ nothing, no alert | ✅ byte-exact, and on into the archive | ✅ byte-exact, under the alert #17538 |
+| the same payload as ONE mpack message | ❌ nothing, no alert | ✅ byte-exact, and on into the archive | ✅ byte-exact, under the alert #17538† |
 | the three-part BinHex posting | ✅ byte-exact, and on into the archive | ✅ byte-exact, and on into the archive | ❌ a 0-byte `MacROT13.cpt`, no alert |
+
+† *Hypothesis*, untested: the message's `Content-MD5` was not MD5 —
+our LP64 mpack wrote both MIME subjects (DECISIONS.md 2026-10-11, *the
+digest our own oracle could not compute*). 7.0.3 on the same message
+re-made with a real digest would settle whether that is the alert;
+5.5.1 raised none on the same file.
 
 **So every StuffIt opens some of 2.0's archives and none opens most.** That
 includes 2.0's own successors. 4.0.2 handles exactly the `Text 1` case its
