@@ -334,28 +334,18 @@ claim and goes in the same file with what it cost.
 
 ---
 
-## 8. A release that is due, and a version number that cannot tell two builds apart
+## 8. A version number that cannot tell two builds apart
 
-Like §7, this needs no Macintosh — it needs the maintainer. `v0.39.0` is
-the newest tag, and `main` has moved since while `UNC_VERSION` in
-`include/macextract.h` still reads `0.39.0` — deliberately, since bumping
-it is step one of a release (CLAUDE.md, *Cutting a release*). So
-`--version` and `dist/README.txt`'s title read `0.39.0` on both builds;
-the application has no About box, and a person holding a download tells
-them apart only by its date. (No count of commits here: it is `git
-rev-list --count v0.39.0..HEAD`, and a number written down would be wrong
-by the next commit.)
+Like §7, this needs no Macintosh — it needs the maintainer. `v0.40.0`,
+tagged 2026-10-11, is the newest release, and `UNC_VERSION` stays at its
+number until the next one is cut (CLAUDE.md, *Cutting a release*). So once
+`main` moves past the tag, `--version`, Get Info's `'vers'` and
+`dist/README.txt`'s title read `0.40.0` on both builds, and a person
+holding a download tells them apart only by its size and date.
 
-- [ ] **Decide whether the next release is due.** The published v0.39.0
-      refuses every plain `.zip` on a Macintosh as *"This archive has more
-      parts"* — in the release whose headline is a zip method — and
-      `main` has the fix (DECISIONS.md 2026-10-11, *the zip that was a set
-      of one*). `dist/README.txt` names what is new "since v0.39.0, and in
-      this download". The steps are CLAUDE.md's; no session working here
-      takes them unasked.
-
-**What to record.** Nothing, if the answer is "not yet". If it is cut, the tag
-is confirmable from this machine and the release page is not (CLAUDE.md), so
+**What to record.** Nothing until a build differs from the tag. When one
+does, whether to cut a release is the maintainer's call; the tag is
+confirmable from this machine and the release page is not (CLAUDE.md), so
 the page is somebody else's look.
 
 ---

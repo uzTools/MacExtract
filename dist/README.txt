@@ -1,4 +1,4 @@
-MacExtract v0.39.0 — bootstrap distribution
+MacExtract v0.40.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -30,32 +30,34 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-v0.39.0 opens the last zip method of PKZIP's first years: Reducing, in
-all four of its strengths. No Macintosh program is known to have
-written it, but the PC disks that Mac CD-ROMs carried by the hundred
-did, and v0.38.0 skipped those files and pointed you to another
-program. They come out now. The same release makes Shrinking about an
-eighth faster on a 68000, and moves both old methods out of the memory
-every other format shares: an archive opened directly has about 1 KB
-more room than in v0.38.0, while a zip, or anything still inside a
-BinHex or MacBinary wrapper, has about 1.6 KB less. No test archive
-changed whether it fits.
+v0.40.0 is what the first real Macintosh to run it found -- an LC 475,
+in its owner's hands. The biggest: on a Macintosh, a zip whose name ends
+in ".zip", which is nearly every zip, was refused with "This archive has
+more parts". Every release since August had it, and every zip passed
+every test, because the tests never called a file ".zip". It opens now.
 
-Since v0.39.0, and in this download, four things found on the first
-real Macintosh to run it, an LC 475. A zip whose name ends in ".zip" --
-which is nearly every zip -- was refused on a Macintosh with "This
-archive has more parts"; it opens now, and so do the Reduce and Shrink
-zips the paragraph above is about. Opening an archive that is already
-extracted next to it no longer puts "~1" copies inside the first
-folder: you get a second folder, "Name~1", with the files under their
-own names. And MacExtract now quits after an archive. It reads all its
-decoders from disk once, at launch, and keeps only the ones the archive
-needs; a second archive in another format could not be opened, so it
-no longer offers you one. Open MacExtract again for the next archive.
-And its icon, in 256 colours or more, now darkens all over when you
+Three more from the same afternoon. MacExtract now quits after an
+archive: it reads its decoders from disk once, at launch, and keeps only
+the ones that archive needs, so a second archive in another format could
+not be opened -- and it no longer offers you one. Open it again for the
+next archive. Extracting an archive into a folder where you already
+extracted it gives you a second folder, "Name~1", with the files inside
+under their own names, instead of "~1" copies scattered through the
+first. And in 256 colours or more the icon now darkens all over when you
 select it, as Apple's own do; it used to darken only its white.
 
-v0.38.0, before it, opened the zip archives of PKZIP's first years, and
+And one from StuffIt Deluxe 2.0: a photograph its JPEG add-on had
+squeezed came back as the wrong picture -- silently -- unless it was 256
+pixels wide and grey. Every width and every colour mode the add-on
+writes now comes back exactly as StuffIt Deluxe 2.0 itself restores it.
+
+v0.39.0, before it, opened the last zip method of PKZIP's first years:
+Reducing, in all four of its strengths. No Macintosh program is known
+to have written it, but the PC disks that Mac CD-ROMs carried by the
+hundred did. The same release made Shrinking about an eighth faster on
+a 68000.
+
+v0.38.0 opened the zip archives of PKZIP's first years, and
 two formats only Aladdin's own software ever read.
 
 Old zip archives open -- the ones PKZIP 1 made in 1989 and 1990, with a
@@ -335,8 +337,9 @@ rest of the archive still extracts.
 Verified on emulators: System 3.0, System 6.0.8 and System 7.0.1 on a Mac
 Plus under Mini vMac, and Mac OS 9.2 on emulated PowerPC, where every
 extraction is checked byte for byte against the same engine on Linux. One
-physical Macintosh has run it: an LC 475 under System 7.6.1, which found
-the zip fault above. Nothing older than that has, so a Mac Plus is still
-untested on real hardware -- worth knowing before you commit a floppy to it.
+physical Macintosh has run it: an LC 475 under System 7.6.1, which ran
+v0.39.0 and found the faults above; their fixes are checked on emulators.
+Nothing older than that has, so a Mac Plus is still untested on real
+hardware -- worth knowing before you commit a floppy to it.
 
 License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.

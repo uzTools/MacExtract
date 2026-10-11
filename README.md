@@ -51,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.39.0**. Or take it straight from the tree:
+currently **v0.40.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
