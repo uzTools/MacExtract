@@ -458,6 +458,10 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # unchanged, so this proves the same-volume case
                        # byte-exact rather than assuming it.
                        $<$<BOOL:$ENV{UNC_AT_SAMEVOL}>:-DUNC_AT_SAMEVOL>
+                       # UNC_OVL_NOFLUSH: no instruction-cache flush after an
+                       # overlay fixup. A probe for a CPU with a cache; never
+                       # shipped.
+                       $<$<BOOL:$ENV{UNC_OVL_NOFLUSH}>:-DUNC_OVL_NOFLUSH>
                        # UNC_AT_TWICE: the same archive extracted twice into
                        # one folder; read the Out disk, not the grid.
                        $<$<BOOL:$ENV{UNC_AT_TWICE}>:-DUNC_AT_TWICE>
