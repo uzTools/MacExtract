@@ -25438,11 +25438,17 @@ where every earlier run drew a blank document — the `'****'` `FREF` the
 stubs inherit from MacExtract gives no icon. Re-run with a drawn icon,
 the archive is drawn unselected with it, which settles that the inverted
 frame was not a selection. **The icon the stubs carry** is
-`tools/icon/make_archive_icon.py`'s: a dog-eared document whose lower half
-is the application's EXTRACT carton, pixel for pixel — chosen over a
-parcel tied with twine, which read as packed but not as MacExtract's.
-Icons are per TYPE, so a stub claims an icon for each type its creator
-writes.
+`tools/icon/make_archive_icon.py`'s: Apple's blank document — the System
+3.0/6.0.8 Finder's `ICN#` 132 and System 7.0.1's `ics#` -4000, reproduced
+pixel for pixel and checked against both — carrying MacExtract's own
+16x16 at 32x32 and a reduced carton, block and folded document at 16x16,
+with 16- and 256-colour members taking `make_icon.py`'s colours by name.
+Chosen by the maintainer over a parcel tied with twine, a document whose
+lower half was the carton, and ruled and solid-carton variants. Drawn by
+the System 6.0.8 Finder on a `SIT!` archive in that run (`--doc-icn`,
+`--doc-ics`); the colour members have been seen in no Finder, because no
+emulator here shows colour short of the Mac OS 9 harness. Icons are per
+TYPE, so a stub claims an icon for each type its creator writes.
 Still open: which application wins when StuffIt is on the same disk, and how a stub hands the document on — the
 stand-in was a whole application, and no stub exists yet.
 
