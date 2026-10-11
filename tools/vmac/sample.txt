@@ -150,6 +150,10 @@ derived-MUSFMT10.ZIP                       # 171960 B
 # the decoder. 13-bit codes, a table filled to slot 8,191, partial clears at
 # every width; 38,777 B peak, against dream.zip's 39,094 (FORMATS.md, *Shrink*).
 shrink-wild-titanic.zip                    # 172972 B
+# Implode (zip method 6) joined 2026-10-10, the first on a Macintosh: a
+# real 1990s archive, all four entries imploded, 4 K/2 trees and 8 K/3
+# trees both; 22,730 B peak on Linux (FORMATS.md, *Implode*).
+4alnch11.zip                               # 41702 B
 
 # ARC and uuencode (M13, 2026-08-15). Neither format occurs in the
 # corpus, so both are generated: tools/synth_arc.py and tools/synth_uu.py.

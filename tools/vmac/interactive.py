@@ -2010,14 +2010,24 @@ def phase_privatefile(args, appbin, workdir, shot):
     data, rsrc, password = subj["Forked"]
     stock = os.path.join(R.VMAC_HOME, args.system)
     bootimg = os.path.join(workdir, "boot-pf.hfv")
+    # System 3.0 reads no shell name (sys30.py), so there the application
+    # is double-clicked out of the Finder, as --e2e does it.
+    finder = args.system == "Sys30.img"
     R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
-         bootimg, "--macbin", f"{found[-1]}:Forked.pf")
+         bootimg, *(["--finder"] if finder else []),
+         "--macbin", f"{found[-1]}:Forked.pf")
 
     scratch = os.path.join(args.outdir, ".settle.png")
     mac = Mac(bootimg, args.emu, workdir)
     try:
         if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
             raise SystemExit("interactive: the machine never settled")
+        if finder:
+            mac.click(*FINDER_VOLUME_ICON, double=True)
+            time.sleep(4.0)
+            shot(mac, "pf-0-volume.png")
+            mac.click(*FINDER_APP_ICON, double=True)
+            time.sleep(args.launch_wait)
         shot(mac, "pf-1-sfgetfile.png")
         # Second row, as in --password: the invisible `Desktop` file
         # sorts first.

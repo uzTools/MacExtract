@@ -10,26 +10,30 @@ DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and Linux
 CLI were never affected by anything in this file. The Retro68 Mac shell runs
 and extracts byte-exact on every system the project claims:
 
-The sample is **72 fixtures** since 2026-10-09, when
-`shrink-wild-titanic.zip` joined it — the first Shrink archive a Macintosh
-has run. **Every Mini vMac tier has run it on the v0.37.0 source**: both
+The sample is **73 fixtures** since 2026-10-10, when `4alnch11.zip`
+joined it — the first Implode archive a Macintosh has run; it was 72 from
+2026-10-09, when `shrink-wild-titanic.zip` joined it. **Every Mini vMac
+tier has run the 72 on the v0.37.0 source**: both
 1 MB floors and both 512 KB machines on 2026-10-09 (the `dist/` binary less
 a comment), the two 4 MB tiers and System 7.0.1 on 2026-10-10 (`dist/`'s
 payload rebuilds byte-identical), and Mac OS 9.2 the same day. Each
 2026-10-10 sweep was paired with a `-D UNC_AT_BUDGET` sweep read field by
 field (`tools/vmac/README.md`, *Why an entry is refused*): no refusal, no
 first-entry error, no image wanted after its release and no failed keep on
-any of the 238 runs.
+any of the 238 runs. **`4alnch11.zip` ran on all seven on 2026-10-10**,
+the same source, one boot each, passing at 22,740 B of peak heap (22,730
+on Linux), and on Mac OS 9.2 on its own, all four files byte-exact
+(`os9.py --launch`; it is not in `os9sample.txt`).
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **72/72**, 2026-10-10 |
-| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **72/72**, 2026-10-09 |
-| System 3.0, **512 KB** Macintosh 512Ke | **70/72**, 2026-10-09 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
-| System 6.0.8, 4 MB Mac Plus | **72/72**, 2026-10-10 |
-| System 6.0.8, **1 MB** — the RAM floor | **72/72**, 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid); no memory-budget refusals remain |
-| System 6.0.8, **512 KB** Macintosh 512Ke | **66/72**, 2026-10-09 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09) |
-| System 7.0.1, 4 MB | **72/72**, 2026-10-10 — the only tier with a code-cache flush route: `_HWPriv` called on all 72, once per kept image plus the bundle fixup |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **73/73**, 2026-10-10 |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **73/73**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10 |
+| System 3.0, **512 KB** Macintosh 512Ke | **71/73**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09; the resident build has not run `4alnch11.zip`): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
+| System 6.0.8, 4 MB Mac Plus | **73/73**, 2026-10-10 |
+| System 6.0.8, **1 MB** — the RAM floor | **73/73**: the 72 on 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid), `4alnch11.zip` 2026-10-10; no memory-budget refusals remain |
+| System 6.0.8, **512 KB** Macintosh 512Ke | **67/73**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09; not run on `4alnch11.zip`) |
+| System 7.0.1, 4 MB | **73/73**, 2026-10-10 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-10-10, through the interactive application (`--launch`, byte-identical to `dist/`) and the autotest build alike |
 
 The heaviest 4 MB allocations are the same to the byte on all three 4 MB
@@ -37,15 +41,34 @@ tiers — the Arsenic transform table, 1,353,789 B for
 `derived-Library_ISBN_Barcoder.sit` — and 44 B under the Linux engine at the
 budget each Mac granted (FORMATS.md, *System 7 tier*).
 
-**On no Macintosh**: an AppleLink `.pkg`, a self-extracting zip (none is
-committable, `tools/specimens/zipit.tsv`) and an Implode archive — none is
-in `sample.txt`. **Shrink has run** since 2026-10-09:
-`shrink-wild-titanic.zip` is byte-exact on all seven Mini vMac tiers, at
-38,807 B of peak heap against 38,777 on Linux. **Private File has run**
-through the application's password dialog on System 6.0.8, at 4 MB and
-at the 1 MB floor (both 2026-10-09) — a wrong password refused, then both
-forks byte-exact (`tools/vmac/interactive.py --privatefile --emu mv-1M-1x`);
-not on the 512 KB machines.
+**Run off the sample, none of it committable** (`tools/specimens/zipit.tsv`
+and the AppleLink specimens), so no tally above counts it. Each is graded
+against this engine's Linux output, which its own suite adjudicates
+(`run.py --expect`; `sys30.py` screenshots through `vmac_check.py
+--fixture`):
+
+- **AppleLink `.pkg`**: all eight real packages byte-exact on **all seven
+  Mini vMac tiers** (2026-10-10), 8,490–41,274 B of peak heap; all
+  fourteen had run on System 6.0.8 at 4 MB and 1 MB on 2026-10-05/06
+  (FORMATS.md, *Run on a Macintosh*).
+- **Self-extracting zip**: the five ZipIt `.sea` specimens on all seven
+  (2026-10-10), up to 66 files and 62,051 B. What the Macintosh read is
+  each one's data fork, which is the zip; MacBinary was taken off on the
+  host first, because the autotest build is single-level. **On System 3.0 at 4 MB,
+  `zipit-1.4.sea` runs out of disk at 1440 KB:** its last fork, 154,165 B, is a
+  per-entry write error (`UNC_ERR_SINK`), since the Finder's `DeskTop` file
+  leaves Out 152,064 B. It passes on a 1600 KB Out volume, and the System
+  3.0 1 MB and 512Ke sweeps were run at 1600 KB from the start.
+- **Private File**: through the password dialog on System 6.0.8 at 4 MB
+  and at 1 MB (2026-10-09) and on **both 512 KB machines** (2026-10-10,
+  `interactive.py --privatefile --emu mv-512Ke`, System 3.0 launching it
+  from the Finder). Each time a wrong password was refused, then both forks
+  came out byte-exact. Neither 512Ke refused it.
+- **Shrink** has been in the sample since 2026-10-09 (`shrink-wild-titanic.zip`, 38,807 B
+  of peak heap against 38,777 on Linux).
+
+From 2026-10-09 to 2026-10-10 this paragraph said that no Macintosh had
+run an AppleLink package (*Withdrawn claims*).
 
 Per-tier
 history, the per-fixture tables and what each refusal costs are FORMATS.md's
@@ -559,6 +582,7 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"On no Macintosh: an AppleLink `.pkg`"** — this file's Status, 2026-10-09, and the brief written from it | FORMATS.md, *AppleLink packages → Run on a Macintosh*: all fourteen packages had run through the application on System 6.0.8 at 4 MB and 1 MB on 2026-10-05/06, four days before the sentence was written. **Cost: one task item spent re-establishing that a format runs on a Macintosh**, which was then extended to all seven tiers (Status). **Why it survived:** the sentence listed what is not in `sample.txt` and called that "on no Macintosh". Those are different sets, and a run off the sample changes no tally that anything checks | 2026-10-10 |
 | **"The 3.5.1 application does not launch here"**, and so *"nothing in this project has ever launched a StuffIt Deluxe application"* — this file's 2026-09-28 entry on `sitcrypt.py`, DECISIONS.md the same day, `tools/vmac/README.md`, and the docstrings of `sitcrypt.py` and `sitopt.py` (*"whether 3.5.1 would use a 2.0 module … that application does not launch here"*) | **it launches by a double-click, and did the same day**: `specimens/sitopt/map351/` (2026-09-28 12:05) shows *About StuffIt Deluxe™…* in the Apple menu and an Archive menu with *Verify* and *Attach Signature*, and `sitopt.launch351`'s own comment says *"A double-click on the icon does"*. The three failures were ⌘O, which goes nowhere on that image. Driven that way on 2026-10-10 it opened Preferences and ran two scripts (`tools/vmac/sitenc351.py`), which settled the question it was blocking: 3.5.1 cannot use an Encryptor module (FORMATS.md, *Where an archive names the module*). **Cost: twelve days of "4 replaced the modules" carried as a hypothesis — load-bearing since `sit_enc_id`, the same morning — and an open "cannot see" in `sitopt.py` that one run answered.** **Why it survived:** the correction was written as a code comment 50 lines below the docstring it contradicted; nothing that reads status reads a function's comment (*a limitation written one paragraph from its own remedy*) | 2026-10-10 |
 | **"The Shortcut updater's archive key is folded only when extraction starts"**, and its picker *"a folder navigator whose Open only descends"* — DECISIONS.md 2026-10-09, OPEN_ITEMS.md, `tools/sit_mkey_oracle.py`; labelled a hypothesis | the picker was the updater asking where the installed **Shortcut** is: a Standard File list filtered on `cdev`/`Cut!`, empty because no such file existed, and the code that filters it was decompressed in the same 45 dumps. A 373-byte stand-in with a `cdev` resource gets past it, and the key is then in memory **before any file is written**, from the restart alert onward (DECISIONS.md 2026-10-10, *the installer's own key*). **Cost: a day, and the next attempt aimed at the wrong thing** — timing dumps for "during extraction" when the obstacle was the installer's own target check | 2026-10-10 |
 | **"No tier moves: the cost is under the narrowest margin, 16,490 B"** — this file's Status, once per change from 2026-09-26 to 2026-10-09, ten times, and `run_tiers.py --check` agreeing each time | the System 6.0.8 / 512 KB sweep of 2026-10-09: **66/72 where the model said 67**, refusing `a2ps.V4.3.tar.Z` 4,142 B short — the very layer that margin was measured on. `TIERS` had been lowered once (2,024 B, 2026-10-01) while `OVL_SAVED` rose 117,040 → 134,032 with the control build; all three bases re-taken on the machine came back **16,888 B lower**, identical on three machines, and the model then reproduces all three tiers by name. **Cost: one fixture refused on a 512 KB System 6 machine for an unknown part of two weeks with every check green**, and ten tier arguments resting on one number. `TIERS_CONTROL` now fails `--check-saved` when the control moves (DECISIONS.md 2026-10-09, *the base nobody re-took*) | 2026-10-09 |

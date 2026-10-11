@@ -3260,6 +3260,7 @@ can show any of that.
 | System 6.0.8, 4 MB Mac Plus | **PASS** (`run.py`) |
 | System 6.0.8, **1 MB** floor | **6/6** synthesised and **8/8 real** (`run.py --mem 1M`, the specimens with `--expect`; the six found on 2026-10-06 added that day) |
 | System 3.0 / Finder 5.1, **1 MB** | **3/3** synthesised. `sys30.py` has no `--expect`, so it grades committed manifests only and a specimen has none |
+| **all seven Mini vMac tiers** — System 3.0, 6.0.8 at 4 MB, 1 MB and 512Ke, System 7.0.1 | **8/8 real** on each, 2026-10-10, the v0.37.0 source: `run.py --expect`, and on System 3.0 `sys30.py`'s screenshots graded by `vmac_check.py --fixture`. Peak heap is identical on all seven: 8,490 B (`SD! Patcher`) to **41,274 B**, 86 B under the 2026-10-06 figures |
 
 **A 541,179-byte member fits a 1 MB Macintosh**, which was the open
 question: `MPW Shell 3.2.2.pkg` writes it to the floppy and peaks at
@@ -3279,7 +3280,7 @@ are what say the Mac runs the same allocations and not merely the same
 decoder.
 
 None of these is in `sample.txt`, so no tier TALLY moves: those stay at
-the 71 fixtures their figures were taken on (BLOCKERS.md, the tier
+the sample their figures were taken on (BLOCKERS.md, the tier
 table). A specimen cannot have a committed manifest, so the real packages
 are graded against this engine's own Linux output, whose correctness is
 `tools/run_sqp.py`'s lane 1 — the recorded sha256 for the four oldest
@@ -3349,9 +3350,11 @@ after (DECISIONS.md 2026-10-09, *the specimen was one search away*).
 | `Gamma` | 0 B data + 608 B resource | `correct-horse-battery` (21) | 713 B | `Gamma.sit`, 375 B |
 
 **Through the application**, `Forked` on System 6.0.8 at 4 MB and at the
-1 MB floor (both 2026-10-09, `tools/vmac/interactive.py --privatefile`):
-a wrong password refused, then both forks byte-exact. Not run on a 512 KB
-machine.
+1 MB floor (both 2026-10-09) and on **both 512 KB machines**, System 3.0
+and System 6.0.8 on a 512Ke (both 2026-10-10, `--emu mv-512Ke`; System 3.0
+launches it from the Finder, because that system reads no shell name), all
+with `tools/vmac/interactive.py --privatefile`: a wrong password refused,
+then both forks byte-exact. Neither 512 KB machine refused it.
 
 ### The layout
 
@@ -4467,6 +4470,16 @@ byte-identical to `unar`'s: 5,801 + 29,628, 4,331 + 670 and
 first time, and the suite's fork tally went 113 → **119 of 119**
 (*Implode*, below).
 
+**The five self-extractors ran on a Macintosh on 2026-10-10**, on all seven
+Mini vMac tiers. The Macintosh read each one's data fork, which is the zip
+(MacBinary was taken off on the host, because the autotest build is
+single-level), and the result matched this engine's Linux output
+(`run.py --expect`) at 21,551–62,051 B of peak heap. **The 1440 KB Out
+floppy is too small for `zipit-1.4.sea` on System 3.0**: the Finder's
+`DeskTop` file leaves 152,064 B for its last fork, 154,165 B, which is a
+per-entry `UNC_ERR_SINK`. On a 1600 KB volume it passes (BLOCKERS.md,
+Status).
+
 
 ## Implode: zip method 6, PKZIP 1.x
 
@@ -4506,6 +4519,7 @@ paid by a build nothing ships.
 | four shapes nothing wild holds | **`unar`, deark, the writer's own plaintext and the stored CRC-32**, in `tools/run_implode.py` on every run. `tools/synth_implode.py` is an ENCODER, because nothing on this machine writes the method — Info-ZIP's `zip` dropped it before 1.0, `unar` and deark decode and do not compress, PKZIP is a DOS program. One of its entries is the fixture `synth-exo-zip-implode.zip` |
 | the 13 entries of `pkz101.exe` | **`unar` for 7 and deark for 6**, fork for fork on every `ci.sh` run — a committed fixture since 2026-10-08, PKZIP 1.01's own distribution self-extractor. Three of the six are the minimum-match-length entries and three are ones `unar` fails with *"Attempted to read more data than was available"* at a combination where the two readings coincide (*The fixture that carries the bug*, below) |
 | two more shapes nothing wild holds, since 2026-10-08 | **deark, the writer's own plaintext and the stored CRC-32**, with `unar` as a NEGATIVE control required to refuse both — the two combinations PKZIP 1.01/1.02's reading is observable in, written that way, one archive each (*The minimum match length PKZIP 1.01 and 1.02 used*, below) |
+| on a Macintosh | **`4alnch11.zip`**, in `tools/vmac/sample.txt` since 2026-10-10: byte-exact on all seven Mini vMac tiers at **22,740 B** of peak heap (22,730 on Linux), and on Mac OS 9.2 with all four files read back off the volume (`os9.py --launch`) |
 | bent streams | **240 mutants on a fixed seed** in `run_implode.py`, every edit confined to the bytes the writer declares compressed, each required to exit cleanly with no sanitizer report; plus the 10 whole-archive variants per fixture of `run_robustness.py` and the three cut points of `run_truncation.py`. `tools/fuzz.py` carries the generator as its third named stream seed, and `fuzz_cover.py` reads the decoder's five functions at **0 never entered** at two seeds, 88.9–100 % of lines (TESTING.md, *Fuzzing*) |
 
 **The suite can fail, established by bending the decoder five ways** —
@@ -6940,7 +6954,7 @@ forks are methods 2 and 3, which is what its profile has always shown
 
 ## Real-hardware verification (Mini vMac — System 6.0.8, 4 MB Mac Plus, 68000)
 
-The Retro68 Mac shell was replayed against a 72-fixture sample spanning all
+The Retro68 Mac shell was replayed against a 73-fixture sample spanning all
 seventeen formats on a **real System 6.0.8 / 4 MB Mac Plus** under Mini vMac
 (a true 68000). Every extraction is verified ON THE MAC ITSELF: the app
 CRC-32s both forks after reading them back through the File Manager and the
@@ -6948,9 +6962,11 @@ result — painted to the framebuffer, read from a screenshot — is
 cross-checked against the same engine's Linux output (`tools/vmac_check.py`,
 `tools/decode_grid.py`).
 
-**72/72 byte-exact PASS on the v0.37.0 source**, 2026-10-10 (the
-`dist/` application rebuilt byte-identical; 507 files, 6,846,866 data
-and 3,458,384 resource-fork bytes), with `shrink-wild-titanic.zip` in.
+**73/73 byte-exact PASS on the v0.37.0 source**, 2026-10-10: the 72 in one
+sweep (the `dist/` application rebuilt byte-identical; 507 files, 6,846,866
+data and 3,458,384 resource-fork bytes), with `shrink-wild-titanic.zip` in,
+and `4alnch11.zip` — the first Implode archive on a Macintosh — on its own
+the same day, 4 files and 103,043 data bytes at 22,740 B of peak heap.
 71/71 on the v0.33.0 binary, 2026-09-25, and 71/71
 earlier the same day on the build before DART left it (and 71/71 on
 **2026-09-22** with every decoder resident, the sweep that put the UTF-8 fold
@@ -7047,8 +7063,8 @@ above System 6: Standard File returns a **working-directory** reference in
 is always running, so the `SIZE` partition governs the launch. Mini vMac's
 Mac Plus supports up to 7.5.5, so this is the same 68000 as every other row.
 
-**72/72 byte-exact PASS at 4 MB on the v0.37.0 source**, 2026-10-10,
-engine peak identical to System 6.0.8 and System 3.0 at 4 MB on every
+**73/73 byte-exact PASS at 4 MB on the v0.37.0 source**, 2026-10-10
+(`4alnch11.zip` on its own after the 72), engine peak identical to System 6.0.8 and System 3.0 at 4 MB on every
 fixture (71/71 on the v0.33.0 binary, 2026-09-25, and
 **71/71 on 2026-09-22** with every decoder resident, the sweep
 that added the two UTF-8-named StuffIt 5 fixtures, so the fold has now run
@@ -7157,14 +7173,14 @@ DiskDoubler rows above differ by 16 B for the same reason: one block.
 
 ## Floor target verification (Mini vMac — System 6.0.8, **1 MB** Mac Plus, 68000)
 
-The same 72-fixture sample was replayed on a Mini vMac built for **1 MB of
+The same 73-fixture sample was replayed on a Mini vMac built for **1 MB of
 RAM** — the project's floor target — one boot per fixture, same on-Mac
 CRC-32 verification (`tools/vmac/run.py --mem 1M --list tools/vmac/sample.txt`).
 The engine budget is derived from `FreeMem` at startup.
 
-**72/72 byte-exact PASS on the v0.37.0 source**, 2026-10-09, with
+**73/73 byte-exact PASS on the v0.37.0 source**: the 72 on 2026-10-09, with
 `shrink-wild-titanic.zip` new to the sample (one fixture re-run after a
-host-side `EMUDIED`; it passed). 71/71 on the **v0.34.0** binary, 2026-09-26 — the release's
+host-side `EMUDIED`; it passed), and `4alnch11.zip` on 2026-10-10. 71/71 on the **v0.34.0** binary, 2026-09-26 — the release's
 spot check, re-run because that release adds 24 B of resident code and so
 takes 24 B off this tier's budget (71/71 on the **v0.33.0** binary,
 2026-09-25; and 71/71 on
@@ -7284,9 +7300,10 @@ and DECISIONS.md for the HFS param-block rewrite that unblocked it — and for t
 ## System 3.0 tier (Mini vMac — System 3.0 / Finder 5.1, Mac Plus, 68000)
 
 The oldest system a Macintosh Plus can boot, and the one it shipped with in
-January 1986: System Tools 1.0, an 800K HFS floppy. **72/72 byte-exact PASS
-at 1 MB on the v0.37.0 source, 2026-10-09, and 72/72 at 4 MB on the same
-source, 2026-10-10**, `shrink-wild-titanic.zip` included; 71/71 at 1 MB on the v0.33.0 binary, 2026-09-25 — and 71/71 at 1 MB and at
+January 1986: System Tools 1.0, an 800K HFS floppy. **73/73 byte-exact PASS
+at 1 MB on the v0.37.0 source (the 72 on 2026-10-09) and 73/73 at 4 MB on
+the same source, 2026-10-10**, `shrink-wild-titanic.zip` included and
+`4alnch11.zip` run on its own on 2026-10-10; 71/71 at 1 MB on the v0.33.0 binary, 2026-09-25 — and 71/71 at 1 MB and at
 4 MB on **2026-09-22** with every decoder resident (the 4 MB figure was 69/69
 on 2026-08-30, two fixtures behind until that sweep) — the same committed
 sample and the same on-Mac CRC-32 read-back as every row above, replayed by
@@ -7331,9 +7348,10 @@ Sys30.img`, ~133 s of emulated Mac Plus time on
 
 ### 512 KB machines: the RAM is enough, the ROM is not
 
-**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 70/72 under
+**A Macintosh 512Ke — 512 KB, the Plus's 128K ROM — runs it: 71/73 under
 System 3.0** (**2026-10-09**, `sys30.py --emu mv-512Ke`, the v0.37.0 source,
-`shrink-wild-titanic.zip` passing at 38,807 B; 69/71 on 2026-09-25 on the
+`shrink-wild-titanic.zip` passing at 38,807 B, and `4alnch11.zip` at 22,740 B
+on 2026-10-10; 69/71 on 2026-09-25 on the
 v0.33.0 binary; **68/72 with every decoder resident on 2026-10-09** and 67/71 on
 2026-09-22, and the two the
 overlays recover are `derived-a2basic.dmg.sit` and `derived-Cool_Tools__.sit`
@@ -7412,8 +7430,8 @@ refused having reached 37,372 B, because renegotiating has a floor and that
 archive's block is under it. What a codec CAN give back decides more than what
 it asks for.
 
-**The same machine under System 6.0.8 manages 66/72 on the shipped build**
-(**2026-10-09**, below; 66/71 on 2026-09-27) **and 63/72 with every decoder resident**
+**The same machine under System 6.0.8 manages 67/73 on the shipped build**
+(**2026-10-09**, below, and `4alnch11.zip` passing on 2026-10-10; 66/71 on 2026-09-27) **and 63/72 with every decoder resident**
 (`run.py --emu mv-512Ke --system System6.hfv`, **2026-10-09**, the nine
 `run_tiers.py` named; 64/71 on 2026-09-22, 63/69 on
 2026-09-04, 58/69 before the stack was cut to 12 KB, which this tier's

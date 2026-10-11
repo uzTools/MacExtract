@@ -20,12 +20,13 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **70/72** on the shipped build (2026-10-09; 69/71 on
+mv-512Ke` is **71/73** on the shipped build (the 72 on 2026-10-09 and
+`4alnch11.zip` on 2026-10-10; 69/71 on
 2026-09-25, 67/71 with every
 decoder resident, 66/69 before the sample grew, 65/69 before the reserve went
 flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
-System6.hfv` is **66/72** (2026-10-09, one fixture fewer than `run_tiers.py`
-predicted on a stale base; 66/71 on 2026-09-27, the tier it predicted
+System6.hfv` is **67/73** (the 72 on 2026-10-09, one fixture fewer than `run_tiers.py`
+predicted on a stale base, and `4alnch11.zip` on 2026-10-10; 66/71 on 2026-09-27, the tier it predicted
 before anything ran it; 64/71 on 2026-09-22 with
 every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). With every decoder resident
 (`-D UNC_OVL_RESIDENT`) the two are **68/72** and **63/72** (2026-10-09).
@@ -3841,7 +3842,12 @@ itself in `ovl_stuffit`) and the envelope unwrap into the StuffIt archive
 inside are run by the shipped application. Wrong password first, then
 `hushnow`; both forks of `Forked` are read back off the volume. Verified
 on System 6.0.8 on 2026-10-09 at 4 MB and, with `--emu mv-1M-1x`, at the
-1 MB floor: refused, asked again, both forks byte-exact.
+1 MB floor, and on 2026-10-10 on both 512 KB machines (`--emu mv-512Ke`,
+with `--system System6.hfv` and `--system Sys30.img`): refused, asked
+again, both forks byte-exact. **On `Sys30.img` the phase boots to the
+Finder** and double-clicks the volume and then the application, as `--e2e`
+does, because System 3.0 reads no shell name; `pf-0-volume.png` is that
+window. The second Standard File row is `Forked.pf` on both systems.
 
 **The resource fork is compared with bytes 16..127 masked**, as every
 on-Mac harness does: the first run compared it raw and failed on the
