@@ -51,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.37.0**. Or take it straight from the tree:
+currently **v0.38.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -259,7 +259,7 @@ faster.
 
 **Memory** only matters under MultiFinder or System 7, where the application
 gets the size set in its Get Info window. It asks for 4 MB, runs in as little
-as 400 KB, and **at about 850 KB every archive in the test sample comes out
+as 400 KB, and **at about 800 KB every archive in the test sample comes out
 whole**. Below that, entries too big to fit are named one by one and the rest
 extract.
 

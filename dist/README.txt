@@ -1,4 +1,4 @@
-MacExtract v0.37.0 — bootstrap distribution
+MacExtract v0.38.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -30,105 +30,102 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-Since v0.37.0, and in this download: old zip archives open -- the ones
-PKZIP 1 made in 1989 and 1990, with a method called Imploding. Nothing
-has written one since, but plenty are still on download sites and
-CD-ROMs, and ZipIt on the Mac could write them too: a Macintosh zip of
-1994 with both forks intact is what settled it. Those entries used to be
-listed and then skipped; they come out now, with their resource forks,
-types and creators. The same release gives you the name a Macintosh file
-HAD inside a ZipIt archive: ZipIt could be told to convert names to the
-MS-DOS shape -- eight letters, upper case, no spaces -- and it kept the
-real one beside it, so "READ ME" comes out as "READ ME" rather than
-"README". The folder around it keeps whatever the archive called it,
-which is all the archive records for a folder.
+v0.38.0 opens the zip archives of PKZIP's first years, and two formats
+only Aladdin's own software ever read.
 
-Also since v0.37.0, and in this download: the OLDEST of those zips open
-too. PKZIP 1.01 and 1.02, from 1989, had a bug in how they wrote some
-files, and a zip made by one of them could be refused here with a
-message saying the file's own checksum was wrong -- when there was
-nothing wrong with the file. PKZIP's own 1989 download is one of them:
-three of the thirteen files inside it. It is read correctly now, and so
-is anything else those two versions wrote. Nothing else changed: every
-other zip is read exactly as before, and a zip that really is damaged
-still says so.
+Old zip archives open -- the ones PKZIP 1 made in 1989 and 1990, with a
+method called Imploding. Nothing has written one since, but plenty are
+still on download sites and CD-ROMs, and ZipIt on the Mac could write
+them too: a Macintosh zip of 1994 with both forks intact is what settled
+it. Those entries used to be listed and then skipped; they come out now,
+with their resource forks, types and creators. The same release gives
+you the name a Macintosh file HAD inside a ZipIt archive: ZipIt could be
+told to convert names to the MS-DOS shape -- eight letters, upper case,
+no spaces -- and it kept the real one beside it, so "READ ME" comes out
+as "READ ME" rather than "README". The folder around it keeps whatever
+the archive called it, which is all the archive records for a folder.
 
-Also since v0.37.0, and in this download: zips that use Shrinking, the
-other method of PKZIP's first years, open too. Most such zips came from
-PCs, but a Macintosh made them as well -- an EndNote style from 1993 is
-the one that was found -- and they turn up on Mac CD-ROMs by the
-hundred. Reducing, older still and rarer, is NOT read, and will not
-be: no Macintosh program is known to have written it. Those entries are
-skipped and the rest of the archive still comes out; deark reads them.
+The OLDEST of those zips open too. PKZIP 1.01 and 1.02, from 1989, had a
+bug in how they wrote some files, and a zip made by one of them could be
+refused here with a message saying the file's own checksum was wrong --
+when there was nothing wrong with the file. PKZIP's own 1989 download is
+one of them: three of the thirteen files inside it. It is read correctly
+now, and so is anything else those two versions wrote. Nothing else
+changed: every other zip is read exactly as before, and a zip that
+really is damaged still says so.
 
-Also since v0.37.0, and in this download: self-extracting zip archives open.
-ZipIt made these -- a .sea you double-click, which on a modern Mac of
-the day unpacked itself. The application part is PowerPC code, so on a
-Mac Plus it was simply a file you could not use; the zip behind it was
-always there, and this program now finds it and gives you the files.
-Pick the .sea in MacExtract's Open dialog and it opens like any other
-archive. The same is true of a self-extracting zip from the PC side.
+Zips that use Shrinking, the other method of PKZIP's first years, open
+too. Most such zips came from PCs, but a Macintosh made them as well --
+an EndNote style from 1993 is the one that was found -- and they turn up
+on Mac CD-ROMs by the hundred. Reducing, older still and rarer, is NOT
+read, and will not be: no Macintosh program is known to have written it.
+Those entries are skipped and the rest of the archive still comes out;
+deark reads them.
 
-Also since v0.37.0, and in this download: AppleLink packages (.pkg) open.
-AppleLink was Apple's own online service, and a .pkg is the little
-archive its software made for sending files over it, in 1992 -- one
-Aladdin wrote the code for and nobody else ever read. Opening one used
-to mean having StuffIt Deluxe and the right add-on. These are
-recognised by what is inside them, which not even Aladdin's own reader
-did: it went by the .pkg on the end of the name.
+Self-extracting zip archives open. ZipIt made these -- a .sea you
+double-click, which on a modern Mac of the day unpacked itself. The
+application part is PowerPC code, so on a Mac Plus it was simply a file
+you could not use; the zip behind it was always there, and this program
+now finds it and gives you the files. Pick the .sea in MacExtract's Open
+dialog and it opens like any other archive. The same is true of a
+self-extracting zip from the PC side.
 
-Also since v0.37.0, and in this download: Private File (.pf) opens.
-Aladdin sold Private File in 1996 and 1997 to lock a file with a
-password before mailing it, and until now only Aladdin's own software
-could open one. You are asked for the password, as for any encrypted
-archive, and you get the original file back, both forks, type and
-creator; a wrong password is refused rather than turned into rubbish.
+AppleLink packages (.pkg) open. AppleLink was Apple's own online
+service, and a .pkg is the little archive its software made for sending
+files over it, in 1992 -- one Aladdin wrote the code for and nobody else
+ever read. Opening one used to mean having StuffIt Deluxe and the right
+add-on. These are recognised by what is inside them, which not even
+Aladdin's own reader did: it went by the .pkg on the end of the name.
 
-And also since v0.37.0, and in this download: more uuencoded files open
-than before. UUTool, the Mac program most of these were made with, had
-a setting that shifted the characters it used so that mail programs
-could not damage them -- it was the DEFAULT setting, and this program
-had never read a file written with it. It does now. So does the other
-spelling, the one Unix's own uuencode uses for a zero. If a .uu file
-was ever refused here as "not recognized", it is worth another try.
+Private File (.pf) opens. Aladdin sold Private File in 1996 and 1997 to
+lock a file with a password before mailing it, and until now only
+Aladdin's own software could open one. You are asked for the password,
+as for any encrypted archive, and you get the original file back, both
+forks, type and creator; a wrong password is refused rather than turned
+into rubbish.
 
-And one more since v0.37.0, and in this download: a .hqx that was
-posted in two halves now opens. Long files were often sent as "part 1
-of 2" and "part 2 of 2", with a line of dashes where they were cut;
-this program used to read the dashes as part of the file and then say
-the file's own checksum was wrong. It now skips over the join. Only
-the dashes were ever the trouble -- a cut marked with ordinary words
-has always been read -- so if a .hqx in two parts was refused for a
-bad checksum, it is worth another try.
+More uuencoded files open than before. UUTool, the Mac program most of
+these were made with, had a setting that shifted the characters it used
+so that mail programs could not damage them -- it was the DEFAULT
+setting, and this program had never read a file written with it. It does
+now. So does the other spelling, the one Unix's own uuencode uses for a
+zero. If a .uu file was ever refused here as "not recognized", it is
+worth another try.
 
-And another since v0.37.0, and in this download: Aladdin's Shortcut
-1.5.3 updater, an installer with an encrypted archive inside, had two of
-its thirteen files refused as "damaged" or "encrypted by a scheme we
-cannot read" even with the right password. They were neither: the
-installer leaves stray numbers where StuffIt 2.0 recorded an encryption
-add-on, and this program believed them. With the password, both now
-come out byte for byte as Aladdin's installer writes them. Other
-installers made with the same tool may have had the same trouble; this
-is the only one tested.
+A .hqx that was posted in two halves now opens. Long files were often
+sent as "part 1 of 2" and "part 2 of 2", with a line of dashes where
+they were cut; this program used to read the dashes as part of the file
+and then say the file's own checksum was wrong. It now skips over the
+join. Only the dashes were ever the trouble -- a cut marked with
+ordinary words has always been read -- so if a .hqx in two parts was
+refused for a bad checksum, it is worth another try.
 
-One fix since v0.37.0, and in this download: a StuffIt 5 archive made
-with compression method 14 -- the format v0.37.0 added, just below --
-could be refused with a message saying the file's own checksum was
-wrong, when there was nothing wrong with the file. Whether it happened
-depended on how the archive was laid out inside rather than on anything
-you did, so one .sit would open and the next would not; the Aladdin
-installers v0.37.0 was tested on were among the ones that worked. If a
-method 14 archive was ever refused here as having a bad checksum, it
-opens now.
+Aladdin's Shortcut 1.5.3 updater, an installer with an encrypted archive
+inside, had two of its thirteen files refused as "damaged" or "encrypted
+by a scheme we cannot read" even with the right password. They were
+neither: the installer leaves stray numbers where StuffIt 2.0 recorded
+an encryption add-on, and this program believed them. With the password,
+both now come out byte for byte as Aladdin's installer writes them.
+Other installers made with the same tool may have had the same trouble;
+this is the only one tested.
 
-v0.37.0 opens the last StuffIt archives this program could not: the
-ones made with compression method 14, which StuffIt 5 used and nothing
-else ever wrote. Aladdin's own installers are full of them -- in StuffIt
-Deluxe 7.0.3's, 80 of its 258 files used it, and this program listed
-them and gave up. All 258 come out now, and all 184 of StuffIt Deluxe
-5.5's. If you have ever been told a .sit was "not supported yet" on a
-file this program could see the names inside, this is the release that
-reads it.
+And one fix: a StuffIt 5 archive made with compression method 14 -- the
+format v0.37.0 added, just below -- could be refused with a message
+saying the file's own checksum was wrong, when there was nothing wrong
+with the file. Whether it happened depended on how the archive was laid
+out inside rather than on anything you did, so one .sit would open and
+the next would not; the Aladdin installers v0.37.0 was tested on were
+among the ones that worked. If a method 14 archive was ever refused here
+as having a bad checksum, it opens now.
+
+v0.37.0, before it, opened the last StuffIt archives this program could
+not: the ones made with compression method 14, which StuffIt 5 used and
+nothing else ever wrote. Aladdin's own installers are full of them -- in
+StuffIt Deluxe 7.0.3's, 80 of its 258 files used it, and this program
+listed them and gave up. All 258 come out now, and all 184 of StuffIt
+Deluxe 5.5's. If you have ever been told a .sit was "not supported yet"
+on a file this program could see the names inside, that is the release
+that reads it.
 
 v0.36.0, before it, was about one program: StuffIt Deluxe 2.0, from
 1990. Everything that application could write, this one opens.
@@ -174,7 +171,7 @@ whole; on larger machines it changes nothing you can see.
 
 What it opens: StuffIt (.sit, classic and 5.x), Compact Pro (.cpt), BinHex
 (.hqx), MacBinary, PackIt (.pit), AppleLink packages (.pkg),
-DiskDoubler (.dd, DDAR, DDA2), Now Compress,
+Private File (.pf), DiskDoubler (.dd, DDAR, DDA2), Now Compress,
 StuffIt SpaceSaver, Alysis SuperDisk! (.X), ARC (.arc), LZH/LHA (.lzh, .lha,
 MacLHA's included), uuencoded files (.uu), btoa (.ascii), base64 and files
 mailed as MIME attachments (.b64, .mim -- both forks, where the message
@@ -305,8 +302,8 @@ one of them and the rest are found beside it, whatever they are called, and
 a Macintosh file mailed that way comes back with both its forks.
 
 Every archive in the test sample extracts byte-exact on a 1 MB Mac Plus,
-StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 12 minutes for a
-200 KB archive, 21 for the largest tested — and the progress dialog
+StuffIt 5 (Arsenic) included. Arsenic is slow on a 68000 — 6 minutes for a
+150 KB archive, 12 for the worst tested — and the progress dialog
 shows a time estimate for that reason. Everything else takes seconds to a few
 minutes: a 280 KB StuffIt archive is about a minute on a 7 MHz Mac Plus, which
 is what StuffIt Expander 4.0.2 takes on the same machine and the same file. If

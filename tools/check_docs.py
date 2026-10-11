@@ -172,6 +172,17 @@ def check_version():
         if ver not in long_:
             bad.append(f"mac/macextract_icons.r: 'vers' ({rid}) long string "
                        f"is {long_!r}, which does not carry {ver!r}")
+        # Byte 2, the minor written as two hex digits that read as the
+        # number (the comment above the resources). It sat at 0x31 through
+        # v0.34.0 and at 0x35 through v0.37.0, each time with a comment
+        # saying it now moves with the strings.
+        nums = re.findall(r"0x([0-9A-Fa-f]{2})", body)
+        minor = ver.split(".")[1]
+        if len(minor) <= 2 and (len(nums) < 2
+                                or nums[1].lstrip("0") != minor.lstrip("0")):
+            bad.append(f"mac/macextract_icons.r: 'vers' ({rid}) byte 2 is "
+                       f"0x{nums[1] if len(nums) > 1 else '??'}, not "
+                       f"0x{int(minor):02d}")
     if found != 2:
         bad.append(f"mac/macextract_icons.r: {found} 'vers' resources, "
                    f"expected 2 (ids 1 and 2)")
