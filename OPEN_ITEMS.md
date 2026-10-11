@@ -147,6 +147,19 @@ UNDOES*).
 | **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a file from somebody who has one.** All 196,139 classic StuffIt archives Discmaster lists have been searched, the 112 early-stopped walks re-walked 2026-10-10; none carries either (TESTING.md, *Searching somebody else's index by content*) |
 | **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **an encrypted archive and its password.** The same search found only `NewDE`, 8 forks in 3 wild archives with no password — the one read-me that speaks to it says the author mailed one on payment (DECISIONS.md 2026-10-07, *the key was what the archive CONTAINED*); `sitcrypt-wild-F7Menus.sit.bin` grades a refusal (FORMATS.md, *The one wild archive here that is encrypted*) |
 
+## `message/partial`: two anchors that come out wrong with exit 0
+
+Measured 2026-10-11, `build/macextract x -nr`, on mpack's three-part set of
+`MacROT13.cpt` (3,309 B; how it was made is in FORMATS.md, *Run over the hard
+cases*). Each anchor below is correctly REFUSED when it is alone, with
+*"part 2 of 3 is missing"*, and the real part 01 as the anchor is right in
+both directories.
+
+| what | what would close it |
+|---|---|
+| **the three parts concatenated into one file, opened with the parts beside it**, gives a 927-byte `MacROT13.cpt` and exit 0 | a joiner that refuses an anchor whose body runs into another part's headers, or a check of the enclosed message's `Content-MD5`, which mpack writes and which disagrees here. *Hypothesis*, unreduced: the anchor's whole tail is taken as part 1's body |
+| **part 01 with one line of plain text appended** (the shape of a mail signature), parts 02 and 03 beside it, gives 3,329 B, 20 bytes too many, and exit 0 | the same `Content-MD5` check, plus the question of what munpack does with the same file, which has not been asked |
+
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09).** The engine is portable C99
