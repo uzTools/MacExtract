@@ -13,7 +13,8 @@
 #
 # run.py splits boot from extraction (it can see the "alive" grid the app
 # paints before it touches a disk), so the extract column is the archive
-# alone.
+# plus the autotest build's CRC read-back of every fork (~5 s per 300 KB
+# of output; FORMATS.md, "Measured on a 7 MHz Mac Plus").
 
 # --- one per format, the largest of that format in sample.txt -------------
 macburger-helper.hqx                       # BinHex        306651 B

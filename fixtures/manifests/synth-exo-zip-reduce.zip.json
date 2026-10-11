@@ -1,0 +1,57 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "1820da6dc639ba27c9c047ed320ce620e95d647a7632fadae0a966d4cbe4aa01",
+   "data_size": 5785,
+   "name": "factor1.txt",
+   "oracle_methods": [
+    "Reduce 1"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "1820da6dc639ba27c9c047ed320ce620e95d647a7632fadae0a966d4cbe4aa01",
+   "data_size": 5785,
+   "name": "factor2.txt",
+   "oracle_methods": [
+    "Reduce 2"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "1820da6dc639ba27c9c047ed320ce620e95d647a7632fadae0a966d4cbe4aa01",
+   "data_size": 5785,
+   "name": "factor3.txt",
+   "oracle_methods": [
+    "Reduce 3"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "1820da6dc639ba27c9c047ed320ce620e95d647a7632fadae0a966d4cbe4aa01",
+   "data_size": 5785,
+   "name": "factor4.txt",
+   "oracle_methods": [
+    "Reduce 4"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-exo-zip-reduce.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "c6bbaed32158f95e211903c4f08428652aaab749627dfa45fed4158e622624c6",
+ "size": 6516
+}

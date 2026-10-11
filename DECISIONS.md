@@ -196,6 +196,207 @@ which fails CI if it drifts from the headings below it.
 - 2026-09-09 (the disk image that is expanded and not opened) — DART, and an error code for a file with nothing wrong with it
 - 2026-09-09 (the oracle that built two times in three) — a timestamp race, and a suite that reported it as a missing reference
 - 2026-09-09 (the merge that deletes the branch) — bringing four parked branches up to date
+- 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
+- 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
+- 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
+- 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
+- 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
+- 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
+- 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
+- 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
+- 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
+- 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
+- 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
+- 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
+- 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
+- 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
+- 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
+- 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
+- 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
+- 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
+- 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
+- 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
+- 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
+- 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
+- 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
+- 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
+- 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
+- 2026-09-21 (the one that had to be asked) — Now Compress's two coders and its blocks, measured off the application
+- 2026-09-21 (the two forks that were never about their literals) — DiskDoubler method 10's second form, and 39 of 39
+- 2026-09-21 (the archive that was never a fork) — Now Compress's container, and the third coder's table
+- 2026-09-21 (the manual for the other machine) — PackIt is published, in the documentation of a DOS extractor
+- 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
+- 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
+- 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
+- 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
+- 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
+- 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
+- 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
+- 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
+- 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
+- 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
+- 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
+- 2026-09-21 (the table that was twenty-six bytes) — StuffIt method 6's fixed code book, priced on both axes
+- 2026-09-22 (the framing that needed no rewrite) — StuffIt method 6's last macutils row, closed for nothing, and the three places this engine is stricter than both references
+- 2026-09-22 (the oracle asked about everything else) — deark over the whole corpus, and two things it does that nothing here had written down
+- 2026-09-22 (the container is the oracle) — eight forks in damaged MacBinary graded by the file's own arithmetic
+- 2026-09-22 (the premise that stopped being true) — Implode has an implementation and an oracle on this disk, and the scope decision is not taken
+- 2026-09-22 (the download nothing looked at) — the one artefact this project ships, compared with the build for the first time
+- 2026-09-22 (the decline that read as a naming gap) — 2,324 forks the sweep was counting as its own blind spot
+- 2026-09-22 (the name that was never a fork) — StuffIt 5's names are UTF-8, and the oracle was asked in the one way that hides it
+- 2026-09-22 (the sidecar is not an archive) — two fixtures that are inputs, and the declaration that says so
+- 2026-09-22 (the document that came with the decoder) — fmt_lzh.c's header walk, from LHa's own header.doc
+- 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
+- 2026-09-22 (a name an HFS volume can hold) — StuffIt 5's UTF-8 names, on both hosts, and what the fold costs a Mac Plus
+- 2026-09-22 (the page that was never written) — DiskDoubler's three containers, measured, and the field that is checked from both sides
+- 2026-09-22 (the version that could not have written it) — the DiskDoubler the `0x20` row was waiting for does not exist
+- 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
+- 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
+- 2026-09-22 (the right flag with the wrong reason) — what `hls -a` is actually for, and the four walks that believed the explanation
+- 2026-09-22 (the header that was a length) — a DiskDoubler file neither reader could open, for 64 bytes
+- 2026-09-22 (the column that was already on the volume) — two walks the survey never found, and a dimension the verdict threw away
+- 2026-09-22 (the file that was on the disk and not in the catalog) — a hypothesis about flushing, reduced to a reproduction
+- 2026-09-22 (the folder the application wrote and no walk could see) — four blind walks taken, and two columns the probe was missing
+- 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
+- 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
+- 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
+- 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
+- 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
+- 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
+- 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
+- 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
+- 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
+- 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
+- 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
+- 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
+- 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
+- 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
+- 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
+- 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
+- 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
+- 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
+- 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
+- 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
+- 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
+- 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
+- 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
+- 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
+- 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
+- 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
+- 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
+- 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
+- 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
+- 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
+- 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
+- 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
+- 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
+- 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
+- 2026-09-27 (the inventory that was kept twice) — a gaps file and a licence notice both listed what was borrowed, they disagreed, and the list is now one file and a check
+- 2026-09-27 (half a citation) — one of the two facts behind DiskDoubler method 8 was measured away and the other turned out to be unfalsifiable on this corpus, which is a better answer than unmeasured
+- 2026-09-27 (the check that tested the wrong thing) — a provenance check built to catch a shed citation missed one within the hour, because it tested for a mention and shedding leaves a mention behind
+- 2026-09-27 (the layout Aladdin's own output settled) — the specimens had been on disk since August, and the measurement was two one-line perturbations
+- 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
+- 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
+- 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
+- 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
+- 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
+- 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
+- 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
+- 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
+- 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
+- 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
+- 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
+- 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
+- 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
+- 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
+- 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
+- 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
+- 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
+- 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
+- 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
+- 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
+- 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
+- 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
+- 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
+- 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
+- 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
+- 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
+- 2026-10-02 (the measurement that was waiting for a second input) — `CCOD`+0x3826 does not round toward zero, and one drawing was too easy to say so
+- 2026-10-02 (three defaults that were being read as format) — what StuffIt Deluxe 2.0.1 will actually be asked for, and what it refuses to be asked by script
+- 2026-10-02 (the question that was about the user, not the format) — `PassLock` protects nothing, so the engine stops refusing
+- 2026-10-02 (the verifier that said where NOT to look) — all five of StuffIt 2.x's ciphers, decrypted
+- 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
+- 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
+- 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
+- 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
+- 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
+- 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
+- 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
+- 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
+- 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
+- 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
+- 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
+- 2026-10-05 (the reference implementation was the fixture's payload) — PackIt's two ciphers read out of PackIt III 1.3, and then RUN out of it
+- 2026-10-05 (the negative that was about one rule) — a line-ending citation shed to a file the same header already cited
+- 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
+- 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
+- 2026-10-06 (the Optimizer that was in somebody else's corpus) — the one key that identifies a StuffIt 2.x feature, and the two harness defects between it and the answer
+- 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
+- 2026-10-06 (the alphabet nothing here had seen) — the program that defines the MU layout was a corpus fixture, and the engine had never read a line of what it writes
+- 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
+- 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
+- 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
+- 2026-10-06 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
+- 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
+- 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
+- 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
+- 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
+- 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
+- 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
+- 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
+- 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
+- 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
+- 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
+- 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
+- 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
+- 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
+- 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
+- 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
+- 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
+- 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
+- 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
+- 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
+- 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
+- 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
+- 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
+- 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
+- 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
+- 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
+- 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
+- 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
+- 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
+- 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
+- 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
+- 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
+- 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
+- 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
+- 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
+- 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
+- 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
+- 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
+- 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table took the two copies from 52 s and 46 s to 9 and 15, and the tick probe now bills the read-back
+- 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
+- 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
+- 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
+- 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
+- 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
+- 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
+- 2026-10-11 (the digest our own oracle could not compute) — `message/partial`'s two wrong anchors: `Content-MD5` catches both once mpack computes MD5, and the check was declined for its size
+- 2026-10-11 (the constant was a square) — asking 2.0.1 for every combination instead of searching for a stranger's
+- 2026-10-11 (the zip that was a set of one) — every plain `.zip` opened on a Macintosh failed as "more parts", for two months, and the first real machine found it in one session
+- 2026-10-11 (one archive per launch) — the eager overlay lifetime cannot open a second format, so the application quits after an archive instead of offering one
+- 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
+- 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
 
 ---
 
@@ -744,8 +945,9 @@ BLOCKERS.md for the full write-up. Key decisions:
   available (`reference/notes/DiskCopy42.md`, from the DiscFerret wiki), so the
   rule stopped biting: `unc_diskcopy_probe` (`src/fmt_stubs.c:76`) matches a
   synthetic 800K GCR image and a real one, 0 false positives across 803
-  fixtures. Still detect-only, because disk images are out of scope for v1.
-  See BLOCKERS.md "Detect-only gap — RESOLVED".
+  fixtures. **[RETIRED 2026-08-26]** with the other disk-image probes, to
+  `attic/` (`UNC_FORMAT_DISKCOPY_RETIRED`; DECISIONS.md 2026-08-26, *a name
+  is only worth something inside the frame the user came with*).
 - **The "broken Retro68 `HOpen` glue" root cause is WITHDRAWN.** M10's write-up
   (BLOCKERS.md, commit 22e806b) blamed Retro68: "`HOpen` returns `noErr` but
   never writes back the refNum on System 6". Building the standalone minimal
@@ -1986,9 +2188,14 @@ the format — macunpack derives it per fork from a fixed weight table
 (`code6[258]`) by recursively splitting the leaf range at half the remaining
 weight (`sit_dosplit`); only the byte each leaf stands for is declared per
 segment, which is what "fixed" means. So the shape depends on nothing but a
-constant, and `tools/gen_sit6_tables.py` computes it once into
+constant, and `tools/gen_sit6_tables.py` computed it once into
 `src/sit6_tables.h`: 514 nodes, depth 13, two `uint16_t` tables with the leaf
-rows dropped. The engine walks it and never builds it.
+rows dropped. The engine walked it and never built it.
+
+**The generated table is gone since 2026-09-21** — 26 bytes and a
+builder state the same code book, and `tools/check_sit6_tree.py`
+is what that generator became: *2026-09-21, (the table that was
+twenty-six bytes)*.
 
 That buys three things a per-fork build would not: no recursion (a rule here),
 no 68000 cycles spent recomputing a constant for every fork of every archive,
@@ -3775,8 +3982,12 @@ Three smaller things this cost, all worth keeping:
   implementation are one file.**
 - **The Finder flags in a Mac header are not a blob to copy across.** Passing
   the ArcMac header's Finder info straight into MacBinary put the application
-  on the volume with bit 0x40 of the high byte set — `invisible`. The disk
-  showed 112K used and one item, which reads as "the copy failed" and is not.
+  on the volume in a state the Finder did not show: the disk showed 112K used
+  and one item, which reads as "the copy failed" and is not. **The bit named
+  here was `invisible`, and that is withdrawn** — measured over all 5 ArcMac
+  files and 11 entries, `fdFlags` is 0x2100 on the application and 0x0100 on
+  every document, and `fInvisible` is set nowhere (BLOCKERS.md, *Withdrawn
+  claims*; 2026-09-22, *the column that was already on the volume*).
 - **Mini vMac only flushes a volume when the guest ejects it.** The Finder
   displayed the freshly written `Test.ARC` while the host's copy of the image
   did not have it, because the emulator buffers sector writes and the harness
@@ -7926,11 +8137,13 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 298 bytes on the
-68000 target (measured; the "280 bytes" that stood in `fmt_lzh.c` was
-never right, and the "296" this entry stated until 2026-09-03 stopped
-being right a few hours after it was written — 2026-09-03, *the struct
-that grew after it was measured*) and it travels on a 4 KB call stack.
+**Why not just carry the name.** `UncEntryInfo` is 302 bytes on the
+68000 target (measured, and re-measured every time the struct grew — the
+"280 bytes" that stood in `fmt_lzh.c` was never right, and the "296"
+this entry stated until 2026-09-03 stopped being right a few hours after
+it was written, 2026-09-03, *the struct that grew after it was
+measured*; FORMATS.md, *Name limits*, carries the figure)
+and it travels on a 4 KB call stack.
 A name field big
 enough for zip's own maximum would be 65,535 bytes. The cap is the
 right decision; being silent about it was not.
@@ -10093,6 +10306,13 @@ a format wants them, and `overlay-eager` loads the same overlay at launch
 instead. **Parked, neither merged**, and the branches are kept as a working
 mechanism rather than as a proposal.
 
+**Its prize figure, its "StuffIt can never be one of the formats it helps"
+and its "neither branch OPENS anything new" are superseded — 2026-09-25, *the
+parked decision that outlived its numbers*.** What follows is the reasoning of
+2026-08-31 and the cipher-only measurements it rested on, both correct for the
+overlay that existed that day. The three later entries that cite 5,988 B as a
+scale are left alone; the number is corrected here, where it lives.
+
 **The evidence, in the order it changed the answer:**
 
 - **The prize is 5,988 B**, for six formats and not for StuffIt. Against a
@@ -10150,9 +10370,10 @@ session. The fix — allow the reload — concedes the branch's own argument.
 
 **So: if something later needs tens of kilobytes, the loader exists.** Nobody
 should have to rediscover `-mpcrel`, the `.bss`/`.data` distinction, the three
-dispatch tables or the `--gc-sections` correction; `BRANCH_NOTES.md` on either
-branch has them, along with the three ways to know whether an entry is
-encrypted and what each costs.
+dispatch tables or the `--gc-sections` correction; they are in the code that
+embodies them and indexed by FORMATS.md, *Where the traps are written down*.
+(Written when both were branches; they merged on 2026-09-25 and the notes
+went with them.)
 
 ## 2026-08-31 (the message that failed a successful extraction) — the allocator cannot know which refusals matter
 
@@ -10572,7 +10793,7 @@ and here it turned a shrug into a free change.
 Extraction needs HFS and those machines only have it with a `Hard Disk 20`,
 which Mini vMac does not emulate; what is measured is that the interface runs
 and that a non-archive is correctly refused there. The rest is
-MANUAL_TESTS.md §7, and it is now askable because the BRANCH'S DOWNLOAD does
+MANUAL_TESTS.md §6, and it is now askable because the BRANCH'S DOWNLOAD does
 it — a test that needs the tester to own Retro68 is not a test anyone will
 run, which is the whole reason the guard was built rather than left as a
 finding.
@@ -11317,8 +11538,10 @@ allocator's per-block overhead; the refusal was photographed on System
 earlier assumption that a DART could not be replayed there was about an
 800K floppy and was wrong.
 
-Numbers and per-specimen results: FORMATS.md, *DART*. How the suite
-runs: TESTING.md, *DART*.
+Numbers and per-specimen results were FORMATS.md, *DART*, and the suite
+TESTING.md, *DART*; **both left with the format on 2026-09-25** (*the disk
+images that found another home*). What this entry describes is v0.9 through
+v0.32.0 and nothing since.
 
 ---
 
@@ -11442,3 +11665,14212 @@ and the branch's own were both raised, and the merged build is **60 B of
 code and 24 B of A5 MORE than the two increments add up to**. Ratchets are
 set from a build; arithmetic would have set them too low and the next
 person would have seen a failure they did not cause.
+
+---
+
+## 2026-09-18 (the byte that left through a pointer) — runs out of the window, the CRC the writer already kept, and a model half its size
+
+A review of the engine for speed, size and RAM, asked to land only what
+costs nothing on the other two axes. Four things qualified; the rest —
+a three-byte Arsenic transform vector, `UNC_HOT` on Compact Pro and Now
+Compress, a second Now Compress block slot, resident cipher tables made
+transient — each buys one currency with another and is parked for a
+decision. Everything below is graded by the 932-fixture suite and
+measured with callgrind on Linux; no Mac tick was taken.
+
+**Four decoders handed every output byte back through a function
+pointer.** `unc_lzah_decode`, `unc_lzdyn_decode`, `unc_lzst0_decode` and
+`unc_arsenic_decode` took `int (*put)(void *, uint8_t)`; the LZ three
+have a window that every byte is written into anyway, so the window IS
+the staging and a run can leave it whole. They now take a run callback
+(`UncPutRun`) and flush `[flushed, pos)` every 2 KB (4 KB for the 8 KB
+windows), which keeps the unflushed span plus the longest match inside
+the window. Arsenic has no window and its only caller is
+`unc_sit_decode_fork`, so it takes the `UncForkOut` itself and puts
+through the inline path.
+
+**And Arsenic ran `unc_crc32` on one byte at a time**, 641,115 calls
+on `derived-Library_ISBN_Barcoder.sit`, for a checksum the fork writer
+already keeps over its 512-byte flushes when asked. Method 15 now asks
+(`UNC_CK_CRC32`, seeded `UNC_CRC32_INIT`) and compares the writer's
+CRC against the stream's after the final flush. The container's CRC-16
+was never meaningful for that method and the caller already skipped it.
+
+**The model table stored a symbol that was always `first + n`.** Nine
+`ArsModel`s of 128 `(int32 symbol, int32 frequency)` pairs is 9,360 B
+inside every StuffIt 5 entry's peak; the symbol is arithmetic, so the
+slot is the frequency alone and the nine are 4,788 B. *The uint16_t
+version was tried first and rejected*: a frequency fits sixteen bits,
+but the zero-extend it put into the symbol search — the hottest loop on
+the fast path — cost that loop **+7.8 % of its instructions** on
+`derived-a2basic.dmg.sit`, and this change was not allowed to trade
+speed. Thirty-two bits, no symbol: −4,572 B and the loop unchanged.
+
+**Result, Linux Ir, same fixtures as the review:**
+
+| fixture | before | after | |
+|---|---|---|---|
+| `derived-Library_ISBN_Barcoder.sit` (Arsenic, fast path) | 200,508,178 | 181,691,663 | **−9.4 %** |
+| `derived-a2basic.dmg.sit` (Arsenic, fast path) | 151,556,773 | 145,451,251 | −4.0 % |
+| `test1-best` (DART, LZHUF) | 156,623,685 | 152,234,748 | −2.8 % |
+| `lhasa-maclha-l2_lh1.lzh` (-lh1-) | 3,079,619 | 3,005,236 | −2.4 % |
+| `derived-XferIt_1.5b4.sea` (Compact Pro, control) | 76,939,094 | 76,573,429 | −0.5 % |
+
+**One more StuffIt 5 fixture extracts fully under a 400 KB budget: 24
+of 31, was 23**, and the six bisected minimums in FORMATS.md each fell
+by 3,569 to 3,755 B — the model's 4,572 B less what the sampled index's
+target rungs give back. The Mac tiers were not re-run;
+every on-Mac peak for a StuffIt 5 fixture measured before this date is
+that much high, and FORMATS.md says so once.
+
+**What it cost, and it was not the zero promised.** The first version
+flushed at two sites per coder — the loop and the exit — and put the
+window flush in one shared function: **+468 B** of 68000 code, the
+shared six-argument call being dearer than the two copies it replaced.
+One call site at the head of the loop, which serves the end of the
+stream as well, and a static flush per file: **+76 B of `CODE`, −12 B
+of A5**, against a review that had called this "roughly 0". A run flush
+is a loop, a bounds split and a call, and on a 68000 that is not free
+even once. Nothing more is flushed on an error path; a failed entry's
+partial output was never graded by anything and both hosts discard it.
+
+**The sniffer's order moved six probes ahead of the zip pair.** The
+spanned-zip probe scans the last 64 KB of every file backwards in 1 KB
+reads, and LZH, Now Compress, DiskDoubler, AppleSingle and the two
+Compact Pro probes sat behind it — up to 65 reads before their own
+byte compares, which on a floppy is the open latency and on the RAM
+disk every tier runs from is nothing. None of the six can take a zip
+or a part of one (every zip head is `PK`; the argument is beside the
+table in `unc_engine.c`), and the reverse case — a Compact Pro archive
+carrying a stored zip part in its last 64 KB — used to be misclaimed
+and is now the archive it is. **Unmeasured on a floppy, and labelled
+so**: the gain is a hypothesis about real hardware, the safety is what
+932 fixtures, 9,320 variants and the DART specimens grade.
+
+**The transferable part is the one about the review itself.** "No
+impact on the other dimensions" was asserted from reading the code and
+was wrong twice in a day, by 468 B and by 7.8 %; both were caught by
+the same two instruments — `m68k-apple-macos-size` per object and
+callgrind per function — run before the commit rather than after. A
+cost estimated is a cost unknown, and the cheapest time to price it is
+before writing it down as zero.
+
+---
+
+## 2026-09-18 (the floppy that was full) — a 40-byte gap that was written up as 62 KB, and a refusal that was a full disk
+
+The review of the same day ranked one item above every code change: FORMATS.md
+said the Mac needed 16 KB more budget than the Linux cap on one fixture and 33
+to 62 KB more on another, blamed 16 B per block, and `derived-EasyFind.dmg.sit`
+was carried as not extracting on a 1 MB Mac Plus. Sixteen bytes a block cannot
+make 16 KB with six blocks live, so the explanation was already wrong on
+paper; what was true is what the emulator says.
+
+**The measurement.** Both fixtures, capped in a throwaway build at 562,000 B
+— 559 B above their bisected Linux minimum of 561,441 B — on the 1 MB
+machine:
+
+| fixture | Linux peak | Mac peak | verdict |
+|---|---|---|---|
+| `derived-XMenu.dmg.sit` | 561,882 | 561,922 | byte-exact, 704 s |
+| `derived-EasyFind.dmg.sit` | 561,879 | 561,919 | byte-exact, 1,427 s |
+
+**40 bytes, twice, and 40 at the shipped budget as well.** The proxy was
+never off by a kilobyte.
+
+**Two instrument errors made the gap, and the second is the one to keep.**
+The 2026-08-30 figures cited `gRefusedWhy = 1` as proof of a budget
+refusal. That variable records the FIRST refusal of a run, and a StuffIt 5
+entry's first refusal is the transform vector it asks for expecting no —
+M46 found the same thing a day later in the alert that said *Needs 48K more
+memory* after a successful extraction, and nobody went back to this
+section with it. And EasyFind's per-entry "refusal" was `UNC_ERR_SINK`,
+`ret` −9, in twenty seconds: its one entry is 1,851,907 B and `run.py`'s Out
+volume has been a 1,440 KB floppy since M10. The first run today failed the
+same way; the `ret` slot said which, and `--out-kb 2400` was already in the
+README for a smaller archive. **A per-entry failure is not a memory
+refusal until the error code has been read.** The grid carries it; the
+write-up quoted the peak beside it and not the code.
+
+**What hid it.** Both fixtures at that budget sit on a low rung of the
+sampled index, where the walk takes 12 and 24 minutes at the emulator's
+all-out speed against `run.py`'s 300 s default timeout, so the runs that
+could have disproved the gap were the ones nobody could afford to wait for.
+The check cost three boots today, one of them wasted on the floppy.
+
+**Consequences.** FORMATS.md's section is rewritten around the 40 B; the
+caveat on every `--budget` figure is gone; EasyFind's row says it extracts;
+the whole corpus is inside a 1 MB Mac Plus, on the machine and not on the
+proxy; and the 2026-08-30 withdrawn-claim row, which had recorded the true
+claim as false on the strength of the two wrong numbers, says so beside them
+(BLOCKERS.md). OPEN_ITEMS.md's overlay note no longer says there are
+archives still out of reach, because there are none.
+
+**The transferable part.** The review recommended chasing this gap first
+because 33 KB was worth more than every code change combined. It was worth
+nothing, and it cost three emulator runs to find out — which is cheap
+against eighteen days of a caveat on every figure in the file. The rule is
+the one CLAUDE.md already states about environments: read every "the Mac
+needs more" for the name of the instrument it is really about. Here there
+were two, and neither was the Mac.
+
+---
+
+## 2026-09-19 (three bytes hold a position) — the transform vector at three bytes an entry, and the price it was allowed to have
+
+**Claim (measured).** Arsenic's inverse-BWT vector — the largest single
+allocation the engine makes, one entry per byte of a block up to 512 KB —
+is three bytes an entry instead of four. A block is `1 << (4 stream bits +
+9)`, at most 2^24 bytes, so a position in it is at most `(1 << 24) - 1` and
+three bytes hold it exactly. The sampled index's `pos[]` made this argument
+on 2026-08-24 and the vector beside it kept its `uint32_t` for another
+month. Two byte-wise accessors, `ars_transform_get` and `ars_transform_put`,
+so the width lives in one place; nothing else in the decoder changes.
+
+**What it buys.** The fast path costs `~30 KB + block + 3 × fill` instead
+of `4 × fill`. Over the 31 StuffIt 5 fixtures at the 1 MB budget of
+648,100 B: nineteen already on the vector peak 16-20 % lower; two —
+`derived-Troi-ClipSave-Plug-in1.1.sit` (531,968 B) and
+`derived-AuthoRize_2.0.sit` (612,943 B) — move off the sampled index, whose
+walk costs 1.37-1.78× the vector's on a Mac Plus at a low rung and less at
+a high one; ten stay on the index, their blocks wanting 1.4-2.1 MB at any
+width. Peaks over the corpus: min 0.13 / median 0.47 / mean 0.74 / max
+2.03 MB, from 0.15 / 0.58 / 0.92 / 2.53. All 31 verify against their
+internal CRC-32 at unlimited budget, at 648,100 B and under the 400 KB
+cap (24 of 31 fully, unchanged). The six bisected minimums do not move,
+because a minimum is a rung of the index and the vector never enters it.
+
+**What it costs, and it is more than the review said.** The walk reads one
+entry per output byte, and three byte loads with two shifts replace one
+long load: **+4.4 % of instructions on `derived-Library_ISBN_Barcoder.sit`
+and +1.9 % on `derived-a2basic.dmg.sit`**, Linux, fast path only. The
+review had quoted 2.4 %, which was the read's share of one earlier
+profile and not the whole-run delta of the change. On a Mac Plus the
+same read is a few tens of cycles against the arithmetic decoder's
+~20,000 a byte (542 s for 205,019 bytes), so the expectation is well
+under 1 % there, and it is unmeasured: no tick run was taken. +36 B of
+68000 code, −4 B of A5; the code ratchet is raised with the attribution.
+
+**Why it was taken anyway.** The cost lands only where the vector fits,
+which is the case with memory to spare; the gain lands on the 1 MB floor
+and on the 512 KB tier, where every kilobyte of headroom is an archive.
+That is the trade this project takes by default — an archive that opens
+beats one that opens a little sooner — and the maintainer chose it with
+the number in front of them. **What it is NOT: a speed fix for the large
+Arsenic archives.** The ten that take twelve to twenty-four minutes on a
+1 MB Mac Plus are untouched; their limit is the block size the
+compressor chose, and no width of vector reaches it.
+
+---
+
+## 2026-09-19 (the seventh that was measured) — `UNC_HOT` on Compact Pro, priced in ticks before it was bought
+
+**Claim (measured).** `unc_cpt_lzh_fork` and `cpt_rle_push` carry
+`UNC_HOT`, and a Compact Pro extraction on a 7 MHz Mac Plus is **14.8 %
+shorter** for it: engine 10,256 → 8,735 ticks over
+`derived-XferIt_1.5b4.sea`, whole run 10,409 → 8,884, File Manager
+unchanged at ~150 ticks. +1,028 B of 68000 code, A5 unchanged. DiskDoubler
+method 8 is Compact Pro's stages inside a DiskDoubler container and runs the
+same two functions.
+
+**Why these two.** Callgrind on 2026-09-18 put 37 % of the run in the LZH
+loop and 30 % in the RLE push, an out-of-line call per output byte that gcc
+had split rather than inlined; neither was on the `UNC_HOT` list, which
+was measured on one StuffIt archive and said so. The 2026-08-30 entry named
+that as the list's limit and this is the first format to be added to it
+since.
+
+**Why it was priced first.** The size flags were kept at 780 B for 0.82 %
+and the six original `UNC_HOT` marks bought 25 % for 1,024 B; a kilobyte
+is about a sixth of an archive at the corpus's headroom density. Whether a
+seventh of the slowest ordinary format is worth a sixth of an archive is
+the maintainer's trade, and it was put to them as two tick counts, not as
+an estimate — one baseline run and one trial run, twelve minutes, the trial
+reverted before the question was asked.
+
+**What is NOT claimed.** That the tiers were re-run (they were not; the
+differential suite covers the code path on Linux at the same optimisation
+level, which is the point of marking functions rather than files). And that
+Now Compress should follow: its three hot functions cost 1,152 B and its
+history slide is the larger lever there, so that one waits for the slot.
+
+---
+
+## 2026-09-19 (the slide that ran every block) — Now Compress's block slots, and the `UNC_HOT` that bought nothing
+
+**Claim (measured).** Now Compress decodes into a buffer of history plus
+room for four blocks, decoding each block directly after the last so its
+history is simply the bytes before it, and slides the window only when
+the next block would not fit. It used to slide after every block — copy
+the last 32 KB to the front, one byte at a time — and every block's
+output is at most 32 KB, so that was one byte copied per byte produced:
+19 % of `derived-SyntheticReferences2.0.sea`, the largest run in the
+corpus, on Linux (callgrind, 2026-09-18).
+
+| | Linux Ir | Mac Plus engine ticks |
+|---|---|---|
+| `derived-SyntheticReferences2.0.sea` | −15.2 % | not run: 9.9 MB out, half an hour at 7 MHz |
+| `derived-Expand_Now_1.0.1.sea` | −12.7 % | **945 → 793, −16.1 %** |
+
++32 B of 68000 code. The three Now Compress fixtures are byte-exact against
+the oracle, and `tools/run_now.py`'s thirteen generated archives — every
+block shape, the dictionary cache carried between streams, both forks in
+one stream — grade the two things this could break: a block whose history
+must be the previous stream's last 32 KB (`dict`), and a back-reference
+that reaches into the history. The reach limit passed to the decoder is
+the block's own history, not the whole buffer, so a corrupt offset is
+refused exactly where it was before.
+
+**Memory, and the shape that keeps the floor.** The buffer is the engine's
+only per-archive allocation. Four slots ask 235,568 B; when the allocator
+refuses, two slots ask 170,032 B, then one asks 137,264 B — the request the
+archive always made — so the set of archives that open is unchanged on
+every tier, and the 512 KB tier's 186 KB budget lands on two slots. The
+slot count is a fact about the machine, not the archive, and it is decided
+once per archive before any entry is read. The shell's "Needs NK more"
+message is not reached by the refused first attempts, because it is shown
+only when an entry actually failed (M46).
+
+**The `UNC_HOT` marks were measured on the same run and bought nothing.**
+`now_newlzss`, `now_next_block` and `now_fork` at -O3: 793 → 795 ticks,
++0.3 %, for +1,152 B. So Compact Pro's two functions gained 14.8 % from
+the same attribute a few hours earlier and Now Compress's three gained
+nothing, which is the rule the 2026-08-30 entry states — a result on one
+file is a result about that file — applied in the other direction. Not
+taken, and the Mac build is the same size for it.
+
+**The transferable part.** The review had ranked Now Compress's `UNC_HOT`
+beside Compact Pro's on the strength of the same profile shape; the tick
+probe separated them in six minutes. A byte-copy loop is the one thing
+`-Os` already compiles as well as `-O3` does, and a copy that runs once
+per block is the one thing the optimiser cannot make run less often.
+
+---
+
+## 2026-09-19 (the transient tables) — 6 KB of cipher tables built at key setup, and a bit convention fitted rather than transcribed
+
+*(Corrected later the same day: there is one DES SP table, not two, and the
+fit below is what showed why — see *the DES that was only wearing a
+disguise*. Everything else here stands; the A5 figure is unchanged, because
+both tables had already left the A5 world.)*
+
+**Claim (measured).** The two DES SP tables and Compact Pro's CRC-64 table
+— 2,048 B each, `const`, and therefore in the A5 world, which the budget
+pays for one for one on every extraction — are built when a cipher is
+keyed, into a 2 KB heap block the host frees with its buffers. Resident in
+their place: the eight S boxes as 512 bytes and the P permutation inverted
+as 32. The Mac build is **−5,588 B of A5 and +756 B of code, net −4,832 B
+of budget**, and the heap sees 2 KB more only while a PMa6, an encrypted
+StuffIt classic or an encrypted Compact Pro entry is decoded — entries the
+corpus has none of, and whose peaks sit at 9 to 76 KB. No disk is touched:
+this is arithmetic on data still compiled in, which is what separates it
+from the parked overlay (2026-08-31). The A5 ratchet is lowered to hold the
+gain.
+
+**The estimate was 300 B of code and it is 756.** Two S-box conventions,
+a CRC loop, an allocate-on-first-use wrapper and six `unc_crypt_init` calls,
+at -Os on a 68000. Recorded because the review had called this one "about
+5.5 KB back", and it is 4.8.
+
+**The part that needed proving.** Standard DES's SP table is what the
+generator already derived from S and P, so building it at run time is the
+same formula in C. StuffIt's table is XADMaster's `DES_SPtrans`, copied
+verbatim until today — a little-endian DES whose bit order the reference
+never states. Rather than transcribe a table that could not then be
+shrunk, the convention was FITTED: every permutation of the six index bits
+against three output-bit rules, checked against all 512 entries. One fits:
+the index takes the E-expansion bits in order with bit 0 first, and output
+bit k lands at word bit (k − 1 + 3) mod 32 — the rotate-by-3 that
+`sitdes_crypt` undoes at the end of a block, which is what made it
+plausible as well as unique. `tools/gen_crypt_tables.py` now asserts that
+derivation against the verbatim table entry for entry whenever the header
+is regenerated, so the fit is a checked fact and not a lucky one; the DES
+known-answer test and the Compact Pro vectors in the unit tests grade the
+C builders, and `tools/run_crypt.py`'s 35 cases grade the ciphers end to
+end.
+
+**Why the fit is safe to ship.** The engine never reads the verbatim table
+any more, so if the derivation were wrong the unit tests would say so on
+every build, and the StuffIt classic decryption fixtures — three archives
+written by StuffIt Deluxe itself with 8-, 9- and 17-character passwords —
+would fail to open. A derivation that is asserted against the reference at
+generation time and against the format at test time is better evidence
+than a transcription nobody re-checks.
+
+**What is NOT claimed.** Any speed change: a table built once per
+encrypted entry and read exactly as before is 512 word writes against a
+decode measured in seconds, and nothing in the corpus reaches the path at
+all. The Mac tiers were not re-run.
+
+---
+
+## 2026-09-19 (the tree that was Yoshizaki's) — the -lh1- coder rebuilt on the published LZHUF, measured against MacMount's, and what it bought on three axes
+
+**Claim (measured).** `src/unc_lzah.c`'s adaptive Huffman tree follows
+the published LZHUF program — Yoshizaki 1988, Okumura's comments 1989 —
+rather than XADMaster's `XADLZHDynamicHandle.m`, and every format on it
+is faster, smaller and lighter for it: StuffIt method 5, LZH -lh1-, ARC
+7.x Trimmed and DART's "best".
+
+| | before | after | |
+|---|---|---|---|
+| `test1-best` on a 7 MHz Mac Plus, engine ticks | 18,585 | 16,700 | **−10.1 %** |
+| `test1-best`, Linux Ir | 152,236,871 | 124,321,840 | −18.3 % |
+| A/UX 1.4 MB boot disk, Linux Ir | 458,688,059 | 363,420,205 | −20.8 % |
+| `lhasa-maclha-l2_lh1.lzh`, Linux Ir | 3,007,375 | 2,683,432 | −10.8 % |
+| `derived-DEF.sit` (method 5), Linux Ir | 5,645,125 | 4,749,371 | −15.9 % |
+| working state per decode | 15,568 B | 9,000 B | −6,568 B |
+| `unc_lzah.c.obj`, 68000 -Os | 1,592 B | 1,478 B | −114 B |
+| the application's `CODE` | 151,684 B | 151,572 B | −112 B |
+
+Same output everywhere: 932/932, DART 37/37, ARC 7 4/4, 782 unit checks,
+and byte for byte MacMount's raw volumes on four real archives.
+
+**Where it came from.** The maintainer asked for MacMount's parked DART
+work to be checked out. Its `src/mm_lzhuf.c` was written from the
+published program for licence reasons of its own (MacMount is 0BSD and
+transcribes nobody), and measured against this file's XADMaster form on
+Linux it was 22–24 % fewer instructions in 9,024 B of state. The
+difference is structural: the published program keeps the tree as three
+arrays — counts sorted in place, sons, parents — and a node that
+overtakes its neighbour swaps with it; XADMaster keeps six node arrays
+plus a rank list and its inverse, so every step touches twice the
+memory, and it decodes the offset's high bits through a canonical table
+where LZHUF reads eight bits and looks them up. This file now has the
+published program's tree and lookup. Everything around them is what was
+already here: the three modes, XADMaster's window preload for -lh1- and
+StuffIt (which the archives agree with, DECISIONS.md 2026-08-23), the
+engine's inline bit reader, and the run-based output out of the window.
+
+**What the ticks say that Linux did not.** Linux promised 18–24 % and
+the Plus delivered 10.1 %. The 68000's bit reader and window copy are a
+larger share of a symbol there than on x86, and those did not change; the
+tree walk and update did. Same lesson as every tick run this week: the
+proxy ranks, the machine prices.
+
+**Provenance, stated the way the record supports it.** LZHUF.C has no
+copyright notice and no licence text; deark's `readme-lzhuf.txt` says so
+and cites Russell Marks's 2001 reconstruction of the authors' intent —
+"use, distribute, and modify this program freely" — which is the basis
+deark ships it on and now this engine too. NOTICE says exactly that,
+rather than the firmer "released by its authors" MacMount's README has.
+**None of this changes MacExtract's licence**: the engine transcribes
+XADMaster in twenty other places and is LGPL for all of them. The reason
+to take it was the table above.
+
+**Two things worth knowing about the second reader.** MacMount's decoder
+is stricter in two places this one is not — a match that would run past
+the block end and whole bytes left over in a block's stream are both
+refused there and tolerated here, as XADMaster tolerates them — and 192
+blocks never exercised either. And it drops the sector tags, which is
+right for a mounter and means `random_t`'s random tags, the specimen
+`tools/run_dart.py` cares most about, are checked here and not there.
+
+**What is NOT done.** MacMount's two A/UX disks are real gradeable
+specimens this engine had never met — the boot disk is the first real
+72-block archive through the 148-byte header path — and both expand
+byte-exact, but they are MacMount's fixtures (a StuffIt on the Macintosh
+Garden FTP, member SHA-256 pinned in its `tools/get_real_samples.py`) and
+are not pinned into `tools/run_dart.py`. That would be a download step
+and a `fixtures/SOURCES.md` row, and it is worth doing. *Done 2026-09-20
+(the checksums that came with the disks), where the disks turned out to
+carry a better oracle than the one asked for here.*
+
+
+---
+
+## 2026-09-19 (the DES that was only wearing a disguise) — StuffItDES folded onto standard DES's round, and the half of the hypothesis that was false
+
+**Claim (measured).** StuffItDES is standard DES's round function with no
+IP and no FP, keyed by its own schedule. `src/unc_crypt.c` now runs both
+its DES ciphers through one `des_core`, reading one SP table kind:
+`revbits`, `sitdes_round` and the `CRYPT_TAB_SITDES` branch are gone.
+
+| axis | before | after | |
+|---|---|---|---|
+| `tools/run_crypt.py` | 35/35 | 35/35 | 0 problems, and the three archives StuffIt Deluxe 3.5.1 wrote are three of them |
+| unit tests | 782 checks | 782 checks | including the `openssl enc -des-ecb` vector, which grades `des_core` from the other side |
+| Mac `CODE` | 151,572 B | **151,156 B** | −416 B, all of it `unc_crypt.c.obj` (9,676 → 9,260) |
+| Mac A5 | 38,668 B | 38,668 B | unchanged: one 2 KB table was already transient |
+| peak heap, encrypted `.sit` | 8,192 B | 8,192 B | `t --stats` on a `synth_crypt.py` archive, both binaries |
+
+**The hypothesis was two claims and only one held.** The brief asked
+whether the whole variant was standard DES around a permutation — permute
+the key, run the standard schedule, permute the block. The key half is
+**false, and cheaply**: `sitdes_setkey` reads all 64 key bits where PC-1
+drops eight, so no permutation π of the key can turn one schedule into the
+other. Counting the bits each schedule reads settles it without searching
+for π at all, which is the whole of step 1 of that plan. The nibble
+schedule therefore stays exactly as it was — it is format knowledge, and
+what grades it is the three real archives.
+
+**The block half holds, and it is where the code went.** Two facts, both
+machine-checked by `tools/fit_sitdes.py`: XADMaster's `DES_SPtrans[b][v]`
+is `ROL(REV(SP[b][rev6(v)]), 3)` for all 512 entries, so the second table
+was the standard one relabelled; and with the state left in the standard
+layout the subkeys fall out of the nibble schedule as plain six-bit
+groups — group 2g is `s1`'s lane 3−g, group 2g+1 is `s0`'s — which is what
+the bit reversal had been undoing. The rotate-by-3 on the way in and out
+of a block was the same relabelling applied to the state, so removing it
+from both ends removes it. The tool also A/Bs the two formulations over
+20,000 random key/block pairs and every single-bit key against every
+single-bit block, both directions: no disagreement.
+
+`tools/gen_crypt_tables.py` no longer derives a StuffIt table, because the
+engine no longer has one; it asserts the relabelling against XADMaster's
+verbatim table instead, so the fact the fold rests on is re-checked every
+time the header is regenerated.
+
+**Two redundant key setups went with it.** `unc_crypt_sit` derived the
+schedule of the folded archive key four times from bytes that had stopped
+changing. Once now.
+
+**The test was shown to fail before it was believed.** One nibble index
+moved by one in `sitdes_setkey` (`i + 14` → `i + 15`) takes `run_crypt.py`
+from 0 problems to 24, including all three Deluxe archives. Without that
+the 35/35 above would be evidence of nothing.
+
+**What is NOT claimed.** No speed change, and none was measured: key setup
+runs a handful of blocks per archive, no corpus fixture is encrypted at
+all, and a tick run on a path nothing reaches would measure the harness.
+The Mac tiers were not re-run — no format's decode path changed, and the
+code is smaller, not larger. The LICENCE does not move either: `unc_crypt.c`
+still owes XADMaster the nibble schedule and the key derivation, and the
+engine is LGPL through every other row of the inventory.
+
+**What it cost the inventory.** OPEN_ITEMS.md's `unc_crypt.c` row said
+"the StuffIt table is PROVEN to be standard DES in a rotated bit order, so
+that variant can be standard DES plus a permutation". The first clause was
+right and is now spent; the second was the false half.
+---
+
+## 2026-09-19 (the rank that was walked a byte at a time) — Arsenic from the write-up, a 68000 profile at last, and −36.7 % on the Plus
+
+**Claim (measured).** `src/sit_arsenic.c` is written from Matthew T.
+Russotto's description of the format rather than from XADMaster's
+handle, and on a 7 MHz Mac Plus `derived-a2basic.dmg.sit` decodes in
+**315 s where it took 498** — engine 29,885 → 18,922 ticks, −36.7 %.
+
+| | before | after | |
+|---|---|---|---|
+| a2basic, Plus engine ticks | 29,885 | 18,922 | **−36.7 %** |
+| KeyGraphics, Plus engine ticks | 933 | 902 | −3.3 % |
+| a2basic, 68000 instructions (qemu-m68k, shipped flags) | 269.6 M | 162.0 M | −39.9 % |
+| ISBN, 68000 instructions | 287.9 M | 243.9 M | −15.3 % |
+| KeyGraphics, 68000 instructions | 8.14 M | 7.74 M | −4.9 % |
+| a2basic / ISBN / KeyGraphics, Linux Ir | | | −10.9 / +1.6 / +1.6 % |
+| corpus peaks, min / median / max | 132,624 / 496,200 / 2,129,848 | 131,356 / 494,932 / 2,128,580 | −1.3 KB |
+| fully extracted at 400 KB | 24 of 31 | 24 of 31 | |
+| the application's `CODE` | 151,572 B | 152,060 B | +488 B |
+
+31/31 byte-exact against the oracle at unlimited budget, at 648,100 B and
+under the 400 KB cap; `ci.sh` green including the forced-sampled variant.
+
+**The instrument came first, and it is the transferable part.** Every
+profile this project had taken was x86 callgrind, and every tick run had
+delivered less than it promised. So before writing a line: a static
+m68k-linux build of the CLI at the Mac's own flags (`-Os -mcpu=68000
+-fno-tree-loop-distribute-patterns -freorder-blocks-algorithm=simple
+-fipa-icf`), run under `qemu-m68k -d exec,nochain,in_asm`, the trace
+streamed through a fifo into a parser that sums each translated block's
+instruction count per function and per block (`tools/m68kprof.py`,
+committed with this entry). Instructions, not cycles — but 68000
+instructions, with libgcc's multiplies and divides and gcc's byte loops
+counted as what they are. It said, of a2basic: **34.5 % in the MTF's
+byte-at-a-time shift** (a 256-entry table shifted by the symbol's rank,
+and an archive that barely compresses has ranks near 128), **27 % in the
+linear symbol search**, 5 % in the divisions. Linux callgrind had shown
+the MTF as nothing: x86 inlines that shift into a block move. The x86
+figures after the change — +1.6 % on two fixtures — say the same thing
+from the other side.
+
+**The two structures**, both choices the format leaves free:
+
+- **bzip2's two-level move-to-front.** Sixteen lists of sixteen in a
+  2 KB array that grows downward and is re-spaced every ~1,800 symbols;
+  a fetch is at most sixteen moves plus one per list. Written from the
+  idea in Seward's `decompress.c` (BSD-style). It computes the same
+  permutation as a flat table, which is the only thing the format cares
+  about.
+- **A grouped symbol search.** Each model keeps a sum per sixteen
+  frequencies; the walk is over the group sums then inside one group.
+  Bump adds to one sum; halving rebuilds them.
+
+**The one thing the write-up says obliquely and the fixtures said
+loudly.** Seventeen of 31 fixtures failed the first build with "corrupt".
+`frequency = code / renorm` can equal or exceed the model's total —
+`renorm` is rounded down, so `code` can lie in `[renorm × total, range)`
+— and the format's answer is the LAST symbol. The old linear walk fell
+through to it by construction; the grouped walk had to be told to stop
+at the last non-empty group. The write-up notes this rounding as the
+difference from MACM; it does not say what a decoder must do with it.
+
+**What is NOT claimed.** That this is a clean-room rewrite: the author
+had read the XADMaster transcription, and DECISIONS.md says so where
+the licence is discussed. That the 1 MB sampled path moved: it was not
+re-timed (a2basic there is a 12-minute run at 1x), though the block
+decode it shares gained the same. That the Mac timing table is current:
+its two Arsenic rows are from the screenshot clock and predate this.
+
+**Memory, and a first draft that cost a fixture.** The first build used a
+4 KB MTF array and 128 frequencies per model, 4.6 KB of which were never
+used; the peak rose 4.2 KB and one fixture fell out at the 400 KB
+budget. A 2 KB array and one pool of exactly 267 frequencies put it
+back, and the state is 1.3 KB smaller than the XADMaster form's.
+
+
+---
+
+## 2026-09-19 (the byte that went to two places at once) — Compact Pro's LZH and RLE stages fused, −31.7 % on a Mac Plus for +76 B
+
+**Claim (measured).** Compact Pro's LZ match no longer walks its output
+through a call per byte: the byte goes into the window and into the
+writer's staging buffer from the same register, and the run-length
+expansion is written as a run instead of a byte at a time. On a 7 MHz
+Mac Plus `derived-XferIt_1.5b4.sea` decodes in **engine 5,970 ticks
+where it took 8,735**, and `derived-Guy_s_Mac_Consultants.cpt` — the
+archive over half of whose output comes out of the run-length half of
+the format — in **2,318 where it took 3,536**.
+
+| | before | after | |
+|---|---|---|---|
+| XferIt, Plus engine ticks | 8,735 | 5,970 | **−31.7 %** |
+| XferIt, Plus whole run | 8,885 | 6,107 | −31.3 % |
+| Guy's Mac Consultants, Plus engine ticks | 3,536 | 2,318 | **−34.4 %** |
+| XferIt, 68000 instructions (qemu-m68k, shipped flags) | 82,825,986 | 55,513,387 | −33.0 % |
+| Guy's, 68000 instructions | 32,473,326 | 21,638,415 | −33.4 % |
+| XferIt / Guy's, Linux `Ir` | 76.6 M / 29.3 M | 52.2 M / 18.9 M | −31.9 / −35.7 % |
+| `ddtf-dd377ddb.dd`, DiskDoubler method 8, `Ir` | 4,771,312 | 2,527,660 | **−47.0 %** |
+| `derived-Terrainman_2.0__.sea`, DiskDoubler `DDn`, the control | 31,212,483 | 31,212,458 | −0.0 % |
+| peak heap, every one of the 245 Compact Pro and DiskDoubler fixtures | | | **identical** |
+| the application's `CODE` | 151,644 B | 151,720 B | +76 B |
+| A5 world (data + bss) | 38,660 B | 38,648 B | −12 B |
+
+`ci.sh` green, and old and new engines were held against each other
+directly: 945 fixtures and 560 truncated and bit-flipped variants of
+Compact Pro and DiskDoubler archives, identical in exit code, in every
+message and in every extracted byte. A single token changed in the new
+inner loop (`CPT_ESC1` → `CPT_ESC2`) takes that from 0 mismatches to 82,
+which is what says the comparison tests anything.
+
+**This row is for speed, and it moves no licence.** No non-copyleft
+description of Compact Pro exists, so `fmt_cpt.c` still owes XADMaster
+and macutils its container and its stages, and the engine stays LGPL
+(OPEN_ITEMS.md, *What is still XADMaster's*). What was rewritten is the
+shape of the loops, not the format.
+
+**Where the time was.** `tools/m68kprof.py` on the shipped flags put
+25.6 % of a Compact Pro run inside `cpt_rle_push` — of which the CALL,
+its sticky-error test and its switch were 13.8 % of the whole run
+before any RLE work was done — and another 20 % in the match's byte
+loop, which read the window, wrote the window, and called. The fix is
+that the RLE stage is the IDENTITY for every byte that is neither the
+escape nor inside an escape sequence, so a match is a copy that stops
+at the first 0x81:
+
+    do { b = *s++; *w++ = b; if (b == CPT_ESC1) break; *d++ = b; }
+    while (s < send);
+
+and a piece is cut so that the match, both ends of the circular window,
+the output still owed and the staging buffer are all bounded before the
+loop starts rather than tested inside it.
+
+**Three measurements that were not guesses, and each cost a round:**
+
+- **Indexing is not addressing.** The same loop written with one index
+  (`s[i]`, `w[i]`, `d[i]`) is ONE instruction shorter and about 45 %
+  dearer, because a 68000 reads through `(An)+` in 8 cycles and through
+  an indexed mode in 14. `m68kprof` counts instructions and says the
+  index version is better; it is the tick probe that is right. Prefer
+  the cursor form and do not let an instruction count arbitrate between
+  two addressing modes.
+- **Splitting the source run as well as the destination LOST.** Cutting
+  each piece at both window ends takes the mask out of the copy — 6
+  instructions a byte down to 5 — and costs more than it saves, because
+  the average match here is eight bytes and the extra clip is paid per
+  MATCH. +0.6 M instructions, reverted.
+- **`cpt_rle_push` had to go out of line.** Written with the run fill
+  inside it, it stopped being inlined into the LZ loop, and the loop it
+  was no longer in got 4.1 % SLOWER: with one more live value the
+  output cursor spills to the stack and every byte of every match pays
+  two instructions. Marked `UNC_NOINLINE` (new in `unc_internal.h`) the
+  escape machinery cannot reach the hot loop's register allocation at
+  all, and both fixtures reach their best figure at once. The lesson is
+  the general one: on this target an inliner decision is a performance
+  decision, and the way to stop it moving under you is to take it.
+
+**The bulk run fill is worth having and a threshold on it is not —
+measured.** Runs of three bytes and fewer cost more through the copy's
+setup than through the byte loop, so a `CPT_RUN_BULK` of 4 was written
+and priced: 0.1 % either way on both fixtures, and 244 B of code. Taken
+out again — a branch that cannot be told from noise is not worth a
+quarter of a kilobyte on a 1 MB machine. **It went in half-removed**,
+the constant left at 1 with a comment still describing the crossover it
+no longer implemented, and the file then disagreed with this entry;
+that is the second commit, with 16 B back.
+
+**A swallowed write error, and what it is NOT.** Two arms of
+`cpt_rle_push` answer `return r->err` when a write fails, and that field
+was only ever set by the closing flush — so they returned UNC_OK for a
+failed write. `cpt_rle_emit` now sets it, which costs −8 B of code for
++8 B of A5. **No reachable case was found where it changed an outcome**,
+and none is claimed: a failed flush empties the staging buffer, both
+arms stage at least one more byte after it, and the entry's closing
+flush therefore writes again and fails again. Only a sink that failed
+once and then succeeded would have lost the error, and nothing here can
+produce one. Hardening, labelled as hardening.
+
+**What is NOT claimed.** That the Macintosh tiers were re-run: they were
+not, and nothing about the shell or the allocation changed — the
+differential suite runs this code at the same optimisation level on
+Linux, which is what marking functions rather than files is for. That
+the plain-RLE method (a fork with no LZ stage) got faster: it gets the
+one-byte fast path and nothing else, and in the whole corpus the
+largest such fork is 3,897 bytes. And no claim at all about the
+`--budget` behaviour, which cannot have moved: the peak is the same
+byte count on every fixture of both formats.
+
+
+---
+
+## 2026-09-19 (the match that was walked twice) — static LZH and LArc rebuilt on lhasa, and the copy that goes to two places at once
+
+**Claim (measured).** `src/fmt_lzh.c`'s remaining decoders — `-lh4-`
+.. `-lh7-` and LArc's `-lz5-`/`-lzs-` — are written from Simon Howard's
+lhasa (ISC) rather than `XADLZHStaticHandle.m` and `XADLArcHandles.m`,
+and a match no longer leaves the window a call at a time: the byte
+reaches the window and the writer's staging buffer from one register.
+Output is identical everywhere; a 68000 does 18–46 % fewer instructions
+for it.
+
+| | before | after | |
+|---|---|---|---|
+| `aminet-lha_68k.lha` (-lh5-, 331 KB out), Plus engine ticks | 3,527 | 3,046 | **−13.6 %** |
+| the same, Plus whole run | 3,650 | 3,182 | −12.8 % |
+| `aminet-lha_68k.lha`, 68000 instructions | 32,158,062 | 26,422,696 | **−17.8 %** |
+| `lhasa-unix114i-h2_lh7.lzh` (-lh7-), 68000 instructions | 1,742,747 | 1,392,054 | **−20.1 %** |
+| `larc333/long.lzs` (-lz5-), 68000 instructions | 58,726,028 | 31,484,585 | **−46.4 %** |
+| the same three, Linux `Ir` | 24.11 / 1.301 / 37.54 M | 24.14 / 1.272 / 28.08 M | +0.1 / −2.2 / **−25.2 %** |
+| peak heap, 168 LZH specimens | | | identical on Linux; 20,048 → 20,044 B on the Mac |
+| `fmt_lzh.c.obj`, 68000 -Os | 5,718 B | 5,858 B | +140 B |
+| the application's `CODE` | 151,696 B | 151,836 B | +140 B |
+| A5 world (data + bss) | 38,640 B | 38,660 B | +20 B |
+
+**What is lhasa's now.** The block structure and the three code tables
+(`lh_new_decoder.c`: `read_temp_table`, `read_code_table`,
+`read_offset_table`, `read_length_value`, `read_skip_count`,
+`start_new_block`, `read_offset_code`), the 510-symbol command alphabet
+and the two offset-field widths (`lh5_decoder.c`, `lh7_decoder.c`), and
+both LArc coders with their preload and their two START_OFFSETs
+(`lz5_decoder.c`, `lzs_decoder.c`). lhasa decodes a symbol by walking a
+tree built in an array (`tree_decode.c`, `build_tree`), which assigns
+codes in order of length and, within a length, in symbol order — a
+canonical code, which is what `UncCanon` already builds with a 10-bit
+lookup in front of it. That table and the bit reader stay: they are
+this project's and were measured in the 2026-08-24 pass. So are the
+window sizing, the MacBinary split and the header walk, which is still
+XADMaster's and says so.
+
+**Where the instructions went.** `unc_fork_put` was 12.4 % of an
+`-lh5-` extraction on a 68000 by itself — one out-of-line call per
+decoded byte, which at `-Os` GCC declines to inline — and the match
+loop around it re-masked two indices per byte. Now a match is cut into
+pieces bounded by the match, both ends of the circular window, the
+output still owed and the staging buffer, and the piece is copied
+through three `(An)+` cursors with none of those tests inside it. The
+literal path writes the same two places inline. `unc_fork_put` does not
+appear in the profile at all any more.
+
+**LArc gained most because it had least.** `-lz5-`'s commands are two
+bytes for a match of 3–18 and its window is 4 KB, so almost every byte
+of its output used to be a call; `long.lzs` is −46.4 %.
+
+**What the four instruments disagreed about, and which was right.**
+Linux `Ir` said +0.1 % on the `-lh5-` fixture, where the 68000 said
+−17.8 % — the opposite of the `-lh1-` row a few entries above, where
+Linux promised 18–24 % and the Plus delivered 10.1 %. x86 inlines the
+per-byte put into a block move and never had the call to lose. The
+proxy ranks; the machine prices.
+
+**Two things measured and NOT taken.**
+
+- **`UNC_HOT` on the new copy loop**: +416 B of `CODE` for **+3.8 %**
+  more 68000 instructions on `aminet-lha_68k.lha` (the -O3 loop spills
+  where the -Os one does not). Refused, like the Now Compress marks.
+- **Keeping the literal path on `unc_fork_put`** instead of writing the
+  staging buffer inline: 80 B of `CODE` cheaper but 16 B of A5 dearer,
+  and 3.1 % more instructions on `-lh5-`. Refused. Folding LArc's two
+  literal paths into one WAS taken: 72 B of `CODE` for 8 B of A5 and
+  2.1 % on `-lz5-` alone, which is the rarer format.
+
+**The window fill byte, which turned out not to matter.** lhasa and LHa
+1.14i fill the `-lh4-` .. `-lh7-` dictionary with SPACES and XADMaster
+with zeros; this file followed XADMaster. Only a stream that reads
+further back than it has written can tell the difference, and **none of
+the 166 specimens in reach can**: a build with each fill is identical in
+exit code, message and every extracted byte. The two references that
+describe the format agree, so the file now says spaces — for nothing,
+which is the honest size of the finding.
+
+**How it was graded.** `tools/run_lzh.py` green (182 archives against
+`unar` and against lhasa, 12 sets written by LHa 1.14i, the MacLHA 2.00
+specimen), `ci.sh` green, and the old and new engines held directly
+against each other: **177 LZH specimens** and the **whole 950-fixture
+corpus**, identical in exit code, in every message and in every
+extracted byte. That holdout was shown to be able to fail first — three
+one-token changes to the new code produced 6, 57 and 82 mismatches.
+
+**What is NOT claimed.** That the licence moves: the header walk, and
+twenty other files, still transcribe XADMaster, and the engine stays
+LGPL-2.1-or-later (NOTICE). That `-lh2-` or `-lh3-` moved — they have no
+permissive reference and `src/unc_lzdyn.c` is untouched. That this is
+clean-room: the author had read the XADMaster transcription this
+replaces.
+
+
+## 2026-09-19 (the buffer that became a length) — LZW from the public compress(1), and the array that was hiding 17.8 %
+
+**Item 5 of the shedding list, which predicted neutral.** The inventory
+read "doubtful — the chain walk is already tight" (OPEN_ITEMS.md). The
+walk was tight. The array it walked into was not, and only writing the
+file from a description instead of reading the transcription made that
+visible.
+
+**Where the format came from.** `reference/deark/src/fmtutil-lzw.c`
+(Jason Summers, MIT), already in `reference/` as the ARC oracle, is a
+complete account of the compress(1) stream: the clear code, the point at
+which the width grows, and the padding rule — codes are written eight at
+a time at one width, so a width change mid-group leaves the rest of the
+group to discard (`delzw_unixcompress_end_bitgroup`). XADMaster
+implements the same rule with the comment "God damn, this is dumb"; the
+new file cites a source that says WHY it is there. The algorithm is
+Welch's. `LZW.c` and `XADCompressHandle.m` are no longer sources of
+`src/unc_lzw.c` (NOTICE).
+
+**What the rewrite found.** A symbol's string is stored backwards —
+`chr[s]` is its last byte and `parent[s]` names the rest — so walking it
+produces the bytes in reverse. The old decoder staged the reversed
+string in a `capsymbols`-byte array and then copied it out backwards. On
+`popper-1.7.tar.Z` that copy alone was **1,212,620 of 6,832,171
+instructions, 17.8 %**, seven per output byte, and it exists only
+because the length is not known until the walk has finished.
+
+**So store the length.** `len[sym]` takes the byte per symbol the
+staging array used, which leaves the allocation exactly what it was:
+`cap * 4`, `parent` 2 + `chr` 1 + `len` 1. With the length in hand the
+walk writes straight into the caller's buffer from the far end
+backwards, and the string lands the right way round with no second pass
+over it.
+
+Three things had to hold for that byte to be free:
+
+- **One byte is not enough for a length.** It saturates at 255, and
+  `lzw_strlen` recovers the exact figure by walking UP the parents until
+  one of them did not saturate — length−254 steps, not a second walk of
+  the whole string.
+- **The new table entry needs the string's FIRST byte**, which used to
+  be read out of the staging array. It is the last byte the walk stores,
+  so the write hands it back. For a code that names the entry it is
+  itself about to define, that byte is the PREVIOUS string's first byte,
+  already in hand from the previous write.
+- **A string longer than the caller's buffer** used to sit in the array
+  between calls. It is now re-walked with the part already handed over
+  skipped, which is quadratic in the number of pieces — so it was
+  measured rather than reasoned about. ARC reads LZW through a 64-byte
+  buffer and splits 46 of `synth-arc-mixed.arc`'s 740 codes; that
+  fixture is still −1.7 % on Linux. popper splits 16 of 33,612.
+
+**Four axes.**
+
+| | old | new | |
+|---|---|---|---|
+| `popper-1.7.tar.Z`, Mac Plus engine ticks | 713 | 646 | **−9.4 %** |
+| `derived-xmasbeeps.sit`, Mac Plus engine ticks | 2,850 | 2,801 | **−1.7 %** |
+| `popper-1.7.tar.Z`, Linux Ir | 6,832,171 | 5,260,173 | −23.0 % |
+| `a2ps.V4.3.tar.Z`, Linux Ir | 3,413,007 | 2,767,512 | −18.9 % |
+| `ddtf-dd377dda-testfile.TIF` (DiskDoubler 1), Linux Ir | 2,581,333 | 2,133,022 | −17.4 % |
+| `derived-xmasbeeps.sit`, Linux Ir | 26,689,757 | 23,452,283 | −12.1 % |
+| `derived-EmpireBuilderDemo.sit`, Linux Ir | 28,397,076 | 25,924,370 | −8.7 % |
+| `synth-arc-mixed.arc`, Linux Ir | 1,926,042 | 1,893,798 | −1.7 % |
+| `CODE` | 151,836 | 151,976 | +140 B |
+| A5 | 38,660 | 38,648 | **−12 B** |
+| peak heap, all 113 LZW fixtures | — | — | identical, to the byte |
+
+**The Mac got a fraction of what Linux promised, and that is the part
+worth transferring.** −23.0 % of x86 instructions is −9.4 % of Mac Plus
+ticks on the same fixture, and −12.1 % is −1.7 %. What the rewrite
+removes is a byte copy with two pointer increments, about the cheapest
+thing a 68000 does; what remains is an indexed load from two arrays per
+output byte, about the dearest. The trap list already said Linux counts
+overstate the Plus — by about 2x for the `-lh1-` coder. Here it is 2.4x
+and 7x, so "overstates" is not a factor anybody should carry in their
+head: the Linux count RANKS a change, the tick probe PRICES it, and
+nothing else in this file should be read as doing both.
+
+**One shape refused, one taken against the Linux number.** Carrying ONE
+pending counter (bytes left) instead of two (length and position) reads
+better and costs 40 B of code to save 8 B of A5 — 32 B the wrong way,
+since both come off the same budget here. Refused.
+
+The other is the more interesting measurement. The first build was
++280 B; folding the two `lzw_strlen` call sites into one and turning the
+continuation loop into an `if` — it can only ever run once, because the
+piece it takes is the smaller of what is left and what fits, so one of
+the two always runs out — gave **128 B back and cost 1.5 to 3.0 % of
+Linux instructions**, because the symbol and the flag are now read from
+the struct once per code instead of held in registers at each site. On
+the Plus it is **−4 ticks on popper and +6 on xmasbeeps, both inside the
+±0.5 % two runs of one build differ by**. So it was taken: 128 B of a
+1 MB machine's budget is a measurement, and 1.5 % of an x86's
+instructions on this path is not.
+
+**One fixture in the brief exercises nothing.** It named `arc2pak1.pak`
+as "ARC's LZW methods"; instrumenting the decoder and sweeping the whole
+corpus says that archive never enters it — it is Crushed and Distilled —
+and its instruction count is byte-for-byte unchanged by this work. The
+one ARC fixture here that does reach LZW is `synth-arc-mixed.arc`. A
+fixture list written from what a format CAN use is not a list of what a
+file DOES use.
+
+**How it was graded.** `ci.sh` green; and the old and new engines held
+directly against each other over the **113 fixtures that reach the LZW
+decoder** — found by instrumenting the decoder and sweeping the corpus,
+not by guessing from extensions — identical exit code, identical
+messages, every extracted byte and identical peak heap on every one. The
+holdout was shown able to fail first: three one-token changes to the new
+file gave **113, 113 and 111** mismatches.
+
+**The path no archive reaches, and what now tests it.** The longest
+string anywhere in the corpus is **223 bytes**, so `lzw_strlen`'s
+resolving walk never runs in a shipped build on any file here — a
+tolerance whose only evidence would otherwise be our own output. `ci.sh`
+builds a variant at `UNC_LZW_LEN_MAX=4`, where nearly every string takes
+it; that variant is byte-exact on all 113. And it was shown to test
+something: breaking the resolving walk by one token changes **nothing at
+255 and 112 of 113 at 4**.
+
+**The canonical Huffman half, and the bug that came free with the
+reference.** `unc_canon_build_ext` and `unc_canon_decode` now follow
+RFC 1951 section 3.2.2 and puff.c (Mark Adler, zlib licence) rather
+than `XADPrefixCode.m` and macutils' `cpt.c`, and puff.c supplies
+something the old citation only had as a remark about one encoder: an
+INCOMPLETE code set is a legal outcome with a defined meaning, not a
+Compact Pro quirk. Byte-identical on the whole corpus and **0.00 % on
+Linux** on four fixtures that use it (Compact Pro, `-lh7-`, Now
+Compress, StuffIt) — a re-derivation, not a rewrite. It is −4 B of code
+and −20 B of A5, because puff's over-subscription check carries the
+code space LEFT as a counter instead of comparing a running total
+against a shifted constant.
+
+Carried over unchanged it would have been a defect. puff.c holds that
+counter in a signed `int` and tests it below zero, which is safe at its
+`MAXBITS` of 15 and is undefined at this file's `UNC_CANON_MAX_BITS` of
+**31**: two symbols declared at length 31 take the counter to `1 << 31`.
+The corpus cannot reach it — 18 bits is the deepest anything here goes,
+which is why 944 fixtures agreeing said nothing about it — so the
+boundary is a unit test now, and the test was shown to fail: with the
+signed form restored, the sanitizer build reports "left shift of
+1073741824 by 1 places cannot be represented in type 'int'". The check
+is made before the subtraction and the counter is unsigned. **A
+reference implementation's constants are part of what it assumes**, and
+this one was read carefully enough only on the second pass.
+
+**What is NOT claimed.** That the licence moves — twenty other files
+still transcribe XADMaster and the engine stays LGPL-2.1-or-later
+(NOTICE). That the `.Z` header parsing moved: that is `fmt_exo.c`, item
+6. That this is clean-room — the author had read the transcription being
+replaced. That the 1 MB budget figure of 648,100 B has been re-measured:
+it is still the 2026-08-31 number, and this row takes 160 B of it, as
+the four rows before it today took their own.
+
+---
+
+## 2026-09-19 (the facts that were somebody else's to state) — the container parsers re-cited on their own specifications
+
+**The ask**, from the same brief as the six rows before it: shed
+XADMaster where something else can carry the same weight. This row is
+the one with no code in it. Seven files cited
+`reference/XADMaster/<file>` for things that are not algorithms and not
+XADMaster's to begin with — an alphabet, a header offset, an entry
+table, a directory record — because XADMaster was the only description
+of them on this machine. It was not the only description of them
+anywhere.
+
+**What was done.** `tools/fetch_references.sh` now fetches seven public
+documents into `reference/notes/`, and `src/fmt_binhex.c`,
+`fmt_macbinary.c`, `fmt_applesingle.c`, `fmt_exo.c` and `fmt_zipseg.c`
+cite the section of the document a fact is written in:
+
+| file | now cites | for |
+|---|---|---|
+| `fmt_binhex.c` | Peter N Lewis, "BinHex 4.0 Definition" (1991); RFC 1741 App. A | the alphabet, the banner, the 0x90 RLE, the CRC |
+| `fmt_macbinary.c` | MacBinary II Standard (7/24/87); MacBinary III Proposal (1996) | the 128-byte header, the padding, the CRC, `mBIN`, the version procedure |
+| `fmt_applesingle.c` | RFC 1740, App. A and B | magics, version, filler, entry table, entry ids, the 2000 epoch |
+| `fmt_exo.c` | RFC 1952; APPNOTE.TXT 6.3.10; POSIX.1-2017 `pax`; deark | the gzip header; zip's records, Zip64 and AES; the ustar header block; the `.Z` three-byte header |
+| `fmt_zipseg.c` | APPNOTE.TXT 4.3.12, 4.3.16, 8.5 | the (part, offset) pairs and the spanning marker |
+
+The `.Z` header is the one the LZW row handed over by name ("that is
+`fmt_exo.c`, item 6" — DECISIONS.md, *the buffer that became a
+length*); it cites the same deark file the decoder behind it now does.
+
+**MEASURED: no code moved.** A release build (`-O2 -Werror`) of this
+commit and of its parent produce byte-identical `macextract` and
+`unit_tests` — same sha256 — so nothing below the comments changed, and
+the tick probe, the size ratchet and the heap figures were not run
+because there is nothing they could have measured.
+
+**Four things came out of reading the documents rather than somebody's
+reading of them**, which is the return on a row that was supposed to
+have none.
+
+*RFC 1741 cannot define BinHex.* Its Appendix A prints the alphabet with
+a stray space in it, 65 characters where the encoding needs 64, so a
+reader holding only the RFC cannot say what the sixty-four are. Lewis's
+document has it right and is also the only one of the two that states
+the CRC and the zero-count-means-literal rule. Both are fetched, and the
+constant in the source says which one it came from.
+
+*A claim in `fmt_zipseg.c` was made false by this work.* It said the
+four bytes displacing a first segment's local header "measure 50 4B 07
+08 ... no reference in this repository documents them, so the probe does
+not require them". They are APPNOTE.TXT 8.5.3's spanning signature
+0x08074b50, and the sentence was true only for as long as APPNOTE was
+not on this machine. The BEHAVIOUR is unchanged and is now better
+argued: 8.5.4 says a one-segment split carries a different marker,
+0x30304b50, where Info-ZIP was measured here writing 0x08074b50 anyway,
+and 8.5.5 adds that the same value is a data-descriptor signature
+elsewhere. Three meanings, so the displacement stays the test and the
+marker stays unread.
+
+*MacBinary I's heuristics were never XADMaster's.* The II standard sets
+out the test for a header with no checksum — offsets 101..125 zero, the
+name length, the fork lengths bounded — and nothing here had cited it.
+Of the four tests in `mb_version`, three are the standard's, two of
+those are applied differently on purpose (zero from 99 rather than 101,
+because 99 is the Get Info comment length the same standard reports
+nobody implemented; and `UNC_MAC_MAX` rather than the standard's
+0x007FFFFF, which is a 1987 statement about Macintosh files rather than
+about the format), and only the nonzero-date test has no document behind
+it. Each difference is now written at the line that makes it.
+
+*And `fmt_stubs.c` was not the dead end its own comments said it was.*
+Three detect-only probes, all three citing XADMaster, and two of them
+did not need to. deark (MIT) recognises the same eight-byte StuffIt X
+magic. And macutils' `macunpack/dd.h` — a file this project has cited
+for years, for other formats — states DiskDoubler's two older headers
+outright: `MAGIC2 "\253\315\000\124"` is the 0xABCD0054 the probe
+tests, `C_HDRCRC 82` in an 84-byte header and `ARCHHDRCRC 76` in a
+78-byte one are the two CRC positions it checks. Nothing was looked for
+there because the comment said where the fact came from, and a citation
+is not a search. Only Now Compress is XADMaster's entire, and `DDA2` is
+neither's: it is DiskDoubler Pro's, read off the CC0 specimens NOTICE
+already credits.
+
+**What stays XADMaster's, and is marked as such where it is made:** the
+MacBinary CRC-16/0xA001 fallback for encoders that reached for the wrong
+table; the nonzero-date test above; the byte-swapped AppleSingle header,
+which the RFC positively forbids ("most significant byte first") and so
+can never be re-cited; the whole StuffIt split header in
+`fmt_sitseg.c`, which Aladdin never published and which neither deark
+nor macutils reads; and Now Compress in `fmt_stubs.c`.
+
+**What is NOT claimed.** That the licence moves — it does not, and it
+cannot until the last transcription is gone; these files carried facts,
+not code, so the LGPL grant was never resting on them and removing the
+citations frees nothing. That any behaviour changed anywhere: see the
+byte-identical binaries above. That the search for a second description
+was exhaustive: it was `reference/` and nothing else, which is deark,
+macutils, lhasa, LHa, mpack, btoa, CiderPress2 and XADMaster. And
+nothing at all about the formats' correctness, which the differential
+suites already grade and which this row did not touch.
+
+---
+
+## 2026-09-20 (the checksums that came with the disks) — the two A/UX DART specimens pinned, a peak-RAM table that had gone stale under them, and the `--only` case a stride never reached
+
+**Claim (measured).** The two A/UX 3.0.1 floppies Apple's own DART 1.5.3
+compressed in 1993 are this repository's fixtures from today and are
+graded by `ci.sh`: `AUX301_ReadMe_MacSE.dart` (381,699 B, 800K, 40 slots)
+and `AUX301_BootDisk_Quadra.dart` (978,283 B, 1440K, **72 slots** — the
+only 72-slot archive of any kind this project has held). Ten cases in
+`tools/run_dart.py`, which went from 37 to 53; the other six are the
+synthetic cases, which used to be skipped when `reference/ciderpress2`
+was absent and now run on the binary alone.
+
+**The oracle came with the disks, and it is not the one the item asked
+for.** OPEN_ITEMS.md asked for the two Disk Copy 4.2 checksums MacMount
+had derived by walking the expanded volumes under `hfsutils`. Both
+members turn out to carry Apple's own: a 411-byte resource fork holding
+'CKSM' 1 over the tags, 'CKSM' 2 over the data, and a 'DART' 0 Pascal
+string that spells both out — *"1.5, tag checksum=$AC4AA5C3, data
+checksum=$E257EF53"*. The data halves agree with the derived numbers
+(`E257EF53`, `3DF12BA6`), so what the pinning added is the TAG side:
+`AC4AA5C3` over 19,200 B of real GCR tags, stated by the program that
+wrote them. `tools/get_dart_specimen.py --show readme` prints all three
+in one command, which is where the constants in `run_dart.py` are cited
+from.
+
+**The 72-entry table is checked from the specimen, not from our reading
+of it.** For each disk the suite tries BOTH table lengths and requires
+exactly the one `srcSize` calls for to add up to the file: 4 + 2n + Σ
+lengths, with 0xFFFF counted as 20,960. A 40-entry reading of the boot
+disk falls 407,486 B short, and would put the payload 64 bytes out — the
+defect this row exists to make impossible. Source for the arithmetic:
+`reference/ciderpress2/DART-notes.md`, which gives a "best" length in
+bytes and a "fast" one in words.
+
+**The specimens are unpacked by this engine's own CLI.** They are members
+of a StuffIt that exists in one place, Macintosh Garden's FTP; the
+SHA-256s MacMount pinned from `unar`'s output grade our StuffIt 5 walk on
+the way in, so a walk that is one byte wrong produces a failure rather
+than a fixture. All four members came out byte-identical to `unar`'s.
+`tools/fetch_references.sh` fetches the wrapper once into
+`reference/macgarden/` and `fixtures/SOURCES.md` names the generator as
+each member's provenance, so `harvest.py --restore` rebuilds them.
+
+**What the row found on the way, and the smell it came from.** A constant
+in a peak-RAM matrix is one of the ten smells; this was the other kind —
+a number that should have MOVED and did not. FORMATS.md's DART table read
+40,301–40,624 B for "best" and "15,568 B for the adaptive Huffman tree",
+both of which stopped being true on 2026-09-19, when the `-lh1-` coder
+DART borrows was rebuilt and its working state fell to 9,000 B (*the tree
+that was Yoshizaki's*). Measured on all seven specimens, "best" is now
+27,967–34,056 B and every figure is the sum of its parts exactly: longest
+chunk + 9,000 + 4,096. The Macintosh row was stale by the same 6,568 B and
+was re-run the same day: **PASS at 4 MB and at the 1 MB floor**, 838,484 B
+out, peak heap **33,765 B** both times — the Linux figure plus 32 B of the
+Mac allocator's per-block overhead, where the pre-rewrite pair differed by
+20. **A format's numbers live in the section of the format, not of the
+coder** — a shared decoder rewritten under one format's row leaves the
+other's untouched, and nothing checks that.
+
+The new specimens also disproved the sentence under that table. It said
+the saving from sizing the input buffer off the block table rather than
+at a fixed 20,960 B was "between 0 and 474 B" because "every real 800K
+disk has at least one chunk that barely compresses". The *Read Me* disk
+holds one document and is otherwise empty: its worst chunk compresses to
+14,871 B and it saves **6,089**. The hypothesis in the following sentence
+— that a mostly empty disk is where this sizing pays, and that it is the
+small machines which meet one — is the one that survived.
+
+**And what the corpus itself shifted.** `tools/run_only.py` sweeps every
+SIXTEENTH fixture by name. Two files sorting near the top of `fixtures/`
+moved that stride by two, and the new sample found `compact-pro-151.hqx`
+— an archive with a comment, which `--only` had never been run against
+in the three weeks the suite has existed. It failed: a selective
+extraction wrote `Compact Pro Package (English).comment.txt` beside the
+one entry asked for.
+
+That is the engine behaving as designed — an archive's comment belongs
+to the archive and to no entry of it, so it is written whatever was
+selected, and `--no-comment` declines it (cli/main.c, `sink_comment`) —
+and a suite that had never been told. No `src/` change: `run_only.py`
+now permits the file and, because a permission nothing grades is a hole,
+a fifth generated case asserts all three halves (written under `--only`,
+absent under `--no-comment`, and not selectable, since it is not an
+entry). The sweep does not GUESS the name: this fixture's comment is
+named after the archive inside the BinHex envelope rather than after the
+fixture, so it asks instead — what a `--no-comment` run does not write
+is the comment, by definition. All three assertions were checked by
+mutation.
+
+**The lesson is about the sample, not the comment.** A sweep that takes
+every Nth fixture by name covers a set that changes when the corpus
+gains a file, so it can never be said to cover a PROPERTY — only to have
+met one. This is the same shape as an aggregate that cannot fail on what
+it does not aggregate (CLAUDE.md), and it is worth knowing that adding a
+fixture reshuffles what several suites look at.
+
+**What is NOT claimed.** That anything in `src/` changed: nothing did, so
+there is no tick, size or heap movement to price, and the heap figures
+above are the corrected old ones rather than new behaviour. That a
+Macintosh has expanded either A/UX disk — neither has been through the
+shell, and the boot disk's 1,509,268 B output does not fit the harness's
+1,440 KB Out volume without `--out-kb`. What was re-run there is
+`test1-best`, which is CiderPress2's. That the other two members of the
+StuffIt (an 800K boot disk and a 1440K *Read Me*) add anything: they are
+the same two shapes again, and are named in the generator and left where
+they are. And nothing about the MS-DOS or Apple II disk types, or a real
+400K disk, none of which any specimen here has ever been.
+
+## 2026-09-20 (the character that was touched three times) — BinHex's line read, judged and decoded in one pass, and four characters at once
+
+**Item 1 of CURRENT_WORK.md, chosen from a 68000 instruction profile**
+that read `bh_get_bits` 41 % and `bh_next` 29 % of
+`macburger-helper.hqx` — 204 of the 946 files in `fixtures/` are `.hqx`,
+the commonest format in the corpus. The brief proposed decoding four
+characters into three bytes at once and said, as an aside worth one
+look, that every character is touched three times.
+
+**The aside was the larger half, and only the per-BLOCK profile said
+so.** Read by function, the work is in the two that fetch six bits and
+assemble a byte. Read by block with `file:line`, `bh_refill_line` —
+which is inlined into `bh_get_bits` and so invisible in the function
+ranking — is 8.77 M of 34.6 M instructions, **25 %**, and the inlined
+`unc_bufin_next` under it another 9.7 %. The 6-bit fetch proper is
+15.6 %. The three touches are the reason: a character is copied into
+`line[]` one call at a time, scanned there by a second loop that judges
+whether the line belongs to the document, and looked up in the LUT a
+third time when its six bits are wanted.
+
+**What the line reader does now.** The line is normally in the reader's
+own buffer already, all 64 characters and the terminator with them, so
+it is taken with one scan for that terminator (`unc_bufin_span` /
+`unc_bufin_drop`, new and used only here) instead of a call, a bounds
+test and a cursor store per character. The pass that judges the line
+then also CONVERTS it: `line[]` holds 6-bit values and 0xFE for the
+':' from that point on, so neither the 6-bit fetch nor the group decode
+looks a character up again. Two touches, no call per character.
+
+**The whitespace rule is why the conversion cannot move into the copy.**
+hexbin trims trailing whitespace before judging a line, and space and
+tab are not in the BinHex alphabet — so a fused copy-and-judge would
+have to either reject every line a mailer padded or stop rejecting an
+interior space, and the alphabet omitting the space is load-bearing
+(`fmt_binhex.c`, `bh_refill_line`). The trim therefore still runs on
+CHARACTERS, between the scan and the conversion, and the rule is
+unchanged.
+
+**And the 4:3 group.** When four values are on the line and none is the
+terminator — one test on their OR, since every value is a 6-bit code or
+0xFE — all three bytes are computed at once and the second and third
+are served from the decoder. A BinHex line is 64 characters, a multiple
+of four, so a real file takes this path for every group but the last of
+a line; a short line, a group straddling two lines and the ':' all fall
+through to the byte-at-a-time path, which is unchanged.
+
+**Two shapes for serving those two bytes, and the cheaper one is not the
+tidier one.** Extending the existing `phase` counter to 3 and 4 costs
+14 instructions to hand back a byte already in hand. A pointer pair
+(`bp`, `bend`) tested before the phase costs 24 B more of 68000 code and
+is **−4.0 %** of the whole run: 23,126,796 → 22,209,542 instructions.
+Taken, and the phase machinery is left for the slow path alone.
+
+| | old | new | |
+|---|---|---|---|
+| `macburger-helper.hqx`, Mac Plus engine ticks | 3,771 | **2,386** | **−36.7 %** |
+| `macburger-helper.hqx`, 68000 instructions | 34,609,457 | 22,209,542 | −35.8 % |
+| `a2basic-09.hqx`, 68000 instructions | 22,963,608 | 14,508,403 | −36.8 % |
+| `CODE` | 151,976 | 152,216 | +240 B |
+| A5 | 38,648 | 38,664 | +16 B |
+| peak heap, `macburger-helper.hqx` on the Mac | 8,208 B | 8,208 B | identical |
+
+**The 68000 count and the tick probe agreed to one point**, which is new
+here: the same two instruments disagreed by 2.4x and 7x on the LZW
+rewrite the day before (*the buffer that became a length*), because what
+that one removed was a byte copy — the cheapest thing a 68000 does.
+What this one removes is calls, bounds tests and indexed loads, which
+the count and the clock price alike. One data point, and the rule
+stands: the profile RANKS, the probe PRICES.
+
+**The A5 growth is not a table.** `fmt_binhex.c.obj` carries no data at
+all, before or after; all 238 B of its growth is text. The 16 B is
+rodata alignment shifting under it, the same effect measured on
+2026-09-19 (+16 B "around the 64-byte length table, not a new table").
+
+**A defect the fixtures caught that a suite would not have.** The first
+draft of the fast path left `n` at the count the terminator scan had
+reached when it fell through to the byte-at-a-time loop, so a line that
+straddled a refill was appended after a copy of itself. 203 of 204
+`.hqx` fixtures failed their CRC immediately — but only because the
+old engine binary was kept and its output diffed against the new one
+over every fixture of the format, which is the check CURRENT_WORK.md's
+protocol asks for and the reason it asks. The 4 KB input buffer makes
+that path fire about once every 64 lines, so it is well covered; a
+smaller corpus, or grading on exit status alone, would have shipped it.
+
+**What is NOT claimed.** That the licence moves: `fmt_binhex.c` left the
+XADMaster row on 2026-09-19 for RFC 1741 and Lewis's definition, and
+nothing here changed a format detail — the alphabet, the banner, the
+CRC and the RLE layer are untouched, and so is hexbin's garbage rule.
+That the CRC-16 or the RLE filter got cheaper: they did not, and they
+are now 12.3 % and 4 % of what is left. That any other format moved —
+`unc_bufin_span` has one caller, and the 932-fixture differential run
+is byte-for-byte what it was. And no 1 MB tier was re-run for this: the
+allocation is `UNC_IOBUF * 2` as before and the Mac peak is identical to
+the byte, so nothing a tier measures can have moved.
+
+## 2026-09-20 (the row that was not the archive) — one harness's fix, another harness's silent wrong answer
+
+**Claim.** Since 2026-08-30 the yardstick has been extracting the
+Finder's `Desktop` file instead of the archive, for any fixture whose
+name sorts after it.
+
+**Evidence.** `expander.py` drove our side by clicking the first row of
+Standard File and pressing Return — the archive is the only thing on the
+volume worth opening, so the first row is the archive. On 2026-08-30
+`mkboot.py` stopped deleting the `Desktop` file (*the Desktop file the
+password phase needed*, BLOCKERS.md: deleting it broke the password
+phase, for reasons that are still not understood, so it is kept unless a
+Finder is wanted). That file is **invisible to `hdir`** — which is why
+`mkboot`'s own strip walk could not see it and `names_on` does not list
+it — and **visible in our dialog**, which filters nothing. So it sorts
+into row one, and `macburger-helper.hqx` and `unshar-111.hqx` both
+report *"This file could not be extracted"* three seconds in,
+photographed, on builds either side of today's BinHex change.
+
+**Consequence.** The file is named by type-ahead now, Standard File's
+own prefix search, and the frame that shows the selected row is
+photographed before Return. `unshar-111.hqx` went from 3 s and nothing
+to 60 s and ten files; `macburger-helper.hqx` to 250 s and 312 files,
+which is the same work FORMATS.md's 269 s row describes, 19 s faster —
+and 19 s is what today's BinHex work takes off that chain's first layer,
+measured separately. The two published rows sort BEFORE `Desktop`
+("der" < "Des") and were taken cleanly, which is the whole reason three
+weeks of sessions did not meet this.
+
+**The transferable part is not about Standard File.** A harness that
+addresses anything by POSITION measures whatever is in that position,
+and the thing that moved it was a deliberate, documented, correct change
+to a DIFFERENT harness — one whose own note says "do not delete it
+unconditionally again". Nothing connects those two files; nothing could
+have. What made it findable at all was that the failure had a
+photograph: the run printed `wrote 0: NOTHING` beside a seconds column
+that looked like a measurement, and the frame behind it was an alert.
+**A harness that prints what it produced can be caught lying; one that
+prints only a number cannot.**
+
+**What is NOT claimed.** That the 2026-08-29 figures were wrong: 269 s
+described 312 files then and the repaired harness writes 312 files now,
+so that run selected the archive — which it could, the day before the
+`Desktop` file came back. Nothing between those two dates was measured
+with this instrument, so nothing else needs re-reading. And Expander's
+own column is untouched: its dialog lists only what it can expand, and
+its side of the harness never clicked a row.
+
+## 2026-09-20 (the window that was already the staging buffer) — method 13's per-byte put, and the call that was never inlined
+
+**Item 2 of CURRENT_WORK.md, and it very nearly did not survive
+reading.** The plan was to flush runs through `unc_fork_write` instead
+of calling `unc_fork_put` per byte — and `unc_fork_write` **is a byte
+loop over `unc_fork_put`** (`unc_util.c`, and its comment says so: on a
+68000 a byte loop is what a copy is anyway, and chunking into the
+staging buffer was measured 100 B bigger on 2026-09-18). Swapping one
+byte loop for another buys nothing.
+
+**What makes it pay is where the loop is.** `unc_fork_put` is `static
+inline`, but it carries a call to `unc_fork_flush`, so gcc declines to
+inline it at `-Os` and emits it once: the 68000 profile shows it at its
+own address, 10 instructions plus the `jsr` and the `rts`, **13.6 % of
+a method-13 run**. Inside `unc_fork_write` — same translation unit as
+the definition — it IS inlined. So the byte work is identical and the
+CALL happens once per run instead of once per byte.
+
+The profile bears that out exactly: `unc_fork_write` now costs
+5,505,711 instructions where `unc_fork_put` cost 5,504,604 — the same
+work to the thousandth — and the saving is all in the decode loop,
+`unc_sit_decode_fork` 13,889,602 → 9,206,094.
+
+**The window is the staging buffer**, so a run costs no memory to keep:
+the decoder was already writing every literal and every copied byte
+into `window[pos & (win-1)]`. What is new is `flushed`, a second
+cursor, and one `sit13_flush` call at the head of the decode loop when
+`pos - flushed` reaches a quarter of the window, plus one at the end.
+
+**Why a quarter.** The flush hands over `to - from` bytes and must
+never be asked for more than the window holds. One iteration adds at
+most 32,832 bytes — the 0x13f escape is 15 bits plus 65 — so a quarter
+of a 64 KB window leaves 16,383 + 32,832 = 49,215 worst case, inside
+65,536. Below 64 KB the window is rounded up to at least `outlen`
+(*sit13_winsize*), so `pos` never wraps at all and the question does
+not arise.
+
+| | old | new | |
+|---|---|---|---|
+| `derived-Ultimate_Copland_1.1.sit.1`, Mac Plus engine ticks | 4,395 | **3,867** | **−12.0 %** |
+| the same, 68000 instructions | 40,451,161 | 35,769,616 | −11.6 % |
+| `CODE` | 152,216 | 152,356 | +140 B |
+| A5 | 38,664 | 38,652 | **−12 B** |
+| peak heap, the same fixture on the Mac | 81,226 B | 81,226 B | identical |
+| the whole corpus, old binary vs new | — | — | **948 fixtures, 0 differences** |
+
+**The wall clock did not move and that is not a contradiction.** That
+run reads 140.4 s before and 140.5 s after, because the autotest build
+CRC-reads both forks back off the volume after extracting, and the
+read-back is most of it. The engine ticks are the measurement; the
+seconds column of `run.py` is not, for this build.
+
+**What is NOT claimed.** That the licence moves: method 13 still has no
+description anywhere but `XADStuffIt13Handle.m`, and this is its speed
+half only — CURRENT_WORK.md's Item 4 is the rewrite, and it now has a
+floor to beat. That any other format changed: `sit13_flush` is static
+and has no other caller, and the corpus A/B covers every one of them.
+And nothing about cancel timing: the old code turned any non-`UNC_OK`
+from the put into `UNC_ERR_SINK` and the new code propagates what came
+back, which is what `fmt_lzh.c` has done since 2026-09-19 — a cancel
+mid-fork now reports `UNC_ERR_ABORTED` where it reported a sink error,
+and the 948-fixture A/B says no corpus path reaches either.
+
+## 2026-09-20 (what a helper call costs that its count does not say) — Arsenic's two products, and a count that understated the clock by 3.6x
+
+**Item 3 of CURRENT_WORK.md, and the only row this week that came out
+better on every axis at once.**
+
+**The claim.** `renorm * low` and `renorm * freq[n]` are the arithmetic
+coder's inner two multiplications, and on a 68000 — which has no 32x32
+multiply — they went through libgcc's `__mulsi3`. They need not: a
+model's `total` never passes its `limit` by more than one increment
+(`ars_model_bump`), so the limits of 256 and 1,024 make `low` and
+`freq[n]` **11-bit numbers**, and only `renorm` needs 32 bits, `range`
+being `ARS_NUMBITS` wide. Two 16x16 products and a shift is the
+identity, and `mulu.w` is an instruction the 68000 has.
+
+**Seen, not assumed.** `objdump -dr` on the object: the relocations to
+`__mulsi3` go from 3 to 2, and the two that remain are at
+`ars_model_reset` and the model setup — once per entry, not once per
+symbol. `muluw` goes from 2 to 6. The brief said to check this rather
+than trust gcc's m68k backend to recognise the pattern, and the check
+is the reason the cast is on both operands.
+
+**The high half is shifted off the top of the word and that is exact**
+here: `renorm` is `range / total` rounded down and the multiplicand is
+at most `total`, so the true product is at most `range` — under 2^25 —
+and the discarded bits are zero. Unsigned throughout, so they are
+defined rather than overflow.
+
+| | old | new | |
+|---|---|---|---|
+| `derived-a2basic.dmg.sit` at 4 MB, Mac Plus engine ticks | 18,916 | **17,002** | **−10.1 %** |
+| the same, wall clock for the run | 341 s | 321 s | (±one 20 s poll) |
+| the same, 68000 instructions | 161,955,101 | 157,445,238 | **−2.78 %** |
+| `derived-KeyGraphics.sit`, 68000 instructions | 7,738,377 | 7,598,077 | −1.8 % |
+| `CODE` | 152,356 | **152,336** | **−20 B** |
+| A5 | 38,652 | **38,640** | **−12 B** |
+| peak heap, a2basic on the Mac | 829,041 B | 829,041 B | identical |
+
+**−2.78 % of the count bought −10.1 % of the clock, and that is the
+part worth transferring.** The trap list has always said a libgcc
+helper costs more than its count says; this is the first time the two
+instruments have been put either side of one and the factor measured.
+It is **3.6x**, and it points the OPPOSITE way from the LZW rewrite the
+day before, where −23.0 % of an x86 count was −9.4 % of ticks. So the
+error is not a constant and not even a sign: what the profile ranks is
+instructions, and a `jsr` into a shift-and-add loop with its stack
+traffic is not one instruction's worth of machine.
+
+**What is NOT claimed.** That the 1 MB sampled path moved: it has not
+been re-timed since the 2026-09-19 rewrite and this run is the 4 MB
+fast path (FORMATS.md, *StuffIt 5 / Arsenic at 1x*). That anything but
+StuffIt 5 changed — `ars_mulw` is static, `sit_arsenic.c` has no other
+caller, and 554 StuffIt and BinHex fixtures come out byte-identical
+against the old binary. And nothing about other 32x32 multiplies in
+the engine: the bound that makes this one safe is a property of this
+model's limits, and every other site would need its own.
+
+## 2026-09-20 (the tree that could be measured instead) — the serialized Huffman tree, derived from three formats' output rather than rewritten
+
+**Item 11 of CURRENT_WORK.md's Part B, and it closes without a line of
+decoder being rewritten.** That is the result, not a dodge: the row's
+obstacle was never the code.
+
+**What the row said.** `unc_huffman.c`'s bit-serialized tree parse —
+used by StuffIt method 3, DiskDoubler method 4 and PackIt — cited
+`XADStuffItHuffmanHandle.m` and macutils' `de_huffman.c`, and the
+inventory recorded "the tree parse cannot follow: no spec describes
+it". The brief called it the smallest licence row there is and asked
+for a spec note written from the application's output, then a rewrite
+of the ~40 lines from that note.
+
+**The note is now the first half, and it was cheap.** The serialisation
+is four facts, and all four fall out of an experiment that consults
+nothing: try every plausible serialisation at every byte offset of a
+real archive, and keep the one whose decode reproduces the sha256 an
+independent oracle already recorded for a whole fork. One fork settles
+it — a coincidence over 3,469 bytes of sha256 is not a thing — and
+thirteen forks across the three formats confirm it:
+
+> bits MSB-first; `1` = a leaf and the next 8 bits are its symbol;
+> `0` = an internal node, its zero subtree then its one subtree; and
+> per output byte, walk from the root, `0` first subtree, `1` second.
+
+`docs/formats/serialized-huffman-tree.md` states it with its evidence,
+and `tools/derive_huffman_tree.py --grid` re-derives it from nothing in
+about a minute.
+
+**The second half is not worth doing, by this project's own rule.**
+"Nothing is rewritten for the licence alone, and nothing is kept unless
+it is measured" (CURRENT_WORK.md). The parse is 0.44 % of a run that
+uses it; a rewrite from the note would be neutral on every axis at
+best, and the rule says a neutral row is recorded and not taken. What
+was blocking the row was the SOURCE of the facts, and facts are what
+the note replaces — the same conclusion the 2026-09-19 re-citation
+reached for the container parsers, reached here by measuring rather
+than by finding somebody else's document.
+
+**Two smaller facts left the same rows on the way.** That DiskDoubler
+method 4 writes the same tree as StuffIt method 3 came from
+`XADDiskDoublerParser.m`; it is now measured, on a container
+**Salient's own 1991 expander reads back**. And that a PackIt `PMa4`
+entry codes its 94-byte header into the same stream as its two forks
+came from `pit.c`; it is now measured, by finding each entry's own name
+and fork lengths in the first 94 bytes the tree hands back.
+
+**The false positive is the part worth transferring.** A single-leaf
+tree is nine bits — `1` and a byte — that occur in almost any file, and
+it consumes NO bits per symbol, so it "decodes" into any number of
+copies of that byte. It matched a 700-byte fork of identical bytes at
+an offset that meant nothing, and it was reported as a confirmation
+until it was looked at. The real reading of that entry has a 25-leaf
+tree, because PackIt's header is in the stream. **An experiment that
+searches a space will find the degenerate member of it**, and the
+degenerate member is the one whose match carries no information;
+`derive_huffman_tree.py` refuses them, and says why.
+
+**What is NOT claimed.** That the parse in `unc_huffman.c` is provably
+an independent expression: it predates the note and is unchanged, and
+nobody who has read it can write a clean-room replacement. What the
+note changes is that a replacement can now be written from a
+description rather than from that file — by somebody who has not
+opened it — and that the FACTS the shipped file needs no longer come
+from anyone else. That the licence itself moves: it does not, and will
+not until the last row in the inventory is gone. And nothing about
+Compact Pro, whose canonical 4-bit code lengths are a different
+mechanism that left this file on 2026-09-19.
+
+## 2026-09-20 (four forks, and the three rules none of them reach) — StuffIt method 8 derived, and the part a derivation could not take
+
+**Item 7 of Part B, by the template Item 11 set**: derive the facts
+from the format's own output, verify against an oracle's own bytes,
+cite the note, leave a decoder that measures neutral alone.
+
+**What method 8 is.** An LZ coder whose dictionary entries are the
+**concatenation of two earlier entries** — the previous match followed
+by this one — rather than an entry plus one byte. That is Miller and
+Wegman's 1985 variation, which is what the "MW" in XADMaster's name
+for it stands for, and it is a published algorithm rather than a
+proprietary one. Codes are LSB-first, nine bits growing as the
+dictionary fills; the caller's byte count is what stops it.
+
+**How it was derived.** A decoder written against a family of
+hypotheses, with the parameters searched and scored by how many bytes
+of the oracle's own output came back. A full match on the first fork
+tried, and then **all four method-8 forks in the corpus**, byte for
+byte against `unar`'s sha256 — 17,005 bytes down to 1,301.
+`tools/derive_stuffit8.py`.
+
+**A fifth fork looked like a failure and was not.** `BitMapHelp.index`
+has a 286-byte resource fork that does not decode under the rule and
+is not stored either. The oracle names one method per ENTRY and
+StuffIt picks per FORK: a scratch build that prints each fork's method
+says that one is **method 5**. A miss is worth a minute of explaining
+before it is worth a sentence of hedging — and the answer here made the
+evidence stronger rather than weaker, because it accounts for the
+corpus exactly.
+
+**Three rules stay XADMaster's, and this is the useful part of the
+row.** The shipped decoder restarts the table on a code equal to the
+next free one, ends the stream on a code greater than it, and caps the
+width at 14 bits with 16,385 entries. **No specimen reaches any of
+them**: the largest fork in the corpus stops at 7,347 entries and
+13 bits. Instrumenting the derivation to report the widest code
+actually used is what turned "maximum 14" from something the note was
+about to assert into something it now lists as unestablished — the note
+first said 14 because the shipped code says 14, which is exactly the
+mistake this exercise exists to avoid.
+
+**What would close them:** a method-8 fork whose dictionary fills,
+several times larger than anything here. Synthesising one settles
+nothing, because both readings available on this machine descend from
+the rule in question — ours from XADMaster, and `unar` IS XADMaster.
+That is the distinction between a second implementation and an
+independent one, and it is why the row closes at four fifths rather
+than being written up as done.
+
+**What is NOT claimed.** That the shipped `sit_mw_fork` is independent
+expression — it is unchanged, and the rule that a neutral rewrite is
+recorded and not taken applies here as it did to the Huffman tree.
+That Miller and Wegman's paper was consulted: it was not, and the note
+cites the algorithm by name because the derivation ARRIVED at that
+dictionary rule, not because a paper supplied it.
+
+## 2026-09-20 (the encoder that would answer questions) — ARC's header and three coders, derived from archives ARC wrote to order
+
+**Item 9 of Part B, and the first row where the format's own program
+could be ASKED rather than sampled.** `tools/get_arc.sh` fetches ARC
+**5.21q**, Howard Chu's UNIX port of SEA's own — an implementation
+whose lineage runs to the format's authors and not through XADMaster.
+It compresses what it is given, which turns derivation from a search
+over somebody else's archives into an experiment with a control.
+
+**What was derived**, each verified against the exact bytes handed to
+the encoder, then re-verified against `unar`'s sha256 over the corpus
+fixture (`tools/derive_arc.py`, with and without `--grid`):
+
+- **the member header** — `0x1a`, method, 13 bytes of name, u32
+  compressed size little-endian, date, time, CRC-16, and u32 original
+  size **except for method 1, which has no such field**. Walked end to
+  end through a real ARC 5, a real PAK and `derived-ARCDOS.arc`, an
+  ARC 7 archive `unar` cannot read at all;
+- **RLE90** (method 3 alone, and behind two others);
+- **method 4, squeezed** — a Huffman tree written as a `u16` count and
+  that many **pairs of `s16`**, negative for a leaf holding
+  `-value-1`, symbol 256 ending the stream, read LSB-first from pair 0;
+- **method 8, crunched** — the member's **first byte is the maximum
+  code width**, then LSB-first LZW from 9 bits, 256 clearing the
+  table, 257 the first code assigned, then RLE90;
+- **method 9, squashed** — the same LZW to 13 bits with neither the
+  width byte nor the RLE90.
+
+**Two things the encoder could not be asked, and they are the row's
+remainder.** ARC 5.21q will not write methods **5, 6 or 7**, so
+nothing here can produce a specimen to derive them from, and they stay
+`XADARCCrunchHandle.m`'s. PAK's **Crushed** did not fall to the LZW
+parameter grid at all — it is a different dictionary organisation, and
+it stays `XADARCCrushHandle.m`'s, which remains the only reading of it
+anywhere.
+
+**The tail taught something the other two derivations had not.** A
+squeezed member's bit stream ends with padding, and on the LAST member
+of an archive those bits run off the end of the file; the decoder that
+found this raised EOF rather than finishing. A real decoder never sees
+it, because the header's original size is what stops it — the same
+shape as StuffIt method 8's caller-supplied length. **A coder that has
+an end-of-stream symbol may still need the length**, and a derivation
+that only ever reads members from the middle of an archive will not
+discover that.
+
+**What is NOT claimed.** That `src/fmt_arc.c`'s code was rewritten: it
+was not, and the neutral-rewrite rule applies here as it did to Items
+7 and 11. That ARC 5.21q is the original: it is a port, and what makes
+it worth something is that it is not descended from XADMaster, not
+that it is descended from SEA. And nothing about ARC's encryption,
+which no specimen here uses.
+
+## 2026-09-20 (the description that was one link away) — Compact Pro was documented all along, and the inventory said it was not
+
+**Item 8's Compact Pro half, and the row's premise was false.** The
+inventory read: "no non-copyleft description of the format exists, so
+the container and the stages are still XADMaster's and macutils'".
+The description exists. It is three pages of The Unarchiver's format
+wiki, and `reference/notes/cpt_specs_theunarchiver.md` — fetched into
+this repository long ago, cited by `fmt_cptseg.c` — **ends with links
+to the other two**:
+
+>   * Rle8182Algorithm - An RLE encoding
+>   * CompactProLzhAlgorithm - An LZSS+Huffman encoding
+
+`tools/fetch_references.sh` fetched the first page and not those. So
+the project has had a full description of Compact Pro's coder one hop
+from a file in its own reference directory, for as long as that file
+has been there, while an inventory row said no description existed.
+**"Have you looked at all" is one of the ten smells in BLOCKERS.md,
+and this is what it looks like from the inside**: nobody had followed
+a link at the bottom of a page they were already citing.
+
+**The pages are largely right, and where they are wrong it is
+specific.** `tools/derive_cpt.py` is a reader written from those three
+pages and nothing else; with six corrections it reproduces **536 forks
+of 68 archives — every Compact Pro fork in the corpus — byte for
+byte** against the oracle's sha256. The corrections, each established
+by decoding rather than by reading an implementation, are in
+`docs/formats/compact-pro.md`; the two that took longest are worth
+repeating here:
+
+- **a count byte in front of each code list**, where the page says the
+  three codes are "of fixed size". Kraft's equality settles it without
+  any implementation at all: exactly 1.000000 for all three codes when
+  the byte is read, nowhere near 1 when it is not. That test is how a
+  prefix code can be recognised in a stream whose layout is in doubt,
+  and it turned a stuck afternoon into one measurement;
+- **the header's length counts the RLE's output, not the LZSS's.**
+  Neither page says which. Driving the LZSS by it reads past the end
+  of short forks and stops short on forks whose `0x81 0x82 0x00`
+  escapes make the filter shrink — which is why the first full run
+  failed 57 forks out of 566 with two different symptoms at once.
+
+**And the inventory's other claim went with it.** A comment in
+`unc_internal.h` said Compact Pro's Huffman block was `0xfff0` and
+DiskDoubler method 8's `0x1fff0`. It is the other way round — the code
+has had it right all along (`CPT_BLOCK` is `0x1fff0`, and `fmt_dd.c`
+passes `0xFFF0` at the call), and the fetched page agrees with the
+code. A comment that contradicts the constant three lines from it
+survived because nothing reads comments.
+
+**A harness fault worth recording, because it looked like a format
+fault.** 28 forks "differed" until the reader kept the directory
+structure: `derived-_bot_1.0.cpt` has **twelve pairs of files with the
+same name in different folders**, and a reader that keys entries by
+leaf name compares half of them against the wrong hash. The spec's own
+sentence — "the directory structure can be entirely inferred from the
+entry count field" — is what fixes it, so the bug was in not
+implementing enough of the page.
+
+**What is NOT claimed.** That `src/fmt_cpt.c` was rewritten: it was
+not, and the neutral-rewrite rule applies. That the pages are
+complete: they say nothing about encryption, and the segmented scheme
+is `fmt_cptseg.c`'s own row. And nothing about PackIt, the other half
+of this inventory row, which keeps macutils' `pit.c` for its
+container.
+
+## 2026-09-20 (forty pages nobody had listed) — the wiki has an index, and it documents most of Part B
+
+**Three inventory rows said a format was undocumented. All three were
+wrong, and finding out cost one HTTP request.**
+
+The Compact Pro row fell first (*the description that was one link
+away*), on a link at the bottom of a page already in
+`reference/notes/`. That raised the obvious question — what ELSE is on
+that wiki — and the answer is a file:
+
+    https://storage.googleapis.com/google-code-archive/v2/
+        code.google.com/theunarchiver/wikis.json
+
+**Forty pages**, listed in JSON, including `StuffItAlgorithm13.wiki`,
+`DiskDoublerAdAlgorithm.wiki`, `DiskDoublerDdAlgorithm.wiki`,
+`DiskDoublerSpecs.wiki`, `StuffItFormat.wiki`, `Rle90Algorithm.wiki`
+and `MacBinarySpecs.wiki`. `tools/fetch_references.sh` had fetched one
+of the forty. The inventory meanwhile read "no other reader anywhere"
+for StuffIt method 13 and "documented nowhere else" for DiskDoubler's
+`ADn` and `DDn`.
+
+**Method 13 is now the page's**, and the page is good. A reader
+written from it alone — `tools/derive_sit13.py`, which parses the
+tables out of the page rather than holding a copy — reproduces **897
+method-13 forks across 103 archives** byte for byte against the
+oracle's sha256, meeting **all six code selectors**: in-stream codes
+352 times and each of the five predefined sets. (It read 790 of 94
+when this entry was first written, with forks over 30 KB skipped for
+time; the wider sweep found nothing new to say, which is the point of
+running it.) It needs two corrections,
+written up in `docs/formats/stuffit-method-13.md`:
+
+- the meta-code's **"in addition"**: values 34, 35 and 36 set their
+  repeats AND one more entry. Kraft's equality is what says so —
+  1.53 against 1.00 — with no implementation to compare against;
+- the match offset is **one further back** than the page's sentence
+  says. Compact Pro's page has the same ambiguity and the opposite
+  answer, so nothing but decoding settles either.
+
+**And the tables moved with it.** `src/sit13_tables.h` was generated
+from `XADStuffIt13Handle.m`; the page prints the same seventeen
+arrays, they were compared element by element, they are identical, and
+regenerating from the page reproduces the committed header byte for
+byte. `gen_sit13_tables.py` reads the page now.
+
+**The lesson is not "read the wiki".** It is that
+`fetch_references.sh` encodes what this project believes exists, and
+nothing ever re-asked. Three rows of an inventory, a brief that
+planned reverse-engineering campaigns against emulated applications
+for two of them, and the answer was a JSON index nobody had opened. A
+**list of sources is a claim like any other** — and the cheapest of
+the ten smells to re-test, because a source either exists or it does
+not.
+
+**What is NOT claimed.** That DiskDoubler's rows are closed: the pages
+are fetched and the inventory says they are unverified, because
+nothing has yet been held against the corpus (that is what the three
+`derive_*.py` tools do, and DiskDoubler has none yet). That the code
+was rewritten: it was not, here or in any row today. And that the
+licence moves: `fmt_sit.c` still owes macutils method 6 and the RLE90
+filter, and OPEN_ITEMS.md lists what every other file still owes.
+
+## 2026-09-20 (thirty-two of thirty-four) — DiskDoubler's DD coder from its published description, and the two forks that refuse
+
+**Item 6, half of it.** The same wiki index that gave up StuffIt
+method 13 has pages for DiskDoubler's `AD` and `DD` coders, against an
+inventory that said both were "documented nowhere else".
+
+**`tools/derive_dd.py` reads 32 of the corpus's 34 DDn forks** from
+that page alone, byte for byte against the oracle. It has **no
+container parser**, because the wiki does not document DiskDoubler's
+containers — it says "see XADDiskDoublerParser.m for now" — and a
+reader allowed to peek at that would prove nothing. It does not need
+one: **every DD block header ends with the XOR of its first
+twenty-one bytes**, so the format supplies its own locator, and
+scanning for valid headers finds the blocks. That trick is the reason
+this row could be attempted at all, and it generalises to any format
+whose blocks are self-checking.
+
+Five corrections, in `docs/formats/diskdoubler-dd.md`. Two are worth
+repeating:
+
+- **the streams are in the page's stated order — offset, literal, run
+  length — and not the header's**, which lists their sizes the other
+  way round. Reading the header's order decodes nothing, which is a
+  pleasant kind of wrong: it fails immediately;
+- **the window spans blocks.** The page says matches may reference
+  earlier blocks, and a reader that decodes each block into its own
+  buffer and concatenates gets every fork over ~12 KB wrong. That one
+  failed *slowly*, on the two largest forks of the first archive
+  tried, which is the dangerous kind.
+
+**And two forks refuse.** `derived-Terrainman_2.0__.sea`'s 19,240 B
+and 16,524 B data forks: genuinely method 10, decoding to exactly the
+right length with no error, diverging a few hundred bytes in, with all
+three of the block's code tables satisfying Kraft's equality exactly
+and no match reaching back before the fork's start. The block beside
+them, same flags and same shape, is perfect. It is **not** the
+XADMaster DDn defect this project has a reproduction for — that one is
+an input bound a byte short, and this reader has no bound.
+
+**So the row does not close, and `fmt_dd.c` keeps its citation.**
+Ninety-four per cent of a format is not a description of it. Writing
+that down is the whole point of doing these rows by decoding rather
+than by reading: a transcription can be 94 % right and nobody can
+tell.
+
+**`ADn` went the same way an hour later, and whole.** Methods 6 and 9
+are a simpler coder — no Huffman, an LZSS whose dictionary is the
+block — and **all five AD forks in the corpus read** from its page,
+which needed exactly one correction: the page says "bit 0 of the flags
+field indicates whether the block is compressed or not" without saying
+which way round, and it is set for an UNcompressed block. So the tally
+is **37 of 39 DD and AD forks**, and what stands between this row and
+closed is two forks of one archive.
+
+**What is NOT claimed.** Anything
+about DiskDoubler's containers, which the wiki does not describe.
+And no code changed — `derive_dd.py` is a probe, and `src/fmt_dd.c`
+is untouched.
+
+## 2026-09-20 (four kilobytes for thirty-four) — the SpaceSaver dictionary stored deflated, measured and not taken
+
+**Part C's last measurable item, and the answer is no** — with the
+numbers, because the answer was not obvious and the estimate in the
+brief was out by a factor of three.
+
+**The idea.** `ss_dict0` is 9,679 bytes of Aladdin's preset dictionary
+and it is in every build, on a machine where code and heap come off
+one budget. Deflated at level 9 with a 4 KB window it is 5,155 bytes,
+and zlib is linked already for zip and gzip, so it could be inflated
+into a scratch buffer at preset time and the difference given back to
+every format.
+
+**Built and measured**, not estimated:
+
+| | shipped | deflated | |
+|---|---|---|---|
+| `CODE` | 152,336 | 152,624 | +288 B (the inflate glue) |
+| A5 data | 27,220 | 22,696 | **−4,524 B** |
+| bss | 11,420 | 11,416 | −4 B |
+| **budget, at rest** | 190,976 | 186,736 | **−4,240 B** |
+| peak heap, `m4.ss` | 36,864 | 71,111 | **+34,247 B** |
+| peak heap, `m3.ss` | 42,120 | 76,367 | +34,247 B |
+| peak heap, m0/m1/m2 | — | — | unchanged; they use no dictionary |
+
+**The transient is eight times the saving, and three quarters of it is
+zlib.** 9,679 B of inflated table, 1,024 B of staging, **16,384 B of
+window and ~7,160 B of `inflate_state`** — and the window is that big
+because `unc_inflate_raw` sizes it from the declared output, which is
+9,679, rather than from the 4 KB the stream was written with. The
+brief guessed "a ~10 KB heap transient"; it is 34 KB.
+
+**So: not taken**, by this project's own rule — a row is taken when it
+is at least neutral on every axis and better on one, and peak heap is
+not neutral. Nothing else decided it: no refusal moves at 1 MB
+(648,100 B of budget against a 71 KB peak) or at 512 KB (186,444 B),
+and the ticks were never measured because the heap had already
+settled it.
+
+**What would change the verdict is not a better estimate, it is a
+different decompressor.** Four fifths of the transient is zlib's state
+and window; a decoder whose state is a few hundred bytes would make
+the trade −4,240 B against perhaps +10 KB, which is a different
+question. SpaceSaver's own LZSS is in the binary already and its
+window is the one this code has just allocated — what is missing is an
+encoder for it on this side, which is a `tools/` script and not a
+format risk.
+
+**Two smaller things fell out.** The brief said the dictionary is in
+`CODE` "(`size` puts all of `fmt_spacesaver.c.obj` in text)" — true of
+the OBJECT, which goes 16,272 → 12,036 B of text, and not of the
+linked image, where Retro68 places it in the A5 data section. Both
+numbers are right about different things and only the total matters.
+And `unc_inflate_raw`'s `produced` argument is not optional: passing
+NULL segfaults at the last line. Its doc comment says `*crc` may be
+NULL and says nothing about `produced`, which is how an hour went.
+
+## 2026-09-21 (the one that had to be asked) — Now Compress's two coders and its blocks, measured off the application
+
+**Item 5, and the only row in the inventory where nothing could be
+fetched.** Compact Pro, StuffIt method 13, DiskDoubler's AD and DD and
+ARC all turned out to have published descriptions that this project
+had not looked for (*forty pages nobody had listed*). Now Compress has
+none: no wiki page, no specification, no second implementation.
+`XADNowCompressHandle.m` really is the only account of it that exists.
+
+**So it was asked instead.** `tools/vmac/nowcompress.py` drives Now
+Compress under the emulator over inputs chosen here and keeps each
+input beside its output — a corpus made on 2026-08-16 for a different
+purpose, and exactly the material a derivation needs. Reading four of
+those pairs gives one of the format's stream shapes, whole:
+
+> a flag byte, eight tokens, bits most significant first; a 1 is a
+> literal byte; a 0 is a match of `length - 2` then distance, one byte
+> each — unless the length byte is zero, which is an escape, and then
+> the token is zero, distance, `length - 2`.
+
+Payload at a fixed 164 bytes in, a four-byte trailer after it, and no
+end marker that matters: the caller's byte count is what stops it, as
+in StuffIt method 8 and ARC's squeezed members.
+
+**Three things the reading gave away for free.** *Faster* and
+*Smaller* produce **byte-identical streams** for both test files, so
+whatever the mode word (`0x0010` against `0x003f`) changes, it is not
+these. *Archive* mode **stores** its members and compresses the `.sea`
+around them — 49,000 bytes in, 49,000 bytes out. And the match
+distance is eight bits, so this shape can never reach further than
+255 bytes back, which is presumably why the encoder chooses another
+for anything large: the two files it reads are under 8 KB, and the
+16,000- and 49,000-byte specimens are written some other way.
+
+**What this does not do is move the row**, and the note says so in its
+second paragraph. Every real Now Compress archive in the corpus uses a
+shape this does not describe, so `src/fmt_now.c` cites XADMaster for
+all of it, exactly as before. One shape of five, measured, is progress
+of a kind this row had none of yesterday — and it establishes the
+method: the specimens are already on disk, any input can be chosen,
+and `synth-now-mixed.now` has an oracle hash waiting for the reader
+that reads it.
+
+**The thing worth transferring is the shape of the search.** Six
+formats were re-described today and yesterday. Five of them fell to
+*reading a document and correcting it*; this one fell to *choosing an
+input and looking at what came back*. The tell for which you are in is
+whether anybody ever wrote the format down — and that question turned
+out to be worth asking for every row, because the answer was yes five
+times when the inventory said no.
+
+**Followed up the same day: the second coder, and the blocks.** The
+`half.bin` specimen — 8,000 random bytes then 8,000 `'A'`s — gave up
+the rest of the format:
+
+- there is a **256-symbol Huffman code** in front of it, 256 lengths
+  of four bits, and **Kraft's equality finds it**: exactly 1.000000 at
+  one offset in the fork and nowhere else;
+- what it codes is **shape 1's own stream, byte for byte, flag bytes
+  and all**. That is why symbol 255 carries the shortest code in a
+  file of incompressible data — a flag of eight literals IS `0xff`.
+  The clue was a `0xff` appearing between correct literals every nine
+  symbols, emitting nothing: not an escape, a flag;
+- a **match is two symbols**, `length = (S & 7) + 2` and
+  `distance = ((S >> 3) << 8) | D`, with a length of 2 escaping to a
+  third symbol. That was read off ONE match: the first in the
+  stream, whose distance had to be 4,237 — and `0x81 0x8d` is
+  `(0x81 >> 3) << 8 | 0x8d` exactly, with `(0x81 & 7) + 2` = 3, the
+  length. The first 5,520 bytes of that file are pure literals, so
+  the match path had never been exercised until that one symbol;
+- and a fork is **32,768-byte blocks, each coded its own way**:
+  `mixed.bin` is a stored block then a Huffman one. "Which coder does
+  Now Compress use" has no answer.
+
+**All eight specimens now read**, byte for byte against the inputs the
+application was handed — and seven of them **from the fork's own
+block table** rather than by searching, because that fell too: eight
+byte records from offset 144, a u16 offset and a u16 mode, ending on
+a record whose offset is the fork's size. Stored, shape 1 and shape 2
+blocks begin 0, 2 and 1 bytes past their record's offset.
+
+**And the mode word is not one value per coder.** The two `runs.bin`
+forks are byte-identical **except for that word** — `0x0010` from
+Faster, `0x001f` from Smaller, the same payload — so the low bits are
+the user's setting. **Bit `0x20` is the coder**, set for shape 2.
+That is four data points, and the kind of hypothesis worth writing
+down because it predicted the other two forks before it was recorded.
+
+**What is left is a layer, not a coder.** The corpus's two archives
+are not bare forks — one is self-extracting — so there is no block
+table at 144 in them, and the remaining work is finding the fork
+inside the wrapper.
+
+**Two habits did all the work here**, and neither is about Now
+Compress. Choosing the INPUT — random bytes then a long run — meant
+the literal path and the match path could be told apart by eye.
+And Kraft's equality, which found a code table in Compact Pro
+yesterday, found this one in a fork with no structure visible at all:
+**it is the cheapest test in this whole exercise**, one line, and it
+has now identified three formats' tables and refuted one guess.
+
+
+## 2026-09-21 (the two forks that were never about their literals) — DiskDoubler method 10's second form, and 39 of 39
+
+**Claim.** Method 10 has two forms. In the second, what the coder
+produces is not the fork but the fork's **first difference**: the fork
+is the running sum of it, `out[i] = out[i-1] + s[i]`, from zero. With
+it, `tools/derive_dd.py` reads **39 of the corpus's 39 DD and AD
+forks** from the format's published pages, and `src/fmt_dd.c` no
+longer cites XADMaster for either coder — only for the containers,
+which the wiki punts to that file by name.
+
+**Evidence.** The two forks of `derived-Terrainman_2.0__.sea` that had
+refused since 2026-09-20, byte for byte against the oracle's sha256.
+The reading was found by a literal-substitution trace: feed the true
+byte at every literal position, and record what the stream actually
+carried. **All 5,443 literals of the 19,240-byte fork were the
+difference from the previous output byte**, not the byte itself. That
+alone would have suggested a filter on the literal stream; what said
+it was the whole stream is the other half of the same trace — only
+**167 of 3,380 matches** copied the right source bytes, and under the
+delta reading they all do.
+
+**What was wrong before, and why it looked right.** The 2026-09-20
+write-up had three real measurements — the decode consumed exactly the
+literal and offset counts the block header states, the literals landed
+at the right output offsets, and two literals sharing one code wanted
+different bytes. Every one of them holds. The conclusion did not, and
+the reason is a smell worth keeping: **it explained the failures and
+not the successes.** Eleven of the first thirty literals were wrong
+and nineteen were right, and the reading under test accounted only for
+the eleven. A rule that is actually right produces numbers like 5,443
+of 5,443; a patch produces 19 of 30. The instrument that settles it is
+one line long — check the part of the decode you have ASSUMED is
+good — and it was not run for a day (BLOCKERS.md, *"The DD reader's
+structure is right"*).
+
+**Which forks use it, and what this does not claim.** That is a
+container fact and the container is not described here. The corpus
+states it twice and the two statements agree on all 186 of its forks:
+bit `0x80` of the fork's method byte, and a `u16` that is 1 rather
+than 0 fifty bytes further into the same header. Two fields that agree
+on every specimen cannot be told apart by any specimen here, so the
+note names both and claims neither, and the reader — which parses no
+container at all — tries both forms and reports which read.
+
+## 2026-09-21 (the archive that was never a fork) — Now Compress's container, and the third coder's table
+
+**Claim.** A Now Compress archive is not a fork with a wrapper round
+it; it is a container whose **members each carry their own
+fork-shaped header**, and the block table belongs to the member.
+Read that way, `derived-Expand_Now_1.0.1.sea` — the corpus's real
+1993 specimen, unread since the format was added — walks into
+**three blocks**, and 32,768 + 32,768 + 23,406 is 88,942, its fork's
+size exactly.
+
+**Evidence and the correction that mattered.** The member records are
+110 bytes from offset 24, with the data area's bounds at +98 and
++102. The block table sits **ten bytes into that data area in
+everything Now Compress 5.0.1 wrote and two bytes into it in the 1993
+file**, and the header's own first-block-offset field is what tells
+them apart. Reading the later layout into the older file silently
+drops the FIRST block — which is exactly the error that made that
+archive look like a fork whose table did not parse.
+
+**The near-miss that was not one.** The 2026-09-20 note recorded a
+record at 144 reading `(0x4ad6, 0x20)` as a probable coincidence,
+because 0x4ad6 sat one byte before the file's only Kraft-1.0 table,
+and advised the next attempt not to trust it. It was not a
+coincidence: that record is the archive's **second** block, shape 2,
+with its table one byte past its offset exactly where shape 2 puts
+one. What made it undecodable was not the record but the two things
+around it — it is not the first block, so its output starts at 32,768
+and its matches reach back into a block that had not been decoded.
+**A structure that matches in two independent ways is evidence, and
+"probably chance" is a claim that needs its own test.**
+
+**And FORMATS.md had said so for a month.** Its *Now Compress* section
+records, from instrumenting the engine's own block loop on
+2026-08-15, that this archive is "three blocks, 'new' LZSS twice and
+Huffman-only once". The derivation note written on 2026-09-21 said in
+the same tree that the file's blocks could not be located. Two files
+disagreeing is the cheapest smell this project has, it is first in
+BLOCKERS.md's list, and it was sitting between a measured count of
+three and a claim of none. **The shapes the container walk produced —
+`0x40`, `0x20`, `0x40` — are that sentence exactly.**
+
+**The third coder, and where this stops.** An archive's members use a
+shape the bare forks never do (mode bit `0x40`). Its header is read —
+`0x2f`, then a sixteen-entry four-bit **code-length code** whose Kraft
+sum is exactly 1 on all eight known blocks, then 24 bits nobody can
+account for, then a main table written in that code and ending where
+the code completes, whose symbols 0..255 are the literals. Its
+**stream is not read**, so no corpus archive decodes from this
+description and the citation cannot move.
+
+**What made the table findable** is the technique, not the format:
+four inputs chosen so that the answer would be recognisable —
+`nowcompress.py --case probe` archives a 4,000-byte run of one byte,
+6,000 bytes over `{A, B}`, 6,000 over `{A, B, C, D}`, and one file
+that is its own first half twice. **A table whose literal region must
+contain exactly two entries is found by what it must contain, not by
+where it might be**, and the harness's existing members — prose and
+keystream — could never have supplied that. The check afterwards came
+from the 1993 file, which the derivation never saw: its third block
+codes 252 literals and the 23,406 bytes it decodes to hold exactly
+those 252 distinct values, none missing and none spare.
+
+
+## 2026-09-21 (the manual for the other machine) — PackIt is published, in the documentation of a DOS extractor
+
+**Claim.** PackIt's container is documented, field for field, in
+appendices B and C of `UNPACKIT.DOC` — the manual of unPACKIT 1.0, a
+1986 freeware DOS extractor by R. Scott McGinnis. A reader written
+from those appendices and this project's own tree note reads **all 38
+forks of the corpus's four PackIt archives** byte for byte
+(`tools/derive_packit.py`, `docs/formats/packit.md`), so
+`src/fmt_packit.c`'s container is no longer macutils'.
+
+**What the appendices give** that the inventory said had to be read
+out of `pit.c`: the four subfile type words and the `PEnd` terminator,
+the 94-byte entry header with every field's offset and meaning, the
+order of forks and CRCs — and, in a boxed note, the fact this project
+spent 2026-09-20 measuring: for a compressed subfile the header is
+coded along with the forks, "therefore the entire subfile must be
+uncompressed in order to get to the next subfile".
+
+**Four corrections.** The name field is fixed at 63 bytes and not the
+length the count byte gives; there is no MacBinary header on a `.pit`
+(appendix B says there is, and four of the corpus's five specimens
+begin at the first type word); the type table lists `PMa5` twice, so
+the document cannot name the fourth word at all; and the compression
+is named — "huffman encoded" — and not described.
+
+**Why this was not found for a year, and it is the whole lesson.**
+The inventory's reason was *"PackIt's own format is trivial; the app
+is not here"*, and the plan it produced was to wait for a specimen set
+written by PackIt itself. Both sentences are about the APPLICATION.
+Neither is about whether anybody wrote the format down — and
+`reference/notes/PackIt.md` had been in this tree since the first
+reference fetch with a *Specifications* section naming this document,
+a second one (`macutils`' own `doc/README.unpit`, already on this
+disk), and PackIt's own source code. **The page was fetched, and read
+as far as the magic numbers.**
+
+That is the same failure as 2026-09-20's *forty pages nobody had
+listed*, one level down: there the index of a wiki went unopened, here
+the bibliography of a page that WAS open. `tools/fetch_references.sh`
+encodes what this project believes exists, and a reference that names
+other references is a fetch list nobody ran. **When a format's row
+says the reason is that some program is out of reach, that is a claim
+about programs; the question was whether anybody documented it, and
+those are not the same question.**
+
+**What this does not close.** The two CRCs are named by the appendix
+and their polynomial is not, so CRC-16/XMODEM is still macutils'; the
+resync rule for an undecodable entry is still macutils'; both ciphers
+and the `PMa6` word are still XADMaster's. The derivation tool checks
+no CRC, and says so.
+
+
+## 2026-09-21 (the window that stopped at the fork) — a Now Compress defect the corpus could not reach, and the four-member archive that found it
+
+**Claim.** `src/fmt_now.c` sized its sliding history from the archive's
+largest fork, and the window spans MEMBERS, so an archive whose forks
+are all small refused any match that reached into an earlier member.
+The bound is now the SUM of every fork, still capped at the format's
+32 KB. **No fixture's peak heap changes** — every Now archive in the
+corpus already has a fork over 32 KB — so this is a correctness fix
+that costs nothing measurable.
+
+**Evidence.** An archive Now Compress itself wrote, four members of 4
+to 6 KB (`nowcompress.py --case probe`). Two of the four came back
+*archive structure is corrupt*, at offsets **6,228 and 13,000 against
+a 6,000-byte window**. A reader written here from the block's own
+bytes decodes all four **only** when the members' output is carried
+forward as one history: alone, three of the four fail, and with the
+history they are byte-exact against what went in.
+
+**The claim was in a comment, and its refutation was in the same
+file.** The sizing block said "a back-reference cannot reach further
+back than the fork has produced, so <= maxout too". Seventy lines
+earlier `now_next_block` says "a block that starts a stream reaches
+back into the history the PREVIOUS stream left behind. The reference
+calls this absurd and does it anyway; so do we, because the bytes
+require it." Both were written here, months apart, and nothing had
+read them together. **An intra-file contradiction is cheaper to find
+than the cross-file kind this project already hunts, and no tool
+looks for either.**
+
+**Why the corpus could not find it.** Not for want of coverage in the
+usual sense — Now Compress has two real fixtures, thirteen synthetic
+archives and eight specimens from the encoder itself. It is that
+**every one of them is a single file, or members with nothing in
+common.** A match across a member boundary needs two members that
+resemble each other, and nothing in the corpus is shaped that way.
+The probe case was not built to find this; it was built to make a
+code table legible, and it needed four mutually similar members to do
+that. **An input chosen for one property tests every other property
+too, which is the whole argument for generating inputs rather than
+collecting them.**
+
+**And the obvious next question, measured rather than left open.**
+The offset table reaches `0xe100` plus thirteen extra bits — **65,791
+bytes** — while `NOW_HISTORY` is 32,768, so a match further back than
+32 KB would be refused exactly as these two were. It does not happen:
+`nowcompress.py --case reach` archives five 16 KB members whose fifth
+is a byte-for-byte copy of the first, putting a perfect 16 KB match
+**64 KB back**, and the encoder does not take it — the archive's
+largest offset is **32,766**, two short of the window, and the fifth
+member compresses no better than the four before it. **The window is
+32,768 bytes and the offset table's extra reach is capacity nothing
+writes.** All five extract byte-exact. Two of the same measurement's
+by-products confirm the fix above independently: members of 6,000
+bytes name offsets of 11,531 and 15,124, which no per-fork window
+could serve.
+
+
+## 2026-09-21 (the pair that never repeats) — Now Compress's third coder, read off matches planted at a length and a distance chosen here
+
+**Claim.** Shape 3 — the coder a Now Compress archive's members use,
+and the one this project had read no further than its code table — is
+described: its token grammar, a 33-symbol length alphabet whose
+longest match is **257 bytes**, and a 56-class distance alphabet
+reaching **65,791**. A reader written from that description alone
+(`tools/derive_now.py`, `docs/formats/now-compress.md`) decodes **every
+shape-3 block of every specimen here and of both corpus archives**,
+byte for byte and **with nothing searched for**: **81 of 81** blocks
+the harness made, **3 of 3** in the 1993 archive and **306 of 306** in
+the 1995 one — 9.9 MB of real data.
+
+**What made it measurable, and it is the transferable part.** Not
+staring at bit patterns: **inputs in which the answer is the only thing
+that can be there.** `nowcompress.py --case tokdist` and `--case
+toklen` build each member out of a **de Bruijn sequence of order 2
+over 256 symbols** — a sequence in which every pair of bytes occurs
+exactly once, so an LZ encoder can find *no* match in it at all — and
+then append a copy of that member's own first bytes. The only match in
+the member is therefore at a distance and of a length chosen here, and
+the token's bits are read off against them: forty distances from 2 to
+16,384, twenty-four lengths from 2 to 255. Two emulator runs.
+
+**Three things the bytes said that extrapolation did not.**
+
+- **The distance table's stored value is the code length plus two.**
+  Kraft's equality is what says so: over the stored values it comes to
+  0.250000 on every table with more than one symbol, and to exactly
+  1.000000 once two is subtracted. A constant offset is invisible in
+  one table and unmistakable in three.
+- **The main table is a fixed 290 entries, trailing zeros and all** —
+  see BLOCKERS.md, *Withdrawn claims*, for what the "ends where the
+  code completes" reading cost.
+- **The distance classes are not a uniform ladder.** They go four to an
+  octave up to 255 and then jump: eight classes of 256, then doubling
+  every four. Extrapolating the low end alone put a 3,000-byte distance
+  at symbol 41 in a block whose table has 38 symbols — a contradiction
+  that took a probe, not an argument, to settle.
+
+**The check that was not the derivation's own.** The last distance
+class starts at **57,600 and spans 8,192**, so the alphabet ends at
+65,791 — the number measured off this engine's own offset table from
+the other side on the same day (*the window that stopped at the fork*,
+above). Two routes, neither aware of the other, to one number; that is
+what makes the top of the table credible when nothing in the corpus
+reaches it.
+
+**And one thing the probes found that they were not built for.** Two
+members of the `tokdist` archive came back with mode `0x120`, a
+combination no specimen had shown — and chasing it settled a second
+shape: **`0x20` is Huffman ALONE**, one symbol per output byte with no
+flag bits and no matches, its stream one byte after its table. The
+mode word is a set of layers, not a number: the low five bits say LZSS,
+`0x20` says a Huffman code over it, `0x40` the archive coder, `0x100`
+inside an archive. Reading `0x20` as `0x3f` with bits missing is why
+the 1993 archive's MIDDLE block had never been read here either — and
+with it read, **every block of both corpus archives now decodes from
+this description**: 3 of 3 and 306 of 306. An input chosen for one
+property keeps testing the others.
+
+**And then the block header gave itself up, because the search had
+written its answer down.** Reading 75 blocks with the stream's start
+found by trial produced a column of "bits past the tables" — and
+header byte 4 was 16 minus that number in every row. Byte 1 is the
+same number again as a byte offset, plus 85; byte 3 is the same
+arithmetic at the far end, after which the last four bytes of the
+block are **a 32-bit sum of every byte before them** — the "presumably
+a checksum" this note had carried for a shape-1 trailer, now measured,
+and the same in all four shapes. Three of the four unread header bytes
+and the trailer, out of a table nobody would have thought to build:
+the search was not just a workaround, it was the instrument.
+
+**A rule fitted to 75 blocks was wrong on the 306 it had not seen.**
+"16 − byte 4" holds wherever that byte is nonzero, which it is in all
+75; the 1995 archive has twenty blocks where it is zero, and there the
+stream starts at the tables' end exactly. The rule is
+`(16 − byte) mod 16`. What caught it was that the header states the
+same number twice and the two accounts disagreed — **a redundancy in
+the format is a test you get for free, and only if you read both.**
+
+**And the last search in the reader went the same way — by asking
+what the stream OPENS with rather than where it starts.** Where a
+shape-2 block's bit stream begins had been down here as unknown since
+the shape was read: "23 bits after its table in one specimen and 18 in
+another". Both numbers are one zero byte plus **two Huffman symbols,
+`0x00` and `0x03`** — and `00 03` is exactly what a shape-1 block
+opens with, in every specimen, before its first flag byte. The gap was
+the stream's own prefix, coded through the block's table like every
+other byte, which is why it measured differently in each block.
+
+**Why it read as a position problem for a month.** A reader that
+starts at the prefix sees a flag byte of `0x00` — eight matches — and
+the first of them reaches back from output position nought, where
+nothing has been produced. It fails, and it fails exactly as a wrong
+starting bit fails, so the
+symptom points at "where" when the fault is "what". The fix came from
+the neighbouring shape: shape 1's payload was documented as starting
+**two bytes** into its block, and nobody had asked what those two
+bytes were.
+
+**And a count this project has carried since 2026-08-16 reconciles.**
+FORMATS.md records two "stream-restart records" in the 1995 archive,
+from instrumenting the engine's block loop; the container walk finds
+one repeated offset, inside `SynRef2.0 INFO`, where a member's resource
+fork ends and its data fork begins. The second is the repeat that OPENS
+the big member's table — its data area states the first block's offset
+and the table's first record restates it — which a reader walking the
+archive as one stream sees as another zero-length entry. **The two
+counts were of the same two records under different names**, and the
+disagreement only showed up because the derivation described the
+container from the file rather than from the decoder.
+
+The same reading cost this note another claim: the block record's last
+four bytes, "zero in every specimen", are **a u16 padding count** and a
+zero u16. The count is how many bytes sit between a block's stream and
+its checksum — 1 on four of the harness's shape-1 blocks — and the
+shape-1 decoder stopping exactly `padding + 4` bytes short of the next
+block is what says so. **That lead came from `src/fmt_now.c`, which is
+XADMaster's**, and the note says so where it states the field: a
+derivation kept for a licence is worth exactly what its provenance is,
+and one borrowed lead recorded is cheaper than a claim nobody can
+place.
+
+**And then the two tables were compared with the only other reader
+there is.** `src/fmt_now.c` carries XADMaster's own `UnpackNewLZSS`
+arrays; against the ones derived here they disagree **nowhere** — 33
+length classes and 55 distance classes, every base and every extra-bit
+count, including the jump from five extra bits to eight at distance
+256 and the last base `0xe100`. The derivation was committed before
+that file was opened, so the agreement is a check rather than a
+source, and it is the kind this project keeps asking for: two
+lineages, no shared evidence, 88 numbers, no difference.
+
+**And the engine's own comments are worth reading for leads, which is
+not the same as reading them for facts.** Two more pieces of the
+container came that way and were then measured here: the padding count
+above, and a **u32 after every member's header and block table that is
+the sum of every byte before it** — the same checksum idiom a block's
+trailer uses, true of all 75 members of the seven archives here. That
+sum is what `fmt_now.c` hunts for when the reference's offsets need a
+constant added; this note found it by looking where the hunt looks and
+then checking the arithmetic against the bytes.
+
+**And the container was pinned the same way the coders were — with a
+specimen made for the question.** The entry table's records give both
+fork lengths at +86 and +90, the data area's bounds, and at +106 a u32
+that is the sum of the record's first 106 bytes; a folder record is
+followed by exactly the entries its +80 field counts. That last was a
+rule read off ONE archive, the corpus's 1995 fixture being the only
+one here with a folder in it, so `nowcompress.py --case tree` made
+another: two folders and two loose files, seven records, pre-order,
+every checksum agreeing.
+
+**And reading the engine for leads found a wrong claim of this note's
+own.** Its shape-1 match rule — "a length byte, then a distance byte"
+— fits every shape-1 block here and is not the format's: the two bytes
+hold a 3-bit length and a **13-bit** distance, so a match reaches
+8,191 back rather than 255. The specimens cannot tell the readings
+apart, because they agree under 256 and no shape-1 token here has a
+first byte of 8 or more; **the shape one layer up can**, and 1,340 of
+shape 2's 2,162 match tokens live in the range where they differ.
+The note had both rules in it, one per shape, and they contradicted
+each other about the same LZSS layer for a day (BLOCKERS.md,
+*Withdrawn claims*). A cross-file contradiction is this project's
+cheapest smell; this one was inside a single file.
+
+**And the header turned out to be simpler than the reading that
+worked.** Bytes 0..1 of a shape-3 block are not a `0x2f` magic and an
+offset; they are **one u16, `0x2F59` plus the length of the compressed
+header that follows**. Both readings put the stream in the same place
+on all 386 blocks — `4 + length` rounded up to even IS `byte 1 − 85`
+whenever the length is even — and the second explains what the first
+could not: why byte 1 is always odd, where 85 comes from, and why
+"24 bits this note cannot account for" sat behind the code-length
+code. Those 24 bits are four more code lengths, all zero, and a count
+byte: the alphabet is **twenty** symbols, not sixteen, because a
+distance entry is stored as its length plus two and 17 has to fit.
+**An unexplained gap in a header is usually a field you have not
+finished reading**, and the giveaway was a constant nobody could
+source — an 85 that is 4 − 0x59.
+
+**Where that leaves the reader.** Given an archive and nothing else —
+no expected output, no oracle — `tools/derive_now.py` now decodes every
+block of both corpus archives, 3 of 3 and 306 of 306: the member
+records give each fork's length, the block headers give each stream's
+bounds, and three checksums (per record, per block table, per block)
+say the walk is on the rails. A description that needs the answer
+first is a different thing from one that reads the file, and this is
+now the second.
+
+**And the detect-only probe left the inventory the same day.** What
+`unc_nowcompress_probe` tests — a `00 02` file header, a plausible
+entry count, a Pascal name, and a byte sum over bytes 24..129 stored
+at 130 — is the archive's first ENTRY RECORD checking itself, which
+this note now describes along with the rest of the 24-byte file
+header: a version word that tells the 1993 archive from a 5.0.1 one,
+the count as a u32 at +8, and at +20 the sum of the twenty bytes
+before it. Nine archives agree on that sum; the one exception is this
+project's own synthetic fixture, whose generator leaves the field
+zero, and nothing had noticed because nothing reads it. So
+`src/fmt_stubs.c` cites the note now, and NOTICE can say that none of
+its three probes is XADMaster's any more.
+
+**One thing was asked for and refused, which is also an answer.** The
+code-length escape past 15 — a count of "extra length" entries after
+the 128-byte table, each symbol gaining 16 — is the other thing the
+note still attributes to the reference, and `--case deep` and
+`--case deeparc` went looking for a specimen: four files whose byte
+histograms are Fibonacci, the distribution that makes a Huffman code
+as deep as it can be (20 bits at 21 symbols), compressed in one case
+and archived in the other. **Eight tables came back 10 to 13 deep with
+the escape count zero.** The reason is structural: every shape puts an
+LZ coder under the Huffman one, and it eats exactly the skew that
+would have made a deep code — the commonest byte's repetitions become
+matches, so the code sees a far flatter histogram than the input has.
+An input both skewed and match-free would be needed, and those pull
+against each other. **A negative from a probe designed to force the
+thing is worth more than silence**, and it is why the cases are kept.
+
+**What is left.** Byte 2 of a shape-3 header, which is 255 on 59
+blocks of 75 and 0 on six, matches no bitmap of the lengths or
+distances a block uses, and tracks the shortest match on part of one
+probe and then stops. What `00 03` means. And the zero byte between a
+Huffman table and its stream. — *All three were settled later the same
+day, by changing each field and handing the file back to the encoder:
+2026-09-21, (asking the program that wrote it).*
+
+## 2026-09-21 (asking the program that wrote it) — Now Compress's last four unknowns, and the coders rewritten from the note
+
+**A reader that ignores a field cannot tell you whether the FORMAT
+ignores it.** The note written earlier the same day ended with three
+fields it could not account for — byte 2 of a shape-3 block header, the
+two bytes `00 03` every LZSS stream opens with, the byte between a
+Huffman table and its stream — and a fourth it could not test, the
+offset delta `src/fmt_now.c` corrects a block table by. All four were
+"nothing here reads it", which is a fact about this engine and about
+XADMaster, the only two readers there are.
+
+**So the question was put to the encoder.** `tools/mutate_now.py`
+changes one field and recomputes every checksum over it — a block's
+four-byte trailer, the block table's, the entry record's, the file
+header's — so that no correct reader can tell the file from the
+original; `tools/vmac/nowcompress.py --expand` drives Now Compress's own
+**Decompress** over a compressed file, and `--adjudicate` runs a
+self-extracting archive's own decoder. What comes back is compared with
+what went in. Four answers, all measured, all on this day:
+
+- **Byte 2 is read by nothing.** All 38 shape-3 blocks of an archive
+  were given `0x5a` there; its own self-extractor produced **80 forks of
+  80 byte for byte**.
+- **`00 03` is read by nothing** either — `5a a5` in a shape-1 block,
+  two other symbols of the same code length in a shape-2 one, both
+  files back out of Decompress unchanged.
+- **The byte after a Huffman table IS read**: set to 7, the same file
+  comes back as 16,000 bytes of something else.
+- **The offset delta is the format's, not the reference's belief.** An
+  archive with every stored offset short by 100 and the table checksum
+  recomputed — the shape `tools/synth_now.py` writes to exercise the
+  search — comes out of its own self-extractor byte for byte, while
+  this engine with `now_find_delta` disabled refuses all four of its
+  members. **And the same archive with only the first-block u32 short**
+  reads back too, where this engine refuses it: a correction that adds
+  one constant to every record turns its correct records into wrong
+  ones. So the delta is real and the reference's mechanism is not the
+  format's; what the format's is, is not known, and no file the encoder
+  writes needs either.
+
+**And byte 2 was not a hard question, it was 386 easy ones.** Every
+hypothesis this project had tested was a property of the BLOCK — header
+size, table sizes, code depths, flush counts, compression ratio,
+bitmaps of the lengths and distances used — and all of them failed
+because the answer is not in that class at all. `--case tokdist`
+archives forty near-identical members, and its byte 2 reads 191, 224,
+240, 248, 252, 254, 255, then 255 for the remaining thirty-two, each
+step halving the distance to 255. A per-block quantity cannot do that.
+**When a long list of hypotheses all fail, the list may be the
+problem**: one sequence over near-identical inputs said in a glance
+what 386 blocks of negative results had not.
+
+### The control that stopped the wrong answer
+
+The escape past 15 — a count of symbols whose code length gains 16 —
+had no specimen, because Now Compress will not write a code deeper than
+15 (eight attempts, and the reason is structural: every shape puts an
+LZ coder under the Huffman one and it eats the skew). So one was
+written here: a whole compressed file built from scratch, one block,
+a 20-deep code over Fibonacci data. **Now Compress called it "damaged
+and cannot be repaired"**, and that looked like an answer — the escape
+is a fiction the reference invented.
+
+It was not. The same volume carried **the same file with a code 13
+deep**, and Now Compress refused that one too: what it dislikes is
+something about a file written from scratch here, not the escape. The
+real specimen had to be a **re-coding of a file the encoder itself
+wrote** — `--recode 20` decodes the Huffman region of `half.bin` to the
+LZSS stream underneath and writes it back under a code that is legal
+but not optimal, a chain of lengths 1, 2, … 20, 20 with the shallowest
+leaf split as often as there are symbols to place, putting six symbols
+at 16 to 20 bits and changing nothing else in the file. **Decompress
+returned all 16,000 bytes**, and so did the control re-coded at 15.
+
+A mutation that FAILS proves only that something changed. It takes a
+positive specimen to say what a field means, and a control beside it to
+say the specimen is fair — the first draft of this experiment had
+neither, and its conclusion was the opposite of the truth.
+
+### What the four answers left, and what was under them
+
+Two of them were load-bearing for the licence. The offset delta and the
+escape were the last two facts in `src/fmt_now.c` that rested on
+XADMaster; both are measured now, and the file's coders were rewritten
+from the note the same day. **One Huffman-region reader serves all
+three of its consumers** — a Huffman-only block, the stream under a
+shape-2 block, and the header a shape-3 block writes its two code
+tables in — which is the note's own account of the format rather than
+the reference's three functions, and the 346-byte staging array that
+header needs moved into the per-archive allocation its code tables
+already live in. Byte-exact on all 124 Now Compress files here and on
+`run_now.py`'s 42 archives, **−204 B of code**, **−616 B** of the
+frames its deepest chain uses, and **790 → 792 engine ticks** on a
+7 MHz Mac Plus, which is that instrument's own resolution.
+
+**The draft that read best was 2.7 % slower, and Linux said it was
+faster.** Splitting the region's OPENING into its own function —
+clearer, and 572 B less of frame again — cost **790 → 811 ticks** on
+`derived-Expand_Now_1.0.1.sea`, reproducibly, while callgrind had that
+build executing 12,000 FEWER x86 instructions and 1.1 % fewer on the
+9.9 MB archive. Three more shapes were measured on the Plus before one
+landed at parity: the bound hoisted into a local (−2), the class bases
+fetched after their extra bits (0, reverted), and finally the loop put
+back in one function with every value it touches a local (−19). **What
+a 68000 pays for is not what a Linux profile counts** — here it was
+register allocation across a call boundary inside a loop that runs
+32,768 times a block — and this project has a probe for exactly that;
+the only mistake was reaching for it fourth instead of first.
+
+**And the container turned out to be one thing, not two.** A compressed
+FILE is an archive of one entry — the same 24-byte header, the same
+110-byte entry record, both checksums agreeing on all sixteen bare
+forks — which is what the engine had been reading since M12 without
+anybody writing it down, and which is why "the fork header" had a block
+table at 144: 134 + 10. The block table has **one layout and one
+offset width**, not the two the note had derived: records of
+`[mode][padding][end offset]` from +4, on all 108 members, with the two
+words the note could not name turning out to be the mode and padding of
+a leading record that produces no bytes. That reading is the
+reference's, and what makes it a measurement here is the 108 members
+and their checksums; it is also what `tools/derive_now.py` walks now.
+
+## 2026-09-21 (six copies of one file) — what a block table is anchored on, the record a file written here was missing, and byte 2 computed
+
+**One mutation is a question with two answers.** The session before this
+one changed a field, handed the file back to Now Compress and learned
+that its decoder tolerated it — twice, for two shapes of a wrong block
+table — and the note it wrote said in as many words that the RULE was
+still unknown. What was missing was not a cleverer mutation: it was
+**six copies of the same file on one volume**, one field of its block
+table moved in each, every checksum over it recomputed, in a single
+run. Five came back byte for byte and one did not, and a seventh rung
+on a second volume — the LAST record short instead of the first — said
+which block pays: **a wrong record damages its own block and no
+other**, in both directions. Together they say what no pair of them
+could (docs/formats/now-compress.md, *The
+archive layer*, for the table): the correction Now Compress applies is
+a **whole-table constant**, it works in either direction, the stored
+first-block offset is no part of it, and it is not where the record
+count comes from either — short by 100, that u32 makes
+`(first − start − 4)` equal −68, and the file still read.
+
+**The engine was left as it is, deliberately.** It corrects by a
+constant computed from that u32, so it refuses three files the format
+reads; the reading that fits every rung — one constant tried across the
+records and kept only if the blocks then check out — is a hypothesis,
+and the files it would buy are files no encoder writes. Changing a walk
+that 124 Now files and 42 archives depend on, to accept specimens this
+project makes itself, is the shape of change this repository has
+learned to price before taking. What the measurement bought is the
+note: a reader that has to choose now knows which field is trusted
+least.
+
+**A constant in the harness was what made a ladder look expensive.**
+`nowcompress.py --expand` pressed Return twice per run, which is
+exactly enough for the report a clean run puts up — so the first file
+it refused would have stopped every file behind it, and six rungs would
+have been six boots of eight minutes rather than one. One Return per
+file on the volume, and a ladder costs what a single mutation used to.
+The smell is this repository's own: a constant that does not vary with
+its input is usually a ceiling nobody questioned.
+
+**A helper that tidies can erase what you are measuring.** `--rename`
+wrote the entry record's 32-byte name field whole — length, name,
+zeros — and the encoder leaves 23 catalogue-shaped bytes in that
+padding. Every file on the next volume, the control included, would
+have carried one of the differences that volume existed to test. What
+caught it was the mutation printing what it had changed: *"the 23 bytes
+after the name zeroed (were zero already)"*. A mutation that reports
+its own before-and-after is not decoration.
+
+**And a run that ends early looks exactly like a refusal.** The second
+ladder came back with four files unexpanded, of which **two** had been
+refused: the volume was ejected while QuickFiler was still working
+through the selection, and a file it had not REACHED is byte for byte a
+file it declined. The last screenshot is what tells them apart — an
+icon still highlighted is still in the selection — and the harness now
+waits fifteen seconds per file on the volume instead of a flat thirty.
+Re-run with that, both of the doubtful rungs came back byte-exact, so
+the note says what it would otherwise have got wrong twice over: the
+Finder flags, the dates, the u32 at +94 and the 23 bytes after a short
+name are read by nothing.
+
+**And the file this project could not get read was missing one
+record.** `synth_now.py` has written compressed files since M12 that
+Now Compress calls *"damaged and cannot be repaired"*, with every field
+right and every checksum agreeing; that refusal is why the specimen for
+the escape past 15 had to be a re-coding of a real file rather than a
+construction, and what was wrong with it went down as not known. It is
+the **leading record** — the eight bytes that produce no output and
+whose end offset repeats the first-block offset. Dropping it from a
+file the encoder wrote gets that alert word for word, and **a file
+built here with one added comes back out of Decompress byte for byte**,
+16,000 of 16,000.
+
+Neither half would have done alone, which is the same shape as the
+escape experiment the day before: a mutation that FAILS says only that
+something changed, and the file built here differs from the encoder's
+in more than one way, so the negative could have been about any of
+them. It took the positive specimen — the field ADDED to a file that
+lacked it — to name the field, and an encoder-written control beside it
+on the same volume to say the question was fair.
+
+**Byte 2 of a shape-3 header is computed, not left over.** Eight
+hypotheses about the block had failed and the sequence over
+near-identical members ruled out a per-block quantity, which left
+"uninitialised memory" as the reading this project was closest to
+taking. Running the same case a second time settles that without any
+theory of what the field means: **the two archives differ in their date
+fields and the checksums over them and nowhere else**, byte 2 included.
+Ask whether a value is noise before asking what it means; a repeat run
+is the cheapest experiment there is, and the only one that can answer
+it. What it does track is where the encoder is in its window — 41 of
+the 43 values above 200 in the 1995 archive are in blocks that start in
+the low half of its 64 KB window — which is a correlation and not a
+formula, and is filed as one. *Withdrawn: a case that CHOOSES a block's
+offset puts eight full blocks at each quarter of the window and byte 2
+is 0 in all eight — 2026-09-21, (the quarter that changed nothing).*
+
+## 2026-09-21 (the symbol that was only there once) — where `00 03` is written, and the dimension no Now Compress experiment has varied
+
+**A field nothing reads still has a birthplace, and the Huffman table
+names it.** `00 03` opens every shape-1 LZSS stream; four experiments
+had established only what it is NOT — not read by this reader, not by
+XADMaster, and not by Now Compress's own Decompress, which returns a
+file with `5a a5` there byte for byte. Every one of those is a
+statement about decoders, and the question left over — what the encoder
+thinks it is writing — has no decoder in it at all.
+
+**So the question went to the encoder's other half.** A shape-2 block
+codes the shape-1 stream byte by byte, prefix included, and its
+128-byte table is built from that stream's frequencies. If the prefix
+is emitted by the LZSS coder, the Huffman pass counts it; if it is
+prepended afterwards by whatever writes the block, the table is built
+without it — and a symbol absent from the rest of the stream would have
+no code, so the prefix could not be written at all. The two readings
+differ only where a prefix byte occurs nowhere else, so the corpus was
+searched for that block rather than reasoned about. `huffgap/g09.bin`
+is it: **4,517 symbols, `0x03` occurring exactly once — as the prefix —
+and carrying a 12-bit code**, with 116 symbols coded and 116 occurring,
+the correspondence exact both ways and no other symbol coded-but-unused
+anywhere in the fourteen shape-2 blocks here. **The prefix is inside
+the byte stream the Huffman pass counts.**
+
+It does not separate the LZSS coder emitting those two bytes from a
+wrapper that adds them and bumps the two counts before coding — both
+put them upstream of the Huffman stage, and that is the whole of what
+is claimed. What it retires is the class of readings where the prefix
+is added AFTER that stage: a block header, a framing marker, alignment,
+anything wrapped around the coded output. And it says nothing about
+what 3 means, which it was not built to.
+
+**And the constant is narrower than "every specimen" sounded.** Walking
+every block of every specimen and both corpus archives finds **20** that
+carry this prefix at all: nineteen are their member's first block, one
+is `stored/mixed.bin`'s second, and **neither corpus archive contributes
+one**, because the 1993 and 1995 archives are shape 3 and Huffman-only
+throughout and shape 3 has no prefix. All 20 came out of one installed
+program. So the field is constant over content, over both settings,
+over two shapes, over one block at index 1 — and over **one version of
+Now Compress**.
+
+**Which is the dimension to vary, and it is not only this field's.**
+Now Utilities shipped as 3.0.2, 4.0.2, 5.0.1, 6.0.x and 6.5/6.7.x, and
+all of them are downloadable; the harness installed 5.0.1 alone. A
+value written by an encoder, ignored by every decoder and constant
+within a version is the shape of a version or parameter stamp, and a
+second encoder is the only instrument that could show it moving. The
+same second encoder bears on a question worth more than this one:
+**what selects the leading record.** — *Both were run the same day:
+2026-09-21, (the other program), where the prefix does not move, two
+unread fields beside it do, and 3.0.2/4.0.2 turn out to have no
+compressor in them at all. The leading record turned out not to be one,
+and the encoder was the wrong dimension for it: 2026-09-21, (the record
+that was never leading).*
+
+**The lesson is the one this repository keeps relearning under a new
+name.** "Nothing reads it" is a claim about readers, and four readers
+agreeing is still four readers. The evidence that moved the question
+was not a better decoder experiment; it was noticing that the encoder
+had already written its answer down somewhere else — in a frequency
+table it had to build before it could write the byte at all.
+
+## 2026-09-21 (the other program) — a second Now Compress, and the difference between a constant and a leftover
+
+**Three fields in a Now Compress file are written by the encoder and
+read by nobody**, and until today they were indistinguishable from each
+other: the two bytes `00 03` an LZSS stream opens with, the padding byte
+between a block's stream and its trailer, and the two words of the
+leading block-table record. Every one had been checked the same way —
+change it, recompute the checksums over it, hand the file back to Now
+Compress's own Decompress — and every one came back byte-exact. That
+says a decoder ignores them. It says nothing about whether the ENCODER
+means them.
+
+**The instrument for that is a second encoder, and there was one.** Now
+Utilities shipped through 6.7; the harness had only 5.0.1. Now Utilities
+**6.0**, March 1996 against 5.0.1's 1994, installed beside it and given
+the same inputs at the same settings, writes files of the same LENGTH
+across all four coders — and every byte identical except the entry
+record's dates, the leading record's `0037` → `003a`, one padding byte
+`ff` → `47`, and the checksums over those. Every mode word, both block
+tables, every Huffman table, every LZSS stream and every trailer are the
+same bytes. **The coder did not change in four years.**
+
+**Two of the three unread fields moved and one did not**, which is the
+whole of what the second encoder bought:
+
+| field | 5.0.1 | 6.0 | reading |
+|---|---|---|---|
+| the LZSS prefix | `00 03` | `00 03` | a constant the encoder means |
+| the padding byte | `ff` | `47` | leftover |
+| the leading record's words | `0d4c 0037` | `0d4c 003a` | moves with the program; version stamp and deterministic leftover both fit |
+
+A value that is constant across 27 files from one program, two months
+apart, both settings, compressed files and archives, looks exactly like
+a value the program intends — until a second program writes a different
+one in the next field along. **"Deterministic" and "deliberate" are the
+same observation until the thing underneath changes**, and nothing a
+single build writes can separate them. This project had already been
+close to calling a shape-3 header byte "uninitialised memory" on
+evidence of the same kind (*six copies of one file*).
+
+**And the second encoder retired a hypothesis about a THIRD question.**
+Why 5.0.1 writes a leading record in front of every block table while
+the 1993 archive has none was down as possibly a version difference.
+6.0 writes one exactly where 5.0.1 does, and the 1995 archive has a
+member with one and a member without in the same file — so whatever
+selects it is not the program. *It is the fork lengths, and there is no
+leading record: 2026-09-21, (the record that was never leading).*
+
+**What it cost, so the next one can be priced.** Four emulator runs of
+about five minutes each and two downloads. The route was not the one
+planned: Now Utilities **3.0.2 and 4.0.2 contain no compressor at all** —
+their disks are Super Boomerang, NowMenus, WYSIWYG Menus and the rest,
+and QuickFiler arrives in 5 — so the older half of the version range
+cannot answer anything, and the 1993 archive's encoder was a separate
+1993 product that is not on the mirrors. 6.0's installer is a StuffIt
+archive of finished files rather than an application, which made the
+install a file copy instead of a driven dialog: the extension and its
+toolbox into `System Folder:Extensions`, the droplets at the root, the
+**leading spaces in their names kept** because that is the load order.
+It runs on the System 7.0.1 image the harness already had, on an
+emulated Mac Plus.
+
+**And the same instrument, pointed at a fourth field, said the
+opposite — which is what makes it an instrument.** A shape-3 header's
+byte 2 had been shown not to be noise by a repeat run of the `probe`
+case, which is a claim about one build. `tokdist` compressed by 6.0
+settles it against another: the same 46,548 bytes, and **all 38 of its
+shape-3 block headers identical to 5.0.1's**, the six values that are
+not `0xff` included. A repeat run says a field is deterministic; a
+second build is what says the thing computing it did not change — in a
+file where two fields that ARE leftovers moved.
+
+**The generalisable part.** When a field is constant and nobody reads
+it, the question is not "what does it mean" — that one has no instrument
+— but "what is it constant WITH RESPECT TO?" Vary the thing the field
+belongs to rather than the thing it is written about, and the answer
+arrives as a difference somewhere else in the same file.
+
+## 2026-09-21 (the record that was never leading) — one empty block-table record per member, and where a harness had never varied its input
+
+**Claim.** A Now Compress member's block table holds **exactly one
+record that produces no bytes, and it is the boundary between the
+member's resource fork and its data fork.** Where it sits follows from
+the two fork lengths: between the forks when both are non-empty, at the
+head when the resource fork is empty, at the tail when the data fork
+is. Measured on **153 of the 153 members Now Compress has written
+here**.
+
+**What it replaces.** Until today the same bytes were read as two
+things — a "leading record" 5.0.1 writes in front of every table, plus,
+separately, a fork boundary — with the 1993 archive's only member and
+the 1995 archive's first member filed as exceptions that have no
+leading record. Both are the rule seen from a position the corpus had
+one specimen of each: the 1993 member's data fork is empty, so its
+record is last; the 1995 archive's first member is the only real
+specimen with two non-empty forks, so its record is in the middle.
+
+**Why it survived, and this is the transferable half.** Every member
+this harness had ever made came off an HFS volume built with `hcopy
+-r`, which writes the **data fork alone**. So 105 of 107 members had a
+zero-length resource fork and therefore a boundary at the head, which
+is indistinguishable from a convention about tables. The mechanism is
+already in BLOCKERS.md's list — *every input a suite grades against,
+made by one program; ask what the generator never varies* — and what
+this generator never varied was the thing the format's rule is written
+in terms of. **The question to ask a harness is not what it covers but
+what it cannot produce.**
+
+`nowcompress.py --case forks` produces it: four members placed on the
+volume as MacBinary so `hcopy -m` carries both forks — data-only,
+resource-only, both forks small, and both forks with a **three-block**
+resource fork. One emulator run, and each record lands where the rule
+says, the big one at index 3 rather than index 1, which is what tells a
+fork boundary from a leading record.
+
+**And the same file disproved a second sentence, which is the one that
+mattered.** The note said the window is carried across a restart
+unchanged, "so nothing here needs a reload". It is not: the block after
+a restart reaches into the **dictionary cache**, the last 32,768 bytes
+ending where the previous stream's FIRST block ended. Those are the
+same bytes whenever the previous stream is one block long, which every
+specimen in the tree was until `bothbig.bin` existed; there they differ
+by 19,909 bytes of output. `src/fmt_now.c` had always reloaded — the
+behaviour was transcribed before it was described — but the note is
+what `fmt_now.c` now cites instead of XADMaster, and `tools/derive_now.py`
+is a reader written from the note: it read 8 of that archive's 11
+blocks. Both are fixed; the withdrawn sentences and what they cost are
+in BLOCKERS.md.
+
+**What it leaves open.** Not *where* the record goes, and not *that* a
+decoder requires one — both are measured from both sides. What the
+decoder DOES with it is still unmeasured, and that is the bullet the
+note now carries.
+
+## 2026-09-21 (the quarter that changed nothing) — byte 2 does not track the window, and the archives this project writes are refused
+
+**Two experiments the last handoff asked for, both negative, and a
+negative is what each was for.**
+
+### Where in the window a block starts changes byte 2 by nothing
+
+**Claim withdrawn.** A shape-3 header's byte 2 was said to track which
+half of a 65,536-byte window its block begins in, on a correlation in
+the 1995 archive: 41 of its 43 values above 200 are in low-half blocks.
+`nowcompress.py --case wpos` is the experiment that correlation asks
+for: four members of 65,536 bytes each, identical to within a seed,
+produce two full 32,768-byte blocks apiece and advance the window by
+exactly one turn, so a 16,384-byte spacer in front of each moves its
+pair a quarter along. **Eight full blocks, two at each quarter, byte 2
+= 0 in all eight.** Only the archive's first block differs, at 236.
+
+**Why the correlation looked real.** The 1995 archive's 306 blocks are
+all full and all in one member, so they alternate low/high half by
+construction; anything that drifts through that file correlates with
+the alternation. The lead survived because every previous byte-2
+experiment varied the block's CONTENT and read the offset off whatever
+came out. **Nothing had ever chosen the offset** — and a correlation
+you only ever observe is one you have not tested.
+
+**What replaced it is smaller and sharper.** `tokdist`'s forty members,
+none matchable against another, walk byte 2 191 → 224 → 240 → 248 →
+252 → 254 → 255, and every step is exactly `b2 + ((255 − b2) >> 1) + 1`
+— **101 transitions across the files here take it, 31 more sit at the
+cap**. Going the other way there is no law at all: `reach`'s five
+near-identical members, which DO match each other, go 224 and then 0,
+0, 0, 0, and `wpos` does the same. Rises toward a maximum when nothing
+matches, drops to zero when everything does. That is a hypothesis about
+what the encoder keeps there, labelled as one.
+
+**Half of it survived the same day and half did not.** Byte 2 does fall
+as more of a block can be matched — a ladder that varies only that
+measures it — but it is computed from its own block, and the climb is a
+description of a ladder ordered one way rather than of anything the
+encoder keeps: *2026-09-21, (the ladder that was walked back down)*.
+
+### The archives this project writes are refused, and not for the reasons listed
+
+**Thirteen archives graded by `unar` since M12, never once put to Now
+Compress.** `synth_now.py --ladder` fixes that: four rungs and a
+control, each spliced into a real self-extractor's data fork by
+`mutate_now.py` so the decoder Now Software shipped reads it.
+
+| rung | what it adds | Now Compress |
+|---|---|---|
+| control | `probe`'s 3,830-byte archive in `tree`'s self-extractor, built around one half that size | **all four members byte-exact** |
+| `both` | the header's setting, window and byte sum, every block trailer, and the fork-boundary record | **refused** |
+| `arch` | plus the `0x0100` bit every archive mode word carries | **refused** |
+
+The control is what makes the other two mean anything: the route works
+and a different length is not the obstacle. So something among what is
+LEFT is fatal, and it is not among the four differences that were
+fixed. **The LZSS prefix is not a candidate**, which is worth writing
+down because it was the first guess and it is wrong on its face: every
+block in that archive is shape 3 or Huffman-only, and only shapes 1 and
+2 carry a `00 03` at all. What is left is the entry record's own
+fields, the byte in front of a Huffman-only stream, and the shape-3
+blocks as this project encodes them. TESTING.md had listed
+five such differences; this session found two more before running
+anything (the `0x0100` bit and the header's window word), which is its
+own comment on a list nobody had tested.
+
+**And that list of three was wrong too — none of the answers is on
+it.** They are a 16-byte trailer past the end of everything any reader
+walks, the 32,768-byte block size, and word alignment: *2026-09-21,
+(sixteen bytes nobody had read)*, which is also where the reason a list
+was the wrong instrument is written down.
+
+**And the instrument lied twice before anyone noticed.** `--adjudicate`
+printed *"the original extractor agrees with us on every fork"* for both
+refused rungs, because a volume with nothing extracted onto it compares
+zero forks and zero forks disagree. It now fails when it graded nothing,
+and `--dearchive` counts the files that were not already there. **An
+aggregate over an empty set is the purest form of the failure this
+repository keeps rediscovering**: the check ran, the check passed, the
+check touched nothing.
+
+**What it cost, so the next one can be priced.** Five emulator runs.
+One was spent on `--dearchive`, a route built from scratch — QuickFiler
+does offer Dearchive for a file typed `NCar`/`NCdc`, with Archive and
+Compress correctly greyed out, so the type (read out of Expand Now's own
+`FREF` resources rather than guessed) is right — and it expanded
+nothing, not even the control. That route is unexplained and is not the
+one the results above rest on.
+
+## 2026-09-21 (sixteen bytes nobody had read) — what a Now Compress archive needs, and where the three answers were
+
+**Claim.** An archive Now Compress will open needs three things this
+project's generator did not do, and the fork comparison says which
+does what: a **16-byte trailer** after the last member, **32,768-byte
+blocks**, and **every block starting on a word boundary**. The first
+two are outright refusals; the third is an archive that extracts with
+one block silently wrong. A fourth difference found the same way turned
+out not to matter. Ten rungs, ten emulator boots, one control
+(TESTING.md, *The rungs*).
+
+**The first archive this project has ever written that Now Compress
+reads** is the `no-tail` rung: two members, both byte-exact, four forks
+graded.
+
+**Where the three came from, and this is the whole lesson.** The
+previous session left a list of three suspects — the entry record's
+fields, the byte in front of a Huffman-only stream, and "the shape-3
+blocks as `synth_now.py` encodes them" — and **not one of the three
+answers is on it**. They came from diffing an archive the encoder wrote
+against one this project wrote, field by field, with no hypothesis in
+hand:
+
+- the trailer is 16 bytes **past the end of everything any reader
+  walks**. `unc_sniff`, `src/fmt_now.c`, `derive_now.py` and XADMaster
+  all stop at the last member's data end, so nothing had ever looked
+  at them. They were found by asking a question with no suspect in it
+  — *does the file length equal the last member's end?* — of every
+  specimen at once, and the answer was no for all ten archives and yes
+  for all sixteen compressed files;
+- the block size was found by printing block lengths next to fork
+  lengths;
+- the alignment was found by noticing that byte 1 of a shape-3 header
+  is always odd, which this note had recorded as a tally and not as a
+  cause.
+
+**The same session's earlier list was built the way lists are built,
+from what somebody had already thought of.** The previous entry records
+exactly this failure once already (*the symbol that was only there
+once*: a suspect named from the list of differences instead of from the
+file). It happened again, and the fix is the same: **census a property
+over every specimen rather than reason about one.** Three of today's
+four candidate differences came out of a loop over 34 files that
+printed one number each.
+
+**Why "refused" was nearly the wrong measurement.** Three rungs in a
+row were refused and each refusal said only *something among what is
+left*. The rung that finally discriminated is the one that was
+ACCEPTED and still wrong — `no-word` extracts both members and one of
+them differs — and that is the result which turns "the alignment
+matters" into "the alignment matters to the block that starts at an
+odd offset". **A pass/fail instrument would have called that rung a
+pass.** `--adjudicate` compares fork by fork, and the day before it had
+printed *"agrees with us on every fork"* for a volume with no forks on
+it at all; the guard added then is what makes today's four IDENTICAL
+lines mean something.
+
+**What it cost, so the next one can be priced.** Ten boots at about six
+minutes. Five were spent climbing one rung at a time from below, which
+is the wrong direction when several differences are fatal at once:
+every one of them said "still refused". The five that were worth
+anything were **leave-one-out from a rung that passed** — drop one
+thing from a working archive and see what breaks. Reaching a working
+archive first, by fixing everything found and then subtracting, is the
+cheaper order and it is what the next ladder should do.
+
+**What this does NOT change.** `src/fmt_now.c` reads every real
+archive and every synthetic one, and none of this is a decoding
+question: the three requirements are things a WRITER must do, and this
+project's only writer is a test tool. The thirteen archives keep their
+old shape on purpose — `unar` refuses a bit-coded region that leaves
+it fewer than four spare bits, and a 16-bit flush does not always
+leave more, so aligning them would cost the oracle that grades them
+(TESTING.md). What is fixed is that the difference is now measured,
+named and gated behind a flag instead of being an unexamined property
+of the generator.
+
+## 2026-09-21 (the ladder that was walked back down) — Now Compress's byte 2 is a property of its own block, and the climb was a description of one ladder
+
+**Claim.** A shape-3 header's byte 2 **falls as more of its block can
+be matched** and is computed **from that block**, not carried between
+blocks. Two archives measure it: eleven members varying matchability
+and nothing else give 255, 255, 127, 127, 127, 127, 63, 63, 31, 31, 8;
+twenty-one walking the same ladder up and back down give those values
+and then their mirror, **every mirrored pair equal**
+(`nowcompress.py --case match`, `--case matchv`).
+
+**What it withdraws.** Until today the note read the field as a running
+state: it climbs toward 255 by `b2 + ((255 − b2) >> 1) + 1` when
+nothing matches — 101 transitions take that step exactly — and collapses
+to 0 when everything does. A carried value updated by half the distance
+to a target **lags**, and there is no hysteresis anywhere in the V; not
+one of the ten transitions on the way back up takes the step. So the
+101 that do are a description of the ladders they were read off, all of
+which are ordered by a parameter that only ever increases.
+
+**That is the second time in one day the same mistake was found in the
+same field.** The morning's withdrawal was a window correlation read
+off one file whose blocks alternate by construction (*the quarter that
+changed nothing*), and the sentence written then was: *"a correlation
+you only ever observe is one you have not tested"*. The climb is the
+same thing with an equation attached — and an exact law over 101
+transitions looks like far better evidence than a correlation over 43
+blocks, which is precisely why it survived longer. **The number of
+confirmations is not the question; whether anything ever varied the
+input the other way is.** Walking a ladder backwards costs one run.
+
+**What it cost, so the next one can be priced.** Three emulator runs.
+**One of them was wasted on the content**, and the lesson is worth more
+than the run: the first `match` case used a keystream, which is
+incompressible, so seven of its eleven members came out as **stored**
+blocks — which have no header and therefore no byte 2 — and the ladder
+had four rungs instead of eleven. A probe that varies one property of a
+compressed block has to make sure the encoder compresses it at all.
+The second build uses de Bruijn bytes for the unmatchable half and a
+run of one letter for the rest, which is compressible, unmatchable
+across members, and the same cost to code in every member.
+
+**What is still open, and it is narrower than it was.** Six quantities
+a block has are now ruled out by name over 175 tokenised blocks — the
+literal count, the literal-to-output ratio, the token counts, the table
+sizes, the longest match distance and the block's length. `matchv`'s
+`n09` and `n11` agree on **every one of them**, block length included,
+and differ in byte 2; `n00` and `n01` have identical code tables and
+differ by half. So it is something the encoder knows and the block does
+not spell — a search depth, a hash occupancy, a cost estimate — and no
+instrument outside the encoder's own code is left to ask.
+
+## 2026-09-21 (the oracle that was never asked) — a second implementation of StuffIt method 6, four weeks on the disk
+
+**Claim.** deark implements StuffIt method 6 and agrees with this engine
+on all 11 method-6 forks here. It is MIT, it has been in `reference/`
+since 2026-08-25, and `ci.sh` compiles it on every run. The claim it
+disproves — *"this is the ONLY reference implementation the project has
+for method 6"* — was written in `src/fmt_sit.c`, repeated in FORMATS.md
+and OPEN_ITEMS.md, and used in TESTING.md to state a blind spot: that on
+method 6 the second oracle "adjudicates a transcription against its
+source rather than two independent implementations".
+
+**Why it survived, and this is the transferable half.** The third oracle
+is offered a fork **only when `unar` and `macunpack` have both left it
+open**. Method 6 is a method macunpack reads, so nothing was ever open,
+so deark was never asked — on that method or on any other the others can
+read. **A check positioned where nothing can contradict it cannot
+contradict anything.** The question that finds this one is not "what
+does the suite cover" but "what is this check never run ON".
+
+The same three lines are why the ARC Distilled resource forks sat
+unadjudicated: they were open, deark could have said they are empty, and
+a second premise stopped it — *"deark has no notion of a resource fork
+for these formats"*. It writes AppleDouble sidecars, and **the only fork
+that premise excluded is the only fork method 6 occurs in**: the
+corpus's one real method-6 entry has an empty data fork and a
+34,818-byte resource fork.
+
+**What changed.** deark now cross-checks the 23 forks macunpack alone
+had graded — all 23 agree, and a fork records both oracles — and it fills
+resource forks. `oracle-unadjudicated` fell from **23 forks across 12
+fixtures to 15 across 11**.
+
+**And the guard that had to be added, which is the second lesson.**
+Lifting the gap-filling restriction let deark grade forks nobody else
+could, and seven fixtures immediately failed against it. deark does not
+FAIL on a damaged file — it **pads**. `sitdoc.sit` declares a 286-byte
+resource fork in a file that ends 52 bytes short; this engine writes the
+234 bytes present and reports the file truncated, and deark writes 286
+whose last 52 are zeros it made up. **An oracle that always produces
+something is not ground truth about a file that does not contain it**,
+and for one run the manifest asserted those 52 invented zeros and graded
+us against them. So deark now fills a gap only where it cannot invent
+one: an empty fork, which is an assertion of absence, or a method it is
+the designated oracle for. Everything else is a cross-check against a
+fork somebody else already graded.
+
+**A third thing fell out of the same rebuild, and it is the 2026-08-08
+trap one layer up.** `./ci.sh` runs `make clean`, which deletes
+`build/macunpack/`; a manifest rebuild without it writes weaker
+manifests and looks like success, which is why `MISSING_ORACLE` exists.
+Letting deark close the gaps macunpack used to fill made that warning
+**discard itself** — nothing was left unadjudicated, so the fixture no
+longer looked short of an oracle. The discard now requires macunpack to
+be present. The same hole, in the same file, reopened by the change that
+made the third oracle more capable.
+
+**What it is worth beyond the oracle.** `src/sit6_tables.h` is **1,028
+bytes** of tables transcribed from macutils, and deark states the same
+fixed code book as **13 (count, length) pairs — 26 bytes — plus a
+twenty-line assignment rule**. Expanding those 26 bytes and assigning
+codes by that rule reproduces **256 of the 257 codes exactly**; the
+257th is the terminator, where macunpack's tree carries two leaves under
+one 12-bit prefix and deark's carries one. So the row in OPEN_ITEMS.md
+that has kept macutils in `fmt_sit.c` is now a licence shed with a
+plausible size win attached, and the size is what should decide it.
+
+**What is NOT claimed.** deark credits macunpack as documentation and
+uses none of its code. The two are independent implementations and not
+independent readings: a transcription error in either shows up, a
+misreading of the format shared with macunpack does not. That half of
+TESTING.md's caveat stands, and saying so is the difference between a
+second oracle and a second opinion.
+
+## 2026-09-21 (the table that was twenty-six bytes) — StuffIt method 6's fixed code book, priced on both axes
+
+**Claim.** The 1,028-byte fixed decode tree `src/sit6_tables.h` carried
+is **26 bytes of information**: thirteen (count, length) pairs and a
+twenty-line assignment rule, both stated in
+`reference/deark/modules/stuffit.c` (MIT). Built at run time they
+reproduce macunpack's tree over **every one of the 8,192 bit paths of
+depth 13** — same leaf, same number of bits — and the committed
+synthetic fixture regenerates byte-identical from them.
+
+**The price, measured before it was taken and on both axes**, because
+the axis that matters was not the obvious one:
+
+| | |
+|---|---|
+| code | **+408 B** |
+| A5 (data + bss) | **−1,000 B** |
+| net, and `build_mac.sh` counts the two one for one | **−592 B off every extraction's budget on a 1 MB Mac Plus** |
+| peak heap, method-6 forks only | 40,982 → **42,010 B** (+1,028, the tree) |
+| engine ticks on `derived-INITLoader.sit` | 3 → 3, the instrument's resolution |
+| extractions lost | **none** — `run_tiers.py` reads 69/69 at the 1 MB floor and 66/69 at 512 KB, the tallies recorded before the change |
+
+**The table was in A5, not in code**, which is the whole reason this is
+worth anything and is not what it looked like going in: removing 1,028
+bytes and adding a builder made the CODE ceiling fail by 408 B, and
+only the A5 line showed where the 1,028 had gone. Had both been code
+the change would have been a 620 B win; had the table been code and the
+builder A5 it would have been a loss. **Price every axis the ratchet
+measures, not the one the change is about.** A one-loop zeroing of the
+two arrays was tried on top and is worth exactly nothing: +4 B of code
+for −4 B of A5.
+
+**What made it safe was an exhaustive check rather than a sample.** A
+13-deep tree has 8,192 bit paths and all of them fit in a loop, so
+"equivalent" is provable rather than likely. It was worth doing: the
+terminator is the one place the two trees differ in shape — macunpack
+spends thirteen bits on it, reaching either of two leaves, where the
+code book gives symbol 256 twelve — and a tree built from the code book
+alone would have consumed one bit fewer on every segment end. `sit6_build`
+reproduces the split deliberately. The first draft of that split also
+rescanned the nodes it had just written and split the terminator it had
+just made, which the fixtures caught immediately.
+
+**What it is for.** `tools/gen_sit6_tables.py` generated that table from
+macutils and is now `tools/check_sit6_tree.py`, which compares the two
+trees instead of writing one — a generator that became a check, and one
+shown to fail on two different corruptions of the 26 bytes. What
+`fmt_sit.c` still owes macutils is method 6's **framing**: the segment
+header, the stored-segment rule and the PackBits tail. deark implements
+those too, so the row is not closed, it is smaller.
+
+## 2026-09-22 (the framing that needed no rewrite) — StuffIt method 6's last macutils row, closed for nothing, and the three places this engine is stricter than both references
+
+**Claim.** Method 6's **framing** — the segment header, the
+stored-segment rule and the PackBits tail, the last of `macunpack/sit.c`
+in `src/fmt_sit.c` — is stated in full by
+`reference/deark/modules/stuffit.c` and `reference/deark/src/fmtutil-rle.c`,
+both MIT. `docs/formats/stuffit-method-6.md` is that description plus the
+three corrections it needs, and `tools/derive_sit6.py`, written from it
+and from the container page alone, reads **all 11 method-6 forks in the
+corpus** byte for byte against the sha256 two oracles recorded. The row
+in OPEN_ITEMS.md closes: **nothing in `fmt_sit.c` is XADMaster's or
+macutils' any more.**
+
+**Evidence, and the price.** Priced on all five axes the previous row
+was, and it is a row of zeros:
+
+| | |
+|---|---|
+| code | **0 B** — 152,596, the ceiling |
+| A5 | **0 B** — 37,660, the ceiling |
+| peak heap | **0 B** |
+| engine ticks | **0** |
+| extractions lost | **none** |
+
+Zero because **nothing executable changed**. Every line this touched in
+`src/fmt_sit.c` is a comment; `git diff src/` has no other kind. That is
+not a disappointment, it is the result: the engine's framing and deark's
+agree field for field, which is what a re-derivation is for. The RLE90
+row closed the same way on 2026-09-21 and PackIt's did not — there the
+appendices needed four corrections and a derivation tool to find them.
+
+**What the derivation found that the citation would not have.** The two
+references **disagree about where a Huffman segment ends**, and the
+engine had quietly taken a third position:
+
+- deark stops decoding the instant the segment's declared length is
+  reached and never reads the stop code;
+- macunpack ignores the declared length and decodes until the stop code;
+- `fmt_sit.c` does both — it reads on after the declared length and
+  **requires** the next symbol to be the stop code.
+
+Nothing in either reference says which is right, so it was measured:
+across the corpus's **13 Huffman segments the symbol after the declared
+length is the stop code in 13 of 13** — never a byte, never the
+segment's end. So all three readings agree on every file here, and the
+strictest of them refuses a segment they would disagree about instead of
+picking a winner. `tools/derive_sit6.py` implements deark's rule and
+reports the measurement beside it, so the day a segment disagrees the
+tool says so rather than the engine failing a fixture.
+
+The other two corrections are the same shape and smaller: **both**
+references index their translation array with a decoded symbol and bound
+it against nothing, so a segment naming 12 bytes and coding a thirteenth
+hands back what the previous segment left there — a wrong fork rather
+than a refused one, and no segment here does it; and deark treats a
+segment header below 10 bytes as a clean stop where this engine reports
+the fork corrupt, the fork being short either way and the difference
+being whether the caller is told.
+
+**The transferable part.** *The code book was worth 592 bytes and the
+framing is worth nothing, and both were worth doing.* The size win was
+the reason the previous row got taken, and reading it as the reason
+would have left this one undone — a licence row is closed by the
+description existing, not by the description saving anything. What the
+zero buys is that `NOTICE`'s macutils paragraph no longer names
+`fmt_sit.c`, and that the framing is now written down somewhere other
+than in a decoder.
+
+**And `dist/` was stale, which is the same day's other cost.** Rebuilding
+it for this commit produced a resource fork **591 B smaller** than the
+committed one: `0aa9101` changed `src/fmt_sit.c` and `src/sit6_tables.h`
+— the −592 B the code book was taken FOR — and did not rebuild the only
+download this project offers, so the download did not have the saving in
+it. Nothing tells you: the ratchets read the working tree, `ci.sh` builds
+`build/mac/` and not `dist/`, and a stale binary is the right size and
+the wrong bytes. Found by rebuilding `dist/` and diffing, and confirmed
+against a **fresh `git worktree`** of `HEAD` — whose build has the same
+resource fork as this one, which is what says the staleness predates
+this change rather than being caused by it.
+
+**One figure corrected on the way.** "All 12 method-6 forks" was written
+in three files on 2026-09-21, each time next to the enumeration that
+adds to eleven — ten in `synth-sit-fixhuf.sit`, one in
+`derived-INITLoader.sit`. The corpus has **11**; counting them is the
+first thing `derive_sit6.py` does. A number and its own enumeration
+disagreeing in one sentence is the cheapest smell there is, and it
+survived three files for a day.
+
+## 2026-09-22 (the oracle asked about everything else) — deark over the whole corpus, and two things it does that nothing here had written down
+
+**Claim.** The third oracle was still only ever asked where the others
+were silent. `tools/sweep_deark.py` asks it about **everything**:
+**2,080 graded forks across 593 of the 932 fixtures, and 2,053 agree.
+Zero disagreements.** The remaining 27 are three shapes that are not
+disagreements, and two of those three were discovered by running it.
+
+*(Those are the day's first figures. Both of the things below that the
+sweep "cannot see" turned out to be mis-read, and correcting them took
+it to **4,502 forks and 2,151 agreements**, still with zero
+disagreements — see 2026-09-22, "the decline that read as a naming
+gap".)*
+
+**Evidence.** Nothing is written and nothing is adjudicated — the
+sweep compares deark's output against every hash the manifests already
+hold, from whatever oracle put them there. A cross-check that changes
+nothing is the point: **either it finds nothing, which is cheap and
+worth knowing, or it finds something.** It found nothing wrong and two
+facts about the oracle itself.
+
+**The first: deark declining a fork is not deark reading an empty
+one.** `make_manifests.py` asserted the opposite in a comment — "a
+member deark wrote at all has both forks" — and it is false. Given
+`derived-BitMap11.sit`, a StuffIt archive with one method-8 (MW) data
+fork, deark writes that member's resource-fork sidecar, prints
+`Unsupported compression method: 8 (MW)` for the data fork, and writes
+no data file. The absence read as "this fork is 0 bytes", which is the
+one thing deark is trusted to assert on its own (*an empty fork is an
+assertion of absence*, TESTING.md). **Nothing had gone wrong yet** —
+no manifest records a false empty — because the gap-filling path had
+never been offered such a fork. It is a hazard found before it fired,
+which is the only cheap time to find one. `deark_forks` now parses the
+errors deark attaches to a fork and returns **None** for those, which
+every caller has to tell from `b""`; an error it cannot attach to a
+fork makes every absent fork of that archive unknown, which costs 9
+forks of coverage in two fixtures and cannot turn an error into an
+assertion.
+
+**The second: half the corpus was not being compared, for the same
+reason as always.** deark writes each member to a real FILE, so a
+member inside a folder arrives on disk with its path separators
+mangled to `_` — and both the sweep and `make_manifests.py` matched
+raw names, so **every entry in a folder was skipped**: 500 of them.
+Modelling deark's own sanitiser (`de_char_to_valid_fn_char`, one
+function) took the sweep from 1,641 forks to 2,075 and closed the same
+hole in the manifest builder. **A matcher that silently drops what it
+cannot match reports success on the subset it can** — the same shape
+as a check positioned where nothing can contradict it, one layer down.
+
+**The third shape was already known and is not a defect:** deark does
+not unwrap MacLHA's MacBinary payload, writing the header and both
+padded forks as one file where `unar` and this engine split them. The
+sweep reports those as `wrapped` after checking that the container's
+own data fork is byte-identical to the graded one. Agreement one layer
+down is agreement.
+
+**What this sweep CANNOT see, and it prints it every run.** 283
+entries deark names in a way no mangling of ours reproduces — 150
+StuffIt 5, 75 StuffIt, 49 Tar, 9 others — are not compared at all. The
+tally is printed per format rather than described, because a sweep is
+worth what its denominator is worth.
+
+**Both halves of that sentence were wrong, and the same day.** 225 of
+the 283 are entries deark NAMED and declined, and the 49 Tar ones are
+not the AppleDouble merge this entry said they were. **37** is the
+number, in four shapes that TESTING.md names one by one; the two
+disproofs are the entry cited above and BLOCKERS.md's withdrawn
+claims. What survives here is the method: a check positioned where
+nothing can contradict it, and a denominator printed per format so the
+blind spot is a number somebody can pull on.
+
+## 2026-09-22 (the container is the oracle) — eight forks in damaged MacBinary graded by the file's own arithmetic
+
+**Claim.** Eight forks in seven damaged MacBinary fixtures had no
+second implementation to be wrong against: `unar` declines them, deark
+PADS them, and our own output cannot grade our own output. **They did
+not need one.** A MacBinary is a 128-byte header, the data fork padded
+to a multiple of 128, then the resource fork, all of it stored — so
+where a fork starts is arithmetic and what is in it is the file's own
+bytes. A file that ends early holds exactly as much as is physically
+there, and that number is forced rather than decoded.
+`oracle-unadjudicated` falls from **15 forks across 11 fixtures to 7
+across 4** — and back to 8 the same day, when the third oracle stopped
+asserting that `arcplus712.zip`'s entry has an empty resource fork on
+the strength of a run where it failed that entry's CRC (*the oracle
+asked about everything else*, above).
+
+**Evidence.** All eight match, byte for byte, what
+`macextract` already writes — `sitdoc.sit`'s 234 bytes of a declared
+286, `systemidle.sit`'s 235, `sigmaedit.sit`'s 348, `ddarchive.sit`'s
+238, `appledraw51.cpt`'s 13,036 of 13,121, `pcal296.cpt`'s 12,899, and
+`guysmaccontacts.sea`'s data fork at 114,644 of a declared 137,726
+with its resource fork not present at all.
+
+**The part that took the thinking, because it is what makes this
+legitimate rather than circular.** The engine reads the same header,
+so it would be wrong the same way, so "the layout says so" is not
+evidence. The rule therefore **refuses to grade anything unless the
+arithmetic is confirmed on the file it is being applied to**, and two
+confirmations exist:
+
+- the header's **own CRC-16/CCITT** over its first 124 bytes matches
+  the value at +124 — MacBinary II, so the lengths are checksummed.
+  That is `guysmaccontacts.sea`, the one file where neither fork had
+  an oracle;
+- or the entry's **other fork is already adjudicated** and the same
+  arithmetic reproduces it byte for byte, which pins both offsets on
+  that file. That is the six MacBinary I fixtures, where `unar` grades
+  the data fork and the resource fork is the remainder.
+
+And where an oracle and the arithmetic disagree on a file, it grades
+**nothing** there and says so: a rule that adjudicates where it has
+just been shown wrong is worse than no rule. Shown failing before it
+was believed passing — six cases, including a broken CRC and a
+falsified oracle hash, each refusing correctly.
+
+The layout is not assumed either: the same arithmetic reproduces both
+forks of **174 undamaged MacBinary fixtures**, every one in the corpus
+with a single entry and two adjudicated forks, with no mismatch.
+
+**And a second implementation turned out to corroborate it after all.**
+Once those forks carried hashes, `sweep_deark.py` compared deark's
+output against them and returned `padded` on all six resource forks:
+deark reads the same bytes at the same offsets, stops where the file
+stops, and only THEN invents a tail. What made it useless as an oracle
+— that it always produces something — hid the fact that its prefix is
+right. The padding guard, written to keep invented zeros out of a
+manifest, is what makes that readable.
+
+**The transferable part.** *Ask what would settle this if no second
+implementation existed at all.* Three implementations had been asked
+and the answer was "nobody can adjudicate these", which is true and was
+read as the end of it. The container states its own layout, and a
+length that is forced by arithmetic is a different KIND of ground
+truth from a length another decoder agrees with — not weaker, and in
+this case stronger, because there is nothing in it for a second bug to
+agree with.
+
+## 2026-09-22 (the premise that stopped being true) — Implode has an implementation and an oracle on this disk, and the scope decision is not taken
+
+**Claim.** PKZIP 1.x's Implode (zip method 6) was declined with no
+implementation to write it from and nothing to grade it against. Both
+are now here. **Nothing has been done about it** — the scope is the
+maintainer's, and this entry exists so the decision is re-made
+knowingly rather than inherited (OPEN_ITEMS.md, *Out by the brief*,
+the Implode row).
+
+**Evidence, measured 2026-09-22.** `reference/deark/src/fmtutil-lzh.c`
+implements it under MIT, in `src/` and not in the `foreign/` tree its
+licence carves out. And it is right: deark decodes all **7** Implode
+entries of `4acalc.zip` and `4alnch11.zip`, and every one matches the
+**CRC-32 PKZIP itself stored** — a check no decoder here can
+influence. `CALC.TXT` comes out at 5,284 bytes.
+
+**What has not changed.** Implode is not a Macintosh method, it
+predates deflate, and the two archives are PC software that entered
+the corpus to exercise the per-entry refusal path. That is still the
+whole of the case for declining it, and it is a reasonable one; what
+is gone is the second half, "and we could not check it anyway".
+
+**Left undone on purpose, and it is one line.** Adding `"Implode"` to
+`DEARK_METHODS` would record those entries' forks as ground truth
+without implementing anything, so that a decoder landing later starts
+compared rather than unadjudicated. It belongs to the same decision.
+
+## 2026-09-22 (the download nothing looked at) — the one artefact this project ships, compared with the build for the first time
+
+**Claim.** `dist/` is the only download this project offers, CLAUDE.md
+has a rule about rebuilding it, and nothing enforced the rule. It was
+stale, and it had been since `0aa9101`.
+
+**Evidence, measured.** Building `0aa9101`'s own tree in a worktree and
+reading the two MacBinary headers: the committed `dist/MacExtract.bin`
+declared **188,154 B** of resource fork against the build's **187,563 B**
+— 591 B behind, with different bytes. The build that catches it was
+already running: `ci.sh` variant 4 compiles the Mac shell on every run
+and had never been asked what it produced.
+
+**Consequence.** One command in variant 4 — SHA-256 from offset 128 on,
+both files — fails the run and names `sh tools/make_dist.sh` as the fix.
+
+Three things decided its shape, and each is the reason it is not
+somewhere simpler:
+
+- **Not size, and not a timestamp.** Changing `unc_strerror`'s `"ok"` to
+  `"oK"` produces a `MacExtract.bin` of **exactly the same 187,776
+  bytes** as the shipped one. A stale-by-mtime or stale-by-length test
+  passes that; the content hash is what fails it.
+- **Not the whole file.** MacBinary stores the file's creation and
+  modification dates, so byte 94 differs between two runs over identical
+  code. `make_dist.sh` has said so since it was written; what was
+  missing was anything that ASSERTED it. It now does, three separate
+  builds of the same source agreeing on the payload.
+- **The generated prose could not go in `ci.sh` at all.** A docs-only
+  change does not run it (CLAUDE.md, Rules), and `dist/README.txt` is
+  the release notes verbatim — generated from a heredoc in
+  `make_dist.sh` that expands exactly one thing, `$VERSION`. So that
+  half is `check_docs.py`'s check 7, which re-renders the heredoc and
+  reports the first line that differs. The two halves of one artefact
+  are checked in two places because they go stale for two different
+  reasons.
+
+**The general shape, which this project keeps re-learning.** A rule in
+CLAUDE.md is not a check. This one was written down, followed most of
+the time, and silently broken by the commit before last — and the
+evidence to catch it was being rebuilt from source on every CI run and
+thrown away.
+
+## 2026-09-22 (the decline that read as a naming gap) — 2,324 forks the sweep was counting as its own blind spot
+
+**Claim.** `sweep_deark.py` reported **283** entries it could not
+compare because deark "names them in a way no mangling of ours
+reproduces". For 225 of them that sentence was false in both halves:
+deark named them perfectly well, and what stopped the comparison was
+deark declining the method.
+
+**Evidence, measured.** `deark_forks` was built from deark's output
+FILES. A member deark declines every fork of writes none — for
+`derived-seasons_greetings.sit` it writes 2 files for 8 members and
+prints `Unsupported compression method: 13 (LZ+Huffman)` for the other
+6, naming each member and each fork. Every one of the 75 StuffIt
+entries in that 283 is method 13, and 122 of the 150 StuffIt 5 ones are
+Arsenic (method 15). Carrying those members gives **declined 2,342, up
+from 18**, with `agree` and `DIFFER` untouched.
+
+**Consequence.** The fix is in `deark_forks`, not in the sweep, so
+`make_manifests.py` sees the same thing — and that it changes nothing
+there is measured, not assumed: all **12** deark-touched manifests
+rebuild byte-identically under it, in memory, with nothing written.
+(The first attempt at that check said 9 of 12 had CHANGED. `ci.sh` had
+run `make clean` in between and `build/macunpack` was gone, so the
+rebuild was one oracle short — the trap in TESTING.md, caught by a
+comparison rather than by a manifest.) What is left is the naming gap
+the line was always supposed to report: **37**, and every one of the
+four shapes in it is now named in TESTING.md rather than totalled.
+
+**The 49 Tar entries were not what three files said either, and this is
+the better lesson.** They were filed as "deark writing an AppleDouble
+member as a literal `._NAME` file where `unar` merges it" — a merge
+rule, and a plausible one, because `unar` really does merge Netatalk
+sidecars. What actually happens is that a tar member is stored as
+`./NAME`, `unar` reports it without the `./`, deark keeps it, and
+**deark's own sanitiser turns that slash into `_`** — so `./READ_ME`
+reaches the disk as `._READ_ME`. None of the 49 files deark writes for
+`derived-PCCTS.tar` begins with the AppleDouble magic and each holds
+its member's own data. Matching the alternative name recovers all 49
+entries and **98 forks, every one of which agrees**: the sweep now
+compares **4,502** forks and agrees on **2,151**.
+
+**A coincidence that corroborates a wrong story is worse than no
+evidence at all.** `._X` is exactly the filename the AppleDouble
+convention would have produced, so the explanation looked confirmed by
+the data every time anybody glanced at it. What settled it was opening
+one of the files, which is four bytes of reading and was never done.
+
+**A member with no file at all asserts nothing about the fork the
+errors did not name.** The rule one layer up is "a fork with no file is
+empty, unless deark said it could not read it" — an assertion of
+absence. That rule is right for a member deark DID write a file for and
+wrong for one it gave up on, which it may have given up on before the
+second fork was ever considered. Those are unknown, which costs
+coverage and cannot record a falsehood.
+
+**And the name in an error is not the member's raw name**, which the
+comment above `_DEARK_ERR` asserted. deark prints it
+MAKE_PRINTABLE (`reference/deark/src/deark-ucstring.c`,
+`ucstring_to_sz`), so `Icon\r` — the commonest filename on a Macintosh
+volume — arrives as `Icon<\r>` and our sanitiser model turns that into
+`Icon__r_` where the file on disk is `Icon_`. **382 declined forks
+across 35 fixtures are mis-keyed that way**, and on the day it was
+found **none was live**: in every one, deark had written no file for
+that member, so nothing consulted the wrong key. It is a latent
+false-empty — the exact defect the declined-fork rule exists to
+prevent — and `deark_err_name()` reverses the escapes before
+sanitising. A byte deark could not decode is `DE_CODEPOINT_BYTE00 + b`
+= 0x10000000 + b, past the 0x10ffff `de_char_to_valid_fn_char` keeps,
+so in a filename it is `_` and that is what it maps to.
+
+**The general shape.** A harness that prints what it cannot see is
+worth having; a harness that prints the WRONG reason for what it cannot
+see is worse than one that prints nothing, because the number looks
+audited. 283 had been read three times as "deark is a weak oracle for
+StuffIt" when it meant "deark does not implement method 13" — which is
+the same fact about the format the project already knew and had written
+down twice.
+
+## 2026-09-22 (the name that was never a fork) — StuffIt 5's names are UTF-8, and the oracle was asked in the one way that hides it
+
+**Claim.** This engine writes StuffIt 5 entry names as mojibake, on
+Linux and on the Macintosh, and the 932-fixture corpus is byte-exact
+against an oracle that makes the same mistake.
+
+**Evidence, measured.** `derived-Cool_Tools__.sit` holds `C6 92` for a
+folder name. That is UTF-8 for U+0192, `ƒ` — the character a Mac user
+types for a folder. deark decodes it as UTF-8 (`d->input_encoding` is
+UTF-8 for `file_fmt==2` and MacRoman otherwise,
+`reference/deark/modules/stuffit.c`), `lsar -nr` unforced prints
+`Cool Tools ƒ`, and `lsar -nr -e macintosh` — the project's own oracle
+invocation — prints `Cool Tools ∆í`, which is what this CLI writes to
+disk. In Japanese the same archive family gives
+`800-SAY-WHAT 3.0.1J/読んで下さい.rtf` against 25 characters of
+nothing. 28 entries across 5 fixtures — **corrected the same day to 27
+across 4**; the 28th was an entry with two empty forks and nothing to do
+with encoding (BLOCKERS.md; *a name an HFS volume can hold*, below).
+
+**Consequence.** Filed in OPEN_ITEMS.md (*StuffIt 5 entry names are
+UTF-8*) and nothing is changed here: the frontend's per-format encoding,
+the oracle invocation with the four manifests built from it, and what
+the Macintosh shell should write to an HFS name have to move together,
+and the last of those wants a UTF-8 → MacRoman table on a 1 MB machine.
+
+**Why it survived 932 fixtures and five oracles.** The corpus agrees
+because both sides assume the same thing: `-e macintosh` forces MacRoman
+on every format, so unar produced the mojibake and the manifest recorded
+it as ground truth. This is the tolerance-with-no-independent-evidence
+smell from CLAUDE.md, in the one place nobody looks for it — not in a
+decoder, in the harness's own command line. The thing that found it was
+the only check in this project that compares names with an oracle
+invoked differently.
+
+## 2026-09-22 (the sidecar is not an archive) — two fixtures that are inputs, and the declaration that says so
+
+**Claim.** `ddtf-ddpro411ad1.dd.ad` and `.sea.ad` are not archives to be
+graded. They are inputs, and the open question about what their entry
+should be CALLED does not have to be answered.
+
+**Evidence.** `run_segments.py`'s `DDSEG_SPECIMENS` reads both, in
+`ci.sh`, on every run: they carry the resource fork of the two
+DiskDoubler files that were cut into `.1`/`.2` parts, and they are what
+a joined set is compared against. `run_ddtf.py` registered them saying
+exactly that — "like the parts themselves they get no manifest" — and
+the parts have none to this day.
+
+**Consequence.** `make_manifests.py` gains `NOT_ARCHIVES`, which is
+where the statement has to live: that tool builds a manifest for any
+fixture that lacks one, and these two are the only two in the corpus
+that `unar` can read but nothing should grade. Twelve other fixtures
+have no manifest and need no declaration, because `unar` cannot produce
+one for any of them.
+
+**Why not the other answer.** Committing the two manifests would mean
+recording `ddtf-ddpro411ad1.dd.ad` as the entry's name — `unar` keeps
+the extension — and this CLI would have to stop stripping it. That
+strip is not an AppleDouble rule: it is the general one that names a
+name-less format's single entry after the file without its extension,
+and it is what makes `x.txt.gz` come out as `x.txt`. Two fixtures are
+not worth a special case in it, and the bytes they would add are
+already asserted from the other side by `run_segments.py`.
+
+## 2026-09-22 (the document that came with the decoder) — fmt_lzh.c's header walk, from LHa's own header.doc
+
+**Claim.** The last of `fmt_lzh.c` that was XADMaster's — "the header
+walk and the CRC contract from `XADLZHParser.m`" — is described by the
+format's own publication, and that file has been in this tree since the
+first reference fetch.
+
+**Evidence, measured.** `reference/lha/header.doc.euc` is Masaru Oki's
+`header.doc`, shipped with LHa for UNIX and dated 2 March 1992: levels
+0, 1 and 2 as a column of field widths, the extended-header types
+(`0x00`, `0x01`, `0x02`, `0x3f`, `0x50`–`0x54`), the OS IDs — including
+`'m'`, Mac — and the method IDs. `tools/derive_lzh.py` is a reader
+written from it, plus lhasa for the four things it does not cover, and
+it walks **156 archives and 191 entries with 0 disagreements** against
+lhasa's listing of the same files: this project's 7 fixtures, lhasa's
+collection from 20 writers, and LHa for UNIX's own.
+
+**The price, on the five axes the previous rows were priced on:**
+
+| | |
+|---|---|
+| code | **0 B** — 152,596, the ceiling |
+| A5 | **0 B** — 37,660, the ceiling |
+| peak heap | **0 B** |
+| engine ticks | **0** |
+| extractions lost | **none** |
+
+Zero because nothing executable changed: `git diff src/` is 36 comment
+lines. The Macintosh binary's payload hashes the same before and after,
+which is the whole claim in one line — and it was `ci.sh`'s new
+stale-`dist/` check, written this morning for another reason, that made
+that a one-command measurement.
+
+**What the document settles that a reading of somebody's parser cannot.**
+Level 1's compressed-size field is called **"skip size"** in the table,
+which is the published statement of the quirk this file had carried as
+"XADLZHParser.m, level 1 branch": the size counts the extended headers
+too. A fact stated by the people who defined the field beats the same
+fact inferred from a program that reads it.
+
+**Four things it does not cover**, all lhasa's (ISC) and all already
+cited elsewhere in the file: level 3; LHA for OS-9/68k 2.01 writing its
+level 2 header size two bytes short; `-lhd-` meaning a directory; and
+LHArk 0.4d writing `-lh7-` over an algorithm of its own.
+
+**One rule is still XADMaster's and it has no specimen.** A NUL inside a
+level 0/1 name field ends the name, the rest being the entry's comment.
+The document does not mention it; lhasa takes the whole field. **0 of
+the 140 level 0/1 name fields in the 156 archives here contains a NUL**,
+so no file this project can reach makes the two readings differ, and
+nothing could grade a change. Kept, measured, and marked at the line —
+the alternative is to delete a rule on the strength of a corpus that
+cannot exercise it either way.
+
+**And the file's own header comment said `-lh2-` and `-lh3-` were
+declined per entry**, listing them under "What is NOT here, and why"
+with a reason — no archive in reach uses them — that had been answered
+by patching LHa for UNIX to WRITE one (`tools/run_lzh.py`, TESTING.md).
+The code twenty lines below decodes both. A source comment contradicting
+the code beside it is the same cheapest-smell as two files disagreeing,
+and it survived because nobody reads a file's masthead while working in
+its middle.
+
+## 2026-09-22 (the page the sources list named) — fmt_sit5.c's container, and a citation that was not true
+
+**Claim.** `fmt_sit5.c`'s container parser was XADMaster's, and the
+inventory said a second description was already here: "Russotto's
+write-up describes the SIT5 container too". **That was false**, and the
+description that does exist was one link from a file this project had
+read twice before.
+
+**Evidence, measured.** `reference/notes/arsenic_russotto.md` is method
+15 from its first line to its last — the coder, the models, the block
+sort — and the only "header" in it is the Arsenic stream's own; nothing
+in it mentions an archive, an entry or a fork. Meanwhile
+`reference/notes/StuffIt.md`, the wiki page **StuffIt method 13 was read
+out of on 2026-09-20**, lists `StuffIt5Format` in its *Sources*. That
+page is on the same wiki as the eight `tools/fetch_references.sh`
+already fetches, and it describes the archive header, both entry
+headers, the second file header with its version-dependent offsets, the
+flag bits, the folder marker, the fork order and the CRC.
+
+`tools/derive_sit5.py`, written from that page alone, reads **all 31
+StuffIt 5 fixtures — 525 entries** — and agrees with the oracle
+manifests on every entry's PATH and both fork lengths: **0
+disagreements**.
+
+**The price, on the five axes:**
+
+| | |
+|---|---|
+| code | **0 B** — 152,596, the ceiling |
+| A5 | **0 B** — 37,660, the ceiling |
+| peak heap | **0 B** |
+| engine ticks | **0** |
+| extractions lost | **none** |
+
+`git diff src/fmt_sit5.c` is comments. The engine's reading and the
+page's agree field for field, which is what a re-derivation is for.
+
+**One correction, and it is the kind that only a reader finds.** The
+page's archive-header table gives offset **84 twice** — "Total size of
+archive" and "Offset of first entry header" — and then jumps to 86. Two
+fields cannot share an offset; the count is a `u16` at 92 and the offset
+a `u32` at 94, which reads all 31 archives, and which the other
+published copy of the same table (Maconv's, linked from the same
+*Sources* list) gives. A transcription that had been read by nobody in
+the middle of a page everybody cites.
+
+**Paths are the check worth building.** Nothing in a SIT5 container
+stores a path: an entry carries the OFFSET of its parent folder, so a
+path is the tree those offsets make. The first version of the
+derivation keyed entries on their leaf names and reported four
+mismatched lengths — two corpus archives hold `.nib` bundles with three
+identically-named files each, and the dictionary had been quietly
+collapsing them. **A comparison that loses rows is worse than one that
+fails**: it reported four wrong lengths for entries whose lengths are
+right.
+
+**What is left is the encrypted archive, and it has no specimen.** Where
+the password hash sits behind two optionally-present blocks, and the
+MD5-of-MD5 that grades a password, are `XADStuffIt5Parser.m`'s; the page
+says only "Encrypted (algorithm used is unknown)". **All 31 corpus
+archives read `0x10` in that flags byte and none is encrypted**, so the
+only archives that exercise the path are ones `tools/run_crypt.py`
+synthesises here — from the same reading, so they cannot grade it.
+
+## 2026-09-22 (a name an HFS volume can hold) — StuffIt 5's UTF-8 names, on both hosts, and what the fold costs a Mac Plus
+
+**Claim.** The three things that had to move together have moved: the
+engine says which encoding a name is in, the Linux CLI passes StuffIt
+5's UTF-8 through, the oracle is asked in that encoding and the
+manifests rebuilt from it, and the Macintosh shell folds UTF-8 into the
+MacRoman bytes an HFS name holds. The open item this closes is
+OPEN_ITEMS.md, *StuffIt 5 entry names are UTF-8* (the finding is
+2026-09-22, *the name that was never a fork*).
+
+**The engine says it; it does not convert.** `UncEntryInfo.name_utf8`
+is one byte, set by `fmt_sit5.c` and by nothing else. The alternative
+was a format table in each front end, and it would have been wrong in
+a place neither front end can see: a **segmented** StuffIt 5 set is
+sniffed as a split and walked by whatever the joined stream turns out
+to be, so the format the CLI knows about is not the one that read the
+name. `derived-Sniffles_2.0.sit.1` is exactly that file. The field
+costs 0 B of stack anywhere — `-Os -fstack-usage` on the three deepest
+frames is unchanged to the byte, because the struct's existing
+alignment padding absorbed it.
+
+**The oracle was the hard half, and it is one word.** `-e macintosh`
+forces MacRoman on every format, which is why the corpus was byte-exact
+against its own mistake. `make_manifests.py` now picks per format
+(`ORACLE_ENCODING`), and because the format decides the encoding and
+the encoding decides the names, the first `lsar` is trusted only for
+the format — which no encoding changes — and a format with its own
+encoding costs one more call. **31 manifests rebuilt, 35 names changed
+across 4 fixtures, 0 hashes changed anywhere**, and `run_diff.py` is
+31/31 on StuffIt 5.
+
+**Two independent checks say the names are now right, and neither is
+ours.** `lsar -nr` unforced — auto-detection, not our pin — prints
+`Cool Tools ƒ`. And deark reads those names as UTF-8 itself, so
+`tools/sweep_deark.py` could not match a single one of those entries
+while the manifests held the mojibake: over the whole corpus it goes
+from **4,502 graded forks and 37 entries it could not compare** to
+**4,556 and 10**, DIFFER 0 either way.
+
+**What those 54 forks are is not what it would be nice to report.**
+Every one of them is `declined` — StuffIt 5's Arsenic and method 13,
+which deark does not implement — so agreements stay at **2,151** and
+the declines go 2,342 → 2,396. The sweep gained no new adjudication
+here: what it gained is that 27 entries it was counting as its own
+naming blind spot are now counted as the oracle saying *I do not
+implement this method*, which is the same correction as
+*the decline that read as a naming gap*, earlier the same day, arriving
+by a different route. Checked rather than assumed — the first draft of
+this entry said the 54 agreed, on the strength of a per-format run
+whose agreements were there before.
+
+**And the 28 was 27.** One of them — `.typeAttributes.dict` in
+`derived-PuzzleGetter_0.8.sit` — was never about encoding: both its
+forks are empty, and deark writes no file for a member with nothing in
+either fork (`do_pre_decompress_fork`, `if(frk->unc_len==0 &&
+frk->cmpr_len==0)`), so `deark_forks` cannot see a member it named
+perfectly well. That is the same shape as the naming gap fixed earlier
+the same day, one size smaller, and it is now a named row in the
+sweep's *what it cannot see* table rather than a number attached to the
+wrong cause. The encoding case was **27 entries across 4 fixtures**.
+
+**What the Macintosh does with a name it cannot write.** An HFS name is
+MacRoman bytes, so something has to fold, and `Utf8ToMacRoman` does it
+once at the door of `sink_begin`, on the whole path, in place. Two
+properties make that safe and they are why it is not done component by
+component: UTF-8 never puts a `0x2F` byte inside a multi-byte sequence,
+so the engine's separators survive, and the fold only shortens, so the
+output never overtakes the input. Everything downstream — the folder
+walk, the folder hash, the 31-character cut, `BumpName`, every line of
+the report — then sees one name, of one length, in one encoding. The
+31-character cut acting on the FOLDED name is not a detail: 16 `é` are
+32 bytes of UTF-8 and 16 of MacRoman, and before the fold that name was
+cut, through the middle of a sequence.
+
+A code point MacRoman has no byte for becomes `_`, and the report says
+so in a line of its own — *"`<name>` was named in characters this
+Macintosh cannot write"* — which names what IS on the disk. It has to:
+printing what the archive asked for would print the row of substitutes
+twice and call it a rename. One bit per path component says which
+component lost something, so a folder of Japanese names says it once
+and not once per file in it.
+
+**The price, on the five axes, measured on the object before and
+after:**
+
+| | |
+|---|---|
+| code | **+580 B** — `Utf8ToMacRoman` inlined into `sink_begin` (.text 1,114 → 1,596 B) plus `RepLostChars`; ceiling 152,596 → 153,176 |
+| A5 | **+316 B** — MacRoman's 128-entry high half (.rodata 11 → 268 B) and the one report line (.rodata.str1.1 1,862 → 1,915 B); ceiling 37,660 → 37,976 |
+| peak heap | **0 B** — the fold is in place, in the shell's own copy of the entry |
+| stack | **+12 B** — `sink_begin` 400 → 412 B; `ExtractOne`, the largest frame in the shell, unchanged at 1,484 B |
+| engine ticks | **0** — the fold does not run at all unless the format set the flag, and then it is one pass over ≤255 bytes per entry |
+
+**896 B off every extraction's budget on a 1 MB Mac Plus, and it was
+worth taking**: that is 0.14 % of 648,100 B, against 5,988 B for the
+overlay that was judged not worth it, and nothing in the corpus has
+been out of that machine's reach since 2026-09-18. What it buys is that
+the application — which is what a user actually runs — writes names
+instead of mojibake for a convention as ordinary as a folder called
+`Cool Tools ƒ`: 4 of the 31 StuffIt 5 archives here.
+
+**What the table is not.** Retro68 has no Unicode converter that
+reaches System 3.0 — the Script Manager's is System 7.1 and the Unicode
+Converter is Mac OS 8.5 — so a table is the only route, and putting it
+in a resource to save 256 B of A5 would cost code to load it and is the
+kind of mechanism the overlay decision already declined at twenty times
+the prize.
+
+**One rule has no specimen and says so.** A byte that does not begin a
+valid UTF-8 sequence is passed through as itself: the name is then not
+UTF-8, the only other encoding this shell knows is MacRoman, and
+passing it on is what happened before the fold existed. All 525 entries
+of the 31 StuffIt 5 fixtures here are valid UTF-8, so that rule is
+stated rather than measured.
+
+**How the two halves are graded, and they are graded differently.** The
+ENGINE setting the flag is graded by `run_diff.py` over the corpus's own
+StuffIt 5 archives — names included, which is the one thing an
+aggregate never fails on. The SHELL's fold is graded by
+`mac_sink_test.c --utf8` through `tools/run_macnames.py`, driven
+straight through `sink_begin` the way `--cancel` is, because nothing in
+this tree writes a StuffIt 5 archive and inventing one to test the
+shell would have been the wrong file to write. That one case runs on
+**big-endian m68k under qemu** as well as natively — a 16-bit table and
+a shift-and-or decode being the shape that reads differently on the
+target. Both halves are in `ci.sh`.
+The case was made to fail first: with the fold disabled it reports the
+mojibake on disk, no report lines, and the 32-byte name cut at 31.
+
+## 2026-09-22 (the page that was never written) — DiskDoubler's three containers, measured, and the field that is checked from both sides
+
+**Claim.** `fmt_dd.c`'s containers — the last XADMaster row with a
+route — are described by a document this project measured, and a
+reader written from that document alone reads **all 91 DiskDoubler
+fixtures**: 244 entries, **643 assertions against the oracle, 0
+disagreements** (`docs/formats/diskdoubler-container.md`,
+`tools/derive_ddc.py`).
+
+**The first thing checked was the excuse.** The inventory said the wiki
+"punts them to `XADDiskDoublerParser.m` by name", and it does — it
+lists `DiskDoublerSingleFormat`, `DiskDoublerArchiveFormat1` and
+`DiskDoublerArchiveFormat2` as pages. **Those three pages do not
+exist.** That wiki's own index, `wikis.json`, has 40 pages and none of
+them is one. This was worth one `curl`, because the same list on the
+same wiki is what produced `StuffIt5Format` earlier the same day, where
+the named page WAS there. A name in a list is not a page, and the only
+way to tell is to look.
+
+**So the description is measured, and the offsets are derived rather
+than asserted.** `derive_ddc.py --grid` throws the layout away and
+searches: for each field, every offset whose value agrees with the
+oracle in *every* fixture that states one. The data fork's length
+survives at one offset over 66 compressed files and over all 195 file
+headers; type and creator at one each over the 87 entries the oracle
+records them for; `DDAR`'s name at one over 36 entries and `DDA2`'s
+over 142; each archive's body offset over all of them. **Nothing
+locates a record except something the format supplies** — a magic, or
+the walk those 643 assertions already grade.
+
+**The field the row existed for, checked from both sides.** The
+container is what says which method 10 forks are in the delta form, and
+nothing in the stream says it. `derive_ddc.py` reads the two fields and
+names two forks; `derive_dd.py` has no container parser at all — it
+finds blocks by the checksum a block header carries — tries both forms
+and reports which reproduced the oracle's hash, and names **the same
+two forks out of 39**. A field read without decoding, and a decoding
+done without reading the field. `derive_dd.py` was counting those two
+rather than naming them, which is a count that cannot be held against a
+list; it names them now.
+
+**What `--grid` cannot pin is the most useful thing it prints.**
+`DDA2`'s stored-record resource-fork length survives at **27
+offsets**, because the value is 0 in all 30 such records. That is not a
+gap in the search, it is what "DiskDoubler Pro writes this record only
+for a file with no resource fork" — measured on the application on
+2026-08-21 — looks like from the outside. A field a corpus cannot tell
+from a constant is a field the document must not claim, and this is the
+peak-RAM-matrix smell from CLAUDE.md arriving in a header table.
+
+**What was left had no specimen rather than no description, so two
+were made.** All 36 entries of the 7 `DDAR` archives here are files
+with a full file header: not one folder, and not one record with the
+`0x20` flag that says the forks follow raw. `tools/vmac/diskdoubler.py
+--combine` builds a volume with a known tree on it and drives
+**DiskDoubler 3.7's own Combine command** under Mini vMac.
+
+**The folder records are measured now.** The archive comes back holding
+`Nest/One`, `Nest/Two` and `Raw`, and `--verify-combine` grades what
+this engine makes of it against **the bytes DiskDoubler was given** —
+the oracle is the encoder's input, the bargain `nowcompress.py` and
+`run_dart.py` already make. **7 entries, 0 disagreements**, across both
+specimens, the folder tree and a two-fork file included. The closing
+record turns out to be a copy of the record before it with one byte
+set, name and all — a reader that looks at the name first sees the
+previous entry twice.
+
+**And `0x20` is still not measured, which is now a measurement of its
+own.** Five shapes were offered to 3.7 specifically to provoke it — a
+file nothing compresses, an empty file, a file with a resource fork, an
+already-compressed file, ordinary text — and every one came back with a
+full compressed-file header behind its record. The flags word reads
+`0x0000` in all 44 records on this disk. So that rule stays attributed,
+to XADMaster and to macutils' `macunpack/dd.h`, which states the same
+seven offsets under its own field names. **Two readers agreeing is
+evidence about the readers, not a specimen**, and the note says so in
+those words rather than letting a table imply otherwise.
+
+**The specimen corrected the description twice, which is what a
+specimen is for.** The record's `+74` is not the data fork's length —
+it is the **entry's whole span**, and stepping by it walks all nine
+`DDAR` archives here from the first record to the last byte with no
+special case at all. What it spans is a compressed FILE, which is why
+the arithmetic looked like it was 84 bytes out: **a file DiskDoubler
+compressed ends with a byte-identical copy of its own 84-byte header**
+— 63 of the corpus's 66, and the three without it are
+`synth-dd-m3/m4/m5.dd`, written in this tree rather than by
+DiskDoubler. So the "stray header" this project's walk had been
+stepping over since M12 was never stray: it is the previous entry's
+trailer, inside that entry's stated span. `src/fmt_dd.c` walks by the
+span now and checks it against the header's own arithmetic, which is
+one rule fewer and one check more — **+16 B of code and −16 B of A5**,
+so the budget does not move and both ratchets did.
+
+**And the change immediately failed eighteen assertions, which is the
+best thing that happened to it.** `tools/synth_dd.py` writes the `DDAR`
+archives `run_names.py` and `run_macnames.py` walk, and it had been
+putting the uncompressed data fork's length at `+74` and the resource
+fork's at `+78` — neither of which DiskDoubler writes, and neither of
+which anything read while the walk stepped by the file header. A
+generator free to be wrong in a field nobody reads is the same shape as
+a tolerance with no independent evidence; the suite that caught it is
+the one that feeds those archives to the engine. They say what the
+encoder says now.
+
+**Established that the reader can fail**, because a reader that agrees
+with an oracle 643 times is exactly the shape that might be agreeing
+with itself: swapping type and creator in the file header gives 130
+disagreements, and moving `DDA2`'s folder-depth field by four bytes
+gives 82. The unmodified reader gives 0.
+
+**Two smaller things the census found, both written into the note.**
+Five of the seven `DDAR` archives end with a stray 84-byte compressed
+file header belonging to no entry — stepping over it is the only
+reading under which those five end exactly at their last byte. And
+`DDAR`'s record carries a type and creator that are **not the entry's**:
+`derived-MAZv143.sea` reads `DDF1`/`DDAP` there where the oracle says
+`cdev`/`NaOH`, so what the record describes is the compressed file and
+the entry's own metadata comes from the header behind it. That is why
+the search pins type and creator inside the file header and finds
+nothing for them in the record.
+
+## 2026-09-22 (the version that could not have written it) — the DiskDoubler the `0x20` row was waiting for does not exist
+
+**Claim.** The last open row of `fmt_dd.c` — the `DDAR` record's `0x20`
+flag, which says the two forks follow raw — has been waiting for the
+wrong file. It was recorded as closable by "a 1.x or 2.x DiskDoubler,
+neither of which is reachable from here" (OPEN_ITEMS.md and
+`docs/formats/diskdoubler-container.md`, both written earlier the same
+day). **A 2.x DiskDoubler could not have written a `DDAR` record of any
+flags**, so finding one would have settled nothing. Withdrawn in
+BLOCKERS.md.
+
+**What the search actually returned.** Macintosh Garden — where
+`diskdoubler.py --setup` fetches 3.7, so it is the search this project
+already trusts for this format — has two DiskDoubler application pages,
+3.7 and 4.0, and one collection page, `apps/disk-doubler`. Its five
+downloads are four EXPANDERS and one INIT. No 1.x or 2.x compressor is
+on the site, and the request thread that asks for exactly those two was
+posted in 2010 by **balrog, XADMaster's own author** — "DiskDoubler 1.x
+(I have 1.0) DiskDoubler 2.x", stated there to be "to generate test
+cases in order to add support for more formats to The Unarchiver". The
+rule this row cites is that lineage's, and the lineage did not have the
+file either.
+
+**The disproof is in the expander, and it took no emulator.** A
+Macintosh application declares the file types it opens in its `BNDL`,
+and the two expanders are on the same page:
+
+| | declares |
+|---|---|
+| DDExpand 2.03a, 1990 | `DD01`, `DDDA`, `DD02`, `DDTM`, `DDSP` |
+| DDExpand 3.1 | those five, plus `DDAR`, `DDTD`, `DDCR` and `DDF0`–`DDF5` |
+
+`DDAR` does not occur anywhere in 2.03a's 65,212-byte resource fork;
+3.1 holds the literal nine times, six of them as the immediate of a
+`cmpi.l`. **A version's own expander not knowing the type is that
+version not writing it** — which is one inference and is labelled as
+one, but it is the only reading under which Salient shipped an expander
+that cannot open its own archives. So the flag can only come from a
+version that writes `DDAR` at all, and those — 3.x, 4.0, Pro 4.1 — all
+run here already, and the five shapes offered to 3.7 did not provoke it
+(*the page that was never written*, above).
+
+**What the search found instead is worth keeping.** `DiskDoublerExpand3.sit`
+carries **DiskDoubler ß05, "Copyright 1990 Salient"** — the oldest
+DiskDoubler reachable anywhere, four versions older than the 3.1.2 this
+project had called the oldest, and the first COMPRESSOR older than 3.7
+to turn up. It cannot write an archive either, and its own resource
+fork says so in one string: its Finder menu is
+`Compress Selection;Expand Selection;(-;About DiskDoubler`. No Combine,
+no Split, and no `DDAR` in the file. It compresses single files, which
+is what DiskDoubler was in 1990.
+
+**Why the wrong specimen was named, and it is a mechanism already on the
+list.** *A search that names the wrong tool* (BLOCKERS.md, added
+2026-08-25 for PKARC) is this exactly, one format over: the row named a
+VERSION rather than a shape, on the strength of which version XADMaster's
+author happened to own. Neither document had asked what a 2.x file looks
+like — and the answer was two downloads and one `BNDL` away, on the page
+this repository already fetches from.
+
+**Cost: nothing yet, which is the only cheap time to find one.** No
+emulator boot was spent on the wrong specimen, because none was
+available to spend it on. What it would have cost is the next session's:
+a search for a 2.x compressor that, had it succeeded, would have
+produced a file with no `DDAR` record in it.
+
+## 2026-09-22 (the fold, on a Macintosh) — the UTF-8 fold's first run on a real Mac, and the name that is not composed
+
+**Claim.** The fold shipped that morning (*a name an HFS volume can hold*)
+had never run on a Macintosh: no fixture in `tools/vmac/sample.txt` had a
+non-ASCII StuffIt 5 name, so it was graded only through the qemu mock. Two
+fixtures put it on the machine, and the first run found a property of the
+archives that the Linux side is structurally unable to see.
+
+**Two fixtures, because the fold has two halves and only one of them can
+fail a harness.** `derived-Cool_Tools__.sit` is `Cool Tools ƒ` — two UTF-8
+bytes folding to the one MacRoman byte `0xC4`, nothing lost.
+`derived-800saywhat301j.sit` is three Japanese names, which MacRoman has a
+byte for none of, so each code point becomes `_`.
+
+**And the first of those cannot fail the harness, which is worth knowing
+before trusting it.** `checkdisk.py` compares CHARACTERS: the Mac's name
+decodes from MacRoman and the CLI's is already UTF-8, so a name MacRoman can
+spell is the same character on both sides whether the harness folds or not.
+Run with the fold disabled, `derived-Cool_Tools__.sit` passes; only
+`derived-800saywhat301j.sit` fails, three MISSING and three UNEXPECTED. A
+fixture chosen for a feature is not automatically a test of it.
+
+**`run.py` was never going to catch this, and TESTING.md said it would.**
+That file warned that the two harnesses grading Mac output against the
+manifests — `check_mac_sink.py` and `run.py` — would read a correct fold as
+a defect. `run.py`'s verdict is the on-screen grid: a file count, two summed
+CRC-32s and two summed lengths. **A summed CRC cannot carry a name**, which
+is the blind spot `checkdisk.py` was written for in the first place, one
+section away in the same file. Withdrawn in BLOCKERS.md; the harness that
+needed teaching is `checkdisk.py`, and it was taught
+(`tools/vmac_check.py`, `mac_component`).
+
+**The name the archive states is DECOMPOSED.** `ユーザーライセンスの購入.rtf`
+is thirteen code points, not twelve: `ザ` is stored as `サ` + U+3099, and
+MacRoman has neither, so the Macintosh writes **thirteen** `_`. The oracle
+manifests hold the composed spelling, because `lsar` composes; `run_diff.py`
+normalizes both sides to NFC before comparing, so it cannot see the
+difference and never could. `checkdisk.py` was normalizing too — and
+normalizing the wrong thing, the reference PATH, so it opened a file that
+does not exist and compared a fork against zero bytes. It folds before it
+normalizes now. **The engine is right, both harnesses were reading it
+through a filter that removed the evidence**, and the filter was there to
+make two spellings compare equal.
+
+**What the five sweeps say.** 71/71 on System 6.0.8 at 4 MB and at 1 MB,
+71/71 on System 3.0 at 1 MB, 67/71 and 64/71 on a 512 KB 512Ke under
+System 3.0 and System 6.0.8. **No refusal moved**: the two 512 KB tiers each
+gained exactly one, `derived-Cool_Tools__.sit`, whose StuffIt 5 block needs
+242,464 B — a fixture the sample gained, not a demand the engine grew.
+`checkdisk.py` then read all 73 kept Out volumes byte-exact with names.
+
+**Every budget constant in the repository was stale, and the freshest one
+was the worst.** The three tiers' budgets are `FreeMem() - 20,480` measured
+on the machine, and none had been re-taken since 2026-08-31. Re-taken:
+**648,282 B** at the 1 MB floor (668,762 free), **219,394 B** on the 512Ke
+under System 3.0 (239,874), **123,994 B** under System 6.0.8 (144,474). The
+two small ones had drifted 21,666 B each; the floor had drifted 182 B — and
+had been made worse by arithmetic, because 896 B for the fold had been
+subtracted from a base three weeks old, moving it away from the machine
+rather than towards it. **A constant derived from a measurement is only as
+current as the measurement, and subtracting from a stale one looks like
+maintenance.**
+
+**What that bought, beyond three numbers.** With all three re-taken,
+`tools/run_tiers.py` reproduces **all three tiers fixture for fixture** —
+including System 6.0.8 / 512 KB, which had never matched and was carried as
+a diagnostic because of it. TESTING.md had filed the disagreement under
+fragmentation ("the likeliest reason"), and it was the budget: that tier is
+asserted now.
+
+**The report line is photographed, and its document asserted**
+(`interactive.py --report-utf8`): *"`_______` was named in characters this
+Macintosh cannot write"*, three of them, with *"Extraction complete."* under
+them — the clean outcome, because nothing failed. The counts are the
+assertion, and a control run expecting the composed twelve `_` fails it,
+which is the defect an NFC fold would have.
+
+**One thing had to be worked around rather than explained.** Extracting this
+archive onto the BOOT volume leaves the saved report unreadable on the host:
+the Macintosh has the file — frame 4 photographs it in Standard File's own
+listing — and `hcopy` off the image cannot find it. Four things did not help:
+a 30 s flush wait, Mini vMac's Control-Q, SIGTERM instead of the SIGKILL
+`Mac.close()` sends, and the shell's `FlushVol` (already called). Sending the
+output to a floppy instead makes the report readable, and the phase does
+that. **The hypothesis recorded here — that 300 KB across a seven-deep tree
+grows the catalog and what is written after that does not reach the image —
+was reduced to a reproduction the same day and is wrong in its load-bearing
+half: the report's BYTES are on the image and its CATALOG ENTRY is not**
+(*the file that was on the disk and not in the catalog*, below;
+`interactive.py --report-utf8 --utf8-to-boot`). **It is a limitation of this
+harness and not of the application**: the same fold, on the same fixture, is
+graded off the Out volume by `checkdisk.py` on every one of the seven
+sweeps.
+
+**And one harness bug, found by it costing a sweep.** `sys30.py` called
+`_origin()` whether or not the emulator window had appeared, so a window
+that never came up died with a `TypeError` — at fixture 70 of 71, taking
+the tally of the sixty-nine that had already passed with it. One fixture
+that cannot be started is one fixture's failure, and it says NOGRID now.
+
+**The other two harnesses that predict a Mac name were taught the same
+day, and the ORDER is the whole of it.** `checkdisk.py` was the one that
+had a fixture; the other two had the same code and no subject.
+
+- **`tools/check_mac_sink.py`, which is the layer in `ci.sh`.** It knew
+  nothing of the fold at all, and `tests/run_mac_sink.sh`'s list held no
+  UTF-8 fixture, so over a real archive the fold was exercised only by
+  an emulator — `mac_sink_test.c --utf8` drives the shell through
+  `sink_begin` with no engine in front of it.
+  `derived-800saywhat301j.sit` joins that list, which runs it
+  **big-endian under `qemu-m68k`** as well as native, and the checker
+  puts the manifest's name through `vmac_check.mac_component`. The
+  manifest is where the normalization bites here rather than a
+  directory: it holds `unar -e utf-8`'s COMPOSED spelling, so the fold
+  has to run on the decomposition. That is measured rather than assumed
+  — over all 31 StuffIt 5 fixtures, 27 non-ASCII entry names, and both
+  of the two where NFC and NFD differ are stored decomposed — and a
+  composed one would fail rather than pass quietly. Established that it
+  can fail: with the fold off, three MISSING; with NFC instead of NFD,
+  exactly the two decomposed names, 12 `_` against 13 and 6 against 7.
+- **`tools/vmac/os9.py`, where it was labelled and left.** `mac_leaf`'s
+  docstring said the two callers normalized before folding and that it
+  was latent because no fixture in `os9sample.txt` had a non-ASCII
+  StuffIt 5 name. Adding one bites it: run against the names the shell
+  actually writes, the old order predicts `____________.rtf` where the
+  Mac writes `_____________.rtf`, and — the half that matters more —
+  the two reference paths it keeps are the NFC spelling, which does not
+  exist on disk, so the forks would have been compared against zero
+  bytes. That is `checkdisk.py`'s bug exactly, and the same fix: fold,
+  then normalize the KEY, and keep the VALUE unnormalized because it
+  has to be opened. The fixture is in `os9sample.txt` now, and the tier
+  passes with it: **19 files, 23 forks byte-exact, `Icon\r` included**.
+
+**And running it found two things the Mac OS 9 walk could not SEE, which
+is the half a fold fix would never have reached.** The first run came
+back FAIL with `800-SAY-WHAT 3.0.1J/Icon\r` MISSING — and the file was
+on the volume the whole time, 51,781 bytes of resource fork, type
+`icon`, creator `MACS`, invisible. `hls` lists neither a dotted name nor
+a file whose Finder invisible bit is set unless it is given **`-a`**
+(measured on that volume: four entries without it, five with), and
+`_walk_volume` then ran `rstrip()` over each line, which takes the
+carriage return off the end of `Icon\r` — the name every custom folder
+icon on a Macintosh has. So on this tier **an invisible entry was
+invisible to the comparison as well as to the Finder**, on every fixture
+it has ever run, and a name ending in a control character was compared
+under a different name.
+
+`checkdisk.py` has had both rules since it was written, the `Icon\r` one
+with a comment saying exactly this. Three defects in one file, all three
+already solved one directory away: **the cost of a harness that is
+written twice is that only one copy learns anything**, and the way that
+surfaces is a fixture that reaches the copy nobody has been exercising.
+
+**A label is not a fix, and the interval is the evidence.** `mac_leaf`'s
+docstring named this defect precisely, said what would bite it and said
+how to fix it — and the fix was one line either side of a call. What
+kept it open was that nothing on that tier could fail, which is the same
+reason the fold had never run on a Macintosh at all.
+
+## 2026-09-22 (the magic that was a length) — DiskDoubler ß05, 1990, and the three things the 84-byte header was hiding
+
+**Claim.** `0xABCD0054` is not a magic number. It is the word `0xABCD`
+and a 16-bit **header size**, and the reason nobody here knew that is
+that every one of the 195 file headers in this corpus states 84.
+`DiskDoubler ß05, Copyright 1990 Salient` states **48**, and lays those
+48 bytes out field for field like the first 48 of the 84. Measured by
+running it: `tools/vmac/diskdoubler.py --beta`.
+
+**Why this file was worth a boot at all.** Everything
+`docs/formats/diskdoubler-container.md` measures was measured on 3.7,
+4.0 and Pro 4.1 — three releases of one generation, all of them 1992 and
+later. The document said so and nobody had read it as a limit. ß05 is
+four versions older than the 3.1.2 this project had been calling the
+oldest, and it turned up in the search that withdrew the `0x20` row's
+premise the same day (*the version that could not have written it*),
+sitting inside `DiskDoublerExpand3.sit` as an INIT whose Finder menu is
+`Compress Selection;Expand Selection` and nothing else.
+
+**What it wrote**, over a subject with an 11,428-byte data fork and a
+340-byte resource fork, against what 3.7 writes from the same subject:
+
+| | ß05, 1990 | 3.7, 1992 |
+|---|---|---|
+| first long | `ab cd 00 30` | `ab cd 00 54` |
+| lengths | 11,428 → 1,697, 340 → 97 | the same four numbers |
+| `info1` at +22 | `0x1f` | `0x2a` |
+| checksums at +48 | **the header has ended** | `d766` / `116a` |
+| the data fork begins | `1f 9d 90` | `45 c7 ca` |
+| after the two forks | nothing | a byte-identical copy of the header |
+| the file is stamped | `ZIVM`/`LZIV` | `DD01`/`DDAP` |
+
+Four answers in one file, three of them to questions this document had
+written down:
+
+- **The header trailer is 3.x's, not the format's.** 63 of the corpus's
+  66 compressed files end with a copy of their own header and the three
+  that do not are this project's own synthetics — which is the shape of
+  a fact about the format and was read as one. 1990 writes none:
+  `48 + 1697 + 97 = 1842`, and the file is 1842 bytes.
+- **`DD01` is not what ß05 stamps.** The open question was whether
+  `DD01`/`DD02` — DiskDoubler file types neither this engine nor
+  XADMaster recognises — are a different container or older type codes
+  on the same stream. They are neither, on this evidence: 1990 stamps
+  `ZIVM`/`LZIV`, and its `BNDL` declares no file types beyond its own
+  `INIT`. `DD01` is 3.x's, which is where `DDExpand 2.03a` and 3.1 both
+  list it.
+- **`info1` is a version byte, and the XOR garbling is gated on it.**
+  The rule transcribed from XADMaster — garble when `info1` has reached
+  `0x2a` and `info2`'s high bit is clear — had every specimen on one
+  side of it. Here is the other: `0x1f`, and `compress(1)`'s own
+  `1f 9d 90` in clear where 3.7's is that XORed with `0x5a`. The `>=`
+  is still not distinguished from `==`, because `0x1f` fails both.
+- **The 1990 expander's validator reads the size as a size.** Out of its
+  `CCOD` resource: refuse a word other than `0xABCD`, then require the
+  value at +2 to be **≥ 48**, then `info1` to be **≤ 31**. A
+  forward-compatible test on one field and a version ceiling on the
+  other — which is a program that expected its header to grow, written
+  two years before it did.
+
+**Graded against the bytes DiskDoubler was given**, the bargain
+`--verify-combine` and `nowcompress.py` make, and here it was the only
+one available: **neither this engine nor `unar` opens a 48-byte
+header** — both answer "format not recognized". So `--beta-verify` sets
+the size word to 84, computes each fork's checksum **from the input**
+and writes it where an 84-byte header keeps one, and hands that to this
+engine. Both forks come back byte-exact, and the two sums it computed —
+`0xd766` and `0x116a` — are the two DiskDoubler 3.7 itself stored for
+the same forks, which is a check neither this decoder nor that
+arithmetic could have arranged between them. Established that it can
+fail: one flipped payload byte and a header read as 84 bytes both come
+back as a failed entry.
+
+**What is NOT done, and it is a decision rather than a gap.** The engine
+still refuses a 1990 file. Reading one is matching on the word and the
+size instead of the long, with the fields past the stated size read as
+zero — small, and priced against a 1 MB Mac Plus that pays for it
+whether or not a 1990 file ever reaches it. Nobody has one but this
+machine: no corpus fixture, nothing on the 3.7 distribution disk, and
+the only specimen in existence here is the one the harness made.
+OPEN_ITEMS.md, *A DiskDoubler header this engine does not read*.
+
+**And the cross-check found a doc defect on the way.** The `DDAR`
+record table gave the Finder flags at **+94** and listed no creator;
+`src/fmt_dd.c` reads them at +98 and the creator at +94, `derive_ddc.py`
+has `R_CREATOR, R_FLAGS = 94, 98`, and macutils' `dd.h` says
+`D_FNDRFLAGS 98`. Three readers against one table row, in a row marked
+"no specimen" — so nothing had ever executed the table's version of it.
+Corrected in place. **A field nothing reads is where a document rots**,
+and the cheapest way to find it is still to hold the document against
+the code that claims to implement it.
+
+**Cost: two emulator boots and no source change.** One to photograph the
+menu bar, because an INIT's menu sits wherever the Finder's own leave
+room and `BETA_MENU_X` had to be measured rather than guessed; one to
+compress.
+
+## 2026-09-22 (the right flag with the wrong reason) — what `hls -a` is actually for, and the four walks that believed the explanation
+
+**Claim.** `hls` hides a file whose Finder **INVISIBLE** bit is set unless
+it is given `-a`. It does not hide names beginning with a dot, which is
+what `checkdisk.py`'s comment and `tools/vmac/README.md` had both said
+since the flag was added. Withdrawn in BLOCKERS.md, with what it cost.
+
+**Measured as a 2×2, because one cell is not a cause.** Four MacBinary
+files onto one volume, and both listings:
+
+| | leading dot | invisible bit | `hls -1` | `hls -a -1` |
+|---|---|---|---|---|
+| `.quiet` | yes | no | shown | shown |
+| `.loud` | yes | **yes** | **HIDDEN** | shown |
+| `Open` | no | no | shown | shown |
+| `Shut` | no | **yes** | **HIDDEN** | shown |
+
+The dot column does nothing; the bit column does all of it. `.DS_Store`
+needed `-a` because a Macintosh writes it invisible — so the original
+OBSERVATION was right, the flag was right, and only the reason was
+wrong.
+
+**And the reason is what propagates.** A wrong explanation bolted to a
+working fix fails nothing, so nothing re-tests it; what it does is tell
+the next author whether the fix applies to them. "hfsutils hides
+dotfiles" reads as *irrelevant unless your archive has a `.DS_Store`* —
+and four later volume walks whose subjects had no dotfiles skipped the
+flag on exactly that reasoning. `os9.py` was the fifth, and it is the one
+that finally failed: `Icon\r` reported MISSING off a volume holding it
+with 51,781 bytes of resource fork (*the fold, on a Macintosh*).
+
+**So the smell goes on the list**: *a correct workaround with the wrong
+reason attached*. It is a worse one than a plain wrong claim, because
+every symptom of it is somewhere else — the bug is in the harnesses that
+read the comment and decided it did not apply to them.
+
+**`tools/vmac/walkprobe.py` makes it executable.** One volume holding the
+four shapes that tell the walks apart — plain, invisible, dotted with the
+bit CLEAR, and `Icon\r` — every walk in the tree run against it, and the
+table printed. No emulator, no ROM, no X server; seconds. Of four
+subjects: `checkdisk.walk` 4/4, `os9._walk_volume` 4/4 (since today), and
+`arcmac.read_volume`, `nowcompress.read_volume`,
+`diskdoubler.volume_files` and `superdisk.read_forks` **2/4 each**.
+`--check` asserts that set and fails in both directions: taking `-a` back
+out of `os9.py` reports it newly blind, and fixing one of the four
+reports it as no longer blind. Established, both ways.
+
+**Corrected the same day: it is five of EIGHT, not four of six, and
+`arcmac.read_volume` is no longer one of them.** Two walks list with
+`hdir` and no search for `hls` found them — see *the column that was
+already on the volume*, below, which also adds the depth column this
+table could not express.
+
+**Two `os9.py` listings were fixed on the spot because the change cannot
+cost anything.** `wrapper_names` is a NEGATIVE — the verdict is that none
+of the output is on the plain-HFS wrapper, so it was being read off the
+listing that makes the negative EASIEST to satisfy; `-a` can only
+lengthen the list and can only make it harder to pass. `report_present`
+polls for a file, where a miss is a timeout rather than a wrong answer,
+and a timeout here would have been read as the application hanging.
+
+**The other four are NOT fixed, and that is a measurement rather than
+laziness.** `superdisk.read_forks` alone has about thirty callers across
+nine harnesses, and `-a` also surfaces the Finder's own invisible
+bookkeeping — `Desktop`, `Desktop DB`, `Desktop DF` — on any volume a
+booted Mac has touched. A caller that compares fork SETS would begin
+failing on files the Finder made, so each needs the filter `os9.py`
+already has and an emulator run to re-verify: one harness at a time,
+priced and re-run. Scoped in OPEN_ITEMS.md rather than swept.
+
+**One of the four looked like a live risk and said so one function
+away.** `arcmac.macbinary`'s docstring records that "the ArcMac header's
+own Finder info has bit 0x40 of the high byte set, which is `invisible`"
+— the project met this bit, worked around it in the WRITER, and never
+asked whether the READER beside it could see one. **Withdrawn the same
+day**: no ArcMac header here has that bit, over 5 files and 11 entries.
+The walk was blind independently of it and was fixed anyway; what the
+claim actually did was order the work (*the column that was already on
+the volume*, below).
+
+**The same fact had been observed FOUR times and generalised none.** That is
+what makes this worth an entry rather than a one-line fix:
+
+1. `checkdisk.py` passes `-a` and explains it as dotfiles;
+2. `arcmac.macbinary` refuses to copy a Mac header's Finder info because
+   "the ArcMac header's has bit 0x40 of the high byte set — `invisible`",
+   and fixes the WRITER — a sighting of the bit that turns out to be
+   a sighting of `fHasBundle`, withdrawn below;
+3. the yardstick's Standard File row was taken on the wrong file for three
+   weeks because the Finder's `Desktop` "is invisible to `hdir` and VISIBLE
+   in our dialog, which filters nothing";
+4. `mkboot.strip_system_folder` deletes `Desktop` by name with the reason
+   stated exactly right — "`hdir` hides invisible files unless given -a, and
+   the Desktop file is invisible" — **one function above** a comment
+   blaming the leftover folders on "at least one directory whose valence
+   disagrees with what hdir enumerates". It is the same bit, and the two
+   files that survive the strip are `Icon\r`.
+
+Four sightings, four local workarounds, one correct statement, and no rule.
+`hdir` behaves exactly as `hls` does, measured here: both hide the invisible
+bit, both take `-a`.
+
+**And the check that guards the boot image could not fail.**
+`verify_stripped()` asserts that the System Folder holds only System and
+Finder — the property every peak-heap figure's comparability rests on, since
+System 6 loads INITs, cdevs and drivers from the files sitting there. It read
+that listing WITHOUT `-a`, so **the files the strip is unable to delete are
+exactly the ones it could not see**. Demonstrated: an invisible `Ghost INIT`
+copied into the System Folder of a freshly stripped image leaves
+`ls(invisible=False)` returning `['Finder', 'System']` and the check passing;
+with `-a` it returns `['Finder', 'Ghost INIT', 'System']` and the check
+raises. Measured on all four boot images here, no System Folder holds an
+invisible file, so this is a check that GAINED the ability to fail rather
+than a failure that was being hidden — but it had no way of telling anyone
+that, which is the whole point.
+
+**`ls()` did not simply get the flag.** `strip_system_folder` deletes what
+`ls` returns, and the Finder's `Desktop` file is invisible and is kept on
+purpose on some runs (`drop_desktop`, five runs both ways, BLOCKERS.md) — so
+a default `-a` would have deleted it and broken the password phase. The flag
+is a parameter: a verification wants it, a deletion wants the explicit list.
+Verified end to end, `run.py` on one fixture: 1/1 PASS.
+
+## 2026-09-22 (the header that was a length) — a DiskDoubler file neither reader could open, for 64 bytes
+
+**Claim.** The engine reads a 1990 DiskDoubler file. `0xABCD0054` is the
+magic word `0xABCD` and the header's own SIZE, so the parser takes the
+size off +2 instead of matching a 32-bit constant, and the fields past
+the stated size are read as absent rather than assumed. Graded against
+the bytes DiskDoubler was given: **both forks byte-exact**, sniffed,
+listed as `TEXT`/`ttxt` with both fork lengths right.
+
+**Why it was worth doing at all.** It is the same format, one generation
+older, and until today this engine answered *"format not recognized"* for
+a file DiskDoubler itself wrote. `unar` still does — there is no second
+reader anywhere — so the alternative was leaving a hole that only this
+machine can even demonstrate. The measurement that opened it is
+*the magic that was a length*, above.
+
+**What the fields past +47 do.** Nothing, and that is the whole
+implementation: a short header is zero-filled to the 84-byte struct after
+the read, and every consumer already had the right behaviour for zero.
+A zero checksum is the *"very old file"* case the sniffer has accepted
+since M12 — which turns out to be literally this case, and `macutils`'
+own comment says so. Zero delta distances mean no delta. `info1` `0x1f`
+with `info2` 0 leaves `dd_xorval()` at 0, which is correct: the 1990
+file is not garbled, and its data fork begins with `compress(1)`'s own
+`1f 9d 90` in clear. **No branch anywhere else in the format changed.**
+
+**Two sizes, not a range, and the reason is both honesty and bytes.**
+ß05's own validator accepts any size from 48 up — that is the evidence
+the field IS a size, and it is quoted as such. But only 48 and 84 have a
+specimen, and a reader that acted on the whole range would be guessing
+what a third value puts in the bytes between. Taking exactly the two
+makes each one a **whole 32-bit constant**, which is as specific a magic
+as the one this had before.
+
+**And it is 96 bytes cheaper, which was not the reason but is the
+lesson.** The first draft matched the word plus a range, and needed
+something to stand in for the header CRC a short header does not have:
+the two length pairs, `compressed <= uncompressed`, which is the rule
+ß05's validator applies. That cost **+144 B of code**. Constraining the
+size to two values instead cost **+48 B**:
+
+| | code | A5 | budget |
+|---|---|---|---|
+| word + range + length pairs | +144 B | +16 B | 160 B |
+| two 32-bit magics | **+48 B** | +16 B | **64 B** |
+
+Per object, `m68k-apple-macos-size` before and after: `fmt_dd.c` 8,888 →
+8,918 text, `fmt_stubs.c` 1,057 → 1,073, and **zero data in either, both
+times**. So the 16 B of A5 is rodata alignment shifting under 46 B of new
+text — the same effect measured on 2026-09-19 and 2026-09-20 — and not a
+table. Both ratchets raised deliberately in `tools/build_mac.sh` with
+that attribution.
+
+**Third time a constant has been cheaper composed or constrained than
+stored on this target** (2026-09-01 *two byte reads*, 2026-09-09 DART's
+type table, this). The pattern is worth naming: on a 68000 an immediate
+is free and a comparison against one is a single instruction, so
+*narrowing* what you accept often costs less than *generalising* it —
+which is the opposite of the instinct, and it agrees with the honest
+answer here rather than fighting it.
+
+**What grades it, and what cannot.** No corpus fixture has a 48-byte
+header and none can: the only specimen in existence here is the one
+`diskdoubler.py --beta` made, and fixture archives are not committed. So
+the differential suite does not cover this at all, and
+`--beta-verify` — the encoder's input as oracle — is the whole of the
+byte-level grade. What `ci.sh` carries instead is the CONTAINER, as a
+unit test with stored forks and two negative controls: size 47, below
+the floor ß05 enforces, and size 60, a value ß05 would accept and for
+which nothing here knows the layout. Both must sniff UNKNOWN.
+**Established that it can fail**: the new test fails 7 of its checks
+against the unchanged engine.
+
+**And the budget moved 32 B, not 64.** All three tier budgets were re-taken
+on the machine with `-D UNC_AT_BUDGET` immediately afterwards — because a
+budget is `FreeMem() - 20,480` on a BINARY and goes stale the moment the
+application's size does — and every one of them fell by **exactly 32 B**:
+648,282 → 648,250 at the 1 MB floor, 219,394 → 219,362 and 123,994 →
+123,962 on the 512Ke. The arithmetic said 64. Half of it did not arrive,
+and this records the gap rather than explaining it: a `CODE` resource is a
+handle of its own size and the A5 world is rounded, so tens of bytes of
+growth can land inside slack that was already paid for. **The measurement
+is the number; the arithmetic is only what says when to go and take one** —
+which is the same lesson as *the fold, on a Macintosh*, arriving from the
+other direction. `run_tiers.py` reproduces all three tallies unchanged at
+the new figures (71/71, 67/71, 64/71), and the Macintosh agrees: **71/71 at
+4 MB and 71/71 at the 1 MB floor** on System 6.0.8 with this build.
+
+
+## 2026-09-22 (the column that was already on the volume) — two walks the survey never found, and a dimension the verdict threw away
+
+**Claim.** `walkprobe.py` was measuring six of the eight volume walks in
+this tree, along one of the two dimensions its own fixture carries.
+Both gaps are closed; the count "four blind walks", which three files
+carried and which scoped the work, was **five of eight**.
+`arcmac.read_volume` is the first of them taken, and is 4/4.
+
+**The two walks it never found were found by asking for the capability
+rather than the name.** The inventory was built by grepping for `hls`.
+`cptsegment.read_volume` and `cptcrypt.read_volume` list with **`hdir`**,
+so no search for `hls` will ever return them — and `hdir` hides a file
+whose Finder INVISIBLE bit is set exactly as `hls` does, and takes the
+same `-a`: 3 lines against 5 on the probe volume, re-derived on every
+run now. *This project had already written that down*, in the entry one
+above this one — "`hdir` behaves exactly as `hls` does, measured here" —
+and then built the survey that would act on it out of the other
+spelling.
+
+**The second dimension was on the disk from the first day.** `build()`
+has always copied the same four subjects into a folder, with a docstring
+saying "so a walk is tested at depth as well". It was not: `leaves()`
+reduced every result to leaf NAMES, and the folder holds the same four
+names as the root, so a walk that returned two entries scored exactly
+what one returning eight did. **Four of the eight never descend** —
+`arcmac`, `nowcompress`, `cptsegment`, `cptcrypt`. The fixture was
+right and the reading was lossy, which is the harder half to notice,
+because nothing is missing and nothing fails.
+
+**Root-only is recorded, not fixed, and the distinction is the point.**
+All four read volumes that `make_volume` builds flat and that one guest
+application writes to; none has ever had a folder to descend into. So
+this is not four defects, it is four properties that were being carried
+as assumptions. `EXPECT_FLAT` is what turns an assumption into a line
+that fails the day one of those harnesses grows a folder — which is the
+same service `EXPECT_BLIND` does, and it fails in both directions:
+established by taking `-a` back out of the walk just fixed (reported
+newly blind) and by claiming that walk descends (reported newly
+root-only).
+
+**What `arcmac.read_volume` cost, since it is the template for the
+other four.** The flag, a `FINDER_OWN` filter, the raw-bytes rule for
+`hcopy`, and one emulator run:
+
+- **the filter was measured on that harness's own volume, not assumed.**
+  On the `Arc` volume a System 6 boot leaves behind, `hls -a -1` adds
+  exactly one name to the four `hls -1` gives — `Desktop`, FNDR/ERIK,
+  invisible. Three names are filtered rather than one, because the two
+  `Desktop DB`/`Desktop DF` are what a later system writes in its place;
+- **its two callers needed nothing.** `arcmac.make` selects on the file
+  TYPE `mArc` and `maclha.make` on the `.lzh` extension, so neither
+  compares fork SETS — which is the thing that makes the other four
+  expensive;
+- **names go to `hcopy` as the bytes `hls` printed.** The old code
+  decoded to `str` and handed that back, which re-encodes as UTF-8 and
+  is a file that does not exist for any 8-bit name. It read `Icon\r`
+  correctly on the first try once both were in — 4/4, both forks.
+
+**And the risk that made this walk FIRST is not there.** The reason
+`arcmac.read_volume` was taken before the other four is one sentence:
+`arcmac.macbinary`'s docstring has recorded since M13 that "the ArcMac
+header's own Finder info has bit 0x40 of the high byte set, which is
+`invisible`", so this format's own files were the one blind walk with a
+known-real subject. **Measured, and withdrawn.** `macunpack/arc.h` puts
+`FINFO` at offset 42 of the 88-byte header — `fdFlags`, `fdLocation`,
+`fdFldr` — so the flags word is `h[42:44]`; across every ArcMac file
+reachable here, **5 files and 11 entries**, it is **0x2100 on the
+application and 0x0100 on every document**. 0x2100 is `fHasBundle |
+fHasBeenInited`. `fInvisible` is 0x4000 and is set nowhere, including in
+the two archives found in the wild and in the outer MacBinary of the
+download itself.
+
+**The symptom was real and the reason was reconstructed from it.** The
+volume did show one item where two had been written; that is recorded in
+M13 and nothing here contradicts it. But the code that produced it was
+never committed — the fix is in `arcmac.py`'s first commit — so what it
+actually passed cannot be recovered, and `fHasBeenInited` copied onto a
+file the Finder has never seen is enough to stop that file's first-time
+bundle processing, which would also look like "the Finder did not show
+it". **A reason inferred from a symptom, written down as a property of
+the format, and then quoted for three years of harness decisions as
+though it were one.** Same shape as *the right flag with the wrong
+reason*, above, and found by the same habit: the fix stayed right the
+whole time, which is exactly why nobody re-read it.
+
+What that costs here is nothing and what it changes is the ORDER. The
+walk was blind whether or not any ArcMac file is invisible, the flag
+cost nothing, and 4/4 is 4/4. Whether a blind walk has ever LOST
+anything is still the right question to ask of each of the remaining
+four — this is the answer for one of them, and it is *no*.
+
+
+## 2026-09-22 (the file that was on the disk and not in the catalog) — a hypothesis about flushing, reduced to a reproduction
+
+**Claim.** `interactive.py --report-utf8` sends its saved report to a
+floppy because the report written onto the BOOT volume cannot be read
+off the image afterwards. That was carried as *"hypothesis, not
+measured: 300 KB across a seven-deep tree grows the catalog, and what is
+written after that does not reach the image"*. **It is measured now, and
+the hypothesis is wrong in its load-bearing half: the bytes reach the
+image. The catalog entry does not.**
+
+**One run says it, and `--utf8-to-boot` is that run.** It is this phase
+with the one click that switches volumes removed, so the output lands
+beside the archive the way it did before the workaround, and it keeps
+the image and reads it twice:
+
+| reading | answer |
+|---|---|
+| the extraction's 300 KB of output, in the volume's catalog | **YES** — `800-SAY-WHAT 3.0.1J`, five entries, `Icon\r` included |
+| the report, in the volume's catalog | **NO** |
+| the report's TEXT, in the image's blocks | **YES** — the three `_` lines and `Extraction complete.`, in order, complete |
+
+**So nothing is lost "after a point".** The File Manager lays a data
+fork's blocks down and then records the entry, and this run ends between
+the two. That is why the four remedies did nothing: a 30 s flush wait,
+Control-Q, SIGTERM and the shell's own `FlushVol` were all aimed at a
+write that had already happened. It also explains the asymmetry the
+hypothesis was invented for — `--report`'s few hundred bytes never
+provoke it because they are not the LAST thing that volume is asked to
+record; they are written to a volume whose catalog is about to be
+touched again.
+
+**The needle is the finding's own trap, and this is the second time
+today.** `Extraction Report` is the name `SFPutFile` offers, so it is in
+the application's resources, on the same volume, in every run — a raw
+search for it answers YES whether or not any report was ever saved, and
+the first version of this probe did exactly that and reported a pass.
+The reading that works searches the blocks for a string only the SAVED
+document can hold (`_______ was named in characters`, one hit) and the
+CATALOG for the name. **A search for a name is a search for every copy
+of that name**, and an application that offers a default filename has
+one.
+
+**What the workaround is worth, now that it is known.** Sending the
+report to another volume gets its entry written on a volume whose
+catalog is not in that state. That is a sidestep and stays — but it is
+a sidestep of a known thing, and the run that demonstrates it is one
+command. The application is not implicated either way — the same fold
+on the same fixture is graded off the Out volume by `checkdisk.py` on
+every one of the seven sweeps. The level below this one — whether the
+lost sector sits in Mini vMac's buffered stdio or in the guest's own
+volume cache — was open here until the same day: *the entry a second
+write placed*, below.
+
+
+## 2026-09-22 (the folder the application wrote and no walk could see) — four blind walks taken, and two columns the probe was missing
+
+**Claim.** Four of the five walks `walkprobe.py` listed as blind take
+`-a` and are 4/4; the fifth, `superdisk.read_forks`, is left for its
+thirty callers. On the way in, the probe gained **two more columns**,
+both of them shapes that already exist on volumes in this cache, and
+`-a` cost one real defect that only a harness re-run could have found.
+
+**The question the probe cannot ask, answered off files already here.**
+"Has a blind walk ever LOST anything" depends on what the application it
+grades writes, so it is a question about each application. Two readings
+settle it without booting anything:
+
+- **the archives.** `lsar -j` prints `XADFinderFlags`, so every fixture
+  in the corpus can be asked whether any entry is invisible. Across
+  **897 Compact Pro entries, 236 DiskDoubler, 26 PackIt, 5 Now Compress
+  and 3 LZH — not one**, and not a single `Icon\r` among them. So in the
+  EXPANDING direction none of these applications has ever been handed an
+  invisible file to write. (StuffIt and BinHex are the other story: 337
+  and 354, almost all of them `Icon\r`.)
+- **the volumes.** All **84 mountable images** in
+  `~/.cache/macextract/vmac`, listed twice, with `-a` and without. That
+  is where the answer is YES.
+
+**`nowcompress.read_volume` has lost something, and it is a folder.**
+Now QuickFiler creates `[Now QuickFiler Folder]` on the volume it is
+compressing on and puts an `NCdb`/`NCex` database inside it. **The
+folder is invisible; the database is not.** It is on six of the kept
+`specimens/now/*` work volumes and on the Now Utilities 5.0.1 installer
+floppy, and no run ever mentioned it. `superdisk.read_forks` has lost
+two: `ndd.harvest` reads the Norton DiskDoubler Pro floppy through it,
+and that floppy carries `[DiskExpress Activity Log]` — invisible AND
+locked — and `Norton DiskDoubler Pro/Icon`.
+
+**That is the cell where the probe's two columns crossed, and it had
+none.** An invisible FOLDER is hidden without `-a` exactly as a file is
+— measured, both listers — and passing either existing column does not
+imply passing it: `diskdoubler.volume_files` descended and was blind, so
+it walked past a whole subtree it could not see. The probe's fixture now
+carries the same four subjects inside an invisible folder.
+
+**And a second column that has nothing to do with `-a`.** `hdir` prints
+a LOCKED file with a leading `F`. `cptsegment.read_volume` and
+`cptcrypt.read_volume` kept a listing line on `line.startswith("f")` —
+a directory test — and so threw away every locked file as well.
+`mkboot.Hfs.ls` had the same character set and the same hole, and
+`verify_stripped` is built on it. One locked item exists across all 84
+images, which is what a lister has to be measured against rather than
+reasoned about: **a test aimed at one property was silently deciding a
+second**.
+
+**What `-a` cost, which is why the rule is to re-run the HARNESS.**
+Making `Icon\r` reachable for the first time broke both Compact Pro
+walks outright: they read the listing with `text=True`, which applies
+**universal newlines**, so the carriage return inside the name became a
+line break and `hcopy` was handed `Icon`. `hdir` prints the CR verbatim
+— checked both ways — so the defect was Python's, in a line nobody had
+reason to look at. This is the same rule `arcmac` and `superdisk`
+already state as "names go to `hcopy` as raw bytes", arriving through a
+door neither of them names.
+
+**Each filter is now a measurement rather than a constant.** Every walk
+fixed prints what `-a` surfaced and what it dropped, on every run. On
+their own volumes: `cptsegment` and `cptcrypt` drop `Desktop` and
+nothing else (one Mini vMac run each, 4 segments and 3/3 decrypted, both
+unchanged); `nowcompress` drops `Desktop` and `[Now QuickFiler Folder]`;
+`diskdoubler --wild` drops `Desktop` and still reports 10 compressed
+files on the 3.7 disk. A three-name `FINDER_OWN` that every harness
+imports from one place beats four copies that drift.
+
+**Why `diskdoubler.volume_files` was cheap and `superdisk.read_forks`
+is not, stated as a property of the CALLERS.** All six of the
+DiskDoubler walk's callers select by DiskDoubler header, by exact name,
+or by a magic number; not one compares fork SETS. That is the test to
+run before adding the flag anywhere, and it is the only reason the two
+walks with the same shape cost different amounts.
+
+
+## 2026-09-22 (the entry a second write placed) — the lost catalog update was unflushed, not lost
+
+**Claim.** The catalog entry `--utf8-to-boot` showed missing is not
+destroyed and is not the victim of a fixed tail. **One more write to the
+same volume places it.** `--utf8-second` saves the report a second time,
+under the name `Second`, and both entries are in the catalog:
+
+    the report is in the catalog       : YES
+    the SECOND report is in the catalog: YES
+
+where the identical run without that one extra save reads NO for the
+first. Two frames, `utf8-3b` and `utf8-3c`, photograph the second save
+box with `Extraction Report` already in Standard File's own listing
+behind it.
+
+**What that rules out.** A fixed tail — the last N bytes of Mini vMac's
+buffered stdio going down with a killed emulator — predicts that
+whatever is written LAST is lost. Both entries live in the same catalog
+leaf, so under that reading the second save rewrites the very block that
+is about to be dropped, and both should be missing. Both are present.
+The observation is also not about elapsed time: a 30 s flush wait is one
+of the four remedies already measured as useless (*the file that was on
+the disk and not in the catalog*, above), and this run's `FLUSH_WAIT` is
+the same 30 s.
+
+**What is left, and it is labelled as what it is.** MEASURED: a second
+B*-tree operation on the volume is sufficient to place the first entry.
+HYPOTHESIS, and now a narrow one: the File Manager holds the dirty
+catalog block in the guest's own volume cache, and the next operation on
+that tree is what writes it out — so the run ends with one update
+pending, not with one sector stranded in the emulator. Nothing here
+depends on which: the workaround is a sidestep either way, and
+`--utf8-second` is the run that would notice if the answer changed.
+
+**The general shape, which is why this was worth one run.** "The last
+thing is lost" and "the last thing is not yet written" look identical
+from outside and are fixed by opposite things — the first by flushing
+harder, the second by doing one more ordinary write. Four remedies were
+aimed at the first reading before anybody asked the second. The
+discriminator is always the same: do the thing again and see whether the
+earlier one appears.
+
+
+## 2026-09-22 (the last walk, and the exit code nobody could get) — all eight walks see an invisible file, and a harness that could never report success
+
+**Claim.** `superdisk.read_forks` takes `-a`, so **all eight** volume
+walks in the tree see an invisible file, an invisible folder and a
+locked one. `EXPECT_BLIND` and `EXPECT_NO_LOCKED` are empty sets and are
+kept, because they still fail the other way.
+
+**The recorded reason it was expensive was half right, and the half that
+was wrong nearly made it cheap.** Three files said the blocker was that
+"a caller compares fork SETS". No caller does, literally — a first pass
+over all the call sites found every one selecting by leaf name, by
+creator, by type or by a DiskDoubler header, which looked like grounds
+to call the whole cost estimate stale. **Reading the unclassified ones
+settled it the other way.** There are **38** call sites, not the "about
+thirty" three files carried, and **four** of them — `--adjudicate` in
+`superdisk.py`, `nowcompress.py` and `diskdoubler.py`, and
+`superdisk.py --nest` — hold EVERY entry on the guest volume against our
+own extraction. An entry with no counterpart in our output is a
+difference, so a `Desktop` file would have failed all four. Not a fork
+SET comparison; an ENTRY set comparison, which is the same hazard under
+a name that made it unfindable by reading for the words.
+
+**So the filter belongs in the walk, not the callers.** `FINDER_OWN` at
+the ROOT only — where the Finder puts its bookkeeping — and everything
+else kept, including an invisible file an application deliberately
+wrote, which is the entire point of the flag. One change serves 38 call
+sites; four separate filters would have drifted.
+
+**Measured on two of the four, and the other two are not measured.**
+`superdisk --adjudicate` and `diskdoubler --adjudicate` were re-run: the
+filter dropped exactly `Desktop DB` and `Desktop DF`, nothing else, and
+the verdicts were unchanged at 2/2 and 10/10 forks identical.
+`nowcompress --adjudicate` and `superdisk --nest` were re-run on
+2026-09-23 and are green too — `--nest` 11 files with the Macintosh
+agreeing, `--adjudicate` every fork identical — as are `spacesaver
+--layout` and `--pkg`, which select correctly on a volume where `-a` now
+surfaces seventeen invisible `Icon` files. **Two of those runs were not
+testing this walk at all**: `nowcompress --adjudicate` calls
+`nowcompress.read_forks`, a ninth walk nobody had listed (*the ninth
+walk, found by the missing line*, below). The remaining `spacesaver.py`
+phases — most of its call sites — are still unexercised, and select by
+name or creator.
+
+**And the re-run found something the flag had nothing to do with.**
+`superdisk --adjudicate` has **always exited 1**, including on a clean
+run: its last line printed `shots`, a local of `run_selfextractor`, so
+it raised `NameError` immediately after printing the verdict. The
+comparison was right and the exit code was useless, for as long as the
+phase has existed. Nothing caught it because `ci.sh` replays this
+verdict by CONTENT (`tools/run_superdisk.py`) and never runs the
+harness, and a human reading the output sees "all identical" on the line
+above the traceback. **An exit code nobody consumes is not a result**,
+and the way it surfaced is the ordinary one: run the thing rather than
+the thing that stands in for it.
+
+**The transferable part.** Two of today's four findings came from the
+same move — re-running a harness rather than the probe that models it.
+The probe cannot see a `text=True` newline translation, and it cannot
+see an exit code.
+
+
+## 2026-09-23 (the ninth walk, found by the missing line) — the inventory was searched for a spelling twice, and the population is thirty
+
+**Claim.** There is a NINTH volume walk. `nowcompress.py` defines its own
+`read_forks`, which is not `superdisk.read_forks`, and `--adjudicate`
+calls that one. It was blind, it descends, and it passed names as `str`.
+Fixed, graded, and the probe now covers nine.
+
+**How it surfaced, which is the only interesting part.** The previous
+day's change made every fixed walk print what its filter dropped. Running
+`nowcompress --adjudicate` to verify the `superdisk.read_forks` change,
+the run came back green — **and printed no filter line**. A verdict
+without its instrument's line is not the instrument passing; it is the
+instrument not being there. The harness had been re-run to prove a filter
+safe and had exercised a different function entirely, still blind.
+
+**The inventory was wrong twice in one day, and both times the search was
+for a SPELLING.**
+
+- six of eight, because it was built by grepping for `hls` and two walks
+  list with `hdir` (*the column that was already on the volume*);
+- eight of nine, because it was extended by grepping for the NAME
+  `read_forks` and every hit was credited to `superdisk`'s. Two functions
+  in two files share a name; one grep, one wrong population, and a "38
+  call sites" count that silently included two belonging to the other.
+
+**The search that works asks for the capability.** An `ast` walk over
+`tools/` for any function that runs `hls` or `hdir` finds **thirty**.
+Nine are graded; nine more list a volume with no `-a` and nothing grades
+them — `interactive.read_joined`, `phase_wrapped`, `phase_chain`,
+`phase_named`, `expander.app_from_image`, `macmime.ls`, `rescomp.report`,
+`sitcrypt.list_folder`, `spacesaver.lift_installer`. Every one of them
+selects by a name it chose itself, **which is exactly the argument that
+was made for `nowcompress.read_forks` the day before it turned out to be
+one of the four that compare whole entry sets.** So the table in
+`tools/vmac/README.md` says *unverified* against it, rather than
+*harmless*.
+
+**What the fix cost.** `-a`, the shared `FINDER_OWN`, and names to `hcd`
+and `hcopy` as bytes. Re-run: the filter dropped exactly `Desktop DB` and
+`Desktop DF`, and the adjudication is unchanged — every fork identical,
+including one of 9,949,696 B, exit 0.
+
+**The transferable rule, and it now has three instances.** An inventory
+built by searching for how something is SPELLED will find what is spelled
+that way. Ask what the thing DOES — lists a volume, hides an invisible
+file, compares an entry set — and search for that. The two `hdir` walks,
+this ninth one, and the "compares fork SETS" phrase that described a real
+hazard under a name that made it unfindable, are the same mistake three
+times in two days.
+
+
+## 2026-09-23 (all thirty, and the two that were never worth booting) — the rest of the volume listers, and spacesaver closed by measurement
+
+**Claim.** All **thirty** functions in `tools/` that list an HFS volume
+pass `-a`. Nine are graded by `walkprobe.py`; the other nine were taken
+one flag each and are not gradeable by it, because none takes an
+arbitrary image and returns an entry set.
+
+**Three of the nine were not the low-stakes lookups the previous day's
+table called them.** `interactive.phase_wrapped`, `phase_chain` and
+`phase_named` build the volume's entry SET and compare it with what the
+application should have written, which is the same hazard as the four
+`--adjudicate` callers. `phase_chain` was already filtering `Desktop` by
+hand — the fact, spelled once, in a set nobody had named. They now use
+`FINDER_OWN`, which also covers the `Desktop DB`/`Desktop DF` a later
+System writes instead. `macmime.HFS.ls` is a fourth, and it carried the
+`text=True` universal-newline bug as well.
+
+The other five are diagnostics or one-name lookups, and `-a` is still
+right in each: `interactive.read_joined`'s listing prints only when the
+file was NOT found, `rescomp.report`'s listing IS the report,
+`sitcrypt.list_folder` is *"the only way to see what DropConvert called
+its output"*, and a name search (`expander.app_from_image`,
+`spacesaver.lift_installer`) cannot find a file the lister hides.
+
+**`FINDER_OWN` moved to `mkboot.py`.** It was in `arcmac.py`, which
+imports `Mac` from `interactive`, so the moment `interactive.py` needed
+it the import was a cycle. `mkboot.py` has no imports of its own, which
+is what makes it the right floor for a fact every walk needs.
+
+**spacesaver was closed by measuring, not by booting.** Its ~20 call
+sites are the bulk of `superdisk.read_forks`'s, and re-running its
+thirty-five emulator phases would have been hours. Instead: run the walk
+BOTH ways over the **42 cached spacesaver volumes** and diff. `-a` adds
+**630 entries** — fifteen per volume, the `Icon\r` files inside StuffIt
+Deluxe's folders — and **not one of them matches any selector those call
+sites use** (`SMKR`, `SITe`, `PKG Expand Translator`, `SpaceSaver
+Pref*`, `OutA..OutD`, the `SUBJECTS` names). Two host-only phases,
+`--layout` and `--pkg`, were run as the control and pick their targets
+correctly. A question about 20 call sites answered in seconds, over real
+volumes, because the thing to vary was the FLAG and not the emulator.
+
+**The re-survey is one command**, and it is in `tools/vmac/README.md`
+rather than here: an `ast` walk for any function running `hls` or
+`hdir`, printing the ones without `-a`. That is what makes "all thirty"
+a claim the next session can re-test instead of inherit.
+
+**Two harness facts found on the way, both of which cost a run.**
+Two `interactive.py` phases started together fight over the shared
+`build/mac-interactive` CMake directory and one dies in `cmake --build`
+— the file's own README already said "run them one at a time" for a
+different reason. And `--named zip` needs a fixture **over 64 KB**:
+`zip -s 64k` marks an archive split whatever its size, so a smaller
+payload makes one `Aset.zip` and no `Aset.z01`, and the application
+answers *"This archive has more parts. Find them and try again."* —
+correctly. That was diagnosed the right way round: the same failure
+reproduced on the unmodified file, which is what said it was not the
+`-a` change, and then the SHOT said what it actually was.
+
+
+## 2026-09-23 (the three that were gradeable after all) — "not gradeable" was a reading, and grading them found another `Icon\r`
+
+**Claim.** *"None of the other nine listers takes an arbitrary image and
+returns an entry set, so `walkprobe.py` cannot grade them"* was wrong
+for three of them, and was a reading of the code rather than an attempt.
+The probe now has **twelve** subjects. Grading the third one found a
+live defect that the reading had passed over.
+
+**`mkboot.HFS.ls` came back 3/4, missing `Icon\r`.** It read its listing
+with `text=True`, whose universal-newline translation cuts a name at a
+carriage return — the same defect as the two Compact Pro walks, in a
+function nobody had connected to them. It is load-bearing: `mkboot.py`'s
+own `rmtree` carries a comment saying the files that survive a strip
+**are** `Icon\r`, and `verify_stripped` — the assertion every peak-heap
+figure's comparability rests on — reads through this listing. The
+argument for not grading it was that it "picks one application by name";
+the name it could not pick was the one the file already knew about.
+
+**`interactive.volume_entries` is new, and the reason it can be graded is
+the reason it should exist.** `phase_wrapped`, `phase_chain` and
+`phase_named` held three copies of the same mount-list-parse block, each
+inline in a phase that drives an emulator, which is exactly what made
+them ungradeable. One function serves all three, `walkprobe.py` grades
+it, and the `splitlines()` bug all three shared is fixed once.
+`macmime.HFS.ls` needed nothing but to be called.
+
+**Two mistakes made while doing it, both caught by running.** Taking
+`mkboot.HFS.ls` to bytes, the first draft decoded with **MacRoman** —
+correct about what an HFS name IS, wrong about what happens next: these
+names go straight back to hfsutils as arguments, and `subprocess`
+encodes a str with `os.fsencode`. `Résumé` on the System 6 disk decoded
+to `é` and went back out as UTF-8's two bytes, and `hdel` failed, and
+every boot image stopped building. **The decode has to match the ENCODE
+that follows it**, which `run()`'s own comment says two lines above.
+Then `onvol` turned out to be a list in one phase and a set in the
+other, so `| onvol` raised. Neither would have been found by reading;
+both took one run each.
+
+**The four that really are not gradeable**, and now for a stated reason
+rather than a guess: `interactive.read_joined`, `rescomp.report` and
+`sitcrypt.list_folder` do not return an entry set at all — two print
+their listing and one returns it as text for a screenshot — and
+`spacesaver.lift_installer` takes no image, reading a fixed CD path. All
+four still pass `-a`, and the `ast` re-survey is what keeps that true.
+
+
+## 2026-09-23 (the harness the CLI outgrew) — a phase that wanted one envelope layer at a time, and got both
+
+**Claim.** `sitcrypt.py --btoa-send` failed with *"payload.bin: format
+not recognized"*, and neither the Macintosh nor the engine was wrong.
+The phase peels the specimen a layer at a time on purpose — its own
+docstring says *"`macextract` takes them one at a time here rather than
+being trusted to chain them, so the grade says which layer was read"* —
+and the CLI's envelope auto-unwrap now takes btoa AND the MacBinary
+inside it off in one pass. The first peel therefore returned the
+subject, and asking the CLI to decode 465 bytes of ramp again answered,
+correctly, that it is not an archive. **`-nr` is the flag that says
+what the harness meant**, and `decode_layer` already took an `extra`
+argument to pass it.
+
+**What said it was not a regression, before anything was changed.** The
+stream the Macintosh wrote is **byte-identical** to the one kept on
+2026-08-26 — md5 `5add97f23be195fd25b99b8eb1b8fa84`, 732 bytes — and
+`made.json` is identical too. So the guest, the translator and the
+specimen were all constant and the difference was entirely on this side.
+That is a two-command check and it is the one worth doing first: a
+harness failure that names OUR file is still, more often than not, ours.
+
+**The first fix was worse than the failure, and the check that caught it
+was one command.** Accepting "one peel or two" made the phase pass —
+and quietly destroyed the measurement underneath it. The reference half
+encodes the payload with btoa 5.2.1 and diffs it against the stream the
+Macintosh wrote, so it must encode **what the Macintosh encoded**, which
+is the MacBinary. With the accept-either fix it encoded the unwrapped
+subject instead: **11 of 12 lines differing where the right input gives
+1 of 12**, the trailer alone. Both spellings "passed". Only the figure
+says which one is measuring.
+
+**The lesson is the file's own rule, from the other side.** This
+project's habit is to ask what evidence a tolerance rests on; the same
+question applies to a fix that makes a red harness green. Ask what the
+number was before, and whether it still means the same thing.
+
+
+## 2026-09-23 (hardware decoding) — an FPU cannot help a bit shuffler, and the formats answered the CPU question themselves
+
+**Claim.** Hardware acceleration — an FPU, a coprocessor, a NuBus codec
+card — is out of scope, and not for want of ambition: there is no
+measured work here for one to take. Recorded in OPEN_ITEMS.md Part 1.
+
+**The one place an FPU is even arguable is priced at 0.72 %.** No float
+appears in `src/`; every codec is integer bit work. The single
+FP-shaped operation in the engine is Arsenic's range coder, two 32÷32
+divides per symbol (`sit_arsenic.c`). FORMATS.md, *What is still hot*,
+measured both divisions at **0.72 %** of the ISBN run against **9.9 %**
+for the linear symbol search sitting beside them. A divide that cost
+nothing at all would buy under one percent of the slowest format in the
+corpus.
+
+**Ask whether the hardware offering the shortcut is the hardware that
+needs it.** That is the transferable half. A 68881 implies a 68020 or
+better, which already has a native 32-bit `DIVU.L` and emits no
+`__udivsi3` call; the 68000, where the software divide is a real cost,
+has no FPU and never had one. The accelerator is available only on the
+machines where the slow path is already fast. The same shape disqualifies
+it at the top of the range: PowerPC Macs run this binary through the
+**68LC040** emulator (FORMATS.md, *Mac OS 9 tier*), and the LC is the
+missing FPU — the fastest tier cannot reach one either.
+
+**It would also be code no tier here can fail.** Mini vMac is a 68000
+Mac Plus and the Mac OS 9 tier's emulated CPU has no FPU, so an FPU path
+would ship inside the one binary that must run unchanged from System 3.0
+to Mac OS 9 with no suite able to execute it.
+
+**The formats already solved the CPU-dispatch problem, in the direction
+that leaves a decoder alone.** SpaceSaver and DiskDoubler gate their
+compressors on the CPU — a `CMod` mask at +0x24, index 4 for 68000–68020,
+index 3 for 68030 and up, index 15 for PowerPC — and give each one a
+**decompress-only twin that accepts every CPU**, so any Mac reads any
+file (FORMATS.md, the SpaceSaver module table). The encoder dispatches;
+every decoder is CPU-neutral. Implementing all of those modules, which is
+done, is the whole of what a dispatch would have bought.
+
+**Unverified, from memory, and not load-bearing:** classic-Mac "hardware
+codec" appears to have meant *media* codecs — the C-Cube CL550 on NuBus
+cards, surfaced as a fast `'jpeg'` component through QuickTime's Image
+Compression Manager — and nothing in the corpus is JPEG; the AV Quadras'
+DSP3210 is a floating-point signal processor, the worst fit there is for
+serial Huffman decoding, and would mean shipping a second object format.
+None of this was checked against a reference, and it does not need to be:
+the two measured paragraphs above decide the question without it.
+
+**One adjacent trade, so it is not confused with this one.** A second
+`-mcpu=68020` build would delete libgcc's `__mulsi3`/`__divsi3` calls,
+one of which `sit_arsenic.c` names at ~4 % of an Arsenic run. It is not
+recommended and not open: it is a second binary the floor machine cannot
+run, against a `CODE` size that was already load-bearing at 142,152 B when
+this was written — 54,340 B resident since the overlays, and that row now
+turns on the heap TOTAL rather than on one segment, which changes the figure
+and not this trade (2026-10-06, *the wall the overlays had already moved*) —
+and **this machine cannot price it** — the tick probe is an emulated Mac
+Plus, so a 68020 build has no timing model here, and instruction counts
+rank rather than price.
+
+## 2026-09-23 (the block that was bigger than its fork) — a Now Compress stored block read past its output buffer, and the check that was one clause
+
+**Claim.** A crafted Now Compress archive overran the heap in
+`now_next_block` (`src/fmt_now.c`). Found while reviewing the
+XADMaster-shedding work, not introduced by it — the same read overflows
+at the commit before that work began.
+
+**Evidence, under AddressSanitizer.** A 20,158-byte file — one entry
+declaring a 40-byte data fork, one stored block of 20,000 bytes, the
+block-table checksum computed to match — gives `heap-buffer-overflow ...
+WRITE of size 20000` at the `unc_read_full` in the stored path. The
+build: `make CFLAGS="-O1 -g -fsanitize=address,undefined,alignment
+-fno-sanitize-recover=all ..."`; the file is built from
+`tools/synth_now.py`'s own `build_table` and `entry_record`.
+
+**The root cause.** A block's COMPRESSED length is checked only against
+`incap` (`NOW_INBLOCK`, 32 KB), because three of the five block shapes
+stage their input in `st->inblock`, which is that size. But the STORED
+shape and the Huffman-then-LZSS shape (flags `0x20|0x1f`) stage their
+raw input in `outstart` instead, whose room is `blkcap` — and `blkcap`
+is sized from the DECLARED fork size (`min(maxout, 0x8000)`). So a fork
+that declares 40 bytes but carries a 20,000-byte stored block writes
+19,960 bytes past the single per-archive allocation. The other three
+shapes read into `inblock` and were always safe.
+
+**The fix is one clause per path:** `if (length > st->blkcap) return
+UNC_ERR_CORRUPT;` before each read into `outstart`. A valid stored
+block's output IS its length, so it cannot exceed `blkcap` — the bound
+every decoder already writes to — and no valid file is refused: the 946
+fixtures extract byte-identically before and after, and the three real
+Now archives pass under ASan.
+
+**Why the fuzzer never found it, and where the test now lives.** The
+block table carries a byte-sum checksum (`now_check_table`), so a
+byte-flip of a valid fixture — which is all the robustness suite does —
+breaks the checksum and is refused before the read is reached. Only a
+file crafted from scratch, with a matching checksum, gets there. The
+regression test is therefore a CONSTRUCTED archive, not a mutated one:
+`run_now.py`'s `check_refusals` now builds a stored and a hufflzss block
+larger than their fork and asserts refusal, and it runs under the ASan
+build in `ci.sh` variant 1, which is what would fail on a regression.
+
+**The transferable part.** *A bound that is right for most callers is
+not a bound.* `length &lt;= incap` was correct for the three paths that
+read into the incap-sized buffer and silently wrong for the two that
+read into the blkcap-sized one; the single shared check read as
+sufficient because it was sufficient three times out of five. The smell
+is the one this repository already names — a tolerance whose evidence is
+"our own output": every fixture and every fuzzer variant has a valid
+checksum, so none could reach the read, and "the robustness suite is
+green" measured the checksum guard rather than the buffer bound.
+
+## 2026-09-23 (the tables that were the standard's) — DES's constants came from a file with no licence, and the standard itself was one fetch away
+
+**The claim that failed.** OPEN_ITEMS.md's `unc_crypt.c` row called the
+five `Crypto/` files it names "public-domain or permissive in XADMaster's
+own tree". Four are: `md5.c` is Solar Designer's, placed in the public
+domain; `sha.c` and `hmac_sha1.c` are Aaron Gifford's under BSD-3;
+`aeskey.c` is Gladman's. **`des.c` states nothing at all** — 482 lines
+with no copyright, no licence and no grant, only "Stuart Levy, Minnesota
+Supercomputer Center, April 1988" — and a file with no terms of its own
+inside an LGPL tree takes the tree's. So the one file in that list whose
+terms nobody had checked was the one carrying no terms.
+
+**What was actually taken from it was not code.** `gen_crypt_tables.py`
+parsed six tables out of it — PC-1 as `bK_C`/`bK_D`, PC-2 as `bCD_KS`,
+`preshift`, `S`, `P` — plus IP, reconstructed from the prose in that
+file's comment. Every one of those is a published constant of FIPS 46-3.
+They came from somebody's implementation because nobody had looked for
+the standard.
+
+**The standard is one fetch.** `csrc.nist.gov` still serves FIPS 46-3,
+the 1999-10-25 reaffirmation, as a 468 KB PDF. This machine has no
+`pdftotext` and no `pypdf`, and needs neither: the content streams are
+Flate, so `zlib` plus a regex over the string literals yields the text,
+and all thirteen tables are in it — IP, IP^-1, PC-1, PC-2, the shift
+schedule, P and the eight selection functions of Appendix 1.
+
+**The one real obstacle, and the method worth keeping.** PDF text
+carries no inter-glyph kerning, so some multi-digit entries arrive
+split: PC-1's `43` reads as `4 3`, IP's `17` as `1 7`. The repair is not
+a heuristic — **each table is a permutation of a known set over a known
+span**, the whole table for the permutations and each row of sixteen for
+the S boxes, so re-segmenting the digit run under that constraint has
+exactly one solution, and the generator asserts it is unique rather than
+taking the first. Two edges are worth recording because they are where
+the method's limits are:
+
+- **The shift schedule is the table a permutation cannot check** — its
+  counts repeat, so there is no constraint to re-segment under. It
+  prints as sixteen (iteration, shift) pairs, and the check is the
+  ITERATION column: 1..16 in order, with the shift column asserted
+  inside {1, 2}.
+- **A table must be allowed to stop before its digit run does.** S4's
+  run ends with a stray `18` — a page number. Demanding that a reading
+  consume the whole run fails there and nowhere else. What replaces it
+  is stronger than what it removed: leftovers are allowed, but **no
+  leftover may be a legal value of the table**, which is what makes the
+  page number admissible and a dropped entry not.
+
+**The price, measured rather than argued.** The regenerated
+`src/crypt_tables.h` is **byte for byte identical** — all 1,712 values —
+so the compiler sees the same input and `CODE`, A5, peak RAM and ticks
+cannot move; that is identity, not a measurement, and no m68k build or
+tick probe was run or needed. The cost is `tools/gen_crypt_tables.py`:
+325 → 388 lines (+63, twelve of which came back by deleting the
+`grab_table` helper that only des.c needed) and 0.035 s → 0.060 s. The
+committed header changes by six lines of provenance comment.
+
+**Two checks exist now that could not before.** The published IP^-1 is
+asserted equal to the FP the generator derives by inverting IP; and the
+published IP equals the one reconstructed from des.c's prose, which
+until now rested only on the DES known-answer test in
+`tests/unit_formats.c` — a test that would have caught a wrong table but
+could not have told anyone the reconstruction was sound.
+
+**The first cut was 50 % bigger and made fewer checks.** It was 115
+lines and 0.172 s, with a duplicated helper and a widening-retry loop
+around the S boxes. Scoping the distinctness constraint per row of
+sixteen instead of per table deleted the loop; allowing a prefix reading
+deleted the last special case. *A special case that exists to absorb
+junk is usually a missing constraint* — and the version with the
+constraint is both smaller and stricter, which is the general shape of
+that trade.
+
+**What it does not buy, stated plainly.** The licence does not move.
+`src/unc_crypt.c` named twelve XADMaster files; eleven remain, among
+them the StuffItDES nibble key schedule and key derivation, which no
+published document states, and PackIt's keytr1. `XADStuffItDESHandle.m`
+is still read by the generator — but only to CHECK that `DES_SPtrans`
+is the standard SP table relabelled. Nothing emitted is derived from it
+any more.
+
+## 2026-09-23 (the third statement of the same constants) — MD5's tables were RFC 1321's all along, and the AES S box was already ours
+
+**The same move as the DES tables, and cheaper.** `gen_crypt_tables.py`
+pulled MD5's per-step message-word index, rotation and constant out of
+the unrolled `STEP()` list in XADMaster's `Crypto/md5.c`. Every one of
+those 192 numbers is stated in RFC 1321 — in the 64 `FF/GG/HH/II` calls
+of the RFC's own reference implementation, with the sixteen `#define
+S11 7`-style macros above them. RFC 1321 is plain text, so unlike FIPS
+46-3 there is no PDF extraction and no re-segmentation: the whole change
+is +24 lines, and `src/crypt_tables.h` came out byte for byte identical.
+
+**The RFC states its constants twice, and both are used.** Section 3.4
+defines T[i] as the integer part of 4294967296 × abs(sin(i)); the code
+below it writes the 64 literals. The generator reads the literals and
+asserts they reproduce the sines, so a mis-parse of the RFC's own text
+fails at generation. XADMaster's `md5.c` is still read — and still has
+to agree — but nothing is emitted from it.
+
+**The AES S box needed no source at all, and had one.** `aes_sbox()`
+extracted `sb_data` from `Crypto/aestab.c`, then BUILT the same 256
+bytes from FIPS-197's definition — the multiplicative inverse in
+GF(2^8), then the affine map — asserted the two were equal, and
+returned the extracted copy. The construction was already load-bearing
+and the extraction was already a check; the code just named the wrong
+one as the answer. Returning `built` changes no byte and leaves the
+assertion exactly where it was.
+
+**What the two together buy.** `src/crypt_tables.h` now contains
+**nothing derived from XADMaster**: DES's tables are FIPS 46-3's, MD5's
+are RFC 1321's, the AES S box is FIPS-197's definition evaluated here,
+and Compact Pro's CRC-64 is read out of the application (2026-08-23).
+`Crypto/md5.c`, `Crypto/aestab.c` and `XADStuffItDESHandle.m` are read
+only to agree with what the standards give. The LICENCE does not move —
+`src/unc_crypt.c` still names ten XADMaster files, the StuffItDES key
+schedule and PackIt's keytr1 among them, and the engine is LGPL through
+the rest of the tree regardless.
+
+**The transferable part.** *A check that has been promoted to a source
+is invisible, because it passes.* The AES extraction had been redundant
+since the construction was written, and nothing could have failed to
+reveal it: the assertion was green precisely because the two agreed.
+What found it was not a test but reading the function to answer a
+different question — which is the same route by which `des.c` was found
+to carry no licence.
+
+## 2026-09-23 (the ciphers nothing had ever fuzzed) — two instruments lied about coverage, and a planted fault settled it
+
+**The gap.** `tools/fuzz.py` ran every case as `macextract t` with no
+password. An encrypted entry is refused at `unc_password`, which is
+before any key schedule runs, so **no mutation of any fixture could
+reach `src/unc_crypt.c` at all** — 9,320 robustness variants and 4,000
+fuzz cases had never executed a line of the eight ciphers.
+
+**Two cheap instruments said otherwise, and both were wrong.** Scoring a
+case as "reached the cipher" when the run exits 0 or prints the word
+password gave `sit-des` 31 out of 40; the truth is 0, because `t` on
+that archive exits 0 having decrypted nothing. Ground truth came from
+PLANTING a fault — a four-byte stack array written at index 4 — in each
+key setup and counting the mutants that trip UBSan. The first planted
+fault was itself a no-op (`fault[pwlen & 7]` with a nine-character
+password writes index 1), which is the same lesson one level down: *a
+fault injection is a test too, and has to be shown to fire.*
+
+**What the fault found.** `t` never descends into the MacBinary a
+StuffIt archive arrives in, so the crypt cases had to EXTRACT. Under
+`x`, out of 30 mutants each: StuffIt classic's DES 19, StuffIt 5's RC4
+21, PackIt's XOR and DES 0 — the PackIt zeroes because a flipped bit
+fails its header CRC before a key is derived.
+
+**Why one to four bit flips.** The existing mutator (1..64 edits,
+truncations, duplications) destroys the container long before the
+cipher: measured over 80 cases per setting, cases reaching key setup
+were 9 at 1..64, 24 at 1..8, **35 at 1..4** and 25 at 1..2. The crypt
+generator is therefore its own mutator, and takes a quarter of the run
+because four encrypted seeds among ~950 fixtures would otherwise be
+drawn about half a time in 150 cases.
+
+**The transferable part.** *A coverage claim needs an instrument that
+can distinguish "ran and passed" from "never ran".* Exit codes cannot:
+both are zero. This is the third time the same shape has cost this
+project something — the on-screen result grid that could not fail on a
+name, the Now Compress checksum that kept every mutant out of the buggy
+read, and now a password prompt that kept every mutant out of the
+ciphers. What they share is a GUARD in front of the code under test,
+and the cure is always the same: get past the guard deliberately, then
+prove you did.
+
+## 2026-09-23 (the ten kilobytes nothing watched) — the application grew 5.7 % in a month, and the only reason it cost nothing is luck
+
+**The observation.** Re-measuring FORMATS.md's size table showed the
+engine's per-object code at 116,432 B against a documented 92,580. Most
+of that gap is real growth and some of it is the instrument: summing per
+object overstates what links, because `--gc-sections` drops what nothing
+calls. The figure that matters is the SHIPPED binary, and it went
+178,560 B on 2026-08-28 to 188,672 B — **+10,112 B, +5.7 %**.
+
+**Where it went, by rebuilding the 2026-08-24 tree on the same flags.**
+Six files that did not exist then are 16,926 B of it: `fmt_mime` 7,128,
+`unc_lzdyn` 3,216, `fmt_b64` 2,040, `fmt_dart` 2,006, `fmt_mimeseg`
+1,344, `fmt_foreign` 1,192. The rest is existing decoders gaining
+methods — `fmt_spacesaver` +3,906, `fmt_arc` +3,092, `unc_util` +1,904,
+`fmt_exo` +1,190. It is capability, not drift, and no dead code survives
+the link.
+
+**Whether it cost anything is a measurement, not arithmetic.** Every
+byte is resident — one CODE resource read at launch, an A5 world never
+purged — so 10,112 B is 10,112 B of heap a Macintosh no longer has, and
+a tier's budget is `FreeMem()` minus the binary. `run_tiers.py` answers
+it by moving the BUDGET rather than the binary. At budgets 10,112 B
+larger, which is what the smaller application left, the tallies are
+unchanged: 71, 67, 64. **So the month cost no fixture at any tier.**
+
+**But the margin is now under 7 KB.** At budgets 10,112 B smaller — a
+next month like the last one — the floor target and the System 3.0 tier
+still pass 71 and 67, and System 6.0.8 / 512 KB drops 64 to 63.
+Bisecting, `derived-LHA_Expander_1.0.3.sea` flips between 116,694 and
+117,010 against that tier's 123,962: **6,952 B of headroom**. That is
+where `tools/check_app_size.py`'s 2,048 B tolerance comes from — three
+deliberate acknowledgements before a tier loses a fixture, rather than a
+round number chosen for looking like one.
+
+**The heap did not grow with the code**, which is the other half of the
+question and a different axis: peak heap is per ENTRY and depends on the
+archive being extracted, not on how many formats are compiled in. The
+formats added in that month peak at 5 KB (base64), 8 KB (MIME) and
+24.6–34.1 KB (DART), against an existing maximum of 396 KB.
+
+**The transferable part.** *A budget that is derived from the binary
+goes stale every time the binary does, and nothing says so out loud.*
+The tier budgets are re-taken by hand on the machine — they were last
+re-taken 2026-09-22, and all three had drifted. What was missing was not
+a measurement but a TRIPWIRE: the growth was invisible because no check
+failed, and the documentation's own figure had been wrong for four days
+in the same way. A number nothing compares is a number nothing defends.
+
+## 2026-09-23 (the 3,504 bytes that stay) — `-lh2-`/`-lh3-` were settled on 2026-08-25, and an inventory re-opened them on one axis
+
+**This was not an open decision, and treating it as one is the finding.**
+`-lh2-` and `-lh3-` were settled on **2026-08-25**, the day they were
+implemented: the case for them was made by BUILDING the thing that
+grades them — an LHa patched to write `-lh2-`, an encoder for `-lh3-`,
+and 21 entries of the two in `ci.sh` every run since. `src/unc_lzdyn.c`
+stays, which is what it has been doing for a month.
+
+What happened on 2026-09-20 is that the XADMaster-shedding inventory
+(OPEN_ITEMS.md, *What is still XADMaster's*) priced the file's removal
+at 3,504 B, wrote **"the decision is the maintainer's; nothing here will
+take it"**, and so re-opened a settled question — on the one axis that
+inventory looks at. Confirmed keep on 2026-09-23; the entry is worth
+keeping for HOW it came back, not for the answer.
+
+**What it costs, re-measured 2026-09-23:** 3,476 B of `CODE` and 28 B of
+A5 — **3,504 B** of a 1 MB Mac Plus's budget — from a build with the file
+and its two dispatch arms removed (153,256/37,960 against 149,780/37,932,
+`m68k-apple-macos-size` on the linked image, the instrument
+`tools/build_mac.sh`'s ratchets use). The total is what 2026-09-20
+measured to the byte; the split has moved 4 B, which is the rodata
+alignment shifting under changed text that this file has recorded four
+times, and not a new table. Set against the 6,952 B of
+headroom the tightest tier has (*the ten kilobytes nothing watched*,
+above), that is half the margin, which is why the row was worth asking.
+
+**What buys it back is that the file is reachable.** The shedding case
+rested on "no corpus archive uses them", which is true and is not the
+same claim as "nobody can hand you one": LHa for UNIX writes `-lh2-`
+today once `tools/build_lha_lh2.sh` patches it, `tools/run_lzh.py`
+writes `-lh3-` itself, and `ci.sh` grades 15 and 6 entries of them every
+run. A method this project can MAKE a file in is a method a user can be
+handed a file in. The format is also contemporaneous with the whole
+target range end to end — LHarc predates System 6 and LHA outlived Mac
+OS 9 — and the Macintosh corpus holding no `.lzh` says where these files
+come FROM, not that they never arrive: a `.lzh` on a classic Mac is
+something that travelled from a PC, an Amiga or a Japanese desktop,
+which is the case an unarchiver exists for rather than an argument
+against covering it.
+
+**The consequence to book honestly.** That row can now never close on
+its own terms. Its other reference is LHa for UNIX under its own
+licence, and lhasa implements neither method, so there is nothing to
+rewrite `unc_lzdyn.c` FROM — the LGPL stays for this file whatever
+happens to the rest of the inventory. Keeping the code is therefore also
+a decision to stop treating the licence as reachable by shedding alone.
+
+**The transferable part, and it is about inventories rather than LZH.**
+*An inventory built for one axis will re-open decisions that were
+settled on another, and it will not know it is doing so.* This one asks
+"what is still XADMaster's, and what would it take to replace it" — a
+licence question — and it prices each row in bytes. Both are fair. But a
+row whose honest answer is "nothing to rewrite it from, so this cannot
+close" then carried a SCOPE question it had no standing to re-ask, and
+parked it as the maintainer's. Nothing in the row was false; what was
+wrong was the status.
+
+The smell is specific enough to reuse: **a row that reports a price and
+names no decision-maker's question is fine; one that ends "the decision
+is X's" has converted a measurement into an open item, and should have
+to say what changed since the decision was last taken.** Here nothing
+had. The row quoted the corpus — "no corpus archive uses them" — and
+never quoted `ci.sh`, where 21 entries of the two methods pass every
+run, which is both the evidence and the date it was settled.
+
+**Swept the other rows with that test the same day: one repeat, and the
+test discriminates.** The repeat is *What WinZip's AES costs a Macintosh
+Plus*, which cited this row as its precedent and reproduced its mistake
+— a 2,150 B price attached to "the maintainer's call ... nothing here
+will take it", naming nothing changed since WinZip AES was settled on
+2026-08-23 by the commit that added it (*"so no encryption a zip can
+carry is refused"*). Its reachability argument is weaker than this one's:
+`ci.sh` grades four AES configurations every run on fixtures **7-Zip**
+writes, where `-lh2-` needs a fork this project patched itself. Fixed in
+place.
+
+The other three PASS, which is what makes the test worth having rather
+than a licence to rewrite every row. **PKZIP Implode is the model**: it
+also says "the decision is the maintainer's", and it earns it by naming
+exactly what changed — an MIT implementation and a stored-CRC oracle for
+all 7 entries arrived on this disk on 2026-09-22, leaving only "not a
+Macintosh method" carrying the decision. `fmt_arc.c`'s Crunch 5/6/7 row
+is a decision **taken and dated** (2026-09-22, not taken, with reasons),
+not one parked. The `selective-extract` branch is a genuinely open
+decision because nothing was ever settled — the feature has never
+shipped, so there is no prior decision for it to re-open.
+
+## 2026-09-25 (the parked decision that outlived its numbers) — a scope answer re-read as settled while its evidence grew seventeenfold
+
+**Claim: the overlay decision of 2026-08-31 still lands the same way, and not
+one of the three premises it landed on has survived.** Asked because somebody
+proposed making `overlay-eager` the default build; answered by reading the
+branch rather than main's account of it.
+
+**The evidence, each item against what the scope file has been saying:**
+
+- **The prize was 5,988 B and is 84–103 KB.** That figure was the ciphers as
+  one image; the branch has carried **fifteen** since 2026-09-24. Its own
+  measurements at 1 MB on System 6.0.8 grant the engine 734,656 B for a
+  StuffIt 5, 752,898 B for an LZH and 746,682 B for a Compact Pro, against
+  650,692 B with everything resident — and the resident column does not move
+  with the archive, which is what says the gain belongs to the mechanism and
+  not to a month of `main`.
+- **"Neither branch OPENS anything new" is withdrawn.** System 3.0 at 512 KB
+  is **69/71 against main's 67/71**: `derived-a2basic.dmg.sit` and
+  `derived-Cool_Tools__.sit`, which took `MoveHHi` and twelve more images to
+  reach and which no tier on `main` extracts.
+- **"StuffIt can never be one of the formats it helps" was a fact about the
+  CIPHER image**, read as a fact about the mechanism. A StuffIt 5 gains 84 KB
+  like everything else; what it cannot do is release the ciphers, and that is
+  **10,702 B** — down from 15,748 B when `main` stopped carrying the DES SP
+  tables and Compact Pro's CRC-64 as const data (2026-09-19, the transient
+  tables). Compact Pro and zip no longer pay even that, because their
+  directories can be asked before anything is decoded.
+- **The download grows by more than the record says.** +2,304 B was the
+  cipher bundle. Both configurations built at the branch tip on 2026-09-25:
+  `MacExtract.bin` **189,312 B against 214,528 B, +25,216 B**.
+
+**Consequence: the answer is unchanged and its reasons are now different
+ones.** At the floor target the headroom answers archives this project does
+not have — nothing in the corpus has been out of a 1 MB Mac Plus's reach since
+2026-09-18 — what it does open is on a 512 KB machine that is not the floor,
+**no tier above a 68000 has ever run the configuration**, the overlay variant
+in the branch's `ci.sh` only compiles it so no Linux suite exercises the
+loader, and it costs 13 % of the only download this project offers. Scope
+status and what would reopen it: OPEN_ITEMS.md, Part 1, *Overlays*.
+
+### The transferable part: parking a decision does not park the work it was about
+
+The 2026-08-31 entry wrote its own epitaph — *"a figure that cannot change the
+conclusion is a figure nothing checks"* — about a prize that had been wrong
+for one day. The sentence then held for three weeks against the corrected
+figure, in the other direction: the prize grew seventeenfold, the conclusion
+did not move, and so nobody re-derived it.
+
+**What kept it invisible is that a decision parks and a BRANCH does not.**
+Work continued on both branches for three weeks after "merge neither", and
+every session wrote its findings to `BRANCH_NOTES.md` on the branch — which is
+where BRANCHES.md says branch state belongs, and is correct. Nothing in that
+loop reaches `main`, so the status file on `main` went on quoting the number
+that justified parking, to readers who had no reason to check out a branch
+that was decided.
+
+**The smell that caught it is the cheapest one in BLOCKERS.md and needed no
+insight: three files, three numbers.** BRANCHES.md said 18,116 B, OPEN_ITEMS.md
+said 5,988 B, and the branch said neither. That contradiction had been
+readable on `main` since 2026-09-02.
+
+**So a parked decision needs its re-read trigger where the NUMBER lives, not
+where the decision was made.** On `main` that is BRANCHES.md, the only file
+that names a branch at all — which is why its rows now carry the figure and
+the date it was taken, and why a row that cannot be dated is a row nobody can
+tell is stale.
+
+## 2026-09-25 (the skip that could not fire, again) — `./ci.sh` deleted what its first check needs, and the guard for that was a tuple
+
+**Claim: `./ci.sh` was not idempotent, and a second run on an untouched tree
+failed its first check.** `make clean` is `rm -rf build/`, which takes
+`build/btoa` with it; `check_docs.py` then re-generates the `synth-os9-btoa`
+row of `fixtures/SOURCES.md` by running `tools/synth_os9.py --kind btoa`,
+which needs that binary. Found by running the suite twice, on a branch, for
+reasons that had nothing to do with it.
+
+**The cause is the repository's own favourite shape.** `run_btoa.build()`
+answers `(ok, why)` — a distinction added 2026-09-09 so that "the reference
+was never fetched" and "the reference is there and would not compile" stop
+being one answer. Both callers tested the TUPLE: `if not run_btoa.build():`
+in `tools/synth_os9.py` and `if RB.build():` in `tools/vmac/sitcrypt.py`. A
+2-tuple is never falsy, so the first one's skip could not fire and the
+second's guard could not stop anything. What arrived instead was a
+`FileNotFoundError` from the subprocess call, which `check_docs` reports as
+*"cannot be restored"* — a failure, where it has a case for exactly this and
+would have said *"generator unavailable here — row not checked"*.
+
+**Consequence: `build()` is now called for its first element in both
+places.** With `build/btoa` deleted, `synth_os9.py --kind btoa` recompiles the
+reference and succeeds, so a second `ci.sh` is green; with no `reference/btoa`
+at all it exits 3 and `check_docs` reports the row as unchecked, which is the
+behaviour that was written and never reachable.
+
+**The transferable part is not "unpack the tuple".** It is that the 2026-09-09
+change which SPLIT one answer into two left its callers testing the old shape,
+and nothing failed: the richer return value was added for a reason, and the
+place it was added made every existing caller silently wrong. **A return type
+that grows needs its callers re-read, because widening one is not a change the
+language will report** — no argument list moved, no name changed, and Python
+will not say a word.
+
+So `ci.sh` now makes it report one: `tools/check_tuple_truth.py` fails the
+build when a function whose every `return` is a tuple is tested for
+truthiness. It found these two call sites and no third, and it carries the
+pre-fix pair as a selftest, because a lint nobody has watched fail is the
+same kind of evidence as the skip it replaces (TESTING.md, check 0b).
+
+## 2026-09-25 (the flush nobody wrote, and the alarm nobody could read) — the documented rule was not the toolchain's, and a diagnostic that fires when nothing is wrong
+
+**Claim: `overlay-eager` relocated executable bytes at two sites and flushed
+no cache, and the question of whether that mattered was written down as a
+hypothesis waiting for hardware when it was waiting for a document.** Asked
+while closing the two things OPEN_ITEMS.md named as what would reopen the
+overlay decision. Both sites and both fixes are in `mac/ovl_reloc.c`, which
+every configuration links (FORMATS.md, *Overlays*); what follows is the part
+that transfers.
+
+**Inside Macintosh: Memory, chapter 4, *Stale Instructions* settles the rule
+in one sentence** — "you must flush the instruction cache every time you
+modify executable instructions in memory" — and names `_BlockMove`, `_Read`,
+`_LoadSeg` and `_UnloadSeg` as the traps that do it for you. `BlockMoveData`,
+which the shim used to copy an image, is the variant trap and is not among
+them. No measurement was needed to know the code was wrong; one page was.
+
+**And the toolchain's own answer was not the documented one.** Retro68's
+relocator flushes at exactly the two moments this shim needed — after applying
+relocations, after patching a jump-table entry — by calling `FlushCodeCache`
+(0xA0BD). Inside Macintosh documents `FlushInstructionCache` as `_HWPriv`
+(0xA198) selector 1, and says that on a processor with a copy-back data cache
+it flushes the DATA cache first, so that instructions copied into the
+instruction cache are not read from stale RAM. That is the 68040, and it is
+precisely what copying an image as data creates. **A working implementation in
+the toolchain you link is evidence about what compiles and runs, not about
+what the documentation requires** — the older trap is the one Retro68 needs
+for the ROMs it supports, and reading only the code would have shipped the
+narrower of the two.
+
+**The measurement that mattered was not the sweep.** Apple documents that the
+68LC040 Emulator ignores instruction-cache invalidation requests while telling
+developers to keep issuing them (Inside Macintosh: PowerPC System Software,
+*The 68LC040 Emulator*), and Mini vMac emulates a 68000, which has no cache.
+So every tier this project can run is incapable of failing for want of the
+flush: a green sweep would have been the repository's oldest trap, a test that
+cannot fail. What a run here CAN answer is whether the call was reached, so
+the probe build reports the route and the count — `fc=0 fn=0` on System 6.0.8,
+**`fc=1 fn=3` on System 7.0.1**, three being the bundle fixup plus one per
+kept image. **When the environment cannot test the effect, test the
+occurrence.**
+
+### The alarm that fired on a healthy archive
+
+**A diagnostic that fires when nothing is wrong has stopped being a
+diagnostic.** The same probe reported `wa=128` — an image wanted after the
+release, which the branch calls a thing that must never happen — on a Compact
+Pro archive that extracted completely. The cause was benign and structural:
+three format readers free the cipher table unconditionally at cleanup, the
+resident implementation is a no-op on a NULL table, and an archive whose
+directory let the release drop the ciphers therefore asks for an image that is
+correctly gone.
+
+Nothing was broken, and that is the point: `wa` is the field that found the
+preload bug that had flattered every interactive measurement for a week, and
+it had since become a light that is always on. The fix was to let the one path
+that is ALLOWED to find the image gone ask quietly, so the field means again
+what it says. **Before trusting a signal, find the healthy paths that trip
+it** — a check whose false-positive rate is unknown is a check whose silence
+is uninformative.
+
+## 2026-09-25 (two branches that were one file apart) — the overlays become the build, and the lifetime becomes a flag
+
+**Claim: `overlay-eager` and `selective-loading` were never two mechanisms,
+and keeping them apart cost the same fix twice.** Decided by the maintainer
+after the two tiers above System 6 came back at parity: the images ship, eager
+is the default, and the resident build stays only as the control the budget
+figures rest on.
+
+**What the measurement of "similar" actually was**, taken before touching
+anything: of the 24 files under `tools/overlay/` — the image stubs,
+`mkoverlay.sh`, `overlay.ld`, `ovl_rt.c`, `ovlid.py`, the relocation trailer,
+the forwards generator — **21 were byte-identical between the two branches**.
+The three that differed were `overlay.h` by five lines, `mkoverlay.sh` by six,
+and `mkbundle.py`, which only the eager side had. The whole of the difference
+was one half of `mac/ovl_shim.c`: ~340 lines of dispatch shims the same on
+both sides, and a loader — 60 lines lazy, 250 eager — reached through exactly
+three calls.
+
+**The cost of having kept them apart is on the record in both branch
+histories.** Each grew its own commit titled *"The image build could go stale
+three ways, and did in two"*, days apart, and each carries its own `ovl_rt.c`
+and `ovlid.py`. A fix written twice is a fix that will be forgotten once.
+
+**So the seam was already there and nothing had been built on it**:
+`mac/ovl_shim.c` is dispatch, `mac/ovl_reloc.c` is the relocation trailer and
+the instruction-cache flush, and `mac/ovl_load_eager.c` / `mac/ovl_load_lazy.c`
+are the two lifetimes behind `ovl_image()`, `ovl_preload()` and
+`ovl_release_if_unwanted()`. The no-ops are real functions rather than
+`#ifdef`s at the call sites, so `mac/macextract_mac.c` reads the same in every
+build.
+
+### Three things the merge decided, each with a reason worth keeping
+
+- **The switch is a BOOLEAN, `UNC_OVL_LAZY`, not `UNC_OVL_LIFETIME=lazy`.**
+  Every harness here passes build switches as `-D NAME` and sets them to `1`
+  (`build_autotest_app`), so a lifetime spelled as a VALUE could not be driven
+  from `run.py`, `interactive.py` or `os9.py` — and the variant that is not
+  the default would have become the variant that can never be run on a
+  Macintosh. **A configuration your instruments cannot express is a
+  configuration you cannot test.**
+- **`ci.sh` builds both lifetimes** (variants 4b and 4c). The duplicated fix
+  above is what an unbuilt variant costs; a compile is what it costs to
+  prevent.
+- **The resident build survives as an instrument.** Every budget figure this
+  project quotes for the mechanism — 84–103 KB — is a difference against a
+  build where all fifteen images are linked in, and that column not moving
+  with the archive is what says the gain belongs to the mechanism rather than
+  to a month of other work. Deleting it would have removed the control, not
+  just a build.
+
+### The ratchets had to be re-based, and one of them had stopped meaning what it said
+
+`tools/build_mac.sh` held one code ceiling, 153,804 B, measured on the
+resident build. The shipped build's resident code is **54,028 B**: holding it
+to the old ceiling would have let it TRIPLE before anything complained. There
+is now a ceiling per configuration, and each was shown to fire before it was
+trusted.
+
+`tools/check_app_size.py` opens with "Every byte of this application is
+RESIDENT on the target". That was true when it was written on 2026-09-23 and
+is not any more — the bundle is 146,176 B, read at launch and mostly released
+before the engine takes its budget, which is the entire point of the build.
+The figure it watches moved 185,472 → 65,792 B and its premise moved with it.
+**A check's rationale ages faster than its number, and it is the rationale
+that decides whether the number is worth anything.**
+
+### And the lazy lifetime had never flushed the instruction cache
+
+Unifying found it: `selective-loading`'s loader writes an image's relocations
+and then executes them, exactly as the bundle path does, and the flush added
+on the eager side that morning had no counterpart there. Nothing on any tier
+this project can run could have shown it — Mini vMac is a 68000 and Apple
+documents the 68LC040 emulator as ignoring the request (*the flush nobody
+wrote*, above). It is now in `mac/ovl_reloc.c`, which both lifetimes call.
+**Two implementations of one mechanism do not inherit each other's fixes; one
+implementation with two behaviours does.**
+
+## 2026-09-25 (the disk images that found another home) — DART leaves, NDIF and UDIF never arrive
+
+**Claim: expanding a compressed disk image is not this program's job, and
+having done it for sixteen days does not make it one.** The maintainer's call,
+before a release. DART came in on 2026-09-09 (*the disk image that is expanded
+and not opened*); it goes out today, the `ndif-udif` branch with it —
+deleted from `origin` at **`7269acd`**, which is written here because a
+deleted ref is recoverable only by somebody who still has the object.
+
+**The argument that brought it in is the argument that takes it out.** DART
+was admitted because what comes out of one is not files but another disk
+image — a codec with no volume in it, so no filesystem was needed. That was
+true, and it is exactly why the feature belongs elsewhere: the only thing a
+user does with the expanded file is MOUNT it, and mounting is MacMount's.
+Shipping half of a workflow in the tool that cannot finish it means a user
+ends up with a file this program can no longer help with, which is the
+position they were in before, minus the disk space.
+
+**What it cost to have, and gives back**: 2,220 B of resident `CODE` and 164 B
+of A5 on the resident build; 696 B and 136 B on the shipped overlay build,
+because most of DART lived in its own image. The download falls 3,456 B. Every
+ratchet was LOWERED in the same commit, on the same terms a raise takes — at
+the measured size on the day — so what a removed format gave back cannot be
+spent later without somebody noticing.
+
+**And the engine is simpler in one place that matters.** `unc_lzah.c` had
+three modes; it has two. DART's "best" was Apple's LZHUF over a window of
+zeros, one constant away from `-lh1-`, and that constant is gone with it.
+`UNC_ERR_NOTCOMPRESSED` goes too — it existed for one sentence in one
+alert — and its number is retired rather than reused, so a caller built
+against an older header cannot read a new code as that one.
+
+### The transferable part: scope is a question about the WHOLE task, not about the file
+
+The 2026-09-09 entry asked "can this engine read the format?" and answered
+yes, correctly. The question that decides scope is a different one: **after
+this program has done its part, is the user finished?** For every archive
+format here the answer is yes — the files are on the disk. For a disk image it
+was never yes, and no amount of codec work could make it so, because the
+missing step is a filesystem this program deliberately does not have.
+
+**A sibling project is not a reason to keep a feature, it is a reason to move
+it.** MacMount already carried its own LZHUF (`src/mm_lzhuf.c`) — this
+repository benchmarked against it on 2026-09-19 and took the better tree — so
+the capability had two homes and one of them could finish the job.
+
+
+## 2026-09-26 (the guard that was on the other side) — every cipher gains a fuzz seed, and PackIt's zero was seventeen
+
+**The item.** Three of the eight ciphers had no encrypted seed, so
+`tools/fuzz.py` had never executed a line of them: Compact Pro's, the
+traditional zip one, and WinZip's AES. Two more — PackIt's XOR and DES —
+were recorded as having seeds that never reached the key, 0 mutants in
+30, *"because a flipped bit fails its header CRC before a key is
+derived"*.
+
+**Who writes the seed matters, and it is not the oracle.** Both zip
+shapes already have an encoder on this machine, and `run_crypt.py` grades
+the decoders against them: `zip -P` and `7z -pPW -mem=AES256`. Reaching
+for those here would have been the cheap answer and the wrong one. A
+fuzzer's seed has one job an external encoder cannot do — **be the same
+bytes on every machine and in every run**. Info-ZIP seeds its twelve-byte
+encryption header from the clock and 7-Zip picks a random salt, so a
+quarter of a fuzzer that advertises seeded reproducibility would have
+stopped being reproducible, and the coverage of two of the eight ciphers
+would have depended on what happened to be installed. That is the
+property the whole item was about: coverage that can vanish quietly is
+what let these ciphers go unfuzzed in the first place — and ARC's makes
+the same point without the conditional, its encoder having not been
+installed here at all (below). So all three zip seeds — the traditional
+cipher, and AES at both key lengths, which take different paths through
+the key schedule — are written in `synth_crypt.py`, in Python, and then
+handed BACK to `unar` and `7z t`, which is the arrangement that grades
+them: it caught a planted flipped bit in each.
+
+The price was an AES: no Python here has one (`cryptography` and
+`pycryptodome` are both absent; `hashlib` supplies PBKDF2 and HMAC and no
+cipher), so `synth_crypt.py` gained an encryption-only AES — about 60
+lines, S box COMPUTED from FIPS-197's definition the way
+`tools/gen_crypt_tables.py` already builds the engine's, and checked at
+import against the standard's own two known-answer vectors. 7-Zip then
+verifies every archive it ends up in, which is the check that counts.
+
+**Compact Pro cost nothing at all**: `tools/synth_cpt.py` has written
+encrypted archives since 2026-08-23, because that cipher has no second
+implementation anywhere and Compact Pro 1.51 under Mini vMac had to grade
+it. A shape the project already had, one import away from the fuzzer for
+a month. *Before building a generator, look for the one that exists.*
+
+### PackIt's zero, and the guard that was on the other side
+
+Re-measured with the same instrument as 2026-09-23 — a fault planted in
+the key setup, counting mutants that trip it — and mutating the same way,
+the figures reproduce **exactly** for `sit-des` (19) and `sit5-rc4` (21)
+and come back **17 of 30** for both PackIt schemes, where the record says
+0.
+
+The stated cause is the part worth keeping, because it was refutable
+without running anything. **PackIt encrypts the entry HEADER along with
+the payload** — `build_packit` encrypts a whole `PMa4` stream, header,
+forks and CRC together — so the reader cannot compute that header CRC
+until it has derived a key and decrypted. `src/fmt_packit.c` does exactly
+that: the PMa5/PMa6 arm keys the cipher, and the CRC comparison is
+further down the same walk. The checksum is BEHIND the cipher, and a
+checksum behind the code cannot guard it.
+
+There is a real guard, and it is a different one: the archive's first
+entry is deliberately in the clear, and *its* header CRC stops the walk
+before anything encrypted is reached. One flipped bit at offset 20 or 60
+never reaches the key; one at offset 200 does. That is 100 bytes of 890
+rather than all of them — which is why the number is 17 and not 0 or 30.
+
+**What the wrong cause cost** is not the number: it is that the number
+came with a remedy attached, *"for PackIt a mutation that repairs the
+header CRC afterwards"*, and that remedy would have been written, tested
+against a problem that does not exist, and left in the tree. A figure
+gets re-measured eventually; the story next to it is what gets
+implemented.
+
+### The ranges, which are worth having anyway
+
+`synth_crypt.py --ranges` now reports, per shape, the byte ranges the
+reader hands to a cipher, and half the flips land inside them. It was
+built for PackIt's supposed checksum wall and kept on its measurements:
+every shape improved, `cpt` 20 → 29 and `sit-des` 19 → 26, and for the
+AES shape it is what guarantees a mutant gets past the two-byte password
+verifier into the cipher proper — `aes_encrypt_block`, a second planted
+site, 26 → 29. The other half still flips anywhere, because the container
+of an encrypted archive is worth fuzzing too.
+
+### The instrument, and its control
+
+`tools/fuzz_reach.py` is the 2026-09-23 method made re-runnable: for one
+cipher at a time it writes an out-of-bounds store into that cipher's key
+setup, rebuilds, and counts the mutants that trip the sanitizer. Two
+things in it are not decoration. It runs the **unmutated** seed first and
+requires the fault to fire, because a fault injection is a test and
+2026-09-23's first one was a no-op that fired for nobody. And it keeps
+`--untargeted`, which mutates the way the fuzzer did before the ranges
+existed — so the before and the after come from ONE instrument, which is
+the only reason the PackIt contradiction is worth anything: the same run
+that disagrees about PackIt agrees to the case about StuffIt.
+
+### The ninth seed, and the entry that was refused without being tried
+
+The eight shapes were still one cipher short, and the open item's own
+arithmetic is where that shows: it said *"three of the eight ciphers are
+still unfuzzed"* and named three, with `sit-des` and `sit5-rc4` reached
+and PackIt's two *"reached only by construction"* — seven. **ARC's
+garble was in none of the three categories.** It is the least
+archive-shaped cipher here: the password is XORed over an entry's
+compressed bytes and nothing in the file records that it was done, so
+`src/fmt_arc.c` finds it by decoding an entry, failing, and trying the
+password.
+
+Writing that seed found a defect, which is the only defect this whole
+exercise found. The retry condition was `est != UNC_ERR_CRC && est !=
+UNC_ERR_CORRUPT`, written out twice, so **an entry whose ungarbled stream
+ran SHORT was refused without the password ever being tried**: garbled
+RLE90 over 200 A's, three 0x90s and 120 B's decodes to a truncation
+rather than a bad CRC, and `unar -p` reads that entry while this engine
+printed *"file is truncated"* and failed it. One archive, three entries,
+two of them fine.
+
+`src/fmt_packit.c` has asked the same question since M3, and asks it
+better: `pit_retryable()` is a named predicate, it includes
+`UNC_ERR_TRUNCATED`, and its comment says why — *"a wrong key makes the
+Huffman tree, and then the header, into nonsense; an I/O error or an
+abort is nobody's password"*. So the fix is `arc_retryable()`, the same
+predicate plus the CRC that ARC also has. **The same question answered in
+two files, once as a named predicate and once as an inline comparison
+repeated twice — and the inline one was less complete, in the format
+where the cipher is DETECTED by decode failure and so the one where the
+list of decode failures matters most.** When two formats ask one
+question, the one with a name for it is the one to copy.
+
+**Why it survived**: `run_crypt.py`'s garbled-ARC cases need Debian's
+`arc`, which is not installed here, so every `./ci.sh` has printed *"no
+`arc` ... garbled ARC skipped"* and that cipher's only graded cases have
+never run on this machine. A skip is a hole in the suite that reports
+itself in every run and is read as normal (BLOCKERS.md, *Withdrawn
+claims*, the mechanism list). The synthetic garbled archive now closes
+it: three methods, graded by `unar -p`, and it fails two ways against the
+engine of an hour ago.
+
+**And `tools/get_arc.sh` worked on the first try**, which is the other
+half of it: the encoder was one command away, named in the same file as
+the skip, and the three real garbled fixtures pass — 45 cases to 48. So
+the fix is not an accommodation of this project's own garbling: archives
+`arc g<password>` wrote agree with it. The skip had been printed on every
+`./ci.sh` for five weeks with its own remedy beside it.
+
+**And it prints again on the next run.** `ci.sh` opens with `make clean`,
+which is `rm -rf build`, and `build/arc` is exactly where `get_arc.sh`
+installs — so every CI run destroys the oracle it then reports missing.
+`build/deark` and `build/mpack` sit in the same place and survive it,
+because the suites that need them rebuild them on demand, and nothing
+does that for `arc`. That is the argument for the SYNTHETIC shape rather
+than a note telling the next person to run a script: a seed that needs
+nothing installed is graded on every run, and one that needs a fetch is
+graded when somebody remembers. *A skip whose remedy has to be re-run
+after every clean is a permanent skip with a helpful message.*
+
+### What it found in the engine: nothing else
+
+3,000 crypt-only cases and 2,000 mixed, clean. Four ciphers that had
+never run under a fuzzer now do, and no MUTANT found anything in any of
+them — what the exercise found, it found while building the seeds.
+Worth saying plainly, because the temptation with a coverage result is to
+present the coverage as the finding: the finding is that the paths are
+clean, and the coverage is what makes that sentence mean something.
+
+**Two numbers, found on the way, and both were counts of a list sitting
+underneath them.** BLOCKERS.md's withdrawn-claims section opened with
+*"Ten mechanisms keep finding the next one"* over a list of **thirty**,
+and CLAUDE.md said ten as well. FORMATS.md's *Encryption* said *"Seven
+ciphers across five formats"* over a table of **eight rows across six**,
+and TESTING.md's decryption section repeated the seven. All corrected in
+place, with the date of the count this time — the same drift as the
+session-start reading figure two days ago, and in one case in the file
+whose whole subject is claims that stopped being true. **A count written
+above a list is the cheapest claim in the repository to check and the
+least likely to be checked**, because the list grows one row at a time
+and no row is ever the one that breaks the number.
+
+
+## 2026-09-26 (the numbers DART left behind) — the ratchet was lowered and the prose quoting it was not, and the control nothing built went 4 B over
+
+**What was wrong.** FORMATS.md's *Overlays* section gave the shipped
+build as 54,028 B of resident `CODE`, 19,124 B of A5 and a 214,784 B
+download, over a 146,176 B bundle of fifteen images. Every one of those
+is the figure from BEFORE DART left the engine on 2026-09-25. The
+measured set is 53,332 / 18,988 / 211,328, a 143,616 B bundle and
+**fourteen** images.
+
+**And the tool was right all along.** `tools/build_mac.sh` carries a
+ratchet per configuration, and DART's own commit lowered all three of
+them — *"eager 54,028 -> 53,332, lazy 52,600 -> 51,956, resident 153,804
+-> 151,584, with the A5 figures following"* — in the file that ENFORCES
+the number. The file that merely quotes it was not touched, and could
+not complain: a ratchet fires, prose does not. **When a commit lowers a
+limit, grep for the number it lowered from** — it is the one edit whose
+own success guarantees nothing about the four other places the figure
+lives. Here it lived in FORMATS.md twice (the *Overlays* table and
+*Resident memory*, which WAS updated, so one file carried both sets 60
+lines apart), in `check_app_size.py`'s docstring, and as an image count
+in six files including CLAUDE.md.
+
+**A cross-file contradiction is a disproof nobody has collected**, and
+this one was inside a single file. What made it findable was following a
+number to the tool that produces it rather than to the prose beside it.
+
+### The launch read: two numbers that were written as one
+
+The section said the shipped build's launch read is *"the same read
+redistributed plus 26,368 B, which is the download delta and not a second
+term"*. The read delta and the download delta are not the same number.
+Measured on this tree: the control reads 183,552 B of `CODE` at launch,
+the shipped build reads 64,896 + 143,616 = 208,512 B, so the read grows
+by **24,960 B** — while the download grows by **24,448 B**, 211,328
+against 186,880. 512 B apart. The point the paragraph was making
+survives, which is why it is easy to miss: the launch read is a
+redistribution and not a new cost. *"X, which is also Y"* is two claims,
+and the second one here was never measured.
+
+**Corrected later the same day: the bundle is 143,072 B, not 143,616 B**, so
+the read grows by 24,416 B and the two deltas are 32 B apart rather than 512.
+The figure used here is the bundle's resource FORK (*the fork that was
+mistaken for its contents*, below). The 512 B that this entry left
+unaccounted for was the whole of the error.
+
+### A control that is not built is not a control
+
+The other half was found by building the resident configuration by hand
+to re-measure the table: it came out **4 B over its own ratchet**, and
+`ci.sh` had gone green. The 4 B is `arc_retryable()` from the same day's
+ARC garble fix (*the guard that was on the other side*), and the reason
+every other check passed is that `src/fmt_arc.c` is in an OVERLAY in both
+shipped lifetimes — so the shipped build is +0 B and only the build with
+every decoder linked in pays. `ci.sh` compiled variants 4, 4b and 4c, and
+the control was the one it left out, while TESTING.md said all three were
+built.
+
+So the ratchet is raised by 4 B with what it bought written beside it, the
+A5 ratchet is lowered by 4 B because the same change moved 4 B the other
+way, and `ci.sh` gains **variant 4d**. The lesson is already written in
+`ci.sh`, one comment above the gap: *"An unbuilt variant is a variant that
+rots."* It was written about the two lifetimes, by somebody who had just
+paid for it twice, and the configuration it did not cover is the one the
+whole overlay argument is measured against.
+
+**The generalisable form**: of three configurations, the one a suite is
+most likely to skip is the one that is not shipped — and that is exactly
+the one whose job is to be a fixed reference. A control earns its name by
+being rebuilt, not by being described.
+
+## 2026-09-26 (the feature that was parked, and is now out) — choosing entries in the Macintosh application leaves the brief
+
+**Decision, the maintainer's, taken 2026-09-26: the application will not
+offer a list of entries to tick.** Selective extraction stays where it
+already ships — the CLI's `--only`, M39, on `l`, `x` and `t` alike — and
+the engine keeps both halves a host needs: `UncOptions.list_only`, which
+walks and reports without decoding, and the skip a `begin_entry` returning
+>0 performs (`include/macextract.h`, *Sink*). **Nothing is removed and no
+capability is lost.** What closes is the question.
+
+**What it rests on.** Every run of the application pays for a picker,
+including the runs of a user who never opens it, and the shell is the
+thin part of this project by design (CLAUDE.md, *Mission*). A host that
+wants the behaviour has the engine's two halves; the Macintosh user's case
+— the whole archive, byte-exact, on a 1 MB machine — is the one the tiers
+verify.
+
+**What it does NOT rest on: the branch's price.** `BRANCH_NOTES.md` on
+`selective-extract` measures the feature against a build that predates the
+overlays and DART's removal, and states the cost as a share of a prize
+that was itself recorded at a seventeenth of its measured value at the
+time (2026-09-25, *the parked decision that outlived its numbers*). Those
+figures were not re-taken for this decision and this entry quotes none of
+them, deliberately: **a stale number is not evidence, and a scope answer
+that needed a byte count would be a different answer.**
+
+**The transferable part.** On 2026-09-23 this file worked out that a row
+ending *"the decision is X's"* has to name what changed since the decision
+was last taken, and exempted this one because nothing had ever been
+settled for it to re-open — correctly. But "genuinely open" was then
+carried for three days as a status, while the only number attached to it
+went stale underneath. *An open decision decays the same way a claim
+does.* The cheap move was not to re-price the branch; it was to ask what
+the decision turned on, find that it was not the price, and take it.
+
+**Consequence.** OPEN_ITEMS.md's Part 2 section is deleted and one row of
+Part 1 replaces it (*Out by the brief*). BRANCHES.md keeps the branch as
+parked-by-decision with its figures marked as pre-overlay. `ci.sh` is
+unchanged: `tools/run_only.py` grades the CLI half, which ships.
+
+## 2026-09-26 (the loader that could be run after all) — the overlay images were never Retro68's to hold
+
+**Claim: the reason the overlay loader had no automated test was a property
+of the Macintosh, and it was not.** OPEN_ITEMS.md had carried *"there is no
+obvious Linux-side loader test — the images are m68k, position-independent,
+and relocated by a loader that exists only in the Macintosh build, where
+`qemu-m68k` runs the engine but not the Resource Manager"* since the images
+landed. Every clause is true. The conclusion does not follow, and the cost of
+believing it was three defects found by hand (DECISIONS.md 2026-09-25, *the
+flush nobody wrote*).
+
+**What the mechanism actually needs.** An image is a flat `-mpcrel` m68k blob
+with a relocation trailer — no Toolbox in it, by construction, because it may
+not call the application. The loader needs eight Memory Manager calls
+(`NewHandle`, `DisposeHandle`, `GetHandleSize`, `HLock`, `HUnlock`, `MoveHHi`,
+`BlockMoveData`, `MemError`), two Resource Manager calls (`GetResource`,
+`ReleaseResource`) and a trap probe. **That is the whole surface**, and
+`tests/mac_sink_test.c` had been running the Mac shell's sink against a mock
+Toolbox of the same shape since 2026-08.
+
+So: `mkoverlay.sh` gained a toolchain PREFIX (default unchanged, Retro68's),
+`m68k-linux-gnu-gcc` builds the identical sources with the identical flags,
+stub headers named `Memory.h`/`Resources.h`/`OSUtils.h` let all four loader
+files compile **unmodified**, and `qemu-m68k` executes them. One seam was
+needed in shipping code and it is one macro: the low-memory global ROM85's
+ADDRESS, which a host cannot map. Identical codegen in every shipped build.
+
+**The result, first run:** 17 fixtures extracted through real m68k images,
+byte-exact against the committed oracle manifests, in both lifetimes, in
+about a second each — and the mechanism's own properties asserted for the
+first time anywhere: the eager lifetime reads one resource and never
+re-reads, the lazy one reads once per image, and **every relocation in every
+image is checked against the raw file's trailer at the address the image
+runs at**, including a kept copy relocated a second time by the difference of
+two addresses.
+
+**Two things the mock does that a Macintosh does not, and both are the
+point.** Every unlocked block moves on every allocation, where the Memory
+Manager compacts only when it must — so an image the loader forgot to lock
+fails here every time and there only on a full heap. And every block's last
+byte abuts a guard page, so a relocation offset past the image end faults at
+the write instead of corrupting a neighbour; that is the exact class the
+trailer's `off + 4 > table` guard exists for.
+
+**Made to fail, six ways, permanently.** A suite this new has earned nothing,
+so `--mutate` is part of it and `ci.sh` runs it: the delta dropped, the
+trailer table mislocated, a kept copy relocated by its own address, the
+bundle fixup not flushing, the lazy loader not locking, the codecs image not
+kept. All six are caught. **The first attempt at this lane reported a
+mutation as UNCAUGHT when it had never been applied** — the `sed` matched
+nothing and exited 0, which is the same shape as the checks this project has
+withdrawn for being unable to fail. `tests/ovlbox/mutate.py` fails on an
+absent pattern for that reason.
+
+**And then the shipped images too.** `--shipped-only` (variant 3d, after the
+Retro68 build) hands the images `dist/` ships to the same loader: the bundle's
+directory, and **30 relocations across six images**, all correct at the
+addresses they run at — where the m68k-linux build of the same sources emits
+15 in one image, so the first lane could not have covered them. They cannot be
+CALLED here: a Retro68 image entered from an m68k-linux binary segfaults,
+measured on `synth-sit-rle90.sit` rather than assumed. That is the honest
+boundary — the shipped bytes are LOADED here and RUN only on the emulator.
+
+**What is still not reachable**, and it is a short list now: no host here has
+an instruction cache, so the documented flush is counted rather than needed;
+no Retro68 image is ever executed off the Macintosh; and
+there is no Resource Manager, no fragmentation model and no interface. The
+control lane's oracle is this project's own output and cannot notice a decoder
+that is wrong in both configurations — which is what the 932 fixtures are for.
+OPEN_ITEMS.md, *The overlay loader*, keeps what remains.
+
+**The transferable part, and it is not about overlays.** *A negative built out
+of true clauses is still a hypothesis.* "The Resource Manager only exists on
+the Macintosh" was true and irrelevant: nothing in the loader needs a real
+one, only ten calls' worth of behaviour, and the harness that could supply
+them had been in `tests/` for seven weeks. The question that opened it was not
+"how could this be tested?" but **"what does this code actually require?"** —
+asked of the code rather than of the platform it was written for.
+
+## 2026-09-26 (the fork that was mistaken for its contents) — one instrument mismatch, three wrong numbers, and the 512 B nobody could place
+
+**Claim: the `'OVLY'` bundle is 143,616 B. It is 143,072 B.** The larger
+figure is `build/mac/ovl_bundle.r.rsrc.bin` — the Rez'd RESOURCE FORK around
+the bundle, map and header included — where every other figure in the same
+paragraph is a `.code.bin` or a `.bin`, i.e. resource DATA or the download.
+544 B of resource-fork overhead, quoted as if it were part of the bundle.
+
+**Three numbers fell with it**, all in FORMATS.md, *Overlays*:
+
+- the bundle's index cost, quoted as **724 B** — the difference between the
+  fork's size and the images' 142,892 B. The index is **180 B**, and it is
+  fully accountable: a 4-byte header, 12 bytes of directory per image
+  (`tools/overlay/mkbundle.py`'s layout), and 8 bytes of padding to 4. 172 +
+  8 = 180, exactly the difference;
+- the launch read, quoted as 208,512 B and a **+24,960 B** delta. It is
+  207,968 B and **+24,416 B**;
+- and with it the **512 B** that DECISIONS.md 2026-09-25 (*the overlay launch
+  read was counted as a cost twice*) reported as the gap between the read
+  delta and the download delta, with *"nothing here has needed to account for
+  the 512 B"* written beside it. With the bundle's real size the gap is
+  **32 B** — and a MacBinary download is quantised to 128 B a fork (both are
+  exact multiples), so a pair that close is inside the padding and needs no
+  account at all.
+
+**What made it findable.** Nothing measured the bundle: the figure was quoted
+in four places, including `tools/check_app_size.py`'s own header, and produced
+by no tool. It came out while adding `--bin` to `mkbundle.py` so that
+`tests/run_overlay_host.sh` could hand the SHIPPED bundle to the real loader
+(*the loader that could be run after all*) — the first time anything in this
+repository read the bundle's bytes as bytes.
+
+**The transferable part.** *An unexplained residue is an unread instrument.*
+This project had already written the residue down and labelled it as
+unexplained, which is the right thing to do; what it had not done was ask
+which file each of the four numbers came from. Two of them came from the same
+build and the third from a different KIND of file, and the gap was exactly the
+difference between the two kinds. **A figure nothing measures is a figure
+nobody can correct** — the bundle's size is now written by the build, and the
+host loader lane reads it every run.
+
+## 2026-09-26 (the reproduction that had stopped reproducing) — a recipe whose mechanism was a size, and which never said to check the size
+
+**Claim: adding a 2-byte field to `UncEntryInfo` makes two DiskDoubler
+self-extracting fixtures roughly twenty times slower on the Macintosh.** Filed
+2026-09-25 as *unexplained, reproducible and load-bearing*, with three
+commands and a warning to the next person who edits that struct. Labelled a
+hypothesis, which was right. **It does not reproduce: six runs, all PASS in
+5.1 s** (BLOCKERS.md, *Withdrawn claims*, has the grid).
+
+**What went wrong with the recipe, and it is the transferable part.** Step 1
+is *"add `uint8_t encrypted;` to `UncEntryInfo` — anywhere in the struct, set
+by nobody"*. Placement decides whether the struct grows at all: put before
+`method_data` the field lands in existing padding and `sizeof` stays **300**,
+the same as the clean tree. The first two runs here were exactly that, and
+they passed — a result that meant nothing, because the condition the whole
+effect is about had not been met.
+
+The entry itself contains the reason this matters, one paragraph below the
+recipe: *"the one clue is the SIZE"* — `uint32_t` grows the struct by 4 and
+passes, `uint8_t` and `uint16_t` grow it by 2 and hang. **A reproduction whose
+mechanism is a number has to assert that number.** Say `sizeof` must come out
+302 and how to check it (`m68k-linux-gnu-gcc -Iinclude` on a four-line probe,
+under `qemu-m68k`, two seconds), not "anywhere in the struct".
+
+**With the size actually 302**, both named fixtures extract and pass, at 1 MB
+and at 4 MB, in the shipped overlay build and in the resident control — and
+the field was in the binary, which was checked rather than assumed: the
+autotest `CODE` is 114,544 B with it and 114,428 B without.
+
+**What is NOT claimed.** Not that the original timeouts were imagined. They
+were observed twice, on two fixtures, and a size-neutral placement cannot
+produce a spurious hang — only a spurious pass. Between then and now the tree
+lost DART, gained the overlays as the default build and moved about 8 KB of
+code, and the effect pointed at Memory Manager block placement to begin with;
+a heap whose contents have all moved is no longer the heap that showed it. So
+the effect is gone from this tree and its cause was never established, which
+is the honest statement and the reason the claim leaves the live sections.
+
+**The general shape, and it is the second time this week.** An unexplained
+effect is the kind of claim most worth re-running and the least likely to be
+re-run, because the write-up says "reproducible" and nobody doubts it. This
+one cost a day when it was found and then stood for ten days as a warning
+about a tree that had stopped showing it. *A reproduction is a measurement
+with a date, not a property of the code.*
+
+## 2026-09-26 (a budget per format, and one per layer) — the tier model follows the build that ships
+
+**Claim: `tools/run_tiers.py` modelled one budget per tier, which since
+2026-09-25 is the control's and not the shipped build's.** With a budget per
+tier PER FORMAT it reproduces the machine's shipped tallies — 69/71 at System
+3.0 / 512 KB and 71/71 at the floor target, refusing the same fixtures by name
+(FORMATS.md, *512 KB machines*). The resident lane is kept and still asserted:
+it grades the engine against a fixed ceiling, which is a different question
+from what a user's Macintosh refuses.
+
+**Nothing in the model is restated.** The keep set is parsed out of
+`mac/ovl_load_eager.c`'s own switch, the format names and envelope flags out
+of the engine's table, the image sizes out of `build/mac/` — and the sizes
+that are written down are checked against that build whenever Retro68 is
+installed. This is `tools/overlay/images.py`'s rule applied again: a second
+copy of the release table would grade a program the Macintosh does not run.
+Every guard was made to fire before it was believed — an image size moved by
+16 B, `ovl_keep(OVL_ID_CODECS)` deleted, an unknown `OVL_ID_*` kept, and the
+asserted refusal list swapped for a same-length one, which fails on the names
+while the tally still reads 69.
+
+**A budget per LAYER, not just per format**, and this is the part that is
+about the Macintosh rather than about arithmetic: `ExtractOne` calls the
+engine once per envelope layer and `mal_take_budget` runs at each layer's
+first allocation, so a `.sit.hqx` is measured twice against two different
+budgets. The model sweeps layer by layer with `t -nr` and passes a fixture
+only if every layer passes. That is what exposed the row no tally had shown —
+an envelope keeps the whole bundle, so it runs 24,886 B TIGHTER than a
+resident build would have (FORMATS.md, *What each format is granted*).
+
+**The evidence the arithmetic was checked against is not the thing it
+predicts.** The three granted budgets FORMATS.md already carried — StuffIt 5,
+LZH and Compact Pro at 1 MB, 734,656 / 752,898 / 746,682 B — are reproduced
+exactly, all three, by one expression with one unexplained constant in it
+(1,138 B). Three measurements against one free parameter is two chances to
+disagree, and they did not. Only then was the model pointed at the tallies.
+**A model first fitted to the tallies it is meant to predict cannot fail** —
+which is this repository's own rule about tolerances, applied to a predictor.
+
+**The residue is labelled and load-bearing on nothing.** Dropping it moves no
+prediction, because the narrowest margin between a layer's demand and its
+budget is **46,712 B** at the two tiers this lane asserts
+(`popper-1.7.tar.Z`'s LZW layer at System 3.0 / 512 KB) and **13,028 B** at
+any of the three (`a2ps.V4.3.tar.Z`'s, at System 6.0.8 / 512 KB) — measured
+2026-09-26 by bisecting every layer of all 71 fixtures, which is the same
+sweep run once per candidate budget. The same measurement is what makes the
+one deliberate pessimism safe: the model cannot reach
+`unc_archive_encrypted` from the CLI, so it keeps the ciphers for every
+Compact Pro and zip archive and grants 9,808 B less than the machine does —
+against a narrowest margin of **143,800 B** on the layers where that applies.
+Every constant in the model is an order of magnitude under the margin it
+could move, so none of them decides a fixture; the day one could, the sweep
+would be deciding fixtures on a number nobody has explained, and that is the
+condition to re-read this entry on.
+
+## 2026-09-26 (the AES that was never Gladman's) — the standard was one fetch away, and the code was already written from it
+
+**The claim that failed.** `src/unc_crypt.c`'s AES section read "Source:
+FIPS-197 as implemented in `reference/XADMaster/Crypto/aeskey.c` and
+`aescrypt.c`", and had since the cipher was added on 2026-08-23
+(`895fb64`, the only commit that has ever touched those two functions).
+FIPS 197 was not in `reference/`, so the first half of that sentence
+named a document nobody on this machine could open and the second half
+was the only part anything could check.
+
+**The fetch is one line.** `csrc.nist.gov` serves FIPS 197 — the 26
+November 2001 standard — at the same path shape as FIPS 46-3, and
+`tools/fetch_references.sh` now takes it there. Its text streams are
+Flate like 46-3's, so the same `zlib`-and-a-regex reading works; unlike
+46-3 nothing has to be extracted from it, because no table here comes
+out of it.
+
+**The rewrite turned out to be already written.** Held against section
+5.2 and its Fig. 11, `aes_setkey` is that pseudo-code line for line: the
+first `Nk` words copied, `temp = w[i-1]`, `SubWord(RotWord(temp)) xor
+Rcon[i/Nk]` at `i mod Nk == 0`, the `Nk > 6 and i mod Nk == 4` branch,
+`w[i] = w[i-Nk] xor temp`, and the bound `Nb(Nr+1)` with `Nr = Nk + 6`
+from section 5's Fig. 4. The round is section 5.1's Fig. 5, the state
+index is section 3.4's `4c + r`, `xtime` is section 4.2.1, and folding
+SubBytes into ShiftRows is the standard's own first property in section
+5.3.5. Every line has a clause; not one of them needed changing.
+
+**What disproves the attribution is shape, not opinion.** Gladman's
+`aeskey.c` is a 32-bit word machine: one function per key size
+(`aes_encrypt_key128/192/256`), macro-unrolled through `ke4`/`ke6`/`ke8`,
+Rcon read out of a TABLE (`t_use(r,c)`), and the schedule carried as a
+running four-word `ss[]` rather than as Fig. 11's array; `aescrypt.c`
+is the same shape again, unrolled per key size and routed through
+`aesopt.h`'s configuration macros to `aestab.c`'s round tables. This
+file has no word type in the schedule, no Rcon table — it doubles in
+GF(2^8), which is the definition — one function for all three key
+sizes, and a 256-byte S box.
+A transcription does not survive that many changes of shape. What the
+code exhibits is the standard.
+
+**Priced, and it cost nothing, because nothing executable moved.**
+`unc_crypt.c` ships in the `OVLY` crypt image since 2026-09-25, and that
+image is **byte-identical** across the change at 9,800 B; the resident
+`CODE` is 53,332 B and the A5 world 18,988 B before and after, to the
+byte; the overlay bundle is byte-identical at 143,072 B; and
+`src/crypt_tables.h` regenerates byte for byte. The only bytes that move
+in `MacExtract.code.bin` are its creation date and the header checksum
+over it, which differ between two builds of the SAME source.
+
+**The tick probe was not run, and that is the stronger answer.** Its
+resolution is a tick, and it would be asked to distinguish two identical
+instruction streams. Byte equality of the image already says what the
+probe could only fail to contradict. This is the one shape of change
+where the probe is not the instrument — and it is worth saying so
+explicitly, because the rule it looks like an exception to (*settle a
+close call on the tick probe, not on instruction counts*) is about
+changes that alter the code.
+
+**Grading did not move either, and did not have to.** `ci.sh` runs four
+WinZip AES configurations — AES-128, 192 and 256, plus a stored AES-256
+entry — through `tools/run_crypt.py` on archives **7-Zip** writes, and
+`tools/synth_crypt.py` asserts appendix C's AES-128 and AES-256
+known-answer vectors at import, which are the two key sizes it writes
+seeds for. AES-192 is graded only by 7-Zip, and that is the whole of
+what covers `Nk = 6`. A byte of changed output would have failed it.
+
+**The transferable part.** *A citation to a document that is not on the
+machine cannot be held against the code, so it is not a citation — it is
+a promise.* This one stood for 34 days, through the two passes that
+re-cited everything around it — 2026-09-19 and 2026-09-23, the second
+of which took this file from twelve XADMaster citations to five —
+because both read the AES line as already sourced. And the contradiction
+was in the tree by this morning: `tools/synth_crypt.py`'s `Aes`, added
+today in `0472a81`, says "Key schedule: FIPS-197 section 5.2" about the
+same algorithm the file beside it attributed to Gladman. Two files
+disagreeing is this repository's cheapest disproof; this one was hours
+old rather than months, and it would still have settled nothing, because
+the document both of them name was not there to settle it with.
+
+## 2026-09-26 (the inventory that listed the decoders) — the licence was tracked against a table assembled from the format list, and ten files were never in it
+
+**The claim.** OPEN_ITEMS.md, *What is still XADMaster's*: a twelve-file
+table, with "the licence changes only when the last row is gone".
+
+**What disproved it, in one command.**
+
+    grep -rlE 'Source:.*(XAD|macutils)' src/*.c src/*.h
+
+Fifteen files came back and **eight had no row**: `unc_util.c` and
+`unc_internal.h` (the three CRC tables, and the MSB-first bit reader),
+`fmt_binhex.c`, `fmt_uu.c` and `fmt_mime.c` (macutils' `hexbin`), and
+`fmt_foreign.c` with `fmt_sit_probe.c` and `fmt_packit_probe.c` (seven
+formats' signatures and two recognisers). **Then two more, which that
+grep cannot see**: `unc_lzah.c`'s window preload and `unc_encinfo.c`'s
+second-hand citation put `Source:` and the name on different lines, and
+`grep` is line-based — the same false negative that hid a stale Compact
+Pro claim on 2026-08-23, in the same week's lesson. Ten files.
+Every row the table DID have is a format —
+`fmt_*.c` plus `unc_crypt.c` and `unc_lzdyn.c`, which are a format's
+ciphers and a format's coders. **It was the decoder list with a provenance
+column, and it had been read as an inventory of the repository.**
+
+**Why a grep found it and a year of shedding did not.** Each shedding
+pass took a format, so each pass asked "what does THIS decoder still
+owe?" — and the shared primitives are owed by eleven decoders and
+attributed by none of them. The two questions have different answers and
+the same shape. *An inventory assembled by walking the subjects is
+complete only for the dimension you walked.* The 2026-09-22 version of
+this — an inventory of volume walks built by grepping for `hls` when two
+walk with `hdir` — got the mechanism right and its remedy wrong: it said
+to search for the capability rather than the name, and here the
+capability search is `Source:`, which is one string and was never run.
+
+**Two documents were already contradicting the source, and neither was
+read against it.** NOTICE says BinHex left XADMaster's orbit on
+2026-09-19, and `fmt_binhex.c` still cites macutils' `hexbin` for two
+rules; NOTICE said `unc_lzah.c`'s "window preloads ... are this
+project's", and that file says in as many words that the -lh1- and
+StuffIt method 5 preload is `resetLZSSHandle`'s pattern. The second is
+the more useful of the two, because the pattern turns out to be
+published: LHa for UNIX writes the identical five steps in `larc.c`'s
+`decode_start_lz5` — **for LArc's -lz5-, not for -lh1-** — and lhasa
+fills the -lh1- buffer with spaces. So what is XADMaster's here is not
+the pattern but its application to this method, which no other
+implementation on this disk agrees with, and no corpus archive
+contradicts because none reaches back into the preload.
+
+**What was fixed rather than filed.** Four citations that name XADMaster
+for facts this project's own documents replaced, each verified against
+the document before the line moved:
+
+| line | said | says |
+|---|---|---|
+| `unc_internal.h`, the bit-serialized tree | `XADStuffItHuffmanHandle.m` (parseTree), macutils `de_huffman.c` | `docs/formats/serialized-huffman-tree.md`, which NOTICE and `unc_huffman.c` have named since 2026-09-20 |
+| `unc_internal.h`, the canonical codes | `XADPrefixCode.m`, macutils `cpt.c` | RFC 1951 §3.2.2 and `puff.c`, named since 2026-09-19 |
+| `unc_encinfo.c`, Compact Pro's index | fmt_cpt.c's comment, "itself from" XADMaster and macutils | `docs/formats/compact-pro.md`, which is what that comment says now |
+| `fmt_cpt.c`, `CPT_WINDOW` | "macutils CIRCSIZE" | `1 << 13`, the offset width in compact-pro.md's correction 3 |
+
+Comments only, and **measured rather than argued**: the Retro68
+application this tree builds has the same payload sha256 as the one in
+`dist/` — `2f20f588…`, 211,328 B, `tail -c +129` past the MacBinary
+header whose dates differ between any two runs — which is `ci.sh`'s own
+stale-`dist` comparison and is why this commit does not rebuild `dist/`
+despite touching `src/`. The ratchets in `tools/build_mac.sh` agree
+across all four configurations, variant 4d included. The crypt tables'
+re-citation three days ago came out byte-identical for the same reason
+(2026-09-23, *the tables that were the standard's*). The rest is in the table as rows, priced or
+explicitly unpriced, because a row is closed by a graded rewrite and not
+by a better sentence.
+
+**The CRC row is the one worth taking next, and the reason is the
+precedent.** `unc_util.c`'s three tables are already described in their
+own comment as "generated mechanically from the polynomials", with all
+three published check values asserted — in `tests/unit_main.c` and
+`tests/unit_formats.c`, not in the `tests/unit_util.c` that comment
+named, which has never existed in this repository; the
+polynomials are in `reference/notes/binhex40_lewis.txt` (CRC-16/XMODEM,
+bit by bit) and `zip_appnote.txt` (CRC-32, with its `0xdebb20e3`
+residue), and deark and lhasa each BUILD the 0xA001 table from its
+polynomial rather than listing one. That is the shape that came out at
+0 B three days ago.
+
+### Two numbers in one sentence, and the pass that dated one of them
+
+CLAUDE.md's session-start reading was corrected this morning from 7.5k
+tokens to 14k, with *re-measured 2026-09-26* added to the sentence — and
+the same sentence's next figure, *"BLOCKERS' withdrawn-claims archive is
+another 15k"*, was the 2026-08-26 measurement. That archive was 164,442
+characters when this was found, **~41k tokens** at the
+four-characters-per-token proxy under the 14k, and ~16k when the figure
+was taken — two and a half times' growth with the number standing still.
+
+**The mechanism is new and is worth the bullet it got.** A pass that
+re-measures one number in a sentence leaves the sentence looking
+measured, and the freshly added date is what stops the next reader
+asking about the rest of it. The same paragraph also says what made the
+docs grow, so it was not a sentence anybody skimmed.
+
+And the smells count above that table was wrong for the third time —
+thirty-three in CLAUDE.md over a list of thirty-five, two of which had
+been added hours earlier by the entries either side of this one. Three
+corrections of one number is the point at which it stops being a
+correction and becomes a check: `tools/check_docs.py` now counts the
+list itself and holds both sentences to it, and measures the four
+document sizes CLAUDE.md advertises. **The rule this follows is
+`check_version`'s, which exists for the same reason** — `UNC_VERSION`
+sat at 0.4.0 through four releases because nothing read it.
+
+**One more of the same kind, in the source this time.**
+`src/unc_crypt.c` opened with *"Seven schemes across the five formats
+that can encrypt an entry"* over a list of eight across six. FORMATS.md
+and TESTING.md were corrected for that exact count earlier today; the
+grep that found them was over `*.md`.
+
+
+## 2026-09-26 (the magic in somebody else's index) — two files this project had given up on, and the search that was never by name
+
+OPEN_ITEMS.md's *"Waiting on a file this machine does not have"* held two
+items and nothing else. Both are gone, and neither needed an emulator.
+
+### What the searches had all been
+
+Twenty emulator runs went on making SpaceSaver compress a file and seven on
+making Aladdin's software read a package written here — both the right shape
+of effort for the wrong question, and both written up as *nothing here can
+produce one*. What no entry records is a search of anybody else's disks, and
+the reason that never looked promising is worth stating: **neither format is
+labelled**. SpaceSaver compresses a file in place and renames nothing, so no
+archive site has ever listed one as anything; an AppleLink package is called
+`ALink.PKG`, and `.pkg` means InstallShield, Newton, OS/2, BeOS and five
+other things before it means AppleLink. Searching for either by name returns
+the software, never a file.
+
+What worked is one query against the BYTES. Discmaster indexes the contents
+of about 1.7 billion files out of archived CD-ROMs and disk images, and its
+*detections* field is full-text over what each identifier printed —
+including `file`'s own output. A SpaceSaver file begins `SIT!DFD3`, and
+`file`, matching only `SIT!`, prints **`StuffIt Archive (data) : T!DFD3`**.
+So the magic is a search term: `detection=DFD3` returned 296 files, 142 of
+them genuine after parsing the 84-byte header, across both header versions
+and methods 0, 1, 2, 3 and 4.
+
+**The lesson is a question to ask of any corpus: what is it indexed BY?** A
+format that renames nothing is invisible to every index built on names and
+plainly visible in one built on magic. That is now a smell in BLOCKERS.md.
+
+### The originals, which are what make them worth having
+
+Every SpaceSaver codec was already graded against Aladdin's own modules under
+`qemu-m68k`, so what a specimen buys is the CONTAINER, and only if the
+uncompressed file is beside it. It is, because of how these files got onto a
+CD at all: a publisher mastered a disc from a production Macintosh that had
+SpaceSaver running, and pressed the same title in earlier months from one
+that did not. So
+`MPW Script Tips 1.1.1/Sample Scripts/SmallWindow` is **1,024 bytes** and
+compressed on the Tool Chest discs from November 1993 on, and **665 bytes of
+plain text** on twelve discs from March 1992 to March 1993 — and 665 is
+exactly the uncompressed data-fork length in the compressed copy's header.
+Matching on (leaf name, decoded length) found 50 candidate pairs; 46 are
+byte-exact and the other four are provably different files that share a name
+and a length (a GPL text in CR and in LF, a `README` from an Amiga package, a
+`MAD.h` from PlayerPRO 4.3 against 4.4).
+
+**40 of the 142 leaf names contain *small***, which is not chance: that is
+SpaceSaver's *compress anything whose name begins or ends with* rule, firing
+on somebody else's Macintosh. It does not follow that it was the only trigger
+— the other 102 are named `MAD.h`, `Rates`, `cdev.π` — and it does not
+disturb what BLOCKERS.md records, which is that the rule never fired under
+Mini vMac here.
+
+### What a real package turned out to be
+
+`ALink.PKG` and `Read First.PKG` ship beside AppleLink 6.1 on fifteen Apple
+Developer CDs. That is the same lesson from the other side: **534 of the 539
+fixtures `fixtures/SOURCES.md` fetches over HTTP come from
+`www.nic.funet.fi` or `raw.githubusercontent.com`** — an FTP mirror and git
+trees, both indexed by path — and the corpus had never taken a file out of a
+CD-ROM image. A corpus drawn entirely from name-indexed sources cannot hold
+a file nobody named. The packages are **binary containers**: each record
+carries two lengths, a type, a creator, Finder flags, a Pascal name and two
+Macintosh dates at fixed offsets, and then data that is not text. The 2026-08-23 *transfer manifest* hypothesis is withdrawn,
+and so is something sharper: the shipped `.pkg` probe — Aladdin's own
+recogniser, correctly transcribed, measured at 0 false positives over 928
+fixtures — **rejects both real packages**, and one of them is claimed by the
+Compact Pro segment probe instead. *A false-positive rate measured over a
+corpus that contains no specimen of the format is a fact about the corpus.*
+The transcription stands; the conclusion drawn from it did not survive the
+first file.
+
+### Two instruments that were not instruments
+
+`tools/run_spacesaver.py` has graded specimens against their originals since
+2026-08-22 and could never have done it: it looked for the decoded file under
+the specimen's basename with `.ss` removed, where the CLI deliberately keeps
+the whole basename for this format, because SpaceSaver adds no extension.
+Forty-six of forty-six failed the first time it was given something to do.
+Fixed, and a specimen with no original beside it is now decoded and required
+to succeed rather than skipped — **a harness written for files that have not
+arrived is green because it is empty, and the emptiness is what needs the
+test.**
+
+The second is MANUAL_TESTS.md, which spent a section asking a stranger to
+compress a file and mail it. That is the second section of that file to be
+withdrawn after the machine turned out to be able to answer it (the other
+cost half a stranger's afternoon on a Macintosh 128K). **Asking somebody
+outside this machine is expensive in a currency this project cannot see, so
+it is the last resort and not the second.**
+
+## 2026-09-26 (the bargain that was finally paid) — a probe admitted it was weak, and a real file from another format collected
+
+`unc_cptseg_probe` accepted any file whose byte 0 is 1 with a zero longword
+at 4, and its own comment had called the bargain deliberate since the format
+gave it nothing else: a middle Compact Pro segment is a chunk of compressed
+data with an eight-byte hat. `Read First.PKG`, one of the two AppleLink
+packages that arrived earlier the same day, is `01 01 00 00` with a zero
+index, and was sniffed as the first segment of a set.
+
+**There was one more field, and the probe was not using it.** Bytes 2–3 are
+the set identity, whose entire job is to tell one set's parts from another's.
+A segment carrying no index is adjudicated by nothing else, so it must now
+carry a non-zero one. Zero identifies nothing.
+
+The rule is measured rather than argued: of the **82 raw Compact Pro files
+reachable on this machine — 75 distinct identities, including the two real
+multi-part sets `edu3` (`0xab78`, four parts) and `biplane5` (`0xdac4`,
+five) — none is 0**. `tools/synth_cptsplit.py` had reached the same
+conclusion years of commits earlier and never said so out loud: its
+`identity()` ends `return h or 1`.
+
+The final segment is untouched. It carries an index, so `unc_cpt_probe`
+walks its CRC — strictly stronger than anything this rule adds — and a set
+goes on being adjudicated by the one part that can be.
+
+**The transferable part is where the check came from.** Nothing was invented
+and no reference was needed: the field was already parsed, already
+documented in the file's own header comment, and already reported as the
+segment fingerprint by `unc_cptseg_describe`. *A probe that calls itself
+weak is worth re-reading against its own format notes before it is believed
+— "there is nothing else to check" was a statement about the payload, and
+the header had a field left.* The same header comment that admitted the
+weakness listed the field two paragraphs above it.
+
+`tests/unit_formats.c` gains `test_cptseg_probe`, the first unit test this
+probe has ever had, with the package's real header as the negative control
+and both real sets' shape as the positive; it was confirmed to fail with the
+check removed before it was believed.
+
+## 2026-09-27 (the prediction that was run) — a model said 66/71 before any machine had, and the machine agreed fixture for fixture
+
+`tools/run_tiers.py`'s shipped lane was written on 2026-09-26 and could
+reproduce two tiers a Macintosh had already run. At the third, System 6.0.8
+on a 512 KB Macintosh 512Ke, it made a PREDICTION instead: 66/71 against the
+resident build's measured 64/71, naming the five fixtures it would refuse and
+the two a per-format budget would clear. FORMATS.md carried that as a
+hypothesis and asserted nothing on it, which was right.
+
+**The machine returned 66/71, refusing those five and no others**, and
+`derived-Troi-ClipSave-Plug-in1.1.sit` and `derived-Expand_Now_1.0.1.sea`
+both passed as modelled. `run_tiers.py` asserts the tier by name from today,
+and the assertion was confirmed to fail with one name misspelled before it
+was believed.
+
+**Why this was worth a boot when two tiers already agreed.** Reproducing a
+number somebody has already measured cannot distinguish a model from a
+lookup table — the fixtures, the budgets and the expected tallies were all
+in the file. A prediction made before the run is the only version of that
+test that can fail for the right reason, and this model had exactly one
+outstanding. *A model validated only against the runs it was built from is
+a record of those runs.*
+
+### The residue did not reproduce, and that is labelled
+
+The same boot with `-D UNC_AT_BUDGET` grants an LZH archive 753,382 B at the
+1 MB floor where the arithmetic computes 750,456 B — pessimistic by 2,926 B,
+where the record for this model is a 1,138 B residue. **Hypothesis**: two
+things are unattributed, the 648,250 B base having been taken on the v0.33.0
+binary against this tree's ~24 B smaller one, and the probe build not being
+the build whose grant is modelled. The next step is one command and it is
+written down (OPEN_ITEMS.md, *The overlay loader*). Recording it as a
+discrepancy rather than as a correction is the whole point: a number taken
+from two different binaries is not a residue, it is two numbers.
+
+### And the harness beside it was lying about which machine ran
+
+`run.py` printed its summary as `N/M PASS at {args.mem}`, so this sweep —
+`--emu mv-512Ke`, a 512 KB machine — reported **"66/71 PASS at 4M"**.
+`sys30.py`, the driver beside it, has guarded against exactly this since it
+was written, with a comment naming the consequence: *"a summary that reports
+--mem's default while a different machine ran is how a 512 KB result gets
+filed as a 4 MB one."* The JSON record was always right; only the line a
+human reads was wrong. Fixed the same way sys30.py does it.
+
+**No new smell: this is the second instance of one already on the list** —
+*a harness that ends its runs differently from the harness beside it*, filed
+2026-08-22 when `arcmac.py` shut its emulator down properly and three
+SpaceSaver runs did not. Both instances have the same shape and the second
+adds one method to it: **grep for the COMMENT, not for the bug.** The comment
+is the proof somebody understood the problem once, and it is evidence about
+every sibling that does not have it.
+
+## 2026-09-27 (the residue that was two numbers) — a base and a grant from one binary, and a constant that was drift
+
+Yesterday's probe granted an LZH archive 753,382 B at the 1 MB floor where
+`tools/run_tiers.py` computed 750,456 B, and that 2,926 B was labelled a
+hypothesis because the base and the grant came from different binaries. Taken
+today from ONE tree and ONE probe pair — `run.py --mem 1M -D UNC_AT_BUDGET`
+with and without `-D UNC_OVL_RESIDENT` — it decomposes exactly:
+
+    base, re-taken       652,996 B   was 648,250      +4,746
+    residue, re-taken       -714 B   was  +1,138      -1,852 (-1,820 net of
+                                                       OVL_SAVED's 32 B)
+    2,926 B accounted for to the byte
+
+**So the model was never pessimistic. It was arithmetic on a stale base**, and
+the direction was the one arithmetic cannot be trusted in: the same mistake
+this file records for the floor budget, where 896 B of UTF-8 fold — a correct
+sum on a correct formula — was subtracted from a base three weeks old and
+moved the figure away from the machine. **A difference of two measurements is
+a measurement only if both come from the same binary.** Until then it is two
+numbers, which is why yesterday refused to correct anything.
+
+### The constant that fit three formats was a property of the build
+
+`OVL_RESIDUE` reproduced three granted budgets exactly with one value, and
+that read as structure. It is not: re-measured on this tree it is **−714 B**,
+the opposite sign, and 1,852 B away. What the three-row fit actually
+established was that the PER-FORMAT part of the arithmetic — images kept, 8 B
+of block header each — is right, because an error there could not have been
+absorbed by one additive term shared by three different keep sets. The term
+itself is per-build slack, and a budget is `FreeMem()` on a binary: it goes
+stale exactly when the tier budgets do, and must be re-taken with them.
+
+Ten keep sets now, not three, all of them from one pair of binaries and all
+leaving the same constant to the byte — including the envelope row, which
+LOSES 26,706 B because the bundle stays. Three measurements against one free
+parameter are two chances to disagree; ten are nine. 368 B of the constant is
+now attributed as well: the probe is not the build being modelled, and
+`-D UNC_AT_BUDGET` costs the eager configuration 400 B of `CODE` + A5 against
+the control's 320 B, so a pair measured through it saves 116,720 B where the
+shipped pair saves 117,088 B. What is left unattributed is 346 B.
+
+### Two smells, both already on the list, both paying out again
+
+**A cross-file contradiction.** `OVL_SAVED` was 117,056 B under a comment
+naming FORMATS.md's *Three configurations, one tree* as "the only place to
+correct them" — and that table read 117,088 B, corrected there for v0.34.0's
+Compact Pro segment check and not here. 32 B, inside the residue, invisible.
+A constant that is the DIFFERENCE OF TWO BUILD ARTEFACTS can be graded against
+them, so `run_tiers.py --check-saved` now does, out of `ci.sh` after the
+resident control. **A comment saying where a number lives is not a check.**
+
+**A number quoted for the wrong question.** The open item attributed the base
+gap to "this tree's application is ~24 B smaller", which is what the code-size
+table says v0.34.0's segment check cost. The base had moved 4,746 B — 200
+times that — because the table answers *what did this change cost*, not *what
+is the difference between these two dates*. The tell was available without any
+measurement: a 24 B application difference cannot produce a 2,926 B
+discrepancy, and the estimate was quoted anyway because it was the only size
+number in reach.
+
+### What it cost, and the one number that was free
+
+Two 1 MB boots to settle it and nine more to widen it from three keep sets to
+ten, plus three tier re-takes on three machines — and then all of it again
+after the AppleLink probe left the same day (*the recogniser that was a command
+line*), which moved every budget 536 B and every per-format GAIN not at all.
+That second pass is the one that makes the 346 B a figure: an unattributed
+remainder that survives a 496 B change to the application unchanged is not
+noise in the measurement. All three tier budgets rose
+by the same 4,746 B, and no tally moved on either lane — so the cost of having
+carried a stale base was nothing yet, which is exactly the condition under
+which it would have been carried until it cost something. The third tier's
+budget was PREDICTED from the first two before that boot: two machines had
+moved 4,746 B, so System 3.0 / 512 KB was expected at 224,108 B, and it is.
+
+## 2026-09-27 (the recogniser that was a command line) — a routine copied correctly out of the right file, answering a different question
+
+`unc_applelink_probe` shipped from 2026-08-23 and named a file an AppleLink
+package when its first whitespace-delimited token was `Decode` and its third
+`to` or `into`. That is `PKG Expand Translator`'s @0x2952 transcribed
+accurately, cited, and witnessed by four byte patterns a different build would
+fail (`tools/vmac/spacesaver.py --pkg`). Two real packages arrived on
+2026-09-26 and it named neither, and the open item asked the right question:
+*two shapes of input, or the wrong routine?*
+
+**Neither. It is the right routine for a question nobody asked it.** The five
+other translators with code on the same disk carry the SAME routine:
+
+| translator | `STR# 129` items 1–4 | its recogniser |
+|---|---|---|
+| PKG Expand | `Decode`, ` Folder`, `.pkg`, `to` | @0x2952 |
+| CompactPro | `Decode`, ` Folder`, `.cpt`, `to` | @0x2bc8 — instruction for instruction the same |
+| UnZip | `Decode`, ` Folder`, `.zip`, `to` | same shape, same three item tests |
+| BinHex4, UUCode, Unix Compress | `Decode`, `Encode`, `replace`, … `to` | same shape |
+
+Its input is a Handle the host passes at `param+4`, its answer goes back in
+`param+8`, and the selector at `param+12` decides whether it is being asked to
+PARSE (bit 1) or to RUN (bit 2). `Decode "X" to "Y"` is a sentence in the
+StuffIt translator API's command language. A file test it is not: the
+CompactPro translator's copy would reject all 108 Compact Pro fixtures in this
+corpus, and PKG Expand's accepted `Decode "Payload.hqx" to "Out"`, which is
+equally the CompactPro translator's command.
+
+Where Aladdin's file recognition actually lives is visible in the same
+resource: `STR# 129` item 3 is the EXTENSION, used to strip `.pkg` and append
+` Folder` for the destination (@0x2e5c), and the translator's Standard File
+dialog lists only directories. It never sniffs. What expands a package is not
+in the translator either — it calls `GetResource('Eng ', 2)` in
+`StuffIt Engine™` and jumps in (@0x334c).
+
+**The probe is removed rather than kept.** It was the only thing `.pkg` had,
+and what it matched was a translator command that appears in no archive — a
+name that cannot be right about a file. The unit test now asserts the four
+lines it used to accept are `UNC_FORMAT_UNKNOWN`, which is a test that fails
+if the probe comes back.
+
+### The lesson, and it is a new smell
+
+Rule #1 says a magic number comes from a reference implementation with a
+`/* Source: */` comment, and every word of that was obeyed here. It does not
+say **check which question the cited routine answers.** The available check
+costs nothing and would have worked on the day: the reference implementation
+had five siblings, one of them for a format with 108 fixtures in this corpus,
+and running the sibling's copy of the routine against those fixtures answers
+"is this a format test?" immediately.
+
+It also explains an expensive day that had already been paid for: the seven
+boots of 2026-09-01 that could not hand Aladdin's expander a package, because
+its dialog lists only directories (DECISIONS.md 2026-09-01). That was this
+same fact from the other side — a translator that takes a place and a command
+has no use for a file dialog — and it was read as an obstacle rather than as
+evidence about the routine.
+
+**Cost: 35 days of a format counted as named that named no file**, plus a
+supporting measurement that could not fail ("0 false positives across 928
+fixtures" — the corpus held neither a package nor a script), plus those seven
+boots. Settled with no boot at all: the disproof was five resources on an
+image this project has had installed since August.
+
+
+## 2026-09-27 (the signatures that were already on the disk) — a row said its replacements were not on this machine, and eight of the ten were compiled by ci.sh every run
+
+`OPEN_ITEMS.md`'s XADMaster inventory carried a row for
+`src/fmt_foreign.c`, `src/fmt_sit_probe.c` and
+`src/fmt_packit_probe.c` — seven formats' detect-only signatures and
+two recognisers, each cited to the XADMaster parser it came from. Its
+"other reference on this machine" cell read: *deark for Zoo, already
+cited; the rest are in each format's own published description, none
+of which is on this disk.*
+
+**That cell asked about descriptions and answered for implementations.**
+deark is on this disk, `tools/build_deark.sh` compiles it on every
+`ci.sh` run, and it states eight of the ten:
+
+| signature | where deark states it |
+|---|---|
+| ARJ `60 ea`, the 30..2600 header bounds, the basic-header CRC-32 | `modules/arj.c` — `g_arj_hdr_id`, `de_identify_arj`, `arj_read_member` |
+| RAR 5.x, 1.5–4.x, and "RE~^" | `modules/rar.c`, `rar_get_fmtver` |
+| Cabinet `MSCF` | `modules/cab.c` |
+| Zoo, four bytes at 0x14 | `modules/zoo.c` (already cited) |
+| bzip2 `BZh` + the block header | `modules/unsupported.c`, `get_fmt` |
+| 7-Zip, xz | the same function |
+| PackIt's recogniser | `modules/packit.c`, `de_identify_packit` |
+
+The two it does not state need nobody. bzip2's EMPTY form — the
+end-of-stream marker where a block would be — is one command here:
+`bzip2 -c < /dev/null` writes `42 5a 68 39 17 72 45 38 50 90`, which
+is the branch byte for byte. And StuffIt's recogniser is the wiki page
+`fmt_sit.c` already walks the container with: it gives `0x724c6175` at
+offset 10 and lists `SIT!`, `ST46`, `ST50`, `ST60`, `ST65`, `STin`.
+
+**What was not free, and is labelled.** The probe accepts a superset
+of that list — `ST` and two digits, `STi` and a digit. That widening
+is XADMaster's in origin and is kept as this project's, marked as
+such, on the argument that it cannot cost a false positive because
+`rLau` must match too: all 336 archives in the corpus with `rLau` at
+offset 10 carry `SIT!`, at either offset a MacBinary header can put
+them. And ARJ's lower bound moved from XADMaster's 32 to deark's 30
+(with the length guard from 40 to 38) rather than be kept as an
+unsourced tightening — deark names the ARJ TECHNOTE for its ceiling,
+so its numbers are the sourced ones. No fixture exercises the ARJ
+path either way.
+
+**The lesson is one already on BLOCKERS' list, paying out again: an
+oracle that was never asked.** Method 6 cost four weeks of "macutils
+is the only reference" while deark implemented it under MIT. This row
+cost five weeks of "none of which is on this disk" — written about
+specifications, believed about the code — while deark's identify
+functions sat two directories away, being compiled every run. The
+question that finds this class is not *"is there a description?"* but
+*"does anything here READ this format?"*
+
+**Consequence: the row is gone**, the first to leave the inventory for
+a reason other than a rewrite, and the table is 12 rows over 18 files.
+The licence does not move — `unc_lzdyn.c`, `unc_crypt.c`, `unc_lzah.c`
+and the tolerance row are still measured-unclosable — and nothing
+executable changed but two ARJ constants.
+
+
+## 2026-09-27 (the tables that said they were generated) — a comment claimed the tables were the polynomials' for months and nothing checked it, and the pad byte beside them turned out to be unobservable
+
+`src/unc_util.c`'s three CRC tables were cited to XADMaster's `CRC.m`
+and macutils' `arc_updcrc`, and the same comment said they were
+"generated mechanically from the polynomials". Both cannot be the
+load-bearing statement. The inventory row for them read **unmeasured,
+and expected to be 0 B** — the only row in the table with no verdict
+at all.
+
+**The claim was true and had never been checked.**
+`tools/check_crc_tables.py` rebuilds all three from the polynomial its
+published description states — CRC-16/XMODEM from
+`binhex40_lewis.txt`'s bitwise algorithm, CRC-32 from
+`zip_appnote.txt`, CRC-16/ARC from 0xA001, which deark and lhasa each
+BUILD rather than list — and all 768 entries agree, with the three
+standard check values. Nothing executable changed, so the 0 B was
+right; what was missing was the evidence.
+
+**The check has a `--selftest` and `ci.sh` runs it that way.** It
+bends one entry of each table and confirms all three are caught,
+because a table checker that silently matched nothing would pass for
+years (CLAUDE.md, *a test that passes may not be testing anything*).
+
+**And the file carried a third citation its row never named**: the
+block-cipher tail padding, cited to `XADPackItDESHandle`. Rather than
+re-cite it, it was measured. The pad path executes **3 times over
+`run_crypt.py`'s 45 cases** — established by counting, not assumed —
+and the suite is byte-for-byte green with the pad changed from 0 to
+**0xA5**. The value cannot be observed, so it is not a format detail
+and needs no source. Zero stays because it is what the reference
+does; nothing rests on it.
+
+**What did NOT close, and why it is worth writing down.**
+`unc_internal.h` was about to leave the table with `unc_util.c`, and
+it carries three more citations belonging to other rows' subjects: the
+MIME line reader's `readline.c`, `Source: XADDiskDoublerParser.m case
+8` for method 8 being Compact Pro's two stages, and a second statement
+of the LZAH window preload. None was inventoried. They are in the
+`fmt_binhex.c`, `fmt_dd.c` and `unc_lzah.c` rows now. **A shared
+header collects citations from every subject that uses it, so a row
+naming one of its items reads as naming the file** — which is how a
+file with five citations nearly left an inventory of files with
+citations. The 2026-09-26 entry found the same shape in the same
+header and fixed only the two declarations it was looking at.
+
+**Consequence: `src/unc_util.c` leaves, `src/unc_internal.h` stays**,
+and the table is 11 rows over 17 files.
+
+
+## 2026-09-27 (the inventory that was kept twice) — a gaps file and a licence notice both listed what was borrowed, they disagreed, and the list is now one file and a check
+
+Asked: do the XADMaster rows have to live in OPEN_ITEMS.md forever?
+
+**No, and two of them should never have been there.** OPEN_ITEMS.md's
+own framing says Part 1 is *"decided, or impossible — nothing here is
+closed by finding a file"* and that *"only OPEN items live in part 2,
+each says what would close it."* Five rows had a verdict cell reading
+**"the row cannot close"**, in those words. A row whose answer to
+"what would close it" is "nothing" is not an open item; it is Part 1
+material sitting in the gaps list, which is the failure mode CLAUDE.md
+names by hand — *nineteen such rows once made the file unreadable as a
+list of what is left.*
+
+**And the table was a second copy of NOTICE.** That is the part worth
+transferring. NOTICE exists to state what this project borrowed and
+from whom; the table stated the same thing per file, with more detail.
+CLAUDE.md's *one home per finding* predicts what happens next, and it
+happened: on the morning of the same day, NOTICE, `src/fmt_sit.c`'s
+own header and the table all said the file owed `XADStuffItParser.m`
+nothing, over a live `Source:` line naming it. Three statements of one
+fact, wrong in the same words.
+
+**What replaced both.** NOTICE gains *What is still somebody else's, in
+full* — seventeen files, one line each — and `tools/check_provenance.py`
+checks it on every `ci.sh` run. Every file under `src/` that mentions
+either reference must be classified as CARRYING something or as
+HISTORICAL, and every carrier must be named in NOTICE. **It fails in
+both directions**, which is the point: a file that gains a citation
+fails as unclassified, and a file that sheds its last fails as a row
+that can now leave. Nobody has to notice either by hand — which is the
+actual answer to "forever?".
+
+It earned its keep before it was wired in: it found that NOTICE named
+neither `src/fmt_uu.c` nor `src/unc_lzdyn.c`, two files that carry
+borrowed code, and `unc_lzdyn.c` is the whole of `-lh2-` and `-lh3-`.
+**A licence notice with a hole in it is the one kind of staleness that
+matters**, and the prose had been read many times without anybody
+seeing the absence — absence being what prose is worst at.
+
+**What moved where.** Part 1 gains one section, *The licence cannot
+move*, with the five unclosable items and the evidence for each.
+Part 2 keeps six items and one column: what would move it. The
+per-file detail is gone from both, to NOTICE.
+
+**Consequence: OPEN_ITEMS.md drops from 9k tokens to 6k**, and the
+session-start reading from ~15k to ~12k. The brief is not closed — six
+items still have a route — but the LICENCE question is, and stating
+that once in Part 1 costs a paragraph where tracking it cost a table.
+
+
+## 2026-09-27 (half a citation) — one of the two facts behind DiskDoubler method 8 was measured away and the other turned out to be unfalsifiable on this corpus, which is a better answer than unmeasured
+
+`src/unc_internal.h` carried `Source: XADDiskDoublerParser.m case 8`
+for two facts at once: that DiskDoubler method 8 IS Compact Pro's two
+decode stages, and that its Huffman block is 0xfff0 where Compact
+Pro's own is 0x1fff0. It was filed as **probably the cheapest thing
+in the table**, because Compact Pro's own description is published and
+`tools/derive_cpt.py` already reads it from those pages alone. It paid
+half.
+
+**The first fact is measured.** `tools/derive_dd8.py` decodes every
+method-8 fork in reach with that reader and compares against the
+sha256 an independent oracle recorded: **7 of 7, byte for byte.** It
+is no longer anybody's word that method 8 is Compact Pro inside a
+DiskDoubler container.
+
+**The second cannot be measured here, and the grid is what says so.**
+The block size was swept DOWN as well as up, which is the part worth
+transferring: a size larger than the cost a stream ever reaches never
+flushes, so it decodes identically and pins nothing, while a size
+below that cost makes the decoder look for a tree that is not there
+and fails. **Every size at or above 0x1000 reads all 7 forks; the
+largest that fails anywhere is 0x400.** So these streams never reach
+even 0x400 cost units, 0xfff0 is unfalsifiable on this corpus, and the
+honest entry is not "unmeasured" but "no specimen here can tell" —
+with the specimen named: a method-8 fork whose coder output crosses
+0xfff0 cost units, 2 per literal and 3 per match. The biggest in
+reach is 44,549 B and compresses to 1,230.
+
+**Two harness errors on the way, both worth the note.** The first run
+returned NONE for all seven, and the reflex — that the claim was
+false — was wrong twice over. The stages are FUSED in the published
+reading: `lzh` sinks through an `Rle` object rather than handing back
+an intermediate, so calling both in sequence decodes twice. And a
+method-8 fork opens with **sixteen bytes whose sum selects the path**,
+which are the container's and not the coder's. What established the
+harness rather than the claim was checking the OFFSETS first: four
+stored forks in the same archive hash to their oracle values exactly,
+so the container arithmetic was right and the fault had to be in the
+decode. **Grade the harness on a case whose answer is already known
+before reading anything into a failure** — here that case cost one
+command and was sitting in the same file.
+
+
+## 2026-09-27 (the check that tested the wrong thing) — a provenance check built to catch a shed citation missed one within the hour, because it tested for a mention and shedding leaves a mention behind
+
+`tools/check_provenance.py` was written to end the "recorded as shed
+while still carrying a citation" class of bug, and its second stated
+guarantee was the reverse direction: **a file in CARRIES that sheds its
+last citation fails, so a row cannot quietly stay in the inventory
+after it is empty.**
+
+Within the hour, `src/fmt_mime.c`'s only live citation — the uu
+terminator — moved to mpack, leaving one sentence saying it had been
+macutils' until that day. **The check passed.** It tested whether the
+file MENTIONS either reference, and shedding a citation properly leaves
+a mention behind: the note that says what the file no longer owes. The
+one event the check existed to catch was the one event it could not
+see.
+
+**The fix is the marker, and NOTICE had already named it**: *"Files
+that transcribe XADMaster code carry a `Source: reference/XADMaster/
+<file>` comment."* Liveness is that marker, not the mention. Six
+carriers stated their citations without one — `fmt_packit.c`,
+`unc_lzah.c` and the four tolerance files — so those were normalised,
+which also retires the complaint the inventory carried for a day that
+the `Source:` grep *"finds 11 of 17 files and no more"*: it finds all
+of them now, and the second spelling is gone.
+
+The selftest gained the assertion that makes this stick: **liveness
+must be a strict subset of mention.** If the two sets are ever equal
+the script has collapsed back into the version that passed
+`fmt_mime.c`, and it says so rather than printing ok.
+
+**The transferable part is about building checks, not about licences.**
+Three times this project has recorded a file as shed while it still
+carried a citation, and the check aimed at that class was built around
+the wrong predicate on the first try. *A check's predicate has to be
+the thing that CHANGES at the event*, and "mentions XADMaster" does not
+change when a citation goes — only the marked form does. The general
+question to ask of a new check: **what does the source look like
+immediately before and immediately after the event, and does the
+predicate differ between those two states?** Here it did not, and one
+worked example would have shown it — which is what the selftest now is.
+
+
+## 2026-09-27 (the layout Aladdin's own output settled) — the specimens had been on disk since August, and the measurement was two one-line perturbations
+
+`src/fmt_sit.c` cited `XADStuffItParser.m` for the encrypted fork's
+key layout: sixteen bytes of key material at the fork's END, so the
+compressed length is sixteen more than the ciphertext. It was filed as
+needing **a specimen written to order** — StuffIt Deluxe 3.5.1 runs
+here, so the route was an emulator session.
+
+**No session was needed. The specimens were already on disk**, written
+on 2026-08-23 by `tools/vmac/sitcrypt.py` while settling a different
+question (which fold count the archive key uses at eight characters
+and above), under three passwords of 8, 9 and 17 characters, each with
+the plaintext of both forks recorded in `made.json`. `run_crypt.py`
+has been grading the engine against them ever since. **An item filed
+as "needs a specimen" was sitting on the same disk as the specimen** —
+the *magic in somebody else's index* shape again, one directory away
+rather than one index away.
+
+**The measurement is a perturbation, not a rewrite.** Arithmetic could
+not settle it: the compressed lengths are 72 and 104, and 56 + 16 and
+88 + 16 are both multiples of the block size either way, so "is there
+a 16-byte tail" does not show up in the numbers. What does show up is
+whether the archive decodes. Two one-line edits to `sit_fork_crypt`,
+each rebuilt and run against the three archives:
+
+| where the sixteen bytes are read from | result |
+|---|---|
+| `at + complen - 16` — the fork's end, as shipped | 45 cases, **0 problems** |
+| `at` — the fork's start | 45 cases, **24 problems** |
+| `at + complen - 24` — eight bytes earlier | 45 cases, **24 problems** |
+
+So the key material is at the end and exactly there, on the evidence
+of what Aladdin's own software wrote rather than on XADMaster's word.
+
+**The pad byte beside it was demoted rather than measured**, for the
+reason the PackIt pad byte was earlier the same day: the byte at
+header offset 104/105 states how far the last plaintext block was
+padded, and nothing here reads it, because every method stops at the
+fork's declared length. A fact the code does not act on is an
+observation, not a source.
+
+**What is left in the file cannot close**, and that was checked rather
+than assumed: the three method-8 rules no specimen reaches are
+`XADStuffItOldHandles.m`'s, and deark names method 8 "MW" with a NULL
+decoder — it identifies the method and implements nothing. So
+`fmt_sit.c` leaves Part 2 for Part 1.
+
+
+## 2026-09-27 (the second cache nobody looked in) — a second "no specimen exists" fell to a second set of vendor archives already on disk, and the pattern is now three for three
+
+Immediately after `src/fmt_sit.c`'s encrypted-fork layout turned out
+to be gradeable by specimens that had been in the cache since August,
+`src/fmt_sit5.c` was read with the same question — and said, in its
+own comment: *"It has no specimen either — all 31 corpus archives read
+0x10 here and none is encrypted, so the only archives that exercise it
+are the ones `tools/run_crypt.py` synthesises, which cannot grade
+it."*
+
+**Three encrypted StuffIt 5 archives written by DropStuff 5.0.1 had
+been in `~/.cache/macextract/sit5/specimens/` since 2026-08-26**, and
+FORMATS.md has described them by name the whole time. They exercise
+exactly that byte.
+
+What they settle, with no engine and no reference in the loop —
+`tools/derive_sit5crypt.py` is the bytes Aladdin wrote and `hashlib`:
+
+- **bit 7 means encrypted**: all three read 0x90;
+- **bit 4 shifts the password hash by 14 bytes**, and the shift is
+  load-bearing rather than merely consistent: at the shifted offset
+  the length byte reads 5, the key length the format requires, and at
+  the unshifted offset it reads 13. The tool checks that separately,
+  because *"the shifted reading works"* is not evidence when the
+  unshifted one would work too — the trap DiskDoubler method 8's block
+  size fell into the same afternoon;
+- **the stored five bytes are MD5(MD5(password)[:5])[:5]**, at
+  passwords of 4, 9 and 17 characters.
+
+What is left is **bit 5**, which none of the three sets and which
+shifts the hash four bytes further. That is still
+`XADStuffIt5Parser.m`'s, and the specimen that would grade it is an
+archive carrying a comment — DropStuff can write one, so it is the one
+remaining item that genuinely wants an emulator session.
+
+**Three for three, and the rule is now worth stating plainly.** Today
+*"none of which is on this disk"* was wrong about deark, *"needs a
+specimen written to order"* was wrong about StuffIt Deluxe, and *"has
+no specimen either"* was wrong about DropStuff. In every case the
+evidence had been produced by a PAST question and filed under that
+question's name. **A claim that no specimen exists is a claim about
+the last search, and searches are indexed by the question that
+prompted them.** Before filing one, list what this machine has
+produced for other reasons — the cache directories are that list, and
+there are thirty-two of them.
+
+
+## 2026-09-27 (the fourth one that was really blocked) — three "no specimen" claims fell the same day and the fourth did not, and the difference is what makes the first three worth trusting
+
+`src/fmt_sit5.c`'s bit 5 was the item left after the other three fell,
+and it was worth attempting precisely because the day's pattern
+predicted it would fall too. It did not, and the session is written up
+because **a limit that has been tested is worth more than one that has
+been assumed** — and because three cheap wins in a row are exactly the
+conditions under which the fourth gets filed as blocked without being
+tried.
+
+**What was checked before booting anything**, which is the part that
+generalises: every StuffIt 5 archive on the machine — 47 of them —
+reads 0x10 or 0x90 at the flag byte, so none sets bit 5; and the
+StuffIt Deluxe 5.0.1 CD holds no StuffIt 5 archive at all, scanned as
+raw bytes on the host with no emulator involved. The cheap search came
+first this time.
+
+**What the session established**, in four steps and about half an hour:
+
+- **StuffIt Deluxe 5.0.1 quits at launch on this guest**, reproduced
+  independently — *"an update to this software is required for
+  compatibility with the improved Mac OS file system"*. The existing
+  claim holds, and the archive-comment UI is that application's.
+- **DropStuff runs and cannot write a comment**: its Stuff dialog
+  offers *Delete item when finished* and *Encrypt with password*, and
+  its whole File menu is `Stuff…` / `Preferences…` / `Deluxe Info…` /
+  `Quit`.
+- **`Preferences…` could not be opened**, and the two failures are
+  different. Clicking the title then the item loses to the sticky-menu
+  timeout, because `goto()` costs ~40 s. Holding the button down and
+  stepping in defeats the timeout — the menu is still open in the
+  screenshot — but **no item highlights** and the release selects
+  nothing. That is the same signature as Mini vMac's submenus, now on
+  a second emulator and on a TOP-LEVEL menu, which promotes it from a
+  hierarchical-tracking quirk to a harness limit
+  (`tools/vmac/README.md`, *what the pointer cannot select*).
+
+**So the route is not a search, it is a system image**: a guest whose
+boot volume is HFS, where Deluxe 5.0.1 will run. Filed that way.
+
+**And one claim was NOT promoted.** That bit 5 marks a comment is
+XADMaster's naming of the two fields it reads and discards — a
+*hypothesis*, and it stays labelled as one, because nothing here has
+ever seen the bit set. The temptation after a day of wins is to write
+"an archive with a comment would grade it" as though the comment part
+were established. It is not.
+
+
+## 2026-09-27 (the volume that was not the problem) — the cheap version of a filed route was tried and failed, which narrowed the route and gained the harness a capability
+
+The route filed for `fmt_sit5.c`'s bit 5 was *"a guest whose boot
+volume is HFS, where StuffIt Deluxe 5.0.1 will run"*. Before building
+one, the cheap version was worth trying: the alert is what Mac OS
+raises when an application makes a File Manager call that HFS+ does
+not support, so if the trigger were the volume the APPLICATION sits
+on, copying it to the plain-HFS `sitwork` volume would be enough.
+
+**It is not.** Copied to `sitwork` and launched from there, StuffIt
+Deluxe 5.0.1 gives the identical alert. The trigger is the SYSTEM's
+volume, not the application's — so the route needs an OS installed
+onto an HFS volume, and this machine has no Mac OS install media at
+all. A route that read as "a system image" is really "an OS install",
+which is a different size of job, and the entry says so now.
+
+**The experiment paid for itself anyway, in the harness.** Getting the
+application onto `sitwork` meant a Finder drag, and holding the button
+down across relative `mouse_move` packets is precisely what a drag
+needs. It tracks: press on the icon, step 882 px, release over the
+volume, and the copy happens, ghost icon and all. **So the menu limit
+found an hour earlier is the Menu Manager specifically, not
+held-button interaction in general** — which is a much better-bounded
+statement than "the pointer cannot select things", and it makes file
+copies, window drags and anything else press-move-release available to
+future sessions (`tools/vmac/README.md`, *what the pointer cannot
+select*).
+
+Worth keeping as a pattern: **the cheap version of a route is worth
+running even when you expect it to fail, because the failure is what
+distinguishes two hypotheses that the filed wording had merged.** Here
+"HFS+ is the problem" and "the application's own volume is the
+problem" were the same sentence until one of them was tested.
+
+
+## 2026-09-27 (the file system was never the problem) — an HFS boot volume was built and the alert did not care, so a route filed twice in one day is withdrawn
+
+The route for `fmt_sit5.c`'s bit 5 was filed as *"a guest whose boot
+volume is HFS, where StuffIt Deluxe 5.0.1 will run"*, then refined the
+same day to *"an OS installed onto an HFS volume, not a copy"* when
+running the application from the plain-HFS `sitwork` volume changed
+nothing. Both readings are now withdrawn: **an HFS boot volume was
+built and the application behaves identically on it.**
+
+**How the volume was built**, which is reusable and took no install
+media: `tools/vmac/mkapmdisk.py` clones a working Apple Partition Map
+from the Mac OS 9 master and drops a freshly `hformat`-ed **HFS**
+volume into it, so a 1 GB `hfsboot.img` mounts as Mac OS Standard.
+The System Folder was then copied across inside the guest — 1,751
+items, about 215 MB, roughly five minutes — the volume was flushed by
+unmounting it (Cmd-Y), and QEMU was relaunched with that disk as
+index 0. It became the startup disk: it sits at the top of the desktop
+volume icons, the *"did not shut down properly"* alert stops
+appearing, and the HFS+ volume gains about 500 MB of free space, which
+is its virtual-memory swapfile no longer being in use.
+
+**The 2×2, all four failing:**
+
+| booted from | application run from | result |
+|---|---|---|
+| HFS+ | HFS+ | the alert |
+| HFS+ | HFS | the alert |
+| **HFS** | HFS+ | the alert |
+| **HFS** | HFS | the alert |
+
+**So the alert names the file system and is not about it.** StuffIt
+Deluxe 5.0.1 will not run under Mac OS 9.2 whatever the volumes are;
+the remaining route is an older system — 8.x — and this machine has no
+Mac OS install media of any kind. That is a fetch or a person, not a
+search, and OPEN_ITEMS says so.
+
+**Two things worth keeping.** `hfsboot.img` is a working plain-HFS
+Mac OS 9 boot volume and is kept, because the next question about HFS
+versus HFS+ behaviour now costs one relaunch instead of an afternoon.
+And the drag work of the last two hours generalises: the System Folder
+copy, the window move that made room for it, and the `Put Away` that
+undid a misdrop are all press-move-release, all reliable, and all
+recorded in `tools/vmac/README.md`.
+
+**The lesson is about how the route was worded.** *"A guest whose boot
+volume is HFS"* was written from the alert's own text, which says
+"file system" — and was believed twice, once when filed and once when
+refined, before anything tested it. **An error message's noun is a
+hypothesis about the cause, not a statement of it**; this one named
+the file system while being a property of the OS release. The cheapest
+disproof was available both times and cost about ninety minutes when
+it was finally run.
+
+
+## 2026-09-27 (the fuzzer that could only reach what the corpus had) — the ciphers' reach question asked of the decoders, and one whole file had never been fuzzed
+
+`tools/fuzz_reach.py` exists because in 2026-09-23 four ciphers turned
+out never to have been fuzzed at all while the suite reported clean.
+**The same question had never been asked of the decoders**, and the
+evidence that it mattered was already written down: the one heap
+overflow this project has found in a decoder — `now_next_block`
+checking a length against `incap` where the buffer is `blkcap` — came
+from a hand-crafted archive under ASan, not from a mutant.
+
+**The instrument is coverage, not planted faults**, because for a
+decoder "was this entered" is exactly what gcov reports, and one build
+answers it for every decoder at once rather than one rebuild per site.
+`tools/fuzz_cover.py`: build `--coverage`, run `fuzz.py`, report per
+family.
+
+**The result, 3,000 cases, seed 11**: `src/unc_lzdyn.c` is 16 of 16
+functions never entered — the whole `-lh2-`/`-lh3-` decoder. Also
+never entered: DiskDoubler's methods 3, 4 and 7, ARC's Crush, three of
+Arsenic's index helpers, and six of Now Compress's thirteen.
+
+**One cause covers almost all of it.** Three of the four generators
+mutate a corpus fixture, so **the fuzzer's reach is the corpus's
+coverage.** Every method this project grades by GENERATING a file —
+`-lh2-`/`-lh3-` from `run_lzh.py`, DiskDoubler 3/4/5 from
+`ddencode.py`, ARC's methods from an encoder — is graded for
+correctness and fuzzed not at all. The remedy is the one the ciphers
+got: a seed per method, deterministic and in-repo, the way
+`synth_crypt.py` writes nine shapes in pure Python.
+
+**Now Compress is the interesting exception**, because its archives ARE
+in the corpus. Its coders are unreached anyway: a 32-bit sum gates the
+block table and a random mutation destroys it, so the mutant is
+refused before any coder runs. That is the gate the overflow sat
+behind — which is why it took a crafted archive to find and why a
+checksum-repairing generator, not more cases, is what would have found
+it.
+
+**Two process notes worth keeping.** A 400-case run showed far more at
+zero and most of that was sampling; only the 3,000-case run separates
+structure from luck, and the tool says so rather than presenting one
+run as fact. And the first version of the analysis counted
+`pit_synth`, `cpt_synth` and `sit_synth` as unreached decoders — they
+are helpers in `tests/`, and in `gcov -f` output the functions are
+printed BEFORE the `File` line they belong to, so splitting the text
+on `File '` assigns every function to the wrong file. Filtering per
+gcov invocation fixes it. **An instrument's first output is a draft**,
+and the check that caught this was reading the names rather than the
+totals.
+
+
+## 2026-09-27 (the rule both references already followed) — a decision put to the maintainer dissolved on reading what lhasa yields rather than what it stores
+
+`src/fmt_lzh.c` truncates a level 0/1 name at an embedded NUL. That was
+filed as the file's last XADMaster-only rule and put to the maintainer
+as a DECISION, because *"the document does not mention it and lhasa
+takes the whole field"* — so adopting lhasa's reading would change
+behaviour with no specimen able to say which is right.
+
+**There was no decision.** Asked why the two differ, the answer is that
+they do not:
+
+- **XADMaster** stops at the NUL explicitly and keeps the remainder as
+  `XADCommentKey` (`XADLZHParser.m`).
+- **lhasa** reaches the same filename implicitly. `process_level0_path()`
+  copies the whole field and NUL-terminates it — which is what "takes
+  the whole field" was read off — but every consumer then handles it as
+  a C string: `strrchr` in `split_header_filename`, `strdup`, and
+  `strlen`/`sprintf` in `lha_file_header_full_path`. Anything after an
+  embedded NUL is unreachable.
+
+So both yield the same name, and they differ only in whether the
+trailing bytes surface as a comment. This engine has nowhere to put a
+comment and drops them, which agrees with both. The published document
+states no comment in that field at all, and lhasa's level-0 comment
+support is in the extended AREA (`process_level0_extended_area`, for
+PMarc) — a different place entirely.
+
+**Consequence: `fmt_lzh.c` leaves the provenance inventory**, cited to
+lhasa (ISC) for the behaviour. Its other citation went the same day and
+for a duller reason: the base-header table was cited to
+`XADLZHParser.m` AND the document, and section A of the document states
+every field of it, so the parser was never needed there.
+
+**The lesson is about how implementations get compared.** *"lhasa takes
+the whole field"* was read off the `memcpy`, which is what lhasa
+STORES. What an implementation yields is a different question, and for
+a C string the difference is exactly an embedded NUL. **A claim that
+two implementations disagree is a claim about their output**, and this
+one was never tested against output — no specimen has a NUL, so nothing
+forced the question until somebody asked why they differed.
+
+Worth noting what asking cost: five days of a file in the inventory
+with nothing uniquely XADMaster's in it, and a decision offered to the
+maintainer three times that was not a decision.
+
+
+## 2026-09-27 (the delta that was a draw) — a repair generator reached the Now Compress coders, and the other half of what it seemed to do was sampling
+
+Now Compress's coders were the one measured gap with a remedy this
+repository already owned. `tools/mutate_now.py` exists to change a
+field and fix every checksum that field sits under, so that the
+program which wrote the file cannot notice; a fuzz generator wants the
+opposite half of the same trick — corrupt what the CODER reads and fix
+what the WALK checks. `fuzz.py`'s fifth generator flips bits inside a
+block's payload and calls `mutate_now.fix_trailer`.
+
+**It works: Now Compress goes from 6 functions never entered to 1**,
+`now_find_delta`, and that reproduces at seeds 11 and 12. It is the
+only route past that gate — the gate the one decoder heap overflow
+this project has found sat behind.
+
+**The rest of what the first run appeared to show was a draw.** At a
+sixth of the cases the total never-entered count rose from 132 to 149
+and StuffIt classic went from 0 to 7, which was written up as the
+repair generator starving the other generators. Two things disproved
+it. Lowering the share to a twentieth took the total to **163** —
+higher, not lower, so not monotonic in the weight. And an identical
+build at seed 12 gives StuffIt classic 1 where seed 11 gives 6, ARC 10
+where it gives 6, Compact Pro 1 where it gives 4.
+
+**The cause is obvious once stated**: changing a generator changes the
+whole RNG consumption sequence, so every run draws a different sample
+of ~950 fixtures, and the rare formats — StuffIt method 6, ARC's
+squeeze and crunch, Compact Pro's RLE — are hit or missed by luck.
+
+**The lesson is about the instrument, not the fuzzer. A measurement
+with no noise floor cannot support a delta.** `fuzz_cover.py` was
+built, used, and written up across three runs before anyone ran it
+twice with the same code and different seeds; one extra run — about
+six minutes — established that the floor is ±5 functions per family
+and retired a causal sentence that had already been committed to
+`fuzz.py`'s comments. The figures the instrument CAN support are
+whole-family ones: `-lh2-`'s `lzd_*` set is at zero at every seed, and
+6 → 1 holds at both. Those are the two it now reports as findings; the
+rest of the table is labelled as noisy in place.
+
+
+## 2026-09-27 (the encoder that only wrote literals) — chasing a coverage number found that a decoder's whole LZSS half had never been graded by anything
+
+The `-lh3-` position tree was the cheap item left on the fuzz-coverage
+list: `lzs_read_tree_p` and `lzs_decode_p` at zero, wanting a seed
+shaped for them. Before writing one, the seed was run UNMUTATED through
+the coverage build to see which of the two the mutants were losing.
+
+**`lzs_decode_p` was at zero there too**, and that is a different kind
+of fact. It means no `-lh3-` stream this project has ever written
+contains a match: `lh3_stream()` builds a Huffman code over the 256
+byte values and emits nothing above 255. The corpus has no `-lh3-`
+archive, so those streams are the only ones in reach. **The decoder's
+whole LZSS half — `lzs_decode_p` and the copy loop — was graded by
+nothing**, while `run_lzh.py` reported six cases agreeing with LHa.
+Agreement on literals says nothing about matches.
+
+**Writing the encoder was the fix, and LHa was the adjudicator**: the
+suite already extracts the generated archive with LHa before asking
+this engine, so a stream LHa reads back wrong is the encoder's fault
+and says so immediately. It said so twice.
+
+- **The block size is a count of SYMBOLS, not bytes.** Both decoders
+  decrement it once per code read. A literals-only stream cannot tell
+  the two apart, which is why the field had been wrong-by-construction
+  and invisible since the encoder was written.
+- **The longest match is 31, not 32.** The alphabet is 286 symbols and
+  both decoders read a length as `c - (256 - 3)`, which makes symbol
+  285 a match of 32 — and both refuse it, LHa with a CRC error and this
+  engine with a truncated file, on the same stream, while 3..31
+  round-trip through both at every distance tried. **Why 285 is not a
+  length-32 code is not established**; the ceiling is measured and
+  labelled as such rather than explained.
+
+**And the seeds had to be split.** With the match cases added to the
+existing ten-entry archive, `lzs_decode_p` stayed at zero under
+fuzzing: a mutant of a ten-entry archive almost always breaks an
+earlier entry and the walk stops before reaching the interesting one.
+One archive per case, and every `-lh3-` function is reached —
+`unc_lzst0_decode` 100 %, `lzs_decode_p` 88.9 %, `lzs_read_tree_p`
+64.3 %.
+
+**What this says about coverage instruments.** `fuzz_cover.py` was
+built to ask whether the FUZZER reaches the decoders. The most valuable
+thing it found was not about the fuzzer at all: running the seed
+unmutated turned a coverage question into a grading one. **A function
+at zero is a question about every suite, not just the one you were
+measuring** — and the cheapest way to tell them apart is to run the
+instrument on input that is supposed to work.
+
+
+## 2026-09-27 (the tree that never had to be rebuilt) — the same question put to -lh2-, and the subject that answers it had to satisfy two conditions at once
+
+`-lh3-`'s match path turned out to be graded by nothing, so `-lh2-`
+was asked the same question the same way: run the GRADED suite under
+the coverage build and read which functions never execute.
+
+**`-lh2-` came out much better, and for a reason worth stating.** Its
+archives are written by a real encoder — the patched LHa this repo
+builds — so `unc_lzdyn_decode` and `lzd_decode_p` are at 100 %. The
+`-lh3-` hole existed because this project writes its own `-lh3-`
+streams and the encoder only emitted literals; where somebody else's
+encoder makes the input, that class of hole does not arise.
+
+**One path was still at zero: `lzd_reconst`.** The adaptive tree
+halves every frequency and rebuilds when the root's count reaches
+0x8000 — 32,768 codes — and every subject in the set was far short of
+that. It is the `-lh1-` decoder's own shape too, and there
+`lzah_reconst` is at 100 %, because real corpus archives are long
+enough. `-lh2-` has no corpus archives at all; its subjects are the
+ones this file chooses, and none was big enough.
+
+**Choosing one took three attempts, and the two failures are the
+instructive part**:
+
+- **48 KB of incompressible bytes** added no `-lh2-` entry at all. LHa
+  stores what it cannot shrink as `-lh0-`, so the subject was there
+  and the method was not — visible only because the entry COUNT did
+  not move, which is why that count is printed.
+- **80 KB of digits** compressed and stayed `-lh2-`, and still missed.
+  Ten symbols make a three-byte match available almost everywhere, so
+  the codes ran at roughly a quarter of the bytes.
+- **50 KB over a 64-symbol alphabet** does both at once: six bits of
+  entropy a byte, so Huffman alone shrinks it and the method survives,
+  while a three-byte repeat is rare enough that the code count tracks
+  the length.
+
+`lzd_reconst` and `lzd_update_c` are now at 100 %, and this is
+GRADING rather than coverage: `run_lzh.py` has LHa's own decoder read
+each archive before this engine is handed one.
+
+**The general shape, now seen twice in one day.** A decoder path
+guarded by a threshold — a frequency ceiling, a table restart, a code
+width — is reached by the size of the input rather than by its shape,
+and a suite assembled from small subjects will never reach any of
+them. `lzd_update_p` is the one left here, wanting 32,768 MATCHES
+rather than codes, and it is recorded rather than chased.
+
+
+## 2026-09-28 (a seed is ours, a fixture is theirs) — the last unfuzzed method was somebody else's file, and the mechanism for that already existed
+
+`-lh2-` and DiskDoubler 3/4/5 became committed seeds under
+`tools/seeds/` because this project WRITES those files: an encoder here
+makes them, so the bytes are ours to commit. DiskDoubler method 7 was
+filed as the one that could not follow, since nothing here writes Stac
+LZS and the only specimens are Salient's.
+
+**The conclusion drawn from that was wrong**, and it was wrong by
+importing the seed pattern into a case it does not fit. A vendor's file
+is not a seed, it is a FIXTURE, and fixtures have had a mechanism since
+the corpus existed: nothing is committed, `fixtures/SOURCES.md` carries
+a name, a hash, a size and a recipe, and `tools/harvest.py --restore`
+rebuilds them. Three `derived:` schemes were already there —
+`unar-nr`, `member`, `arcplus` — each carving a fixture out of a
+fetched parent and checking the hash.
+
+So method 7 wanted a fourth: `derived:hfsvol:<image>:<mode>:<HFS path>`,
+which lifts one file out of an emulator disk image with hfsutils. The
+parent is the DiskDoubler 3.7 disk, which is emulator material under
+the same rule as the ROM and the System images — fetched by setup,
+never committed. On a machine without it the fixture cannot be
+restored, which is the position every fixture is in on a fresh clone.
+
+**Two details cost a run each, and both are recorded where they bite.**
+The mode letter is load-bearing: a DiskDoubler file has to come off as
+the DATA fork alone, because MacBinary-wrapping it makes `unar` stop at
+the wrapper and report a 1,356-byte `DD01` file — the manifest then
+describes the container and never the contents, and the suite would
+compare our expansion against the unexpanded thing. And splitting the
+recipe's fields eats the HFS path's leading separator, which is what
+makes it absolute.
+
+**Result: DiskDoubler is at 0 functions never entered**, and the
+fixture is graded like any other — `unar` names the method `Stac LZS`
+and agrees with this engine on the 2,226-byte resource fork.
+
+**The lesson is about which pattern to reach for.** Two mechanisms
+looked interchangeable because both end in "a file the suite can use",
+and they are not: a seed is something this project made and may
+therefore commit; a fixture is somebody else's and may only be
+described. Asking who WROTE the bytes decides it, and that question was
+not asked until the maintainer asked where the copyrighted code was
+supposed to go.
+
+
+## 2026-09-28 (the preload nothing reaches) — asked whether a published pattern was enough, and the corpus turned out unable to tell it from the alternative
+
+Asked why `unc_lzah.c`'s window preload is still XADMaster's when the
+five steps are published. The premise is right and the file already
+acts on it: `larc.c`'s `decode_start_lz5` and `lzah_preload` are the
+same five steps byte for byte. What is XADMaster's is narrower — the
+claim that `-lh1-` and StuffIt method 5 use that pattern, where LHa
+applies it to LArc's `-lz5-` and lhasa fills `-lh1-` with spaces.
+
+That is a claim about behaviour, so it looked measurable. **It is not,
+on this corpus**, and five builds say so — each the whole differential
+suite with a different window fill:
+
+| fill | result |
+|---|---|
+| the pattern | **933/933** |
+| all spaces, lhasa's `-lh1-` | **933/933** |
+| all zeros | 932/933 |
+| all `0xAA` | 932/933 |
+| the pattern with only its TAIL bent | 932/933 |
+
+**One fixture of 933 touches the preload at all** —
+`derived-BitMap11.sit`, 29 method-5 entries — and it touches only the
+last of the five steps, the trailing spaces. That is why all-spaces
+passes: it differs from the pattern everywhere except the one place
+anything reads.
+
+So the corpus proves the window is not zero-filled, and proves nothing
+about which non-zero reading is right. The ramps and the 13-byte runs
+are never read here.
+
+**Three routes, and none of them is progress:**
+
+- rewrite from `larc.c` — already done, that IS the code, and LHa for
+  UNIX is under its own licence, so the citation moves and the licence
+  does not (the `unc_lzdyn.c` row's position exactly);
+- adopt lhasa's all-spaces fill — permissive, and passes every test
+  here identically. But that swaps one unverified reading for another
+  and calls the swap evidence;
+- find a stream whose first match reaches back more than ~110 bytes
+  from the window end, into the ramps. Nothing in reach has one.
+
+**The transferable part is the shape of the question.** "The pattern is
+published" and "our use of the pattern is verified" are different
+claims, and the row said the first while being read as the second.
+
+**Asked for other rows of that shape, the answer was structural**:
+OPEN_ITEMS' provenance table answers only the first question, so every
+row was being read as an answer to the second. They diverge both ways.
+`fmt_packit.c`'s ciphers, `unc_crypt.c`'s StuffItDES and the
+mailed-text rules are all GRADED — by `unar -p`, by three archives
+StuffIt Deluxe wrote, and by `run_uu.py`'s gapped sets — so those rows
+implied a doubt that the evidence does not support; the table says so
+per row now, and its preamble names the two axes. The one that
+genuinely coincides with `unc_lzah.c` is the **MacBinary CRC-16/0xA001
+fallback**, and bending it settled that the same day: it fires **zero
+times** across 933 fixtures and 9,330 robustness variants, and removing
+either it or the nonzero-date test beside it changes nothing any suite
+grades. The counter's control is a header built with the 0xA001 CRC —
+accepted by the fallback and by nothing else — so the zero is a
+measurement rather than a dead instrument.
+
+**Pinned rather than removed.** A case in `tests/unit_formats.c` now
+holds the fallback to that header, and it was shown to FAIL with the
+fallback taken out before it was kept. Removing the tolerance was the
+other option and is the wrong one: XADMaster did not invent it for
+nothing, and this corpus having no such file is a fact about the corpus.
+What the pin buys is that the two axes stop coinciding — the citation is
+still XADMaster's word, but a change to the behaviour is now noticed.
+
+**And the compression that prompted this cost the distinction once
+already.** Pruning the mailed-text row on 2026-09-27 deleted the
+sentence naming `run_uu.py` as its grader — the one clause that
+separated "the citation is stuck" from "the behaviour is unchecked".
+**Shortening a row is not free when the removed words were the
+evidence**, which is the counterweight to the rule that rows should
+state the claim and not the reasoning. A
+constant that no input reads is not load-bearing however important it
+looks — and the way to find that out is to bend it and see whether
+anything notices. Bending the tail broke one fixture; bending the rest
+broke nothing.
+
+## 2026-09-28 (the six bytes Aladdin's own Get Info pane reads) — a field filed as needing an emulator session was in a program already on this disk, and the answer turned a message into a correctness fix
+
+**Claim.** Where a StuffIt 2.x archive records which add-on module a fork
+needs was filed as *"not known here"*, closed only by a specimen from an
+emulator session. It is six bytes of the entry header, and the program that
+writes them had been extracted onto this disk an hour earlier.
+
+**Evidence.** StuffIt Deluxe 2.0.1's Get Info pane calls its module manager
+once per fork with the fork's method byte and three id bytes; the module
+manager matches an installed module whose `COMP`/`DCMP` resource ID is
+`class << 8 | id`. The offsets are in FORMATS.md, *Where an archive names the
+module*.
+
+**Consequence.** `src/fmt_sit.c` refuses an optimized or externally
+compressed fork per entry (`UNC_ERR_MODULE`) and names the module. Four
+lessons, and the first is the one worth carrying.
+
+**A missing specimen and a missing implementation are different gaps, and
+this project keeps conflating them.** The item said "what such an entry does
+here has never been observed" — true — and concluded that the route was an
+archive. But the question it actually blocked was *where is the field*, and
+for that the WRITER is as good as its output and usually easier to get: it is
+one file, it is on archive.org, and `macextract` lists it. This is the same
+shape as the two claims BLOCKERS.md already keeps — "no oracle for this
+method" with the second oracle in `reference/`, "no second implementation
+exists" with one in a fixture's resource fork. **Before filing "we need a
+file this format wrote", ask whether the program that writes it is reachable,
+because a format's own application is a reference implementation under
+rule #1.**
+
+**A disassembly is a reading only if something in the same access pins the
+base.** The module manager is called with a pointer into a 112-byte buffer at
+`A5-2844`, and nothing in it says that `A5-2844` is header byte 0. What says
+so is that the SAME call passes two longs from `A5-2760` and `A5-2752`, uses
+them for the pane's compression percentage, and 84 and 92 are exactly where
+the header keeps a fork's decompressed and compressed length. Three of the
+four fields per fork then land on bytes XADMaster had already labelled
+"unknown", and the second per-fork call lands on the data-fork twin of each.
+Without that anchor the six offsets would have been a guess with a story
+attached.
+
+**A byte that means nothing unless a flag says otherwise cannot be checked
+against its distribution.** The corpus — 2,512 forks of 1,256 file entries in
+227 StuffIt archives — has bytes 46/47 nonzero in **91** of them, which reads
+as a refutation of "46 is the compressor module id" until you notice that no
+entry anywhere has method nibble 7. StuffIt 1.x wrote whatever was in the
+buffer. **Anchor a field's meaning to the flag that switches it on, not to
+the field being zero when it is off** — the earlier note that 104..109 were
+"zero in 1,251 of 1,256 entries" was measuring the absence of the feature and
+reading it as evidence about the bytes.
+
+**And the flag made this a correctness bug rather than a message.** An
+Optimizer is a preprocessor: it runs before the compressor, so a fork with
+bit `0x40` set decodes perfectly under its stated method and yields the
+optimized bytes — a text file with its resources deleted and its leading
+spaces turned into tabs — under the original's name, with the header's CRC
+agreeing, exit 0. The unit test shows it: take the refusal out and the same
+archive extracts, which is how it was established that the test can fail.
+**An unread header field is not inert when what it says is that the bytes
+mean something else.**
+
+And the oracle does exactly that. `unar` 1.10.8, handed the same synthetic
+archive, writes all three optimized entries' preprocessed bytes and reports
+success — which is worth more than the argument: the mistake this engine
+would have made is one a mature implementation makes today, and the excuse
+mechanism in `run_diff.py` would have pressed a future session into
+reproducing it, because that mechanism takes the oracle's word. TESTING.md
+records why this one decline is not eligible. **The first thing to do with a
+field nobody had read is to ask what the tool you grade yourself by does with
+it** — here, the answer settled whether refusing was pedantry or the point.
+
+## 2026-09-28 (the two walls between here and one archive) — went after the specimen and met a licence and a submenu, and the run disproved what the harness beside it was thought to be driving
+
+**Claim.** The optimized specimen this project has never had was filed as one
+emulator session away. It is not reachable from this machine at all, and
+finding that out cost six boots and disproved something else on the way.
+
+**Evidence.** `tools/vmac/sitopt.py`. StuffIt Deluxe 2.0.1 installs by
+copying the installer's payload — no installer, no guessed dialogs — and
+launches on System 6. It then wants a name, a **signature drawn in a box**,
+and a **serial number it checks**: with the box empty it says *"You must type
+in and sign your name"*, and with it marked, *"The serial number you have
+entered is invalid"*, for every code published on the page the software comes
+from. Magic Menu runs without one and stuffs, and its `StuffIt Options ▸`
+submenu holds compression method and Leave/Delete Originals. Nothing else
+reaches an Optimizer.
+
+**Consequence.** MANUAL_TESTS.md §8 — two minutes of somebody with a licensed
+copy. Four things worth keeping.
+
+**The wall was not the one that was filed, and "installs" is not "runs".**
+The item said *"Deluxe 2.0.1 installs on a 68000 under System 6"*, which is
+true, and concluded that stuffing a file was therefore a boot away. This is
+1990 commercial software and its first dialog is a licence. **When the plan
+is to drive somebody's application, the first question is whether it will
+start** — cheaper to ask than anything downstream of it, and this project had
+already recorded the same wall for 3.5.1 and for 4.0 in the file next door.
+
+**Going after one thing disproved another, and that is the usual way.**
+`sitcrypt.py` says it drives StuffIt Deluxe 3.5.1. It does not: every dialog
+in its successful runs is **Magic Menu's**, over a Finder menu bar, and the
+3.5.1 application does not launch here either. Nothing in this project has
+ever launched a StuffIt Deluxe application (WITHDRAWN 2026-10-10: those
+attempts were ⌘O, and a double-click launched it that same day —
+BLOCKERS.md). That cost the encryption work
+nothing — it only ever needed the archives — and it costs three runs to
+anyone who arrives wanting a dialog the application alone has, which is
+exactly what happened here. **A description of how a WORKING harness works is
+the least-read sentence in any file**, and the giveaway had been photographed
+twenty times: the menu bar above the dialog.
+
+**Run the control before believing the interesting explanation.** When the
+3.5.1 application first failed to come up, the image had 2.0's modules newly
+dropped into it, and "3.5.1 will not launch with a 2.0 Optimizer installed"
+was sitting there ready to be written down. The same image without them did
+not launch either. One run, and a false root cause that would have been
+quoted for months.
+
+**And a documented trap turned out to be narrower than its wording.**
+tools/vmac/README.md says a hierarchical submenu's items *"never highlight
+and cannot be selected however the pointer is moved"*. Under System 6, with
+Magic Menu 2.0, the parent item highlights and the submenu draws. The
+measured failure is real and is System 7's Translate menu; the sentence had
+generalised it to the Menu Manager. **A trap written from one measurement
+should name the thing it was measured on**, or the next session skips a route
+that works.
+
+## 2026-09-28 (the page the codes were not on) — one question from the maintainer turned a registration wall back into a boot, and the archive that came out corrected the reading it was meant to confirm
+
+**Claim.** StuffIt Deluxe 2.0.1 does not check a serial number this project
+cannot supply, and the optimized specimen was never out of reach. Six codes
+were tried from the wrong version's page; the right one is printed on the
+page the file itself comes from.
+
+**Evidence.** `macintoshgarden.org/apps/stuffit-deluxe-2` — not
+`/apps/stuffit-deluxe`, which is where `spacesaver.py` gets 3.0.7's and
+5.x's codes and where these two downloads are not — says of this installer
+set: *"Requires a name and serial activation: A nnnnn (where 'n' = any
+number, for example: A 12345)"*, and offers a second build that is *"already
+pre-registered"*. `A 12345` was accepted first try.
+
+**Consequence.** Three archives written by 2.0.1 with `Text 1` enabled,
+graded by `tools/run_sitopt.py` against 2.0.1's own unstuffer, and an engine
+rule that is now measured rather than reasoned. Three lessons, and the first
+is not about StuffIt.
+
+**A provenance line is a claim about a URL, and the only test is to open
+it.** The codes were already in this repository with a citation attached, so
+reusing them read as reuse rather than as an assertion — and the citation
+was to a page that does not host the file I was using it for. Between
+noticing the refusal and being asked the question, that mistake had been
+written into five files and a commit message as *"every code published on
+the page the software comes from"*, a sentence that is precise, confident
+and false in both halves. **The cheapest disproof of a citation is
+`curl`**; what stopped it being run is that the claim did not feel like
+mine. This file already names the mechanism — *a limitation you inherited
+from the reference rather than measured* — and the new part is that an
+inherited PROVENANCE is the same shape.
+
+**"It refused six codes" is a measurement of the codes, not of the
+software.** The run that produced the wall was correct and its conclusion
+was not: nothing in it tested whether 2.0.1 accepts a valid serial, only
+whether it accepts three versions' worth of other ones. **A negative result
+is about the inputs that were tried**, and the inputs were chosen by a list
+I had not checked was for this version.
+
+**And the archive corrected the reading it was meant to confirm.** The
+reading said byte 106 holds the Optimizer module's id; `Text 1` is module
+5 and the byte reads **255**. 255 is the value for an Optimizer that cannot
+be undone — `Text 1` has no `DCMP`, the application's Get Info pane
+special-cases 255 before it looks anything up, and 2.0.1's own unstuffer
+hands back the optimized bytes — so the engine now DECODES those entries
+and refuses only the ids a module could restore. **This is the whole reason
+a specimen was worth six hours**: the flag, the two offsets and the class
+rule were all right, and the one part that a disassembly could not settle
+was what the writer actually puts there. A reading tells you where to look;
+only the writer tells you what it wrote.
+
+## 2026-09-28 (nothing here is one, and nothing here can make one are different sentences) — a manual test was filed for a file the emulator could draw, and drawing it confirmed the half of the reading that was still open
+
+**Claim.** The reversible half of the Optimizer reading — that byte 106
+holds the module's id when the module has a `DCMP` — did not need anybody
+outside this machine. It needed a MacPaint document, and MacPaint is here.
+
+**Evidence.** `MacPaint 1` keys on type `PNTG`; the 933-fixture corpus has
+six `sfil` sounds and no paint document, which is what the manifests say and
+what made this look closed. MacPaint 2.0 is on this machine in a `.sea.hqx`
+that `macextract` unwraps, runs on the same System 6 image, and drew one in
+a single boot. Stuffed with the Optimizer on, the entry records **4** in
+bytes 106 and 108 — `MacPaint 1`'s resource id.
+
+**Consequence.** MANUAL_TESTS.md §8 is deleted four minutes after it was
+written, and `tools/run_sitopt.py` grades both branches of the rule. Two
+things worth keeping.
+
+**A negative search feels like a finished question, and it is half of
+one.** The search was real: every manifest, every entry, by type code, and
+the answer *"there is no PNTG here"* was correct. What it licensed was
+*"therefore somebody must send one"*, and that step is where the mistake
+lives. **"Nothing here IS one" and "nothing here can MAKE one" are different
+sentences**, and this repository has a whole directory of programs that make
+things — its SpaceSaver, DiskDoubler, Now Compress and ARC specimens are all
+output, not finds. The question to ask before filing anything as manual is
+not *do we have the artefact* but *do we have something that emits it*.
+
+**And the thing that emitted it was the format's own application.** That is
+the same shape as the morning's finding, one layer up: the reading came out
+of StuffIt Deluxe's code, the irreversible case came out of StuffIt Deluxe's
+output, and the reversible case came out of MacPaint's. **Where a format's
+own software is reachable, it answers questions about that format better
+than any reasoning about it** — including questions about a second format it
+happens to write.
+
+## 2026-09-28 (the module said what it wanted, twice, and the second time it was right about our own resource forks) — three Optimizers declined every subject until their acceptance tests were read, and one of the refusals was a bug in this harness
+
+**Claim.** All five 2.0 Optimizers write their own module id into byte 106,
+except the one that cannot be undone. Getting the last three to say so took
+three runs, and two of those runs failed for reasons that had nothing to do
+with StuffIt.
+
+**Evidence.** `Sound 1` → 1, `Photoshop 1` → 2, `Photoshop/JPEG Lossy` → 3,
+`MacPaint 1` → 4, `Text 1` → 255 (FORMATS.md, *What Aladdin's own output
+says*). `tools/run_sitopt.py` grades eight archives.
+
+**Consequence.** The reading is closed; what remains open is that no `DCMP`
+has been executed here. Four things worth keeping, and the last is the one
+that cost the most.
+
+**"It declined" is a question, not an answer, and the module can be asked.**
+A sound suitcase out of the corpus and a Photoshop document written by
+ImageMagick were both refused, twice, and the temptation each time was to
+vary the subject and try again — bigger, RGB, more channels. What ended it
+was disassembling forty instructions of each `COMP`: `Sound 1` compares the
+file's type against **`FSSD`**, Sound Designer II, so it is not a sound
+optimizer at all in the general sense; `Photoshop 1` compares against
+**`8BIM`**, which is Photoshop 1.0's type and not the `8BPS` every modern
+writer produces. **Two failed guesses cost more than the reading would
+have.**
+
+**A negative from a program is worth reading in its own words.** The first
+run of all three printed *"* * * Optimizer Not Found: Sound 1"* into the
+script's status file, because `--install` had copied two of the five
+modules. That is not a subtle failure — but it is only visible because
+every script here begins with `Write Status To`, and the alternative would
+have been three archives that looked exactly like a module declining.
+
+**The 255 sentinel survived the test that could have killed it.**
+`Photoshop/JPEG Lossy` is lossy, and 255 is precisely what the
+application's Get Info pane prints as *" lossy"*; had it written 255 while
+carrying a `DCMP`, this engine would be decoding entries whose bytes
+nobody can check. It writes **3**. So 255 means *nothing can undo this*,
+and `Text 1` — the only module with no `DCMP` at all — is the only module
+that writes it. **The case worth testing first is the one that would make
+you wrong**, and it was identified from the module inventory before any of
+these runs.
+
+**And the last refusal was ours.** `Photoshop 1` went on declining a
+subject built specifically to its own test, and the reason was that the
+resource fork this harness writes had never been read back by anything:
+its map was missing the two-byte attributes field, so `typeListOffset`
+sat two bytes early and `Get1Resource` returned NULL. The module was right
+every time. **A generator whose output nothing parses is not a generator**,
+and the check is one line — `spacesaver.resources()` is in this tree and
+reads real Macintosh forks. It now parses what `one_resource()` writes
+before either goes near an emulator.
+
+## 2026-09-28 (the right answer with the wrong reason, again) — asked the application to undo an Optimizer and it did not, which withdrew the justification for a refusal the header had been justifying all along
+
+**Claim.** This engine refuses an entry whose Optimizer has a `DCMP`
+because *"the module would restore the original and we do not have it"*.
+The module does not restore the original. The refusal is right anyway, for
+a reason that was in the header from the start.
+
+**Evidence.** StuffIt Deluxe 2.0.1, `MacPaint 1` installed, unstuffing its
+own archive by script into an empty folder with the original deleted: the
+artwork is byte-identical from offset 512 on, the 512-byte header differs
+in 486 bytes, and the 501-byte resource fork is gone. Run twice, once with
+a second archive alongside and once alone, because the first run's output
+folder had two candidates in it.
+
+**Consequence.** FORMATS.md, *What a module gives back*; the engine comment
+now cites the lengths instead. Two things.
+
+**The declared lengths were the answer and nobody had compared them.** An
+entry optimized by `Text 1` declares 0/594 where its control declares
+338/732 — the header describes the OPTIMIZED file. Every entry optimized by
+a module with a `DCMP` declares its control's lengths exactly — 501/2945,
+342/8192 — and stores a remnant: `MacPaint 1`'s resource fork is two
+compressed bytes for a declared 501. **That is the whole design, it is four
+bytes of arithmetic per entry, and it makes the 255 sentinel obvious in
+hindsight**: 255 means the header already describes what is stored, so no
+module is needed to read it. The reason this took a day and six emulator
+runs to see is that every step was chasing behaviour — what decodes, what
+refuses, what the Engine says — and the header was sitting there the whole
+time. **Compare the control's bytes to the specimen's before running
+anything.**
+
+**This is the third right answer with a wrong reason this file records,
+and the pattern is now clear enough to name.** The others are
+`checkdisk.py`'s `hls -a` and the `HOpen` attribution. Each time the
+BEHAVIOUR was correct and the sentence next to it was not, and each time
+the wrong sentence survived because nothing fails when a comment is
+wrong. Here the sentence came from Aladdin's own alert — *"Please use
+StuffIt Deluxe instead"* — read as "the application can undo it" when it
+says only "the application can open it". **A quotation is evidence for
+what it says, not for what it implies.**
+
+## 2026-09-29 (the record was a CInfoPBRec, and the header it writes is a stack frame) — drove both halves of an Optimizer and the round trip came out byte-identical everywhere it can be
+
+**Claim.** A 2.0 Optimizer's data path is now run rather than read:
+`MacPaint 1`'s `COMP` makes the remnant from a document and its `DCMP`
+rebuilds the document from the remnant, on an emulated Mac Plus, with
+nothing this project invented in between.
+
+**Evidence.** `tools/vmac/sitopt.py --dcmpdata`. The remnant is 2,437
+bytes — a 4-byte length, then the 2,945-byte document from offset 512 on,
+byte for byte. The rebuilt file is 2,945 bytes with no resource fork, and
+its artwork from 512 on is identical to the document AND to what StuffIt
+Deluxe 2.0.1's own unstuffer produced from the archive. FORMATS.md, *What
+the data path does*.
+
+**Consequence.** OPEN_ITEMS.md's Optimizer item loses everything but the
+one question that was never shell work — an optimized entry declares the
+ORIGINAL lengths, so producing the remnant needs a decode-until-input-
+exhausted mode `UncEntryInfo` cannot describe. Four things are worth
+keeping.
+
+**The record a module is handed is a `CInfoPBRec`, and TWO fields proved
+it rather than one.** The `DCMP` reads the parent directory at +48 and
+the `COMP` reads it at +100. Either alone is a number at an offset;
+together they are `ioDirID` and `ioFlParID`, which is a `PBGetCatInfo`
+result and nothing else. **When an offset could be anything, look for the
+second offset that could only be one thing.**
+
+**The 512 bytes a `DCMP` writes are the CALLER's uninitialised stack.**
+It links a 670-byte frame and writes 512 bytes of it to the front of the
+rebuilt document. Three runs of this probe write the same 512 bytes; a
+differently built probe writes 135 different ones; 2.0.1 writes 421
+different ones. So the 486-byte header difference measured the day
+before was never a palette or a default — the Addendum's *"will use
+default settings"* describes what MacPaint does afterwards, not what
+the module writes — and **an optimized MacPaint entry has no byte-exact
+answer that is not tied to one caller**. Note which way the samples cut:
+repeating the run says "deterministic", and only CHANGING the caller
+says what it is a function of. **One sample is a value, two are a
+guess, and the useful third is the one that varies something on
+purpose.**
+
+**Both bugs in this session were mine and neither was about StuffIt.**
+One `FSRead` for a 2,437-byte file returned 2,048 — the file's first
+extent — and the uninitialised tail of the buffer went through the
+module and came out as the rebuilt document's last 389 bytes, the right
+LENGTH with the wrong content, which is the failure shape that looks
+most like success. And `_FlushVol` returning 0 is not Shut Down: a run
+that flushed and hung left the rebuilt file's catalog entry reading zero
+on the image. **A short read is legal, and the module's own loop was
+there to be copied** — Aladdin's transform loops over `_Read` for
+exactly this reason, and the probe that did not was the one thing in the
+room not written by somebody who knew the File Manager.
+
+**And the way OUT of the module was the module.** The temp file a `COMP`
+writes cannot be opened while it holds it (-49, `opWrErr`), and -2 is
+the call that deletes it — but `*selector > 0` on a `COMP` reads that
+file into the caller's buffer and answers with the count. The probe
+spent a run going around the ABI for bytes the ABI hands over.
+
+## 2026-09-29 (a question, not a run, disproved this) — "every decoder would need a new mode" was true of the loops and false of the problem
+
+**Claim.** Getting an optimized entry's remnant out of a StuffIt archive
+does NOT need a new decode mode in the eight methods. It needs the right
+output length, and the remnant carries it.
+
+**Evidence.** Every method in `src/fmt_sit.c` decodes to a requested
+length and stops — the file's own comment states it as an invariant. So
+a caller may ask for four bytes, and `MacPaint 1`'s `DCMP` reads the
+remnant's total length out of the first four bytes of the caller's
+buffer on its first positive-selector call. And `unar` 1.10.8, run
+against the archive 2.0.1 wrote here, produces **2,437 bytes identical
+to what the `COMP` made on the Mac** — so the stored bytes are the
+remnant, adjudicated by a second implementation. Two-pass decoding is a
+**hypothesis**; the rest is measured.
+
+**Consequence.** OPEN_ITEMS.md's Optimizer item shrinks; the withdrawal
+is in BLOCKERS.md. Three things.
+
+**The claim was disproved by somebody asking why, not by a run.** The
+question was *"why do you need to touch other decoders to add the 512
+missing bytes"* — and the honest answer required opening
+`unc_sit_decode_fork`, which nobody had done while writing three files
+about it. **An estimate is a claim, and it is subject to the same rule
+as any other: it gets checked against the code it is about, not against
+how the problem felt.**
+
+**"The loop condition is wrong" became "the loop must change" with no
+step in between.** Both sentences are about the same line of code and
+only the first is an observation. The second silently assumed the
+decoder is the only thing that could supply the number, and the number
+was in the data. **When a limit looks wrong, ask what else knows the
+right value before deciding who has to be rewritten.**
+
+**And the oracle already had the answer, again.** `unar` decodes this
+entry and has since before any of this started — FORMATS.md has said so
+in the words *"`unar`, which decodes both, is right about one of them"*
+since 2026-09-28, while the neighbouring paragraph called the remnant
+unreachable. It is right about one of them in a sharper sense than that
+sentence meant: the data fork comes out exact and the resource fork
+comes out as 82 bytes of nothing, off the end of a two-byte stream.
+**A tool named as wrong about a case is still evidence about the
+case.**
+
+## 2026-09-29 (the smallest module was the biggest gain) — three of the four reversible Optimizers are undone in the engine, and two of them are exact
+
+**Claim.** `src/fmt_sit.c` now extracts an entry a 2.0 Optimizer
+touched. `Sound 1` and `Photoshop 1` come back byte for byte with the
+archive's own CRC agreeing; `MacPaint 1` comes back as a valid painting
+that is not the user's file and is reported as such; `JPEG Lossy` is
+still refused by name.
+
+**Evidence.** `tools/run_sitopt.py`, over the eight archives 2.0.1 wrote
+here: `Sound 1`'s 8,192-byte subject and `Photoshop 1`'s 115,320-byte
+one identical in both forks, `MacPaint 1`'s painting identical from
+offset 512 on to MacPaint's own file AND to 2.0.1's unstuffed output,
+with no resource fork. Three negative controls run: the delta disabled,
+the header length wrong by twelve, the length prefix left in — 2, 1 and
+1 problems respectively, and the last came out as `UNC_ERR_CORRUPT`
+rather than a wrong file.
+
+**Consequence.** FORMATS.md, *What an Optimizer did to the fork*;
+OPEN_ITEMS.md keeps `JPEG Lossy` and nothing else. Four things.
+
+**The 264-byte module was worth more than the 3,010-byte one.** A day
+went into `MacPaint 1` — disassembly, an emulator harness, a round trip
+— and what it buys is a document with a blank header. `Sound 1`'s
+`'DCMP'` is **264 bytes**, and reading it took ten minutes: it is a
+byte-wise cumulative sum and nothing else, it restores the file
+EXACTLY, and `Photoshop 1`'s is the same code with a different name.
+Two of the five were a six-line filter the whole time. **The module
+that was hard to run was the one the work started on because it was the
+one with a document on this disk — which is a reason to open a
+specimen, not a reason to rank a problem.** Survey the set before
+committing to a member of it.
+
+**The CRC field had been saying which entries were restorable.** An
+entry `Sound 1` optimized carries the ORIGINAL file's CRC-16 — the same
+value its control carries — so undoing the delta is verified by the
+archive. An entry `MacPaint 1` or `JPEG Lossy` optimized carries
+**`ffff` in both fields**. The format marks its own irreversible
+entries, and this project had looked at those bytes twice (the
+2026-09-28 header reading counted 104..109 and never printed 100..103)
+without noticing that one archive's CRCs matched its control's and
+another's were a constant. **A constant in a field that should vary is
+the smell this file already names; it applies to bytes in a header, not
+only to rows in a matrix.**
+
+**The filter went where every method already funnels.** `unc_fork_flush`
+takes the checksum, so putting the delta there means the CRC is over
+the RESTORED bytes and no decoder had to change — including method 2,
+which writes straight into the staging buffer and would have bypassed a
+filter in `unc_fork_put`. **Two candidate places, and the one that
+looked natural was wrong**; what settled it was reading which of them
+method 2 actually goes through.
+
+**And the guard is the part that earns its place.** `MacPaint 1`'s
+remnant states its own length in its first four bytes, and the engine
+compares it with the length the header implies. That is not redundancy:
+driving the module by hand produced a file of exactly the right SIZE
+with its last 389 bytes wrong, twice, and nothing about the output said
+so. Where a format states a quantity twice, check the two against each
+other — it is the only cheap defence against the failure that looks
+like success.
+
+## 2026-09-29 (the third time the corpus was mistaken for the machine) — Photoshop 1.0.7 runs on an emulated Mac Plus, and its own Optimizer round-trips what it writes
+
+**Claim.** `Photoshop/JPEG Lossy` is not broken. It refused the subject
+`--makemods` built for it because that subject was not a Photoshop 1.0
+document, and it round-trips one that is.
+
+**Evidence.** `sitopt.py --add-photoshop`, `--psdoc`, `--psjpeg`.
+Photoshop 1.0.7 launches under Mini vMac on the Mac Plus and saves its
+native format: **196,608 bytes of raw pixels, 256x256x3, no header**,
+with the geometry in an `8BIM` 1000 resource of ten bytes. Stuffed with
+the module enabled and unstuffed in the same boot, the document comes
+back the same size with **10.1 % of its pixel bytes changed** and 58
+distinct values where it had 2. FORMATS.md, *What an Optimizer did to
+the fork*.
+
+**Consequence.** The refusal in `src/fmt_sit.c` is unchanged and its
+grounds are replaced: there IS an oracle and a subject now, and what
+stops it is a JPEG decoder on a 1 MB floor. Three things.
+
+**The corpus was mistaken for the machine, for the third time.** This
+file already records the MacPaint case, where *"nothing here is a paint
+document"* was true and *"so nobody here can make one"* did not follow
+— and BLOCKERS.md states the rule in as many words. It was not applied
+here: *"the corpus has no type-`8BIM` document"* was searched, correct,
+and published as *"no oracle and no subject"*. The application was a
+441 KB download away. **A rule written down after being learned is not
+learned; the tell is that the sentence "this machine has none" reads as
+a conclusion rather than as the question "can it make one?".**
+
+**And the requirements page was wrong in the useful direction.**
+Photoshop 1.0.7's page says *"Macintosh SE or newer"*, which would have
+ruled out every emulator this project has. It runs on the Plus. **A
+stated minimum is a support claim, not a measurement** — cheaper to
+boot it than to believe it, and the boot was four minutes.
+
+**The failure the day before had its cause in the archive's first
+sixteen bytes.** The module's container records channels, height and
+width, and on the synthetic subject it reads **0, 0, 0** where the real
+document reads **3, 256, 256** — it had taken its geometry from the
+`8BIM` 1000 resource the harness fabricated. The 80 bytes had been
+dumped and read the day before and that field was not decoded, because
+the question then was "is there a JPEG in here" and the answer was no.
+**A structure worth dumping is worth parsing: the bytes that answer the
+next question are usually already on the screen.**
+
+## 2026-09-29 (the spike that found the work already done) — `JPEG Lossy` carries its own tables, and the codec has a name on it
+
+**Claim.** Recovering `Photoshop/JPEG Lossy`'s tables was never the
+task. Its payload is a self-describing TIFF with the quantisation and
+Huffman tables inside it, and the module wraps a licensed C-Cube JPEG
+engine.
+
+**Evidence.** The 14,047 bytes after the module's 80-byte header begin
+`MM\0*` and parse as a 22-entry TIFF IFD: 256x256, 3x8 bits, YCbCr,
+compression **32865** (C-Cube's private JPEG code), quantisation tables
+at tag 33606 that are Annex K's in zigzag order halved, DC and AC
+Huffman tables at 33607 and 33608 that are byte-identical to the
+module's `DATA` 1001, quality 25 at 33604 matching the module's `Pref`
+128. The module file also holds **`C3a` 1, 31,952 bytes, "C-Cube
+V1.0"**. FORMATS.md, *What an Optimizer did to the fork*.
+
+**Consequence.** The refusal in `src/fmt_sit.c` is unchanged and the
+estimate behind it is withdrawn (BLOCKERS.md). Three things.
+
+**The spike succeeded by failing its own premise.** It was set up to
+answer "can the tables be recovered from the module?" and the useful
+answer was "there is nothing to recover". **A spike should be allowed
+to invalidate its question, and the way to let it is to look at the
+artefact before executing the plan** — here, to list the module file's
+resources, which takes one command and had never been run. Every
+search for the tables had been inside the two resources already
+extracted.
+
+**A structure announces itself in its first four bytes.** `MM\0*` was
+printed to the screen the day before, in the hex dump that established
+the payload "cannot be a JPEG stream". That conclusion was right and
+useless: the question asked was "is there an `FF D8` here", and the
+bytes answering the *next* question were in the same 48 characters.
+**When a dump answers "no", read it again for what it does say.**
+
+**And the name was the fastest route of all.** "C-Cube V1.0" on a
+resource identifies the codec, its era and its file format in three
+words — C-Cube defined JPEG-in-TIFF and 32865 is their compression
+code. Ten minutes of disassembly for tables that were not there, when
+a resource listing gave the answer. **Read the labels before the
+instructions.**
+
+## 2026-09-29 (a measured zero, declined — then reversed) — `JPEG Lossy` was put out of scope and put back the same day
+
+**Decision.** StuffIt 2.0's `Photoshop/JPEG Lossy` Optimizer (module 3)
+is out of scope for v1. Entries it touched stay named and refused per
+entry. OPEN_ITEMS.md, Part 1.
+
+**What it is not decided on.** Not difficulty: the payload is a
+self-describing TIFF carrying its own quantisation and Huffman tables
+(*What an Optimizer did to the fork*, FORMATS.md). Not budget: a
+5,166-byte blob compiled into `src/fmt_sit.c` moved the shipped build's
+resident `CODE` and A5 by **0 and 0**, landed wholly in
+`ovl_stuffit.bin`, and moved no tier tally in either lane — measured,
+not estimated. **The price was zero and the answer is still no.**
+
+**What it is decided on.** The result is **lossy by construction**:
+Aladdin's own round trip changes 10.1 % of the pixel bytes, so no
+implementation returns the file that was archived. Nobody has ever seen
+such an archive that this project did not write. And whoever has one
+has no sign that an Optimizer touched it — except from this program,
+which names the module and skips the entry, and that is already the
+right answer to give them.
+
+**Two premises were offered for it and neither holds, which is worth
+recording because the decision does not need them.** *"A modern viewer
+can open the compressed file"* — no: forging the TIFF `Compression` tag
+from C-Cube's 32865 to TIFF 6.0's 6 gets the payload past `libtiff`,
+which returns a **solid black 256x256 frame**, one distinct byte value.
+That is worse than refusing, because it looks like an answer. And
+*"modern upscaling tools supersede the work"* — no: an upscaler cannot
+read a format, it can only improve what something else has already
+decoded. **A decision can be right on grounds other than the ones
+reached for, and saying so is cheaper than letting a wrong premise
+become the citation** — this file records three cases of a correct
+answer with the wrong reason attached, and this is the first where the
+reason was corrected before it was written down.
+
+**Reversed the same day.** The maintainer put it back in scope once
+the two premises were shown not to hold. Nothing below changes: the
+result is still lossy, so it will land as `module_restored = 2` —
+named and flagged, like `MacPaint 1` — and the reason to do it is that
+the format is fully described and costs the shipped build nothing, not
+that anybody will get their picture back. **The entry stays here with
+both halves**, because a decision that was made and unmade in a day is
+worth more as a record of how the arguments moved than either half is
+alone.
+
+**And the transferable half.** This project prices every axis before
+calling a thing free, and the habit is worth having for the case where
+the price comes back zero and the work is declined anyway. **Cost is
+a veto, not a reason.** What carried this was who would benefit and by
+how much, which no ratchet measures.
+
+## 2026-10-01 (a page comment found what 947 fixtures could not) — zip's Macintosh extra fields are unread, and the corpus had no subject to say so with
+
+**Found, not decided.** A Macintosh-written zip carries type, creator,
+Finder flags and the Mac dates in an extra field, and this engine reads
+none of it. `zip_extra_scan` knows Zip64 and WinZip AES; the six
+Macintosh header ids go past as unknown. Filed in OPEN_ITEMS.md Part 2,
+*Zip's Macintosh extra fields*, with what would close it. Not
+implemented and not priced.
+
+**The evidence came from a user's download page.** Macintosh Garden's
+Rex Nebular entry has a 2022 comment saying the disk images lose their
+type and creator and that MacZip is needed to restore them. That is a
+statement about Info-ZIP's `0x334d` field, and it is true of this
+engine too: on `rexnebular_1_0_0.zip` the data forks are perfect — 21
+of 21 byte-identical to `unzip`, ten disk images matching the MD5s the
+archive ships in its own `checksum.md5` — and `l` prints an empty
+type/creator for all 22 entries while `lsar` reads them correctly off
+the same bytes. The `.sit` on that same page comes out with all four
+pieces of metadata, 15 of 15 forks byte-identical to `unar`.
+
+**Why no suite caught it, and the grading was not at fault.** The
+differential suite does grade type/creator wherever `lsar` reads them
+(*the DiskDoubler corpus becomes fixtures*, 2026-08-21 later). It had
+nothing to grade: none of the seven zips among 947 fixtures carries a
+Macintosh extra field. `derived-MUSFMT10.ZIP` is the near miss — host
+byte 0x07, written on a Macintosh, and carrying no extra fields at all.
+Two of the other six are PKZIP 1.x from PC software indexes and two are
+generated here.
+
+**The transferable half, and it sharpens a rule already in CLAUDE.md.**
+That rule says an aggregate check cannot fail on a property it never
+aggregates. This is the next one in: **a property the suite DOES grade
+is still ungraded if no fixture exhibits it.** The grading code, the
+oracle and the assertion were all present and correct for fourteen
+months of corpus growth, and the whole apparatus was a no-op on this
+field because the subject was missing. So the question to ask of a
+graded property is not "is it checked?" but **"which fixture would fail
+if it broke?"** — and if the answer cannot be named, the check is
+decoration.
+
+**The second half is about where fixtures come from.** This corpus was
+harvested by name and extension from Macintosh software indexes, and
+`.zip` is the one extension those indexes mostly do not hold — the Mac
+archives there are `.sit`, `.cpt`, `.hqx`, `.bin`. The zips arrived from
+PC indexes and from a generator instead, so the format's *Macintosh*
+dialect was never sampled. **A corpus inherits its blind spots from the
+query that built it**, which is the same shape as 2026-09-26's *was the
+search by NAME?* and costs a capability rather than a file.
+
+## 2026-10-01 (the field that was published all along) — zip's Macintosh extra fields cost 2,000 B of overlay and no licence
+
+**Decision.** Read them. Info-ZIP's `0x334d` and ZipIt's
+`0x2705`/`0x2805` give type, creator, Finder flags and dates; a ZipIt
+`0x2605` entry's data is a MacBinary stream and yields both forks.
+**+2,000 B, all in `ovl_exo`**; resident `CODE` +0, A5 +0, peak RAM +0,
+no tier tally moved (FORMATS.md, *Zip's Macintosh extra fields*).
+
+**The price that nearly got paid was not bytes.** The first
+implementation cited `reference/XADMaster/XADZipParser.m`, because that
+is what was sitting in `reference/` and it reads all four fields.
+`tools/check_provenance.py` failed it: `fmt_exo.c` is in HISTORICAL —
+*"mentions a reference only to say what it no longer owes"* — and
+citing XADMaster would have moved the zip reader into the fifteen files
+that owe it, for four small features, in a project whose licence is
+already forced by that debt and which records *"no regression for the
+licence's sake"*.
+
+**It did not have to.** APPNOTE.TXT 4.6.4–4.6.6 specifies all three
+ZipIt fields, and has since long before this project, *including*
+`0x2605`'s whole meaning: "This block MUST be present if the file is
+stored MacBinary-encoded". It was already in `reference/notes/` and had
+been read for Zip64 and AES. `0x334d` is named in APPNOTE.TXT's
+header-id table with no layout, and is specified in full — central and
+local, all five flag bits, the attribute record field by field — in
+Info-ZIP's own `proginfo/extrafld.txt`, by the field's designer. One
+`curl`. **So the entire licence cost of this work was an unfetched
+document**, and the thing that made it visible was a gate that fires on
+the shape of a comment.
+
+**And the spec did not only change the citation, it changed the
+code.** The dates are taken unadjusted, which is what neither reference
+does. `FlCrDat` is "original Mac FileTime values (local time!)" and
+this engine's consumer is `ioFlCrDat`, which is local — so the stored
+value is already the wanted one. Then the decisive part: **XADMaster
+adds `CrGMTOffs` and deark subtracts it, and both label the result
+UTC.** They cannot both be right, so neither is an oracle for that
+field, and the document settles it by making the offset irrelevant
+here. Every entry of `rexnebular_1_0_0.zip` carries −18000, so the
+choice is observable and this engine's dates stand 5 h from `lsar`'s.
+
+**Three transferable halves.**
+
+- **"The reference implementation on disk" is not the same thing as
+  "the source".** Both readers were right for their own target and one
+  of them was wrong for this one. A spec describes the format; a reader
+  describes the format *plus* its author's purpose, and transcribing
+  takes both. This repository has shed six formats' worth of that debt
+  by finding the publication; this is the first time the publication
+  was already in `reference/` and had been read for other fields.
+- **When two implementations disagree, the disagreement is the
+  finding.** It is cheaper to detect than either one being wrong: no
+  specimen is needed, only reading both. And it retires an oracle for
+  one field without touching its standing for the rest, which is why
+  the date column cannot be graded against `lsar` and the type/creator
+  column can.
+- **A hardcoded budget does not fall when the build grows.**
+  `run_tiers.py`'s resident `TIERS` are figures re-taken on real
+  machines, so the resident tallies were read at budgets that had not
+  been reduced by the control's +2,024 B and were reported as unmoved
+  before they were a measurement. They do hold at 651,508 / 222,620 /
+  127,220 — but *"a constant in the peak-RAM matrix"* is the smell
+  CLAUDE.md names, and the matrix is not the only place one hides.
+
+## 2026-10-02 (a 1990 approximation, reproduced on purpose) — C-Cube's JPEG is in the engine, byte-exact, and it cost the shipped build nothing
+
+**`src/sit_ccube.c` decodes the `JPEG Lossy` Optimizer's payload and the
+restored data fork is byte-identical to what StuffIt Deluxe 2.0.1 itself
+hands back** — 196,608 bytes, zero differing — while the RESOURCE fork
+comes out identical to the original document's, which 2.0.1's own output
+is not. The figures, the format and the transform are FORMATS.md, *What
+an Optimizer did to the fork*; what follows is why it was written that
+way.
+
+**The target was Aladdin's output, not the picture.** A float IDCT came
+0.96 % away and jpeg-6b's `jpeg_idct_islow` came 1.065 % away — *worse*
+— so accuracy was moving in the wrong direction. That is the whole
+shape of the problem: the subject is an image a 1990 encoder already
+threw information out of, so the only reachable answer is the one its
+own decoder produced, approximation error included. Deciding that early
+is what turned an open-ended "get closer" into a finite task: read the
+arithmetic out of the module.
+
+**Half of it was published and that half was unfetched.** The entropy
+layer is ITU-T T.81's — Annex F's BITS/HUFFVAL tables, the category
+codes, `FF 00` stuffing, Figure A.6's zig-zag — and the spec was not in
+`reference/` while this was being read out of a disassembly. It is now
+(`reference/notes/itu-t81.pdf`, one `curl` in
+`tools/fetch_references.sh`), and `src/sit_ccube.c` cites the two halves
+separately: what T.81 states, and what only `CCOD` does. Same shape as
+the zip extra fields a day earlier — the licence and the reading cost of
+a format are both lowered by looking for the publication first.
+
+**And reading it was cheaper than guessing at it.** A sweep over
+families and precisions — eight to sixteen bits of cosine, every split
+of the two descales — bottomed out at 4.48 % on the inked blocks and
+could not have converged, because the transform is not a parameterised
+version of any standard one. `tools/ccube/m68ktrace.py`, a symbolic
+interpreter over one straight-line region, had the complete 1-D network
+out of `CCOD`+0x2f3c in about an hour. **A search over plausible
+implementations is unbounded; reading the implementation is bounded by
+the size of the function.**
+
+**The engine pays for it only when it is needed.** Every byte is in the
+StuffIt overlay — 18,582 → 23,174 B — so the shipped build's resident
+`CODE` and A5 are unchanged to the byte, and all six tier tallies are
+unmoved. Peak heap is 31.7 KB for a 256x256 document, and it grows with
+the stored fork and with the PADDED width, not with the image: the
+decoder holds one MCU row of three components and decodes the stream
+once per output plane rather than keeping three. That is the trade this
+format invites, because the stream is 14 KB and a full plane is 64 KB.
+
+**And one line of it was undefined behaviour nothing but a sanitizer
+could have found.** The IDCT pre-scale was written `blk[i] <<= 3`, the
+shift the module performs — and a dequantised coefficient is signed, so
+on a negative one that is undefined in C99 (6.5.7p4), which this engine
+compiles as `-std=c99 -pedantic` without ever hearing about it. UBSan
+said so on the first full `ci.sh` run, at a coefficient of −25. It is
+`blk[i] *= 8` now, which every 68000 compiler turns into the same
+shifts. The decoder had already been graded byte-exact against 2.0.1's
+own output BEFORE that run: **a transform can be bit-for-bit correct on
+every specimen and still be undefined**, because UB is a property of the
+source and not of the answer.
+
+**One thing is left measured and unexplained, on purpose.**
+`CCOD`+0x3826 applies the same round-toward-zero correction after
+`(x + 16) >> 5` that every rotation in the network applies, and the
+output is exact only WITHOUT it — with it, 709 of 65,536 luma samples
+miss by one. The decoder omits it and says so in a comment. Smoothing
+that over would have meant describing the asm as something it is not;
+an unexplained disagreement between a trace and a result is a finding
+with a number on it, and the next person to touch this function needs
+it more than they need a tidy story.
+
+**And "somebody else's archive" was the wrong bar, which took saying
+out loud.** This section carried an open item reading *"nothing has
+seen an optimized archive that this project did not make"* until
+2026-10-02. It conflated two different things: an archive **we
+synthesised** and an archive **the original application wrote for us**.
+All nine specimens are the second — StuffIt Deluxe 2.0.1's own output,
+under Mini vMac, with the module installed the way a 1990 user
+installed it — so the header reading is graded against authentic bytes
+already, and a stranger's archive would not make it more authentic.
+What a stranger's archive would really have supplied is a combination
+nobody here thought to ask for: a different JPEG quality, a different
+compression method, an Optimizer over an encrypted entry. The writer is
+on the emulator image, so those are boots of `sitopt.py` rather than a
+search — which is why the item moved from *"find one"* to *"ask for
+them"* (OPEN_ITEMS.md). The one thing that search genuinely cannot
+replace is a SUBJECT needing software this project does not have, which
+is Sound Designer II and nothing else.
+
+**Two transferable halves.**
+
+- **The provenance that matters is the WRITER's, not the owner's.** A
+  specimen is synthetic when something other than the format's own
+  implementation produced it — not when it was produced here. Those two
+  readings of "ours" are what let a corpus gap masquerade as an
+  authenticity gap for four days, and the distinction is worth making
+  before a hunt is started: ask whether the real writer is reachable
+  first, because a reachable writer turns a search into a loop.
+- **"More correct" is not a direction when the oracle is old
+  software.** Every tolerance in this repository is a bound on a
+  distance to some reference; when the reference is an approximation,
+  improving the approximation increases the distance. The cue was that
+  the better IDCT scored worse — which looked like a bug for an hour
+  and was the measurement that settled the approach.
+- **The cost question and the scope question are different
+  questions.** This module was put out of scope and put back the same
+  day (2026-09-29, above) on an argument about whether anybody would
+  notice such an entry. What finally made it cheap was neither
+  argument: it is that a format's decoder lives in that format's
+  overlay, so the shipped build measured identical before and after.
+  Price the axis the user actually pays on before debating whether the
+  work is worth doing.
+
+## 2026-10-02 (the measurement that was waiting for a second input) — `CCOD`+0x3826 does not round toward zero, and one drawing was too easy to say so
+
+**The C-Cube entry above shipped with one thing labelled unexplained**:
+the module's output stage appeared to apply the same round-toward-zero
+correction every rotation in its IDCT applies, and the decoder was
+byte-exact only WITHOUT it. 709 of 65,536 luma samples missed by one
+with it. That is written up as settled now (FORMATS.md, *What an
+Optimizer did to the fork*) and the claim is withdrawn (BLOCKERS.md).
+What follows is how, because the method is worth more than the answer.
+
+**An unexplained measurement has a shape: two readings that cannot both
+be true, and not enough data to say which.** Here they were "the trace
+of that tail is wrong" and "the image never takes that branch". Neither
+is testable by reading the disassembly again — the first one is a claim
+ABOUT that reading, so re-reading it is the one experiment guaranteed to
+be circular. What separates them is an input: an image that takes the
+branch so often that "never" is not available.
+
+**So the second subject was drawn for the arithmetic and not for the
+picture.** `sitopt.py --psdoc --drawing grid` draws a 6-pixel comb
+crossed with a 12-pixel one, which puts an edge in nearly every 8x8
+block in both directions at once; Photoshop 1.0.7 saved it, StuffIt
+Deluxe 2.0.1 stuffed it with `JPEG Lossy` and unstuffed it in the same
+boot. The module stored 22,097 B of it against the first subject's
+14,127 and changed 21.0 % of the pixel bytes against 10.1 %. The
+correction then got **9,645** output bytes wrong against the first
+subject's 2,127, and the decoder was byte-exact on both. The branch is
+taken; the correction is not the module's; the attribution was a
+misreading.
+
+**Two transferable halves.**
+
+- **"Unexplained" is a label with an expiry date, and the thing that
+  retires it is usually an input rather than an insight.** This one sat
+  for two days while the available move looked like more disassembly.
+  The question to ask of an unexplained measurement is not *what else
+  could cause this* but *what input would make the two explanations
+  disagree* — and here that was a drawing, which cost two emulator
+  boots and no reasoning at all.
+- **A test that passes on an easy subject is not evidence that it is
+  load-bearing.** Putting the correction back into `src/sit_ccube.c`
+  fails the first subject by 2,127 bytes and the second by 9,645, so
+  both sections of `run_sitopt.py` catch it — but the first one caught
+  it only because the oracle is byte-exact. A tolerance anywhere in that
+  comparison would have swallowed the easy subject and kept the hard
+  one, which is the argument for grading an approximation by equality
+  when equality is available at all.
+
+## 2026-10-02 (three defaults that were being read as format) — what StuffIt Deluxe 2.0.1 will actually be asked for, and what it refuses to be asked by script
+
+**Every optimized specimen this project had was one subject, at the
+default quality, through one compression method.** Nothing was wrong
+with any of them; the problem is what a single point looks like — a
+constant. Six boots turned that point into a range, and three things
+that had been written down as properties of the format turned out to be
+properties of the defaults. The figures are FORMATS.md's; this is why
+each one mattered.
+
+**The quantisation tables are not "halved".** FORMATS.md described tag
+33606 as *"the standard Annex K luminance and chrominance tables in
+zigzag order, halved"*, which is exactly true of a Q=25 archive and of
+nothing else: at Q=50 they are Annex K **unscaled**, so the rule is
+Annex K x Q/50 and "halved" was the default's arithmetic. The decoder
+was never at risk — it reads the tables out of the file — but a
+transcription that had taken the sentence at face value would have
+been.
+
+**And the quality is a user setting, which took a wrong turn to find.**
+The Optimizers dialog is an activation LIST with Cancel and OK, and
+this file would have recorded that a quality cannot be set at all. It
+can: clicking a module's row opens **the module's own dialog**, which
+asks for a quantization level and recommends 20 to 30. What exposed it
+was a run that was doing something else and failed — the dialog
+swallowed a file name into its Q field, and the screenshot of that
+failure is the whole finding. **A probe that fails usefully is worth
+more than one that passes blindly**, and the difference is whether it
+photographs after every click.
+
+**The method matrix closed a comment in the engine.** `src/fmt_sit.c`
+refuses an optimized `JPEG Lossy` fork whose method nibble is not 0 and
+said so with *"the only shape seen"*, which is a hypothesis wearing a
+measurement's clothes. Asked for `fast`, `faster`, `better` and
+`optimal`, 2.0.1 stores the optimized fork every time and byte-identically
+— the method applies to the fork the Optimizer did not touch. The
+refusal is now measured across every method the script language has.
+
+**The one that did not close is the interesting one.** `PassLock` sits
+in the System Folder, and arming it from Options ▸ Custom Encryption…
+ticks that menu item — and a scripted `Stuff` then writes a plain
+archive, with no prompt and no error. The script language's security
+vocabulary is `newde` and `des` (STR# 257) and neither names an
+installed encryptor, so **the menu state does not reach scripted
+stuffing at all**. That is a fact about the application worth having
+before anybody spends a day scripting an encrypted archive out of it.
+
+**Two transferable halves.**
+
+- **A default observed once is indistinguishable from a constant, and
+  the docs will record it as one.** All three corrections here are the
+  same shape: a single specimen's value written down as the format's.
+  The cue is a figure that appears in a table with no range beside it —
+  and the cheap test is not more reading, it is asking the writer for a
+  second value. Six boots covered a matrix that four days of
+  disassembly had left as "the only shape seen".
+- **When a tool will not be driven the way you want, find out which
+  half refuses.** The script language and the menus are not two
+  interfaces to one program here: the menus configure the interactive
+  Stuff and the script carries its own arguments, and the overlap is
+  only as wide as STR# 257. Discovering that cost one boot; assuming
+  the menu was global would have cost several and produced a specimen
+  that was quietly not encrypted.
+
+## 2026-10-02 (the question that was about the user, not the format) — `PassLock` protects nothing, so the engine stops refusing
+
+**"But what if the user has the password?"** The engine had just been
+taught to refuse a `PassLock` entry with *"no password will open it"*,
+and that question is the one nobody had asked of it. The answer turned
+out to be that the password is irrelevant: the module appends sixteen
+bytes of key material and the method's padding and **leaves every
+compressed byte of both forks exactly as an unprotected archive has
+them** — measured on two subjects, FORMATS.md, *Encryption*. So an
+entry that is "encrypted" is readable, and refusing it withheld bytes
+sitting in the clear.
+
+**The specimen was built to answer a different question, and could
+answer this one only because of one decision.** It was made to test an
+Optimizer over an encrypted entry, and the quality was left at the
+module's default deliberately so that the plaintext would be a payload
+this project already had, byte for byte, rather than something new.
+That turned a "can we decrypt it?" question into a comparison: XOR the
+two and look. They were identical, which is not a result a cipher can
+produce. **A specimen whose plaintext is already known is worth more
+than one that is merely valid**, and it costs nothing to arrange at the
+time — only afterwards.
+
+**Then the claim was investigated properly, which is what it deserved.**
+Two diffs are a coincidence away from being wrong, so: the entry's own
+CRC-16 passes over what the engine produces (the format checking the
+bytes rather than us); the module's `DCMP` data path — the one handed a
+block of the fork — **pushes the buffer pointer and calls a routine
+that sets a flag and returns, never dereferencing it**; its `COMP` is
+the same shape, so nothing is transformed in either direction by
+design; and its About box says *"PassLock provides simple password
+protection for files"*. The module's own `COMP`/`DCMP` resource id is
+**514** — `(kind-1) << 8 | id` with kind 3 and id 2 — which also
+confirms the header byte this engine reads it by.
+
+**And then it was made SILENT, which is the opposite of where this
+started.** The first version printed a line per entry, a line per run
+and a line in listings. A user can do nothing with that fact: there is
+no password to find, no file damaged, nothing to retry. The entries
+that earn a line are the ones whose bytes on disk are not the bytes
+that went in — an `MacPaint 1` or `JPEG Lossy` document — and a
+`PassLock` entry's ARE. An unarchiver that editorialises on every entry
+is one whose warnings stop being read, so the fact lives in FORMATS.md
+where somebody can look it up, and the extraction is quiet.
+
+**The field went with the message, and that is the measurable half.**
+`UncEntryInfo.encryptor_nominal` took the struct from 302 to 304 bytes
+on the 68000 — fields 292..300 are packed and `name_full_len` then
+needs a pad, so one byte of struct cost two of size — and with nothing
+left to read it, it is gone and the struct is 302 again. `check_docs.py`
+failed on the stated size in both directions, naming all three places,
+which is the difference between a figure that is corrected and one that
+quietly rots.
+
+**Two transferable halves.**
+
+- **A refusal is a claim, and it gets tested like one.** *"No password
+  will open it"* was about the format and was false of it; the true
+  statement was *"we do not implement this"*, which is about us. The
+  cue is a message that tells a user what the WORLD cannot do — this
+  repository has written one of those before, and the test is always
+  the same: would somebody with the right software, or the right
+  password, get a different answer?
+- **A security property is worth measuring before it is assumed in
+  either direction.** The 1990 word "encryptor" carried the assumption
+  that bytes were enciphered, through a header field, a refusal, and a
+  message, until two archives were diffed. Nobody needed to break
+  anything: the comparison that settled it was one XOR, and it was
+  available from the first specimen.
+- **A true fact is not automatically worth printing.** The honest
+  message and the useful behaviour were different answers here. What
+  decides it is whether the reader can do anything with it — and the
+  test for a warning is the same as for a log line: if it fires on
+  every instance and nobody can act on it, it is noise that makes the
+  warnings beside it less likely to be read.
+
+## 2026-10-02 (the verifier that said where NOT to look) — all five of StuffIt 2.x's ciphers, decrypted
+
+**Five schemes, three ciphers, one key derivation.** `DES` and `DESex`
+are standard DES in CBC; `NewDE™` and `NewDEx` are StuffItDES in CBC;
+3.5's built-in is StuffItDES through an 8-byte feedback XOR; and
+`PassLock` enciphers nothing. The table is FORMATS.md's, *The three
+ways 2.0.1 encrypts*. This is how they were found, because the method
+transfers and the ciphers do not.
+
+**The engine's own verifier located the problem before any analysis.**
+`unc_crypt_sit` derives an archive key from the password, decrypts the
+`'MKey'` resource under it and checks that block against itself — and
+on a 2.0.1 `DES` archive, with the right password, **it passed**. That
+single bit of information said the password, the folding and the whole
+archive stage were already correct and that only the fork transform
+could be wrong, which turned an open-ended "what cipher is this?" into
+a bounded sweep. **A verifier is a bisection point**: when a format has
+one, run it first, because a pass tells you which half of your
+implementation to stop reading.
+
+**Then the sweep, which is cheap because the oracle is exact.** 32
+variants of the file-key stage against 8 transforms, scored by how many
+of 286 known plaintext bytes come back — and the answer was 286 of 286
+on the first run that included STANDARD DES, which this engine had all
+along for PackIt. The sweep is not clever; it is only possible because
+the specimen was made with a plain control in the same boot, so the
+plaintext is known exactly rather than recognised by eye.
+
+**The implementation was then two cipher kinds and a switch.** Both
+primitives already existed — `des_crypt` with IP and FP for PackIt,
+`sitdes_crypt` without them for StuffIt — and CBC is four lines around
+either. Nothing new was written cryptographically, which is the
+measure of how much the key derivation was doing.
+
+**Two transferable halves.**
+
+- **A refusal that names what the WORLD cannot do is a bug twice over.**
+  The second one today: PassLock's message said no password would open
+  an archive whose bytes were in the clear, and this one said nothing
+  implements a cipher that this engine implemented four hours later.
+  Both were true of us and false of the file. The smell is any message
+  with "nothing", "never" or "cannot be" about something outside the
+  program.
+- **Ask the format's own check before asking the format.** Every
+  encrypted format here has some verifier — an `'MKey'` block, a check
+  byte, a two-byte MAC — and it is usually treated as a yes/no for the
+  user's password. It is also a measurement of your own code, free, and
+  it halves the search space the moment it passes.
+
+## 2026-10-02 (the bar somebody else set) — "everything StuffIt 2 can make BY DEFAULT", and why that is the right line
+
+**The question that produced this was "are we good now?"** and the
+honest answer needed a bar, because "everything StuffIt 2 can make" has
+no edge: the format lets a fork be handed to an external COMPRESSOR
+module the way it can to an Optimizer or an encryptor, and anybody could
+have written one in 1991. The maintainer set the line: **everything the
+application writes by default** — with what Aladdin sold in the box —
+and a third party's plug-in waits for somebody's file.
+
+**It is the right line because it is finite and the inside of it is now
+closed.** Aladdin's two disks carry five Optimizers, three encryptors
+and nine translators, and **not one compressor**. So "by default" is a
+list that can be exhausted, and on 2026-10-02 it was: every Optimizer,
+every cipher, every compression word the script language has including
+`guess`, a 1.5.1-compatible archive and a folder, each asked of 2.0.1
+itself and each read back (FORMATS.md). The alternative bar — anything
+the format permits — cannot be closed by any amount of work here,
+because the missing piece is a file nobody has.
+
+**And it changes what the comparison table claims.** The row says what
+StuffIt Deluxe 2.0 itself wrote, which is a promise about archives a
+user might actually hold, rather than about the format's grammar. The
+cells for the two later Deluxes say *not tested here* rather than a
+colour, because nothing in this project has run them against these
+archives — the 🔴 that IS there is 2.0's own Engine refusing an entry
+its Optimizers touched, in its own words.
+
+**The transferable half.** **A completeness claim needs a bar somebody
+can check, and "what the format permits" is usually the wrong one.**
+The useful bar is what the SHIPPED software produces, because that is
+both finite and what users have. This repository has the same shape
+elsewhere — "every method the corpus uses" versus every method the
+format defines — and the first is a measurement while the second is an
+argument.
+
+## 2026-10-03 (method 14) — the hole that needed no file, and the four places the transcription departs
+
+**The session opened with "the only open items need files we don't have",
+and that was wrong about one row.** StuffIt 5 method 14 sat in
+OPEN_ITEMS.md asking for *a decoder* — and everything a decoder needs was
+already on this disk: two specimens (Aladdin's own 5.5 and 7.0.3
+installer payloads), an oracle that reads them (`unar`), and a reference
+implementation in `reference/XADMaster/XADStuffItOldHandles.m`, the file
+this project already transcribes for method 8. **Re-reading the row cost
+less than believing it.** The engine listed 258 entries of 7.0.3's
+installer and refused 80 of them; it extracts all 258 now.
+
+**What the method is**: LZSS over a 256 KB window with both alphabets
+canonically Huffman-coded per block, and a third alphabet the code
+lengths themselves may be coded in. Nothing else implements it — deark
+names it "installer" with a NULL decompressor — so the citation is
+permanent and is in NOTICE and Part 1 of OPEN_ITEMS.md, not Part 2.
+
+**Four places where the transcription deliberately departs, and each is
+measured rather than argued:**
+
+- **Two recursions had to go** (68000 discipline): the code-length
+  quicksort, which is the same partition driven from an explicit range
+  stack — the permutation is identical because each subrange is sorted
+  independently and the order they are taken in cannot change the result
+  — and the nested tree read, which becomes a branch rather than a
+  self-call.
+- **A nested tree that nests again is refused.** The reference passes one
+  array as both the inner call's scratch and its result, so a second
+  level would decode through a trie it was overwriting. That is not a
+  format, it is an aliasing accident; and no stream reaches it — 797
+  nested reads across both payloads, every one at depth 1.
+- **The byte boundary discards its bits.** `xadIOByteBoundary` clears the
+  bit COUNT and leaves up to seven bits in the buffer, which the next
+  refill ORs a byte over; it only works because encoders pad with zeros.
+  Measured: **3,326 boundaries across both payloads, not one with a
+  nonzero pad**, so the two readings cannot be told apart here.
+- **The block length clamps instead of wrapping.** The reference lets
+  `n -= matchlen` go through zero and relies on the output limit to stop.
+
+**The 17 KB of tables that are not there.** `SIT_14` builds `var6[1024]`
+and `var8[0x4000]` and never reads either: they are a compressor's
+inverse mapping, left in a decoder. Transcribing a reference means
+reading it, not copying it — 17 KB of a 283 KB working set, on a machine
+whose floor is 1 MB.
+
+**The grading needed an ENCODER, and that is the transferable part.**
+Both specimens are multi-megabyte commercial installers: not
+committable, not restorable, so no suite in `ci.sh` could ever have
+touched this decoder. `tools/synth_sit14.py` writes the format instead —
+1,859 B, four entries, one shape each — and `unar` adjudicates it, so
+three implementations agree about every byte. **Writing the encoder is
+also what proved the reading**: its first version emitted a repeat count
+without the escape in front of it, and the decoder said so.
+
+**What the fuzzer could not do, and what it then found.** 1,500 cases of
+`fuzz.py` entered not one method-14 function: the seed is drawn from 946
+fixtures and this one is 1,859 B. Pointing 2,000 mutants at its streams
+instead reached 95.5 % of the decoder's lines — and failed twice. One was
+a signed left shift in the canonical code assignment, undefined on a
+corrupt tree where the reference's unsigned counter merely wraps; the
+other was a leak in `cli/main.c` that predated all of this, on the path
+where the archive fails after a name was shortened — which also means
+the notice telling a user where those files went was suppressed on
+exactly the runs where it was least obvious. **A targeted fuzz run is
+worth more than a bigger random one when the seed is small**, and
+"0 failures" from a run you have not measured the reach of is the
+emptiest kind of green.
+
+**What it costs the Macintosh: nothing resident.** 2,613 B of text, all
+of it in the `ovl_stuffit` image (23,670 → 26,278 B), which is released
+for every archive that is not a StuffIt one — so the shipped build's
+`CODE` and A5 did not move by a byte, and the control's +2,624 B is what
+the overlay build exists to avoid paying. Peak heap is 276 KB on a real
+fork and 65 KB on the synthetic, because the window is sized to the fork
+(`sit13_winsize`'s argument). No tier tally moves.
+
+## 2026-10-04 (the tolerance that had to be written down first) — a real MacZip in the corpus, and the column that had been eating the names
+
+**The fixture lands.** `rexnebular_1_0_0.zip` — 29.7 MB, 22 entries, Zip
+2.3, host 0x07, the archive a Macintosh Garden comment pointed at on
+2026-10-01 — is corpus fixture 935, and the first Macintosh-written zip
+there has ever been. Until today every claim about Info-ZIP's `0x334d`
+rested on archives written here. OPEN_ITEMS.md's row is closed and gone,
+not annotated.
+
+**What is graded, and the one thing that is not.** Names, folders, both
+forks, type/creator and Finder flags: 22/22 against `lsar`, 21 data
+forks byte-identical to `unar`, on every `ci.sh` run. The three
+Macintosh DATES are graded nowhere, and the reason is a fact about the
+oracles rather than about this engine: **XADMaster does `create +=
+readInt32LE` and deark does `de_mac_time_to_timestamp(mt_raw -
+mt_offset)`, and both label the result UTC** (re-read in
+`XADZipParser.m` and `modules/zip.c` today, because a claim about to
+carry a fixture is worth opening the source for). They cannot both be
+right, so neither adjudicates `CrGMTOffs`; and the choice is observable
+— every entry here carries −18000, so this engine's unadjusted dates
+stand 5 h from `lsar`'s on all 22.
+
+**So the exclusion is declared, not inherited.** The manifest carries
+`"ungraded": {"dates": "..."}` with that reasoning in it; `run_diff.py`
+refuses any other field under the key, refuses an empty reason, and
+prints the declaration every run. `make_manifests.py` carries it across
+a `--force` rebuild, because a rebuild has nothing to regenerate it
+from and would otherwise drop it silently. The alternative was to add
+the fixture and let the manifest schema's silence stand in for the
+decision — which is how a tolerance stops being re-read.
+
+**And the fixture found a hole on the way in.** The suite takes
+type/creator from `macextract l`, whose columns are `%4s/%-4s` — so a
+code holding a SPACE moves the name by a field. `PDF /CARO` parsed as
+type `PDF` and name `/CARO docs/mac_package.pdf`; no manifest entry has
+that name, so the comparison did not fail, **it did not happen**. 200 of
+the corpus's 5,539 type/creator codes hold a space, and a NUL inside a
+code truncates the row outright. `l --finder` now prints type, creator
+and flags as hex — the only form a parser can read back — and an
+unparsable row is a failure rather than a shrug. All 935 fixtures pass
+with the exact comparison, so what the silence hid was agreement; what
+it cost was the ability to notice.
+
+**The Finder flags are graded now, where the oracle has them** — 22
+entries today, all this fixture's, since no older manifest carries the
+key. Corpus-wide 3,195 would be gradeable, `unar`'s AppleDouble
+`fdFlags` and `lsar`'s `XADFinderFlags` agree on all 423 where both
+exist, and the engine agrees with `lsar` on every one of the 3,195
+(measured today). Recording them means rebuilding 934 manifests, which
+is a change of its own and not this one.
+
+**What it costs, measured before it was taken.** 0.51 s a diff run and
+2.8 s a robustness run, so ~11 s of `ci.sh` across the eight lanes that
+run those two suites; the slowest robustness variant is 0.51 s against a
+30 s timeout; `fixtures/` grows 41 %. The figures and the table are in
+TESTING.md, *The Finder metadata, and the one field no oracle settles*.
+
+**And the way NOT to measure it, which cost an hour.** Timing eleven
+suites with the fixture and again without gave 489 s against 511 s — the
+run without it SLOWER, and the diff suite moving 24.7 → 38.4 s between
+two runs of identical work. The quantity being measured is smaller than
+this machine's run-to-run variance, so the experiment could only return
+noise however carefully it was run. **A difference measurement needs the
+difference to be bigger than the instrument**; the fixture's own 0.51 s,
+taken five times in-process, was both cheaper and conclusive.
+
+**The transferable half.** Both halves of this entry are one shape: *a
+comparison that cannot run is indistinguishable from one that passes.*
+The dates cannot be compared because the oracles disagree, and that is
+now a printed declaration; the space-bearing codes could not be compared
+because our own output format ate them, and that is now a parse failure.
+Neither was visible anywhere — `run_diff.py` printed "fixtures ok"
+through both. So the fix in both cases was to make the suite COUNT what
+it compares, which is why it now prints how many Finder flags it
+checked.
+
+## 2026-10-04 (the archive that carried its own extractor) — nine real ZipIt archives, and the premise that was only APPNOTE's word
+
+OPEN_ITEMS.md had named its own blind spot: ZipIt's three Macintosh extra
+fields were graded on archives written here, because **ZipIt's output is a
+plain `.zip` and is invisible to a search by name.** That sentence was true
+and incomplete, which is the whole of this entry.
+
+### What was indexed, and what was not
+
+The question from 2026-09-26 is *what is the corpus indexed BY*, and
+Discmaster answers it twice over.
+
+**By content, for the self-extractors.** A ZipIt SEA is a code stub with the
+zip behind it, and dexvert — the identifier Discmaster runs — knows that stub
+on sight and files it as `zipIt`. `format=zipIt` returns 69 files, 67 of them
+ZipIt's own distribution across European and Japanese cover discs — 59 are
+copies of one 1.4 self-extractor — and **two that somebody else made**, an EV
+Nova plug-in and its installer. No search by name could have found those two,
+and none was needed, because somebody else had already read the bytes.
+
+**Not at all, for the plain ones.** `detection=ZPIT` returns one unrelated
+file and `q=ZPIT` over content returns none: the extra-field id is not in
+anybody's index. So the plain ones were found by scanning: `format=zip`
+restricted to each of the 40 Discmaster items `tools/fetch_specimens.py`
+already cites gives **3,029 zips**, and the first local file header of each
+was fetched with an HTTP `Range` request — **512 bytes per archive, 1.5 MB
+for the sweep** against 7.3 GB to download them. **Seven carry a ZipIt
+field**, four of them distinct archives. A range scan is the cheap form of
+"search by content" when no index has the content: it costs one request per
+candidate and reads the one header that settles it.
+`tools/scan_discmaster_zips.py` is that sweep, kept so the next one is a
+widened item list rather than a rewrite. **One trap in it is written down
+because the tool fell into it the first time it ran:** Discmaster's `pageNum`
+is 0-based, and `pageNum=1` on a single-page result returns an empty JSON
+array rather than an error — so a sweep that starts at page 1 reports "0
+zips" for an item holding 35 and looks finished. It was caught only because
+the item being tested was one with a known hit in it. **A crawler asked for
+a page that does not exist gets an empty answer, not an error**; test it
+against something you already know is there.
+
+### The premise, measured in both directions
+
+APPNOTE.TXT 4.6.4 says the long field "MUST be present if the file is stored
+MacBinary-encoded and SHOULD NOT be used if the file is not". Over the nine
+specimens, **119 entries**: every one of the **16 file entries with a
+reachable `0x2605` payload decodes to a MacBinary stream**, and **not one of
+the 86 entries carrying `0x2705` does**. The field's own `FileType` and
+`Creator` equal the MacBinary header's in all 16, so the decision to read the
+header and not the field (2026-10-01) loses nothing — now measured rather
+than argued.
+
+**One exception, and it is ZipIt 1.x's.** Those versions write the LONG field
+on DIRECTORY entries, where APPNOTE assigns `0x2805` — three of them here,
+across 1.4 and the Japanese 1.x build. A
+directory entry is zero bytes, so its claim to be MacBinary is simply false.
+It costs nothing because `zip_mb_peek` refuses anything under 128 bytes and
+then probes the header: **the engine verifies the claim instead of trusting
+the flag**, which is why a writer that lies about it was already handled.
+ZipIt 2.2.2 uses `0x2805`.
+
+### The three shapes a real writer uses
+
+APPNOTE marks most of these members "MAY be omitted", and every option is
+exercised in the wild: `0x2705` at **12 bytes** (type and creator alone,
+ZipIt 1.x), **14** (plus `fdFlags`) and **16** (plus the trailing word);
+`0x2805` always at 8. So both of the engine's length guards do something,
+and the 12-byte form — the one a generated archive never produced here — now
+has a subject.
+
+### The name, which neither implementation reads
+
+A `0x2605` field carries APPNOTE's "full Macintosh filename", and this engine
+deliberately ignores it. **It is the field that settles the name, and it
+settles it against each implementation once.** Over 20 real `0x2605` entries
+the zip's own name, the field's name and the MacBinary header's name agree 16
+times. The four that differ split evenly:
+
+- ZipIt 2.2.2's `Drop files here to zip (OS X)` is 29 characters in the zip
+  and in the field, and 22 inside the MacBinary header. XADMaster renames the
+  entry to the header's name and **loses `(OS X)`**; this engine keeps the
+  zip's, and the field backs it.
+- One archive's names went into the zip converted to MS-DOS form —
+  `PSYCHO!`, `README`, `SAMPLE` — with `Psycho!`, `READ ME`, `Sample` kept
+  in the field. XADMaster recovers them; **this engine writes the PC-safe
+  name**, and `README` has even lost a space. (Written here as a habit of
+  ZipIt 1.x; corrected 2026-10-05 — it is a per-archive PREFERENCE, and
+  two other 1.x writers here do not do it. See that day's entry, *a leaf
+  is not a path, and a version is not a preference*.)
+
+Nothing was changed for it, because **every entry this build can extract is
+in the agreeing 16**: all four divergent entries are either refused by method
+or already right. What it costs to fix is in OPEN_ITEMS.md; what matters here
+is that the tolerance in `tools/run_zipit.py` is not "ours is right" but
+"ZipIt's own field is one of the two names", which can therefore fail.
+
+### And the premise that fell with it
+
+`Psycho!v1.0ß1.zip` is a White Knight script set from February 1994, written
+by ZipIt, every entry a MacBinary payload with a resource fork — and **every
+entry compressed with method 6, Implode.** OPEN_ITEMS.md's Part 1 keeps
+Implode out on two grounds, of which one was already gone (2026-09-22: an MIT
+implementation and an oracle are both on this disk) and the other was *"not a
+Macintosh method: it is PKZIP 1.x's, and the two corpus archives carrying it
+are PC software"*. **That is now false, measured.** The archive's own comment
+says who wrote it. The CLI's refusal for those three entries ends *"if you
+can share this file, please open an issue — a specimen is exactly what is
+needed to add support"*, and the specimen has arrived; the decision is still
+the maintainer's and nothing was implemented. Note the coupling: adding
+Implode would also need the `0x2605` name, because these are the three
+entries whose names this engine gets wrong.
+
+### What went into the suite, and why not all of it
+
+Two became corpus fixtures, both plain zips the sniffer reads unaided:
+`MrTs_Paint_Folder.zip` (`0x2705` and `0x2805`, no forks) and
+`NPWritersKit.zip` (a `0x2605` entry, 150,016 B of data fork and 323 B of
+resource fork). Those are graded by `run_diff.py` against a committed
+manifest with **no oracle at run time**, which is the strongest form this
+project has.
+
+The other seven are specimens, for one reason: **a ZipIt SEA is not
+recognised.** `unc_zip_probe` reads the head, and the head is PowerPC or 68k
+code. The walker needs nothing — it addresses the central directory
+absolutely, so `-f Zip` reads all five correctly — so this is a probe-shaped
+gap and it is in OPEN_ITEMS.md with its cost. `tools/run_zipit.py` forces the
+format for those five and asserts that the other four are sniffed, so the
+distinction cannot quietly disappear.
+
+### The instrument, and what it cannot see
+
+`run_zipit.py` was made to fail three ways before it was believed: rewriting
+every `0x2605` id to `0x2805` in one specimen gives 4 failures, and moving
+the `0x2705` flag read by two bytes in `src/fmt_exo.c` gives 66. It asserts
+per-specimen tallies — entries, one count per field id, MacBinary payloads —
+because a parse that stopped parsing would otherwise report zero of
+everything and pass. It compares no fork of an entry whose method is out of
+scope and prints that declaration every run. And it adjudicates no date:
+`lsar` reports zip's MS-DOS stamp where a `0x2605` entry's MacBinary header
+carries two Macintosh ones, so the two are not the same field.
+
+### The tool that was eating the documentation
+
+`harvest.py --probe` rewrites `fixtures/SOURCES.md` whole and wrote back its
+own `HEADER` constant, so **registering a fixture deleted the twelve lines of
+prose under it** — the paragraph naming the fixtures that are not archives
+and must not have manifests. Nothing reads that file, so nothing ever failed;
+it was noticed only because `git diff` said `1 insertion, 13 deletions`.
+`save_sources` now keeps everything above the table marker verbatim and
+round-trips byte-exact. **A generator that regenerates a file it does not own
+all of will throw away the part it does not know about**, and the diff is the
+only thing that was ever going to say so.
+
+## 2026-10-04 (the installation nobody installed) — StuffIt 5.5 and 7.0.3 over Info-ZIP's `0x334d`, and three ways a keystroke lies
+
+**The question.** FORMATS.md said StuffIt does not read Info-ZIP's
+`0x334d` and rested that on two different kinds of evidence: 3.5.2 had
+been RUN over an archive, and 5.5 and 7.0.3 had been READ — their zip
+readers lifted out of the installers and searched for the compared
+immediate. The reading was labelled as a reading. It is now a
+measurement too: both were run on 2026-10-04 and both agree with it
+(FORMATS.md, *What Aladdin's own software does with the same bytes*).
+
+**Why it got cheap enough to do.** The blocker was never the question,
+it was the installation: 5.5 wants a 68020 and 7.0.3 a PowerPC, so both
+mean the Mac OS 9 QEMU guest, whose pointer costs ~40 s a move and
+whose menus cannot be used at all. Two unrelated things had meanwhile
+removed the obstacle. Method 14 landed on 2026-10-03, so this engine
+extracts both installer PAYLOADS whole; and `hfsboot.img` had existed
+since 2026-09-27 — a plain-HFS Mac OS 9 boot volume, which hfsutils can
+write. Between them the installation can be **assembled on Linux**: the
+engine, the translators and the application `hcopy -m`'d into a System
+Folder, and the guest booted with the result. No installer is walked, no
+serial number is typed, and the only pointer work left is two licence
+buttons. **An item filed as "needs an emulator that installs them" was
+closed by a decoder and a disk image, neither written for it.**
+
+**Where the pieces go is read, not remembered.** The 5.5 engine's own
+`STR# 999` is `Extensions`, `Aladdin`, `Extensions:Aladdin`; `STR# 1004`
+holds `:Extensions` and `StuffIt Engine™`; `fld# 999` names
+`Translators`. The installer's *What was installed (and where)* draws
+the same tree in two `PICT`s, which render here. That is the format rule
+applied to a filesystem layout, and it cost nothing: every guess would
+have been checked by a boot anyway, and a boot is eight minutes.
+
+**Select by type and creator, never by name.** An InstallerMaker payload
+carries a zero-length `STde`/`STin` directive beside most real files —
+one per thing the installer deletes or moves — and `! Zip Translator` is
+one of them. The first assembly pattern-matched `*Translator` and
+selected the directives: empty files, in the folder where the engine
+looks for translators, with nothing to say they were wrong. Picking by
+`SITo`/`SIT!` and asserting the count the box documents (seventeen)
+fails instead.
+
+**Three keystrokes that lie, and all three look identical from outside.**
+
+- **A Return in the Finder renames.** The sequence opened with
+  `os9.py`'s `Cmd-Q, Return`, which quits the Setup Assistant the HFS+
+  master puts up on every boot. `hfsboot.img` has no assistant, so the
+  Finder was frontmost, the Return opened the selected icon's name for
+  editing, and the three letters typed next went into it: the boot
+  volume `HFSBoot` was renamed `sit`, and the run then opened it instead
+  of the transfer volume and reported every step as healthy. **A step
+  borrowed from another harness carries that harness's assumptions
+  about what is on screen.**
+- **A chord the application does not have is a chord the guest
+  ignored.** 5.5's Expand is ⌘E and 7.0.3's is ⌘O — `MENU` 129 in each
+  — and under ⌘E the 7.0.3 run sat on its drop window for 127 s and
+  then carried on. The resource says which; nothing else does.
+- **Return does not reach a button that is not the default.** Apple's
+  disk image draws `Disagree` and `Agree` with identical frames, and so
+  does the installer's *"you must agree"* alert; six presses moved
+  neither. The `Choose` button of 7.0.3's Navigation Services dialog is
+  the same shape of problem — and worse, because `Open` beside it is
+  enabled for FOLDERS, so the run that pressed Return navigated into
+  the boot volume and reported "expansion started" with nothing
+  expanding.
+
+Each of those produced a complete, plausible run that measured nothing.
+What caught all three was the same thing: **the verdict is read off the
+disk afterwards and the screenshots are looked at**, so "0 agree, 4
+differ" and "NOTHING extracted" are different outcomes and a renamed
+volume is visible in the frame.
+
+**The CarbonLib gate, and why the guest had to do that part.** 7.0.3's
+Expander refuses to launch under the CarbonLib the image ships — it says
+so, by name and version. Apple's 1.6 update is a self-mounting image
+whose data fork is NDIF, and reading one is out of scope here
+(OPEN_ITEMS.md Part 1), so the Macintosh mounts it: the harness launches
+the `.smi`, clicks `Agree`, opens the volume, opens the installer, and
+walks its default buttons. The pass condition is the extension's `vers`
+read back off the volume with hfsutils, which is the only part of that
+chain that cannot be fooled by a screenshot of the right window at the
+wrong moment.
+
+**What came out.** No StuffIt reads the field, across nine years and
+three generations, and all three lose `MSWD` three times out of three.
+Two differences between them are worth more than the agreement: 7.0.3
+stopped rewriting text — 3.5.2 and 5.5 convert CRLF to CR and 7.0.3
+returns all four forks byte-identical to the archive — and 7.0.3 stopped
+GUESSING, leaving `checksum.md5` with type and creator both zero where
+its predecessors at least produced `TEXT/ttxt`. **The last classic
+StuffIt fixed the data and dropped the metadata**, which is the opposite
+trade from the one this engine makes.
+
+
+## 2026-10-05 (the sample that was read as the table) — two of fourteen call sites, and the id they named belonged to another format
+
+On 2026-09-27 the `.pkg` probe was withdrawn because the routine behind it
+was a command parser, and the same reading established where the real work
+must be: *"it calls `GetResource('Eng ', 2)` in `StuffIt Engine™` and jumps
+in (@0x334c) ... the decoding lives in 25 KB code resources"*. That sentence
+became the open item, FORMATS.md's row and this session's brief: **read the
+26,362-byte `'Eng ' 2`.**
+
+**It is the StuffIt/PackIt unstuffer.** The disproof is to count the call
+sites. There are **fourteen** `'Eng '` literals in the translator's code, not
+two, and they are a complete 7 × 2 table: a pair of
+`GetResource`/`HLock`/`jsr`/`ReleaseResource` thunks for each id 0 through 6,
+every one of them reached from a seven-way if/else-if chain at @0x30c0. Each
+branch is a recogniser, and **none of them tests `.pkg`**:
+
+| recogniser | test | → |
+|---|---|---|
+| @0x37ac | extension `.HQX` | `'Eng ' 0` |
+| @0x37f0 | type `PACT` or creator `EXTR` | `'Eng ' 1` |
+| @0x3834 | type `HBSF` | `'Eng ' 2` |
+| @0x386a | `.ZIP`, `.GZ`, `.TGZ` | `'Eng ' 3` |
+| @0x38dc | `.ARC` | `'Eng ' 4` |
+| @0x3920 | `.Z` | `'Eng ' 5` |
+| @0x3962 | `.UU`, `.UUE` | `'Eng ' 6` |
+
+Three of those seven are confirmed by the resources' own contents rather
+than by the disassembly — `'Eng ' 0` holds BinHex's 64-character table,
+`'Eng ' 3` the gzip magic, `'Eng ' 5` `1f 9d` — so the table is checked two
+independent ways. `'Eng ' 1` is **Compact Pro**: `PACT`/`CPCT` is Compactor
+in `reference/macutils/README`, and the resource's header parser wants byte 0
+= 1, byte 1 ≤ 1 and a non-zero longword at +4, then seeks there and reads
+seven bytes — which is `src/fmt_cpt.c`'s signature, volume, index offset,
+index CRC, `nentries` and `commentlen`, field for field. Its error numbers
+index `STR# 211`, whose item 1 is *"it is not a Compact Pro file"* and whose
+item 15 — raised for a zero index offset — is *"this is a segmented
+archive"*, the same condition `fmt_cpt.c` returns `UNC_ERR_SEGMENTED` for.
+
+**The translator has no AppleLink code in it, and says so in a resource
+name.** `PKG Expand Translator`'s `'Othe' 0` is *named* `CompactPro`; its
+`'Name' 0` is `AppleLinkPKG`. `Unix Compress Translator`'s code resource is
+named `UUCode`. Aladdin built these plug-ins by copying a sibling and
+changing `STR# 129`, and the resource names recorded which sibling — which
+is also why that file's recogniser was "instruction for instruction the same"
+as CompactPro's in the 2026-09-27 entry. It was the same build.
+
+### Where the reference implementation actually was
+
+**StuffIt Deluxe 3.0.7 ships `AppleLink Package Translator` 3.0.3,
+"Copyright © 1990-1992 Aladdin Systems, Inc."** — and FORMATS.md had named
+that file on 2026-09-28, in the sentence *"which 3.5 renames `PKG Expand`"*.
+It is not a rename. It is a different program: `'Othe' 1`, 33,300 bytes,
+**148 MacsBug symbols**, AppleLink's own `'ALinkFont'`, an `'INT ' 6000`
+named *"line speed, bps"*, and menus reading *"Expand from AppleLink
+Package"*. Its `'HBSF' 0` resource is the Pascal string `SQUEEZEPLAY 1.0`,
+and its routines are `RdSQPDirectory`, `WrSQPDirectory`, `InitSqp`,
+`unpackFile`, `Decompress`, `GetCode`. The format's name is **SqueezePlay**.
+
+Getting it out needed no emulator. The 3.0.7 installer is two StuffIt
+segments (`ac d9 00 01` / `00 02`) that neither this engine nor `unar`
+recognises, but each carries a 100-byte header and `seg1[100:] + seg2[100:]`
+is **exactly** the `0x14dd14` the `SIT!` header declares — an arithmetic
+check, not a guess — after which `macextract` lists and extracts it and the
+CRCs pass.
+
+The layout, the codec and the grading are FORMATS.md's (*AppleLink
+packages*); `tools/derive_sqp.py` is the reader, with thirteen witnesses.
+All **4 of 4** members of both real packages expand to their declared length.
+
+### The lessons
+
+**Count the call sites before believing the one you read.** The 2026-09-27
+entry's new smell was *check which question the cited routine answers*; this
+is that one step on — **check whether the routine you cited is one of
+many.** The check costs nothing and would have worked on the day: searching
+the same 16,482 bytes for the `'Eng '` literal returns fourteen hits, and
+seven consecutive ids are a dispatch table rather than a format's decoder.
+The id that was sampled was reachable only through a `HBSF` type test, which
+is visible in the same function.
+
+**A resource's NAME is evidence about where its code came from.** It cost
+nothing to print and it settled what `PKG Expand Translator` is. Nothing had
+ever listed that translator's resources with their names until this session,
+although `tools/vmac/spacesaver.py --pkg` had been reading two resources out
+of the same file since 2026-08-23.
+
+**And the oldest one here again: the thing was one directory away.** The
+3.0.7 installer has been in `~/.cache/macextract/stuffit307/` since
+2026-09-28, downloaded to count translators by their names — and the answer
+to *"is there a reference implementation?"* was inside it, put there by a
+question about something else. That is the fourth time (deark's signatures,
+StuffIt Deluxe's encrypted forks, the StuffIt 5 crypt specimens, this), and
+the rule that keeps catching it is: **before filing a route that needs new
+evidence, look for the evidence a PAST question already produced.**
+
+### One thing this session got wrong in its own tool, and it is the smell in CLAUDE.md
+
+The first version of `derive_sqp.py` passed `rec["dlen"]` into the
+decompressor as a ceiling and then asserted that the output was `dlen` bytes
+long. **It reported OK on a package with a byte flipped in the middle of its
+LZW stream**, because the assertion was about its own truncation. Removing
+the ceiling makes the stream's natural end the test, and the same corrupted
+file then reports 1,960 bytes against a declared 1,954 and exits non-zero.
+The sha256 of each expanded member is recorded in the script for the same
+reason: a package carries no per-member checksum, so nothing else can tell a
+subtly wrong decoder from a right one.
+
+
+## 2026-10-05 (the file the item asked for was already in ci.sh) — the offset-delta search fuzzed, and a `--check` that compared nothing
+
+`now_find_delta` was the last Now Compress function no fuzzing entered,
+and OPEN_ITEMS.md said what it wanted: *"an archive whose block table
+carries a delta. Neither corpus archive has one."* Both halves of that
+are true. **It is also a file this project has written since M12** —
+`synth_now.py`'s `synth-now-delta` and `synth-now-delta-small`, graded
+three ways against `unar` by `run_now.py` on every `ci.sh` run. What was
+missing was one line of `fuzz.py`, whose repair generator draws from
+`corpus()` and so could only ever see files somebody else made. **When
+an item names what it wants, grep for it**: `synth-now-delta` is a
+literal string in this repository, and the row stood for eight days
+without anybody typing it.
+
+**But adding the file alone would have done nothing, which is why the
+row looked right.** `now_repair` finds a block's payload through
+`mutate_now.blocks` → `derive_now.member_blocks`, and that reader had no
+offset-delta search at all: it requires the last record's end offset to
+equal the member's declared end, which is exactly what a rebased table
+does not do. A delta archive therefore fell out of `now_seeds()`'s own
+filter — *no blocks, not a seed* — and would have done so silently. So
+the Python side got the search the engine has had all along, transcribed
+from the same place (`-findFileHeaderDeltaWithHeaderOffset:firstOffset:`,
+`reference/XADMaster/XADNowCompressHandle.m`), tried in the same order:
+an offset that cannot be right is not tried, otherwise the plain reading
+goes first.
+
+**And the one grader that could have noticed was the one that could not
+read the file.** `tools/mutate_now.py --check` decodes before and after
+and reports what moved — the step whose stated purpose is to say that a
+mutation is a fair question. On every `--delta` run it zipped two empty
+lists, printed `0 block(s) read the same, 0 changed`, and exited 0.
+Pass-shaped, and it had never once compared a block. It cost nothing
+downstream — the delta ladder's verdicts came from the Macintosh, where
+the archive's own self-extractor read a rebased file byte for byte
+(2026-09-21), and the engine's search is graded by `unar` — but it is
+why this item took eight days to close and not an afternoon, because the
+reader that would have reported *"I cannot read this"* reported a pass
+instead. The vacuous line had been printing since `--delta` was written,
+on 2026-09-21. **A comparator that
+iterates over what it parsed reports success when parsing failed.**
+Compared-nothing is now a failure, which is one line, and planting a
+`table_delta` that returns 0 turns the same run red.
+
+**One archive did have to be written, and it is the one with the sign
+on it.** The two that existed are off by +134 and +8; `mutate_now
+--delta` has accepted a negative since 2026-09-21 and nothing had ever
+handed one to a reader, so everything downstream of the search — an
+`int32_t` added to every offset, in both implementations — was graded
+only on positives. `synth-now-delta-neg` is off by **-64**, read by
+`unar` and by this engine and by `derive_now`, and **it is gated on the
+sign**: forcing `now_find_delta`'s answer positive refuses that archive
+and leaves the other three extracting, 1 of 4. A delta archive that
+does not fail when the arithmetic is broken is testing the search and
+not the correction.
+
+What the re-measurement says, and what it does not. `fuzz_cover.py` at
+3,000 cases: **Now Compress 13 functions, 0 never entered, at seeds 11
+and 12**, against the same two seeds naming `now_find_delta` as its one
+unreached function beforehand. Other families moved in both directions
+in those same runs — **ARC 0 at seed 11 against 13 at seed 12**, StuffIt
+classic 9 against 2 — which is not an effect of anything here (three
+files added to a pool shift every later draw in the run) but is **more
+than
+the five functions this instrument's noise floor claimed**. That figure
+is corrected to thirteen in all three places that cite it. The signal to
+read off this instrument remains the one it says to read: whether a
+family is WHOLLY at zero, at more than one seed.
+
+**One wart found by needing the instrument four times.**
+`fuzz_cover.py` opened with `make clean` and no `BUILD=`, which is
+`rm -rf build` — `build/san`, what `ci.sh` and `fuzz.py` both default
+to, and every oracle built under that directory: deark, lha, mpack,
+50 MB of clone-and-compile. It rebuilds one directory and now empties
+only that one.
+
+## 2026-10-05 (the seed nobody drew) — method 14 fuzzed by naming a seed and targeting its streams, and the two rows of the instrument that could not report
+
+**The item said to fix the instrument rather than the row, and the row
+turned out to be half wrong as well.** It read *"method 14's decoder is
+never entered by `fuzz.py`"*, measured over 1,500 cases on 2026-10-03.
+At 3,000 cases, **ten of its eleven functions are entered**, at seeds 11
+and 12 alike: the seed is 1 of ~958 in the pool the mutation and splice
+generators draw from, which is about 2.3 draws in a run that long. The
+zero was a sample, and the claim was written without the case count it
+was measured at (BLOCKERS.md). The instrument's own docstring says a
+family at zero in a small run may be sampling — which is the
+*limitation written one paragraph from its own remedy* smell, in the
+cheapest possible form: the paragraph was in the tool being quoted.
+
+**What was really missing is the part a bigger run cannot buy.** The
+nested-tree reader, `sit14_lengths_coded`, is at 0 % at both seeds and
+every case count tried, because it is entry 4's shape and most mutants
+die before the walk reaches it. So the fix is the one the ciphers got in
+2026-09-26, in the other half of the engine: name the seed, and confine
+the edits to the bytes a DECODER reads. `synth_sit14.py --ranges` is
+`synth_crypt.py --ranges`' contract — the four method-14 streams, 1,345
+B of 1,859, the rest being an 80-byte banner and four entry headers that
+refuse the file when they are bent.
+
+**And the decomposition is worth keeping, because it is not the obvious
+one.** Naming the seed is most of the gain: 120 cases of the file
+mutated ANYWHERE already reach all eleven functions and 95.5 % of the
+entry function's lines. Targeting adds 98.5 % and `sit14_tree` 94.4 →
+100. The reasoning that the banner makes whole-file mutation useless is
+true per case and false per hundred — *most* mutants dying in the
+sniffer is not *all* of them, and a generator that draws the same file
+120 times gets the survivors. **A per-case probability is not a reach
+figure**; what made the difference here was arithmetic over the pool,
+not the mutation shape.
+
+**The twelve seeds that already existed had the same disease, and
+nothing could see it.** `method_seeds()` has written `-lh2-`, `-lh3-`
+and DiskDoubler 3/4/5 seeds since 2026-09-27, each committed or
+generated precisely to take a family off zero — and then dropped into
+the pool with the same weight as any fixture, so whether the family is
+reached is a draw with about a tenth of the weight on never. It landed
+during this work: `-lh2-`'s `lzd_*` read 2 functions never entered at
+seed 12, and **16 of 16, the whole file, one reshuffle later.** A seed
+committed to the tree so a family would stop being at zero, and whether
+it was at zero was decided by the RNG. Named seeds now take one case in
+32, at which `-lh2-` reads 1 at seeds 11, 12 and 13 alike.
+
+**1/32 rather than 1/16 is measured, and the figure that chose it is not
+the one I expected to use.** Both shares give the same families the same
+counts at three seeds, so stability does not separate them; what does is
+the total never-entered, LOWER at 1/32 at all three (147/137/150 against
+174/163/156). What no run here can say is whether 3 % of the draws costs
+a corpus family anything, and the attempt to say so is instructive: ARC
+reads 7, 11 and 18 functions never entered at 1/32 against 15, 15 and 13
+at 1/16, so the cheaper share owns the worst run of the six. **A family
+whose specimens are one archive each is a lottery however the draws are
+weighted**, and this is the withdrawn starvation claim of 2026-09-27
+again — which is why the share was chosen on the one number that moved
+in one direction at every seed, and the rest reported as noise.
+
+**Two rows of the measuring instrument could not report at all, and
+both were found by splitting it.** `^sit\d*_` put method 14's eleven
+functions inside a "StuffIt classic" of 34, and a family of 34 cannot
+read as wholly at zero — the one signal this instrument calls reliable.
+So method 14's state had been unreadable there since the day it landed,
+which is what made the open item believable: the row it was filed from
+could not have contradicted it. The BinHex row's regex named `hqx_`/`binhex_` where the
+functions are `bh_`: zero matches, and the tool skipped empty families
+silently, so twelve functions read as absent rather than unmeasured for
+as long as the tool has existed. Both are the *check whose subject
+failed to load* in a new place: **an aggregate that names its subjects
+by pattern has to be asked whether the pattern matched anything.** The
+tool now prints a row that matches nothing, and counts the functions
+that match no row — 381 of 581, which is the containers and envelopes
+it was never a claim about.
+
+**And it was asked whether it would have found the defect that
+motivated it**, which is the only form of "this works" this repository
+accepts: `sit14_build`'s code counter planted signed again — the 2026-10-03
+defect — is caught by **11 of 400 `--stream-only` cases and by none of
+3,000 under the old instrument**, which enters the decoder there and
+still misses it. Entered is not exercised, in one measurement. `ci.sh`'s
+150-case smoke misses it too, at 11 stream cases and a 2.75 % hit rate;
+that is what a smoke is, and the figure is in TESTING.md so nobody reads
+the green as coverage.
+
+**What the new mode cannot see**, recorded because a harness without
+that paragraph is worth less than its figures: the window-wrap half of
+`sit14_flush`, which needs a fork past 256 KB where this seed's largest
+is 17,799 B — the window is sized to the fork, so nothing smaller can
+reach it; **withdrawn 2026-10-06, 458 B of stream decode to 278,896 B
+and a second named seed wraps it** (BLOCKERS.md; 2026-10-06, *the fork
+that was cheaper than the file*) — and the `goto out` after a failed
+flush, which is a sink write error no mutant can cause. One container only, a bare `.sit`. And
+a mutant is graded by nothing: what is graded is the seed, which
+`run_diff` adjudicates against `unar` on every run.
+
+## 2026-10-05 (the deviation that was the reference) — AppleLink packages extract, and the codec needed no parameter
+
+The brief was to implement the AppleLink `.pkg` decoder, and it named the
+one thing that would make the codec awkward: **SqueezePlay sets the next
+free code to 256 after a clear where `compress` sets 257, so
+`src/unc_lzw.c` cannot be reused unchanged — choose between a parameter
+and a separate path on measured m68k size.**
+
+**Neither, because the premise is wrong.** `reference/macutils/macunpack/
+de_compress.c` — Unix `compress`'s own decompressor, which this project
+has carried since M0 — reads, at the clear code:
+
+    clear_flg = 1;
+    free_ent = FIRST - 1;
+
+`FIRST` is 257, so `compress` sets **256** there, exactly as the expander
+does at @0x2ae0. What sets 257 is **deark's** rendering of the same
+algorithm (`delzw_clear`, `free_code_search_start = first_dynamic_code`),
+and deark is what `src/unc_lzw.c` was transcribed from. So the claim was
+a fact about this engine's own source, promoted to a fact about
+`compress`, and then recorded as a deviation in the format. It is
+withdrawn (BLOCKERS.md).
+
+The two renderings differ in one thing and it is unobservable: `compress`
+writes an entry into slot 256 on the first code after a clear, with the
+stale pre-clear `oldcode` as its prefix, and no prefix chain can ever
+reach 256 because 256 is consumed as the clear code before any table
+lookup. `unc_lzw.c` writes nothing there and skips the first add instead.
+Both arrive at the same `free_ent` and the same table from the second
+post-clear code onwards.
+
+**So the measured answer to "a parameter or a separate path" is 0 bytes of
+either**, and the call is
+`unc_lzw_init(&z, al, in, 13, 1, clen)` — the configuration ARC method 9
+already asks for, graded by 10 ARC fixtures on every run.
+
+### What made that safe to believe, and it is not the argument above
+
+An argument that two decoders agree is worth what its author's attention
+is worth. What settles it is that **a SqueezePlay fork is a `.Z` file
+without its header**: write `1f 9d` and a mode byte of 13 | 0x80 in front
+of the fork's own bytes and `gzip -dc` decodes it. All four members of the
+two real packages come out byte-identical to the engine's output, and so
+do all 18 LZW forks of the six synthesised packages — including a
+36,000-byte stream that fills the 8,192-entry table twice and therefore
+carries two clear codes, which is the path the withdrawn claim was about.
+
+That is a **second implementation** for the codec, found by asking what
+the codec IS rather than by looking for a program that reads `.pkg`
+files. Nothing reads `.pkg`: `unar`, deark and macunpack have zero hits
+for "applelink" or "squeezeplay" between them. The oracle was one
+`subprocess.run` away the whole time, and it is in `ci.sh` now
+(TESTING.md, *AppleLink packages: SqueezePlay*).
+
+### Three things the reading had wrong, all from routines nobody had read
+
+`tools/derive_sqp.py` graded 4/4 on both packages on 2026-10-05 and three
+of its field assignments were still wrong — which is what a corpus of two
+flat, resource-forkless, under-50-item packages can hide:
+
+- **Record +4 and +16 are the resource fork's compressed length and
+  absolute offset**, the mirror of the data fork's +8 and +12. They were
+  filed as two of "three `u32`s not read by anything", because both are
+  zero in all four real members. `DoWork` @0x714 tests +4 to decide
+  whether there is a second fork at all, and @0x816 writes +16.
+- **The stored flag is bit 1 of the BYTE at +84**, not of a `u16`. The
+  distinction is bit 1 against bit 9, and this corpus cannot tell them
+  apart: all four records hold `0x8000`, so both readings answer "not
+  stored". `btst #1,%a3@(96)` on a memory operand is a byte operation —
+  that is the whole of the evidence.
+- **The resource fork has its own stored bit**, bit 2 of the same byte
+  (`DoWork` @0x96e). Two `bset`/`btst` pairs exist in the binary, one per
+  fork, and a search for them took a minute.
+
+And two facts the reading did not have at all: the header's count is the
+**SQP** directory's, capped at 50 and skipping folders and already-
+compressed types, while the **item** count is the second header's; and a
+version-1 package's HFS directory carries a `u16` level and a `u16` folder
+flag per record, which is a folder TREE. The engine reads both, and a
+package with folders extracts into folders.
+
+**A folder's type and creator are a rectangle, and a first version of the
+decoder reported them.** `AddItems` @0x2378 copies 16 bytes of Finder info
+into record +20 whatever `PBGetCatInfo` left there, so a file's record
+carries an `FInfo` and a folder's a `DInfo` — whose first eight bytes are
+the folder's window rect. The Finder flags survive the difference (both
+structures hold them at +8) and so do the dates, which are one field of one
+union; the type and creator do not, and the engine now leaves them unknown
+for a folder. Nothing would have failed on it: `synth-sqp-folder.pkg`'s
+folders had `TEXT`/`ttxt` in those bytes because the generator put them
+there, and the two real packages have no folder at all. **A generator that
+shares the decoder's reading agrees with it about its mistakes** — which is
+the limit the FORMATS.md table states for all three container paths that
+rest on one.
+
+**The smell is one this file has recorded before and under another name:
+a reading that passes is not a reading that is complete.** The grading
+was real — four members, byte-exact, against a recorded sha256 — and it
+could not have failed on any of the five fields above, because every one
+of them is zero or constant in both specimens. What found them was
+reading the WRITER as well as the reader: `DoSqForward`, `DoItemsForward`
+and `AddItems` say what each field is FOR, and three of them contradicted
+the table.
+
+### The probe, which had to be a file test
+
+`unc_applelink_probe` was removed on 2026-09-27 for tokenizing a
+translator command line, and the item that replaced it asked for a real
+one: an item count, a version byte, eight zero bytes, and a directory
+whose records tile the file to its last byte. That is what
+`src/fmt_sqp_probe.c` does, plus two structural tests the tiling does not
+cover — every name within what a `Str31` holds, and every level between 1
+and one deeper than the item before it, since only a folder can be
+descended into.
+
+**It costs 666 B of 68000 text, resident**, because the sniffer calls it
+for every file it is handed; with the release switch's case, the shim and
+the engine's table row that is **788 B off every extraction's budget on a
+1 MB Mac Plus**, and it is the largest single addition to the shipped
+build since the overlays landed. Two cheaper shapes were measured and
+**both were 6 B worse**: a table of the two forks' field offsets instead
+of the ternaries, and one helper for the two runs of zero bytes instead of
+two loops. A third change — carrying a running record offset instead of
+multiplying — was free, so it was taken for being clearer.
+
+What the 788 B buys is the only thing it could: a `.pkg` recognised by
+its CONTENT. Aladdin's own reader never did that — `PKG Expand
+Translator` matches the extension and its Standard File dialog lists only
+directories — so this engine identifies the format in a way the program
+that invented it could not.
+
+### Its own image, and the count goes back to fifteen
+
+`ovl_sqp` is **1,972 B**, the smallest of the fifteen, and the alternative
+was lodging the decoder in `ovl_packit` — the only other image holding one
+small single-format decoder. Measured, not chosen on taste: an image costs
+12 B of bundle directory and 8 B of block header, so a fifteenth image
+costs 20 B against making every `.pkg` carry PackIt's 2,648 B and every
+`.pit` carry SqueezePlay's 1,972. The build's own rule — one image per
+format family, so the most expensive archive has the least code in memory
+— answers it, and the arithmetic agrees by two orders of magnitude.
+
+A package therefore gets the **largest per-format grant any format has**,
++119,534 B against the control (FORMATS.md, *What each format is granted*),
+which is what the smallest image means. The 666 B probe and the 119 KB
+grant are the two halves of the same trade, in opposite directions.
+
+### What the generator is for, and what it is not
+
+`tools/synth_sqp.py` writes a package per unreached path — a resource
+fork, a stored fork, a stream with two clears, version 0, a folder tree —
+and it is an ENCODER read out of the same binary as the decoder:
+`Compress` @0x27de and `PutCode` @0x28fe, which are `compress`'s
+`compress()` and `output()` with the ratio-watching `cl_block` heuristic
+absent, so the only clear it can emit is the one the full table forces.
+The stored members are not produced by setting a flag: they are
+incompressible bytes, and the writer's own rule at @0x4e2 stores a fork
+when compressing it saved nothing.
+
+**Three of the five paths are therefore graded against this project's own
+reading** — the container has no second reader anywhere — and FORMATS.md
+says so in a table rather than leaving it to be inferred from a green
+run. The clear code and the 13-bit width are the two that `gzip` settles.
+What would close the rest is one run nobody has done: hand a synthesised
+package to `AppleLink Package Translator` 3.0.3 under Mini vMac. Its
+sibling's dialog could not be given one (seven boots, 2026-09-01), but
+that was the 3.5 translator and this is a different program with its own
+interface — and CLAUDE.md's rule about a submenu applies to a dialog too:
+it is worth one attempt.
+
+## 2026-10-05 (the scan that was already being paid for) — a zip behind a stub, and the segment claim that rested on four bytes
+
+The brief was to decide, with measurements, whether to recognise ZipIt
+self-extracting archives. OPEN_ITEMS.md had priced the fix as **not
+free**: "the cost is a backward scan for every file the sniffer rejects,
+against a corpus where most are not zips". That premise was wrong, and
+not by a little — **the scan was already running on every one of those
+files, finding the record, and throwing it away.**
+
+`unc_zipseg_probe` sits immediately before `unc_zip_probe` in the sniff
+order and scans the last 64 KB backwards for the end-of-central-directory
+record. When that record said "disk 0" it returned `UNC_FORMAT_UNKNOWN` —
+because a set of one is not a segment — and the next probe then looked at
+the first four bytes of the file, which in a self-extractor are code. The
+answer was in hand and discarded one line before the question was asked
+again in a form that could not reach it.
+
+### The number that settled it
+
+`tools/sniff_io_probe.c` counts `UncIO.read` calls and bytes for
+`unc_sniff` alone, which is the axis that matters on a Macintosh — each
+call is a `SetFPos` + `FSRead` pair on a floppy — and the one no Linux
+wall clock shows. With the scan disabled as the control, it is **50.0 %
+of every read a sniff of the 955-file corpus makes and 71.4 % of the
+bytes**: 44.8 reads and 45,271 bytes for each of the 204 BinHex
+fixtures alone. Recognising the archive behind the stub adds **one
+four-byte read** to a file whose record corroborates and **+0 reads,
++0 bytes to all 7,601 files a sweep of 8,364 non-archives has the
+sniffer reject**. The figures are FORMATS.md's, *What the zip pair
+claims, and what it costs*.
+
+So the axis the item was filed on was already spent. What the change
+actually costs is **316 B of resident `CODE` and 4 B of A5, in all three
+configurations** — 320 B off every extraction's budget on a 1 MB Mac
+Plus. Nothing goes into an `'OVLY'` image and nothing can: the sniffer
+calls this probe for every file it is handed, which is the same position
+the 666-byte AppleLink probe is in (2026-10-05, *the probe that had to be
+a file test*). The instruction axis is 0.003 % of one extraction and no
+tick probe was run, because CLAUDE.md reserves the emulator for close
+calls and four orders of magnitude is not one.
+
+### Why self-extracting LZH's reasoning does not transfer
+
+Part 1 of OPEN_ITEMS.md keeps self-extracting LZH out because "the
+archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding
+it means knowing each of those loaders" — `unar` has a parser per
+platform. That is a statement about **LZH**, not about executables: an
+LZH has no directory, its entries are a chain from the first header, and
+nothing in the file says where that header is. The only way to find it is
+to understand the loader in front of it.
+
+A zip is the opposite case, and it is the format that makes it so. Every
+offset in a zip is absolute from the start of the FILE, and the record
+that gives them is at the END, found by scanning backwards from there.
+The stub is never looked at. That is why `-f Zip` already read all five
+ZipIt specimens correctly before any of this, and why the walker needed
+no change: the only thing that could not see past the code was the
+sniffer's first four bytes.
+
+The second half of the item's own reasoning points the same way: there is
+no plain `.zip` beside a ZipIt `.sea` to hand over instead, so "the
+answer is to hand the `.lzh` itself to the extractor" has no counterpart
+here. **And a DOS self-extracting zip being newly claimed is a gain
+rather than the hazard the item read it as** — measured on one built here
+with `zip -A`, it extracts its entries correctly, which is what a user
+wants from an unarchiver; the alternative is "format not recognized".
+Four of the five ZipIt specimens are the same case wearing a Macintosh
+wrapper: MacBinary comes off, and what is underneath is a PEF container
+with a zip behind it.
+
+### What the measurement found that was not asked about
+
+Sweeping 8,364 files that are not Macintosh archives — `reference/`,
+this repository's own trees, the emulator's specimen cache — turned up
+**five that the engine was already claiming**, as `UNC_FORMAT_ZIPSEG`:
+four Python `.pyc` files and one of deark's object files. The segment
+half of the zip pair required `PK\5\6` by backwards scan and a nonzero
+"number of this disk", and nothing else whatever. A `.pyc` carries those
+four bytes by chance about once in 1,700 files.
+
+That is the cheaper half of the same lesson. The item worried that
+claiming a trailing zip was too weak a test — four bytes plus a disk
+number plus a verified directory — while **the probe beside it was
+shipping four bytes plus a disk number and no directory at all.** The
+strong test was being withheld and the weak one was already in the
+binary. Both halves now go through `zs_cd_is_there` (BLOCKERS.md,
+*Withdrawn claims*, for what it cost).
+
+### The test that was proposed, the test that shipped, and why they differ
+
+The item's proposal was "require that the directory it points at starts
+with `PK\1\2` and holds the entry count it declares". The first half
+ships. The second does not, for two measured reasons:
+
+- **It is not well defined.** APPNOTE.TXT 4.3.13 lets a *digital
+  signature* record follow the central file headers inside the same
+  directory, so a walk that expects `total` headers and then the end is
+  reading a rule the format does not state.
+- **It costs reads where the whole point is that reads are the cost.**
+  Walking a 74-entry ZipIt specimen's directory is ~74 reads against the
+  4 the entire sniff now takes.
+
+What shipped instead is the same consistency claim as a **lower bound**:
+a central file header is 46 bytes before its name (4.3.12), so a
+directory of `total` entries cannot be smaller than 46 × total, and the
+`here` entries that are on this part lie in front of the record (4.3.6)
+and need 46 bytes each there too. Zero reads, and it is the row that
+rejects a junk record in the unit test. Each of the five tests is
+observed to reject something — FORMATS.md has the table — which is the
+answer to "what evidence does this tolerance rest on": not our own
+output.
+
+### The first draft refused a set Info-ZIP writes
+
+Two of the five tests are conditional on the directory being on this
+part, and that condition is not caution. **`zip -s` splits the central
+directory** once it outgrows a part: measured at 1,200 entries and 64 KB
+per part — disk 7 of 8, the directory starting on **disk 6**, 132,048
+bytes of it declared, and 238 of the 1,201 entries in the 26,312-byte
+file the record is in, where the signature at the declared offset is the
+middle of somebody's filename. The first draft required the extent
+unconditionally and refused that set: eight parts, 1,200 entries, "format
+not recognized".
+
+Nothing in this repository had ever generated that shape. The three
+things that found it were, in order: running the generator at a size
+nobody had tried, the suite that already existed being pointed at the
+result, and `tools/synth_zipsplit.py` gaining a `zspancd` case so the
+next draft cannot repeat it. It is the plainest instance of the rule this
+project keeps re-learning — **a test that passes may not be testing
+anything** — in its other direction: the five zip cases in
+`run_segments.py` all passed the broken draft, because none of them was
+big enough to make Info-ZIP do the interesting thing.
+
+### A fixture that declared 43,521 entries
+
+Adding the `total` test made nine existing checks fail, and the engine was
+right: `zs_build_tail` in `tests/unit_formats.c` wrote both two-byte
+entry counts **one byte at a time**, so the high byte was whatever the
+caller's buffer held. Two of its three callers hand it a zeroed buffer
+and read 1 as intended; the third fills with 0xAA on purpose — "noise,
+not zeros, in the comment" — and had been declaring 43,521 entries in a
+47-byte directory since the day it was written. The property it tests, a
+signature straddling the backwards scanner's window edge, never depended
+on that. Corrected where it lives, with both bytes written.
+
+---
+
+## 2026-10-05 (a leaf is not a path, and a version is not a preference) — the `0x2605` FileName measured before it was read, and the tolerance that could only fail one way
+
+The brief was to read ZipIt's `0x2605` FileName — APPNOTE.TXT 4.6.4's
+"full Macintosh filename" — and extract under it, because `READ ME`
+comes out of this engine as `README`. The gate came first: **is the
+substitution observable on anything this build can decode?** It is not,
+and the answer took one probe over the bytes rather than any change to
+the engine.
+
+**Measured.** Every `0x2605` field reachable on this disk — the nine
+ZipIt specimens' 22 and `NPWritersKit.zip`'s — is **23**: three on
+directories, three Zip method 6, seventeen with a MacBinary payload.
+The FileName differs from the zip's own leaf on **3**, every one of
+them method 6 in `zipit-Psycho_1.0b1.zip`, refused per entry. **0 of
+the 23 divergences sit on a method this build reads.** FORMATS.md
+(*ZipIt's own archives*) has the table. So the row stays in
+OPEN_ITEMS.md, coupled to the Implode decision, which is the
+maintainer's and was not going to be taken sideways by a name fix.
+
+Two things the gate turned up that the item had not had.
+
+### A version was a preference
+
+The row and FORMATS.md both said "ZipIt 1.x upper-cased the names it
+put in the zip". Three 1.x writers are on this disk and only one did:
+`macextract l` on 1.4's own distribution zip and on the Japanese 1.x's
+prints `Read me`, `Mac SEA` and `Drop files here to zip`, spaces and
+mixed case intact. The switch is in ZipIt 1.4 itself: extract the
+specimen, read the strings out of the application's resource fork, and
+there is a `DOSN` boolean called "dosify filenames" with the help text
+*"Convert filenames to MS-DOS compatible format (8.3, uppercase)"* and
+a menu item *"Convert all filenames to PC-compatible format"*. The
+transferable part is not the correction, it is **where the disproof was
+sitting**: both halves of it — the counter-example names and the
+switch that explains them — were inside one archive this suite already
+extracts byte-exact on every run, 11 entries of it, and neither had
+ever been looked at. A claim about what a program did is cheapest to
+test when a copy of the program is in the corpus, which is exactly when
+nobody tests it (BLOCKERS.md, *Withdrawn claims*).
+
+It also changes what the open item is worth. Filed as a habit of
+writers that stopped shipping, the divergence looked like a closed
+population. As a checkbox, it is unbounded — any ZipIt, any year,
+whoever left it on.
+
+### A leaf is not a path
+
+The field carries one component. `Psycho!v1.0ß1.zip`'s three entries
+live under `PSYCHO!/`, and the archive holds **no entry and no field
+for that folder** — ZipIt writes the long field on directories, but
+only where it stores them, and this archive stores none. A leaf
+substitution would therefore produce `PSYCHO!/Psycho!`,
+`PSYCHO!/READ ME` and `PSYCHO!/Sample`: three of the four wrong name
+components in the only archive where it changes anything, with the
+remaining one still wrong and nothing in the archive able to fix it.
+The item had been written as "it is the right name in all 20", which is
+true of the field and not of the path it goes into.
+
+### The tolerance that could only fail one way
+
+What was committed is the measurement, not the fix:
+`grade_name_coupling` in `tools/run_zipit.py` sweeps the nine specimens
+and the corpus zips, compares each FileName with the zip's leaf off the
+bytes alone, and fails if a divergence ever lands on method 0 or 8. It
+needs neither `unar` nor the engine, and it was shown to fail before it
+was believed — on a copy of `zipit-1.4` with one name converted the way
+ZipIt would have, it names the entry and returns non-zero.
+
+That copy is also what showed the check is not redundant. The suite
+already had a name tolerance, `alias_of`, written so it could fail:
+`unar` renames a MacBinary entry to its header's name, ours keeps the
+zip's, and the tolerance holds only while ZipIt's own field backs one
+of the two. On the doctored copy — a MacBinary entry whose zip name had
+been dosified — `grade_list` does fail, two rows, as designed. But on
+an entry with **no reachable MacBinary payload** the same function
+takes the field's name as `unar`'s expected alias and passes, which is
+precisely the shape the three Implode entries have — measured: the
+suite is green on them and our name for all three is wrong — and the
+shape a stored non-MacBinary `0x2605` entry would have, which is a
+hypothesis, no such entry being on this disk. **The tolerance could
+fail on the case the engine gets right and not on the case it gets
+wrong.** Asking what evidence a tolerance rests on is in CLAUDE.md;
+asking which direction it can fail in is the same question one turn
+further on.
+
+
+## 2026-10-05 (the reference implementation was the fixture's payload) — PackIt's two ciphers read out of PackIt III 1.3, and then RUN out of it
+
+**The claim that moved.** OPEN_ITEMS.md's licence table said
+`fmt_packit.c`'s resync and both ciphers wanted "a second
+implementation of `PMa5`/`PMa6`", and gave three reasons there was
+none: deark's `packit.c` errors on both words, macutils' `pit.c` skips
+the block, and appendix B of the unPACKIT manual lists "PMa5" twice so
+it cannot even name the fourth word. **The third is false, and reading
+it to write this entry is what showed that** — the manual's (L)ist
+section gives all four words and attributes both encrypted forms to
+PackIt III; only appendix B's table duplicates one (BLOCKERS.md). The
+other two are true, and what no edition of the document does is
+describe either cipher. The fourth
+place nobody looked is the corpus: `fixtures/packit.pit_.bin` is a
+PackIt archive whose four members include **`Packit III 1.3`**,
+APPL/`'PIT '`, dated 6/14/87 by its own `'PIT '` resource — the
+generation that wrote every `PMa5` and `PMa6` block there has ever been. An
+application is all resource fork, so `tools/derive_packit.py` had been
+grading the container against an archive carrying the writer of the
+part it could not cite.
+
+**That pattern has now cost four rows.** CLAUDE.md records it as "a
+self-extracting fixture carried a second implementation in its own
+resource fork"; this one was not self-extracting and needed no
+unwrapping trick — the application was simply the payload. The usable
+form of the lesson is narrower than "look in the corpus": **a format's
+own application is a reference implementation, and for a Macintosh
+format of the 1980s the application is a file somebody archived.** Ask
+what the corpus contains, not only what it exercises.
+
+**Read, and then executed.** The reading went in
+`tools/derive_pitcrypt.py` in the shape `tools/derive_sqp.py`
+established — 32 byte patterns each checked AT the offset it is claimed
+to sit at, which matters because 17 of them occur more than once in
+the resource — a count `--witness` prints rather than asserts, because
+the first draft of this entry guessed it at twelve. But `CODE` 1 is 68k with exactly one Toolbox trap in the
+cipher's call graph (`_BlockMove`, A02E), so it does not have to be
+read ONLY: `tools/pitcrypt/pit_run.c` sets up an A5 world at the
+offsets the binary addresses its globals by, maps `CODE` 1 executable,
+copies `CODE` 256 to A5-19150 where the runtime reads it, and calls
+`SetKey` at @0x334a and the cipher at @0x3390 as plain C-convention
+subroutines under `qemu-m68k`. **The same four lines of SIGILL handling
+`tools/sdmodule/` already needed serve the trap.** `--make` then has
+the original cipher encrypt two entries, wraps them in a container
+`tools/synth_pit.py` writes from the published appendices, and asks
+this engine to read them back: 890 B, 890 B and 302 B, every fork
+byte-exact, and `PMa6`'s output identical to `openssl enc -des-ecb`
+over the same key.
+
+**The smell this one came from, and it is a new one.** The table's
+own two-axes note said "our use is graded — `unar -p` reads both
+ciphers back every run", and that was true and worth nothing: `unar`
+IS XADMaster, the implementation both ciphers were transcribed from.
+**A differential test whose oracle is the implementation the code was
+copied from grades the transcription and not the format**, and it
+cannot fail on a shared mistake. It belongs beside "ask what evidence a
+tolerance rests on; if the answer is our own output, it cannot fail" —
+the variant is that *somebody else's* output is not enough either when
+that somebody is where the code came from. Four of the eight ciphers
+here now have an archive the original software produced; the other four
+are ARC (Debian's `arc`), zip (Info-ZIP), WinZip AES (7-Zip) and
+`PassLock`, which enciphers nothing.
+
+**What the application settled that no document could.** The fourth
+magic byte is `'0' + 4·compressed + mode` (@0x109a..0x10c4) rather than
+a table, which is exactly why a document written from the outside lists
+one of them twice. Both encryption menu items also force compression on
+(@0x0c7e, @0x0c9a) and the compression item goes inert while the
+mode is nonzero (@0x0c50), **so `PMa1` and `PMa2` cannot exist** — a
+reassurance the arithmetic alone would not have given, and the reason
+this engine's four-word magic check is complete rather than lucky. The
+`PMa5` key is seven bytes because PC-1 selects 56 bits (@0x3386), not
+eight bytes used modulo seven; the output is identical and the
+description was the reference's shape, not the format's. And the key is
+set once per ENTRY with the magic written in the clear (@0x12c0,
+@0x12ec): no salt, no chaining.
+
+**The one behaviour change, and why it is not free.** The resync for an
+entry nothing can decrypt was macutils' byte-wise scan for the next
+magic. PackIt's writer rounds its last flush up with `addq.l #7` /
+`and.l #-8` whenever the mode is nonzero (@0x1942), so an encrypted
+stream is always a whole number of eight-byte blocks and the next magic
+can only begin on that grid. Scanning the grid instead is PackIt's own
+arithmetic rather than a transcription — and the bytes came back. The
+grid alone is bigger — `fmt_packit.c` 2,142 -> 2,160 B of m68k text at
+`-Os`, measured — but the 4-byte magic test was written out TWICE in
+that file, once in the walk and once in the resync, and factoring it
+into one predicate more than pays for the grid: **`ovl_packit` fell 4
+B**. The resident control's code rose 20 B with its A5 falling by the
+same 20, so `OVL_SAVED` is unchanged and only that configuration's two
+ceilings are re-taken. **Two of this project's own ratchets made that
+happen rather than let it past**: `run_tiers.py --check-images` refused
+the moved image twice, and `build_mac.sh` refused the control at 32 B
+over. The first draft of the grid cost 26 B and would have bought a
+ceiling raise with it. It was
+taken because it could be made to fail: the third specimen's ciphertext
+carries a false `'PMag'` five bytes in, off the grid, and the engine
+rebuilt with the old scan loses the entry AFTER it with the right key
+and the wrong one both. Any 64 bytes are legal ciphertext, so that is
+an archive PackIt could have written. **An ungraded behaviour change
+taken for a citation would have been the `unc_lzah.c` shape — uncited
+and ungraded at once — pointing the other way.**
+
+**And the citation it replaces had a second error in it.** The claim
+that the document "cannot name the fourth word" had been in
+`fmt_packit.c`, in `derive_packit.py` and in OPEN_ITEMS.md since
+2026-09-21, and it is wrong: the duplicate is in appendix B's TABLE,
+while the (L)ist command's section two pages earlier names `PMa6` and
+says which PackIt wrote it. Nobody had re-read the document since the
+container was derived from it — the appendix was what that work needed,
+so the appendix is what got checked. **A document is not one claim.**
+When a citation says "the spec does not state X", the part of the spec
+that was read is usually the part the last task needed.
+
+That also bounds this entry: the manual attributes both encrypted forms
+to PackIt **III**, and 1.0 to 1.2 are not on this disk. Everything
+above is measured on **1.3**; for the earlier III releases it is a
+hypothesis, and the docs say so where the figures are.
+
+**No wild archive can grade either cipher, and that is now measured.**
+Discmaster's first-16-bytes index answers 0 rows for `504d6135*` and
+`504d6136*`, which only means no archive BEGINS with an encrypted
+block — so `tools/scan_discmaster.py` got a `pit` probe that walks the
+chain, decoding every `PMa4` on the way, because a compressed block
+cannot be stepped over any other way. **182 wild archives, 1,107
+blocks, zero encrypted** (plus 6 more from a partial `.pit` extension
+sweep). The ciphers were not under-specimened by accident: PackIt III's
+encryption appears to have gone essentially unused, which is also why
+the only grader available is the application. The probe's blind spot is
+named in TESTING.md and is the obvious one — a MacBinary-wrapped
+archive does not have `PMa` in its first bytes, and this project's own
+PackIt fixture is one.
+
+**One harness trap worth the line.** The first runs of `pit_run`
+returned a different exit status on every invocation while writing
+correct ciphertext. 1987 Macintosh code saves the registers it feels
+like — `SetKey` saves none and uses A2; the dispatcher pushes D4/A3 and
+then writes D2, D3 and A2 — so an inline-asm clobber list of
+`d0 d1 a0 a1` is not caution, it is wrong. Naming D2-D5 and A2-A4 fixed
+it. The symptom was in the harness and looked like the cipher.
+
+
+## 2026-10-05 (the negative that was about one rule) — a line-ending citation shed to a file the same header already cited
+
+**The claim that moved.** `src/fmt_uu.c` and `src/unc_internal.h` cited
+macutils' `hexbin/readline.c` for one rule: CR, LF and CRLF each end a
+line, and a last line need not be terminated at all. OPEN_ITEMS.md said
+why it was stuck — *"mpack is LF-only so it cannot state the CR rule"* —
+and that is true: mpack's `part_gets` breaks on `'\n'` alone.
+
+**What was not asked.** deark. The 2026-09-27 sweep that produced the
+other three cells of that row DID read deark — for the whole-line
+garbage skip, where it errors, and for the second-document rescan,
+where it has none — and the CR cell was written about mpack only. deark
+has `dbuf_find_line` in `src/deark-dbuf.c`: CR alone, LF alone and CR+LF
+each end a line (`eol_size` 2 for the pair), a line at end of file with
+no terminator is still a line (`eol_size` 0, content returned), and
+nothing at all is not one. MIT. Its own `modules/xfer.c` uudecode uses
+it, and treats a CR or LF at the start of a line as *"a multi-byte EOL
+sequence, or blank line"* and skips it — which is exactly the choice
+`fmt_uu.c` makes and documents. **`src/unc_internal.h` already cited
+`deark-dbuf.c` four lines below, for the bit reader.**
+
+**The transferable part.** A negative result is about the pair
+(reference, fact), and this row recorded one as if it were about the
+fact: *"nobody else states the CR rule"* was reached from *"mpack does
+not"*. The row even listed deark in its other cells, so the gap was
+visible in the cell beside it. **When a row gives a different blocker
+per item, check that each blocker names every reference and not just
+the one that failed first** — and if the file you are citing already
+cites a candidate for something else, that candidate is one grep away.
+
+**What this does and does not close.** Three of the original six rules
+are gone — two to mpack, this one to deark — and `unc_internal.h` is
+off the row entirely, down to the LZAH preload. Three remain, all with
+their blockers re-verified the same day against the same two
+references: the whole-line garbage skip (deark errors, mpack keeps the
+prefix), the second-document rescan (deark's binhex reads one document
+and bounds its banner search to 8,192 bytes), and UUTool's MU layout,
+which nothing else implements. No behaviour changed; the readers are
+byte for byte what they were, and `tools/run_uu.py`'s gapped sets and
+the multi-part fixtures grade them as before.
+
+
+## 2026-10-06 (the lesson that was written down and then not applied) — six real AppleLink packages, out of the same index that held the first two, found by the technique the entry beside them already named
+
+OPEN_ITEMS.md's *three container paths no real package has* was filed on
+2026-10-05 and closed on 2026-10-06. What closed it was not new
+reasoning: it was the question DECISIONS.md 2026-09-26 had already
+written down, asked of the half of that entry which never got it.
+
+### The search that was by name, in the entry that says not to search by name
+
+2026-09-26 found two things in one sweep. SpaceSaver files came out of
+Discmaster's *detections* index, searched for the eight bytes `file`
+prints — 296 hits — and the entry's lesson is explicit: *"a format that
+renames nothing is invisible to every index built on names and plainly
+visible in one built on magic."* The AppleLink packages in the same
+entry came out of a **path**: `AppleLink 6.1` on fifteen Apple Developer
+CDs, two files, both called `.PKG`. One technique, two formats, and the
+lesson applied to one of them.
+
+The index answers the other question too. Its own `searchHelp.html`
+documents a field nothing here had used: **`detection=` is also
+full-text over the first 16 bytes of every file**, ASCII or hex, with
+`*` at either end and `?` for any single character. A version-1
+SqueezePlay package's first 16 bytes are the item count, `01`, eight
+zero bytes, and the leading zero long of its first record — so **the
+format is a hex token**, `??01` and fourteen zeros. Fifty tokens, one
+per item count, deduplicated: **1,443 files, 36 of them packages**. A
+second key — `extension=.pkg&family=unknown`, 2,641 files — adds 13
+more including every version-0 one, because version 0 puts a zero where
+the token wants a 1 and that token matches 1.1 million files of
+padding. **49 real packages**, where the project had two.
+
+**Neither key subsumes the other, and that is the transferable part.**
+20 of the 49 are not called `.pkg` at all — `SPAudit10`, `Roland`,
+`MCNCode`, `Houston, TX Map picture`, `Iconf Display` — and the hex key
+is blind to a whole version. *When a search by content is possible at
+all, run it beside the search by name rather than instead of it; the two
+are blind in different directions.*
+
+### What six of them were worth
+
+Six are specimens now, chosen to reach what nothing authentic reached
+(FORMATS.md, *What the eight real packages exercise*). Every path the
+item listed is a real package's: a **resource fork** (30 members, up to
+352,407 B), the **stored** bit on the data fork and, separately, on the
+resource fork, **version 0**, and **folders** — 14 of them, nested four
+deep. `MPW Shell 3.2.2.pkg` alone carries **29 clear codes** and fills
+the 8,192-entry table, which no real package had come near; the two the
+project had reached 12 bits and 2,260 entries.
+
+`tools/derive_sqp.py` already knew how to grade them: it reads every
+package in the specimens directory, expands both forks with its own LZW,
+and prints what the set does NOT exercise. That line has read *"the
+clear code (0 seen), widths above 12 of 13 bits, the resource fork, the
+stored mode"* since it was written, and it now reads **"UNEXERCISED by
+these packages — nothing"**. The instrument that says an item is closed
+was built the day the item was opened.
+
+### Three readers and a fourth number, because a package has no checksum
+
+A SqueezePlay package carries no digest of any kind — not per member,
+not of itself — so "correct" has to be assembled. `tools/run_sqp.py`
+lane 1 now holds **67 forks of 8 packages** against four things at once:
+the engine's output, `derive_sqp.py`'s independent reading, `gzip`
+through a `.Z` header on all 59 LZW streams, and **each record's own
+declared expanded length**, which is the writer's arithmetic rather than
+anybody's reading of it. All four agree on all 67.
+
+The lane was shown to fail before it was believed, twice and both times
+by accident first: a tuple returned where bytes were expected made gzip
+"disagree" with 60 forks whose lengths matched exactly — a disagreement
+with no difference in it is a harness bug, not a finding — and the
+collision assertion below was written because the lane failed on a real
+package. Deliberately, afterwards: one byte flipped inside
+`Read First.PKG` makes it complain four separate ways.
+
+### The two members that want one file
+
+`Iconf Display` holds a member called `bullseye π` whose data fork is
+empty and another called **`bullseye π.rsrc`**. Under `-nr` the first
+member's resource fork and the second member's own (empty) data fork are
+the same output path. The engine refuses the second entry and names it,
+which is M9's refusal to overwrite reached by a real archive for the
+first time, and `--forks hidden` writes all six members. **No
+synthesiser here would have written that package** — the generator makes
+names it chose itself — and it is the one shape in this set that tests
+the shell's naming rather than the decoder.
+
+### What it cost
+
+The item was one day old, so the cost is not the item. It is what was
+built while the second search was not being run: `tools/synth_sqp.py`,
+an encoder written to reach five paths that four real packages reach;
+**seven Mini vMac boots on 2026-09-01** trying to hand a package to the
+translator's sibling; a MANUAL_TESTS.md request to somebody outside this
+machine; and a generator bug that the agreement between generator and
+decoder hid for a day — a folder's type and creator being its window
+rectangle (2026-10-05). A real package with a folder in it would have
+caught that in one run, and 14 of them were two queries away.
+
+
+## 2026-10-06 (the other half of that citation) — a DiskDoubler block size nobody could falsify, pinned by two wild forks and the checksum the archives already carried
+
+DECISIONS.md 2026-09-27, *half a citation*, measured one of the two
+facts behind DiskDoubler method 8 and filed the other as unfalsifiable:
+**no stream in the corpus reached even 0x400 cost units**, so every
+block size at or above 0x1000 decoded every fork identically and
+`0xfff0` could not be told from any of them. The entry named the
+specimen it wanted — *a method-8 fork whose coder output crosses 0xfff0
+cost units, 2 per literal and 3 per match* — and the row went into
+OPEN_ITEMS.md's licence table, where it sat for nine days.
+
+### The specimen was one query
+
+`detection=abcd0054*` is **15,454 DiskDoubler compressed files** in
+Discmaster's first-16-bytes index — the magic word and the header size
+are the first four bytes of every one. Restricted to 40 KB and up and
+deduplicated it is 2,046 files, all 2,046 of which the probe confirms
+are compressed files, and they carry **612 method-8 forks**, the
+largest 6,212,378 B of coder output against the corpus's 1,230. Two
+were taken, both small enough to be cheap fixtures and large enough to
+flush: 84,057 B of coder output from 210,944, and 87,646 from 242,237.
+
+**Compressed size is the thing to filter on, and the arithmetic is
+worth writing down**, because the obvious filter is wrong: the biggest
+fork in the old corpus is 44,549 B UNCOMPRESSED and reaches under 0x400
+cost units, because it compresses to 1,230 B. Cost tracks coded
+SYMBOLS, not output length — about 0.83 cost units per compressed byte
+on a match-heavy stream and about 1.8 on a literal-heavy one — so
+crossing 0xfff0 = 65,520 wants roughly 36–79 KB of COMPRESSED fork.
+Sorting a search by uncompressed size would have found nothing.
+
+### The adjudicator was already in the header
+
+The first instinct was to grade the sweep against `unar`, and that
+works — but the constant being pinned is XADMaster's own, so fitting it
+to XADMaster's output pins the value without re-deriving it.
+
+A method-8 fork's header states a **CRC-16/ARC over its decoded
+bytes** (`docs/formats/diskdoubler-container.md`, +48 and +50), and a
+wrong block size yields the right NUMBER of bytes and the wrong ones.
+So the file adjudicates its own decode: **0xfff0 is the only size of
+eleven swept whose output satisfies the stored CRC**, on both forks,
+with no oracle and no reference implementation in the loop. The
+citation is shed on that, not on the agreement with `unar` — and the
+two agree fork for fork and size for size over all 9 forks and 11
+sizes, which `derive_dd8.py` now asserts, so a lane that silently
+became a restatement of the other says so. One bit flipped in a stored
+CRC makes it print the disagreement and return non-zero; that was run
+before the result was believed.
+
+*When a constant has to be measured against somebody else's program,
+look first for the thing the FORMAT checks.* A checksum, a declared
+length, a tiling — those adjudicate without an implementation, and they
+are the difference between confirming a transcription and re-deriving
+it.
+
+### What the row cost, and the one that paid for it
+
+Nine days, and the specimen was in an index this project had already
+used twice. The same sweep that produced it had just closed the
+AppleLink item for the same reason (*the lesson that was written down
+and then not applied*): **two rows of the same table, in the same
+afternoon, both filed as "no specimen here can tell" and both wrong
+about the world rather than about the corpus.** The honest form of
+such a row is the one *half a citation* used — it said *this corpus*
+cannot pin it, and named the specimen — and that is exactly why the
+sweep took one command to aim.
+
+One real find on the way: `derive_dd8.py` skipped every compressed FILE
+in the corpus, because a `.dd` states no name and the harness matched
+manifest entries BY name. It had been reading 7 forks out of one
+archive and silently ignoring 66 files, which is also why nothing
+noticed that the corpus's method-8 population was so small.
+
+
+## 2026-10-06 (the Optimizer that was in somebody else's corpus) — the one key that identifies a StuffIt 2.x feature, and the two harness defects between it and the answer
+
+OPEN_ITEMS.md had one item left for StuffIt 2.0: *"nothing has seen an
+archive this project did not make"*, all 28 being StuffIt Deluxe
+2.0.1's own output under Mini vMac. Two archives now are somebody
+else's, and getting there needed the right key and two harness fixes.
+
+### Version 2 is not StuffIt 2.x, and that had to be measured first
+
+The obvious key is the archive header's version byte. It does not work,
+and the index says so without downloading anything: `detection=` is
+full-text over the first 16 bytes, so
+`53495421????????????724c6175<vv>??` counts classic StuffIt archives by
+version byte. **4,351 carry 1, 75,381 carry 2, and no other value
+exists at all** among files with `SIT!` at byte 0. Over 16,727 archives
+actually read, the census is 14,030 twos, 2,600 ones and **97 sixes,
+every one of them an `ST65` archive** — InstallerMaker 6.5's magic. So
+the byte tracks the writer's generation, not the application: 2 covers
+everything from 2.0 to 4.5, and a search by it selects nothing.
+
+**What identifies 2.x is a feature only 2.x had**: the Optimizer bit
+`0x40` on an entry's method byte, with the module id at header +106.
+That is per-ENTRY, 22 bytes into the archive and past every preceding
+fork — not indexed anywhere, and not in the first 16 bytes either. So
+the sweep is a `Range` scan: list archives by `format=sit`, fetch the
+head of each, walk the chain.
+
+### The two defects, and which one was dangerous
+
+**The walk had no end.** It stepped by `112 + rclen + dclen` until the
+fetched bytes ran out, where the archive's own header states its total
+size at +6. Past that it was reading compressed data as file headers,
+and it duly reported four Optimizer entries whose names were English
+prose out of the middle of a fork. That one is harmless because it is
+obvious: a name like *"rt up by pressing a Command-Shift-number"* is
+not a file name.
+
+**The flag bits were the published table's**, and that is the dangerous
+one. `reference/notes/sit_format_theunarchiver.md` documents bit 4
+(`0x10`) as part of the folder marker; this repository measured on
+2026-10-02 that **`0x10` is `NewDE`**, the second cipher built into
+2.0.1, and that the encrypted flag is `0x80` (`src/fmt_sit.c`). The
+first version of the probe therefore called encrypted-FOLDER markers
+encrypted entries, and would have missed every real encrypted entry.
+*A probe written from the published description, in a repository that
+has already measured the same bytes against a writer, is written from
+the wrong source* — and the local corpus is what catches it: the probe
+was run over 336 archives and 60 specimens before it was pointed at a
+stranger's disk, and the specimens are what showed it flagging the
+wrong thing.
+
+### `--bytes` is the cheap half of a deep walk
+
+A folder marker carries no fork, so an archive that opens with one —
+**1,081 of the first 1,946 swept** — puts its first file header a few
+hundred bytes in. The probe walks the chain inside the bytes already
+fetched, which costs no extra request, so `--bytes 8192` turns one
+round trip per archive into several entries per archive: 8,798 archives
+and 0 hits at 512 B became 12,998 headers in 7,929 archives and 7 hits
+at 8 KB. **When a format's records are chained, the unit of a content
+scan is the fetch, not the record** — ask for more bytes before asking
+for more requests.
+
+### What the two archives are worth
+
+Both are `Text 1`'s, the Optimizer with no `'DCMP'` and the id 255 that
+means CANNOT BE UNDONE, on Giga-ROM CDs pressed in 1992-93. They grade
+three things nothing here could: the bit and the 255 on bytes nobody in
+this repository wrote; the **method nibble under the bit** — 3 in one of
+them, where 2.0.1 was only ever asked here for 0, 2, 5, 6 and 8, so a
+reader that masked the byte wrongly fails on a file it has never seen;
+and the deleted resource fork declared by somebody else's writer. Both
+outer files are MacBinary-wrapped self-extractors, so the envelope
+chain comes with them.
+
+**What the sweep says about the rest is the useful negative.** Five
+Optimizer bits in 21,767 wild entry headers, in three archives, and
+every one is the same module. (Two further entries carry the bit inside
+`CURSORS.SIT`, counted twice because it is on two CDs: a version-1
+archive whose chain does not step by `112 + rclen + dclen` at its third
+record, and which `unar` refuses outright — so it is a damaged file
+rather than a reading this scanner gets wrong.) The four reversible Optimizers and all five ciphers are still
+graded only on this project's own archives, and OPEN_ITEMS.md now says
+so with the number attached — which is the difference between *"nobody
+has looked"* and *"looked, and here is how rare it is"*.
+
+
+## 2026-10-06 (the media that was one download away) — the last StuffIt 5 item was blocked on a file that `archive.org` has thirty-three of
+
+`fmt_sit5.c`'s bit 5 is the one row of OPEN_ITEMS.md's licence table
+that was filed as needing something off this machine, and the route
+column said why: the only comment UI is StuffIt Deluxe 5.0.1, Mac OS
+9.2 refuses to run it, the file-system theory was disproved in all four
+combinations (2026-09-27), **and "this machine has no Mac OS install
+media."**
+
+That last sentence was never tested. `archive.org`'s search API —
+queried from this machine, where `tools/vmac/os9.py --setup` has been
+downloading a 2 GB Mac OS 9 image since August — answers **33 items for
+Mac OS 8 and 23 for 8.5/8.6**. One of them, `mac-os-8.6-working-iso`,
+is a 304 MB `7z` holding the retail install CD: 665,600,000 bytes that
+`file` calls *Macintosh HFS data (bootable)*, with `LK` boot blocks, a
+volume named `Mac OS 8.6` created 1999-04-16, and `System Folder`,
+`Install Mac OS 8.6` and `Utilities` where `hdir` can list them. It is
+on this disk, and the fetch is four commands in
+`tools/vmac/README.md`.
+
+**What that does and does not close.** The row stays open: three things
+are unmeasured, in order — whether `qemu-system-ppc -M mac99` boots
+8.6 at all, whether 5.0.1 runs on it, and whether 5.0.1's comment UI
+sets bit 5, which is still a hypothesis. What changed is that none of
+them needs anybody outside this machine.
+
+**The pattern, for the third time today.** Three rows were filed as
+"no specimen/no media in reach" — AppleLink's three container paths,
+DiskDoubler method 8's block size, and this — and all three were about
+a search that had not been run rather than about the world. The common
+shape is a route column that names an ARTEFACT ("a third real
+package", "a method-8 fork that flushes", "a Mac OS 8.x image") and
+then asserts its absence in the same sentence. *The assertion is the
+part to check; the artefact is usually indexed somewhere.* A route
+column is a better place to record WHERE you looked than to record
+that nothing exists.
+
+
+## 2026-10-06 (the alphabet nothing here had seen) — the program that defines the MU layout was a corpus fixture, and the engine had never read a line of what it writes
+
+**Claim.** `src/fmt_uu.c` cited macutils' `hexbin/mu.c` for the UUTool
+"MU" layout and for `mu_convert()`, under a row that said "nothing else
+implements UUTool's MU layout". Evidence: UUTool states the layout three
+ways itself, and it was already in the corpus. Consequence: the file
+sheds its last macutils citation, and the reading found a defect — the
+engine had been refusing every file UUTool writes with its DEFAULT
+settings.
+
+### "Nothing else implements it" was a sentence about READERS
+
+The sweep behind that cell had asked deark, mpack and XADMaster, which
+are all decoders. UUTool is the ENCODER, and Rule #1 asks for a
+reference implementation or a spec without caring which direction it
+runs in: a program that writes a format states it at least as well as
+one that reads it.
+
+**That sentence was already in BLOCKERS.md.** The mechanism list has
+carried it since 2026-09-28 — "a missing specimen and a missing
+implementation are different gaps: for *what does this format write
+where*, the WRITER is a reference implementation under rule #1, and one
+application is easier to get than one of its archives" — and this row
+sat beside it for eight days, in a file whose first instruction is to
+read a live claim next to an already-withdrawn one. It is the second
+time today that a written-down lesson was not applied to the row it
+was about (*the lesson that was written down and then not applied*),
+and the two have the same tell: a route column that asserts an absence
+("nothing else implements") in the same sentence as the artefact it
+wants. The corpus has had the encoder since **M1** —
+`fixtures/uu-tool-24.hqx`, which is also where
+`derived-UUTool-FAT.sit` comes from, both added with the MacBinary
+milestone and twelve milestones before the uu decoder was written — and
+five more Mac uu programs
+beside it (`un-uu-21`, `uu-cat-10`, `uu-parser-172`, `uu-undo-10`,
+`mac-uucode-105`), every one of them fetched years of project-time
+before the citation was ever questioned.
+
+It states the layout three ways, and `tools/derive_mu.py` checks each
+where it sits, across 2.0.4, 2.3.2 and 2.4:
+
+- **its own manual**, as prose — "The data fork of a file is the first
+  part in the encoded text file, bounded by a 'begin' and 'end'
+  statement.  This is followed by the resource fork, and finally finder
+  information". 2.3.2 keeps it in `TEXT` 129; 2.0.4 ships it as a file
+  beside the application. The same document says the mode "is ignored
+  on the Mac side", which is what licenses reading the section tag at a
+  fixed offset;
+- **the literals it writes from**: `DATA` 0 holds `begin 0700 .rsrc\r`,
+  `begin 0700 .finfo\r` and `end\r` whole in 2.0.4 and 2.3.2;
+- **two 64-byte encode tables**, `HEXA` 128 "PC" and `HEXA` 129 "UNIX".
+
+And UUParser 1.72 — a different author, also a corpus fixture — carries
+both of those tables in a code resource, each behind a `0x40` length
+byte. That is what makes the alphabet two implementations rather than
+one.
+
+### The reading found the defect: three alphabets, and we accepted one
+
+"PC" is the standard uuencode alphabet. "UNIX" is not: it moves the low
+values up past `0x5f` so that **no value encodes to a space**, because
+— the manual again — "some electronic mailors reformat white space".
+Two generations shipped: **2.0.4 moves 30 values, to `0x60..0x7d`**, and
+2.1 onwards moves 27, to `0x60..0x7a` ("changed UNIX encoding table to
+ignore {,}", its revision log). It is the DEFAULT; the standard
+alphabet is the "use original coding" checkbox.
+
+Every one of the three satisfies `((c - 0x20) & 0x3f) == value`, which
+is why `UU_SIXB`'s mask reads all of them and why that mask is
+load-bearing rather than defensive — `mu_convert()` has had the same
+mask since 1992 and nothing here had asked what it was for.
+
+What refused the files was not the decoder but the gate in front of it:
+`unc_uu_line_is_data` required every character in `0x20..0x60`, so
+UUTool's default output did not sniff as uuencode at all. Two wild
+specimens, one per generation, now say so in `ci.sh`:
+`uu-wild-dictcol.uu` (the MU layout, 2.0's table, LF endings, a quoted
+name, and mode `0755` in the first line where both sections keep the
+literal `0700`) and `uu-wild-terrainman.uu` (one section, 2.1's table,
+CR endings, an unquoted name). FORMATS.md, *uuencode*, has what grades
+each.
+
+### The union of two alphabets is not one alphabet
+
+The obvious fix — widen the gate to `0x20..0x7d` — breaks the rule it
+is part of. A uu line is told from a line of MAIL by two things, and
+the character set is one of them: with the union taken as a single
+range, `tools/run_uu.py`'s multi-part cases **failed** — `posted.uu`
+and `split.uu.001`, where each part carries its own mail header, read
+those headers as data.
+
+So the alphabet is narrowed per DOCUMENT: `unc_uu_line_is_data` returns
+the mask of the tables a line could have come from, the section walk
+ANDs the masks as it goes, and a line that does not fit what the
+document has used so far is mail. UUTool writes one table per run, so
+nothing legitimate is lost, and `0x20..0x3a` — space, the digits, the
+punctuation of prose — stays outside the UNIX tables, which is what
+makes a mail header fail. The pair of cases in `run_uu.py` asserts both
+directions with the SAME line: a standard-alphabet data line is data in
+a standard-alphabet document and mail in a UNIX-table one.
+
+**And the mask has to be in the RESIDENT half, which was the one
+judgement call here.** It was in the overlay first, with the probe left
+holding the cheap union test, and that cost nothing — until the probe
+was asked about prose. What a uuencode probe rests on is the line AFTER
+a "begin" line, and an English sentence beginning with a capital `M`
+declares 45 bytes and is short enough to be a data line: with the
+alphabets taken as one range, `begin reading at page five` /
+`Mary had a little lamb, her fleece` sniffed as uuencode. What rejects
+it is fitting NEITHER table — it has a space and lower case — so the
+mask is what the probe needs too, and `run_uu.py` carries that file as
+the second of the two ways uuencode must fail. Resident `CODE` +8 B and
+A5 −8 B, measured in all three overlay configurations: `CODE` + A5 is
+73,392 B either side of it, so nothing comes off any extraction's
+budget, and the six ratchets in `tools/build_mac.sh` moved to say so
+(FORMATS.md, *Three configurations, one tree*).
+
+### Two lessons, and the second is about this repository's own suites
+
+**A generator chose the alphabet, and two graders agreed about a shape
+neither had ever seen.** `tools/synth_uu.py` wrote the standard
+alphabet because `binascii.b2a_uu` does; `hexbin` adjudicated it and
+agreed, because its mask reads anything. Two independent
+implementations, byte-exact agreement, and a format feature that the
+only program which writes the format uses BY DEFAULT was missing from
+both sides. "Ask what evidence a tolerance rests on" (CLAUDE.md)
+catches a tolerance that cannot fire; this is its mirror image — a
+tolerance the suite never presented an input for, because the suite
+generated the inputs. The widening is not generator-side only:
+`synth_uu.py` now writes both UNIX tables, and the wild specimens are
+the half the generator cannot reach.
+
+**A ranged probe that is not honoured reads the head and says 206.**
+The sweep for a wild MU specimen fetched the TAIL of each candidate,
+because a `.finfo` section is the last thing in the file.
+`Range: bytes=-2048` returned `206 Partial Content` and 2,049 bytes —
+of the HEAD — so the first pass over 939 files found nothing and
+looked like a measurement. An explicit `bytes=<size-2048>-<size-1>`
+found the specimen in the same 939. The positive control that caught it
+was one line: fetch a tail whose last bytes are already known and
+compare them. **Establish that a probe can see the thing it is looking
+for before believing that it did not find it** — the same rule as "a
+test that passes may not be testing anything", one layer out.
+
+### What it cost
+
+The claim stood from M13 to 2026-10-06. For all of it, `.uu` was listed
+as supported, the suite was green, and the engine could not read the
+default output of the one program that defines the Macintosh shape of
+the format. The row that was supposed to be about a licence was the
+thing that found it: nobody re-reads a decoder that passes, but
+somebody re-reading its CITATIONS opened the encoder.
+
+
+## 2026-10-06 (the separator that was in the alphabet) — the one junk line BinHex's own alphabet cannot reject, documented by the man who defined the format
+
+**Claim.** `src/fmt_binhex.c`'s scan for a second document in one input
+is DeHQX 2.0.1's, not macutils' — and the same documentation describes a
+part separator this engine could not read. Evidence: DeHQX's *How It
+Works*, checked in the corpus fixture by `tools/derive_dehqx.py`, and a
+posting cut that way, which failed before and reads clean now.
+Consequence: one rule off the row, and a per-entry failure fixed.
+
+### The author of the definition wrote a decoder, and it is a fixture
+
+`reference/notes/binhex40_lewis.txt` — Peter N Lewis's "BinHex 4.0
+Definition" — has been this file's source since M2, the BinHex
+milestone. Lewis also wrote **DeHQX**, and `fixtures/dehqx-201.hqx`
+has been in the corpus since **M1**, a milestone earlier, as an archive
+to extract. Its documentation is a design
+document for the two things the definition does not cover, which are
+both about text that has been MAILED:
+
+- "Source file: a file containing (parts of) one or more HQX sources" —
+  and "When it comes to the end of the HQX source, if [sic] checks for
+  the terminating colon, and then continues scanning the file for the
+  next '(This file...'". That is `bh_find_banner`'s unbounded rescan,
+  stated by the format's author, where it had been hexbin.c's
+  `again = 1; goto nexttry`.
+- "If it encounters a line beginning with '--- end of part', it ignores
+  the file until it encounters a line consisting only of '---', at which
+  time it resumes dehqxing."
+
+### The second sentence was not a citation question
+
+**`---` is three characters and every one of them is in the BinHex
+alphabet.** The rule this project uses to tell data from mail is the
+alphabet — it works because the alphabet omits `n`, `o`, `s`, `t`, `u`
+and the space, so prose disqualifies itself in a few characters — and
+the resume line of a cut posting is exactly the line that rule cannot
+see. Measured 2026-10-06: a two-part posting cut at DeHQX's separator
+came back `checksum mismatch`, 1 of 1 entries failed, because those
+three characters were decoded as two bytes of payload. `hexbin` reads
+the same file, by the equal-length half of its rule — the half this
+project declines on purpose, because it can discard a legitimate short
+final line.
+
+So the fix is not hexbin's half. It is DeHQX's rule, which is narrower
+and is a statement about the CONVENTION rather than about line lengths:
+a line beginning `--- end of part` opens a gap, a line that is exactly
+`---` closes it. `tools/run_multihqx.py` asserts it in both directions,
+and the second direction is the one that keeps it narrow: **a bare
+`---` with no separator before it is still data, and the CRC still
+objects.** Without that control the rule would have quietly become "a
+line of hyphens is never data", which is a different and worse rule.
+
+It costs **+0 B resident** — the BinHex decoder lives in `ovl_binhex`
+— and the comparison is spelled out byte by byte rather than against a
+string constant, because a 13-byte literal would have gone into the A5
+world, which is resident for the life of the application and is at its
+ceiling.
+
+### The lesson, which is the same one as this morning's
+
+Five of the six rules on that row have now left, and not one of them
+went to a decoder in `reference/`. They went to a writer (UUTool), to
+an author's own program (DeHQX), to a permissive mail tool (mpack) and
+to a library's line reader (deark). **The row's search space was
+"other unarchivers", and the answer was never in it.** What these
+rules are about is a CONVENTION of posted text, so the sources are the
+programs that posted it and the people who documented doing so.
+
+And the harder half: a citation hunt found a defect again, for the
+second time in a day. Re-reading a decoder's citations means re-reading
+what each rule is FOR, and that is the question a passing suite never
+asks. Both defects were in the same place — the test that tells a data
+line from a line of mail — and in both cases the input that would have
+shown it was a file somebody had actually posted.
+
+## 2026-10-06 (the fork that was cheaper than the file) — method 14's window wrap reached by a seed, and the two sizes the obstacle ran together
+
+**The row said a fork past 256 KB, and read that as a seed past 256
+KB.** `sit14_flush`'s second half — the flush that straddles the end of
+the window — had been filed on 2026-10-05 as out of reach for fuzzing,
+because `sit14_winsize` sizes the window to the fork and the method-14
+seed's largest fork is 17,799 B. Both halves are true. The inference is
+not: **`tools/synth_sit14.py` is an encoder, 17,799 B is what four
+hand-written symbol scripts happen to decode to, and a match ladder
+whose ceiling is 16,387 B turns 458 bytes of stream into 278,896 bytes
+of fork.** Seventeen matches and a literal between each. The file grew
+by 553 bytes.
+
+That is the whole finding, and the smell it answers to is one this file
+already keeps: **a tolerance that rests on our own output cannot fail.**
+17,799 B is not a property of the format or of this machine — it came
+out of a four-case list in our own generator. The other smell is newer
+and worth naming: **a claim that runs two sizes together, where a
+compressor exists precisely because they differ.** "Past 256 KB" was
+read as an obstacle because files that size are what a corpus has or
+has not got; the claim was about forks.
+
+**It is deliberately NOT a fifth entry in the fixture, and that is the
+decision rather than the discovery.** `fixtures/synth-sit14.sit` is
+graded by `run_diff` against `unar`, carried by `run_robustness.py`,
+run under qemu-m68k by `tests/run_mac_sink.sh` and run on four emulated
+tiers. A 278,896 B fork takes its peak heap from 65,152 B to 294,528 B,
+which is more than one of the two 512 KB lanes grants StuffIt 5
+(210,976 B — short by 83,552, measured; at the bases re-taken 2026-10-09
+both 512 KB lanes refuse it, 197,864 and 293,264 B, short by 96,664 and
+1,264 — FORMATS.md, *StuffIt 5's method 14*). So covering one branch would
+have moved a peak-RAM figure, a budget row and a tier tally, and every
+one of those would then be re-measured on an emulator at minutes a run.
+**The branch is worth less than the tallies.** The archive is generated
+in `ci.sh` instead and graded by `tools/run_sit14wrap.py`, which is the
+shape `run_now.py` already has for the Now Compress archives the corpus
+lacks: generated, adjudicated by `unar`, never a fixture.
+
+**A mutant is graded by nothing, so the seed had to be graded.** The
+fuzzer only asks whether a case crashes; what says method 14 is
+*correct* is the seed, adjudicated against `unar`. Adding a second
+named seed that nothing adjudicated would have put an ungraded archive
+in the pool, so the new suite exists to keep that property true: the
+encoder's bytes, `unar`'s and this CLI's agree on all five entries,
+278,896 B included.
+
+**The payload is aperiodic on purpose.** A fork built as one long match
+at distance 4 is period-4, and the wrap splits a flush into 65,496
+bytes from `window + a` and 52 from `window + 0`: a bug that misplaced
+a chunk by any multiple of the period would produce identical bytes and
+`unar` would agree with us about them. The distances cycle and the
+literal in front of each match changes, so the fork has no period under
+4,096 B. **A three-way agreement on a self-similar payload is three
+implementations agreeing about nothing.**
+
+**The suite also asks whether the archive still wraps, because no byte
+comparison can.** An encoder change that shortened the fork, or a
+`SIT14_WINDOW` that grew, would leave all 278,896 bytes agreeing and
+cover nothing — the *aggregate check cannot fail on a property it never
+aggregates* rule, in its cheapest form. So `flush_points` recomputes
+the straddle and reads `SIT14_WINDOW`/`SIT14_WINMIN` out of
+`src/sit14.c` rather than restating them. What it still mirrors by hand
+is the threshold and where the flush is called; that limit is written
+down where the harness is, because a stale mirror would say "wraps"
+while the branch went dark.
+
+**Three ways of failing, checked, because a test that passes may not be
+testing anything.** `win - a` bent to `win - a - 1` fails the suite on
+the `window-wrap` entry and nowhere else, first wrong byte at 262,143 —
+and the *committed fixture extracts identically under the same bent
+build*, which is the other half of the claim: no existing suite covers
+this branch. Ten matches instead of seventeen, and `SIT14_WINDOW` at
+0x80000, each make the suite say the entry no longer wraps.
+
+**The measurement, and why a line delta needs no noise floor.**
+`fuzz_cover.py` at 3,000 mixed cases over one build, `--stream-shape
+sit14` for the before: `sit14_flush` 55.6 → 100 % of lines at seeds 11,
+12 and 13, with every other method-14 function unchanged. The
+instrument's noise floor — thirteen functions in a family between two
+seeds — is about per-family counts of functions never entered, and this
+family reads 0 of 11 both before and after; the only thing that can see
+the change is `--detail`. **A before that is the same number at three
+seeds and an after that is the same number at three seeds is not a
+draw.** Over 400 `--stream-only` cases of the new shape the branch runs
+202, 212 and 212 times — executions, not cases, since a mutant that
+still decodes runs to the declared length with arbitrary flush points,
+and the unmutated seed wraps once in 13 flushes.
+
+**Both shapes stay in the round robin, which costs the first one half
+its cases and nothing else.** The wrap archive is the fixture's four
+entries plus one, so it reaches everything the plain seed reaches —
+measured: every other method-14 function reads the same percentage
+after as before. The plain seed stays because it is the committed
+fixture, byte for byte, and that identity is what makes `run_diff`'s
+verdict transferable to the fuzzer's seed. `--stream-shape` is kept for
+the same reason `--crypt-untargeted` and `--no-weight` are: the before
+and the after of adding a shape come from one build and one instrument.
+
+**What is left of method 14 under fuzzing is the `goto out` after a
+failed flush** — a sink write error, which no mutant can cause — the
+single container, and the fact that nothing in this lane is
+big-endian. Nothing here is known to be hiding a defect; that is what
+having measured it buys.
+
+## 2026-10-06 (the sort that dropped what it could not hold) — a valid method-14 archive decoded wrong, and the fuzzer that could not report it
+
+**The window-wrap seed's thousandth sanitizer case found a real
+defect**, three days after method 14 shipped and with the whole
+951-fixture suite green over it: `src/sit14.c:201`, *shift exponent -1
+is negative*. The reproduction is 1,262 bytes and the probe that
+explains it is four lines — `nsyms=308, maxtop=16, dropped=4,
+unsorted_pairs=2`.
+
+**`sit14_sort` is libxad's `SIT14_Update` with the recursion turned
+into a stack, and that transcription changed something nobody was
+looking at.** The reference recurses into the SMALLER half of each
+partition and returns before carrying on, so its nesting halves and is
+bounded by log2(nsyms). The transcription DEFERS the smaller half onto
+a 16-deep stack and loops on the larger — which leaves one pending
+range per split, and the comment above it stated the reference's bound
+as though it were this code's:
+
+> *"Each pushed range is the smaller half, so the depth cannot pass
+> log2(nsyms); 16 covers 65,536 symbols against this file's 308."*
+
+Both halves of that are true. The conclusion is about HOW MANY ranges
+are pending and the premise is about the SIZE of each, and the
+rewrite moved the first without touching the second (BLOCKERS.md).
+
+**And the overflow was silent**, which is the part that cost something.
+`if (top < 16)` dropped the range and carried on. A dropped range
+leaves the lengths SORTED — so every check anyone would think to write
+passes — and leaves the ORDER wrong, and the order is what decides
+which symbol gets which code. So two symbols swap codes and the fork
+decodes to plausible wrong bytes.
+
+**It is reachable by a valid archive, which is the finding rather than
+the UB.** The mutant tripped UBSan, which is a corrupt tree; the
+question that mattered is whether a well-formed one can do it, and the
+answer is yes and easily: of 20,000 Kraft-complete codes drawn at
+random, **15,606 come out with a different order under a 16-deep stack**
+when their lengths are arranged in ascending runs. The committed
+reproduction is the simplest closed form of that found — four codes at
+every length from 3 to 15, plus the four the Kraft sum leaves over at
+15, 56 symbols, 112 bytes of fork — and it is the fixture's fifth entry
+now: the pre-fix engine refuses it with *checksum mismatch* while the
+encoder and `unar` agree on all 112 bytes.
+
+**Why no amount of real data would have found it.** The two Aladdin
+payloads decode 9.3 million symbols between them and every fork of both
+is byte-exact against `unar` — measured on the build that had the
+defect. Their trees stay inside 16 pending ranges. A tree shape is not
+a frequency, so a corpus does not sample it: what found this was an
+ENCODER being asked to write a shape no specimen here had, which is the
+same mechanism as `-lh3-`'s seed and method 14's own existence. The
+generator's own `sit14_sort` is the same quicksort over an unbounded
+Python list, so it agreed with `unar` against us — **three
+implementations, and the two that were not transcribed from a recursion
+were the two that agreed.**
+
+**The fix is which half waits, not a bigger stack.** Deferring the
+LARGER half and looping on the smaller halves the live range every
+time, so pending ranges cannot pass log2(nsyms): **7 at the format's
+largest alphabet**, measured over 4,000 random length vectors and every
+shaped one, against 16 available. The array is identical either way —
+the two halves are disjoint ranges, so the order they are partitioned
+in cannot change either of them, checked by running both disciplines
+over the same 4,000 vectors and comparing keys and order. A bigger
+stack was the other option and is worse: the bound would still be
+unstated, and 308 entries is 2,464 B on a stack whose whole budget is
+4 KB.
+
+**A full stack is an error now, and `ci.sh` proves the error fires.**
+`-DSIT14_SORTSTACK=4` must refuse all five method-14 entries as corrupt
+— 5 of 5, exit 1 — where the default passes them. Nothing an archive
+can contain reaches that guard, so without the knob it would be a
+branch nobody could show working, which is the shape this repository
+calls a test that cannot fail.
+
+**Two instrument defects came out with it, and both are the same
+shape.** `tools/fuzz.py` moved a failing case to `--keep-dir` with
+`os.replace`, which cannot cross a filesystem: `/tmp` and the
+repository are on different devices here, so the harness raised
+`OSError` from inside the failure path and **the FUZZ FAIL line never
+printed**. The one time it had something to report, it crashed instead
+of reporting — and nothing noticed for as long as it has existed,
+because a failure path is only run when there is a failure. It is
+`shutil.move` now. The second is the same thing in the small: the
+first probe of this defect ran `gcov` with the wrong working directory,
+printed *"Cannot open source file"* to a discarded stderr, and wrote a
+four-line `.gcov` with no counts in it — which read exactly like "the
+branch was never executed". **An instrument that fails quietly is
+indistinguishable from a measurement**, and both of these were on the
+path between the defect and somebody seeing it.
+
+
+## 2026-10-06 (the spelling the tables did not have) — the uu alphabet was narrowed to UUTool's two tables and lost the one every Unix encoder writes
+
+Reading UUTool's own `HEXA` 128 and 129 resources replaced one range —
+`0x20..0x60`, which this decoder had used since M13 — with two, `0x20..0x5f`
+for the "PC" table and `0x3b..0x7d` for "UNIX", and a per-document mask that
+ANDs them line by line. Both ranges are correct. Their union is not what the
+old constant admitted: **`0x60` is in neither half as the standard
+alphabet's own character**, and `0x60` is how every Unix `uuencode` since
+4.2BSD spells the value ZERO — `ENC(c) = (c) ? ((c) & 077) + ' ' : '`'` —
+so that a mailer stripping trailing whitespace cannot eat it.
+
+The consequence needed two characters on one line. A zero (`` ` ``) cleared
+`UU_TBL_PC`; any value under 27 (`0x20..0x3a`) cleared `UU_TBL_UNIX`; a line
+holding both fitted neither, and the "fits neither" branch is the one that
+skips **mail in mid-stream**. So a classifier narrowing became silent data
+loss: `macextract l` said *format not recognized*, and with `-f uuencode` the
+document listed as **0 bytes and extracted as an empty file, exit 0** —
+uuencode carries no checksum anywhere, so nothing could object. Measured on a
+45-byte payload with three zero bytes: byte-exact before 2026-10-06, empty
+after. The fix is one constant, `UU_PC_MAX` 0x5f → 0x60, which narrows
+nothing in the other direction: `0x60` is already inside the UNIX range, so a
+backtick now fits both halves and prose still needs only a space and one
+lower-case letter to fit neither.
+
+**Two things transfer, and neither is about uuencode.**
+
+**When a test is replaced by a better-sourced model, diff the admitted SET,
+not the citations.** Two authoritative tables are still a narrower claim than
+the range they replace, and the one byte of difference WAS the lost
+capability. Nothing in the reading was wrong; what was missing was the
+subtraction.
+
+**A classifier whose "no" branch means "skip" cannot report a narrowing.**
+The same predicate answers two questions here — *is this a data line?* and
+*is this somebody's mail header?* — and the second reading turns every
+false negative into quiet success. Where a test's negative is a skip rather
+than an error, widening it is cheap and narrowing it is unfalsifiable from
+the outside, which is the asymmetry to check before touching one.
+
+**Why nothing could fail.** `synth_uu.py` writes the standard alphabet with
+`binascii.b2a_uu`, which spells zero as a SPACE, so all four plain cases
+tested one of the two spellings; both wild specimens are UUTool's, where
+`0x60` is a value of its own and legitimately in range. The corpus has had
+eight uu documents for weeks and not one of them could reach it — the
+generator was the model, and the model had a gap in exactly the place the
+decoder did. What grades it now is `synth-uu-plain-classic.uu`, graded three
+ways: our decoder against the payload, **CPython's `binascii.a2b_uu` against
+the same bytes** (a second reader, and one that takes either spelling), and
+an assertion that the document really holds a line with a zero and a
+sub-27 value on it — without which the case is the plain case again.
+
+## 2026-10-06 (the twenty-four minutes) — the CI matrix was a one-core workload, and most of what is left is ASan process startup
+
+**Claim.** `./ci.sh` took **23.8 min** and ran almost entirely on one of this
+machine's two cores. Four suites and every `make` now run as wide as there are
+CPUs, and it takes **20.0 min**. Both figures measured the same way, on the
+same machine, with the same corpus; the second run was green.
+
+**Where it went, and where it goes now** — per-command wall clock from a
+`PS4='@@ $EPOCHREALTIME ' bash -x ./ci.sh` trace, bucketed:
+
+| | before | after |
+|---|---|---|
+| robustness, 3 lanes × 9,510 variants | 454 s | 342 s |
+| other python suites (pak 46 s, SpaceSaver 41 s, large zip 35 s, LZH 27 s …) | 268 s | 265 s |
+| 8 native builds | 169 s | 136 s |
+| diff, 5 `run_diff.sh` lanes + 2 forced `run_diff.py` | 154 s | 120 s |
+| mac sink | 115 s | 103 s |
+| overlay host lanes | 86 s | 93 s |
+| walk agreement | 78 s | 55 s |
+| progress-callback coverage | 71 s | 54 s |
+| 4 Retro68 builds (already `-j`) | 31 s | 31 s |
+
+**What two cores are worth here: 1.33×, not 2×.** The robustness lane alone,
+on the same binary and corpus: **148 s at `-j1`, 111 s at `-j2`, 105 s at
+`-j3`, 115 s at `-j4`**. The knee is at the core count and oversubscription
+loses, so the default is `os.cpu_count()`. There is no cgroup quota to blame
+(`cpu.max` reads `max 100000`) — ASan maps shadow memory for every one of these
+processes, which makes the lane a page-fault workload rather than an arithmetic
+one, and page faults do not scale with cores.
+
+**The output is the same output, and it still fails.** Both halves were
+checked, because a pool that quietly dropped cases would look exactly like a
+pool that was fast:
+
+- serial and parallel runs of the full corpus compared byte-for-byte —
+  identical for `run_robustness.py` (9,510/9,510) and `run_diff.py` (951/951).
+  Order is preserved by construction: `ThreadPoolExecutor.map` yields in
+  submission order, so every line prints where the serial loop printed it.
+- each of the four suites was then handed something broken and had to say so:
+  a binary that dies by `SIGSEGV` (9,510 FAILs, `0/9510 clean`), an engine that
+  extracts nothing (951 FAILs), a walk probe reporting a disagreement and a
+  tick probe reporting a silent decoder (1,385 FAILs each). All four exited 1,
+  and in all four the first failure named the alphabetically first fixture.
+
+**The first attempt at that comparison passed without running anything.**
+`/usr/bin/time` does not exist here, so both halves died in the shell, both
+output files were empty, and `diff` called them identical. A comparison whose
+inputs can both be absent cannot fail — the same shape as the two skips that
+hid 10 adjudicated forks (BLOCKERS.md). The second trap, half an hour earlier:
+timestamping each line of `ci.sh` through a pipe gave every line the same
+stamp, because `dash` block-buffers its builtin `echo` when stdout is not a
+tty and flushes at exit. `bash -x` with a clock in `PS4` is what works, and it
+needs no edit to the script being measured.
+
+**What is left is not parallelism, and was deliberately not taken.** An ASan
+spawn on a one-byte input costs **10.1 ms** against **0.68 ms** for the release
+build. The three robustness lanes spawn 28,530 processes, so **~288 s of them
+is `__asan_init`** — around 60 % of what those lanes cost, and nothing to do
+with reading a corrupted archive. Two routes out, both of them product
+decisions rather than tuning:
+
+- *Several variants per process.* `macextract t` takes one archive, so this
+  means either a CLI that takes many (a shipped-surface change) or a batch
+  probe in the shape of `walk_probe`/`tick_probe` — which would stop running
+  the shipped CLI binary at all, and the CLI's own argument and I/O path is
+  part of what 9,510 corrupted inputs exercise. The verdicts need not change:
+  re-running a batch one case at a time pins the culprit, and batches only
+  misbehave when something is already wrong.
+- *`ASAN_OPTIONS=detect_leaks=0`* is 4.7 ms of the 10.1 ms, ~134 s of CPU
+  across the lanes. It is load-bearing: LeakSanitizer exits 23, the suite fails
+  on any status above 2, and a leak on an error path is exactly what a
+  corrupted archive finds. Not switched off.
+
+Stage-level concurrency — running independent lanes of `ci.sh` at once — was
+not attempted either. With intra-suite pools already saturating both cores it
+would buy little, and it would cost the property that the log reads top to
+bottom.
+
+## 2026-10-06 (the directory of empty records) — the probe's one real test is vacuous when every length is zero, and the name byte is what refuses a file of zeros
+
+**Claim.** `src/fmt_sqp_probe.c` claimed a file whose every fork is empty. A
+**96-byte file of `01 00` followed by 94 zero bytes** sniffed as *AppleLink
+package* and `macextract l` listed one 0-byte entry named `_`; so did a
+198-byte version-1 file of zeros with four bytes planted — the two item
+counts and one record's level. The lower bound on a record's **name length**
+refuses both, measured, and that is the whole of the fix.
+
+**Why the tiling could not catch it.** The tiling test is what makes a
+magic-less probe worth anything: every fork's (offset, compressed length)
+inside the file, the first starting where the directory ends, the last
+ending at EOF, and the lengths summing to exactly the space between. Every
+one of those terms is a comparison against a length the FILE supplies, and
+when all of them are zero the test degenerates: `lo` stays at `fsize`, `hi`
+at `start`, and `sum == fsize - start == 0` holds because both sides are
+zero. A directory of empty records passes it, and the header's own
+arithmetic — `fsize == 10 + 86n` for version 0 — is satisfied by the first
+byte of the file.
+
+The probe's own comment named the wrong test as the guard: *"an empty
+package names nothing and is indistinguishable from a file of zeros, which
+is why this is a test and not a tolerance"*, written against `n < 1`. A
+count of zero locates no record, so nothing downstream runs — but a count of
+ONE is what a file of zeros has in its first byte when the file is 96 bytes
+long. The claim is withdrawn in BLOCKERS.md with what it cost.
+
+**The smell, and it is a new one: ten negative controls derived by bending a
+valid specimen can only show that each test is NECESSARY.** Lane 4 of
+`tools/run_sqp.py` bends every test the sniffer makes, one at a time, on a
+synthesised package and requires `unknown` for each — and all ten passed
+throughout. They had to: bending a positive asks "does this test fire?",
+which is a question about each test in the set. Nothing derived that way can
+ask whether the SET is sufficient, because every input it generates is a
+package with one thing wrong. What finds a missing test is an input that is
+not a package at all and was never derived from one — here, a file of zeros,
+which is the cheapest such input any format has. The lane now carries two.
+
+**Why `sum > 0` is the wrong fix, measured rather than argued.** It is the
+obvious candidate and it refuses both files of zeros, and it passes all 8
+real packages — but it also refuses a package whose one member is an empty
+FILE, and that is a package Aladdin's writer produces. The two halves of a
+record come from different places: `AddItems` takes the name from
+`PBGetCatInfo` and `DoWork` writes each fork's length from what it
+compressed, with 0 and a zero offset for a fork that is not there. Of the
+**39 files in the 8 real packages, 17 already declare one fork of length
+zero** — 8 the data fork (`Iconf Display`'s two `bullseye π` members,
+`MPW Shell`, `SD! Patcher`, four in `SCNPCK3.4.PKG`) and 9 the resource
+fork — and **none declares both**. So nothing in the writer couples a name
+to a length, and a file with neither fork is a record with two zeros in it;
+that no specimen has one is why this is labelled a **hypothesis** in
+TESTING.md rather than a measurement, with what would overturn it. Built and run: the
+`sum > 0` build answers *unknown* for a one-empty-member package in both
+version 0 and version 1. It also costs **672 B** of m68k text against the
+name bound's 670.
+
+**What the name bound rests on.** A record's name is the HFS catalog's own:
+`AddItems` @0x22ac points the `ioNamePtr` of its `CInfoPBRec` (+18) at a
+32-byte buffer it has just cleared, calls `PBGetCatInfo` @0x22be —
+`_HFSDispatch` selector 9, the glue at 0x6500 — bails on any error but
+`fnfErr`, and @0x2354 copies the buffer into the node's name field with
+`pStrCpy`, which is the field `WrHFSDirectory` @0x5f2e writes at record+36.
+That name is the File Manager's answer for a file the writer has just
+enumerated, so it is neither empty nor longer than the `Str31` it is copied
+into: the upper bound the probe already had is half of a range, and the
+lower half was missing. Measured on the
+evidence rather than left at that: **53 records across all 8 real packages,
+shortest name 7 bytes, no zero-length name anywhere**, in the HFS directory
+and in the version-1 SQP directory both.
+
+**What it costs.** `src/fmt_sqp_probe.c` goes from **666 to 670 B** of
+68000 text (`m68k-apple-macos-size` on the object, Retro68 `-Os` with the
+application's own flags). The 4 B is not a shape that can be optimised
+away: **seven shapes were measured**, and the five that read as a range —
+`< 1 || > 31`, `== 0 || > 31`, `!r[36] || > 31`, `> 31 || < 1`, and the
+byte-wise wrap — all land on 670, because the compiler emits the same
+`subq.b #1` + `cmpi.b #30` + `bhi` for each; writing that wrap by hand in
+32-bit arithmetic costs **2 B more**. The application: eager **+4 of `CODE`
+and −4 of A5**, so `CODE` + A5 is unchanged at 73,392 B and nothing comes
+off any extraction's budget; the resident control the same, 202,240 B
+unchanged, so `OVL_SAVED` does not move and `run_tiers.py --check` holds
+every tally (71/71, 67/71, 64/71 resident; 71/71, 69/71, 66/71 shipped). The
+LAZY configuration pays **+4 and +28**, and the 28 is `*fill*` under the
+linker script's `. = ALIGN (0x20)` at the head of `.data` — read off the
+map, because `_sdata` lands at 0xcfa4 once the text is 4 B longer instead of
+0xcfa0. That is the rodata-alignment step this project's ceilings have now
+recorded six times, in the one configuration where it steps the wrong way.
+
+**The control that keeps the new test honest.** A version-0 package whose
+one member is an empty file is **96 bytes — the same length as the file of
+zeros**, with the name field and the Finder info the only difference. Lane 4
+now asserts both: the zeros refused, that package still recognised and its
+one empty file still extracted. A test that refuses namelessness and a test
+that refuses emptiness are indistinguishable on any input but that pair,
+which is why the pair is in the suite rather than the reasoning.
+
+**And the sweep, re-measured both ways.** Every non-`.md` file in
+`fixtures/` — **963** — sniffed with the committed build and with this one:
+**6 answer *AppleLink package*, the same 6 synthesised fixtures by name**,
+and **no file's answer changed at all**, in any format. A probe that is
+narrowed has to be shown not to have narrowed anything else.
+
+## 2026-10-06 (the wall the overlays had already moved) — a figure three files quoted while this project cut it to a third
+
+**Claim, carried since 2026-09-01: a Macintosh 128K is out for a measured
+second reason — its largest single block is 63,744 B against 142,152 B of
+`CODE`.** It was true when it was written and it had stopped being true
+eleven days before it was last read. `CODE` 2 is **48,888 B** in the shipped
+v0.37.0 binary, so the segment the Segment Loader refused now fits inside
+that machine's largest block with room to spare (FORMATS.md, *A Macintosh
+128K*).
+
+**Nothing about the machine changed and nothing about the claim was sloppy.**
+What changed is that this project shipped the overlays on 2026-09-25,
+whose entire purpose was to take the decoders out of resident `CODE`, and
+they did: *Overlays* has recorded the new resident pair ever since, in the
+same file, four thousand lines above the section that was still quoting the
+old one. The subtraction nobody did was done by a feature. This is
+2026-09-22's lesson — *a constant derived from a measurement is only as
+current as the measurement* — with the arithmetic performed by the build
+rather than by hand, which is the harder version: there was no stale
+formula to notice, only a term that three files held and the build no
+longer did.
+
+**The verdict held, and that is why it was cheap.** 55,888 B of `CODE`
+resources plus the 19,052 B A5 world is 74,940 B against `ApplLimit −
+ApplZone` = 78,568 B, and the eager loader then asks for the `'OVLY'`
+bundle as ONE 155,916 B block, so a 128K is short by 3,628 B rather than by
+a factor of about two. Nobody's afternoon was spent on the strength of the
+wrong number — unlike 2026-09-01's, which put half a bad instruction in
+MANUAL_TESTS.md §6. **What it cost is the next question.** "Short by a
+factor of two" closes the conversation; "short by 3,628 B, and the fixed
+cost is ~41 KB of shell and A5" is a brief, and *A Macintosh 128K* has had
+the subset builds priced on the same page since the day the wrong figure
+was written.
+
+**The instrument, and why the project's usual one could not settle it.**
+Every `CODE` figure here comes from `m68k-apple-macos-size`, which measures
+`.text`: 54,340 B for the shipped build. What a 128K heap actually holds is
+the `CODE` RESOURCES — 55,888 B across nine of them, including the 1,024 B
+jump table and the per-segment headers the linker's figure does not carry —
+and what the Segment Loader asks for in one block is the largest single
+resource, which no summed figure shows at all. Both numbers were available;
+only one answers the question, and it is the one no ratchet reads. That is
+2026-09-01's `FreeMem` rule a layer along: **ask what the failing code
+requests, then measure that, in the unit it requests it in.** The answer
+came off `dist/MacExtract.bin`'s own resource map, which is the artefact
+that ships rather than anything a build emits on the way.
+
+**How it was found, and what cannot find it.** Two sections of ONE file
+disagreeing by a factor of three — the second mechanism in BLOCKERS.md's
+list, which is written for two files and applies one file in. No checker
+covers this: `check_docs.py` holds figures against each other only where
+one is derived from another by a rule it was taught, and a number
+re-stated in prose in a distant section is not a derivation it can see.
+The same read turned up two more of the same shape, both corrected in
+place — the `'OVLY'` bundle quoted as 143,328 B in two paragraphs of
+*Overlays* while that section's own derivation says 155,916 B, and
+"ships as 211,200 B … v0.35.0" two releases after it stopped being either.
+Three stale figures in one file, all three in sections whose live
+neighbours are re-measured every time a format lands: **a figure is at
+risk exactly where it is quoted rather than derived**, because the
+re-measuring passes walk the tables and not the prose.
+
+## 2026-10-06 (the gate that had never fired) — a guard proved on built bytes, and a cost priced against a wall it does not hit
+
+**The task was a judgement, not a patch**, and the answer is that nothing
+should be written. ZipIt's `0x2605` FileName is the name a Macintosh file
+HAD, this engine extracts under the zip's own name instead, and the
+measurement that keeps the substitution parked was re-run rather than
+quoted: **23 fields on this disk, 3 whose FileName differs from the zip's
+leaf, all 3 Zip method 6, 0 on a method this build decodes** (FORMATS.md,
+*ZipIt's own archives*). The row stays open and parked, because a
+substitution whose only observable effect is on entries the build refuses
+is a change with no subject.
+
+**But the gate that keeps that row honest had never fired.** It returns 0
+by construction on every real run — every divergence here is on Implode —
+which is this project's own first trap: *a test that passes may not be
+testing anything*. It was made to fail once, by hand, on a copy of a
+specimen, and that mutation lives nowhere. It does now:
+`selftest_coupling` in `tools/run_zipit.py` builds four one-entry zips
+with `tools/synth_crypt.py`'s writer and asserts what the gate
+discriminates on — the method, and the two names — ahead of the sweep and
+before any specimen is read (TESTING.md, *ZipIt's own archives*). A
+hand mutation is evidence about one afternoon; a built case is evidence
+every run.
+
+**Building the cases found the hole.** The gate asked `method in (0, 8)`,
+"the two the engine reads", which is what `src/fmt_exo.c` reads off the
+*header* — and **method 99 means "read the method out of WinZip's
+`0x9901` field"**, where this engine decodes 0 and 8 as well. So an entry
+at 99 could produce a file under the wrong name while the guard called it
+refused. Nothing in the gate's sweep set is at method 99 — 18 archives,
+170 entries, which is every ZipIt specimen and every `fixtures/*.zip` —
+so the hole has never mattered and closing it moves no tally; the
+self-test is the only thing that can show it closed. It is closed by
+counting 99 as reachable rather than by resolving the field, which makes
+the gate err LOUD: **for a guard, a false alarm costs one look at one
+archive and a miss costs the guard.** That asymmetry is now written into
+what the suite says it cannot see, because a guard that over-reports is a
+different instrument from one that is exact and must be read as one.
+
+**The transferable part is where the hole was.** The criterion was a
+sentence in a docstring — "Method 0 and 8 are the two it reads" — and
+`FORMATS.md`'s Zip row says on its own line that the build reads store,
+deflate, PKWARE's cipher *and WinZip's AES*. The two have disagreed since
+the gate was written. **A guard's criterion is a claim about the code, and
+it belongs in the cross-file contradiction sweep like any other claim**;
+nothing had ever read it as one, because a predicate inside a test reads
+as machinery rather than as an assertion.
+
+**And the cost figure beside it was priced against the wrong wall.** Part
+1's Implode row offered the maintainer one number: ~1.5–2 KB of `CODE`,
+estimated, against 12,460 B of headroom at the tightest tier. The
+headroom is *resident* — `check_app_size.py` says in its own docstring
+that the `'OVLY'` bundle is not what it watches — and `src/fmt_exo.c`,
+which is where an Implode decoder is reached from, is excluded from
+resident `ENGINE_SRC` and built into `ovl_exo` by `mac/CMakeLists.txt`.
+The fixture that sets the 12,460 B is a DiskDoubler archive, which
+releases that image before it allocates anything. The row's other half —
+"a removal delta can be built and an addition cannot" — is false as
+practice: zip's own four Macintosh extra fields were **+2,024 B into that
+same image** on 2026-10-01 for +0 resident `CODE`, +0 of A5 and no tier
+tally moved in either lane, which is a measured precedent for an addition
+of exactly this size in exactly this place. Both corrected in place
+(OPEN_ITEMS.md Part 1; BLOCKERS.md, *Withdrawn claims*).
+
+**This is the second time today a pre-overlay figure was found quoted in
+a live row** — *the wall the overlays had already moved* is the first, and
+the mechanism is identical: 2026-09-25 moved fourteen decoders out of
+resident `CODE`, and every sentence that compares a code size to a heap
+margin written before that day now compares two different budgets. The
+sweep that finds these is not a checker. **It is to ask, of any number a
+document hands to a decision, which budget it is drawn from** — and the
+overlays made that question have two answers where it used to have one.
+
+**What was deliberately NOT done.** No Implode decoder was written, and
+the estimate was not re-estimated. Measuring an addition means building
+it, shipping it is the maintainer's call (CLAUDE.md), and a better number
+than a new estimate was already on this disk in the 2026-10-01 delta. The
+substitution was not implemented either: `namebuf`'s 256 B of stack and
+the leaf-is-not-a-path bound are both still what Part 2's row says they
+are, and neither needed re-measuring to decide not to spend them.
+
+## 2026-10-06 (the fix the download page did not mention) — a repair to a release's headline format is release-notes material, and three paragraphs of additions had crowded it out
+
+`dist/README.txt` is the release notes verbatim and the only download page
+this project offers (CLAUDE.md). It carried three paragraphs for what had
+been ADDED since the `v0.37.0` tag — self-extracting zip, AppleLink
+packages, UUTool's alphabet — and nothing for what had been REPAIRED, so
+the one defect that reaches a person who already downloaded v0.37.0 was
+the one thing the page did not say. In that build a VALID method-14
+StuffIt archive can be refused with `checksum mismatch` (fixed 2026-10-06,
+*the sort that dropped what it could not hold*), and method 14 IS
+v0.37.0's reason to download: the page's own words for it are "the last
+StuffIt archives this program could not" open.
+
+**The selection bias is the transferable part.** The heredoc gets edited
+when a format is added, because the paragraph is the feature's
+announcement; a fix produces a commit message and a DECISIONS entry, both
+of which are written for whoever maintains this, and the page is the one
+file that is not (CLAUDE.md, *`README.md` is the exception*). v0.34.0's
+entry shows the register was always available — "was refused outright,
+with *file is truncated*, instead of asking you for the password; it now
+asks" — so the gap was habit, not a missing convention. **Ask of any
+repair: would somebody holding the last download want to know?** If yes,
+it is a paragraph, and the existing "Since v0.37.0, and in this download"
+phrasing is what keeps it honest, because the fix is in the committed
+`dist/` and not in the published release.
+
+**`UNC_VERSION` was NOT bumped and the page says nothing about a next
+release.** Bumping is step one of cutting one and that is the maintainer's
+call, every time (CLAUDE.md, *Cutting a release*). So `--version` reads
+`0.37.0` on both builds and cannot distinguish them; the only thing that
+can is the page's per-paragraph wording. A download page is not where a
+plan belongs (*Writing things down*, no plans in status docs), and the
+decision belongs to somebody outside this machine, which is what
+MANUAL_TESTS.md is for — it is now that file's §8, beside §7's two
+written-and-unposted bug reports, which wait on the same person for the
+same reason.
+
+**`dist/MacExtract.bin` and `.dsk` were deliberately left at their
+committed bytes.** `make_dist.sh` rebuilds all three files, but no source
+changed here, and the rebuilt MacBinary differs from the committed one in
+exactly six bytes — the creation and modification dates and the header
+CRC — every one of them inside the 128-byte header, with the payload
+identical. **`ci.sh`'s own staleness check says that is the expected
+difference**: it hashes `tail -c +129` of both files precisely because
+MacBinary stores the dates, so the committed binaries are not stale by the
+one measure this repository has for it, and committing a megabyte of date
+churn into a shared checkout buys nothing. `check_docs.py` check 7, which
+is the layer a change to the heredoc can fail, compares `dist/README.txt`
+against the heredoc and reads neither binary. **The rule is to rebuild `dist/` in the same commit as a change
+to `mac/` or `src/`** (CLAUDE.md, Rules); a docs-only change to the
+heredoc is not one, and the binaries staying put is evidence that it was
+not, rather than evidence that `dist/` went stale.
+
+
+## 2026-10-06 (the platform the ROM would not admit to) — Mac OS 8.6 boots far enough for Mac OS to refuse the FIRMWARE, and the gate was never the media or the file system
+
+**Claim.** `qemu-system-ppc` does not boot Mac OS 8.6, and the reason is
+that OpenBIOS provides no `/rtas` node. Evidence: with the volume blessed
+and Apple-partitioned and the ROM's platform test satisfied, the ROM's
+ELF runs and prints `MacOS: Boot Failure! (0xF3C481F6)` /
+`MacOS: "/rtas" not found!`. Consequence: the third of the three
+unmeasured steps OPEN_ITEMS.md listed for `fmt_sit5.c`'s bit 5 is never
+reached, and the first is answered no — but the row does not need it
+(*the comment UI that was two boxes later*, below).
+
+### Four gates, and only the last one is about Mac OS
+
+Each was found by looking at the frame rather than at the exit status, and
+three of the four were preparation this repository already had the tools
+for:
+
+| gate | what the screen said | what it was |
+|---|---|---|
+| 1 | `Trying cd:,\\:tbxi...` then `No valid state has been set` | the volume's `drFndrInfo[0]` is **0** — no blessed folder. Its System Folder's catalog record gives dir ID 989 |
+| 2 | the same, as `hd:` | a bare HFS volume with no Apple Partition Map. `mkapmdisk.clone_head` wraps it, and the ROM then LOADS |
+| 3 | `this image is not for this platform` | **the ROM's own Forth**, not OpenBIOS |
+| 4 | `MacOS: "/rtas" not found!` | Mac OS, on firmware that has no RTAS |
+
+**Gate 3 is the one worth transferring.** The message reads like a
+firmware rejection and is not: `System Folder:Mac OS ROM`'s `<BOOT-SCRIPT>`
+is plain Forth in the file's own data fork, and it ends
+
+    ... " powermac1,1" $= r> or >r  " powerbook1,1" $= r> or >r ...
+    0= abort" this image is not for this platform"
+
+so the ROM tests `/` **model** for `iMac,1` and `/` **compatible** for
+`powermac1,1` or `powerbook1,1` — the three New World machines Apple
+shipped in 1998–99 — and QEMU's `mac99` is `PowerMac3,1` (September
+1999) while `g3beige` is neither. Editing the XML `<COMPATIBLE>` tag at
+the head of the same file changed nothing, which is the measurement that
+located the test: **the tag is OpenBIOS's gate and the Forth is the
+ROM's, and only the second one was firing.** One byte — `powermac1,1`
+→ `powermac3,1` — clears it, and 8.6's boot script runs no checksum over
+what it loads where Mac OS 9's runs an adler32 and aborts on a mismatch.
+
+**And the two ROMs differ in exactly the two ways that matter.** Mac OS
+9's (2001-09-25) declares `<COMPATIBLE>MacRISC</COMPATIBLE>`, tests for
+`macrisc`, and asks for no RTAS; 8.6's (1999-04-05) names three machines
+and wants it. That is the whole of why 9.2 has booted here since August
+and 8.6 cannot, and it is readable with `hcopy -r` in ten seconds —
+**on either file, at any point in the last two months.**
+
+### The lesson is about what a "three unmeasured steps" list is for
+
+The row listed three steps in order and said each could end the task.
+That was right, and the thing it did not say is that **step 1 had a
+cause worth measuring whether it passed or failed.** A boot that fails is
+a sequence of refusals, each from a different program, and reading which
+program refused is what separated "8.6 does not boot" — a fact about one
+download, which invites fetching another — from "this firmware has no
+RTAS", which says that three more 8.x images would fail identically and
+that the pre-installed one is the only one with a chance, because
+whoever built it had to get past this.
+
+**Cost: eight boots, about ninety minutes** — four of them spent on
+gates 1 and 2, where the frames were identical and only the device name
+changed, which is the part a `--prepare86` now does in one command so
+nobody pays it twice. The preparation itself was fifteen minutes with
+`mkapmdisk.clone_head`, written for a different problem in August.
+Nothing was spent on the 1.65 GB pre-installed image or the 8.5 CD, and
+that is the saving: without gate 4 the obvious next move was another
+download.
+
+
+## 2026-10-06 (the comment UI that was two boxes later) — the row's blocking application was not the only one with the feature, and the other two already run here
+
+**Claim.** *"The only software that can set bit 5 is StuffIt Deluxe
+5.0.1's comment UI"* is withdrawn. Evidence: StuffIt Deluxe **5.5** and
+**7.0.3 Classic** both carry `Edit Comment…` in their Archive menu and
+both declare `comment` as a scriptable property of the archive — read out
+of their own resource forks, no emulator (`sitcomment.py --read`).
+Consequence: the row never needed Mac OS 8.6, or any system this machine
+does not run; both boxes are already assembled into a Mac OS 9 System
+Folder by `sitzip.py`.
+
+### What the row asserted, and where the answer was
+
+The route column read: the only comment UI is 5.0.1, Mac OS 9.2 refuses
+to run it, the file-system theory is disproved in all four combinations
+(2026-09-27), so the row wants a Mac OS 8.6 boot. Every clause after the
+first is sound. The first is a claim about which PROGRAMS have a feature,
+and the programs it is about were extracted, indexed and `hcopy`-ed onto
+a boot volume on 2026-10-04 for an unrelated question about zip metadata.
+`StuffIt Deluxe™.rsrc` is 1.2 MB in the cache; `MENU` 131 is `Archive`
+and its last item is `Edit Comment...`.
+
+**This repository's own list of mechanisms names this shape twice**, and
+both times on this same row's neighbours: *a route column that asserts an
+absence in the same sentence as the artefact it wants*, and *a claim that
+no specimen exists is a claim about the last search*. The search behind
+"the only comment UI is 5.0.1" was a search for software that can
+COMMENT, run when 5.0.1 was the only Deluxe in reach. Two more arrived
+afterwards for other reasons and nobody re-asked.
+
+### What the later boxes actually offer, and which of it is reachable
+
+| | 5.5 | 7.0.3 |
+|---|---|---|
+| `Edit Comment…` | `MENU` 131, **no Command key** | `MENU` 132, **no Command key** |
+| a comments AREA in the archive window | `STR# 30000` #13, *"Click here to display (and possibly edit) the comments attached to this archive"* | — |
+| `aete` | `comment`, `password` on the archive | `comment` on archive and item, `password` on the archive and on the `stuff` event |
+
+**The menu is the route already measured dead.** A keyless menu item is
+not selectable on either guest — recorded 2026-09-27 on a top-level menu
+under QEMU as well as on Mini vMac's submenus — so `Edit Comment…` is
+out on both boxes, and reading the `MENU` resource is what says so
+without spending a boot discovering it. What is left is the comments
+AREA, which is a click and clicks work, and an Apple event, which is
+`tools/aetran/`'s whole reason for existing: that tool was written
+because a SUBMENU was unreachable, and this is the same obstacle one
+version later.
+
+### The first of those questions was then measured, and it moved the obstacle again
+
+`sitcomment.py --probe`, two boots: **StuffIt Deluxe 5.5 launches on Mac
+OS 9.2.** Its splash is drawn and the menu bar is its own, `Archive`
+included — so what 9.2 refuses is 5.0.1 and not Deluxe. What stops it is
+`STR# 269` #30, *"This copy of StuffIt Deluxe™ has not been properly
+installed"*, and the second boot establishes that this is a **wall and not
+a nag**: the alert's OK is the default button, Return reaches it without a
+pointer, and dismissing it quits the application — the menu bar is the
+Finder's again in the next frame and a ⌘S after it does nothing.
+
+**So the obstacle is now this project's own assembly, and it is local.**
+`sitzip.py` places the engine, its PowerPlug and seventeen translators,
+which is enough for that box's EXPANDER and not for its application; the
+same payload also carries `Aladdin Compression™`, `Compression
+Extension`, `True Finder Integration™`, `Magic Menu™` and a `Text
+Encoding Converter`, and `STR# 269` #34 says the application refuses
+without the last of those by name. Either place what the check wants, or
+drive Aladdin's installer with one of the published 5.x codes already
+sitting in `spacesaver.CODES`. **Neither needs anything off this
+machine** — which is the whole distance this row moved today, from an
+operating system nobody here can boot to a list of files already in the
+cache.
+
+**What is still unmeasured, in order:** which piece `STR# 269` #30 wants;
+whether Stuff will encrypt without a dialog Return cannot reach; and
+whether a comment set through the archive window's comments area lands in
+the ARCHIVE header rather than per entry. Only the last is a question
+about the FORMAT, and the engine's reading of bit 5 stays labelled a
+**hypothesis** until an archive sets it: a comment UI existing is not an
+archive, and neither is an application that launches.
+
+**Cost: nine days of a row filed as blocked on an operating system**,
+and before that a withdrawn file-system theory that cost ninety minutes —
+all of it downstream of one sentence about which programs have a feature,
+written when it was true and never re-read.
+
+
+## 2026-10-06 (the line that had to be the whole line) — three readers asked about BinHex's last macutils rule, all three say no, and the asking found a regression one day old
+
+**Claim.** `src/fmt_binhex.c`'s skip of a line with intermediate garbage
+stays macutils'. Evidence: of the three readers OPEN_ITEMS.md named and
+nobody had asked, one has no BinHex decoder at all, one skips a
+CHARACTER and never a line, and one writes a zero-byte file when a data
+line holds one bad character. Consequence: the row stays, with all three
+now named and the method recorded — and the reading paid for itself
+anyway, which is the fifth time in a row.
+
+### What each one answered, and how it was asked
+
+**UUParser 1.72 cannot be asked, and that is measured rather than
+inferred.** Its README offers BinHex parsing as a registered-user
+feature, so the live question was whether the code is in the shareware
+binary and gated. It is not: the binary carries no window of the BinHex
+alphabet that spans one of the alphabet's own gaps, and its help text
+says *"Parse BinHex File ... This function is enabled when your copy of
+UUParser is registered"* beside *"(Version 1.8) Added binhex file
+parsing"*. The feature is a different build, not a flag.
+
+**Run length was the wrong instrument and it cost a pass to find out.**
+The first version of that check looked for the longest run of the
+alphabet and allowed eight characters as coincidence. UUParser carries
+fifteen — `@ABCDEFGHIJKLMN` — because the longest window of the BinHex
+alphabet that is ALSO a plain ascending ASCII span is fifteen
+characters, and the uu table every uu program carries contains it. What
+distinguishes this alphabet is not length but its GAPS: it omits n, o,
+s, t, u, the space and twenty more. **A test for a property that two
+things share is a test of nothing**, and the fix is to test the
+property only one of them has.
+
+**HQXer 1.1 skips a character, not a line**, and its author named his
+own resources so the reading needs no disassembly to start: `8->6` 128
+*"8 to 6 bit table"* is the alphabet and `6->8` 128 *"6 to 8 bit
+table"* is the 256-byte inverse. **That inverse is three-way**: the 64
+values, `0xFE` at exactly five characters — BS, TAB, LF, CR, SPACE —
+and `0xFF` at the other 187. `CODE` 2 branches on the sign bit at
++0x10ec, fetches the next CHARACTER for `0xFE` at +0x1116, and for
+`0xFF` sets error 11 and raises `STR# 129` strings 2, 10 and 9: *"An
+error has occured: / This file / is corrupt."* `GetByte` is a plain
+buffered reader; there is no line-level test anywhere in its path.
+
+**StuffIt Expander 4.0.2 had to be RUN**, because it carries the
+alphabet twice and no inverse table, so nothing static says what it does
+with a bad byte. Three subjects, and the third is the experiment:
+a control; the same file with one line of mail inserted; and the same
+file with **one bad character inserted inside a data line**. A
+line-skipper and a character-skipper both sail through the second —
+which is why the second alone would have been read as a yes. On the
+third, Expander wrote `MacROT13.cpt` at **zero bytes** and never
+produced the `MacROT13` it expands from it, where the control produced
+both.
+
+### The reading found a regression this project had committed the day before
+
+`fmt_binhex.c` gained the DeHQX separator on 2026-10-06, from Peter
+Lewis's prose: *"it ignores the file until it encounters a line
+consisting only of '---'"*. That was transcribed as `n == 3`. HQXer's
+gap loop does something else — it reads three characters, compares each
+with `-`, and on three hits discards the REST of the line and resumes
+— and the difference is not academic:
+
+The middle column is measured and not reasoned: it comes from a build
+with the `--- end of part` test compiled out, which is what "before the
+gap existed" means and is two minutes with `make BUILD=build/pregap`.
+
+| a posting whose resume line reads | before the gap existed | 2026-10-06 | now |
+|---|---|---|---|
+| `---` | CRC error — the line is data | read | read |
+| `--- part 2 ---` | **read** — it holds spaces, so the garbage rule skips it | **everything after the cut lost** | read |
+| `-----` | CRC error — every character is in the alphabet | **everything after the cut lost** | read |
+
+**So the fix made its own regression, in the one case that had been
+working.** `--- part 2 ---` needs no separator rule at all: the garbage
+rule had always skipped it. Narrowing the resume marker to an exact
+three bytes took a file that read and made it lose everything after the
+cut — and the entry fails rather than lying, so the cost is a refusal
+and not a corruption.
+
+**Nothing could see it.** `run_multihqx.py`'s separator case resumes at
+exactly `---`, so the suite's own subject is the one shape the defect
+spares; and its other multipart case uses `--- part 2 of the digest ---`
+as a separator between DOCUMENTS, which never opens a gap because it
+does not begin `--- end of part`. Two cases that look like coverage of
+this rule, and the property neither aggregates is the resume line's
+SHAPE. Both new shapes are in the suite now and both fail on the
+previous build, checked by putting it back.
+
+### Three things worth keeping
+
+**A prose rule and an implementation's rule are different artefacts, and
+the prose is the one that reads like a specification.** "A line
+consisting only of '---'" is a sentence about the common case written by
+an author describing his own program; the program next door reads three
+characters. Where this project has both — and here it has DeHQX's
+documentation and HQXer's code for the same rule — **the narrower
+reading belongs to whichever of them is being quoted, and the
+implementation is the one that has met files.**
+
+**Asking a reader a question it answers the same way for two different
+reasons is not asking it.** Expander's answer to the inserted LINE was
+yes, and a yes there is consistent with the rule and with its opposite.
+It took a third subject — one bad character INSIDE a line — to separate
+them, and that subject is the only one of the three that was worth an
+emulator.
+
+**And the citation did not move, which was the likely outcome and is
+still worth the day.** Five of this row's six rules left because the
+search stopped asking the decoders in `reference/` and asked a writer,
+an author's own program or a manual. The sixth was asked the same way
+and the answer was no three times — but the asking produced a second
+implementation of a DIFFERENT rule, the one committed the day before,
+and it disagreed with the prose in a way that lost every posting whose
+resume marker was not exactly three hyphens. **A negative result on the
+question you asked is not a negative result.**
+
+One honesty note, carried over from the entry this extends: the subject
+is BUILT. None of the 204 `.hqx` fixtures is cut at a part boundary at
+all — they are Info-Mac downloads, which are single postings — so what
+is measured is the boundary two implementations DESCRIBE, and how often
+a posting in the wild is shaped this way is not something this corpus
+can say.
+
+
+## 2026-10-06 (the archive that came with the application) — the specimen for bit 5 was inside the box the row wanted to drive, and the one it could not find was one `open` away
+
+**Claim.** *"No archive on this machine sets bit 5 — 47 scanned — so
+nothing here can grade it"* is withdrawn. Evidence: `Tutorial
+Files/Sample Archive.sit`, which **StuffIt Deluxe 5.5 ships inside its
+own installer**, reads `0x30` at the archive flag byte and carries a
+204-byte comment. Consequence: **bit 5 marks an archive comment** and its
+block is four bytes, the comment's length and its style scrap's; the row
+is closed, and so is the ORDER question behind it (FORMATS.md, *StuffIt
+5's archive flag byte, and what bit 5 is*).
+
+### The measurement is one sum, and the alternatives are what make it one
+
+100 + 14 (bit 4's block) + 4 (bit 5's) + 204 (the comment) + 22 (the
+style scrap) = **344**, and 344 is the `firstoffs` the archive's own
+header declares. A block of 0, 2, 6 or 8 bytes misses, and
+`tools/derive_sit5crypt.py` checks each of those separately and fails if
+one of them would close the sum too — the rule this project already
+applied to bit 4's fourteen, where a reading that works is not evidence
+unless the alternatives do not.
+
+**Two independent confirmations came free with the file.** `lsar` prints
+that text as *Archive comment*, so XADMaster's reading and this one agree
+on a real archive rather than on each other; and Aladdin's own StuffIt
+Engine SDK 5.1.2 — in the cache since 2026-09-28 — declares
+`GetArchiveComments(archiveInfo *, Handle *commentText, StScrpHandle
+*commentStyl)`, a text handle and a style handle, which is exactly the
+pair of lengths. Neither was reachable while the claim was that no
+archive existed: **the expensive belief was the absence, not the
+reading.**
+
+### Why the row did not find it
+
+The scan behind *"none of the 47"* ran on **2026-09-27**. On
+**2026-10-04** `sitzip.py --payload 55` extracted 138 files into the
+cache to answer a question about zip metadata, and one of them was that
+archive. On **2026-10-06** `sitcomment.py --read` opened `StuffIt
+Deluxe™.rsrc` **out of that same payload**, one directory up from the
+archive, read a `MENU` resource out of it, and concluded the row needed
+an emulator and an application to drive.
+
+**A scan is a measurement of a corpus at a date.** Quoted afterwards it
+reads as a property of the format, and this project's corpus grows
+constantly and for unrelated reasons — installer payloads, reference
+downloads, emulator output. Re-run a scan rather than re-reading it, and
+re-run it FIRST when the row's named route is an emulator: a hundred-byte
+read over every file on the disk is seconds, and a boot is not
+(BLOCKERS.md, *a scan whose corpus has grown since it ran*).
+
+**What the row got right is the shape of the mistake.** Every obstacle it
+listed was an obstacle to WRITING such an archive — which comment UI,
+which system, which installation — and all were real, and two were
+disproved the same day. What it never listed was an obstacle to FINDING
+one, because finding one had been declared impossible first, and after
+that the only moves left on the board are the expensive ones.
+
+### The second half: hand the application an artefact instead of asking it for one
+
+The found archive settles what bit 5 MEANS and not where the password
+hash goes, because it is not encrypted. That needed an archive setting
+both bits, and three boots produced two of them — `enc-comment-added.sit`
+and `enc-comment-stuffed.sit`, `0xb0`, hash at 118, the unshifted offset
+reading 0 (FORMATS.md). What those boots are worth keeping is the shape
+of what worked:
+
+- **`make` failed and `open` did not.** Three shapes of *make new
+  archive* — `at` an alias of the folder, `at` nothing, and `stuff` with
+  no destination — all answered `-1701`, `errAEDescNotFound`; StuffIt
+  Deluxe 7.0.3 wants an insertion location nothing here had built. An
+  archive already on the volume, opened with `aevt/odoc` and then set,
+  worked on the first attempt. **When an application will not CREATE the
+  artefact, give it one and ask it to CHANGE it** — and this project has
+  six StuffIt 5 archives in a cache directory for exactly that.
+- **A reply of 0 says the term was understood, not that anything was
+  written.** `set password of archive 1` answered 0 and the archive came
+  back byte for byte, because nothing had made StuffIt rewrite it; the
+  same event with an item stuffed in afterwards produced a `0xb0`
+  archive. So the sender reads the artefact itself — `aesit` opens the
+  file and prints byte 83 — and a frame is then evidence about the
+  FORMAT rather than about an event queue.
+- **Most of what the row called a blocker was 5.5's.** 7.0.3 launches on
+  Mac OS 9.2 from the installation this project assembles, has no
+  *"properly installed"* check at all, and takes `comment` and `password`
+  by Apple event. The route that was filed as needing an operating
+  system this machine cannot boot needed a different version of the same
+  application, and that version was already on the disk
+  (`tools/vmac/README.md`, *The archive comment, and bit 5*).
+
+**Cost of the first half: two days of a row filed as needing an emulator
+while the archive that answers it sat in a directory the row's own
+harness had indexed** — and, before that, a morning aimed at writing such
+an archive when reading one would have done. **Of the second half:
+three boots, about an hour**, which is what the ORDER actually cost and
+would have cost anyway.
+
+## 2026-10-06 (the rule that no Macintosh program has) — eight more readers asked about BinHex's last macutils rule, and what they settle is the half this engine declines
+
+`src/fmt_binhex.c` keeps one citation to macutils' `hexbin`: the skip of
+a line with intermediate garbage. Five readers had been asked for a
+second statement of it and none gave one; this adds **eight**, chosen by
+the pattern that emptied the other five rules on that row — stop asking
+the decoders in `reference/` and ask a writer, an author's own program,
+or a manual.
+
+**Claim: no Macintosh BinHex reader judges a LINE, so the rule is
+macutils' own invention for Usenet rather than anything the format
+implies.** Evidence: thirteen readers, seven of which are Macintosh
+programs with a decoder in them. Three of the seven answer a character outside the alphabet by
+fetching another one — **BinHex 5.0** (Yves Lempereur, who made the
+format), **Compact Pro 1.51**, and **StuffIt Deluxe 2's own `Binhex4
+Translator`**, whose author named it `DecodeHqx`. Four give up on the
+file — **HQXer 1.1**'s alert, **DeHQX 2.0.1**'s error −7, **BinHqx
+1.02**'s error 127, **StuffIt Expander 4.0.2**'s zero-byte output. Not
+one of the seven buffers a line in order to judge it. Consequence: the
+citation stays and the row keeps its one bullet
+(`tools/derive_hqxgarbage.py`, 109 byte-exact witnesses at the offsets
+they are claimed to sit at).
+
+### Where the readers came from, because the search is the transferable part
+
+Each of the eight was reached from a file this project already had, and
+none needed the network:
+
+- **the two authors.** `binhex-50.hqx` and `dehqx-201.hqx` have been
+  corpus fixtures since M1. The row had been reading *decoders written
+  for Unix*; the men who defined the format wrote Macintosh programs,
+  and both were sitting in `fixtures/`.
+- **DeHQX as a BINARY.** The row said since 2026-10-06 that DeHQX is not
+  a candidate, on the strength of its documentation. That is a claim
+  about prose, so it was re-tested against the code — and held: the
+  author left his Macsbug names in (`INITREADHQX`, `FINDSTART`,
+  `READCOLON`), the table is 256 bytes of `0xFF`, and a character above
+  32 that misses it sets −7 and stops. **A doc-derived claim that
+  survives its binary is worth the hour**: it is the difference between
+  believing the row and knowing it.
+- **a sweep rather than a guess.** Every `.hqx` fixture was extracted
+  and searched for the 64-character alphabet, and the hits — nine
+  files, eight programs — were then classified by whether they hold an INVERSE table.
+  That is the cheap discriminator: an encoder holds the alphabet and no
+  inverse, so `AutoBin 1.0` and `Stuff and Hex 1.0` were ruled out in a
+  minute by their own symbol names (`EncodeDataChar`) rather than read.
+- **the specimen cache, which is not `fixtures/`.** Aladdin's own
+  translator is in `deluxe-2-optional.sit`, downloaded for a StuffIt
+  question months ago and never read for this one. **A cache assembled
+  for one row is corpus for every row.**
+
+### What the asking actually bought: a tolerance that rested on an opinion
+
+`hexbin`'s rule has two halves and this engine transcribes one. The
+comment beside the decline said the length half "can discard a legitimate
+short final line (hexbin ships `-c` to turn it off)" — an objection, not
+evidence, and **the kind of justification that cannot fail.** Two of the
+new readers implement the length test, and both answer that objection the
+same way: a short line is fine when it ends at the `:`. **StuffIt
+Commands 5.5**'s sniffer wants a line of exactly 64 characters, all in
+the alphabet, or shorter and ending in `:`; **BinHqx 1.02** applies the
+same pair to decide whether another document follows. So the objection is
+answered and the decline needed a different reason.
+
+It has one now, and it is a measurement: **no line in any of the 204
+`.hqx` fixtures would be skipped by the length half and kept by the
+alphabet half**, and the scan that says so is shown to fire by injecting
+one (`derive_hqxgarbage.py --length`). What the half would catch is junk
+built only of alphabet characters — a bare rule of hyphens is the
+realistic shape, and one inserted into a fixture does cost that fixture,
+as a per-entry CRC error rather than as silence. That is the engine's
+stated contract for the shape, so nothing changed; what changed is that
+the tolerance is now priced instead of asserted.
+
+**The lesson is the corollary this repository already keeps**: ask what
+evidence a tolerance rests on, and if the answer is an opinion about a
+hypothetical file, go and count the real ones. The count took four
+minutes and replaced a sentence that had stood since the decoder was
+written.
+
+### Two details about the separator, from the authors' own code
+
+Both bear on a rule this engine already implements, and both say the
+implementation is right:
+
+- **DeHQX stores the marker as `--- end of partX`, sixteen characters,
+  and compares the stored length minus one.** So the 15-character prefix
+  this engine matches is the author's own arithmetic, in his own
+  resource, rather than an inference from his prose.
+- **DeHQX's resume test wants `---` then a character of 32 or less**, and
+  a space is 32 — so it reads `--- part 2 ---` and refuses `-----`,
+  where HQXer 1.1 reads both. This engine reads all three and is the
+  union of the two, so the permissive reading taken on 2026-10-06 is
+  bracketed by two implementations rather than chosen.
+
+One difference was found and deliberately not taken: Lempereur's start
+scan requires the opening `:` to be the first character at or above 32 on
+its line, where `bh_find_colon` allows a space or a tab in front of it.
+The Definition names both characters explicitly ("because some old
+programs produced these characters"), so **the Definition wins over the
+author's program when the two disagree** — the program is evidence about
+one implementation, the Definition is the format.
+
+**Cost: an afternoon, and the row's bullet count went from five to
+thirteen without the row moving.** What makes it worth recording is that
+the same afternoon retired an unfalsifiable justification in shipping
+source and confirmed three rules the engine had from single sources.
+
+## 2026-10-07 (the engine four layers down) — the last macutils rule leaves `fmt_binhex.c`, and the reader that states it was inside a download this project already had
+
+`src/fmt_binhex.c` judged a whole line and skipped it when any character
+could not be data, and cited macutils' `hexbin` for it because nothing
+else known stated it. Thirteen readers had been asked for a second
+statement and none gave one (2026-10-06, *the rule that no Macintosh
+program has*). The fourteenth does.
+
+**Claim: StuffIt's own `HQXEngine` states macutils' rule, so the
+citation moves and `src/fmt_binhex.c` owes macutils nothing.** Evidence:
+Aladdin's StuffIt Engine SDK 5.1.2 (April 1999), resource `Eng ` 10000 —
+the decoder behind StuffIt Expander 5.x. Its 6-bit fetcher calls a LINE
+reader (+0x0d7e), which fills an 80-byte buffer to the first CR or LF
+(+0x4acc), hands it to a predicate (+0x4a30), and **on a refusal rewinds
+the buffer and reads the next line** (+0x4b1c). Consequence: the row
+leaves OPEN_ITEMS.md, `fmt_binhex.c` leaves NOTICE's inventory and
+`check_provenance.py`'s CARRIES, and **OPEN_ITEMS' provenance section is
+empty for the first time**. 29 byte-exact witnesses,
+`tools/derive_hqxgarbage.py --engine`.
+
+### Why thirteen readings missed it, which is the transferable part
+
+Every one of the thirteen was a program a user runs. HQXEngine is not:
+it is a code resource that an application loads, and the applications
+that load it — StuffIt Expander, DropStuff — carry it rather than
+implement it. **The search had been enumerating programs when the unit
+that holds a format rule is a module.** StuffIt Expander 4.0.2 was even
+asked, by booting a Macintosh and running it, and answered for its own
+1996 engine; the 1999 one two directories away in the same cache says
+something different.
+
+It was also four layers down, and the layers are why a file search did
+not surface it:
+
+    sdk512.hqx -> "StuffIt SDK™ 5.1.2 Installer" (a .sit)
+               -> the Installer's DATA FORK is itself a StuffIt archive
+               -> Individual Engines/HQXEngine.rsrc  -> `Eng ` 10000
+
+This project's own CLI opens every layer, which is the part worth
+keeping: **the corpus is deeper than its file names.** A sweep for the
+BinHex alphabet across `fixtures/` found eight programs; the same sweep
+across `~/.cache/macextract` found the engine, the SDK's shared
+libraries and StuffIt Expander 5.5 — and the cache had held them since
+2026-09-28, downloaded to answer a question about StuffIt 5 archive
+comments. The same cache produced Aladdin's Deluxe 2 translator a day
+earlier. **A cache assembled for one row is corpus for every row**, and
+this is the second row in two days that it closed.
+
+### What the engine settles, and what it does not
+
+Reading it answered two questions the row had been carrying separately.
+
+**It is both halves of hexbin's rule**, not one: a line passes when it
+is 63 or 64 characters, or ends at the `:`, AND every character is in a
+71-value set. So the length test this engine declines now has three
+implementations against it — HQXEngine, StuffIt Commands 5.5 and BinHqx
+1.02 — and declining it needed a better reason than the corpus count
+written down the day before. It has one, and it is first-party: the
+Definition says **"When decoding, lines of any length should be
+accepted"**. The corpus count stands beside it as the local check.
+
+**The predicate's character set is not the alphabet**, which matters
+only because calling it that would have been describing our rule rather
+than theirs. The branch chain carves the three runs of non-alphabet
+characters out of `.`..`_` and sends everything else to a plain `!`..`r`
+range check, so `7 : O W g n o` ride along — harmlessly, since the
+116-byte table maps each to 0xFF and the character is skipped one layer
+down. `--engine` simulates the chain over all 256 values rather than
+paraphrasing it, which is the only way that distinction survives.
+
+### The trim, which HQXEngine does NOT state — and a correction
+
+`bh_refill_line` trims trailing spaces and tabs before judging. This
+comment said **"THE TAB IS OURS"** from 2026-10-06, having gone looking
+for the tab in `hexbin` (which tests `line[n - 1] == ' '` and nothing
+else) instead of in the document the file is transcribed from. The
+Definition names both characters outright: *"`<return>` means to the
+decoder: Any sequence of `<cr>`, `<lf>`, `<tab>`, `<spc>`. (The `<tab>`
+and `<spc>` are required because some old programs produced these
+characters)"*. **It is Lewis's, and it was two lines above a sentence
+this file already quoted.**
+
+That matters beyond attribution, because HQXEngine does not trim — and
+the corpus says what that costs. **`country-song-generator-101.hqx`
+carries a trailing space on all 2,600 of its data lines.** Every one is
+65 characters and holds a SPACE, so it fails both halves of HQXEngine's
+predicate and StuffIt Expander 5.x would discard the file line by line.
+This engine reads it. **A second implementation of a rule is not a
+second implementation of the reader around it**, and taking the whole
+reader because it states the rule would have lost a real file.
+
+### The four siblings, read the same day, in case one disagreed
+
+A citation is worth only as much as its sibling that contradicts it, so
+Aladdin's other four 5.x BinHex decoders were read too. **All four
+agree, and three are not even independent:**
+
+- **`StuffIt Engine™` (SDK 5.1)** ships `Eng ` 10000 **byte-identical**
+  to the standalone HQXEngine. The individual engine is the shipped one.
+- **StuffIt Expander 5.5** (November 1999) is the same module
+  recompiled: its A4 base moved 90 bytes and its globals with it, so no
+  byte signature matches — and every constant does, in order. Same
+  63/64, same `:` exception, same gap chain, same `!`..`r`, same 80-byte
+  line buffer, same rewind-and-read-the-next-line. The only real
+  difference is that the character is compared in a register instead of
+  through `%a2@`.
+- **`HQXEnginePPC.PPC.shlb`** is the same source through a PowerPC
+  compiler. There is no PowerPC disassembler on this machine, so what
+  is checked is what does not need one: the opcode-11 compares at the
+  offsets they sit at — 63, 64, `'!'`, `'r'`, 80, CR, LF — and the two
+  branches that make it a loop, `bl 0x702c -> 0x6eb4` (the line reader
+  calls the predicate) and `b 0x7040 -> 0x6fc8` (and loops back).
+- **`StuffIt Engine™ PowerPlug`** turned out to be **fourteen
+  concatenated PEF containers**, and the one at +0x87000 holds that same
+  PowerPC code byte for byte. A file search for the alphabet found it at
+  two offsets in a binary with no section covering either, which is what
+  a concatenation looks like before you know it is one.
+
+The six 68K client libraries hold the alphabet and no table: they report
+the format, the Engine decodes it. **So the answer does not depend on
+which Aladdin artefact is asked** — which is the only thing a sibling
+read can establish, and it is why it was worth the hour.
+
+### The rule is a departure from the format, and the Definition says so
+
+The last thing the reading settles is the status of the rule itself.
+Lewis's Definition: *"any character other than those 64 and the
+`<return>` characters indicates an error and the user should be notified
+of such."* deark does that, and so does DeHQX 2.0.1 — Lewis's own
+decoder. So skipping the line is **not an implementation of BinHex**; it
+is a departure two independent authors made for the same reason, text
+that has been mailed. That is why it needed a second implementation to
+rest on rather than a reading of the spec, and it is why the comment
+now says so where the rule is.
+
+**Cost: an afternoon, against two days of asking programs.** What makes
+it worth recording is the shape of the miss: thirteen negative answers
+had made the question feel settled, and the fourteenth reader was in a
+directory this project had filled itself, nine days earlier, for
+something else.
+
+## 2026-10-07 (the engine list as a checklist) — a vendor's own engine set is an external format inventory, and taking one apart found a format this project had never named
+
+`StuffIt Engine™ PowerPlug` was opened to confirm it carried the BinHex
+engine `src/fmt_binhex.c` cites. It turned out to be **fourteen
+concatenated PEF containers**, and identifying all fourteen was cheap:
+the SDK ships the same engines as individually NAMED `.shlb` files, so
+matching each container's code section by hash gives Aladdin's own name
+for it rather than a guess.
+
+**Claim: of the thirteen formats on that list, this engine reads twelve,
+and the thirteenth — Private File — was named in neither part of
+OPEN_ITEMS.md.** Evidence: the roll-call
+(`tools/derive_hqxgarbage.py --siblings`), matched by hash, and
+Aladdin's own `DetermineFileType` enumeration quoted verbatim from the
+SDK's technical reference. Consequence: a new Part 2 row, and the scope
+call is the maintainer's — it is a Macintosh format, so the reasoning
+that keeps RAR and 7z out does not reach it.
+
+### Why this is worth doing again, to somebody else's software
+
+This project's format coverage has been judged against its own corpus
+and against `unar` and deark. **A shipping competitor's engine set is a
+third kind of check, and a better one for scope**: it is a list of
+formats somebody thought worth implementing for this platform, written
+by somebody who implemented all of them. It cost an hour and it found
+the one gap three years of corpus work had not, because a format with no
+specimen never appears in a corpus-driven audit — and Private File has
+no specimen here, no `unar` support and no deark module. **The absence
+of evidence was the reason it stayed invisible.**
+
+The identification technique is the transferable part:
+
+- **a bundle of containers is identifiable if the vendor also shipped
+  them loose.** Fourteen hashes against fourteen named files, and the
+  names are the vendor's.
+- **resource IDs can carry the vendor's own numbering.** The 68K
+  engines' `Eng ` ids run 1..12, and the first eight land in
+  `kFileType` order on CompactPro, AppleLinkPackage, ZIP, ARC,
+  UnixCompress, UUCode, MacBinary and TAR. Seven of those eight names
+  are unambiguous, which is what pins the eighth: `CMPEngine` is Unix
+  compress. That is an alignment rather than a reading, and it is
+  labelled as one where it is used.
+- **a format's own error strings describe it when its code will not.**
+  `PFEngine`'s `STR#` 5100 gives per-fork integrity checks, a
+  wrong-password message and *"encrypted with a method that this
+  software does not handle"* — enough to know Private File is a
+  password-encrypted single-file wrapper without decoding a byte of it.
+
+**Cost: an hour, and it was a by-product.** The question asked was
+whether a citation had a disagreeing sibling; the answer was no, and the
+same half-hour of parsing produced a format inventory that outranks this
+project's own.
+
+## 2026-10-07 (the format that was neither in nor out) — Private File is in scope, and the specimen hunt is the whole of the item
+
+Private File turned up on 2026-10-07 in Aladdin's own fourteen-engine
+list (*the engine list as a checklist*) and was named in neither part of
+OPEN_ITEMS.md. **The scope call was made the same day: it is in.**
+
+**Claim: nothing in Part 1's reasoning ever reached it.** Part 1 keeps
+RAR, 7z, bzip2, xz, Cabinet, Zoo, ar, cpio and ARJ out on one ground —
+*"none is a Macintosh archive format, none carries a resource fork"* —
+and Private File is a Macintosh format that wraps both forks. It was not
+excluded; it was **unnamed**, which is a different thing and the reason
+it needed a decision rather than a defence.
+
+### What the engine gives for free, and what it does not
+
+`PFEngine.rsrc`'s `Eng ` 10009 is 23,984 bytes of 68K and was read far
+enough to price the work:
+
+- a **full MD5** — the init words at +0x1254 and the sine table at
+  +0x156e;
+- a **CRC-32** table, poly `0xedb88320`, at +0x5494;
+- **no DES tables anywhere** — not IP, FP, PC-1, the S boxes or E.
+
+So this engine already owns the primitives (`unc_crypt.c` has both), and
+**StuffItDES is not involved**, which is worth knowing because Aladdin's
+other encrypted format uses it and the natural assumption would have been
+that this one does too.
+
+What is NOT established is the cipher that MD5 keys. StuffIt 5's
+RC4-under-MD5(password) is the obvious guess; it is **a hypothesis** and
+labelled as one, because the 255/256 loops that looked like an RC4
+key schedule turned out on disassembly to be return-value checks around
+Toolbox dialog traps. A cipher cannot be confirmed without a file to
+decrypt, which makes the specimen the whole of the item rather than the
+first step of it.
+
+### The specimen hunt, and why it is recorded rather than summarised
+
+CLAUDE.md says *"this machine cannot get one" is a claim to re-test
+before it is filed* — two OPEN_ITEMS rows were downloaded on 2026-09-26
+after being filed as unobtainable. So the hunt was done BEFORE filing,
+and what it is worth depends on distinguishing its three legs:
+
+- **archive.org — searched, nothing.** Title and combined-term queries.
+- **Discmaster — searched, and the negative is strong for a reason worth
+  reusing.** Its format vocabulary is a dropdown of **3,287** entries
+  built from its own detectors, and **Private File is not among them**.
+  That is not "no results"; it is "this index cannot recognise the
+  format", which is a different and more durable fact. `extension=pf`
+  does return 20 files and not one is Aladdin's — the extension is
+  shared with Amiga text files, CAZIP, TTComp and MS Compress.
+- **Macintosh Garden — NOT searched.** `macintoshgarden.org` did not
+  respond at all (status 000), and the `old.mac.gdn` mirror 404s on
+  search paths because it serves downloads only. **This leg is
+  unfinished, not negative**, and the row says so. Filing it as a
+  negative would have been the exact error the rule above exists to
+  prevent.
+
+**A control is what makes the first two legs mean anything.** A Discmaster
+query for `file=private` returned zero rows, which looked like a result
+and was a wrong field name — `format=sit` returned five rows and the
+form's own HTML gave `file`, `extension` and `format`. The tool beside
+this one warns about precisely that shape: *"pageNum=1 on a one-page
+result returns an EMPTY array rather than an error"*. **An index that
+answers an unknown question with silence will answer a wrong question
+with silence too**, so the control came first and the four zeros before
+it were discarded.
+
+**No MANUAL_TESTS entry.** That file's own lesson — *"before asking
+somebody outside this machine, ask what the emulator would have to be
+handed, and search for the file by its bytes"* — has already deleted two
+of its items. One leg of the search is unfinished and the Garden may
+simply be up tomorrow, so asking a person now would be premature.
+
+## 2026-10-07 (the key was what the archive CONTAINED) — two Optimizers left the "only our own output" row, and three readings of an id byte had to be wrong first
+
+**The row.** Four reversible Optimizers and five ciphers were graded
+only on archives StuffIt Deluxe 2.0.1 wrote here under Mini vMac:
+authentic bytes, one subject per module, every subject chosen here.
+`Text 1` had left that list on 2026-10-06 when two Giga-ROM archives
+turned up carrying it, found by walking 16,727 wild archives' entry
+chains. The widening was supposed to be more archives.
+
+**It was not more archives. It was a better question.** The Optimizer
+bit is 22 bytes into an archive and no index records it, so the sweep
+had to fetch every candidate — and at a hit rate of 5 bits in 21,733
+headers, "more archives" means hours per hit. But **an Optimizer is a
+per-file-type preprocessor**, and each module's own `COMP` names the
+one type it accepts: `FSSD`, `8BIM`, `PNTG`, `TEXT` (FORMATS.md, *The
+module ABI*). An archive with no member of that type cannot carry that
+module's bit.
+
+**And the index already knew what was inside every archive.** Not as a
+search field — `detection=PNTG/MPNT` returns twenty thousand MacPaint
+documents and not one of them is inside a `.sit`, because Discmaster
+does not recurse into one. It is in the LISTING: every row carries
+`meta.fileMeta`, the Mac type and creator of each file in the archive,
+free with the page that was being fetched anyway. So the whole corpus
+could be listed — 196,139 deduplicated archives, sharded by size under
+Elasticsearch's result window — and **954 of them probed instead of
+196,139**. Two carried a module nobody here had seen: `Sound 1` and
+`MacPaint 1`, on a disc pressed in 1993.
+
+**The lesson is the shape of the question.** The first sweep searched
+for the FLAG and could only afford a sample. The second searched for
+the PRECONDITION of the flag, which something else had already
+indexed. *When the thing you want is not indexed, ask what must be true
+of a file that has it, and whether THAT is.*
+
+**Three readings had to be wrong first, and all three are the same
+mistake.** The probe was taught to name the module, and:
+
+- it keyed the cipher on byte 107 OR 109, whichever was nonzero, and
+  reported four `DES` entries — the one cipher this project has no file
+  for — off byte 107 of entries whose **data fork is not there**:
+  `dlen` 0, `dmeth` 0, and the encrypted resource fork's own id 0. An
+  id byte belongs to a FORK. `src/fmt_sit.c` has the rule and the
+  probe did not.
+- it read the id before the method bit, which names a `NewDE` fork
+  `DES`: 2.0.1's own `NewdeT.sit.bin` carries the `0x10` bit AND a
+  stale `1` in the id byte, so the bit must win — which is what
+  `sit_scheme()` does.
+- its walk had no in-step test, only the declared total, so one wrong
+  length put it inside a fork and everything after was read out of
+  compressed data.
+
+That third one is where the care went, because the obvious fix is
+wrong. The tests that survived are measured against the 1,710 file
+headers in `fixtures/`: name-length 1..31 (0 false positives), no NUL
+in the name (0), and the entry plus both forks fitting inside the
+declared total (0). **The obvious fourth — "no control byte in the
+name" — rejects 44 real headers**, names made of tabs and `\x01`, and
+an `Icon\r` is a perfectly ordinary Macintosh file. A test that looks
+tighter and is measured against nothing would have silently dropped
+them.
+
+**What grades a module nothing else implements.** `Sound 1` came out
+adjudicated three ways, none of them this engine: the archive's own
+CRC-16 matches the RESTORED bytes and not the optimized ones; the
+running sum over what `unar` hands back is byte-for-byte this engine's
+output; and clearing the bit, with the header's own CRC repaired, makes
+the same `t` fail. `MacPaint 1` has no oracle at all — `unar` fails the entry outright
+and `macunpack` skips it — so what grades it is
+**MacPaint's own geometry**: 720 PackBits rows of exactly 72 bytes,
+nothing left over, with `deark` reading the result back silently and
+complaining about the same artwork without its header. *An unreachable
+oracle is not the end of grading; the format itself is an oracle, and
+so is a reader that can be made to complain.*
+
+**The ciphers did not move, and the reason is now measured rather than
+assumed.** The same walks found wild encrypted forks in 27 disc images
+— 354 `StuffItDES (built-in)`, 201 with the id unset, and **8 forks
+with the `NewDE` bit in 4 archives**, which is one of the five modules
+in the row. No password for any of them was found: the text
+content of all 27 disc images was searched and the one read-me that
+speaks to the question says *"When you upgrade, I'll send you a
+password"* — a negative looked for rather than proved, because that
+index ORs the words of a quoted phrase instead of matching it. So a wild `NewDE` archive is a fixture that grades a
+REFUSAL (FORMATS.md, *Encryption*), not a decryption, and the row keeps
+the five ciphers with that reason attached.
+
+
+## 2026-10-07 (the pop that outlived its push) — one rule for a path too deep to represent, and why the contract that said ignoring it was safe was only true of one of the five walks
+
+`unc_path_push` refuses to descend past `UNC_PATH_MAXDEPTH` (24), and five
+walks call it. They did three different things about the refusal:
+DiskDoubler's two containers returned it as `UNC_ERR_CORRUPT`, Now
+Compress descended only on success, and AppleLink packages and SuperDisk!
+cast it to `(void)`. The header said that was all fine — *"NOTHING
+changed, so a caller that would rather carry on than fail may ignore the
+result"*.
+
+**The claim was about the PUSH, and the bug is in the POP.** Four of the
+five walks come back up by a COUNT, not by asking how deep they are: an
+`enddir` record (DDAR), a level counter (DDA2), an `SD_TAG_UPDIR` marker
+(SuperDisk!), a per-directory entry count (Now Compress). A push that was
+refused still gets its matching pop, and that pop takes a level the walk
+really is standing in. So the walk comes back up one level short for
+every refusal, and keeps going: not "the entries land under the parent"
+but *every entry after the deep folder is reported inside a real folder
+it is not in*. Only AppleLink packages escaped it, because their pop is
+`while (depth >= level)` — absolute, from the record's own level field,
+and therefore self-correcting. BLOCKERS.md has the measured numbers and
+what the words cost.
+
+**That failure is invisible to everything this project already runs.** The
+path it produces is plausible, nothing in it looks cut, and every decoded
+byte is correct — so a differential suite comparing names and CRCs passes,
+and so does an aggregate over file counts and summed CRCs (CLAUDE.md's
+rule about what a harness cannot see, earned once already on the gzip/.Z
+fallback name). What sees it is asking a DIFFERENT question: not "is this
+entry right" but "is this entry where the archive put it".
+
+### The rule, argued on what comes out of the archive
+
+Three candidates, measured on a generated 30-deep archive of 91 entries
+(`tools/synth_deep.py`) because nothing in the corpus nests past 4
+(FORMATS.md, *How deep anything actually nests*):
+
+| rule | what the user gets |
+|---|---|
+| refuse the archive (DiskDoubler's) | **48 of 91 entries**, and a correct archive called corrupt. The walk stops at the deep folder and everything after it — including 24 entries at paths it could have represented perfectly — is never offered |
+| emit, do not descend (Now Compress's intent) | all 91, and **24 of them silently in the wrong folder**, 12 files written where nobody asked and 5 folders created inside a sibling branch |
+| emit, do not descend, and FAIL the ones it cannot place | all 91 offered, **49 at their own paths**, 17 refused out loud, nothing written anywhere wrong |
+
+The third is what shipped. It is CLAUDE.md's per-entry-error rule — an
+allocation failure is per entry, never per archive, and an unrepresentable
+path is the same shape of problem — and it is what `truncdepth` already
+does for the related case of a name too long to fit: a path the engine
+could not represent is REPORTED, not guessed at.
+
+**Losing entries is better than misfiling them, and both are worse than
+saying so.** The middle row is the one worth arguing about, because it
+looks the most generous: everything comes out. But a file written into a
+folder it was never in is a file the user cannot find and cannot know is
+misplaced, and two entries from different depths flatten onto the same
+path and collide. The first row at least fails loudly — it just throws
+away 43 entries to do it.
+
+### Why the walker counts refusals instead of flagging them
+
+`UncPath` gained one `int`, `lost`: the number of refused descents not yet
+come back up. `unc_path_push` increments it instead of touching the path;
+`unc_path_pop` decrements it *before* it would pop anything real. That is
+what makes the refusal safe to ignore — the claim the old contract made
+without earning it — because now the pop a refused push will be matched by
+undoes the refusal rather than a level that was pushed.
+
+A counter and not a flag, because refusals nest: six levels past the limit
+need six pops before the walk is back where it belongs. It is an `int` and
+not a narrow saturating field for the same reason the count exists at all
+— a counter that stuck at its maximum would under-count the pops and
+quietly lose the balance it is there to keep. Every push costs a record in
+the file, so a 32-bit archive cannot hold enough of them to wrap it.
+
+With that, four of the five walks needed no arithmetic at all: three now
+ignore the refusal honestly, and AppleLink packages compare against
+`unc_path_askdepth()` — depth plus refusals — instead of `depth`, which
+otherwise pins at 24 and never comes back up.
+
+**Now Compress needed real work, because its tree is implied by counts
+rather than marked.** Each directory says how many entries follow it, and
+a refused level has no slot in `owed[]` to put its count in. The counts of
+all the refused levels are therefore summed into one accumulator: the sum
+telescopes — every entry is owed by exactly one level, and a refused
+folder adds its own count the way a real one does — so the chain is
+exhausted at the same entry a stack of counters would have exhausted it
+at. What a single counter cannot say is WHICH refused level each entry
+belonged to, which is precisely the thing the walk could not represent.
+The two pop loops are ordered, and that order is load-bearing: a real
+level whose count ran out while the walk was still below the limit has to
+wait, or its pop lands on the refusal instead and the walk surfaces one
+level short — the original bug, reintroduced.
+
+### The field, and the host that never hears the error
+
+`UNC_ERR_TOODEEP` (-16) is the sibling of `UNC_ERR_TOOLARGE`: that one is
+an entry past this engine's 32-bit reach, this one an entry past its
+folder-depth reach. Both are per entry; `unc_fatal()` is a whitelist, so a
+new code is non-fatal by construction.
+
+It is not enough on its own. **A host may decline an entry at
+`begin_entry` and then never hear its status** — the Linux CLI declines
+every directory, having already created it, which is why a too-deep folder
+was counted for SuperDisk! and nowhere else on the first pass. So the fact
+also travels on `UncEntryInfo.path_too_deep`, read at `begin_entry`, which
+is exactly where `name_truncated` already lives and for the same reason.
+Both hosts now refuse to create such a folder.
+
+That first pass is also what turned up a six-week-old contract violation:
+`fmt_superdisk.c` called `end_entry` whether or not `begin_entry` had
+declined the entry, which the other four never did. Harmless while the
+status was always `UNC_OK` — and the reason one format's tally disagreed
+with four others' the moment a status was not.
+
+### What it cost
+
+**160 B resident on a 1 MB Mac Plus** in the shipped configuration — 120 B
+of `CODE`, 40 B of A5 for the one new message — because the five decoders
+are in `'OVLY'` images and only the walker, the message and the shell's
+refusal are resident. The Macintosh report borrows the engine's sentence
+rather than keeping one of its own, which is `RepFailed`'s reasoning about
+`UNC_ERR_MODULE` applied again: a string literal in `mac/` is A5 .rodata
+for a case nothing in the corpus reaches. Shortening the message from
+"nested too deep for this engine to place" to "nested too deep to place"
+gave back 16 of those bytes.
+
+The deepest chain in the engine goes **3,386 → 3,406 B** against
+CLAUDE.md's 4 KB, all of it the +20 B on `unc_dd_extract`; FORMATS.md
+(*How deep anything actually nests*) has every frame. `UncEntryInfo` is
+302 → **304** bytes, one byte of struct costing two of size for the sixth
+time.
+
+**`UNC_PATH_MAXDEPTH` stayed at 24.** `stack` and `fullstack` are sized by
+it, so raising it buys A5 world for a depth nothing on this disk comes
+within six times of.
+
+### Run on a Macintosh, 2026-10-07
+
+The shell's half of the rule is its own code — it declines the entry at
+`begin_entry`, because a host that declines never hears `end_entry`'s
+status — so the Linux suite cannot reach it. Two routes, both at 4 MB on
+System 6.0.8, and the numbers are FORMATS.md's.
+
+**Neither is worth quoting without its negative control, and both have
+one.** The volume route is graded against the application of 2026-10-06 on
+the same package: 61 files and 30 folders where the new one writes 49 and
+25, and `checkdisk.py` fails it by name. The report route's control is
+cheaper and stronger — the sentence *"nested too deep to place"* is not in
+that binary at all, so no unfixed application can make that assertion pass.
+
+**The report phase asserts the document and NOT the volume, and that is a
+limitation rather than a choice.** `hls` will not list the root of a volume
+the interactive build leaves behind, which `phase_report_utf8` had already
+recorded; an assertion about folders written there found nothing and read
+as the application's fault. The volume is `checkdisk.py`'s subject and the
+document is this phase's, which is the same division `--report-utf8` makes
+for the same reason.
+
+The output goes to a floppy for that phase's other known reason: a report
+saved onto a boot volume this application has just written a 25-level tree
+to is on the image and not in its catalog. The first run photographed a
+correct box and read no document — the 2026-09-22 finding reproducing on a
+different cause of the same catalog state.
+
+**Two harness defects surfaced, and both were of the kind that reads as an
+application defect.** `checkdisk.py`'s volume walk returned `[]` past eight
+levels, so a correct 24-level volume came back as 32 files missing on the
+Mac; and it could only identify a COMMITTED fixture, so a generated subject
+skipped silently. Both are in BLOCKERS.md and `tools/vmac/README.md`. The
+second one is the more interesting: an instrument that skips rather than
+fails is one nobody notices has stopped measuring — which is why
+`--fixture` matches by content and not by the name it was given.
+
+### The two limits at once, and the whole name that was not one
+
+Asked after the rule shipped: *"I thought the path was shortened when too
+long?"* It is, and the two are not the same failure.
+
+**Shorten where the DESTINATION cannot hold it; refuse where only the
+ENGINE cannot.** A name too long for HFS is shortened, numbered if it
+collides, and reported — the disk could not have held it either way. A
+path too deep is refused, because 24 is OUR limit: ext4 and HFS both nest
+far past it, so writing the entry anywhere would put it in a folder the
+archive never had, and `macextract.h` already said a host that could place
+it correctly should treat our limit as a per-entry failure. The other half
+of the difference is recoverability: for a long name the engine hands over
+the whole thing through `UncOptions.long_name`, so the host can decide;
+for a deep path there is nothing to hand over, because `fullstack` has no
+slot past 24 and the uncut path stops being tracked.
+
+**Where both fire, the engine was claiming a whole name it did not have.**
+`unc_path_leaf` set `name_full_len` from the uncut path and `name_truncated`
+2 — *"the WHOLE name is in UncOptions.long_name"* — without asking whether
+the walk had got that far. Measured on an archive nested 30 deep whose
+folder names are 31 characters, so a path passes UNC_NAME_MAX around the
+eighth level: the CLI printed `.../D24.../f30.txt` as "the archive's name"
+for an entry with six more folders in it. Now `name_full_len` is 0, the
+documented *"the format cannot say"*, and 2 is never reached.
+
+The CLI had the same shape of error one layer up: it recorded the cut
+note BEFORE the refusal, so the end-of-run notice said "written as ..."
+about a folder it had declined to create. The refusal moved above the
+fitting block.
+
+**Both were found by one question, and neither by a suite** — which is the
+part worth keeping. Three suites run over these archives and all three
+were green: the rule is about what the engine SAYS, and a differential
+suite compares what it WRITES.
+
+**The test for it had to be rewritten before it was believed.** The first
+`test_path_depth` pushed one-character folder names, so `truncdepth` was
+never set, the reporting branch was never entered, and it passed against
+the defect with the fix reverted. With 31-character names it fails. The
+assertion cannot live in `run_depth.py` at all: a too-deep path is itself
+cut at UNC_NAME_MAX, so every deep entry reports the same 255-byte string
+and that string is also a shallow entry's — a check written there fired on
+the collision rather than the defect.
+
+### What the generator is for, and the one it broke
+
+`tools/synth_deep.py` writes the same tree for all five formats, and its
+shape is the finding: a file at every level on the way down says where
+descending stopped, a TRAILER at every level on the way back up catches
+the unbalanced pop, and a sentinel at the root catches the case where the
+arithmetic cancels. That last one is why the trailers exist — `unc_path_pop`
+clamps at depth 0, so a walk that over-pops by fewer levels than it has
+left still lands the root sentinel correctly, and an assertion built only
+on the sentinel would have passed on all five broken walks.
+
+Adding two function-like macros next to the `UncPath` field they read
+broke `tools/overlay/mkforwards.py`, which took the leftmost `unc_name(`
+in a chunk and so matched the macro instead of the prototype behind it —
+`unc_path_push` went missing from the host vector. It now takes the
+rightmost name in `SYMBOLS`. The script's own comment already recorded
+being fixed once for a preceding `#define`; a function-like one was the
+case that fix did not cover. It failed the build loudly, which is what
+that file is built to do.
+
+
+## 2026-10-07 (the limit that was three transcriptions) — `UNC_PATH_MAXDEPTH` is deleted, nesting is bounded by the path string and by nothing else, and popping re-scans instead of remembering
+
+Three messages, each shorter than the last: *"I thought the path was
+shortened when too long?"*, *"depth isn't a limitation of hfs?"*, and
+*"UNC_PATH_MAXDEPTH shouldn't even exist"*. All three were right, and the
+third is the one that settles the other two.
+
+**The limit was never measured against anything.** `src/unc_internal.h`
+said so in as many words — "all three formats that use this chose 24
+independently" — which is three transcriptions of XADMaster's constant
+read as corroboration. `tools/vmac/depthtest/` asked a Macintosh:
+**250 levels created by dirID and read back, noErr**; 89 on an HFS volume
+from Linux. The only limit anywhere is the full path STRING, 255 bytes,
+which is `UNC_NAME_MAX` and is also what a classic `Str255` pathname
+holds — and the Macintosh shell never even builds one, walking component
+by component with a parent dirID.
+
+### What actually held the limit in place
+
+Not policy: two fixed arrays. `stack[24]` kept the buffer length before
+each push and `fullstack[24]` the uncut length, so that a pop could
+restore them — and an array needs a bound. Everything else followed from
+that one implementation choice, including a public error code, a public
+struct field, a refusal in each of two hosts and a day's work defending
+the behaviour.
+
+**Popping re-scans for the separator now.** That is exact rather than a
+guess: a `/` inside a component is swapped to `:` on the way in, by this
+walker's own push and leaf, so every `/` in the buffer is one it wrote.
+The header had said components are popped "by LENGTH, never by
+re-scanning for a separator" since M0 — stated as a property, never as a
+reason, and the storing is the whole of what a depth limit ever bought.
+
+### It should have given bytes back, and at first it did not
+
+The first answer was **+376 B of resident `CODE`**, and the reader who
+had asked for the measurement asked the obvious question of it: how can
+removing a check cost that? It cannot, and both explanations I offered
+were true without being the cause.
+
+**+202 of it was inlining, not logic.** `path_longbuf` resolves the
+host's buffer, and it had exactly one caller, so the compiler inlined it.
+The new `pop` made it a second caller, which outlined the function AND
+cost its inlined copies in `path_full_add` and `unc_path_leaf`. Resolving
+the buffer once in `unc_path_init` and caching the pointer put all three
+back — and the two of them ended up SMALLER than before. **A function
+that grows when you add a caller is not growing for the reason the diff
+suggests.**
+
+**The rest was the real thing, and it was a design fault rather than a
+cost.** The walker kept the path TWICE — `buf`/`len` as reported, and a
+parallel `full` for the same path uncut — each with its own per-level
+stack of restore points. `UNC_PATH_MAXDEPTH` was sized to bound those
+stacks: it existed because there were two paths, not because 24 was
+anything. Deleting one stack left the other to be reconstructed on every
+pop, which is where the bytes went, and the reconstruction is why `pop`
+briefly went 62 → 270 B.
+
+**The fix was to stop keeping two.** The host's `long_name` buffer is
+already where the uncut path has to end up, and the Linux CLI offers 64
+KB of it, so the walk writes the path THERE and holds one length. That
+deletes `path_full_add` outright — 152 B — and `unc_path_push` comes out
+34 B smaller than before any of this. Per function, against that build:
+
+| | before | after |
+|---|---|---|
+| `path_full_add` | 152 | **0** |
+| `unc_path_push` | 194 | 160 |
+| `unc_path_pop` | 62 | 78 |
+| `unc_path_init` | 30 | 78 |
+| `unc_path_leaf` | 246 | 318 |
+| | | **net −50** |
+
+**−68 B of `CODE` against +4 of A5 in the shipped build, so −64 B
+resident** — and `UncPath` is ~100 B smaller, so every walk frame shrinks
+and the engine's **deepest chain falls 3,386 → 3,310 B**. All six
+ceilings came down. One public error code, one public struct field, two
+host refusals and a whole failure mode are deleted with it, and an
+archive nests as deep as its paths will fit.
+
+**What it narrows**, named rather than discovered: a host that offers no
+`long_name` buffer no longer learns the uncut LENGTH of a path past 255
+bytes — it gets 0, the documented "the format cannot say", where it used
+to get a count kept past the end of a buffer nobody could read. Neither
+host here is such a host: the CLI offers 64 KB and the Macintosh shell
+offers none and reads no length.
+
+**The limit cost more than removing it did.** A day of work rested on it:
+a rule, a suite, a unit test, two emulator runs and a Macintosh
+verification, all green, none of which could see that the number was
+arbitrary — because every one of them tested behaviour AT the limit
+rather than the limit itself.
+
+### Two things the tests caught that review did not
+
+**Deleting Now Compress's accumulator broke a graded capability.** Its
+tree is implied by per-directory counts, and a folder the path string
+cannot hold gets no slot — so its count has to go somewhere or the walk
+closes the folder ABOVE too early and reports everything under it from a
+path it has already left. `run_names.py` caught it on the 296-byte path
+it grades. The accumulator is the same one the depth limit needed, keyed
+on the string filling instead.
+
+**And the first fix to the leaf was wrong in an interesting way.** I had
+made an omitted push stop advancing the uncut length, on the reasoning
+that a path with components missing cannot have its whole name reported.
+That was true while the components were never counted; once `full` keeps
+counting through an omission, `name_truncated` 2 is honest again and the
+whole path IS available. The rule is not "say less when something is
+missing" but "say exactly what is still known".
+
+`tools/vmac/checkdisk.py`'s volume walk was wrong twice in one day for
+the same reason — a bound copied from the engine's limit rather than from
+the path — and both times it reported a correct volume as files missing
+on the Mac. It is at 260 now, derived from the 255-byte string, and it
+raises rather than truncating.
+
+
+## 2026-10-07 (the seven sentences that were not the class) — a check that names the claims it holds is a spot-check of the ones somebody remembered
+
+`check_docs.py` check 10 was written on 2026-10-06 after two corpus
+figures went stale under a green suite. It derives the three counts the
+way the harnesses derive them — the manifests, ten variants of each
+implemented manifest, every non-`.md` file in `fixtures/` — and holds
+them against **seven named sentences**. It worked: all seven were
+correct the next day, and two of them were only correct because the
+check had failed and somebody re-took them.
+
+Seven was the wrong unit. Scanning for the SHAPE instead — a figure in a
+per-kind window beside the words "fixtures", "robustness variants" or
+"corpus files" — found six more in the same five files:
+
+- `FORMATS.md`'s *Verification* row and `OPEN_ITEMS.md`'s fuzz-draw
+  sentence, both still at 951 against 954 manifests;
+- `FORMATS.md`'s foreign-probe sweep at 940 against 966 corpus files,
+  a claim `ci.sh` re-establishes on every run;
+- and three that had stopped being TRUE rather than merely current.
+  *"No corpus file"* for btoa, for MIME and for base64 was measured in
+  August and September; today the corpus holds `synth-os9-btoa.btoa`,
+  `synth-os9-mime.mim` and `synth-os9-rar.rar`, written HERE for the Mac
+  OS 9 tier's one-boot-per-format sample. They carry no manifest, so the
+  differential suite still sees none of those formats and the
+  conclusion ("every case is generated, so grade it by two other
+  implementations") stands — but the sentence that justified it did not,
+  and the three files have been in `fixtures/` since September.
+
+**The transferable part is the asymmetry.** A check that enumerates the
+claims it holds can only hold the ones whose staleness somebody has
+already thought about; the ones that rot are the ones nobody is thinking
+about, which is the same set the enumeration misses. Scanning the class
+inverts that: everything in the shape is held, and what is deliberately
+historical has to be DECLARED. Seventeen figures are declared in the
+checker now, each with the measurement it belongs to, and the list is
+itself a readable record of which numbers are dated.
+
+**What made the class scannable was a window per kind**, and that is the
+part that nearly did not work: `fixtures` in 900..1,200 rather than any
+number, because FORMATS.md says "the 1993 fixture's Huffman-only block"
+about a year and TESTING.md counts 115 fixtures of one corpus and 204 of
+one format. A scan with no window reports those forever, which is how a
+check gets switched off.
+
+**Also corrected here, from the same review**, and both the same shape
+one layer down: `UncOptions.long_name`'s own comment promised a length
+the walker had stopped keeping four hours earlier, and
+`UNC_PATH_MAXDEPTH` was deleted from the code while six places went on
+describing it in the present tense — including the emulator probe that
+PRINTS it on the Macintosh screen, which is the probe whose answer
+deleted it (BLOCKERS.md, *Corrected figures*). A constant's deletion is
+a prose job as much as a code one, and the compiler grades only half of
+it.
+
+## 2026-10-07 (the method that was out for a premise with no halves left) — Implode lands, and the coupled row was the one that made it visible
+
+**Claim.** Zip method 6 (Implode) is implemented, and ZipIt's `0x2605`
+FileName is the leaf an entry comes out under. The two were one piece of
+work because each was the other's reason to wait: the FileName changed
+nothing extractable while every divergent field on this disk sat on an
+Implode entry, and Implode's case for staying out had been *"not a
+Macintosh method"* while the archive that disproved that was the one
+carrying those three fields.
+
+**What the decision cost, measured, and the estimate it replaces.**
+OPEN_ITEMS.md carried *"~1.5–2 KB of `CODE`, estimated, not measured"*
+for eighteen days. The measurement:
+
+| | before | after | delta |
+|---|---|---|---|
+| resident `CODE`, SHIPPED (eager) | 54,272 | 54,272 | **+0** |
+| A5, SHIPPED | 19,056 | 19,056 | **+0** |
+| resident `CODE`, resident CONTROL | 164,408 | 166,264 | **+1,856** |
+| A5, control | 37,928 | 37,928 | +0 |
+| `ovl_exo` image | 29,252 | 31,176 | **+1,924** |
+| `MacExtract.bin` (the download) | 225,408 | 227,328 | +1,920 |
+
+So the estimate was right about the order and wrong about where: 1,856 B
+is what the method weighs, it is all in a build nothing ships, and the
+release pays 1,924 B of a `'OVLY'` image read at launch and released as
+soon as the sniff says the archive is not a zip. `run_tiers.py --check`
+holds every tally in both lanes — 71/71, 67/71, 64/71 resident and
+71/71, 69/71, 66/71 shipped, the same fixtures by name. The comparable
+precedent is zip's four Macintosh extra fields on 2026-10-01, +2,024 B
+of image against +0 and +0: the second format in a row to land in that
+image for nothing resident, which is what the overlays were for.
+
+**The control's ratchet refused it, and that is the number rather than
+an obstacle.** `tools/build_mac.sh` stopped the resident build at
+"1,856 B over the ceiling" — exactly the figure above, arrived at from
+the other direction, which is the one configuration where this format's
+cost is visible at all. The ceiling is raised with the measurement
+written beside it; the two SHIPPED ceilings do not move by a byte.
+
+**Peak heap does not move either, and the reason is worth keeping.** An
+Implode entry allocates 1,000 B of tables plus the dictionary the flag
+word names — 5,096 B at 4 K and 9,192 at 8 K — against the 11,256 B
+`unc_inflate_raw` takes for a deflated one, measured on the same
+archives. The worst Implode entry is 2,064 B cheaper than any deflated
+one, so no mixture of methods can raise the format's ceiling. So zip's peak is still set by deflate and the format's
+12–54 KB row in FORMATS.md is unchanged: `4acalc.zip` goes 13,477 →
+22,669 B and `synth-exo-zip-deflate.zip` was already 24,863 B. A new
+decoder that does not move a format's ceiling is the uncommon case, and
+it is the dictionary being 4 or 8 KB where deflate's window is 32.
+
+**The one thing the engine's existing canonical coder could not be
+asked to do.** Implode's Shannon-Fano codes and RFC 1951's canonical
+codes are the same code set with the bits complemented — provable
+(`D_k = 2^{l_k} − 1 − C_k` by induction down the length order, and it
+holds on all 24 trees in reach), so `unc_canon_build` plus a
+complementing walk would have been the smaller change. It was not taken,
+and the reason is the induction's base case: the identity needs the code
+to be COMPLETE, and completeness is a property of the stream rather than
+of the format's grammar. Using it would have made a malformed tree
+decode as something rather than as corrupt, and the rule here is to
+transcribe the construction the specification states (APPNOTE.TXT 5.3.8)
+and let a bent tree be a per-entry error. The identity is recorded
+because it is the kind of thing worth not re-deriving, not because
+anything rests on it.
+
+**What no corpus could have graded, and the measurement that says so.**
+Four parameter combinations exist — 4 K or 8 K dictionary against two or
+three Shannon-Fano trees — and the two PKZIP 1.x fixtures hold two of
+them. **The other two are exactly the two where PKZIP 1.01's
+minimum-match-length bug is observable**, and the only subject for them
+on this disk is `Psycho!v1.0ß1.zip`, a specimen that cannot be
+committed. So a build that took the minimum match length from the
+dictionary size instead of from the literal tree's presence passed
+`run_diff.py` over the whole corpus — measured, on that build — and
+failed only the ZipIt specimen. That is a tolerance whose evidence was
+the absence of a file.
+
+The answer is an ENCODER: `tools/synth_implode.py` writes all four
+combinations, because nothing on this machine writes any of them —
+Info-ZIP's `zip` dropped the method before 1.0, `unar` and deark decode
+and do not compress, and PKZIP is a DOS program. One of its four
+entries is a committed fixture now, and with it in the corpus the same
+bent build fails `run_diff.py` on `8k-2trees.txt`. Five separate bends
+of the decoder were each required to fail `tools/run_implode.py` before
+the suite was believed: the minimum-match-length rule, the zero-filled
+window, the length-63 escape, the distance bias and the direction the
+codes are assigned in.
+
+**Graded by two outside readers, not by the generator.** An encoder of
+ours agreeing with a decoder of ours proves nothing, so every shape is
+held against `unar`, against deark, against the plaintext the writer
+says it coded, and against the CRC-32 the writer stored — and the wild
+entries against the CRC-32 **PKZIP itself** stored, which is the check
+no decoder here can influence. Adding `"Implode"` to
+`make_manifests.py`'s `DEARK_METHODS` was the one line DECISIONS.md
+2026-09-22 left undone on purpose; it closed the last two unadjudicated
+forks in those two fixtures before any decoder existed, which is the
+order that makes a new decoder's first run mean something.
+`ORACLE_OUT_OF_SCOPE` is empty for the first time.
+
+**The name gate's criterion inverted, and a gate that changes meaning
+has to be re-proved.** `tools/run_zipit.py` used to ask *"does a
+divergent FileName ever sit on an entry this build can decode?"* — a
+question about a gap, which returned 0 on every run it ever had, because
+all three divergences were Implode. Both halves of that are gone. It now
+asks the opposite and asks it of all 23 fields: the leaf this engine
+LISTS must BE the field's FileName. The negative control is this
+program's own behaviour the day before — a stub that answers with the
+zip's own leaf, which the gate has to fail on, and does, in 3 of 5 built
+cases. 119 of 119 forks are byte-identical to `unar` where it was 113,
+and the suite's only `UNGRADED` declaration is gone.
+
+**What is still wrong, and it is the format's doing.** The field is a
+LEAF. `Psycho!v1.0ß1.zip`'s three entries sit under `PSYCHO!/`, for
+which the archive holds no entry and no field, so that component stays
+upper-cased: 3 of the 4 wrong name components, not 4. Nothing in the
+archive records what the folder was called.
+
+**And the one thing left ungraded was searched for by MAGIC before it
+was filed, which is this project's own rule and the sweep is the
+strongest form of it yet.** The PKZIP 1.01/1.02 bug is not a byte
+anywhere in a file — it is a decode outcome — so no index can be asked
+for one. What an index CAN be asked for is the two flag combinations
+where the two readings disagree, which sit in a zip's first local
+header: `detection=504b0304????02000600*` and `...04000600*` name
+4,074 and 4,869 files. `tools/scan_discmaster.py --probe implode`
+fetches each and decodes every bug-capable entry BOTH ways, graded by
+the CRC-32 the archive itself stored. **800 archives, 19,107
+bug-capable entries: 19,105 follow APPNOTE.TXT 5.3.4, 0 need the other
+rule, and the 2 that decode under neither are two copies of one
+truncated `synchro.zip` that `unar` and deark refuse as well.**
+
+Three things that sweep settled that the row could not have:
+
+- **"No specimen in reach" would have been a claim about a search
+  nobody had run.** It is a measured negative over 19,107 entries now,
+  and the measurement is reproducible from the command line.
+- **The combinations the ZipIt specimen supplies are not rare — they
+  are rare HERE.** 8,943 archives in that index open with one. What the
+  corpus lacked was not a population; it was one committable file, and
+  the generator is what replaces it.
+- **The probe can fail in both directions on files whose answer is
+  already known**, which is what makes the negative worth anything: the
+  7 PC entries are a combination where the two rules COINCIDE and come
+  out CRC-OK either way, and the ZipIt specimen's 3 come out CRC-OK
+  under 5.3.4 and CRC-bad or EOF under the other.
+
+**The refusal that asked for the file was never Implode's, and it is
+left alone.** The brief for this work said to remove or rewrite it. Swept
+— `cli/main.c`'s `sink.unsupported` report, FORMATS.md's zip row,
+`dist/README.txt` and TESTING.md — and the CLI's sentence names no
+method: it fires for any `UNC_ERR_UNSUPPORTED` and ends *"if you can
+share this file, please open an issue"*. It stops firing for method 6 on
+its own (measured: both PKZIP 1.x fixtures now exit 0 under `t`) and
+stays correct for every method still refused — a zip at method 1 prints
+*"method 1 is not supported yet"* and then asks for the file, measured on
+a one-entry Shrink archive built for the purpose. **Removing it would
+have taken a true sentence out of the program for a format it was not
+about.** What DID have to move is the three places the refusal was
+stated as a fact about scope: FORMATS.md's format table, the fixture
+count beside it, and `dist/README.txt`'s release notes, which gains a
+paragraph about old PKZIP 1 zips rather than losing one.
+
+**The stack, measured rather than assumed** (`-Os -fstack-usage`, the
+one-command method in FORMATS.md, *Stack*): `unc_zip_extract` 1,432 →
+1,460 B and `zip_decode` 56 → 132 B, with `namebuf` unchanged at 256 —
+the substitution is built in the buffer that was already there, and in
+the streamed case the directory prefix it copies is already in it. The
+deepest zip chain is 1,836 → 1,940 B and it is still the DEFLATE path;
+Implode's is 1,684. Both far under the 4 KB rule and under the engine's
+own deepest chain.
+
+
+## 2026-10-08 (the stub is the writer's signature) — the PKZIP 1.01 bug has a specimen, and the key was the self-extractor's own EXE header
+
+**The question changed and the key did not.** On 2026-10-07 the search
+for a zip carrying PKZIP 1.01/1.02's minimum-match-length bug was run by
+the only key the index seemed to offer: the two flag combinations where
+APPNOTE 5.3.4 and the buggy rule disagree, which live in a zip's first
+local header and are therefore a hex token over the first 16 bytes. That
+named 8,943 files, 800 were probed, and 19,105 of 19,107 bug-capable
+entries came out by the specification with none by the bug. The figure
+was filed as a measured negative and it was one — but of the wrong
+population. **Flag combinations are a property of the ARCHIVE; the bug is
+a property of the WRITER**, and the two questions have different keys.
+
+**A writer key existed and was sitting in the file this project was
+looking for.** `PKZ101.EXE` is PKZIP 1.01's own distribution, a
+self-extracting archive, and its first 16 bytes are the PKSFX stub's DOS
+`MZ` header: `4d5a98001f000b002000c10affff0a0e`. Those bytes are
+identical in 1.01's and 1.02's stub and different in 1.10's, so the token
+names **5,576 files in the index, every one of them built by a version
+that has the bug** — where no token about `PK\x03\x04` can see a
+self-extractor at all, because the bytes it indexes are the executable's.
+1,323 deduplicated, all probed: 12 bug-capable entries, **12 by the bug
+and 0 by the specification**, in four copies of `PKZ101.EXE`. Three
+oracles agree on the three entries — deark reports `MML bug detection: 1`
+and its output matches the stored CRC-32, `unar` and Info-ZIP `unzip`
+both fail those three on CRC, and so does this engine.
+
+**What makes this worth transferring is not the file, it is the shape of
+the key.** This repository's own habit is to search by content rather
+than by name, and `detection=` over the first 16 bytes is how that has
+been done eight times. The first 16 bytes of a file are not always the
+format's — when a format can be WRAPPED, they belong to the wrapper, and
+the wrapper is usually written by one program and therefore has one
+signature. A stub, a MacBinary header, a `begin` line: each is a key for
+whoever produced it, and that is a different and sometimes better
+question than a key for the payload.
+
+**The second key is real and was not enough.** The central directory's
+*version made by* (APPNOTE 4.4.2) is the field a writer stamps itself
+into, and it is at the END of the file, which is why no `detection=`
+token carries it; `central_vermade()` reads it over two HTTP `Range`s for
+the price of 4 KB instead of the whole archive. Measured off the three
+distributions themselves, PKZIP 1.01 and 1.02 write ZIP spec **1.0** and
+1.10 writes **1.1** — a clean discriminator between the versions that
+have the bug and the one that fixed it. Over the 3,821 deduplicated
+plain-zip candidates it narrows to 1,537 worth fetching, and the
+histogram is what finally explains the 2026-10-07 negative: 919 of them
+are MS-DOS/1.1 and 1,111 are spec 2.0, and **only 10 carry MS-DOS +
+spec 1.0**. The lesson about the field is that the LOW byte alone is not
+the key — 1,467 of the 1.0-spec archives are host 3, Unix, and were
+written by Info-ZIP-era tools that never had the bug. A version without
+a platform is half a fingerprint.
+
+**And the third key was run in order to say it is worthless.** A date
+filter, 1989 to 1990, names 975 archives at the bug-capable
+combinations; all 3,543 of their entries follow 5.3.4. An era contains
+every writer that was alive in it.
+
+**The run that reported 0 and had decoded nothing.** The first sweep of
+the stub key printed `0 match the probe` over all 1,323 files and looked
+like a clean negative on a key that had just been designed. It was not:
+the sweep hands a probe `need` bytes and refetches the whole file only
+when the probe answers `"more"`, and 30 bytes of an `MZ` file contain no
+local header, so `zip_start()` returned "not a zip" every time. **The
+probe had been controlled for its ability to FAIL — on four files whose
+answers were known — and not for its ability to RUN inside the harness
+that calls it.** Those are two different controls and this one needed
+both; the tell was that a sweep over 1,151 files with a 150 KB mean had
+finished in the same time as one that only read their directories.
+Status: FORMATS.md, *The specimen that carries the bug*; the sweeps:
+TESTING.md, *Searching somebody else's index by content*; the withdrawn
+claim and its cost: BLOCKERS.md.
+
+
+## 2026-10-08 (the second attempt that had nowhere to go) — PKZIP 1.01/1.02's minimum match length lands, and a streaming engine cannot keep a pass it has to throw away
+
+**Claim.** Zip method 6 entries written by PKZIP 1.01 and 1.02 decode
+correctly. Those two versions took the minimum match length from the
+DICTIONARY SIZE where APPNOTE.TXT 5.3.4 takes it from the literal tree's
+presence, and which of the two readings an archive wants is settled by
+decoding one of its entries with no output and comparing the stored
+CRC-32. Figures: FORMATS.md, *The minimum match length PKZIP 1.01 and
+1.02 used*.
+
+**The rule was the easy half. The design problem was where the second
+attempt goes.** deark decodes the entry TWICE and keeps whichever pass
+reproduces the CRC-32, and this engine cannot copy that shape: it streams
+each fork to the sink as it decodes, so at the moment a mismatch is known
+the host has the bytes. Three shapes were priced before one was written,
+and the two that lost are worth recording because each loses to something
+structural rather than to a number being large:
+
+- **Emit, fail the entry, retry it.** This is the cheap shape — no extra
+  pass on anything — and it is out on the SINK CONTRACT, not on cost.
+  `begin_entry` is documented as *"called once per entry before any
+  writes"* and carries no restart; the CLI refuses to write over a file
+  that is already there, which is a deliberate per-entry error and not an
+  oversight; and the Macintosh shell CREATES the file inside
+  `begin_entry`. So the shape needs a new public contract — a restart, or
+  a "discard what I gave you" — for a rule that affects two flag
+  combinations of one method. **An API change is a decision to write
+  down, not one to slip in**, and the answer is no.
+- **Buffer the fork and emit on success.** Out on the FORMAT's own bound
+  rather than on a corpus figure: `usize` is 32 bits, so there is no
+  ceiling to size a buffer by. The largest Implode fork in reach happens
+  to be 64,544 B against a zip whose entire peak-RAM row is 12–54 KB at a
+  1 MB floor, which is the illustration; the argument is that a streaming
+  engine that buffers one fork has stopped being one.
+
+**What makes the surviving shape cheap is not the shape, it is the
+scope.** A probe pass is a whole extra decode, and the sweep that found
+the specimen also measured the population it would be paid on: 29,799
+bug-capable entries across 1,537 archives, 19.4 per archive. Settling the
+question per ENTRY would therefore cost about nineteen times what
+settling it per ARCHIVE does, and deark's own `d->mml_bug_policy` is
+archive-wide too, so the scope is the reference's architecture and not a
+shortcut taken here. What it assumes — one writer per archive — is wider
+than anything measured, and that gap was closed on 2026-10-08 by
+bounding it rather than by arguing for it (*the writer a zip is allowed
+to have twice*, below). The result: an
+entry at an unambiguous combination pays nothing, and a conforming
+archive pays ONE probe pass of its FIRST bug-capable entry, once, however
+many it has.
+
+**Three smaller orderings, each with a reason:**
+
+- **5.3.4 is probed first and a match ends it.** deark probes the bug
+  first and falls back; the costs are identical in both the conforming
+  and the buggy case, and spec-first is one pass cheaper in the one case
+  they differ — an entry with no matches at all, where both readings
+  succeed. The tie-break is the same either way: the specification wins.
+- **The 1.01/1.02 reading is adopted only on positive evidence.** It has
+  to reproduce the stored CRC-32 where 5.3.4 did not. A rule inferred
+  from a failure would make every corrupt entry at those combinations
+  re-label the whole archive.
+- **"Neither reading works" leaves the verdict UNSETTLED and falls
+  through to an ordinary 5.3.4 decode.** Short-circuiting there was the
+  obvious optimisation — the probe has already proved the entry cannot
+  reach its CRC-32 under either rule, so the third pass can only fail —
+  and it was not taken, because the status a corrupt entry reports would
+  have changed: a truncated stream reports *truncated* today and would
+  have reported a checksum failure, and `run_truncation.py` and
+  `run_robustness.py` both grade what a cut archive does. The price is
+  one extra pass on an entry that was going to fail anyway, and the gain
+  is that nothing about a failing entry's behaviour moves. Leaving the
+  verdict unsettled also means a corrupt FIRST entry does not lock the
+  archive into the wrong reading, which deark's shape does.
+
+**The subject is a fixture, and the difference that makes is not
+tidiness.** `PKZ101.EXE` had been a specimen since the day before, with a
+pinned URL, a sha256 and six Discmaster items carrying identical bytes —
+`tools/specimens/implode.tsv` said in as many words that it was
+fixture-eligible, and the only thing holding it there was that no decoder
+implemented the rule. As a fixture it is graded by `run_diff.py` on every
+`ci.sh` run instead of by a lane that skips when a cache is cold. **And
+it catches something the generator cannot**: a probe that asks only
+*"did the decode finish?"* instead of comparing the CRC-32 passes
+`run_implode.py` and FAILS this fixture, because `README.DOC` under
+5.3.4 decodes to the right LENGTH and the wrong bytes where the generated
+8 K/2-tree stream runs out of input instead. That bend was built and run;
+it is one of five, and the fifth is below.
+
+Two things the fixture needed that are worth not re-deriving. **deark
+identifies it as a DOS EXE**, extracts the embedded zip as one member and
+adjudicates nothing, so `make_manifests.py` needs `-m zip` named for it —
+one entry in a `DEARK_MODULE` table, deliberately not a fallback, because
+"if the first run matched nothing, try again differently" would quietly
+re-identify any fixture whose names failed to match for some other
+reason, and name matching is the one thing in that function that has been
+wrong before. And **`lsar` names the STUB where this engine names the
+archive**, so `run_diff.py`'s `IMPLEMENTED` needed `"Self-extracting
+Zip": "Zip"` — the only row in that table where the two disagree about a
+format both read.
+
+**One of the two combinations is still the generator's alone, and
+FORMATS.md says so rather than letting a green run imply otherwise.**
+All three authentic bug entries are at 4 K with three trees. Nothing on
+this disk is 8 K with two trees AND written by the bug — the one real
+8 K/2-tree entry anywhere in reach is a ZipIt specimen written to 5.3.4 —
+so for that half `tools/synth_implode.py` is the only subject there is,
+with deark as the second reader and `unar` as a negative control required
+to REFUSE it. A stream written and read by this repository grades nothing;
+a stream this repository writes that deark reads back byte for byte and
+`unar` cannot read at all grades the rule.
+
+**The generated pair is written one archive per shape, and that was a
+correction.** The first version put both in one archive, which made only
+the first of them a subject — the verdict is per archive, so the second
+entry rides on the first one's answer. Worse, WHICH one was first decided
+what a bent build got away with: the CRC-ignoring bend above is invisible
+when the 8 K/2-tree stream leads. One archive each removes the ordering
+from the question.
+
+**The bend nothing caught, and it is the cost axis.** Five bends of the
+new code were built and run. Four fail a suite — the rule keyed on the
+tree count instead of the dictionary size, the probe ignoring the stored
+CRC-32, the probe adopting the buggy reading where 5.3.4 matched, and the
+two-combination predicate narrowed to nothing. The fifth — that predicate
+WIDENED to every Implode entry — passes everything, because it changes no
+output at all and only how many passes run. **No lane in `ci.sh` counts a
+decode pass**, so the claim that an unambiguous combination pays nothing
+rests on two instruments outside it: callgrind `Ir`, and `read` + `lseek`
+counted with `strace`, which is the axis a Macintosh actually pays since
+each `UncIO.read` there is a `SetFPos` + `FSRead` pair. Both say +0 on
+two real zips with no ambiguous entry. The probe ORDER is in the same
+class: inverting it is correct and costs one pass. **Corrected
+2026-10-09: both are caught now**, by `run_implode.py`'s fifth lane,
+which counts passes through the CLI's existing allocation trace — no
+engine hook was needed, because a pass is its own pair of allocations.
+
+**What was deliberately not done: an ENCRYPTED ambiguous entry.** The
+probe runs before `unc_password` and must not ask for a password twice,
+and the cipher would have to be re-keyed per pass. Such an entry is
+decoded under 5.3.4 exactly as it was before, so nothing regresses; it is
+a corner no file in reach occupies, and it is named in the source rather
+than measured. The same is true of `zip_mb_peek`, which reads an entry's
+first 128 bytes under 5.3.4 to decide whether it is a MacBinary payload:
+a PKZIP 1.01-written entry carrying a ZipIt `0x2605` field would be
+misread there, and ZipIt is a Macintosh program where PKZIP 1.01 is a DOS
+one, so nothing can carry both.
+
+**Two stale figures fell out of the way, from one cause.** Raising the
+`'OVLY'` bundle's size led to `tools/check_app_size.py`'s
+`EXPECT_BUNDLE`, which was still 156,068 — the value from before
+`ovl_exo` grew 1,924 B on 2026-10-07. That check WARNS on the bundle
+rather than failing (1,924 B is inside its tolerance), so it spent a day
+reporting a growth it should have been holding, and nothing went red.
+The same omission left FORMATS.md's launch-read paragraph quoting a
+difference of 25,860 B that its own terms no longer gave: 222,468 −
+196,608, the sum before that image grew. The bundle figure and the sum
+were corrected that day and the difference was not. **The single
+difference is now gone from that paragraph rather than corrected** — its
+base has not been re-derived from the resource map since 2026-10-06, and
+the two terms are quoted so the subtraction is the reader's, which is
+the remedy that section had already applied once to a pair of build
+sizes. *The mechanism was a constant that three places quote and one
+place checks, with the check's tolerance wide enough to absorb the
+change.*
+
+
+## 2026-10-08 (the writer a zip is allowed to have twice) — a scope that assumed one writer per archive, bounded to the entry it can be wrong about
+
+The minimum-match-length verdict is settled once per ARCHIVE, from its
+first bug-capable entry, because a probe is a whole extra decode and the
+population it is paid on holds 19.4 bug-capable entries per archive
+(*the second attempt had nowhere to go*, above). The scope is deark's as
+well. What it ASSUMES is that a zip has one writer, and that was written
+into four files as the reason rather than as an assumption.
+
+**It is wider than the measurement.** What the sweeps establish is that
+no archive of the 1,537 swept mixes the two readings — and they
+establish it well, because every one of the 29,799 bug-capable entries
+was classified individually rather than by its archive. What they cannot
+establish is the general claim: a zip is appendable, PKZIP 1.1 wrote
+Implode as well as fixing the bug, and an archive updated across that
+boundary is a shape the FORMAT allows whatever any writer did. deark
+settling per archive is not evidence either — it is one implementation's
+choice, and this repository has withdrawn "three implementations chose
+the same constant" as corroboration once already (`UNC_PATH_MAXDEPTH`).
+
+**Measured consequence, on a three-entry archive this project's own
+encoder wrote — bug-written entry first, two conforming ones after it,
+all at the same ambiguous combination:**
+
+| build | what came out |
+|---|---|
+| 2026-10-08 morning | entry 1; entries 2 and 3 BOTH refused, both *"file is truncated"* |
+| before the reading existed | entries 2 and 3; entry 1 refused, *"checksum mismatch"* |
+| this | entries 1 and 3; entry 2 refused, *"checksum mismatch"* |
+
+So the assumption was costing the whole remainder of an archive, and the
+diagnosis was wrong twice over: nothing is truncated — a stream decoded
+under the other reading desynchronises and runs out of input, which is
+what the engine reported as a short file.
+
+**The bound is one probe, paid only on an entry that has already
+failed.** If an entry INHERITED the verdict and failed under it, decode
+it once more with no output under the other reading. If that reproduces
+the stored CRC-32 the bytes were good and the rule was wrong: report a
+checksum failure, and set the archive back to UNSETTLED so the next
+ambiguous entry probes for itself. Three properties make it affordable
+and honest at once — it cannot fire on an archive with one writer, it
+cannot fire on an entry that settled the verdict itself, and it cannot
+turn a failure into a success, because the entry's bytes have already
+reached the sink and `begin_entry` is called once per entry.
+
+**What this does not do is rescue that entry**, and it should not
+pretend to. Two ways out were priced here: buffering a fork, which is
+out on `usize` being 32 bits, and a sink contract that allows a restart,
+which is a public API change nobody has asked for. A third — settling
+the verdict once per *version made by* value instead of once per archive
+— was not priced here, and was tested against PKZIP itself the same day:
+the key holds, and no archive in reach gives it anything to separate
+(*the key that survives and has nothing to separate*, below). One entry
+of a mixed archive is the price, and now it is only one.
+
+**The transferable part.** A scope decision carries an assumption about
+the world, and the measurement behind it is almost always narrower than
+the sentence it gets written down as — "a zip has one writer" against
+"no archive of 1,537 mixes". Two useful questions follow from that, and
+they are cheaper than being right: what does the FORMAT allow, as
+distinct from what writers are known to do; and if the assumption is
+wrong, is the damage bounded by anything? Here the first answer was
+"more than we assumed" and the second was "no" — and bounding it cost
+one probe on a path that was already failing.
+
+
+## 2026-10-08 (the key that survives and has nothing to separate) — a per-writer verdict, tested on PKZIP itself under DOSBox, and not built
+
+**The hypothesis.** The entry *the writer a zip is allowed to have twice*
+still loses could be kept by settling the minimum-match-length verdict
+once per *version made by* value rather than once per archive. PKZIP
+1.01/1.02 stamp 0x000a and 1.10 stamps 0x000b (*the stub is the writer's
+signature*), so a 1.0x archive that 1.10 later added to would carry two
+verdicts, and each would be settled by its own first entry. That holds
+only if 1.10 keeps the stamps of the records it did not write. Our own
+encoder cannot answer that, because it would be grading our rule with our
+own output. So the writers were run: the three `PKZIP.EXE` binaries from
+their own distributions, headless under DOSBox. `tools/pkzip_writers.py`
+re-runs all of it in about 30 s.
+
+**The stamps survive. Measured.** When 1.10 adds (`-a`), updates (`-u`)
+or freshens (`-f`) a 1.02 archive, every 1.02 record stays 0x000a and
+only 1.10's own records are 0x000b. When 1.02 adds to a 1.10 archive, the
+same happens in reverse. When 1.10 adds to `PKZ101.EXE` itself, all
+thirteen of 1.01's records keep 0x000a, the three bug entries among them.
+So within PKZIP's own line the key separates the two readings.
+
+**And there is nothing for it to separate. Measured.** None of the three
+writers ever writes a combination where the two rules disagree. In each
+of them the dictionary size follows the tree count: 8 K with three
+trees, 4 K with two. Over the script's 50 inputs (every file of the
+three distributions and eleven generated shapes), each version wrote 31
+entries at 4 K/two trees, 15 at 8 K/three and 4 stored, the same split
+from all three. About 170 more inputs run by hand moved nothing, under
+`PKNO386`, an explicit `-ex`, and 350–500 KB of memory taken by
+`loadfix`. Two inputs show this is a property of these writers and not
+of the data:
+
+- `PKZ101.EXE`'s own three 4 K/three-tree entries come back at 4 K/two
+  trees from every version.
+- `CPUTEST.ZIP` (Simtel, 1989) was written by a spec-1.1 MS-DOS writer
+  at 8 K/two trees and 4 K/three. Its two files also come back at
+  4 K/two trees.
+
+So in a 1.0x archive that 1.10 added to, the 1.10 entries are
+unambiguous and pay nothing, and the current build already extracts the
+one real such archive in full: `PKZ101.EXE` plus PKZIP 1.10 `-a`, 15
+entries, with the three bug entries and the appended one compared byte
+for byte. **A lane on that archive cannot fail on the current build**,
+and that was the condition for building the change, so it was not built
+and nothing was costed: there was no case to cost it against. **The
+only case that would reopen it** is a mixed archive in which BOTH
+writers wrote disagreeing combinations. One example: an Info-ZIP-era
+writer (0x030a, which wrote 28,896 of the 29,799 bug-capable entries in
+the 2026-10-08 sweep) adding to an archive built by 1.0x. None is on
+this disk.
+
+**The rule itself is measured, on the READERS.** PKUNZIP 1.01 and 1.02
+fail both entries of `CPUTEST.ZIP` on CRC and pass all of `PKZ101.EXE`.
+PKUNZIP 1.10 passes `CPUTEST.ZIP` and fails exactly `README.DOC`,
+`ORDER.DOC` and `OMBUDSMN.ASP`. Until today, "PKZIP 1.01/1.02's reading"
+rested on deark and one file. Now it rests on the programs themselves,
+and so does the fix in 1.1. What wrote PKZ101.EXE's three entries is
+none of the shipped writers. *Hypothesis:* an internal build that did
+not yet tie the two parameters together. Nothing on this disk can test
+that.
+
+**Found on the way, and filed rather than chased.** PKUNZIP 1.01 and
+1.02 refuse every stream `tools/synth_implode.py` writes, including the
+two shapes where both rules agree, but read all 50 entries PKZIP 1.10
+wrote. PKUNZIP 1.10 reads the four conforming shapes. So the generator
+emits something no PKZIP writer does, which 1.0x decodes differently.
+Reduced on 2026-10-09 to two features, both now avoided, and since then
+1.01 and 1.02 read both `-mmlbug` shapes themselves (*the run PKZIP
+never codes at distance one*).
+
+**Transferable.** A key that exists is half a fix. The other half is a
+case for it to act on, and the writer's output histogram says whether
+that case exists. Running the writer was cheaper than reasoning about
+it. Fifteen seconds of DOSBox answered the restamping question, and also
+answered whether these writers could make the shape at all, which nobody
+had asked. The readers came with them: the writer's own
+reader is an oracle for the writer's own rule.
+
+## 2026-10-08 (the method a Macintosh wrote once) — Shrink comes into scope, Reduce goes out, and the count that split them was the writer, not the shelf
+
+**Claim.** Zip method 1, Shrink, is implemented. Methods 2–5, Reduce,
+are out by the brief (OPEN_ITEMS.md, Part 1). Both had been refused one
+entry at a time, with a CLI line promising "not supported yet", and
+neither part of OPEN_ITEMS.md mentioned them. Implode was in the same
+state before 2026-10-07.
+
+**The question was who WROTE them, and a shelf does not answer it.**
+The content search (FORMATS.md, *Shrink*) found 96,193 files whose first
+entry is shrunk. 141 distinct ones sit somewhere a Macintosh user would
+meet them: on the HFS side of a disc, inside a `.sit`, under `pub/mac/`.
+Read as "Mac zips use Shrink", that is a landslide. It is not one. 139 of the
+141 say MS-DOS or Unix in *version made by*, one is truncated before its
+directory, and the files inside are `.EXE`, `.COM` and `.DLL` in folders
+called `Windows`. That is the same lesson as *a date is not a writer*
+(*the stub is the writer's signature*). The host byte separates the
+two, and it found **one** archive written on a Macintosh: `BBA.zip`,
+with ZipIt's 3.2 signature. Reduce, counted the same way, has 5 on Mac
+media and 0 from a Mac writer. So the split follows the criterion that
+admitted Implode: a Macintosh program wrote it. One archive is a thin
+case. It is the case the brief set ("if real Mac zips use these
+methods"), and the 141 DOS zips on Mac CDs are what a user with those
+CDs would actually open.
+
+**The oracle was the wrong source, and the stored CRC is what said
+so.** The obvious transcription was XADMaster's, as for most of this
+engine. `XADZipShrinkHandle.m` turns code 256,2 into `ClearLZWTable`,
+a FULL clear. PKZIP's partial clear keeps every code that is another
+code's parent, so `unar` fails 270 of 2,246 wild entries with "Error on
+decrunching". A decoder transcribed from it would have passed every
+oracle comparison `unar` can make, and failed one entry in eight on real
+files. deark's `fmtutil-lzw.c` matches the stored CRC-32 on 2,246 of
+2,246 (2,247 until 2026-10-09, one entry counted twice — *the three
+entries that were the harness's*), and that is why it is the source. **Choose a reference by
+grading it against the archives' own checksums before transcribing
+it.** Agreement with a second implementation tells you nothing when the
+second one has the same gap.
+
+**Two rules that read as defensive are load-bearing.** A code naming a
+free slot is the string about to be defined (1,799 entries). A walk
+that reaches a freed slot stands in the previous string's first byte
+and continues up the old code (1 entry, `MM.COM`). That entry comes out
+CRC-bad without it. Each rule has a fixture that fails when the rule is
+bent (FORMATS.md, *Shrink*, *What grades it*).
+
+**Where it lives was decided by the 68000, not by the design.** It was
+written beside Implode in `src/fmt_exo.c`, and `ovl_exo` stopped
+linking: `-mpcrel` code reaches its data through 16-bit PC-relative
+offsets, and the image had crossed 32 KB. Nothing had recorded that an
+image has a ceiling. It moved to `src/unc_lzw.c`, so into the codecs
+image every format keeps. A codecs-only format's grant rises 36 B, and
+a zip's falls 64. The cost is spread differently, and that is the price
+of the limit, written down rather than discovered by the next format.
+`ovl_exo` has about 730 B left.
+
+**The table is three bytes a slot because the fourth was measured.** A
+separate kind byte took `dream`'s peak to 47,286 B. Codes are 13 bits,
+so "in use" and the partial clear's mark fit in the parent word, and
+the peak is 39,094 B. Two of the corollaries in CLAUDE.md apply here.
+The table is sized from the compressed length, as `unc_lzw.c`'s
+compress table is. And the transient-free fixed allocation was kept,
+because here too the table IS the allocation.
+
+**The CLI stops asking for what it will not use.** A Reduce entry now
+says it is Reduce and out of scope, and the closing request for a
+specimen is made only for methods that are merely missing. It names
+deark, the one reader measured to read it.
+
+## 2026-10-09 (the specimen was one search away, and the installer was an archive) — Private File reads, and its payload turned out to be another format
+
+**Claim.** Aladdin Private File (`.pf`) extracts, graded byte-exact on
+three files Private File 2.0 itself wrote under Mini vMac (FORMATS.md,
+*Private File*). The 2026-10-07 hypothesis — RC4 keyed by MD5 of the
+password — was right, and is a finding now rather than a guess.
+
+**The leg that was "unfinished, not negative" was the one that had it.**
+Macintosh Garden's search answered over plain `http://` the first time
+it was retried: *Aladdin Private File 2.0*, `private_file_2.0.sit`, on
+the `old.mac.gdn` mirror with a browser user agent. The 2026-10-07
+entry refused to file that leg as a negative, and this is what that
+refusal was worth. Nothing about the search was clever; it was simply
+the one not yet done.
+
+**No installer was walked.** `Aladdin Private File Installer` is an
+InstallerMaker application whose data fork is a StuffIt archive, and
+this engine already opens those — so `PF Encrypt™` came out of it on
+Linux in one command. Its cipher is in its own `CODE` 4, so it needs
+no StuffIt Engine and no extension, and it is pre-registered. Put in
+`Startup Items` on a copy of the System 7.0.1 image, it launches at
+boot. **Before driving an installer, ask whether its payload is a
+format already read here**.
+
+**The writer was read before it was run, and the run graded the
+reading.** `CODE` 4 kept its MacsBug names, so the layout came off the
+disassembly in an hour: an 18-byte clear header, a 308-byte record
+under one RC4 stream, both forks under a second, and a clear 12-byte
+footer with two CRC-32s. The first file the emulator produced matched
+it to the byte — the header was exactly the predicted
+`CSIT 0002 0001 0001 0005 0000 00000000`. Three things only the run
+could say:
+
+- **The key is five bytes**, not sixteen: `GetEncryptionKeySize` reads
+  `'KSiz'` 128 and falls back to 5, and the shipped application has no
+  `'KSiz'`. The reading had both; the file chose.
+- **The payload is never the file.** PF Encrypt Stuffs the subject
+  first and encrypts `Forked.sit`. So Private File became an ENVELOPE —
+  one file in, one file out, unwrapped by `x` like MacBinary — and its
+  reader went into the StuffIt `'OVLY'` image, beside the archive it
+  always yields.
+- **Passwords under six characters are refused by the writer**, which
+  cost the first run and changed nothing in the reader.
+
+**Where the reader lives was measured, not designed.** Resident, the
+first build cost the shipped application **+1,652 B of `CODE`**,
+more than twice what AppleLink packages did. Split like every other
+decoder — probe resident, reader in an image — it costs **+368 B of
+`CODE` and +32 of A5**: the probe, two shims and the table row. The
+reader needed two host-vector slots to reach the cipher from the
+StuffIt image, and the key setup (MD5, then RC4) went into the crypt
+image as `unc_crypt_pf`, so MD5 stays where it already was. No tier
+tally moves (tools/build_mac.sh, the eager pair).
+
+**The probe was the outlier, and the first commit shipped it at 222 B.**
+The maintainer asked why a format test and two hooks cost 464 B. The
+shims were ordinary — 80 B against 72 for their siblings, 46 B against
+56 — but the probe was larger than StuffIt classic's while testing less.
+Its fields went through `unc_get_u16be`, and on a 68000 that rebuilds
+each big-endian field with shifts before comparing it with a constant
+of 0, 1 or 2. Comparing the bytes themselves (`head[4] | head[6] |
+head[8]` zero, then three byte compares) made it 186 B. The total fell
+to 400 B, with 28 B of A5 coming back as alignment. **A probe that
+compares fields with small constants should compare bytes**: the
+accessor is right for a field the code reads as a number, and wasteful
+for one it only compares.
+
+**Then the reader itself, priced before it was changed.** Two candidate
+savings were measured and only one was worth taking. `tools/m68kprof.py`
+over a 256 KB file put **RC4 at 65 % and CRC-32 at 32 %** of 8.5 M
+68000 instructions (8.0 M after the first change below, which FORMATS.md
+quotes); the file reads were ~2 % and MD5 0.05 %. So
+computing MD5 twice per extraction, which looked wasteful, is not worth a
+resident host-vector slot to avoid, and the guess that I/O would
+dominate was wrong. Two changes went in:
+
+- **RC4's indices live in locals for the loop.** Through the struct they
+  were loaded and stored on every byte: `buf` is a `uint8_t *` and may
+  alias them, so GCC could not keep them in registers. 21 → 19
+  instructions a byte, and the four that went were `d16(An)` memory
+  accesses — **roughly 15 % off RC4 by the 68000 timing table, an
+  ESTIMATE**: the tick probe's autotest build cannot supply a password.
+  StuffIt 5's encrypted forks share the loop and gain the same.
+- **The record is decrypted in place** and read again for each password
+  tried, instead of kept encrypted beside its decrypted copy: peak heap
+  5,696 → **5,392 B**, for one 308 B read per WRONG password. The lane
+  gained the retry case that path needs, and it fails when the re-read
+  is removed.
+
+Both are in `'OVLY'` images in the shipped build, which therefore did
+not move; both images got smaller (`ovl_stuffit` −12, `ovl_crypt` −4).
+**What was left alone**: the loop's two `andi.l #255` zero-extensions,
+16 cycles each, which only hand-written assembly would remove.
+
+**The Macintosh application's first run "failed", and the harness was
+wrong.** Both forks came out at the right length and the resource fork
+differed in bytes 48..125 — the file's own name, which the Macintosh
+writes into a resource fork's system-reserved bytes 16..127. Every
+on-Mac harness masks that range since M10; the new phase did not, and
+the subject's fork is not a resource map, so the stamp landed on
+subject bytes. **A new harness inherits the old ones' masks or it
+rediscovers them**, and this one rediscovered it in a run.
+
+**Not supported, by decision:** derivation 0 and cipher 0, which PFEngine
+accepts and no writer here produces. They are named and refused per
+entry; reading them would be inventing them.
+
+## 2026-10-09 (what GCC will not do with an index) — RC4 in 68000 assembly is estimated at ~40 % fewer cycles, and is filed rather than written
+
+**Claim (an ESTIMATE, from the MC68000 timing table; nothing timed):**
+RC4's keystream loop is ~178 cycles a byte as GCC compiles the C today,
+and ~104 hand-written. The difference is a trick GCC does not use. If an
+index register's upper byte is cleared once, `add.b` wraps it at 256 for
+free, and `(d8,An,Dn.w)` addresses the table with it directly. GCC
+instead zero-extends every index with `andi.l #255` (16 cycles each,
+twice a byte) and reloads through `lea`.
+
+**C cannot be coaxed into it, measured.** 16-bit indices masked with
+`& 0xff` and a pointer walk, the usual way to steer GCC, compiled to 25
+instructions a byte against today's 19: worse, with the table pointer
+reloaded from the stack each byte. So the gain needs real assembly.
+
+**Filed, not written, by the maintainer's call:** a 68000-only path
+beside the C one is the engine's first, and x86 CI cannot grade it. The
+candidates are collected in OPEN_ITEMS.md (*Hand-written 68000
+assembly*) to be built, tested under `qemu-m68k` and timed on the tick
+probe in one pass.
+
+
+## 2026-10-09 (the writer's own output was the population the flags excluded) — PKZIP 1.0x's fingerprint, swept, never writes the 8 K/two-tree half, and its OS/2 twin narrows who did write PKZ101.EXE
+
+**Claim, measured.** No real archive written with the 1.01/1.02 rule at
+0x0002 (8 K, two trees) was found. The search went through the
+population that wrote the bug. **151,924 Implode entries in 19,278 zips
+whose directory says MS-DOS + spec 1.0** were each fetched whole and
+walked, and every one is at 0x0000 or 0x0006. So the 0x0002 half stays
+graded by `tools/synth_implode.py` and deark (FORMATS.md, *Which half is
+graded by a real file*). The sweeps are in TESTING.md, *Searching
+somebody else's index by content*.
+
+**The 2026-10-08 keys had excluded that population, by construction.**
+The flag tokens name archives whose first entry is ALREADY at a
+disagreeing combination. *The key that survives* measured that no
+shipped PKZIP writes one, so those tokens can only select other
+writers: 10 of their 3,821 directories said MS-DOS/1.0. A key that does
+not mention the flags, *version needed* 1.0 plus a first member dated
+1988–1989, gets **19,299 of 48,948** (39 %). Inside that output the
+histogram is the DOSBox result again, at scale. **A key that names the
+answer can only find writers who give it.** To learn whether a writer
+ever produces a shape, select on the writer and count the shapes.
+
+**PKZIP 1.01 for OS/2 narrows the hypothesis.** `PKZ101_2.ZIP` and
+`PKZ101-S.EXE` are the same release, both dated 1989-07-21, and they
+carry the same `ORDER.DOC` (4,607 B) and `OMBUDSMN.ASP` (595 B) as
+`PKZ101.EXE`. There both are at **0x0000**; in the DOS package both are
+at 0x0004. So the program that wrote the three bug entries wrote ONLY
+the DOS distribution, and PKWARE's other package that day came from a
+writer that tied dictionary size to tree count. *Hypothesis, still
+unreduced:* a pre-release build. A CompuServe message of 1989-05-29
+(`pkz100.txt`) quotes Phil Katz testing a *"PKZIP 1.0 Alpha"*, which
+fits but does not establish it. Inside `PKZ101.EXE` the bug writer
+used 4 K for every entry up to 4,607 B. Its only 8 K entries are the
+three texts of 8,959 B and over, all with three trees, and its five
+program files, up to 31,342 B, are all 4 K with two. If that is its
+rule, 0x0002 is a shape it may never have written either. That rests
+on one archive.
+
+
+## 2026-10-09 (the read nothing sent short) — a contract half of which no host exercises is a contract nothing tests
+
+**Claim, measured.** Private File's reader read its 12-byte footer with
+one bare `io->read` and called anything short a truncation. `UncIO`
+allows a short read before EOF (`include/macextract.h`), so a valid file
+came out in full, both forks, and was then reported *file is truncated*
+— reproduced with an I/O capped at 7 bytes, by a review. Fixed by
+`unc_read_full`, the helper every other fixed-size read already uses:
+`ovl_stuffit` −24 B, the shipped pair unmoved.
+
+**The bug was the small part.** Neither host this project has ever
+returns a short read — a `FILE *` and `FSRead` both fill the request —
+so half of the I/O contract had never been exercised by any suite in
+the project's life, and every fixed-size read in the engine was correct
+by inspection only. The CLI's `UNC_SHORT_READ` and `tools/run_shortread.py`
+send the short reads now: **959 fixtures at 1 B per read, and the
+decryption and Private File suites whole, agree with uncapped** — so
+this was the only one (TESTING.md, *Short reads*).
+
+**And the first green run of that lane graded nothing**: it ran against
+a sanitizer build linked before the hook, which ignored the variable and
+matched itself 959 times. The CLI announces the cap now and the lane
+refuses a binary that does not. **An environment hook is an input the
+binary may not read; a harness that sets one has to see it was read.**
+
+
+## 2026-10-09 (the run PKZIP never codes at distance one) — the generator's streams cut down until PKUNZIP 1.01 read them, and two things 1.0x read differently from 5.3
+
+**Claim, measured.** PKUNZIP 1.01 and 1.02 refused every stream
+`tools/synth_implode.py` wrote (*the key that survives and has nothing to
+separate*). The streams were cut down token by token under DOSBox until
+1.01 read them. That found **two features, not one**, and the generator
+now avoids both. Each of the six shapes is now read by the PKUNZIP whose
+rule it was written to: 1.01 and 1.02 read both `-mmlbug` shapes and
+refuse the 5.3.4 shapes at the two disagreeing combinations, and 1.10
+does the reverse. So the 1.01/1.02 rule is graded by 1.01/1.02 itself,
+by hand, for the 8 K/two-tree half too, which until now had deark alone
+(`tools/pkzip_writers.py`, which keeps the pass or failure of each
+minimal case below and its control, asserted since 2026-10-09 — not the
+bytes PKUNZIP wrote, the per-value sweep or the two 9-bit trees, which
+were observed by hand and are not re-checkable from the repository).
+
+**1. A match at distance operand 0.** Minimal case: eight literals and
+one match of length 2 at operand 0. 1.01 and 1.02 fail it on CRC, 1.10
+reads it, and the same fill at operand 1 is read by all three. 1.01's
+output for `abcdefgh` plus (0, 6) is `abcdefghh` and then five zeros. In
+a window that already holds data, the output is the first byte right and
+then each stale byte twice (`c s0 s0 s2 s2 …`). *Hypothesis, unreduced:*
+that is a forward copy two bytes at a time, which cannot repeat a byte
+when the source is only one byte behind. Where in 1.01's buffer the
+stale bytes come from does not fit one simple ring, and it was not
+chased. **No PKZIP writer emits operand 0**: 1.01, 1.02 and 1.10 wrote
+105,658–105,962 matches over 51 inputs, including 20 KB of zeros and long
+single-byte runs, and none was at operand 0. 1.01 codes a run of zeros
+as length-320 matches at operand 319, reaching back into the zero
+window. The generator's one-byte fill is now two literals and a match
+at operand 1.
+
+**2. A literal tree that gives a high byte a short code.** Minimal case:
+one literal 0x80 under a flat 8-bit literal tree. 1.01 writes 0x00 and
+loses its place in the stream, and 1.02 and 1.10 read it. One literal
+0xFF under the same tree comes out 0x00 from **all three**, 1.10
+included, with sync kept. The controls, the same bytes under PKZIP's own
+literal tree, are read by all three. Per value, 1.01 fails every byte
+0x80 and up whose code is 8 bits or fewer, under three different trees,
+and none whose code is longer. *Hypothesis, unreduced:* a decode table
+indexed by 8 bits holds the symbol in a signed byte, with a negative
+entry meaning "longer code". In 1.01 any byte 0x80 and up would look
+negative; in 1.02 and 1.10 only 0xFF would.
+
+**Why no PKZIP file ever showed it: PKZIP stores one literal tree.**
+Every three-tree entry the three shipped writers made, 15 of 15 from
+each, stores the same 99 bytes, whatever the input. One input was
+French-style text in which é is roughly one byte in six, and é still got
+12 bits while 'v', half as common, got 8. In that table every byte 0x80
+and up has 12 or 13 bits. Only `PKZ101.EXE`'s own entries, from a build
+none of these three reproduces, carry trees of their own. The generator
+now stores that table (`PKZIP_LITERAL_TREE`). Its first eight 12-bit
+codes, all for bytes below 0x80, are re-split into a chain 10…16, 16,
+so a 256-value literal tree still states a 16-bit code. All three
+PKUNZIPs read every byte value under it, and read the generated streams.
+
+**What this changes about 1.01's reading, beyond the minimum match
+length.** It is a third and a fourth difference from 5.3, and both are
+in the READER: unar, deark and this engine read both features to 5.3,
+and PKUNZIP 1.10 reads operand 0. Neither reaches a file PKZIP wrote,
+because its writers never produce either. So nothing in `src/` changes:
+an operand-0 match or a short high-byte code in a stranger's zip was
+written by something else, and 5.3 is what that writer meant. **Found
+and not reduced:** two hand-built literal trees that put 128 bytes at 9
+bits are misread by all three PKUNZIPs on many byte values. unar and
+deark read them, and the generator's trees are not affected (measured
+per value). That is recorded, not explained.
+
+**Transferable.** A reader's refusal of a whole stream says nothing
+about which rule it disagrees with. Cutting the stream down did, and in
+under two seconds per DOSBox run. The second feature only appeared once
+the first was fixed, and only in the 1.01 column: a reduction ends when
+every reader agrees, not when the first difference is found. The tree
+PKZIP stores was invisible to every question asked about its *flags*.
+A table a writer always emits is a fact about the writer, and the same
+DOSBox session that asked about flags could have shown it.
+
+## 2026-10-09 (the base nobody re-took) — the shipped tier model was 16,888 B generous for a week, and the machine was the only thing that could say so
+
+**What happened.** `shrink-wild-titanic.zip` joined `sample.txt` and four
+tiers were re-run on the current source. Three matched `run_tiers.py
+--shipped` by name. System 6.0.8 on a 512Ke came back 66/72 where the
+model said 67: `a2ps.V4.3.tar.Z`'s compress layer was granted 81,938 B
+and needed 86,080, the same peak it reaches on every other tier.
+
+**Why the model missed it.** A shipped budget is `TIERS` (the control
+build's budget, read off the machine) plus `OVL_SAVED` (control less
+shipped `CODE` + A5) less what the format keeps. When the control grows
+by G and the shipped build by S, the right move is `TIERS` −G and
+`OVL_SAVED` +(G−S): net −S, which is the shipped build's own growth. CI
+re-checked `OVL_SAVED` against the two builds on every run
+(`--check-saved`), so the +(G−S) always landed, while `TIERS` was lowered
+once by derivation (2,024 B, 2026-10-01) and otherwise left alone. From
+2026-10-02, as Implode, Shrink, Private File and the zip work went into
+the control, every per-format budget the lane printed rose by what
+should have come off. The `-D UNC_OVL_RESIDENT -D UNC_AT_BUDGET` probe
+settled it in three boots: all three bases 16,888 B lower, identical
+across both systems and both RAM sizes, which is the one-for-one
+signature of application size and nothing else. At those bases the model
+reproduces all three tiers by name and puts `a2ps` 4,070 B short against
+the machine's 4,142.
+
+**Why nothing else caught it.** Every tier argument from 2026-09-26 on
+compared a change's cost with "the narrowest margin, 16,490 B". That
+margin came from the same model, so it moved with the error and could
+not detect it. *A tolerance measured by the instrument it is meant to
+protect is our own output again* (CLAUDE.md). The sample also had no
+fixture the change itself needed: the argument was always about other
+fixtures' headroom, so the first fixture to lose it was the first sign.
+
+**What changed.** `TIERS_CONTROL` pins the control build's `CODE` + A5
+the bases were read against, and `--check-saved` fails when the build
+moves. The term nothing checked is now checked by the same line that
+checked the other one. The resident `EXPECT` tallies were re-pinned from
+the model (72, 68, 63) and say so: no resident build has run on a
+machine since 2026-09-22. The same evening it did, on all three, and
+returned 72, 68 and 63 refusing exactly the fixtures the model named;
+`EXPECT` asserts those names since. The bases, re-taken in the same
+session, had fallen the 256 B the control grew in between, to the byte,
+as `TIERS` had derived. (The docs said 128 B, the last of three steps.)
+
+**Transferable.** For a derived figure, list its inputs and ask which
+of them something re-takes. Here the checked input was the less
+important one: `OVL_SAVED` is a difference of two builds and cheap to
+check, while the base needs an emulator, so the cheap check was the one
+that got automated. That is the usual direction of this failure.
+
+## 2026-10-09 (the three entries that were the harness's) — a gap between two decoders was two harnesses counting different entries, and a slow path the review read was priced before it was fixed
+
+**Claim.** The Shrink row's "2,247 against 2,244, 3 UNEXPLAINED" was
+never about the decoder. The transcription and the engine agree on all
+2,246 distinct entries of the 2026-10-08 sweep, entry by entry, and on
+the 1,953 a fresh 346-archive draw gives both (FORMATS.md, *Shrink*,
+*What grades it*).
+
+**Two totals are only comparable if they count the same things.** The
+transcription walked central directories itself. It could not parse
+`Thief35.zip`, so it skipped those 12 entries. The C comparison let
+Python's `zipfile` list entries. That module reads Thief35, but it
+refuses two RISC OS zips over Acorn's `0x4341` extra field (15
+entries). So 2,247 − 15 + 12 = 2,244, and there was no three. Both
+harnesses also counted one archive twice, because the random draw
+re-picked a Mac-context zip. A difference between two decoders'
+totals is first a question about the two denominators. Comparing
+per-entry verdicts keyed by archive and name would have caught it on
+day one, and that is how it was run this time.
+
+**"Was not kept" was a claim about a directory nobody had looked in.**
+The working set was in `/tmp` the whole time, with the scripts and the
+per-entry tables. That is BLOCKERS.md's *cannot get one* smell applied
+to this machine's own disk. `scan_discmaster.py --probe keep` now
+writes the files and a manifest under the cache on purpose, so the next
+sweep does not depend on `/tmp` surviving.
+
+**A slow path found by reading is priced before it is fixed, and the
+price decided both halves differently.** The partial clear is O(table)
+per 18 bits of input, so a crafted 100 KB stream holds a Mac Plus for
+hours — an ESTIMATE, from 68000 instruction counts at ~0.5 M a second,
+and instructions are not cycles (FORMATS.md, *What a crafted stream
+costs*). That cost is the format's, and deark pays it too, so nothing
+cheap removes it. What a fix CAN buy is a working Cancel. Ticks had come
+only from the reader, ~17 minutes apart, and a tick per clear (+76 B in
+the codecs image) brings that to ~0.3 s, both on the same estimate. The peek's double decode is
+up to 8 KB of real work per ZipIt Shrink entry, and 0 such entries
+exist, so that half was left alone. Its no-progress pass was fixed
+instead (+20 B), because only that half changes what a user can do.
+Lowering the clear's walk bound was measured on paper at a factor of
+~3 for an attacker who adapts, which is not a bound, and was not built.
+
+
+## 2026-10-09 (the bar that counted the peek) — a dry pass has to tick and must not count, and the first check that compared `done` with `total` found 66 more
+
+**Claim, measured.** Zip's two dry passes — the 128-byte MacBinary peek
+on a ZipIt entry and the minimum-match-length probe — read the entry
+through `c->ps`, so each counted input the decode proper then counted
+again: 152 % on a unit test's ZipIt archive, so a Macintosh's bar would
+sit at 100 % for half the run. The peek was given `c->ps` the same day
+so that Cancel could answer during it, which was right; counting was
+the side effect. Both now restore `done` afterwards: they still tick,
+and only the decode proper counts.
+
+**The check is what was missing, not the fix.** `tools/run_ticks.py` had
+graded since 2026-08-28 that every archive ticks and that no gap passes
+32 KB, and never that `done` stays under `total`. Asked, it named **75
+layers**: the two zips this fixes, and 73 rows (66 distinct layers) of
+DiskDoubler, MacLHA's peek and uuencode that predate it by months. A
+DiskDoubler DDn archive of 5,193 B reports 96 KB done, because its
+decoder reseeks between separately stored streams and every reseek
+refills — and counts — a 4 KB buffer. Those were a ratchet
+(`KNOWN_OVERRUN`) and an open item with a route, closed the same day
+(*DiskDoubler read every block six times*, below), not part of this fix: counting consumption
+rather than refills is an engine-wide change with a 68000 price, and the
+repo's own rule is that the second problem gets measured rather than
+handed the first one's answer. **An aggregate that is never compared
+with its bound is not checked by the lane that collects it.**
+
+## 2026-10-09 (DiskDoubler read every block six times) — the 66 overruns closed in three formats, and neither engine-wide option was needed
+
+**Claim, measured.** All 66 layers `tools/run_ticks.py` held in
+`KNOWN_OVERRUN` now finish at or under the archive's size, and the table
+is empty. Three causes, each traced to its line under gdb on a `-O0`
+probe before anything was changed:
+
+- **MacLHA** (`fmt_lzh.c`): the 128-byte peek that decides whether the
+  payload is MacBinary decodes the entry through `c->ps`, and the decode
+  proper counts it again: 11,157 B counted on 7,094 B. A dry pass, so
+  it got `zip_mb_peek`'s fix: `done` saved and put back.
+- **uuencode** (`fmt_uu.c`): `uu_scan_doc` reads a whole document to
+  learn its fork sizes before `begin_entry`, then the writing pass seeks
+  back and reads it again, so `uu-wild-terrainman.uu` counted itself
+  twice. Also a dry pass, and the search for the next `begin` line
+  re-reads the tail the previous pass had buffered. Progress is now
+  pinned to the position each pass starts from: `base + pos` before the
+  search, `base + d.start` before the writing pass.
+- **DiskDoubler** (`fmt_dd.c`) was **two causes**, and the open item had
+  named one. `ddtf-dd377ad.dd` has no DDn fork at all and still counted
+  43.6 KB on 16,848 B: no fork's `UncBufIn` had a `limit`, so each 4 KB
+  refill read into the next fork, and that fork's own reader counted the
+  same bytes again. DDn added the reseeks: six per block, each a
+  `seek` + `unc_bufin_init` that threw away a buffer which nearly always
+  held the target already, because a block's three streams lie back to
+  back. Each fork's reader is now limited to its compressed length, and
+  `ddn_seek` moves the cursor when the target is inside the buffer or
+  just past its end. It goes to the file only when the target is not.
+
+**The two engine-wide options were priced as asked, and neither was
+needed.** All four builds come from one tree. The shipped (eager) 68000
+build, callgrind over every file in `fixtures/` in one probe process (972
+on that run; 959 of them have a manifest) (base
+10,233,708,156 Ir), and the tick lane:
+
+| | resident CODE / A5 | 'OVLY' images | callgrind Ir | tick lane |
+|---|---|---|---|---|
+| A: count consumed (the old buffer, at refill) | +12 / +20 | +0 | −27,363 | **FAILS**: 64 of 66 clear, uuencode untouched (a whole-file re-read is consumption), and 77 fewer archives tick (1,134 → 1,057), two of them 259 KB (`MacburgerHelper.sit`) and so over the lane's 64 KB floor, which is what fails: no tick, so Cancel is out of reach |
+| B: high-water mark (one `tell` per `unc_bufin_init`, not per refill) | +128 / +0 | +0 | +528,682 (`ftell`) | passes, all 66 clear |
+| C: in the formats (chosen) | **+0 / +0** | `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8 | +50,754 | passes, all 66 clear |
+
+A also loses partly-consumed buffers whenever a reader is abandoned, and
+fixing that would need a release call in every reader. B costs resident
+code, which comes off every extraction. It leaves DiskDoubler's reads
+untouched. It also hides the fault the lane exists for: under a high-water
+mark a second pass sits at 100 % for its whole length without ever
+exceeding the total. C's `ovl_cptdd` +144 is `ddn_seek` +72 and `dd_fork` +74 per function at
+the overlay's flags, +146; the 2 B between the per-function sum and the
+image is not attributed (CORRECTED 2026-10-10: this called it +146 B in
+`ovl_cptdd`). That image is
+released once the sniff has named the format.
+
+**x86 callgrind is the wrong instrument for C, and the Macintosh says
+so.** C's +50,754 Ir is `dd_fork` +741k against libc's read path −600k
+or more. On x86 the bigger `ddn_seek` is outlined and the hot loop's
+codegen moves: the variant with buffer reuse removed pays the same
++100k on the DDn fixture. Marking `ddn_seek` `inline` takes that fixture
+below base on x86, and leaves the 68000 overlay **byte-identical**, so
+it is kept. On the Mac (`run.py --emu mv-4M-1x -D UNC_AT_TIMING`,
+`ddtf-ddpro411dd1.dd`, System 6, each run twice and identical to the
+tick):
+
+| | total | FSRead | FSWrite | rest of the File Manager | remainder (engine) |
+|---|---|---|---|---|---|
+| base | 707 | 15 | 7 | 36 | 649 |
+| C | 698 | 2 | 1 | 39 | 656 |
+
+The remainder's +7 is inside what the per-call rounding of 113 reads
+can move between columns. The total is the robust figure: **−9 ticks,
+−1.3 %**.
+
+**The read count was the same fault, so no wider window was needed.**
+The open item asked separately whether a wider window per DDn stream
+would cut the 180 KB of reads. It would have widened a buffer that was
+being thrown away. Measured with `strace` through the CLI
+(`t -nr ddtf-ddpro411dd1.dd`): **113 reads, 179,695 B and 65 seeks
+before; 3 reads, 6,025 B and 29 seeks after**, on a 5,193 B file. On a
+Macintosh each read is a `SetFPos` + `FSRead`.
+
+**One consequence, accepted:** 36 small DiskDoubler layers that ticked
+before no longer tick at all (1,134 ticking → 1,098). Every one is under 8 KB (largest 7,153 B),
+below the pump's step. They ticked only because their input was
+counted more than once.
+
+**The transferable part:** an open item's diagnosis is a hypothesis
+about the population as well as the cause. "DDn reseeks" was true of
+the one archive it was measured on, and the same overrun on AD-only
+archives, already in the table, disproved it as the whole story.
+Pricing two engine-wide answers before tracing every row would have
+priced the wrong question.
+
+
+## 2026-10-09 (the key is folded at decrypt time, not at launch) — the Shortcut updater's archive key is recoverable from a decrypt-time RAM dump by an 8-byte oracle, but its install UI never reached decrypt here
+
+**Status: WITHDRAWN 2026-10-10.** The 45 dumps were taken while the
+installer had no target; once it accepts one, the key is in memory before
+any file is written (2026-10-10, *the installer's own key*; BLOCKERS.md).
+
+**The question.** `sit_scheme()` reads bytes 107/109 of a StuffIt entry as
+encryptor-module ids and, on the two forks of Aladdin's *Shortcut 1.5.3
+Update* that carry 5/3 and 6/5 at 106/109 (empty data forks, so only 109
+is read), routes one to `NewDEx` and refuses the
+other as *"a scheme we cannot read"* while the archive's other eleven forks —
+all method 13, id 0 — ask for a password under the built-in scheme
+(FORMATS.md, *Where an archive names the module*). The hypothesis is that those
+bytes are installer-private, not ids, and that all thirteen forks are the
+built-in scheme under one shared password. To settle it the archive has to
+decrypt, and the password *"installs without asking"*, so the key is a constant
+the installer carries.
+
+**The oracle, which needs no password guess.** An encrypted StuffIt classic
+archive carries an eight-byte `'MKey'` resource that verifies the key, and the
+check precedes any fork (that every scheme shares the archive key is not
+established; the self-test grades the 3.5.1 built-in scheme on three of
+Aladdin's own archives since 2026-10-10). So the MKey decides a candidate directly — and
+not only a candidate *password*: it decides a candidate eight-byte **archive
+key**, the value the password folds into. That turns recovery into a
+fixed-width search: slide an 8-byte window over anything and keep the offsets
+that verify. `tools/sit_mkey_oracle.py` is the oracle, self-testing; the hot
+loop translated to C (StuffItDES with a byte-reversal table, `verify_ak`
+only) scanned a 12 MB dump in a few seconds; it was committed on
+2026-10-10 as `tools/sit_akscan.c`, and the Python scan is ~1 ms a window. The updater's MKey is
+`4d87bcb0c49abe53`.
+
+**Where the key is, and is not.** The updater runs under Mini vMac (boot-shell
+build, `mkboot.py --app-name`): it paints the InstallerMaker 1.0.3 splash, then
+a license pane, then an SFGetFile destination picker. Reading Mini vMac's own
+process memory (`/proc/<pid>/mem`) at the splash, at the license and across the
+destination dialog — **45 dumps** in all — and scanning every one for the
+archive key found **nothing**. The password is not a plaintext string in the
+uncompressed resources either, and the installer's engine lives in compressed
+`ADCR` resources no reference here decodes. **The reading drawn here, and
+WITHDRAWN the next day**: that the archive key is computed lazily, when
+extraction starts. The "destination picker" was not a folder navigator but
+Standard File asking for the installed Shortcut, and until it had one the
+installer never derived the key; given a stand-in, the key was in memory
+before any file was written (2026-10-10, *the installer's own key*).
+
+**The transferable part.** A verifier that checks the derived key rather
+than the password is what lets a memory image answer the question, and it
+held. The inference from 45 empty dumps did not: an absence in memory said
+the program had not reached the key, not WHEN it would — the same shape as
+a timeout read as a measurement (BLOCKERS.md, *Withdrawn claims*).
+
+## 2026-10-10 (the header that checks its own CRC) — a search of unread bytes is a count only when the thing searched for can fail a checksum
+
+**Claim (measured).** The 112 StuffIt walks the 2026-10-09 sweep left short
+of their declared end were two different stops reported as one figure: 88
+at a header `plausible()` rejects and 24 at a header past the end of the
+file the index holds. Fetches that came back short are a third kind of stop
+the sweep can make, and none of the 112 was one once re-run. Only the first kind has
+bytes left to read, and reading them by plausibility alone gave **2,571
+"flagged headers"** with Optimizer and Encryptor ids spread evenly over
+0..255. That is the signature of compressed data, not of a module.
+
+**What made it a count.** `src/fmt_sit.c` refuses any entry whose header
+CRC-16 at +110 fails, so a header the engine would read always carries one.
+All 2,835 headers in `fixtures/` and 2.0.1's specimens pass it, and the same
+unread bytes then held 12,255 headers that check, none of them flagged
+(TESTING.md, the 2026-10-10 row). A plausibility test can say where to look.
+Only a test the bytes can fail can say that nothing is there, and
+StuffIt's headers carry one for free.
+
+**Consequence.** The two StuffIt 2.0 rows in OPEN_ITEMS.md have no
+population left in reach here. What would close them is a file from
+somebody who has one.
+
+## 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
+
+**Claim (measured).** Bytes 106..109 of a method-13 fork are not module
+ids when InstallerMaker 1.0.3 wrote them. Aladdin's *Shortcut 1.5.3
+Update* carries 3 and 5 at byte 109 on two of its thirteen forks. All
+thirteen decrypt under the built-in scheme and the password `PeekAB00`,
+and twelve pass their CRC; the Addendum is damaged in the archive itself.
+Under the standard resource-header mask, the six files compared are byte
+for byte what the installer wrote to an emulated disk, these two
+included (FORMATS.md, *Where an archive names the module*).
+`sit_scheme()` no longer reads the id on a method-13 fork.
+
+**What stood in the way was a question, not a destination.** The
+updater's "destination picker" was Standard File asking where the
+installed Shortcut is. The list was empty because it filters on
+`cdev`/`Cut!` and the volume had no such file. Its pre-flight hook
+(`IBeg`, compressed with `ADCR` in the file) does that filtering, and the
+hook is plain 68000 code in the RAM dumps, already decompressed. It calls
+`FindFolder('ctrl')`, looks for `Shortcut™`, falls back to searching by
+creator, opens the file's resources and accepts it if its first `cdev`
+resource is non-empty (a `GetHandleSize` test). A 373-byte stand-in with a
+`vers` and a 16-byte `cdev`, placed in System 7.0.1's Control Panels, is
+found without a dialog, and the installer goes on to Install, a restart
+warning, *"Install software as:"* and extraction. System 7 was used
+because the hook asks for the Control Panels folder; whether 6.0.8 would
+also work with this stand-in was not tried. The earlier stand-in, with no
+`cdev` resource, made the updater quit silently on both systems.
+
+**When the key exists.** A launcher that stays alive as Mini vMac's parent
+dumped the emulator's memory from the Install click to the end. Yama
+(`ptrace_scope` 1) lets only an ancestor read `/proc/<pid>/mem`, and a
+detached dumper got `EACCES`. Results:
+- every one of the 30 dumps kept from the restart alert and the save
+  dialog, and all 120 taken during extraction, holds `78a51a6ffd3a3ea4`
+  at two offsets, and `--ak` verifies it against the MKey;
+- 16 dumps sampled from the run where the stand-in was rejected hold no
+  key.
+So the key is computed once the installer has a target, and before any
+file is written. Reading it as a decrypt-time fold was wrong (BLOCKERS.md).
+
+**The password came back with the key.** StuffIt classic folds the
+password under one schedule, keyed by `0123456789abcdef` and never
+re-keyed inside the loop. For eight characters or fewer that fold is a
+single DES encryption, so `D(key) ^ 0123456789abcdef` gives back the
+password. That is `unfold()` in `tools/sit_mkey_oracle.py`, which also
+grades `tools/sit_akscan.c`, the compiled scanner, against the Python
+verifier.
+
+**Transferable.**
+- An empty Standard File list is a filter, and the filter is code that
+  can be read. The hook was in the dumps already taken for something
+  else.
+- A second oracle came free with the experiment: the installer that
+  carries the key also extracts, so letting it finish graded the engine
+  against Aladdin's own decoder.
+
+## 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
+
+**Claim (measured).** The Shortcut updater's Addendum is damaged in its
+compressed stream, and no single flipped bit explains it (FORMATS.md,
+*Where an archive names the module*). Three decoders agree byte for
+byte, Aladdin's own included, so the fault is in the bytes, not a reader.
+
+**The search said otherwise six times.** Every bit of the 74,072-byte
+fork was flipped in turn, and `macextract t` passed the entry six times.
+A positive control found a planted single-bit error in a healthy fork,
+and only that one flip, so the harness worked. The six were chance: a
+16-bit CRC passes one candidate in 65,536, and 592,576 candidates
+predict about nine. None of the six ended at the end symbol `0x140`, and
+none produced a resource map that parses.
+
+**Transferable.**
+- A checksum grades a search only while the search is smaller than the
+  checksum's range. Past that, a pass is the expected outcome and not
+  evidence.
+- What decided it was structure the format already carries. Method 13
+  ends every healthy fork with `0x140` at exactly the declared length,
+  12 of 12 here, and a resource fork's map points at itself. Those are
+  free and cannot pass by accident at this scale. This is the
+  2026-10-10 header-CRC entry's lesson, met from the other side.
+- No engine change: the CRC already refuses the entry, and the end
+  symbol would only refuse it a second way.
+
+## 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
+
+**Claim (measured).** StuffIt Deluxe 3.5.1 writes encryptor id 4 beside
+method 13 whatever it is asked for, and has no route to a 2.x module, so
+`sit_enc_id` ignoring 107/109 on a method-13 fork costs nothing on
+anything 3.5.1 wrote (FORMATS.md, *Where an archive names the module*).
+
+**Evidence.** `tools/vmac/sitenc351.py`: with 2.0's three Encryptors
+installed in both candidate folders, the script words `des`, `newde` and
+`encrypt` each wrote 4 / 4. `Set encryptor` and `Enable Optimizer` were
+answered *"No longer supported"*. The Preferences dialog and the Stuff
+dialog offer a checkbox and nothing else. The static read pointed the
+same way first: 3.5.1's folder list has no `Encryptors`, where 2.0.1's
+does. That string list was the cheap half; the run was what could have
+come out the other way.
+
+**Transferable.**
+- **A scope hypothesis about what a program writes is settled by asking
+  the program for the thing, not by counting its absence in the wild.**
+  166,970 walked headers without a module id said nothing about whether
+  3.5.1 *could* write one. One script that asks for each cipher by name
+  did, in two runs.
+- **"Does not launch" has to record how it was launched.** The 2026-09-28
+  write-up said three attempts failed and left out that all three were ⌘O.
+  The double-click that worked the same day went into a code comment
+  fifty lines away, and every status file kept the wrong version for
+  twelve days (BLOCKERS.md, withdrawn claims).
+- **No engine change.** The narrowing this would have needed (reading the
+  id again on any method-13 fork that is not InstallerMaker's) has
+  nothing to protect. The lane now asserts the 4, so a 3.x archive that
+  says otherwise fails there first.
+
+## 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table took the two copies from 52 s and 46 s to 9 and 15, and the tick probe now bills the read-back
+
+**Claim (measured).** On the 7 MHz tier, the autotest build's read-back
+was 92 % and 83 % of the two copy-only fixtures' extract wall, and
+FORMATS.md's "the extract column is the archive alone" was wrong for
+every row of that table (FORMATS.md, *Measured on a 7 MHz Mac Plus*).
+
+**Evidence.** `run.py --emu mv-4M-1x --poll 3 -D UNC_AT_TIMING`, with a
+new `gTkBack` bracket around the read-back loop in grid slot 7:
+
+| fixture | `gTkRun` | read-back, bit at a time | read-back, table | extract wall, before → after |
+|---|---|---|---|---|
+| `kermitut9test.bin` | 90 ticks (1.5 s) | 2,860 ticks (47.7 s) | 341 ticks (5.7 s) | 52 s → 9 s |
+| `derived-PCCTS.tar` | 459 ticks (7.7 s) | 2,286 ticks (38.1 s) | 325 ticks (5.4 s) | 46 s → 15 s |
+
+`at_crc32_update` is now table-driven, the table built bit at a time on
+first use from the same polynomial and kept separate from the engine's
+`unc_crc32`. Graded: 72/72 at 4 MB and 72/72 at 1 MB on System 6.0.8,
+and all fifteen `timing.txt` rows byte-exact at 1x. Shown able to fail:
+one entry XORed by 1 (`tab[0x5A]`) failed both fixtures, on the CRC slot
+only. Autotest build only, so `dist/` did not change. DECISIONS.md
+2026-09-20 (*the window that was already the staging buffer*) had
+already said the read-back was most of a method-13 run; that was the
+right one of the two files.
+
+**Transferable.**
+- **A clock that stops on a painted result times everything before the
+  paint.** "Boot is split off" was true and was read as "so the rest is
+  the archive"; nobody asked what else ran between `RunExtract` and the
+  grid. The tick probe's own bracket had the answer since 2026-08-30 —
+  it is half of every wall figure the -O3 section compared it with —
+  and the ratio was written down twice as a fact about the clocks.
+- **A harness's cost is proportional to what it checks, so it distorts
+  the comparison as well as the totals.** Compact Pro and DiskDoubler
+  halved; `derived-Export.sit` did not move. A per-row correction from
+  any one fixture would have been wrong for the others.
+- **An independent clock agreed once the harness was out.** The
+  interactive application, timed against Expander with no read-back,
+  reads 56 s for `derived-EmpireBuilderDemo.sit`; the autotest reads
+  61 s now and read 119 s before.
+
+## 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
+
+The question was a companion application that makes double-clicked archives
+open in MacExtract on System 6 and earlier, by writing MacExtract into the
+Finder's `Desktop` file under other applications' creators.
+
+**Claim (measured, System 6.0.8; one case on System 3.0).** The System 6
+Finder hands a double-clicked document to the launched application only when
+the document's creator is the APPLICATION FILE's own creator. Which
+application launches is the `Desktop` file's business; whether it gets the
+document is not.
+
+**Evidence.** `tools/vmac/deskclaim.py`, one boot each, a `SIT!/SIT!`
+archive double-clicked, graded on which dialog the application opened:
+
+| `Desktop` file | application file's creator | result |
+|---|---|---|
+| stock | `MExt` | the Finder refuses: *"could not be opened/printed (the application is busy or missing)"* |
+| + `APPL` entry `SIT!` → MacExtract | `MExt` | MacExtract launches, **no document** — its Open dialog |
+| + that entry and a bundle filed under `SIT!` | `MExt` | the same |
+| stock, archive's creator `MExt` | `MExt` | handed over — the first System 6 double-click of a MacExtract document ever measured |
+| + the `SIT!` entry | `SIT!` | handed over |
+| **stock** | **`SIT!`** | **handed over**, and on System 3.0 the same |
+
+The Finder registered the retagged application under `SIT!` by itself
+(`APPL` after the run). Its `BNDL` still names `MExt`, so it draws the
+generic application icon; nothing in `mac/` reads its own creator.
+
+**Consequence.** The companion does not need to write the `Desktop` file:
+what hands an archive to MacExtract is an application FILE whose creator is
+the archive's. One file has one creator, so covering `SIT!`, `CPCT` and the
+rest takes one file per creator — whole copies of MacExtract (~230 KB each),
+or a small stub per creator that relaunches MacExtract with the document,
+which is untested. Still open: which application wins when StuffIt is on the
+same volume. The `APPL` list holds newest first and allows duplicates (`MACS`
+three times), so "the last one the Finder saw" is a hypothesis, not a
+finding. System 7 keeps the list in `Desktop DB`, and nothing here wrote one.
+
+**Transferable.** The first version of the probe graded on the volume and
+passed the run that handed over nothing: the harness's own Return opened the
+archive from the Open dialog. A launch and a handover end in the same files.
+
+## 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
+
+The design that follows from 2026-10-10 (*the double-click that goes by the
+application's creator*): one small application per claimed creator, which
+hands the document on to MacExtract. This entry is where those files can
+sit. **Decided: visible, in one folder next to MacExtract** — the
+maintainer does not want invisible files, so the invisible rows below are
+measured and not used.
+
+**Claim (measured, System 6.0.8).** A stand-in stub — a whole copy of
+MacExtract with its file creator set to `SIT!` — is handed a double-clicked
+`SIT!` archive from a folder the user has never opened, and after a desktop
+rebuild, on two conditions: the companion writes its `APPL` entry into the
+`Desktop` file, and the stub's `BNDL` and signature resource are filed under
+the creator it claims. A stub on the startup disk serves archives on a
+floppy.
+
+**Evidence.** `tools/vmac/deskclaim.py`, one boot each, graded on the
+dialog; *refused* is the Finder's alert, identified positively:
+
+| stub | `Desktop` file | result |
+|---|---|---|
+| startup disk's root; archive on a second floppy | stock, startup window opened first | handed, entries on the floppy |
+| `MacExtract Helpers:`, never opened | stock | refused |
+| the same | + `APPL` entry `SIT!`, dirID of the folder | handed |
+| the same, creator retagged only | deleted, rebuilt at boot | refused |
+| the same, with `--stub-bundle` | deleted, rebuilt at boot | handed |
+| root, invisible | stock, window opened | refused |
+| root, invisible | + `APPL` entry | handed |
+| root, invisible, with `--stub-bundle` | deleted, rebuilt at boot | handed |
+
+**Consequence.** The companion writes, per creator, a visible stub in a
+folder beside MacExtract whose bundle is filed under that creator, and
+| `MacExtract Helpers:`, `--stub-bundle --doc-icon 'SIT!'` | deleted, rebuilt at boot | handed, and **the archive drawn with the stub's icon** |
+writes its `APPL` entry; a rebuild then finds the stubs by their bundles,
+so nothing has to be re-run. **A stub can also give the archives their
+icon**: with an `FREF` for document type `SIT!` and an `ICN#` of its own
+(MacExtract's, inverted, for the test) the `SIT!` archive is drawn with it,
+where every earlier run drew a blank document — the `'****'` `FREF` the
+stubs inherit from MacExtract gives no icon. Re-run with a drawn icon,
+the archive is drawn unselected with it, which settles that the inverted
+frame was not a selection. **The icon the stubs carry** is
+`tools/icon/make_archive_icon.py`'s: Apple's blank document — the System
+3.0/6.0.8 Finder's `ICN#` 132 and System 7.0.1's `ics#` -4000, reproduced
+pixel for pixel and checked against both — carrying MacExtract's own
+16x16 at 32x32 and a reduced carton, block and folded document at 16x16,
+with 16- and 256-colour members taking `make_icon.py`'s colours by name.
+Chosen by the maintainer over a parcel tied with twine, a document whose
+lower half was the carton, and ruled and solid-carton variants. Drawn by
+the System 6.0.8 Finder on a `SIT!` archive in that run (`--doc-icn`,
+`--doc-ics`); the colour members have been seen in no Finder, because no
+emulator here shows colour short of the Mac OS 9 harness. Icons are per
+TYPE, so a stub claims an icon for each type its creator writes.
+Still open: which application wins when StuffIt is on the same disk, and how a stub hands the document on — the
+stand-in was a whole application, and no stub exists yet.
+
+**Transferable.** Two runs were invalid and one of them passed: moving the
+application into a folder moved the archive's icon, the double-click landed
+on empty space, and the control — expecting a refusal — read "no
+MacExtract dialog" as one. A control that expects nothing to happen passes
+when nothing is clicked; the grade now has to SEE the alert.
+
+
+## 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
+
+**Six cells of README.md's comparison table rested on documentation or on
+nothing.** Four of them were measured on 2026-10-11: the three StuffIt
+columns of the StuffIt 2.0 row, and the 5.5.1 and 7.0.3 encrypted Compact
+Pro cells. The two others got the best reading available: the disk-image
+cell by reading 4.0.2's own files, and the mail row by running all three
+StuffIts. Results: FORMATS.md, *Run over the hard cases*.
+
+**A box is graded by its own Expander, not by its Deluxe application.** It
+is what the box hands an archive to, through the same Engine and the same
+translators. It also installs from Linux (`sitzip.py`), whereas 5.5's
+Deluxe will not start on an assembled installation. The cost is said where
+the result is: an application with modules of its own could differ for the
+2.0 Optimizers, and that is not measured.
+
+**The mail row went back to "several mail messages", with the cells
+qualified.** 6f140b9 had narrowed it to `message/partial`, so that 4.0.2's
+documented multipart BinHex would not read as 🔴. The run made a narrower
+row unnecessary. Two StuffIts read the BinHex posting and the newest does
+not, and none joins a MIME set, so "BinHex postings only, not MIME" says
+what each one does.
+
+**Transferable.** Running all three showed what neither the documentation
+nor the line of versions predicted. Each StuffIt fails differently, and
+none of them is the same set as an older one plus additions. 4.0.2
+refuses what 5.5.1 decrypts. 5.5.1 hands back damaged files where 4.0.2
+and 7.0.3 refuse. 7.0.3, the newest, is the only one that loses a
+multipart BinHex posting. A column filled in from "a later version does
+everything the earlier one did" would have been wrong in both rows.
+
+## 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
+
+**README.md's zip row ticked all three StuffIts and qualified only
+MacExtract for Reduce**, which OPEN_ITEMS.md puts out of scope. Nobody had
+asked whether any StuffIt read Reduce. Two of the three boxes were run on
+two wild Reduce archives; the results are in FORMATS.md, *Zip methods in
+the three boxes*. 5.5.1 decodes Reduce byte for byte. 7.0.3 writes wrong
+bytes and then crashes.
+
+**The README gained a Reduce row rather than three qualified cells.** One
+row with a 🔴 in MacExtract's column is easier to read than "except
+Reduce" in two columns, and it keeps the zip row about zip.
+
+**Transferable.** Both binaries carry a string naming the method:
+7.0.3 a `reduce_decompressor` class, 5.5.1 an error message listing what
+it supports. That message omits Implode, which 5.5.1 then decodes.
+A capability string in a binary is a claim, like a Read Me, and it
+failed in both directions here. This is why 4.0.2's cell says "not
+tested" and not ✅, even though its add-on's translator carries the
+same sentence as 5.5.1.
+
+## 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
+
+**Claim.** Zip methods 2 to 5, Reduce, decode (FORMATS.md, *Reduce*).
+They had been out by the brief since 2026-10-08 (*the method a Macintosh
+wrote once*), on a census that found no Macintosh writer. **The census
+stands; the maintainer moved the line**: a Mac user with a DOS CD meets
+these files, and 5.5.1's Expander reads them (*the string that said
+reduced*). Nothing measured changed, so nothing was re-measured.
+
+**The reading was graded before it was transcribed.** APPNOTE.TXT 5.2
+states the whole method, and deark's `foreign/ozunreduce.h` is the one
+implementation in `reference/`: XADMaster names the methods and has no
+decoder, and Info-ZIP UnZip 6.00 refuses them. A Python transcription
+went over every Reduce entry in reach first — the Shrink sweep's 346
+files, all 105 + 92 + 13 distinct method 2–4 zips the index has, and 150
+method-5 zips drawn with `--seed 20261011` — **2,371 of 2,379 entries
+reproduce the CRC-32 the archive stored**, and deark fails all 8 others:
+three PHP test stubs, two entries in archives cut before their
+directory, and three CRC-bad in deark too, damage a HYPOTHESIS. The C
+decoder then agreed with the transcription file by file, before and
+after the rewrite below.
+
+**The same day, the maintainer asked what I would have done differently,
+and then for all of it. Four things, each measured:**
+
+- **Where it lives.** The first commit put Reduce in `ovl_codecs` beside
+  Shrink, because `ovl_exo` was full and Shrink had gone there. That
+  image is kept by EVERY format, so every format paid for two methods
+  only zip has: 2,275 B, measured per function at the overlay's flags.
+  Both now live in a sixteenth image, `ovl_zipold`, which patches itself
+  into the host vector exactly as the codecs do and which the release
+  keeps for zip alone. Against the tree before Reduce, every format that
+  is not zip now has **1,128 B more** heap on the machine, tar 1,052,
+  and zip 1,622 less: it carries its own methods. The resident cost is
+  80 B of code and 16 of A5, shrunk from a first 108 and 36 by sharing
+  one patch routine and keeping the keep a test after the switch.
+- **Speed.** It was never measured. The tick probe on an authentic Mac
+  Plus read **75.6 s** for 549 KB of output; `m68kprof` put 43 % of the
+  instructions in the shared bit reader's out-of-line calls, two or
+  three a byte. Bits in two locals and B(N) from a table: **35.6 s**,
+  −53 %.
+- **A copy longer than its distance.** The first version refused it, as
+  `ozur` does, and called that a rule the CRCs needed. They did not:
+  no good entry has one, and the 3 that do fail with it allowed or
+  refused. **APPNOTE.TXT 5.2.5 permits it** — "copy Len+3 bytes from
+  this position" is an ordinary LZ77 copy, which repeats a run when it
+  overlaps — so this follows the specification, and deark is a reader
+  that refuses a stream the format allows. No fixture can tell the two
+  apart; the unit test checks the repeated run.
+- **An index past a follower set's count.** `ozur` gives 0, from its
+  zeroed table. 5.2.4 defines S(j)[I] only for I < N(j), so this
+  refuses it. No wild entry has one.
+
+**Two things the first entry said were wrong, and are withdrawn here.**
+It said the zero window came "from a calloc rather than from a comment".
+**5.2.5 states it**: "assume that all the data before the start of the
+output stream is filled with zeros". The 1,480 entries that reach into
+it confirm the specification rather than discover something it left
+out. And while weighing where the decoder should live, I read
+`synth-dd-m5.dd`'s 512Ke refusal, "short by at least 854 B", as a
+fixture Shrink and Reduce had cost. That figure is only the first
+refused allocation; **the entry needs 401,408 B**, 180 KB more than it
+is granted. No tally moves either way. **"Short by at least" is a
+floor; binary-search the budget before calling a fixture close.**
+
+**An encoder, because nothing here writes Reduce.** `tools/synth_reduce.py`
+is written from 5.2 alone and graded by deark, which reads its four
+entries byte-exact. It is the fifth fixture, and the named fuzz seed that
+took `unc_reduce_decode` to 100 % of lines in 3,000 cases. Its first draft
+never reached before the start of the output: its match search stopped
+at the first copy capped by its own distance. Counting each rule over
+its own output, before trusting it as a seed, is what caught it.
+
+**The table is a fixed 8,448 B, and that constant was questioned**
+(CLAUDE.md's smell). The follower sets use a median of 359 of their
+8,192 value slots, so sizing them from the stream would save up to
+~8 KB. It is not done: the whole Reduce peak, 21.8 KB, is under deflate's
+and Shrink's in the same reader, so no budget a zip is extracted under
+is set by Reduce.
+
+**The CLI loses a mechanism, not just a message.** `method_out_of_scope`
+and its closing paragraph naming deark existed for Reduce alone. With no
+method out by decision, they are deleted rather than left empty.
+
+## 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
+
+**Claim.** Reduce is 3.9 % and 2.1 % faster on two wild archives and
+Shrink 13.3 % and 13.2 % on two fixtures, on the tick probe, and the
+image both live in is 8 B SMALLER (FORMATS.md, *Reduce*, *Speed*;
+*Shrink*). Resident code, A5, heap and every tier tally are unmoved;
+Reduce's frame grew 4 B on a chain that is not the deepest.
+
+**Each change was measured alone, size first and ticks second, and two
+of the six were not taken.** Fewer live values (one countdown for a
+position and a size) was smaller and 4 ticks slower, twice; a mask table
+was 37 B larger and no faster, because a register-count shift of at most
+5 costs less than the indexed load that replaces it. Neither guess would
+have survived the instrument, and both were plausible from the
+listing.
+
+**The space came from the cold path, and that is where to look first.**
+The follower-set header is read once per entry and carried two inlined
+copies of the hot loop's window top-up: 92 B for no time anyone could
+measure. That paid for the copy loop's cursors (+4 B, −62 ticks) and for
+Shrink's inline bit fast path (+82 B, −474 ticks) in the same image.
+**Before calling a speed change a trade, look for the bytes in the
+same image's cold code.**
+
+**For Shrink the narrower change was faster than the fuller one.** A
+fully local bit reader, which is what made Reduce fast this morning,
+was −268 ticks for +112 B in Shrink. Its table-walking decoder had no
+registers to spare, so the reader's state went to the stack. Inlining
+only the fast path through the existing `UncBitIn`, and keeping the
+out-of-line call for the window's edge, was −474 for +82. **The same fix
+does not always work twice** (CLAUDE.md): the second decoder had a
+different shortage.
+
+**What is left is register pressure, and it is not free.** At `-Os` GCC
+keeps Reduce's copy destination in a data register and moves it to an
+address register every byte; a rewrite with fewer live values bought 63
+ticks for 34 B. Shrink's double walk of each string is an estimate of a
+few percent, in the code the free-slot rule runs through. Both are in
+FORMATS.md with their figures, not done.
+
+## 2026-10-11 (the digest our own oracle could not compute) — `message/partial`'s two wrong anchors: `Content-MD5` catches both once mpack computes MD5, and the check was declined for its size
+
+**The item named the check, and the check would have refused every good
+set.** OPEN_ITEMS.md said `Content-MD5` "disagrees here" on both wrong
+anchors. It disagreed on the RIGHT one as well: `9wUjvhRTvxJ5PathZdghuA==`
+is not the MD5 of `MacROT13.cpt` (`dO2NH00wvu2hojPgtDVU+w==`). mpack's
+`md5.h` declares `UINT4` as `unsigned long`, which was 32 bits on every
+machine mpack was written for, the 68000 included, and is 64 on this one,
+so `build/mpack/mpack` wrote `eZncdejaZIxnJ+E3xbd4Aw==` for `abc` where
+RFC 1321 gives `kAFQmDzST7DWlj99KOF/cg==`. munpack, built the same way,
+agreed, so the oracle pair never warned on its own messages and could
+not fail on a digest. The 68000 port does compute MD5:
+`tools/vmac/macmime.py` has asserted since 2026-08-29 that the
+Macintosh-written specimen's digest equals Python's.
+`tools/build_mpack.sh` now edits that one line of its copy and rebuilds
+any mpack whose `abc` is wrong.
+
+**The mechanism was the format's, not the joiner's.** With both programs
+fixed, munpack on the concatenated anchor writes the byte-identical
+929 B this engine does, and warns. Part 1's body runs to the end of its
+file; the OPEN_ITEMS hypothesis holds, and there is no joiner defect.
+
+**The check was built, priced and declined.** Graded on base64 parts
+(mpack hashes quoted-printable and unencoded bodies in their CRLF form),
+it failed both anchors per entry, passed the good set, and passed
+`run_mime.py` and the unit tests on x86 and under `qemu-m68k`. An image
+cannot call another, so it needed an MD5 of its own in `ovl_text`:
+**+1,446 B**, resident +0 shipped, +784 in the control, which cost that
+lane `derived-DD_Expand.sea` at 512 KB. Against that: a header that
+nothing here has seen outside mpack's own output, and a corpus with no
+MIME file this project did not write. The maintainer's call: too many
+bytes for something that may never be used. It is not kept as a branch:
+the numbers are FORMATS.md's (*`message/partial`*), the decision
+OPEN_ITEMS.md's (*Out by the brief*).
+
+**Transferable.** An oracle built from the same source as its partner
+cannot grade what both get wrong the same way — two programs agreeing
+is one measurement when they share a bug. And the population a check
+serves is a number to take before the check is built, not after: the
+size was measured to the byte while the use was never measured at all.
+
+## 2026-10-11 (the constant was a square) — asking 2.0.1 for every combination instead of searching for a stranger's
+
+OPEN_ITEMS.md held one StuffIt 2.0 item: `Photoshop 1`, `JPEG Lossy` and
+the five ciphers *"graded only on archives this project made"*, to be
+closed by *"a file from somebody who has one"*. That framing had been
+argued against on 2026-10-02 (*the Optimizer that was in somebody else's
+corpus* rests on it): every specimen was StuffIt Deluxe 2.0.1's own, so
+a stranger's archive could add only a COMBINATION nobody here asked for,
+and the writer was on the emulator image. So the combinations were asked
+for: 22 boots, 121 archives, each set unstuffed by 2.0.1 in its own boot
+(`tools/vmac/sitcombo.py`; FORMATS.md, *Every other document 2.0.1 will
+optimize*).
+
+**What came back.** Everything but `JPEG Lossy` was already right:
+`Photoshop 1` on Photoshop's own documents under every method, a second
+painting under `MacPaint 1`, every Optimizer under each built-in cipher,
+the three plug-ins over optimized entries, the ciphers' edges, four
+Optimizers at once over a folder, and a dozen stale ids 2.0.1 leaves in
+104..109 without the bit that would make them mean something.
+`JPEG Lossy` was right on 2 of 33 new documents — the two its module
+declined — and **wrote garbage with exit 0 on 5**.
+
+**The constant was a square, twice.** `src/sit_ccube.c` decoded 7
+restart segments per MCU row because both subjects were 256 pixels wide,
+and FORMATS.md wrote *"a tile row is 7 segments = 21 MCUs"* as the
+format. CLAUDE.md names this smell — a constant where the input should
+vary — and it could not be seen from inside, because the input did not
+vary. The rule, `(w + 39) / 40` segments, was in C3a+0x4366 all along
+and took ten minutes to read once a second width existed. The header's
+width and height were swapped in `decode.py` for the same reason, and
+the rewrite inherited it until a 400x300 document failed.
+
+**Grey content hid the colour path entirely.** Every document Photoshop
+drew here was pencil on white, whose chroma is 128 everywhere, so
+replicating chroma and interpolating it give the same bytes, and the
+old `>> 14` conversion and CCOD+0xd98's 16-bit one agree. Twenty-one
+coloured documents (`cdocs/`, built in Photoshop's own layout and
+optimized by 2.0.1) were 56 % wrong at 256x256. Two models were tried
+against them and failed before the third, interpolation at the
+module's full precision with the image's own last column repeated,
+came out exact on every width from 1 to 512. CCOD+0x5b9a's byte-domain
+upsampler, the first thing found in the disassembly, is NOT the one
+the decoder runs: it is 31 bytes away on a 7x5 document.
+
+**What the search would have found.** All 196,139 classic StuffIt
+archives Discmaster lists had been searched for these modules and none
+carries either; a search has no result to find when the thing it wants
+does not exist. The loop over the writer found five silent failures in
+an afternoon. **Ask what the original software will do before asking
+who else has used it** — the provenance that matters is the writer's,
+and a reachable writer is a loop, not a search.
+
+**Two smaller things, same root.** `cli/main.c` told the owner of a
+forkless DES archive that the engine did not implement DES, a line
+written the day it started to; every encryptor it can name is
+implemented, so it fired only on a missing `'MKey'`. And an Optimizer's
+refusal printed *"method 64"* — the method byte with the Optimizer bit
+in it. Checking the first of those found a third: `run_crypt.py`'s
+*"unimplemented encryptor"* case bent id 3, which has been `NewDEx`
+and implemented since 2026-10-02, and passed anyway because its copy
+had no resource fork — every id is refused alike without an `'MKey'`.
+With the fork and id 5 it fails if the id check goes (measured: id 3
+there gives *"truncated"* against the expected *"encrypted"*).
+
+**Costs, measured.** The StuffIt overlay 27,938 -> 28,614 B (+676),
+resident `CODE` and A5 unchanged; peak RAM unchanged at 256x256 and
+51.9 KB at 400x300 (FORMATS.md, the `JPEG Lossy` table).
+
+**Transferable.**
+
+- **A specimen set is a sample of a format's PARAMETERS, not only of its
+  bytes.** Two specimens agreeing on every dimension measure nothing
+  about those dimensions; before calling a decoder exact, list what the
+  writer lets a user vary — size, mode, colour, quality — and check each
+  has more than one value.
+- **Content can hide a whole stage.** A stage whose input is constant
+  over the specimen (chroma 128) cannot fail, which is *a test that
+  passes may not be testing anything* one level down: the test did not
+  pass vacuously, the pipeline did.
+
+## 2026-10-11 (the zip that was a set of one) — every plain `.zip` opened on a Macintosh failed as "more parts", for two months, and the first real machine found it in one session
+
+**Claim.** From 2026-08-14 to this fix, the application refused every
+ordinary zip whose name ended in `.zip` with *"This archive has more
+parts. Find them and try again."* Measured on the maintainer's LC475
+under System 7.6.1 (`08 Reduce.zip`, `09 Shrink.zip`, from a clean
+launch, repeatably), then reduced: the same bytes under `run.py --as
+archive.zip` give `ret = -11` (`UNC_ERR_SEGMENTED`) on System 7.0.1 and
+PASS under the harness's old name. With the fix both pass, and
+`interactive.py --named zip` still joins a real spanned set.
+
+**Mechanism.** The shell decides by NAME first that a file is part of a
+family (`ZipFamPartOf`), so that part 1 of a split `.sit` is not read as
+a truncated archive (2026-08-10). `.zip` is the name of a spanned set's
+LAST part, so every `.zip` went to `SegDescribeLast`, which asks the
+file's end record for a part count — and an ordinary zip's says
+"disk 0", which `unc_zipseg_describe` rightly calls not-a-set. The
+failure was then reported as a missing part. The Linux CLI never had
+it: it decides by the sniffed format and uses the name only to find
+siblings. A `.zip` is now a set member only if its own record says so;
+a `.zNN` is still placed by name, because nothing in it can say.
+
+**Why nothing caught it.** Every Macintosh tier opens the fixture as
+`archive.sit` (`run.py`'s `ARCHIVE_NAME`; `compat9.py` names zips `z1`,
+`z2`), so no emulated run had ever opened a file called `*.zip`, and the
+path a user's zip takes had never executed. `run.py --as NAME` now
+chooses the name, and the autotest opens the first root file called
+`archive.*`. **What the tiers still cannot see:** every other extension
+the shell dispatches on by name (`.NNN`, `.zNN`, the gzip/.Z fallback
+name) is reached only when a run asks for it with `--as`.
+
+**Transferable.** A harness that renames its input to one constant has
+removed a dimension of the input space, and the code that branches on
+that dimension is untested however many fixtures pass. The fixture
+count said 964; the number of distinct names the Macintosh code had
+seen was one.
+
+## 2026-10-11 (one archive per launch) — the eager overlay lifetime cannot open a second format, so the application quits after an archive instead of offering one
+
+**Claim.** On the LC475, a `.sit` opened after a `.cpt` in the same
+launch failed. That is the eager lifetime working as written:
+`ovl_release_if_unwanted` gives back every image the first archive's
+format cannot want and never reloads (`mac/ovl_load_eager.c`), yet the
+main loop went back to Standard File as if any archive could follow.
+
+**Decision, the maintainer's.** Quit, rather than reload: a reload is a
+disk access after the archive is chosen, which on a one-drive machine
+is the floppy swap the eager lifetime exists to avoid. `ovl_spent()`
+reports that a release happened, and the interactive loop stops after
+that archive. An archive that never reached a release — not an
+archive, could not be opened, destination cancelled — still returns to
+Standard File. The lazy and resident builds answer 0 and keep looping.
+**Cost:** of several archives dropped on the icon at once, the first is
+extracted and the rest are not; the Finder has to hand them over again.
+
+## 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
+
+**Claim.** Extracting `derived-Library_ISBN_Barcoder.sit` twice into one
+folder on the LC475 put 34 `name~1` files through the first run's tree
+(its report lists them). That was by decision: since 2026-09-03 a
+folder this run did not make was descended into, "rather than sprout a
+`~1` beside it".
+
+**Decision, the maintainer's, reversing that one.** At the TOP of the
+extraction, a folder already on the disk is numbered `~1` like a file,
+and nothing inside it needs renaming; below the top, nothing can be
+there that this run did not make, so the old rule is untouched. The
+top-level folders a run made are kept in a table of their own
+(`gTopMade`, 16 ids) because the general one (`gDirMemo`) can fill, and
+a top folder it forgot would be numbered on its second visit — one
+archive folder split in two. When the small table is full the top
+merges as before. Measured with the probe build `-D UNC_AT_TWICE`
+(the same archive twice in one launch) on System 7.0.1:
+`derived-Jobs_Quote.sit` gives `Jobs Quote` and `Jobs Quote~1`, four
+files each under their own names.
+
+## 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
+
+**Claim.** Selected on the LC 475, the application's colour icon darkened
+only its white; the cyan box and the orange block kept their shade. The
+cause is documented, not inferred: *"only the 34 colors shown in Figure
+8-23 get darkened when a color icon is selected"* (Macintosh Human
+Interface Guidelines, ch. 8, *Selection mechanism for color icons*). Of
+the nine indices `icl8` used, the five carrying the box and the block
+were outside the 34 — 240 of the 1,024 pixels in the box's mid-tone
+alone. The figure prints no values; they are from Kreative Korp's MoCCP
+(`gpl/AppleIconColors.gpl`), whose `MacOS8Bit.gpl` also confirmed the
+generator's palette model on all 256 entries — the "reconstructed, not
+transcribed" caveat it carried since 2026-08-24 is withdrawn as a caveat,
+because it is now checked.
+
+**Change.** `make_icon.py` takes every 8-bit tone from the 34 through
+`icon8()`, which asserts membership: cyan 153/255/255, 0/153/255 and
+102/102/204, orange 255/204/153, 255/102/51 and 221/0/0. Two old cyan
+tones map to one Apple blue, so the dark tone moved to Apple's
+periwinkle to keep three.
+
+**Seen selected, under emulation** — Mini vMac as a Macintosh II under
+System 7.5.5 (`tools/vmac/colouricon.py`), v0.39.0's application against
+this one, Apple's SimpleText beside each. At 256 colours the old icon
+darkens its white sheet and nothing else, which is the LC 475's report
+reproduced; the new one darkens all over, as SimpleText does
+(`docs/screens/0c-icon-selected-256.png`). **At 16 colours there was
+nothing to fix**: every selected icon, SimpleText's included, is drawn in
+flat grey, old and new alike (`0d-icon-selected-16.png`). The "16 colours"
+in the open item was this session's reading of the maintainer's note,
+which listed the depths the icon looks right at; it was never measured.
+Not seen on silicon, nor under 7.6.1.
+
+**The generator had stopped being the source.** `macextract_icons.r`
+says "edit the script, not the hex", and has since gained a `'****'`
+FREF, its BNDL entry and both `'vers'` by hand. Regenerated whole, the
+file lost all of them — 102 lines, caught in the diff. The new members
+were spliced in, and the script now says so at its top.
+
+**Transferable.** "Generated, do not edit" is a claim about a file like
+any other, and it decays the first time somebody edits it anyway. Diff a
+regeneration before trusting it.

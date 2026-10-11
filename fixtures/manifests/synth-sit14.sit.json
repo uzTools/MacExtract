@@ -1,0 +1,74 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "96d0501ce5ffd59acbf33998a987952b91ca2c00349133ed9f59045d51accf01",
+   "data_size": 112,
+   "finder_flags": 0,
+   "name": "ascending-code-lengths",
+   "oracle_methods": [
+    "Installer"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a4892710e7a946cb89d5fd2531314ba1b5a58e322bcd85c8af83c1bd2c250894",
+   "data_size": 17799,
+   "finder_flags": 0,
+   "name": "extra-bits-and-the-longest-match",
+   "oracle_methods": [
+    "Installer"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "2959a730cf4e6d70b0a71bdeefc137f249c2693b9714f4bcf9c2a8d912a3dbb7",
+   "data_size": 300,
+   "finder_flags": 0,
+   "name": "literals-two-blocks",
+   "oracle_methods": [
+    "Installer"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "cc6fde4cf2d70fb953f01243f4596144984e6c439b8ebcb99c3199f0b783436f",
+   "data_size": 14,
+   "finder_flags": 0,
+   "name": "matches-shortest",
+   "oracle_methods": [
+    "Installer"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "5ff7cde38ece72679dd705b78af44edfb1a9e714e609f1ffaf9a2e5d676c1f88",
+   "data_size": 276,
+   "finder_flags": 0,
+   "name": "nested-tree",
+   "oracle_methods": [
+    "Installer"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-sit14.sit",
+ "format": "StuffIt 5",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
+ "sha256": "6451046c6a7cdf74e3be55ae604b592f2b86719b0ff8d32cb8c32989d88650e4",
+ "size": 2149
+}

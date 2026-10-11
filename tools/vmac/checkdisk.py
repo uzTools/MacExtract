@@ -32,7 +32,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import os9                                                   # noqa: E402
-from vmac_check import mask_reserved, aggregate_dir           # noqa: E402
+from vmac_check import (mask_reserved, aggregate_dir,         # noqa: E402
+                        mac_component, names_are_utf8)
 
 CLI = os.path.join(REPO, "build", "rel", "macextract")
 
@@ -41,8 +42,18 @@ def hfs(env, *argv):
     return subprocess.run(argv, capture_output=True, env=env)
 
 
-def walk(env, mac_dir=(), depth=0):
+class TooDeep(Exception):
+    """The volume walk went deeper than the engine can write."""
+
+
+def walk(env, mac_dir=(), depth=0, dirs=False):
     """Every file on the mounted volume, as tuples of MacRoman components.
+
+    With `dirs`, every FOLDER too. Off by default, because the comparison
+    this file makes is against a Linux extraction's files; a caller that
+    needs to assert a folder was NOT created has to ask for them, and one
+    that forgets gets a set no folder can ever be in — which is an
+    assertion that cannot fail (CLAUDE.md).
 
     Components, not a joined string: '/' is a legal character in an HFS
     filename (`mw/68k•unshar π` in derived-unshar_1.11_folder.sit) and ':'
@@ -50,11 +61,31 @@ def walk(env, mac_dir=(), depth=0):
     name and a path. Found on 2026-08-08, when that fixture joined the
     sample and two of its entries could not be copied off the volume.
     """
-    if depth > 8:
-        return []
+    # There is no depth limit in the engine and none on a Macintosh, which
+    # creates 250 levels by dirID without an error (FORMATS.md, *What the
+    # DESTINATION actually allows*). What bounds a path is the STRING:
+    # UNC_NAME_MAX is 255 and a level costs at least its separator, so
+    # nothing this application writes can be past 256 components.
+    #
+    # The guard is here to stop a CYCLE, not to bound a tree, so exceeding
+    # it RAISES rather than returning what it has. It was `depth > 8:
+    # return []` until 2026-10-07, which reported a correct 24-deep volume
+    # as 32 files MISSING ON THE MAC — a harness limit that reads exactly
+    # like an application defect, and silent because nothing in the sample
+    # nests past 6. It was then 26 for a few hours, derived from a depth
+    # limit that stopped existing the same day (BLOCKERS.md).
+    if depth > 260:
+        raise TooDeep("the volume nests past %d components, which no path of "
+                      "255 bytes can be — a loop, or a harness bug" % depth)
     out = []
-    # -a because hfsutils HIDES names beginning with a dot without it, and
-    # archives contain .DS_Store; the path goes out as MacRoman bytes because
+    # -a because hfsutils hides a file whose Finder INVISIBLE bit is set —
+    # NOT, as this comment said until 2026-09-22, names beginning with a dot.
+    # Measured as a 2x2 (`walkprobe.py`): a dotted name with the bit clear is
+    # listed without -a and one with the bit set is hidden, dot or no dot.
+    # `.DS_Store` needed the flag because a Macintosh writes it invisible.
+    # The wrong reason mattered: four later walks whose subjects had no
+    # dotfiles skipped the flag and looked safe (OPEN_ITEMS.md).
+    # The path goes out as MacRoman bytes because
     # that is what the names on the volume are — passing a Python str makes
     # subprocess encode UTF-8 and any 8-bit name (`spinning brain ƒ`) becomes
     # a directory that does not exist.
@@ -75,7 +106,9 @@ def walk(env, mac_dir=(), depth=0):
         name = entry[:-1] if isdir or entry.endswith("*") else entry
         rel = mac_dir + (unicodedata.normalize("NFC", name),)
         if isdir:
-            out += walk(env, rel, depth + 1)
+            if dirs:
+                out.append(rel)
+            out += walk(env, rel, depth + 1, dirs)
         else:
             out.append(rel)
     return out
@@ -86,8 +119,15 @@ def mac_path(comps, folder=False):
     return ":" + ":".join(comps) + (":" if folder else "")
 
 
-def fixture_of(indsk, env):
-    """Which fixture was this run? The In volume holds it as `archive.sit`."""
+def fixture_of(indsk, env, candidates=None):
+    """Which fixture was this run? The In volume holds it as `archive.sit`.
+
+    `candidates` are extra paths to match before `fixtures/` — a GENERATED
+    subject is in no committed directory, so without them a run over one
+    skips, which is what every `tools/synth_*.py` archive did here until
+    2026-10-07. The match is still by CONTENT: naming a file that is not
+    the one on the disk identifies nothing.
+    """
     if hfs(env, "hmount", indsk).returncode != 0:
         return None
     got = hfs(env, "hcopy", "-r", "archive.sit", "/tmp/.checkdisk-archive").returncode
@@ -95,15 +135,17 @@ def fixture_of(indsk, env):
     if got != 0:
         return None
     want = open("/tmp/.checkdisk-archive", "rb").read()
-    for f in os.listdir(os.path.join(REPO, "fixtures")):
-        p = os.path.join(REPO, "fixtures", f)
+    pool = list(candidates or [])
+    fixdir = os.path.join(REPO, "fixtures")
+    pool += [os.path.join(fixdir, f) for f in os.listdir(fixdir)]
+    for p in pool:
         if os.path.isfile(p) and os.path.getsize(p) == len(want):
             if open(p, "rb").read() == want:
                 return p
     return None
 
 
-def check(rundir):
+def check(rundir, candidates=None):
     workhome = os.path.join(rundir, ".hfshome")
     os.makedirs(workhome, exist_ok=True)
     env = dict(os.environ, HOME=workhome)
@@ -112,14 +154,17 @@ def check(rundir):
     if not (os.path.exists(outdsk) and os.path.exists(indsk)):
         return None, f"{rundir}: no out.dsk/in.dsk"
 
-    fixture = fixture_of(indsk, env)
+    fixture = fixture_of(indsk, env, candidates)
     if fixture is None:
         return None, f"{rundir}: cannot identify the fixture from in.dsk"
     name = os.path.basename(fixture)
 
     if hfs(env, "hmount", outdsk).returncode != 0:
         return False, f"{name}: the Out volume will not mount"
-    names = walk(env)
+    try:
+        names = walk(env)
+    except TooDeep as e:
+        return False, f"{name}: {e}"
 
     ref = os.path.join(rundir, "linux-out")
     subprocess.run(["rm", "-rf", ref], check=False)
@@ -137,10 +182,14 @@ def check(rundir):
     want_names = []
     enf, _sdc, _sdl, _src, _srl = aggregate_dir(ref, want_names)
 
-    # Mac path tuple -> the components the CLI actually wrote on Linux. Two
-    # differences make that mapping necessary: the CLI writes a Mac name's
-    # '/' as ':', and the Mac shell caps each component at 31 characters
-    # (ComponentToStr63).
+    # Mac path tuple -> the components the CLI actually wrote on Linux.
+    # Three differences make that mapping necessary, and all three live in
+    # vmac_check.mac_component(): the CLI writes a Mac name's '/' as ':',
+    # the Mac shell caps each component at 31 characters with its extension
+    # kept (ComponentToStr63), and a StuffIt 5 name is UTF-8 on this side
+    # and MacRoman on that one (Utf8ToMacRoman) — so `Cool Tools ƒ` is one
+    # byte there and two here, and a Japanese name is a row of '_'.
+    utf8 = names_are_utf8(fixture, CLI)
     expected = {}
     # The two hosts save an archive COMMENT under different names — the
     # CLI derives one from the archive's filename, the Mac shell writes
@@ -158,11 +207,26 @@ def check(rundir):
             if f.startswith("._"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
-            comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
-            if comps == [comment_file]:
+            # The VALUE is the components as they are on the Linux disk,
+            # unnormalized, because that is what has to be opened below.
+            # Normalizing them was wrong and survived until a fixture with
+            # an NFD name arrived: this engine writes the archive's own
+            # bytes, and `ユーザーライセンスの購入.rtf` is DECOMPOSED in
+            # every StuffIt 5 archive that has one, where the oracle
+            # manifests hold NFC (run_diff.py normalizes both sides). An
+            # NFC key opened a file that does not exist and the fork
+            # compared against zero bytes.
+            comps = rel.split(os.sep)
+            if [unicodedata.normalize("NFC", c) for c in comps] == [comment_file]:
                 expected[("Comments",)] = comps
                 continue
-            expected[tuple(c.replace(":", "/")[:31] for c in comps)] = comps
+            # The KEY is what the Mac wrote, and the fold reads the
+            # archive's own bytes — so it goes before the normalization and
+            # not after it. On an NFD name that is the whole difference:
+            # the shell folds 13 code points to 13 '_' where NFC would
+            # predict 12 (vmac_check.fold_macroman).
+            expected[tuple(unicodedata.normalize("NFC", mac_component(c, utf8))
+                           for c in comps)] = comps
 
     problems = []
     names = set(names)
@@ -206,10 +270,22 @@ def check(rundir):
 
 
 def main():
-    dirs = sys.argv[1:] or ["."]
+    args = sys.argv[1:]
+    # --fixture PATH, repeatable: an archive to match the In volume against
+    # besides the committed ones. For a generated subject.
+    cands, dirs = [], []
+    i = 0
+    while i < len(args):
+        if args[i] == "--fixture" and i + 1 < len(args):
+            cands.append(args[i + 1])
+            i += 2
+        else:
+            dirs.append(args[i])
+            i += 1
+    dirs = dirs or ["."]
     npass = nfail = nskip = 0
     for d in sorted(dirs):
-        ok, detail = check(d.rstrip("/"))
+        ok, detail = check(d.rstrip("/"), cands)
         if ok is None:
             nskip += 1
             print(f"SKIP  {detail}")

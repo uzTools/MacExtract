@@ -14,7 +14,7 @@
   },
   {
    "creator": "EDIT",
-   "data_oracle": "macunpack (macutils 2.0b3, -m32)",
+   "data_oracle": "macunpack (macutils 2.0b3, -m32) + deark (Deark version: 1.7.3-1)",
    "data_sha256": "62bce478f0e001c02ef58f5cb6a0c4b6b6618e021148b4069e202d4f6a4eceaa",
    "data_size": 1400,
    "name": "Snow.info",

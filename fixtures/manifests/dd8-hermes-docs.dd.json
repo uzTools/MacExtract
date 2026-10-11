@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "creator": "MWII",
+   "data_sha256": "695618091441a7cb9e98d99b99ae3452f0b069b2c70f7981dc846cdfce906853",
+   "data_size": 210944,
+   "finder_flags": 0,
+   "name": "dd8-hermes-docs",
+   "oracle_methods": [
+    "Compact Pro"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "MW2D"
+  }
+ ],
+ "fixture": "dd8-hermes-docs.dd",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "c5add1291d15a65af4d25ff1bea926f27a492dd8814d3c63fc6a0ad8bdf4348f",
+ "size": 84141
+}

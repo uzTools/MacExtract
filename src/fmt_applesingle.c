@@ -1,20 +1,31 @@
 /*
  * fmt_applesingle.c — AppleSingle / AppleDouble decoder.
  *
- * Layout transcribed from:
- *   Source: reference/XADMaster/XADAppleSingleParser.m — LGPL, see NOTICE.
+ * Source: reference/notes/rfc1740.txt, appendices A and B — the whole
+ * header, the predefined entry ids, and the epoch entry 8's dates are
+ * counted from.
  *
  *   u32 magic     0x00051600 = AppleSingle, 0x00051607 = AppleDouble
- *                 (byte-swapped variants 0x00160500 / 0x07160500 are
- *                 accepted as little-endian files, as XADMaster does)
- *   u32 version   0x00020000 (or LE-swapped)
- *   16 bytes filler
+ *   u32 version   0x00020000
+ *   16 bytes filler (RFC: "all zeros")
  *   u16 count
  *   count × { u32 id, u32 offset, u32 length }
  *
  * Entry ids used: 1 = data fork, 2 = resource fork, 3 = real name,
- * 8 = dates (always big-endian, epoch 2000-01-01), 9 = Finder info
- * (type 4, creator 4, flags 2, ...).
+ * 8 = dates ("the number of seconds before or after 12:00 a.m.
+ * (midnight), January 1, 2000 Greenwich Mean Time"), 9 = Finder info
+ * (FInfo then FXInfo: type 4, creator 4, flags 2, ...).
+ *
+ * ONE tolerance here is not the RFC's, and cannot be, because the RFC
+ * forbids what it tolerates: "byte ordering in the file fields follows
+ * MC68000 conventions, most significant byte first". The byte-swapped
+ * magics 0x00160500 / 0x07160500 and version 0x00000200 below accept a
+ * header written the other way round, and read the entry table to
+ * match. XADMaster is the sole source of that — LGPL, see NOTICE.
+ * Source: reference/XADMaster/XADAppleSingleParser.m. It stops at the table:
+ * the CONTENTS of entries 8 and 9 are read big-endian whatever the
+ * header said, because the RFC defines them as Macintosh structures
+ * rather than as header fields.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -134,7 +145,7 @@ int unc_appledouble_extract(UncCtx *c)
                 }
             }
             break;
-        case 8: /* dates: always big-endian, epoch 2000 (see ref) */
+        case 8: /* dates: always big-endian, epoch 2000 (file comment) */
             if (elen >= 8 && unc_read_at(c->io, offs, tmp, 8) == UNC_OK) {
                 e.create_date = unc_get_u32be(tmp) + AS_EPOCH_2000_AS_MAC;
                 e.mod_date    = unc_get_u32be(tmp + 4) + AS_EPOCH_2000_AS_MAC;

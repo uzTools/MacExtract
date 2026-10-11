@@ -15,74 +15,37 @@
  *   datalen bytes of data fork, u16 CRC
  *   rsrclen bytes of rsrc fork, u16 CRC
  *
- * Everything transcribed from:
- *   Source: reference/XADMaster/XADBinHexParser.m — LGPL, see NOTICE.
- * (Alphabet string, RLE semantics incl. "count==1 is illegal",
- * banner scanning, ':'-after-whitespace start condition, fork CRCs
- * computed over the fully decoded stream.)
+ * Source: reference/notes/binhex40_lewis.txt — Peter N Lewis, "BinHex
+ * 4.0 Definition", August 1991, which is the only full statement of the
+ * format there is; and reference/notes/rfc1741.txt Appendix A, which
+ * repeats the layout, the banner and the 0x90 run encoding.
+ *
+ * The RFC is the weaker of the two and in one place it is wrong: its
+ * rendering of the alphabet carries a stray space and is 65 characters
+ * long, so a reader holding only the RFC cannot say what the 64
+ * characters are. Lewis's document also has what the RFC has not — the
+ * CRC (polynomial 0x1021, initial register zero, restarted for each of
+ * the three sections and taken over the decoded bytes) and the rule
+ * that a run count of zero means a literal 0x90.
+ *
+ * One behaviour here is in neither document and is this project's: a
+ * run count of ONE is rejected (unc_rle90's strict mode). Lewis defines
+ * counts of zero and of two-and-up and says nothing about one;
+ * macutils' hexbin emits the byte once and says nothing either.
+ * Refusing it costs nothing a real encoder writes, and turns a
+ * malformed stream into a per-entry error instead of into plausible
+ * output.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_binhex_priv.h"
 
-/* The 64-character BinHex alphabet, index = 6-bit value.
- * Source: reference/XADMaster/XADBinHexParser.m (GetBits). */
+/* The 64-character BinHex alphabet, index = 6-bit value. Source:
+ * binhex40_lewis.txt, "This string defines the valid characters, in
+ * order" — not RFC 1741's copy of it, which has 65 characters in it. */
 static const char bh_alphabet[65] =
     "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
-
-static const char bh_banner[40] = "(This file must be converted with BinHex";
-
-/* How far into the file we are willing to look for the banner when
- * sniffing (XADMaster inspects the first 8 KB). */
-#define BH_SNIFF_LIMIT 8192
-
-/* ------------------------------------------------------------------ */
-/* Probe: banner within the head buffer, then EOL, whitespace, ':'.   */
-/* ------------------------------------------------------------------ */
-
-UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    /* The banner can sit deep inside mail headers/digests, so scan up
-     * to BH_SNIFF_LIMIT bytes (XADMaster inspects 8 KB too): first the
-     * sniff head we were given, then onward from the io handle with a
-     * rolling 40-byte window. */
-    uint8_t window[40];
-    uint8_t chunk[256];
-    int32_t have = 0, w = 0, scanned = 0, pos = 0, clen = 0, cpos = 0;
-    int found = 0;
-
-    /* Earlier probes may have moved the position; continue after head. */
-    if (io->seek(io->ctx, (uint32_t)len) < 0) return UNC_FORMAT_UNKNOWN;
-
-    while (!found && scanned < BH_SNIFF_LIMIT) {
-        int ch;
-        int32_t i;
-        if (pos < len) {
-            ch = head[pos++];
-        } else {
-            if (cpos >= clen) {
-                clen = io->read(io->ctx, chunk, (int32_t)sizeof chunk);
-                if (clen <= 0) break;
-                cpos = 0;
-            }
-            ch = chunk[cpos++];
-        }
-        scanned++;
-        window[w] = (uint8_t)ch;
-        if (++w == 40) w = 0;
-        if (have < 40) have++;
-        if (have == 40) {
-            int32_t j = w;
-            for (i = 0; i < 40; i++) {
-                if (window[j] != (uint8_t)bh_banner[i]) break;
-                if (++j == 40) j = 0;
-            }
-            if (i == 40) found = 1;
-        }
-    }
-    return (found)
-           ? UNC_FORMAT_BINHEX : UNC_FORMAT_UNKNOWN;
-}
 
 /* ------------------------------------------------------------------ */
 /* Decoder state                                                      */
@@ -106,9 +69,13 @@ typedef struct BhDec {
                            * 3-byte cycle the next byte comes from. Kept
                            * ALREADY REDUCED rather than counted and taken
                            * mod 3, because that modulo ran once per output
-                           * byte and a 68000 has no divide instruction */
+                           * byte and a 68000 has no divide instruction.
+                           */
+    uint8_t  batch[2];    /* bytes 2 and 3 of a group decoded at once */
+    uint8_t *bp, *bend;   /* what is left of them; equal when none is */
     uint8_t  prev_bits;
     int      eof;         /* saw terminating ':' */
+    int      in_gap;      /* between "--- end of part" and "---" */
     /* RLE layer */
     UncRle90 rle;
     int      err;         /* sticky decoder error */
@@ -122,8 +89,10 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
     for (i = 0; i < 64; i++) d->lut[(uint8_t)bh_alphabet[i]] = (uint8_t)i;
     d->lut[':'] = 0xFE;
     d->phase = 0;
+    d->bp = d->bend = d->batch;
     d->prev_bits = 0;
     d->eof = 0;
+    d->in_gap = 0;
     unc_rle90_init(&d->rle, 1);
     d->llen = d->lpos = 0;
     d->err = UNC_OK;
@@ -131,49 +100,182 @@ static void bh_init(BhDec *d, UncCtx *c, uint8_t *storage, uint32_t cap)
 
 /* Read the next line and decide whether it belongs to the document.
  *
- * Source: reference/macutils/hexbin/hqx.c, which checks each line "for
- * intermediate garbage" and skips the whole line when it finds any —
- * that is what lets it read a file posted in several parts, each part
- * carrying its own mail header, and it is why the BinHex alphabet
- * omitting n, o, s, t, u and the space is load-bearing: ordinary prose
- * fails within a few characters.
+ * A line that cannot be data is skipped WHOLE, which is what lets this
+ * read a file posted in several parts, each part carrying its own mail
+ * header. It is why the BinHex alphabet omitting n, o, s, t, u and the
+ * space is load-bearing: ordinary prose fails within a few characters.
+ *
+ * Source: StuffIt's own `HQXEngine`, Aladdin's StuffIt Engine SDK 5.1.2
+ * (April 1999), resource `Eng ` 10000 — the decoder behind StuffIt
+ * Expander 5.x. Its 6-bit fetcher calls a LINE reader (+0x0d7e), which
+ * fills an 80-byte buffer to the first CR or LF (+0x4acc), hands it to a
+ * predicate (+0x4b0e), and on a refusal REWINDS THE BUFFER AND READS THE
+ * NEXT LINE (+0x4b1c). The predicate (+0x4a30) wants a line of 63 or 64
+ * characters, or one ending at the ':', with every character in a
+ * 71-value set that holds all 64 of the alphabet and rejects SPACE and
+ * TAB. Not published as source: it is four layers inside `sdk512.hqx`,
+ * and tools/derive_hqxgarbage.py --engine opens every layer with this
+ * project's own CLI and checks 29 witnesses at the offsets they are
+ * claimed to sit at.
+ *
+ * macutils' hexbin states the same rule (hqx.c, "Check line for
+ * intermediate garbage") and is where this was first transcribed from.
+ * It is no longer cited: thirteen readers were asked for a second
+ * statement of it and none gave one, the fourteenth did, and nothing
+ * here is hexbin's alone any more (NOTICE; DECISIONS.md 2026-10-07,
+ * *the engine four layers down*).
+ *
+ * THE RULE IS A DEPARTURE FROM THE FORMAT, not an implementation of it,
+ * and the Definition says so in as many words: "any character other than
+ * those 64 and the <return> characters indicates an error and the user
+ * should be notified of such" (binhex40_lewis.txt). deark and DeHQX
+ * 2.0.1 — Lewis's own decoder — both do exactly that. Two readers depart
+ * for mailed text in the same direction, which is what this rests on.
  *
  * ONE HALF of hexbin's rule is deliberately not transcribed: it also
  * skips any line whose length differs from the first line's, with a
- * look-ahead exception for the last one. That test can discard a
- * legitimate short final line (hexbin ships `-c` to turn it off), and
- * the alphabet half already rejects every header shape measured here.
- * What it would have caught — a junk line built only of alphabet
- * characters — is caught by BinHex's own per-fork CRC instead, as a
- * per-entry error rather than as silence. */
+ * look-ahead exception for the last one, and HQXEngine's 63-or-64 is the
+ * same test. The Definition refuses it first-party — "When decoding,
+ * lines of any length should be accepted" — and the corpus agrees: NO
+ * line in any of the 204 `.hqx` fixtures would be skipped by the length
+ * half and kept by the alphabet half (measured 2026-10-06,
+ * tools/derive_hqxgarbage.py --length, whose scan is shown to fire by
+ * injecting one). What the half would have caught — a junk line built
+ * only of alphabet characters, a bare rule of hyphens being the
+ * realistic shape — is taken as data and caught by BinHex's own per-fork
+ * CRC, as a per-entry error rather than as silence. */
 static int bh_refill_line(BhDec *d)
 {
     for (;;) {
-        int ch;
-        int32_t i;
+        const uint8_t *q;
+        uint32_t avail;
+        int32_t n = 0, i;
         int ok = 1;
 
         d->llen = d->lpos = 0;
-        for (;;) {
-            ch = unc_bufin_next(&d->in);
-            if (ch < 0) {
-                if (d->llen == 0) { d->err = d->in.err; return -1; }
-                break;
-            }
-            if (ch == '\n' || ch == '\r') break;
-            if (d->llen >= BH_LINE_MAX) break;      /* hand over in pieces */
-            d->line[d->llen++] = (uint8_t)ch;
-        }
-        /* Mailers eat trailing whitespace; hexbin trims it before
-         * judging the line, so a trimmed line is not "garbage". */
-        while (d->llen > 0 && (d->line[d->llen - 1] == ' ' ||
-                               d->line[d->llen - 1] == '\t'))
-            d->llen--;
-        if (d->llen == 0) continue;                 /* blank line */
 
-        for (i = 0; i < d->llen; i++)
-            if (d->lut[d->line[i]] == 0xFF) { ok = 0; break; }
-        if (ok) return UNC_OK;
+        /* The line is normally in the reader's buffer already, all 64
+         * characters and the terminator with them, so it is taken in
+         * one scan for that terminator rather than one call, one bounds
+         * test and one cursor store per character. */
+        avail = unc_bufin_span(&d->in, &q);
+        if (avail > (uint32_t)BH_LINE_MAX) avail = (uint32_t)BH_LINE_MAX;
+        while ((uint32_t)n < avail && q[n] != '\n' && q[n] != '\r') n++;
+        if ((uint32_t)n < avail) {
+            unc_bufin_drop(&d->in, (uint32_t)n + 1u);   /* and the terminator */
+        } else {
+            /* Not in hand: the line straddles a refill, or ends with
+             * the file, or is longer than the buffer. One character at
+             * a time, and a line that overflows is handed over in
+             * pieces — harmless, because every piece is judged by the
+             * same rule and the character order is unchanged. */
+            int ch;
+            n = 0;                      /* the scan above found nothing */
+            for (;;) {
+                ch = unc_bufin_next(&d->in);
+                if (ch < 0) {
+                    if (n == 0) { d->err = d->in.err; return -1; }
+                    break;
+                }
+                if (ch == '\n' || ch == '\r') break;
+                if (n >= BH_LINE_MAX) break;
+                d->line[n++] = (uint8_t)ch;
+            }
+            q = d->line;
+        }
+
+        /* Mailers put whitespace on the end of a line, so it is
+         * trimmed before the line is judged and a trimmed line is not
+         * "garbage".
+         *
+         * Source: binhex40_lewis.txt — "<return> means to the decoder:
+         * Any sequence of <cr>, <lf>, <tab>, <spc>. (The <tab> and <spc>
+         * are required because some old programs produced these
+         * characters)". Both characters are named by the format's own
+         * Definition, so trailing ones are a line ending and not data.
+         *
+         * THE TAB IS NOT OURS, corrected 2026-10-07: this comment said
+         * it was from 2026-10-06, having looked for it in hexbin (which
+         * tests `line[n - 1] == ' '` and nothing else) rather than in
+         * the document this file is transcribed from. HQXer 1.1 is a
+         * second implementation — its inverse table marks TAB skippable
+         * ANYWHERE in a line, with BS, LF, CR and the space
+         * (tools/derive_hqxgarbage.py --tables).
+         *
+         * The trim is load-bearing, and on a real file:
+         * country-song-generator-101.hqx carries a trailing space on all
+         * 2,600 of its data lines. StuffIt's HQXEngine does not trim, so
+         * every one of those lines is 65 characters long and holds a
+         * SPACE — it fails both halves of that engine's predicate and
+         * the whole file is discarded, line by line. A rule and its
+         * second implementation are not the same reader
+         * (tools/derive_hqxgarbage.py --length). */
+        while (n > 0 && (q[n - 1] == ' ' || q[n - 1] == '\t')) n--;
+        if (n == 0) continue;                       /* blank line */
+
+        /* The part separator a posting is CUT at, which the alphabet
+         * rule below cannot see: the resume line is "---" and every one
+         * of those three characters is in the BinHex alphabet, so it
+         * reads as two bytes of data and the fork's CRC fails.
+         *
+         * Source: DeHQX 2.0.1's own documentation, *How It Works*, by
+         * Peter N Lewis — who wrote the BinHex 4.0 Definition this file
+         * is transcribed from: "If it encounters a line beginning with
+         * '--- end of part', it ignores the file until it encounters a
+         * line consisting only of '---', at which time it resumes
+         * dehqxing." tools/derive_dehqx.py checks that sentence and
+         * grades a posting cut this way, which this reader failed until
+         * 2026-10-06 and macutils' hexbin reads (by the length rule
+         * below, which is still not transcribed).
+         *
+         * THE RESUME LINE IS A PREFIX, not the whole line, and that is
+         * a second implementation's reading rather than the prose's.
+         * Source: HQXer 1.1 (John Stiles, 1994), `CODE` 2 +0x1baa — its
+         * gap loop reads three characters, compares each with '-', and
+         * on three hits discards the REST of the line and resumes with
+         * the next character. Taking "consisting only of '---'"
+         * literally cost a regression this suite could not see, written
+         * and withdrawn the same day, 2026-10-06: a posting whose resume
+         * line read `--- part 2 ---` or `-----` lost everything after
+         * the cut —
+         * and the FIRST of those had read correctly before the gap
+         * existed at all, because it holds spaces and the garbage rule
+         * below skips it, so the gap cost a file it had been given
+         * (measured on a build with this test compiled out;
+         * DECISIONS.md 2026-10-06; graded by tools/run_multihqx.py's
+         * three cuts). HQXer is more permissive
+         * still — it scans for three consecutive '-' anywhere, not at a
+         * line start — and the line anchor is kept because nothing here
+         * needs the rest. */
+        if (d->in_gap) {
+            if (n >= 3 && q[0] == '-' && q[1] == '-' && q[2] == '-')
+                d->in_gap = 0;
+            continue;
+        }
+        if (n >= 15 && q[0] == '-' && q[1] == '-' && q[2] == '-' &&
+            q[3] == ' ' && q[4] == 'e' && q[5] == 'n' && q[6] == 'd' &&
+            q[7] == ' ' && q[8] == 'o' && q[9] == 'f' && q[10] == ' ' &&
+            q[11] == 'p' && q[12] == 'a' && q[13] == 'r' && q[14] == 't') {
+            /* Compared byte by byte rather than against a literal: a
+             * string constant here would be thirteen bytes of A5 world,
+             * which is resident for the life of the application and is
+             * at its ceiling (tools/check_app_size.py). */
+            d->in_gap = 1;
+            continue;
+        }
+
+        /* The one pass that judges the line also converts it: what
+         * line[] holds from here on is 6-bit values and 0xFE for the
+         * ':', not characters, so neither bh_get_bits nor the 4->3
+         * group in bh_decode_byte looks a character up again. In the
+         * straddling case q IS d->line and the conversion is in place,
+         * one element at a time. */
+        for (i = 0; i < n; i++) {
+            uint8_t v = d->lut[q[i]];
+            if (v == 0xFF) { ok = 0; break; }
+            d->line[i] = v;
+        }
+        if (ok) { d->llen = n; return UNC_OK; }
     }
 }
 
@@ -187,7 +289,7 @@ static int bh_get_bits(BhDec *d)
     for (;;) {
         uint8_t v;
         if (d->lpos < d->llen) {
-            v = d->lut[d->line[d->lpos++]];
+            v = d->line[d->lpos++];
             if (v < 0xFE) return v;
             if (v == 0xFE) { d->eof = 1; d->err = UNC_ERR_TRUNCATED; return -1; }
             continue;                               /* 0xFF: cannot happen */
@@ -196,11 +298,35 @@ static int bh_get_bits(BhDec *d)
     }
 }
 
-/* Next byte of the 6-bit layer (pre-RLE). */
+/* Next byte of the 6-bit layer (pre-RLE).
+ *
+ * Four characters make three bytes, and when all four are on the line in
+ * hand the group is decoded in one go: the caller gets the first byte
+ * and the other two are served from d->batch without the line, the
+ * bounds test or the LUT being touched again. A BinHex line is 64
+ * characters, a multiple of four, so a real file takes this path for
+ * every group except at a line break. Everything else — a short line, a
+ * group straddling two lines, the terminating ':' — falls through to
+ * the one-character-at-a-time path below, which is unchanged. */
 static int bh_decode_byte(BhDec *d)
 {
     int bits1, bits2;
     uint32_t ph = d->phase;
+
+    if (d->bp != d->bend) return *d->bp++;   /* rest of a decoded group */
+    if (ph == 0u && d->llen - d->lpos >= 4) {
+        const uint8_t *p = d->line + d->lpos;
+        uint32_t a = p[0], b = p[1], c = p[2], e = p[3];
+        /* Every value on the line is a 6-bit code or 0xFE (':'); one
+         * test on the OR of the four says all of them are codes. */
+        if (((a | b | c | e) & 0xC0u) == 0u) {
+            d->lpos += 4;
+            d->batch[0] = (uint8_t)((b << 4) | (c >> 2));
+            d->batch[1] = (uint8_t)((c << 6) | e);
+            d->bp = d->batch; d->bend = d->batch + 2;
+            return (int)(((a << 2) | (b >> 4)) & 0xFFu);
+        }
+    }
     d->phase = (ph == 2u) ? 0u : ph + 1u;
     switch (ph) {
     case 0:
@@ -260,9 +386,15 @@ static int bh_next(BhDec *d)
  * after it: the text between two postings is a whole posting, and in
  * list mode the previous document's own encoded stream has not been
  * consumed, so the distance to the next banner is the size of the file.
- * Source: reference/macutils/hexbin/hexbin.c, which decodes a document
- * and then does `again = 1; goto nexttry` to look for the next header in
- * the same input, its find_header() scanning to EOF.
+ *
+ * Source: DeHQX 2.0.1's own documentation, *How It Works*, by Peter N
+ * Lewis — the author of the BinHex 4.0 Definition above: "When it comes
+ * to the end of the HQX source, if [sic] checks for the terminating
+ * colon, and then continues scanning the file for the next '(This
+ * file...'", and its glossary defines a source file as "a file
+ * containing (parts of) one or more HQX sources". macutils' hexbin.c,
+ * which decodes a document and then does `again = 1; goto nexttry`,
+ * until 2026-10-06 (tools/derive_dehqx.py).
  *
  * Returns UNC_OK or UNC_ERR_FORMAT. */
 static int bh_find_banner(UncBufIn *in, int limited)
@@ -305,7 +437,17 @@ static int bh_find_banner(UncBufIn *in, int limited)
 }
 
 /* Position the 6-bit decoder start: ':' preceded by line break or
- * whitespace (source: resetByteStream in the reference). */
+ * whitespace. Source: binhex40_lewis.txt, which defines <return> to a
+ * DECODER as "any sequence of <cr>, <lf>, <tab>, <spc>" — the tab and
+ * the space "because some old programs produced these characters" —
+ * and then says to skip <return> characters and check for the colon.
+ *
+ * Lempereur's own BinHex 5.0 is STRICTER than its Definition here: its
+ * start scan skips characters below 32 and requires the ':' to be the
+ * first one at or above it, so a space or a tab in front of the colon
+ * loses the document there and is read here (`CODE` 1 +0x0522,
+ * tools/derive_hqxgarbage.py --author). The Definition names both
+ * characters, so the Definition is what this follows. */
 static int bh_find_colon(UncBufIn *in)
 {
     int prev = '\n', curr;
@@ -355,8 +497,10 @@ static void bh_reset(BhDec *d)
 {
     d->llen = d->lpos = 0;
     d->phase = 0;
+    d->bp = d->bend = d->batch;
     d->prev_bits = 0;
     d->eof = 0;
+    d->in_gap = 0;
     unc_rle90_init(&d->rle, 1);
     d->err = UNC_OK;
 }

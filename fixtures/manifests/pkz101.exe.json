@@ -1,0 +1,152 @@
+{
+ "comment": "Thank you for using PKWARE!\r\nPKWARE Inc. - The Data Compression Experts (tm)\r\n",
+ "entries": [
+  {
+   "data_sha256": "f643e3bdedf01e55f5d90816bade83c6fc3417a81d303c439fb4794c33e0c53b",
+   "data_size": 25662,
+   "name": "APPNOTE.TXT",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "edc82bf30189cccb2c5ab3a18d212149ba82e3c14c700ea58433389a3d1e8f7e",
+   "data_size": 720,
+   "name": "DEDICATE.DOC",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "fd365b8ab51265e8b13ed59871e2d7ddd6169825f94c5f90af85d139b54cfa98",
+   "data_size": 8959,
+   "name": "LICENSE.DOC",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "096ef777023a1e946ab04a3e99162cbdaaa17c5700bf5589d957dce4a909a86f",
+   "data_size": 896,
+   "name": "MAKESFX.COM",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "33a6ec00cbc48e944c89326b2acae160d54afe22cb0b834d2847b2f1a7b3994b",
+   "data_size": 140355,
+   "name": "MANUAL.DOC",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "890f95b60c8e93e6cfd468c7e42a246c6fb6adfb7f62fe3c79841cce2f432222",
+   "data_size": 595,
+   "name": "OMBUDSMN.ASP",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "e68d15db0ea53209cfb4707accf1cff9f18ed8912974e009a39e77b45e130c9f",
+   "data_size": 4607,
+   "name": "ORDER.DOC",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "5590ee43fa8f79eba34507394c0c234074cd2c8db927335d0362d59d8e7d06a2",
+   "data_size": 21440,
+   "name": "PKUNZIP.EXE",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "f9a29d01258d743afa6f3dbd7c1cd2869354c7b5ef73338c30d55c955f8ce356",
+   "data_size": 31342,
+   "name": "PKZIP.EXE",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "6de1cc2eb67b60a07ee7538d7a82d801ac995c091c6c9b70347c6f0c5bb52d0c",
+   "data_size": 8926,
+   "name": "PKZIPFIX.EXE",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "dcfed6f11652fe234c7c6228f0cc22990758e37b6bc4b09fae9f63a1788fae85",
+   "data_size": 873,
+   "name": "README.DOC",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_sha256": "a04fdfc66a5b5527f55845dde5cae122cb338d2c358df336c973e9c2bda8d42e",
+   "data_size": 14592,
+   "name": "REZIP.ZIP",
+   "oracle_methods": [
+    "None"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "f2be47b24b3a5b920249b828396b9d83833b1338a393fe0f405e9aaa602b5fd6",
+   "data_size": 6898,
+   "name": "ZIP2EXE.EXE",
+   "oracle_methods": [
+    "Implode"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "pkz101.exe",
+ "format": "Self-extracting Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "f36d9551c1917a7990db2b4582191656d748179ea2bd15499294388e9c4fa458",
+ "size": 131517
+}

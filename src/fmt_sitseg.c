@@ -1,7 +1,16 @@
 /*
  * fmt_sitseg.c — one part of a StuffIt segmented ("split") set.
  *
- * Layout (source: reference/XADMaster/XADStuffItSplitParser.m,
+ * XADMaster is the SOLE source of this header, and the re-citation
+ * that moved BinHex, MacBinary, AppleSingle, zip, tar and gzip onto
+ * their own specifications (DECISIONS.md 2026-09-19, *the facts that
+ * were somebody else's to state*) found nothing to move this onto:
+ * Aladdin published nothing about it, and neither deark nor macutils
+ * reads it. So it stays, and so does what that costs.
+ *
+ * Source: reference/XADMaster/XADStuffItSplitParser.m — the whole
+ * layout below.
+ * Layout (reference/XADMaster/XADStuffItSplitParser.m,
  * +recognizeFileWithHandle:, +volumesForHandle: and -parse — LGPL,
  * see NOTICE):
  *

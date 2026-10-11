@@ -9,6 +9,12 @@ the PNG preview; without it the .r file is still written.
 
 An open carton lettered EXTRACT, with a document and a block rising out of
 it. Emits ICN#, ics#, icl4, ics4, icl8, ics8, FREF and BNDL, all at ID 128.
+
+DO NOT REPLACE mac/macextract_icons.r WITH ITS OUTPUT. That file has since
+gained resources written by hand and not emitted here -- the '****' FREF
+129 and its BNDL entry, and both 'vers' -- and a whole-file regeneration
+deletes them silently. Run it elsewhere and splice the members that
+changed (DECISIONS.md 2026-10-11, *the icon that did not darken*).
 """
 import sys
 from collections import deque
@@ -206,7 +212,7 @@ PAL4 = [(255, 255, 255), (252, 243, 5), (255, 100, 3), (221, 9, 7),
         (192, 192, 192), (128, 128, 128), (64, 64, 64), (0, 0, 0)]
 W4, ORA4, CYA4, BLK4 = 0, 2, 7, 15
 
-# 256-colour indices assume a 6x6x6 cube - see the caveat in HEADER below.
+# 256-colour indices: a 6x6x6 cube plus ramps - see PALETTE in HEADER below.
 LEVELS = [255, 204, 153, 102, 51, 0]
 
 
@@ -220,16 +226,59 @@ def cube(r, g, b):
 def rgb_of(i):
     if i == 255:
         return (0, 0, 0)
+    if i >= 215:
+        return RAMPS[i - 215]
     r, rem = divmod(i, 36)
     g, b = divmod(rem, 6)
     return (LEVELS[r], LEVELS[g], LEVELS[b])
 
 
-CY_HI, CY_MID, CY_LO = cube(153, 255, 255), cube(51, 204, 255), cube(0, 153, 204)
-CY_SHADOW = cube(51, 153, 204)
-OR_HI, OR_MID, OR_LO = cube(255, 204, 102), cube(255, 102, 0), cube(204, 51, 0)
-PAPER, PAPER_LO = cube(255, 255, 255), cube(204, 204, 204)
-BLACK8, W8 = 255, cube(255, 255, 255)
+# Apple's 34 icon colours, the ResEdit "Apple Icon Colors" palette.
+# Source: Macintosh Human Interface Guidelines, ch. 8, "Selection mechanism
+# for color icons" -- "only the 34 colors shown in Figure 8-23 get darkened
+# when a color icon is selected"; the RGB values, which the figure does not
+# print, from Kreative Korp's MoCCP, gpl/AppleIconColors.gpl. Every 8-bit
+# pixel must be one of these, or that part of the icon stays the same shade
+# when it is selected -- which the first version's cyan box and orange block
+# did, seen on an LC 475 on 2026-10-11 (DECISIONS.md, *the icon that did
+# not darken*).
+ICON34 = [(255, 255, 204), (255, 204, 153), (204, 153, 102), (255, 102, 51),
+          (51, 255, 153), (0, 187, 0), (51, 153, 102), (51, 102, 102),
+          (153, 255, 255), (0, 153, 255), (0, 0, 221), (51, 0, 153),
+          (204, 204, 255), (153, 153, 255), (102, 102, 204), (51, 51, 102),
+          (255, 102, 204), (153, 0, 102), (153, 102, 153), (255, 255, 255),
+          (238, 238, 238), (221, 221, 221), (204, 204, 204), (187, 187, 187),
+          (170, 170, 170), (136, 136, 136), (119, 119, 119), (85, 85, 85),
+          (68, 68, 68), (34, 34, 34), (17, 17, 17), (0, 0, 0),
+          (255, 255, 0), (221, 0, 0)]
+
+
+def icon8(r, g, b):
+    """The 256-colour index of one of Apple's 34 icon colours, and only
+    those: the ramps at 215-254 included, which cube() cannot reach."""
+    assert (r, g, b) in ICON34, (r, g, b)
+    if (r, g, b) == (0, 0, 0):
+        return 255
+    if r in LEVELS and g in LEVELS and b in LEVELS:
+        return cube(r, g, b)
+    return 215 + RAMPS.index((r, g, b))
+
+
+# Indices 215-254: four ramps of ten, red, green, blue, grey, each
+# 238..17 in steps of 17 minus the cube's multiples of 51. Source: the
+# Mac OS 8-bit palette, MoCCP gpl/MacOS8Bit.gpl, which this table was
+# checked against entry for entry.
+_RAMP = [v for v in range(238, 0, -17) if v % 51]
+RAMPS = ([(v, 0, 0) for v in _RAMP] + [(0, v, 0) for v in _RAMP] +
+         [(0, 0, v) for v in _RAMP] + [(v, v, v) for v in _RAMP])
+
+CY_HI, CY_MID, CY_LO = (icon8(153, 255, 255), icon8(0, 153, 255),
+                        icon8(102, 102, 204))
+CY_SHADOW = icon8(102, 102, 204)
+OR_HI, OR_MID, OR_LO = (icon8(255, 204, 153), icon8(255, 102, 51),
+                        icon8(221, 0, 0))
+PAPER, PAPER_LO = icon8(255, 255, 255), icon8(204, 204, 204)
+BLACK8, W8 = 255, icon8(255, 255, 255)
 
 
 def flat(mono, msk, w, boxr, docr, blkr):
@@ -328,11 +377,12 @@ HEADER = """/* MacExtract - application icon family, classic Mac OS.
    merely thickens them. At 16x16 a south-east shadow IS applied, because
    there the one-pixel columns need filling out to read as a label.
 
-   PALETTE CAVEAT: the 'icl8'/'ics8' indices assume the Macintosh 256-colour
-   palette is a 6x6x6 cube at index = 36*r + 6*g + b over the levels
-   (255,204,153,102,51,0), with black at 255. That is reconstructed, not
-   transcribed from a reference - verify the colours on a real System 7+
-   machine. The ramps at 215-254 are deliberately unused.
+   PALETTE: every 'icl8'/'ics8' pixel is one of Apple's 34 icon colours,
+   because only those darken when the Finder draws the icon selected
+   (Human Interface Guidelines, ch. 8). The indices are the Macintosh
+   256-colour palette's - a 6x6x6 cube at 36*r + 6*g + b over the levels
+   (255,204,153,102,51,0), four ramps at 215-254 and black at 255 -
+   checked entry for entry against MoCCP's MacOS8Bit.gpl.
 
    After installing, rebuild the Desktop file (hold Cmd-Option at boot) or
    the Finder will keep showing the previous icon.                        */
@@ -381,7 +431,7 @@ resource 'ics4' (128, "MacExtract") {{
 {block(hex4(f16, 16, 16), 2)}
 }};
 
-/* 256 colours, three tones per surface - see the palette caveat above. */
+/* 256 colours, three tones per surface, Apple's icon colours only - see PALETTE above. */
 
 resource 'icl8' (128, "MacExtract") {{
 {block(hex8(t32, 32, 32), 1)}

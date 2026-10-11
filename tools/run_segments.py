@@ -90,7 +90,7 @@ def read_tree(d, appledouble=False):
             p = os.path.join(root, f)
             rel = os.path.relpath(p, d)
             if appledouble and f.startswith("._"):
-                rsrc, _t, _c = parse_appledouble(p)
+                rsrc = parse_appledouble(p)[0]
                 blob = rsrc if rsrc is not None else open(p, "rb").read()
             else:
                 blob = open(p, "rb").read()

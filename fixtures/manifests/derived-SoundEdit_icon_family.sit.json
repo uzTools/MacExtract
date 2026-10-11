@@ -1,0 +1,35 @@
+{
+ "entries": [
+  {
+   "creator": "AOqc",
+   "data_sha256": "f88017269c52b7e453eb2a4d8f1d46cf30f6686ff5ff717c0497b465141ae89f",
+   "data_size": 1307,
+   "finder_flags": 0,
+   "name": "SoundEdit™ icon info",
+   "oracle_methods": [
+    "Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "icons for SoundEdit™",
+   "oracle_methods": [
+    "MW"
+   ],
+   "rsrc_sha256": "872ddbe1bbdf6a6d9f07992af9d44b4d58ac31f5ef912d43f796f5c54b5482c6",
+   "rsrc_size": 9678,
+   "type": "rsrc"
+  }
+ ],
+ "fixture": "derived-SoundEdit_icon_family.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "a679294d93c20e86b808fd7d887399417b02922353cfe0f6d630aa0551cd8e13",
+ "size": 4469
+}

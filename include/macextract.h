@@ -28,7 +28,7 @@ extern "C" {
  * tools/make_dist.sh do now, and tools/check_docs.py fails the build if
  * this, README.md and dist/README.txt disagree. A constant nobody reads
  * is a constant that is wrong. */
-#define UNC_VERSION "0.32.0"
+#define UNC_VERSION "0.40.0"
 
 /* ------------------------------------------------------------------ */
 /* Formats                                                            */
@@ -84,7 +84,6 @@ typedef enum UncFormat {
     UNC_FORMAT_SPACESAVER,    /* StuffIt SpaceSaver compressed file     */
 
     /* Named, not extracted, since 2026-08-23. */
-    UNC_FORMAT_APPLELINK,     /* AppleLink package (`.pkg`)             */
 
     /* Brought in scope 2026-08-23; appended for the same ABI reason. */
     UNC_FORMAT_BTOA,          /* btoa/atob ASCII armour                 */
@@ -117,12 +116,11 @@ typedef enum UncFormat {
      * several FILES. Joined, never extracted on its own. */
     UNC_FORMAT_MIMESEG,
 
-    /* Brought in scope 2026-09-09; appended for the same ABI reason.
-     * The one format here whose output is a file of its OWN format: a
-     * compressed DART expands to an uncompressed DART, because what
-     * reads a DART is a mounter and not this program (DECISIONS.md
-     * 2026-09-09, the disk image that is expanded and not opened). */
-    UNC_FORMAT_DART,          /* Apple's Disk Archive/Retrieval Tool    */
+    /* Brought in scope 2026-10-05; appended for the same ABI reason. */
+    UNC_FORMAT_SQP,           /* .pkg — AppleLink package (SqueezePlay) */
+
+    /* Brought in scope 2026-10-07; appended for the same ABI reason. */
+    UNC_FORMAT_PRIVATEFILE,   /* .pf — Aladdin Private File           */
 
     UNC_FORMAT__COUNT
 } UncFormat;
@@ -158,17 +156,42 @@ enum {
     UNC_ERR_SEGMENTED   = -11,  /* multi-segment archive, parts missing */
     UNC_ERR_PASSWORD    = -12,  /* encrypted, and no usable password      */
     UNC_ERR_TOOLARGE    = -13,  /* entry past this engine's 32-bit reach  */
-    /* Recognized, well-formed, and holding nothing there is any work to
-     * do on: an uncompressed DART already IS the file that expanding
-     * one produces. The opposite of UNC_ERR_UNSUPPORTED, which says
-     * there is something here and this engine cannot read it, and the
-     * difference is the whole of what the user needs to be told
-     * (DECISIONS.md 2026-09-09).                                       */
-    UNC_ERR_NOTCOMPRESSED = -14
+    /* -14 was UNC_ERR_NOTCOMPRESSED, for a DART that was already
+     * uncompressed. DART left the engine on 2026-09-25 (DECISIONS.md,
+     * *the disk images that found another home*); the number is not
+     * reused, so a caller built against an older header cannot read a
+     * new code as that one.                                            */
+    UNC_ERR_MODULE      = -15
+    /* -16 was UNC_ERR_TOODEEP, for an entry nested deeper than the
+     * engine carried folders. It existed for four hours on 2026-10-07
+     * and was deleted the same day: the limit it reported was 24
+     * levels, chosen by nobody, where the destination takes 250
+     * (FORMATS.md, *What the DESTINATION actually allows*). There is no
+     * depth limit now, so nothing can be too deep for one. The number
+     * is not reused, so a caller built against that header cannot read
+     * a new code as that one.                                          */
 };
 
 /* Human-readable message for an error code. */
 const char *unc_strerror(int err);
+
+/* The three classes of StuffIt add-on module, in the order Aladdin's own
+ * application numbers them: the class is the high byte of the module's
+ * resource id, so an Optimizer is 1..255, a Compressor 256..511 and an
+ * Encryptor 512..767 (FORMATS.md, *StuffIt 2.0's pluggable modules*).
+ *
+ * The engine reports the class and the id and does NOT carry the modules'
+ * NAMES: on the 68000 target a table of them is .rodata in the A5 world,
+ * which comes off every extraction's heap whether or not anybody prints
+ * it (tools/build_mac.sh, the A5 ratchet). The five names Aladdin shipped
+ * are in cli/main.c, which is the host that prints them, and in
+ * FORMATS.md. */
+enum {
+    UNC_MODULE_NONE       = 0,
+    UNC_MODULE_OPTIMIZER  = 1,
+    UNC_MODULE_COMPRESSOR = 2,
+    UNC_MODULE_ENCRYPTOR  = 3
+};
 
 /* ------------------------------------------------------------------ */
 /* I/O abstraction                                                    */
@@ -258,8 +281,9 @@ typedef struct UncAlloc {
 typedef enum UncFork { UNC_FORK_DATA = 0, UNC_FORK_RSRC = 1 } UncFork;
 
 typedef struct UncEntryInfo {
-    /* Filename: a '/'-separated path of raw name components (MacRoman
-     * for Mac formats), NUL-terminated. '/' is ALWAYS a path separator:
+    /* Filename: a '/'-separated path of raw name components, in the
+     * ARCHIVE's own encoding (MacRoman for most Mac formats; see
+     * name_utf8), NUL-terminated. '/' is ALWAYS a path separator:
      * in Mac-format components the engine applies the classic
      * reversible '/'->':' swap (':' cannot occur in an HFS name, '/'
      * can), so a raw '/' never leaks into a component. zip/tar paths
@@ -279,8 +303,53 @@ typedef struct UncEntryInfo {
     uint32_t comp_rsrc_size;
 
     uint8_t  is_dir;        /* directory entry (no forks)     */
+    /* The name bytes above are UTF-8, not the 8-bit encoding the rest
+     * of that format's family uses. StuffIt 5 is the one format here
+     * that sets it: its names are UTF-8 where StuffIt classic's are
+     * MacRoman (reference/deark/modules/stuffit.c picks the encoding
+     * on `file_fmt`, and `lsar -nr` unforced agrees). The engine does
+     * not convert — a host decides what its filesystem wants; the
+     * Linux CLI passes UTF-8 through and the Macintosh shell folds it
+     * into MacRoman, which is what an HFS name holds. */
+    uint8_t  name_utf8;
     uint8_t  method_data;   /* format-specific method id (informational) */
     uint8_t  method_rsrc;
+    /* The add-on module this entry needs, for the one format that has
+     * them: StuffIt 2.x could hand a fork to an external Optimizer,
+     * Compressor or Encryptor, shipped as a file of type 'SITe' whose
+     * 'COMP'/'DCMP' resource id is (kind - 1) << 8 | module_id. Nothing
+     * has those modules, so what an entry can do depends on what its
+     * module DID, which the engine undoes for the ones it has read —
+     * see module_restored below. One whose module it cannot undo fails
+     * UNC_ERR_MODULE; both fields are set in every case, in list mode
+     * too, so that a host can say WHICH module rather than "damaged".
+     * kind is UNC_MODULE_NONE unless the entry names one; where both
+     * forks do, this is the data fork's. The names Aladdin shipped are
+     * a host's to print — see UNC_MODULE_* above for why. */
+    uint8_t  module_kind;
+    uint8_t  module_id;
+    /* What the engine did about that module, set once the entry is
+     * decoded (0 in list mode, where nothing was decoded):
+     *
+     *   0  nothing to do — no module, or one whose output IS the file
+     *      (`Text 1`, id 255: there is nothing to undo).
+     *   1  the module's transform was undone EXACTLY, and the entry's
+     *      own CRC-16 verified the result: `Sound 1` and `Photoshop 1`
+     *      delta-code a fork and the header then carries the ORIGINAL
+     *      file's checksum.
+     *   2  the entry was restored INEXACTLY — a valid document, not
+     *      the user's file, and nothing checks it because an entry
+     *      like this carries no checksum at all. `MacPaint 1` throws
+     *      a painting's 512-byte header and its whole resource fork
+     *      away, and neither this engine nor StuffIt Deluxe itself can
+     *      put them back (FORMATS.md, *What an Optimizer did to the
+     *      fork*).
+     *
+     * A host that writes files should SAY SO for 2. The Linux CLI
+     * prints a line per entry and README.md carries the same warning;
+     * a silent 2 is a file that differs from the one the user
+     * archived, under its name, with no sign of it. */
+    uint8_t  module_restored;
     /* Set when the archive's name for this entry was LONGER than
      * UNC_NAME_MAX and `name` holds only the first UNC_NAME_MAX bytes
      * of it. The engine cannot carry more (the buffer is part of this
@@ -294,9 +363,11 @@ typedef struct UncEntryInfo {
     uint8_t  name_truncated;   /* 0 = whole; 1 = cut; 2 = cut, and the
                                 * WHOLE name is in UncOptions.long_name */
     /* How long the name was BEFORE it was cut, saturating at 65,535, or
-     * 0 where the format cannot say — a name cut by a line buffer took
-     * its own length with it. The bytes themselves are gone: they are
-     * never held anywhere, which is the point of the cap. */
+     * 0 where it cannot be said. Two causes: a name cut by a line
+     * buffer took its own length with it, and a PATH cut because the
+     * host offered no `long_name` buffer for the walk to build the
+     * uncut one in (see that field). The bytes themselves are gone:
+     * they are never held anywhere, which is the point of the cap. */
     uint16_t name_full_len;
 } UncEntryInfo;
 
@@ -429,8 +500,19 @@ typedef struct UncOptions {
      * it (raw bytes, NUL-terminated, cut only at `long_name_cap`)
      * wherever the format still holds it when the cut is made;
      * `name_truncated` is then 2 rather than 1. NULL, and the classic
-     * Mac shell passes NULL, costs nothing and loses only the text: the
-     * length is still reported in `name_full_len`.
+     * Mac shell passes NULL, costs nothing and loses the text — and,
+     * since 2026-10-07, the LENGTH of an over-long PATH as well:
+     * `name_full_len` is 0 there. The walk builds the uncut path in
+     * THIS buffer, so without one there is no uncut path to measure,
+     * and a count maintained past the end of a buffer nobody can read
+     * is not a number any host here has asked for (the Mac shell reads
+     * none). A name cut by a LINE buffer — uuencode's, MIME's — is
+     * unaffected: those report their length as they always did.
+     * `long_name_cap` above 65,536 is NOT supported: the walk's length
+     * is 16-bit, so a larger buffer is filled correctly to 64 KB and
+     * then silently rewritten from its start. The Linux CLI passes
+     * exactly 65,536 (DECISIONS.md 2026-10-07, *what the header was
+     * still promising*).
      * A NON-NULL pointer is WRITTEN in the formats that walk folders
      * (DiskDoubler, SuperDisk!, Now Compress) for every path component,
      * cut or not — the uncut path accumulates here. So a host that has

@@ -150,6 +150,30 @@ static void test_macbinary(void)
     test_make_memio(&io, &m, arc, len);
     CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
     arc[124] ^= 0xFF;
+
+    /* THE 0xA001 FALLBACK, pinned here because nothing else reaches it.
+     * fmt_macbinary.c accepts a header whose CRC was computed with the
+     * reflected 0xA001 table instead of CRC-16/XMODEM — XADMaster's
+     * tolerance, supported by no standard. Measured 2026-09-28: it
+     * fires ZERO times across 933 fixtures and 9,330 robustness
+     * variants, and removing it changes nothing any suite grades. So
+     * it was uncited AND unexercised, which is the pair OPEN_ITEMS
+     * calls the `unc_lzah.c` shape. This case does not make it right —
+     * only noticed, so a change to it cannot pass silently. */
+    {
+        uint16_t a = 0xFFFF;
+        uint32_t i, j;
+        for (i = 0; i < 124; i++) {
+            a ^= arc[i];
+            for (j = 0; j < 8; j++)
+                a = (a & 1) ? (uint16_t)((a >> 1) ^ 0xA001)
+                            : (uint16_t)(a >> 1);
+        }
+        a ^= 0xFFFF;
+        arc[124] = (uint8_t)(a >> 8); arc[125] = (uint8_t)a;
+        test_make_memio(&io, &m, arc, len);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_MACBINARY);
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -447,9 +471,46 @@ static void test_canon(void)
     unc_bitin_init(&bi, &in);
     CHECK(unc_canon_decode(&cn, &bi) == -1);
 
+    /* ONE symbol, written with a length of 1 -> Kraft 0.5, the most
+     * incomplete a code can be. Now Compress writes exactly this: a
+     * block matched entirely out of the member before it codes one
+     * match symbol and no literal at all (docs/formats/now-compress.md,
+     * *The main table*). No fixture comes near it — the smallest main
+     * alphabet in the two real Now archives is 47 symbols, measured by
+     * tools/derive_now.py over both — so the two bytes here are what
+     * covers the shape. Enough of them to fill the fast table's ten
+     * bits, because that is the path at risk: half of
+     * fastlen[] names the symbol and the other half must fall through
+     * to the walk and be refused. */
+    lens[0] = 0; lens[1] = 0; lens[2] = 1; lens[3] = 0;
+    CHECK(unc_canon_build(&cn, lens, 4) == UNC_OK);
+    buf[0] = 0x40; buf[1] = 0x00;   /* bits 0, then 1: the code, then not */
+    test_make_memio(&io, &m, buf, 2);
+    unc_bufin_init(&in, &io, NULL, storage, sizeof storage);
+    unc_bitin_init(&bi, &in);
+    CHECK(unc_canon_decode(&cn, &bi) == 2);
+    CHECK(unc_canon_decode(&cn, &bi) == -1);
+
     /* Over-subscribed code -> rejected at build time. */
     lens[0] = 1; lens[1] = 1; lens[2] = 1;
     CHECK(unc_canon_build(&cn, lens, 3) == UNC_ERR_CORRUPT);
+
+    /* The deepest length the type allows. UNC_CANON_MAX_BITS is 31, so
+     * the code space reaches 1 << 31 here — which is not an int32_t, and
+     * carrying it signed the way puff.c does at 15 bits is undefined
+     * behaviour the sanitizer build catches. Two symbols at 31 bits are
+     * a legal (very incomplete) code; 1 << 31 of them would not be, and
+     * nothing can declare that many, so the check being made BEFORE the
+     * subtraction is what keeps the arithmetic in range. */
+    {
+        uint8_t deep[2];
+        deep[0] = UNC_CANON_MAX_BITS; deep[1] = UNC_CANON_MAX_BITS;
+        CHECK(unc_canon_build(&cn, deep, 2) == UNC_OK);
+        CHECK(cn.maxlen == UNC_CANON_MAX_BITS);
+        /* One length past it is refused rather than truncated. */
+        deep[0] = UNC_CANON_MAX_BITS + 1;
+        CHECK(unc_canon_build(&cn, deep, 2) == UNC_ERR_CORRUPT);
+    }
 }
 
 /* Build a one-entry RLE-only Compact Pro archive around `comp`, with
@@ -766,6 +827,111 @@ static void test_sit(void)
         CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
         CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_ENCRYPTED);
     }
+
+    /* An Optimizer, a Compressor and an Encryptor module, each named.
+     *
+     * WHAT THIS CANNOT SEE: no archive written by StuffIt 2.x is in
+     * hand, so these entries are built to the layout read out of
+     * StuffIt Deluxe 2.0.1's own application (src/fmt_sit.c) rather
+     * than measured. What it does check is the thing that matters
+     * either way — that a fork the archive says went through a module
+     * is REFUSED. The first case decodes perfectly as method 1 and its
+     * CRC agrees, so with the flag ignored it comes back UNC_OK with
+     * the optimized bytes under the original's name; the control below
+     * is the same archive with bit 0x40 cleared and it must extract,
+     * which is what makes the refusal a discrimination and not a
+     * blanket. */
+    {
+        uint8_t mod[256];
+        uint32_t mlen;
+        uint16_t crc;
+        int i;
+        /* flag/nibble to set, the id byte's offset, its value, and what
+         * the entry should then report. The NAME a host prints for an id
+         * is not graded here and cannot be: the table is the CLI's
+         * (cli/main.c, module_name), because on the 68000 target it
+         * would be resident A5 for every extraction. */
+        static const struct {
+            uint8_t meth; int off; uint8_t id; unsigned kind;
+        } cases[] = {
+            { 0x41, 106,  5, UNC_MODULE_OPTIMIZER  },
+            { 0x41, 106, 99, UNC_MODULE_OPTIMIZER  },
+            { 0x07,  46,  1, UNC_MODULE_COMPRESSOR },
+        };
+        /* 255 is NOT one of them: it is the id StuffIt Deluxe 2.0.1
+         * writes for an Optimizer nothing can undo, and such an entry
+         * decodes. The ids above are the refused case, and it is not a
+         * guess either — `MacPaint 1` carries a 'DCMP' and writes its
+         * real id of 4, which Aladdin's own Engine refuses to unstuff.
+         * tools/run_sitopt.py grades both against five archives 2.0.1
+         * wrote. */
+
+        for (i = 0; i < (int)(sizeof cases / sizeof cases[0]); i++) {
+            mlen = sit_synth(mod, "opt", 1, comp, sizeof comp,
+                             plain, sizeof plain);
+            mod[22 + 1] = cases[i].meth;
+            mod[22 + cases[i].off] = cases[i].id;
+            crc = unc_crc16_arc(0, mod + 22, 110);
+            mod[22 + 110] = (uint8_t)(crc >> 8);
+            mod[22 + 111] = (uint8_t)crc;
+            test_make_memio(&io, &m, mod, mlen);
+            cap_make(&sk, &cap);
+            CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL)
+                  == UNC_OK);
+            CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_MODULE);
+            CHECK(cap.info[0].module_kind == cases[i].kind);
+            CHECK(cap.info[0].module_id == cases[i].id);
+            CHECK(cap.dlen[0] == 0);       /* nothing was written */
+        }
+
+        /* The control: bit 0x40 cleared, everything else identical. */
+        mlen = sit_synth(mod, "opt", 1, comp, sizeof comp, plain, sizeof plain);
+        mod[22 + 106] = 5;
+        crc = unc_crc16_arc(0, mod + 22, 110);
+        mod[22 + 110] = (uint8_t)(crc >> 8);
+        mod[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, mod, mlen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].module_kind == UNC_MODULE_NONE);
+        CHECK(cap.dlen[0] == sizeof plain);
+
+        /* Optimizer id 255: decoded, not refused, and the fields still
+         * say what happened so a host can report it. */
+        mlen = sit_synth(mod, "lossy", 1, comp, sizeof comp,
+                         plain, sizeof plain);
+        mod[22 + 1] = 0x41;
+        mod[22 + 106] = 255;
+        crc = unc_crc16_arc(0, mod + 22, 110);
+        mod[22 + 110] = (uint8_t)(crc >> 8);
+        mod[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, mod, mlen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.info[0].module_kind == UNC_MODULE_OPTIMIZER);
+        CHECK(cap.info[0].module_id == 255);
+        CHECK(cap.dlen[0] == sizeof plain);
+        CHECK(memcmp(cap.data[0], plain, sizeof plain) == 0);
+
+        /* An encrypted fork names its encryptor too, and still fails as
+         * encrypted — that code says something this one does not. The
+         * id is 4, which is what StuffIt Deluxe 3.5.1 wrote for the
+         * built-in scheme on the three archives it made here. */
+        mlen = sit_synth(mod, "enc", 1, comp, sizeof comp, plain, sizeof plain);
+        mod[22 + 1] = 0x81;
+        mod[22 + 107] = 4;
+        crc = unc_crc16_arc(0, mod + 22, 110);
+        mod[22 + 110] = (uint8_t)(crc >> 8);
+        mod[22 + 111] = (uint8_t)crc;
+        test_make_memio(&io, &m, mod, mlen);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_SIT, &io, &sk, &al, NULL, NULL) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_ERR_ENCRYPTED);
+        CHECK(cap.info[0].module_kind == UNC_MODULE_ENCRYPTOR);
+        CHECK(cap.info[0].module_id == 4);
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1049,6 +1215,358 @@ static void test_zip_comment(void)
     CHECK(cap.comments == 0);
     CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
     CHECK(cap.dlen[0] == strlen(ZIP_SYNTH_PAYLOAD));
+}
+
+/* A zip BEHIND something else — a self-extracting archive, whose first
+ * bytes are executable code. Nothing in the corpus is one and nothing
+ * here can be: the five specimens ZipIt wrote are not committable
+ * (fixtures/SOURCES.md), and `tools/run_zipit.py` grades those. What is
+ * pinned here is the probe's reasoning, which no whole archive isolates:
+ * the claim rests on the end-of-central-directory record alone, and each
+ * of the five things that record has to agree with is bent in turn.
+ *
+ * The stub is a PEF container's first bytes — "Joy!peff" — because that
+ * is what all five of those specimens begin with, measured 2026-10-05.
+ * Its content is irrelevant to the engine, which never looks at it; what
+ * matters is that the archive's offsets count from the start of the FILE
+ * and not from the start of the zip, which is what Info-ZIP's `zip -A`
+ * and ZipIt both write (FORMATS.md, *What the zip pair claims, and what
+ * it costs*). */
+#define ZIP_STUB_LEN 200u
+
+static uint32_t zip_synth_behind_stub(uint8_t *out, uint32_t *cdp,
+                                      uint32_t *eop)
+{
+    uint32_t cd, eocd, len;
+
+    memset(out, 0, ZIP_STUB_LEN);
+    memcpy(out, "Joy!peffpwpc", 12);
+    len = zip_synth(out + ZIP_STUB_LEN, NULL, 0, &cd, &eocd);
+    cd += ZIP_STUB_LEN;
+    eocd += ZIP_STUB_LEN;
+    /* The two offsets a stub displaces: "relative offset of local
+     * header" (APPNOTE.TXT 4.4.16) and "offset of start of central
+     * directory" (4.4.24). Both are from the start of the file. */
+    put32le(out + cd + 42, 0 + ZIP_STUB_LEN);
+    put32le(out + eocd + 16, cd);
+    if (cdp) *cdp = cd;
+    if (eop) *eop = eocd;
+    return ZIP_STUB_LEN + len;
+}
+
+static void test_zip_behind_a_stub(void)
+{
+    static const char *payload = ZIP_SYNTH_PAYLOAD;
+    uint8_t arc[256 + ZIP_STUB_LEN];
+    uint32_t n = (uint32_t)strlen(payload);
+    uint32_t cd, eocd, len;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_alloc(&al);
+    len = zip_synth_behind_stub(arc, &cd, &eocd);
+
+    /* Recognised with nothing forced, and extracted from the directory
+     * the record points at. This is the whole of the 2026-10-05 change:
+     * before it, the sniff of this buffer was UNC_FORMAT_UNKNOWN. */
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == n && memcmp(cap.data[0], payload, n) == 0);
+
+    /* --- the five tests, one bend each ----------------------------- *
+     * Each must take the claim away. A corroboration nothing can fail
+     * is not one (CLAUDE.md), and four bytes of `PK\5\6` on their own
+     * claimed five files of 8,364 that are not archives at all. */
+
+    /* 1. the central file header is not where the record says. This is
+     *    a stub glued in front of an archive whose offsets were never
+     *    adjusted — the file cannot be read as a zip, and must not be
+     *    claimed as one. */
+    put32le(arc + eocd + 16, cd - ZIP_STUB_LEN);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put32le(arc + eocd + 16, cd);
+
+    /* 2. no entries: nothing to extract, and the count every walk is
+     *    bounded by. */
+    put16le(arc + eocd + 10, 0);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put16le(arc + eocd + 10, 1);
+
+    /* 3. more entries on this disk than in the whole directory. */
+    put16le(arc + eocd + 8, 2);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put16le(arc + eocd + 8, 1);
+
+    /* 4. a directory too small to hold the entries it declares: a
+     *    central file header is 46 bytes before its name (4.3.12). */
+    put32le(arc + eocd + 12, 45);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    /* 5. ...and one that does not fit in front of the record pointing
+     *    at it. 0xFFFFFFFF is Zip64's escape (4.4.23), so this is also
+     *    the test that the arithmetic cannot wrap. */
+    put32le(arc + eocd + 12, 0xFFFFFFFFu);
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    put32le(arc + eocd + 12, eocd - cd);
+
+    /* Restored, it is claimed again — so the five checks above were
+     * measuring the bend and not something they broke on the way. */
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_ZIP);
+
+    /* --- a signature by chance, which is what the five files had ---- *
+     * `PK\5\6` in a buffer that is not an archive, with the fields that
+     * follow it being whatever was there. It must be claimed as neither
+     * zip NOR zip segment: the segment half took exactly this on the
+     * strength of a nonzero disk number until 2026-10-05 (BLOCKERS.md,
+     * *Withdrawn claims*). Four shapes, because a chance record's disk
+     * number is as likely to be nonzero as zero. */
+    {
+        static const uint16_t disk[4] = { 0, 1, 626, 0xFFFFu };
+        unsigned k;
+        for (k = 0; k < 4; k++) {
+            uint8_t junk[600];
+            uint32_t at = 400;
+            unsigned j;
+            for (j = 0; j < sizeof junk; j++)
+                junk[j] = (uint8_t)(j * 37u + 11u);     /* not an archive */
+            memcpy(junk + at, "PK\x05\x06", 4);
+            put16le(junk + at + 4, disk[k]);
+            test_make_memio(&io, &m, junk, sizeof junk);
+            CHECK(unc_sniff(&io) != UNC_FORMAT_ZIP);
+            CHECK(unc_sniff(&io) != UNC_FORMAT_ZIPSEG);
+        }
+    }
+}
+
+/* A Shrink entry that is nothing but partial clears ticks once per
+ * clear — the zip peek's decode too, which until 2026-10-09 had no
+ * progress state at all — and a Cancel inside the peek ends the archive
+ * before the entry is begun. Each clear walks the table twice for 18
+ * bits of input, so a crafted 100 KB stream is ~3 hours of a Mac Plus;
+ * before this its only ticks were the reader's, ~17 minutes apart
+ * (FORMATS.md, *Shrink*). 373 bytes here, which the reader alone never
+ * ticks for: the counts below are 0 without the per-clear tick. */
+#define SHR_TICK_OUT 131u
+static long shr_ticks, shr_cancel_at;
+static uint32_t shr_overrun;    /* the most `done` ever exceeded `total` */
+static int shr_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    (void)ctx;
+    if (done > total && done - total > shr_overrun)
+        shr_overrun = done - total;
+    return ++shr_ticks != shr_cancel_at;
+}
+
+static uint32_t zip_shrink_clears(uint8_t *out, int zipit)
+{
+    static const char *name = "c";
+    uint8_t *d = out + 31;                  /* past the local header */
+    uint32_t acc = 0, bits = 0, n = 0, crc, cd, eocd, ex = zipit ? 18 : 0;
+    uint8_t plain[SHR_TICK_OUT];
+    int i;
+
+    for (i = 0; i < 331; i++) {
+        /* 'A', then 100 escapes of code 2 (partial clear), then 130
+         * more 'A's: 131 bytes, because the peek skips an entry
+         * shorter than a MacBinary header. Codes are 9 bits, LSB
+         * first. */
+        uint32_t code = i == 0 || i > 200 ? 65u : (i & 1) ? 256u : 2u;
+        acc |= code << bits;
+        bits += 9;
+        while (bits >= 8) { d[n++] = (uint8_t)acc; acc >>= 8; bits -= 8; }
+    }
+    if (bits) d[n++] = (uint8_t)acc;
+    memset(plain, 'A', sizeof plain);
+    crc = unc_crc32(0xFFFFFFFFu, plain, SHR_TICK_OUT) ^ 0xFFFFFFFFu;
+
+    memset(out, 0, 31);
+    memcpy(out, "PK\x03\x04", 4);
+    out[4] = 10;
+    out[8] = 1;                             /* method 1, Shrink */
+    put32le(out + 14, crc);
+    put32le(out + 18, n);
+    put32le(out + 22, SHR_TICK_OUT);
+    out[26] = 1;
+    out[30] = (uint8_t)name[0];
+
+    cd = 31 + n;
+    memset(out + cd, 0, 47 + ex + 22);
+    memcpy(out + cd, "PK\x01\x02", 4);
+    out[cd + 10] = 1;
+    put32le(out + cd + 16, crc);
+    put32le(out + cd + 20, n);
+    put32le(out + cd + 24, SHR_TICK_OUT);
+    out[cd + 28] = 1;
+    out[cd + 30] = (uint8_t)ex;
+    out[cd + 46] = (uint8_t)name[0];
+    if (zipit) {
+        /* APPNOTE.TXT 4.6.4: 'ZPIT', FnLen, FileName, fdType,
+         * fdCreator. The entry is not MacBinary, so the peek decodes
+         * it and says no — which is the decode being measured. */
+        uint8_t *x = out + cd + 47;
+        put16le(x, 0x2605);
+        put16le(x + 2, 14);
+        memcpy(x + 4, "ZPIT\x01" "cTEXTttxt", 14);
+    }
+    eocd = cd + 47 + ex;
+    memcpy(out + eocd, "PK\x05\x06", 4);
+    out[eocd + 8] = 1; out[eocd + 10] = 1;
+    put32le(out + eocd + 12, eocd - cd);
+    put32le(out + eocd + 16, cd);
+    return eocd + 22;
+}
+
+static void test_zip_shrink_ticks(void)
+{
+    uint8_t arc[512], plain[SHR_TICK_OUT];
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncProgress pg;
+    uint32_t len;
+    int zipit;
+
+    test_make_alloc(&al);
+    memset(plain, 'A', sizeof plain);
+    memset(&pg, 0, sizeof pg);
+    pg.tick = shr_tick;
+    for (zipit = 0; zipit < 2; zipit++) {
+        len = zip_shrink_clears(arc, zipit);
+        test_make_memio(&io, &m, arc, len);
+        cap_make(&sk, &cap);
+        shr_ticks = 0;
+        shr_cancel_at = -1;
+        shr_overrun = 0;
+        CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, &pg, NULL)
+              == UNC_OK);
+        /* The peek reads the entry once and the decode again; only one
+         * of them may count toward the bar, or a ZipIt archive reads
+         * 100 % halfway through (152 % here until 2026-10-09). */
+        CHECK(shr_overrun == 0);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        CHECK(cap.dlen[0] == SHR_TICK_OUT &&
+              memcmp(cap.data[0], plain, SHR_TICK_OUT) == 0);
+        CHECK(shr_ticks >= (zipit ? 200 : 100));
+    }
+    /* Cancelled at the first tick, which is the peek's. */
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    shr_ticks = 0;
+    shr_cancel_at = 1;
+    CHECK(unc_extract_as(UNC_FORMAT_ZIP, &io, &sk, &al, &pg, NULL)
+          == UNC_ERR_ABORTED);
+    CHECK(cap.count == 0 && shr_ticks == 1);
+}
+
+/* Zip's Reduce (src/unc_reduce.c), on hand-built streams: every follower
+ * set empty (256 six-bit zeros, 192 bytes), so each byte after them is
+ * an 8-bit literal of stage 1, and stage 2 is what is tested. The wild
+ * fixtures pin the zero window and the literal 144; a copy longer than
+ * its distance and an index past a set's count are in no CRC-good entry,
+ * so only these can fail on them (FORMATS.md, *Reduce*). */
+static int red_out_len;
+static uint8_t red_out[64];
+static int red_put(void *ctx, const uint8_t *p, uint32_t n)
+{
+    (void)ctx;
+    if (red_out_len + (int)n > (int)sizeof red_out) return UNC_ERR_CORRUPT;
+    memcpy(red_out + red_out_len, p, n);
+    red_out_len += (int)n;
+    return UNC_OK;
+}
+
+static int red_run(const uint8_t *tail, uint32_t ntail, uint32_t usize)
+{
+    static uint8_t s[192 + 16], obuf[4096];
+    UncBufIn in;
+    UncAlloc al;
+    uint32_t crc = UNC_CRC32_INIT;
+
+    memset(s, 0, 192);
+    memcpy(s + 192, tail, ntail);
+    test_make_alloc(&al);
+    unc_bufin_init_mem(&in, s, 192 + ntail);
+    red_out_len = 0;
+    return unc_reduce_decode(&al, &in, 1, usize, &crc, obuf, sizeof obuf,
+                             red_put, NULL);
+}
+
+/* LSB-first bit writer for the follower-set streams below. */
+static uint32_t red_bw_put(uint8_t *buf, uint32_t at, uint32_t v, int n)
+{
+    int k;
+    for (k = 0; k < n; k++, at++)
+        if ((v >> k) & 1u) buf[at >> 3] |= (uint8_t)(1u << (at & 7u));
+    return at;
+}
+
+/* Set 0 (the one the first byte is coded against) holds 'x', 'y', 'z':
+ * N = 3, so B(N) = 2 and an index of 3 can be SENT and names nothing. */
+static int red_run_index(uint32_t index, uint8_t *got)
+{
+    static uint8_t s[256], obuf[4096];
+    UncBufIn in;
+    UncAlloc al;
+    uint32_t at = 255u * 6u, crc = UNC_CRC32_INIT;   /* 255 empty sets */
+    int r;
+
+    memset(s, 0, sizeof s);
+    at = red_bw_put(s, at, 3, 6);
+    at = red_bw_put(s, at, 'x', 8);
+    at = red_bw_put(s, at, 'y', 8);
+    at = red_bw_put(s, at, 'z', 8);
+    at = red_bw_put(s, at, 0, 1);                    /* "from the set" */
+    at = red_bw_put(s, at, index, 2);
+    test_make_alloc(&al);
+    unc_bufin_init_mem(&in, s, (at + 7u) / 8u);
+    red_out_len = 0;
+    r = unc_reduce_decode(&al, &in, 1, 1, &crc, obuf, sizeof obuf,
+                          red_put, NULL);
+    *got = red_out_len ? red_out[0] : 0;
+    return r;
+}
+
+static void test_zip_reduce_rules(void)
+{
+    /* Factor 1: V = 0x05 is length 5 + 3, and D = 7 a distance of 8,
+     * which reaches 7 bytes before the start: zeros. */
+    static const uint8_t back[] = { 'A', 144, 0x05, 7 };
+    static const uint8_t lit[] = { 144, 0, 'B' };
+    /* The same copy at distance 1: longer than its distance, so it
+     * repeats the one byte before it (APPNOTE.TXT 5.2.5). */
+    static const uint8_t over[] = { 'A', 144, 0x05, 0 };
+    static const uint8_t run[] = { 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+    static const uint8_t want[] = { 'A', 0, 0, 0, 0, 0, 0, 0, 'A' };
+
+    CHECK(red_run(back, sizeof back, 9) == UNC_OK);
+    CHECK(red_out_len == 9 && memcmp(red_out, want, 9) == 0);
+    CHECK(red_run(lit, sizeof lit, 2) == UNC_OK);
+    CHECK(red_out_len == 2 && red_out[0] == 144 && red_out[1] == 'B');
+    CHECK(red_run(over, sizeof over, 9) == UNC_OK);
+    CHECK(red_out_len == 9 && memcmp(red_out, run, 9) == 0);
+    /* A stream that ends before `usize` is truncated, not padded. */
+    CHECK(red_run(lit, sizeof lit, 3) == UNC_ERR_TRUNCATED);
+    /* Index 2 is the set's third byte; index 3 is past its count, which
+     * `ozur` turns into a 0 and this refuses. */
+    {
+        uint8_t got = 0;
+        CHECK(red_run_index(2, &got) == UNC_OK && got == 'z');
+        CHECK(red_run_index(3, &got) == UNC_ERR_CORRUPT);
+    }
 }
 
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
@@ -1528,7 +2046,12 @@ static uint32_t zs_build_tail(uint8_t *buf, uint32_t crc, uint32_t n,
     memcpy(buf + eocd, "PK\x05\x06", 4);
     put16le(buf + eocd + 4, ndisks - 1);         /* "number of this disk" */
     put16le(buf + eocd + 6, cddisk);
-    buf[eocd + 8] = 1; buf[eocd + 10] = 1;       /* entry counts */
+    /* Both entry counts, both bytes each. They were a single byte apiece
+     * until 2026-10-05 and read as 1 only because two of the three
+     * callers hand this a zeroed buffer; the third fills with 0xAA and
+     * was declaring 43,521 entries in a 47-byte directory. */
+    put16le(buf + eocd + 8, 1);                  /* entries on this disk */
+    put16le(buf + eocd + 10, 1);                 /* entries altogether   */
     put32le(buf + eocd + 12, eocd - cd);         /* cd size */
     put32le(buf + eocd + 16, cdrel);             /* cd offset in cddisk */
     put16le(buf + eocd + 20, commentlen);
@@ -2750,6 +3273,67 @@ static void test_diskdoubler(void)
         CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
     }
 
+    /* The same file with the 1990 header: **48**, not 84. That long is
+     * the magic word 0xABCD and the header's own SIZE, so a header can
+     * be shorter than the one every corpus file has — it ends before
+     * the checksums at +48 — and the forks begin where it says they do.
+     * Stored forks, so this tests the container and no codec; what
+     * grades the BYTES is a file DiskDoubler ß05 wrote under emulation,
+     * against the bytes it was given (`diskdoubler.py --beta-verify`).
+     * Source: docs/formats/diskdoubler-container.md, "The header size,
+     * and the 1990 header". */
+    {
+        UncOptions opt;
+        static const uint8_t hint[] = "Subject";
+        uint8_t one[512];
+        uint32_t n;
+        for (n = 0; n < 48; n++) one[n] = 0;
+        one[0] = 0xAB; one[1] = 0xCD; one[2] = 0x00; one[3] = 0x30;
+        put32(one + 4, 5);           /* datasize   */
+        put32(one + 8, 5);           /* datacomp   */
+        put32(one + 12, 3);          /* rsrcsize   */
+        put32(one + 16, 3);          /* rsrccomp   */
+        one[20] = 0; one[21] = 0;    /* both methods: stored */
+        one[22] = 0x1F;              /* info1, the 1990 version byte */
+        memcpy(one + 32, "TEXT", 4);
+        memcpy(one + 36, "ttxt", 4);
+        n = 48;
+        memcpy(one + n, "plain", 5); n += 5;
+        memcpy(one + n, "RSC", 3);   n += 3;
+        memset(&opt, 0, sizeof opt);
+        opt.name_hint = hint;
+        opt.name_hint_len = (uint16_t)(sizeof hint - 1);
+        test_make_memio(&io, &m, one, n);
+        /* There is no header CRC below +82 to check, so the sniffer's
+         * test is the two length pairs — the rule ß05's own validator
+         * applies. A fork claiming to compress to more than it started
+         * as is not one of these files. */
+        CHECK(unc_sniff(&io) == UNC_FORMAT_DISKDOUBLER);
+        cap_make(&sk, &cap);
+        CHECK(unc_extract_as(UNC_FORMAT_DISKDOUBLER, &io, &sk, &al, NULL,
+                             &opt) == UNC_OK);
+        CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+        /* No ".dd" to strip: that version compresses in place. */
+        CHECK(cap.info[0].name_len == 7 &&
+              memcmp(cap.info[0].name, "Subject", 7) == 0);
+        CHECK(cap.dlen[0] == 5 && memcmp(cap.data[0], "plain", 5) == 0);
+        CHECK(cap.rlen[0] == 3 && memcmp(cap.rsrc[0], "RSC", 3) == 0);
+        CHECK(cap.info[0].type == 0x54455854u);   /* 'TEXT' */
+
+        /* Two values, not a range, and these are the controls that say
+         * so. 47 is below the floor that version's own validator
+         * enforces; 60 is a size it WOULD accept and for which no
+         * specimen exists, so nothing here guesses what would sit in
+         * the twelve bytes between. Both are UNKNOWN. */
+        one[3] = 0x2F;
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+        one[3] = 0x3C;
+        test_make_memio(&io, &m, one, n);
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+        one[3] = 0x30;
+    }
+
     /* A corrupt header CRC is not a DiskDoubler archive at all. */
     arc[76] ^= 0xFF;
     test_make_memio(&io, &m, arc, len);
@@ -2872,193 +3456,8 @@ static void ss_head3(uint8_t *h, uint32_t dclen, uint32_t dulen,
 }
 
 /* ------------------------------------------------------------------ */
-/* DART                                                                */
+/* SpaceSaver                                                          */
 /* ------------------------------------------------------------------ */
-
-/* CapSink holds 4 KB a fork and a DART's output is 419,284 bytes, so
- * this one checks the stream as it goes: the header verbatim, and every
- * byte after it against the word the archive encodes. */
-#define DART_CHUNK 20960u
-#define DART_USED  20u
-#define DART_WORD  0xA55Au
-
-typedef struct {
-    UncEntryInfo info;
-    uint8_t      head[84];
-    uint32_t     len;
-    int          bad;          /* a byte that was not the expected one */
-    int          status;
-    int          count;
-} DartSink;
-
-static int dart_begin(void *ctx, const UncEntryInfo *info)
-{
-    ((DartSink *)ctx)->info = *info;
-    return 0;
-}
-
-static int dart_write(void *ctx, UncFork fork, const void *buf, int32_t len)
-{
-    DartSink *s = (DartSink *)ctx;
-    const uint8_t *p = (const uint8_t *)buf;
-    int32_t i;
-    if (fork != UNC_FORK_DATA) return -1;
-    for (i = 0; i < len; i++, s->len++) {
-        if (s->len < sizeof s->head) s->head[s->len] = p[i];
-        else if (p[i] != (uint8_t)((s->len & 1u) ? DART_WORD : DART_WORD >> 8))
-            s->bad = 1;
-    }
-    return 0;
-}
-
-static int dart_end(void *ctx, int status)
-{
-    DartSink *s = (DartSink *)ctx;
-    s->status = status;
-    s->count++;
-    return 0;
-}
-
-static void dart_sink(UncSink *sk, DartSink *s)
-{
-    memset(s, 0, sizeof *s);
-    sk->ctx = s;
-    sk->begin_entry = dart_begin;
-    sk->write = dart_write;
-    sk->end_entry = dart_end;
-    sk->comment = NULL;
-}
-
-/* A 400K DART: twenty chunks used, forty slots, the last twenty zero.
- * Each chunk is one negative RLE count and the word it repeats — four
- * bytes that expand to a whole 20,960-byte chunk, which is what makes a
- * whole archive fit in a unit test. Layout: reference/notes/DartIntf.h,
- * SrcInfoRec; the RLE: reference/ciderpress2/DART-notes.md. */
-static uint32_t dart_400k(uint8_t *f, uint8_t cmp, uint8_t type)
-{
-    uint32_t i, at = 84, words = DART_CHUNK / 2u;
-    int32_t count = -(int32_t)words;
-
-    memset(f, 0, 84);
-    f[0] = cmp;
-    f[1] = type;
-    f[2] = 0x01; f[3] = 0x90;                          /* 400 */
-    for (i = 0; i < DART_USED; i++) {
-        f[4 + 2 * i] = 0x00; f[5 + 2 * i] = 0x02;      /* two words */
-        f[at + 0] = (uint8_t)(((uint32_t)count >> 8) & 0xFF);
-        f[at + 1] = (uint8_t)((uint32_t)count & 0xFF);
-        f[at + 2] = (uint8_t)(DART_WORD >> 8);
-        f[at + 3] = (uint8_t)DART_WORD;
-        at += 4;
-    }
-    return at;
-}
-
-static void test_dart(void)
-{
-    /* One byte of slack past the archive: the "a byte added to the file"
-     * case below hands the reader n + 1, and the byte it may look at has
-     * to be one this array owns. */
-    uint8_t f[84 + DART_USED * 4 + 1];
-    uint8_t hint[] = "System Tools.image";
-    MemIO m;
-    UncIO io;
-    UncAlloc al;
-    UncSink sk;
-    DartSink ds;
-    UncOptions opt;
-    uint32_t n, i;
-
-    memset(&opt, 0, sizeof opt);
-    opt.name_hint = hint;
-    opt.name_hint_len = 12;            /* "System Tools", as a host strips */
-    test_make_alloc(&al);
-
-    n = dart_400k(f, 0, 1);
-    f[n] = 0;
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DART);
-    dart_sink(&sk, &ds);
-    CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt) == UNC_OK);
-    CHECK(ds.count == 1 && ds.status == UNC_OK);
-    /* What comes out is a DART again: 84 bytes of header, then twenty
-     * whole chunks of the word the archive encoded. */
-    CHECK(ds.len == 84u + DART_USED * DART_CHUNK);
-    CHECK(ds.bad == 0);
-    CHECK(ds.head[0] == 2);                            /* kNoCompress */
-    CHECK(ds.head[1] == 1 && ds.head[2] == 0x01 && ds.head[3] == 0x90);
-    for (i = 0; i < 40; i++) {
-        uint8_t want = i < DART_USED ? 0xFF : 0x00;
-        CHECK(ds.head[4 + 2 * i] == want && ds.head[5 + 2 * i] == want);
-    }
-    /* The name gets an extension back, because the file is a DART. */
-    CHECK(ds.info.name_len == 17);
-    CHECK(memcmp(ds.info.name, "System Tools.dart", 17) == 0);
-    CHECK(ds.info.type == 0x444D6431u);                /* 'DMd1', Mac 400K */
-    CHECK(ds.info.creator == 0x44415254u);             /* 'DART' */
-    CHECK(ds.info.data_size == 84u + DART_USED * DART_CHUNK);
-
-    /* Method 2 is not a failure of the file: it IS what expanding one
-     * produces, and no other format returns this code. No entry is
-     * offered, because the verdict is about the archive. */
-    {
-        static uint8_t stored[84 + DART_USED * DART_CHUNK];
-        memset(stored, 0, sizeof stored);
-        stored[0] = 2; stored[1] = 1; stored[2] = 0x01; stored[3] = 0x90;
-        for (i = 0; i < DART_USED; i++) {
-            stored[4 + 2 * i] = 0xFF; stored[5 + 2 * i] = 0xFF;
-        }
-        test_make_memio(&io, &m, stored, sizeof stored);
-        CHECK(unc_sniff(&io) == UNC_FORMAT_DART);
-        dart_sink(&sk, &ds);
-        CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt)
-              == UNC_ERR_NOTCOMPRESSED);
-        CHECK(ds.count == 0);
-    }
-
-    /* Near-misses, one byte each. There is no signature anywhere in this
-     * format, so every one of these is load-bearing. */
-    f[0] = 3;                                   /* no such method */
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
-    f[0] = 0;
-    f[1] = 16;                       /* kMacHiDDisk, which is never 400K */
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
-    f[1] = 1;
-    f[4 + 2 * 30] = 0x01;            /* a slot past the end of the disk */
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
-    f[4 + 2 * 30] = 0;
-    f[5] = 0x03;                     /* a length the file does not have */
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
-    f[5] = 0x02;
-    /* The table has to add up to the file, to the byte, and that is the
-     * whole of what makes this probe safe. */
-    test_make_memio(&io, &m, f, n - 1);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
-    test_make_memio(&io, &m, f, n + 1);
-    CHECK(unc_sniff(&io) != UNC_FORMAT_DART);
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_sniff(&io) == UNC_FORMAT_DART);
-
-    /* A cut archive: sniffing rejects it outright — the arithmetic does
-     * not close — so this asks the walk directly, where the chunk that
-     * is not there has to say so. */
-    dart_sink(&sk, &ds);
-    test_make_memio(&io, &m, f, n - 2);
-    CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt) == UNC_OK);
-    CHECK(ds.count == 1 && ds.status == UNC_ERR_TRUNCATED);
-
-    /* A zero count cannot occur in an RLE stream (DART-notes.md), and a
-     * chunk that does not expand to exactly one chunk is corrupt. */
-    dart_sink(&sk, &ds);
-    f[84] = 0; f[85] = 0;
-    test_make_memio(&io, &m, f, n);
-    CHECK(unc_extract_as(UNC_FORMAT_DART, &io, &sk, &al, NULL, &opt) == UNC_OK);
-    CHECK(ds.count == 1 && ds.status == UNC_ERR_CORRUPT);
-}
 
 static void test_spacesaver(void)
 {
@@ -3296,13 +3695,72 @@ static void test_spacesaver_preset(void)
 }
 
 /* ------------------------------------------------------------------ */
-/* AppleLink package (`.pkg`) — detect only                           */
+/* Compact Pro segments: the one field an indexless segment can be    */
+/* held to (src/fmt_cptseg.c)                                          */
+/*                                                                     */
+/* A middle segment is a chunk of compressed data with an 8-byte hat,  */
+/* so the probe is deliberately weak. It was weak enough to claim a    */
+/* file from another format: `Read First.PKG`, a real AppleLink        */
+/* package, is 01 01 00 00 with a zero index and sniffed as a first    */
+/* segment until 2026-09-26. The header below is that file's, byte for */
+/* byte; the specimen is fetched, not committed.                       */
+/* ------------------------------------------------------------------ */
+static void test_cptseg_probe(void)
+{
+    uint8_t seg[64];
+    MemIO m;
+    UncIO io;
+    UncSegmentDesc desc;
+    int i;
+
+    /* A first segment as Compact Pro writes one: volume 1, no index,
+     * and the identity edu3's real four-part set carries. */
+    for (i = 0; i < (int)sizeof seg; i++) seg[i] = (uint8_t)(i * 7 + 3);
+    seg[0] = 0x01; seg[1] = 0x01; seg[2] = 0xab; seg[3] = 0x78;
+    seg[4] = seg[5] = seg[6] = seg[7] = 0x00;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_CPTSEG);
+
+    /* A middle segment of the same set. */
+    seg[1] = 0x03;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_CPTSEG);
+
+    /* The AppleLink package. Zero identity and zero index: there is no
+     * Compact Pro fact anywhere in the file, and the probe must not
+     * invent one. */
+    seg[1] = 0x01; seg[2] = 0x00; seg[3] = 0x00;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_UNKNOWN);
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_describe(&io, &desc) == UNC_ERR_FORMAT);
+
+    /* Volume 0 does not exist, identity or no identity. */
+    seg[1] = 0x00; seg[2] = 0xab; seg[3] = 0x78;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_probe(seg, sizeof seg, &io) == UNC_FORMAT_UNKNOWN);
+
+    /* The describe walk agrees with the probe on the file it accepts,
+     * and reports the identity as the set fingerprint. */
+    seg[1] = 0x02;
+    test_make_memio(&io, &m, seg, sizeof seg);
+    CHECK(unc_cptseg_describe(&io, &desc) == UNC_OK);
+    CHECK(desc.fp[0] == 0xab && desc.fp[1] == 0x78);
+    CHECK(desc.part == 2 && desc.nparts == 0);
+}
+
+/* ------------------------------------------------------------------ */
+/* AppleLink package (`.pkg`) — NOT recognised, deliberately          */
 /*                                                                    */
-/* The whole magic is three tokens, which is what Aladdin's own        */
-/* reader checks (`PKG Expand Translator`, `Othe` 0 @0x2952). These    */
-/* assert the shape of that test rather than the format: there is no   */
-/* `.pkg` file here to check a reading against, and the probe is the   */
-/* only thing shipped.                                                 */
+/* `unc_applelink_probe` shipped from 2026-08-23 to 2026-09-27 and    */
+/* tested three tokens — `Decode <thing> to|into <place>` — read out  */
+/* of `PKG Expand Translator`. That routine is the StuffIt translator */
+/* COMMAND parser and not a file test: the CompactPro, UnZip, UUCode, */
+/* BinHex4 and Unix Compress translators each carry the same routine  */
+/* with the same `STR# 129` verbs, so a line it accepts is equally    */
+/* every one of their commands and none of their formats. Removed;    */
+/* these assert that it stays removed (FORMATS.md, *AppleLink         */
+/* packages*; DECISIONS.md 2026-09-27).                               */
 /* ------------------------------------------------------------------ */
 
 static void ss_sniff_is(const char *text, UncFormat want)
@@ -3493,23 +3951,175 @@ static void test_foreign(void)
 
 static void test_applelink(void)
 {
-    /* What the translator accepts. */
-    ss_sniff_is("Decode \"My File\" to \"Some Folder\"\r",
-                UNC_FORMAT_APPLELINK);
-    ss_sniff_is("Decode Thing into Folder\r", UNC_FORMAT_APPLELINK);
-    /* Case-insensitive, as _CmpString is called there. */
-    ss_sniff_is("DECODE thing TO folder\r", UNC_FORMAT_APPLELINK);
-    /* Leading whitespace is skipped by the same tokenizer. */
-    ss_sniff_is("\r\n   Decode thing to folder\r", UNC_FORMAT_APPLELINK);
-
-    /* And what it does not. A prefix is not a token... */
-    ss_sniff_is("Decoder ring to nowhere\r", UNC_FORMAT_UNKNOWN);
-    /* ...the third token has to be there and has to be one of two... */
-    ss_sniff_is("Decode thing\r", UNC_FORMAT_UNKNOWN);
-    ss_sniff_is("Decode thing from folder\r", UNC_FORMAT_UNKNOWN);
-    /* ...and prose that merely starts with the word is not a package. */
+    /* A translator command line names nothing. Every one of these was
+     * sniffed as "AppleLink package" until 2026-09-27, and the first is
+     * also, word for word, what the CompactPro translator's own
+     * recogniser accepts. The probe that replaced it on 2026-10-05 is a
+     * file test and these stay here as the pin on the old one. */
+    ss_sniff_is("Decode \"My File\" to \"Some Folder\"\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("Decode Thing into Folder\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("DECODE thing TO folder\r", UNC_FORMAT_UNKNOWN);
+    ss_sniff_is("\r\n   Decode thing to folder\r", UNC_FORMAT_UNKNOWN);
     ss_sniff_is("Decode the message by hand, then send it to Bob.\r",
                 UNC_FORMAT_UNKNOWN);
+}
+
+/* ------------------------------------------------------------------ */
+/* AppleLink packages: SqueezePlay (src/fmt_sqp.c), M56               */
+/*                                                                    */
+/* The codec and the container are graded on real and synthesised      */
+/* packages by tools/run_sqp.py and the diff suite; what is here is    */
+/* the version-1 container at its smallest, so that every test the     */
+/* SNIFFER makes can be bent one at a time in a few bytes. The record  */
+/* below is a STORED fork, because the probe does not decode and this  */
+/* keeps the subject readable.                                        */
+/* ------------------------------------------------------------------ */
+
+/* One item, stored, four bytes of data fork. Returns the total length.
+ * Source: as fmt_sqp.c. */
+static uint32_t sqp_synth(uint8_t *buf)
+{
+    uint32_t i, start = 86u + 22u + 90u;   /* 198 */
+    uint8_t *rec;
+
+    for (i = 0; i < start + 4u; i++) buf[i] = 0;
+    buf[0] = 1;                            /* one SQP record  */
+    buf[1] = 1;                            /* version         */
+    buf[10 + 86 + 3] = 1;                  /* one HFS record  */
+
+    /* The HFS record: level 1, not a folder, then the same 86 bytes the
+     * SQP directory carries. */
+    rec = buf + 10 + 86 + 12;
+    rec[1] = 1;                            /* level           */
+    rec = rec + 4;
+    unc_put_u32be(rec + 8, 4);             /* data, compressed */
+    unc_put_u32be(rec + 12, start);        /* data, at         */
+    memcpy(rec + 20, "TEXTttxt", 8);
+    rec[36] = 1;
+    rec[37] = 'T';
+    unc_put_u32be(rec + 80, 4);            /* data, expanded   */
+    rec[84] = (uint8_t)(0x80 | 0x02);      /* InitSqp's bit, and stored */
+    memcpy(buf + 10, rec, 86);             /* the SQP copy of it */
+    memcpy(buf + start, "ABCD", 4);
+    return start + 4u;
+}
+
+static void test_sqp(void)
+{
+    uint8_t pkg[256], bent[256];
+    uint32_t len = sqp_synth(pkg);
+    uint32_t recat = 10u + 86u + 12u;      /* the HFS record   */
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+
+    test_make_memio(&io, &m, pkg, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+
+    test_make_alloc(&al);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, pkg, len);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 1 && cap.info[0].name[0] == 'T');
+    CHECK(cap.info[0].type == 0x54455854u);     /* 'TEXT' */
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "ABCD", 4) == 0);
+    CHECK(cap.rlen[0] == 0);
+
+    /* Every test the probe makes, bent one at a time. A probe with no
+     * magic number is worth exactly what its negative controls are. */
+#define SQP_BENT(what, at, to) do {                                      \
+        memcpy(bent, pkg, len);                                          \
+        bent[at] = (uint8_t)(to);                                        \
+        test_make_memio(&io, &m, bent, len);                             \
+        CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);                     \
+    } while (0)
+    SQP_BENT("the version byte", 1, 2);
+    SQP_BENT("one of the eight zero bytes", 5, 1);
+    SQP_BENT("the SQP count, which locates the HFS directory", 0, 2);
+    SQP_BENT("the item count", 10 + 86 + 3, 2);
+    SQP_BENT("the second header's zero bytes", 10 + 86 + 4, 1);
+    SQP_BENT("the level", recat + 1, 2);
+    SQP_BENT("the name length, past what a Str31 holds", recat + 4 + 36, 32);
+    SQP_BENT("the name length, to zero, which no HFS name has",
+             recat + 4 + 36, 0);
+    SQP_BENT("the compressed length, so the members no longer tile",
+             recat + 4 + 11, 5);
+    SQP_BENT("the fork's offset", recat + 4 + 15, 199);
+#undef SQP_BENT
+
+    /* A file of ZEROS whose length is 10 + 86n for the n in its first
+     * byte. Every length in it is 0, so the tiling test cannot fail on
+     * it — `lo` stays at EOF, `hi` at the directory's end and the sum at
+     * 0 == fsize - start — and the name's lower bound is the only test
+     * left standing. This was sniffed as a package, and listed as one
+     * 0-byte entry, until 2026-10-06 (DECISIONS.md, *the directory of
+     * empty records*). */
+    memset(bent, 0, sizeof bent);
+    bent[0] = 1;                                /* one version-0 record */
+    test_make_memio(&io, &m, bent, 96);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+    /* The same 96 bytes with a NAME in the record is a package — one
+     * member, an empty file — and the pair is what says the probe
+     * refuses a nameless record rather than a forkless one. */
+    bent[10 + 36] = 1;
+    bent[10 + 37] = 'E';
+    test_make_memio(&io, &m, bent, 96);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, bent, 96);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.info[0].name_len == 1 && cap.info[0].name[0] == 'E');
+    CHECK(cap.dlen[0] == 0 && cap.rlen[0] == 0);
+
+    /* And one byte short of tiling, from the other end. */
+    test_make_memio(&io, &m, pkg, len - 1);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_UNKNOWN);
+
+    /* A version-0 package is the SQP directory alone, with every item
+     * at level 1 (ReadFileAndBuildLinkedList @0x31be). */
+    memcpy(bent, pkg, len);
+    bent[1] = 0;
+    unc_put_u32be(bent + 10 + 12, 96);     /* the member moves to 10+86 */
+    unc_put_u32be(bent + 10 + 8, 4);
+    memcpy(bent + 96, "WXYZ", 4);
+    test_make_memio(&io, &m, bent, 100);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, bent, 100);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(cap.dlen[0] == 4 && memcmp(cap.data[0], "WXYZ", 4) == 0);
+
+    /* A folder, whose own record carries no forks and must not be
+     * asked for any: DoItemsReverse @0x1ecc never calls DoWork for one,
+     * and the lengths in that record are the Finder's rather than the
+     * format's. */
+    memcpy(bent, pkg, len);
+    bent[recat + 2] = 0;
+    bent[recat + 3] = 1;                        /* it is a folder */
+    unc_put_u32be(bent + recat + 4 + 8, 0);     /* no fork lengths */
+    unc_put_u32be(bent + recat + 4 + 80, 0);
+    test_make_memio(&io, &m, bent, 198);        /* nothing after it */
+    CHECK(unc_sniff(&io) == UNC_FORMAT_SQP);
+    cap_make(&sk, &cap);
+    test_make_memio(&io, &m, bent, 198);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.info[0].is_dir == 1);
+    CHECK(cap.dlen[0] == 0 && cap.rlen[0] == 0);
+
+    /* The version the reference implementation refuses, and it refuses
+     * the whole file rather than one entry. */
+    memcpy(bent, pkg, len);
+    bent[1] = 2;
+    test_make_memio(&io, &m, bent, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_SQP, &io, &sk, &al, NULL, NULL)
+          == UNC_ERR_UNSUPPORTED);
+    CHECK(cap.count == 0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -4046,6 +4656,7 @@ static void test_arc(void)
 static void test_des(void)
 {
     UncCrypt cr;
+    UncAlloc al;
     /* Key 0123456789abcdef over "Now is t": the FIPS example, and what
      * `openssl enc -des-ecb -K 0123456789abcdef -nopad` produces. */
     static const uint8_t key[8] = { 0x01,0x23,0x45,0x67,0x89,0xab,0xcd,0xef };
@@ -4057,16 +4668,19 @@ static void test_des(void)
     /* PackIt decodes by DES-DECRYPTING, which is the operation
      * unc_crypt_apply performs, so the ciphertext must come back as
      * the plaintext of the same key pair. */
-    unc_crypt_packit_des(&cr, key, 8);
+    test_make_alloc(&al);
+    unc_crypt_init(&cr);
+    CHECK(unc_crypt_packit_des(&cr, &al, key, 8) == UNC_OK);
     memcpy(buf, cipher, 8);
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, plain, 8) == 0);
 
     /* And a second block runs on the same schedule (ECB: no state). */
-    unc_crypt_packit_des(&cr, key, 8);
+    CHECK(unc_crypt_packit_des(&cr, &al, key, 8) == UNC_OK);
     for (i = 0; i < 8; i++) buf[i] = cipher[i];
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, plain, 8) == 0);
+    unc_crypt_free(&cr, &al);
 }
 
 static void test_md5(void)
@@ -4130,11 +4744,14 @@ static void test_cpt_cipher(void)
     static const uint8_t wantlong[8] = {
         0x67,0xe9,0x32,0x46,0xc6,0x8f,0x59,0x6a };
     UncCrypt cr;
+    UncAlloc al;
     uint8_t buf[16];
     int i;
 
+    test_make_alloc(&al);
+    unc_crypt_init(&cr);
     for (i = 0; i < 16; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"ohsecret", 8) == UNC_OK);
     unc_crypt_apply(&cr, buf, 16, 0);
     CHECK(memcmp(buf, want, 16) == 0);
 
@@ -4143,15 +4760,16 @@ static void test_cpt_cipher(void)
      * the register steps on the PLAINTEXT byte, so encrypting and
      * decrypting are different walks; tools/synth_cpt.py has both.) */
     for (i = 0; i < 16; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"ohsecret", 8);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"ohsecret", 8) == UNC_OK);
     unc_crypt_apply(&cr, buf, 5, 0);
     unc_crypt_apply(&cr, buf + 5, 11, 5);
     CHECK(memcmp(buf, want, 16) == 0);
 
     for (i = 0; i < 8; i++) buf[i] = 0;
-    unc_crypt_cpt(&cr, (const uint8_t *)"a-very-long-password-indeed", 27);
+    CHECK(unc_crypt_cpt(&cr, &al, (const uint8_t *)"a-very-long-password-indeed", 27) == UNC_OK);
     unc_crypt_apply(&cr, buf, 8, 0);
     CHECK(memcmp(buf, wantlong, 8) == 0);
+    unc_crypt_free(&cr, &al);
 }
 
 /* SHA-1, HMAC-SHA1, PBKDF2 and AES: the four WinZip's AES is built
@@ -4386,6 +5004,108 @@ static void test_resfork_find(void)
           == UNC_ERR_FORMAT);
 }
 
+/* ------------------------------------------------------------------ */
+/* The path walker, which has no depth limit                          */
+/*                                                                    */
+/* It had one until 2026-10-07 — UNC_PATH_MAXDEPTH, 24, sized two     */
+/* fixed arrays, and was measured against nothing. A Macintosh takes  */
+/* 250 levels (FORMATS.md, *What the DESTINATION actually allows*).   */
+/* The only limit now is the path STRING, and these assert that.      */
+/* ------------------------------------------------------------------ */
+
+static void test_path_depth(void)
+{
+    UncPath p;
+    UncEntryInfo e;
+    uint8_t nm[40];
+    int i;
+
+    /* 1. Depth far past the old limit, with the path exactly right at
+     *    the bottom. One character a level, so 100 levels is 199 bytes
+     *    and the string never fills. */
+    unc_path_init(&p, NULL);
+    for (i = 0; i < 100; i++) {
+        nm[0] = (uint8_t)('a' + (i % 26));
+        CHECK(unc_path_push(&p, nm, 1) == UNC_OK);
+    }
+    CHECK(p.depth == 100);
+    CHECK(p.len == 199);                      /* 100 names + 99 separators */
+    CHECK(p.w == p.buf);                      /* no host buffer offered */
+    CHECK(p.lost == 0);
+    CHECK(p.truncdepth == 0);
+    CHECK(p.buf[0] == 'a' && p.buf[1] == '/' && p.buf[2] == 'b');
+
+    /* 2. Popping back up by SCANNING, which is what replaced the arrays.
+     *    Every level has to come back exactly. */
+    for (i = 99; i >= 0; i--) {
+        unc_path_pop(&p);
+        CHECK(p.depth == i);
+        CHECK(p.len == (i ? (uint16_t)(2 * i - 1) : 0));
+    }
+    CHECK(p.len == 0 && p.depth == 0);
+
+    /* 3. A '/' inside a component becomes ':' on the way in, which is
+     *    what makes the scan exact rather than a guess: pop must land on
+     *    the separator this walker wrote and not on one from a name. */
+    unc_path_init(&p, NULL);
+    CHECK(unc_path_push(&p, (const uint8_t *)"a", 1) == UNC_OK);
+    CHECK(unc_path_push(&p, (const uint8_t *)"x/y", 3) == UNC_OK);
+    CHECK(p.len == 5 && p.buf[1] == '/' && p.buf[3] == ':');
+    unc_path_pop(&p);
+    CHECK(p.len == 1 && p.depth == 1);        /* back to "a", not to "a/x" */
+
+    /* 4. The string filling is the ONE failure, and it is counted so the
+     *    pops stay balanced — four of the five walks pop by a count, and
+     *    an uncounted omission misfiles every entry after it (BLOCKERS.md). */
+    unc_path_init(&p, NULL);
+    for (i = 0; i < 40; i++) nm[i] = (uint8_t)'w';
+    for (i = 0; i < 8; i++)
+        CHECK(unc_path_push(&p, nm, 31) == UNC_OK);
+    CHECK(p.len == UNC_NAME_MAX);             /* 8 x 31 + 7 = 255 exactly */
+    CHECK(p.truncdepth == 0);                 /* exactly full is not cut */
+    CHECK(unc_path_push(&p, nm, 31) == UNC_ERR_TRUNCATED);
+    CHECK(p.lost == 1);
+    CHECK(p.depth == 8);                      /* the path did not move */
+    CHECK(unc_path_askdepth(&p) == 9);        /* but the archive's did */
+    CHECK(unc_path_push(&p, nm, 31) == UNC_ERR_TRUNCATED);
+    CHECK(p.lost == 2);
+
+    /* 5. With no host buffer the path stopped at UNC_NAME_MAX and what
+     *    did not fit was never counted, so the length is 0 — the
+     *    documented "the format cannot say" (macextract.h) rather than a
+     *    number for a path nothing here holds. A host that offers a
+     *    buffer gets the whole thing instead; `run_names.py` grades THAT
+     *    on a real archive, through the CLI's 64 KB. */
+    unc_entry_clear(&e);
+    unc_path_leaf(&p, &e, (const uint8_t *)"leaf.txt", 8);
+    CHECK(e.name_truncated == 1);
+    CHECK(e.name_full_len == 0);
+
+    /* 6. The omissions unwind before the real levels do. */
+    unc_path_pop(&p);
+    CHECK(p.lost == 1 && p.depth == 8);
+    unc_path_pop(&p);
+    CHECK(p.lost == 0 && p.depth == 8);
+    unc_path_pop(&p);
+    CHECK(p.depth == 7);
+
+    /* 7. A component that PARTLY fits is a cut, not an omission: the
+     *    separator is there, so the scan still finds it and the pop is
+     *    exact — only the name is short. `truncdepth` marks it and comes
+     *    back up with it. */
+    unc_path_init(&p, NULL);
+    for (i = 0; i < 7; i++)
+        CHECK(unc_path_push(&p, nm, 31) == UNC_OK);
+    CHECK(p.len == 223 && p.truncdepth == 0);
+    CHECK(unc_path_push(&p, nm, 40) == UNC_OK);   /* 31 of 40 fit */
+    CHECK(p.len == UNC_NAME_MAX);
+    CHECK(p.truncdepth == 8);
+    CHECK(p.lost == 0);                           /* cut, not omitted */
+    unc_path_pop(&p);
+    CHECK(p.depth == 7 && p.len == 223);          /* the scan still works */
+    CHECK(p.truncdepth == 0);                     /* and the cut came back */
+}
+
 void run_format_tests(void)
 {
     test_macbinary();
@@ -4402,7 +5122,11 @@ void run_format_tests(void)
     test_tar();
     test_zip();
     test_zip_comment();
+    test_zip_behind_a_stub();
+    test_zip_shrink_ticks();
+    test_zip_reduce_rules();
     test_lzh_probe();
+    test_cptseg_probe();
     test_lzh_extract();
     test_sitseg();
     test_zipseg();
@@ -4411,10 +5135,11 @@ void run_format_tests(void)
     test_diskdoubler();
     test_nowcompress();
     test_applelink();
+    test_sqp();
     test_foreign();
-    test_dart();
     test_spacesaver();
     test_spacesaver_alg4();
+    test_path_depth();
     test_spacesaver_preset();
     test_superdisk();
     test_superdisk_single();

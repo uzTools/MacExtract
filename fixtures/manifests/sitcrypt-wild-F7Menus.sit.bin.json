@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "SIT!",
+   "data_sha256": "850ffc55d1cf00f90d81a3928189dcf5a27e1446c9bb0243c00ed5158cad06e0",
+   "data_size": 4574,
+   "finder_flags": 256,
+   "name": "Commercial Finder 7 Menus!.sit",
+   "rsrc_sha256": "00064ca7350aa031f89327342727938b919aabd2a847b8601c73c32bbac3927b",
+   "rsrc_size": 318,
+   "type": "SIT!"
+  }
+ ],
+ "fixture": "sitcrypt-wild-F7Menus.sit.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "8c7b967380756013b63bcd5c32e19018ec0596c89abf4069e07d5bc0d0956717",
+ "size": 5120
+}

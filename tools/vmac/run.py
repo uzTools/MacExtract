@@ -409,6 +409,40 @@ def check_interleave(vals):
                    + "; ".join(which) + f" over {rounds} rounds")
 
 
+BUDGET_FIELDS = ("e1", "wa", "kf", "rf", "fc", "fn")
+
+
+def budget_probe(indsk):
+    """The `-D UNC_AT_BUDGET` fields the grid has no slot for, read from the
+    report file the autotest writes on the In volume: e1 (first per-entry
+    status), then wa kf rf fc fn (mac/ovl_load.h). Grid slots 1, 3, 7 and 5
+    are the shortfall, FreeMem at start, the budget and the refusal reason.
+    Returns a printable string, or None when there is no 14-value report —
+    which is what a build without the overlay fields writes."""
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    rep = os.path.join(home, "report")
+    try:
+        if subprocess.run(["hmount", indsk], capture_output=True,
+                          env=env).returncode != 0:
+            return None
+        c = subprocess.run(["hcopy", "-r", "report", rep],
+                           capture_output=True, env=env)
+        subprocess.run(["humount"], capture_output=True, env=env)
+        if c.returncode != 0:
+            return None
+        b = open(rep, "rb").read()
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    u32 = lambda o: int.from_bytes(b[o:o + 4], "big")
+    if len(b) < 12 or b[:4] != b"UNCR" or u32(8) < 14:
+        return None
+    v = [signed32(u32(12 + 4 * i)) for i in range(14)]
+    out = [f"{k}={v[8 + i]}" for i, k in enumerate(BUDGET_FIELDS)]
+    out += [f"bg={v[7]}", f"short={v[1]}", f"why={v[5]}", f"free0={v[3]}"]
+    return " ".join(out)
+
+
 def check(fixture, png, manifest_dir, expect=False):
     """Cross-check the on-screen grid against the Linux engine's output.
 
@@ -484,11 +518,22 @@ def main():
                          "UNC_ERR_ABORTED (-8), rather than failing every "
                          "remaining entry. It reports FAIL by construction "
                          "-- read the numbers, not the verdict.")
+    ap.add_argument("--as", dest="as_name", default=None, metavar="NAME",
+                    help="the fixture's name on the In floppy (default "
+                         f"{ARCHIVE_NAME}). Must begin 'archive.': the app "
+                         "opens the first such file. The shell dispatches "
+                         "on the extension before it reads a byte, so "
+                         "'--as archive.zip' runs a path the default name "
+                         "never reaches")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     metavar="UNC_...",
                     help="extra build switch for the application, e.g. "
                          "-D UNC_MAC_STAGE_WRITES (repeatable)")
     args = ap.parse_args()
+    if args.as_name is not None:
+        if not args.as_name.startswith("archive.") or len(args.as_name) > 31:
+            ap.error("--as wants a name beginning 'archive.', 31 bytes at most")
+        globals()["ARCHIVE_NAME"] = args.as_name
 
     extras = []
     for spec in args.extra_file:
@@ -576,6 +621,9 @@ def main():
             else:
                 ok, detail = check(fixture, png, manifest_dir, args.expect)
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
+            if "UNC_AT_BUDGET" in args.defines and vals is not None:
+                probe = budget_probe(os.path.join(workdir, "in.dsk"))
+                detail = f"[{probe or 'no probe report'}] {detail}"
             timing = ""
             if boot is not None and extract is not None:
                 timing = f" [boot {boot:.0f}s + extract {extract:.0f}s]"
@@ -596,7 +644,13 @@ def main():
                 shutil.rmtree(workdir, ignore_errors=True)
 
     shutil.rmtree(bootdir, ignore_errors=True)
-    print(f"\n{npass}/{len(fixtures)} PASS at {args.mem} on {args.system}")
+    # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
+    # summary that reports --mem's default while a different machine ran is how
+    # a 512 KB result gets filed as a 4 MB one. sys30.py beside this file has
+    # guarded against exactly that since it was written; this one printed
+    # args.mem until 2026-09-27, when a real 512Ke sweep reported "at 4M".
+    machine = (args.emu or f"mv-{args.mem}").replace("mv-", "")
+    print(f"\n{npass}/{len(fixtures)} PASS at {machine} on {args.system}")
     if args.json:
         json.dump(results, open(args.json, "w"), indent=1)
     return 0 if npass == len(fixtures) else 1

@@ -178,7 +178,7 @@
 /* under half a second on a 70-second run.                             */
 /* ------------------------------------------------------------------ */
 #ifdef UNC_AT_TIMING
-static long gTkRun, gTkRead, gTkWrite, gTkMeta;
+static long gTkRun, gTkRead, gTkWrite, gTkMeta, gTkBack;
 #define TK_T0        long tk0_ = TickCount()
 #define TK_ADD(acc)  ((acc) += TickCount() - tk0_)
 #else
@@ -461,6 +461,9 @@ static long gFreeAtStart;  /* FreeMem() before the reserve is taken off */
  * fixes ("the reserve is too big" vs "the heap is fragmented"). These
  * make both visible. See tools/vmac/README.md. */
 static long gBudget;        /* what the engine was actually given        */
+#ifdef UNC_AT_BUDGET
+short gFirstEntryErr;       /* the first per-entry status that was not OK */
+#endif
 static long gRefusedSize;   /* size of the FIRST refused allocation      */
 static long gRefusedWhy;    /* 1 = over budget, 2 = NewPtr returned NULL */
 static long gRefusedMaxBlk; /* MaxBlock() at that moment: contiguity vs total */
@@ -532,9 +535,36 @@ static long gMoveBefore, gMoveAfter;   /* the block's ADDRESS, not MaxBlock:
 
 typedef struct {
     long budget;    /* remaining bytes the engine may hold */
-    long initial;   /* starting budget (set at init) */
+    long initial;   /* starting budget (taken at the first allocation) */
     long lowmark;   /* lowest budget ever seen => peak = initial - lowmark */
+    char taken;     /* 0 until the budget has been computed */
 } MacAlloc;
+
+/* The budget is taken at the engine's FIRST ALLOCATION, not before the
+ * extraction starts, and on this branch that is a correctness requirement
+ * rather than a tidiness one.
+ *
+ * The ciphers live in an `OVLY` resource and are fetched when an archive
+ * turns out to be encrypted — which is DURING the extraction, long after the
+ * budget was computed. Budgeting up front therefore promises the engine heap
+ * that the overlay then takes: the engine believes it may hold N bytes, the
+ * overlay loads 5,988 of them, and what fails is a NewPtr the budget said was
+ * affordable — `gRefusedWhy` = 2, the refusal this shell deliberately
+ * distinguishes from an over-budget one because the two have opposite fixes.
+ *
+ * Measured on the `code-segments` experiment, where the same mistake was
+ * larger and therefore visible: a budget taken before the loader ran read
+ * 726,122 B against a real 650,880 B, and an archive extracted to within
+ * about 5 KB of a NewPtr failure. That branch was retired; this is the part
+ * of it worth keeping, and it applies to any mechanism that brings code in
+ * after the budget has been granted.
+ *
+ * PurgeSpace rather than FreeMem for the same reason: a released overlay is a
+ * purgeable Handle, so FreeMem understates what the engine can actually have.
+ * Source: Inside Macintosh II-42 — "the total amount of free memory that
+ * would be available if all purgeable blocks were purged". It is in the 64K
+ * ROM, so it costs the rom64k branch nothing. */
+static void mal_take_budget(MacAlloc *a);
 
 #ifdef UNC_AT_RESERVE
 /* Low-water mark of FreeMem() across a whole run — the instrument that priced
@@ -721,11 +751,37 @@ static void StackMark(long *where)
 #endif
 
 
+static void mal_take_budget(MacAlloc *a)
+{
+    /* See mal_take_budget's note above for why this is PurgeSpace. */
+    long total, contig;
+    long freenow;
+    long reserve;
+    PurgeSpace(&total, &contig);
+    freenow = total;
+    if (freenow < FreeMem()) freenow = FreeMem();   /* never below the floor */
+    reserve = freenow / 4;
+    if (reserve > kMemReserveMax) reserve = kMemReserveMax;
+    if (reserve < kMemReserveMin) reserve = kMemReserveMin;
+#if defined(UNC_AT_BUDGET) || defined(UNC_AT_RESERVE)
+    gFreeAtStart = freenow;
+#endif
+    a->budget = freenow - reserve;
+    if (a->budget < 32L * 1024) a->budget = 32L * 1024;
+    a->initial = a->budget;      /* for peak-usage = initial - lowmark */
+    a->lowmark = a->budget;
+    a->taken = 1;
+#ifdef UNC_AT_BUDGET
+    gBudget = a->initial;
+#endif
+}
+
 static void *mal_alloc(void *ctx, uint32_t size)
 {
     StackSample();
     MacAlloc *a = (MacAlloc *)ctx;
     Ptr p;
+    if (!a->taken) mal_take_budget(a);
     if ((long)size + 16 > a->budget) {
         /* How much more the budget would have had to be, at this moment.
          * The engine already holds initial - budget, so this is exactly
@@ -978,6 +1034,7 @@ typedef struct {
     Str63        curName;      /* sanitized current file name */
     UncEntryInfo cur;
     int          entries, errors, unsupported;
+    int          inexact;    /* restored, but not the original file */
     /* The shape of what was written, for the envelope unwrap in
      * ExtractOne: one file and no folders is what an envelope layer
      * looks like, and lastName/lastDir say where it landed. */
@@ -1077,6 +1134,17 @@ static long  gRepMore;              /* lines there was no room for */
 static struct { long dir; uint32_t hash; } gDirMemo[kDirMemo];
 static short gDirMemoN;
 
+/* Set when a TOP-LEVEL folder this run made found gDirMemo full. A folder
+ * at the top that is already on the disk and not in the memo is numbered
+ * `~1` rather than descended into, so extracting the same archive twice
+ * gives a second folder instead of `~1` files inside the first
+ * (DECISIONS.md 2026-10-11, *the folder that is already there*) — but a
+ * top folder the memo had no room for would read the same on its second
+ * visit and be numbered too: one archive folder split in two. So once
+ * that has happened, the top merges for the rest of the run, as before.
+ * One flag rather than a table of its own: a table was 64 B of A5. */
+static Boolean gTopLost;
+
 static void RepReset(void)
 {
     gRepN = 0;
@@ -1084,6 +1152,7 @@ static void RepReset(void)
     gRepCur = -1;
     gRepMore = 0;
     gDirMemoN = 0;
+    gTopLost = false;
 }
 
 /* Start a line. `urgent` is a failure, which may take from the reserve. */
@@ -1166,6 +1235,20 @@ static void RepRenamed(const char *what, const uint8_t *orig, int olen,
     RepRenamedAt(0, what, orig, olen, now, verb);
 }
 
+/* A name the archive states in characters MacRoman has no byte for.
+ * The line names what IS on the disk and not what was asked for,
+ * because what was asked for cannot be drawn on this Macintosh at all:
+ * a report that printed it would print a row of substitutes twice and
+ * call it a rename. */
+static void RepLostChars(const char *what, const unsigned char *now)
+{
+    if (!RepNew(0)) return;
+    RepCat(what);
+    RepCatP(now);
+    RepMarkBreak();
+    RepCat(" was named in characters this Macintosh cannot write");
+}
+
 /* djb2 over one path component, raw engine bytes. Raw because a
  * component cannot hold a '/' — that is the engine's separator — so its
  * bytes and the name this shell writes are one to one, and any
@@ -1228,6 +1311,19 @@ static void RepEntryFailed(const uint8_t *orig, int olen, const char *why)
 /* The same, for the failure the engine reports once the entry has been
  * accepted. The reason is what the user can act on, so each says what is
  * wrong rather than naming the error. */
+/* An entry an Optimizer left INEXACT. It did not fail — the file is on
+ * the disk and it opens — so it is not a RepFailed, and the report says
+ * what is true of it instead. One sentence, because on this target a
+ * literal is .rodata in the A5 world and resident for every extraction
+ * (see the UNC_ERR_MODULE arm below). */
+static void RepInexact(const uint8_t *orig, int olen)
+{
+    if (!RepNew(1)) return;
+    RepCatBytes(orig, olen);
+    RepMarkBreak();
+    RepCat(" opens, but is not the original file");
+}
+
 static void RepFailed(const uint8_t *orig, int olen, int status)
 {
     if (!RepNew(1)) return;
@@ -1242,6 +1338,18 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
         break;
     case UNC_ERR_UNSUPPORTED:
         RepCat(" uses a method this version cannot read");
+        break;
+    case UNC_ERR_MODULE:
+        /* The only case here that does not carry its own sentence, and
+         * deliberately: on this target a string literal is .rodata in
+         * the A5 world, resident for every extraction, and the engine
+         * already has this one word for word. What the user needs first
+         * is that the archive is not damaged — it wants a StuffIt 2.0
+         * add-on, and only StuffIt Deluxe 2.0 with that module opens
+         * it. WHICH module is in the CLI's report and not in this one,
+         * for the same reason (cli/main.c, module_name). */
+        RepCat(" ");
+        RepCat(unc_strerror(status));
         break;
     case UNC_ERR_CRC:
         RepCat(" is damaged: its checksum does not match");
@@ -1283,6 +1391,102 @@ static int ExtStart(const unsigned char *b, int len)
         return i;
     }
     return -1;
+}
+
+/* ------------------------------------------------------------------ */
+/* UTF-8 names, folded into the bytes an HFS name holds               */
+/* ------------------------------------------------------------------ */
+
+/* MacRoman 0x80..0xFF as Unicode: the standard Apple layout, the same
+ * table the Linux CLI carries (cli/main.c). */
+static const unsigned short kMacRomanHigh[128] = {
+    0x00C4,0x00C5,0x00C7,0x00C9,0x00D1,0x00D6,0x00DC,0x00E1,
+    0x00E0,0x00E2,0x00E4,0x00E3,0x00E5,0x00E7,0x00E9,0x00E8,
+    0x00EA,0x00EB,0x00ED,0x00EC,0x00EE,0x00EF,0x00F1,0x00F3,
+    0x00F2,0x00F4,0x00F6,0x00F5,0x00FA,0x00F9,0x00FB,0x00FC,
+    0x2020,0x00B0,0x00A2,0x00A3,0x00A7,0x2022,0x00B6,0x00DF,
+    0x00AE,0x00A9,0x2122,0x00B4,0x00A8,0x2260,0x00C6,0x00D8,
+    0x221E,0x00B1,0x2264,0x2265,0x00A5,0x00B5,0x2202,0x2211,
+    0x220F,0x03C0,0x222B,0x00AA,0x00BA,0x03A9,0x00E6,0x00F8,
+    0x00BF,0x00A1,0x00AC,0x221A,0x0192,0x2248,0x2206,0x00AB,
+    0x00BB,0x2026,0x00A0,0x00C0,0x00C3,0x00D5,0x0152,0x0153,
+    0x2013,0x2014,0x201C,0x201D,0x2018,0x2019,0x00F7,0x25CA,
+    0x00FF,0x0178,0x2044,0x20AC,0x2039,0x203A,0xFB01,0xFB02,
+    0x2021,0x00B7,0x201A,0x201E,0x2030,0x00C2,0x00CA,0x00C1,
+    0x00CB,0x00C8,0x00CD,0x00CE,0x00CF,0x00CC,0x00D3,0x00D4,
+    0xF8FF,0x00D2,0x00DA,0x00DB,0x00D9,0x0131,0x02C6,0x02DC,
+    0x00AF,0x02D8,0x02D9,0x02DA,0x00B8,0x02DD,0x02DB,0x02C7
+};
+
+/* One engine path, UTF-8 -> MacRoman, IN PLACE. Returns the new length
+ * and sets one bit of *lost per path component that lost a character.
+ *
+ * An HFS name is MacRoman bytes and StuffIt 5 states its names in UTF-8
+ * (macextract.h, `name_utf8`), so without this the Macintosh writes the
+ * same mojibake the Linux CLI wrote until 2026-09-22. The whole path is
+ * folded at the door rather than component by component, so that the
+ * folder walk, the folder hash, the 31-character cut and every line of
+ * the report go on seeing one name, of one length, in one encoding.
+ * Two properties make that safe: UTF-8 never puts a 0x2F byte inside a
+ * multi-byte sequence, so the engine's '/' separators survive, and the
+ * fold only ever shortens, so the output never overtakes the input.
+ *
+ * A code point MacRoman has no byte for becomes '_' — every Japanese
+ * name in the corpus is one, and no System that boots on a 68000 Mac
+ * Plus can draw it. A byte that does not begin a valid sequence is
+ * passed through as itself: the name is then not UTF-8, the only other
+ * encoding this shell knows is MacRoman, and passing it on is what
+ * happened before this function existed. That rule is stated rather
+ * than measured — all 525 entries of the 31 StuffIt 5 fixtures here
+ * are valid UTF-8.
+ *
+ * 68000: one pass, byte-wise, no recursion, no allocation. */
+static int Utf8ToMacRoman(uint8_t *p, int len, uint32_t *lost)
+{
+    int i = 0, o = 0, comp = 0;
+
+    *lost = 0;
+    while (i < len) {
+        uint8_t b = p[i];
+        uint32_t cp;
+        int n, k, ok;
+
+        if (b < 0x80) {                       /* ASCII, separators and all */
+            if (b == '/' && comp < 31) comp++;
+            p[o++] = b;
+            i++;
+            continue;
+        }
+        if      ((b & 0xE0) == 0xC0) { cp = (uint32_t)(b & 0x1F); n = 1; }
+        else if ((b & 0xF0) == 0xE0) { cp = (uint32_t)(b & 0x0F); n = 2; }
+        else if ((b & 0xF8) == 0xF0) { cp = (uint32_t)(b & 0x07); n = 3; }
+        else                         { p[o++] = b; i++; continue; }
+        ok = (i + n < len);
+        for (k = 1; ok && k <= n; k++)
+            if ((p[i + k] & 0xC0) != 0x80) ok = 0;
+        if (!ok) { p[o++] = b; i++; continue; }
+        for (k = 1; k <= n; k++)
+            cp = (cp << 6) | (uint32_t)(p[i + k] & 0x3F);
+        i += n + 1;
+        /* A sequence that codes a value below 0x80 is overlong, and an
+         * overlong '/' would put a separator inside a component. It is
+         * not a character this can write either way. */
+        ok = 0;
+        if (cp >= 0x80) {
+            for (k = 0; k < 128; k++)
+                if ((uint32_t)kMacRomanHigh[k] == cp) {
+                    p[o++] = (uint8_t)(0x80 + k);
+                    ok = 1;
+                    break;
+                }
+        }
+        if (!ok) {
+            p[o++] = '_';
+            *lost |= (uint32_t)1 << comp;
+        }
+    }
+    p[o] = 0;
+    return o;
 }
 
 /* One engine path component -> Pascal Str63: undo the '/'->':' swap,
@@ -1389,11 +1593,17 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
  * that a folder went into one this run had made for another name after
  * all, which is what happens past `~99`.
  *
- * A directory THIS RUN DID NOT MAKE is descended into, still: a folder
- * the user already had, or one an earlier run left, must take this
- * archive's files rather than sprout a `~1` beside it. */
+ * A directory THIS RUN DID NOT MAKE is descended into below the top
+ * level: inside a folder this run made, nothing else can be there. At
+ * the TOP (`top`), it is numbered instead — a folder the user already
+ * had, or one an earlier run left, gets a `~1` beside it, and the files
+ * inside keep their own names. Until 2026-10-11 it was descended into
+ * there too, and a second extraction of one archive put `name~1` files
+ * through the first one's tree (DECISIONS.md 2026-10-11, *the folder
+ * that is already there*). */
 static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
-                       long *dirID, int *isNew, int *merged, int *numbered)
+                       int top, long *dirID, int *isNew, int *merged,
+                       int *numbered)
 {
     Str63 base;
     int attempt;
@@ -1412,6 +1622,7 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
         if (err == noErr) {
             *dirID = created;
             *isNew = 1;
+            if (top && gDirMemoN >= kDirMemo) gTopLost = true;
             return noErr;
         }
         if (err != dupFNErr) return err;
@@ -1426,6 +1637,8 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
             return err;                  /* a FILE holds the name */
         *dirID = pb.dirInfo.ioDrDirID;
         seen = (uint32_t)RepDirKnown(*dirID, hash);
+        if (top && seen == 0 && !gTopLost)
+            seen = 1;                    /* already there: not ours */
         if (seen != 1) return noErr;     /* not ours, or the same folder */
         /* Ours, under another name: a different folder. Number it —
          * unless the numbers have run out, where merging is what is
@@ -1530,11 +1743,24 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
     MacSink *s = (MacSink *)ctx;
     long dir = s->rootDirID;
     int start = 0, i, attempt;
-    int leafStart = 0, leafLen = 0, leafChanged = 0;
+    int leafStart = 0, leafLen = 0, leafChanged = 0, leafLost = 0;
+    const uint8_t *nm;
+    int nlen, comp_i = 0;
+    uint32_t lost = 0;
     OSErr err;
 
     s->cur = *info;
     s->entries++;
+    /* StuffIt 5's names are UTF-8; an HFS name is MacRoman bytes. The
+     * fold happens once, here, and everything below sees one encoding
+     * (Utf8ToMacRoman). It shortens in place, so `s->cur` — this
+     * shell's own copy — is where it lands, and the report, the failure
+     * lines and the folder hashes all read the folded bytes. */
+    if (info->name_utf8)
+        s->cur.name_len = (uint16_t)Utf8ToMacRoman(s->cur.name,
+                                                   (int)info->name_len, &lost);
+    nm = s->cur.name;
+    nlen = (int)s->cur.name_len;
 #ifndef UNC_MAC_STAGE_WRITES
     s->openRef = 0;
     s->openIsRsrc = 0;
@@ -1548,24 +1774,28 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 #endif
 
     /* Walk the '/'-separated engine path, creating directories. */
-    for (i = 0; i <= info->name_len; i++) {
-        if (i == info->name_len || info->name[i] == '/') {
+    for (i = 0; i <= nlen; i++) {
+        if (i == nlen || nm[i] == '/') {
             Str63 comp;
-            int changed = ComponentToStr63(info->name + start, i - start, comp);
-            if (i == info->name_len && !info->is_dir) {
+            int changed = ComponentToStr63(nm + start, i - start, comp);
+            int compLost = (lost >> (comp_i < 31 ? comp_i : 31)) & 1;
+            comp_i++;
+            if (i == nlen && !info->is_dir) {
                 BlockMoveData(comp, s->curName, comp[0] + 1);
                 s->curDirID = dir;
                 leafStart = start;
                 leafLen = i - start;
                 leafChanged = changed;
+                leafLost = compLost;
             } else {
                 int isNew = 0, merged = 0, numbered = 0;
-                uint32_t h = DirHash(info->name + start, i - start);
-                OSErr derr = EnsureDir(s->vRefNum, dir, comp, h, &dir,
+                uint32_t h = DirHash(nm + start, i - start);
+                OSErr derr = EnsureDir(s->vRefNum, dir, comp, h,
+                                       dir == s->rootDirID, &dir,
                                        &isNew, &merged, &numbered);
                 if (derr != noErr) {
                     if (derr == dskFulErr) return -1;   /* the run is over */
-                    RepEntryFailed(info->name + start, i - start,
+                    RepEntryFailed(nm + start, i - start,
                                    " could not be made on the disk");
                     s->errors++;
                     return 1;                           /* this entry only */
@@ -1580,15 +1810,17 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                  * different: nothing is lost, but two folders are now
                  * one. */
                 if (isNew) {
-                    if (changed || numbered)
-                        RepRenamed("Folder ", info->name + start, i - start,
+                    if (compLost)
+                        RepLostChars("Folder ", comp);
+                    else if (changed || numbered)
+                        RepRenamed("Folder ", nm + start, i - start,
                                    comp, " renamed to ");
                     RepDirMemo(dir, h);
                 } else if (merged) {
-                    RepRenamedAt(1, "Folder ", info->name + start, i - start,
+                    RepRenamedAt(1, "Folder ", nm + start, i - start,
                                  comp, " combined with ");
                 }
-                if (i == info->name_len) return 1;   /* dir entry done */
+                if (i == nlen) return 1;             /* dir entry done */
             }
             start = i + 1;
         }
@@ -1608,7 +1840,7 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                  * "abort", so the eleventh file whose name shortened
                  * alike ended the extraction and everything after it was
                  * never written (BLOCKERS.md). */
-                RepEntryFailed(info->name + leafStart, leafLen,
+                RepEntryFailed(nm + leafStart, leafLen,
                                err == dupFNErr
                                ? " could not be given a name of its own"
                                : " could not be created on the disk");
@@ -1625,8 +1857,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
      * ENGINE's own cut — a path that summed past its 255-byte cap — and
      * it is reported even where this shell then left the leaf alone,
      * because the file is not where the archive said it was. */
-    if (leafChanged)
-        RepRenamed("", info->name + leafStart, leafLen, s->curName,
+    if (leafLost)
+        RepLostChars("", s->curName);
+    else if (leafChanged)
+        RepRenamed("", nm + leafStart, leafLen, s->curName,
                    " renamed to ");
     else if (info->name_truncated && RepNew(0)) {
         RepCatP(s->curName);
@@ -2003,7 +2237,17 @@ static int SINK_END(void *ctx, int status)
          * created in sink_begin, so no incomplete output is left behind. */
         MyHDelete(s->vRefNum, s->curDirID, s->curName);
     }
-    if (status != UNC_OK) s->errors++;
+    if (status != UNC_OK) {
+        s->errors++;
+#ifdef UNC_AT_BUDGET
+        /* The FIRST per-entry error code, kept for the probe. The grid
+         * carries a COUNT and the alert a summary, so a failing entry says
+         * how many and never which kind — which is exactly the question a
+         * tier failure asks. */
+        { extern short gFirstEntryErr;
+          if (!gFirstEntryErr) gFirstEntryErr = (short)status; }
+#endif
+    }
     /* Every failure that does not stop the archive goes in the report,
      * named: "some entries could not be extracted" is what the user was
      * told before 2026-08-29, and it names neither the entry nor the
@@ -2019,6 +2263,18 @@ static int SINK_END(void *ctx, int status)
      * the one failure whose answer is the file itself, and the alert
      * says so rather than "some entries could not be extracted". */
     if (status == UNC_ERR_UNSUPPORTED) s->unsupported++;
+    /* Not a failure, and told anyway: `MacPaint 1` throws a painting's
+     * header and its resource fork away, and what this engine puts back
+     * is a valid document rather than the user's file (macextract.h,
+     * module_restored). Saying nothing would leave a file under the
+     * archive's name that differs from the one that was archived. */
+    if (status == UNC_OK && s->cur.module_restored == 2) {
+        int b = 0, k;
+        for (k = 0; k < (int)s->cur.name_len; k++)
+            if (s->cur.name[k] == '/') b = k + 1;
+        RepInexact(s->cur.name + b, (int)s->cur.name_len - b);
+        s->inexact++;
+    }
     if (s->cur.is_dir) s->dirCount++;
     else s->fileCount++;
     return 0;
@@ -3271,8 +3527,8 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
                 for (i = 0; i < stemlen; i++) famStem[i] = name[i + 1];
                 famStemLen = stemlen;
                 famSplit = SplitPartOf(famStem, stemlen, name) >= 1;
-                famZip = !famSplit &&
-                         ZipFamPartOf(famStem, stemlen, name) != 0;
+                famZip = famSplit ? 0
+                                  : ZipFamPartOf(famStem, stemlen, name);
             }
         }
         segOK = unc_segment_describe(&pio, &desc) == UNC_OK;
@@ -3286,6 +3542,18 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
             famSplit = 0;
             famZip = 0;
         }
+        /* And a ".zip" is a set only if it SAYS so. The name makes it the
+         * LAST member of a family, which is where a spanned zip keeps its
+         * part count — but every ordinary zip is called that too, and its
+         * end record says "disk 0". Taken on the name alone, every plain
+         * .zip opened here failed as "This archive has more parts" from
+         * 2026-08-14 to 2026-10-11, and no emulated tier could see it: the
+         * harness always named the archive "archive.sit". Found on an
+         * LC475 (DECISIONS.md 2026-10-11, *the zip that was a set of
+         * one*). A ".zNN" is still placed by name: nothing in it can say. */
+        if (famZip == kZipFamLast &&
+            !(segOK && desc.scheme == UNC_FORMAT_ZIPSEG))
+            famZip = 0;
         if (famSplit || famZip || segOK) {
             sh = (SegHost *)NewPtr((Size)sizeof(SegHost));
             segScratch = NewPtr((Size)unc_segment_scratch_size());
@@ -3462,26 +3730,15 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     io.size = fio_size;
 #endif
 
-    /* Budget the engine against the free heap. With the archive read straight
-     * off disk there is no buffer to subtract first, so on the floor target
-     * the engine now gets the archive's size back — which is what decided
-     * which StuffIt 5 entries it could afford. */
-    {
-        long freenow = FreeMem();
-        long reserve = freenow / 4;
-        if (reserve > kMemReserveMax) reserve = kMemReserveMax;
-        if (reserve < kMemReserveMin) reserve = kMemReserveMin;
-#if defined(UNC_AT_BUDGET) || defined(UNC_AT_RESERVE)
-        gFreeAtStart = freenow;
-#endif
-        ma.budget = freenow - reserve;
-    }
-    if (ma.budget < 32L * 1024) ma.budget = 32L * 1024;
-    ma.initial = ma.budget;      /* for peak-usage = initial - lowmark */
-#ifdef UNC_AT_BUDGET
-    gBudget = ma.initial;
-#endif
-    ma.lowmark = ma.budget;
+    /* Budget the engine against the free heap — DEFERRED to the first
+     * allocation, see mal_take_budget. With the archive read straight off
+     * disk there is no buffer to subtract first, so on the floor target the
+     * engine gets the archive's size back — which is what decided which
+     * StuffIt 5 entries it could afford. */
+    ma.budget = 0;
+    ma.initial = 0;
+    ma.lowmark = 0;
+    ma.taken = 0;
     al.ctx = &ma;
     al.alloc = mal_alloc;
     al.free = mal_free;
@@ -3592,6 +3849,22 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         vs.ctx = sh;
         vs.need = seg_need;
         vs.release = seg_release;
+#ifdef UNC_AT_OVERLAY
+        /* The other release site. A segmented set never came through here
+         * until 2026-09-02, so the bundle was read at launch and held for the
+         * whole run — measured at 631,300 B of budget against 650,548 B with
+         * no overlays at all, which made this branch WORSE than not having
+         * the mechanism for one shape of input (BRANCH_NOTES.md).
+         *
+         * The SCHEME is what is known here, not the format inside, and the
+         * two are not interchangeable: a Compact Pro or spanned-zip set is
+         * read by that format's own reader, while a StuffIt set, a `SPLT`
+         * and a plain .NNN split all join to a FILE that a later layer
+         * sniffs. The shim keeps everything for those, exactly as it does
+         * for an envelope. */
+        { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
+          ovl_release_if_unwanted(sh->desc.scheme, &io); }
+#endif
         ret = unc_extract_segments(&sh->desc, &vs, segScratch, &sk, &al,
                                    prog, &opt);
         seg_release(sh, NULL);
@@ -3604,6 +3877,14 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * the layer was — which is what decides whether there is another
          * one under it. */
         extractedAs = unc_sniff(&io);
+#ifdef UNC_AT_OVERLAY
+        /* Before the engine's first allocation, always: the budget is taken
+         * there (mal_take_budget), so what this frees is simply part of the
+         * heap the engine is then measured against. Nothing has to be
+         * credited back, and a credit path would be code no run executes. */
+        { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
+          ovl_release_if_unwanted(extractedAs, &io); }
+#endif
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the
          * name and stripping one eats a real ".txt". cli/main.c has said
@@ -3723,16 +4004,31 @@ static OSErr FindVolWait(ConstStr255Param want, short *vref)
  * by reading a fork back through the File Manager. Comparing this against a
  * host-side CRC of the same fork tells whether a mismatch is the decoder
  * writing wrong bytes (on-Mac CRC already wrong) or the harness ferrying
- * them wrong (on-Mac CRC right, host CRC wrong). */
+ * them wrong (on-Mac CRC right, host CRC wrong).
+ *
+ * Table-driven, the table built bit at a time on first use from the same
+ * polynomial. Bit at a time over every byte was 47.7 s of a 52 s MacBinary
+ * run at 7 MHz, where the archive itself is 1.5 s (FORMATS.md, *Measured on
+ * a 7 MHz Mac Plus*). The table is the harness's own, not the engine's
+ * unc_crc32, so the check stays independent of the code it is checking. */
 static uint32_t at_crc32_update(uint32_t crc, const uint8_t *p, long n)
 {
-    long i; int k;
-    crc = ~crc;
-    for (i = 0; i < n; i++) {
-        crc ^= p[i];
-        for (k = 0; k < 8; k++)
-            crc = (crc >> 1) ^ (0xEDB88320u & (uint32_t)(-(int32_t)(crc & 1)));
+    static uint32_t tab[256];
+    static Boolean built;
+    long i;
+    if (!built) {
+        int b, k;
+        for (b = 0; b < 256; b++) {
+            uint32_t c = (uint32_t)b;
+            for (k = 0; k < 8; k++)
+                c = (c >> 1) ^ (0xEDB88320u & (uint32_t)(-(int32_t)(c & 1)));
+            tab[b] = c;
+        }
+        built = true;
     }
+    crc = ~crc;
+    for (i = 0; i < n; i++)
+        crc = tab[(crc ^ p[i]) & 0xFF] ^ (crc >> 8);
     return ~crc;
 }
 
@@ -4084,6 +4380,41 @@ static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
 }
 #endif
 
+/* The archive's NAME on the "In" volume: the first file in its root
+ * called "archive.<something>", or "archive.sit" when there is none.
+ * Until 2026-10-11 it was always "archive.sit", and that hid a whole
+ * class of defect: the shell dispatches on the name's extension before
+ * it reads a byte (a ".zip" is tried as the last part of a spanned set),
+ * so every zip the emulator ran went in as a ".sit" and the path a real
+ * user's "Reduce.zip" takes had never executed. run.py --as picks the
+ * name. */
+static Str63 gATName = "\parchive.sit";
+
+static void at_pick_archive(short vol)
+{
+    CInfoPBRec pb;
+    Str63 nm;
+    short idx, i;
+    long z;
+
+    for (idx = 1; idx < 512; idx++) {
+        for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+        nm[0] = 0;
+        pb.hFileInfo.ioNamePtr = nm;
+        pb.hFileInfo.ioVRefNum = vol;
+        pb.hFileInfo.ioDirID = fsRtDirID;
+        pb.hFileInfo.ioFDirIndex = idx;
+        if (PBGetCatInfoSync(&pb) != noErr) return;
+        if (pb.hFileInfo.ioFlAttrib & 0x10) continue;          /* a folder */
+        if (nm[0] < 9 || nm[1] != 'a' || nm[2] != 'r' || nm[3] != 'c' ||
+            nm[4] != 'h' || nm[5] != 'i' || nm[6] != 'v' || nm[7] != 'e' ||
+            nm[8] != '.')
+            continue;
+        for (i = 0; i <= (short)nm[0]; i++) gATName[i] = nm[i];
+        return;
+    }
+}
+
 static void at_fail(int code)
 {
     uint32_t vals[8];
@@ -4119,6 +4450,9 @@ int main(void)
     InitCursor();
     FlushEvents(everyEvent, 0);
     gHasWNE = TrapAvailable(_WaitNextEvent);
+#ifdef UNC_AT_OVERLAY
+    { extern void ovl_preload(void); ovl_preload(); }   /* while the boot disk is in */
+#endif
     StackMark(&gStkInit);
 
     at_status(kAtRunning);   /* "I am alive" — see the kAt* codes above */
@@ -4130,6 +4464,7 @@ int main(void)
      * the grid is the only channel off this machine, so a setup failure has
      * to travel down it too. */
     if (FindVolWait("\pIn", &inVol) != noErr)   at_fail(kAtNoInVol);
+    at_pick_archive(inVol);
 
     /* The file report goes to the INPUT volume, deliberately. It is the one
      * the harness built, so the harness knows it can read it; the output
@@ -4165,7 +4500,7 @@ int main(void)
         int i;
         prog.ctx = NULL;
         prog.tick = at_cancel_tick;
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          &prog, &entries, &errors, NULL);
         at_count_dir(outVol, fsRtDirID, &files, &dirs);
@@ -4224,7 +4559,7 @@ int main(void)
         for (i = 0; i < 8; i++) vals[i] = 0;
 
         /* Pass A: the control. Nothing touches the volume while it runs. */
-        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+        if (MyOpenFork(inVol, fsRtDirID, gATName, fsRdPerm, 0,
                        &ref) == noErr) {
             for (;;) {
                 long cnt = (long)sizeof rbuf;
@@ -4241,7 +4576,7 @@ int main(void)
         /* Pass B: the same read, with catalog-changing writes in between.
          * A fresh file every round, on the volume being read from — the
          * shape an extraction has when output lands beside the archive. */
-        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+        if (MyOpenFork(inVol, fsRtDirID, gATName, fsRdPerm, 0,
                        &ref) == noErr) {
             for (;;) {
                 long cnt = (long)sizeof rbuf;
@@ -4283,7 +4618,7 @@ int main(void)
          * interleave disturbs, this is the case that would either suffer from
          * it or be immune to it, and either answer is worth having before
          * writing the replacement. */
-        if (MyOpenFork(inVol, fsRtDirID, "\parchive.sit", fsRdPerm, 0,
+        if (MyOpenFork(inVol, fsRtDirID, gATName, fsRdPerm, 0,
                        &ref) == noErr) {
             long pos = 0;
             for (;;) {
@@ -4371,7 +4706,7 @@ int main(void)
         wdRef = wpb.ioVRefNum;                /* the WD refNum, as SFGetFile returns */
 
         /* dirID 0 with a working-directory refNum: exactly ExtractOne(). */
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          wdRef, 0, inVol, fsRtDirID,
                          NULL, &entries, &errors, NULL);
 
@@ -4397,16 +4732,28 @@ int main(void)
         UncProgress prog;
         prog.ctx = NULL;
         prog.tick = at_prog_tick;
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          &prog, &entries, &errors, NULL);
     }
 #else
     {
         TK_T0;
-        ret = RunExtract(inVol, fsRtDirID, "\parchive.sit",
+        ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          NULL, &entries, &errors, NULL);
+#ifdef UNC_AT_TWICE
+        /* The same archive again, into the same folder, as a user does
+         * who opens it twice: what the second run makes of the first
+         * run's folders. A probe, not a grade — the grid counts both
+         * runs' files and FAILs by construction; read the Out disk
+         * (run.py --keep-disks). RepReset is what ExtractOne does
+         * before every archive. */
+        RepReset();
+        ret = RunExtract(inVol, fsRtDirID, gATName,
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         NULL, &entries, &errors, NULL);
+#endif
         TK_ADD(gTkRun);
     }
 #endif
@@ -4423,6 +4770,7 @@ int main(void)
         long totalDataLen = 0, totalRsrcLen = 0;
         uint32_t vals[8];
         int e;
+        TK_T0;
         for (e = 0; e < gATnrec; e++) {
             uint32_t dc = 0, rc = 0; long dl = 0, rl = 0;
 #ifndef UNC_AT_NOCRC   /* skip the read-back to isolate write vs read crashes */
@@ -4432,6 +4780,7 @@ int main(void)
             sumDataCRC += dc; totalDataLen += dl;
             sumRsrcCRC += rc; totalRsrcLen += rl;
         }
+        TK_ADD(gTkBack);   /* the harness's own read-back, not the archive */
         vals[0] = (uint32_t)gATnrec;
         vals[1] = (uint32_t)ret;
         vals[2] = (uint32_t)errors;
@@ -4516,12 +4865,13 @@ int main(void)
         }
 #endif
 #ifdef UNC_AT_TIMING
-        /* Overwrite four of the eight slots, the way UNC_AT_BUDGET and
+        /* Overwrite five of the eight slots, the way UNC_AT_BUDGET and
          * UNC_AT_META do: the GRID is the channel the Mini vMac harness
          * reads, and a probe build is not graded on its CRCs. Ticks, 60 Hz.
-         * The file report keeps all twelve for anything that can read it. */
+         * Slot 7 is the read-back below RunExtract, which the wall clock
+         * includes and gTkRun does not; the file report keeps all thirteen. */
         {
-            uint32_t tv[12];
+            uint32_t tv[13];
             int k;
             for (k = 0; k < 8; k++) tv[k] = vals[k];
             tv[8]  = (uint32_t)gTkRun;     /* the whole extraction        */
@@ -4529,12 +4879,42 @@ int main(void)
             tv[10] = (uint32_t)gTkWrite;   /* FSWrite, both forks         */
             tv[11] = (uint32_t)gTkMeta;    /* create, SetEOF, close,      */
                                            /* FlushVol, catalog           */
+            tv[12] = (uint32_t)gTkBack;    /* the read-back + CRC above   */
             vals[3] = tv[8];
             vals[4] = tv[9];
             vals[5] = tv[10];
             vals[6] = tv[11];
+            vals[7] = tv[12];              /* peak heap stays in the file */
             at_report(vals, 8);
-            at_report_file(tv, 12);
+            at_report_file(tv, 13);
+        }
+#elif defined(UNC_AT_BUDGET) && defined(UNC_AT_OVERLAY)
+        /* The six fields the completion alert carries and the grid has no
+         * slot for — e1, then wa kf rf fc fn (mac/ovl_load.h) — go in the
+         * FILE only, after the eight grid values. Without them a sweep is
+         * read by its tally alone; run.py and sys30.py print them. */
+        {
+            extern short gFirstEntryErr;
+            extern short gWantedAfterRelease, gKeepFail, gRelFmt;
+            extern short gFlushHas, gFlushCalls;
+            uint32_t bv[14];
+            int k;
+            for (k = 0; k < 8; k++) bv[k] = vals[k];
+            bv[8]  = (uint32_t)(long)gFirstEntryErr;
+            bv[9]  = (uint32_t)(long)gWantedAfterRelease;
+            bv[10] = (uint32_t)(long)gKeepFail;
+            bv[11] = (uint32_t)(long)gRelFmt;
+            bv[12] = (uint32_t)(long)gFlushHas;
+            bv[13] = (uint32_t)(long)gFlushCalls;
+            /* File first, then eject In, then the grid: the host kills
+             * the emulator once the grid shows, and Mini vMac flushes its
+             * buffered writes to an image on eject and not before — without
+             * it the report reached in.dsk on System 7.0.1 and on neither
+             * System 3.0 nor 6.0.8 (2026-10-10; tools/vmac/README.md, *A
+             * run that drives the FINDER*). */
+            at_report_file(bv, 14);
+            (void)Eject(NULL, gATreportVol);
+            at_report(vals, 8);
         }
 #else
         at_report(vals, 8);
@@ -5189,19 +5569,6 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         PStrCat(outcome, unc_format_name(topFmt));
         PStrCat(outcome, " files.");
     }
-    else if (ret == UNC_ERR_NOTCOMPRESSED && entries == 0 &&
-             topFmt != UNC_FORMAT_UNKNOWN) {
-        /* The opposite of the branch above, and the reason it needed a
-         * code of its own: this file is not damaged, is not a format
-         * somebody else's program opens, and is not missing anything.
-         * It is ALREADY what expanding it would produce — an
-         * uncompressed DART, which is the one a mounter reads. Saying
-         * "could not be extracted" about it sends the user looking for
-         * a fault that is not there. */
-        PStrCat(outcome, "This ");
-        PStrCat(outcome, unc_format_name(topFmt));
-        PStrCat(outcome, " disk image is already uncompressed.");
-    }
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what
          * was read is on the disk: "this file could not be extracted"
@@ -5260,6 +5627,56 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
             NumToString(gStkFirst[b], n);
             for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
         }
+        PStrCat(tmp, " ");
+        for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
+        for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
+    }
+#endif
+#ifdef UNC_AT_BUDGET
+    {   /* "bg" is the budget the engine was actually given, and "pk" the most
+         * it held. In the AUTOTEST build these travel in grid slots; the
+         * interactive build had no way to report them at all, which is why
+         * the overlay branches' envelope path could not be measured — the
+         * chaining that opens an unwrapped file as a new layer lives in
+         * ExtractOne, and only the interactive main() calls it
+         * (BRANCH_NOTES.md). Prepended, like the probes above, because the
+         * report window clips a long line at its right edge. */
+        unsigned char n[32], tmp[256];
+        short i;
+        tmp[0] = 0;
+        { extern short gFirstEntryErr;
+          unsigned char q[32]; short k2;
+          PStrCat(tmp, "e1=");
+          NumToString(gFirstEntryErr, q);
+          for (k2 = 1; k2 <= q[0]; k2++) tmp[++tmp[0]] = q[k2];
+          PStrCat(tmp, " "); }
+#if defined(UNC_AT_OVERLAY)
+        { extern short gWantedAfterRelease, gKeepFail, gRelFmt;
+          extern short gFlushHas, gFlushCalls;
+          unsigned char w[32]; short k;
+          PStrCat(tmp, "wa=");
+          NumToString(gWantedAfterRelease, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " kf=");
+          NumToString(gKeepFail, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " rf=");
+          NumToString(gRelFmt, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " fc=");
+          NumToString(gFlushHas, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " fn=");
+          NumToString(gFlushCalls, w);
+          for (k = 1; k <= w[0]; k++) tmp[++tmp[0]] = w[k];
+          PStrCat(tmp, " "); }
+#endif
+        PStrCat(tmp, "bg=");
+        NumToString(gBudget, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
+        PStrCat(tmp, " pk=");
+        NumToString(gPeakUsage, n);
+        for (i = 1; i <= n[0]; i++) tmp[++tmp[0]] = n[i];
         PStrCat(tmp, " ");
         for (i = 1; i <= outcome[0]; i++) tmp[++tmp[0]] = outcome[i];
         for (i = 0; i <= tmp[0]; i++) outcome[i] = tmp[i];
@@ -5401,6 +5818,22 @@ int main(void)
     TEInit();
     InitDialogs(NULL);
     InitCursor();
+
+#ifdef UNC_AT_OVERLAY
+    /* The overlay bundle, read ONCE, here, while the boot disk is certainly
+     * still in — which is this branch's entire argument.
+     *
+     * It was called from the AUTOTEST main() and not from this one until
+     * 2026-09-02, so the build a user runs never preloaded at all: the shim
+     * fetched the bundle lazily on first use instead, which is a disk access
+     * after the archive has been chosen and is exactly what this branch
+     * exists to avoid. The autotest could not see it, because the autotest
+     * is the main() that had the call. Same shape as the ballast that was
+     * referenced from only one main() (FORMATS.md, *What the application
+     * costs the engine*) — on this target, "which main()?" is a question
+     * worth asking of every launch-time call. */
+    { extern void ovl_preload(void); ovl_preload(); }
+#endif
     FlushEvents(everyEvent, 0);
 
     gHasWNE = TrapAvailable(_WaitNextEvent);
@@ -5437,10 +5870,10 @@ int main(void)
          * usable prompt item, which is why the two are told apart by
          * POSITION below. DECISIONS.md, 2026-08-09. */
         /* A document the Finder handed over takes the place of the
-         * Open dialog, one per pass: dropping three archives extracts
-         * three, and the loop falls back to Standard File when the
-         * list runs out rather than quitting, so the application is
-         * still there to be given another file. */
+         * Open dialog, one per pass, and the loop falls back to Standard
+         * File when the list runs out. Since 2026-10-11 the shipped
+         * (eager) build quits after the first archive it extracts, below,
+         * so of three dropped archives one is extracted. */
         if (!DropNext(&reply.vRefNum, reply.fName)) {
 #ifdef UNC_AT_STACK
             SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
@@ -5487,6 +5920,17 @@ int main(void)
          * and plain volume refNums on System 6; dirID 0 is correct for
          * either (FORMATS.md, the working-directory row). */
         ExtractOne(reply.vRefNum, 0, reply.fName, dest.vRefNum, 0);
+#ifdef UNC_AT_OVERLAY
+        /* The decoders this archive did not need are gone, and reading
+         * them again is a disk access the eager lifetime exists to avoid.
+         * Offering Standard File again offered what could not be done:
+         * on an LC475 a .sit opened after a .cpt failed. So the
+         * application quits, and the next archive starts a fresh launch
+         * (DECISIONS.md 2026-10-11, *one archive per launch*). An archive
+         * that never got as far as a release — not an archive, could
+         * not be opened — still comes back here. */
+        { extern int ovl_spent(void); if (ovl_spent()) break; }
+#endif
     }
     return 0;
 }

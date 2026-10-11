@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "aust",
+   "data_sha256": "a679294d93c20e86b808fd7d887399417b02922353cfe0f6d630aa0551cd8e13",
+   "data_size": 4469,
+   "finder_flags": 8460,
+   "name": "SoundEdit icon family.sit",
+   "rsrc_sha256": "61718af4c0991fe23de207044d04984608c5cd5bbd0f4fa00233eb8b6c82c747",
+   "rsrc_size": 22532,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "sitopt-wild-SoundEditicons.sea.bin",
+ "format": "MacBinary",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "f482df2a1385c4b631b678b8ff7bf95ab3bdb4072f96bb8438e6a6eced4f1b34",
+ "size": 27264
+}

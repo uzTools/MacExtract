@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "24ccd35819492f53f3249299a40f212f7862f5913a24b2cc177529608c2d1017",
+   "data_size": 184340,
+   "name": "Terrainman_2.0.1.sit",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "uu-wild-terrainman.uu",
+ "format": "uuencode",
+ "oracle": "the StuffIt CRCs of the archive its data fork decodes to \u2014 27 forks, hexbin cannot read this one (tools/derive_mu.py --grade)",
+ "sha256": "9ef54ae763798605da98e16606d57c7d3748b45e1ebc5fcc57c6762d7ece5382",
+ "size": 254084
+}

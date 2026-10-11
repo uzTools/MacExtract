@@ -12,6 +12,7 @@ failed: milestones land one format at a time. A manifest whose format
 IS implemented must pass completely.
 """
 import argparse, hashlib, json, os, re, subprocess, sys, tempfile
+from concurrent import futures
 import unicodedata
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -29,6 +30,12 @@ IMPLEMENTED = {
     "StuffIt": "StuffIt",                  # M5/M6
     "StuffIt 5": "StuffIt 5",              # M7
     "Zip": "Zip",                          # M8
+    # A zip behind a code stub. `lsar` names the STUB and this engine
+    # names the archive, which is the one case in this table where the
+    # two differ about a format both read — recognised here since
+    # 2026-10-05, and the fixture is PKZIP 1.01's own distribution
+    # self-extractor (FORMATS.md, *What the zip pair claims*, *Implode*).
+    "Self-extracting Zip": "Zip",
     "Gzip": "Gzip",
     "Tar": "Tar",
     "Compress": "Unix compress",
@@ -42,6 +49,13 @@ IMPLEMENTED = {
     # "oracle" field (TESTING.md, "ARC and uuencode").
     "uuencode": "uuencode",                # M13
     "LZH": "LZH",                          # M28
+    # Nothing but Aladdin's own translator reads an AppleLink package —
+    # `unar`, deark and macunpack have never heard of the format — so
+    # these manifests are the bytes tools/synth_sqp.py compressed, with
+    # gzip reading every LZW fork through a .Z header in
+    # tools/run_sqp.py. The manifest says so in its "oracle" field
+    # (TESTING.md, *AppleLink packages: SqueezePlay*).
+    "SqueezePlay": "AppleLink package",    # M56
 }
 
 # Formats v1 names but does not extract. Until 2026-08-14 a fixture of one
@@ -125,27 +139,47 @@ def collect_outputs(tmp):
     return files, dirs
 
 
+# `macextract l --finder`: the Finder metadata as hex, which is the only
+# form that can be read back. The pretty columns cannot be: `%4s/%-4s`
+# of a code holding a SPACE ("PDF ") or a NUL moves the name by a field,
+# and 200 of the corpus's 5,539 type/creator codes hold a space
+# (measured 2026-10-04). The old parser took those rows' names apart
+# wrongly, found no manifest entry under the mangled name, and compared
+# nothing — silently (DECISIONS.md 2026-10-04).
+LISTING_ROW = re.compile(
+    r"^([fd]) +(?:\S+) +(?:\S+) +([0-9a-f]{8})/([0-9a-f]{8}) "
+    r"([0-9a-f]{4}) (.*)$")
+
+
 def parse_listing(out):
-    """Parse `macextract l` output -> {name: (type, creator) or (None, None)}.
+    """Parse `macextract l --finder` output ->
+    ({name: (type, creator, finder_flags)}, unparsed_row_count).
 
     Every listed entry is recorded, not only those with type/creator: the
     listing is how an entry the engine cannot extract is checked to be
-    SEEN at all, and a zip entry has no type/creator to print (the field
-    is a bare "/").
+    SEEN at all, and a zip entry has no Finder metadata at all (every
+    field is zero). Directories are recorded too: a folder has Finder
+    flags of its own and the oracle reports them.
+
+    Type and creator come back as the 32-bit values they are, so a
+    comparison is exact for all four bytes including NUL and the high
+    half of MacRoman.
     """
-    meta = {}
+    meta, unparsed = {}, 0
     for line in out.splitlines():
-        if not line.startswith("f "):
+        if not (line.startswith("f ") or line.startswith("d ")):
             continue
-        # f <data> <rsrc> <type>/<creator> <name...>
-        parts = line.split(None, 4)
-        if len(parts) < 5:
+        m = LISTING_ROW.match(line)
+        if not m:
+            # Never shrugged off: a row the suite cannot read is a row
+            # it grades nothing about, which is the hole this parser
+            # was rewritten to close.
+            unparsed += 1
             continue
-        tc = parts[3]
-        meta[normpath(parts[4])] = ((tc[:4], tc[5:])
-                                    if len(tc) == 9 and tc[4] == "/"
-                                    else (None, None))
-    return meta
+        meta[normpath(m.group(5))] = (int(m.group(2), 16),
+                                      int(m.group(3), 16),
+                                      int(m.group(4), 16))
+    return meta, unparsed
 
 
 ENTRY_ERR = re.compile(r"^macextract: (.*): (.*)$")
@@ -192,9 +226,19 @@ def said_unsupported(msg):
 #
 # Deliberately only the methods the corpus actually contains: a method
 # named here that lsar spells differently would excuse nothing, silently,
-# whereas an unlisted one fails the suite loudly and gets added. Zip
-# reduce/shrink and tar links belong here the day a fixture has one.
-ORACLE_OUT_OF_SCOPE = {"Implode"}
+# whereas an unlisted one fails the suite loudly and gets added. Tar
+# links belong here the day a fixture has one.
+#
+# **EMPTY as of 2026-10-07**, and kept because it was not: `Implode`
+# left when zip method 6 was implemented, which turned the 7 entries of
+# `4acalc.zip` and `4alnch11.zip` from "graded on their names" into 7
+# forks compared byte for byte — 5 against `unar` and 2 against deark,
+# the two `unar` fails (DECISIONS.md 2026-10-07, *the method that was
+# out for a premise with no halves left*). An empty set is not a dead
+# mechanism: `out_of_scope` below still runs on every entry. Shrink and
+# Reduce did not need it: the entries `unar` fails went to deark through
+# DEARK_METHODS (2026-10-08 and 2026-10-11).
+ORACLE_OUT_OF_SCOPE = set()
 
 
 def out_of_scope(entry):
@@ -203,6 +247,28 @@ def out_of_scope(entry):
     absent field must not become an excuse."""
     m = entry.get("oracle_methods")
     return bool(m) and all(x in ORACLE_OUT_OF_SCOPE for x in m)
+
+
+def said_truncated(msg):
+    """True when our binary declined an entry because the file ran out.
+
+    Same rule as `said_unsupported`: match the ENDING, not the whole
+    sentence."""
+    return msg.endswith("file is truncated")
+
+
+# A fork the manifest grades from the container rather than from an
+# implementation. `make_manifests.py` writes this only for a MacBinary
+# whose file ends before its own header says it should, and only where
+# the arithmetic is confirmed on that very file — so the string is an
+# assertion that the fixture IS truncated (TESTING.md, *The container's
+# own arithmetic*).
+MACBINARY_ARITHMETIC = "MacBinary container arithmetic"
+
+
+def graded_from_container(entry):
+    return any(entry.get(f + "_oracle") == MACBINARY_ARITHMETIC
+               for f in ("data", "rsrc"))
 
 
 # Archives that do NOT fit on a 1 MB Mac Plus as the application stands.
@@ -219,10 +285,77 @@ def out_of_scope(entry):
 OVER_BUDGET_1MB = set()      # empty: every corpus archive fits again
 
 
-def check_fixture(macextract, man, verbose, budget=0):
+# A field a fixture may declare its manifest does NOT grade, with the
+# reason in the manifest beside it. Exactly one, and it is not a
+# convenience: the three Macintosh dates in zip's 0x334d have no oracle
+# at all, because XADMaster adds CrGMTOffs where deark subtracts it and
+# both call the result UTC (FORMATS.md, *Zip's Macintosh extra fields*).
+# Anything else under the key is REFUSED — a fixture cannot declare away
+# a field this suite compares — and a declaration without a reason is
+# refused too, because the reason is the whole value of the key.
+UNGRADABLE = {"dates"}
+
+
+def check_ungraded(man, problems):
+    """Validate a manifest's `ungraded` declaration. Returns the fields
+    declared, for the tally at the end: a tolerance nobody counts is a
+    tolerance nobody reads."""
+    decl = man.get("ungraded") or {}
+    if not isinstance(decl, dict):
+        problems.append("the manifest's \"ungraded\" is not an object")
+        return []
+    for field, why in sorted(decl.items()):
+        if field not in UNGRADABLE:
+            problems.append(
+                f"the manifest declares {field!r} ungraded, and this "
+                f"suite grades it; only {sorted(UNGRADABLE)} may be "
+                f"declared")
+        elif not (isinstance(why, str) and why.strip()):
+            problems.append(
+                f"the manifest declares {field!r} ungraded with no "
+                f"reason; the reason is the point")
+    return sorted(decl)
+
+
+def fourcc(s):
+    """A manifest's four-character code -> the 32-bit value the listing
+    prints. The manifest holds the oracle's four bytes decoded as
+    MacRoman, and MacRoman is a complete 256-character table, so the
+    encode back is exact."""
+    if s is None:
+        return None
+    b = s.encode("mac_roman")[:4].ljust(4, b"\0")
+    return int.from_bytes(b, "big")
+
+
+def check_flags(e, name, listing, problems, graded_flags):
+    """The Finder flags, where the ORACLE recorded them. A manifest built
+    before 2026-10-04 has none and grades nothing here, so the count is
+    printed at the end rather than assumed: a column nobody compares is
+    the shape this suite has been caught by before (DECISIONS.md
+    2026-10-01, *a page comment found what 947 fixtures could not*)."""
+    if "finder_flags" not in e:
+        return
+    if name not in listing:
+        problems.append(
+            f"{name!r}: the oracle reports Finder flags "
+            f"{e['finder_flags']:#06x} and the listing has no row for "
+            f"this entry")
+        return
+    ff = listing[name][2]
+    if ff != e["finder_flags"]:
+        problems.append(f"{name!r}: Finder flags {ff:#06x} != "
+                        f"{e['finder_flags']:#06x}")
+    else:
+        graded_flags[0] += 1
+
+
+def check_fixture(macextract, man, verbose, budget=0, graded_flags=None):
     fx = os.path.join(FIXDIR, man["fixture"])
     cap = ["--budget", str(budget)] if budget else []
     problems, unadjudicated, masked = [], 0, 0
+    graded_flags = graded_flags if graded_flags is not None else [0]
+    declared = check_ungraded(man, problems)
     excused = {normpath(e["name"]) for e in man["entries"]
                if e.get("unadjudicated")}
     with tempfile.TemporaryDirectory() as tmp:
@@ -237,24 +370,44 @@ def check_fixture(macextract, man, verbose, budget=0):
         # that would let a regression in the method dispatch grade itself.
         outofscope = {normpath(e["name"]) for e in man["entries"]
                       if out_of_scope(e)}
+        # And a third case, which is an ASSERTION rather than an excuse.
+        # An entry whose forks the manifest graded from the container's
+        # own arithmetic is one the manifest says is CUT: the hashes are
+        # of the bytes physically present. So our engine must report
+        # that entry truncated — reporting success on it is the M42
+        # defect, and reporting nothing is a missing entry. The excuse
+        # is the manifest's word; `said_truncated` only says which of
+        # our messages is eligible for it.
+        cut = {normpath(e["name"]) for e in man["entries"]
+               if graded_from_container(e)}
+        for n in sorted(cut):
+            if not said_truncated(un_errs.get(n, "")):
+                problems.append(
+                    f"{n!r}: the container's arithmetic grades this entry "
+                    f"as cut and our engine did not report it truncated "
+                    f"({un_errs.get(n, 'no per-entry error at all')!r})")
         if r.returncode != 0:
             unexplained = {n: er for n, er in un_errs.items()
                            if n not in excused
-                           and not (said_unsupported(er) and n in outofscope)}
+                           and not (said_unsupported(er) and n in outofscope)
+                           and not (said_truncated(er) and n in cut)}
             if unexplained or not un_errs:
                 problems.append(
                     f"exit {r.returncode}: {r.stderr.decode()[:300]}")
         files, dirs = collect_outputs(tmp)
 
-        lr = subprocess.run([macextract, "l", fx] + cap,
+        lr = subprocess.run([macextract, "l", "--finder", fx] + cap,
                             capture_output=True, timeout=60)
-        listing = parse_listing(lr.stdout.decode("utf-8", "replace"))
+        listing, unparsed = parse_listing(lr.stdout.decode("utf-8", "replace"))
+        if unparsed:
+            problems.append(f"{unparsed} listing row(s) could not be parsed")
 
         for e in man["entries"]:
             name = normpath(e["name"])
             if e.get("is_dir"):
                 if name not in dirs and name not in files:
                     problems.append(f"missing dir: {name!r}")
+                check_flags(e, name, listing, problems, graded_flags)
                 continue
             # Forks the oracle itself failed on carry no hashes: there
             # is no ground truth to compare against, so they are counted
@@ -316,12 +469,15 @@ def check_fixture(macextract, man, verbose, budget=0):
                         f"{name!r}: rsrc size {rsz} != {e['rsrc_size']}")
                 elif rp and sha256_file(rp) != e["rsrc_sha256"]:
                     problems.append(f"{name!r}: rsrc sha mismatch")
-            if "type" in e and listing.get(name, (None, None))[0]:
-                t, c = listing[name]
-                if t != e["type"] or (e.get("creator") and c != e["creator"]):
+            if "type" in e and name in listing:
+                t, c, _ = listing[name]
+                want_t, want_c = fourcc(e["type"]), fourcc(e.get("creator"))
+                if t != want_t or (want_c is not None and c != want_c):
                     problems.append(
-                        f"{name!r}: type/creator {t}/{c} != "
-                        f"{e['type']}/{e.get('creator')}")
+                        f"{name!r}: type/creator {t:#010x}/{c:#010x} != "
+                        f"{want_t:#010x}/"
+                        f"{'-' if want_c is None else format(want_c, '#010x')}")
+            check_flags(e, name, listing, problems, graded_flags)
         # The archive's OWN comment. It is not an entry — it has no
         # forks and no name of its own — so it is graded here rather
         # than in the entry loop: the oracle's XADComment (recorded in
@@ -364,7 +520,7 @@ def check_fixture(macextract, man, verbose, budget=0):
                 problems.append(f"listing does not print {listed!r}")
         for leftover in files:
             problems.append(f"unexpected output: {leftover!r}")
-    return problems, unadjudicated, masked
+    return problems, unadjudicated, masked, declared
 
 
 def main():
@@ -373,6 +529,11 @@ def main():
     ap.add_argument("--all", action="store_true",
                     help="run even not-yet-implemented formats")
     ap.add_argument("-v", "--verbose", action="store_true")
+    ap.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 1,
+                    help="fixtures extracted at once (default: one per CPU). "
+                         "Output does not depend on it: the selection pass, "
+                         "the grading pass and every line printed stay in "
+                         "manifest order.")
     ap.add_argument("--format", help="only fixtures of this lsar format")
     ap.add_argument("--budget", type=int, default=0,
                     help="run under an allocation cap, in bytes: every "
@@ -403,10 +564,20 @@ def main():
                        if f.endswith(".json")) if os.path.isdir(mandir) else []
 
     ran = passed = skipped_fmt = skipped_missing = 0
+    graded_flags = [0]
+    ungraded = []
     detect_ran = detect_bad = 0
     over_budget = 0
     unadj_forks = unadj_fixtures = oos_entries = unadj_masked = 0
     fails = []
+
+    # Three passes where there was one loop: SELECT every fixture this run
+    # grades, extract them `--jobs` at a time, then grade the results in
+    # manifest order. Each fixture was already independent -- check_fixture
+    # owns a temporary directory and prints nothing -- so the only shared
+    # state that had to go was the Finder-flag counter, now summed per
+    # fixture (DECISIONS.md 2026-10-06, *the twenty-four minutes*).
+    work = []
     for mf in manifests:
         with open(os.path.join(mandir, mf)) as f:
             man = json.load(f)
@@ -421,22 +592,42 @@ def main():
             continue
         if not args.all and fmt not in IMPLEMENTED:
             if fmt in DETECT_ONLY:
-                detect_ran += 1
-                bad = check_detect_only(args.macextract, fxpath,
-                                        DETECT_ONLY[fmt])
-                if bad:
-                    detect_bad += 1
-                    print(f"DETECT FAIL {man['fixture']}")
-                    for b in bad:
-                        print(f"    {b}")
-                elif args.verbose:
-                    print(f"detect ok: {man['fixture']} ({fmt})")
+                work.append((man, fmt, "detect"))
                 continue
             skipped_fmt += 1
             continue
+        work.append((man, fmt, "diff"))
+
+    def run_one(item):
+        man, fmt, kind = item
+        if kind == "detect":
+            return check_detect_only(args.macextract,
+                                     os.path.join(FIXDIR, man["fixture"]),
+                                     DETECT_ONLY[fmt])
+        flags = [0]
+        return check_fixture(args.macextract, man, args.verbose,
+                             args.budget, flags) + (flags[0],)
+
+    with futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
+        results = list(ex.map(run_one, work))
+
+    for (man, fmt, kind), result in zip(work, results):
+        if kind == "detect":
+            detect_ran += 1
+            bad = result
+            if bad:
+                detect_bad += 1
+                print(f"DETECT FAIL {man['fixture']}")
+                for b in bad:
+                    print(f"    {b}")
+            elif args.verbose:
+                print(f"detect ok: {man['fixture']} ({fmt})")
+            continue
         ran += 1
-        problems, unadj, masked = check_fixture(
-            args.macextract, man, args.verbose, args.budget)
+        problems, unadj, masked, declared, flags = result
+        graded_flags[0] += flags
+        for field in declared:
+            ungraded.append((man["fixture"], field))
         unadj_masked += masked
         oos_entries += sum(1 for e in man["entries"] if out_of_scope(e))
         if unadj:
@@ -501,6 +692,18 @@ def main():
     if oos_entries:
         print(f"  {oos_entries} entr(y/ies) the oracle names as compressed "
               f"with a method outside v1 scope: graded on name only")
+    # Said out loud, in both directions: the flags are graded only where
+    # a manifest records them, and most manifests predate the field
+    # (TESTING.md, *The Finder flags*).
+    print(f"  Finder flags: {graded_flags[0]} entr(y/ies) compared against "
+          f"the oracle's")
+    # Printed every run, named fixture by named fixture. The tolerance a
+    # fixture rests on is worth exactly as much as the chance of reading
+    # it, and a manifest key nobody prints is not read (TESTING.md, *The
+    # Finder metadata, and the one field no oracle settles*).
+    for fixture, field in ungraded:
+        print(f"  DECLARED UNGRADED: {fixture} — {field}: no oracle "
+              f"adjudicates them (the manifest says why)")
     print(f"  oracle-unadjudicated: {unadj_forks} fork(s) across "
           f"{unadj_fixtures} fixture(s) — the oracle failed on these, so "
           f"no second implementation adjudicates them byte for byte "

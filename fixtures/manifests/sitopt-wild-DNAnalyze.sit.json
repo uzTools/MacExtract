@@ -1,0 +1,79 @@
+{
+ "entries": [
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "DNAnalyze"
+  },
+  {
+   "creator": "PANT",
+   "finder_flags": 256,
+   "name": "DNAnalyze/DNANAL Key Commands",
+   "oracle_methods": [
+    "LZAH"
+   ],
+   "type": "PNTG",
+   "unadjudicated": {
+    "data": "Attempted to read more data than was available",
+    "rsrc": "oracle wrote no output for this fork"
+   }
+  },
+  {
+   "creator": "DEMA",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 8460,
+   "name": "DNAnalyze/DNANALYZE 1.8",
+   "oracle_methods": [
+    "LZAH"
+   ],
+   "rsrc_sha256": "4972f6434ceeb159640fc73d064cf42fd02a6a09cd40f4267a66c26cce6fc0b9",
+   "rsrc_size": 298574,
+   "type": "APPL"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "7cd89a8ab709c40c3e48211d46ddaa5d75fb7ba3a7ac693982892ef45644dc8b",
+   "data_size": 93786,
+   "finder_flags": 256,
+   "name": "DNAnalyze/DNANALYZE Docs",
+   "oracle_methods": [
+    "LZAH"
+   ],
+   "rsrc_sha256": "8a24b100be1db29746ea0cad0509ef2369eb9cef420cff5ac5f7613d77e7bd10",
+   "rsrc_size": 841,
+   "type": "WORD"
+  },
+  {
+   "creator": "MACA",
+   "data_sha256": "4fd9c0420796986ffa0633e352520b37e486f847360b8dedf67b17779e95068f",
+   "data_size": 2440,
+   "finder_flags": 256,
+   "name": "DNAnalyze/Schwindinger 1987",
+   "oracle_methods": [
+    "LZAH"
+   ],
+   "rsrc_sha256": "52aba4a6dbd5123c26d0324389bd7c456da9c68afa917db1d042764ba96026e8",
+   "rsrc_size": 730,
+   "type": "WORD"
+  },
+  {
+   "creator": "EDIT",
+   "data_sha256": "d72e9f70065166b4d6830740097eb2e73e8e5e56c826a53d7cec04164b6d920b",
+   "data_size": 293,
+   "finder_flags": 256,
+   "name": "DNAnalyze/TC.DNA",
+   "oracle_methods": [
+    "Huffman"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "sitopt-wild-DNAnalyze.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "f45524d9ea18ff5fdb69ae38bf10476053ef0807c6dbd3870d0ec39df66566c9",
+ "size": 186218
+}

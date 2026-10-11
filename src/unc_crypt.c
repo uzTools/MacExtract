@@ -2,21 +2,30 @@
  * unc_crypt.c — the ciphers the encrypting formats use, and the layer
  * that puts one underneath a decoder.
  *
- * Seven schemes across the five formats that can encrypt an entry:
+ * Eight schemes across the six formats that can encrypt an entry:
  *
  *   ARC          a plain repeating XOR of the password over the
  *                compressed bytes (XADXORHandle).
  *   PackIt PMa5  an XOR too, but the key is the password run through
- *                DES's PC-1 permutation and then applied modulo SEVEN
- *                over an eight-byte key (XADPackItXORHandle — the
- *                modulus is the original's and is kept).
- *   PackIt PMa6  DES in ECB, decrypting eight bytes at a time.
- *   StuffIt      a two-stage thing: a modified DES ("StuffItDES", a DES
- *   classic      with its own key schedule and no initial permutation)
- *                derives a per-file key from the password, the archive's
- *                'MKey' resource and a per-entry key stored after the
- *                fork; the fork itself is then decrypted by an
- *                eight-byte feedback XOR built from that key.
+ *                DES's PC-1 permutation, which yields 56 bits — so the
+ *                keystream is SEVEN bytes, cycled, and restarted at
+ *                every entry.
+ *   PackIt PMa6  DES in ECB, decrypting eight bytes at a time. Both of
+ *                PackIt's are the application's own, read out of and
+ *                then RUN out of Packit III 1.3's `CODE` 1 and `CODE`
+ *                256 (tools/derive_pitcrypt.py; DECISIONS.md
+ *                2026-10-05), which is also where the key being the
+ *                zero-padded first eight characters comes from
+ *                (@0x0bda, @0x0c1e) and which direction of DES decodes
+ *                (@0x3390 writes with the ascending rounds, so reading
+ *                is the descending ones). Nine tables in `CODE` 256,
+ *                and every one of them is FIPS 46-3's to the word.
+ *   StuffIt      a two-stage thing: standard DES with no IP/FP and its
+ *   classic      own key schedule ("StuffItDES") derives a per-file key
+ *                from the password, the archive's 'MKey' resource and a
+ *                per-entry key stored after the fork; the fork itself is
+ *                then decrypted by an eight-byte feedback XOR built from
+ *                that key.
  *   StuffIt 5    RC4, keyed by MD5(password) truncated to five bytes
  *                followed by the entry's own five key bytes.
  *   zip          PKWARE's stream cipher, three CRC-32-driven keys
@@ -41,13 +50,24 @@
  *                encrypted entry opens with is fmt_cpt.c's business,
  *                not this file's. DECISIONS.md 2026-08-23.
  *
- * Sources: reference/XADMaster/XADStuffItDESHandle.m (StuffItDES, key
- * derivation and the fork cipher), XADStuffIt5Parser.m + XADRC4Handle.m,
- * XADPackItParser.m (both PackIt handles), XADZipCryptHandle.m,
- * XADXORHandle.m, and reference/XADMaster/Crypto/des.c + md5.c for the
- * standard DES and MD5 tables, which src/crypt_tables.h carries
- * precomputed (this engine may not have global mutable state, and that
- * DES builds its tables at runtime). LGPL — see NOTICE.
+ * Sources: FIPS 46-3 for DES itself, which is now the whole of both DES
+ * ciphers here — StuffIt's variant is that round function and no other
+ * (see *StuffItDES* below); reference/XADMaster/XADStuffItDESHandle.m
+ * for what remains format knowledge, the nibble key schedule and the
+ * derivation the three real archives grade; XADStuffIt5Parser.m and
+ * XADXORHandle.m (ARC's garble). Both PackIt handles left on 2026-10-05
+ * for the application itself. The other four left on 2026-09-23 for the documents
+ * that state what they do: RFC 3174, RFC 2104 and RFC 2898 for SHA-1,
+ * HMAC and PBKDF2, reference/notes/winzip_aes.txt for AE-1/AE-2's
+ * parameters, zip_appnote.txt section 6.1 for the traditional zip
+ * cipher, and arcfour_draft.txt for RC4's schedule. AES followed on
+ * 2026-09-26, to FIPS 197 itself (reference/notes/fips197.pdf).
+ * The TABLES in src/crypt_tables.h are nobody's
+ * implementation since 2026-09-23: standard DES's are FIPS 46-3's own
+ * (reference/notes/fips46-3.pdf), MD5's are RFC 1321's
+ * (reference/notes/rfc1321.txt), and the AES S box is built from the
+ * definition in FIPS 197 section 5.1.1. They are precomputed because
+ * this engine may not have global mutable state. LGPL — see NOTICE.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -81,6 +101,94 @@ static uint32_t bit_at(const uint8_t *b, int n)
     return (uint32_t)((b[(n - 1) >> 3] >> (7 - ((n - 1) & 7))) & 1);
 }
 
+/* ------------------------------------------------------------------ */
+/* The tables a round reads, built when a key is set                   */
+/*                                                                    */
+/* DES reads the S boxes merged with P as eight 64-entry words, and     */
+/* Compact Pro's cipher reads a 256-entry table of 64-bit CRC steps.    */
+/* That is 2 KB each, and as const data it sat in the A5 world — which  */
+/* costs the engine its budget one for one, on every extraction, for   */
+/* entries the corpus does not have one of. So they are built HERE,    */
+/* into a 2 KB heap block that lives as long as the entry's other      */
+/* buffers, from the 512 B of S boxes and 32 B of inverted P that      */
+/* crypt_tables.h keeps.                                              */
+/*                                                                    */
+/* There is ONE DES table, not two. Until 2026-09-19 StuffItDES had a  */
+/* second one in a different bit order; tools/fit_sitdes.py shows that */
+/* order is a relabelling rather than a cipher, so the variant reads   */
+/* this table (see *StuffItDES* below). DECISIONS.md 2026-09-19.       */
+/* ------------------------------------------------------------------ */
+
+#define UNC_CRYPT_TAB_WORDS 512u
+
+enum { CRYPT_TAB_NONE = 0, CRYPT_TAB_DES, CRYPT_TAB_CRC64 };
+
+static uint32_t des_sp_entry(int box, int v)
+{
+    int row = ((v & 0x20) >> 4) | (v & 1);
+    int col = (v >> 1) & 0xF;
+    int out = unc_des_s[box * 64 + row * 16 + col];
+    uint32_t w = 0;
+    int b;
+
+    for (b = 0; b < 4; b++) {
+        if (out & (8 >> b)) {
+            int dest = unc_des_pinv[box * 4 + b];        /* 1..32 */
+            w |= 1u << (32 - dest);
+        }
+    }
+    return w;
+}
+
+static void crypt_build(uint32_t *tab, int kind)
+{
+    int i, j;
+
+    if (kind == CRYPT_TAB_CRC64) {
+        /* Compact Pro 1.51 `CODE` 3 @0x408e, as an algorithm: eight
+         * reflected steps of a 64-bit CRC with 0xEDB88320 in both
+         * halves, in two 32-bit registers (68000 discipline). */
+        for (i = 0; i < 256; i++) {
+            uint32_t hi = 0, lo = 0, v = (uint32_t)i;
+            for (j = 0; j < 8; j++) {
+                uint32_t fb = (lo ^ v) & 1u;
+                lo = (lo >> 1) | ((hi & 1u) << 31);
+                hi >>= 1;
+                if (fb) { hi ^= 0xEDB88320u; lo ^= 0xEDB88320u; }
+                v >>= 1;
+            }
+            tab[2 * i] = hi;
+            tab[2 * i + 1] = lo;
+        }
+    } else {
+        for (i = 0; i < 8; i++)
+            for (j = 0; j < 64; j++)
+                tab[i * 64 + j] = des_sp_entry(i, j);
+    }
+}
+
+/* Make sure cr->tab holds `kind`, allocating it on first use. */
+static int crypt_table(UncCrypt *cr, UncAlloc *al, int kind)
+{
+    if (!cr->tab) {
+        cr->tab = (uint32_t *)unc_alloc(al, UNC_CRYPT_TAB_WORDS * 4u);
+        if (!cr->tab) return UNC_ERR_MEM;
+        cr->tabkind = CRYPT_TAB_NONE;
+    }
+    if (cr->tabkind != kind) {
+        crypt_build(cr->tab, kind);
+        cr->tabkind = kind;
+    }
+    return UNC_OK;
+}
+
+void unc_crypt_free(UncCrypt *cr, UncAlloc *al)
+{
+    unc_free(al, cr->tab);
+    cr->tab = NULL;
+    cr->tabkind = CRYPT_TAB_NONE;
+}
+
 static void des_setkey(uint8_t ks[16][8], const uint8_t key[8])
 {
     uint32_t c = 0, d = 0;
@@ -103,14 +211,14 @@ static void des_setkey(uint8_t ks[16][8], const uint8_t key[8])
     }
 }
 
-static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt)
+/* The sixteen rounds, and nothing else: standard DES is this between IP
+ * and FP, StuffItDES is this alone. On return `*lp` is L16 and `*rp` is
+ * R16, so the preoutput a caller writes is R16 then L16. */
+static void des_core(uint32_t *lp, uint32_t *rp, uint8_t ks[16][8],
+                     int decrypt, const uint32_t *sp)
 {
-    uint32_t l = 0, r = 0;
-    uint8_t pre[8];
-    int i, round;
-
-    for (i = 0; i < 32; i++) l = (l << 1) | bit_at(block, unc_des_ip[i]);
-    for (i = 32; i < 64; i++) r = (r << 1) | bit_at(block, unc_des_ip[i]);
+    uint32_t l = *lp, r = *rp;
+    int round;
 
     for (round = 0; round < 16; round++) {
         const uint8_t *sk = ks[decrypt ? 15 - round : round];
@@ -120,12 +228,27 @@ static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt)
             /* The E expansion picks bits 4g, 4g+1 .. 4g+5 (1-based, and
              * 0 means 32), which is a rotate and a shift. */
             uint32_t e = (rotl32(r, (4 * g + 31) & 31) >> 26) & 0x3Fu;
-            f ^= unc_des_sp[g][e ^ sk[g]];
+            f ^= sp[g * 64 + (int)(e ^ sk[g])];
         }
         t = r;
         r = l ^ f;
         l = t;
     }
+    *lp = l;
+    *rp = r;
+}
+
+static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt,
+                      const uint32_t *sp)
+{
+    uint32_t l = 0, r = 0;
+    uint8_t pre[8];
+    int i;
+
+    for (i = 0; i < 32; i++) l = (l << 1) | bit_at(block, unc_des_ip[i]);
+    for (i = 32; i < 64; i++) r = (r << 1) | bit_at(block, unc_des_ip[i]);
+
+    des_core(&l, &r, ks, decrypt, sp);
 
     /* Preoutput is R16 L16 — the final swap. */
     pre[0] = (uint8_t)(r >> 24); pre[1] = (uint8_t)(r >> 16);
@@ -144,100 +267,78 @@ static void des_crypt(uint8_t ks[16][8], uint8_t block[8], int decrypt)
 /*                                                                    */
 /* "A modified DES that ROLs the input, does the DES rounds without    */
 /* IP, then RORs the result. It also uses its own key schedule." —     */
-/* XADStuffItDESHandle.m, transcribed below including its              */
-/* little-endian bit order, which is why it needs its own S-box table  */
-/* rather than the one above. Used only to derive keys: a handful of   */
-/* blocks per archive.                                                */
+/* XADStuffItDESHandle.m. That description is exact, and since         */
+/* 2026-09-19 only its second sentence is code here: the rotate, the   */
+/* bit reversal and the second S-box table were one relabelling of     */
+/* standard DES's round, applied to the state and undone at the end of */
+/* the block, so the rounds ARE des_core above.                        */
+/*                                                                    */
+/* Two facts carry it, both machine-checked by tools/fit_sitdes.py:    */
+/* XADMaster's DES_SPtrans[b][v] equals ROL(REV(SP[b][rev6(v)]), 3)    */
+/* entry for entry, and with the state held in the standard layout the */
+/* subkeys fall out of the nibble schedule as plain six-bit groups —   */
+/* group 2g is s1's lane 3-g, group 2g+1 is s0's, which is why no      */
+/* revbits survives. The same tool A/Bs the two formulations over      */
+/* 20,000 random key/block pairs and every single-bit case.            */
+/*                                                                    */
+/* What is NOT standard DES, and is kept as the format knowledge it    */
+/* is, is the schedule below — it reads all 64 key bits where PC-1     */
+/* drops eight, so no permutation of the key can turn one into the     */
+/* other (DECISIONS.md 2026-09-19, *the DES that was only wearing a    */
+/* disguise*). Used only to derive keys: a handful of blocks per       */
+/* archive.                                                           */
 /* ------------------------------------------------------------------ */
-
-typedef struct SitDesKs {
-    uint32_t subkeys[16][2];
-} SitDesKs;
-
-static uint32_t revbits(uint32_t v)
-{
-    uint32_t res = 0;
-    int i;
-    for (i = 0; i < 32; i++) {
-        res <<= 1;
-        res |= v & 1;
-        v >>= 1;
-    }
-    return res;
-}
 
 static uint32_t sit_nibble(const uint8_t key[8], int n)
 {
     return (uint32_t)((key[(n & 0x0f) >> 1] >> (((n ^ 1) & 1) << 2)) & 0x0f);
 }
 
-static void sitdes_setkey(const uint8_t key[8], SitDesKs *ks)
+/* The nibble schedule, straight into standard six-bit subkey groups. */
+static void sitdes_setkey(const uint8_t key[8], uint8_t ks[16][8])
 {
     int i;
     for (i = 0; i < 16; i++) {
-        uint32_t s1 = ((sit_nibble(key, i) >> 2) | (sit_nibble(key, i + 13) << 2));
-        uint32_t s0;
-        s1 |= ((sit_nibble(key, i + 11) >> 2) | (sit_nibble(key, i + 6) << 2)) << 8;
-        s1 |= ((sit_nibble(key, i + 3) >> 2) | (sit_nibble(key, i + 10) << 2)) << 16;
-        s1 |= ((sit_nibble(key, i + 8) >> 2) | (sit_nibble(key, i + 1) << 2)) << 24;
-        s0 = ((sit_nibble(key, i + 9) | (sit_nibble(key, i) << 4)) & 0x3f);
-        s0 |= ((sit_nibble(key, i + 2) | (sit_nibble(key, i + 11) << 4)) & 0x3f) << 8;
-        s0 |= ((sit_nibble(key, i + 14) | (sit_nibble(key, i + 3) << 4)) & 0x3f) << 16;
-        s0 |= ((sit_nibble(key, i + 5) | (sit_nibble(key, i + 8) << 4)) & 0x3f) << 24;
-        /* A little-endian DES: bit-reverse and swap the even/odd
-         * subkeys. Not needed by a regular DES implementation. */
-        ks->subkeys[i][0] = revbits(s1);
-        ks->subkeys[i][1] = revbits(s0);
+        ks[i][0] = (uint8_t)((sit_nibble(key, i + 8) >> 2) |
+                             (sit_nibble(key, i + 1) << 2));
+        ks[i][1] = (uint8_t)((sit_nibble(key, i + 5) |
+                              (sit_nibble(key, i + 8) << 4)) & 0x3f);
+        ks[i][2] = (uint8_t)((sit_nibble(key, i + 3) >> 2) |
+                             (sit_nibble(key, i + 10) << 2));
+        ks[i][3] = (uint8_t)((sit_nibble(key, i + 14) |
+                              (sit_nibble(key, i + 3) << 4)) & 0x3f);
+        ks[i][4] = (uint8_t)((sit_nibble(key, i + 11) >> 2) |
+                             (sit_nibble(key, i + 6) << 2));
+        ks[i][5] = (uint8_t)((sit_nibble(key, i + 2) |
+                              (sit_nibble(key, i + 11) << 4)) & 0x3f);
+        ks[i][6] = (uint8_t)((sit_nibble(key, i) >> 2) |
+                             (sit_nibble(key, i + 13) << 2));
+        ks[i][7] = (uint8_t)((sit_nibble(key, i + 9) |
+                              (sit_nibble(key, i) << 4)) & 0x3f);
     }
 }
 
-static void sitdes_round(uint32_t *left, uint32_t right, const uint32_t *subkey)
+/* DES with no IP and no FP: the block IS L0 R0, and the preoutput is
+ * the answer. `enc` runs the subkeys forwards, which is what des_core
+ * calls NOT decrypting. */
+static void sitdes_crypt(uint8_t data[8], uint8_t ks[16][8], int enc,
+                         const uint32_t *sp)
 {
-    uint32_t u = right ^ subkey[0];
-    uint32_t t = rotr32(right, 4) ^ subkey[1];
-    *left ^=
-        unc_sitdes_sp[0][(u >> 2) & 0x3f] ^
-        unc_sitdes_sp[2][(u >> 10) & 0x3f] ^
-        unc_sitdes_sp[4][(u >> 18) & 0x3f] ^
-        unc_sitdes_sp[6][(u >> 26) & 0x3f] ^
-        unc_sitdes_sp[1][(t >> 2) & 0x3f] ^
-        unc_sitdes_sp[3][(t >> 10) & 0x3f] ^
-        unc_sitdes_sp[5][(t >> 18) & 0x3f] ^
-        unc_sitdes_sp[7][(t >> 26) & 0x3f];
-}
+    uint32_t l = unc_get_u32be(&data[0]);
+    uint32_t r = unc_get_u32be(&data[4]);
 
-static void sitdes_crypt(uint8_t data[8], const SitDesKs *ks, int enc)
-{
-    uint32_t left = revbits(unc_get_u32be(&data[0]));
-    uint32_t right = revbits(unc_get_u32be(&data[4]));
-    int i;
+    des_core(&l, &r, ks, !enc, sp);
 
-    right = rotr32(right, 29);
-    left = rotr32(left, 29);
-
-    if (enc) {
-        for (i = 0; i < 16; i += 2) {
-            sitdes_round(&left, right, ks->subkeys[i]);
-            sitdes_round(&right, left, ks->subkeys[i + 1]);
-        }
-    } else {
-        for (i = 15; i > 0; i -= 2) {
-            sitdes_round(&left, right, ks->subkeys[i]);
-            sitdes_round(&right, left, ks->subkeys[i - 1]);
-        }
-    }
-
-    left = rotr32(left, 3);
-    right = rotr32(right, 3);
-
-    unc_put_u32be(&data[0], revbits(right));
-    unc_put_u32be(&data[4], revbits(left));
+    unc_put_u32be(&data[0], r);
+    unc_put_u32be(&data[4], l);
 }
 
 /* ------------------------------------------------------------------ */
 /* MD5 (StuffIt 5's key derivation, and nothing else)                  */
-/* Source: reference/XADMaster/Crypto/md5.c — its unrolled STEP list is */
-/* src/crypt_tables.h's three tables. Public domain; see NOTICE.        */
+/* Source: RFC 1321 (reference/notes/rfc1321.txt) — sections 3.4's four  */
+/* round functions, and the 64 round calls of its reference             */
+/* implementation, which are src/crypt_tables.h's three tables. See      */
+/* NOTICE.                                                              */
 /* ------------------------------------------------------------------ */
 
 static void md5_block(uint32_t abcd[4], const uint8_t *p)
@@ -310,9 +411,13 @@ static void crypt_clear(UncCrypt *cr, int kind, uint32_t blocksize);
 
 /* ------------------------------------------------------------------ */
 /* SHA-1, HMAC-SHA1 and PBKDF2 (WinZip's AES, and nothing else)        */
-/* Source: reference/XADMaster/Crypto/sha.c and hmac_sha1.c, and the    */
-/* key derivation in XADWinZipAESHandle.m (DeriveKey), which is         */
-/* PBKDF2 with 1000 iterations. LGPL / public domain — see NOTICE.      */
+/* Source: the standards, since 2026-09-23. RFC 3174 sections 5 and 6.1 */
+/* for SHA-1's K constants, its five initial words and the round;       */
+/* RFC 2104 for HMAC's 0x36/0x5C pads over a 64-byte block; RFC 2898    */
+/* section 5.2 for PBKDF2's U_1 xor ... xor U_c over a four-octet       */
+/* big-endian INT(i). The PARAMETERS are WinZip's published AES spec    */
+/* (reference/notes/winzip_aes.txt): 1,000 iterations, a salt half the  */
+/* key's length, and the last two bytes as the verifier. See NOTICE.    */
 /* ------------------------------------------------------------------ */
 
 static void sha1_block(uint32_t h[5], const uint8_t *p)
@@ -468,15 +573,37 @@ void unc_pbkdf2_test(const uint8_t *pw, uint32_t pwlen,
 /* Counter mode encrypts to decrypt, so the inverse cipher is never    */
 /* needed and neither are its tables: one 256-byte S box and the       */
 /* column mix, which costs speed and saves four kilobytes on a machine */
-/* that has one megabyte. Source: FIPS-197 as implemented in           */
-/* reference/XADMaster/Crypto/aeskey.c and aescrypt.c.                 */
+/* that has one megabyte.                                             */
+/*                                                                    */
+/* Source: FIPS 197 (reference/notes/fips197.pdf), the standard        */
+/* itself — section 5.2 and its Fig. 11 for the key expansion below,   */
+/* section 5.1 for the round, section 4.2.1 for the xtime doubling     */
+/* that Rcon and MixColumns are both built out of, and appendix C for  */
+/* the known-answer vectors two of the three key sizes are graded on   */
+/* (tools/synth_crypt.py, at import; AES-192 is 7-Zip's in ci.sh).     */
+/* It cited Gladman's Crypto/aeskey.c and aescrypt.c until 2026-09-26, */
+/* which state the same algorithm in a shape nothing here shares:      */
+/* those are 32-bit word machines, macro-unrolled, one function per    */
+/* key size, with Rcon as a table and the schedule kept as a running   */
+/* four-word state. DECISIONS.md 2026-09-26.                          */
 /* ------------------------------------------------------------------ */
 
+/* Multiplication by {02} in GF(2^8), modulo x^8+x^4+x^3+x+1: FIPS 197
+ * section 4.2.1. Both Rcon and MixColumns are built out of it. */
 static uint8_t xtime(uint8_t x)
 {
     return (uint8_t)((x << 1) ^ ((x & 0x80) ? 0x1b : 0));
 }
 
+/* The key expansion, FIPS 197 section 5.2 and its Fig. 11, written a
+ * byte at a time because the round key is XORed into the state a byte
+ * at a time: `i` is the standard's word index and cr->rk[i * 4 + j] is
+ * its w[i]. Nk is 4, 6 or 8 and Nr is Nk + 6 (section 5 and its
+ * Fig. 4), so with Nb = 4 the bound Nb * (Nr + 1) is (nk + 7) * 4
+ * words. Rcon[i / Nk] is [x^(i/Nk - 1), {00}, {00}, {00}], which is
+ * the standard's DEFINITION evaluated rather than a table of its
+ * values — the same choice tools/gen_crypt_tables.py makes for the S
+ * box. */
 static void aes_setkey(UncCrypt *cr, const uint8_t *key, int keybytes)
 {
     int nk = keybytes / 4;                 /* 4, 6 or 8 words */
@@ -505,6 +632,12 @@ static void aes_setkey(UncCrypt *cr, const uint8_t *key, int keybytes)
     }
 }
 
+/* The cipher, FIPS 197 section 5.1 and its Fig. 5. SubBytes and
+ * ShiftRows are done in one pass, which is the standard's own first
+ * property in section 5.3.5: the two transformations commute, because
+ * SubBytes is bytewise. The last round is the loop's last iteration
+ * with MixColumns skipped, which is what Fig. 5 writes out as a
+ * separate step. */
 static void aes_encrypt_block(const UncCrypt *cr, uint8_t st[16])
 {
     int round, i;
@@ -512,8 +645,9 @@ static void aes_encrypt_block(const UncCrypt *cr, uint8_t st[16])
     for (i = 0; i < 16; i++) st[i] ^= cr->rk[i];
     for (round = 1; round <= cr->aesrounds; round++) {
         uint8_t t[16];
-        /* SubBytes + ShiftRows, in the column-major order AES uses:
-         * byte (r,c) lives at 4*c + r and row r rotates left by r. */
+        /* SubBytes + ShiftRows, in the column-major order AES uses
+         * (section 3.4): byte (r,c) lives at 4*c + r, and section
+         * 5.1.2 shifts row r left by r columns. */
         for (i = 0; i < 16; i++)
             t[i] = unc_aes_sbox[st[(i + 4 * (i & 3)) & 15]];
         if (round != cr->aesrounds) {
@@ -542,8 +676,12 @@ void unc_aes_encrypt_test(UncCrypt *cr, const uint8_t *key, int keybytes,
 /* WinZip's AES: PBKDF2 over the salt gives an encryption key, an
  * authentication key and a two-byte verifier, and the data is a counter
  * mode stream with the counter LITTLE-endian and starting at 1.
- * Source: XADWinZipAESHandle.m. `keybytes` is 16, 24 or 32; `salt` is
- * keybytes/2 long. Returns UNC_ERR_PASSWORD if the verifier disagrees. */
+ * Source: reference/notes/winzip_aes.txt, WinZip's own AE-1/AE-2
+ * specification, for everything but the counter's endianness and start
+ * value, which it leaves to Gladman's library and which are therefore
+ * the one thing here graded only by the fixtures that decrypt.
+ * `keybytes` is 16, 24 or 32; `salt` is keybytes/2 long. Returns
+ * UNC_ERR_PASSWORD if the verifier disagrees. */
 int unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                          const uint8_t *salt, int keybytes,
                          const uint8_t verifier[2])
@@ -572,10 +710,14 @@ int unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
 static void crypt_clear(UncCrypt *cr, int kind, uint32_t blocksize)
 {
     uint8_t *p = (uint8_t *)cr;
+    uint32_t *tab = cr->tab;          /* the caller's to free, not ours */
+    int tabkind = cr->tabkind;
     uint32_t i;
     for (i = 0; i < sizeof *cr; i++) p[i] = 0;
     cr->kind = kind;
     cr->blocksize = blocksize;
+    cr->tab = tab;
+    cr->tabkind = tabkind;
 }
 
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
@@ -588,10 +730,12 @@ void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     if (pwlen == 0) cr->kind = UNC_CRYPT_NONE;
 }
 
-/* PackIt PMa5. The key is DES's PC-1 applied to eight password bytes;
- * it is then used modulo SEVEN, which loses key[7] entirely. That is
- * what XADPackItXORHandle does and what the files were written by.
- * Source: XADPackItParser.m (keytr1). */
+/* PackIt PMa5. The key is DES's PC-1 applied to eight password bytes,
+ * and PC-1 selects 56 of the 64, so what comes out is seven bytes and
+ * the eighth is never written: Packit III 1.3 allocates exactly seven
+ * (CODE 1 @0x3386, the counter it resets to) and cycles them.
+ * Source: tools/derive_pitcrypt.py, which runs that routine; the table
+ * itself is FIPS 46-3's PC-1. */
 void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 {
     uint8_t passbuf[8];
@@ -600,7 +744,9 @@ void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     crypt_clear(cr, UNC_CRYPT_PIT_XOR, 1);
     for (i = 0; i < 8; i++) passbuf[i] = i < pwlen ? pw[i] : 0;
     for (i = 0; i < 56; i++) {
-        /* keytr1 is PC-1: bK_C then bK_D, which is how des.c holds it. */
+        /* PC-1, its C half then its D half, which is how the
+         * standard's own table divides at 28 — and the order the
+         * application's single 56-entry table has it in. */
         int bitindex = (i < 28 ? unc_des_pc1c[i] : unc_des_pc1d[i - 28]) - 1;
         cr->key[i / 8] = (uint8_t)(cr->key[i / 8] |
             (((passbuf[bitindex / 8] << (bitindex % 8)) & 0x80) >> (i % 8)));
@@ -608,16 +754,27 @@ void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     cr->keylen = 7;
 }
 
-/* PackIt PMa6: DES, and the operation that DECODES is DES's decrypt. */
-void unc_crypt_packit_des(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
+/* PackIt PMa6: DES, keyed on the first eight password bytes zero-padded,
+ * and the operation that DECODES is DES's decrypt — Packit III 1.3
+ * writes with the block routine whose rounds ascend (CODE 1 @0x33fc,
+ * reached only from the writer) and reads with the one whose rounds
+ * descend. Graded by two archives its own code encrypted
+ * (tools/derive_pitcrypt.py --make). */
+int unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                         uint16_t pwlen)
 {
     uint8_t key[8];
-    int i;
+    int i, err;
+    if ((err = crypt_table(cr, al, CRYPT_TAB_DES)) != UNC_OK) return err;
     crypt_clear(cr, UNC_CRYPT_PIT_DES, 8);
     for (i = 0; i < 8; i++) key[i] = i < pwlen ? pw[i] : 0;
     des_setkey(cr->ks, key);
+    return UNC_OK;
 }
 
+/* The traditional zip cipher. Source: reference/notes/zip_appnote.txt,
+ * section 6.1 — the three key constants, `update_keys` and
+ * `decrypt_byte`, all of it written out there. */
 int unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
 {
     uint16_t i;
@@ -646,11 +803,13 @@ void unc_crypt_zip_update(UncCrypt *cr, uint8_t b)
  * Those bytes are then folded into the CRC register one at a time, by
  * the same step the data uses. Source: Compact Pro 1.51 `CODE` 3
  * @0x1892 (the key) and @0x40fe (the seed and the fold). */
-void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
+int unc_crypt_cpt(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                  uint16_t pwlen)
 {
     uint8_t key[9];
-    int i, n;
+    int i, n, err;
 
+    if ((err = crypt_table(cr, al, CRYPT_TAB_CRC64)) != UNC_OK) return err;
     crypt_clear(cr, UNC_CRYPT_CPT, 1);
     for (i = 0; i < 9; i++) key[i] = 0;
     for (i = 0; i < (int)pwlen; i++)
@@ -662,12 +821,16 @@ void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen)
     cr->lo = 0x89abcdefu;
     for (i = 1; i <= n; i++) {
         uint32_t idx = (uint32_t)(key[i] ^ (cr->lo & 0xFF));
-        uint32_t lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ unc_cpt_crc64[idx][1];
-        cr->hi = (cr->hi >> 8) ^ unc_cpt_crc64[idx][0];
+        uint32_t lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ cr->tab[2 * idx + 1];
+        cr->hi = (cr->hi >> 8) ^ cr->tab[2 * idx];
         cr->lo = lo;
     }
+    return UNC_OK;
 }
 
+/* RC4's key schedule. Source: reference/notes/arcfour_draft.txt section
+ * 3.1 (draft-kaukonen-cipher-arcfour-03), whose S2 is the key repeated to
+ * 256 bytes — which is what indexing by i % keylen does. */
 void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen)
 {
     int i;
@@ -702,16 +865,30 @@ int unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
     return UNC_OK;
 }
 
+/* Private File: RC4 keyed by the first `keylen` bytes of MD5(password).
+ * Source: PF Encrypt™ 2.0, CODE 4, CCrypt::Encrypt — MD5::Update over the
+ * password's bytes, GetDigest, then RC4::SetKey(digest, keylen) (fmt_pf.c
+ * has the rest of the format). */
+void unc_crypt_pf(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                  uint16_t keylen)
+{
+    uint8_t digest[16];
+    unc_md5(pw, pwlen, digest);
+    unc_crypt_rc4(cr, digest, keylen > 16 ? 16 : keylen);
+}
+
 /* StuffIt classic. Three keys are involved: the ARCHIVE key, iterated
  * out of the password; the archive IV, which is the 'MKey' resource
  * decrypted under it (and which also verifies the password); and the
  * FILE key and IV, derived from the sixteen bytes stored at the end of
  * the entry's own compressed fork. Source: XADStuffItDESHandle.m
  * keyForPasswordData:entryKey:MKey:. */
-int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
-                  const uint8_t entrykey[16], const uint8_t mkey[8])
+int unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                  uint16_t pwlen, const uint8_t entrykey[16],
+                  const uint8_t mkey[8], int scheme)
 {
-    SitDesKs ks;
+    uint8_t ks[16][8];
+    const uint32_t *sp;
     uint8_t archivekey[8] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
     uint8_t archiveiv[8], verifyblock[8] = { 0, 0, 0, 0, 0, 0, 0, 4 };
     uint8_t filekey[8], fileiv[8];
@@ -733,7 +910,12 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
      * cannot, which is what the divergence looked like from here before
      * an archive existed to ask. */
     blocks = (length + 7u) >> 3;
-    sitdes_setkey(archivekey, &ks);
+    {
+        int err = crypt_table(cr, al, CRYPT_TAB_DES);
+        if (err != UNC_OK) return err;
+    }
+    sp = cr->tab;
+    sitdes_setkey(archivekey, ks);
     for (x = 0; x < blocks; x++) {
         uint8_t passblock[8];
         uint32_t off = x << 3, n = length - off < 8u ? length - off : 8u;
@@ -743,18 +925,21 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
 
         for (i = 0; i < 8; i++) archivekey[i] ^= passblock[i] & 0x7f;
 
-        sitdes_crypt(archivekey, &ks, 1);
+        sitdes_crypt(archivekey, ks, 1, sp);
     }
 
+    /* Everything below is keyed by the folded archive key, so the
+     * schedule is derived once. (It was derived three more times until
+     * 2026-09-19, each from the same unchanged bytes.) */
+    sitdes_setkey(archivekey, ks);
+
     for (i = 0; i < 8; i++) archiveiv[i] = mkey[i];
-    sitdes_setkey(archivekey, &ks);
-    sitdes_crypt(archiveiv, &ks, 0);
+    sitdes_crypt(archiveiv, ks, 0, sp);
 
     /* Verify: encrypting the IV's first four bytes (with a trailing 4)
      * must reproduce its last four. */
     for (i = 0; i < 4; i++) verifyblock[i] = archiveiv[i];
-    sitdes_setkey(archivekey, &ks);
-    sitdes_crypt(verifyblock, &ks, 1);
+    sitdes_crypt(verifyblock, ks, 1, sp);
     for (i = 0; i < 4; i++)
         if (verifyblock[4 + i] != archiveiv[4 + i]) return UNC_ERR_PASSWORD;
 
@@ -762,15 +947,33 @@ int unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
         filekey[i] = entrykey[i];
         fileiv[i] = entrykey[8 + i];
     }
-    sitdes_setkey(archivekey, &ks);
-    sitdes_crypt(filekey, &ks, 0);
+    sitdes_crypt(filekey, ks, 0, sp);
     for (i = 0; i < 8; i++) filekey[i] ^= archiveiv[i];
-    sitdes_setkey(filekey, &ks);
-    sitdes_crypt(fileiv, &ks, 0);
+    sitdes_setkey(filekey, ks);
+    sitdes_crypt(fileiv, ks, 0, sp);
 
-    crypt_clear(cr, UNC_CRYPT_SIT_DES, 8);
-    cr->a = unc_get_u32be(&filekey[0]);
-    cr->b = unc_get_u32be(&filekey[4]);
+    /* Everything above is shared by all three schemes — the archive key,
+     * the 'MKey' and its verifier, the file key and IV — and only the
+     * fork transform differs. Measured 2026-10-02 against a known
+     * PLAINTEXT: StuffIt Deluxe 2.0.1 stuffed one subject three times in
+     * one boot, with `des`, with `newde` and with neither, so the
+     * control holds the exact 286 compressed bytes behind both
+     * ciphertexts (tools/vmac/sitopt.py --psdes). Both come out with 0
+     * bytes differing. */
+    if (scheme == UNC_SIT_SCHEME_DES) {
+        crypt_clear(cr, UNC_CRYPT_SIT_CBC, 8);
+        des_setkey(cr->ks, filekey);
+    } else if (scheme == UNC_SIT_SCHEME_NEWDE) {
+        crypt_clear(cr, UNC_CRYPT_SIT_NEWDE, 8);
+        sitdes_setkey(filekey, cr->ks);
+    } else {
+        crypt_clear(cr, UNC_CRYPT_SIT_DES, 8);
+        cr->a = unc_get_u32be(&filekey[0]);
+        cr->b = unc_get_u32be(&filekey[4]);
+    }
+    /* c and d are the IV for the feedback and the chaining block for
+     * the two CBC schemes; both advance the same way through
+     * `unc_crypt_apply`. */
     cr->c = unc_get_u32be(&fileiv[0]);
     cr->d = unc_get_u32be(&fileiv[4]);
     return UNC_OK;
@@ -803,7 +1006,7 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
         break;
 
     case UNC_CRYPT_PIT_DES:
-        for (i = 0; i + 8 <= len; i += 8) des_crypt(cr->ks, buf + i, 1);
+        for (i = 0; i + 8 <= len; i += 8) des_crypt(cr->ks, buf + i, 1, cr->tab);
         break;
 
     case UNC_CRYPT_SIT_DES:
@@ -820,25 +1023,57 @@ void unc_crypt_apply(UncCrypt *cr, uint8_t *buf, uint32_t len, uint32_t pos)
         }
         break;
 
-    case UNC_CRYPT_RC4:
-        for (i = 0; i < len; i++) {
-            uint8_t t;
-            cr->si = (uint8_t)(cr->si + 1);
-            cr->sj = (uint8_t)(cr->sj + cr->s[cr->si]);
-            t = cr->s[cr->si];
-            cr->s[cr->si] = cr->s[cr->sj];
-            cr->s[cr->sj] = t;
-            buf[i] ^= cr->s[(uint8_t)(cr->s[cr->si] + cr->s[cr->sj])];
+    case UNC_CRYPT_SIT_CBC:
+    case UNC_CRYPT_SIT_NEWDE:
+        /* CBC: decrypt the block, XOR the previous CIPHERTEXT into it,
+         * and carry that ciphertext forward — across refills too, which
+         * is why it lives in the struct. `DES` is the standard cipher,
+         * IP and FP included; `NewDE` is StuffItDES, which omits them.
+         * The key schedule is the same shape for both and was built at
+         * key setup. */
+        for (i = 0; i + 8 <= len; i += 8) {
+            uint32_t cl = unc_get_u32be(buf + i);
+            uint32_t cr2 = unc_get_u32be(buf + i + 4);
+            if (cr->kind == UNC_CRYPT_SIT_CBC)
+                des_crypt(cr->ks, buf + i, 1, cr->tab);
+            else
+                sitdes_crypt(buf + i, cr->ks, 0, cr->tab);
+            unc_put_u32be(buf + i, unc_get_u32be(buf + i) ^ cr->c);
+            unc_put_u32be(buf + i + 4, unc_get_u32be(buf + i + 4) ^ cr->d);
+            cr->c = cl;
+            cr->d = cr2;
         }
         break;
+
+    case UNC_CRYPT_RC4: {
+        /* The two indices are copied out for the loop and written back
+         * once. Through the struct they were loaded and stored on every
+         * byte, because `buf` is a uint8_t * and may alias them, so the
+         * compiler could not keep them in registers: 21 68000
+         * instructions a byte, measured with tools/m68kprof.py, and this
+         * loop is two thirds of decrypting a Private File (DECISIONS.md
+         * 2026-10-09). */
+        uint8_t *s = cr->s;
+        uint8_t si = cr->si, sj = cr->sj;
+        for (i = 0; i < len; i++) {
+            uint8_t t = s[++si];
+            sj = (uint8_t)(sj + t);
+            s[si] = s[sj];
+            s[sj] = t;
+            buf[i] ^= s[(uint8_t)(t + s[si])];
+        }
+        cr->si = si;
+        cr->sj = sj;
+        break;
+    }
 
     case UNC_CRYPT_CPT:
         for (i = 0; i < len; i++) {
             uint32_t idx, lo;
             buf[i] ^= (uint8_t)(cr->lo >> 8);          /* keystream byte */
             idx = (uint32_t)(buf[i] ^ (cr->lo & 0xFF));/* on the PLAINtext */
-            lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ unc_cpt_crc64[idx][1];
-            cr->hi = (cr->hi >> 8) ^ unc_cpt_crc64[idx][0];
+            lo = ((cr->hi << 24) | (cr->lo >> 8)) ^ cr->tab[2 * idx + 1];
+            cr->hi = (cr->hi >> 8) ^ cr->tab[2 * idx];
             cr->lo = lo;
         }
         break;

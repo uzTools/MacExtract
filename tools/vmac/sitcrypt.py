@@ -17,6 +17,17 @@ with passwords. So: have it encrypt a known file under a password of
 NINE characters, read the archive back, and see which reading gets the
 bytes out. That is the whole point of the harness.
 
+**What actually runs is MAGIC MENU, not the application** — established
+2026-09-28, and every step below is the same either way. Each dialog
+this harness drives is drawn over a FINDER menu bar (look at
+`specimens/sitcrypt/pw8/04-new-dialog.png`), because ⌘N and ⌘S here
+belong to Aladdin's Finder extension. The 3.5.1 application does
+launch on this image, by a double-click on its icon and not by ⌘O
+(`sitopt.launch351`; `sitenc351.py` drives it). It makes no difference
+to the archives, and all the difference to anyone who comes here
+wanting a dialog only the application has (BLOCKERS.md, withdrawn
+claims).
+
     tools/vmac/sitcrypt.py --map        photograph the application's menus
     tools/vmac/sitcrypt.py              make the archive and read it back
     tools/vmac/sitcrypt.py --btoa-send  have the btoa/atob translator encode
@@ -479,13 +490,28 @@ def grade_btoa(outdir, ascii_path):
 
     work = tempfile.mkdtemp(prefix="btoa-grade-")
     try:
-        name, payload = decode_layer(cli, ascii_path, work)
+        # **`-nr` on both peels, since 2026-09-23.** This phase wants the
+        # layers ONE AT A TIME — the docstring above says so, and the
+        # grade is which layer was read — but the CLI auto-unwraps an
+        # envelope chain, so a plain `x` of the btoa stream came back
+        # with the subject already out of its MacBinary. Asking it to
+        # decode THAT again answers "format not recognized", which is the
+        # CLI being right and this harness asserting an envelope depth it
+        # never meant to test. `-nr` is the flag that turns auto-unwrap
+        # off, and it keeps the reference comparison below exact as well:
+        # btoa 5.2.1 must encode the MacBinary, which is what the
+        # Macintosh encoded, not the payload inside it.
+        #
+        # Nothing about the specimen changed: the stream the Macintosh
+        # wrote is byte-identical to the one kept on 2026-08-26, md5
+        # 5add97f23be195fd25b99b8eb1b8fa84.
+        name, payload = decode_layer(cli, ascii_path, work, extra=["-nr"])
         if payload is None:
             return False
         print("sitcrypt: btoa layer -> %r, %d bytes" % (name, len(payload)))
         inner = os.path.join(outdir, "payload.bin")
         open(inner, "wb").write(payload)
-        name2, back = decode_layer(cli, inner, work)
+        name2, back = decode_layer(cli, inner, work, extra=["-nr"])
         if back is None:
             return False
         ok = back == BTOA_DATA
@@ -497,7 +523,10 @@ def grade_btoa(outdir, ascii_path):
 
         # The reference encodes the same payload, in both framings, and
         # the comparison is with the stream the Macintosh wrote.
-        if RB.build():
+        # (ok, why), not a bool: testing the tuple is always true, which
+        # reached RB.BIN with no reference/btoa fetched and raised instead
+        # of skipping the comparison (same bug as tools/synth_os9.py).
+        if RB.build()[0]:
             mac = open(ascii_path, "rb").read()
             for label, flags in (("v5", []), ("v4", ["-o"])):
                 ref = os.path.join(outdir, "reference-%s.ascii" % label)
@@ -530,7 +559,10 @@ def list_folder(image):
         if subprocess.run(["hmount", image], capture_output=True,
                           env=env).returncode != 0:
             return ""
-        out = subprocess.run(["hls", "-l",
+        # `-a`: this is "the only way to see what DropConvert decided to
+        # call its output", and without the flag an invisible output is
+        # not seen at all (2026-09-23).
+        out = subprocess.run([b"hls", b"-a", b"-l",
                               (":" + APP_FOLDER + ":").encode("mac_roman")],
                              capture_output=True, env=env).stdout
         subprocess.run(["humount"], capture_output=True, env=env)

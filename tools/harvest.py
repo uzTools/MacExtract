@@ -73,9 +73,29 @@ def load_sources():
     return rows
 
 
+def preamble():
+    """Everything SOURCES.md says above its table, kept verbatim.
+
+    The file is rewritten whole on every registration, and until
+    2026-10-04 that threw away the prose: HEADER was written back and
+    the twelve lines of explanation after it were not, so one --probe
+    deleted the paragraph saying which fixtures are not archives and
+    must not have manifests. Nothing reads the file, so nothing failed;
+    `git diff` saying "1 insertion, 13 deletions" is what caught it.
+    Falls back to HEADER for a fresh clone.
+    """
+    marker = "| name | sha256 | size | url |"
+    if os.path.exists(SOURCES):
+        text = open(SOURCES, encoding="utf-8").read()
+        if marker in text:
+            return text[:text.index(marker)] + marker + "\n|---|---|---|---|\n"
+    return HEADER
+
+
 def save_sources(rows):
-    with open(SOURCES, "w") as f:
-        f.write(HEADER)
+    head = preamble()
+    with open(SOURCES, "w", encoding="utf-8") as f:
+        f.write(head)
         for name in sorted(rows):
             sha, size, url = rows[name]
             f.write(f"| {name} | {sha} | {size} | {url} |\n")
@@ -236,6 +256,54 @@ def restore():
                 ok += 1
             else:
                 print(f"  carve failed or hash mismatch: {name}")
+                bad += 1
+            continue
+        # `derived:hfsvol:<image>:<mode>:<HFS path>` lifts ONE file out
+        # of an emulator disk image with hfsutils; <mode> is hcopy's
+        # letter, `r` for the data fork alone and `m` for MacBinary.
+        # A DiskDoubler file wants `r`: its payload is in its own DATA
+        # fork, and MacBinary-wrapping it makes `unar` stop at the
+        # wrapper and report the DD01 file rather than expanding it, so
+        # the manifest would describe the container and never the
+        # contents. `<image>` is relative to the vmac cache
+        # ($UNC_VMAC_HOME), because a distribution disk is emulator
+        # material and lives under the same rule as the ROM and the
+        # System images: fetched by tools/vmac/setup.sh, never
+        # committed. Absent, the fixture simply cannot be restored,
+        # which is the position every fixture is in on a fresh clone.
+        if url.startswith("derived:hfsvol:"):
+            _, _, image, mode, hfspath = url.split(":", 4)
+            mode = "-" + (mode or "m")
+            # An HFS path is absolute when it LEADS with the separator,
+            # and the field splitting above has just eaten that colon.
+            if not hfspath.startswith(":"):
+                hfspath = ":" + hfspath
+            vmac = os.environ.get("UNC_VMAC_HOME",
+                                  os.path.expanduser(
+                                      "~/.cache/macextract/vmac"))
+            img = os.path.join(vmac, image)
+            path = os.path.join(FIXDIR, name)
+            if not os.path.exists(img):
+                print(f"  no disk image for {name}: {img} "
+                      f"(tools/vmac/setup.sh fetches it)")
+                bad += 1
+                continue
+            r = subprocess.run(["hmount", img], capture_output=True,
+                               timeout=120)
+            if r.returncode == 0:
+                # SOURCES.md holds the path as readable Unicode; the
+                # volume holds MacRoman, so "Sample IAC \u0192" has to go
+                # back to the 0xC4 byte hfsutils will match. Bytes are a
+                # legal argv entry on POSIX.
+                subprocess.run([b"hcopy", mode.encode(),
+                                hfspath.encode("mac-roman"),
+                                path.encode()],
+                               capture_output=True, timeout=120)
+            if os.path.exists(path) and \
+                    sha256_bytes(open(path, "rb").read()) == sha:
+                ok += 1
+            else:
+                print(f"  hfsvol extract failed or hash mismatch: {name}")
                 bad += 1
             continue
         if url.startswith("derived:member:"):

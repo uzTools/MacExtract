@@ -19,6 +19,8 @@
  * UNC_TRACE_ALLOC=1 in the environment prints every allocation and every
  * budget refusal with the live total, which is how a tier's peak is read
  * apart into its pieces (TESTING.md, *The tiers a budget predicts*).
+ * UNC_SHORT_READ=<n> caps every read at n bytes (TESTING.md, *Short
+ * reads*).
  *
  * The CLI is the only place libc I/O and malloc are used; the engine
  * sees callbacks only.
@@ -64,10 +66,18 @@ static unc_off_t file_size_off(const struct stat *st, const char *path)
     return (unc_off_t)st->st_size;
 }
 
+/* UNC_SHORT_READ=<n> caps every read at n bytes. `UncIO` allows a short
+ * read before EOF, and a file-backed host never returns one, so without
+ * this no suite exercises the engine's half of that contract
+ * (TESTING.md, *Short reads*). Set once in main(). */
+static int32_t fio_read_cap;
+
 static int32_t fio_read(void *ctx, void *buf, int32_t len)
 {
     FileIO *io = (FileIO *)ctx;
-    size_t r = fread(buf, 1, (size_t)len, io->f);
+    size_t r;
+    if (fio_read_cap > 0 && len > fio_read_cap) len = fio_read_cap;
+    r = fread(buf, 1, (size_t)len, io->f);
     if (r == 0 && ferror(io->f)) return -1;
     return (int32_t)r;
 }
@@ -239,6 +249,15 @@ static char *name_to_text(const uint8_t *name, size_t len, int mac_encoding,
     return out;
 }
 
+/* Is this entry's name MacRoman, and so ours to decode? A Mac format's
+ * names are — except StuffIt 5's, which are the archive's own UTF-8 and
+ * already the encoding this side writes (macextract.h, name_utf8). The
+ * engine says which per ENTRY rather than per format, because the
+ * format the CLI sniffed is not always the one that read the name: a
+ * segmented set is sniffed as a split and walked by whatever the joined
+ * stream turns out to be. */
+#define NAME_IS_MACROMAN(s, i) ((s)->mac_encoding && !(i)->name_utf8)
+
 /* The largest name a format here can state: zip and tar count theirs in
  * 16 bits. Only ever displayed, so this is not a filesystem question. */
 #define UNC_LONGNAME_CAP 65536u
@@ -336,6 +355,17 @@ typedef struct {
     int         nonly;
     int         mac_encoding;   /* names are MacRoman */
     int         verbose;
+    int         show_finder;    /* --finder: the Finder metadata as hex
+                                 * — type, creator, flags — in place of
+                                 * the four-character columns. Off by
+                                 * default: the hex is for a parser, not
+                                 * a reader. The pretty columns cannot be
+                                 * read back, which is why this exists: a
+                                 * code holding a space ("PDF ") or a NUL
+                                 * moves the name, and the suite then
+                                 * compares nothing at all (TESTING.md,
+                                 * *The Finder metadata, and the one
+                                 * field no oracle settles*) */
     const char *archive;        /* the archive's own filename: the
                                  * comment file is named after it       */
     int         no_comment;     /* --no-comment: read it, drop it       */
@@ -350,6 +380,7 @@ typedef struct {
     UncEntryInfo cur;
     uint32_t    data_written, rsrc_written;
     int         entries, errors;
+    int         inexact;        /* entries an Optimizer left INEXACT   */
     int         unsupported;    /* entries whose METHOD this build lacks */
     int         unsup_method;   /* the first such method, for the message */
     /* For envelope auto-unwrap: shape of what was extracted. */
@@ -510,7 +541,7 @@ static char *sink_orig_name(DiskSink *s, const UncEntryInfo *info)
 {
     if (info->name_truncated != 2 || !s->long_name) return NULL;
     return name_to_text(s->long_name, strlen((const char *)s->long_name),
-                        s->mac_encoding, s->raw_names);
+                        NAME_IS_MACROMAN(s, info), s->raw_names);
 }
 
 /* --only: did the user name this entry? It matches a selector exactly,
@@ -542,8 +573,8 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     DiskSink *s = (DiskSink *)ctx;
     char name[FS_NAME_MAX];
 
-    name_to_fs(info->name, info->name_len, s->mac_encoding, s->raw_names,
-               name, sizeof name);
+    name_to_fs(info->name, info->name_len, NAME_IS_MACROMAN(s, info),
+               s->raw_names, name, sizeof name);
 
     /* Not asked for: skipped before it counts, so the tallies at the end
      * describe the SELECTION rather than the archive. */
@@ -565,15 +596,25 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
         }
         fourcc_str(info->type, t);
         fourcc_str(info->creator, c);
-        if (info->is_dir)
-            printf("d %10s %10s %-9s %s\n", "-", "-", "-", name);
-        else {
+        if (info->is_dir) {
+            if (s->show_finder)
+                printf("d %10s %10s %08lx/%08lx %04x %s\n", "-", "-",
+                       (unsigned long)info->type, (unsigned long)info->creator,
+                       (unsigned)info->finder_flags, name);
+            else
+                printf("d %10s %10s %-9s %s\n", "-", "-", "-", name);
+        } else {
             char dsz[16], rsz[16];
             if (info->data_size == UNC_SIZE_UNKNOWN) snprintf(dsz, sizeof dsz, "?");
             else snprintf(dsz, sizeof dsz, "%u", info->data_size);
             if (info->rsrc_size == UNC_SIZE_UNKNOWN) snprintf(rsz, sizeof rsz, "?");
             else snprintf(rsz, sizeof rsz, "%u", info->rsrc_size);
-            printf("f %10s %10s %4s/%-4s %s\n", dsz, rsz, t, c, name);
+            if (s->show_finder)
+                printf("f %10s %10s %08lx/%08lx %04x %s\n", dsz, rsz,
+                       (unsigned long)info->type, (unsigned long)info->creator,
+                       (unsigned)info->finder_flags, name);
+            else
+                printf("f %10s %10s %4s/%-4s %s\n", dsz, rsz, t, c, name);
         }
         return 1; /* skip data */
     }
@@ -782,6 +823,49 @@ static int sink_write(void *ctx, UncFork fork, const void *buf, int32_t len)
     return 0;
 }
 
+/* The StuffIt add-on modules, named, or NULL for a pair this does not
+ * know — third-party modules existed and an id prints on its own.
+ *
+ * Source: StuffIt Deluxe 2.0.1's own two floppies. The Optimizers are
+ * the five files in the installer payload's `Optimizers` folder and
+ * PassLock is its `Encryptors` one, each named by its 'COMP'/'DCMP'
+ * resource id; NewDEx and DESex come off `deluxe-2-optional.sit` the
+ * same way. Encryptor 1 is the one module no file here has and the
+ * application names in its own code — the switch in its CODE 11 prints
+ * "DES" (FORMATS.md, *Where an archive names the module*).
+ *
+ * Encryptor **4 is deliberately absent**: it is the built-in scheme that
+ * replaced the modules, which is the one this engine implements, so it
+ * is not an add-on to name and its absence here is what makes the
+ * encrypted report below say something only when a password cannot help.
+ *
+ * Here and not in the engine because on the 68000 target these strings
+ * are .rodata in the A5 world, resident for every extraction, and the
+ * Macintosh shell has no room to print them. */
+static const char *module_name(unsigned kind, unsigned id)
+{
+    if (kind == UNC_MODULE_OPTIMIZER) {
+        switch (id) {
+        case 1: return "Sound 1";
+        case 2: return "Photoshop 1";
+        case 3: return "Photoshop:JPEG Lossy";
+        case 4: return "MacPaint 1";
+        case 5: return "Text 1";
+        default: return NULL;
+        }
+    }
+    if (kind == UNC_MODULE_ENCRYPTOR) {
+        switch (id) {
+        case 1:  return "DES";
+        case 2:  return "PassLock";
+        case 3:  return "NewDEx";
+        case 64: return "DESex";
+        default: return NULL;
+        }
+    }
+    return NULL;
+}
+
 static int sink_end(void *ctx, int status)
 {
     DiskSink *s = (DiskSink *)ctx;
@@ -802,12 +886,33 @@ static int sink_end(void *ctx, int status)
         if (s->rsrc_f) { fclose(s->rsrc_f); s->rsrc_f = NULL; }
     }
 
-    name_to_fs(s->cur.name, s->cur.name_len, s->mac_encoding, s->raw_names,
-               name, sizeof name);
+    name_to_fs(s->cur.name, s->cur.name_len, NAME_IS_MACROMAN(s, &s->cur),
+               s->raw_names, name, sizeof name);
 
     if (status != UNC_OK) {
         s->errors++;
-        if (status == UNC_ERR_UNSUPPORTED) {
+        if (status == UNC_ERR_MODULE) {
+            /* Name the module, which is the one thing a user can act
+             * on: the file wants a 1990 StuffIt add-on, and no
+             * unarchiver since has had one. The id is what the archive
+             * records; the name is this host's, not the engine's, so
+             * that the Macintosh build does not pay A5 for a table only
+             * a terminal prints (macextract.h, UNC_MODULE_*). */
+            static const char *const kinds[] = {
+                "", "Optimizer", "Compressor", "Encryptor"
+            };
+            unsigned k = s->cur.module_kind;
+            const char *mn = module_name(k, s->cur.module_id);
+            if (k > UNC_MODULE_ENCRYPTOR) k = 0;
+            if (mn)
+                fprintf(stderr, "macextract: %s: needs the \"%s\" StuffIt "
+                                "%s, which nothing has\n",
+                        name, mn, kinds[k]);
+            else
+                fprintf(stderr, "macextract: %s: needs StuffIt %s module "
+                                "%u, which nothing has\n",
+                        name, kinds[k], s->cur.module_id);
+        } else if (status == UNC_ERR_UNSUPPORTED) {
             /* Name the method. A report that says "method 13" is one
              * somebody can act on; "unsupported" is not. The id is
              * informational (UncEntryInfo), and 0 means the format did
@@ -816,17 +921,65 @@ static int sink_end(void *ctx, int status)
                                             : s->cur.method_rsrc;
             if (!s->unsupported) s->unsup_method = (int)m;
             s->unsupported++;
-            if (m)
-                fprintf(stderr, "macextract: %s: method %u is not supported "
-                                "yet\n", name, m);
+            if (s->cur.module_kind == UNC_MODULE_OPTIMIZER &&
+                module_name(UNC_MODULE_OPTIMIZER, s->cur.module_id))
+                /* The method byte of an optimized fork carries the
+                 * Optimizer bit, so "method 64" named nothing: it is
+                 * what a greyscale `JPEG Lossy` entry said until
+                 * 2026-10-11. Name the module instead. */
+                fprintf(stderr, "macextract: %s: what the \"%s\" StuffIt "
+                                "Optimizer stored here is not supported "
+                                "yet\n", name,
+                        module_name(UNC_MODULE_OPTIMIZER, s->cur.module_id));
+            else if (m)
+                fprintf(stderr, "macextract: %s: method %u is not "
+                                "supported yet\n", name, m);
             else
                 fprintf(stderr, "macextract: %s: %s\n", name,
                         unc_strerror(status));
+        } else if (status == UNC_ERR_ENCRYPTED &&
+                   s->cur.module_kind == UNC_MODULE_ENCRYPTOR &&
+                   module_name(UNC_MODULE_ENCRYPTOR, s->cur.module_id)) {
+            /* Every encryptor this host can NAME, the engine implements
+             * — `DES`, `PassLock`, `NewDEx` and `DESex` (src/fmt_sit.c,
+             * sit_enc_known) — so UNC_ERR_ENCRYPTED on one of them
+             * means the cipher was never reached: its key is the
+             * archive's 'MKey' resource, and this copy has no resource
+             * fork. Until 2026-10-11 this said the engine "does not
+             * implement" the cipher, which was true of nothing it could
+             * fire on; a forkless DES archive is what showed it
+             * (tools/run_sitcombo.py). An id with no name is a third
+             * party's module and gets the generic refusal below. */
+            fprintf(stderr, "macextract: %s: encrypted with StuffIt's "
+                            "\"%s\", whose key is in the archive's "
+                            "resource fork — which this copy does not "
+                            "have\n",
+                    name, module_name(UNC_MODULE_ENCRYPTOR,
+                                      s->cur.module_id));
         } else {
             fprintf(stderr, "macextract: %s: %s\n", name, unc_strerror(status));
         }
-    } else if (s->verbose && !s->list_only) {
-        printf("  %s (%u data, %u rsrc)\n", name, s->data_written, s->rsrc_written);
+    } else {
+        /* An Optimizer this engine could only PART undo. The bytes are
+         * on the disk under the archive's name and they are not the
+         * bytes that went in — `MacPaint 1` throws a painting's
+         * 512-byte header and its resource fork away and neither this
+         * nor StuffIt Deluxe can put them back — so say so, every
+         * time, whether or not anybody asked for -v. An entry restored
+         * EXACTLY (module_restored 1) says nothing: its own CRC
+         * verified it. README.md, *Compared with what Aladdin sold*. */
+        if (s->cur.module_restored == 2 && !s->list_only) {
+            const char *mn = module_name(s->cur.module_kind,
+                                         s->cur.module_id);
+            s->inexact++;
+            fprintf(stderr, "macextract: %s: rebuilt from what the \"%s\" "
+                            "StuffIt Optimizer left — a valid document, "
+                            "NOT the original file\n",
+                    name, mn ? mn : "?");
+        }
+        if (s->verbose && !s->list_only)
+            printf("  %s (%u data, %u rsrc)\n", name,
+                   s->data_written, s->rsrc_written);
     }
     if (s->cur.is_dir) s->dir_count++;
     else {
@@ -1820,6 +1973,10 @@ static void usage(void)
         "                 <archive>.comment.txt, and printed by l and t\n"
         "  --stats        print allocator statistics\n"
         "  -f <format>    force format\n"
+        "  --finder       with l, the Finder metadata as hex — type,\n"
+        "                 creator, flags — in place of the four-character\n"
+        "                 columns, which a parser cannot read back when a\n"
+        "                 code holds a space or a NUL\n"
         "  -v             verbose\n"
         "  --version      print the version and exit\n");
 }
@@ -1828,6 +1985,7 @@ int main(int argc, char **argv)
 {
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
     int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
+    int show_finder = 0;
     int no_comment = 0;
     uint32_t budget = 0;
     int i;
@@ -1865,6 +2023,13 @@ int main(int argc, char **argv)
     int nonly = 0, onlymiss = 0;
 
     memset(only_hit, 0, sizeof only_hit);
+    if (getenv("UNC_SHORT_READ")) {
+        fio_read_cap = (int32_t)atol(getenv("UNC_SHORT_READ"));
+        /* Said, so a harness can tell a binary that honours the cap from
+         * one that predates it and passes every comparison by ignoring it. */
+        fprintf(stderr, "macextract: every read capped at %ld B\n",
+                (long)fio_read_cap);
+    }
 
     if (argc >= 2 && (strcmp(argv[1], "--version") == 0 ||
                       strcmp(argv[1], "-V") == 0)) {
@@ -1907,6 +2072,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--no-comment") == 0) no_comment = 1;
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
+        else if (strcmp(argv[i], "--finder") == 0) show_finder = 1;
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
         else if (argv[i][0] == '-') { usage(); return 2; }
         else file = argv[i];
@@ -1957,6 +2123,7 @@ nextlayer:
     sink.overwrite = overwrite;
     sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
     sink.verbose = verbose;
+    sink.show_finder = show_finder;
 
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;
@@ -2527,6 +2694,12 @@ nextlayer:
 
     if (ret != UNC_OK) {
         fprintf(stderr, "macextract: %s: %s\n", file, unc_strerror(ret));
+        /* The names that were shortened are on the disk whatever the
+         * WALK then did, so the notice that says where to find them is
+         * owed on this path too — and it is what frees the list, which
+         * this path leaked until 2026-10-03 (found by UBSan/ASan on a
+         * mutated archive, TESTING.md, *Method 14*). */
+        sink_report_cuts(&sink);
         return 1;
     }
     if (sink.unsupported) {
@@ -2562,6 +2735,16 @@ nextlayer:
                 onlymiss++;
             }
     }
+    /* Said once at the end as well as once per entry: a long run's
+     * per-entry lines scroll away, and this is the one thing about the
+     * output that a user has to know afterwards. Not an error — the
+     * files are there and they open. */
+    if (sink.inexact)
+        fprintf(stderr, "macextract: %d entr%s rebuilt from what a StuffIt "
+                        "Optimizer left, and %s NOT the original file%s\n",
+                sink.inexact, sink.inexact == 1 ? "y was" : "ies were",
+                sink.inexact == 1 ? "is" : "are",
+                sink.inexact == 1 ? "" : "s");
     if (sink.errors) {
         fprintf(stderr, "macextract: %d of %d entries failed\n",
                 sink.errors, sink.entries);

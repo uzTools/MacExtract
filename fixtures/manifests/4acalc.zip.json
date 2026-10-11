@@ -11,14 +11,16 @@
    "rsrc_size": 0
   },
   {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "1db5648664a8d5a0160674a0256cd17a8b62dd97d1d66025e6d2347c06e6d879",
+   "data_size": 5284,
    "name": "CALC.TXT",
    "oracle_methods": [
     "Implode"
    ],
-   "unadjudicated": {
-    "data": "Attempted to read more data than was available",
-    "rsrc": "oracle wrote no output for this fork"
-   }
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   },
   {
    "data_sha256": "0d9c3b72debfdedbe729bbbcc97d4e031cac6b5a7c4ee0a6279b59aab283b285",

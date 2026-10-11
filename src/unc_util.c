@@ -143,17 +143,34 @@ void unc_entry_path_append(UncEntryInfo *e, const uint8_t *comp, uint32_t len)
 /* ------------------------------------------------------------------ */
 /* CRC primitives                                                     */
 /*                                                                    */
+/* ALL THREE TABLES ARE THEIR POLYNOMIALS, and since 2026-09-27 that  */
+/* is checked rather than asserted: tools/check_crc_tables.py rebuilds */
+/* each from the polynomial its PUBLISHED description states, compares */
+/* all 768 entries, and runs the three standard check values. It has   */
+/* a --selftest that bends one entry of each table and confirms all    */
+/* three are caught, and ci.sh runs it. The tables were XADMaster's    */
+/* CRC.m and macutils' arc_updcrc until that day; the file had said    */
+/* "generated mechanically from the polynomials" all along and         */
+/* nothing had ever checked it (DECISIONS.md 2026-09-27, *the tables   */
+/* that said they were generated*).                                    */
+/*                                                                    */
 /* CRC-16/XMODEM: poly 0x1021, init 0, MSB-first, no final xor.       */
-/*   Used by MacBinary II/III (header CRC over bytes 0..123, checked  */
-/*   in reference/XADMaster/XADMacArchiveParser.m via the equivalent  */
-/*   reflected-table formulation) and BinHex 4                        */
-/*   (reference/XADMaster/XADBinHexParser.m).                         */
+/*   Source: reference/notes/binhex40_lewis.txt, section "CRCs",      */
+/*   which states the bitwise algorithm step by step with its initial */
+/*   register. Used by MacBinary II/III (header CRC over bytes        */
+/*   0..123), BinHex 4 and PackIt.                                    */
 /* CRC-32: poly 0x04C11DB7 reflected (table constant 0xEDB88320),     */
-/*   init/final-xor handled by callers. Used by Arsenic, gzip, zip.   */
-/*   Source: reference/XADMaster/CRC.m — LGPL, see NOTICE.            */
-/* Tables generated mechanically from the polynomials; check values   */
-/* xmodem("123456789")=0x31C3, crc32("123456789")=0xCBF43926 are      */
-/* asserted in tests/unit_util.c.                                     */
+/*   init/final-xor handled by callers. Source:                       */
+/*   reference/notes/zip_appnote.txt, which states the polynomial and */
+/*   the 0xdebb20e3 residue. Used by Arsenic, gzip, zip, Compact Pro. */
+/* CRC-16/ARC: at its own table, below.                               */
+/*                                                                    */
+/* The standard check values xmodem("123456789")=0x31C3 and           */
+/* crc32("123456789")=0xCBF43926 are asserted in tests/unit_main.c    */
+/* (test_crc, with an incremental-equals-one-shot case beside them),  */
+/* and crc16_arc("123456789")=0xBB3D in tests/unit_formats.c against  */
+/* an independent bitwise implementation. This comment named          */
+/* tests/unit_util.c until 2026-09-26; no such file ever existed.     */
 /* ------------------------------------------------------------------ */
 
 static const uint16_t unc_crc16_table[256] = {
@@ -239,9 +256,13 @@ static const uint32_t unc_crc32_table[256] = {
 
 /* CRC-16/ARC: poly 0xA001 (reflected), init 0, no final xor.
  * Used by StuffIt classic header and fork CRCs.
- * Source: reference/XADMaster/CRC.m (XADCRCTable_a001) and
- * reference/macutils (arc_updcrc) — LGPL, see NOTICE.
- * Check value: crc16_arc("123456789") = 0xBB3D (asserted in tests). */
+ * Source: the polynomial, 0x8005 reflected to 0xA001 — which is what
+ * reference/deark (MIT) and reference/lhasa (ISC) each BUILD this
+ * table from rather than listing it, and what tools/check_crc_tables.py
+ * builds it from here. It was XADMaster's CRC.m (XADCRCTable_a001) and
+ * macutils' arc_updcrc until 2026-09-27.
+ * Check value: crc16_arc("123456789") = 0xBB3D (tests/unit_formats.c,
+ * beside an independent bitwise implementation). */
 static const uint16_t unc_crc16_arc_table[256] = {
     0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241,
     0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440,
@@ -407,9 +428,14 @@ int unc_bufin_next_slow(UncBufIn *b)
     if (b->crypt && b->crypt->blocksize > 1) {
         /* A block cipher cannot decrypt half a block, and io->read is
          * allowed to come up short, so fill the buffer rather than take
-         * what arrives. At a genuine EOF the tail is zero-padded to the
-         * block size, which is what the reference handles do
-         * (XADPackItDESHandle: memset the block, then break). */
+         * what arrives. At a genuine EOF the tail is padded to the block
+         * size, and THE PAD VALUE CANNOT BE OBSERVED — measured
+         * 2026-09-27, not reasoned: this path executes 3 times over
+         * tools/run_crypt.py's 45 cases, and the suite is byte-for-byte
+         * green with the pad changed to 0xA5. Zero is kept because it is
+         * what the reference handles use (XADPackItDESHandle memsets the
+         * block), but nothing depends on it, so the citation is a note
+         * and not a source. */
         uint32_t got = 0;
         want -= want % b->crypt->blocksize;
         if (want == 0) want = b->crypt->blocksize;
@@ -506,6 +532,8 @@ void unc_fork_out(UncForkOut *o, UncCtx *c, UncFork fork, int write,
     o->crc16 = 0;
     o->crc32 = 0;
     o->dstart = o->dend = o->rstart = o->rend = 0;
+    o->delta = o->dacc = o->skip = 0;
+    o->skipval = 0;
 }
 
 void unc_fork_split(UncForkOut *o, uint32_t dstart, uint32_t dend,
@@ -532,11 +560,48 @@ static int fork_span(UncForkOut *o, UncFork fork, uint32_t start, uint32_t end)
     return UNC_OK;
 }
 
+int unc_fork_write(UncForkOut *o, const uint8_t *p, uint32_t n)
+{
+    /* The inline put, in a loop: on a 68000 a byte loop is what a copy
+     * is anyway, and this is 100 B smaller than chunking into the
+     * staging buffer (measured 2026-09-18). */
+    while (n-- > 0) {
+        int err = unc_fork_put(o, *p++);
+        if (err != UNC_OK) return err;
+    }
+    return UNC_OK;
+}
+
 int unc_fork_flush(UncForkOut *o)
 {
     int err = UNC_OK;
 
     if (o->len == 0) return UNC_OK;
+
+    /* An Optimizer's output is turned back into the file here, ahead of
+     * the checksum and the sink, so that everything downstream — the
+     * CRC, `written`, the split spans — sees the restored bytes and
+     * nothing else has to know. Source: the modules' own 'DCMP'
+     * resources, disassembled (FORMATS.md, *What an Optimizer did to
+     * the fork*). */
+    if (o->skip) {
+        uint32_t n = o->skip < o->len ? o->skip : o->len, i;
+        for (i = 0; i < n; i++)
+            o->skipval = (o->skipval << 8) | o->buf[i];
+        o->len -= n;
+        o->skip = (uint8_t)(o->skip - n);
+        for (i = 0; i < o->len; i++) o->buf[i] = o->buf[i + n];
+        if (o->len == 0) return UNC_OK;
+    }
+    if (o->delta) {
+        uint32_t i;
+        uint8_t a = o->dacc;
+        for (i = 0; i < o->len; i++) {
+            a = (uint8_t)(a + o->buf[i]);
+            o->buf[i] = a;
+        }
+        o->dacc = a;
+    }
 
     /* The checksum is over what was DECODED, so it is taken whether or
      * not the bytes are written: a test-only run and a password
@@ -575,42 +640,19 @@ int unc_fork_flush(UncForkOut *o)
 /* A folder path being walked                                         */
 /* ------------------------------------------------------------------ */
 
-/* The host's long-name buffer, or NULL when there is none to write to.
- * Two bytes is the smallest one that can hold anything at all. */
-static uint8_t *path_longbuf(const UncPath *p, uint32_t *cap)
+/* Where the component that ends at `n` begins, in a '/'-joined path: the
+ * byte after the last separator before it, or 0. This scan is what makes
+ * a stack of per-level lengths unnecessary, and it is exact rather than
+ * a guess — a '/' inside a component is swapped to ':' on the way in, by
+ * this file's own push and leaf, so every '/' here is one the walker
+ * wrote. */
+static uint32_t path_back(const uint8_t *buf, uint32_t n)
 {
-    if (!p->c || !p->c->opt.long_name || p->c->opt.long_name_cap < 2)
-        return NULL;
-    *cap = p->c->opt.long_name_cap;
-    return p->c->opt.long_name;
-}
-
-/* Add one component to the uncut path: write what fits at `at` in the
- * host's buffer, and return where the next component would start.
- * Counting continues past the end of that buffer — that is how the
- * caller learns the whole name did not fit — and saturates at 65,535,
- * which is all `name_full_len` can carry. */
-static uint32_t path_full_add(const UncPath *p, uint32_t at,
-                              const uint8_t *name, uint32_t nlen)
-{
-    uint32_t cap = 0, i, room;
-    uint8_t *out = path_longbuf(p, &cap);
-    if (!out) {                              /* nothing to write: count */
-        uint32_t want = at + (at ? 1u : 0u) + nlen;
-        return want > 65535u ? 65535u : want;
+    while (n > 0) {
+        n--;
+        if (buf[n] == '/') return n;
     }
-    room = cap - 1u;                         /* keep one for the NUL */
-    if (at) {
-        if (at < room) out[at] = '/';
-        if (at < 65535u) at++;
-    }
-    for (i = 0; i < nlen; i++) {
-        uint8_t ch = name[i] == '/' ? (uint8_t)':' : name[i];
-        if (at < room) out[at] = ch;
-        if (at >= 65535u) break;
-        at++;
-    }
-    return at;
+    return 0;
 }
 
 void unc_path_init(UncPath *p, struct UncCtx *c)
@@ -618,63 +660,97 @@ void unc_path_init(UncPath *p, struct UncCtx *c)
     p->len = 0;
     p->depth = 0;
     p->truncdepth = 0;
-    p->buf[0] = 0;
+    p->lost = 0;
     p->c = c;
-    p->full = 0;
+    /* The host's buffer if it can hold more of a path than ours can.
+     * Two bytes is the smallest one that holds anything at all. */
+    if (c && c->opt.long_name && c->opt.long_name_cap > UNC_NAME_MAX + 1u) {
+        p->w = c->opt.long_name;
+        p->wcap = c->opt.long_name_cap;
+    } else {
+        p->w = p->buf;
+        p->wcap = UNC_NAME_MAX + 1u;
+    }
+    p->w[0] = 0;
 }
 
 int unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen)
 {
-    uint32_t i;
-    if (p->depth >= UNC_PATH_MAXDEPTH) return UNC_ERR_CORRUPT;
-    p->fullstack[p->depth] = p->full;
-    p->stack[p->depth++] = p->len;
-    if (p->len && p->len < UNC_NAME_MAX) p->buf[p->len++] = '/';
-    for (i = 0; i < nlen && p->len < UNC_NAME_MAX; i++) {
+    uint32_t i, room = p->wcap - 1u;         /* keep one for the NUL */
+    /* No room for even the separator this level needs — or an outer
+     * level already had none. Leave the path alone and COUNT it, so the
+     * pop this descent will be matched by undoes the omission instead of
+     * a level that was really pushed. */
+    if (p->lost || (p->len && p->len >= room)) {
+        p->lost++;
+        if (!p->truncdepth) p->truncdepth = p->depth + p->lost;
+        return UNC_ERR_TRUNCATED;
+    }
+    if (p->len) p->w[p->len++] = '/';
+    p->depth++;
+    for (i = 0; i < nlen && p->len < room; i++) {
         uint8_t ch = name[i];
-        p->buf[p->len++] = (uint8_t)(ch == '/' ? ':' : ch);
+        p->w[p->len++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
     if (i < nlen && !p->truncdepth) p->truncdepth = p->depth;
-    p->buf[p->len] = 0;
-    p->full = (uint16_t)path_full_add(p, p->full, name, nlen);
+    p->w[p->len] = 0;
     return UNC_OK;
 }
 
 void unc_path_pop(UncPath *p)
 {
+    if (p->lost) { p->lost--; return; }      /* undo an omitted push */
     if (p->depth > 0) {
-        p->full = p->fullstack[p->depth - 1];
-        p->len = p->stack[--p->depth];
+        p->len = (uint16_t)path_back(p->w, p->len);
+        p->depth--;
+        p->w[p->len] = 0;
     }
     if (p->truncdepth > p->depth) p->truncdepth = 0;
-    p->buf[p->len] = 0;
 }
 
 void unc_path_leaf(const UncPath *p, UncEntryInfo *e,
                    const uint8_t *name, uint32_t nlen)
 {
     uint8_t full[UNC_NAME_MAX + 1];
-    uint32_t n = p->len, i, want, cap = 0;
-    uint8_t *out;
+    uint32_t n = p->len, i, want;
+
+    /* What the entry is REPORTED at: the path, cut to UNC_NAME_MAX. */
     if (n > UNC_NAME_MAX) n = UNC_NAME_MAX;
-    for (i = 0; i < n; i++) full[i] = p->buf[i];
+    for (i = 0; i < n; i++) full[i] = p->w[i];
     if (n && n < UNC_NAME_MAX) full[n++] = '/';
     for (i = 0; i < nlen && n < UNC_NAME_MAX; i++) {
         uint8_t ch = name[i];
         full[n++] = (uint8_t)(ch == '/' ? ':' : ch);
     }
-    /* The uncut path is assembled whether or not this entry needs it:
-     * a folder cut on the way down was cut before anyone knew which
-     * leaf would want the length back. */
-    want = path_full_add(p, p->full, name, nlen);
     unc_entry_set_path(e, full, n);
+
     if (i < nlen || p->truncdepth) {
         e->name_truncated = 1;
-        e->name_full_len = (uint16_t)want;
-        out = path_longbuf(p, &cap);
-        if (out && want < cap) {         /* every byte of it is in there */
-            out[want] = 0;
-            e->name_truncated = 2;
+        /* And what it IS. Where the host offered a buffer the walk has
+         * been building the whole path in it all along, so finishing it
+         * with this leaf is an append and a NUL — there is no second
+         * length to have kept in step, which is what the two stacks and
+         * the depth limit that bounded them were for.
+         *
+         * Where it offered none the path stopped at UNC_NAME_MAX and
+         * what did not fit was never counted, so the length is reported
+         * as 0: the documented "the format cannot say" (macextract.h),
+         * which is what it is. Counting past the end of a buffer nobody
+         * can read is a number no host here has ever asked for — the
+         * CLI offers 64 KB and the Macintosh shell reads no length. */
+        want = (uint32_t)p->len + (p->len ? 1u : 0u) + nlen;
+        if (p->lost || p->w == p->buf || want >= p->wcap) {
+            e->name_full_len = 0;
+            return;
         }
+        for (i = 0; i < nlen; i++) {
+            uint8_t ch = name[i];
+            p->w[p->len + (p->len ? 1u : 0u) + i] =
+                (uint8_t)(ch == '/' ? ':' : ch);
+        }
+        if (p->len) p->w[p->len] = '/';
+        p->w[want] = 0;
+        e->name_full_len = (uint16_t)(want > 65535u ? 65535u : want);
+        e->name_truncated = 2;
     }
 }

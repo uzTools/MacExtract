@@ -3,11 +3,21 @@
  * ArcMac container that wraps each entry in Macintosh metadata.
  *
  * Sources (transcribed, never guessed):
- *   reference/XADMaster/XADARCParser.m       — header walk, the method
- *       numbers, which methods chain RLE90, and the CRC-16 contract
- *       (IBM CRC-16 over the DECODED bytes, unconditioned).
- *   reference/XADMaster/XADRLE90Handle.m     — the 0x90 run filter.
- *   reference/XADMaster/XADSqueezeHandle.m   — method 4's Huffman tree.
+ *   docs/formats/arc-container-and-coders.md — this project's own
+ *       description, derived 2026-09-20 from archives ARC 5.21q
+ *       wrote here (tools/derive_arc.py): the member HEADER, the
+ *       RLE90 filter, method 4's node-pair Huffman tree, method 8's
+ *       leading width byte and LZW, and method 9's LZW without
+ *       either. Methods 1, 2, 3, 4, 8 and 9 of the corpus fixture
+ *       are read back by that note's rules alone.
+ *   reference/XADMaster/XADARCParser.m       — the method numbers
+ *       this file names, which methods chain RLE90, and the CRC-16
+ *       contract (IBM CRC-16 over the DECODED bytes, unconditioned);
+ *       the header walk itself is the note above since 2026-09-20.
+ *   reference/notes/rle90_theunarchiver.md  — the 0x90 run filter,
+ *       superseded by the note above, which derives the same rule.
+ *   reference/XADMaster/XADSqueezeHandle.m   — method 4's Huffman
+ *       tree, likewise superseded.
  *   reference/XADMaster/XADARCCrunchHandle.m — methods 5/6/7, an LZW
  *       whose table is addressed by hash rather than by sequence.
  *   reference/XADMaster/XADARCCrushHandle.m + LZW.c — method 0x0a, the
@@ -52,25 +62,9 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_arc_priv.h"
 
 /* Methods. Source: XADARCParser.m and macutils' arc.h, which agree. */
-#define ARC_M_STORED_OLD  0x01
-#define ARC_M_STORED      0x02
-#define ARC_M_PACKED      0x03
-#define ARC_M_SQUEEZED    0x04
-#define ARC_M_CRUNCH5     0x05
-#define ARC_M_CRUNCH6     0x06
-#define ARC_M_CRUNCH7     0x07
-#define ARC_M_CRUNCH8     0x08
-#define ARC_M_SQUASHED    0x09
-#define ARC_M_CRUSHED     0x0a
-#define ARC_M_DISTILLED   0x0b
-#define ARC_M_INFO        0x14   /* archive info      (ARC 7.x)      */
-#define ARC_M_FILEINFO    0x15   /* extended file info                */
-#define ARC_M_OSINFO      0x16   /* OS-specific info                  */
-#define ARC_M_DIR         0x1e
-#define ARC_M_DIREND      0x1f
-#define ARC_M_COMPRESSED  0x7f
 
 /* Informational items, not members: an ordinary header whose payload
  * is metadata. ARC 7.x writes 0x14 first in every archive it makes,
@@ -78,8 +72,6 @@
  * these were walked (neither `unar` nor deark-less tooling reads one).
  * They are skipped: what they carry is a version string and per-file
  * notes this extractor has nothing to do with. */
-#define arc_is_item(m) ((m) == ARC_M_INFO || (m) == ARC_M_FILEINFO || \
-                        (m) == ARC_M_OSINFO)
 
 /* Carried in the `method` int above the byte a header holds: this
  * archive's 0x0a is ARC 7.x's Trimmed, not PAK's Crushed. The two
@@ -89,20 +81,8 @@
  * the same entry up to four times. */
 #define ARC_F_TRIMMED     0x1000
 
-#define ARC_HDR_MIN       0x1d   /* 0x1a, method, 13 name, 4+2+2+2, 4 */
-#define ARC_NAME_LEN      13
 
 /* ArcMac field offsets. Source: reference/macutils/macunpack/arc.h. */
-#define AM_MAGIC1      0
-#define AM_KIND        1
-#define AM_FNAME       2      /* 31 bytes, NUL-padded */
-#define AM_FTYPE      34
-#define AM_FAUTH      38
-#define AM_FINFO      42
-#define AM_FDATA      50      /* data fork length   */
-#define AM_FRSRC      54      /* rsrc fork length   */
-#define AM_MAGIC2     59      /* the PC ARC header starts here */
-#define AM_HDRBYTES   88
 
 /* Crunch: a 4096-entry table, addressed by hash. */
 #define ARC_CRUNCH_SIZE  4096
@@ -881,7 +861,7 @@ static int arc_raw_byte(ArcDec *d)
 }
 
 /* One output byte, through the RLE90 filter where the method uses it.
- * Source: XADRLE90Handle.m. */
+ * Source: reference/notes/rle90_theunarchiver.md (unc_internal.h). */
 static int arc_byte(ArcDec *d)
 {
     if (!d->rle) return arc_raw_byte(d);
@@ -1039,14 +1019,6 @@ static void arc_dec_free(ArcDec *d)
 /* Header walk                                                        */
 /* ------------------------------------------------------------------ */
 
-static int arc_name_ok(const uint8_t *p)
-{
-    int i;
-    if (p[0] == 0) return 0;
-    for (i = 0; i < ARC_NAME_LEN && p[i] != 0; i++)
-        if (p[i] < 32) return 0;
-    return 1;
-}
 
 /* Trim as XADARCParser does: to the NUL, then one trailing space, then
  * one trailing dot. */
@@ -1059,54 +1031,6 @@ static uint32_t arc_name_len(const uint8_t *p)
     return n;
 }
 
-UncFormat unc_arc_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    uint32_t compsize, uncompsize, nextoff;
-    int method;
-    uint8_t nb[1];
-
-    if (len < ARC_HDR_MIN) return UNC_FORMAT_UNKNOWN;
-
-    /* ArcMac: the Mac header, then the PC one 59 bytes in. */
-    if (head[AM_MAGIC1] == 0x1b && len >= AM_HDRBYTES &&
-        head[AM_MAGIC2] == 0x1a && head[AM_KIND] != 0 &&
-        head[AM_KIND] == head[AM_MAGIC2 + 1])
-        return UNC_FORMAT_ARC;
-
-    if (head[0] != 0x1a) return UNC_FORMAT_UNKNOWN;
-    method = head[1];
-    if (method == 0) return UNC_FORMAT_UNKNOWN;
-    if (method != ARC_M_DIR && method != ARC_M_DIREND && !arc_is_item(method) &&
-        (method & 0x7f) > ARC_M_DISTILLED && (method & 0x7f) != ARC_M_COMPRESSED)
-        return UNC_FORMAT_UNKNOWN;
-    /* An informational item's name field is empty and its uncompressed
-     * length is 0 while its payload is not, so neither the name check
-     * nor the size relation below applies to one. */
-    if (!arc_is_item(method) && !arc_name_ok(head + 2)) return UNC_FORMAT_UNKNOWN;
-
-    compsize = unc_get_u32le(head + 0x0f);
-    if (method == ARC_M_STORED_OLD) {
-        if (compsize > 0x1000000u) return UNC_FORMAT_UNKNOWN;
-        nextoff = 0x19u + compsize;
-    } else {
-        if (len < 0x1d) return UNC_FORMAT_UNKNOWN;
-        uncompsize = unc_get_u32le(head + 0x19);
-        if (compsize > 0x1000000u) return UNC_FORMAT_UNKNOWN;
-        if (uncompsize > 0x1000000u) return UNC_FORMAT_UNKNOWN;
-        if (!arc_is_item(method) && compsize > uncompsize) return UNC_FORMAT_UNKNOWN;
-        nextoff = 0x1du + compsize;
-        if (method & 0x80) nextoff += 12u;
-    }
-
-    /* The strongest thing an ARC file says about itself: the next
-     * header, or the end marker, sits exactly where the size puts it. */
-    if ((int32_t)nextoff < len) return (head[nextoff] == 0x1a)
-           ? UNC_FORMAT_ARC : UNC_FORMAT_UNKNOWN;
-    if (!io) return UNC_FORMAT_UNKNOWN;
-    if (unc_read_at(io, nextoff, nb, 1) != UNC_OK) return UNC_FORMAT_UNKNOWN;
-    return (nb[0] == 0x1a)
-           ? UNC_FORMAT_ARC : UNC_FORMAT_UNKNOWN;
-}
 
 /* Write one run of decoded bytes, splitting it across the two forks.
  *
@@ -1155,25 +1079,28 @@ static int arc_trim_emit(ArcTrim *t, int b)
     return unc_fork_put(&t->out, (uint8_t)b);
 }
 
-/* One byte out of the LZH layer, through RLE90. The run count is
+/* A run out of the LZH layer, through RLE90 — the same filter the pull
+ * side above runs, driven from the other end. The run count is
  * inclusive of the byte already emitted, as arc_byte() reads it. */
-/* One byte out of the LZH layer, through RLE90 — the same filter the
- * pull side above runs, driven from the other end. */
-static int arc_trim_put(void *ctx, uint8_t b)
+static int arc_trim_put(void *ctx, const uint8_t *p, uint32_t n)
 {
     ArcTrim *t = (ArcTrim *)ctx;
-    int v = unc_rle90_feed(&t->rle, b);
-    int err;
 
-    if (v == UNC_RLE90_MORE) return UNC_OK;
-    if (v < 0) return v;
-    err = arc_trim_emit(t, v);
-    while (err == UNC_OK) {
-        v = unc_rle90_take(&t->rle);
-        if (v == UNC_RLE90_MORE) break;
+    while (n-- > 0) {
+        int v = unc_rle90_feed(&t->rle, *p++);
+        int err;
+
+        if (v == UNC_RLE90_MORE) continue;
+        if (v < 0) return v;
         err = arc_trim_emit(t, v);
+        while (err == UNC_OK) {
+            v = unc_rle90_take(&t->rle);
+            if (v == UNC_RLE90_MORE) break;
+            err = arc_trim_emit(t, v);
+        }
+        if (err != UNC_OK) return err;
     }
-    return err;
+    return UNC_OK;
 }
 
 static int arc_entry_trimmed(UncCtx *c, UncBufIn *in, uint32_t outsize,
@@ -1281,6 +1208,22 @@ static int arc_run(UncCtx *c, UncCrypt *cr, uint8_t *iobuf, uint32_t iocap,
                           dsplit);
 }
 
+/* Is this failure the kind the garble key might explain? A wrong key —
+ * and no key at all, on a garbled entry — makes the coder's own input
+ * into nonsense, which surfaces three ways: the entry's CRC disagrees,
+ * a coder rejects what it read, or a stream ends before its declared
+ * output is filled. The third was missing until 2026-09-26, so an entry
+ * whose garbled stream happened to run short was refused without the
+ * password ever being tried (DECISIONS.md, *the guard that was on the
+ * other side*). An I/O error or an abort is nobody's password.
+ * `pit_retryable` in src/fmt_packit.c is the same question, and has
+ * always included the third. */
+static int arc_retryable(int err)
+{
+    return err == UNC_ERR_CRC || err == UNC_ERR_CORRUPT ||
+           err == UNC_ERR_TRUNCATED;
+}
+
 static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
                              uint32_t iocap, uint32_t at, int method,
                              uint32_t compsize, uint32_t outsize,
@@ -1301,7 +1244,7 @@ static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
         return write ? arc_run(c, cr, iobuf, iocap, at, method, compsize,
                                outsize, crc16, write, dsplit, NULL, 0)
                      : UNC_OK;
-    if (est != UNC_ERR_CRC && est != UNC_ERR_CORRUPT) return est;
+    if (!arc_retryable(est)) return est;
 
     for (;;) {
         uint8_t pw[UNC_PASSWORD_MAX];
@@ -1333,7 +1276,7 @@ static int arc_entry_data_pw(UncCtx *c, UncCrypt *cr, uint8_t *iobuf,
                                        compsize, outsize, crc16, write,
                                        dsplit, pw, n)
                              : UNC_OK;
-            if (est != UNC_ERR_CRC && est != UNC_ERR_CORRUPT) return est;
+            if (!arc_retryable(est)) return est;
         }
         if (!c->opt.ask) return UNC_ERR_PASSWORD;
         attempt++;
@@ -1409,6 +1352,7 @@ int unc_arc_extract(UncCtx *c)
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + (uint32_t)sizeof *cr);
     if (!iobuf) return UNC_ERR_MEM;
     cr = (UncCrypt *)(void *)(iobuf + iocap);
+    unc_crypt_init(cr);
 
     for (;;) {
         UncEntryInfo e;

@@ -73,10 +73,13 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_SUPERDISK,   "SuperDisk!",          1, 0, unc_superdisk_extract },
     { UNC_FORMAT_DDSEG,       "DiskDoubler split",   1, 0, unc_ddseg_extract },
     { UNC_FORMAT_SPACESAVER,  "StuffIt SpaceSaver",  1, 0, unc_spacesaver_extract },
-    { UNC_FORMAT_APPLELINK,   "AppleLink package",   0, 0, NULL },
     { UNC_FORMAT_BTOA,        "btoa",                1, 1, unc_btoa_extract },
     { UNC_FORMAT_BASE64,      "base64",              1, 1, unc_b64_extract },
     { UNC_FORMAT_MIME,        "MIME message",        1, 0, unc_mime_extract },
+    { UNC_FORMAT_SQP,         "AppleLink package",   1, 0, unc_sqp_extract },
+    /* An envelope: one file in, one file out — and the file PF Encrypt
+     * puts in is always a StuffIt archive it made first (fmt_pf.c). */
+    { UNC_FORMAT_PRIVATEFILE, "Private File",        1, 1, unc_pf_extract },
     /* Named, never extracted (src/fmt_foreign.c). */
     { UNC_FORMAT_RAR,         "RAR",                 0, 0, NULL },
     { UNC_FORMAT_RAR5,        "RAR 5",               0, 0, NULL },
@@ -93,11 +96,6 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_LRZIP,       "lrzip",               0, 0, NULL },
     { UNC_FORMAT_WIM,         "WIM",                 0, 0, NULL },
     { UNC_FORMAT_AAR,         "Apple Archive",       0, 0, NULL },
-    /* Extractable, and NOT an envelope: what comes out of a DART is a
-     * disk image, and looking inside one would mean mounting a volume.
-     * The output happens to be a DART itself, which is one more reason
-     * the engine must not go round again (src/fmt_dart.c). */
-    { UNC_FORMAT_DART,        "DART",                1, 0, unc_dart_extract },
 };
 
 static const UncFormatDesc *unc_desc(UncFormat f)
@@ -143,7 +141,7 @@ const char *unc_strerror(int err)
     case UNC_ERR_SEGMENTED:   return "multi-segment archive (missing segments)";
     case UNC_ERR_PASSWORD:    return "wrong password, or none given";
     case UNC_ERR_TOOLARGE:    return "entry is past this engine's 32-bit reach";
-    case UNC_ERR_NOTCOMPRESSED: return "already uncompressed: there is nothing to expand";
+    case UNC_ERR_MODULE:      return "needs a StuffIt add-on module nothing has";
     default:                  return "unknown error";
     }
 }
@@ -178,6 +176,10 @@ static const UncProbe unc_sniff_order[] = {
     unc_packit_probe,
     unc_gzip_probe,
     unc_compressz_probe,
+    /* 'CSIT' and a version word, confirmed by a second 'CSIT' twelve
+     * bytes from the end. Neither StuffIt probe above can take one: their
+     * magics are 'SIT!' and the StuffIt 5 banner (fmt_pf.c). */
+    unc_pf_probe,
     /* The PC-side archives, all of them a constant at a fixed offset, so
      * the whole set costs a handful of byte compares on a buffer already
      * read. They sit with the other magic numbers and ahead of
@@ -202,35 +204,24 @@ static const UncProbe unc_sniff_order[] = {
      * ARC, tar and Disk Copy all have a non-zero byte 0). 932 fixtures
      * and 9,320 robustness variants are what actually grade that. */
     unc_macbinary_probe,
-    /* Before the plain zip probe, and not after: the two parts of a
-     * spanned set that are recognizable at all both look enough like a
-     * zip for that probe to claim them, and it would then be reported
-     * as an archive that happens to be broken rather than as a piece of
-     * one. This costs every file that reaches here a bounded backwards
-     * scan for an end-of-central-directory record; a whole zip has one
-     * in its last 512 bytes, so it pays a single read. */
-    unc_zipseg_probe,
-    unc_zip_probe,
+    /* Four more magic numbers, and the two Compact Pro probes, AHEAD of
+     * the zip pair rather than behind it (2026-09-18). The spanned-zip
+     * probe below scans the last 64 KB of the file backwards in 1 KB
+     * reads, so every file that reached it paid up to 65 reads before
+     * its own probe ran — on a Mac Plus reading a floppy, that is the
+     * open latency. None of these six can take a zip or a part of one:
+     * every zip head starts 'P' 'K', where LZH wants '-' at byte 2,
+     * Now Compress 0x00 0x02 at byte 0, DiskDoubler one of three
+     * four-byte magics, AppleSingle its own, and both Compact Pro
+     * probes a first byte of 1. The reverse — a Compact Pro archive
+     * carrying a stored zip part in its last 64 KB — used to be claimed
+     * as a zip segment, and is now the archive it is. SuperDisk! stays
+     * behind the zip pair, being weak on its own (below). */
     unc_lzh_probe,
     unc_nowcompress_probe,
     unc_diskdoubler_probe,
-    /* SuperDisk!'s own mark is a module signature or a record tag at
-     * byte 8, either way confirmed by the 0x27 record that must end
-     * the file — weak on its own, so it sits after the magics. */
-    unc_superdisk_probe,
     /* One probe, two formats: they share a magic and differ in it. */
     unc_applesingle_probe,
-
-    /* Weaker/structural probes. */
-    /* DART has no signature at all: three plausible bytes, then a table
-     * of chunk lengths. What makes it safe here is that the table has
-     * to ADD UP to the rest of the file exactly, which is a test of
-     * every byte of the header against the one number the header does
-     * not contain. It sits at the head of this group rather than with
-     * the magics because those three bytes on their own are worth
-     * nothing, and above the text formats because it costs one size
-     * call on a buffer already read. */
-    unc_dart_probe,
     /* Before the plain Compact Pro probe, and for the same reason the
      * spanned-zip probe precedes the zip one: the FINAL segment of a set
      * carries a valid index and would be claimed as a whole archive,
@@ -239,15 +230,45 @@ static const UncProbe unc_sniff_order[] = {
      * offset, and only this probe looks at those. */
     unc_cptseg_probe,
     unc_cpt_probe,
+    /* Before the plain zip probe, and not after: the two parts of a
+     * spanned set that are recognizable at all both look enough like a
+     * zip for that probe to claim them, and it would then be reported
+     * as an archive that happens to be broken rather than as a piece of
+     * one. This costs every file that reaches here a bounded backwards
+     * scan for an end-of-central-directory record; a whole zip has one
+     * in its last 512 bytes, so it pays a single read.
+     *
+     * It is also where a zip is recognised BEHIND something else — a
+     * self-extracting archive, whose first bytes are code. The record
+     * this probe already has in hand says where the central directory
+     * is, absolutely, so the decoder needs nothing extra and neither
+     * does the sniff: one four-byte read confirms the directory is
+     * there. Nothing below is reached by such a file today, and nothing
+     * above can be taken from it — every probe ahead of this one has a
+     * magic number at a fixed offset, and 8,364 files that are not
+     * archives were swept for the claim (FORMATS.md, *What the zip pair
+     * claims, and what it costs*). */
+    unc_zipseg_probe,
+    unc_zip_probe,
+    /* SuperDisk!'s own mark is a module signature or a record tag at
+     * byte 8, either way confirmed by the 0x27 record that must end
+     * the file — weak on its own, so it sits after the magics. */
+    unc_superdisk_probe,
+    /* An AppleLink package has no magic number at all, so its probe is
+     * the container's own arithmetic — a version byte, eight zero bytes
+     * and a directory whose forks tile the file to its last byte. It
+     * costs a file that is not one ten bytes already read, which is why
+     * it sits here rather than at the end: everything below scans, and a
+     * package that reached them would pay for the scan before being
+     * recognised (fmt_sqp_probe.c). */
+    unc_sqp_probe,
+
+    /* Weaker/structural probes. */
     unc_tar_probe,
     /* ARC's magic is one byte (0x1a), so the probe leans on the whole
      * header: a printable 13-byte name, a known method, and sizes that
      * land on the next header or the end marker. */
     unc_arc_probe,
-    /* An AppleLink package is TEXT, so it sits with the other text
-     * formats — and before them, because its test is three whole tokens
-     * and theirs are scans for a line that may be anywhere. */
-    unc_applelink_probe,
     /* BinHex last: it scans for a banner amid mail garbage. uuencode
      * and btoa sit beside it — same habitat, same kind of scan — and
      * before it, because BinHex's probe reads on past its own banner

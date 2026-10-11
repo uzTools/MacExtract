@@ -40,6 +40,7 @@ application itself has to be the grader.
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -53,6 +54,11 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                       # noqa: E402
 from interactive import Mac                           # noqa: E402
 from mkboot import LISTING_DATE                       # noqa: E402
+from mkboot import FINDER_OWN                        # noqa: E402
+
+# `hdir`'s name column on a BYTES listing — see cptsegment.read_volume for
+# why the listing cannot be read as text.
+LISTING_DATE_B = re.compile(LISTING_DATE.pattern.encode("ascii"))
 import synth_wrapped as W                             # noqa: E402
 import synth_cpt as SCPT                              # noqa: E402
 
@@ -365,9 +371,17 @@ def shutdown(mac, shot):
     shot(mac, "z-shutdown.png")
 
 
-def read_volume(image, outdir, skip):
+def read_volume(image, outdir, skip, invisible=True):
+    """Every file Compact Pro left at the boot volume's ROOT, as MacBinary.
+
+    `hdir -a` and an `F` as well as an `f` on the line test, since
+    2026-09-22, for the reasons `cptsegment.read_volume` states in full —
+    the two walks are the same walk written twice, and `walkprobe.py`
+    grades both. Root-only is deliberate and recorded there as well: this
+    is a boot volume, and its `System Folder` is not output.
+    """
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
-    got = {}
+    got, dropped = {}, []
     try:
         for _ in range(5):
             r = subprocess.run(["hmount", image], env=env, capture_output=True,
@@ -378,25 +392,35 @@ def read_volume(image, outdir, skip):
         else:
             raise SystemExit(f"cptcrypt: cannot mount {image}: {r.stderr}")
         vol = r.stdout.split('Volume name is "', 1)[1].split('"', 1)[0]
-        listing = subprocess.run(["hdir", vol + ":"], check=True, env=env,
-                                 capture_output=True, text=True,
-                                 errors="surrogateescape").stdout
-        for line in listing.splitlines():
-            if not line.startswith("f"):
+        vb = vol.encode("mac-roman") + b":"
+        listing = subprocess.run([b"hdir"] + ([b"-a"] if invisible else [])
+                                 + [vb], check=True, env=env,
+                                 capture_output=True).stdout
+        for line in listing.split(b"\n"):
+            if line[:1] not in (b"f", b"F"):   # a directory, or a blank line
                 continue
-            m = LISTING_DATE.search(line)
+            m = LISTING_DATE_B.search(line)
             if not m:
                 continue
-            name = m.group(1)
+            raw = m.group(1)
+            name = raw.decode("mac-roman", "replace")
+            if invisible and name in FINDER_OWN:
+                dropped.append(name)
+                continue
             if name in skip:
                 continue
             dest = os.path.join(outdir, name.replace("/", "_"))
-            subprocess.run(["hcopy", "-m", f"{vol}:{name}", dest + ".bin"],
+            subprocess.run([b"hcopy", b"-m", vb + raw,
+                            dest.encode() + b".bin"],
                            check=True, env=env, capture_output=True)
             got[name] = dest + ".bin"
         subprocess.run(["humount"], env=env, capture_output=True)
     finally:
         shutil.rmtree(env["HOME"], ignore_errors=True)
+    # What `-a` cost on THIS harness's own volume, printed rather than
+    # assumed: the filter is only right if what it drops is the Finder's.
+    print("%s: -a surfaced and FINDER_OWN dropped: %s"
+          % ('cptcrypt', ", ".join(sorted(dropped)) or "nothing"))
     return got
 
 

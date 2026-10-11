@@ -22,6 +22,19 @@
 #include "../mac/mac_mocks.h"
 #include "macextract.h"
 
+#ifdef UNC_AT_OVERLAY
+/* The overlay lane, tests/run_overlay_host.sh. The decoders are not linked in
+ * this build: they are the m68k 'OVLY' images the Retro68 build ships, built
+ * here by the same script with the m68k-linux toolchain, loaded by the REAL
+ * loader through the mock Resource Manager in tests/ovlbox/ovlbox.c, and
+ * CALLED. Everything below is unchanged, so the same fixtures and the same
+ * oracle manifests grade both configurations (OPEN_ITEMS.md, *The overlay
+ * loader*). */
+#include "ovlbox.h"
+extern void ovl_preload(void);
+extern void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
+#endif
+
 /* ------------------------------------------------------------------ */
 /* Mock Toolbox: a tiny open-file table backed by Linux fds.          */
 /* ------------------------------------------------------------------ */
@@ -58,6 +71,10 @@ Ptr NewPtr(Size n)      { return (Ptr)malloc((size_t)n); }
 Ptr NewPtrClear(Size n) { return (Ptr)calloc(1, (size_t)n); }
 void DisposePtr(Ptr p)  { free(p); }
 long FreeMem(void)       { return 3800L * 1024; }   /* pretend 3.8 MB */
+/* Nothing purgeable in the mock heap, so PurgeSpace agrees with FreeMem —
+ * which is what it does on a single-segment build anyway. */
+void PurgeSpace(Size *total, Size *contig)
+{ if (total) *total = FreeMem(); if (contig) *contig = FreeMem(); }
 void BlockMoveData(const void *s, void *d, Size n) { memmove(d, s, (size_t)n); }
 void NumToString(long v, StringPtr s)
 {
@@ -321,6 +338,66 @@ int main(int argc, char **argv)
         }
         return ok ? 0 : 1;
     }
+    if (argc >= 2 && strcmp(argv[1], "--utf8") == 0) {
+        /* The fold a UTF-8 name goes through before it can be an HFS
+         * name (Utf8ToMacRoman in mac/macextract_mac.c).
+         *
+         * Driven through sink_begin directly, the way --cancel is,
+         * because the only format that sets `name_utf8` is StuffIt 5
+         * and nothing here writes one: a synthetic archive would have
+         * to be invented, and what is under test is the SHELL. That
+         * the engine sets the flag at all is what the differential
+         * suite grades, over the corpus's own StuffIt 5 archives.
+         *
+         * Every name is written as escapes so this file stays ASCII.
+         * What each one is: see tools/run_macnames.py, which asserts
+         * on the files and on the report lines printed below. */
+        static const struct { const char *name; int utf8; } cases[] = {
+            /* U+0192 'f with hook' — MacRoman 0xC4, the folder mark a
+             * Mac user types. Folds, and loses nothing. */
+            { "Cool Tools \xc6\x92/Cool Tools doc",              1 },
+            /* Three Japanese characters MacRoman has no byte for. */
+            { "\xe8\xaa\xad\xe3\x82\x93\xe3\x81\xa7.rtf", 1 },
+            /* A folder that loses characters, holding a file that does
+             * not: one line, about the folder. */
+            { "\xe3\x81\x82\xe3\x81\x84/plain",              1 },
+            /* 16 x U+00E9: 32 bytes of UTF-8, 16 of MacRoman, so the
+             * 31-character cut must happen AFTER the fold. */
+            { "\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9"
+              "\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9"
+              "\xc3\xa9\xc3\xa9\xc3\xa9\xc3\xa9",          1 },
+            /* Another unwritable character: same disk name as case 2's
+             * sibling below, so the collision numbering acts. */
+            { "\xe3\x81\x82.txt",                               1 },
+            { "\xe3\x81\x84.txt",                               1 },
+            /* The same bytes with the flag CLEAR — StuffIt classic —
+             * pass through untouched. */
+            { "\xc6\x92 classic",                                0 }
+        };
+        size_t c;
+        snprintf(gOutDir, sizeof gOutDir, "%s",
+                 argc >= 3 ? argv[2] : "/tmp/utf8_out");
+        mkdir(gOutDir, 0755);
+        snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+        RepReset();
+        for (c = 0; c < sizeof cases / sizeof cases[0]; c++) {
+            MacSink s; UncEntryInfo info;
+            memset(&s, 0, sizeof s); s.vRefNum = 1; s.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            info.name_len = (uint16_t)strlen(cases[c].name);
+            memcpy(info.name, cases[c].name, info.name_len);
+            info.name_utf8 = (uint8_t)cases[c].utf8;
+            info.data_size = 0; info.rsrc_size = 0; info.is_dir = 0;
+            if (sink_begin(&s, &info) == 0) sink_end(&s, UNC_OK);
+        }
+        {
+            short i;
+            for (i = 0; i < gRepN; i++)
+                fprintf(stderr, "report: %.*s\n", (int)gRepLen[i],
+                        gRepBuf + gRepStart[i]);
+        }
+        return 0;
+    }
     if (argc >= 2 && strcmp(argv[1], "--shortfall") == 0) {
         /* The number the low-memory alert quotes.
          *
@@ -338,6 +415,7 @@ int main(int argc, char **argv)
         int ok = 1;
         a.budget = a.initial = 40000L;
         a.lowmark = a.budget;
+        a.taken = 1;      /* an imposed budget: see mal_take_budget */
         gShortBy = 0;
         if (mal_alloc(&a, (uint32_t)want) != NULL) {
             fprintf(stderr, "shortfall: the over-budget request was ALLOWED\n");
@@ -358,6 +436,15 @@ int main(int argc, char **argv)
         return ok ? 0 : 1;
     }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
+#ifdef UNC_AT_OVERLAY
+    if (ovlbox_load_manifest(getenv("OVLBOX_IMAGES")) <= 0) {
+        fprintf(stderr, "overlay lane: no images registered — $OVLBOX_IMAGES "
+                        "is %s\n", getenv("OVLBOX_IMAGES") ? getenv("OVLBOX_IMAGES")
+                                                           : "unset");
+        return 2;
+    }
+    ovl_preload();
+#endif
     snprintf(gOutDir, sizeof gOutDir, "%s", argv[2]);
     mkdir(gOutDir, 0755);
     snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);   /* dir id 0 */
@@ -402,6 +489,11 @@ int main(int argc, char **argv)
         if (reserve > kMemReserveMax) reserve = kMemReserveMax;
         if (reserve < kMemReserveMin) reserve = kMemReserveMin;
         ma.budget = FreeMem() - reserve;
+        ma.initial = ma.budget;
+        ma.lowmark = ma.budget;
+        /* This test imposes its own budget, so mal_alloc must not go and take
+         * one at the first allocation (mal_take_budget). */
+        ma.taken = 1;
     }
     al.ctx = &ma; al.alloc = mal_alloc; al.free = mal_free;
 
@@ -416,6 +508,18 @@ int main(int argc, char **argv)
     sk.comment = sink_comment;
 
     memset(&opt, 0, sizeof opt);
+
+#ifdef UNC_AT_OVERLAY
+    /* The two calls mac/macextract_mac.c makes, in its order: preload while
+     * the boot disk is certainly in, then release what the sniffed format
+     * cannot want, before the engine's first allocation. An overlay build that
+     * skipped the release would pass every byte-exactness test and lose the
+     * whole mechanism, which is what happened on the branch for a week
+     * (DECISIONS.md 2026-09-25, *the flush nobody wrote*). */
+    ovl_release_if_unwanted(unc_sniff(&io), &io);
+    fprintf(stderr, "overlay: %ld read(s), %ld flush(es) so far\n",
+            ovlbox_reads, ovlbox_flushes);
+#endif
 
     ret = unc_extract(&io, &sk, &al, NULL, &opt);
     fprintf(stderr, "unc_extract -> %d, entries=%d errors=%d\n",

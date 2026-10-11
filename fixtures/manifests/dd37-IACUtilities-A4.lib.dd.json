@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "creator": "KAHL",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "dd37-IACUtilities-A4.lib",
+   "oracle_methods": [
+    "Stac LZS"
+   ],
+   "rsrc_sha256": "18a443e6a4402a75f85276a3882279b5d87592c17ebb1769656e61d3727f8256",
+   "rsrc_size": 2226,
+   "type": "LIB "
+  }
+ ],
+ "fixture": "dd37-IACUtilities-A4.lib.dd",
+ "format": "DiskDoubler",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "f193396675b0fd32445f6bd4c1d45a625ddb1a3a0de4d98b0ce899e807d6ff7c",
+ "size": 1356
+}

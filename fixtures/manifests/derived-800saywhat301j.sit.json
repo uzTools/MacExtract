@@ -201,20 +201,10 @@
    "type": "icon"
   },
   {
-   "data_sha256": "b73eec2eeeb0bacbf4628230c0aa3165adc0a23d0c78cf21b89a6b9e074f3766",
-   "data_size": 5543,
-   "name": "800-SAY-WHAT 3.0.1J/Ë™≠„Çì„Å¶„Çô‰∏ã„Åï„ÅÑ.rtf",
-   "oracle_methods": [
-    "Arsenic"
-   ],
-   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rsrc_size": 0
-  },
-  {
    "creator": "MACS",
    "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "data_size": 0,
-   "name": "800-SAY-WHAT 3.0.1J/„Ç™„É≥„É©„Ç§„É≥Ë≥ºÂÖ•",
+   "name": "800-SAY-WHAT 3.0.1J/オンライン購入",
    "oracle_methods": [
     "Arsenic"
    ],
@@ -226,18 +216,28 @@
    "creator": "\u0000\u0000\u0000\u0000",
    "data_sha256": "628663e3f382e4c6a6a75f90083931accd8f8817003f49bb1759ea6aee5df3ec",
    "data_size": 14397,
-   "name": "800-SAY-WHAT 3.0.1J/„É¶„Éº„Çµ„Çô„Éº„É©„Ç§„Çª„É≥„Çπ„ÅÆË≥ºÂÖ•.rtf",
+   "name": "800-SAY-WHAT 3.0.1J/ユーザーライセンスの購入.rtf",
    "oracle_methods": [
     "Arsenic"
    ],
    "rsrc_sha256": "8dac8e37b8a4bd0eeb2e9ba79b387805cc18482b91440d463b516ac1cc5dc643",
    "rsrc_size": 49376,
    "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "data_sha256": "b73eec2eeeb0bacbf4628230c0aa3165adc0a23d0c78cf21b89a6b9e074f3766",
+   "data_size": 5543,
+   "name": "800-SAY-WHAT 3.0.1J/読んで下さい.rtf",
+   "oracle_methods": [
+    "Arsenic"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
   }
  ],
  "fixture": "derived-800saywhat301j.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "d3788d31eb57ea17cc0a218fbc2167f50be59f536bd899d97334363a9fcf8f7f",
  "size": 91648
 }

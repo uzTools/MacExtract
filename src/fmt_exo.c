@@ -1,17 +1,31 @@
 /*
  * fmt_exo.c — the exogenous formats: gzip (.gz), Unix compress (.Z),
- * tar, and zip (store + deflate).
+ * tar, and zip (store, Shrink, Reduce, Implode and deflate).
  *
- * These are byte-oriented Unix/PC formats with public specs:
- *   gzip: RFC 1952. zip: PKWARE APPNOTE (EOCD + central directory).
- *   tar: POSIX ustar. .Z: compress(1) LZW (see unc_lzw.c).
- * Cross-checked against reference/XADMaster (XADGzipParser.m,
- * XADZipParser.m, XADTarParser.m, XADCompressParser.m) — LGPL, see
- * NOTICE. Deflate decoding uses vendored zlib (third_party/zlib).
+ * These are byte-oriented Unix/PC formats, and every one of them has a
+ * specification of its own. Those are what is cited, here and at each
+ * field below:
+ *   gzip  reference/notes/rfc1952.txt
+ *   zip   reference/notes/zip_appnote.txt (PKWARE APPNOTE.TXT 6.3.10),
+ *         with reference/notes/winzip_aes.txt for the one extra field
+ *         APPNOTE names but does not lay out; section 5.3 is the whole
+ *         of Imploding and is cited field by field at the decoder,
+ *         beside reference/deark/src/fmtutil-lzh.c, which is the
+ *         reference implementation each reading was checked against
+ *   tar   reference/notes/posix_ustar.txt (POSIX.1-2017, the pax page,
+ *         "ustar Interchange Format")
+ *   .Z    reference/deark/src/fmtutil-lzw.c for the three-byte header
+ *         (the codec itself is unc_lzw.c, which cites the same file)
+ *
+ * One thing is in none of them: pre-POSIX v7 tar predates the standard
+ * above and has no magic at all, so recognising one is this project's
+ * own problem and its answer says so at the line that makes it.
+ * Deflate decoding uses vendored zlib (third_party/zlib).
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_exo_priv.h"
 
 /* Twice UNC_IOBUF. These readers move whole runs rather than bytes:
  * inflate hands back a block at a time, LZW a phrase, and tar copies
@@ -20,17 +34,95 @@
 
 /* Shared emit callback: write to sink data fork. */
 typedef struct ExoSink {
-    UncCtx *c;
-    int     failed;
+    UncCtx  *c;
+    int      failed;
+    /* ZipIt stores a Macintosh file as a MacBinary stream and zips
+     * THAT, so one decoded stream is a 128-byte header, the data fork
+     * padded to 128, then the resource fork. `split` routes the stream
+     * to two forks by position; the entry's CRC-32 is still taken over
+     * all of it, header and padding included, which is what the
+     * directory records. Same arrangement as MacLHA's (fmt_lzh.c). */
+    uint8_t  split;
+    uint32_t pos, ds, de, rs, re;
+    /* The first 128 bytes, captured for the header peek. */
+    uint8_t *head;
+    uint32_t headgot;
+    /* Decode and CRC but write NOTHING, for the Implode
+     * minimum-match-length probe (zip_imp_dry, below). Distinct from
+     * `UncOptions.test_only`, which is the user asking for the same
+     * thing over a whole archive: this one is the engine's own and
+     * lasts one pass. */
+    uint8_t  dry;
 } ExoSink;
 
 static int exo_emit(void *ctx, const uint8_t *p, int32_t n)
 {
     ExoSink *s = (ExoSink *)ctx;
-    if (s->c->opt.test_only) return UNC_OK;
-    if (s->c->sink->write(s->c->sink->ctx, UNC_FORK_DATA, p, n) < 0)
-        return UNC_ERR_SINK;
+
+    /* Peek mode: capture the first 128 bytes and write NOTHING —
+     * begin_entry has not been called yet. Once they are in hand the
+     * decode is stopped by failing the callback, which is the only
+     * brake a chunk emitter has: zlib hands over a whole bufferful at
+     * a time, so asking unc_inflate_raw for 128 bytes instead would
+     * trip its "more output than declared" check before emitting any
+     * of them. The status is discarded by the caller. */
+    if (s->head) {
+        while (n > 0 && s->headgot < 128) {
+            s->head[s->headgot++] = *p++;
+            n--;
+        }
+        return s->headgot < 128 ? UNC_OK : UNC_ERR_SINK;
+    }
+    /* A probe pass: the CRC-32 is accumulated by the decoder itself, so
+     * there is nothing for this to do but count. One test, ahead of the
+     * split walk, because a probe never splits. */
+    if (s->dry) {
+        s->pos += (uint32_t)n;
+        return UNC_OK;
+    }
+    if (!s->split) {
+        s->pos += (uint32_t)n;
+        if (s->c->opt.test_only) return UNC_OK;
+        if (s->c->sink->write(s->c->sink->ctx, UNC_FORK_DATA, p, n) < 0)
+            return UNC_ERR_SINK;
+        return UNC_OK;
+    }
+    /* Split: walk the chunk, handing each fork the part that falls in
+     * its span and dropping the header and the padding between them. */
+    while (n > 0) {
+        uint32_t end = s->pos + (uint32_t)n;
+        uint32_t lo, hi;
+        UncFork fk;
+
+        if (s->pos < s->de && end > s->ds) { lo = s->ds; hi = s->de;
+                                             fk = UNC_FORK_DATA; }
+        else if (s->pos < s->re && end > s->rs) { lo = s->rs; hi = s->re;
+                                                  fk = UNC_FORK_RSRC; }
+        else { s->pos = end; return UNC_OK; }   /* header or padding */
+
+        if (s->pos < lo) {          /* skip up to the span */
+            uint32_t skip = lo - s->pos;
+            if (skip > (uint32_t)n) skip = (uint32_t)n;
+            p += skip; n -= (int32_t)skip; s->pos += skip;
+            continue;
+        }
+        {
+            uint32_t take = hi - s->pos;
+            if (take > (uint32_t)n) take = (uint32_t)n;
+            if (!s->c->opt.test_only &&
+                s->c->sink->write(s->c->sink->ctx, fk, p, (int32_t)take) < 0)
+                return UNC_ERR_SINK;
+            p += take; n -= (int32_t)take; s->pos += take;
+        }
+    }
     return UNC_OK;
+}
+
+static void exo_sink_init(ExoSink *s, UncCtx *c)
+{
+    s->c = c; s->failed = 0; s->split = 0; s->pos = 0;
+    s->ds = s->de = s->rs = s->re = 0;
+    s->head = NULL; s->headgot = 0; s->dry = 0;
 }
 
 static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
@@ -43,12 +135,6 @@ static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
 /* gzip (RFC 1952)                                                    */
 /* ------------------------------------------------------------------ */
 
-UncFormat unc_gzip_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    return (len >= 3 && head[0] == 0x1F && head[1] == 0x8B && head[2] == 8)
-           ? UNC_FORMAT_GZIP : UNC_FORMAT_UNKNOWN;
-}
 
 int unc_gzip_extract(UncCtx *c)
 {
@@ -72,7 +158,9 @@ int unc_gzip_extract(UncCtx *c)
     unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
     if (c->io->seek(c->io->ctx, 10) < 0) { err = UNC_ERR_IO; goto out; }
 
-    /* Optional header fields, in order: FEXTRA, FNAME, FCOMMENT, FHCRC. */
+    /* Optional header fields, in the order RFC 1952 section 2.3's
+     * member-format diagram puts them: FEXTRA, FNAME, FCOMMENT, FHCRC
+     * — the last "immediately before the compressed data". */
     if (flg & 0x04) {   /* FEXTRA */
         int lo = unc_bufin_next(&in), hi = unc_bufin_next(&in);
         int32_t n;
@@ -113,7 +201,7 @@ int unc_gzip_extract(UncCtx *c)
 
     if (!c->opt.list_only) {
         uint32_t produced = 0, crc = UNC_CRC32_INIT;
-        es.c = c;
+        exo_sink_init(&es, c);
         est = unc_inflate_raw(&in, c->al, obuf, ocap, UNC_SIZE_UNKNOWN,
                               &produced, &crc, exo_emit, &es);
         if (est == UNC_OK) {
@@ -143,12 +231,6 @@ out:
 /* Unix compress .Z                                                   */
 /* ------------------------------------------------------------------ */
 
-UncFormat unc_compressz_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    return (len >= 3 && head[0] == 0x1F && head[1] == 0x9D)
-           ? UNC_FORMAT_COMPRESS_Z : UNC_FORMAT_UNKNOWN;
-}
 
 int unc_compressz_extract(UncCtx *c)
 {
@@ -214,72 +296,11 @@ out:
 /* ------------------------------------------------------------------ */
 
 /* Parse an octal field (space/NUL padded). Returns value or -1. */
-static int64_t tar_octal(const uint8_t *p, int32_t n)
-{
-    int64_t v = 0;
-    int32_t i = 0;
-    while (i < n && (p[i] == ' ' || p[i] == 0)) i++;
-    if (i == n) return 0;
-    for (; i < n && p[i] >= '0' && p[i] <= '7'; i++)
-        v = v * 8 + (p[i] - '0');
-    return v;
-}
 
-static int tar_checksum_ok(const uint8_t *h)
-{
-    int64_t stored = tar_octal(h + 148, 8);
-    int32_t i;
-    int64_t uns = 0, sig = 0;
-    for (i = 0; i < 512; i++) {
-        uint8_t b = (i >= 148 && i < 156) ? (uint8_t)' ' : h[i];
-        uns += b;
-        sig += (int8_t)((i >= 148 && i < 156) ? ' ' : (int8_t)h[i]);
-    }
-    return stored == uns || stored == sig;   /* GNU tolerates signed sums */
-}
 
 /* An octal header field: octal digits terminated/padded by NUL or
  * space (leading spaces allowed), or all NUL. */
-static int tar_field_ok(const uint8_t *p, int32_t n)
-{
-    int32_t i = 0;
-    while (i < n && p[i] == ' ') i++;
-    while (i < n && p[i] >= '0' && p[i] <= '7') i++;
-    while (i < n && (p[i] == 0 || p[i] == ' ')) i++;
-    return i == n;
-}
 
-UncFormat unc_tar_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    int32_t i;
-    if (len < 512) return UNC_FORMAT_UNKNOWN;
-    if (!tar_checksum_ok(head)) return UNC_FORMAT_UNKNOWN;
-
-    /* POSIX/old-GNU: "ustar" magic at 257 plus the checksum. */
-    if (head[257] == 'u' && head[258] == 's' && head[259] == 't' &&
-        head[260] == 'a' && head[261] == 'r')
-        return UNC_FORMAT_TAR;
-
-    /* Pre-POSIX v7 tar has NO magic. XADTarParser falls back to the
-     * *filename* for these, which our content-only rule forbids, so
-     * we demand structure instead: a valid checksum plus well-formed
-     * v7 fields (see DECISIONS.md M9/M10 follow-up).
-     *   - name: NUL-terminated printable, non-empty
-     *   - mode/uid/gid/size/mtime: octal fields
-     *   - typeflag: NUL or '0'..'7' */
-    if (head[0] == 0) return UNC_FORMAT_UNKNOWN;
-    for (i = 0; i < 100 && head[i]; i++)
-        if (head[i] < 0x20 || head[i] == 0x7F) return UNC_FORMAT_UNKNOWN;
-    if (i == 100) return UNC_FORMAT_UNKNOWN;                    /* name not terminated */
-    if (!tar_field_ok(head + 100, 8)) return UNC_FORMAT_UNKNOWN;   /* mode  */
-    if (!tar_field_ok(head + 108, 8)) return UNC_FORMAT_UNKNOWN;   /* uid   */
-    if (!tar_field_ok(head + 116, 8)) return UNC_FORMAT_UNKNOWN;   /* gid   */
-    if (!tar_field_ok(head + 124, 12)) return UNC_FORMAT_UNKNOWN;  /* size  */
-    if (!tar_field_ok(head + 136, 12)) return UNC_FORMAT_UNKNOWN;  /* mtime */
-    if (head[156] != 0 && (head[156] < '0' || head[156] > '7')) return UNC_FORMAT_UNKNOWN;
-    return UNC_FORMAT_TAR;
-}
 
 int unc_tar_extract(UncCtx *c)
 {
@@ -457,26 +478,6 @@ int unc_tar_extract(UncCtx *c)
 /* zip (EOCD + central directory; store and deflate)                  */
 /* ------------------------------------------------------------------ */
 
-UncFormat unc_zip_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    if (len < 4) return UNC_FORMAT_UNKNOWN;
-    /* Local file header or (rarely first) central dir / EOCD magic. */
-    if (head[0] == 'P' && head[1] == 'K' &&
-        ((head[2] == 3 && head[3] == 4) ||
-         (head[2] == 5 && head[3] == 6)))    /* empty archive */
-        return UNC_FORMAT_ZIP;
-    /* A local header displaced to offset 4: what a splitting zip writes
-     * when it puts a marker in front. That archive may be a set of one,
-     * in which case it is an ordinary zip and reads as one — the four
-     * bytes are simply part of every offset it records.
-     * Source: reference/XADMaster/XADZipParser.m
-     * +recognizeFileWithHandle:, `bytes[4..7] == PK\3\4`. Segmented
-     * sets are caught before this by unc_zipseg_probe. */
-    return (len >= 8 && head[4] == 'P' && head[5] == 'K' &&
-           head[6] == 3 && head[7] == 4)
-           ? UNC_FORMAT_ZIP : UNC_FORMAT_UNKNOWN;
-}
 
 /* A zip stores every address as (part, offset within that part). For an
  * archive in one file the part is always 0 and the offset is absolute,
@@ -522,16 +523,386 @@ static int zip_emit(void *ctx, const uint8_t *p, int32_t n)
     return exo_emit(ctx, p, n);
 }
 
+/* ------------------------------------------------------------------ */
+/* Implode — zip method 6, PKZIP 1.x                                  */
+/* ------------------------------------------------------------------ */
+
+/* A sliding dictionary whose output tokens are Shannon-Fano coded, with
+ * one tree per alphabet stored byte-aligned at the head of the entry.
+ * THREE parameters shape it and every one is read off the entry's own
+ * general-purpose flag word rather than assumed:
+ *
+ *   bit 1 (0x0002)  0 = a 4 K dictionary, 1 = 8 K
+ *   bit 2 (0x0004)  0 = two trees stored (length, then distance),
+ *                   1 = three (a literal tree first)
+ *
+ * and the literal tree's PRESENCE is what sets the minimum match
+ * length: 3 when it is there, 2 when it is not.
+ *
+ * Source: reference/notes/zip_appnote.txt 5.3.2 (the dictionary size and
+ * the flag bit that states it), 5.3.3 (the tree count, its flag bit, and
+ * the order the trees are stored in), 5.3.4 (the literal tree's 256
+ * values and the minimum match length that follows from its presence),
+ * 5.3.5 and 5.3.6 (the 64-value length and distance trees), 5.3.7 (how a
+ * tree is stored), 5.3.8 (how the codes come out of the bit lengths) and
+ * 5.3.9 (the token stream). reference/deark/src/fmtutil-lzh.c (MIT) is
+ * the reference implementation each of those was read beside —
+ * `implode_read_a_tree`, `implode_read_trees` and
+ * `decompress_implode_internal`.
+ *
+ * A FOURTH parameter is not in the flag word and not in the stream: it
+ * is the WRITER. PKZIP 1.01 and 1.02 took the minimum match length from
+ * the DICTIONARY SIZE instead of from the literal tree's presence — 3
+ * at 8 K and 2 at 4 K — which disagrees with 5.3.4 in exactly the two
+ * combinations where the two readings differ (bit 1 set alone, and bit
+ * 2 set alone). `mmlbug` selects it, and which of the two an archive
+ * wants is settled by decoding one entry with no output and comparing
+ * the stored CRC-32 (zip_imp_dry, below).
+ *
+ * Source: reference/deark/src/fmtutil-lzh.c (MIT),
+ * `fmtutil_decompress_zip_implode` — `cctx->implode_min_match_len =
+ * cctx->implode_8k_buffer ? 3 : 2` under `params->mml_bug`, against
+ * `cctx->implode_3_trees ? 3 : 2` without it. No specification states
+ * the buggy rule: it is a reading of two programs' behaviour, and
+ * PKZIP 1.01's own distribution is what grades it here (the fixture
+ * `pkz101.exe`; FORMATS.md, *Implode*). */
+
+/* The RLE nibble carries a bit length MINUS ONE, so 16 is the longest
+ * code the format can state. Source: zip_appnote.txt 5.3.7. */
+#define IMP_MAXBITS 16
+
+/* 4 K or 8 K, and the low bits of a distance that are read raw: six for
+ * a 4 K dictionary and seven for an 8 K one, the distance tree supplying
+ * the upper six either way. Source: zip_appnote.txt 5.3.2, 5.3.6, 5.3.9. */
+#define IMP_DICT_4K  4096u
+#define IMP_DICT_8K  8192u
+
+/* One decode table. `sym` is the symbol each code slot names, laid out
+ * in the order 5.3.8 assigns codes — so the codes of one bit length are
+ * a consecutive run, and `first`/`cbase` turn a code of that length into
+ * an index. Symbols are 0..255, which is why a byte holds one. */
+typedef struct ImpTree {
+    uint16_t count[IMP_MAXBITS + 1];  /* codes of each bit length      */
+    uint16_t first[IMP_MAXBITS + 1];  /* lowest code value of a length */
+    uint16_t cbase[IMP_MAXBITS + 1];  /* where that run starts in sym  */
+    uint8_t *sym;                     /* nsyms entries                 */
+    uint8_t  maxlen;
+} ImpTree;
+
+/* Per-entry state. One allocation, so a refusal is one failure: the
+ * window is the second and is sized to the dictionary the flags name. */
+typedef struct ImpState {
+    ImpTree  lit, len, dist;
+    uint8_t  litsym[256], lensym[64], distsym[64];
+    /* The bit lengths of the tree being built, by symbol. 256 covers the
+     * literal tree and both 64-value ones. */
+    uint8_t  lengths[256];
+} ImpState;
+
+/* 5.3.7: a count byte holding (number of RLE bytes - 1), then that many
+ * bytes of "high nibble = number of values at this bit length - 1, low
+ * nibble = bit length - 1".
+ *
+ * The tree data is read as whole BYTES and not through the bit reader,
+ * which is what the reference does (`dbuf_getbyte_p` against
+ * `bitrd.curpos`): the trees sit at the head of the entry and the token
+ * stream's bit numbering starts after them.
+ *
+ * The count must come to EXACTLY the alphabet's size. 5.3.4/5.3.5/5.3.6
+ * fix those at 256, 64 and 64, and the reference says the same in
+ * prose — "the Implode specification apparently requires the trees to
+ * always be fully populated". A stream that says otherwise is corrupt,
+ * and this is where a bent one is turned away. */
+static int imp_read_lengths(UncBufIn *in, uint8_t *lengths, uint32_t nsyms)
+{
+    int b = unc_bufin_next(in);
+    uint32_t nrle, i, next = 0;
+
+    if (b < 0) return in->err;
+    nrle = (uint32_t)b + 1u;
+    for (i = 0; i < nrle; i++) {
+        uint32_t n, l, k;
+
+        b = unc_bufin_next(in);
+        if (b < 0) return in->err;
+        n = ((uint32_t)b >> 4) + 1u;        /* values at this length   */
+        l = ((uint32_t)b & 0x0Fu) + 1u;     /* the length itself       */
+        if (next + n > nsyms) return UNC_ERR_CORRUPT;
+        for (k = 0; k < n; k++) lengths[next++] = (uint8_t)l;
+    }
+    if (next != nsyms) return UNC_ERR_CORRUPT;
+    return UNC_OK;
+}
+
+/* 5.3.8, steps 1, 2 and 4, without step 3.
+ *
+ * Step 3 reverses every code so that its most significant bit becomes
+ * its least significant, and step 3 is NOT performed: the token stream
+ * hands its bits over least-significant-first within each byte
+ * (5.3.9 through `unc_bitin_init_le`), so accumulating a code
+ * most-significant-bit-first out of that stream — which is what
+ * `imp_decode` below does, and what the reference's bit-serial tree walk
+ * does — IS the reversal. The two readings were checked against each
+ * other on every tree in reach (DECISIONS.md 2026-10-07).
+ *
+ * Steps 1 and 2 together are: visit the symbols longest code first, and
+ * within one length in DECREASING symbol order; give the first a code of
+ * zero; and for each one after it take the previous code, shift it right
+ * by the drop in length, and add one. That is the reference's
+ * `fmtutil_huffman_make_canonical_tree2` driven over the length array
+ * reversed, which is what its two flags
+ * (LEFT_ALIGN_BRANCHES | LAST_CODE_FIRST) ask for.
+ *
+ * It is NOT this engine's canonical coder (`unc_canon_build`), whose
+ * codes run the other way: shortest first, all-zeros at the shortest
+ * length, ascending by symbol. */
+static int imp_build(ImpTree *t, const uint8_t *lengths, uint32_t nsyms)
+{
+    uint32_t code = 0, prevlen = 0;
+    uint32_t l, i, slot = 0;
+    int first = 1;
+
+    for (l = 0; l <= IMP_MAXBITS; l++)
+        t->count[l] = t->first[l] = t->cbase[l] = 0;
+    t->maxlen = 0;
+
+    for (l = IMP_MAXBITS; l >= 1; l--) {
+        uint32_t runstart = slot;
+        /* Decreasing symbol order: step 1's sort is stable, so reading
+         * it back from the end visits each length's symbols that way. */
+        i = nsyms;
+        while (i-- > 0) {
+            if (lengths[i] != l) continue;
+            if (first) { code = 0; first = 0; }
+            else code = (code >> (prevlen - l)) + 1u;
+            prevlen = l;
+            if (code >= (1u << l)) return UNC_ERR_CORRUPT;
+            if (t->count[l] == 0) t->first[l] = (uint16_t)code;
+            t->count[l]++;
+            t->sym[slot++] = (uint8_t)i;
+        }
+        if (t->count[l]) {
+            t->cbase[l] = (uint16_t)runstart;
+            if (t->maxlen == 0) t->maxlen = (uint8_t)l;
+        }
+    }
+    /* A tree with no codes at all decodes nothing, and the alphabet
+     * sizes above make it unreachable; refuse it rather than loop. */
+    return t->maxlen ? UNC_OK : UNC_ERR_CORRUPT;
+}
+
+/* One code, bit-serially: take a bit, make it the next
+ * least-significant bit of the code, and ask whether a code of the
+ * length so far starts where this one does. The same walk
+ * `unc_canon_decode` falls back to, over this format's own run table. */
+static int imp_decode(const ImpTree *t, UncBitIn *bi)
+{
+    uint32_t code = 0;
+    uint32_t l;
+
+    for (l = 1; l <= (uint32_t)t->maxlen; l++) {
+        int bit = unc_bitin_bit(bi);
+        if (bit < 0) return -1;
+        code = (code << 1) | (uint32_t)bit;
+        if (t->count[l] && code - t->first[l] < t->count[l])
+            return t->sym[t->cbase[l] + (code - t->first[l])];
+    }
+    return -2;                  /* no code of any length: corrupt */
+}
+
+/* Hand over what the window has taken since the last flush, and take the
+ * CRC-32 of the same span. The window wraps, so a span crossing its end
+ * is two writes — the shape is sit14_flush's (src/sit14.c). */
+static int imp_flush(const uint8_t *win, uint32_t dict, uint32_t from,
+                     uint32_t to, uint32_t *crc,
+                     int (*emit)(void *, const uint8_t *, int32_t),
+                     void *ectx)
+{
+    uint32_t n = to - from, a = from & (dict - 1u);
+
+    if (n == 0) return UNC_OK;
+    if (a + n > dict) {
+        int err;
+        *crc = unc_crc32(*crc, win + a, (int32_t)(dict - a));
+        err = emit(ectx, win + a, (int32_t)(dict - a));
+        if (err != UNC_OK) return err;
+        n -= dict - a;
+        a = 0;
+    }
+    *crc = unc_crc32(*crc, win + a, (int32_t)n);
+    return emit(ectx, win + a, (int32_t)n);
+}
+
+static int zip_implode(UncCtx *c, UncBufIn *in, uint32_t flags, uint32_t usize,
+                       uint32_t *crc, uint32_t mmlbug,
+                       int (*emit)(void *, const uint8_t *, int32_t),
+                       void *ectx)
+{
+    ImpState *s;
+    uint8_t *win;
+    UncBitIn bi;
+    uint32_t dict = (flags & 0x0002u) ? IMP_DICT_8K : IMP_DICT_4K;
+    uint32_t lowbits = (flags & 0x0002u) ? 7u : 6u;
+    int three = (flags & 0x0004u) != 0;
+    /* 5.3.4's rule, or PKZIP 1.01/1.02's — see the fourth parameter in
+     * the comment above this file's Implode section. */
+    uint32_t mml = mmlbug ? (dict == IMP_DICT_8K ? 3u : 2u)
+                          : (three ? 3u : 2u);
+    uint32_t mask, thresh, pos = 0, flushed = 0;
+    int err;
+
+    if (usize == 0) return UNC_OK;
+
+    s = (ImpState *)unc_alloc(c->al, (uint32_t)sizeof *s);
+    if (!s) return UNC_ERR_MEM;
+    win = (uint8_t *)unc_alloc(c->al, dict);
+    if (!win) { unc_free(c->al, s); return UNC_ERR_MEM; }
+    /* 5.3.9: "if this position is before the start of the output stream,
+     * then assume that all the data before the start of the output
+     * stream is filled with zeros" — so the dictionary starts zeroed,
+     * and a match that reaches back past the first byte reads those
+     * zeros. 30 of the 20,247 matches in reach do (FORMATS.md). */
+    {
+        uint32_t i;
+        for (i = 0; i < dict; i++) win[i] = 0;
+    }
+    mask = dict - 1u;
+    thresh = dict >> 2;
+
+    s->lit.sym = s->litsym;
+    s->len.sym = s->lensym;
+    s->dist.sym = s->distsym;
+
+    /* 5.3.3: with three trees the literal tree comes first; with two the
+     * length tree does, and the distance tree is last either way. */
+    if (three) {
+        if ((err = imp_read_lengths(in, s->lengths, 256)) != UNC_OK) goto out;
+        if ((err = imp_build(&s->lit, s->lengths, 256)) != UNC_OK) goto out;
+    }
+    if ((err = imp_read_lengths(in, s->lengths, 64)) != UNC_OK) goto out;
+    if ((err = imp_build(&s->len, s->lengths, 64)) != UNC_OK) goto out;
+    if ((err = imp_read_lengths(in, s->lengths, 64)) != UNC_OK) goto out;
+    if ((err = imp_build(&s->dist, s->lengths, 64)) != UNC_OK) goto out;
+
+    unc_bitin_init_le(&bi, in);
+
+    while (pos < usize) {
+        int bit;
+
+        if (pos - flushed >= thresh) {
+            if ((err = imp_flush(win, dict, flushed, pos, crc, emit, ectx))
+                    != UNC_OK)
+                goto out;
+            flushed = pos;
+        }
+
+        bit = unc_bitin_bit(&bi);
+        if (bit < 0) { err = bi.err; goto out; }
+        if (bit) {
+            /* 5.3.9: a set bit is a literal — through the literal tree
+             * where there is one, eight raw bits where there is not. */
+            int b;
+            if (three) {
+                b = imp_decode(&s->lit, &bi);
+                if (b < 0) { err = b == -1 ? bi.err : UNC_ERR_CORRUPT;
+                             goto out; }
+            } else {
+                int32_t v = unc_bitin_bits_le(&bi, 8);
+                if (v < 0) { err = bi.err; goto out; }
+                b = (int)v;
+            }
+            win[pos++ & mask] = (uint8_t)b;
+        } else {
+            int32_t lo;
+            int hi, lc;
+            uint32_t distance, mlen, from;
+
+            lo = unc_bitin_bits_le(&bi, (int)lowbits);
+            if (lo < 0) { err = bi.err; goto out; }
+            hi = imp_decode(&s->dist, &bi);
+            if (hi < 0) { err = hi == -1 ? bi.err : UNC_ERR_CORRUPT;
+                          goto out; }
+            distance = ((uint32_t)hi << lowbits) | (uint32_t)lo;
+
+            lc = imp_decode(&s->len, &bi);
+            if (lc < 0) { err = lc == -1 ? bi.err : UNC_ERR_CORRUPT;
+                          goto out; }
+            if (lc == 63) {
+                /* 5.3.9: the top length code is an escape and eight more
+                 * bits follow. 249 of the matches in reach take it. */
+                int32_t v = unc_bitin_bits_le(&bi, 8);
+                if (v < 0) { err = bi.err; goto out; }
+                mlen = mml + 63u + (uint32_t)v;
+            } else {
+                mlen = mml + (uint32_t)lc;
+            }
+
+            /* "move backwards Distance+1 bytes in the output stream":
+             * masked, which is the same slot for every distance the
+             * dictionary can hold, and the zeros above for the rest. A
+             * match may overlap its own output (347 in reach do), so it
+             * is copied one byte at a time. */
+            from = pos - 1u - distance;
+            while (mlen-- > 0 && pos < usize) {
+                win[pos & mask] = win[from++ & mask];
+                pos++;
+            }
+            /* No flush inside that loop, and it is not an omission: the
+             * test at the head of the while reserves a quarter of the
+             * window, and the longest match the format can state is
+             * mml + 63 + 255 = 321 bytes, so `pos - flushed` cannot pass
+             * (dict/4 - 1) + 321 — 1,344 against the 4,096 of the
+             * smaller dictionary. Unflushed bytes therefore cannot be
+             * overwritten, and a check here could not fire. */
+        }
+    }
+
+    err = imp_flush(win, dict, flushed, pos, crc, emit, ectx);
+    /* No "short of `usize`" test here, and sit14's shape is the wrong
+     * one to copy: this loop's only exit is `pos >= usize`, so such a
+     * test could not fire. A stream that ends early is reported by the
+     * bit reader instead — `unc_bufin_next` hits the substream's limit
+     * and `bi.err` is UNC_ERR_TRUNCATED, which every read above
+     * propagates. */
+
+out:
+    unc_free(c->al, win);
+    unc_free(c->al, s);
+    return err;
+}
+
+/* Zip method 1, Shrink, is LZW and lives with the other LZW in
+ * unc_lzw.c — in the codecs image on a Macintosh, because this image is
+ * at the 32 KB a 68000's 16-bit PC-relative references reach
+ * (FORMATS.md, *Shrink*). This only adapts the emit. */
+static int zip_put(void *ctx, const uint8_t *p, uint32_t n)
+{
+    return exo_emit(ctx, p, (int32_t)n);
+}
+
 /* Decode one entry's data from a reader already positioned at it (and,
  * for an encrypted entry, already past the twelve-byte encryption
  * header and reading through a cipher). Accumulates the CRC-32 the
  * caller compares against the directory's. */
 static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
-                      uint32_t usize, uint32_t *crc,
-                      uint8_t *obuf, uint32_t ocap)
+                      uint32_t flags, uint32_t usize, uint32_t *crc,
+                      uint32_t mmlbug, uint8_t *obuf, uint32_t ocap)
 {
     uint32_t produced = 0;
     int est;
+
+    if (method == 6) {
+        /* Implode's three parameters are in the flag word, not in the
+         * stream, which is why this is the one method that needs it
+         * (zip_implode, above). */
+        return zip_implode(c, in, flags, usize, crc, mmlbug, zip_emit, es);
+    }
+    if (method == 1)
+        return unc_shrink_decode(c->al, in, usize, crc, obuf, ocap,
+                                 zip_put, es);
+    if (method >= 2 && method <= 5)
+        return unc_reduce_decode(c->al, in, method - 1u, usize, crc, obuf,
+                                 ocap, zip_put, es);
 
     if (method == 0) {
         uint32_t left = usize;
@@ -560,21 +931,312 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
     return est;
 }
 
+/* ZipIt's MacBinary payload: the first 128 decoded bytes of an entry,
+ * so the header can be read before begin_entry is called.
+ *
+ * It has to be before, not during: a MacBinary stream's two fork sizes
+ * are what the entry IS, and an entry is offered to the sink with both
+ * of them set. MacLHA pays the same price for the same reason and in
+ * the same way — decode the entry, stop at 128 bytes, then decode it
+ * again properly (fmt_lzh.c, *MacLHA's payload*). Not one header's
+ * worth of decoding but one EMIT's: the decode stops at the first call
+ * that completes the 128 bytes, and Shrink and stored entries call it
+ * once per 8 KB of output. A stream that emits nothing decodes whole,
+ * so the peek ticks through `c->ps` like zip_imp_dry, and a Cancel
+ * there is returned (FORMATS.md, *Shrink*).
+ *
+ * Returns 1 and fills `mb` when the 128 bytes are a MacBinary header
+ * whose fork spans fit inside the entry, UNC_ERR_ABORTED when the user
+ * cancelled, and 0 otherwise. An ENCRYPTED entry is left
+ * alone: the peek would have to derive the key and burn a password
+ * attempt before the entry proper, and no ZipIt archive is in reach to
+ * say whether one exists. It comes out as a single data fork, which is
+ * what every version of this engine has done. */
+static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                       uint32_t method, uint32_t flags,
+                       uint32_t csize, uint32_t usize,
+                       uint8_t *mb, uint8_t *iobuf, uint32_t iocap,
+                       uint8_t *obuf, uint32_t ocap)
+{
+    uint8_t lh[30];
+    UncBufIn in;
+    ExoSink es;
+    uint32_t crc = UNC_CRC32_INIT, done0;
+    int err;
+
+    if (usize < 128 || usize == UNC_SIZE_UNKNOWN) return 0;
+    if (zip_seek(c, part, lhoffs) != UNC_OK ||
+        unc_read_full(c->io, lh, 30) != UNC_OK) return 0;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
+    if (zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
+                    unc_get_u16le(lh + 28)) != UNC_OK) return 0;
+
+    exo_sink_init(&es, c);
+    es.head = mb;
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+    in.limit = csize;
+    /* 128 is asked for and the error that the stream holds more is
+     * discarded: what is being tested is whether 128 bytes came out.
+     * A Cancel is not discarded: it is the user's, not the stream's.
+     *
+     * The `mmlbug` argument is 0 — 5.3.4's minimum match length — and
+     * the probe that would say otherwise has not run yet: it is inside
+     * the extract branch, after begin_entry, and this call is what
+     * decides what begin_entry is TOLD. So a PKZIP 1.01-written entry
+     * carrying a ZipIt `0x2605` field would have its first 128 bytes
+     * read under the wrong rule and simply not look like a MacBinary
+     * header. ZipIt is a Macintosh program and PKZIP 1.01 a DOS one,
+     * so nothing can carry both; UNEXERCISED, and said here rather
+     * than measured. */
+    done0 = c->ps.done;
+    err = zip_decode(c, &in, &es, method, flags, usize, &crc, 0, obuf, ocap);
+    /* The entry is read again by the decode proper, which counts it; this
+     * pass ticks so Cancel answers, but must not count, or the bar passes
+     * 100 % on every ZipIt entry. */
+    c->ps.done = done0;
+    if (err == UNC_ERR_ABORTED) return UNC_ERR_ABORTED;
+    if (es.headgot != 128) return 0;
+    if (!unc_macbinary_probe(mb, 128, 0)) return 0;
+    {
+        uint32_t sec  = unc_get_u16be(mb + 120);
+        uint32_t dlen = unc_get_u32be(mb + 83);
+        uint32_t rlen = unc_get_u32be(mb + 87);
+        uint32_t ds = 128u + ((sec + 127u) & ~127u);
+        uint32_t rs = ds + ((dlen + 127u) & ~127u);
+        if (dlen > usize || rlen > usize || rs + rlen > usize) return 0;
+    }
+    return 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Which minimum match length an archive's writer used                */
+/* ------------------------------------------------------------------ */
+
+/* The two combinations where 5.3.4's rule and PKZIP 1.01/1.02's
+ * disagree: bit 1 set alone (8 K, two trees — 2 by the specification,
+ * 3 by the bug) and bit 2 set alone (4 K, three trees — 3 against 2).
+ * With both set or neither, the two rules name the same length and
+ * nothing here runs.
+ *
+ * Source: reference/deark/src/fmtutil-lzh.c's caller,
+ * reference/deark/modules/zip.c `could_have_mml_bug` —
+ * `(bit_flags & 0x6)==2 || (bit_flags & 0x6)==4`. */
+static int zip_imp_ambig(uint32_t flags)
+{
+    return (flags & 0x0006u) == 0x0002u || (flags & 0x0006u) == 0x0004u;
+}
+
+/* Decode one Implode entry under `mmlbug` with NO output and compare
+ * the CRC-32 the central directory stored.
+ *
+ *   1  the entry reproduces that CRC-32 under this reading
+ *   0  it does not — a wrong reading, or a corrupt entry
+ *  <0  the engine error that ends the walk: the user cancelled, the
+ *      sink died, or the file is unreadable. Returned as itself rather
+ *      than as one sentinel, so a cancellation does not come out as an
+ *      I/O failure.
+ *
+ * A local header this cannot read is 0 and not an error: the ordinary
+ * decode below seeks to the same place a moment later and reports it
+ * per entry, which is what it did before this probe existed.
+ *
+ * Same shape as zip_mb_peek above, and for the same reason: this engine
+ * streams each fork to the sink as it decodes, so by the time a CRC-32
+ * mismatch is known the host has the bytes. The only place a second
+ * reading can be tried is BEFORE the first byte is emitted, which makes
+ * a probe pass the price of the rule (DECISIONS.md 2026-10-08, *the
+ * second attempt that had nowhere to go*).
+ *
+ * Progress goes through `c->ps` rather than NULL, unlike zip_mb_peek's
+ * 128 bytes: a probe decodes a whole entry, and on a Macintosh a decode
+ * that does not tick freezes the dialog and puts Cancel out of reach. */
+static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                       uint32_t flags, uint32_t csize, uint32_t usize,
+                       uint32_t wantcrc, uint32_t mmlbug,
+                       uint8_t *iobuf, uint32_t iocap,
+                       uint8_t *obuf, uint32_t ocap)
+{
+    uint8_t lh[30];
+    UncBufIn in;
+    ExoSink es;
+    uint32_t crc = UNC_CRC32_INIT;
+    uint32_t done0;
+    int err;
+
+    if (zip_seek(c, part, lhoffs) != UNC_OK ||
+        unc_read_full(c->io, lh, 30) != UNC_OK) return 0;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
+    if (zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
+                    unc_get_u16le(lh + 28)) != UNC_OK) return 0;
+
+    exo_sink_init(&es, c);
+    es.dry = 1;
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+    in.limit = csize;
+    done0 = c->ps.done;
+    err = zip_decode(c, &in, &es, 6, flags, usize, &crc, mmlbug,
+                     obuf, ocap);
+    c->ps.done = done0;          /* counted once, by the decode proper */
+    if (unc_fatal(err)) return err;
+    return err == UNC_OK && ~crc == wantcrc;
+}
+
 /* The value a central-directory field carries when the real one is in
  * the Zip64 extra field instead. Not a ceiling: the format's own
  * escape, which happens to be all-ones. */
 #define ZIP64_ESC32 0xFFFFFFFFu
 
-/* One central-directory record's extra fields. Two matter here: WinZip's
- * AES (0x9901) and Zip64 (0x0001).
+/* 0x334d's Finder flags and dates, which the CENTRAL directory does not
+ * carry: deark's ef_infozipmac reads type and creator and then
+ * `if(eii->is_central) goto done`, and every field measured here is
+ * exactly 14 bytes long for that reason. The rest of the record is in
+ * the LOCAL header, and is DEFLATED unless flag 0x0004 says otherwise.
+ *
+ * The attribute record, once uncompressed — all little-endian:
+ *   0  fdFlags Short, fdLocation.v/.h Short, fdFldr Short
+ *   8  FXInfo 16 bytes
+ *   24 FVersNum Byte, ACUser Byte
+ *   26 FlCrDat, FlMdDat, FlBkDat ULong
+ *   38 CrGMTOffs, MdGMTOffs, BkGMTOffs Long, signed — OPTIONAL
+ * Source: reference/notes/zip_extrafld_infozip.txt, *Attributes*.
+ *
+ * The three dates are taken UNADJUSTED, and that is the one place
+ * this differs from both reference implementations. The document says
+ * of them: "These time numbers are original Mac FileTime values
+ * (local time!)", and of the offsets that they "may be used to
+ * support timestamp adjustment after inter-timezone transfer". This
+ * engine's consumer is `ioFlCrDat`/`ioFlMdDat` (mac/macextract_mac.c),
+ * which are local Mac times — so the stored value is already the
+ * wanted one and adding the offset would move every date by a
+ * timezone. XADMaster adds it because it is building an absolute
+ * NSDate; that is right for XADMaster and wrong here.
+ *
+ * THE TWO REFERENCE IMPLEMENTATIONS DISAGREE ON THE SIGN, so neither
+ * adjudicates this: XADMaster does `create += readInt32LE` and deark
+ * does `de_mac_time_to_timestamp(mt_raw - mt_offset)`, and both then
+ * label the result UTC. They cannot both be right. The document is
+ * what settles it, and it settles it by making the question moot —
+ * FlCrDat is the local Mac time already, and local is what the sink
+ * wants, so no offset of either sign enters.
+ *
+ * The choice IS observable here and has no oracle: every entry of
+ * rexnebular_1_0_0.zip carries CrGMTOffs = MdGMTOffs = BkGMTOffs =
+ * -18000, so this engine's dates stand 5 h from `lsar`'s on all 22.
+ * A MacZip fixture whose dates were graded against `lsar` would fail
+ * on that difference, and the failure would be the oracle's.
+ *
+ * Flag bit 3 (64-bit dates) refuses the record: this engine's dates
+ * are uint32. Bit 4 says the offsets are ABSENT, which costs nothing
+ * now that they are not wanted.
+ *
+ * Only ever called for an entry whose central record carried a 0x334d,
+ * so an archive with no Macintosh field in it pays nothing at all —
+ * not the seek, not the read, and not the inflate. */
+#define ZIP_MACATTR_WANT 38u    /* through FlMdDat; the GMT offsets
+                                 * after it are not wanted (above) */
+
+typedef struct { uint8_t buf[ZIP_MACATTR_WANT]; uint32_t got; } ZipAttrSink;
+
+static int zip_attr_emit(void *ctx, const uint8_t *p, int32_t n)
+{
+    ZipAttrSink *a = (ZipAttrSink *)ctx;
+    while (n > 0 && a->got < ZIP_MACATTR_WANT) {
+        a->buf[a->got++] = *p++;
+        n--;
+    }
+    return UNC_OK;   /* the tail is deliberately discarded: what
+                      * follows offset 50 is a path and a comment */
+}
+
+static void zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                          UncEntryInfo *e)
+{
+    uint8_t lh[30];
+    uint8_t ex[256];
+    uint32_t lnamelen, lextralen, exlen, q;
+
+    if (zip_seek(c, part, lhoffs) != UNC_OK ||
+        unc_read_full(c->io, lh, 30) != UNC_OK)
+        return;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return;
+    lnamelen  = unc_get_u16le(lh + 26);
+    lextralen = unc_get_u16le(lh + 28);
+    if (!lextralen) return;
+    exlen = lextralen < sizeof ex ? lextralen : (uint32_t)sizeof ex;
+    if (zip_seek(c, part, lhoffs + 30 + lnamelen) != UNC_OK ||
+        unc_read_full(c->io, ex, (int32_t)exlen) != UNC_OK)
+        return;
+
+    for (q = 0; q + 4 <= exlen; ) {
+        uint32_t id = unc_get_u16le(ex + q);
+        uint32_t sz = unc_get_u16le(ex + q + 2);
+        const uint8_t *d = ex + q + 4;
+        if (sz + 4u > exlen - q) break;
+        if (id != 0x334d || sz < 14) { q += 4 + sz; continue; }
+        {
+            uint32_t ulen = unc_get_u32le(d);
+            uint32_t fl   = unc_get_u16le(d + 4);
+            ZipAttrSink a;
+            const uint8_t *rec = NULL;
+
+            if (fl & 0x0008) return;     /* 64-bit dates: not read */
+            a.got = 0;
+            if (fl & 0x0004) {
+                /* Stored in the field itself, right after type and
+                 * creator — no compression method and no CRC. */
+                if (sz >= 14 + ZIP_MACATTR_WANT) {
+                    rec = d + 14;
+                    a.got = ZIP_MACATTR_WANT;
+                }
+            } else if (sz >= 20 && unc_get_u16le(d + 14) == 8 &&
+                       ulen >= ZIP_MACATTR_WANT && ulen <= 1000000u) {
+                /* u16le method (8 = deflate), u32le CRC, then the
+                 * stream. Anything else — Info-ZIP could in principle
+                 * write method 6 there, which deark declines too — is
+                 * left unread rather than guessed at. */
+                uint8_t iobuf[128], obuf[64];
+                UncBufIn in;
+                uint32_t produced = 0;
+                unc_bufin_init(&in, c->io, NULL, iobuf, (uint32_t)sizeof iobuf);
+                in.limit = sz - 20;
+                if (zip_seek(c, part, lhoffs + 30 + lnamelen + q + 4 + 20)
+                        == UNC_OK &&
+                    unc_inflate_raw(&in, c->al, obuf, (uint32_t)sizeof obuf,
+                                    ulen, &produced, NULL,
+                                    zip_attr_emit, &a) == UNC_OK &&
+                    a.got >= ZIP_MACATTR_WANT)
+                    rec = a.buf;
+            }
+            if (!rec) return;
+            e->finder_flags = unc_get_u16le(rec);
+            {
+                uint32_t cr = unc_get_u32le(rec + 26);
+                uint32_t mo = unc_get_u32le(rec + 30);
+                /* A date below one day is "never set": both reference
+                 * implementations treat it so, and the engine's own
+                 * convention is 0 for unstated. */
+                if (cr >= 86400u) e->create_date = cr;
+                if (mo >= 86400u) e->mod_date = mo;
+            }
+            return;
+        }
+    }
+}
+
+/* One central-directory record's extra fields. Four matter here:
+ * WinZip's AES (0x9901), Zip64 (0x0001), and the two Macintosh writers'
+ * fields that carry Finder metadata — Info-ZIP's 0x334d and ZipIt's
+ * 0x2705/0x2805.
  *
  * A Zip64 field holds only those values whose central-directory field
  * carries the escape (0xFFFFFFFF, or 0xFFFF for a disk number), in the
  * fixed order uncompressed size, compressed size, local-header offset,
  * start disk — so the record has to be walked in order, not indexed, and
  * the scan cannot stop at the first field it recognises.
- * Source: XADMaster XADZipParser.m, -parseCentralDirectoryRecord
- * (extid==1), quoting APPNOTE.TXT 4.5.3.
+ * Source: APPNOTE.TXT 4.5.3 — "the order of the fields in the zip64
+ * extended information record is fixed, but the fields MUST only appear
+ * if the corresponding Local or Central directory record field is set
+ * to 0xFFFF or 0xFFFFFFFF".
  *
  * Each Zip64 value is 64 bits and this engine addresses 32, so the low
  * half is taken and the high half must be zero — the same rule the
@@ -589,11 +1251,34 @@ typedef struct {
     int      aeskeybytes, aesversion;
     uint32_t aesmethod;
     int      err;                /* UNC_OK, or this entry's refusal */
+    /* Finder metadata off a Macintosh writer's extra field. 0 means
+     * "not stated", which is what UncEntryInfo already uses. */
+    uint32_t mtype, mcreator;
+    uint16_t mflags;
+    uint8_t  mhave;              /* a Macintosh field was recognised */
+    uint8_t  mbin;               /* ZipIt 0x2605 seen: the entry's data
+                                  * is a MacBinary stream */
+    /* ZipIt 0x2605's FileName, as an offset into the extra field and a
+     * length — not a copy. The field may be in the caller's `exbuf`,
+     * which is in scope for exactly as long as `ex` is, and the leaf
+     * substitution is done inside that same scope. 0 means the field was
+     * absent, empty, or longer than the record it sits in. */
+    uint32_t mbnameoff;
+    uint32_t mbnamelen;
+    uint8_t  mattrs;             /* 0x334d seen: the attribute record
+                                  * is in the LOCAL header, so Finder
+                                  * flags and the dates need a second
+                                  * read (zip_mac_attrs) */
 } ZipExtra;
 
 static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
                            uint32_t method, uint32_t flags, ZipExtra *z)
 {
+    /* Where this record starts within the extra field. `ex` walks
+     * forward; the caller keeps the pointer it passed, so a position
+     * handed back to it has to be measured from there. */
+    uint32_t at0 = 0;
+
     while (exlen >= 4) {
         uint32_t id = unc_get_u16le(ex);
         uint32_t sz = unc_get_u16le(ex + 2);
@@ -621,7 +1306,12 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
                    (flags & 0x0001)) {
             /* WinZip's AES puts the real compression method, the key
              * length and its own version here; method 99 means "look
-             * there". Source: XADZipParser.m. */
+             * there". Source: APPNOTE.TXT APPENDIX E, which sets the
+             * compression method to 99 and names header id 0x9901, and
+             * reference/notes/winzip_aes.txt, which is the layout
+             * APPENDIX E points at: version (1 or 2), the two-character
+             * vendor id "AE" (0x4541), a strength byte of 1, 2 or 3 for
+             * a 128-, 192- or 256-bit key, then the real method. */
             uint32_t ver = unc_get_u16le(ex + 4);
             uint32_t vendor = unc_get_u16le(ex + 6);
             uint32_t strength = ex[8];
@@ -631,9 +1321,94 @@ static void zip_extra_scan(const uint8_t *ex, uint32_t exlen,
                 z->aeskeybytes = (int)(8 + 8 * strength);  /* 16/24/32 */
                 z->aesmethod = unc_get_u16le(ex + 9);
             }
+        } else if (id == 0x334d && sz >= 14) {
+            /* Info-ZIP's Macintosh field ("M3"), written by MacZip —
+             * the Macintosh port of Info-ZIP's zip, which is the only
+             * common writer that puts Finder metadata in a zip at all.
+             * The first fourteen bytes are the whole of what the
+             * CENTRAL directory carries: the uncompressed length of the
+             * attribute record, a flag word, then type and creator.
+             * Source: reference/notes/zip_extrafld_infozip.txt,
+             * *Info-ZIP Macintosh Extra Field (new)*, which gives the
+             * central-header version as exactly BSize, Flags, fdType,
+             * fdCreator and stops there — the local-header version is
+             * the one that goes on. APPNOTE.TXT lists 0x334d in its
+             * header-id table (4.6.1) and specifies no layout for it,
+             * which is why the Info-ZIP document is the citation.
+             *
+             * Byte-wise through unc_get_* like everything else: a
+             * record at an odd offset in the extra field would fault a
+             * 68000 on a word read (CLAUDE.md, 68000 discipline). */
+            z->mtype = unc_get_u32be(ex + 10);
+            z->mcreator = unc_get_u32be(ex + 14);
+            z->mhave = 1;
+            z->mattrs = 1;
+        } else if (id == 0x2705 && sz >= 12 &&
+                   unc_get_u32be(ex + 4) == 0x5A504954ul) {
+            /* ZipIt's short field for FILES: the signature 'ZPIT',
+             * then type and creator, then Finder flags BIG-endian.
+             * Source: APPNOTE.TXT 4.6.5 — '"ZPIT" beLong
+             * extra-field signature, FileType Byte[4], Creator
+             * Byte[4], fdFlags beShort attributes from FInfo.frFlags,
+             * MAY be omitted'. "MAY be omitted" is why the flags are
+             * read only once the field is long enough to hold them,
+             * and the signature is checked first because every one of
+             * these three blocks is identified by it. */
+            z->mtype = unc_get_u32be(ex + 8);
+            z->mcreator = unc_get_u32be(ex + 12);
+            if (sz >= 14) z->mflags = unc_get_u16be(ex + 16);
+            z->mhave = 1;
+        } else if (id == 0x2605 && sz >= 13 &&
+                   unc_get_u32be(ex + 4) == 0x5A504954ul) {
+            /* ZipIt's LONG field. What it says about the entry is
+             * that the entry is MacBinary: APPNOTE.TXT 4.6.4 is
+             * explicit — "This block MUST be present if the file is
+             * stored MacBinary-encoded and it SHOULD NOT be used if
+             * the file is not stored MacBinary-encoded". Its own
+             * fdType and fdCreator sit behind a variable-length
+             * FileName and are not read, because the MacBinary header
+             * carries both and is the thing the forks are measured
+             * from anyway — one source for the entry rather than two
+             * that can disagree.
+             *
+             * The FileName IS read, since 2026-10-07, and it is the
+             * name the Macintosh file HAD: APPNOTE calls it the "full
+             * Macintosh filename", and where it disagrees with the
+             * zip's own name it is the zip's that was converted to
+             * MS-DOS form on the way in (FORMATS.md, *ZipIt's own
+             * archives*). Recorded as a position, substituted by the
+             * caller — see `nread` in unc_zip_extract.
+             * Source: APPNOTE.TXT 4.6.4 — '"ZPIT" beLong, FnLen Byte,
+             * FileName variable, FileType Byte[4], Creator Byte[4]',
+             * whose minimum is the 13 bytes guarded for here, and
+             * whose FnLen is what bounds the name below. */
+            z->mbin = 1;
+            z->mhave = 1;
+            {
+                uint32_t fnlen = ex[8];
+                /* 'ZPIT' + FnLen + the name + fdType + fdCreator must
+                 * fit the record the field declares. A FnLen that does
+                 * not is a field this does not read rather than a
+                 * reason to refuse the entry: everything else about it
+                 * is still true. */
+                if (fnlen && 4u + 1u + fnlen + 8u <= sz) {
+                    z->mbnameoff = at0 + 9u;
+                    z->mbnamelen = fnlen;
+                }
+            }
+        } else if (id == 0x2805 && sz >= 6 &&
+                   unc_get_u32be(ex + 4) == 0x5A504954ul) {
+            /* ZipIt's short field for DIRECTORIES: 'ZPIT' then Finder
+             * flags, and no type or creator — a folder has none.
+             * Source: APPNOTE.TXT 4.6.6 — '"ZPIT" beLong, frFlags
+             * beShort attributes from DInfo.frFlags, MAY be omitted,
+             * View beShort ZipIt view flag, MAY be omitted'. */
+            z->mflags = unc_get_u16be(ex + 8);
+            z->mhave = 1;
         }
         ex += 4 + sz;
         exlen -= 4 + sz;
+        at0 += 4 + sz;
     }
 }
 
@@ -650,6 +1425,26 @@ int unc_zip_extract(UncCtx *c)
     ZipScan scan;
     uint32_t i;
     int err = UNC_OK;
+    /* Which minimum match length this archive's Implode entries were
+     * written with: -1 not settled yet, 0 APPNOTE.TXT 5.3.4's reading,
+     * 1 PKZIP 1.01/1.02's. Per ARCHIVE and not per entry, which is what
+     * makes the probe affordable — the pass below is paid once, not 19
+     * times, on an archive of the shape PKZIP's own distribution has
+     * (FORMATS.md, *Implode*, for the figures).
+     *
+     * That scope ASSUMES one writer per archive, and the assumption is
+     * wider than the measurement behind it: no archive of the 1,537
+     * swept on 2026-10-08 mixes the two readings (29,799 bug-capable
+     * entries, classified per entry), but a zip is appendable and
+     * PKZIP 1.1 wrote Implode too, so the format allows one that does.
+     * It is BOUNDED rather than relied on — see the recovery below,
+     * where an inherited verdict that turns out wrong costs the entry
+     * it was wrong about and not the rest of the archive.
+     *
+     * Source for the architecture: reference/deark/modules/zip.c
+     * `d->mml_bug_policy`, which is likewise archive-wide and set from
+     * the first bug-capable member. */
+    int imppol = -1;
 
     /* Where the end-of-central-directory record may be. A whole archive
      * ends where the file does; a segmented one ends where its LAST
@@ -696,9 +1491,9 @@ int unc_zip_extract(UncCtx *c)
      * the high half is only ever compared against zero, so no 64-bit
      * arithmetic enters the engine.
      *
-     * Source: reference/XADMaster/XADZipParser.m,
-     * -parseWithCentralDirectoryAtOffset:zip64Offset: — record layout,
-     * field order and the 0x06064b50 / 0x07064b50 signatures. */
+     * Source: APPNOTE.TXT 4.3.15 (the Zip64 end of central directory
+     * LOCATOR, signature 0x07064b50, which says which part the record
+     * is on and where) and 4.3.14 (the record itself, 0x06064b50). */
     if (eocd >= 20) {
         uint8_t lo[20];
         if (zip_seek(c, lastpart0, eocd - 20) == UNC_OK &&
@@ -758,10 +1553,10 @@ int unc_zip_extract(UncCtx *c)
      * entries — the same trade both hosts already make when they
      * cannot write it out (cli/main.c, mac/macextract_mac.c).
      *
-     * Source: reference/XADMaster/XADZipParser.m,
-     * -parseWithCentralDirectoryAtOffset:zip64Offset: — the comment
-     * length is the u16 at EOCD+20 and the bytes follow the record,
-     * which is what `lsar` reports as XADComment. */
+     * Source: APPNOTE.TXT 4.3.16 — ".ZIP file comment length 2 bytes"
+     * closes the fixed part of the record, so the length is the u16 at
+     * EOCD+20 and the bytes follow it. It is what `lsar` reports as
+     * XADComment. */
     {
         uint32_t clen = unc_get_u16le(eo + 20);
 
@@ -792,6 +1587,7 @@ int unc_zip_extract(UncCtx *c)
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     /* Read the whole central directory once, so that walking it does not
      * interleave with reading entry data. On one file that saves seeks;
@@ -817,12 +1613,18 @@ int unc_zip_extract(UncCtx *c)
     for (i = 0; i < nentries; i++) {
         uint32_t method, flags, wantcrc, csize, usize;
         uint32_t namelen, extralen, commentlen, lhoffs, startdisk;
+        uint32_t mtype, mcreator;
+        uint16_t mflags;
+        uint8_t mattrs, mbin, mbok;
+        uint8_t mb[128];
+        uint32_t mbds, mbde, mbrs, mbre;
         int aeskeybytes, aesversion;
         int z64err;
         uint32_t aesmethod;
         const uint8_t *cd, *namep;
         uint8_t namebuf[256];
-        uint32_t nread;
+        uint32_t nread, plen;
+        int isdir, namesub;
         UncEntryInfo e;
         int sret, est;
 
@@ -868,6 +1670,17 @@ int unc_zip_extract(UncCtx *c)
             }
         }
 
+        /* A trailing separator is what makes the record a DIRECTORY, and
+         * it is read here rather than below because the leaf may be
+         * replaced in between (the 0x2605 FileName, next): the field is a
+         * bare name and carries no separator, so what the record said
+         * about being a folder has to be taken off the record's own
+         * name. */
+        plen = nread;
+        isdir = plen > 0 && namep[plen - 1] == '/';
+        while (plen > 0 && namep[plen - 1] == '/') plen--;
+        namesub = 0;
+
         /* The extra fields, for AES and for Zip64. Where the directory
          * is in memory they are read in place; where it is being
          * streamed a record at a time they are fetched behind the name,
@@ -887,6 +1700,14 @@ int unc_zip_extract(UncCtx *c)
             z.aesversion = 0;
             z.aesmethod = method;
             z.err = UNC_OK;
+            z.mtype = 0;
+            z.mcreator = 0;
+            z.mflags = 0;
+            z.mhave = 0;
+            z.mattrs = 0;
+            z.mbin = 0;
+            z.mbnameoff = 0;
+            z.mbnamelen = 0;
             if (cdbuf) {
                 if (extralen && cdrel + 46 + namelen + extralen <= cdsize) {
                     ex = cdbuf + cdrel + 46 + namelen;
@@ -915,17 +1736,73 @@ int unc_zip_extract(UncCtx *c)
             aesversion = z.aesversion;
             aesmethod = z.aesmethod;
             z64err = z.err;
+            mtype = z.mtype;
+            mcreator = z.mcreator;
+            mflags = z.mflags;
+            mattrs = z.mattrs;
+            mbin = z.mbin;
+
+            /* ZipIt's 0x2605 FileName becomes the leaf this entry comes
+             * out under, since 2026-10-07. APPNOTE.TXT 4.6.4 calls it
+             * the "full Macintosh filename", and it is the right name in
+             * every field in reach: where it disagrees with the zip's
+             * own, it is the zip's that went through ZipIt's "dosify
+             * filenames" conversion on the way in (FORMATS.md, *ZipIt's
+             * own archives*).
+             *
+             * It is a LEAF and not a path, so only the last component
+             * moves and the enclosing folders keep whatever the zip
+             * called them. In the one archive here where this fires that
+             * leaves `PSYCHO!/` upper-cased: 3 of its 4 wrong
+             * components, not 4.
+             *
+             * Built in `namebuf`, which in the streamed case already
+             * holds the record's name and in the in-memory case is
+             * otherwise unused — so there is no second buffer and the
+             * 256 B it costs this frame were already being paid. The
+             * field is in `ex`, which is `cdbuf` or `exbuf` and never
+             * `namebuf`, so the source and the destination cannot
+             * overlap.
+             *
+             * NOT done when the record's own name did not fit `namebuf`:
+             * the directory prefix would be measured from a cut path,
+             * and such an entry is reported truncated instead. The
+             * longest name in the corpus is 120 bytes. */
+            if (z.mbnamelen && ex && namelen <= nread) {
+                uint32_t dir = plen, k;
+                while (dir > 0 && namep[dir - 1] != '/') dir--;
+                if (dir + z.mbnamelen <= sizeof namebuf) {
+                    for (k = 0; k < dir; k++) namebuf[k] = namep[k];
+                    for (k = 0; k < z.mbnamelen; k++) {
+                        uint8_t ch = ex[z.mbnameoff + k];
+                        /* The engine's own path rule, applied here for
+                         * the first time to a name a FORMAT stated
+                         * rather than one a walk built: a '/' can occur
+                         * in an HFS name and a ':' cannot, so the two
+                         * are swapped per component (DECISIONS.md M4,
+                         * unc_entry_path_append). Without it a field
+                         * could put a separator inside a leaf and
+                         * invent a folder. UNEXERCISED: not one of the
+                         * 23 fields in reach holds a '/' (FORMATS.md,
+                         * *Implode, and what the corpus cannot reach*). */
+                        namebuf[dir + k] = ch == '/' ? (uint8_t)':' : ch;
+                    }
+                    namep = namebuf;
+                    plen = dir + z.mbnamelen;
+                    namesub = 1;
+                }
+            }
         }
 
         unc_entry_clear(&e);
         {
-            uint32_t plen = nread;
-            int isdir = plen > 0 && namep[plen - 1] == '/';
-            while (plen > 0 && namep[plen - 1] == '/') plen--;
             unc_entry_set_path(&e, namep, plen);  /* '/' native, raw bytes */
             /* The record's name was cut to `namebuf` before the funnel
-             * could see how long it really was. */
-            if (namelen > nread) {
+             * could see how long it really was. `namesub` cannot be set
+             * here — a substitution is refused on a cut name — and the
+             * test is written against it anyway, so that the two can
+             * never both be true silently. */
+            if (namelen > nread && !namesub) {
                 e.name_truncated = 1;
                 e.name_full_len = (uint16_t)(namelen > 65535u ? 65535u
                                                               : namelen);
@@ -940,6 +1817,47 @@ int unc_zip_extract(UncCtx *c)
         e.comp_data_size = csize;
         e.rsrc_size = 0;
         e.method_data = (uint8_t)(method > 255 ? 255 : method);
+        /* Finder metadata, where a Macintosh writer stated it. A
+         * DIRECTORY is given its Finder flags and no type or creator:
+         * both reference implementations read 0x334d's type/creator
+         * slots unconditionally, but a folder has neither, and MacZip
+         * fills them with DInfo bytes instead — `docs/` in
+         * rexnebular_1_0_0.zip reads 0x002f000c/0x0154012b, which is a
+         * rectangle and a point, not two codes. ZipIt says the same by
+         * construction: its directory field (0x2805) has no room for
+         * them at all. */
+        e.finder_flags = mflags;
+        if (!e.is_dir) {
+            e.type = mtype;
+            e.creator = mcreator;
+        }
+        if (mattrs) zip_mac_attrs(c, startdisk, lhoffs, &e);
+
+        /* ZipIt's long field: the entry's data is a MacBinary stream,
+         * and what the entry is called for is inside its header. */
+        mbok = 0;
+        mbds = mbde = mbrs = mbre = 0;
+        sret = mbin && !e.is_dir && !(flags & 0x0001)
+             ? zip_mb_peek(c, startdisk, lhoffs, method, flags, csize, usize,
+                           mb, iobuf, iocap, obuf, ocap) : 0;
+        if (sret < 0) { err = sret; break; }
+        if (sret) {
+            uint32_t sec  = unc_get_u16be(mb + 120);
+            uint32_t dlen = unc_get_u32be(mb + 83);
+            uint32_t rlen = unc_get_u32be(mb + 87);
+            mbds = 128u + ((sec + 127u) & ~127u);
+            mbde = mbds + dlen;
+            mbrs = mbds + ((dlen + 127u) & ~127u);
+            mbre = mbrs + rlen;
+            e.data_size = dlen;
+            e.rsrc_size = rlen;
+            e.type = unc_get_u32be(mb + 65);
+            e.creator = unc_get_u32be(mb + 69);
+            e.finder_flags = (uint16_t)((mb[73] << 8) | mb[101]);
+            e.create_date = unc_get_u32be(mb + 91);
+            e.mod_date = unc_get_u32be(mb + 95);
+            mbok = 1;
+        }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; break; }
@@ -953,9 +1871,10 @@ int unc_zip_extract(UncCtx *c)
             est = UNC_OK;
             if (!c->opt.list_only) {
                 if ((flags & 0x0001) && (flags & 0x0040)) {
-                    /* PKWARE's "strong encryption": its key material is
-                     * in a record nothing here parses, and XADMaster
-                     * refuses it too. OPEN_ITEMS.md. */
+                    /* PKWARE's "strong encryption": general purpose
+                     * bit 6, which APPNOTE.TXT 4.4.4 says "MUST also
+                     * set bit 0". Its key material is in a record
+                     * nothing here parses. OPEN_ITEMS.md. */
                     est = UNC_ERR_ENCRYPTED;
                 } else if (method == 99 && (flags & 0x0001) &&
                            !aeskeybytes) {
@@ -963,7 +1882,17 @@ int unc_zip_extract(UncCtx *c)
                      * there is not one (or it is a version or a key
                      * length this does not read). */
                     est = UNC_ERR_ENCRYPTED;
-                } else if (aesmethod != 0 && aesmethod != 8) {
+                } else if (aesmethod > 6 && aesmethod != 8) {
+                    /* Stored, Shrink, the four Reduces, Implode and
+                     * deflate. Method 6 joined on 2026-10-07
+                     * (DECISIONS.md, *the method that was out for a
+                     * premise with no halves left*), method 1 on
+                     * 2026-10-08 (*the method a Macintosh wrote once*)
+                     * and 2 to 5 on 2026-10-11 (*Reduce comes in*);
+                     * every other method the format has ever had —
+                     * DCL Implode, bzip2, LZMA, PPMd, Zstandard — is a
+                     * per-entry refusal, and so is a method number
+                     * nothing has defined. */
                     est = UNC_ERR_UNSUPPORTED;
                 } else if (z64err != UNC_OK) {
                     /* Zip64 states this entry's size or position past
@@ -975,6 +1904,48 @@ int unc_zip_extract(UncCtx *c)
                      * name/extra lengths may differ from the CD's). */
                     uint8_t lh[30];
                     int attempt = 0;
+                    /* Did THIS entry settle the archive's verdict, or
+                     * did it inherit one? Only an inherited verdict can
+                     * be wrong about the entry in front of it. */
+                    int settled_here = 0;
+
+                    /* Settle the minimum match length before a byte of
+                     * this entry reaches the sink, which is the only
+                     * moment a second reading can be tried at all
+                     * (zip_imp_dry, above).
+                     *
+                     * 5.3.4 is probed FIRST and a match ends it, so a
+                     * conforming archive pays one probe pass and a
+                     * conforming entry at an unambiguous combination
+                     * pays nothing. The 1.01/1.02 reading is adopted
+                     * only on positive evidence — it reproduced the
+                     * stored CRC-32 where 5.3.4 did not — and if
+                     * NEITHER does, the verdict stays unsettled: the
+                     * entry is corrupt rather than informative, it
+                     * falls through to the ordinary decode under 5.3.4
+                     * and fails with the status that decode gives it,
+                     * and the next entry gets to settle the archive.
+                     *
+                     * Not for an ENCRYPTED entry: the probe runs before
+                     * `unc_password` and must not ask twice, and the
+                     * cipher would have to be re-keyed per pass. Such
+                     * an entry is decoded under 5.3.4 as before. */
+                    if (method == 6 && imppol < 0 && zip_imp_ambig(flags) &&
+                        !(flags & 0x0001) && usize != UNC_SIZE_UNKNOWN &&
+                        usize != 0) {
+                        int r = zip_imp_dry(c, startdisk, lhoffs, flags,
+                                            csize, usize, wantcrc, 0,
+                                            iobuf, iocap, obuf, ocap);
+                        if (r < 0) { est = r; goto entry_done; }
+                        if (r) { imppol = 0; settled_here = 1; }
+                        else {
+                            r = zip_imp_dry(c, startdisk, lhoffs, flags,
+                                            csize, usize, wantcrc, 1,
+                                            iobuf, iocap, obuf, ocap);
+                            if (r < 0) { est = r; goto entry_done; }
+                            if (r) { imppol = 1; settled_here = 1; }
+                        }
+                    }
                   retry_entry:
                     est = zip_seek(c, startdisk, lhoffs);
                     if (est != UNC_OK) {
@@ -987,7 +1958,12 @@ int unc_zip_extract(UncCtx *c)
                         UncBufIn in;
                         uint32_t crc = UNC_CRC32_INIT;
                         ExoSink es;
-                        es.c = c;
+                        exo_sink_init(&es, c);
+                        if (mbok) {
+                            es.split = 1;
+                            es.ds = mbds; es.de = mbde;
+                            es.rs = mbrs; es.re = mbre;
+                        }
                         /* The data follows the header's own name and
                          * extra fields; skipping forward rather than
                          * seeking is what lets an entry begin in one
@@ -1023,8 +1999,8 @@ int unc_zip_extract(UncCtx *c)
                             unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
                             in.limit = csize - overhead;
                             in.crypt = cr;
-                            est = zip_decode(c, &in, &es, aesmethod, usize,
-                                             &crc, obuf, ocap);
+                            est = zip_decode(c, &in, &es, aesmethod, flags,
+                                             usize, &crc, 0, obuf, ocap);
                             if (est == UNC_OK) {
                                 /* The ten bytes after the data are the
                                  * authentication code, and they are what
@@ -1079,7 +2055,8 @@ int unc_zip_extract(UncCtx *c)
                                 }
                                 if (est == UNC_OK)
                                     est = zip_decode(c, &in, &es, method,
-                                                     usize, &crc, obuf, ocap);
+                                                     flags, usize, &crc,
+                                                     0, obuf, ocap);
                                 if (est == UNC_OK &&
                                     ~crc != wantcrc)
                                     est = UNC_ERR_CRC;
@@ -1089,12 +2066,56 @@ int unc_zip_extract(UncCtx *c)
                         if (est == UNC_OK) {
                             unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
                             in.limit = csize;
-                            est = zip_decode(c, &in, &es, method, usize,
-                                             &crc, obuf, ocap);
+                            /* The archive's verdict, applied to every
+                             * Implode entry and not only to the
+                             * bug-capable ones: at the two combinations
+                             * where the readings coincide the flag makes
+                             * no difference, so there is nothing to
+                             * gate. Unsettled (-1) means 5.3.4, which
+                             * is also what a corrupt first entry
+                             * leaves. */
+                            est = zip_decode(c, &in, &es, method, flags,
+                                             usize, &crc,
+                                             imppol > 0 ? 1u : 0u,
+                                             obuf, ocap);
                         }
                         if (est == UNC_OK &&
                             ~crc != wantcrc)
                             est = UNC_ERR_CRC;
+                        /* An INHERITED verdict that was wrong about this
+                         * entry: the archive mixes writers after all.
+                         * Settling per archive assumes it does not, and
+                         * what is measured is narrower than that — no
+                         * archive of 1,537 mixes (FORMATS.md, *Implode*)
+                         * — so the assumption is bounded here instead of
+                         * being relied on. One probe pass, paid only on
+                         * an entry that has ALREADY failed: if the other
+                         * reading reproduces the stored CRC-32, then the
+                         * bytes were good and the rule was wrong, which
+                         * is a CRC failure and not the truncation the
+                         * desynchronised decode reported; and the
+                         * archive's verdict goes back to unsettled so
+                         * the next ambiguous entry probes for itself
+                         * rather than inheriting the same mistake.
+                         *
+                         * The entry itself is still lost: its bytes have
+                         * reached the sink, and begin_entry is called
+                         * once per entry (macextract.h, *Sink*), which
+                         * is the whole reason the verdict is settled
+                         * before the first byte. What this bounds is the
+                         * REST of the archive (DECISIONS.md 2026-10-08,
+                         * *the writer a zip is allowed to have twice*).
+                         */
+                        if (est != UNC_OK && method == 6 && !settled_here &&
+                            imppol >= 0 && zip_imp_ambig(flags) &&
+                            !(flags & 0x0001) &&
+                            usize != UNC_SIZE_UNKNOWN && usize != 0) {
+                            int r = zip_imp_dry(c, startdisk, lhoffs, flags,
+                                                csize, usize, wantcrc,
+                                                imppol > 0 ? 0u : 1u,
+                                                iobuf, iocap, obuf, ocap);
+                            if (r > 0) { est = UNC_ERR_CRC; imppol = -1; }
+                        }
                     }
                 }
             }

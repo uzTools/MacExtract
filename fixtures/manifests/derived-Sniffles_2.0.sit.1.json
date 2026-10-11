@@ -259,7 +259,7 @@
  ],
  "fixture": "derived-Sniffles_2.0.sit.1",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "c79aa78ce2540e97f36aa77b10bbfc428d468ad632b2402026b021fa9a46a463",
  "size": 84049
 }

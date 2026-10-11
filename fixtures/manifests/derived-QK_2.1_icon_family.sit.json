@@ -1,0 +1,48 @@
+{
+ "entries": [
+  {
+   "creator": "AOqc",
+   "data_sha256": "f2ca977378c09c86d3db339455a0260deef46b9d88280465aa910d5914c1ee4a",
+   "data_size": 1487,
+   "finder_flags": 256,
+   "name": "QK 2.1 icon info",
+   "oracle_methods": [
+    "MW"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "icons for DialogKeys",
+   "oracle_methods": [
+    "MW"
+   ],
+   "rsrc_sha256": "0ba46f7cec6c97b2ab367291a847e5d02a19c505220f8bd7a9fc8c9cdae3c8c9",
+   "rsrc_size": 2670,
+   "type": "rsrc"
+  },
+  {
+   "creator": "RSED",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 256,
+   "name": "icons for QuicKeys 2.1",
+   "oracle_methods": [
+    "MW"
+   ],
+   "rsrc_sha256": "c643568ea0daba34639813dd2c31eaeede28d0433e2935b0b1e5893e32a3761e",
+   "rsrc_size": 17283,
+   "type": "rsrc"
+  }
+ ],
+ "fixture": "derived-QK_2.1_icon_family.sit",
+ "format": "StuffIt",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "290667e0c585da9ed4cc33ff8854a7f8d1b35ff90d7b2cf419782063fd64b1df",
+ "size": 6798
+}

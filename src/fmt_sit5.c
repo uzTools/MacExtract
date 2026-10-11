@@ -1,9 +1,19 @@
 /*
  * fmt_sit5.c — StuffIt 5+ container (.sit).
  *
- * Source: reference/XADMaster/XADStuffIt5Parser.m — LGPL, see NOTICE.
- * Also documented in Matthew T. Russotto's SIT5 write-up
- * (reference/notes/arsenic_russotto.md).
+ * Source: reference/notes/sit5_specs_theunarchiver.md — the format's
+ * own published description (The Unarchiver's wiki, StuffIt5Format),
+ * plus the one correction it needs and the one thing it does not say:
+ * docs/formats/stuffit5-container.md. A reader written from that page
+ * alone reads all 31 StuffIt 5 fixtures — 525 entries, every path and
+ * both fork lengths (tools/derive_sit5.py).
+ *
+ * NOT Russotto's write-up, which this file claimed until 2026-09-22:
+ * reference/notes/arsenic_russotto.md is method 15 and nothing else.
+ * What is still XADStuffIt5Parser.m's is the ENCRYPTED archive: where
+ * the password hash sits and how a password is graded against it, both
+ * marked where they are. The page says only "Encrypted (algorithm used
+ * is unknown)", and no corpus archive sets the bit.
  *
  * Archive header: an 80-byte banner ("StuffIt (c)1997-....") with 4
  * wildcard bytes, then u8 version (= 5), u8 flags, u32 total size,
@@ -35,6 +45,7 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "fmt_sit5_priv.h"
 
 /* The datalen of the extra entry that follows every directory entry —
  * the format's own marker, not a ceiling. */
@@ -47,22 +58,6 @@
 #define SIT5_ARCH_14BYTES 0x10
 #define SIT5_ARCH_20      0x20
 #define SIT5_ARCH_CRYPTED 0x80
-
-/* The banner match string; \xFF bytes match anything (the four
- * digits of the second year vary). XADStuffIt5Parser.m. */
-static const char sit5_banner[] =
-    "StuffIt (c)1997-\xFF\xFF\xFF\xFF"
-    " Aladdin Systems, Inc., http://www.aladdinsys.com/StuffIt/\x0d\x0a";
-
-UncFormat unc_sit5_probe(const uint8_t *head, int32_t len, UncIO *io)
-{
-    (void)io;
-    const char *m = sit5_banner;
-    if (len < 100) return UNC_FORMAT_UNKNOWN;
-    while (*m && (*head == (uint8_t)*m || (uint8_t)*m == 0xFF)) { m++; head++; }
-    return (*m == 0)
-           ? UNC_FORMAT_SIT5 : UNC_FORMAT_UNKNOWN;
-}
 
 /* Map from directory entry offset -> its path, for parent lookup.
  * Bounded pool; archives with more directories than fit fail cleanly
@@ -111,7 +106,14 @@ static void sit5_dir_add(Sit5Dirs *d, uint32_t offs,
 /* StuffIt 5's archive key is MD5(password) cut to five bytes, and the
  * header carries MD5 of THAT, also cut to five: a password is graded
  * before anything is decoded. Asks the host until one verifies.
- * Source: XADStuffIt5Parser.m keyForEntryWithDictionary. */
+ * MEASURED, since 2026-09-27, against the three archives DropStuff
+ * 5.0.1 wrote under Mac OS 9.2: the five bytes each stores ARE
+ * MD5(MD5(password)[:5])[:5], at passwords of 4, 9 and 17 characters
+ * (tools/derive_sit5crypt.py, which needs no engine and no reference —
+ * the bytes Aladdin wrote and hashlib). It was
+ * XADStuffIt5Parser.m keyForEntryWithDictionary's until then;
+ * no published description covers it
+ * (docs/formats/stuffit5-container.md, "What is still nobody else's"). */
 static int sit5_archive_key(UncCtx *c, const uint8_t hash[UNC_SIT5_KEYLEN],
                             uint8_t key[UNC_SIT5_KEYLEN])
 {
@@ -159,14 +161,48 @@ int unc_sit5_extract(UncCtx *c)
     if (!unc_sit5_probe(hdr, 100, NULL)) return UNC_ERR_FORMAT;
     if (hdr[82] != 5) return UNC_ERR_FORMAT;      /* archive version */
     /* 80-byte banner, u8 version, u8 flags, u32 totalsize @84,
-     * u32 ? @88, u16 numfiles @92, u32 firstoffs @94, u16 crc @98. */
+     * u32 ? @88, u16 numfiles @92, u32 firstoffs @94, u16 crc @98.
+     * The published table gives offset 84 TWICE and then jumps to 86;
+     * 92 and 94 are what reads all 31 archives here, and what the
+     * other published copy of the same table says
+     * (docs/formats/stuffit5-container.md, "The correction it needs"). */
     numentries = unc_get_u16be(hdr + 92);
     firstoffs = unc_get_u32be(hdr + 94);
 
     /* Optional blocks follow the fixed header, and one of them is the
      * five-byte hash that says whether a password is the right one.
      * Their order is fixed; only their presence is flagged.
-     * Source: XADStuffIt5Parser.m parse. */
+     *
+     * The published description says of this byte's bit 7 only
+     * "Encrypted (algorithm used is unknown)", and nothing anywhere
+     * describes bits 4 and 5.
+     *
+     * BITS 7 AND 4 ARE MEASURED, since 2026-09-27, against the three
+     * archives DropStuff 5.0.1 wrote: all three read 0x90, and with
+     * bit 4's 14-byte shift the length byte at the computed offset is
+     * 5, the key length, where the unshifted offset reads 13 — so the
+     * shift is load-bearing and not merely consistent
+     * (tools/derive_sit5crypt.py). This comment said the reading
+     * "has no specimen either" until that day, and three had been in
+     * the cache since 2026-08-26 (BLOCKERS.md, *Withdrawn claims*).
+     *
+     * BIT 5 IS MEASURED TOO, since 2026-10-06: it marks an archive
+     * COMMENT, and the block it adds is four bytes — the comment's
+     * length and its style scrap's length. The archive that says so is
+     * the `Sample Archive.sit` StuffIt Deluxe 5.5 ships in its own
+     * Tutorial Files, where 100 + 14 + 4 + 204 + 22 is exactly the
+     * offset its header gives for the first entry, and no other block
+     * width closes that sum (FORMATS.md, *StuffIt 5's archive flag
+     * byte, and what bit 5 is*).
+     *
+     * AND THE HASH COMES AFTER BOTH BLOCKS — the `hp += 4` below —
+     * measured the same day on two archives StuffIt Deluxe 7.0.3 wrote
+     * by Apple event, the only two here that set bits 5 and 7 together:
+     * the length byte reads 5 at 100+14+4 and 0 at 100+14, so the shift
+     * is load-bearing (tools/derive_sit5crypt.py).
+     *
+     * Source: reference/XADMaster/XADStuffIt5Parser.m, parse;
+     * docs/formats/stuffit5-container.md. */
     if (hdr[83] & SIT5_ARCH_CRYPTED) {
         uint32_t hp = 100;
         uint8_t hb[8];
@@ -186,6 +222,7 @@ int unc_sit5_extract(UncCtx *c)
     if (!iobuf) { unc_free(c->al, dirs); return UNC_ERR_MEM; }
     obuf = iobuf + iocap;
     cr = (UncCrypt *)(void *)(obuf + ocap);
+    unc_crypt_init(cr);
 
     pos = firstoffs;
     for (i = 0; i < numentries; i++) {
@@ -230,8 +267,12 @@ int unc_sit5_extract(UncCtx *c)
             dirfiles = unc_get_u16be(hdr);
             hpos += 2;
             if (datalen == SIT5_DATALEN_NONE) {
-                /* Mystery entry after each directory: skip, does not
-                 * count (XADStuffIt5Parser.m). */
+                /* The marker entry after each directory: skip, and
+                 * do not count it. Published — "if the Data fork
+                 * uncompressed length field is set to 0xffffffff for
+                 * a folder entry, this entry is a special marker
+                 * whose meaning is unknown. It should be ignored when
+                 * reading" (sit5_specs_theunarchiver.md). */
                 numentries++;
                 pos = headerend;
                 continue;
@@ -280,6 +321,13 @@ int unc_sit5_extract(UncCtx *c)
         }
         flags2 = unc_get_u16be(hdr);
         unc_entry_clear(&e);
+        /* This format's names are UTF-8 where StuffIt classic's are
+         * MacRoman. Source: reference/deark/modules/stuffit.c, which
+         * sets `d->input_encoding` to UTF-8 for `file_fmt==2` and to
+         * MacRoman otherwise; `lsar -nr` unforced reads them the same
+         * way. The engine converts nothing — it says which it is and
+         * the host decides (macextract.h, name_utf8). */
+        e.name_utf8    = 1;
         e.type         = unc_get_u32be(hdr + 4);
         e.creator      = unc_get_u32be(hdr + 8);
         e.finder_flags = unc_get_u16be(hdr + 12);
@@ -375,7 +423,7 @@ int unc_sit5_extract(UncCtx *c)
                         if (hasrsrckey) sit5_fork_key(cr, archivekey, rsrckey);
                         est = unc_sit_decode_fork(c, UNC_FORK_RSRC, datastart,
                                                   rsrccomp, rsrclen, rsrcmethod,
-                                                  rsrccrc, iobuf, iocap,
+                                                  0, rsrccrc, iobuf, iocap,
                                                   obuf, ocap,
                                                   hasrsrckey ? cr : NULL);
                     }
@@ -384,7 +432,7 @@ int unc_sit5_extract(UncCtx *c)
                         est = unc_sit_decode_fork(c, UNC_FORK_DATA,
                                                   datastart + rsrccomp,
                                                   datacomp, datalen, datamethod,
-                                                  datacrc, iobuf, iocap,
+                                                  0, datacrc, iobuf, iocap,
                                                   obuf, ocap,
                                                   hasdatakey ? cr : NULL);
                     }

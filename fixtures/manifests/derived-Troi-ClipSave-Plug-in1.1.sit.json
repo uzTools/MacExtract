@@ -173,7 +173,7 @@
  ],
  "fixture": "derived-Troi-ClipSave-Plug-in1.1.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "0e5568730e7136996d5bf77acbe5f3247db00ad53d294a5c3bc342173a6df138",
  "size": 221991
 }

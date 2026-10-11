@@ -325,7 +325,7 @@
  ],
  "fixture": "derived-PuzzleGetter_0.8.sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "2d39e630fed1bc3152c47f92a334025db20aa2c2dea226d8c16848e3adb9bca1",
  "size": 92510
 }

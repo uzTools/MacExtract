@@ -3,6 +3,19 @@
 Fixtures are not committed (copyrighted historical software).
 Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 
+**Not every fixture is an archive.** `ddtf-ddpro411ad1.dd.ad` and
+`ddtf-ddpro411ad1.sea.ad` are AppleDouble sidecars holding the RESOURCE
+FORK of the two DiskDoubler files that were cut into `.1`/`.2` parts;
+`run_segments.py` (DDSEG_SPECIMENS) is what reads them, as the thing a
+joined set is graded against. They have no manifest and are not meant to
+have one — `make_manifests.py`'s NOT_ARCHIVES says so where a rebuild
+would otherwise make two, and DECISIONS.md 2026-09-22 (*the sidecar is
+not an archive*) says why. They are the only two that need saying:
+ten other fixtures have no manifest — the six `.1`/`.2` parts,
+`derived-SD__Utilities.x` and the three `synth-os9-*` — and none of them needs a declaration, because `unar`
+cannot produce a manifest for any of them anyway. Each is graded by the
+suite that owns it (TESTING.md).
+
 | name | sha256 | size | url |
 |---|---|---|---|
 | 12x24fkey.bin | c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836 | 562 | http://www.nic.funet.fi/pub/mac/fkey/12x24fkey.bin |
@@ -15,6 +28,8 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | 800saywhat-301-jp.hqx | 00dfbc3f9405caa2fc46e4a515568c5ec5c5adc9ea0cbecb42f33ffa7bcde9b9 | 123700 | http://www.nic.funet.fi/index/info-mac/info/800saywhat-301-jp.hqx |
 | ACInfo_Comm.sit.bin | e6b0745c08f0a10c07634f70533ea6829b32fe61e694dd6eade2ea5e8e75ef8d | 159360 | http://www.nic.funet.fi/pub/mac/comm/ACInfo_Comm.sit.bin |
 | IIfxserialswitch.bin | 6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b | 3180 | http://www.nic.funet.fi/pub/mac/cdev/IIfxserialswitch.bin |
+| MrTs_Paint_Folder.zip | 3dccac5974d2f4289f50c1cc10773a0283ea852705f79506be94874212ed0cc8 | 1019 | https://discmaster.textfiles.com/file/43251/EVN.zip/EVN/Plugins/Mr.Ts_Paint.sea/Mr.T%27s%20Paint.sea/Mr.T%27s%20Paint%20Folder.zip |
+| NPWritersKit.zip | 24a95a079c91037a806da458658d49cd58cbf8fa2e69c8403ac5bdeb51b9e6af | 55970 | https://discmaster.textfiles.com/file/11927/ftp.mactech.com.zip/ftp.mactech.com/ftp.mactech.com/netprofessional/writerskit/NPWritersKit.zip |
 | PCCTS.tar.gz | 7174d13afe287ff7c6f28affa70b78c3679fa5171fe5a63b051b2cf91efb184a | 63807 | http://www.nic.funet.fi/pub/unix/tools/PCCTS.tar.gz |
 | Player-Pro410.sit.bin | 27137daa4cb5984276961f3f636e7c6471945c9431b38a4d5ae41312e649a704 | 196608 | http://www.nic.funet.fi/pub/mac/sound/Player-Pro410.sit.bin |
 | SyntheticReferences2.0.sea.bin | 7f93b5f8eb2d7fd84bdd70bc9e677914be07e5ad73b423f5e0a92bada1e4ecb1 | 2960000 | http://www.nic.funet.fi/pub/mac/science/SyntheticReferences2.0.sea.bin |
@@ -117,6 +132,9 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | data-converter-13.hqx | 05f4cc6470c209c8a739712af791281aea57efaca1a6273bb3a4de724d5ebd9f | 53005 | http://www.nic.funet.fi/index/info-mac/cmp/data-converter-13.hqx |
 | data-parser-41-hc.hqx | c1dd2a17794ebaf62d5a4fbd0798589351c2b92b2b1efa3bfcd341f6502f5649 | 47918 | http://www.nic.funet.fi/index/info-mac/cmp/data-parser-41-hc.hqx |
 | dd-expand-40.hqx | 5485390004eff5861ca665de401f12dd8dfa3e9b8ff591a983c8a108be761f7c | 181395 | http://www.nic.funet.fi/index/info-mac/cmp/dd-expand-40.hqx |
+| dd37-IACUtilities-A4.lib.dd | f193396675b0fd32445f6bd4c1d45a625ddb1a3a0de4d98b0ce899e807d6ff7c | 1356 | derived:hfsvol:diskdoubler/dd37.hfv:r:Programmers Only:Sample IAC ƒ:IAC Utilities (A4).Lib |
+| dd8-hermes-docs.dd | c5add1291d15a65af4d25ff1bea926f27a492dd8814d3c63fc6a0ad8bdf4348f | 84141 | https://discmaster.textfiles.com/file/1963/BBS%20in%20a%20Box%20-%20Macintosh%20-%20Volume%20IV%20%28January%201992%29%20%28BBS%20in%20a%20Box%29.iso/Files/Tele/H/Hermes%20Docs%20v1.7/Hermes%20Docs%20v1.7 |
+| dd8-list-of-all-files.dd | bb56686b0d9dced3ef94873dfb8aa57db989dba203a10524a951193bac28c205 | 88100 | https://discmaster.textfiles.com/file/46524/no%20label%20-%206cs2t49o.img/Macademic%E2%84%A2%204.0/Macademic%20Indexes/%2AList%20Of%20All%20Files |
 | ddarchive.sit | bf34e9cdeca5162d07eaa937ea22a6e7f61e612e5d1058f87c107d657fef2087 | 35822 | http://www.nic.funet.fi/pub/mac/arcers/ddarchive.sit |
 | ddexpand301.bin | 1857fcd6ac8895d1f010244e7bca64d69c4c40208cd259c0d1a4595148c43831 | 82560 | http://www.nic.funet.fi/pub/mac/arcers/ddexpand301.bin |
 | ddtf-dd377ad-Test_Image | b926788a71822fbb121ceb181580523bbd22adeb1e7d4aea6aaa6c8aaeec8ca1 | 1408 | https://raw.githubusercontent.com/ssokolow/diskdoubler-test-files/c40c7dab3538231d64f59aceb953e64daf7984ef/build/sources.dd377.ad/Test%20Image |
@@ -466,6 +484,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-Power_Macintosh_PRs.sit | 621749aae60b2865b5323b0df70a238d6de190f7c303d44ff302bc0134e0afc7 | 15787 | derived:unar-nr:ppc-press-releases-94-03-14.hqx |
 | derived-Privacy___Encryption.sit | c85238508568d778e3d438c5ea29d83422cd2bbfed9398a57741ec105d4a3299 | 47624 | derived:unar-nr:privacy-encryption.hqx |
 | derived-PuzzleGetter_0.8.sit | 2d39e630fed1bc3152c47f92a334025db20aa2c2dea226d8c16848e3adb9bca1 | 92510 | derived:unar-nr:puzzle-getter-08.hqx |
+| derived-QK_2.1_icon_family.sit | 290667e0c585da9ed4cc33ff8854a7f8d1b35ff90d7b2cf419782063fd64b1df | 6798 | derived:unar-nr:sitopt-wild-QK21icons.sea.bin |
 | derived-QuickConverter.sit | 18b89e64e3699a2aa7d6ecbba72da73d82fc4556703bad1cfcd397ccc091ad98 | 32745 | derived:unar-nr:quick-converter-15.hqx |
 | derived-QuickView.sit | f34a9fc4a718d479f7d98d6bbabbe13d936be0463b7b8731e0e07cb9b33fa5e2 | 13235 | derived:unar-nr:quickview.sit |
 | derived-Quill1.20.sit | a06a91129e0043c4e69e68b395d058d4eb7df97272d912c46b4a22ef18ff5300 | 16207 | derived:unar-nr:quill120.sit |
@@ -502,6 +521,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | derived-Sniffles_2.0.sit.1 | c79aa78ce2540e97f36aa77b10bbfc428d468ad632b2402026b021fa9a46a463 | 84049 | derived:unar-nr:sniffles-20.hqx |
 | derived-Snow.sit | 90d1b6a5a27144a3f0271c5ae8f1d6444392193b70d3272a6fd30a7d9a765a90 | 7087 | derived:unar-nr:snow.sit |
 | derived-SocStylev1.fp3.sit | 9414558705877ed0f145dc27f74386331e82d88b019a42b71061efbf5d941388 | 78792 | derived:unar-nr:social-styles-assessment.hqx |
+| derived-SoundEdit_icon_family.sit | a679294d93c20e86b808fd7d887399417b02922353cfe0f6d630aa0551cd8e13 | 4469 | derived:unar-nr:sitopt-wild-SoundEditicons.sea.bin |
 | derived-SoundExtractor.cpt | a0fc88e78f091cea6f5b0c5623e6b27efdedc7ee18d1c98878c0785166f0ebd8 | 13799 | derived:unar-nr:soundextractor10.cpt |
 | derived-SoundTracker.cpt | ca6294096bfadf23031e0714f1e6636c83cc58d1455278cc6c69a0d2e56aefb1 | 97171 | derived:unar-nr:macsoundtracker.cpt |
 | derived-Sound_Scrap_DA.sea | d9f8adb71b2243f1ace698bbfffb00811780a034d9fda086dd1fa5b886e05e6f | 15198 | derived:unar-nr:soundscrapda.sea |
@@ -788,6 +808,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | picmeup.sit | e145a4d77af73ab7b257ec59a9045bf0baaa1a443884d147ac527161c98c51e6 | 44800 | http://www.nic.funet.fi/pub/mac/appl/picmeup.sit |
 | pict-to-pict.hqx | dbc47ca731fd0193fd90b8c31060298d035c71e01e1cbae03c2afb510807d89b | 10511 | http://www.nic.funet.fi/index/info-mac/cmp/pict-to-pict.hqx |
 | pkgtranslator.sit | db42f459776c3bc5de3f9228da482cf7c9377788705fcbcc75a9cc17cc29348a | 40064 | http://www.nic.funet.fi/pub/mac/arcers/pkgtranslator.sit |
+| pkz101.exe | f36d9551c1917a7990db2b4582191656d748179ea2bd15499294388e9c4fa458 | 131517 | https://discmaster.textfiles.com/file/32597/Disc.iso/ansi/x3t9/area02/pkz101.exe |
 | playground.sea | ae9fef554876285d951ca19f358eb23580af74b64ae074572dbb34abf1574969 | 85760 | http://www.nic.funet.fi/pub/mac/games/playground.sea |
 | pmailmac.sea | 2698c114dc096fa90e80f831f9a48154fc2aeff789044adefd4d537eb45f35c0 | 138135 | http://www.nic.funet.fi/pub/mac/comm/pmailmac.sea |
 | pointingdevice.sit | f14ebedf90b40b3a0154393cacc9835bf778307225fde12c6cb5377459115a87 | 7680 | http://www.nic.funet.fi/pub/mac/cdev/pointingdevice.sit |
@@ -819,6 +840,7 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | resmaster.sit | eecfa4a0bec1aaa9914629a8bebfe4175dda500abf8d3399e74d7b841f233c38 | 24148 | http://www.nic.funet.fi/pub/mac/da/resmaster.sit |
 | retrospect-2i-patch.hqx | 821fb33a816f112765f44a5924c760831ed0facd457a8d8ed41589102dd6a445 | 39354 | http://www.nic.funet.fi/index/info-mac/disk/retrospect-2i-patch.hqx |
 | reversescreen.bin | 3ff8c666221f707d4262a4542f9082a535ba693ae28bfdc30c6c5fbc0a495f44 | 1944 | http://www.nic.funet.fi/pub/mac/cdev/reversescreen.bin |
+| rexnebular_1_0_0.zip | 413ed07cba844da89d87d8e12ef18307aae11980a7d1c5a56d9c72e0af50cfb0 | 31167318 | https://old.mac.gdn/games/rexnebular_1_0_0.zip |
 | ripem-mac-08b2.hqx | 993fb34741a166ac9bfb14d8bbf4af98f28c80c44c86d862128772768111cb36 | 186185 | http://www.nic.funet.fi/index/info-mac/cmp/ripem-mac-08b2.hqx |
 | robert_s-text-cleanup-10.hqx | 2b2960ec1d9bc617d5526bdad2911ac4cbc08a77cb8b676d602ed74fef576eae | 73817 | http://www.nic.funet.fi/index/info-mac/text/robert's-text-cleanup-10.hqx |
 | rp-converter-11-hc.hqx | 7e31e419eb54d90a0437734b81a9a65a406857ea8d19d3893cd5cf05c9df34c1 | 10834 | http://www.nic.funet.fi/index/info-mac/cmp/rp-converter-11-hc.hqx |
@@ -832,6 +854,13 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | seasons-greetings.hqx | 1ec6b2cf4b081f46ef81905ac21ecdba71c062a9e2845a767eae8b69f3edcbf3 | 106441 | http://www.nic.funet.fi/index/info-mac/font/seasons-greetings.hqx |
 | set-aux-binary.hqx | 9f5d95802581f5d2b1aca0e90b2d96bcb51b8c08691fa759a47e2a7b18e43362 | 6517 | http://www.nic.funet.fi/index/info-mac/cmp/set-aux-binary.hqx |
 | setvolume.sit | 6bf604d98e42a794b7204ccf364aadba81bf903998407c4efcab43e8c2c39dd9 | 3669 | http://www.nic.funet.fi/pub/mac/da/setvolume.sit |
+| reduce-wild-2048acad.zip | a2f82f777fd9f6396f6af8d0850f9de4cc6c21e81d065f6ef065854296097551 | 1893 | https://discmaster.textfiles.com/file/22874/PC%20Action%20Issue%2070%20%28Settembre%201998%29.iso/pca/drivers/number9/revolu~2/2048acad.zip |
+| reduce-wild-america.zip | 3950d03046184339c99c306f36bfbfc88b5f80b272023cd6bcd08bf1321402cf | 25962 | https://discmaster.textfiles.com/file/13207/Graphics%20Pro%20Shop.iso/tools_8/america.zip |
+| reduce-wild-checksum.zip | 171aa3bf61be870b785fa1fb91c639f1c1f1c25b31a5dc88a077469782117ef4 | 17920 | https://discmaster.textfiles.com/file/14335/MEGA_ROM_1.cdr/hacktext/checksum.zip |
+| reduce-wild-fractlan.zip | c1da3d7da214e987d263156b08458f87b72eb3bd5f99609b8cca27cf07499415 | 1805 | https://discmaster.textfiles.com/file/1971/RBBS_vol1_no2.iso/008p/fractlan.zip |
+| shrink-wild-BBA.zip | 5db866de2f251c8c62761fcd2a279444ddac20e4a06c1f6a48d71dbbcb6cd6c4 | 1273 | https://discmaster.textfiles.com/file/11844/support.isiresearchsoft.com.zip/support.isiresearchsoft.com/pub/mac/user_contributions/styles/biology/BBA1.uu/BBA.zip |
+| shrink-wild-dream.zip | 72c8d96599ab16675bb9ca122092fc4119f57adc76e0f48939ccf22e99437542 | 90101 | https://discmaster.textfiles.com/file/10601/Phoenix_CD.cdr/18a/dream.zip |
+| shrink-wild-titanic.zip | 36da01a0137fa5bf71b38c4becfb0ee45db1ad980c460dccfbeda9395ddd6ad9 | 172972 | https://discmaster.textfiles.com/file/10564/Giga%20Games.iso/msdos/adventur/titanic.zip |
 | sierpinski-triangeln-1-swe.hqx | 37d7e6398f4c842c366be18788c4a590672d94bd57781b6c383c53afaf449d58 | 10240 | http://www.nic.funet.fi/index/info-mac/sci/sierpinski-triangeln-1-swe.hqx |
 | sigmaedit.sit | dca7b8eef3b3a3f30109c964517dc86d89d8776b5f3fe86260fce9dad2b5b745 | 50780 | http://www.nic.funet.fi/pub/mac/da/sigmaedit.sit |
 | signaleditor121.sit | b039ddd55577c453a02d5b2b34d43cb2fffd41690b92255d73758f3d7d5fe397 | 113652 | http://www.nic.funet.fi/pub/mac/sound/signaleditor121.sit |
@@ -839,8 +868,13 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | simulator020_01e.sit | deb6bfd64c5d30c89a907be9b6266f425b1ff84fba1ab7d9da05d99f6792dff5 | 13568 | http://www.nic.funet.fi/pub/mac/cdev/simulator020_01e.sit |
 | sit-cpt-110.hqx | 5eef9f2bdf2937b9fbbed1a325947e05255cca2306df557919762a6edfcd8bb1 | 25386 | http://www.nic.funet.fi/index/info-mac/cmp/sit-cpt-110.hqx |
 | sit-expand-101.hqx | 3ae880040749aad89478a26b6cec7ae76f7b7bad614fbb1e7f08b36da4b3c8f4 | 32074 | http://www.nic.funet.fi/index/info-mac/cmp/sit-expand-101.hqx |
+| sitcrypt-wild-F7Menus.sit.bin | 8c7b967380756013b63bcd5c32e19018ec0596c89abf4069e07d5bc0d0956717 | 5120 | https://discmaster.textfiles.com/file/14749/info-mac-1992.iso/Utilities%20(util)/Finder%207%20Menus!/Commercial%20Finder%207%20Menus!.sit |
 | sitdoc.sit | 14e15401c17957f1eac742134cf9c794e6a3d4a73daded2c9311e2ce62dc37ee | 34026 | http://www.nic.funet.fi/pub/mac/arcers/sitdoc.sit |
 | sitexpand101.sea | 26ddd9a5390446bebcb2f11196a38e7a1ecd7222a7e6e0d19bbef960f263575c | 23296 | http://www.nic.funet.fi/pub/mac/arcers/sitexpand101.sea |
+| sitopt-wild-DNAnalyze.sit | f45524d9ea18ff5fdb69ae38bf10476053ef0807c6dbd3870d0ec39df66566c9 | 186218 | https://discmaster.textfiles.com/file/21174/Eagles_Nest_Mac_Collection_Disc_5.TOAST/Science%20%26%20Religion/DNAnalyze/DNAnalyze |
+| sitopt-wild-Phantom.sit | 213d0d735d661c8cf23a57cb5f594ded966074c5a1148bdcc234428eb6c1fef7 | 233900 | https://discmaster.textfiles.com/file/21174/Eagles_Nest_Mac_Collection_Disc_5.TOAST/Sound%20%26%20MODs/Phantom/Phantom |
+| sitopt-wild-QK21icons.sea.bin | 30a84ccecabc638c32bf7cdfd0327fcba93e27e5d21cb0ef925c6ba1cfd595de | 29696 | https://discmaster.textfiles.com/file/13263/Giga-ROM%202.0.img.Bin/System%207%20SW%20%26%20PD/UTIL/System%207%20ICONS/QK%202.1%20icon%20family.sit |
+| sitopt-wild-SoundEditicons.sea.bin | f482df2a1385c4b631b678b8ff7bf95ab3bdb4072f96bb8438e6a6eced4f1b34 | 27264 | https://discmaster.textfiles.com/file/13263/Giga-ROM%202.0.img.Bin/System%207%20SW%20%26%20PD/UTIL/System%207%20ICONS/SoundEdit%20icon%20family.sit |
 | sitrep2.sit | f2e95a57f590d1d5f6a2fc65bda8c295b2277c6418743c08ac2cbb3fb97c4ad0 | 48256 | http://www.nic.funet.fi/pub/mac/arcers/sitrep2.sit |
 | sittocpt110.cpt | acc8214b4bcdf5b21818e300b4a15f1ec3978267d016d586ef0d153f2c3d19bc | 18560 | http://www.nic.funet.fi/pub/mac/arcers/sittocpt110.cpt |
 | sliptelnet.bin | cc616579c55a39b39ea379a3fcb064e47f64de737f69d42c0f87ef2104c3ce8b | 284638 | http://www.nic.funet.fi/pub/mac/comm/sliptelnet.bin |
@@ -884,6 +918,8 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | synth-exo-tar-Z.tar.Z | ef13c8a0dc3d1ffb378c33d7acce5272547ea3d5875b4b8289a10a96eb5cb9f9 | 5476 | synthetic:tools/synth_exo.py --kind tar-Z |
 | synth-exo-tar.tar | 5dc48193652cd26ca6920a3154e9a83c6f62ea13ca00df8bccda905e722b4abe | 20480 | synthetic:tools/synth_exo.py --kind tar |
 | synth-exo-zip-deflate.zip | 7764dab45911f96a647ad0f250393f4648fefb21eb311013028d39845398e219 | 3713 | synthetic:tools/synth_exo.py --kind zip-deflate |
+| synth-exo-zip-implode.zip | cf7fae26f4fc84a10ddda54e82000d1223a9987b792175d31e0134395d0adcf0 | 34799 | synthetic:tools/synth_implode.py |
+| synth-exo-zip-reduce.zip | c6bbaed32158f95e211903c4f08428652aaab749627dfa45fed4158e622624c6 | 6516 | synthetic:tools/synth_reduce.py |
 | synth-exo-zip-store.zip | 41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04 | 8404 | synthetic:tools/synth_exo.py --kind zip-store |
 | synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |
 | synth-os9-btoa.btoa | 084b016918298e544fe23e403799cf44979bf87f7d1d2dd88cba5496eb5cc24c | 731 | synthetic:tools/synth_os9.py --kind btoa |
@@ -894,6 +930,13 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | synth-packit-3.pit | 3102287e41ab3fa714b8a2a0a62e00319773b95f7333f169dbb7769c1e5c35f5 | 3381 | synthetic:tools/synth_pit.py --seed 3 |
 | synth-sit-fixhuf.sit | 230ccec1522c0ea3deb1140cacb76c2dae3716cf9d6e5b9e26219ad4000867e8 | 2601 | synthetic:tools/synth_sit6.py |
 | synth-sit-rle90.sit | cdd044dcabffafe20f7dc54c9b9b28b0890330c528543e09cfe37e4e0b9d1b47 | 1287 | synthetic:tools/synth_sit1.py |
+| synth-sit14.sit | 6451046c6a7cdf74e3be55ae604b592f2b86719b0ff8d32cb8c32989d88650e4 | 2149 | synthetic:tools/synth_sit14.py |
+| synth-sqp-clear.pkg | 50c2e7427b9770e9105cf005fde82f238852ea0e2b8856a176ef22acd238f4da | 28667 | synthetic:tools/synth_sqp.py --case clear |
+| synth-sqp-folder.pkg | 8685c68b16d7ff428b833aff1e59e3e50ceea3cf09bb68e0f16772d2dfdc7dc2 | 2343 | synthetic:tools/synth_sqp.py --case folder |
+| synth-sqp-forks.pkg | 637d2aa7f5bdd3a712d3c0ef1d88aa16e998310f855d4050e3581078fa6eb8d2 | 2397 | synthetic:tools/synth_sqp.py --case forks |
+| synth-sqp-plain.pkg | b1bf268f7f9ba09ae84eef4d4e3dd7a0768e8d294d91b52bc5d346efb3ffb773 | 3437 | synthetic:tools/synth_sqp.py --case plain |
+| synth-sqp-stored.pkg | e972b130de618995f48e010de6e6004b01c84afdd044aed890ebb1325c9254f3 | 4681 | synthetic:tools/synth_sqp.py --case stored |
+| synth-sqp-v0.pkg | 96c34bb8e7973ac830d6a71d3fdec426be186e07313bd6969d939b219ab8789a | 1331 | synthetic:tools/synth_sqp.py --case v0 |
 | synth-uu-mac.uu | e2ac98889d442f3a3053a8c4d7be695c11f3b55accf79659f0c97d1172d9d705 | 3020 | synthetic:tools/synth_uu.py |
 | syserrtable30.sit | d120343c034a72ab548824b63edef21572181505c8a6e3952a20397dfc4838fb | 24496 | http://www.nic.funet.fi/pub/mac/da/syserrtable30.sit |
 | systemidle.sit | 99dcc13a87539f6fb212d43221a1eca6a96ab89804706ddb8bee5bc7b6eddfca | 18923 | http://www.nic.funet.fi/pub/mac/da/systemidle.sit |
@@ -932,6 +975,8 @@ Each line records how to re-fetch one. Use `tools/harvest.py --restore`.
 | uu-parser-172.hqx | 93e86b61f6f66601080781db15abd2ccd85908fc7a5ced3c2eec85473b04ca1c | 109415 | http://www.nic.funet.fi/index/info-mac/cmp/uu-parser-172.hqx |
 | uu-tool-24.hqx | 9698d90d530b34629ffb220bf81ae0f9a828eb7356a63ac05f6b37720a4d464d | 88121 | http://www.nic.funet.fi/index/info-mac/cmp/uu-tool-24.hqx |
 | uu-undo-10.hqx | fbb3bdbd27380a9a8e4a45ce5b809a6915a31d8a5f549528fbef9095d7e884db | 59617 | http://www.nic.funet.fi/index/info-mac/cmp/uu-undo-10.hqx |
+| uu-wild-dictcol.uu | 7bc8683fee6944a65fc8eecea9adbb156dc96a8b449138767e0e0415384ff8ec | 8116 | https://discmaster.textfiles.com/file/17149/TeX%20CD-ROM%20July%201995%20%28Disc%201%29%28Walnut%20Creek%29%281995%29.ISO/tex-k/tex-eplain-archive/text0036.txt |
+| uu-wild-terrainman.uu | 9ef54ae763798605da98e16606d57c7d3748b45e1ebc5fcc57c6762d7ece5382 | 254084 | https://discmaster.textfiles.com/file/13892/L%27Effet%20Pommier%20-%20Volume%2001.iso/PAO%20%E2%81%84%20Graphisme%20%E2%81%84%20Multim%C3%A9dia/3D/Terrainman%202.0.1/Terrainman%20uuencode |
 | weather-22.hqx | f48e424ad18857611fcd85d4b2e4b53bf90c1927e7c1821a5def5b877085d379 | 239956 | http://www.nic.funet.fi/index/info-mac/game/weather-22.hqx |
 | wheresit14.sit | eae10e91450de017c85fefa97172d1d832a28eb795d197d06dbd6904b8b094dc | 66907 | http://www.nic.funet.fi/pub/mac/arcers/wheresit14.sit |
 | windchooser.sit | d7c06c519403a7741c21830116888e76717f240a8128541f95ca15e5e64ece41 | 23769 | http://www.nic.funet.fi/pub/mac/cdev/windchooser.sit |

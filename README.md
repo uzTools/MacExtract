@@ -10,7 +10,7 @@ Linux command-line version too, built from the same engine.
 
 ## What it looks like
 
-One 180K application on an 800K floppy, an open carton lettered EXTRACT, drawn
+One 230K application on an 800K floppy, an open carton lettered EXTRACT, drawn
 for 1-bit, 16-colour and 256-colour screens:
 
 ![The floppy image open on a System 6 desktop, holding one item: MacExtract](docs/screens/0-icon.png)
@@ -51,7 +51,7 @@ one, because parts are recognised by what is inside them:
 ## Download
 
 **[Latest release](https://github.com/jarreboum/MacExtract/releases/latest)** —
-currently **v0.32.0**. Or take it straight from the tree:
+currently **v0.40.0**. Or take it straight from the tree:
 
 | | |
 |---|---|
@@ -65,30 +65,34 @@ to unpack a `.sit` until it already has something that can.
 ## What it opens
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
-(`.hqx`), MacBinary, PackIt (`.pit`), DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
+(`.hqx`), MacBinary, PackIt (`.pit`), AppleLink packages (`.pkg`),
+DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files
 (`.uu`), btoa (`.ascii`), base64 and MIME mail attachments (`.b64`, `.mim`),
-AppleSingle/AppleDouble, zip, gzip, tar and Unix compress (`.Z`). Resource
+Aladdin Private File (`.pf`), AppleSingle/AppleDouble, zip, gzip, tar and
+Unix compress (`.Z`). Resource
 forks, type and creator codes and dates all survive, so an extracted
-application simply runs.
+application simply runs. A zip made by PKZIP 1 in 1989 or 1990 opens too —
+those use a method nothing has written since — and a zip ZipIt made comes
+out under the names the Macintosh files actually had, not the shortened
+MS-DOS ones it may have put in the listing.
 
 Nested files like `.sit.hqx` or `.tar.Z` are unwrapped automatically, by
 looking inside them rather than trusting the name — and a `.hqx` or `.uu`
 holding several files, or one posted in several parts, gives you all of it.
+**Self-extracting archives are opened as archives** — the Macintosh ones,
+including ZipIt's, which are a PowerPC application with a zip hidden behind
+it. You get the files, on a Mac that could never have run the application.
+(A self-extracting `.exe` from the PC side is not recognised unless what is
+behind it is a zip.)
 SpaceSaver files are the odd ones: they look like ordinary documents, because
 SpaceSaver compressed them in place and only the Mac that made one could read
 it. `macextract` carries the table those files need, so a lone floppy is
 enough.
 
-**Compressed DART disk images** get their own answer, because a DART is not
-an archive: it holds a floppy rather than files. MacExtract expands one into
-an *uncompressed* DART, which is the shape a mounting program — MacMount, say
-— can read directly. Hand it a DART that is already uncompressed and it says
-so instead of pretending something went wrong.
-
 **Password-protected archives** are opened too — StuffIt, StuffIt 5, Compact
-Pro, PackIt, zip (the old cipher and WinZip's AES) and ARC. The Mac
+Pro, PackIt, Private File, zip (the old cipher and WinZip's AES) and ARC. The Mac
 application asks when it reaches an entry that needs one; on Linux it is `-p`.
 One catch, and it is the format's rather than ours: an encrypted StuffIt
 archive keeps half its key in the file's resource fork, so a copy that lost
@@ -104,32 +108,67 @@ inside them, so names do not matter; for zip and `.NNN` sets the names are all
 there is, so keep them. Send the output to a different disk from the parts —
 the only thing that works when you are swapping floppies.
 
-**Recognises but does not extract:** StuffIt X, AppleLink packages (`.pkg`),
-and the PC-side and modern archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip,
-lrzip, Cabinet, WIM, Zoo, ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`).
-You get *"MacExtract cannot open RAR files."*, not something that looks like
-a damaged download.
+**Recognises but does not extract:** StuffIt X and the PC-side and modern
+archives — RAR, 7-Zip, xz, bzip2, Zstandard, lzip, lrzip, Cabinet, WIM, Zoo,
+ARJ, cpio, `ar`/`.deb` and Apple Archive (`.aar`). You get *"MacExtract
+cannot open RAR files."*, not something that looks like a damaged download.
 
-## Compared with StuffIt Expander 4.0.2
+## Compared with what Aladdin sold
 
-Expander is what you would otherwise reach for on the machine itself. It is
-free, it was the standard, and on System 7 it is nicer to use — drag-and-drop,
-watch folders, background expansion. Under System 6 both are menu-driven.
+Three yardsticks, one per machine you might be sitting at. **StuffIt Expander
+4.0.2** (1996) is the free one, and the newest StuffIt that still runs on
+System 6; it is counted without its paid add-on, which needed System 7.
+**StuffIt Deluxe 5.5.1** (1999) is the high-water mark for a 68k
+Mac: Aladdin dropped 68k support at 6.0 and said so — *"For users of 68K Macs
+that wish to have StuffIt technology, simply download any 5.5 version"* — and
+5.5 reads more Macintosh formats than any StuffIt before or after it.
+**StuffIt Deluxe 7.0.3 Classic** (2003) is the last one for Mac OS 9, and it
+is PowerPC-only, so no 68k Mac runs it at all.
 
-| | StuffIt Expander 4.0.2 | MacExtract |
-|---|---|---|
-| StuffIt, Compact Pro, BinHex, MacBinary | yes | yes |
-| StuffIt 5 archives | no — needs Expander 5 or later | yes |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu`, SpaceSaver | only with a paid add-on, System 7 only | yes |
-| PackIt (`.pit`) | not listed | yes |
-| DiskDoubler, Now Compress and SuperDisk! | no | yes |
-| A Mac file mailed as a MIME attachment | no translator for it | yes — both forks |
-| Sets split across floppies | StuffIt sets, with the add-on | StuffIt, Compact Pro, DiskDoubler, zip and `.001` sets, and mail split into several messages |
-| Split zip or Compact Pro sets | "cannot expand" — its own Read Me | yes |
-| Encrypted archives | yes, if you know the password | yes, and Compact Pro's too, which nothing else reads |
-| The note somebody typed into a Compact Pro or zip archive | written out beside the files | same — a `Comments` document in the folder |
-| What you install | the application, a StuffIt Engine extension, and the add-on for anything above | one application |
-| Source | free, closed | free, open (LGPL) |
+| | Expander 4.0.2 (free, System 6) | Deluxe 5.5.1 (paid, last for 68k) | Deluxe 7.0.3 Classic (paid, last for Mac OS 9) | MacExtract |
+|---|---|---|---|---|
+| Oldest Mac it runs on | System 6.0.5 | System 7.1.1 (7.5.3 recommended), probably a 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
+| StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
+| StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
+| StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu` | 🔴 | ✅ | ✅ | ✅ |
+| zip's rare Reduce method, which no Mac program wrote | 🔴 | ✅ | 🔴 wrong bytes | ✅ |
+| Type and creator in a zip made by MacZip | 🔴 * | 🔴 * | 🔴 * | ✅ |
+| StuffIt SpaceSaver | 🔴 | ✅ | 🔴 | ✅ |
+| PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
+| AppleLink packages (`.pkg`) | 🔴 | ✅ | 🔴 | ✅ |
+| `.lzh` / `.lha` | 🔴 | ✅ | ✅ | ✅ |
+| DiskDoubler (`.dd`) | 🔴 | ✅ | 🔴 | ✅ |
+| Now Compress and Alysis SuperDisk! | 🔴 | 🔴 | 🔴 | ✅ |
+| RAR, ARJ and bzip2 | 🔴 | ✅ bzip2 only | ✅ | 🔴 |
+| Private File (`.pf`) | 🔴 | ✅ | ✅ | ✅ |
+| Self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
+| A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
+| StuffIt sets split across floppies | 🔴 | ✅ | ✅ | ✅ |
+| Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
+| An archive that arrived as several mail messages | BinHex postings only, not MIME | BinHex postings only, not MIME | 🔴 | ✅ |
+| Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
+| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 one of the ten ** | 🔴 two of the ten | 🔴 none | ✅** |
+| Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
+| The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
+| What you install | an application and an extension | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
+| Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
+
+\* **A zip made by MacZip carries the Finder's type and creator, and
+StuffIt throws them away**, guessing from the filename instead — so a Word
+document can come back belonging to TeachText, and a disk image loses what
+tells DiskCopy it is one. MacExtract reads what the archive stored. That was
+seen by running the older Expander 3.5.2 over a real MacZip archive; the three
+🔴 in the table come from reading those programs' code.
+
+\*\* **Everything StuffIt Deluxe 2.0 wrote with what was in its box** —
+five Optimizers and five ciphers — each checked against an archive 2.0.1
+itself made. Three Optimizers — `Text 1`, `MacPaint 1`
+and `JPEG Lossy` — threw something away before the archive was written, so
+those files come back tidied, with a blank header, or softened, and MacExtract
+says which file and why. All three StuffIts were run on the same archives. Expander 4.0.2
+opens only the `Text 1` one; 5.5.1 decrypts two of the ciphers and, for every
+Optimizer, hands back a damaged file with a warning; 7.0.3 opens none.
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:
@@ -141,17 +180,15 @@ same archives on the same disk, and timed by the same instrument:
 | 250 KB Compact Pro | **2¼ minutes** | 2½ minutes |
 | 300 KB BinHex with a StuffIt archive inside | **4½ minutes** | 7 minutes |
 
-Choosing between them on speed alone gives you nothing to choose by. Times are
-to the nearest few seconds, and both wrote the same files — which is what makes
-them comparable at all. The full capability table and the unrounded figures are in
-[FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2" and
-"Timed on the same Mac Plus" inside it.
+Both wrote the same files. Only Expander 4.0.2 could be timed — the two
+Deluxes will not run on a Mac Plus. Unrounded figures and the full table are in
+[FORMATS.md](FORMATS.md), under "Compared with StuffIt Expander 4.0.2".
 
 ## What you need, and how long you will wait
 
 | | |
 |---|---|
-| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. This is the experimental `rom64k` build, so it also STARTS on a true Macintosh **512K** — the 64K ROM, where `main`'s download bombs — though extracting there still needs HFS. A Macintosh **128K** is out even here, and that is measured rather than assumed: the largest single block it grants is 63,744 B against 142,152 B of `CODE`, so this build bombs on launch there too. See BRANCH_NOTES.md |
+| Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. This is the experimental `rom64k` build, so it also STARTS on a true Macintosh **512K** — the 64K ROM, where `main`'s download bombs — though extracting there still needs HFS. A Macintosh **128K** is out even here, and that is measured rather than assumed: this build bombs on launch there too, because the code and data it must hold at once do not fit in that machine's memory. See BRANCH_NOTES.md |
 | For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
 | Disk | one 800K floppy |
@@ -162,8 +199,9 @@ Small ones are fine — half the StuffIt 5 archives tested fit in 512 KB — but
 big block will not, and there is nothing the application can do about it: the
 size was chosen when the archive was made, on a machine with memory to spare.
 Those entries are skipped with a message and the rest of the archive still
-comes out. Every other format tested fits in 512 KB. With 1 MB the question
-does not arise.
+comes out. A few other large archives need more than 512 KB too — a
+DiskDoubler file packed with its heaviest method, and on System 6 some big
+`.tar.Z` and StuffIt archives. With 1 MB the question does not arise.
 
 On System 3.0 the Open dialog does not close on Command-period — that system's
 Standard File ignores it. Click Cancel instead. System 6 and later are
@@ -175,9 +213,9 @@ above is the only one. On a 1 MB Mac Plus, the slowest machine supported:
 | Archive | Time |
 |---|---|
 | A few KB, any format | seconds |
-| 300 KB StuffIt or BinHex | 2–3 minutes |
-| 200 KB StuffIt 5 | 13 minutes |
-| 640 KB StuffIt 5, worst case measured | 21 minutes |
+| A few hundred KB, most formats | 1–2 minutes |
+| 150 KB StuffIt 5 | 6 minutes |
+| 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 12 minutes |
 
 StuffIt 5 is in a class of its own — its compression was designed for machines
 a decade newer. Everything else is quick, and a faster Mac is proportionally
@@ -185,7 +223,7 @@ faster.
 
 **Memory** only matters under MultiFinder or System 7, where the application
 gets the size set in its Get Info window. It asks for 4 MB, runs in as little
-as 400 KB, and **at about 850 KB every archive in the test sample comes out
+as 400 KB, and **at about 800 KB every archive in the test sample comes out
 whole**. Below that, entries too big to fit are named one by one and the rest
 extract.
 
@@ -202,12 +240,13 @@ build/macextract x secret.sit -p hunter2 # password-protected
 
 ## Is it any good?
 
-It is checked against [The Unarchiver](https://theunarchiver.com/) on 932 real
-archives, byte for byte, both forks. The Macintosh application is checked the
+It is checked against [The Unarchiver](https://theunarchiver.com/) on over 900
+real archives, byte for byte, both forks. The Macintosh application is checked the
 same way *while running on* an emulated Mac Plus, a System 7 machine and a
 Mac OS 9 machine — not only on Linux.
 
-No physical Macintosh has ever run it. Emulation is evidence, not proof.
+One physical Macintosh has run it so far: an LC 475 under System 7.6.1.
+Nothing older has, and emulation is evidence, not proof.
 
 ## Where things are written down
 

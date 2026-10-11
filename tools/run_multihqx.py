@@ -165,8 +165,19 @@ def check_posted(macextract, tmp):
     garbage"), and until 2026-08-15 we did not: the ':' in "From:" ended
     the document and the entry came back truncated. Also pinned here is
     the edge of the rule — a junk line built ONLY of alphabet characters
-    is indistinguishable from data and is still consumed, which BinHex's
-    per-fork CRC then catches as a per-entry error rather than silence.
+    is consumed as data, which BinHex's per-fork CRC then catches as a
+    per-entry error rather than silence — and, since 2026-10-06, the ONE
+    line of that shape that is not junk: the "---" DeHQX's documentation
+    says a cut posting resumes at.
+
+    That edge is a choice, not a limit of the format, and the comment
+    here said "indistinguishable from data" until 2026-10-06. It is
+    distinguishable: hexbin's OTHER half skips a line whose length
+    differs from the first's, and two Macintosh readers implement that
+    test. `src/fmt_binhex.c` declines it on a measurement — no line in
+    any of the 204 `.hqx` fixtures needs it — so the consumption below is
+    asserted as intended rather than as unavoidable (DECISIONS.md
+    2026-10-06, *the rule that no Macintosh program has*).
     """
     os.makedirs(tmp, exist_ok=True)
     problems = []
@@ -193,8 +204,79 @@ def check_posted(macextract, tmp):
         problems.append(f"posted: {len(got)} document(s) with different forks, "
                         f"expected the {len(want)} the single file gives")
 
-    # The edge: alphabet-only junk cannot be told from data, so it is
-    # taken as data and the CRC objects. Silence would be the bug.
+    # CUT AT DeHQX'S SEPARATOR, since 2026-10-06. Peter Lewis's own
+    # decoder documents the part boundary a posting is cut at — "a line
+    # beginning with '--- end of part'", then "a line consisting only of
+    # '---'" to resume — and the resume line is the one shape the
+    # alphabet rule cannot reject, every character of "---" being in the
+    # BinHex alphabet. This reader took it as two bytes of data and the
+    # fork's CRC objected, measured 2026-10-06 (DECISIONS.md 2026-10-06,
+    # *the separator that was in the alphabet*). hexbin reads such a
+    # file; tools/derive_dehqx.py has the sentence and the second
+    # implementation.
+    sep = os.path.join(tmp, "sep.hqx")
+    with open(sep, "wb") as f:
+        f.write(b"\n".join(lines[:half]) + b"\n")
+        f.write(b"--- end of part 1\n\n")
+        f.write(b"From: someone\nSubject: " + PARTS[0].encode() +
+                b" (2/2)\n\n")
+        f.write(b"---\n")
+        f.write(b"\n".join(lines[half:]))
+    rc, got = extract(macextract, sep)
+    if rc != 0:
+        problems.append(f"sep: a posting cut at DeHQX's separator exits {rc}")
+    if got != want:
+        problems.append(f"sep: {len(got)} document(s) with different forks, "
+                        f"expected the {len(want)} the single file gives")
+
+    # THE RESUME LINE IS A PREFIX, and these two are the cases the one
+    # above could not see. DeHQX's prose says "a line consisting only of
+    # '---'", which this reader took literally for part of 2026-10-06:
+    # a posting whose resume line carried anything else —
+    # `--- part 2 ---`, or simply more hyphens — never left the gap and
+    # lost EVERYTHING after the cut. The FIRST of the two had read
+    # correctly before the gap existed — it holds spaces, so the garbage
+    # rule skips it — so the separator fix made its own regression, and
+    # the `sep` case above cannot fail on it because its resume line is
+    # the exact one. HQXer 1.1 is the second implementation and reads
+    # three characters (tools/derive_hqxgarbage.py; DECISIONS.md
+    # 2026-10-06, *the line that had to be the whole line*).
+    for tag, resume in (("decorated", b"--- part 2 ---"),
+                        ("longer", b"-----")):
+        more = os.path.join(tmp, "sep-%s.hqx" % tag)
+        with open(more, "wb") as f:
+            f.write(b"\n".join(lines[:half]) + b"\n")
+            f.write(b"--- end of part 1 of 2 ---\n\n")
+            f.write(b"From: someone\nSubject: " + PARTS[0].encode() +
+                    b" (2/2)\n\n")
+            f.write(resume + b"\n")
+            f.write(b"\n".join(lines[half:]))
+        rc, got = extract(macextract, more)
+        if rc != 0:
+            problems.append("sep-%s: a posting resuming at %r exits %d"
+                            % (tag, resume.decode(), rc))
+        if got != want:
+            problems.append("sep-%s: %d document(s) with different forks, "
+                            "expected the %d the single file gives"
+                            % (tag, len(got), len(want)))
+
+    # And the control, which is what says the rule above is the narrow
+    # one DeHQX documents rather than "a line of hyphens is not data":
+    # "---" with no "--- end of part" before it is still data, and the
+    # CRC still objects.
+    lone = os.path.join(tmp, "lone.hqx")
+    with open(lone, "wb") as f:
+        f.write(b"\n".join(lines[:half]) + b"\n---\n" +
+                b"\n".join(lines[half:]))
+    rc, _ = extract(macextract, lone)
+    if rc == 0:
+        problems.append("lone: a bare \"---\" mid-stream was accepted "
+                        "silently; only DeHQX's separator opens a gap")
+
+    # The edge: alphabet-only junk is taken as data by the one half of
+    # hexbin's rule this engine transcribes, and the CRC objects.
+    # Silence would be the bug; the length half that would skip it is
+    # declined on a corpus measurement (the docstring above).
     edged = os.path.join(tmp, "edged.hqx")
     with open(edged, "wb") as f:
         f.write(b"\n".join(lines[:half]) + b"\nAB:CD\n" + b"\n".join(lines[half:]))

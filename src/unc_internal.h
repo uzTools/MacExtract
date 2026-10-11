@@ -138,6 +138,8 @@ enum {
     UNC_CRYPT_PIT_XOR,    /* PackIt PMa5                               */
     UNC_CRYPT_PIT_DES,    /* PackIt PMa6                               */
     UNC_CRYPT_SIT_DES,    /* StuffIt classic fork cipher               */
+    UNC_CRYPT_SIT_CBC,    /* StuffIt 2.x `DES`: standard DES in CBC     */
+    UNC_CRYPT_SIT_NEWDE,  /* StuffIt 2.x `NewDE`: StuffItDES in CBC     */
     UNC_CRYPT_RC4,        /* StuffIt 5                                 */
     UNC_CRYPT_ZIP,        /* PKWARE's zip stream cipher                */
     UNC_CRYPT_CPT,        /* Compact Pro's 64-bit CRC keystream        */
@@ -181,20 +183,58 @@ typedef struct UncCrypt {
     int      aesrounds;
     uint8_t  ctr[16], ctrbuf[16], ctrpos;
     UncHmac  hmac;
+    /* The one 2 KB table the two DES variants and Compact Pro's CRC-64
+     * read a round or a byte through — built at key setup into a heap
+     * block the caller frees with unc_crypt_free, from 544 B of S boxes
+     * and P. Resident as three const tables it was 6 KB of A5 world on
+     * every extraction, for entries nothing in the corpus has
+     * (DECISIONS.md 2026-09-19). Preserved across crypt_clear; the
+     * ciphers that need none leave it NULL. */
+    uint32_t *tab;
+    int      tabkind;
 } UncCrypt;
+
+/* Before the first key: no cipher, no table. Every host of a UncCrypt
+ * calls this once, because the struct usually sits inside a buffer that
+ * was never zeroed. */
+static inline void unc_crypt_init(UncCrypt *cr)
+{
+    cr->kind = UNC_CRYPT_NONE;
+    cr->tab = NULL;
+    cr->tabkind = 0;
+}
+
+/* Give the table back. Safe on a UncCrypt that never needed one. */
+void unc_crypt_free(UncCrypt *cr, UncAlloc *al);
 
 void unc_crypt_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
 void unc_crypt_packit_xor(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
-void unc_crypt_packit_des(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+/* The three that build a table take the allocator and can fail with
+ * UNC_ERR_MEM — per entry, like any other allocation. */
+int  unc_crypt_packit_des(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                          uint16_t pwlen);
 int  unc_crypt_zip(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
-void unc_crypt_cpt(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen);
+int  unc_crypt_cpt(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                   uint16_t pwlen);
 void unc_crypt_zip_update(UncCrypt *cr, uint8_t plain);
 void unc_crypt_rc4(UncCrypt *cr, const uint8_t *key, uint16_t keylen);
 int  unc_crypt_sit5_key(const uint8_t *pw, uint16_t pwlen,
                         const uint8_t hash[UNC_SIT5_KEYLEN],
                         uint8_t out[UNC_SIT5_KEYLEN]);
-int  unc_crypt_sit(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
-                   const uint8_t entrykey[16], const uint8_t mkey[8]);
+/* Private File: RC4 under the first `keylen` (1..16) bytes of
+ * MD5(password). */
+void unc_crypt_pf(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
+                  uint16_t keylen);
+/* `scheme` picks what the FORK is encrypted with — the key derivation
+ * above it is the same for all three, measured 2026-10-02 on archives
+ * StuffIt Deluxe 2.0.1 and 3.5.1 wrote (FORMATS.md, *The three ways
+ * 2.0.1 encrypts*). */
+#define UNC_SIT_SCHEME_FEEDBACK 0   /* 3.5's built-in: the 8-byte XOR  */
+#define UNC_SIT_SCHEME_DES      1   /* 2.x `DES`: standard DES, CBC    */
+#define UNC_SIT_SCHEME_NEWDE    2   /* 2.x `NewDE`: StuffItDES, CBC    */
+int  unc_crypt_sit(UncCrypt *cr, UncAlloc *al, const uint8_t *pw,
+                   uint16_t pwlen, const uint8_t entrykey[16],
+                   const uint8_t mkey[8], int scheme);
 int  unc_crypt_winzip_aes(UncCrypt *cr, const uint8_t *pw, uint16_t pwlen,
                           const uint8_t *salt, int keybytes,
                           const uint8_t verifier[2]);
@@ -262,6 +302,23 @@ static inline int unc_bufin_next(UncBufIn *b)
     return unc_bufin_next_slow(b);
 }
 
+/* The bytes that are already in the buffer: *p is set to the first of
+ * them and their count returned, which is 0 when the buffer is spent —
+ * the caller's cue to go through unc_bufin_next, refill and ask again.
+ * unc_bufin_drop consumes n of them. Only fmt_binhex.c uses this, to
+ * take a whole 64-character line in one pass rather than pay the bounds
+ * test and the cursor store once per character. */
+static inline uint32_t unc_bufin_span(const UncBufIn *b, const uint8_t **p)
+{
+    *p = b->buf + b->pos;
+    return b->len - b->pos;
+}
+
+static inline void unc_bufin_drop(UncBufIn *b, uint32_t n)
+{
+    b->pos += n;
+}
+
 /* The next byte WITHOUT consuming it, or -1 at EOF (which sets the
  * sticky error, as reading it would have). One byte of lookahead is
  * enough for the only caller: unc_readline, which has to take CRLF as a
@@ -280,9 +337,17 @@ static inline int unc_bufin_peek(UncBufIn *b)
 /* Text line reader (unc_util.c)                                      */
 /*                                                                    */
 /* CR, LF and CRLF all end a line, and a last line need not be        */
-/* terminated at all — the rule reference/macutils/hexbin/readline.c   */
-/* states, and the one a btoa file saved on a Mac needed (FORMATS.md,  */
-/* "btoa"). Unlike the readers inside fmt_uu.c and fmt_btoa.c, this    */
+/* terminated at all — and the one a btoa file saved on a Mac needed  */
+/* (FORMATS.md, "btoa").                                              */
+/* Source: reference/deark/src/deark-dbuf.c (MIT), dbuf_find_line —   */
+/* CR alone, LF alone and CR+LF each end a line, a line with no EOL   */
+/* at end of file is still a line, and nothing at all is not one. The */
+/* same file this header already cites four lines down for the bit    */
+/* reader; it was macutils' readline.c until 2026-10-05, when the     */
+/* 2026-09-27 sweep that had asked deark about one of these four      */
+/* rules was asked about this one too (DECISIONS.md 2026-10-05, *the  */
+/* negative that was about one rule*).                                */
+/* Unlike the readers inside fmt_uu.c and fmt_btoa.c, this            */
 /* one consumes CRLF as ONE terminator instead of letting the LF come  */
 /* back as an empty line: those two formats may ignore a blank line    */
 /* anywhere, and MIME may not — a blank line is where a part's headers */
@@ -298,9 +363,14 @@ int unc_readline(UncBufIn *in, uint8_t *buf, int32_t cap, int32_t *len,
 
 /* ------------------------------------------------------------------ */
 /* MSB-first bit reader over UncBufIn                                 */
-/* (Classic Mac compressors emit bits high-to-low within each byte;   */
-/* source: reference/macutils/macunpack/de_huffman.c getbit_be and    */
-/* reference/XADMaster/CSInputBuffer.h.)                              */
+/* (Classic Mac compressors emit bits high-to-low within each byte.)  */
+/* Source: reference/deark/src/deark-dbuf.c (MIT) — de_bitreader and  */
+/* de_bitbuf_lowlevel, the same design in the same two modes: a right- */
+/* aligned buffer refilled a byte at a time, the next bits taken with  */
+/* >> nbits_in_bitbuf & mask in MSB mode and off the bottom in LSB     */
+/* mode, and de_bitreader_skip_to_byte_boundary where this has         */
+/* unc_bitin_align. It was macutils' de_huffman.c (getbit_be) and     */
+/* XADMaster's CSInputBuffer.h until 2026-09-27.                       */
 /* ------------------------------------------------------------------ */
 
 typedef struct UncBitIn {
@@ -391,11 +461,14 @@ uint32_t unc_bitin_bytepos(const UncBitIn *b);
 
 /* ------------------------------------------------------------------ */
 /* Bit-serialized Huffman (prefix) trees                              */
-/* Used by PackIt and StuffIt method 3: serialized depth-first, one   */
-/* bit per node — 1 = leaf followed by 8 value bits, 0 = internal     */
-/* node (zero branch first, then one branch).                         */
-/* Source: reference/XADMaster/XADStuffItHuffmanHandle.m (parseTree)  */
-/* and reference/macutils/macunpack/de_huffman.c (read_sub_tree).     */
+/* Used by PackIt, StuffIt method 3 and DiskDoubler method 4:         */
+/* serialized depth-first, one bit per node — 1 = leaf followed by 8  */
+/* value bits, 0 = internal node (zero branch first, then one).       */
+/* Source since 2026-09-20: docs/formats/serialized-huffman-tree.md,  */
+/* this project's own description, derived from the three formats'    */
+/* output by experiment (tools/derive_huffman_tree.py). NOTICE has    */
+/* said so since that day; this comment still named parseTree and     */
+/* read_sub_tree until 2026-09-26.                                    */
 /* ------------------------------------------------------------------ */
 
 /* macutils sizes its node pool at 515 "because StuffIt Classic needs
@@ -436,11 +509,14 @@ int unc_huff_decode(const UncHuff *h, UncBitIn *bi);
 /* ------------------------------------------------------------------ */
 /* Canonical (code-length) Huffman codes                              */
 /* Codes assigned in (length, symbol) order, shortest code all-zeros; */
-/* MSB-first. Compact Pro serializes 4-bit lengths and permits        */
-/* incomplete trees ("Compactor allows unused trailing codes").       */
-/* Source: reference/XADMaster/XADPrefixCode.m                        */
-/* (initWithLengths:shortestCodeIsZeros:YES) and                      */
-/* reference/macutils/macunpack/cpt.c (cpt_readHuff) — LGPL, NOTICE.  */
+/* MSB-first. Compact Pro serializes 4-bit lengths, two to a byte     */
+/* behind a count byte (docs/formats/compact-pro.md, correction 1),   */
+/* and writes trailing codes it never uses, so an incomplete set is   */
+/* legal — see unc_huffman.c, which says where that comes from.       */
+/* Source since 2026-09-19: reference/notes/rfc1951.txt section       */
+/* 3.2.2 and reference/notes/puff.c. NOTICE has said so since that    */
+/* day; this comment still named XADPrefixCode.m and cpt_readHuff     */
+/* until 2026-09-26.                                                  */
 /* ------------------------------------------------------------------ */
 
 #define UNC_CANON_MAX_SYMS 384
@@ -502,7 +578,7 @@ typedef struct UncLzw {
     uint8_t  *mem;          /* single allocation, see unc_lzw_init */
     uint16_t *parent;       /* [capsymbols] */
     uint8_t  *chr;          /* [capsymbols] */
-    uint8_t  *chain;        /* [capsymbols] reversed-chain staging */
+    uint8_t  *len;          /* [capsymbols] string length, 255 = "or more" */
     uint32_t  bitbuf;       /* LSB-first bit accumulator */
     int32_t   nbits;
     /* maxsymbols is the DECLARED ceiling (1 << maxbits) and governs
@@ -513,7 +589,12 @@ typedef struct UncLzw {
     int32_t   prevsymbol;
     int32_t   symbolsize;   /* current code width in bits */
     uint32_t  symbolcounter;
-    int32_t   chainlen, chainpos;
+    /* A string longer than the caller's buffer is handed over in
+     * pieces: pendsym/pendn/pende say which one and how far in. */
+    int32_t   pendsym, pendn, pende;
+    int32_t   pendtop;      /* the string ends with topbyte (see unc_lzw.c) */
+    uint8_t   topbyte;
+    uint8_t   lastfirst;    /* first byte of the string last handed over */
     int       blockmode;
 } UncLzw;
 
@@ -531,20 +612,23 @@ int32_t unc_lzw_read(UncLzw *z, uint8_t *out, int32_t want);
 
 /* CRC-16/XMODEM: poly 0x1021, init 0, no reflection, no final xor.
  * Used by MacBinary II and BinHex 4.
- * Source: reference/XADMaster/CRC.m (XADCalculateCRC/XADCRCTable) and
- * reference/macutils/crc/ — LGPL, see NOTICE. */
+ * Source: reference/notes/binhex40_lewis.txt, section "CRCs". The
+ * table is checked against that polynomial by
+ * tools/check_crc_tables.py; see src/unc_util.c. */
 uint16_t unc_crc16_xmodem(uint16_t crc, const uint8_t *buf, int32_t len);
 
 /* CRC-16/ARC: poly 0xA001 (reflected), init 0, no final xor.
  * Used by StuffIt classic (header + fork CRCs).
- * Source: reference/XADMaster/CRC.m (XADCRCTable_a001).
+ * Source: the polynomial itself — deark and lhasa each build this
+ * table from 0xA001, as tools/check_crc_tables.py does here.
  * Check value: 0xBB3D over "123456789". */
 uint16_t unc_crc16_arc(uint16_t crc, const uint8_t *buf, int32_t len);
 
 /* CRC-32 (IEEE, reflected, poly 0x04C11DB7 => table 0xEDB88320,
  * init 0xFFFFFFFF, final xor 0xFFFFFFFF handled by caller).
  * Used by Arsenic, gzip, zip.
- * Source: reference/XADMaster/CRC.m (XADCRCReverseTable usage). */
+ * Source: reference/notes/zip_appnote.txt, which states the
+ * polynomial and the 0xdebb20e3 residue. */
 uint32_t unc_crc32(uint32_t crc, const uint8_t *buf, int32_t len);
 
 /* The initial value that definition calls for. The final xor is the
@@ -592,43 +676,86 @@ static inline int unc_fatal(int err)
 /* Compact Pro do the same job through unc_entry_path_append, which is */
 /* the other half of it and is what unc_path_leaf ends in.             */
 /*                                                                    */
-/* Components are pushed and popped by LENGTH, never by re-scanning    */
-/* for a separator, and there is no recursion anywhere in it.          */
+/* THERE IS NO DEPTH LIMIT, and there is no constant for one. There    */
+/* was: `UNC_PATH_MAXDEPTH`, 24, which three formats "chose             */
+/* independently" — three transcriptions of XADMaster's number — and    */
+/* which two fixed arrays here were sized by. Nothing justified it.     */
+/* Measured 2026-10-07 (`tools/vmac/depthtest/`, FORMATS.md, *What the  */
+/* DESTINATION actually allows*): System 6.0.8 creates 250 levels by    */
+/* dirID and reads all 250 back with noErr, and HFS itself takes 89.    */
+/* The one real limit is the PATH STRING — 255 bytes, which is          */
+/* UNC_NAME_MAX and is also what a classic Str255 full pathname holds.  */
+/* So a push fails only when the string is full, which is the           */
+/* over-long path `truncdepth` already reports and both hosts already   */
+/* shorten. Depth is now bounded only by that: a push writes at least   */
+/* a separator, so `depth` cannot exceed UNC_NAME_MAX + 1.              */
+/*                                                                      */
+/* Components are popped by RE-SCANNING for the separator, which is     */
+/* what removed the arrays. That is unambiguous and not a guess: a '/'  */
+/* inside a component is swapped to ':' on the way in, by this file's   */
+/* own push and leaf, so a '/' in `buf` is always one this walker put   */
+/* there. It was done by stored length until 2026-10-07, and the        */
+/* storing is the whole of what a depth limit ever bought.              */
+/* There is no recursion anywhere in it.                                */
 /* ------------------------------------------------------------------ */
 
-/* All three formats that use this chose 24 independently. */
-#define UNC_PATH_MAXDEPTH 24
+/* The deepest a path can be when every level costs at least its
+ * separator. Derived, not chosen: it is the one limit there is. */
+#define UNC_PATH_DEPTH_MAX (UNC_NAME_MAX + 1)
 
 struct UncCtx;
 
 typedef struct UncPath {
+    /* The path is built in ONE buffer and measured by ONE length. Which
+     * buffer depends on the host: a `UncOptions.long_name` big enough to
+     * beat this one is written into directly (the Linux CLI offers 64
+     * KB), so the walk holds the WHOLE path and `len` is its real
+     * length; otherwise this, and `len` stops at UNC_NAME_MAX.
+     *
+     * It was two of each until 2026-10-07 — `buf`/`len` for the path as
+     * reported and a parallel `full` for the path uncut, each with its
+     * own stack of per-level restore points, which is what
+     * `UNC_PATH_MAXDEPTH` was sized to bound. Keeping the second one in
+     * step across a pop without its array cost more than the limit ever
+     * saved; writing the uncut path where the host can already see it
+     * means there is no second one to keep. */
     uint8_t  buf[UNC_NAME_MAX + 1];
+    uint8_t *w;
+    uint32_t wcap;
     uint16_t len;
-    uint16_t stack[UNC_PATH_MAXDEPTH];
     int      depth;
-    /* Depth at which a FOLDER name was first cut to fit, 0 for none.
-     * A leaf under it carries a path that is not the archive's even
-     * when the leaf itself fitted. */
+    /* Depth at which a component was first cut to fit, 0 for none. A
+     * leaf under it carries a path that is not the archive's even when
+     * the leaf itself fitted. */
     int      truncdepth;
-    /* The same path UNCUT: its length, saturating at 65,535, and — when
-     * the host offered UncOptions.long_name — its bytes, written there
-     * as the walk descends. `full` is both the length and the write
-     * offset, so a pop restores the buffer as well as the count. The
-     * context is held for that buffer alone and may be NULL. */
+    /* Components the buffer had no room for at all, not yet come back
+     * up. Counted rather than flagged because four of the five walks pop
+     * by a COUNT — a marker record, or a level counter — so a push that
+     * wrote nothing and a pop that still happened left the walk
+     * SHALLOWER than it went down and misfiled every entry after it into
+     * a real folder it was not in (BLOCKERS.md, *what ignoring a refused
+     * push cost*). They nest, so one counter is enough. */
+    int      lost;
     struct UncCtx *c;
-    uint16_t full;
-    uint16_t fullstack[UNC_PATH_MAXDEPTH];
 } UncPath;
 
 void unc_path_init(UncPath *p, struct UncCtx *c);
 
-/* Descend into `name`. UNC_ERR_CORRUPT at UNC_PATH_MAXDEPTH with
- * NOTHING changed, so a caller that would rather carry on than fail
- * may ignore the result — which is what two of the three formats do,
- * landing the entries under the parent instead of refusing the
- * archive. */
+/* The depth the ARCHIVE asked for, which is what a walk comparing its
+ * position against a level field in a record must use: `depth` alone
+ * stops where the string fills and would then never come back up. */
+#define unc_path_askdepth(p) ((p)->depth + (p)->lost)
+
+/* Descend into `name`. UNC_OK, or UNC_ERR_TRUNCATED when the path string
+ * had no room left for even a separator — the path is then left alone
+ * and the omission is COUNTED, so ignoring the result is safe: the pop
+ * this descent will be matched by undoes it rather than a level that was
+ * really pushed. The entry is reported as truncated either way, which is
+ * what it is. Nothing else can fail. */
 int  unc_path_push(UncPath *p, const uint8_t *name, uint32_t nlen);
 
+/* Come back up one level — or undo one omitted push, which is the same
+ * level as far as the archive is concerned. */
 void unc_path_pop(UncPath *p);
 
 /* The full path of a leaf, without disturbing the stack. Where the path
@@ -755,7 +882,15 @@ int unc_copy_fork(UncCtx *c, UncFork fork, uint32_t size,
 /* say whether it was a decision or a slip (DECISIONS.md 2026-08-27,   */
 /* the fork writer and the filter).                                   */
 /*                                                                    */
-/* Source: reference/XADMaster/XADRLE90Handle.m.                       */
+/* Source: reference/notes/rle90_theunarchiver.md — the format's own   */
+/* published description, which states all four rules this implements: */
+/* `0x90 N` for N nonzero is N-1 repeats of the last byte, `0x90 0x00` */
+/* is a literal 0x90, anything else is a literal, and `0x90 0x01`      */
+/* "seems to either be a no-op or illegal" — which is the `strict`     */
+/* flag above, named as an open question by the description and        */
+/* settled here by measuring five implementations. Re-cited from       */
+/* XADRLE90Handle.m on 2026-09-21: the page was in reference/notes/    */
+/* the whole time (OPEN_ITEMS.md, *What is still XADMaster's*).        */
 /* ------------------------------------------------------------------ */
 
 #define UNC_RLE90_ESC  0x90
@@ -856,7 +991,11 @@ enum {
 #define UNC_IOBUF 4096u
 
 /* UNC_HOT — compile this ONE function for speed, whatever the rest of the
- * translation unit is built at.
+ * translation unit is built at. Carried by StuffIt's two hot method
+ * decoders, the LZW and Huffman primitives, unc_crc16_arc, and since
+ * 2026-09-19 Compact Pro's unc_cpt_lzh_fork, cpt_rle_push and the two
+ * functions its stages were fused into (-14.8 % of that format's engine
+ * time for +1,028 B when the marks went on, tick probe).
  *
  * The Macintosh application builds at -Os because the application is
  * resident and the floor target is a 1 MB machine. That is right for the
@@ -880,6 +1019,16 @@ enum {
 #define UNC_HOT
 #endif
 
+/* UNC_NOINLINE — keep this function out of its caller. Used where a cold
+ * branch's body would otherwise make its CALLER too big to inline into a
+ * hot loop, which measured worse than the branch itself ever cost
+ * (fmt_cpt.c, cpt_rle_fill). */
+#if defined(__GNUC__)
+#define UNC_NOINLINE __attribute__((noinline))
+#else
+#define UNC_NOINLINE
+#endif
+
 typedef struct UncForkOut {
     UncCtx  *c;
     UncFork  fork;       /* destination, unless `split` is set        */
@@ -900,6 +1049,25 @@ typedef struct UncForkOut {
      * it: MacLHA compresses a MacBinary payload and ArcMac splits at
      * one offset. Only meaningful while `split` is set. */
     uint32_t dstart, dend, rstart, rend;
+    /* What a StuffIt 2.0 Optimizer did to the fork before it was
+     * compressed, undone here at flush time and BEFORE the checksum —
+     * because the entry's CRC is over the ORIGINAL bytes wherever the
+     * module is exactly reversible (FORMATS.md, *What an Optimizer did
+     * to the fork*). Both are off for every other format and cost one
+     * test per flush.
+     *
+     * `delta`: the fork is a byte-wise difference; undo it with a
+     * running sum carried across flushes in `dacc`. That is the whole
+     * of what `Sound 1` and `Photoshop 1` do, and their two 'DCMP'
+     * resources are byte-identical apart from the name and the id.
+     *
+     * `skip`: drop this many bytes from the FRONT of the stream,
+     * accumulating them big-endian into `skipval` so the format can
+     * check them — `MacPaint 1` puts its remnant's own length there,
+     * and four bytes shifted into a long is both the smallest code and
+     * the value the caller wants. */
+    uint8_t  delta, dacc, skip;
+    uint32_t skipval;
 } UncForkOut;
 
 /* `write` and `ck` as above; `buf`/`cap` are the caller's staging.
@@ -930,11 +1098,44 @@ static inline int unc_fork_put(UncForkOut *o, uint8_t b)
     return UNC_OK;
 }
 
+/* A run of decoded bytes: staged in pieces the buffer can hold, and
+ * flushed as each fills. The shape the run-callback decoders below
+ * hand their output over in. */
+int unc_fork_write(UncForkOut *o, const uint8_t *p, uint32_t n);
+
+/* How the LZ decoders below hand their output back: a RUN at a time,
+ * straight out of the decoder's own window, rather than one byte at a
+ * time through a pointer. A per-byte callback was 6 % of an LZH or
+ * -lh1- run on Linux (callgrind, 2026-09-18) and an indirect call is
+ * dearer still on a 68000; the window is already the staging, so a run
+ * costs no memory. Returns UNC_OK or a per-entry error, which stops
+ * the decoder. */
+typedef int (*UncPutRun)(void *ctx, const uint8_t *p, uint32_t n);
+
 /* ------------------------------------------------------------------ */
 /* Compact Pro's two decode stages, shared with DiskDoubler method 8,   */
 /* which is Compact Pro compression inside a DiskDoubler container      */
-/* (Source: XADDiskDoublerParser.m case 8). The only difference is the  */
-/* Huffman block size: 0x1fff0 there, 0xfff0 here.                      */
+/* THAT METHOD 8 IS COMPACT PRO'S STAGES IS MEASURED, since            */
+/* 2026-09-27: all 7 method-8 forks in reach decode byte for byte      */
+/* against the oracle's sha256 with a reader written from Compact      */
+/* Pro's three published wiki pages alone (tools/derive_dd8.py).       */
+/* AND SO IS THE BLOCK SIZE, since 2026-10-06, by the archives          */
+/* themselves: a wrong size yields the right NUMBER of bytes and the    */
+/* wrong ones, and a method-8 fork's header states a CRC-16/ARC over    */
+/* the decoded result. Over the 9 forks in reach, 0xfff0 is the only    */
+/* size of eleven swept whose output satisfies that stored CRC — no     */
+/* oracle and no reference implementation in the loop, only the file    */
+/* (tools/derive_dd8.py; DECISIONS.md 2026-10-06, *the other half of    */
+/* that citation*). It took two wild forks, 210,944 and 242,237 B,      */
+/* to reach a flush at all: until they were found no stream here        */
+/* crossed even 0x400 cost units and every size above that read every   */
+/* fork identically.                                                    */
+/* The only difference from Compact Pro is the                          */
+/* Huffman block size: 0x1fff0 for Compact Pro (fmt_cpt.c, CPT_BLOCK,   */
+/* and the published description agrees) and 0xfff0 for DiskDoubler     */
+/* (fmt_dd.c, at the call). This comment had the two the WRONG WAY      */
+/* ROUND until 2026-09-20, when a fetched specification disagreed with  */
+/* it and the code turned out to be right.                              */
 /* ------------------------------------------------------------------ */
 
 typedef struct CptRle {
@@ -970,6 +1171,11 @@ UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
 UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_packit_extract(UncCtx *c);
+
+UncFormat unc_sqp_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_sqp_extract(UncCtx *c);
+UncFormat unc_pf_probe(const uint8_t *head, int32_t len, UncIO *io);
+int unc_pf_extract(UncCtx *c);
 UncFormat unc_cpt_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_cpt_extract(UncCtx *c);
 UncFormat unc_cptseg_probe(const uint8_t *head, int32_t len, UncIO *io);
@@ -1025,29 +1231,60 @@ int unc_zipseg_describe(UncIO *io, UncSegmentDesc *desc);
 typedef int (*UncZipReadAt)(void *ctx, uint32_t off, void *buf, int32_t len);
 int unc_zip_scan_eocd(void *ctx, UncZipReadAt rd, uint32_t end, uint32_t *at);
 
+/* Does this archive hold an encrypted entry? Answered from its own directory
+ * before anything is decoded, and only for the formats that keep a per-entry
+ * flag somewhere a reader can walk: Compact Pro and zip. src/unc_encinfo.c.
+ *
+ * UNKNOWN is the answer for every other format and for a directory that could
+ * not be read, and a caller must treat it as YES. StuffIt and StuffIt 5 flag
+ * encryption per entry with no directory to consult, PackIt in each block's
+ * magic, and ARC not at all. */
+#define UNC_ENC_NO       0
+#define UNC_ENC_YES      1
+#define UNC_ENC_UNKNOWN (-1)
+int unc_archive_encrypted(UncFormat fmt, UncIO *io);
+
 /* One StuffIt fork: seek to `at`, decode `complen` -> `outlen` bytes
  * with the given method, verify the CRC-16/ARC (`wantcrc`; method 15
  * verifies its own internal CRC-32 instead). Shared by the classic
- * and SIT5 containers. Returns a per-entry status. */
+ * and SIT5 containers. Returns a per-entry status.
+ *
+ * `optdec` says what a StuffIt 2.0 Optimizer left behind and how to put
+ * it back — one of fmt_sit.c's SIT_OPTDEC_* values, and 0 for every
+ * caller that has no such thing. It can change what is STORED as well
+ * as what comes out: `MacPaint 1` declares the original length and
+ * stores a shorter remnant. */
 int unc_sit_decode_fork(UncCtx *c, UncFork fork, uint32_t at,
                         uint32_t complen, uint32_t outlen, int method,
-                        uint16_t wantcrc, uint8_t *iobuf, uint32_t iocap,
+                        int optdec, uint16_t wantcrc,
+                        uint8_t *iobuf, uint32_t iocap,
                         uint8_t *obuf, uint32_t ocap, UncCrypt *cr);
+
+/* The payload a StuffIt 2.0 `JPEG Lossy` Optimizer stores: C-Cube's
+ * JPEG inside a TIFF behind an 80-byte module header (sit_ccube.c).
+ * `stored` is the entry's STORED fork, whole — that Optimizer's output
+ * is already compressed and StuffIt keeps it at method 0, which is the
+ * only shape this handles. Writes `outlen` bytes of planar RGB to
+ * `fork` and returns a per-entry status. */
+int unc_ccube_decode(UncCtx *c, UncFork fork, const uint8_t *stored,
+                     uint32_t storedlen, uint32_t outlen,
+                     uint8_t *obuf, uint32_t ocap);
 
 /* LHarc's -lh1- coder (unc_lzah.c): a 4 KB-window LZSS whose literals
  * and lengths come from an adaptive Huffman tree of 314 leaves. Shared
  * by StuffIt classic's method 5 and LZH's -lh1-, which are the same
  * scheme — XADMaster instantiates one handle for both. `bi` is an
  * MSB-first reader the caller has already positioned; `put` receives
- * every decoded byte and returns UNC_OK or a per-entry error. */
+ * the decoded bytes in runs (UncPutRun) and returns UNC_OK or a
+ * per-entry error. */
 /* LHarc's -lh2-: both codes adaptive, and the position tree grows with
  * the output. src/unc_lzdyn.c. */
 int unc_lzdyn_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx);
+                     UncPutRun put, void *pctx);
 
 /* LHarc's -lh3-: a static code rebuilt per block. src/unc_lzdyn.c. */
 int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
-                     int (*put)(void *ctx, uint8_t b), void *pctx);
+                     UncPutRun put, void *pctx);
 
 /* Adaptive-Huffman LZSS, in three dialects that share a tree of 314
  * leaves and differ only in what the codes above 0xff mean and in what
@@ -1056,6 +1293,11 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
  *   UNC_LZAH_LH1      LHarc's -lh1- and StuffIt method 5: 0x100 is a
  *                     match of 3, and the window carries XADMaster's
  *                     preload (value runs, ramps, zeros, spaces).
+ *                     Source: reference/XADMaster/
+ *                     XADLZHDynamicHandle.m, resetLZSSHandle, which
+ *                     is where the preload is written — the same citation
+ *                     src/unc_lzah.c carries, marked here too on
+ *                     2026-10-06.
  *   UNC_LZAH_TRIMMED  ARC 7.x's "Trimmed": 0x100 is a STOP code, 0x101
  *                     is a match of 3 (so 3..59, one shorter than
  *                     -lh1-), and the window starts as zeros.
@@ -1063,28 +1305,51 @@ int unc_lzst0_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen,
  *                     lzhuf_Decode_init's is_arc_trimmed branch, and
  *                     modules/arc.c's decompressor_trimmed, which
  *                     chains RLE90 after it.
- *   UNC_LZAH_DART     DART's "best": -lh1-'s code exactly, over a
- *                     window of ZEROS. Apple took Yoshizaki/Okumura's
- *                     LZHUF and changed two things — no leading length
- *                     word, and 0x00 where LZHUF fills 0x20 — and the
- *                     first of those is the caller's business, not this
- *                     function's. Source:
- *                     reference/ciderpress2/DART.cs (UnpackLZH passes
- *                     initVal 0x00) and DART-notes.md, *Compression*.
  *
- * The window fill is uniform in all three, so LZHUF's ring-buffer start
- * of N-F does not appear here: a match reaching back before the first
- * byte reads the fill byte wherever the cursor started. */
+ * The window fill is uniform in both, so LZHUF's ring-buffer start of
+ * N-F does not appear here: a match reaching back before the first byte
+ * reads the fill byte wherever the cursor started.
+ *
+ * A third mode, UNC_LZAH_DART, was Apple's LZHUF over a window of
+ * zeros; it left with DART on 2026-09-25 (DECISIONS.md, *the disk
+ * images that found another home*). */
 #define UNC_LZAH_LH1      0
 #define UNC_LZAH_TRIMMED  1
-#define UNC_LZAH_DART     2
 
 int unc_lzah_decode(UncAlloc *al, UncBitIn *bi, uint32_t outlen, int mode,
-                    int (*put)(void *ctx, uint8_t b), void *pctx);
+                    UncPutRun put, void *pctx);
 
-/* Arsenic (method 15) core, in sit_arsenic.c. */
+/* Zip method 1, Shrink: LZW whose table is partially cleared rather than
+ * reset (unc_lzw.c). Decodes `usize` bytes from `in` — whose `limit`, if
+ * set, sizes the table — staging them in `obuf`, which must hold at
+ * least 8,192 B: one string can be that long. Adds them to `*crc` and
+ * hands them to `emit`. */
+int unc_shrink_decode(UncAlloc *al, UncBufIn *in, uint32_t usize,
+                      uint32_t *crc, uint8_t *obuf, uint32_t ocap,
+                      UncPutRun emit, void *ectx);
+
+/* Zip methods 2 to 5, Reduce with compression factor 1 to 4
+ * (unc_reduce.c). Decodes `usize` bytes from `in`, using the first
+ * 4,096 B of `obuf` as the window, adds them to `*crc` and hands them
+ * to `emit`. */
+int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
+                      uint32_t usize, uint32_t *crc, uint8_t *obuf,
+                      uint32_t ocap, UncPutRun emit, void *ectx);
+
+/* Arsenic (method 15) core, in sit_arsenic.c. Writes into the fork
+ * writer directly, and has it keep the CRC-32 the stream ends with:
+ * `f` comes back set to UNC_CK_CRC32, flushed, and checked. It used to
+ * take a per-byte callback and CRC each byte through unc_crc32, and the
+ * two calls were 10 % of a fast-path run (callgrind, 2026-09-18). */
 int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
-                       int (*put)(void *ctx, uint8_t b), void *pctx);
+                       UncForkOut *f);
+
+/* Method 14 (sit14.c): LZSS over a window of up to 256 KB, both
+ * alphabets Huffman-coded per block. Writes into the fork writer, which
+ * keeps the container's CRC-16 — unlike Arsenic, this method carries no
+ * check of its own. */
+int unc_sit14_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
+                     UncForkOut *f);
 
 /* Raw-deflate decode via vendored zlib (unc_inflate.c). Decodes one
  * complete deflate stream from `in`, leaving the reader positioned on
@@ -1110,7 +1375,6 @@ int unc_dd_extract(UncCtx *c);
 int unc_now_extract(UncCtx *c);
 int unc_superdisk_extract(UncCtx *c);
 int unc_spacesaver_extract(UncCtx *c);
-int unc_dart_extract(UncCtx *c);
 
 /* uuencode, including UUTool's two-fork shape (fmt_uu.c). The probe
  * needs no io: a uu file identifies itself in its first lines. */
@@ -1211,8 +1475,6 @@ UncFormat unc_sitx_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_nowcompress_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_superdisk_probe(const uint8_t *head, int32_t len, UncIO *io);
 UncFormat unc_spacesaver_probe(const uint8_t *head, int32_t len, UncIO *io);
-UncFormat unc_dart_probe(const uint8_t *head, int32_t len, UncIO *io);
-UncFormat unc_applelink_probe(const uint8_t *head, int32_t len, UncIO *io);
 uint32_t unc_superdisk_single_body(const uint8_t *head, int32_t len);
 UncFormat unc_diskdoubler_probe(const uint8_t *head, int32_t len, UncIO *io);
 

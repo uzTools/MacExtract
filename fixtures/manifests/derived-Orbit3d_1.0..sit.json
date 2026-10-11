@@ -625,7 +625,7 @@
  ],
  "fixture": "derived-Orbit3d_1.0..sit",
  "format": "StuffIt 5",
- "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "oracle": "unar -nr -D -f -q -k hidden -e utf-8 (v1.10.8)",
  "sha256": "48f0baad32d3dc6eb3578353b8a2f4d6a05be6f8ea0a3aff9fb064240b6cdebc",
  "size": 177396
 }

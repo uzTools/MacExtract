@@ -1,23 +1,35 @@
 /*
  * fmt_now.c — Now Compress archives.
  *
- *   Source: reference/XADMaster/XADNowCompressParser.m  (entry table)
- *   Source: reference/XADMaster/XADNowCompressHandle.m  (block table,
- *           and the four ways a block can be compressed)
- * — LGPL, see NOTICE.
+ *   Source: docs/formats/now-compress.md — this project's own
+ *   description of the format, measured off Now Compress 5.0.1 driven
+ *   under emulation (tools/vmac/nowcompress.py) and re-read by
+ *   tools/derive_now.py, which decodes every block of both corpus
+ *   archives from that note alone: the entry table and its per-record
+ *   fields, the block table, all four block shapes, the three
+ *   checksums and the header fields that bound a block's stream.
+ *
+ *   The coders below were REWRITTEN from that note on 2026-09-21, the
+ *   M12 transcription of XADNowCompressParser.m and
+ *   XADNowCompressHandle.m having stood until then. **Nothing in this
+ *   file rests on the reference any more**: the last two things that
+ *   did — the offset-delta search and the code-length escape past 15 —
+ *   were measured against the format's own decoder that day, by
+ *   changing the field and handing the file back to Now Compress
+ *   (tools/mutate_now.py, tools/vmac/nowcompress.py).
  *
  * The archive is a flat entry table, nested by a per-directory entry
- * count, followed by one compressed stream per FILE. The reference
- * treats the whole archive as ONE solid stream and cuts entries out of
- * it by (offset, length); it does not have to. Each file's stream holds
- * exactly that file's resource fork followed by its data fork, in that
- * order, so this reader decodes file by file and never needs the solid
- * abstraction — which is also what lets it run in fixed memory.
+ * count, followed by one compressed stream per FILE, and **a compressed
+ * file is one of those with a single entry** — there is no second
+ * layout to read. The reference treats the whole archive as ONE solid
+ * stream and cuts entries out of it by (offset, length); it does not
+ * have to. Each file's stream holds exactly that file's resource fork
+ * followed by its data fork, in that order, so this reader decodes file
+ * by file and never needs the solid abstraction — which is also what
+ * lets it run in fixed memory.
  *
  * A stream is a table of blocks, each up to 32 KB of output, decoded
- * against a 32 KB sliding history. The block table's offsets are
- * sometimes wrong by a constant, which the reference finds by searching
- * for the header's own checksum; that search is transcribed here.
+ * against a 32 KB sliding history.
  *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
@@ -27,7 +39,18 @@
 #define NOW_OUTBLOCK  0x10000u    /* history + one block's output       */
 #define NOW_INBLOCK   0x8000u     /* staging for a block's input        */
 #define NOW_ENTRY     110u        /* bytes per entry in the table       */
-#define NOW_MAXBLOCKS 0x2000u     /* the reference's own search bound   */
+#define NOW_MAXBLOCKS 0x2000u     /* a table walk's sanity bound: 8,192
+                                   * records is 64 KB of block table  */
+#define NOW_MAXSYMS   0x122u      /* the largest alphabet: shape 3's main */
+/* Block slots after the history, tried first and halved on refusal. Four
+ * is where the tick probe put the knee on a 7 MHz Mac Plus: the window
+ * slide was 19 % of the largest Now Compress run on Linux, and with four
+ * slots derived-Expand_Now_1.0.1.sea's engine time fell 945 -> 793 ticks,
+ * -16.1 %, for +32 B of code and 96 KB more of this one per-archive
+ * allocation when the budget has it (DECISIONS.md 2026-09-19). UNC_HOT on
+ * the three hot functions was measured on the same run and bought 0.3 %
+ * for 1,152 B, so they are not marked. */
+#define NOW_SLOTS     4u
 
 /* ------------------------------------------------------------------ */
 /* Bit input over a memory block, via the shared readers               */
@@ -61,74 +84,79 @@ static uint32_t now_bit_offset(const NowBits *b)
 }
 
 /* ------------------------------------------------------------------ */
-/* Huffman                                                            */
+/* A Huffman-coded region                                             */
 /* ------------------------------------------------------------------ */
 
-/* numvalues/2 bytes of two 4-bit lengths each, then a count of
- * "extra length" entries, then that many symbol indices whose length
- * gains 16. Source: AllocAndReadCode. */
-static int now_read_code(UncCanon *c, const uint8_t *src, uint32_t len,
-                         int32_t numvalues, uint32_t *used)
+/* Three things in this format are one thing: a Huffman-only block, the
+ * stream under a shape-2 block, and the header a shape-3 block writes
+ * its two code tables in. Each is a REGION laid out the same way
+ * (docs/formats/now-compress.md, *Shape 2*, *Huffman alone*, *The
+ * header*):
+ *
+ *   +0        the end flush: `(16 - it) mod 16` bits follow the last
+ *             symbol, which is how much of the encoder's 16-bit
+ *             register was still free when it stopped
+ *   +1        the code, as `nsyms` four-bit lengths, high nibble first
+ *   then      a count of "extra length" entries and that many symbol
+ *             indices, each gaining 16 — the escape past the 15 four
+ *             bits can hold
+ *   then      a pad to an EVEN offset from the region's own start
+ *   then      the symbols
+ *
+ * so one function reads all three and the caller does what it likes
+ * with the symbols. **The escape is measured**, late and the hard way:
+ * Now Compress will not write a code deeper than 15, so a block it did
+ * write was re-coded here to use one and handed back to its own
+ * Decompress, which returned every byte (docs/formats/now-compress.md,
+ * *A code length past 15*). */
+static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
+                           uint8_t *dst, uint32_t dstcap, int32_t nsyms,
+                           UncCanon *code, int *err)
 {
-    uint8_t lengths[0x122];
-    int32_t i, n;
-    uint32_t at = 0;
+    uint8_t lengths[NOW_MAXSYMS];
+    NowBits b;
+    uint32_t at = 1, numbits;
+    int32_t i, n, out = 0;
+    int flush, e;
 
-    if (numvalues > (int32_t)sizeof lengths) return UNC_ERR_CORRUPT;
-    for (i = 0; i < numvalues / 2; i++) {
-        if (at >= len) return UNC_ERR_TRUNCATED;
+    *err = UNC_OK;
+    if (nsyms > (int32_t)NOW_MAXSYMS) { *err = UNC_ERR_CORRUPT; return -1; }
+    if (srclen < 1) { *err = UNC_ERR_TRUNCATED; return -1; }
+    flush = src[0];
+
+    for (i = 0; i < nsyms / 2; i++) {
+        if (at >= srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
         lengths[2 * i]     = (uint8_t)(src[at] >> 4);
         lengths[2 * i + 1] = (uint8_t)(src[at] & 0x0F);
         at++;
     }
-    if (numvalues & 1) lengths[numvalues - 1] = 0;
-    if (at >= len) return UNC_ERR_TRUNCATED;
-    n = src[at++];
-    for (i = 0; i < n; i++) {
-        if (at >= len) return UNC_ERR_TRUNCATED;
+    if (nsyms & 1) lengths[nsyms - 1] = 0;
+    if (at >= srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
+    for (n = src[at++]; n > 0; n--) {
+        if (at >= srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
         lengths[src[at]] = (uint8_t)(lengths[src[at]] + 16u);
         at++;
     }
-    *used = at;
-    return unc_canon_build(c, lengths, numvalues);
-}
-
-/* The code tables a block needs, on the heap rather than on the frame.
- * An UncCanon is ~1.3 KB and now_newlzss holds two while calling
- * now_huffman, which held a third: 4,960 B in one chain, under
- * unc_now_extract's own 1.2 KB, for 5,632 B against CLAUDE.md's 4 KB
- * call-depth rule (measured, m68k -Os -fstack-usage). They ride in the
- * same allocation as the block buffers. */
-struct NowCodes { UncCanon one, main, off; };
-
-/* Decode one Huffman-coded region. Returns the output length, or a
- * negative error. Source: UnpackHuffman. */
-static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
-                           uint8_t *dst, uint32_t dstcap, int32_t numvalues,
-                           UncCanon *code, int *err)
-{
-    NowBits b;
-    uint32_t used = 0, at, numbits;
-    int32_t out = 0;
-    int endbits, e;
-
-    *err = UNC_OK;
-    if (srclen < 1) { *err = UNC_ERR_TRUNCATED; return -1; }
-    endbits = src[0];
-
-    e = now_read_code(code, src + 1, srclen - 1, numvalues, &used);
-    if (e != UNC_OK) { *err = e; return -1; }
-
-    at = 1 + used;
-    if (at & 1) at++;               /* WordAlign, from the buffer start */
+    if (at & 1) at++;               /* even, from the region's start */
     if (at > srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
 
     numbits = (srclen - at) * 8u;
-    if (endbits) {
-        if (numbits < (uint32_t)(16 - endbits)) { *err = UNC_ERR_CORRUPT; return -1; }
-        numbits -= (uint32_t)(16 - endbits);
+    if (flush) {
+        if (numbits < (uint32_t)(16 - flush)) { *err = UNC_ERR_CORRUPT; return -1; }
+        numbits -= (uint32_t)(16 - flush);
+    }
+    if ((e = unc_canon_build(code, lengths, nsyms)) != UNC_OK) {
+        *err = e; return -1;
     }
 
+    /* The region says where it ends; nothing in it says how many
+     * symbols that is. **Everything this loop touches is a local**, and
+     * that is not a style choice: the same code with the opening above
+     * split into its own function — which reads better — cost 21 of 790
+     * engine ticks on derived-Expand_Now_1.0.1.sea at 7 MHz, while x86
+     * instruction counts said it was FASTER. It runs 32,768 times for a
+     * full block (DECISIONS.md 2026-09-21, asking the program that
+     * wrote it). */
     now_bits_start(&b, src + at, srclen - at);
     while (now_bit_offset(&b) < numbits) {
         int sym;
@@ -141,13 +169,30 @@ static int32_t now_huffman(const uint8_t *src, uint32_t srclen,
     return out;
 }
 
+/* The code tables a block needs, on the heap rather than on the frame.
+ * An UncCanon is ~1.3 KB and a shape-3 block wants three of them at
+ * once: 4,960 B in one chain, under unc_now_extract's own 1.2 KB, for
+ * 5,632 B against CLAUDE.md's 4 KB call-depth rule (measured, m68k -Os
+ * -fstack-usage). They ride in the same allocation as the block
+ * buffers, and since 2026-09-21 so does the staging below — the file's
+ * deepest chain is 1,648 B. */
+struct NowCodes {
+    UncCanon one, main, off;
+    /* where a shape-3 header's 290 + 56 code lengths land on their way
+     * into the two builds above: 346 bytes that were a frame in the
+     * deepest chain in this file until they moved here */
+    uint8_t  tables[0x122 + 0x38];
+};
+
 /* ------------------------------------------------------------------ */
 /* The two LZSS variants                                              */
 /* ------------------------------------------------------------------ */
 
 /* Flag byte, MSB first: 1 = literal, 0 = a match whose offset is 13
  * bits split across two bytes and whose length is 3 bits, or a whole
- * byte when those 3 are zero. Source: UnpackLZSS. */
+ * byte when those 3 are zero. Source: docs/formats/now-compress.md,
+ * *Shape 1* — where that rule is now measured rather than borrowed,
+ * against shape 2's 1,340 match tokens whose offsets pass 255. */
 static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
                         uint8_t *dst, uint32_t dstcap, int *err)
 {
@@ -193,7 +238,12 @@ static int32_t now_lzss(const uint8_t *src, uint32_t srclen,
     return out;
 }
 
-/* Source: UnpackNewLZSS — the tables are the format's, transcribed. */
+/* Source: docs/formats/now-compress.md, *Shape 3* — the same 88
+ * numbers, derived from matches planted at a chosen length and
+ * distance and compared with these arrays afterwards, disagreeing on
+ * none of them (DECISIONS.md 2026-09-21, *the pair that never
+ * repeats*). The values are the format's own, re-derived that way and
+ * matched entry for entry; docs/formats/now-compress.md records them. */
 static const uint8_t now_len_extra[0x22] = {
     0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
     1,1,2,2,2,2,2,3, 3,3,4,4,4,4,5,5, 5,5
@@ -222,56 +272,81 @@ static const uint16_t now_off_base[0x38] = {
 };
 
 /* `base` is where matches may reach back to (the history), `dst` where
- * this block's output starts. Source: UnpackNewLZSS. */
+ * this block's output starts. Source: docs/formats/now-compress.md,
+ * *Shape 3* — its tokens, both alphabets, and the window that spans
+ * members. */
+/* A shape-3 block's two code tables, out of the Huffman-coded region
+ * that starts at byte 4: 290 code lengths for the main alphabet, then
+ * 56 for the distance classes, each of those stored as its code length
+ * PLUS TWO. Twenty symbols code them, because that plus-two runs the
+ * values to 19. Source: docs/formats/now-compress.md, *The header*. */
+static int now_tables(const uint8_t *src, uint32_t headersize,
+                      struct NowCodes *cd)
+{
+    uint8_t *t = cd->tables;
+    int32_t i, n;
+    int e;
+
+    n = now_huffman(src, headersize, t, (uint32_t)sizeof cd->tables, 20,
+                    &cd->one, &e);
+    if (n < 0) return e;
+    /* 290 + 56 is the whole region: the two tables are all it carries */
+    if (n != (int32_t)sizeof cd->tables) return UNC_ERR_CORRUPT;
+
+    if ((e = unc_canon_build(&cd->main, t, 0x122)) != UNC_OK) return e;
+    for (i = 0; i < 0x38; i++)
+        t[i] = t[i + 0x122] ? (uint8_t)(t[i + 0x122] - 2) : 0;
+    return unc_canon_build(&cd->off, t, 0x38);
+}
+
 static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
                            uint8_t *base, uint8_t *dst, uint32_t dstcap,
                            struct NowCodes *cd, int *err)
 {
-    uint8_t header[0x15a];
-    uint8_t lengths[0x122];
     NowBits b;
     uint32_t at, headersize, numbits;
-    int32_t out = 0, i, n;
-    int endbits, e;
+    int32_t out = 0;
+    int sym, e;
 
     *err = UNC_OK;
+    /* The header, which is a size and three flush counts. Bytes 0..1
+     * are 0x2F59 plus the length of the coded region that follows;
+     * **byte 2 is read by nothing** — not here, not in the format's own
+     * decoder (docs/formats/now-compress.md, *The header*); byte 3 is
+     * this block's own end flush, and from byte 4 comes the region the
+     * two code tables ride in. */
     if (srclen < 4) { *err = UNC_ERR_TRUNCATED; return -1; }
     headersize = (uint32_t)((unc_get_u16be(src) - 0x2F59u) & 0xFFFFu);
-    endbits = src[3];
     at = 4;
     if (headersize > srclen - at) { *err = UNC_ERR_TRUNCATED; return -1; }
-
-    n = now_huffman(src + at, headersize, header, (uint32_t)sizeof header,
-                    20, &cd->one, &e);
-    if (n < 0) { *err = e; return -1; }
-    if (n != (int32_t)sizeof header) { *err = UNC_ERR_CORRUPT; return -1; }
+    if ((e = now_tables(src + at, headersize, cd)) != UNC_OK) {
+        *err = e; return -1;
+    }
 
     at += headersize;
-    if (at & 1) at++;                       /* WordAlign */
+    if (at & 1) at++;                       /* the stream starts even */
     if (at > srclen) { *err = UNC_ERR_TRUNCATED; return -1; }
 
-    for (i = 0; i < 0x122; i++) lengths[i] = header[i];
-    if ((e = unc_canon_build(&cd->main, lengths, 0x122)) != UNC_OK) {
-        *err = e; return -1;
-    }
-    for (i = 0; i < 0x38; i++)
-        lengths[i] = header[i + 0x122] ? (uint8_t)(header[i + 0x122] - 2) : 0;
-    if ((e = unc_canon_build(&cd->off, lengths, 0x38)) != UNC_OK) {
-        *err = e; return -1;
-    }
-
+    /* Then the stream, where the header says, running to the bit byte 3
+     * names. A symbol below 256 is a literal; 257..289 is a match — its
+     * length class, that class's extra bits, a distance symbol and that
+     * class's extra bits. The window spans members, which is what
+     * `base` bounds. */
     numbits = (srclen - at) * 8u;
-    if (endbits) {
-        if (numbits < (uint32_t)(16 - endbits)) { *err = UNC_ERR_CORRUPT; return -1; }
-        numbits -= (uint32_t)(16 - endbits);
+    if (src[3]) {
+        if (numbits < (uint32_t)(16 - src[3])) {
+            *err = UNC_ERR_CORRUPT; return -1;
+        }
+        numbits -= (uint32_t)(16 - src[3]);
     }
-
     now_bits_start(&b, src + at, srclen - at);
+
     while (now_bit_offset(&b) < numbits) {
-        int sym = unc_canon_decode(&cd->main, &b.bi);
         uint32_t length, offset, k;
         int sel;
-        if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
+        sym = unc_canon_decode(&cd->main, &b.bi);
+        if (sym < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT;
+                       return -1; }
         if (sym < 0x100) {
             if ((uint32_t)out >= dstcap) { *err = UNC_ERR_CORRUPT; return -1; }
             dst[out++] = (uint8_t)sym;
@@ -288,7 +363,8 @@ static int32_t now_newlzss(const uint8_t *src, uint32_t srclen,
         length += 2;
 
         sel = unc_canon_decode(&cd->off, &b.bi);
-        if (sel < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT; return -1; }
+        if (sel < 0) { *err = b.bi.err ? b.bi.err : UNC_ERR_CORRUPT;
+                       return -1; }
         if (sel >= 0x38) { *err = UNC_ERR_CORRUPT; return -1; }
         offset = now_off_base[sel];
         if (now_off_extra[sel]) {
@@ -315,8 +391,14 @@ typedef struct NowStream {
     UncCtx  *c;
     struct NowCodes *cd;   /* code tables, off the stack — see below */
     uint8_t *inblock;      /* [incap]                                    */
-    uint8_t *outblock;     /* [hist + blkcap]                            */
+    uint8_t *outblock;     /* [hist + outcap]                            */
     uint8_t *dict;         /* [hist]                                     */
+    /* Blocks are decoded one after another at `outpos`, so that each
+     * one's history is simply the bytes before it, and the window slides
+     * only when the next block would not fit — once per `outcap / blkcap`
+     * blocks rather than once per block. See now_next_block. */
+    uint32_t outcap;       /* bytes after the history: slots * blkcap    */
+    uint32_t outpos;       /* where the next block decodes, >= hist      */
     /* Sized from the archive's largest fork rather than from the
      * format's ceilings — see unc_now_extract. hist <= NOW_HISTORY and
      * blkcap <= st->blkcap, always. */
@@ -345,72 +427,86 @@ static int now_read_u32(UncCtx *c, uint32_t at, uint32_t *out)
     return UNC_OK;
 }
 
-/* The header's offsets are sometimes off by a constant. The reference
- * finds it by walking the table until a 4-byte field equals the running
- * sum of everything before it, which is where the table's checksum sits.
- * Source: findFileHeaderDeltaWithHeaderOffset. */
-static int32_t now_find_delta(UncCtx *c, uint32_t headeroffset,
-                              uint32_t firstoffset)
+/* A block table's offsets are sometimes all short by a constant. Walk
+ * the table until a 4-byte field equals the running sum of everything
+ * before it — which is where the table's checksum sits, so that
+ * position is the table's true end — and the difference from the offset
+ * the header states is the constant.
+ *
+ * Source: docs/formats/now-compress.md, *The archive layer*, where the
+ * checksum is measured on 108 members and the correction on
+ * 2026-09-21: an archive rebased by 100 here, with that checksum
+ * recomputed, comes out of its OWN self-extractor byte for byte, and
+ * out of this engine not at all when this function is made to return 0
+ * (tools/mutate_now.py --delta). No file the encoder wrote needs it;
+ * the archives that exercise it in ci.sh are written by
+ * tools/synth_now.py for that purpose. */
+/* The sum of `n` bytes: what every one of this format's four checksums
+ * is made of (docs/formats/now-compress.md). */
+static uint32_t now_sum(const uint8_t *p, int n)
+{
+    uint32_t sum = 0;
+    while (n-- > 0) sum += *p++;
+    return sum;
+}
+
+static int32_t now_find_delta(UncCtx *c, uint32_t start, uint32_t first)
 {
     uint8_t buf[8];
-    uint32_t checksum = 0;
-    uint32_t n, i;
+    uint32_t sum = 0, n;
+    int i;
 
-    if (c->io->seek(c->io->ctx, headeroffset) < 0) return 0;
+    if (c->io->seek(c->io->ctx, start) < 0) return 0;
+    /* the u32 and one record: the least a table can hold */
     for (i = 0; i < 4; i++) {
         if (unc_read_full(c->io, buf, 4) != UNC_OK) return 0;
-        checksum += (uint32_t)buf[0] + buf[1] + buf[2] + buf[3];
+        sum += now_sum(buf, 4);
     }
     for (n = 2; n < NOW_MAXBLOCKS; n++) {
         if (unc_read_full(c->io, buf, 4) != UNC_OK) return 0;
-        if (unc_get_u32be(buf) == checksum)
-            return (int32_t)(headeroffset + n * 8u + 4u) - (int32_t)firstoffset;
-        checksum += (uint32_t)buf[0] + buf[1] + buf[2] + buf[3];
+        if (unc_get_u32be(buf) == sum)          /* the table ends here */
+            return (int32_t)(start + n * 8u + 4u) - (int32_t)first;
+        sum += now_sum(buf, 4);
         if (unc_read_full(c->io, buf, 4) != UNC_OK) return 0;
-        checksum += (uint32_t)buf[0] + buf[1] + buf[2] + buf[3];
+        sum += now_sum(buf, 4);
     }
     return 0;
 }
 
-static uint32_t now_sum32(uint32_t v)
+/* Count a member's block records and check the table against itself.
+ *
+ * Source: docs/formats/now-compress.md, *A member's blocks* — the data
+ * area opens with a u32 saying where the first block begins, which is
+ * also where the table ends, so `(first - start - 4) / 8 - 1` records
+ * of eight bytes lie between; then four bytes, then a u32 equal to the
+ * sum of every byte of the data area before it. That sum agrees on all
+ * 108 members measured there, this project's own synthetic archives
+ * included. */
+static int now_check_table(UncCtx *c, uint32_t start, uint32_t first,
+                           int32_t delta, uint32_t *nrecs_out)
 {
-    return (v >> 24) + ((v >> 16) & 0xFF) + ((v >> 8) & 0xFF) + (v & 0xFF);
-}
+    uint8_t buf[8];
+    uint32_t sum;
+    int32_t nrecs, i;
 
-/* Walk the table once to verify its checksum. Source:
- * parseAndCheckFileHeaderWithHeaderOffset. */
-static int now_check_table(UncCtx *c, uint32_t headeroffset,
-                           uint32_t firstoffset, int32_t delta,
-                           uint32_t *nentries_out)
-{
-    uint8_t rec[8];
-    uint32_t checksum, lastoffset = firstoffset;
-    int32_t numentries;
-    int32_t i;
+    nrecs = ((int32_t)(first + (uint32_t)delta - start) - 4) / 8 - 1;
+    if (nrecs < 0 || (uint32_t)nrecs > NOW_MAXBLOCKS) return UNC_ERR_CORRUPT;
 
-    numentries = ((int32_t)(firstoffset + (uint32_t)delta - headeroffset) - 4) / 8 - 1;
-    if (numentries < 0 || (uint32_t)numentries > NOW_MAXBLOCKS)
-        return UNC_ERR_CORRUPT;
+    /* the u32 is the first thing summed, and it is summed as it is
+     * STORED — short by the delta, where there is one */
+    unc_put_u32be(buf, first);
+    sum = now_sum(buf, 4);
+    if (c->io->seek(c->io->ctx, start + 4) < 0) return UNC_ERR_IO;
 
-    if (c->io->seek(c->io->ctx, headeroffset + 4) < 0) return UNC_ERR_IO;
-    checksum = now_sum32(firstoffset);
-
-    for (i = 0; i < numentries; i++) {
-        uint32_t nextoffset;
-        if (unc_read_full(c->io, rec, 8) != UNC_OK) return UNC_ERR_TRUNCATED;
-        nextoffset = unc_get_u32be(rec + 4);
-        checksum += (uint32_t)rec[0] + rec[1];       /* flags   */
-        checksum += (uint32_t)rec[2] + rec[3];       /* padding */
-        checksum += now_sum32(nextoffset);
-        lastoffset = nextoffset;
+    for (i = 0; i < nrecs; i++) {
+        if (unc_read_full(c->io, buf, 8) != UNC_OK) return UNC_ERR_TRUNCATED;
+        sum += now_sum(buf, 8);
     }
-    if (unc_read_full(c->io, rec, 4) != UNC_OK) return UNC_ERR_TRUNCATED;
-    checksum += (uint32_t)rec[0] + rec[1] + rec[2] + rec[3];
-    if (unc_read_full(c->io, rec, 4) != UNC_OK) return UNC_ERR_TRUNCATED;
-    if (checksum != unc_get_u32be(rec)) return UNC_ERR_CORRUPT;
+    if (unc_read_full(c->io, buf, 8) != UNC_OK) return UNC_ERR_TRUNCATED;
+    sum += now_sum(buf, 4);
+    if (sum != unc_get_u32be(buf + 4)) return UNC_ERR_CORRUPT;
 
-    (void)lastoffset;
-    *nentries_out = (uint32_t)numentries;
+    *nrecs_out = (uint32_t)nrecs;
     return UNC_OK;
 }
 
@@ -447,15 +543,36 @@ static int now_stream_open(NowStream *st, uint32_t headeroffset)
 }
 
 /* Decode the next block of the current stream into st->avail.
- * Source: produceBlockAtOffset. */
+ * Source: docs/formats/now-compress.md — the block table's records
+ * (offset, flags, padding), the repeated offset that starts a stream,
+ * and the four shapes a block can be. There is exactly one such
+ * repeated offset per member and it is the boundary between its two
+ * forks, so it is first when the resource fork is empty and last when
+ * the data fork is; a member's first block starts a stream either way. */
 static int now_next_block(NowStream *st)
 {
     UncCtx *c = st->c;
     uint8_t rec[8];
-    uint8_t *outstart = st->outblock + st->hist;
+    uint8_t *outstart;
     uint32_t offset, length, i;
     int32_t out;
     int flags, first, err;
+
+    /* The window slides by the block's length: what was written at
+     * outstart ends up just below it, and the last 32 KB become the
+     * history for the next block. Done HERE, before the next block, and
+     * only when that block would not fit after the last one — the
+     * previous block has been served in full by then (now_fork drains
+     * `avail` before asking for another), so nothing live is moved.
+     * With one slot this runs every block, as it always did; with more
+     * it runs once per slot-full, and the copy was 19 % of the largest
+     * run in the corpus (callgrind, 2026-09-18). */
+    if (st->outpos + st->blkcap > st->hist + st->outcap) {
+        uint8_t *from = st->outblock + st->outpos - st->hist;
+        for (i = 0; i < st->hist; i++) st->outblock[i] = from[i];
+        st->outpos = st->hist;
+    }
+    outstart = st->outblock + st->outpos;
 
     for (;;) {
         uint32_t nextoffset, padding;
@@ -482,14 +599,25 @@ static int now_next_block(NowStream *st)
     /* A block that starts a stream reaches back into the history the
      * PREVIOUS stream left behind. The reference calls this absurd and
      * does it anyway; so do we, because the bytes require it. */
-    if (first)
-        for (i = 0; i < st->hist; i++) st->outblock[i] = st->dict[i];
+    if (first) {
+        uint8_t *hist = outstart - st->hist;
+        for (i = 0; i < st->hist; i++) hist[i] = st->dict[i];
+    }
 
     if (c->io->seek(c->io->ctx, offset) < 0) return UNC_ERR_IO;
 
+    /* The stored path and the Huffman-then-LZSS path stage their raw
+     * input in `outstart` itself, and the room there is `blkcap` — the
+     * bound every decoder below writes to. `length` is a block's
+     * COMPRESSED length, checked only against `incap` above, so a
+     * crafted block can name a length far larger than the fork it
+     * belongs to declared; without this a stored or shape-2 block of up
+     * to `incap` bytes overruns `outstart`. The three paths that read
+     * into `st->inblock` (incap) are already covered by that check. */
     if (flags & 0x20) {
         if (flags & 0x1F) {                       /* Huffman, then LZSS */
             int32_t mid;
+            if (length > st->blkcap) return UNC_ERR_CORRUPT;
             if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             mid = now_huffman(outstart, length, st->inblock, st->incap,
@@ -507,7 +635,7 @@ static int now_next_block(NowStream *st)
     } else if (flags & 0x40) {                    /* new LZSS */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
-        out = now_newlzss(st->inblock, length, st->outblock, outstart,
+        out = now_newlzss(st->inblock, length, outstart - st->hist, outstart,
                           st->blkcap, st->cd, &err);
     } else if (flags & 0x1F) {                    /* LZSS only */
         if (unc_read_full(c->io, st->inblock, (int32_t)length) != UNC_OK)
@@ -515,6 +643,7 @@ static int now_next_block(NowStream *st)
         out = now_lzss(st->inblock, length, outstart,
                        st->blkcap, &err);
     } else {                                      /* stored */
+        if (length > st->blkcap) return UNC_ERR_CORRUPT;
         if (unc_read_full(c->io, outstart, (int32_t)length) != UNC_OK)
             return UNC_ERR_TRUNCATED;
         out = (int32_t)length;
@@ -535,16 +664,17 @@ static int now_next_block(NowStream *st)
     err = unc_progress_add(&c->ps, length);
     if (err != UNC_OK) return err;
 
-    /* The window slides by the block's length: what was written at
-     * outstart ends up just below it, and the last 32 KB become the
-     * history for the next block. */
-    for (i = 0; i < st->hist; i++)
-        st->outblock[i] = st->outblock[i + (uint32_t)out];
-    if (first)
-        for (i = 0; i < st->hist; i++) st->dict[i] = st->outblock[i];
+    /* The dictionary cache the NEXT stream starts from is the last
+     * `hist` bytes ending where this block ends, history included when
+     * the block is shorter than that. */
+    if (first) {
+        const uint8_t *tail = outstart + (uint32_t)out - st->hist;
+        for (i = 0; i < st->hist; i++) st->dict[i] = tail[i];
+    }
 
-    st->avail = outstart - out;
+    st->avail = outstart;
     st->availlen = (uint32_t)out;
+    st->outpos += (uint32_t)out;
     return UNC_OK;
 }
 
@@ -580,9 +710,19 @@ int unc_now_extract(UncCtx *c)
 {
     uint8_t hdr[NOW_ENTRY];
     UncPath path;
-    /* Entries still owed at each level, which is Now Compress's own
-     * way of closing a folder and not part of the shared path. */
-    uint32_t owed[UNC_PATH_MAXDEPTH];
+    /* Entries still owed at each level, which is Now Compress's own way
+     * of closing a folder and not part of the shared path. One slot per
+     * open level, and the bound is DERIVED rather than chosen: a push
+     * writes at least its separator, so a path that must fit
+     * UNC_NAME_MAX bytes cannot be more than UNC_PATH_DEPTH_MAX levels
+     * deep. It is on the heap because 1 KB is not a thing to put on a
+     * 4 KB call stack, and because this file already allocates per
+     * archive — the array was 24 entries on the stack until 2026-10-07,
+     * sized by a depth limit that should never have existed. */
+    uint32_t *owed = NULL;
+    /* And owed by all the levels the path string had no room for, which
+     * have no slot of their own; see the walk below. */
+    uint32_t deepowed = 0;
     NowStream st;
     uint8_t *mem;
     uint32_t totalentries, seen = 0, at = 24;
@@ -615,7 +755,16 @@ int unc_now_extract(UncCtx *c)
      * One pass over the table bounds all three:
      *
      *   hist   <= NOW_HISTORY, and a back-reference cannot reach further
-     *            back than the fork has produced, so <= maxout too
+     *            back than the ARCHIVE has produced, so <= the sum of
+     *            every fork too. **Not the largest fork**: a stream's
+     *            first block reaches into the history the PREVIOUS
+     *            stream left behind (now_next_block, `first`), so a
+     *            match in the third member can name an offset longer
+     *            than any one fork in the file. Bounding this by
+     *            `maxout` refused two members of a four-member archive
+     *            Now Compress itself wrote, with offsets 6,228 and
+     *            13,000 against a 6,000-byte window
+     *            (BLOCKERS.md, *Withdrawn claims*)
      *   blkcap <= NOW_OUTBLOCK - NOW_HISTORY, and one block's output is
      *            part of a fork, so <= maxout
      *   incap  is left at NOW_INBLOCK: a block's COMPRESSED length is not
@@ -626,7 +775,7 @@ int unc_now_extract(UncCtx *c)
      * The tables go FIRST so their alignment is the allocator's own, and
      * everything after them is bytes. */
     {
-        uint32_t maxout = 0, i, scanat = at, left = totalentries;
+        uint32_t maxout = 0, totalout = 0, i, scanat = at, left = totalentries;
         while (left-- > 0) {
             uint32_t d, r;
             if (c->io->seek(c->io->ctx, scanat) < 0) return UNC_ERR_IO;
@@ -638,8 +787,15 @@ int unc_now_extract(UncCtx *c)
              * anything, and the two ceilings below clamp it anyway. */
             if (d > UNC_U32_MAX - r) d = UNC_U32_MAX - r;
             if (d + r > maxout) maxout = d + r;
+            /* Clamp BEFORE adding: a damaged header can declare a
+             * fork of 4 GB, and `totalout += d + r` wraps to a small
+             * number that would size the window too SHORT. */
+            if (totalout < NOW_HISTORY) {
+                if (d + r > NOW_HISTORY - totalout) totalout = NOW_HISTORY;
+                else totalout += d + r;
+            }
         }
-        st.hist   = maxout < NOW_HISTORY ? maxout : NOW_HISTORY;
+        st.hist   = totalout < NOW_HISTORY ? totalout : NOW_HISTORY;
         st.blkcap = maxout < (NOW_OUTBLOCK - NOW_HISTORY)
                     ? maxout : (NOW_OUTBLOCK - NOW_HISTORY);
         st.incap  = NOW_INBLOCK;
@@ -659,18 +815,32 @@ int unc_now_extract(UncCtx *c)
          * of headroom, on an application that grew twenty-four in two
          * versions. Now the entries are still walked and named, and each
          * one that needs the buffer fails on its own. */
+        /* Room for several blocks after the history, so the window slides
+         * once per slot-full instead of once per block (now_next_block).
+         * NOW_SLOTS first, then fewer, then one — the shape the archive
+         * always had — so a small machine pays nothing it cannot afford:
+         * every extra slot is blkcap more of this one per-archive
+         * allocation, 32 KB at the ceiling. Bought for the largest run in
+         * the corpus, where the slide was 19 % (DECISIONS.md 2026-09-19). */
         mem = NULL;
+        st.outcap = st.blkcap;
         if (!c->opt.list_only) {
-            mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
-                                       + st.incap + st.hist + st.blkcap
-                                       + st.hist);
+            uint32_t slots;
+            for (slots = NOW_SLOTS; slots >= 1; slots >>= 1) {
+                st.outcap = slots * st.blkcap;
+                mem = (uint8_t *)unc_alloc(c->al, (uint32_t)sizeof *st.cd
+                                           + st.incap + st.hist + st.outcap
+                                           + st.hist);
+                if (mem) break;
+            }
         }
         st.c = c;
+        st.outpos = st.hist;
         if (mem) {
             st.cd       = (struct NowCodes *)(void *)mem;
             st.inblock  = mem + sizeof *st.cd;
             st.outblock = st.inblock + st.incap;
-            st.dict     = st.outblock + st.hist + st.blkcap;
+            st.dict     = st.outblock + st.hist + st.outcap;
             for (i = 0; i < st.hist; i++) st.dict[i] = 0;
         } else {
             st.cd = NULL;
@@ -679,6 +849,16 @@ int unc_now_extract(UncCtx *c)
     }
 
     unc_path_init(&path, c);
+    /* One counter per open level. Per archive, like everything else this
+     * walk needs, and checked: without it there is no way to know when a
+     * folder closes, so this is the one allocation here that is fatal
+     * rather than per entry. */
+    owed = (uint32_t *)unc_alloc(c->al, (uint32_t)(UNC_PATH_DEPTH_MAX
+                                                   * sizeof *owed));
+    if (!owed) {
+        unc_free(c->al, mem);
+        return UNC_ERR_MEM;
+    }
 
     while (seen < totalentries) {
         UncEntryInfo e;
@@ -747,20 +927,51 @@ int unc_now_extract(UncCtx *c)
         /* This entry counts against the directory it is in; a directory
          * then opens one of its own. Levels close when their count runs
          * out, which is how an empty folder closes immediately.
-         * Source: parseDirectoryWithParent, which does it by recursing. */
-        if (path.depth > 0 && owed[path.depth - 1] > 0)
+         * Source: docs/formats/now-compress.md, *The archive layer* —
+         * a directory is flagged by bit 0x10 at +36 and says at +82 how
+         * many entries follow it; the reference does the same by
+         * recursing (parseDirectoryWithParent).
+         *
+         * A folder the PATH STRING had no room for opens no level of its
+         * own — `unc_path_push` counts it instead of descending — so it
+         * gets no slot in `owed` and the counts of all such folders are
+         * summed into one. The sum telescopes: every entry is owed by
+         * exactly one level, and a counted folder adds its own count the
+         * way a real one does, so the chain is exhausted at the entry a
+         * stack of counters would have exhausted it at. What one
+         * accumulator cannot say is WHICH of them an entry belonged to,
+         * which is the thing the path could not hold either.
+         *
+         * Without this the counts are simply dropped, and then the walk
+         * closes the folder ABOVE too early and every entry under it is
+         * reported from a path it has already left — measured
+         * 2026-10-07, when deleting it cost `run_names.py` the whole
+         * 296-byte path it grades. */
+        if (unc_path_askdepth(&path) > path.depth) {
+            if (deepowed > 0) deepowed--;
+        } else if (path.depth > 0 && owed[path.depth - 1] > 0) {
             owed[path.depth - 1]--;
+        }
 
-        /* Too deep to descend leaves the entries under the parent, which
-         * is what this walk did before the push was shared and is not
-         * the same as refusing the archive. */
-        if ((flags & 0x10) && unc_path_push(&path, hdr + 1, nlen) == UNC_OK)
-            owed[path.depth - 1] = numdir;
+        if (flags & 0x10) {
+            if (unc_path_push(&path, hdr + 1, nlen) == UNC_OK)
+                owed[path.depth - 1] = numdir;
+            else
+                deepowed += numdir;
+        }
 
-        while (path.depth > 0 && owed[path.depth - 1] == 0)
+        /* The counted levels close first, and the real ones only once
+         * they have: a level whose count ran out while the walk was
+         * still below them must wait, or the pop lands on a counted
+         * level instead and the walk comes back up one short. */
+        while (unc_path_askdepth(&path) > path.depth && deepowed == 0)
             unc_path_pop(&path);
+        if (unc_path_askdepth(&path) == path.depth)
+            while (path.depth > 0 && owed[path.depth - 1] == 0)
+                unc_path_pop(&path);
     }
 
+    unc_free(c->al, owed);
     unc_free(c->al, mem);
     return err;
 }

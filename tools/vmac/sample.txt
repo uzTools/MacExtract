@@ -103,6 +103,33 @@ derived-BitMap11.sit                       # 125096 B THINK C, see below
 derived-EmpireBuilderDemo.sit              # 278294 B
 
 # StuffIt 5
+#
+# Two were added 2026-09-22, and they are the only fixtures in this list
+# whose names are not MacRoman: StuffIt 5 states its names in UTF-8 and the
+# Mac shell folds them into the bytes an HFS name holds (FORMATS.md, *A name
+# in the wrong encoding is not a name*). Until that day the fold had never
+# run on a Macintosh at all — nothing here reached it. They are a pair on
+# purpose, because the fold has two halves:
+#
+#   derived-Cool_Tools__.sit      `Cool Tools ƒ`, a name MacRoman CAN
+#                                 spell: two UTF-8 bytes become the one
+#                                 byte 0xC4 and nothing is lost. It is
+#                                 REFUSED on a 512 KB machine — it needs
+#                                 242,464 B against that tier's 197,728 B,
+#                                 the same StuffIt 5 block shape as
+#                                 derived-a2basic and derived-Library_ISBN
+#                                 (FORMATS.md, *512 KB machines*) — so it
+#                                 is the fourth refusal of that tier and no
+#                                 tier above it moves.
+#   derived-800saywhat301j.sit    Japanese names, which MacRoman cannot
+#                                 spell at all: each becomes '_' and the
+#                                 end-of-run report says so per component.
+#                                 It fits every tier, 512 KB included.
+#
+# The names are read off the Out volume by checkdisk.py, not off the grid:
+# a summed CRC cannot carry a name.
+derived-Cool_Tools__.sit                   # 217507 B, `Cool Tools ƒ`
+derived-800saywhat301j.sit                 # 91648 B, Japanese names
 derived-KeyGraphics.sit                    # 4611 B
 derived-RWAsm_Folder.sit                   # 66069 B
 derived-PuzzleGetter_0.8.sit               # 92510 B
@@ -119,6 +146,20 @@ derived-PCCTS.tar                          # 286720 B
 synth-exo-zip-deflate.zip                  # 3709 B
 synth-exo-zip-store.zip                    # 8384 B
 derived-MUSFMT10.ZIP                       # 171960 B
+# Shrink (zip method 1) joined 2026-10-09: until then no Macintosh had run
+# the decoder. 13-bit codes, a table filled to slot 8,191, partial clears at
+# every width; 38,777 B peak, against dream.zip's 39,094 (FORMATS.md, *Shrink*).
+shrink-wild-titanic.zip                    # 172972 B
+# Implode (zip method 6) joined 2026-10-10, the first on a Macintosh: a
+# real 1990s archive, all four entries imploded, 4 K/2 trees and 8 K/3
+# trees both; 22,730 B peak on Linux (FORMATS.md, *Implode*).
+4alnch11.zip                               # 41702 B
+
+# AppleLink package joined 2026-10-11. No real package is committable, so
+# this is tools/synth_sqp.py --case clear: the LZW table filled and cleared
+# twice at 13-bit codes, which no real package reaches, and the format's
+# heaviest allocation, 41,256 B on Linux (FORMATS.md, *AppleLink packages*).
+synth-sqp-clear.pkg                        # 28667 B
 
 # ARC and uuencode (M13, 2026-08-15). Neither format occurs in the
 # corpus, so both are generated: tools/synth_arc.py and tools/synth_uu.py.

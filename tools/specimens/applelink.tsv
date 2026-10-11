@@ -1,0 +1,16 @@
+# The AppleLink packages — SqueezePlay (FORMATS.md, *AppleLink packages*).
+# Found by CONTENT, twice over: a version-1 package's first 16 bytes are
+# the item count, 01, and fourteen zeros, which is a hex token in
+# Discmaster's first-16-bytes index, and `extension=.pkg&family=unknown`
+# reaches the version-0 ones (DECISIONS.md 2026-10-06). Four of the eight
+# are not named `.pkg` at all.
+# tools/derive_sqp.py grades the reading; tools/run_sqp.py the engine.
+# name	role	size	sha256	url
+ALink.PKG	pkg	6900	3ed39490ac70f19843034bdc30361f0a771c22f836c2430a711c3563d23c6bb7	https://discmaster.textfiles.com/file/32706/Dev.CD%20Feb%2094.toast/Tool%20Chest/Networking%20%26%20Communications/AppleLink/AppleLink%206.1/ALink.PKG
+Read First.PKG	pkg	1373	1a4a93fce714b53a4bd505a9c07e57e5a0adf5a9ee2c3c7a1b264d341c76d8ba	https://discmaster.textfiles.com/file/32706/Dev.CD%20Feb%2094.toast/Tool%20Chest/Networking%20%26%20Communications/AppleLink/AppleLink%206.1/Read%20First.PKG
+SCNPCK3.4.PKG	pkg	226898	b189365e9a5c9dfb42e3163afd0c321c6a2a6192223297df96c7a72bdc4705a1	https://discmaster.textfiles.com/file/29125/Apple%20Tech%20I.S.%203.0%20%28Sept-1992%29.toast/Third%20Party%20SW%20Updates/SCANPACK%20Update/SCNPCK3.4.PKG
+MPW Shell 3.2.2.pkg	pkg	352605	02aac9078556151b5ff1d9c125a50a625b5611720d6067142a42028b22ddf5c0	https://discmaster.textfiles.com/file/12806/aol-file-protocol-4400-2201-to-2300.zip/AOLDLs/MADA%20Members%20Software%20Library/MPW%20Shell%203.2.2.PKG/MPW%20Shell%203.2.2.pkg
+SD! Patcher > 1.8.2.PKG	pkg	32831	728a3ba645f8bd4eae310e4928043747946371acbbf3b84fb4f236ad37a68d45	https://discmaster.textfiles.com/file/29125/Apple%20Tech%20I.S.%203.0%20%28Sept-1992%29.toast/Third%20Party%20SW%20Updates/SD%21%20Patcher%20Update/SD%21%20Patcher%20%3E%201.8.2.PKG
+Iconf Display	pkg	18771	82e208e5d70470055491919c6a24d39400b020a6eee7ae4d38cd586505dab6e6	https://discmaster.textfiles.com/file/31870/bincue/Desperately%20Seeking%20Seven.bin/Developer%20Essentials/DTS%20Sample%20Code/Snippets/May%20%2791%20Snippets/Icon%20Display%C6%92/Iconf%20Display
+1-AppleTalk - Concepts.PKG	pkg	53206	1427819179f6b0384658b485a0947adb7d96b6a58dc8bba1cb838a69e22e6c1f	https://discmaster.textfiles.com/file/31865/bincue/Discy%20Business.bin/Info%20Island/AppleLink%20Offline/EuroDev%20BBS%20Disk%20Files/Products%EF%80%A2Adds/N%26C%20Apple%20Products/1-AppleTalk%20-%20Concepts.PKG
+Sys 7 for MA 2.0.1.pkg	pkg	64239	915663f988a8ee8238af3be0747a88a0ac25bb635ddb4b905dcf0f5379099026	https://discmaster.textfiles.com/file/12806/aol-file-protocol-4400-2201-to-2300.zip/AOLDLs/MADA%20Members%20Software%20Library/System%207%20for%20MA%202.0.1.PKG/Sys%207%20for%20MA%202.0.1.pkg

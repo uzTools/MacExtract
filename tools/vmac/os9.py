@@ -56,6 +56,8 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+sys.path.insert(0, os.path.join(R.REPO, "tools"))
+from vmac_check import mac_component, names_are_utf8         # noqa: E402
 
 
 def _die_cleanly(signum, frame):
@@ -887,12 +889,25 @@ def _walk_volume(env, mac_dir="", depth=0):
     # since 2026-08-28; a FOLDER with one was first walked on 2026-09-04
     # (`Terrainman 2.0 \xc4` — DiskDoubler's `derived-Terrainman_2.0__.sea`),
     # and the harness failed a run the application had completed.
-    listing = subprocess.run(["hls", "-F", "-1"]
+    # -a, because without it `hls` shows neither a name beginning with a dot
+    # nor a file whose Finder INVISIBLE bit is set — and an archive holds
+    # both: `.DS_Store`, and the `Icon\r` every custom folder icon on a Mac
+    # is called, which comes out invisible because that is what the archive
+    # says. Measured 2026-09-22 on the volume this tier wrote: `hls -F -1`
+    # lists four of the five entries and `hls -a -F -1` lists five. Until
+    # then a file the Mac had written correctly was reported MISSING, and an
+    # invisible entry was invisible to the COMPARISON as well as the Finder.
+    # checkdisk.py has had both rules since it was written.
+    listing = subprocess.run(["hls", "-a", "-F", "-1"]
                              + ([mac_dir.encode("mac_roman", "replace")]
                                 if mac_dir else []),
                              capture_output=True, env=env)
     for raw in listing.stdout.split(b"\n"):
-        entry = raw.rstrip().decode("mac_roman")
+        # NOT rstrip(): a carriage return is a legal HFS filename character,
+        # and it is the LAST character of `Icon\r`. `hls -1` ends each line
+        # with \n and adds nothing else, so splitting on \n has already
+        # removed everything that is not name.
+        entry = raw.decode("mac_roman")
         if not entry:
             continue
         isdir = entry.endswith(":")
@@ -988,7 +1003,6 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
             expected.add(rel)
-    expected = {unicodedata.normalize("NFC", e) for e in expected}
 
     # The Mac writes each COMPONENT the way ComponentToStr63() does — the
     # engine's ':' back to '/', cut at 31 characters — so the two sides
@@ -999,10 +1013,18 @@ def verify_output(xfer, fixture, workdir, partial=False, password=None):
     # `SD! Utilities : MacWrite`: a colon on Linux and a slash on the
     # Mac, which the set comparison would otherwise call one missing file
     # and one unexpected one. The HFS+ path has done this since M12.
+    # The KEY is what the Mac wrote and is NFC, because _walk_volume()
+    # normalizes what it reads off the volume; the VALUE is the path on the
+    # Linux disk, UNNORMALIZED, because that is the one that has to be
+    # opened below. Both matter, and the order does: the fold reads the
+    # archive's own bytes, so it runs BEFORE the normalization and not
+    # after it (mac_leaf, and checkdisk.py, which learned it first).
     mac_of = {}
     collided = {}
+    utf8 = names_are_utf8(fixture)
     for e in sorted(expected):
-        m = "/".join(mac_leaf(c) for c in e.split("/"))
+        m = "/".join(unicodedata.normalize("NFC", mac_leaf(c, utf8))
+                     for c in e.split("/"))
         if m in mac_of:
             collided[m] = [mac_of[m], e]
         mac_of[m] = e
@@ -1178,15 +1200,30 @@ def read_report(path):
     return vals, recs
 
 
-def mac_leaf(name):
+def mac_leaf(name, utf8=False):
     """A CLI output filename as the Mac shell would write it.
 
     ComponentToStr63() in mac/macextract_mac.c: undo the engine's '/'->':'
     swap and cap at 31 characters. That cap is the whole reason this run
     exists — HFS+ permits 255-character names, but a 68k application reaching
     it through the classic File Manager is still limited to 31, and whether
-    that holds on HFS+ had never been checked."""
-    return name.replace(":", "/")[:31] or "_"
+    that holds on HFS+ had never been checked.
+
+    `utf8` folds a StuffIt 5 name into MacRoman first (Utf8ToMacRoman),
+    which the shell does on HFS+ exactly as it does on HFS — the limit it
+    is written for is the classic File Manager's, not the volume's.
+    tools/vmac_check.py has both rules.
+
+    **This runs on the archive's own spelling, before any Unicode
+    normalization**, because that is what the shell folds: a DECOMPOSED
+    name folds to one '_' per code point, so an NFC fold predicts one
+    too few. Both callers normalized first until 2026-09-22, which was
+    latent while no fixture on this tier had a non-ASCII StuffIt 5 name;
+    `derived-800saywhat301j.sit` is the one that bites it, and they fold
+    first and normalize the KEY afterwards now, as checkdisk.py does.
+    The reference path stays unnormalized because it has to be
+    opened."""
+    return mac_component(name, utf8)
 
 
 def report_present(xfer, workdir):
@@ -1206,7 +1243,13 @@ def report_present(xfer, workdir):
     if subprocess.run(["hmount", hfs], capture_output=True,
                       env=env).returncode != 0:
         return False
-    out = subprocess.run(["hls", "-1"], capture_output=True, env=env).stdout
+    # -a for the reason _walk_volume gives: `hls` hides a file whose Finder
+    # INVISIBLE bit is set. A report the shell had marked invisible would
+    # never be seen here, and the symptom is a poll that never fires — a
+    # timeout, not a wrong answer, but a timeout that would be read as the
+    # application having hung.
+    out = subprocess.run(["hls", "-a", "-1"], capture_output=True,
+                         env=env).stdout
     subprocess.run(["humount"], capture_output=True, env=env)
     return b"report" in out
 
@@ -1224,7 +1267,14 @@ def wrapper_names(boot, workdir):
     classic File Manager reports 'BD' for an HFS+ volume for compatibility, so
     a negative there would mean nothing. This test has no such ambiguity, and
     misreading a signature at a fixed offset is precisely how the "the boot
-    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md)."""
+    volume is plain HFS" claim went wrong in the first place (BLOCKERS.md).
+
+    **`-a`, because this is a NEGATIVE.** The verdict is that none of the
+    output is here, and `hls` without `-a` hides any file whose Finder
+    invisible bit is set — so the listing this is read against was the
+    one that makes the negative EASIEST to satisfy. Adding it can only
+    lengthen the list and can only make the assertion harder to pass,
+    which is the direction a negative wants (2026-09-22)."""
     home = os.path.join(workdir, "wraphome")
     os.makedirs(home, exist_ok=True)
     env = dict(os.environ, HOME=home)
@@ -1232,7 +1282,7 @@ def wrapper_names(boot, workdir):
     if subprocess.run(["hmount", boot, "1"], capture_output=True,
                       env=env).returncode != 0:
         return None
-    out = subprocess.run(["hls", "-1"], capture_output=True, env=env)
+    out = subprocess.run(["hls", "-a", "-1"], capture_output=True, env=env)
     subprocess.run(["humount"], capture_output=True, env=env)
     return [l.decode("mac_roman") for l in out.stdout.split(b"\n") if l.strip()]
 
@@ -1372,7 +1422,13 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
     cli = os.path.join(R.REPO, "build", "rel", "macextract")
-    subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
+    # Named what the Mac saw, for the reason verify_output() gives: this route
+    # compares NAMES too (want_names, below), so gzip and .Z — which fall back
+    # to the archive's filename — need the reference to be handed the same one.
+    asmac = os.path.join(workdir, "as-the-mac-saw-it", ARCHIVE_ON_VOLUME)
+    os.makedirs(os.path.dirname(asmac), exist_ok=True)
+    shutil.copyfile(fixture, asmac)
+    subprocess.run([cli, "x", "-nr", "--forks", "hidden", asmac, "-o", ref],
                    capture_output=True)
 
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
@@ -1417,7 +1473,7 @@ def verify_hfsplus(xfer, fixture, workdir, wrapper=None, expect_refusal=False):
 
     # Names, which no aggregate can carry — and the point of an HFS+ run.
     got_names = sorted(n for _d, n in recs)
-    exp_names = sorted(mac_leaf(n) for n in want_names)
+    exp_names = sorted(mac_leaf(n, names_are_utf8(fixture)) for n in want_names)
     if got_names == exp_names:
         lines.append(f"  {len(got_names)} name(s) on HFS+ exactly as the "
                      f"31-character rule predicts")
@@ -1575,6 +1631,12 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
                        "end of a run (screenshots in " + workdir + ")"]
 
     vals, recs = read_report(rep)
+    if len(vals) >= 14:                  # -D UNC_AT_BUDGET: run.budget_probe
+        sv = [R.signed32(v) for v in vals]
+        lines.append("probe: " + " ".join(
+            [f"{k}={sv[8 + i]}" for i, k in enumerate(R.BUDGET_FIELDS)] +
+            [f"bg={sv[7]}", f"short={sv[1]}", f"why={sv[5]}",
+             f"free0={sv[3]}"]))
     nfiles, ret, errors, sdc, sdl, src, srl, peak = vals[:8]
     ret = ret - (1 << 32) if ret >= (1 << 31) else ret
     for code, what in ((-1001, 'no volume named "In"'),
@@ -1587,10 +1649,21 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
     shutil.rmtree(ref, ignore_errors=True)
     os.makedirs(ref)
     cli = os.path.join(R.REPO, "build", "rel", "macextract")
+    # Against a copy named what the MAC saw, for the reason verify_output()
+    # gives at length: gzip and .Z store no name and fall back to the archive
+    # filename minus its extension, and mkapmdisk.py always writes the archive
+    # to the volume as `archive.sit`. Given the fixture's own path instead,
+    # the two sides derive different names for identical bytes and the run
+    # reads as a failure — which is how this route scored 19/22 on a healthy
+    # build until 2026-09-25. verify_output() has done this since 2026-08-08;
+    # this verifier was written later and did not inherit it.
+    asmac = os.path.join(workdir, "as-the-mac-saw-it", ARCHIVE_ON_VOLUME)
+    os.makedirs(os.path.dirname(asmac), exist_ok=True)
+    shutil.copyfile(fixture, asmac)
     # `-nr`: the AUTOTEST build calls RunExtract once and takes no envelopes
     # off, unlike the interactive build verify_output() grades.
-    subprocess.run([cli, "x", "-nr", "--forks", "hidden", fixture, "-o", ref],
-                   capture_output=True)
+    cr = subprocess.run([cli, "x", "-nr", "--forks", "hidden", asmac,
+                         "-o", ref], capture_output=True)
 
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
     from vmac_check import aggregate_dir, mask_reserved        # noqa: E402
@@ -1607,7 +1680,21 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
         ok = ok and same
         lines.append(f"  {label:>13}: Mac {got}  Linux {want}"
                      f"{'' if same else '   <- MISMATCH'}")
-    if ret != 0 or errors:
+    # An archive the ENGINE refuses is not a failure of the Macintosh: this
+    # harness grades the Mac against the same engine on Linux, and a
+    # detect-only format (RAR, and every other row of FORMATS.md that is named
+    # but not extracted) is refused on both sides with nothing written. The
+    # reference exits non-zero and writes no file; the Mac must then report a
+    # refusal of its own and write no file, and agreeing is a PASS. It stays
+    # strict where it can: identical counts, a non-zero ret on the Mac, and
+    # zero files on both sides, so a Macintosh that silently wrote nothing
+    # while the engine extracted still fails.
+    both_refuse = cr.returncode != 0 and enf == 0 and nfiles == 0 and ret != 0
+    if both_refuse:
+        why = (cr.stderr or b"").decode("utf-8", "replace").strip()
+        lines.append(f"  both sides REFUSE this archive and wrote nothing "
+                     f"(Mac ret={ret}; Linux: {why.splitlines()[-1] if why else 'no output'})")
+    elif ret != 0 or errors:
         ok = False
         lines.append("  the engine did not return UNC_OK with zero per-entry "
                      "errors")
@@ -1645,12 +1732,15 @@ def verify_autotest_hfs(inimg, outimg, fixture, workdir, samevol=False):
             if f.startswith("._"):
                 continue                  # sidecar; it travels with its data
             expected.add(os.path.relpath(os.path.join(root, f), ref))
-    expected = {unicodedata.normalize("NFC", e) for e in expected}
     # Compare in the Mac's spelling, as verify_output() does: the shell writes
-    # each component through ComponentToStr63().
+    # each component through ComponentToStr63(), and a StuffIt 5 name through
+    # Utf8ToMacRoman before that — the fold first, then the normalization,
+    # and the reference path kept unnormalized so it can be opened.
     mac_of = {}
+    utf8 = names_are_utf8(fixture)
     for e in sorted(expected):
-        mac_of["/".join(mac_leaf(c) for c in e.split("/"))] = e
+        mac_of["/".join(unicodedata.normalize("NFC", mac_leaf(c, utf8))
+                        for c in e.split("/"))] = e
     expected = set(mac_of)
 
     lines.append(f"{len(names)} file(s) on the "
@@ -1762,6 +1852,29 @@ def verify_disk(fatal=True):
     return False
 
 
+def filesystem_kind(path):
+    """The filesystem type `path` sits on, or "" when it cannot be told.
+
+    Walks /proc/self/mounts for the longest mount point that is a prefix of
+    the resolved path; no psutil, no findmnt, nothing this harness does not
+    already depend on."""
+    try:
+        real = os.path.realpath(path)
+        best, kind = "", ""
+        with open("/proc/self/mounts") as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
+                mnt, ty = parts[1].replace("\\040", " "), parts[2]
+                if (real == mnt or real.startswith(mnt.rstrip("/") + "/")) \
+                        and len(mnt) >= len(best):
+                    best, kind = mnt, ty
+        return kind
+    except OSError:
+        return ""
+
+
 def boot_copy(workdir):
     """A throwaway copy of the master image to actually boot.
 
@@ -1772,6 +1885,18 @@ def boot_copy(workdir):
     every run quietly damaged the one artifact it depends on, and there was no
     hash to notice."""
     dst = os.path.join(workdir, "boot.img")
+    # A 2 GB copy per fixture onto a tmpfs is 2 GB of RAM per fixture, on a
+    # host that is also running the emulator. Measured 2026-09-25 with -o
+    # under /tmp on an 8 GB machine: the host went into swap and the guest
+    # missed its settle timeout, which the harness can only report as "never
+    # reached the Finder desktop" — a boot failure's symptom for a host
+    # memory problem. Say so before spending the copy, since the fix is one
+    # argument.
+    fs = filesystem_kind(workdir)
+    if fs in ("tmpfs", "ramfs"):
+        print(f"os9: WARNING — {workdir} is on {fs}, which is RAM. Each "
+              f"fixture copies a 2 GB boot image there and the guest runs "
+              f"beside it; pass -o somewhere on disk if this host is small.")
     print(f"os9: copying the master image to {dst} (2 GB; the master is never booted)")
     shutil.copyfile(DISK, dst)
     return dst

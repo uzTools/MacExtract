@@ -1,240 +1,161 @@
 # OPEN_ITEMS.md — what is missing, and what is deliberately not
 
-Two kinds of thing live here, and they are kept apart on purpose:
+1. **Part 1, out of scope** — decided or impossible, recorded so nobody
+   re-litigates it. Read it before starting work on a format.
+2. **Part 2, open items** — what is not done or not verified, each with
+   what would close it. Only OPEN items live there: a closed one moves out
+   (the lesson to DECISIONS.md, the withdrawn claim to BLOCKERS.md, the
+   numbers to FORMATS.md).
 
-1. **Out of scope** — decided or impossible, recorded so nobody re-litigates
-   it, and the first section below because it is the thing a session most
-   needs to know before starting work on a format.
-2. **Open items** — a standing audit of the gaps: things not done, things done
-   but not verified, and things this repository asserts more confidently than
-   the evidence supports. Each says what would close it.
+Nothing here stops the engine or the CLI, which are byte-exact against the
+oracle across 964 fixtures in `./ci.sh`. Detail lives once — status in
+BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
+TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
-**Not** BLOCKERS.md, which records investigations that went wrong and the
-claims withdrawn from them. Nothing here stops the engine or the CLI, which are
-byte-exact against the oracle across 932 fixtures in `./ci.sh`.
+**Filing something here is a decision to stop looking, so ask first.** Each
+of these questions has emptied a row at least once (BLOCKERS.md, *Withdrawn
+claims*, has every case):
 
-Detail lives in one place per finding — status in BLOCKERS.md, reasoning in
-DECISIONS.md, how to re-run in TESTING.md or `tools/vmac/README.md`, what needs
-real hardware in MANUAL_TESTS.md, results in FORMATS.md — and is
-cross-referenced from here rather than repeated.
-
-**Filing something here is a decision to stop looking at it, so it had
-better be true.**
-
-**Only OPEN items live in part 2.** A closed one moves out rather than being
-annotated: the lesson to DECISIONS.md, the withdrawn claim to BLOCKERS.md,
-the numbers to FORMATS.md. A section that empties is the point of the file.
+- Is there an implementation that could be **fed** (DECISIONS.md, methods 3, 4 and 5)?
+- Is *"X does not survive"* a claim about somebody's **search**?
+- Does the search name the **right tool**?
+- **Have you looked at all?**
+- **Was the search by name?** An index of magic sees what one of names
+  cannot — worth asking twice (DECISIONS.md 2026-09-26, *the magic in
+  somebody else's index*).
+- **Is the corpus the claim was measured on the corpus that is here now?**
 
 ---
 
 # Part 1 — Out of scope for v1
 
-**Decided, or impossible. Not open.** Everything here is either a boundary
-somebody chose or a property of a format that no evidence can change; nothing
-here is closed by finding a file, and what is waiting for one is Part 2's
-*"Waiting on a file this machine does not have"*. "Out of scope" is today's
-answer and not a refusal — the brief has grown before, on request.
+**Decided, or impossible. Not open.** Nothing here is closed by finding a
+file; "out of scope" is today's answer and not a refusal — the brief has
+grown before, on request.
 
 ## Out by the brief
 
 | what | status | why it stays out |
 |---|---|---|
 | Compression | not implemented | this is an extractor |
-| The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01, not assumed: `MaxApplZone` is `[Not in ROM]` there (Inside Macintosh II-30) and Retro68 emits it as a trap, so the application dies on its second Toolbox call; behind that, `PBGetCatInfo` is HFS, which that ROM has no idea about. Apple's own software HFS for those machines — the `Hard Disk 20` startup disk — boots on a 128K ROM here and hangs on a 64K one, so even that route is untested (FORMATS.md, *A true Macintosh 512K*). Since 2026-09-01 the branch `rom64k` guards `MaxApplZone` with `Has128KROM()`, so its build starts there and its Standard File interface works; what remains is HFS, which a Hard Disk 20 supplies on exactly the machines where an unarchiver earns its keep. **Nobody has run it on one** — Mini vMac has no HD20, so this stays out of scope until hardware says otherwise (MANUAL_TESTS.md §7). A Macintosh **128K** is out for a second reason and that one is measured: its largest single block is 63,744 B against 142,152 B of `CODE`, so the guarded build bombs `ID = 03` on launch there (FORMATS.md, *A Macintosh 128K*) |
+| Choosing which entries come out, in the Macintosh application | **not implemented; the CLI's `--only` ships** | decided 2026-09-26: a tick list is paid for by every run. The engine keeps both halves a host needs (`UncOptions.list_only`, a `begin_entry` returning >0); built on the kept branch `selective-extract` (BRANCHES.md; DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*) |
+| Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, nothing measured for one to do** | every codec is integer work; Arsenic's two divides are 0.72 % of a run (FORMATS.md, *What is still hot*), and a second `-mcpu=68020` build is out too (DECISIONS.md 2026-09-23, *hardware decoding*) |
+| The Macintosh 512K — 64 KB of ROM | **the interface runs; extraction needs HFS** | measured 2026-09-01; the branch `rom64k` gets as far as Standard File, and only a Hard Disk 20 supplies HFS, which nobody has run (FORMATS.md, *A true Macintosh 512K*; MANUAL_TESTS.md §6). A **128K** is out on the heap TOTAL, corrected 2026-10-06 (FORMATS.md, *A Macintosh 128K*, *Overlays*) |
 | StuffIt X (`.sitx`) | **detect-only** | out by the brief |
-| PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too. Every OTHER encryption these formats have is decrypted, including WinZip's AES (FORMATS.md, *Encryption*) |
-| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | extracting one means a filesystem rather than a codec, and naming one is worth nothing either: a disk image is not an archive, so the name leaves a user exactly where "not recognized" does. The probes are complete, graded and kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). **DART is the one exception, since 2026-09-09**, and it is an exception to the first clause only: a compressed DART expands to an UNCOMPRESSED DART, which is a codec with no volume anywhere in it, and no file on the disk is ever looked at. FORMATS.md, *DART* |
-| PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header. PMarc is a Japanese PC format with its own coders, `-lhx-` is UNLHA32's extension; neither reached a Macintosh |
-| Self-extracting LZH (an executable with an archive behind it) | **not recognised** | the archive sits behind DOS, Amiga, Atari or X68000 machine code, and finding it means knowing each of those loaders. `unar` has a parser per platform; here the answer is to hand the `.lzh` itself to the extractor |
-| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | none is a Macintosh archive format, none carries a resource fork or Finder metadata, and every one is served by a maintained extractor on any machine that can run one. NAMING them is in scope (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
-| Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and REFUSES to decompress — `_Debugger` at its own 0xd4 — so no Alysis expander in reach can read what it writes, and nor can this engine or any other module in the library. Streams can be made here at will and there is nothing whatever to grade one against. It is reachable from Alysis's own compress path (level 11 of INIT 32's table at +0xf2e), so a file COULD exist; reading one would mean inverting that compressor with no second reader anywhere, for a codec no archive in the corpus uses (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29, *the specimen that would have settled nothing*) |
-| Zip64 addressing past 4 GB | **the counts and the per-ENTRY escape are read; over-4-GB fields are refused** — `UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry — and `unc_zipseg_describe` still answers `UNC_ERR_UNSUPPORTED` for a spanned set | zip's own shape is what keeps it out: the directory fields are 32-bit and the Zip64 escape is read as `uint32` halves, so reading past 4 GB properly is a format change rather than a type change. The type is not the obstacle — `UncIO` carries `unc_off_t`, 64-bit in the CLI, for +0.51 % of text and 0 bytes of heap (DECISIONS.md 2026-08-28, *what a width costs*). Reading the halves is what makes a 70,000-entry archive extract, and a 3.4 GB one (FORMATS.md, *Size limits*); tar, whose positions are a running sum, reaches past 4 GB today |
+| PKWARE "strong encryption" in a zip (flag 0x40) | **named, refused per entry** | its key material is in a record nothing here parses, and XADMaster refuses it too; every other cipher these formats have is decrypted (FORMATS.md, *Encryption*) |
+| Disk images (`.image`, `.img`, `.iso`, `.cdr`, `.toast`, `.dmg`, `.smi`), and Disk Copy 4.2 | **not recognised**, and not extracted | a filesystem, not a codec; the probes are kept in `attic/` (DECISIONS.md 2026-08-26, *read the volume, not the extension*). DART was in from 2026-09-09 to 2026-09-25 and left for MacMount (DECISIONS.md 2026-09-25, *the disk images that found another home*) |
+| PMarc (`-pm0-`, `-pm1-`, `-pm2-`) and `-lhx-` | **not recognised** | a different family behind an LZH-shaped header; neither reached a Macintosh |
+| Self-extracting LZH (an executable with an archive behind it) | **not recognised** | nothing in the file says where the first header is, unlike a zip, whose offsets are absolute — which is why a self-extracting zip is recognised since 2026-10-05 (DECISIONS.md 2026-10-05, *the scan that was already being paid for*) |
+| RAR, 7z, bzip2, xz, Cabinet, Zoo, ar/`.deb`, cpio, ARJ | **named, never extracted** | not Macintosh formats, and each is served by a maintained extractor (DECISIONS.md 2026-08-26, *a name is only worth something inside the frame the user came with*; FORMATS.md, *Archives named but not extracted*) |
+| Alysis SuperDisk! method 13 | **not implemented, and no specimen is wanted** | its module compresses and refuses to decompress, so nothing anywhere could grade a decoder (FORMATS.md, *Module 13*; DECISIONS.md 2026-08-29, *the specimen that would have settled nothing*) |
+| Checking a MIME part's `Content-MD5` | **not implemented**; a `message/partial` anchor that is not a part — the set pasted into one file, or part 1 with a signature after it — comes out wrong with exit 0, as from munpack | decided 2026-10-11: built and priced at **+1,446 B** of `ovl_text` for a header mpack writes and nothing here has seen in a file this project did not make (FORMATS.md, *`message/partial`*; DECISIONS.md 2026-10-11, *the digest our own oracle could not compute*) |
+| Zip64 addressing past 4 GB | **counts and the per-entry escape are read; over-4-GB fields are refused** (`UNC_ERR_UNSUPPORTED` per archive, `UNC_ERR_TOOLARGE` per entry; `unc_zipseg_describe` refuses a spanned set) | a format change, not a type change (DECISIONS.md 2026-08-28, *what a width costs*; FORMATS.md, *Size limits*); tar reaches past 4 GB today |
 
 Everything detect-only is **named** by `unc_sniff`, and both front ends say
 the name: the CLI prints *"recognized as RAR, which v1 cannot extract"* and
 the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
-(photographed on System 6.0.8). Extraction returns cleanly unsupported either
-way.
-
-## Overlays and selective loading: built, measured, parked
-
-**Not open, and not untried.** Loading part of the engine from a resource on
-demand works and runs on a 1 MB Mac Plus. Two branches keep it —
-`selective-loading` (the ciphers fetched when a format wants them) and
-`overlay-eager` (the same overlay loaded at launch) — and **neither is
-merged**.
-
-Three measurements decided it: the prize is **5,988 B**, about one archive in
-922 at the corpus's headroom density, and not one of the archives still out of
-reach; **StuffIt can never be one of the formats it helps**, because an
-encrypted entry is discovered as the entry is read; and the disk dependency
-**cannot be removed, only moved** — one branch pays a mid-run access on the
-first encrypted archive, the other on the second, on a machine with one floppy
-drive. What an end user would trade is a disk swap or a stall for memory that
-opens nothing new. DECISIONS.md 2026-08-31, *the overlay that works and is not
-worth it*.
-
-**What would reopen it:** something needing tens of kilobytes rather than
-six. The mechanism and its traps are written up in `BRANCH_NOTES.md` on either
-branch, so reopening it is a merge and not a rediscovery.
 
 ## Limits of the formats themselves
 
-- **A raw brotli stream cannot be identified, by this or any program.** RFC
-  7932 section 9.1 is its entire stream header: one to seven bits of WBITS,
-  and nothing else. No magic number, no signature, no version byte, no
-  length. So `unc_sniff` will never name a `.br`, and the reason is the
-  format rather than a missing reference. **What would change it:** nothing
-  in the format. A host that trusts the filename could act on `.br`, which
-  is a naming question and not an identifying one.
-  `reference/notes/brotli_rfc7932.txt` is kept as the evidence for a
-  negative.
+**What would change any of these: nothing in the format.**
 
-- **A cut tar cannot be noticed, by this or any program.** A tar has no
-  directory, no entry count and no length of its own, so a file that
-  stops after five members reads exactly as a tar with five members. The
-  two 512-byte zero blocks that POSIX ends an archive with would be the
-  evidence — and they are not reliably there: `derived-popper-1.7.tar`,
-  a real corpus archive, ends with **zero** trailing zero bytes, so
-  requiring them would call it truncated. `unar` accepts a cut tar too.
-  Every other format in the corpus notices a cut at three sampled cut
-  points (`tools/run_truncation.py`, in `ci.sh`). **What would change
-  it:** nothing in the format. A host that knows what the download was
-  SUPPOSED to weigh could compare, which is a question about the
-  transfer and not about the archive.
+- **An encrypted classic StuffIt archive that has lost its resource fork
+  cannot be decrypted by anything**: the password verifier is its `'MKey'`
+  resource. The engine says *"encrypted by a scheme we cannot read"*; the
+  fork counts as present in a MacBinary or BinHex envelope or a sidecar
+  (`load_mkey`, `cli/main.c`). It is the only one of the eight ciphers so
+  affected, measured 2026-10-07 (FORMATS.md, *Encryption*).
+- **A fork compressed by a third party's StuffIt compressor module (method
+  nibble 7) is not decodable.** 2.0.1's own `STR# 267` names a
+  `Compressors` folder among its eight; Aladdin's two disks fill five of
+  them and not that one, and none has surfaced since; the engine names the module id and refuses the entry
+  (FORMATS.md, *What an Optimizer did to the fork*).
+- **A raw brotli stream cannot be identified**: RFC 7932 §9.1 has no magic
+  (`reference/notes/brotli_rfc7932.txt`).
+- **A cut tar cannot be noticed**: no directory or length, and the trailing
+  zero blocks are not reliably there (`derived-popper-1.7.tar` has none).
+  Every other format notices a cut (`tools/run_truncation.py`).
+- **One 46-byte window of a DiskDoubler DDA2 archive is ambiguous**: a cut
+  there is byte-for-byte a valid ending (`derived-DD_Expand.sea`;
+  DECISIONS.md 2026-08-29, *a cut archive*).
+- **A uuencoded set missing a middle part decodes short, silently**: no
+  length or checksum; a missing last part is caught. `tools/run_uu.py`
+  asserts this result.
 
-- **One 46-byte window of a DiskDoubler DDA2 archive is ambiguous.** A
-  DDA2 archive normally ends with a 0xBBBB record, and a walk that never
-  reaches one is reported truncated — except that an archive may
-  legitimately end without it, leaving fewer than the 46 bytes one record
-  needs after its last entry. `derived-DD_Expand.sea` ends exactly so and
-  `unar` reads it, so a cut that lands in that same window is
-  byte-for-byte a valid ending; `ddtf-ddpro411dd3.dd` cut to a fifth is
-  the measured case, and every other cut point in the corpus is caught.
-  **What would change it:** nothing in the format — the two files are
-  identical there. The rule that tries is DECISIONS.md 2026-08-29, *a cut
-  archive*.
+---
 
-- **A uuencoded set missing a MIDDLE part decodes short, and silently.** A
-  document posted in several parts joins and decodes — the mail headers
-  between parts are stepped over — but uuencode carries no length and no
-  checksum anywhere, so nothing can notice that a part never arrived. A
-  missing LAST part IS caught: the terminator and `end` live there. Asserted
-  rather than described — `tools/run_uu.py` builds a gapped set and requires
-  exactly this result, so the day the format turns out to have a check, the
-  suite says so. **What would change it:** nothing in the format. A host that
-  knows the parts were numbered `1/5` could check the count, which is a naming
-  question and not a decoding one.
+## The licence cannot move, and this is the irreducible core
+
+**Measured and settled** (the 2026-09-19 shedding brief): five items have no
+permissive statement anywhere, so LGPL-2.1 stays. **Do not re-price
+these** — each was settled with a measurement, and prices live in
+FORMATS.md (*Resident memory*). The full per-file inventory is NOTICE's,
+checked by `tools/check_provenance.py`.
+
+| what | why nothing replaces it |
+|---|---|
+| `unc_lzdyn.c` — `-lh2-` and `-lh3-` | lhasa implements neither and LHa for UNIX has its own licence; **kept**, settled 2026-08-25 and 2026-09-23 (DECISIONS.md, *the 3,504 bytes that stay*) |
+| `fmt_sit.c` — three rules of StuffIt method 8 (table restart, end of stream, 14-bit ceiling) | no specimen reaches any of them and deark leaves the method NULL (checked 2026-09-27; DECISIONS.md, *the layout Aladdin's own output settled*) |
+| `unc_crypt.c` — StuffItDES's key schedule | reads all 64 key bits, so no standard schedule; graded against three StuffIt Deluxe 3.5.1 archives every run |
+| `unc_lzah.c` — the `-lh1-`/method-5 window preload | the corpus cannot tell XADMaster's reading from lhasa's, measured 2026-09-28; a stream reaching back past ~110 bytes would (DECISIONS.md 2026-09-28, *the preload nothing reaches*) |
+| `src/sit14.c` — StuffIt 5's method 14 | libxad's `SIT_14` is the only implementation; deark leaves it NULL (checked 2026-10-03). Graded against `unar` and `synth-sit14.sit` (FORMATS.md, *StuffIt 5's method 14*) |
+| `fmt_arc.c` — Crunch 5/6/7 and Crush | no other implementation of 7 or Crush, and nothing could grade a rewrite; **not taken, decided 2026-09-22** |
+| four tolerances no specification supports — the MacBinary CRC-16/0xA001 fallback and its nonzero-date test, the byte-swapped AppleSingle header, the StuffIt split header | deark read for all four 2026-09-27, a checked negative (its MacBinary is CRC-16/XMODEM alone with no date test; `de_identify_applesd` takes only big-endian magics); the two MacBinary ones are also unexercised (933 fixtures, 9,330 variants, 2026-09-28), and the fallback is pinned in `tests/unit_formats.c` |
 
 ---
 
 # Part 2 — Open items
 
----
+## What the LC 475 found that is not fixed
 
-## Selective extraction: the entries the user ticked, and no others
+The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
+§2, §4). Each is measured on that machine and nowhere else.
 
-**Asked for 2026-09-03**: show what is in the archive, extract what is chosen.
+- **Cmd-. does nothing on a French (AZERTY) keyboard.** The period
+  needs Shift there, and the shell compares the event's character with
+  `'.'` (`mac/macextract_mac.c`, the progress pump). *Hypothesis*: with
+  Command down, that key does not report a period — Apple's technote on
+  international canceling is about this case, and it has not been read
+  here. The Cancel button works. Closing it starts with that technote,
+  and is priced in bytes like any shell change.
+- **There is no way to switch out of the application on System 7.**
+  It has no menu bar at all, so the Process Manager has nowhere to put
+  the Application menu, and the `SIZE` flag `canBackground` buys
+  nothing a user can reach. Closing it needs a menu bar, priced at the
+  floor.
+- **The time estimate steps backwards for a tick**, on StuffIt 5 (the
+  bar never does). Not looked into.
 
-**The engine already has both halves.** `UncOptions.list_only` walks the
-containers and reports every entry through `begin_entry` while decoding
-nothing, and a `begin_entry` that returns >0 skips its entry — the data is
-not decoded and `end_entry` is not called (`include/macextract.h`, *Sink*).
-So this is a shell and a UI item; no format and no decoder is involved.
+## The overlay loader: whether the flush is needed
 
-What it costs, all of it on the Macintosh side:
+**The shipped bytes have run on silicon**: an LC 475 (68LC040) under
+System 7.6.1 extracted nine archives in five formats on 2026-10-11,
+no bomb (BLOCKERS.md, *Status*). What that run cannot say is whether the
+flush at both fixup sites is NEEDED, because it ran with the flush in
+place: a CPU-cache machine running a build WITHOUT `ovl_flush_code`
+would answer it — a wrong byte or a crash there, and none here, says
+the call is load-bearing. The cache state on that machine was the
+7.6.1 default, not checked (*hypothesis*: on). Short of that run, read
+every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`, `kf`,
+`rf`, `fc`, `fn`) rather than on the tally alone.
 
-- **a second walk of the archive**, at no decode. The LAST layer only: a
-  chain's envelopes are unwrapped to disk either way, so `.sit.hqx` is not
-  walked twice.
-- **the list, on a 1 MB machine.** The end-of-run report holds 64 lines in a
-  6 KB pool for this reason, and a 70,000-entry zip fits in nothing. A cap,
-  and *"too many entries to choose from"* falling back to extracting
-  everything, is the shape that stays honest; the choice itself is a bit per
-  entry.
-- **the two passes have to agree entry for entry.** An ordinal alone is
-  fragile — match the name too, and extract everything rather than the wrong
-  thing if they diverge.
-- **the list is hand-drawn**, like the report box: the floor is System 3.0.
+## Hand-written 68000 assembly: candidates, held for one VM pass
 
-**What would close it:** the shell answering >0 for what was not ticked,
-graded through the mock sink, plus the list driven on screen on System 3.0
-and System 6 (`tools/vmac/interactive.py`).
+**Not started, by decision (2026-10-09).** The engine is portable C99
+and has no assembly. The maintainer's call is to collect the loops where
+hand assembly beats what GCC emits, and then build, test and time them
+together in one pass, rather than one at a time. Every figure is
+an ESTIMATE from the MC68000 timing table and none has been timed on a
+machine (DECISIONS.md 2026-10-09, *what GCC will not do with an
+index*).
 
-**All of that is done on the branch `selective-extract`, and it is not
-merged** — what is left is the decision, because the price is now known:
-2,720 B off every 1 MB extraction's budget whether or not anybody unticks
-anything, and ~10 ms an entry for the second walk. BRANCHES.md, and
-`BRANCH_NOTES.md` on that branch.
+The candidates — twelve loops with a C and an assembly cycle estimate
+each, and fifteen suggestions not yet estimated — are FORMATS.md's
+(*Hand-written 68000 assembly: the candidates, estimated*).
 
-## A DART's checksums, which this writes no fork to carry
+**Prerequisites for the pass**, once for every row:
 
-**Not a scope decision and not a missing specimen: it is a missing
-reference.** An expanded DART comes out with a data fork and nothing
-else. A DART written by the application keeps its integrity check in the
-RESOURCE fork — 'CKSM' 1 over the tags, 'CKSM' 2 over the data, and a
-'DART' 0 string spelling both out — and this writes none of them
-(FORMATS.md, *DART*).
-
-Nothing currently reads them: MacMount parses the data fork alone, and
-no other reader of the format is on this machine. And the bytes are
-verified even so — `tools/run_dart.py` checks what came out against the
-checksums DART recorded in 1993, which is the same assertion from the
-other side.
-
-**What would close it:** a statement of what an UNCOMPRESSED DART's
-resource fork holds. DART 1.5.3 only ever wrote compressed files
-(DART-notes.md: "Compression is always applied by DART v1.5"), so the
-one shape this program produces is a shape no reference describes, and
-writing a partial fork would be inventing the layout. An uncompressed
-DART written by whatever produced them — an earlier version of the
-application, per the same note — would settle it.
-
-## Waiting on a file this machine does not have
-
-**Not scope decisions, and not effort.** Everything here is written or
-writeable; what is missing is something to grade it against. They sit together
-across formats because that is how they close — by somebody finding a file,
-and the finding usually arrives from outside the format it settles. The
-question to bring here is *what did I just find?*
-
-Each says which of the two is missing, because the searches are different:
-
-- a **reference** — a spec, an implementation, or a self-extracting specimen,
-  which is one; rule #1 forbids writing a format without it;
-- a **gradeable specimen** — a file written by something else, so our output
-  has something to be wrong against.
-
-None of this is impossible here: a download would do it.
-
-**Four questions before filing anything here**, each of which has emptied this
-section at least once: is there an implementation that could be **FED**
-(DECISIONS.md, methods 3, 4 and 5); is *"X does not survive"* a claim about
-somebody's **search** (BLOCKERS.md, SuperDisk!'s compressor); does the search
-name the **right tool** (BLOCKERS.md 2026-08-25); and **have you looked at
-all** (BLOCKERS.md, the ARC 7 row, filed and disproved the same day).
-
-- **A SpaceSaver file written by SpaceSaver.** Every codec is graded against
-  Aladdin's own modules (FORMATS.md, *StuffIt SpaceSaver*), so what rests on
-  this is the CONTAINER: the method the application picks for its CPU, the
-  data fork's length rounded up to 256 bytes, the 84-byte header, and the
-  type, creator and Finder flags it moves aside — all currently read from
-  containers this project builds itself. **Nothing here can make the
-  application compress anything**; about twenty emulator runs are accounted
-  for in BLOCKERS.md, and the request now sits in MANUAL_TESTS.md §6.
-  Missing: a **gradeable specimen** — one SpaceSaver file, with the original
-  beside it.
-
-- **AppleLink `.pkg`: one file, which would settle two questions.**
-  Named from Aladdin's own recogniser (FORMATS.md, *AppleLink packages*),
-  and detect-only because nothing here can grade a decoder. Three measured
-  things suggest there is nothing to decode — that a package is a transfer
-  manifest naming files beside it rather than a container — in which case
-  this closes as a property of the format (DECISIONS.md 2026-08-23,
-  *AppleLink `.pkg`, named at last*). Missing: a **gradeable specimen**,
-  which answers both. **Not** something to be produced here: a package
-  written on this machine was offered to all three of Aladdin's own
-  commands that run a translator, each in a boot where a control
-  succeeded, and none of them read it — seven boots, and what PKG Expand
-  asks for turns out to be a FOLDER (DECISIONS.md 2026-09-01, *the
-  package that cannot be handed over*).
+| what | why |
+|---|---|
+| **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py`, the differential suite (every CRC row) and a `UNC_ARS_FORCE_SAMPLED` build (the scan) | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
+| **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe (tools/vmac/README.md) is what prices a change here, and today it cannot reach any cipher |

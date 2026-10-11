@@ -47,9 +47,9 @@ nothing dismisses — Apple's own disk and a disk built here with only that file
 added behave identically, so it is the DRIVER, not the disk layout, and the
 likely reason is that Mini vMac provides no HD20 hardware for it to find.
 
-So the remaining question is one somebody with a real 128K or 512K **and an
+So the remaining question is one somebody with a real 512K **and an
 HD20** can answer in an afternoon, and nobody here can answer at all. That is
-MANUAL_TESTS.md §7, and it is askable only because this branch's `dist/`
+MANUAL_TESTS.md §6, and it is askable only because this branch's `dist/`
 starts.
 
 ## Why it is not on `main`

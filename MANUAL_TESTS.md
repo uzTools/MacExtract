@@ -1,15 +1,26 @@
 # MANUAL_TESTS.md — what only a person outside this machine can settle
 
-**Status: none of it has been done.** No physical Macintosh has ever run this
-application. Everything the repository claims was observed under emulation —
+**Status: one session, on one machine.** The maintainer's LC 475 (68LC040,
+System 7.6.1, 12 MB) ran `dist/` v0.39.0 on 2026-10-11 (§2, §4); it found
+a zip defect no tier could see, fixed the same day (BLOCKERS.md). Nothing
+older has run it. Everything else the repository claims was observed under emulation —
 Mini vMac for System 3.0, 6.0.8 and 7.0.1, QEMU for Mac OS 9.2 — and emulation is
 evidence, not proof.
 
 This file is the to-do list for whoever has what this machine does not — the
-hardware (§1–§5, §7), a copy of the software (§6), or an account to post
-from (§8). Each item says what to do, why nothing here can answer it, and what to
-record. Nothing below is a known failure; it is unverified, which is a
-different thing.
+hardware (§1–§6), an account to post from (§7) or the call on a release (§8).
+Each item says what to do,
+why nothing here can answer it, and what to record. Nothing below is a known
+failure; it is unverified, which is a different thing.
+
+**It is shorter than it was, twice over.** *A file that SpaceSaver itself
+wrote* asked a stranger to compress a file and send it; 48 of them turned
+out to be on CD-ROMs anybody can download. *One archive from a registered
+StuffIt Deluxe* was filed here on 2026-09-28 and deleted the same day: the
+emulator writes it, and the only thing actually missing was a MacPaint
+document, which MacPaint 2.0 drew under Mini vMac in one boot (BLOCKERS.md).
+**Before asking somebody outside this machine, ask what the emulator would
+have to be handed** — and search for the file by its bytes.
 
 Everything that *can* be automated already is, and lives elsewhere:
 
@@ -139,7 +150,14 @@ Toolbox revisions, sometimes a different CPU.
 - [ ] **System 7 with MultiFinder in the background.** Start a long extraction
       and switch to another application: it must stay responsive and the
       extraction must finish (the `WaitNextEvent` path).
-- [ ] **The `SIZE` partition on a small machine.** 4 MB preferred / 400 KB
+**Done on the LC 475, 2026-10-11:** launch, nine archives in five formats
+with no bomb (StuffIt 5 with 45 entries in 29 s), and a 400 KB partition
+refusing one StuffIt 5 entry "at least 136K" short. Not done: MultiFinder
+switching, which the application gives no way to reach (OPEN_ITEMS.md,
+*What the LC 475 found*); counts and names were checked by eye, the bytes
+not at all — extract onto an AppleShare volume next time, and they can be.
+
+- [ ] **The `SIZE` partition on a small machine.** 2 MB preferred / 400 KB
       minimum is in `mac/macextract.r`. Set the application's memory low in Get
       Info and confirm a large Arsenic entry is refused per entry with an
       alert, rather than the application failing to launch.
@@ -160,16 +178,6 @@ Verified under QEMU only, through the 68LC040 emulator.
 - [ ] **8-bit MacRoman names on screen.** The bytes are checked everywhere; how
       they *look* above System 6 is not. `derived-Education7.1.cpt` has a
       `spinning brain ƒ` folder and PackIt's synthetic fixtures have `Appé`.
-- [ ] **The application's icon at 16 COLOURS.** `icl4` and `ics4` are the two
-      members of the icon family that nothing here can display, and it is a
-      hard limit rather than a missing step (measured 2026-08-27): the QEMU
-      `mac99` guest offers exactly one colour depth — its Monitors control
-      panel lists "Millions" and greys out "Grays" — and booted at
-      `-g 1024x768x4` it does not reach the Finder at all, stopping in
-      OpenBIOS. Mini vMac is a 1-bit Mac Plus. So the 1-bit and 8-bit members
-      are photographed (DECISIONS.md 2026-08-24, *the icon*) and the 4-bit
-      pair needs a screen set to 16 colours on real hardware, or an emulator
-      with a 4-bit video mode.
 
 ## 4. The interactive application, on any real machine
 
@@ -180,6 +188,14 @@ Cmd-., partial-output cleanup, the result alert, and an extracted `APPL`
 launching (`tools/vmac/interactive.py --e2e`). Re-doing it by hand is worth one
 pass per machine, because a person notices what a screenshot comparison does
 not.
+
+**Done on the LC 475, 2026-10-11, all as expected unless named:** launch,
+Cancel to the Finder, the Cancel button mid-run, the 31-character cut,
+a `.cpt` tree, a `.hqx` and a `.bin`, a truncated `.sit`, a non-archive.
+Named: Cmd-. on an AZERTY keyboard (OPEN_ITEMS.md, *What the LC 475
+found*); a second archive in the same launch, and the same archive
+twice, both changed by decision the same day (DECISIONS.md 2026-10-11,
+*one archive per launch*, *the folder that is already there*).
 
 Launch and UI
 - [ ] Application launches; SFGetFile appears immediately.
@@ -214,8 +230,11 @@ Extraction correctness
       confirms the resource fork is intact.
 - [ ] A file whose name contains `/`: it appears with the `/` in the Finder
       (the engine's `:` substitution undone).
-- [ ] Extract the same archive twice into the same folder: `name~1` copies, no
-      overwrite, no crash.
+- [ ] Extract the same archive twice into the same folder: a top-level
+      folder comes out as `Folder~1` with the files inside under their own
+      names, a top-level file as `name~1`; no overwrite, no crash.
+- [ ] Extract an archive: the application quits afterwards (the shipped
+      build). Dropping two archives on its icon extracts the first.
 - [ ] An archive with a member name over 31 characters (zip or tar): truncated
       to 31, extraction completes.
 - [ ] A truncated `.sit`: per-entry error alert, application stays alive.
@@ -229,50 +248,16 @@ Extraction correctness
 - [ ] **The progress dialog uses `DialogSelect` without a filterProc.** Confirm
       the Cancel button highlights when clicked.
 
-## 6. A file that SpaceSaver itself wrote
-
-This one is not about the application at all — it is the last gap in a
-FORMAT, and it needs a copy of StuffIt SpaceSaver driven by a person.
-
-- [ ] **Compress one file with SpaceSaver and send the result**, along
-      with the original. Any version, any Macintosh, real or emulated.
-      A file of a few KB is enough; two, one with a resource fork, is
-      better.
-
-**Why nobody here can do it.** SpaceSaver 3.5.1 installs and runs under
-Mini vMac, its control panel opens, and *SpaceSaver Info…* reports
-correctly on a selected file — but every path that would WRITE a
-compressed file declines in silence: the `small` keyword on a file name
-or on the disk, Magic Menu's *SpaceSaver Compress*, *Idle Now* with the
-volume enrolled, and DropCompress. In the same boots, StuffIt Deluxe's
-own *Archive via Rename* fires every time, so the machine is healthy and
-the Finder events arrive. Roughly twenty emulator runs; what is
-eliminated and what is left is in `OPEN_ITEMS.md` and `BLOCKERS.md`.
-
-**What it would settle.** Every SpaceSaver CODEC is already graded
-against Aladdin's own modules, which run on Linux under `qemu-m68k`
-(`tools/ssmodule/`) — methods 0, 1, 2, 3 and 4 all decode byte-exact.
-What has never been checked against a real file is the CONTAINER: the
-method the application picks for the machine it runs on, the data fork's
-length rounded up to 256 bytes, the 84-byte header, and the type,
-creator and Finder flags it moves aside. Those are read from containers
-this project builds itself.
-
-**What to record.** The file, the original, the SpaceSaver version, and
-the Macintosh it ran on (a 68030 or better writes method 3, a 68000
-writes method 4 — so the CPU decides what the specimen exercises).
-`tools/run_spacesaver.py` grades a `.ss` against a `.orig` placed beside
-it in the emulator's specimen directory.
-
----
-
-## 7. A Macintosh 512K with a Hard Disk 20
+## 6. A Macintosh 512K with a Hard Disk 20
 
 **A Macintosh 128K cannot run this and is not what this section asks for.**
 Measured 2026-09-01: the same volume that reaches Standard File on a 512K
-bombs `ID = 03` on a 128K, whose largest single block is 63,744 B against the
-142,152 B of `CODE` the engine lives in (FORMATS.md, *A Macintosh 128K*). The
-machine below is a **512K**, with 512 KB of RAM behind its 64 KB ROM.
+bombs `ID = 03` on a 128K. The reason is CORRECTED 2026-10-06 and the verdict
+is not — it is the heap total rather than one segment, 74,940 B of `CODE`
+resources and A5 world against 78,568 B of application heap, plus the
+`'OVLY'` bundle the eager loader asks for in one block, whose size is
+FORMATS.md's (*Overlays*; *A Macintosh 128K*). The machine below is a **512K**, with 512 KB of RAM
+behind its 64 KB ROM.
 
 **Why nothing here can answer it: Mini vMac does not emulate the Hard Disk
 20.** Apple's own *HD 20 Startup* disk boots on the emulated 512Ke and stops
@@ -320,7 +305,7 @@ what it would establish is that the HFS the `Hard Disk 20` file installs is
 enough for this application — after which the tiers in BLOCKERS.md would still
 have to be re-run before the claim went into README.md.
 
-## 8. Two bug reports, written and not posted
+## 7. Two bug reports, written and not posted
 
 Neither needs a Macintosh — they need an account. Both are reduced to a
 reproduction and written up ready to send; what is missing is somebody to post
@@ -348,6 +333,23 @@ belongs to. If either is rejected or explained upstream, that is a withdrawn
 claim and goes in the same file with what it cost.
 
 ---
+
+## 8. A version number that cannot tell two builds apart
+
+Like §7, this needs no Macintosh — it needs the maintainer. `v0.40.0`,
+tagged 2026-10-11, is the newest release, and `UNC_VERSION` stays at its
+number until the next one is cut (CLAUDE.md, *Cutting a release*). So once
+`main` moves past the tag, `--version`, Get Info's `'vers'` and
+`dist/README.txt`'s title read `0.40.0` on both builds, and a person
+holding a download tells them apart only by its size and date.
+
+**What to record.** Nothing until a build differs from the tag. When one
+does, whether to cut a release is the maintainer's call; the tag is
+confirmable from this machine and the release page is not (CLAUDE.md), so
+the page is somebody else's look.
+
+---
+
 
 ## What a failure here would change
 

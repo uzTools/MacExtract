@@ -41,6 +41,7 @@ document is a question for an emulated Macintosh (tools/vmac/README.md).
 """
 import argparse
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -60,7 +61,7 @@ def run(sink, archive, out):
     The report lines are what the Macintosh box lists at the end of a
     run: the mock prints each one to stderr (tests/mac_sink_test.c), in
     the order the shell recorded them."""
-    r = subprocess.run([sink, archive, out], capture_output=True)
+    r = subprocess.run(sink + [archive, out], capture_output=True)
     got = {}
     for root, _, files in os.walk(out):
         for f in files:
@@ -171,12 +172,12 @@ def path_folder_case(sink, tmp, problems):
 
 def folder_again_case(sink, tmp, problems):
     """The same archive extracted TWICE into the same destination. A
-    folder that is already on the volume is not this run's to number —
-    it is the user's, or the last run's — so the second run descends
-    into it and the FILES inside are what gets numbered. Numbering the
-    folder instead would spray `~1` over the first run's work, and a
-    user who extracts an archive twice has said nothing about wanting
-    two copies of its folders."""
+    top-level folder that is already on the volume is numbered like a
+    file, and the files inside the new one keep their names: the second
+    run is a second copy, beside the first, not `~1` files sprayed
+    through it. The maintainer's call on 2026-10-11, reversing the merge
+    this case asserted before (DECISIONS.md 2026-10-11, *the folder that
+    is already there*). The rename is reported, as every numbering is."""
     base = "H" * HFS
     tree = [synth_dd.folder(base + "folder",
                             [synth_dd.file("x.txt", data=b"in it\n")])]
@@ -186,11 +187,13 @@ def folder_again_case(sink, tmp, problems):
     run(sink, p, out)
     got, rc, rep = run(sink, p, out)
     check(problems, rc == 0, "diragain: exit was %d" % rc)
-    check(problems, sorted(got) == [base + "/x.txt", base + "/x~1.txt"],
-          "diragain: wrote %r, wanted one folder holding both runs' files"
-          % sorted(got))
-    check(problems, not any(l.startswith("Folder ") for l in rep),
-          "diragain: a folder that was already there was reported: %r" % rep)
+    check(problems, sorted(got) == [base + "/x.txt",
+                                    "H" * (HFS - 2) + "~1/x.txt"],
+          "diragain: wrote %r, wanted a second folder, numbered, holding "
+          "the file under its own name" % sorted(got))
+    check(problems, rep == ["Folder " + base + "folder renamed to "
+                            + "H" * (HFS - 2) + "~1"],
+          "diragain: the numbered folder must be reported, once: %r" % rep)
     return 1
 
 
@@ -410,30 +413,114 @@ def folder_table_full_case(sink, tmp, problems):
     return 1
 
 
+def utf8_case(sink, tmp, problems):
+    """A UTF-8 name folded into the bytes an HFS name holds.
+
+    StuffIt 5 states its names in UTF-8 and every other Mac format here
+    states them in MacRoman (macextract.h, `name_utf8`), so the shell
+    folds one into the other before anything else looks at the name —
+    otherwise the Macintosh writes the mojibake the Linux CLI wrote
+    until 2026-09-22. The cases are driven straight through
+    `sink_begin` by `mac_sink_test.c --utf8`, listed there: nothing in
+    this tree writes a StuffIt 5 archive, and what is under test is the
+    SHELL. That the ENGINE sets the flag is graded by run_diff.py over
+    the corpus's own StuffIt 5 fixtures.
+
+    Names below are the bytes that reach the disk — MacRoman, so
+    `\xc4` is the folder mark and `\x8e` is an e-acute."""
+    out = os.path.join(tmp, "utf8")
+    os.mkdir(out)
+    r = subprocess.run(sink + ["--utf8", out], capture_output=True)
+    # Walked as BYTES: these names are MacRoman and are not text to
+    # this host, so decoding them here would only lose them.
+    got = set()
+    for root, ds, fs in os.walk(os.fsencode(out)):
+        for f in list(fs) + list(ds):
+            got.add(os.path.relpath(os.path.join(root, f), os.fsencode(out)))
+    rep = [l[len("report: "):]
+           for l in r.stderr.decode("mac_roman").splitlines()
+           if l.startswith("report: ")]
+    check(problems, r.returncode == 0, "utf8: exit was %d" % r.returncode)
+
+    want = {
+        # U+0192 -> MacRoman 0xC4, and the file under it.
+        b"Cool Tools \xc4",
+        b"Cool Tools \xc4/Cool Tools doc",
+        # Three characters MacRoman has no byte for.
+        b"___.rtf",
+        b"__", b"__/plain",
+        # 16 x U+00E9 is 32 bytes of UTF-8 and 16 of MacRoman: the
+        # 31-character cut acts on the FOLDED name, so nothing is cut.
+        b"\x8e" * 16,
+        # Two different unwritable characters fold to one disk name.
+        b"_.txt", b"_~1.txt",
+        # The same bytes with the flag clear are not folded at all.
+        b"\xc6\x92 classic",
+    }
+    check(problems, got == want,
+          "utf8: on disk %r, wanted %r" % (sorted(got - want),
+                                           sorted(want - got)))
+    lost = [l for l in rep if "cannot write" in l]
+    check(problems, len(lost) == 4,
+          "utf8: %d report line(s) about unwritable characters, wanted 4: %r"
+          % (len(lost), rep))
+    check(problems, any(l.startswith("Folder __ ") for l in lost),
+          "utf8: the folder that lost characters is not named: %r" % (lost,))
+    # A file inside a folder that lost characters is not itself
+    # reported: the folder is said once, and an archive of Japanese
+    # names would otherwise fill the box with one line per file.
+    check(problems, not any(l.startswith("plain") for l in rep),
+          "utf8: a file under a folded folder was reported too: %r" % (rep,))
+    # A name the fold left ALONE says nothing at all.
+    check(problems, not any("classic" in l for l in rep),
+          "utf8: a name that lost nothing was reported: %r" % (rep,))
+    return 1
+
+
+CASES = [
+    ("collision", lambda *a: collision_case(*a)),
+    ("folder-collision", lambda *a: folder_collision_case(*a)),
+    ("path-folder", lambda *a: path_folder_case(*a)),
+    ("folder-again", lambda *a: folder_again_case(*a)),
+    ("folder-crowd", lambda *a: folder_crowd_case(*a)),
+    ("folder-table-full", lambda *a: folder_table_full_case(*a)),
+    ("engine-cap", lambda *a: engine_cap_case(*a)),
+    ("edges", lambda *a: edge_cases(*a)),
+    ("extension", lambda *a: extension_case(*a)),
+    ("report", lambda *a: report_case(*a)),
+    ("failure", lambda *a: failure_case(*a)),
+    ("crowd", lambda *a: crowd_case(*a)),
+    ("utf8", lambda *a: utf8_case(*a)),
+]
+
+
 def main():
     ap = argparse.ArgumentParser()
+    # A LIST, so a cross-built sink can be run under an emulator:
+    #   --sink "qemu-m68k build/mac_sink_m68k"
     ap.add_argument("--sink", default="build/mac_sink_asan")
+    ap.add_argument("--case", action="append",
+                    help="run only these cases (default: all); "
+                         + ", ".join(n for n, _ in CASES))
     args = ap.parse_args()
-    if not os.path.exists(args.sink):
-        print("macnames: %s absent, skipped" % args.sink)
+    sink = shlex.split(args.sink)
+    if not os.path.exists(sink[-1]):
+        print("macnames: %s absent, skipped" % sink[-1])
         return 0
+    if args.case:
+        unknown = [c for c in args.case if c not in dict(CASES)]
+        if unknown:
+            print("macnames: no such case: %s" % ", ".join(unknown))
+            return 2
 
     problems = []
     ran = 0
     tmp = tempfile.mkdtemp()
     try:
-        ran += collision_case(args.sink, tmp, problems)
-        ran += folder_collision_case(args.sink, tmp, problems)
-        ran += path_folder_case(args.sink, tmp, problems)
-        ran += folder_again_case(args.sink, tmp, problems)
-        ran += folder_crowd_case(args.sink, tmp, problems)
-        ran += folder_table_full_case(args.sink, tmp, problems)
-        ran += engine_cap_case(args.sink, tmp, problems)
-        ran += edge_cases(args.sink, tmp, problems)
-        ran += extension_case(args.sink, tmp, problems)
-        ran += report_case(args.sink, tmp, problems)
-        ran += failure_case(args.sink, tmp, problems)
-        ran += crowd_case(args.sink, tmp, problems)
+        for cname, fn in CASES:
+            if args.case and cname not in args.case:
+                continue
+            ran += fn(sink, tmp, problems)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

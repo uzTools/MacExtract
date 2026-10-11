@@ -59,7 +59,7 @@ the application extracted:
 Mini vMac maps the host Alt key to the Mac Command key; see command_key() for
 why the chord is sent as an explicit hold rather than an xdotool chord.
 """
-import argparse, glob, os, shutil, signal, subprocess, sys, tempfile, time
+import argparse, glob, os, re, shutil, signal, subprocess, sys, tempfile, time
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -67,6 +67,11 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
+from mkboot import FINDER_OWN                                # noqa: E402
+
+# `hdir`'s name column on a BYTES listing — a text listing cannot carry the
+# carriage return inside `Icon\r`.
+LISTING_DATE_B = re.compile(LISTING_DATE.pattern.encode("ascii"))
 
 
 def build_interactive_app(defines=()):
@@ -485,8 +490,10 @@ def accept_destination(mac, pause=3.0):
 SFPUT_DRIVE = (337 + 30, 181 + 30)
 
 
-def volume_names(img):
+def volume_names(img, dirs=False):
     """Every file on an HFS image, as checkdisk.py's component tuples.
+
+    With `dirs`, the folders as well — see `checkdisk.walk`.
 
     Not `hls -1` split on whitespace: a Mac filename contains spaces
     ("Demo Manual V1.6" is three fields, one name), may begin with a dot,
@@ -498,7 +505,7 @@ def volume_names(img):
     try:
         if CD.hfs(env, "hmount", img).returncode != 0:
             raise SystemExit(f"interactive: {img} will not mount")
-        names = set(CD.walk(env))
+        names = set(CD.walk(env, dirs=dirs))
         CD.hfs(env, "humount")
         return names
     finally:
@@ -541,17 +548,19 @@ def expected_names(fixture, workdir):
     subprocess.run([CD.CLI, "x", "--forks", "hidden", asmac, "-o", ref],
                    capture_output=True)
     comment_file = os.path.basename(asmac) + ".comment.txt"
+    utf8 = CD.names_are_utf8(fixture, CD.CLI)
     want = set()
     for root, _dirs, files in os.walk(ref):
         for f in files:
             if f.startswith("._"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), ref)
-            comps = [unicodedata.normalize("NFC", c) for c in rel.split(os.sep)]
-            if comps == [comment_file]:
+            raw = rel.split(os.sep)
+            if [unicodedata.normalize("NFC", c) for c in raw] == [comment_file]:
                 want.add(("Comments",))
                 continue
-            want.add(tuple(c.replace(":", "/")[:31] for c in comps))
+            want.add(tuple(unicodedata.normalize("NFC", CD.mac_component(c, utf8))
+                           for c in raw))
     if not want:
         print(f"interactive: the CLI extracted nothing from {fixture} — "
               f"there is no output to look for")
@@ -621,6 +630,104 @@ def volume_text(img, name):
             return f.read().decode("mac_roman").splitlines()
     finally:
         shutil.rmtree(home, ignore_errors=True)
+
+
+def report_reached_image(img, second=False):
+    """Where the report actually is, when the host cannot read it.
+
+    The control for the floppy workaround `phase_report_utf8` carries.
+    That workaround rested on a HYPOTHESIS — that 300 KB across a
+    seven-deep tree grows the catalog and what is written after that
+    does not reach the image — and a hypothesis nothing can read is not
+    one this repository keeps (CLAUDE.md, the reproduction rule).
+
+    **Measured 2026-09-22, and it replaces the hypothesis.** Run with
+    `--utf8-to-boot`, the report is unreadable off the boot volume by
+    any HFS tool, and its bytes are in the image all the same: the three
+    `_` lines and `Extraction complete.` are there, in order, complete.
+    The extraction's own output — 300 KB written to the same volume
+    minutes earlier — is both in the image AND in the catalog, five
+    entries deep, `Icon\r` included. So what is lost is **the catalog
+    update for the last file written**, not the file, and not "what the
+    guest wrote after a point": the File Manager lays a data fork's
+    blocks down before it records the entry, and the run ends between
+    the two.
+
+    That is why no flush helped: four remedies were tried against a
+    write that had already happened. It also says what the workaround
+    is worth — sending the report to another volume gets a catalog
+    entry written on a volume whose catalog is not in that state, which
+    is a sidestep and is still the right one.
+
+    Two readings, printed whatever they say:
+
+      - the CATALOG, which is what every harness here reads — `hls -a`
+        at the volume root, so an invisible file counts as present;
+      - the BLOCKS, a raw search for a string only the saved document
+        can contain. Not its NAME: `Extraction Report` is the default
+        `SFPutFile` offers, so it is in the application's own resources
+        on the same volume, and searching for it answers YES either way.
+        That is the shape of the error this reading is built to avoid.
+
+    **`second=True` is the discriminator**, and it is the one level below
+    this that was left open: whether the lost catalog update is sitting in
+    Mini vMac's buffered stdio or in the guest's own volume cache. With
+    `--utf8-second` the report is saved TWICE, the second time under
+    `Second`, so one more file and one more catalog update follow the
+    first. The three outcomes read differently:
+
+      - `Second` in the catalog and the report NOT: the first entry was
+        overwritten or reordered, not merely unflushed — a property of
+        the ORDER the File Manager records in;
+      - NEITHER in it: whatever holds the tail holds both, which is a
+        buffer with more than one update in it;
+      - the report in it and `Second` NOT: the tail simply MOVED, which
+        is the buffer reading with the blame on whichever write is last.
+    """
+    # The three-`_` line as the DOCUMENT spells it. The application's
+    # resources hold the template without the name, so this matches the
+    # saved file and nothing else — verified at one hit.
+    SAVED = "_______ was named in characters".encode("mac_roman")
+    raw = open(img, "rb").read()
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        listed = []
+        if CD.hfs(env, "hmount", img).returncode == 0:
+            out = CD.hfs(env, "hls", "-a", "-1").stdout
+            listed = [x.decode("mac_roman") for x in out.split(b"\n") if x]
+            CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    print("interactive: the volume's CATALOG holds: "
+          + (", ".join(repr(x) for x in listed) or "<nothing; it did not mount>"))
+    print("interactive: the report is in the catalog       : %s"
+          % ("YES" if REPORT_FILE in listed else "NO"))
+    print("interactive: the extraction's output is in it   : %s"
+          % ("YES" if any(x.startswith("800-SAY-WHAT") for x in listed) else "NO"))
+    print("interactive: the report's TEXT is in the image  : %s"
+          % ("YES" if SAVED in raw else "NO"))
+    if SAVED in raw and REPORT_FILE not in listed:
+        print("interactive: so the bytes landed and the catalog entry did "
+              "not — the reproduction, not the hypothesis")
+    if second:
+        got1 = REPORT_FILE in listed
+        got2 = UTF8_SECOND_FILE in listed
+        print("interactive: the SECOND report is in the catalog: %s"
+              % ("YES" if got2 else "NO"))
+        if got2 and not got1:
+            verdict = ("the later entry landed and the earlier did not — "
+                       "ORDERING, not an unflushed tail")
+        elif not got2 and not got1:
+            verdict = ("neither entry landed — whatever holds the tail "
+                       "holds more than one update")
+        elif got1 and not got2:
+            verdict = ("the tail simply MOVED to the last write — the "
+                       "buffer reading")
+        else:
+            verdict = ("both landed, so a second write is enough to place "
+                       "the first — the first was unflushed, not lost")
+        print("interactive: discriminator says: " + verdict)
 
 
 def phase_report(args, appbin, workdir, shot):
@@ -737,6 +844,184 @@ def phase_report(args, appbin, workdir, shot):
             print(f"interactive: the report names {n}, the volume does not")
     ok = not missing
     print("interactive: report " + ("COMPLETE" if ok else "WRONG"))
+    return ok
+
+
+# The one archive in the corpus whose names a Macintosh cannot write, and
+# the lines it must put in the report. `derived-800saywhat301j.sit` is a
+# StuffIt 5 archive from a Japanese publisher: three of its entries are
+# named in kana and kanji, MacRoman has a byte for none of those, and the
+# shell writes one '_' per code point (FORMATS.md, *A name in the wrong
+# encoding is not a name*).
+#
+# The counts are the whole point of the assertion and they are NOT the
+# character counts a reader would guess: `ユーザーライセンスの購入` is
+# thirteen code points and not twelve, because the archive stores `ザ`
+# DECOMPOSED — `サ` plus U+3099 — and the fold replaces each of them.
+# The oracle manifests hold the composed spelling, which is why nothing
+# noticed until this ran on a Macintosh.
+# How long to let Mini vMac flush before Mac.close() SIGKILLs it. See
+# phase_report_utf8 for what it is for and what it cost to find.
+FLUSH_WAIT = 30.0
+
+# What Save as Text offers as the document's name, and what the volume is
+# therefore searched for. It is ALSO in the application's own resources,
+# which is why report_reached_image() searches the blocks for the
+# document's CONTENT and the catalog for this.
+REPORT_FILE = "Extraction Report"
+# The second report, saved under a name of its own by `--utf8-second`.
+# Its only job is to be the NEXT catalog update after the first one's.
+UTF8_SECOND_FILE = "Second"
+
+UTF8_REPORT_FIXTURE = "derived-800saywhat301j.sit"
+UTF8_REPORT_LINES = [
+    "_______ was named in characters this Macintosh cannot write",
+    "_______.rtf was named in characters this Macintosh cannot write",
+    "_____________.rtf was named in characters this Macintosh cannot write",
+]
+# The names those lines are ABOUT — `800-SAY-WHAT 3.0.1J:_______` and the
+# two `.rtf`s — are not checked here, and deliberately: `run.py
+# --keep-disks` then `checkdisk.py` already compares them off the Out
+# volume for this very fixture, with both forks, as part of a 71-fixture
+# sweep. This phase would be a second, weaker copy of that check, and it
+# cannot even make it — hfsutils will not list the ROOT of a volume the
+# interactive build leaves behind ("Current HFS directory 'Dest::' no
+# longer exists"), though `hcopy` still fetches a file from it by name,
+# which is why the document below can be read and a listing cannot.
+
+
+def phase_report_utf8(args, appbin, workdir, shot):
+    """The report line no generated archive can make it say.
+
+    `--report` builds its own DiskDoubler archive, and no DiskDoubler
+    archive can reach this line: the fold runs only where the ENGINE says
+    the names are UTF-8, which `fmt_sit5.c` alone does. So this phase
+    ignores the fixture argument the other way round — it uses one real
+    corpus archive, named above.
+
+    Four frames and one assertion. The frames are the box, Standard File
+    over it after **Save as Text**, the box redrawn once that is
+    dismissed, and SFGetFile afterwards; there is no scrolled frame
+    because four lines do not fill the box, and `--report` is where the
+    live scroll bar is photographed. The assertion is the saved DOCUMENT,
+    for the reason `--report` asserts one: a photograph of a box full of
+    '_' cannot fail, and a missing line in that file can.
+
+    **The output goes to a floppy and not beside the archive**, which is
+    the one way this phase differs from `--report` and it is not
+    cosmetic. Extracting this archive onto the BOOT volume leaves the
+    saved report unreadable on the host: the Macintosh has the file —
+    frame 4 photographs it in Standard File's own listing — and `hcopy`
+    off the image cannot find it. Four things did not help: a 30 s flush
+    wait, Mini vMac's Control-Q, SIGTERM instead of SIGKILL, and the
+    shell's own `FlushVol`, already called at `macextract_mac.c`'s
+    Save-as-Text.
+
+    **What it is, measured rather than guessed, is `--utf8-to-boot`'s
+    doing**: the report's BYTES are on the image — the three `_` lines
+    and `Extraction complete.`, in order, complete — and its **catalog
+    entry is not**, while the 300 KB the extraction wrote to the same
+    volume minutes earlier is in both. So nothing is lost after a point;
+    what is lost is the directory record for the last file written, and
+    no flush could have helped because the write had already happened.
+    `report_reached_image` reads both, and DECISIONS.md 2026-09-22, *the
+    file that was on the disk and not in the catalog*, has the rest.
+    Sending the report to another volume gets its entry written on a
+    volume whose catalog is not in that state: a sidestep, and the right
+    one.
+
+    **`--utf8-second` is the level below that, and it is settled too.**
+    Saving the report a second time under its own name puts one more
+    catalog update after the lost one, and BOTH entries then land — so
+    the first was unflushed rather than lost, and a fixed tail of Mini
+    vMac's buffered stdio is ruled out, since both entries live in the
+    same catalog leaf (DECISIONS.md 2026-09-22, *the entry a second
+    write placed*).
+    """
+    fixture = os.path.join(R.REPO, "fixtures", UTF8_REPORT_FIXTURE)
+    if not os.path.exists(fixture):
+        print(f"interactive: no {UTF8_REPORT_FIXTURE} in fixtures/ — this "
+              f"phase has no subject (fixtures/SOURCES.md)")
+        return False
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-utf8.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+         bootimg, "--data", f"{fixture}:archive.sit")
+    destdsk = os.path.join(workdir, "dest.dsk")
+    R.make_floppy(destdsk, "Dest", size_kb=1440)
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir, extra=(destdsk,))
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        # Standard File opens on the last-inserted volume, the empty
+        # floppy; drive back to the boot volume for the archive.
+        mac.click(*SF_DRIVE)
+        time.sleep(2.0)
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        time.sleep(3.0)
+        if not getattr(args, "utf8_to_boot", False):
+            mac.click(*SFPUT_DRIVE)            # ...and away to the floppy
+            time.sleep(1.5)
+        accept_destination(mac, pause=1.0)
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "utf8-1-box.png")            # the three lines, outcome last
+        mac.click(*REPORT_SAVE)
+        time.sleep(4.0)
+        shot(mac, "utf8-2-save.png")
+        mac.key("Return")
+        time.sleep(5.0)
+        shot(mac, "utf8-3-saved.png")
+        if getattr(args, "utf8_second", False):
+            # The DISCRIMINATOR. Save the report a SECOND time, under a
+            # name of its own, so one more small file and one more catalog
+            # update land on this volume after the first report's. Which
+            # of the two entries survives is the whole reading; see
+            # `report_reached_image`.
+            mac.click(*REPORT_SAVE)
+            time.sleep(4.0)
+            mac._xdo("type", "--delay", "120", UTF8_SECOND_FILE)
+            time.sleep(1.0)
+            shot(mac, "utf8-3b-second-named.png")
+            mac.key("Return")
+            time.sleep(5.0)
+            shot(mac, "utf8-3c-second-saved.png")
+        mac.click(*REPORT_OK)
+        time.sleep(3.0)
+        shot(mac, "utf8-4-back.png")
+        time.sleep(FLUSH_WAIT)
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
+    if getattr(args, "utf8_to_boot", False):
+        keep = os.path.join(args.outdir, "utf8-boot.hfv")
+        shutil.copyfile(written, keep)
+        print("interactive: the boot volume this run wrote is kept at "
+              + keep)
+        report_reached_image(keep, second=getattr(args, "utf8_second", False))
+    lines = (volume_text(destdsk, "Extraction Report")
+             or volume_text(written, "Extraction Report"))
+    if lines is None:
+        print("interactive: NO saved report on either volume")
+        return False
+    for l in lines:
+        print("interactive: report | " + l)
+    missing = [w for w in UTF8_REPORT_LINES if w not in lines]
+    # Nothing FAILED here — every entry came out, under a name the disk
+    # can hold — so the outcome is the clean one even though the box is
+    # up. That is the difference between this phase and --report.
+    if not lines or "Extraction complete." not in lines[-1]:
+        missing.append("<'Extraction complete.', on the last line>")
+    for m in missing:
+        print("interactive: NOT in the saved report: " + m)
+    ok = not missing
+    print("interactive: utf8 report " + ("COMPLETE" if ok else "WRONG"))
     return ok
 
 
@@ -1130,7 +1415,10 @@ def read_joined(image, name, workdir):
             return None
         got = CD.hfs(env, "hcopy", "-r", b":" + name, out.encode())
         if got.returncode != 0:
-            listing = CD.hfs(env, "hls", "-l").stdout.decode("mac_roman")
+            # `-a`: this line runs only when the file was NOT found, so a
+            # listing that hides an invisible file is misleading exactly
+            # when it is read (2026-09-23).
+            listing = CD.hfs(env, "hls", "-a", "-l").stdout.decode("mac_roman")
             print("interactive: not on the volume, which holds:\n" + listing)
         CD.hfs(env, "humount")
         return open(out, "rb").read() if got.returncode == 0 else None
@@ -1142,7 +1430,17 @@ def build_named_set(kind, workdir, fixture):
     """A set whose parts are placed by NAME, and the one file it must
     produce. Both schemes are given ONE payload on purpose: the check at
     the end is a byte comparison, and one file can be compared without
-    walking a tree off an HFS volume."""
+    walking a tree off an HFS volume.
+
+    **`zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks the
+    archive as split whatever its size, so a smaller payload produces one
+    `Aset.zip` and no `Aset.z01` at all — a one-part set the application
+    correctly refuses with *"This archive has more parts. Find them and
+    try again."* That photographs as an application bug and is an
+    invocation error; it cost a run on 2026-09-23.
+    `fixtures/derived-xmasbeeps.sit` (286 KB) is what this is driven with.
+    `split` has no such floor: it cuts any payload into three.
+    """
     d = os.path.join(workdir, "namedset")
     os.makedirs(d, exist_ok=True)
     blob = open(fixture, "rb").read()
@@ -1168,6 +1466,49 @@ def build_named_set(kind, workdir, fixture):
             f.write(blob[i * cut:(i + 1) * cut])
         parts.append(p)
     return parts, b"Ablob", blob
+
+
+def volume_entries(image, ignore=()):
+    """Every NAME at the root of <image>, minus the Finder's own and
+    <ignore>. The entry set three phases compare against what the
+    application should have written.
+
+    Extracted 2026-09-23 from `phase_wrapped`, `phase_chain` and
+    `phase_named`, which held three copies of it. Two things follow from
+    having one:
+
+    - **`walkprobe.py` can grade it.** The copies could not be graded by
+      anything: each was inline in a phase that drives an emulator, so
+      "these select by a name they chose themselves, so `-a` is
+      harmless" was a reading of the code rather than a measurement.
+      Three of the nine ungraded listers become one graded walk.
+    - **the `Icon\r` bug is fixed once.** All three called
+      `splitlines()`, which splits on a carriage return as well — and a
+      CR is a legal HFS filename character, the last one of `Icon\r`.
+      `hdir` prints it verbatim, so a custom folder icon arrived as a
+      name cut in half. The same defect the two Compact Pro walks had,
+      in a different spelling.
+    """
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        if CD.hfs(env, "hmount", image).returncode != 0:
+            return set()
+        listing = CD.hfs(env, "hdir", "-a", ":").stdout
+        CD.hfs(env, "humount")
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+    drop = set(ignore) | FINDER_OWN
+    got = set()
+    # split on b"\n" alone: splitlines() would cut `Icon\r` in two.
+    for raw in listing.split(b"\n"):
+        m = LISTING_DATE_B.search(raw)
+        if not m:
+            continue
+        nm = m.group(1).decode("mac_roman", "replace")
+        if nm not in drop:
+            got.add(nm)
+    return got
 
 
 def phase_wrapped(args, appbin, workdir, shot):
@@ -1229,24 +1570,10 @@ def phase_wrapped(args, appbin, workdir, shot):
         if os.path.exists(scratch):
             os.remove(scratch)
 
-    home = tempfile.mkdtemp(prefix="hfs-")
-    env = dict(os.environ, HOME=home)
-    try:
-        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
-        CD.hfs(env, "humount")
-    finally:
-        shutil.rmtree(home, ignore_errors=True)
-    got = set()
-    for line in listing.splitlines():
-        m = LISTING_DATE.search(line)
-        if not m:
-            continue
-        nm = m.group(1)
-        if nm in ("System Folder", "Desktop", "MacExtract") or \
-                nm.startswith("StuffIt Expander") or nm in onvol:
-            continue
-        got.add(nm)
+    got = {n for n in volume_entries(os.path.join(workdir, "boot.hfv"),
+                                     ignore={"System Folder", "MacExtract"}
+                                     | set(onvol))
+           if not n.startswith("StuffIt Expander")}
 
     # The reference CLI, same binary and same guard as phase_chain: this
     # named `build/dev` until 2026-09-03, which nothing builds and which
@@ -1306,22 +1633,14 @@ def phase_chain(args, appbin, workdir, shot):
             os.remove(scratch)
 
     # What the Mac ended up with, at the root of the volume it wrote to.
-    home = tempfile.mkdtemp(prefix="hfs-")
-    env = dict(os.environ, HOME=home)
-    try:
-        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
-        CD.hfs(env, "humount")
-    finally:
-        shutil.rmtree(home, ignore_errors=True)
-    ignore = {"System Folder", "StuffIt Expander\u2122 4.0.1 Folder", "Desktop",
-              "MacExtract", onmac}
-    got = set()
-    for line in listing.splitlines():
-        m = LISTING_DATE.search(line)
-        if m and m.group(1) not in ignore and \
-                not m.group(1).startswith("StuffIt Expander"):
-            got.add(m.group(1))
+    # `Desktop` was in this ignore set by hand until 2026-09-23;
+    # `volume_entries` drops the whole of FINDER_OWN, which also covers
+    # the `Desktop DB`/`Desktop DF` a later System writes instead.
+    got = {n for n in volume_entries(
+               os.path.join(workdir, "boot.hfv"),
+               ignore={"System Folder", "StuffIt Expander\u2122 4.0.1 Folder",
+                       "MacExtract", onmac})
+           if not n.startswith("StuffIt Expander")}
 
     # What the Linux CLI makes of the same file, recursion and all. The
     # same binary every other reference in this file uses: this named
@@ -1397,25 +1716,11 @@ def phase_named(args, appbin, workdir, shot):
     # behind and deletes the archive. This phase checked for the file and
     # failed the day the loop landed; the application was right and the
     # expectation was a day old.
-    home = tempfile.mkdtemp(prefix="hfs-")
-    env = dict(os.environ, HOME=home)
-    try:
-        CD.hfs(env, "hmount", os.path.join(workdir, "boot.hfv"))
-        listing = CD.hfs(env, "hdir", ":").stdout.decode("mac_roman")
-        CD.hfs(env, "humount")
-    finally:
-        shutil.rmtree(home, ignore_errors=True)
     onvol = {os.path.basename(p) for p in parts}
-    got = set()
-    for line in listing.splitlines():
-        m = LISTING_DATE.search(line)
-        if not m:
-            continue
-        nm = m.group(1)
-        if nm in ("System Folder", "Desktop", "MacExtract") or \
-                nm.startswith("StuffIt Expander") or nm in onvol:
-            continue
-        got.add(nm)
+    got = {n for n in volume_entries(os.path.join(workdir, "boot.hfv"),
+                                     ignore={"System Folder", "MacExtract"}
+                                     | set(onvol))
+           if not n.startswith("StuffIt Expander")}
 
     # The reference CLI, same binary and same guard as phase_chain — see
     # phase_wrapped for what the old `build/dev` path cost.
@@ -1655,6 +1960,122 @@ def phase_password(args, appbin, workdir, shot):
     return bad == 0
 
 
+def read_forks(image, name, workdir):
+    """(data, rsrc) of a file in the root of an HFS image, or None."""
+    out = os.path.join(workdir, "forks-read.bin")
+    home = tempfile.mkdtemp(prefix="hfs-")
+    env = dict(os.environ, HOME=home)
+    try:
+        if CD.hfs(env, "hmount", image).returncode != 0:
+            return None
+        got = CD.hfs(env, "hcopy", "-m", b":" + name, out.encode())
+        if got.returncode != 0:
+            listing = CD.hfs(env, "hls", "-a", "-l").stdout.decode("mac_roman")
+            print("interactive: not on the volume, which holds:\n" + listing)
+        CD.hfs(env, "humount")
+        if got.returncode != 0:
+            return None
+        b = open(out, "rb").read()
+        dl = int.from_bytes(b[83:87], "big")
+        rl = int.from_bytes(b[87:91], "big")
+        roff = 128 + (dl + 127) // 128 * 128
+        return b[128:128 + dl], b[roff:roff + rl]
+    finally:
+        shutil.rmtree(home, ignore_errors=True)
+
+
+def phase_privatefile(args, appbin, workdir, shot):
+    """Does the APPLICATION read a Private File — the one format whose
+    reader keys its cipher through the crypt overlay's own entry
+    (`OVL_CRYPT_PF`) and whose payload is a second archive?
+
+    The specimen is one Aladdin's PF Encrypt™ wrote under Mini vMac
+    (tools/vmac/privatefile.py), from the `Forked` subject: both forks,
+    password `hushnow`. Answered wrongly once, as `--password` does,
+    and graded on the host: both forks of `Forked`, read off the volume,
+    against the bytes that subject was made of.
+    """
+    import glob
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "privatefile", os.path.join(HERE, "privatefile.py"))
+    pf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pf)
+    subj = {n: (d, r, pw) for n, _t, _c, d, r, pw in pf.SUBJECTS}
+    found = sorted(glob.glob(os.path.join(pf.SPECIMENS, "*",
+                                          "Forked.pf.bin")))
+    if not found:
+        raise SystemExit("interactive: no Forked.pf.bin specimen — "
+                         "tools/vmac/privatefile.py --make makes one")
+    data, rsrc, password = subj["Forked"]
+    stock = os.path.join(R.VMAC_HOME, args.system)
+    bootimg = os.path.join(workdir, "boot-pf.hfv")
+    # System 3.0 reads no shell name (sys30.py), so there the application
+    # is double-clicked out of the Finder, as --e2e does it.
+    finder = args.system == "Sys30.img"
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, appbin,
+         bootimg, *(["--finder"] if finder else []),
+         "--macbin", f"{found[-1]}:Forked.pf")
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        if finder:
+            mac.click(*FINDER_VOLUME_ICON, double=True)
+            time.sleep(4.0)
+            shot(mac, "pf-0-volume.png")
+            mac.click(*FINDER_APP_ICON, double=True)
+            time.sleep(args.launch_wait)
+        shot(mac, "pf-1-sfgetfile.png")
+        # Second row, as in --password: the invisible `Desktop` file
+        # sorts first.
+        mac.click(SF_FIRST_ROW[0], SF_FIRST_ROW[1] + SF_ROW_HEIGHT)
+        mac.key("Return")
+        time.sleep(3.0)
+        shot(mac, "pf-2-destination.png")
+        mac.key("Return")
+        time.sleep(8.0)
+        shot(mac, "pf-3-asked.png")
+        for ch in "wrongone":
+            mac.key(ch)
+        mac.key("Return")
+        time.sleep(4.0)
+        shot(mac, "pf-4-asked-again.png")
+        for ch in password:
+            mac.key(ch)
+        mac.key("Return")
+        mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "pf-5-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    got = read_forks(os.path.join(workdir, "boot.hfv"), b"Forked", workdir)
+    # Bytes 16..127 of a resource fork are restamped by the Macintosh as
+    # it writes one, and every on-Mac harness masks them (DECISIONS.md,
+    # M10; tools/vmac_check.py). This subject's fork is not a resource
+    # map, so the first run here read the system's stamp — the file's
+    # own name at byte 48 — as a decoding error.
+    sys.path.insert(0, os.path.join(R.REPO, "tools"))
+    import vmac_check as VC                                   # noqa: E402
+    ok = (got is not None and got[0] == data and
+          VC.mask_reserved(got[1]) == VC.mask_reserved(rsrc))
+    if got is not None and not ok:
+        print("interactive: Forked came out data %d B (%s), rsrc %d B (%s)"
+              % (len(got[0]), got[0] == data, len(got[1]),
+                 VC.mask_reserved(got[1]) == VC.mask_reserved(rsrc)))
+        for tag, b in (("data", got[0]), ("rsrc", got[1])):
+            open(os.path.join(args.outdir, "Forked.got." + tag), "wb").write(b)
+    print("interactive: Private File "
+          + ("WORKS — both forks byte-exact (resource fork outside the "
+             "system-reserved 16..127)" if ok else "FAILED"))
+    return ok
+
+
 def phase_drop(args, appbin, workdir, shot):
     """Does the FINDER hand a dropped document to this application?
 
@@ -1850,6 +2271,12 @@ def main():
                          "Ignores the fixture argument: the archive is "
                          "generated, because nothing in the corpus is "
                          "encrypted.")
+    ap.add_argument("--privatefile", action="store_true",
+                    help="extract a Private File that PF Encrypt wrote "
+                         "(tools/vmac/privatefile.py), answering the "
+                         "password dialog wrongly once, and check both "
+                         "forks of the result on the host. Ignores the "
+                         "fixture argument.")
     ap.add_argument("--report", action="store_true",
                     help="the end-of-run report phase: extract a generated "
                          "archive whose names cannot be written as they "
@@ -1857,6 +2284,27 @@ def main():
                          "photograph the report box, scroll it, save it as "
                          "a document, and read that document back off the "
                          "volume. Ignores the fixture argument.")
+    ap.add_argument("--report-utf8", action="store_true",
+                    help="the report line a generated archive cannot make: "
+                         "a StuffIt 5 archive whose names are UTF-8 and "
+                         "hold characters MacRoman has no byte for, so the "
+                         "shell writes '_' and says so per component. Uses "
+                         "fixtures/" + UTF8_REPORT_FIXTURE + " and ignores "
+                         "the fixture argument.")
+    ap.add_argument("--utf8-to-boot", action="store_true",
+                    help="the CONTROL for --report-utf8's floppy: extract "
+                         "onto the BOOT volume, the way that phase did "
+                         "before the workaround, keep the image and say "
+                         "which of this run's writes reached it. Settles "
+                         "whether the report alone is lost or nothing the "
+                         "guest wrote arrives at all.")
+    ap.add_argument("--utf8-second", action="store_true",
+                    help="the DISCRIMINATOR for --utf8-to-boot: save the "
+                         "report a second time under its own name, so one "
+                         "more catalog update follows the lost one, and say "
+                         "which of the two entries reached the image. Tells "
+                         "an ordering problem from an unflushed buffer "
+                         "tail.")
     ap.add_argument("--drop-type", default="SIT!",
                     help="the four-character TYPE to give the archive in the "
                          "--drop phase. The Finder matches this against the "
@@ -1878,6 +2326,12 @@ def main():
                          "then double-click the application that was "
                          "extracted. Needs a fixture containing an APPL.")
     args = ap.parse_args()
+    if args.utf8_to_boot and not args.report_utf8:
+        ap.error("--utf8-to-boot is the control for --report-utf8 and means "
+                 "nothing without it")
+    if args.utf8_second and not args.utf8_to_boot:
+        ap.error("--utf8-second discriminates between two readings of what "
+                 "--utf8-to-boot measures, and needs it")
 
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
@@ -1911,6 +2365,14 @@ def main():
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
         return 0 if ok else 1
 
+    if args.report_utf8:
+        try:
+            ok = phase_report_utf8(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
     if args.diskswap:
         try:
             ok = phase_diskswap(args, appbin, workdir, shot)
@@ -1922,6 +2384,14 @@ def main():
     if args.password:
         try:
             ok = phase_password(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.privatefile:
+        try:
+            ok = phase_privatefile(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
