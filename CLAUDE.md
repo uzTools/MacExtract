@@ -48,9 +48,9 @@ an open item.
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~22.0k tokens** (PROGRESS 9.1k,
-OPEN_ITEMS 10.4k, BLOCKERS' first two sections 2.5k), re-estimated
-2026-10-10; BLOCKERS' withdrawn-claims archive is another **~72.9k** and is reference, not
+That session-start reading is **~9.0k tokens** (PROGRESS 4.1k,
+OPEN_ITEMS 3.4k, BLOCKERS' first two sections 1.5k), re-estimated
+2026-10-11 after a trim from 22.0k; BLOCKERS' withdrawn-claims archive is another **~73.1k** and is reference, not
 orientation. **Those five figures are an ESTIMATE and the earlier ones
 were measured**: no tokenizer is installed here any more, so they are
 each file's bytes over the 3.93 bytes per token the 2026-10-07 figures

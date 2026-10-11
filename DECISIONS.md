@@ -935,8 +935,9 @@ BLOCKERS.md for the full write-up. Key decisions:
   available (`reference/notes/DiskCopy42.md`, from the DiscFerret wiki), so the
   rule stopped biting: `unc_diskcopy_probe` (`src/fmt_stubs.c:76`) matches a
   synthetic 800K GCR image and a real one, 0 false positives across 803
-  fixtures. Still detect-only, because disk images are out of scope for v1.
-  See BLOCKERS.md "Detect-only gap — RESOLVED".
+  fixtures. **[RETIRED 2026-08-26]** with the other disk-image probes, to
+  `attic/` (`UNC_FORMAT_DISKCOPY_RETIRED`; DECISIONS.md 2026-08-26, *a name
+  is only worth something inside the frame the user came with*).
 - **The "broken Retro68 `HOpen` glue" root cause is WITHDRAWN.** M10's write-up
   (BLOCKERS.md, commit 22e806b) blamed Retro68: "`HOpen` returns `noErr` but
   never writes back the refNum on System 6". Building the standalone minimal

@@ -2,31 +2,18 @@
 
 ## Status
 
-**No open blocker.** The one this file carried on 2026-09-04 — the
-application bombing on Mac OS 9.2 on every DiskDoubler archive and on
-SuperDisk! — was a field of `UncOptions` the Mac shell never assigned, and is
-withdrawn below with what it cost (*Withdrawn claims*; the reasoning is
-DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and Linux
-CLI were never affected by anything in this file. The Retro68 Mac shell runs
-and extracts byte-exact on every system the project claims:
+**No open blocker.** The last one — the application bombing on Mac OS 9.2 on
+every DiskDoubler archive and on SuperDisk! — was an `UncOptions` field the
+shell never assigned (*Withdrawn claims*; DECISIONS.md 2026-09-04, *the
+field nobody assigned*). The engine and CLI were never affected by anything
+in this file.
 
-The sample is **74 fixtures** since 2026-10-11, when `synth-sqp-clear.pkg` joined it
-— the first AppleLink package in it — and `4alnch11.zip`, the first Implode
-archive a Macintosh has run, the day before; it was 72 from
-2026-10-09, when `shrink-wild-titanic.zip` joined it. **Every Mini vMac
-tier has run the 72 on the v0.37.0 source**: both
-1 MB floors and both 512 KB machines on 2026-10-09 (the `dist/` binary less
-a comment), the two 4 MB tiers and System 7.0.1 on 2026-10-10 (`dist/`'s
-payload rebuilds byte-identical), and Mac OS 9.2 the same day. Each
-2026-10-10 sweep was paired with a `-D UNC_AT_BUDGET` sweep read field by
-field (`tools/vmac/README.md`, *Why an entry is refused*): no refusal, no
-first-entry error, no image wanted after its release and no failed keep on
-any of the 238 runs. **`4alnch11.zip` ran on all seven on 2026-10-10**,
-the same source, one boot each, passing at 22,740 B of peak heap (22,730
-on Linux), and on Mac OS 9.2 on its own, all four files byte-exact
-(`os9.py --launch`; it is not in `os9sample.txt`). **`synth-sqp-clear.pkg` did the
-same on 2026-10-11**, graded against its committed manifest, at 41,274 B
-(41,256 on Linux).
+The sample is **74 fixtures**: `shrink-wild-titanic.zip` joined 2026-10-09,
+`4alnch11.zip` (Implode) 2026-10-10 and `synth-sqp-clear.pkg` (an AppleLink
+package) 2026-10-11. Every tier ran on the v0.37.0 source, each 2026-10-10
+sweep paired with a `-D UNC_AT_BUDGET` sweep read field by field
+(`tools/vmac/README.md`, *Why an entry is refused*): no refusal, first-entry
+error, late image or failed keep on any of the 238 runs.
 
 | tier | result |
 |---|---|
@@ -39,142 +26,68 @@ same on 2026-10-11**, graded against its committed manifest, at 41,274 B
 | System 7.0.1, 4 MB | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-10-10, through the interactive application (`--launch`, byte-identical to `dist/`) and the autotest build alike |
 
-The heaviest 4 MB allocations are the same to the byte on all three 4 MB
-tiers — the Arsenic transform table, 1,353,789 B for
-`derived-Library_ISBN_Barcoder.sit` — and 44 B under the Linux engine at the
-budget each Mac granted (FORMATS.md, *System 7 tier*).
+The heaviest 4 MB allocation is the same to the byte on all three 4 MB
+tiers, 44 B under the Linux engine (FORMATS.md, *System 7 tier*).
 
-**Run off the sample, none of it committable** (`tools/specimens/zipit.tsv`
-and the AppleLink specimens), so no tally above counts it. Each is graded
-against this engine's Linux output, which its own suite adjudicates
-(`run.py --expect`; `sys30.py` screenshots through `vmac_check.py
---fixture`):
+**Run off the sample**, none of it committable, each graded against this
+engine's Linux output (`run.py --expect`):
 
-- **AppleLink `.pkg`**: all eight real packages byte-exact on **all seven
-  Mini vMac tiers** (2026-10-10), 8,490–41,274 B of peak heap; `synth-sqp-clear.pkg`,
-  a synthesised one, is in the sample since 2026-10-11; all
-  fourteen had run on System 6.0.8 at 4 MB and 1 MB on 2026-10-05/06
-  (FORMATS.md, *Run on a Macintosh*).
-- **Self-extracting zip**: the five ZipIt `.sea` specimens on all seven
-  (2026-10-10), up to 66 files and 62,051 B. What the Macintosh read is
-  each one's data fork, which is the zip; MacBinary was taken off on the
-  host first, because the autotest build is single-level. **On System 3.0 at 4 MB,
-  `zipit-1.4.sea` runs out of disk at 1440 KB:** its last fork, 154,165 B, is a
-  per-entry write error (`UNC_ERR_SINK`), since the Finder's `DeskTop` file
-  leaves Out 152,064 B. It passes on a 1600 KB Out volume, and the System
-  3.0 1 MB and 512Ke sweeps were run at 1600 KB from the start.
+- **AppleLink `.pkg`**: all eight real packages byte-exact on all seven Mini
+  vMac tiers, 2026-10-10 (FORMATS.md, *Run on a Macintosh*).
+- **Self-extracting zip**: the five ZipIt `.sea` specimens on all seven,
+  2026-10-10 (`tools/specimens/zipit.tsv`). On System 3.0 at 1440 KB,
+  `zipit-1.4.sea`'s last fork is a per-entry `UNC_ERR_SINK` because the
+  Finder's `DeskTop` file fills the Out volume; it passes at 1600 KB.
 - **Private File**: through the password dialog on System 6.0.8 at 4 MB
-  and at 1 MB (2026-10-09) and on **both 512 KB machines** (2026-10-10,
-  `interactive.py --privatefile --emu mv-512Ke`, System 3.0 launching it
-  from the Finder). Each time a wrong password was refused, then both forks
-  came out byte-exact. Neither 512Ke refused it.
-- **Shrink** has been in the sample since 2026-10-09 (`shrink-wild-titanic.zip`, 38,807 B
-  of peak heap against 38,777 on Linux).
+  and 1 MB (2026-10-09) and on both 512 KB machines (2026-10-10), a wrong
+  password refused first each time.
 
-From 2026-10-09 to 2026-10-10 this paragraph said that no Macintosh had
-run an AppleLink package (*Withdrawn claims*).
-
-Per-tier
-history, the per-fixture tables and what each refusal costs are FORMATS.md's
-(*Real-hardware verification* and the tier sections after it); how to re-run
-any of it is `tools/vmac/README.md`; what no emulator here can settle is
+Per-tier history, per-fixture tables and what each refusal costs are
+FORMATS.md's (*Real-hardware verification* and the tier sections after it);
+re-running is `tools/vmac/README.md`; what no emulator can settle is
 MANUAL_TESTS.md.
 
 ---
 
 ## What is true, and load-bearing
 
-**How the Mac shell is verified.** The autotest build CRC-32s both forks after
-reading them back through the real File Manager and paints the aggregate to
-the framebuffer; the host decodes a screenshot and compares against the same
-engine's Linux output. Since 2026-08-02 the Out volume is also read directly,
-which adds the one thing an aggregate cannot carry — **names**. The off-Mac
-blind spot is real: the qemu-m68k mock calls the sink directly and never
-touches the Toolbox glue, so only Mini vMac exercises that layer.
+**How the Mac shell is verified.** The autotest build CRC-32s both forks read
+back through the real File Manager and paints the aggregate to the
+framebuffer; the host decodes a screenshot and compares it with the Linux
+output, and reads the Out volume for **names**. Only Mini vMac exercises the
+Toolbox glue: the qemu-m68k mock calls the sink directly.
 
-**The fix that unblocked M10 — and what is still unknown about it.** Driving
-the File Manager through explicit, fully-zeroed HFS param blocks
-(`PBHOpenSync` / `PBHOpenRFSync` / `PBHCreateSync` / `PBHDeleteSync`)
-unblocked everything at once and is what ships. **Why it worked is not
-established.** The original attribution — a broken Retro68 `HOpen` — was
-disproved (below). The likeliest remaining explanation is that the helpers
-zero the whole param block where the pre-fix code passed partly-uninitialised
-state, but that has never been reduced to a reproduction, so it is a guess and
-not a finding. It is not being chased: the app is verified byte-exact as it
-stands.
+**The fix that unblocked M10 is not understood.** Explicit, fully zeroed HFS
+param blocks (`PBHOpenSync` and siblings) are what ships. The `HOpen`
+attribution was disproved (below); "the old code passed partly
+uninitialised state" is a **hypothesis**, never reduced to a reproduction,
+and not being chased.
 
-The one upstream finding that survived: **both `OpenDF` and `HOpenDF` return
-`paramErr` on System 6**, because the `_OpenDF` trap is System 7 and neither
-has a fallback — `FSOpen`, in the same glue file, does. Written up in
-`tools/retro68-hopen-repro/ISSUE.md`, deliberately not filed; the maintainer
-will post it.
+**Upstream: `OpenDF` and `HOpenDF` return `paramErr` on System 6** — the
+`_OpenDF` trap is System 7 and neither falls back, where `FSOpen` does.
+`tools/retro68-hopen-repro/ISSUE.md`, deliberately not filed.
 
-**`HideCursor()` before drawing the grid — CONFIRMED, with a reproduction.**
-Built without it and with the host pointer dragged through the grid's cell
-centres, the decoded result comes back as `0x04000000` — one flipped bit, a
-cell stamped over by the cursor's saved background. The stock build survives the same drag.
-Reproduced twice. The two things that must be right before the test means
-anything are in `tools/vmac/README.md`; both early attempts "passed" while
-testing nothing.
+**`HideCursor()` before drawing the grid — confirmed by reproduction**: without
+it, a pointer dragged through the grid flips one bit of the result
+(`0x04000000`, reproduced twice). What must
+be right before that test means anything is in `tools/vmac/README.md`.
 
-**The oracle is wrong about one method, and the suites know it.** `unar`
-decodes ARC/PAK method 0x0b (Distilled) to the right length and the wrong
-bytes wherever a match reaches back past the start of the data, because
-XADMaster starts the 8 KB window at zero and PAK fills it with spaces
-(withdrawn claims, below; the reasoning is in DECISIONS.md). So for that
-one method the oracle is **deark**, built by `tools/build_deark.sh`, and
-`tools/run_pak.py` never consults `unar` about it; `make_manifests.py`
-offers it the forks `unar` failed. `unar` remains the oracle for 0x0a
-(Crushed), which deark does not implement at all, and for everything
-else. Both are outranked by the CRC-16 PAK stored per member, which is
-the only check in this format no decoder here can influence.
+**`unar` is wrong about ARC/PAK method 0x0b (Distilled)**, starting the window
+at zero where PAK fills it with spaces, so deark is that method's oracle
+(`tools/run_pak.py`). `unar` stays the oracle for 0x0a (Crushed), which deark
+lacks; PAK's stored CRC-16 outranks both.
 
-**`unar` does not read ARC 7.x at all.** Every archive ARC+Plus writes
-opens with an informational item (method 0x14), and XADMaster's parser
-stops there — `unar` and `lsar` both answer "Couldn't recognize the
-archive format". It also reads method 0x0a as Crushed unconditionally,
-so it could not grade Trimmed even given the container. deark reads
-both, which is why `tools/run_arcplus.py` consults it and not `unar`,
-and why `fixtures/manifests/derived-ARCDOS.arc.json` is registered by
-that tool rather than built by `make_manifests.py` (TESTING.md).
+**`unar` does not read ARC 7.x at all**, stopping at the informational item
+(method 0x14), so `tools/run_arcplus.py` consults deark and
+`fixtures/manifests/derived-ARCDOS.arc.json` is registered by that tool
+(TESTING.md).
 
-**`src/fmt_binhex.c` owes macutils nothing, as of 2026-10-07, and
-OPEN_ITEMS' provenance section is empty.** The skip of a line that
-cannot be data is stated by **StuffIt's own `HQXEngine`** (SDK 5.1.2,
-`Eng ` 10000: line buffer +0x4acc, predicate +0x4a30, rewind-and-read-
-the-next-line +0x4b1c), which is what the file cites now; the trailing
-whitespace trim is the Definition's, which names `<tab>` and `<spc>`
-outright. Thirteen readers were asked before it and none stated the
-rule. Mechanically checked, which is the point: `check_provenance.py`
-fails if a `Source:` naming macutils survives in a file listed as
-historical, and that check is why this is not the fourth time a shed
-citation has been recorded while still in the source (*Withdrawn
-claims*). The length half stays untranscribed, now on the Definition's
-own words — *"lines of any length should be accepted"* — with the
-corpus beside it: 0 of 204 `.hqx` fixtures need it. 178 witnesses,
-`tools/derive_hqxgarbage.py`; DECISIONS.md 2026-10-07, *the engine four
-layers down*. **The citation has no disagreeing sibling**: Aladdin's
-other four 5.x decoders were read the same day and all four agree — the
-full `StuffIt Engine™` ships the identical module, Expander 5.5 is it
-recompiled, and the two PowerPC builds are the same code, one bundling
-the other byte for byte. The PowerPC pair is checked by its constants
-and two branches rather than read, because this machine has no
-disassembler for it (TESTING.md). **Taking PowerPlug apart also produced
-a format inventory**: its fourteen containers are the SDK's fourteen
-named PowerPC engines, twelve of the thirteen formats among them were
-read here by then, and the thirteenth — **Private File** — was named nowhere in
-this repository until 2026-10-07, came into scope that day and **reads
-since 2026-10-09**, so all thirteen do: three files Private File 2.0
-itself wrote decrypt byte-exact, RC4 under MD5(password) as the
-hypothesis had it (FORMATS.md, *Private File*; DECISIONS.md 2026-10-07,
-*the engine list as a checklist*, and 2026-10-09, *the specimen was one
-search away*).
-
-**Detect-only gap — RESOLVED.** DiskCopy 4.2 was named in `unc_sniff` and
-never detected, for want of a reference. One was obtained
-(`reference/notes/DiskCopy42.md`) and the probe is real: a synthetic 800K GCR
-image and a real one match, 0 false positives across the corpus. Still
-detect-only — disk images are out of scope for v1.
+**`src/fmt_binhex.c` owes macutils nothing since 2026-10-07**: its last rule
+is cited to StuffIt's own `HQXEngine` (SDK 5.1.2, `Eng ` 10000), and
+`check_provenance.py` fails if a macutils `Source:` survives (DECISIONS.md
+2026-10-07, *the engine four layers down*). Taking that engine family apart
+named Private File, which reads since 2026-10-09 (DECISIONS.md 2026-10-07,
+*the engine list as a checklist*).
 
 ---
 
