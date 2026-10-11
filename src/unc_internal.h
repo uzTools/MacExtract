@@ -1328,6 +1328,14 @@ int unc_shrink_decode(UncAlloc *al, UncBufIn *in, uint32_t usize,
                       uint32_t *crc, uint8_t *obuf, uint32_t ocap,
                       UncPutRun emit, void *ectx);
 
+/* Zip methods 2 to 5, Reduce with compression factor 1 to 4
+ * (unc_reduce.c). Decodes `usize` bytes from `in`, using the first
+ * 4,096 B of `obuf` as the window, adds them to `*crc` and hands them
+ * to `emit`. */
+int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
+                      uint32_t usize, uint32_t *crc, uint8_t *obuf,
+                      uint32_t ocap, UncPutRun emit, void *ectx);
+
 /* Arsenic (method 15) core, in sit_arsenic.c. Writes into the fork
  * writer directly, and has it keep the CRC-32 the stream ends with:
  * `f` comes back set to UNC_CK_CRC32, flushed, and checked. It used to

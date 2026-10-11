@@ -42,7 +42,7 @@ unc_entry_clear unc_entry_path_append unc_entry_set_name unc_entry_set_path
 unc_fork_flush unc_fork_out unc_fork_split unc_fork_write unc_huff_decode unc_huff_read_tree
 unc_io_size32 unc_lzah_decode unc_lzw_free
 unc_lzw_init unc_lzw_read unc_macbinary_probe unc_password unc_path_init
-unc_shrink_decode
+unc_shrink_decode unc_reduce_decode
 unc_path_leaf unc_path_pop unc_path_push unc_progress_add unc_read_at
 unc_read_full unc_crc16_arc unc_crc16_xmodem unc_progress_at
 unc_readline unc_crypt_packit_des unc_crypt_packit_xor unc_crypt_rc4
@@ -69,7 +69,7 @@ CODECS = """
 unc_bitin_align unc_bitin_bits unc_bitin_bits_le unc_bitin_bytepos
 unc_bitin_init unc_bitin_init_le unc_canon_build unc_canon_build_ext
 unc_canon_decode unc_huff_decode unc_huff_read_tree unc_lzah_decode
-unc_lzw_free unc_lzw_init unc_lzw_read unc_shrink_decode
+unc_lzw_free unc_lzw_init unc_lzw_read unc_shrink_decode unc_reduce_decode
 """.split()
 
 

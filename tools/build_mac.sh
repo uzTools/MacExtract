@@ -446,7 +446,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # *the installer's own key*). The total is unmoved; the A5 side was not
 # attributed per symbol. `ovl_stuffit` +24 when shipped, the eager pair
 # unmoved.
-UNC_MAC_CODE_DEFAULT=170056
+# RAISED 2026-10-11, 170,056 -> 170,936, +880 B for zip Reduce, methods
+# 2-5 (src/unc_reduce.c and its call): resident only here; shipped, it is
+# in `ovl_codecs` (+840) and `ovl_exo` (+76) and the eager pair is unmoved
+# (FORMATS.md, *Reduce*).
+UNC_MAC_CODE_DEFAULT=170936
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -589,7 +593,10 @@ UNC_MAC_CODE_DEFAULT=170056
 # data symbol changed size (all 126 compared), so alignment.
 # LOWERED the same day to 37,972, -8, with the code ceiling's +136.
 # LOWERED 2026-10-10 to 37,960, -12, with the code ceiling's +12.
-UNC_MAC_A5_DEFAULT=37960
+# RAISED 2026-10-11 to 37,976, +16, with the code ceiling's +880: no data
+# symbol changed size (compared against HEAD's build), only `_sdata`'s
+# padding, 0x2a -> 0x3a. Alignment again.
+UNC_MAC_A5_DEFAULT=37976
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

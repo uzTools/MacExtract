@@ -193,7 +193,8 @@ TAKEN = "2026-10-09"
 # -> 162,040: `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
 # progress count put right in DiskDoubler, MacLHA and uuencode.
 # -> 162,064: `ovl_stuffit` +24, a method-13 fork's encryptor id unread.
-EXPECT_BUNDLE = 162064
+# -> 162,980 2026-10-11: `ovl_codecs` +840 and `ovl_exo` +76, zip Reduce.
+EXPECT_BUNDLE = 162980
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 

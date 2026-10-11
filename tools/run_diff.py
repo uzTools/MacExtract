@@ -226,8 +226,8 @@ def said_unsupported(msg):
 #
 # Deliberately only the methods the corpus actually contains: a method
 # named here that lsar spells differently would excuse nothing, silently,
-# whereas an unlisted one fails the suite loudly and gets added. Zip's
-# Reduce and tar links belong here the day a fixture has one.
+# whereas an unlisted one fails the suite loudly and gets added. Tar
+# links belong here the day a fixture has one.
 #
 # **EMPTY as of 2026-10-07**, and kept because it was not: `Implode`
 # left when zip method 6 was implemented, which turned the 7 entries of
@@ -235,10 +235,9 @@ def said_unsupported(msg):
 # forks compared byte for byte — 5 against `unar` and 2 against deark,
 # the two `unar` fails (DECISIONS.md 2026-10-07, *the method that was
 # out for a premise with no halves left*). An empty set is not a dead
-# mechanism: `out_of_scope` below still runs on every entry, and the day
-# a fixture arrives with a Reduce in it the line that adds it is here.
-# Shrink did not need it: the entries `unar` fails went to deark through
-# DEARK_METHODS (2026-10-08).
+# mechanism: `out_of_scope` below still runs on every entry. Shrink and
+# Reduce did not need it: the entries `unar` fails went to deark through
+# DEARK_METHODS (2026-10-08 and 2026-10-11).
 ORACLE_OUT_OF_SCOPE = set()
 
 

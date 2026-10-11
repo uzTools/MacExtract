@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "a04f3af913db2165af645f24ce4f79a7289879cd45b935932c791fd73df5775c",
+   "data_size": 2098,
+   "name": "CHECKSUM.DOC",
+   "oracle_methods": [
+    "Reduce 1"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  },
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "a46740a3953df7bd631135559abb3b238b0af30236a9a53eed93fe73c87e466e",
+   "data_size": 25705,
+   "name": "CHECKSUM.EXE",
+   "oracle_methods": [
+    "Reduce 1"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "reduce-wild-checksum.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "171aa3bf61be870b785fa1fb91c639f1c1f1c25b31a5dc88a077469782117ef4",
+ "size": 17920
+}

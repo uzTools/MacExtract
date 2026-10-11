@@ -388,7 +388,13 @@ DEARK_ID = "deark"
 # has one — 270 of 2,246 wild entries — while deark decodes all 2,246 to
 # the CRC-32 the archive stored (DECISIONS.md 2026-10-08, *the method a
 # Macintosh wrote once*).
-DEARK_METHODS = {"Distilled", "Implode", "Shrink"}
+# Reduce joined on 2026-10-11 with the scope decision that brought zip
+# methods 2-5 in: `unar` refuses every Reduce entry ("File is not fully
+# supported"), and deark matches the stored CRC-32 on every wild entry
+# this engine does (DECISIONS.md 2026-10-11, *Reduce comes in*). lsar
+# names the four factors separately.
+DEARK_METHODS = {"Distilled", "Implode", "Shrink",
+                 "Reduce 1", "Reduce 2", "Reduce 3", "Reduce 4"}
 
 
 def deark_id():

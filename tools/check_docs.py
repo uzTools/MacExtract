@@ -654,6 +654,9 @@ CORPUS_SCAN = ("CLAUDE.md", "PROGRESS.md", "OPEN_ITEMS.md", "FORMATS.md",
 CORPUS_HISTORICAL = {
     # One entry per (file, kind, figure); it covers every occurrence of
     # that figure in that file. Each was read before it was declared.
+    ("TESTING.md", "manifests", 959):
+        "the read-cap lane's bend of 2026-10-09, unc_read_full made to "
+        "give up on a short read; an experiment, not a re-run lane",
     ("PROGRESS.md", "robust", 9320):
         "the NAME of a BLOCKERS.md section, cited; a withdrawn claim's "
         "title is not a figure to correct",

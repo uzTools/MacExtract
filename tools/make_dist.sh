@@ -102,10 +102,10 @@ really is damaged still says so.
 Zips that use Shrinking, the other method of PKZIP's first years, open
 too. Most such zips came from PCs, but a Macintosh made them as well --
 an EndNote style from 1993 is the one that was found -- and they turn up
-on Mac CD-ROMs by the hundred. Reducing, older still and rarer, is NOT
-read, and will not be: no Macintosh program is known to have written it.
-Those entries are skipped and the rest of the archive still comes out;
-deark reads them.
+on Mac CD-ROMs by the hundred. So do zips that use Reducing, older
+still and rarer: no Macintosh program is known to have written it, but
+the PC disks those CD-ROMs carried did, and all four of its strengths
+are read.
 
 Self-extracting zip archives open. ZipIt made these -- a .sea you
 double-click, which on a modern Mac of the day unpacked itself. The

@@ -132,7 +132,7 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
 | zip, gzip, tar, `.Z`, `.arc`, `.uu` | 🔴 | ✅ | ✅ | ✅ |
-| zip's rare Reduce method, which no Mac program wrote | 🔴 | ✅ | 🔴 wrong bytes | 🔴 |
+| zip's rare Reduce method, which no Mac program wrote | 🔴 | ✅ | 🔴 wrong bytes | ✅ |
 | Type and creator in a zip made by MacZip | 🔴 * | 🔴 * | 🔴 * | ✅ |
 | StuffIt SpaceSaver | 🔴 | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |

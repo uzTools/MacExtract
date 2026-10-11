@@ -1,0 +1,21 @@
+{
+ "entries": [
+  {
+   "data_oracle": "deark (Deark version: 1.7.3-1)",
+   "data_sha256": "8968f111b94c934b48c5628b8573e7bcd20b93626d05b43b01ff596b6c90df5d",
+   "data_size": 6404,
+   "name": "DSNNN.DVP",
+   "oracle_methods": [
+    "Reduce 2"
+   ],
+   "rsrc_oracle": "deark (Deark version: 1.7.3-1)",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "reduce-wild-2048acad.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "a2f82f777fd9f6396f6af8d0850f9de4cc6c21e81d065f6ef065854296097551",
+ "size": 1893
+}

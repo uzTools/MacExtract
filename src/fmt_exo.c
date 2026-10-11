@@ -1,6 +1,6 @@
 /*
  * fmt_exo.c — the exogenous formats: gzip (.gz), Unix compress (.Z),
- * tar, and zip (store, Shrink, Implode and deflate).
+ * tar, and zip (store, Shrink, Reduce, Implode and deflate).
  *
  * These are byte-oriented Unix/PC formats, and every one of them has a
  * specification of its own. Those are what is cited, here and at each
@@ -900,6 +900,9 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
     if (method == 1)
         return unc_shrink_decode(c->al, in, usize, crc, obuf, ocap,
                                  zip_put, es);
+    if (method >= 2 && method <= 5)
+        return unc_reduce_decode(c->al, in, method - 1u, usize, crc, obuf,
+                                 ocap, zip_put, es);
 
     if (method == 0) {
         uint32_t left = usize;
@@ -1879,17 +1882,17 @@ int unc_zip_extract(UncCtx *c)
                      * there is not one (or it is a version or a key
                      * length this does not read). */
                     est = UNC_ERR_ENCRYPTED;
-                } else if (aesmethod != 0 && aesmethod != 1 &&
-                           aesmethod != 6 && aesmethod != 8) {
-                    /* Stored, Shrink, Implode and deflate. Method 6
-                     * joined on 2026-10-07 (DECISIONS.md, *the method
-                     * that was out for a premise with no halves left*)
-                     * and method 1 on 2026-10-08 (DECISIONS.md, *the
-                     * method a Macintosh wrote once*); every other
-                     * method the format has ever had — the four
-                     * Reduces, DCL Implode, bzip2, LZMA, PPMd,
-                     * Zstandard — is a per-entry refusal, and so is a
-                     * method number nothing has defined. */
+                } else if (aesmethod > 6 && aesmethod != 8) {
+                    /* Stored, Shrink, the four Reduces, Implode and
+                     * deflate. Method 6 joined on 2026-10-07
+                     * (DECISIONS.md, *the method that was out for a
+                     * premise with no halves left*), method 1 on
+                     * 2026-10-08 (*the method a Macintosh wrote once*)
+                     * and 2 to 5 on 2026-10-11 (*Reduce comes in*);
+                     * every other method the format has ever had —
+                     * DCL Implode, bzip2, LZMA, PPMd, Zstandard — is a
+                     * per-entry refusal, and so is a method number
+                     * nothing has defined. */
                     est = UNC_ERR_UNSUPPORTED;
                 } else if (z64err != UNC_OK) {
                     /* Zip64 states this entry's size or position past

@@ -122,6 +122,7 @@ else()
     # a blob can be called by other blobs at all.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_huffman\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzw\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_reduce\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzah\\.c$")
 endif()
 
@@ -629,12 +630,14 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${ENGINE_DIR}/src/unc_huffman.c
             ${ENGINE_DIR}/src/unc_lzw.c
+            ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/unc_lzah.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_codecs.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_codec_exports_gen.h
             ${ENGINE_DIR}/src/unc_huffman.c
             ${ENGINE_DIR}/src/unc_lzw.c
+            ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/unc_lzah.c
             ${OVL_DEPS})
 

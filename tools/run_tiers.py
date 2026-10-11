@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (205476, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (110076, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (634364, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (204580, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (109180, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (633468, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -167,7 +167,10 @@ TIERS = {
 # three machines: 205,476, 110,076 and 634,364 B, `FreeMem()` 225,956,
 # 130,556 and 654,844 B, against this control. So TIERS is a machine
 # measurement again, and not a derivation.
-TIERS_CONTROL = 208016     # build/mac-resident, CODE + A5, 2026-10-09
+# **Lowered by 896 B 2026-10-11, DERIVED and not re-measured**: the
+# control's CODE +880 and A5 +16 (alignment) for zip Reduce (FORMATS.md,
+# *Reduce*); the free figures in the labels are that evening's.
+TIERS_CONTROL = 208912     # build/mac-resident, CODE + A5, 2026-10-11
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -403,7 +406,10 @@ EXPECT = {
 # A5 -8 for DiskDoubler's buffer reuse and the MacLHA and uuencode
 # progress counts; `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
 # shipped build unmoved. No tally moved on either lane.
-OVL_SAVED = 134288
+# **+896 2026-10-11, -> 135,184**: the control's CODE +880 and A5 +16 of
+# alignment for zip Reduce; `ovl_codecs` +840, `ovl_exo` +76, the shipped
+# build unmoved (FORMATS.md, *Reduce*).
+OVL_SAVED = 135184
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -491,14 +497,18 @@ OVL_RESIDUE = -666
 # **STUFFIT +24 B 2026-10-10**: a method-13 fork's encryptor id is not
 # read (DECISIONS.md 2026-10-10, *the installer's own key*); a helper
 # function and a clear-in-place came out at +24 and +36.
+# **CODECS +840 and EXO +76 B 2026-10-11** for zip Reduce, methods 2-5:
+# the decoder is `src/unc_reduce.c`, in the codecs image beside Shrink for
+# the same reason (`ovl_exo` has 608 B left), and the zip reader's call
+# and method guard (FORMATS.md, *Reduce*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
-    "OVL_ID_CODECS":      7628,
+    "OVL_ID_CODECS":      8468,
     "OVL_ID_CPTDD":       15908,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         32084,
+    "OVL_ID_EXO":         32160,
     "OVL_ID_LZH":         9586,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
@@ -508,7 +518,7 @@ IMAGES = {
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11510,
 }
-BUNDLE = 162064
+BUNDLE = 162980
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

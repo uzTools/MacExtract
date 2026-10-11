@@ -520,10 +520,10 @@ whatever it finds inside.
   and nothing else, and the 7 entries it covered — in the two PKZIP 1.x
   zips — are compared fork for fork now that method 6 is implemented,
   with no change to the harness, exactly as this paragraph said they
-  would be. The mechanism stays. **Shrink did not need it**: its
-  fixtures arrived on 2026-10-08 and the entries `unar` fails went to
-  deark through `DEARK_METHODS` instead, so the set stayed empty; a
-  Reduce, which is out by the brief, is the case it is kept for. Until 2026-08-08 the whole FIXTURE was skipped instead, on the
+  would be. The mechanism stays. **Shrink and Reduce did not need it**:
+  their fixtures arrived on 2026-10-08 and 2026-10-11, and the entries
+  `unar` fails went to deark through `DEARK_METHODS` instead, so the set
+  stayed empty. Until 2026-08-08 the whole FIXTURE was skipped instead, on the
   strength of our own error message; see "When our engine declines an
   entry".
 - Do not read "unadjudicated: 9 forks" as 9 defects. It is **9
@@ -2300,7 +2300,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-08 over all 971 corpus files, exactly one sniffs as a MIME
+2026-10-11 over all 975 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -4751,11 +4751,11 @@ bare `io->read`, so a valid file came out in full and was then called
 truncated (DECISIONS.md 2026-10-09, *the read nothing sent short*). **Made
 to fail before it was believed**, three ways: the footer fix reverted
 (the Private File suite fails under the cap), `unc_read_full` bent to
-give up on a short read (953 of 959 fixtures fail), and a binary built
+give up on a short read (953 of 959 fixtures failed, 2026-10-09), and a binary built
 before the hook (refused outright — the CLI's announcement is what tells
 a binary that honours the cap from one that passes by ignoring it, and
 the first run of this lane was exactly that, green on a stale build).
-959 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
+963 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
 
 **What it cannot see**: a decoder that is right under any cap and slow
 under a small one — nothing times the calls — and the Macintosh host,
@@ -4822,6 +4822,7 @@ at a stranger's disk. That check matters more than it sounds:
 | 2026-10-05 | `detection=504d6135*` and `504d6136*` — an archive that BEGINS with an encrypted block | 0 | **0**, which is why the chain has to be walked |
 | 2026-10-05 | `detection=504d61*` — first bytes `PMa`, complete | 2,573 | **182** PackIt archives, 1,107 blocks (696 `PMa4`, 411 `PMag`), **0 encrypted** |
 | 2026-10-05 | `extension=.pit`, 3,324 of 22,558 probed (resumable; `/tmp/dm-pit.json`) | 22,558 | 6 more archives, 27 blocks, **0 encrypted** |
+| 2026-10-11 | `detection=504b0304????????MM00*` for MM = 02, 03, 04 — every Reduce 1–3 zip, `--probe keep --dedup` into `~/.cache/macextract/discmaster/reduce/files`; and MM = 05 with `--dedup --max-size 400000 --sample 150 --seed 20261011` into `files5`. `manifest.tsv` beside them is the four states as one table | 117 / 143 / 42 / 12,603 listed; 105 + 92 + 13 + 150 kept | **2,379 Reduce entries**, graded entry by entry against the stored CRC-32 (FORMATS.md, *Reduce*) |
 
 **A suffix `Range` is not honoured here, and it answers `206`.** The uu
 sweep wanted the END of each candidate, because UUTool's ` .finfo`
@@ -5470,7 +5471,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 971 files, and the
+  the population you give it: the corpus is 975 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

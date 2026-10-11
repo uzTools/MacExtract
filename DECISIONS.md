@@ -389,6 +389,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
 - 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
 - 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
+- 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was chosen by grading it against 2,379 stored CRCs, and two rules that read as defensive are what the CRCs need
 
 ---
 
@@ -25484,3 +25485,54 @@ A capability string in a binary is a claim, like a Read Me, and it
 failed in both directions here. This is why 4.0.2's cell says "not
 tested" and not ✅, even though its add-on's translator carries the
 same sentence as 5.5.1.
+
+## 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was chosen by grading it against 2,379 stored CRCs, and two rules that read as defensive are what the CRCs need
+
+**Claim.** Zip methods 2 to 5, Reduce, decode (FORMATS.md, *Reduce*).
+They had been out by the brief since 2026-10-08 (*the method a Macintosh
+wrote once*), on a census that found no Macintosh writer. **The census
+stands; the maintainer moved the line**: a Mac user with a DOS CD meets
+these files, and 5.5.1's Expander reads them (*the string that said
+reduced*). Nothing measured changed, so nothing was re-measured.
+
+**The source was graded before it was transcribed.** deark's
+`foreign/ozunreduce.h` is the one reader in `reference/`: XADMaster
+names the methods and has no decoder, and Info-ZIP UnZip 6.00 refuses
+them. A
+Python transcription went over every Reduce entry in reach first — the
+Shrink sweep's 346 files, all 105 + 92 + 13 distinct method 2–4 zips the
+index has, and 150 method-5 zips drawn with `--seed 20261011` —
+**2,371 of 2,379 entries reproduce the CRC-32 the archive stored**, and
+deark fails all 8 others. Three are PHP's `compress_unsup*.zip` test
+files, three bytes of stored data labelled Reduce; two are in archives
+cut before their central directory; three are CRC-bad in deark too,
+damage a HYPOTHESIS with no second copy tried. The C decoder then
+agreed with the transcription file by file.
+
+**Two rules in that file read as defensive, and the CRCs settle both.**
+
+- **The window starts as 4,096 zeros**, which `ozur` gets from a
+  `calloc` rather than from a comment. **1,480 of the 2,371 good
+  entries reach into it**, and every fixture fails with the window
+  filled with 0xAA instead. It is the same lesson as ARC's Trimmed
+  window of spaces (2026-08-25): the starting contents of a window are
+  part of the format, whether or not anybody wrote them down.
+- **A copy longer than its distance is corrupt.** That is unusual for
+  an LZ77, where overlap is how runs are written, and it was the rule
+  to doubt. **No good entry has one**; the 3 entries that do fail
+  their CRC with overlap allowed as well. So the refusal costs no real
+  file and fails damage early. No fixture can pin a rule that only
+  CRC-bad entries reach, so a unit test does.
+
+**The table is a fixed 8,448 B, and that constant was questioned**
+(CLAUDE.md's smell). The follower sets use a median of 359 of its
+8,192 value slots, so sizing it from the stream would save ~8 KB.
+It is not done: the whole Reduce peak, 21.8 KB, is under deflate's
+and Shrink's in the same reader, so no budget a zip is extracted under
+is set by Reduce. The window is the first 4 KB of the output buffer the
+zip reader already holds, as in `ozur`, where the circular buffer is
+also what gets flushed.
+
+**The CLI loses a mechanism, not just a message.** `method_out_of_scope`
+and its closing paragraph naming deark existed for Reduce alone. With no
+method out by decision, they are deleted rather than left empty.

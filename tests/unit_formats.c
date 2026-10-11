@@ -1472,6 +1472,58 @@ static void test_zip_shrink_ticks(void)
     CHECK(cap.count == 0 && shr_ticks == 1);
 }
 
+/* Zip's Reduce (src/unc_reduce.c), on hand-built streams: every follower
+ * set empty (256 six-bit zeros, 192 bytes), so each byte after them is
+ * an 8-bit literal of stage 1, and stage 2 is what is tested. The wild
+ * fixtures pin the zero window and the literal 144; the third rule, that
+ * a copy longer than its distance is corrupt, no CRC-good entry has, so
+ * only this can fail on it (FORMATS.md, *Reduce*). */
+static int red_out_len;
+static uint8_t red_out[64];
+static int red_put(void *ctx, const uint8_t *p, uint32_t n)
+{
+    (void)ctx;
+    if (red_out_len + (int)n > (int)sizeof red_out) return UNC_ERR_CORRUPT;
+    memcpy(red_out + red_out_len, p, n);
+    red_out_len += (int)n;
+    return UNC_OK;
+}
+
+static int red_run(const uint8_t *tail, uint32_t ntail, uint32_t usize)
+{
+    static uint8_t s[192 + 16], obuf[4096];
+    UncBufIn in;
+    UncAlloc al;
+    uint32_t crc = UNC_CRC32_INIT;
+
+    memset(s, 0, 192);
+    memcpy(s + 192, tail, ntail);
+    test_make_alloc(&al);
+    unc_bufin_init_mem(&in, s, 192 + ntail);
+    red_out_len = 0;
+    return unc_reduce_decode(&al, &in, 1, usize, &crc, obuf, sizeof obuf,
+                             red_put, NULL);
+}
+
+static void test_zip_reduce_rules(void)
+{
+    /* Factor 1: V = 0x05 is length 5 + 3, and D = 7 a distance of 8,
+     * which reaches 7 bytes before the start: zeros. */
+    static const uint8_t back[] = { 'A', 144, 0x05, 7 };
+    static const uint8_t lit[] = { 144, 0, 'B' };
+    /* The same copy at distance 1: longer than its distance. */
+    static const uint8_t over[] = { 'A', 144, 0x05, 0 };
+    static const uint8_t want[] = { 'A', 0, 0, 0, 0, 0, 0, 0, 'A' };
+
+    CHECK(red_run(back, sizeof back, 9) == UNC_OK);
+    CHECK(red_out_len == 9 && memcmp(red_out, want, 9) == 0);
+    CHECK(red_run(lit, sizeof lit, 2) == UNC_OK);
+    CHECK(red_out_len == 2 && red_out[0] == 144 && red_out[1] == 'B');
+    CHECK(red_run(over, sizeof over, 9) == UNC_ERR_CORRUPT);
+    /* A stream that ends before `usize` is truncated, not padded. */
+    CHECK(red_run(lit, sizeof lit, 3) == UNC_ERR_TRUNCATED);
+}
+
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection
  * cover the decoders (tools/run_lzh.py, fixtures/manifests); what a
  * whole archive cannot isolate is covered here: every method byte the
@@ -5027,6 +5079,7 @@ void run_format_tests(void)
     test_zip_comment();
     test_zip_behind_a_stub();
     test_zip_shrink_ticks();
+    test_zip_reduce_rules();
     test_lzh_probe();
     test_cptseg_probe();
     test_lzh_extract();
