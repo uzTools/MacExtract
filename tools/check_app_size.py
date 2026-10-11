@@ -8,7 +8,7 @@ one for one, and a tier's budget is FreeMem() minus it
 (tools/run_tiers.py).
 
 "Every byte of this application is resident" was true until 2026-09-25
-and is not any more: the decoders ship as fifteen 'OVLY' images, read at
+and is not any more: the decoders ship as sixteen 'OVLY' images, read at
 launch as one bundle and mostly released as soon as the sniff says what
 the archive is (mac/ovl_load_eager.c). The bundle is EXPECT_BUNDLE below
 and none of it is resident while an archive is being extracted — which
@@ -193,8 +193,9 @@ TAKEN = "2026-10-09"
 # -> 162,040: `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
 # progress count put right in DiskDoubler, MacLHA and uuencode.
 # -> 162,064: `ovl_stuffit` +24, a method-13 fork's encryptor id unread.
-# -> 162,980 2026-10-11: `ovl_codecs` +840 and `ovl_exo` +76, zip Reduce.
-EXPECT_BUNDLE = 162980
+# -> 163,596 2026-10-11: zip Reduce, `ovl_exo` +76 and a sixteenth image,
+# `ovl_zipold` (2,666 B), with Shrink gone from `ovl_codecs` (-1,224).
+EXPECT_BUNDLE = 163596
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 

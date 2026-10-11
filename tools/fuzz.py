@@ -315,10 +315,17 @@ def now_seeds(tmp):
 # the format's flag combinations, 4 K and 8 K dictionary against two and
 # three Shannon-Fano trees, and declares one compressed span per entry
 # (tools/synth_implode.py; FORMATS.md, *Implode*).
+#
+# The fourth is zip methods 2-5, for the same reason: nothing else here
+# writes Reduce, and the corpus's four wild archives are four draws in
+# ~950. One entry per compression factor, each declaring its follower
+# sets and coded stream as one span (tools/synth_reduce.py; FORMATS.md,
+# *Reduce*).
 STREAM_SEEDS = (
     ("sit14", "synth_sit14.py", "seed-sit14.sit", ()),
     ("sit14-wrap", "synth_sit14.py", "seed-sit14-wrap.sit", ("--wrap",)),
     ("implode", "synth_implode.py", "seed-implode.zip", ()),
+    ("reduce", "synth_reduce.py", "seed-reduce.zip", ()),
 )
 
 

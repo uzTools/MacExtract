@@ -919,6 +919,7 @@ suite that owns it (TESTING.md).
 | synth-exo-tar.tar | 5dc48193652cd26ca6920a3154e9a83c6f62ea13ca00df8bccda905e722b4abe | 20480 | synthetic:tools/synth_exo.py --kind tar |
 | synth-exo-zip-deflate.zip | 7764dab45911f96a647ad0f250393f4648fefb21eb311013028d39845398e219 | 3713 | synthetic:tools/synth_exo.py --kind zip-deflate |
 | synth-exo-zip-implode.zip | cf7fae26f4fc84a10ddda54e82000d1223a9987b792175d31e0134395d0adcf0 | 34799 | synthetic:tools/synth_implode.py |
+| synth-exo-zip-reduce.zip | c6bbaed32158f95e211903c4f08428652aaab749627dfa45fed4158e622624c6 | 6516 | synthetic:tools/synth_reduce.py |
 | synth-exo-zip-store.zip | 41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04 | 8404 | synthetic:tools/synth_exo.py --kind zip-store |
 | synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |
 | synth-os9-btoa.btoa | 084b016918298e544fe23e403799cf44979bf87f7d1d2dd88cba5496eb5cc24c | 731 | synthetic:tools/synth_os9.py --kind btoa |

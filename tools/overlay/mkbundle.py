@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mkbundle.py — the fifteen overlay images as ONE resource.
+"""mkbundle.py — the sixteen overlay images as ONE resource.
 
 The LAZY lifetime (`mac/ovl_load_lazy.c`, `UNC_OVL_LAZY=1`) carries one `OVLY`
 per image and reads whichever the archive turns out to need. That costs a disk
@@ -10,8 +10,8 @@ application's own floppy may have been swapped by then (FORMATS.md,
 This bundle is the EAGER lifetime, which is what ships and trades the other
 way: **one read at launch, while the boot disk is certainly still in**, and
 then everything the archive cannot want is thrown away before the engine asks
-for memory. One resource rather than fifteen because fifteen `GetResource`
-calls are fifteen reads, and the whole point of loading eagerly is to pay for
+for memory. One resource rather than sixteen because sixteen `GetResource`
+calls are sixteen reads, and the whole point of loading eagerly is to pay for
 the disk once.
 
 Layout — chosen so the shim can find an image without a parser:

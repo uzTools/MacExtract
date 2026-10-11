@@ -66,7 +66,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
  * proof that a decoder can be one at all. It is 'OVLY' 129: a separate
  * resource from the ciphers, because an encrypted zip has no reason to load
  * a SpaceSaver decoder or the other way round. */
-/* In the EAGER lifetime, which is what ships, all fifteen images live in ONE
+/* In the EAGER lifetime, which is what ships, all sixteen images live in ONE
  * resource, 'OVLY' 128, read once at launch (tools/overlay/mkbundle.py). The
  * per-image ids below are then indexes INTO that bundle rather than resource
  * numbers; under UNC_OVL_LAZY=1 they are the resource numbers themselves. */
@@ -103,6 +103,11 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * the same reason as the two above: it
                                     * calls into the codecs image for LZW
                                     * and nothing calls into it         */
+#define OVL_ID_ZIPOLD        143   /* zip's Shrink and Reduce, PKZIP 0.9x's
+                                    * methods. Only zip calls them, so
+                                    * only zip keeps this; it patches
+                                    * itself into the host vector as the
+                                    * codecs image does               */
 
 /* How many images there can be, for sizing a table rather than for numbering
  * one: mac/ovl_load_lazy.c keeps a loaded image per slot and must not be able

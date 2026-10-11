@@ -446,11 +446,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # *the installer's own key*). The total is unmoved; the A5 side was not
 # attributed per symbol. `ovl_stuffit` +24 when shipped, the eager pair
 # unmoved.
-# RAISED 2026-10-11, 170,056 -> 170,936, +880 B for zip Reduce, methods
-# 2-5 (src/unc_reduce.c and its call): resident only here; shipped, it is
-# in `ovl_codecs` (+840) and `ovl_exo` (+76) and the eager pair is unmoved
-# (FORMATS.md, *Reduce*).
-UNC_MAC_CODE_DEFAULT=170936
+# RAISED 2026-10-11, 170,056 -> 171,232, +1,176 B for zip Reduce, methods
+# 2-5: the decoder, its call, and the shim's patch of `ovl_zipold` into the
+# vector. Shipped, the decoder is in that image beside Shrink and the
+# eager pair pays only the keep and the patch (FORMATS.md, *Reduce*).
+UNC_MAC_CODE_DEFAULT=171232
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -593,10 +593,10 @@ UNC_MAC_CODE_DEFAULT=170936
 # data symbol changed size (all 126 compared), so alignment.
 # LOWERED the same day to 37,972, -8, with the code ceiling's +136.
 # LOWERED 2026-10-10 to 37,960, -12, with the code ceiling's +12.
-# RAISED 2026-10-11 to 37,976, +16, with the code ceiling's +880: no data
-# symbol changed size (compared against HEAD's build), only `_sdata`'s
-# padding, 0x2a -> 0x3a. Alignment again.
-UNC_MAC_A5_DEFAULT=37976
+# RAISED 2026-10-11 to 38,000, +40, with the code ceiling's +1,176: no
+# data symbol changed size against the previous commit's build, only
+# `_sdata`'s padding. Alignment again.
+UNC_MAC_A5_DEFAULT=38000
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -806,8 +806,16 @@ UNC_MAC_A5_DEFAULT=37976
 # format on Aladdin's own engine list, graded byte-exact on three files
 # Private File 2.0 wrote (FORMATS.md, *Private File*).
 # `run_tiers.py --check` is what says whether it cost a fixture.
-UNC_MAC_CODE_EAGER=54640
-UNC_MAC_A5_EAGER=19088
+# +80 code and +16 A5 on 2026-10-11 for the SIXTEENTH image, `ovl_zipold`
+# — zip's Shrink and Reduce, which only zip keeps, where they had been in
+# the codecs image every format keeps. The code is the release's fourth
+# keep (+24), the shim patching a second image into the vector through one
+# routine shared with the codecs (`ovl_patched`, +24 net) and the zip shim
+# asking for it (+20), 68 B by symbol and 12 of alignment between
+# functions; the A5 is a fourth keep slot's 6 B and `_sdata` padding. What it buys: 2,064 B back in every format that is
+# not zip, measured on `ovl_codecs` 8,468 -> 6,404 (FORMATS.md, *Reduce*).
+UNC_MAC_CODE_EAGER=54720
+UNC_MAC_A5_EAGER=19104
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -830,8 +838,10 @@ UNC_MAC_A5_EAGER=19088
 # pieces as the eager pair above; the A5 is 32 B more than there because
 # the `.data` alignment that gave 28 B back in the eager build steps the
 # other way in this one.
-UNC_MAC_CODE_LAZY=53216
-UNC_MAC_A5_LAZY=19200
+# +56 code and +8 A5 on 2026-10-11 for `ovl_zipold`, the shim half of the
+# eager pair's change (this lifetime has no release to teach).
+UNC_MAC_CODE_LAZY=53272
+UNC_MAC_A5_LAZY=19208
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

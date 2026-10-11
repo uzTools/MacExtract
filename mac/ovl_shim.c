@@ -46,17 +46,24 @@ static const OverlayHost gOvlHost = { ovl_host_crc32, NULL, NULL, NULL,
  * per-entry memory error, which is what this shell does with every other
  * allocation failure. */
 static int gCodecsIn;   /* the vector is patched to an ADDRESS, so it is only
-                         * valid while the image it points into stays put */
+                         * valid while the image it points into stays put.
+                         * One bit per image that patches it: 1 the codecs,
+                         * 2 zip's Shrink and Reduce (ovl_zipold.c). */
+
+static int ovl_patched(short id, int bit)
+{
+    OverlayEntry e;
+    if (gCodecsIn & bit) return 1;
+    e = ovl_image(id);
+    if (!e) return 0;
+    e(&gOvlHost, OVL_CODEC_EXPORTS, &gOvlFns, NULL);
+    gCodecsIn |= bit;
+    return 1;
+}
 
 static int ovl_codecs_ready(void)
 {
-    OverlayEntry e;
-    if (gCodecsIn) return 1;
-    e = ovl_image(OVL_ID_CODECS);
-    if (!e) return 0;
-    e(&gOvlHost, OVL_CODEC_EXPORTS, &gOvlFns, NULL);
-    gCodecsIn = 1;
-    return 1;
+    return ovl_patched(OVL_ID_CODECS, 1);
 }
 
 /* The eager release copies the codecs image out of the bundle, so the vector
@@ -396,7 +403,9 @@ int unc_pf_extract(UncCtx *c)
 int unc_zip_extract(UncCtx *c)
 {
     OverlayEntry e;
-    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    /* Zip's Shrink and Reduce too, which only zip keeps. */
+    if (!ovl_codecs_ready() || !ovl_patched(OVL_ID_ZIPOLD, 2))
+        return UNC_ERR_MEM;
     e = ovl_image(OVL_ID_EXO);
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_ZIP_EXTRACT, c, NULL);

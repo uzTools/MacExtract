@@ -8,7 +8,7 @@
    numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 963 fixtures in `./ci.sh`. Detail lives once — status in
+oracle across 964 fixtures in `./ci.sh`. Detail lives once — status in
 BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
 TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
@@ -109,8 +109,8 @@ checked by `tools/check_provenance.py`.
 
 Two items, and both want the same thing: **a Macintosh with a 68020 or
 better, running the shipped binary** (MANUAL_TESTS.md §2 and §6). The
-Linux lane closed what it could on 2026-09-26 — it builds the fifteen
-images, runs the real loaders through a mock Memory and Resource
+Linux lane closed what it could on 2026-09-26 — it builds every
+image, runs the real loaders through a mock Memory and Resource
 Manager, extracts 20 fixtures byte-exact under `qemu-m68k`, and catches
 six deliberate breaks every run (TESTING.md, *The overlay loader, off
 the Macintosh*).

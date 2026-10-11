@@ -20,7 +20,7 @@ TWO LANES, and they grade different things
   decoder that starts asking for more memory moves a tally here whatever
   the Macintosh shell does with its resources.
 - **shipped** (`--shipped`) — one budget per tier PER FORMAT, which is
-  what the `'OVLY'` build has: the decoders are fifteen images read as
+  what the `'OVLY'` build has: the decoders are sixteen images read as
   one bundle at launch, and everything the sniffed format cannot want is
   released before the engine takes its budget (FORMATS.md, *Overlays*).
   This is the lane that predicts what a user's Macintosh refuses.
@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (204580, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (109180, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (633468, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (204260, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (108860, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (633148, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -167,10 +167,10 @@ TIERS = {
 # three machines: 205,476, 110,076 and 634,364 B, `FreeMem()` 225,956,
 # 130,556 and 654,844 B, against this control. So TIERS is a machine
 # measurement again, and not a derivation.
-# **Lowered by 896 B 2026-10-11, DERIVED and not re-measured**: the
-# control's CODE +880 and A5 +16 (alignment) for zip Reduce (FORMATS.md,
-# *Reduce*); the free figures in the labels are that evening's.
-TIERS_CONTROL = 208912     # build/mac-resident, CODE + A5, 2026-10-11
+# **Lowered by 1,216 B 2026-10-11, DERIVED and not re-measured**: the
+# control's CODE +1,176 and A5 +40 for zip Reduce (FORMATS.md, *Reduce*);
+# the free figures in the labels are 2026-10-09's.
+TIERS_CONTROL = 209232     # build/mac-resident, CODE + A5, 2026-10-11
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -406,10 +406,11 @@ EXPECT = {
 # A5 -8 for DiskDoubler's buffer reuse and the MacLHA and uuencode
 # progress counts; `ovl_cptdd` +144, `ovl_lzh` +18, `ovl_text` +8, the
 # shipped build unmoved. No tally moved on either lane.
-# **+896 2026-10-11, -> 135,184**: the control's CODE +880 and A5 +16 of
-# alignment for zip Reduce; `ovl_codecs` +840, `ovl_exo` +76, the shipped
-# build unmoved (FORMATS.md, *Reduce*).
-OVL_SAVED = 135184
+# **+1,120 2026-10-11, -> 135,408**: zip Reduce, the control's CODE
+# +1,176 and A5 +40, less the shipped build's +80 and +16 for the
+# sixteenth image's keep and its patch into the vector (FORMATS.md,
+# *Reduce*).
+OVL_SAVED = 135408
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -445,7 +446,7 @@ OVL_HANDLE = 8
 # (DECISIONS.md 2026-09-26, *a budget per format, and one per layer*.)
 OVL_RESIDUE = -666
 
-# The fifteen images and the bundle they are read as, in bytes, measured
+# The sixteen images and the bundle they are read as, in bytes, measured
 # 2026-09-26 off `build/mac/` and STUFFIT re-taken 2026-09-28, +208 B for the
 # add-on module fields (FORMATS.md, *Where an archive names the module*) —
 # which is where that change lands in the shipped build: resident code took
@@ -497,15 +498,16 @@ OVL_RESIDUE = -666
 # **STUFFIT +24 B 2026-10-10**: a method-13 fork's encryptor id is not
 # read (DECISIONS.md 2026-10-10, *the installer's own key*); a helper
 # function and a clear-in-place came out at +24 and +36.
-# **CODECS +840 and EXO +76 B 2026-10-11** for zip Reduce, methods 2-5:
-# the decoder is `src/unc_reduce.c`, in the codecs image beside Shrink for
-# the same reason (`ovl_exo` has 608 B left), and the zip reader's call
-# and method guard (FORMATS.md, *Reduce*).
+# **EXO +76 B 2026-10-11** for zip Reduce's call and method guard, and a
+# SIXTEENTH image the same day, ZIPOLD, 2,666 B: Shrink and Reduce, which
+# only zip calls and only zip keeps. CODECS fell 7,628 -> 6,404 with
+# Shrink gone from it — its size before Shrink came in (FORMATS.md,
+# *Reduce*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
     "OVL_ID_BTOA":        2756,
-    "OVL_ID_CODECS":      8468,
+    "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15908,
     "OVL_ID_CRYPT":       10244,
     "OVL_ID_EXO":         32160,
@@ -517,8 +519,9 @@ IMAGES = {
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11510,
+    "OVL_ID_ZIPOLD":      2666,
 }
-BUNDLE = 162980
+BUNDLE = 163596
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
@@ -588,7 +591,7 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
                          % path)
     body = body[1]
 
-    out, pend, want, crypt = {}, [], None, True
+    out, pend, want, crypt = {}, [], set(), True
     for m in re.finditer(r"case\s+(UNC_FORMAT_\w+)\s*:|(default)\s*:|"
                          r"want\s*=\s*(OVL_ID_\w+)|crypt\s*=\s*0|"
                          r"(break)\s*;|(return)\s*;|(\n\s*\})", body):
@@ -596,7 +599,7 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
         if case or dflt:
             pend.append(case or "default")
         elif image:
-            want = image
+            want.add(image)
         elif m.group(0).startswith("crypt"):
             crypt = False
         elif brk or ret:
@@ -604,14 +607,13 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
             if ret:                      # an envelope: nothing is released
                 keep = None
             else:
-                if want:
-                    keep.add(want)
+                keep |= want
                 if crypt:
                     keep.add("OVL_ID_CRYPT")
                 keep.add("OVL_ID_CODECS")
             for name in pend:
                 out[name] = frozenset(keep) if keep is not None else frozenset()
-            pend, want, crypt = [], None, True
+            pend, want, crypt = [], set(), True
             if ret and "default" in out:
                 break                    # past the default: the switch is done
         elif end:
@@ -622,6 +624,27 @@ def keep_sets(path=os.path.join(REPO, "mac", "ovl_load_eager.c")):
     if len(out) < 15:
         raise SystemExit("run_tiers: parsed %d release cases, expected 15+"
                          % len(out))
+    # And the keeps AFTER the switch that only some formats get, written
+    # `if (fmt == A || fmt == B) ovl_keep(ID, n);` — zip's Shrink and
+    # Reduce (tools/overlay/ovl_zipold.c). A keep of that shape this does
+    # not read would be a format the model under-charges, so an
+    # `ovl_keep(` it cannot attribute is refused rather than skipped.
+    tail = text.split("switch (fmt) {", 1)[1]
+    extra = 0
+    for m in re.finditer(r"if\s*\(([^;{}]*?)\)\s*ovl_keep\((OVL_ID_\w+)\s*,",
+                         tail):
+        fmts = re.findall(r"fmt\s*==\s*(UNC_FORMAT_\w+)", m.group(1))
+        if not fmts:
+            continue                     # `if (want)`, `if (crypt)`
+        for f in fmts:
+            if f not in out or not out[f]:
+                raise SystemExit("run_tiers: %s keeps %s after the switch "
+                                 "and is not a releasing case" % (f, m.group(2)))
+            out[f] = out[f] | {m.group(2)}
+        extra += 1
+    if tail.count("ovl_keep(") != 3 + extra:
+        raise SystemExit("run_tiers: the loader has an ovl_keep this model "
+                         "cannot attribute to a format")
     for keep in out.values():
         for image in keep:
             if image not in IMAGES:
@@ -644,6 +667,17 @@ def check_images(builddir=os.path.join(REPO, "build", "mac")):
         elif os.path.getsize(p) != size:
             bad.append("%s: %d B built, %d B here"
                        % (ident, os.path.getsize(p), size))
+    # And the other direction: an image the build has and this table does
+    # not. Until 2026-10-11 only the table was walked, so a sixteenth image
+    # showed up as nothing but a bundle that had grown.
+    import glob
+    for p in sorted(glob.glob(os.path.join(builddir, "ovl_*.bin"))):
+        name = os.path.basename(p)[len("ovl_"):-len(".bin")]
+        if name.startswith("bundle"):        # the bundle, and its Rez fork
+            continue
+        if "OVL_ID_" + name.upper() not in IMAGES:
+            bad.append("OVL_ID_%s: %d B built, not in IMAGES"
+                       % (name.upper(), os.path.getsize(p)))
     if os.path.getsize(bundle) != BUNDLE:
         bad.append("bundle: %d B built, %d B here"
                    % (os.path.getsize(bundle), BUNDLE))

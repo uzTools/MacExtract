@@ -1475,9 +1475,9 @@ static void test_zip_shrink_ticks(void)
 /* Zip's Reduce (src/unc_reduce.c), on hand-built streams: every follower
  * set empty (256 six-bit zeros, 192 bytes), so each byte after them is
  * an 8-bit literal of stage 1, and stage 2 is what is tested. The wild
- * fixtures pin the zero window and the literal 144; the third rule, that
- * a copy longer than its distance is corrupt, no CRC-good entry has, so
- * only this can fail on it (FORMATS.md, *Reduce*). */
+ * fixtures pin the zero window and the literal 144; a copy longer than
+ * its distance and an index past a set's count are in no CRC-good entry,
+ * so only these can fail on them (FORMATS.md, *Reduce*). */
 static int red_out_len;
 static uint8_t red_out[64];
 static int red_put(void *ctx, const uint8_t *p, uint32_t n)
@@ -1505,23 +1505,68 @@ static int red_run(const uint8_t *tail, uint32_t ntail, uint32_t usize)
                              red_put, NULL);
 }
 
+/* LSB-first bit writer for the follower-set streams below. */
+static uint32_t red_bw_put(uint8_t *buf, uint32_t at, uint32_t v, int n)
+{
+    int k;
+    for (k = 0; k < n; k++, at++)
+        if ((v >> k) & 1u) buf[at >> 3] |= (uint8_t)(1u << (at & 7u));
+    return at;
+}
+
+/* Set 0 (the one the first byte is coded against) holds 'x', 'y', 'z':
+ * N = 3, so B(N) = 2 and an index of 3 can be SENT and names nothing. */
+static int red_run_index(uint32_t index, uint8_t *got)
+{
+    static uint8_t s[256], obuf[4096];
+    UncBufIn in;
+    UncAlloc al;
+    uint32_t at = 255u * 6u, crc = UNC_CRC32_INIT;   /* 255 empty sets */
+    int r;
+
+    memset(s, 0, sizeof s);
+    at = red_bw_put(s, at, 3, 6);
+    at = red_bw_put(s, at, 'x', 8);
+    at = red_bw_put(s, at, 'y', 8);
+    at = red_bw_put(s, at, 'z', 8);
+    at = red_bw_put(s, at, 0, 1);                    /* "from the set" */
+    at = red_bw_put(s, at, index, 2);
+    test_make_alloc(&al);
+    unc_bufin_init_mem(&in, s, (at + 7u) / 8u);
+    red_out_len = 0;
+    r = unc_reduce_decode(&al, &in, 1, 1, &crc, obuf, sizeof obuf,
+                          red_put, NULL);
+    *got = red_out_len ? red_out[0] : 0;
+    return r;
+}
+
 static void test_zip_reduce_rules(void)
 {
     /* Factor 1: V = 0x05 is length 5 + 3, and D = 7 a distance of 8,
      * which reaches 7 bytes before the start: zeros. */
     static const uint8_t back[] = { 'A', 144, 0x05, 7 };
     static const uint8_t lit[] = { 144, 0, 'B' };
-    /* The same copy at distance 1: longer than its distance. */
+    /* The same copy at distance 1: longer than its distance, so it
+     * repeats the one byte before it (APPNOTE.TXT 5.2.5). */
     static const uint8_t over[] = { 'A', 144, 0x05, 0 };
+    static const uint8_t run[] = { 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
     static const uint8_t want[] = { 'A', 0, 0, 0, 0, 0, 0, 0, 'A' };
 
     CHECK(red_run(back, sizeof back, 9) == UNC_OK);
     CHECK(red_out_len == 9 && memcmp(red_out, want, 9) == 0);
     CHECK(red_run(lit, sizeof lit, 2) == UNC_OK);
     CHECK(red_out_len == 2 && red_out[0] == 144 && red_out[1] == 'B');
-    CHECK(red_run(over, sizeof over, 9) == UNC_ERR_CORRUPT);
+    CHECK(red_run(over, sizeof over, 9) == UNC_OK);
+    CHECK(red_out_len == 9 && memcmp(red_out, run, 9) == 0);
     /* A stream that ends before `usize` is truncated, not padded. */
     CHECK(red_run(lit, sizeof lit, 3) == UNC_ERR_TRUNCATED);
+    /* Index 2 is the set's third byte; index 3 is past its count, which
+     * `ozur` turns into a 0 and this refuses. */
+    {
+        uint8_t got = 0;
+        CHECK(red_run_index(2, &got) == UNC_OK && got == 'z');
+        CHECK(red_run_index(3, &got) == UNC_ERR_CORRUPT);
+    }
 }
 
 /* LZH/LHA, in scope since 2026-08-23. The corpus and lhasa's collection

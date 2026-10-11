@@ -95,8 +95,8 @@ named Private File, which reads since 2026-10-09 (DECISIONS.md 2026-10-07,
 
 **Kept deliberately, and this is the part of the file to read first.** Twice a
 live claim has been re-tested *because* it sat beside an already-withdrawn one,
-and one of those was worth 39/44 → 40/44 at the floor target. **Forty-nine**
-mechanisms keep finding the next one — recounted 2026-10-10; the
+and one of those was worth 39/44 → 40/44 at the floor target. **Fifty**
+mechanisms keep finding the next one — recounted 2026-10-11; the
 sentence said ten when the list had thirty, on 2026-09-26 — and three of them
 need no insight at all (the third is the scan at the end of the list):
 
@@ -493,12 +493,21 @@ need no insight at all (the third is the scan at the end of the list):
   a target and so never got that far. **Before a negative says anything
   about the subject, show the subject was in the state that would have
   produced a positive** (the row below, 2026-10-10).
+- **a figure labelled "at least" read as the figure.** Added 2026-10-11:
+  `run_tiers.py` reports a refused fixture "short by at least 854", the
+  first allocation the budget refused, and it was read as how close the
+  fixture was. It needed 401,408 B, 180 KB more. **A floor or a ceiling
+  bounds the answer and is not it; binary-search the real figure before
+  arguing from one** (the row below, 2026-10-11).
 
 Each entry is what was claimed, what disproved it, and what it COST. The cost
 line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"The window starts as zeros, which `ozur` gets from a `calloc` rather than from a comment"** — DECISIONS.md, *Reduce comes in*, and the b5c9813 commit, 2026-10-11, filed as the same lesson as ARC's Trimmed window | **APPNOTE.TXT 5.2.5 states it in words**: *"assume that all the data before the start of the output stream is filled with zeros"*. The sentence was written without reading the section the decoder implements. **Cost: none to the engine — the rule was right; a lesson was drawn from a gap that did not exist** | 2026-10-11 |
+| **"A copy longer than its distance is corrupt, and the CRCs need that rule"** — `src/unc_reduce.c`, FORMATS.md and DECISIONS.md, b5c9813, 2026-10-11, after `ozur` | **the CRCs settle nothing**: no good entry has such a copy and the 3 that do fail either way, and **5.2.5 permits one** — an overlapping LZ77 copy repeats a run. The decoder now follows the specification, and deark is a reader that refuses a stream the format allows. **Cost: a refusal no real file had hit, and a unit test that asserted it** | 2026-10-11 |
+| **`synth-dd-m5.dd` was 14 B from passing System 6.0.8 / 512Ke until Shrink and Reduce went into the codecs image** — reasoned in the session from `run_tiers.py`'s *"short by at least 854"* | **that figure is the first refused allocation, not the need**: the entry needs **401,408 B** against a 221 KB grant. Binary search of `--budget` settled it in one command. **Cost: none committed — caught before it reached a document, but it was the argument offered for redoing the placement, which stands on its own bytes** | 2026-10-11 |
 | **"On no Macintosh: an AppleLink `.pkg`"** — this file's Status, 2026-10-09, and the brief written from it | FORMATS.md, *AppleLink packages → Run on a Macintosh*: all fourteen packages had run through the application on System 6.0.8 at 4 MB and 1 MB on 2026-10-05/06, four days before the sentence was written. **Cost: one task item spent re-establishing that a format runs on a Macintosh**, which was then extended to all seven tiers (Status). **Why it survived:** the sentence listed what is not in `sample.txt` and called that "on no Macintosh". Those are different sets, and a run off the sample changes no tally that anything checks | 2026-10-10 |
 | **"The 3.5.1 application does not launch here"**, and so *"nothing in this project has ever launched a StuffIt Deluxe application"* — this file's 2026-09-28 entry on `sitcrypt.py`, DECISIONS.md the same day, `tools/vmac/README.md`, and the docstrings of `sitcrypt.py` and `sitopt.py` (*"whether 3.5.1 would use a 2.0 module … that application does not launch here"*) | **it launches by a double-click, and did the same day**: `specimens/sitopt/map351/` (2026-09-28 12:05) shows *About StuffIt Deluxe™…* in the Apple menu and an Archive menu with *Verify* and *Attach Signature*, and `sitopt.launch351`'s own comment says *"A double-click on the icon does"*. The three failures were ⌘O, which goes nowhere on that image. Driven that way on 2026-10-10 it opened Preferences and ran two scripts (`tools/vmac/sitenc351.py`), which settled the question it was blocking: 3.5.1 cannot use an Encryptor module (FORMATS.md, *Where an archive names the module*). **Cost: twelve days of "4 replaced the modules" carried as a hypothesis — load-bearing since `sit_enc_id`, the same morning — and an open "cannot see" in `sitopt.py` that one run answered.** **Why it survived:** the correction was written as a code comment 50 lines below the docstring it contradicted; nothing that reads status reads a function's comment (*a limitation written one paragraph from its own remedy*) | 2026-10-10 |
 | **"The Shortcut updater's archive key is folded only when extraction starts"**, and its picker *"a folder navigator whose Open only descends"* — DECISIONS.md 2026-10-09, OPEN_ITEMS.md, `tools/sit_mkey_oracle.py`; labelled a hypothesis | the picker was the updater asking where the installed **Shortcut** is: a Standard File list filtered on `cdev`/`Cut!`, empty because no such file existed, and the code that filters it was decompressed in the same 45 dumps. A 373-byte stand-in with a `cdev` resource gets past it, and the key is then in memory **before any file is written**, from the restart alert onward (DECISIONS.md 2026-10-10, *the installer's own key*). **Cost: a day, and the next attempt aimed at the wrong thing** — timing dumps for "during extraction" when the obstacle was the installer's own target check | 2026-10-10 |

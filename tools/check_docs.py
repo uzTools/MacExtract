@@ -498,7 +498,7 @@ def check_derived_figures(text=None):
 
     # And the bundle's own three terms, which must close: the index is the
     # difference, and it does not depend on how big an image is.
-    m = re.search(r"The bundle is \*\*([\d,]+) B\*\* — the fifteen images "
+    m = re.search(r"The bundle is \*\*([\d,]+) B\*\* — the \w+ images "
                   r"sum to ([\d,]+) B, so its\nindex costs \*\*([\d,]+) B\*\*",
                   text)
     if not m:

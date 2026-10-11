@@ -22,14 +22,14 @@ file(GLOB ZLIB_SRC ${ENGINE_DIR}/third_party/zlib/*.c)
 #
 # UNC_OVL_RESIDENT — the old monolithic application, every decoder linked in.
 # NOT shipped and not the default, kept because it is the CONTROL every budget
-# figure rests on: with all fifteen images resident the engine is granted the
+# figure rests on: with all sixteen images resident the engine is granted the
 # same heap whatever it decodes, and that is what says the 84-103 KB the
 # overlay build gains belongs to the mechanism rather than to a month of other
 # work (FORMATS.md, *Overlays*). An instrument, not a fallback.
 #
 # UNC_OVL_LAZY — WHEN an image is read, which is a whole loader:
 #
-#   unset (default)  EAGER: all fifteen in ONE resource, read at launch while
+#   unset (default)  EAGER: all sixteen in ONE resource, read at launch while
 #                    the boot disk is certainly in, and everything the sniffed
 #                    format cannot want released before the engine takes its
 #                    budget. mac/ovl_load_eager.c, bundle by mkbundle.py.
@@ -72,7 +72,7 @@ else()
     endif()
     # Printed because the two differ by a disk access per format and by
     # nothing a build output would otherwise show.
-    message(STATUS "overlay: fifteen images, ${OVL_LIFETIME}")
+    message(STATUS "overlay: sixteen images, ${OVL_LIFETIME}")
     # The dispatch, the relocation trailer and the cache flush are shared; the
     # loader is the lifetime.
     set(OVERLAY_SHIM ovl_shim.c ovl_reloc.c)
@@ -84,7 +84,7 @@ else()
     else()
         list(APPEND OVERLAY_SHIM ovl_load_lazy.c)
         foreach(img crypt spacesaver cptdd lzh arc now superdisk packit text
-                    stuffit exo codecs binhex btoa sqp)
+                    stuffit exo codecs binhex btoa sqp zipold)
             list(APPEND OVERLAY_R ${CMAKE_CURRENT_BINARY_DIR}/ovl_${img}.r)
         endforeach()
     endif()
@@ -123,6 +123,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_huffman\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzw\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_reduce\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_shrink\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_lzah\\.c$")
 endif()
 
@@ -166,7 +167,7 @@ target_include_directories(MacExtract PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 # Headers come in by glob rather than by name, because the names are what
 # drifted; CONFIGURE_DEPENDS re-globs at build time, so a header added
 # tomorrow is covered without anybody remembering this line. The cost is that
-# touching any header rebuilds all fifteen images — 9.4 s for the whole build,
+# touching any header rebuilds every image — 9.4 s for the whole build,
 # measured — and a no-op rebuild still regenerates nothing.
 file(GLOB OVL_HDRS CONFIGURE_DEPENDS
      ${ENGINE_DIR}/src/*.h
@@ -190,6 +191,8 @@ add_custom_command(
            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
            ${CMAKE_CURRENT_BINARY_DIR}/ovl_codec_exports_gen.h
+           ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
+           ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold_exports_gen.h
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND python3 ${ENGINE_DIR}/tools/overlay/mkforwards.py
             ${CMAKE_CURRENT_BINARY_DIR}
@@ -630,15 +633,31 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${ENGINE_DIR}/src/unc_huffman.c
             ${ENGINE_DIR}/src/unc_lzw.c
-            ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/unc_lzah.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_codecs.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_codecs_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_codec_exports_gen.h
             ${ENGINE_DIR}/src/unc_huffman.c
             ${ENGINE_DIR}/src/unc_lzw.c
-            ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/unc_lzah.c
+            ${OVL_DEPS})
+
+# Zip's Shrink and Reduce, kept for zip alone (tools/overlay/ovl_zipold.c).
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
+    COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_ZIPOLD
+            OVL_INC=${CMAKE_CURRENT_BINARY_DIR}
+            sh ${ENGINE_DIR}/tools/overlay/mkoverlay.sh
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
+            ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
+            ${ENGINE_DIR}/src/unc_shrink.c
+            ${ENGINE_DIR}/src/unc_reduce.c
+    DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold_exports_gen.h
+            ${ENGINE_DIR}/src/unc_shrink.c
+            ${ENGINE_DIR}/src/unc_reduce.c
             ${OVL_DEPS})
 
 add_custom_command(
@@ -720,6 +739,7 @@ add_custom_command(
             OVL_ID_BINHEX:${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.bin
             OVL_ID_BTOA:${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.bin
             OVL_ID_SQP:${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.bin
+            OVL_ID_ZIPOLD:${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.bin
     DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_crypt.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_spacesaver.r
@@ -736,6 +756,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_binhex.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_btoa.r
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_sqp.r
+            ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
             ${ENGINE_DIR}/tools/overlay/mkbundle.py
             ${ENGINE_DIR}/tools/overlay/ovlid.py
             ${ENGINE_DIR}/tools/overlay/overlay.h)

@@ -5,7 +5,7 @@
 ## Mission
 
 1. **`libmacextract`** — a portable, dependency-free C99 extraction engine for classic Macintosh archive and encoding formats, plus a Linux CLI (`macextract`).
-2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** (a January 1986 Macintosh Plus); it also runs in **512 KB**, refusing the heaviest archives per entry, and the same binary runs unchanged through Mac OS 9. Its decoders ship as **fifteen `'OVLY'` images** read at launch and released once the archive's format is known (FORMATS.md, *Overlays*).
+2. **A Retro68 Toolbox application** wrapping the same engine. Floor target: **System 3.0, 68000, 1 MB RAM** (a January 1986 Macintosh Plus); it also runs in **512 KB**, refusing the heaviest archives per entry, and the same binary runs unchanged through Mac OS 9. Its decoders ship as **sixteen `'OVLY'` images** read at launch and released once the archive's format is known (FORMATS.md, *Overlays*).
 
 The engine is the product. The Mac app is a thin shell.
 
@@ -13,8 +13,8 @@ The engine is the product. The Mac app is a thin shell.
 
 **M0–M67 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts; the rest of that table is named-only or
-detect-only by decision. The engine passes a **963-fixture** differential suite
-against `unar` and, where `unar` fails, `macunpack`, plus 9,630 robustness variants. The Macintosh application extracts byte-exact on every
+detect-only by decision. The engine passes a **964-fixture** differential suite
+against `unar` and, where `unar` fails, `macunpack`, plus 9,640 robustness variants. The Macintosh application extracts byte-exact on every
 emulated tier from System 3.0 at 1 MB to Mac OS 9.2; the tallies are
 BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 3.0 and System 6; above those it is deliberate scope, not an open item.
@@ -34,7 +34,7 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 
 That session-start reading is **~9.3k tokens** (PROGRESS 4.2k,
 OPEN_ITEMS 3.6k, BLOCKERS' first two sections 1.5k); BLOCKERS'
-withdrawn-claims archive is another **~73.1k** and is reference, not
+withdrawn-claims archive is another **~73.6k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-11; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you
@@ -58,7 +58,7 @@ method" was a fact about one tool, with the second oracle already sitting in
 self-extracting fixture carried one in its own resource fork.
 
 `BLOCKERS.md` keeps every withdrawn claim with **what each one cost**, and
-names the forty-nine smells that keep finding the next one. The cheapest is a
+names the fifty smells that keep finding the next one. The cheapest is a
 **cross-file contradiction**. Another is a constant in the peak-RAM matrix:
 data-driven allocations vary with their input, so one that does not is
 usually a declared ceiling nobody questioned.

@@ -69,7 +69,7 @@ HISTORICAL = {
     "sit_arsenic.c", "unc_encinfo.c", "unc_huffman.c", "crypt_tables.h",
     "fmt_cpt.c", "fmt_cptseg.c", "fmt_now.c", "unc_util.c",
     "fmt_binhex_priv.h", "sit6_tables.h", "fmt_mime.c", "fmt_lzh.c",
-    "fmt_packit.c", "unc_lzw.c",
+    "fmt_packit.c", "unc_shrink.c",
 }
 
 MENTION = re.compile(r"XAD|macutils")

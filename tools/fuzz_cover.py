@@ -85,6 +85,9 @@ FAMILIES = [
     # family that shares a prefix with a larger one cannot read as
     # wholly at zero, which is the one signal this tool calls reliable.
     ("Zip Implode",       r"^imp_|^zip_implode"),
+    # Zip methods 2-5, added 2026-10-11, its own row for the same reason;
+    # the decoder is one function, its bit reader being macros.
+    ("Zip Reduce",        r"^unc_reduce_decode$"),
 ]
 
 

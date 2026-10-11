@@ -389,7 +389,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
 - 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
 - 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
-- 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was chosen by grading it against 2,379 stored CRCs, and two rules that read as defensive are what the CRCs need
+- 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
 
 ---
 
@@ -25486,7 +25486,7 @@ failed in both directions here. This is why 4.0.2's cell says "not
 tested" and not ✅, even though its add-on's translator carries the
 same sentence as 5.5.1.
 
-## 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was chosen by grading it against 2,379 stored CRCs, and two rules that read as defensive are what the CRCs need
+## 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
 
 **Claim.** Zip methods 2 to 5, Reduce, decode (FORMATS.md, *Reduce*).
 They had been out by the brief since 2026-10-08 (*the method a Macintosh
@@ -25495,43 +25495,76 @@ stands; the maintainer moved the line**: a Mac user with a DOS CD meets
 these files, and 5.5.1's Expander reads them (*the string that said
 reduced*). Nothing measured changed, so nothing was re-measured.
 
-**The source was graded before it was transcribed.** deark's
-`foreign/ozunreduce.h` is the one reader in `reference/`: XADMaster
-names the methods and has no decoder, and Info-ZIP UnZip 6.00 refuses
-them. A
-Python transcription went over every Reduce entry in reach first — the
-Shrink sweep's 346 files, all 105 + 92 + 13 distinct method 2–4 zips the
-index has, and 150 method-5 zips drawn with `--seed 20261011` —
-**2,371 of 2,379 entries reproduce the CRC-32 the archive stored**, and
-deark fails all 8 others. Three are PHP's `compress_unsup*.zip` test
-files, three bytes of stored data labelled Reduce; two are in archives
-cut before their central directory; three are CRC-bad in deark too,
-damage a HYPOTHESIS with no second copy tried. The C decoder then
-agreed with the transcription file by file.
+**The reading was graded before it was transcribed.** APPNOTE.TXT 5.2
+states the whole method, and deark's `foreign/ozunreduce.h` is the one
+implementation in `reference/`: XADMaster names the methods and has no
+decoder, and Info-ZIP UnZip 6.00 refuses them. A Python transcription
+went over every Reduce entry in reach first — the Shrink sweep's 346
+files, all 105 + 92 + 13 distinct method 2–4 zips the index has, and 150
+method-5 zips drawn with `--seed 20261011` — **2,371 of 2,379 entries
+reproduce the CRC-32 the archive stored**, and deark fails all 8 others:
+three PHP test stubs, two entries in archives cut before their
+directory, and three CRC-bad in deark too, damage a HYPOTHESIS. The C
+decoder then agreed with the transcription file by file, before and
+after the rewrite below.
 
-**Two rules in that file read as defensive, and the CRCs settle both.**
+**The same day, the maintainer asked what I would have done differently,
+and then for all of it. Four things, each measured:**
 
-- **The window starts as 4,096 zeros**, which `ozur` gets from a
-  `calloc` rather than from a comment. **1,480 of the 2,371 good
-  entries reach into it**, and every fixture fails with the window
-  filled with 0xAA instead. It is the same lesson as ARC's Trimmed
-  window of spaces (2026-08-25): the starting contents of a window are
-  part of the format, whether or not anybody wrote them down.
-- **A copy longer than its distance is corrupt.** That is unusual for
-  an LZ77, where overlap is how runs are written, and it was the rule
-  to doubt. **No good entry has one**; the 3 entries that do fail
-  their CRC with overlap allowed as well. So the refusal costs no real
-  file and fails damage early. No fixture can pin a rule that only
-  CRC-bad entries reach, so a unit test does.
+- **Where it lives.** The first commit put Reduce in `ovl_codecs` beside
+  Shrink, because `ovl_exo` was full and Shrink had gone there. That
+  image is kept by EVERY format, so every format paid for two methods
+  only zip has: 2,275 B, measured per function at the overlay's flags.
+  Both now live in a sixteenth image, `ovl_zipold`, which patches itself
+  into the host vector exactly as the codecs do and which the release
+  keeps for zip alone. Against the tree before Reduce, every format that
+  is not zip now has **1,128 B more** heap on the machine, tar 1,052,
+  and zip 1,622 less: it carries its own methods. The resident cost is
+  80 B of code and 16 of A5, shrunk from a first 108 and 36 by sharing
+  one patch routine and keeping the keep a test after the switch.
+- **Speed.** It was never measured. The tick probe on an authentic Mac
+  Plus read **75.6 s** for 549 KB of output; `m68kprof` put 43 % of the
+  instructions in the shared bit reader's out-of-line calls, two or
+  three a byte. Bits in two locals and B(N) from a table: **35.6 s**,
+  −53 %.
+- **A copy longer than its distance.** The first version refused it, as
+  `ozur` does, and called that a rule the CRCs needed. They did not:
+  no good entry has one, and the 3 that do fail with it allowed or
+  refused. **APPNOTE.TXT 5.2.5 permits it** — "copy Len+3 bytes from
+  this position" is an ordinary LZ77 copy, which repeats a run when it
+  overlaps — so this follows the specification, and deark is a reader
+  that refuses a stream the format allows. No fixture can tell the two
+  apart; the unit test checks the repeated run.
+- **An index past a follower set's count.** `ozur` gives 0, from its
+  zeroed table. 5.2.4 defines S(j)[I] only for I < N(j), so this
+  refuses it. No wild entry has one.
+
+**Two things the first entry said were wrong, and are withdrawn here.**
+It said the zero window came "from a calloc rather than from a comment".
+**5.2.5 states it**: "assume that all the data before the start of the
+output stream is filled with zeros". The 1,480 entries that reach into
+it confirm the specification rather than discover something it left
+out. And while weighing where the decoder should live, I read
+`synth-dd-m5.dd`'s 512Ke refusal, "short by at least 854 B", as a
+fixture Shrink and Reduce had cost. That figure is only the first
+refused allocation; **the entry needs 401,408 B**, 180 KB more than it
+is granted. No tally moves either way. **"Short by at least" is a
+floor; binary-search the budget before calling a fixture close.**
+
+**An encoder, because nothing here writes Reduce.** `tools/synth_reduce.py`
+is written from 5.2 alone and graded by deark, which reads its four
+entries byte-exact. It is the fifth fixture, and the named fuzz seed that
+took `unc_reduce_decode` to 100 % of lines in 3,000 cases. Its first draft
+never reached before the start of the output: its match search stopped
+at the first copy capped by its own distance. Counting each rule over
+its own output, before trusting it as a seed, is what caught it.
 
 **The table is a fixed 8,448 B, and that constant was questioned**
-(CLAUDE.md's smell). The follower sets use a median of 359 of its
-8,192 value slots, so sizing it from the stream would save ~8 KB.
-It is not done: the whole Reduce peak, 21.8 KB, is under deflate's
+(CLAUDE.md's smell). The follower sets use a median of 359 of their
+8,192 value slots, so sizing them from the stream would save up to
+~8 KB. It is not done: the whole Reduce peak, 21.8 KB, is under deflate's
 and Shrink's in the same reader, so no budget a zip is extracted under
-is set by Reduce. The window is the first 4 KB of the output buffer the
-zip reader already holds, as in `ozur`, where the circular buffer is
-also what gets flushed.
+is set by Reduce.
 
 **The CLI loses a mechanism, not just a message.** `method_out_of_scope`
 and its closing paragraph naming deark existed for Reduce alone. With no

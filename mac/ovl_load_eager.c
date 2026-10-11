@@ -1,4 +1,4 @@
-/* ovl_load_eager.c — all fifteen images as ONE resource, read at launch, and
+/* ovl_load_eager.c — all sixteen images as ONE resource, read at launch, and
  * most of it thrown away as soon as the archive says what it is.
  *
  * The lifetime this file implements is the shipped one. `mac/ovl_load_lazy.c`
@@ -21,8 +21,8 @@
 
 static Handle gBundle;          /* the whole thing, until the release */
 static int    gBundleTried;
-static Handle gKept[3];         /* the images we copied out, locked */
-static short  gKeptId[3];
+static Handle gKept[4];         /* the images we copied out, locked */
+static short  gKeptId[4];
 
 /* Find an image inside the bundle. Returns NULL if this bundle has no such
  * id, which is a build mismatch rather than a run-time condition. */
@@ -93,7 +93,7 @@ OverlayEntry ovl_image_q(short id, int expected)
     const unsigned char *p;
     unsigned long len;
     int i;
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 4; i++)
         if (gKept[i] != NULL && gKeptId[i] == id)
             return (OverlayEntry)(void *)*gKept[i];
     if (gBundle == NULL) {
@@ -108,8 +108,9 @@ OverlayEntry ovl_image(short id) { return ovl_image_q(id, 0); }
 
 /* Keep what this format can want; release the rest. Called after the sniff.
  *
- * The keep set is at most two: the decoder for the format, and the ciphers
- * where an entry might be encrypted. Encryption is discovered per ENTRY, as
+ * The keep set is the decoder for the format — for zip, two images, the
+ * reader and Shrink/Reduce — the ciphers where an entry might be encrypted,
+ * and always the codecs, below. Encryption is discovered per ENTRY, as
  * the entry is read, so a format that can carry one has to keep the ciphers
  * whatever this archive turns out to hold — the eligibility rule the mechanism
  * has always had, applied to a bundle rather than to one blob. */
@@ -219,6 +220,10 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
 
     OVL_DIAG(gRelFmt = (short)fmt);
     if (want) ovl_keep(want, 0);
+    /* Zip, and a spanned zip, also keep Shrink and Reduce, which nothing
+     * else calls. */
+    if (fmt == UNC_FORMAT_ZIP || fmt == UNC_FORMAT_ZIPSEG)
+        ovl_keep(OVL_ID_ZIPOLD, 3);
     if (crypt) ovl_keep(OVL_ID_CRYPT, 1);
     /* And ALWAYS the codecs, because every decoder calls into them: the bit
      * reader, the Huffman and canonical coders, LZW and LZAH live there and

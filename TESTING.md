@@ -1086,6 +1086,17 @@ anything about the suite.**
    below). That lane exists for the reason the AppleLink one does: a
    draw rate is not a property of a decoder.
 
+   **A FOURTH since 2026-10-11: zip methods 2-5 (Reduce)**, for the
+   Implode reason: nothing here writes Reduce, and the four wild
+   fixtures are four draws in ~950. `tools/synth_reduce.py` writes one
+   entry per compression factor and declares each one's follower sets
+   and coded stream as a span; deark reads all four byte-exact. 3,000
+   cases with `--stream-only --stream-shape reduce`, seed 11: **0
+   failures under ASan+UBSan**, and `fuzz_cover.py`'s new `Zip Reduce`
+   family reads `unc_reduce_decode` at **100 % of lines** — including
+   the two paths no CRC-good entry takes, a copy longer than its
+   distance and an index past a set's count (FORMATS.md, *Reduce*).
+
    **What the two method-14 shapes still cannot see.** The `goto out`
    after a failed flush is a sink write error and nothing a mutant can cause;
    it is reached only by the two real payloads, which no committed
@@ -2300,7 +2311,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-11 over all 975 corpus files, exactly one sniffs as a MIME
+2026-10-11 over all 976 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -3863,7 +3874,7 @@ numbers DART left behind*).
 
 | variant | build | what it is |
 |---|---|---|
-| 4 | `build/mac` | the SHIPPED application — fifteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
+| 4 | `build/mac` | the SHIPPED application — sixteen images, **eager**: one bundle read at launch, everything the sniffed format cannot want released before the engine takes its budget. `dist/` is compared against this one |
 | 4c | `build/mac-lazy` | `UNC_OVL_LAZY=1` — the same images, one resource each, read when a format turns out to want one. Not shipped |
 | 4d | `build/mac-resident` | `UNC_OVL_RESIDENT=1` — every decoder linked in, the application as it was until 2026-09-25. It is the CONTROL for budget measurements (FORMATS.md, *Overlays*), it has its own ceiling in `tools/build_mac.sh`, and it is built by `ci.sh` since 2026-09-26 |
 
@@ -3922,10 +3933,10 @@ Four lanes, in one script, ~65 s:
 
 | lane | what it grades |
 |---|---|
-| the images | fifteen of them, from `tools/overlay/images.py`'s inventory — which is PARSED out of `mac/CMakeLists.txt`, so a sixteenth image cannot exist in the build and be missing here. It read fourteen until 2026-10-05, when `ovl_sqp` joined and this count had to be raised with it — which is the drift the assertion exists to make loud |
-| the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format, the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, which is relocated a second time by the difference of two addresses |
-| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **20 fixtures, byte-exact, in both lifetimes** — the twentieth is `synth-exo-zip-implode.zip`, added 2026-10-07, which is the only run zip method 6's decoder gets through its own `'OVLY'` image |
-| one per image | eighteen fixtures reaching fourteen of the fifteen images, each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME, AppleLink). Exit status is compared too, and neither build is required to succeed |
+| the images | sixteen of them, from `tools/overlay/images.py`'s inventory — which is PARSED out of `mac/CMakeLists.txt`, so a seventeenth image cannot exist in the build and be missing here. It read fourteen until 2026-10-05, when `ovl_sqp` joined, and fifteen until 2026-10-11, when `ovl_zipold` did; each time this count had to be raised with it — which is the drift the assertion exists to make loud |
+| the loader | both lifetimes, natively under ASan+UBSan and big-endian under `qemu-m68k`: read counts, keep and release per format — since 2026-10-11 including that a StuffIt release gives `ovl_zipold` back — the `wa`/`kf`/`rf`/`fc`/`fn` probe fields, and **every relocation in every image checked against the raw file's own trailer at the address the image runs at** — including a kept copy, which is relocated a second time by the difference of two addresses |
+| extraction | the sink suite's own fixture list, extracted THROUGH the images under `qemu-m68k` and compared with the committed oracle manifests by `tools/check_mac_sink.py`: **20 fixtures, byte-exact, in both lifetimes** — the twentieth is `synth-exo-zip-implode.zip`, added 2026-10-07, which is the only run zip method 6's decoder gets through its own `'OVLY'` image. **It is also the only check that zip KEEPS `ovl_zipold`**: with that keep removed from the release, the eager lane fails on `derived-MUSFMT10.ZIP` (2026-10-11, bent by hand once). It is not a `--mutate` break because the loader test runs one release, a StuffIt one |
+| one per image | twenty fixtures reaching fifteen of the sixteen images — `shrink-wild-BBA.zip` and `reduce-wild-fractlan.zip` joined 2026-10-11 for `ovl_zipold` — each compared with the RESIDENT build of the same engine — the only oracle for an image no manifest covers (SuperDisk!, btoa, MIME, AppleLink). Exit status is compared too, and neither build is required to succeed |
 | the SHIPPED images (`--shipped-only`, `ci.sh` variant 3d) | the same loader against the images **Retro68** just built — the bytes `dist/` ships — in both lifetimes: found, relocated at the address they run at, kept, released. This is the only check anywhere on the bundle's own directory and on **30 relocations across six images**, which is what Retro68 emits where the m68k-linux build of the same sources emits 15 in one. They cannot be CALLED here: a Retro68 image entered from an m68k-linux host binary segfaults, measured rather than assumed, so that lane stops at the loader |
 
 **The mock is harsher than a Macintosh, deliberately**
@@ -4755,7 +4766,7 @@ give up on a short read (953 of 959 fixtures failed, 2026-10-09), and a binary b
 before the hook (refused outright — the CLI's announcement is what tells
 a binary that honours the cap from one that passes by ignoring it, and
 the first run of this lane was exactly that, green on a stale build).
-963 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
+964 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
 
 **What it cannot see**: a decoder that is right under any cap and slow
 under a small one — nothing times the calls — and the Macintosh host,
@@ -5471,7 +5482,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 975 files, and the
+  the population you give it: the corpus is 976 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is
