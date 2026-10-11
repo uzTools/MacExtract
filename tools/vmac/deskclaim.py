@@ -12,7 +12,13 @@ whether the launched application is handed the FILE, or merely started.
         --creator C           the archive's creator (default SIT!)
         --app-creator C       retag the application FILE's creator (its BNDL
                               is untouched)
-        --expect handed|open|refused
+        --stub-bundle         ...and its BNDL owner and signature resource
+        --app-folder NAME     put the application in a folder never opened
+                              (moves the archive's icon: --archive-at X,Y)
+        --invisible           set the application's invisible bit
+        --no-desktop          no Desktop file: the Finder rebuilds it at boot
+        --floppy              the archive on a second floppy
+        --expect handed|open|refused|nothing
 
 **What a run is graded on is the dialog, not the volume.** MacExtract
 handed a document goes straight to its destination dialog; started without
@@ -22,8 +28,8 @@ first version graded on the volume and passed a run in which nothing was
 handed over. The dialogs are told apart by the first solid border row below
 the menu bar in `claim-3-launched.png`: the application opens the
 destination dialog 30 points below the Open one (`mac/macextract_mac.c`,
-`dwhere`), Mac y 82 against 112. `refused` is neither — the Finder's own
-alert, or the desktop.
+`dwhere`), Mac y 82 against 112. `refused` is the Finder's own alert,
+positively identified; `nothing` is none of the three.
 
 The `APPL` resource layout is MEASURED, not quoted from a spec: read off
 System 6.0.8's own Desktop file on `System6.hfv` (2026-10-10). One resource,
@@ -45,7 +51,8 @@ times). The bundle layout `add_bundle` writes is measured the same way.
 
 **What it cannot see.** Which entry the Finder prefers when two
 applications claim one creator: no StuffIt application is on these
-volumes. It drives System 6.0.8 and System 3.0 only (FINDER_ICONS); System
+volumes. It drives System 6.0.8 and System 3.0 only (FINDER_ICONS), and
+the folder and floppy layouts on System 6.0.8 alone; System
 7 keeps its list in `Desktop DB`, which this does not write. And it boots
 the stock Desktop file, which predates MacExtract, so icons are whatever
 that cache says.
@@ -238,26 +245,38 @@ def desktop_claim(macbin, creator, dirid, name, front=True, bundle=False):
 
 # --- the run ----------------------------------------------------------------
 
-# The first solid black row below the menu bar, in Mac pixels. The Open
-# dialog sits at SFGetFile's `where` (82) and the destination dialog 30
-# points lower; measured off this script's own frames, 2026-10-10.
-DIALOG_TOP = {82: "open", 112: "handed"}
+# Solid black rows (75+ px) that identify each outcome, in Mac pixels,
+# measured off this script's own frames on 2026-10-10/11. The Open dialog's
+# top border is at SFGetFile's `where` (82) and the destination dialog's 30
+# points lower (112); the Finder's "could not be opened/printed (the
+# application is busy or missing)" alert has its top border at 72. A frame
+# with none of them is `nothing` — a double-click that missed reads that
+# way, and was read as a refusal until 2026-10-11, when a moved icon made
+# exactly that happen.
+DIALOG_ROWS = (("open", 82), ("handed", 112), ("refused", 72))
 
 
-def which_dialog(png, minrun=75):
-    w, h = map(int, subprocess.run(["identify", "-format", "%w %h", png],
-               capture_output=True, text=True, check=True).stdout.split())
+def solid_rows(png, minrun=75):
     px = subprocess.run(["convert", png, "-scale", "512x342!", "-depth", "8",
                          "gray:-"], capture_output=True, check=True).stdout
     w, h = 512, 342
-    for y in range(30, h):
+    rows = set()
+    for y in range(20, h):
         run = best = 0
         for v in px[y * w:(y + 1) * w]:
             run = run + 1 if v < 128 else 0
             best = max(best, run)
         if best >= minrun:
-            return DIALOG_TOP.get(y, "refused")
-    return "refused"
+            rows.add(y)
+    return rows
+
+
+def which_dialog(png):
+    rows = solid_rows(png)
+    for name, y in DIALOG_ROWS:
+        if y in rows:
+            return name
+    return "nothing"
 
 
 def hfs_get(img, path, out):
@@ -266,6 +285,39 @@ def hfs_get(img, path, out):
         hfs.run("hcopy", "-m", hfs.path(path), out)
     finally:
         hfs.close()
+
+
+def stub_bundle(macbin, creator):
+    """The application as a stub for `creator` would be: file creator,
+    BNDL owner and signature resource all `creator`, so the Finder files
+    its bundle under the creator it claims — which is what a desktop
+    rebuild reads (hypothesis this run tests)."""
+    h, d, r = macbin_split(macbin)
+    res, fattr = rsrc_read(r)
+    sig = h[69:73]
+    out = []
+    for t, rid, a, n, dd in res:
+        if t == b"BNDL" and dd[:4] == sig:
+            dd = creator + dd[4:]
+        if t == sig and rid == 0:
+            t = creator
+        out.append((t, rid, a, n, dd))
+    h = bytearray(h)
+    h[69:73] = creator
+    return macbin_join(bytes(h), d, rsrc_write(out, fattr))
+
+
+def dir_id(hfs, parent, name):
+    """The catalog ID of folder `name` in `parent`, off `hls -i`."""
+    out = hfs.run("hls", "-i", "-a", parent).stdout
+    for line in out.splitlines():
+        f = line.split(None, 1)
+        if len(f) == 2 and f[1] == name:
+            return int(f[0])
+    raise SystemExit(f"deskclaim: no folder {name!r} in {parent}")
+
+
+WANT = ("Scrollbar Pattern Editor", "About Scroll Bar Pattern Editor")
 
 
 def main():
@@ -278,25 +330,47 @@ def main():
     ap.add_argument("--emu", default="mv-4M")
     ap.add_argument("--claim", action="store_true",
                     help="add a SIT! -> MacExtract entry to the Desktop "
-                         "file's APPL list")
+                         "file's APPL list (pointing into --app-folder)")
     ap.add_argument("--expect", required=True,
-                    choices=("handed", "open", "refused"),
+                    choices=("handed", "open", "refused", "nothing"),
                     help="which dialog claim-3 must show: the destination "
                          "one (document handed over), the Open one "
                          "(launched without it), or neither")
     ap.add_argument("--creator", default="SIT!",
                     help="the archive's creator (default SIT!)")
     ap.add_argument("--bundle", action="store_true",
-                    help="also file a bundle under SIT! (BNDL, FREF SIT!, "
-                         "ICN#, signature) — what the Finder holds for an "
-                         "application it has actually seen")
+                    help="with --claim, also file a bundle under SIT! in "
+                         "the Desktop file")
     ap.add_argument("--app-creator",
                     help="retag the APPLICATION file's creator (its BNDL is "
-                         "untouched): does the Finder hand over only "
-                         "documents whose creator is the launched "
-                         "application's own?")
+                         "untouched)")
+    ap.add_argument("--stub-bundle", action="store_true",
+                    help="with --app-creator, retag the BNDL owner and the "
+                         "signature resource too, as a stub would carry them")
+    ap.add_argument("--app-folder",
+                    help="put the application in this folder at the root, "
+                         "which the run never opens")
+    ap.add_argument("--invisible", action="store_true",
+                    help="set the application's Finder invisible bit")
+    ap.add_argument("--no-desktop", action="store_true",
+                    help="leave the Desktop file deleted, so the Finder "
+                         "rebuilds it at boot — what a desktop rebuild sees")
+    ap.add_argument("--floppy", action="store_true",
+                    help="put the archive on a second floppy, not the boot "
+                         "volume, and double-click it there")
+    ap.add_argument("--floppy-icon", default="472,110",
+                    help="the floppy on the desktop, Mac x,y")
+    ap.add_argument("--archive-at",
+                    help="the archive in the boot volume's window, Mac x,y, "
+                         "when the layout is not FINDER_ICONS' — "
+                         "--app-folder moves it. Check claim-2 for it")
+    ap.add_argument("--want", nargs="*", default=list(WANT),
+                    help="names the archive extracts to; given rather than "
+                         "derived, so the run needs no build/rel CLI")
     ap.add_argument("--launch-wait", type=float, default=20.0)
     args = ap.parse_args()
+    if args.stub_bundle and not args.app_creator:
+        ap.error("--stub-bundle needs --app-creator")
 
     I.calibrate(args.system)
     icons = I.FINDER_ICONS[args.system]
@@ -304,46 +378,95 @@ def main():
     work = tempfile.mkdtemp(prefix="vmac-claim-")
     stock = os.path.join(R.VMAC_HOME, args.system)
     shot = lambda mac, n: mac.shot(os.path.join(args.outdir, n), scale="200%")
+    xy = lambda v: tuple(int(c) for c in v.split(","))
+    names = lambda ents: [(c.decode("mac_roman"), d, n.decode("mac_roman"))
+                          for c, d, n in ents]
     try:
-        desk = os.path.join(work, "Desktop.bin")
-        hfs_get(stock, "Desktop", desk)
-        mb = open(desk, "rb").read()
-        print("deskclaim: stock APPL:",
-              [(c.decode("mac_roman"), d) for c, d, _ in desktop_appl(mb)])
-        if args.claim:
-            mb = desktop_claim(mb, b"SIT!", ROOT_DIRID, APP_NAME.encode(),
-                               bundle=args.bundle)
-            open(desk, "wb").write(mb)
-
+        app = args.app
+        if args.stub_bundle:
+            app = os.path.join(work, "app.bin")
+            open(app, "wb").write(stub_bundle(open(args.app, "rb").read(),
+                                              args.app_creator.encode("mac_roman")))
         boot = os.path.join(work, "boot-claim.hfv")
-        R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock, args.app,
-             boot, "--finder", "--app-name", APP_NAME,
-             "--data", f"{args.fixture}:archive.sit")
+        extra = ()
+        cmd = [sys.executable, os.path.join(HERE, "mkboot.py"), stock, app,
+               boot, "--finder", "--app-name", APP_NAME]
+        if not args.floppy:
+            cmd += ["--data", f"{args.fixture}:archive.sit"]
+        R.sh(*cmd)
+        if args.floppy:
+            flop = os.path.join(work, "floppy.dsk")
+            R.make_floppy(flop, "Archives",
+                          extras=[(args.fixture, "archive.sit")])
+            extra = (flop,)
+            fh = MB.HFS(flop)
+            try:
+                fh.run("hattrib", "-t", "SIT!", "-c", args.creator,
+                       fh.path("archive.sit"))
+            finally:
+                fh.close()
+
         hfs = MB.HFS(boot)
         try:
-            # mkboot --finder deletes the Desktop file; put the (patched)
-            # stock one back, invisible as it was.
-            hfs.run("hcopy", "-m", desk, hfs.path("Desktop"))
+            where = hfs.path(APP_NAME)
+            dirid = ROOT_DIRID
+            if args.app_folder:
+                hfs.run("hmkdir", hfs.path(args.app_folder))
+                hfs.run("hrename", where, hfs.path(args.app_folder, APP_NAME))
+                where = hfs.path(args.app_folder, APP_NAME)
+                dirid = dir_id(hfs, hfs.path(), args.app_folder)
             if args.app_creator:
-                hfs.run("hattrib", "-c", args.app_creator, hfs.path(APP_NAME))
-            hfs.run("hattrib", "-t", "SIT!", "-c", args.creator,
-                    hfs.path("archive.sit"))
+                hfs.run("hattrib", "-c", args.app_creator, where)
+            if args.invisible:
+                hfs.run("hattrib", "+i", where)
+            if not args.floppy:
+                hfs.run("hattrib", "-t", "SIT!", "-c", args.creator,
+                        hfs.path("archive.sit"))
+            if not args.no_desktop:
+                # mkboot --finder deletes the Desktop file; put the stock
+                # one back, patched or not.
+                desk = os.path.join(work, "Desktop.bin")
+                hfs_get(stock, "Desktop", desk)
+                mb = open(desk, "rb").read()
+                if args.claim:
+                    mb = desktop_claim(mb, b"SIT!", dirid, APP_NAME.encode(),
+                                       bundle=args.bundle)
+                open(desk, "wb").write(mb)
+                hfs.run("hcopy", "-m", desk, hfs.path("Desktop"))
+                print("deskclaim: APPL on the boot image:",
+                      names(desktop_appl(mb))[:3], "...")
+            elif args.claim:
+                raise SystemExit("deskclaim: --claim needs a Desktop file")
+            print("deskclaim: application at", where, "dirID", dirid)
         finally:
             hfs.close()
-        print("deskclaim: APPL on the boot image:",
-              [(c.decode("mac_roman"), d, n.decode("mac_roman"))
-               for c, d, n in desktop_appl(open(desk, "rb").read())][:3], "...")
 
-        mac = I.Mac(boot, args.emu, work)
+        mac = I.Mac(boot, args.emu, work, extra=extra)
         try:
             if mac.settle(os.path.join(args.outdir, ".settle.png"),
                           interval=5.0, timeout=300) is None:
                 raise SystemExit("deskclaim: never reached the Finder")
             shot(mac, "claim-1-desktop.png")
-            mac.click(*icons["volume"], double=True)
-            time.sleep(4.0)
-            shot(mac, "claim-2-volume.png")
-            mac.click(*icons["archive"], double=True)
+            if args.floppy:
+                # The boot volume first, so the Finder has seen the
+                # application the way a user's Finder would have.
+                mac.click(*icons["volume"], double=True)
+                time.sleep(4.0)
+                mac.click(*xy(args.floppy_icon), double=True)
+                time.sleep(4.0)
+                shot(mac, "claim-2-volume.png")
+                # The archive is the floppy's only item: Select All and
+                # Open need no coordinate inside a window placed by the
+                # Finder.
+                mac.command_key("a")
+                time.sleep(1.0)
+                mac.command_key("o")
+            else:
+                mac.click(*icons["volume"], double=True)
+                time.sleep(4.0)
+                shot(mac, "claim-2-volume.png")
+                mac.click(*(xy(args.archive_at) if args.archive_at
+                            else icons["archive"]), double=True)
             time.sleep(args.launch_wait)
             shot(mac, "claim-3-launched.png")
             I.accept_destination(mac)
@@ -364,16 +487,16 @@ def main():
         seen = which_dialog(os.path.join(args.outdir, "claim-3-launched.png"))
         print(f"deskclaim: claim-3 shows: {seen}")
         after = os.path.join(work, "boot.hfv")
-        want = I.expected_names(args.fixture, work)
-        have = I.volume_names(after)
+        outvol = extra[0] if args.floppy else after
+        want = {(n,) for n in args.want}
+        have = I.volume_names(outvol)
         got = want <= have and bool(want)
-        print("deskclaim: entries on the volume after:", "ALL" if got else
-              sorted(want - have))
+        print("deskclaim: entries on the archive's volume after:",
+              "ALL" if got else sorted(want - have))
         d2 = os.path.join(work, "Desktop-after.bin")
         hfs_get(after, "Desktop", d2)
         print("deskclaim: APPL after the run:",
-              [(c.decode("mac_roman"), d, n.decode("mac_roman"))
-               for c, d, n in desktop_appl(open(d2, "rb").read())])
+              names(desktop_appl(open(d2, "rb").read())))
         # A handed-over document must also have come out; the volume is
         # the second half of that, never the whole of it (docstring).
         ok = seen == args.expect and (seen != "handed" or got)

@@ -3146,15 +3146,29 @@ application was told WHICH file, since it has read `AppParmHandle` from
     deskclaim.py ... --claim --expect open                  # Desktop APPL entry
     deskclaim.py ... --app-creator 'SIT!' --expect handed   # retag the app
     deskclaim.py ... --system Sys30.img --app-creator 'SIT!' --expect handed
+    deskclaim.py ... --app-creator 'SIT!' --floppy --expect handed
+    deskclaim.py ... --app-creator 'SIT!' --app-folder "MacExtract Helpers" \
+                     --archive-at 237,105 --claim --expect handed
+    deskclaim.py ... (the same) --no-desktop --stub-bundle --expect handed
 
 Double-clicks a `SIT!` archive in the Finder, after optionally adding a
 `SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
-bundle with `--bundle`) or retagging the application file's creator. **It
-grades the DIALOG in `claim-3-launched.png`, not the volume**: a launch that
-was not handed the file shows the Open dialog, the run's Return opens the
-archive from it, and the entries land anyway — the first version passed on
-exactly that. Results are DECISIONS.md 2026-10-10, *the double-click that
-goes by the application's creator*. **What it cannot see:** which of two
+bundle with `--bundle`), retagging the application file's creator, moving
+it into a folder the run never opens, giving it a bundle filed under its
+new creator (`--stub-bundle`, the shape a stub would have), deleting the
+`Desktop` file so the Finder rebuilds it at boot (`--no-desktop`), or
+putting the archive on a second floppy. **It grades the DIALOG in
+`claim-3-launched.png`, not the volume**: a launch that was not handed the
+file shows the Open dialog, the run's Return opens the archive from it,
+and the entries land anyway — the first version passed on exactly that.
+The Finder's refusal alert is identified positively; a frame with none of
+the three is `nothing`, which is what a double-click that missed looks
+like. **`--app-folder` moves the archive's icon**: read its position off
+`claim-2-volume.png` and pass `--archive-at`. The expected names are
+`--want`, not derived, so a run needs no `build/rel` CLI and can share the
+machine with `./ci.sh`. Results are DECISIONS.md 2026-10-10, *the
+double-click that goes by the application's creator*, and 2026-10-11,
+*where the stubs can live*. **What it cannot see:** which of two
 applications under one creator wins (no StuffIt is on these volumes), and
 System 7, whose list is `Desktop DB`.
 

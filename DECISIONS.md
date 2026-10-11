@@ -386,6 +386,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
 - 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table took the two copies from 52 s and 46 s to 9 and 15, and the tick probe now bills the read-back
 - 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
+- 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
 
 ---
 
@@ -25383,3 +25384,47 @@ finding. System 7 keeps the list in `Desktop DB`, and nothing here wrote one.
 **Transferable.** The first version of the probe graded on the volume and
 passed the run that handed over nothing: the harness's own Return opened the
 archive from the Open dialog. A launch and a handover end in the same files.
+
+## 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
+
+The design that follows from 2026-10-10 (*the double-click that goes by the
+application's creator*): one small application per claimed creator, which
+hands the document on to MacExtract. This entry is where those files can
+sit. **Decided: visible, in one folder next to MacExtract** — the
+maintainer does not want invisible files, so the invisible rows below are
+measured and not used.
+
+**Claim (measured, System 6.0.8).** A stand-in stub — a whole copy of
+MacExtract with its file creator set to `SIT!` — is handed a double-clicked
+`SIT!` archive from a folder the user has never opened, and after a desktop
+rebuild, on two conditions: the companion writes its `APPL` entry into the
+`Desktop` file, and the stub's `BNDL` and signature resource are filed under
+the creator it claims. A stub on the startup disk serves archives on a
+floppy.
+
+**Evidence.** `tools/vmac/deskclaim.py`, one boot each, graded on the
+dialog; *refused* is the Finder's alert, identified positively:
+
+| stub | `Desktop` file | result |
+|---|---|---|
+| startup disk's root; archive on a second floppy | stock, startup window opened first | handed, entries on the floppy |
+| `MacExtract Helpers:`, never opened | stock | refused |
+| the same | + `APPL` entry `SIT!`, dirID of the folder | handed |
+| the same, creator retagged only | deleted, rebuilt at boot | refused |
+| the same, with `--stub-bundle` | deleted, rebuilt at boot | handed |
+| root, invisible | stock, window opened | refused |
+| root, invisible | + `APPL` entry | handed |
+| root, invisible, with `--stub-bundle` | deleted, rebuilt at boot | handed |
+
+**Consequence.** The companion writes, per creator, a visible stub in a
+folder beside MacExtract whose bundle is filed under that creator, and
+writes its `APPL` entry; a rebuild then finds the stubs by their bundles,
+so nothing has to be re-run. Still open: which application wins when
+StuffIt is on the same disk, and how a stub hands the document on — the
+stand-in was a whole application, and no stub exists yet.
+
+**Transferable.** Two runs were invalid and one of them passed: moving the
+application into a folder moved the archive's icon, the double-click landed
+on empty space, and the control — expecting a refusal — read "no
+MacExtract dialog" as one. A control that expects nothing to happen passes
+when nothing is clicked; the grade now has to SEE the alert.
