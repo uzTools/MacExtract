@@ -2017,9 +2017,11 @@ refuse the archive, measured.
 pair `sitopt-wild-*.sea.bin` → `derived-*.sit` exercises the envelope
 chain as well.
 
-**What is still only this project's own output** is `Photoshop 1`,
-`JPEG Lossy` and all five ciphers — `Sound 1` and `MacPaint 1` left
-that list on 2026-10-07, below (OPEN_ITEMS.md).
+**What is still only this project's own output** stopped being the
+question on 2026-10-11: every specimen of `Photoshop 1`, `JPEG Lossy`
+and the five ciphers is StuffIt Deluxe 2.0.1's own, and what a stranger's
+archive could add — a combination nobody here asked for — was asked
+for instead (*Every other document 2.0.1 will optimize*, below).
 
 ### Two more, and these the engine UNDOES — found 2026-10-07
 
@@ -2170,7 +2172,7 @@ C-Cube's integer one and nothing else. The format:
 |---|---|
 | an MCU | **2 luma blocks, one `Cb`, one `Cr` — 4:2:2**, so 16x8 pixels |
 | a segment | **exactly 3 MCUs**, 48x8 pixels, ending `FF Dn` and one pad byte |
-| a tile row | **7 segments = 21 MCUs = 336 pixels** for a 256-pixel image: the encoder pads the width and codes the padding flat, which is why the last two segments of every row are 11 bytes whatever the picture does |
+| a row of MCUs | **(w + 39) / 40 segments of (segs·16 + w − 1) / (segs·16) MCUs** — C3a+0x4366's arithmetic, matched on every width from 1 to 512 (*Every other document*, below). For w = 256 that is 7 segments of 3 = 336 pixels, the encoder coding the padding flat; this row said **7 segments = 21 MCUs** for every image until 2026-10-11, measured on 256-wide ones only |
 | the restart index | runs continuously **mod 8 across the whole image**, and **does not reset the DC predictors** — only the very first segment of the file carries a non-zero DC difference on a flat image |
 | tables | one quantisation, one DC and one AC per component, all three from the file's own private tags |
 | bits | MSB-first, `FF 00` stuffing, the last byte of a segment padded with 1s |
@@ -2303,7 +2305,7 @@ RESOURCE fork comes out identical to the ORIGINAL document's, which
 | what it costs the SHIPPED build | **0 B of resident `CODE`, 0 B of A5** — every byte is in the StuffIt overlay, 18,582 -> **23,174 B**, released for any archive that is not a StuffIt one |
 | the control | 154,092 -> 158,116 `CODE`, 37,820 -> 37,884 A5 |
 | the tiers | unmoved: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped |
-| peak RAM, 256x256 | **31.7 KB**, bisected — the stored fork, one MCU row of three components, and the tables. It grows with the stored fork and with 16 B per pixel of padded WIDTH, not with the image |
+| peak RAM, 256x256 | **31.7 KB**, bisected — the stored fork, one MCU row of three components, and the tables. It grows with the stored fork and with 16 B per pixel of padded WIDTH (8 for a one-channel TIFF), not with the image. 2026-10-11, `--budget` bisected through the MacBinary: 39.7 KB for the 22,097 B Q=25 subject, **51.9 KB** for a 400x300 colour one (32,027 B stored), 42.2 KB at 512x128, 26.9 KB for a 256x256 grey one, 29.2 KB for 128x128 CMYK |
 
 **The one thing that was unexplained is settled, by a second subject.**
 It read here until 2026-10-02 that CCOD+0x3826 applies the same
@@ -2344,11 +2346,62 @@ while the arithmetic was still unknown.
 
 **Two things in there are not JPEG's.** A restart marker that does not
 reset the DC predictor is the opposite of what T.81 says one is for,
-and the padded width means a decoder must decode 21 MCUs of every row
-and keep 16. Both were found by decoding rather than by reading: the
+and the padded width means a decoder must decode more MCUs than a row
+needs and keep the ones inside the image (21 and 16 at w = 256; the
+rule is in the table above). Both were found by decoding rather than by reading: the
 first because only the FIRST segment of the file was a byte longer than
 its neighbours, the second because the last two segments of every tile
 row stayed 11 bytes on rows the drawing crossed.
+
+### Every other document 2.0.1 will optimize — measured 2026-10-11
+
+Until this date every `JPEG Lossy` specimen was a 256x256 RGB document of
+**grey** content, whose chroma is flat 128. `tools/vmac/sitcombo.py`
+asked 2.0.1 for 33 more, each unstuffed by 2.0.1 in the same boot:
+twelve Photoshop 1.0.7 drew (`--psnew`) and 21 coloured ones in its
+layout (`cdocs/`). **`src/sit_ccube.c` was right on 2 of the 33** —
+the two the module declined — **silently wrong on 5** (exit 0,
+*"rebuilt"*) and refused the other 26; it is byte-exact on all 39
+`JPEG Lossy` entries on this machine now
+(`tools/run_sitcombo.py`; DECISIONS.md 2026-10-11, *the constant was a
+square*):
+
+| what the documents were | the engine before | why |
+|---|---|---|
+| any width but 256 — 400x300, 512x128 | **garbage, exit 0** (mean error 89 and 134 levels) | it decoded 7 segments a row whatever the width |
+| 203x77, 21x13, 7x5 | *"truncated"*, *"corrupt"* | the same |
+| grey, HSL, HSB, multichannel | *"method 64 is not supported yet"* | one one-channel TIFF per channel, which it refused |
+| CMYK | *"corrupt"* | a three-channel TIFF for C, M, Y and a one-channel one for K |
+| **any coloured content, even 256x256** | off by up to 20 levels on 56 % of bytes | chroma is INTERPOLATED, not repeated |
+| indexed, bitmap | right | the module declines them; the entry is plain |
+
+| what the format does | |
+|---|---|
+| the 80-byte header | colour code at +0 (1 RGB, 2 HSB, 3 HSL, 4 CMYK, 5 one TIFF per channel), channels at +2, **width at +4 and height at +6**, Q at +8, the length after the header at +10, then **each TIFF's offset from +14**, ending with the total |
+| a one-channel TIFF | `SamplesPerPixel` 1, `Photometric` 1, an MCU of one 8x8 block, one table per tag holding the table's offset itself |
+| `TileOffsets` | the offset of an ARRAY of segment offsets **even when its count is 1** (7x5, 1x1) |
+| chroma | an odd column is the mean of its two neighbours at the module's 16-bit precision; the image's last column, at its half-width rounded up, repeats |
+| colour conversion | CCOD+0xd98, which reduces to `y + (k·c2) >> 15`, `c2` being twice the chroma's distance from 128 — the old `>> 14` form agreed on grey and not on green |
+| quality | the module's dialog takes **5..255** and refuses 1..3 without an alert; Q=5 stores 31,479 B and Q=255 12,250 B of the same document, both byte-exact |
+
+And what the same boots showed about the archive, none of it new to the
+engine — all of it already read correctly:
+
+| | |
+|---|---|
+| a 1.5.1-compatible archive | the Optimizer is NOT applied, and 106/108 still carry its id under a method byte without `0x40`; so do folder markers, `none`, and the forks of a mixed folder an Optimizer declined |
+| method nibble **3** under the bit | 2.0.1 writes it: `Photoshop 1` over the 7x5 document came back `0x43`. *Huffman* has no script word or menu item; `fast` falls back to it |
+| `NewDE` with an Optimizer | method **`0x52`** — both bits — and a stale 1 at 107/109 |
+| a folder in an encrypted archive | its markers carry `0x30` |
+| an encrypted empty fork | is not encrypted: method 0, length 0 |
+| the password | asked once per archive, however many `Stuff`s |
+
+**On the Macintosh**: six of them — 400x300 and 512x128 colour, 128x128
+CMYK, 7x5 grey, 256x256 and 1x1 colour — through the application
+(`run.py`'s autotest build) on a 1 MB Mac Plus under System 6.0.8,
+every CRC agreeing with the Linux
+engine's (`tools/vmac/run.py --mem 1M --expect`, the archives' data
+forks; 2026-10-11). Peak heap 50.7 KB for the 400x300.
 
 **`MacPaint 1` is the one that needs saying out loud.** The engine
 writes **512 zero bytes** where the header was — the module writes 512
@@ -5196,6 +5249,14 @@ on 2026-10-11 (*Reduce*), and sixteen since.
 | lazy | `UNC_OVL_LAZY=1` | 53,216 B | 19,200 B | 64,896 B | 230,400 B |
 | resident — the control | `UNC_OVL_RESIDENT=1` | **170,056 B** | **37,960 B** | 202,496 B | 205,824 B |
 
+**Re-measured 2026-10-11, for `JPEG Lossy` at every width and mode**
+(*Every other document 2.0.1 will optimize*): both SHIPPED configurations
+**+0 and +0**, the control **+728 B of `CODE` and −24 of A5**,
+`ovl_stuffit` 27,938 → **28,614 B** and the download +640 B. The
+control's growth is DERIVED to cost its System 6.0.8 / 512 KB lane
+`derived-DD_Expand.sea` (436 B short); no shipped tally moves
+(`run_tiers.py --check`).
+
 **Re-measured 2026-10-10, for the method-13 encryptor id that is not
 read** (*Where an archive names the module*): both SHIPPED configurations
 **+0 and +0**, the control **+12 B of `CODE` and −12 of A5**, `ovl_stuffit`
@@ -5416,12 +5477,12 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **135,408 B** since 2026-10-11's
-zip Reduce, which the control carries and the shipped build does not (134,288 B after 2026-10-09's
+measured 2026-09-27. The shipped pair is **136,112 B** since 2026-10-11's
+`JPEG Lossy` work and 135,408 B since that day's zip Reduce, both of which the control carries and the shipped build does not (134,288 B after 2026-10-09's
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **163,588 B** — the sixteen images sum to 163,376 B, so its
+The bundle is **164,264 B** — the sixteen images sum to 164,052 B, so its
 index costs **212 B** (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
 of directory per image and 16 bytes of padding to 4, which accounts for
@@ -5466,7 +5527,7 @@ and to 162,064 on 2026-10-10 for `ovl_stuffit` +24, and to 163,588 on
 2026-10-11 for zip Reduce: `ovl_exo` +76 and a sixteenth image,
 `ovl_zipold` (2,658 B), holding Shrink and Reduce, with Shrink gone from
 `ovl_codecs` (−1,224). The first commit of Reduce put it in `ovl_codecs`
-instead, at 162,980 (*Reduce*).
+instead, at 162,980 (*Reduce*). And to 164,264 the same day for `ovl_stuffit` +676, `JPEG Lossy` at every width and mode, the index unmoved.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 66,432 B `MacExtract.code.bin` and not the download.
@@ -5482,7 +5543,7 @@ than failing on it, exactly as its tolerance is meant to.)
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
 and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
-re-derived since) plus the **163,588 B** bundle, which is **229,988 B** (DECISIONS.md 2026-09-25, *the overlay
+re-derived since) plus the **164,264 B** bundle, which is **230,664 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5553,7 +5614,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 135,408 B of `CODE` and A5 the shipped build does not carry
+which is the 136,112 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5601,21 +5662,21 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+126,322 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,000 B |
-| Now Compress | now, codecs | **+123,244 B** (measured) |
-| SuperDisk! | superdisk, codecs | +121,264 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+118,736 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+115,426 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+112,414 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +111,600 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+109,950 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +102,162 B (arithmetic), and **+112,414 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+96,162 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+90,132 B** (measured; the −24 B of 2026-10-10 with `ovl_stuffit` is arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +83,244 B (arithmetic), **+93,496 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,854 B** (measured; the −24 B of 2026-10-10 with the bundle is arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+127,026 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,000 B |
+| Now Compress | now, codecs | **+123,948 B** (measured) |
+| SuperDisk! | superdisk, codecs | +121,968 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+119,440 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+116,130 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+113,118 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +112,304 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+110,654 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +102,866 B (arithmetic), and **+113,118 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+96,866 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+90,160 B** (measured; the −24 B of 2026-10-10 and the +28 of 2026-10-11 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +83,948 B (arithmetic), **+94,200 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,826 B** (measured; the −24 B of 2026-10-10 and the +28 of 2026-10-11 with the bundle are arithmetic, no tier re-run) |
 
-**Every row moved on 2026-10-11 by arithmetic, for zip Reduce**, and is against a control that grew 1,216 B the same day: `OVL_SAVED` +1,120, `ovl_codecs` −1,224 with Shrink gone to `ovl_zipold`, which zip alone keeps. On the machine that is +1,128 B for the formats keeping the codecs image and not `ovl_exo`, +1,052 for tar, −1,614 for zip and −1,620 for an envelope (*Reduce*, *What it costs*); no tier was re-run.
+**Every row moved again the same day, for `JPEG Lossy`**: `OVL_SAVED` +704 against a control that grew 704 B, so every row rose 704 and the two keeping `ovl_stuffit` (+676) or the bundle rose 28 — and on the machine nothing moves but those two, by −676 (*Every other document 2.0.1 will optimize*). **Every row moved on 2026-10-11 by arithmetic, for zip Reduce**, and is against a control that grew 1,216 B the same day: `OVL_SAVED` +1,120, `ovl_codecs` −1,224 with Shrink gone to `ovl_zipold`, which zip alone keeps. On the machine that is +1,128 B for the formats keeping the codecs image and not `ovl_exo`, +1,052 for tar, −1,614 for zip and −1,620 for an envelope (*Reduce*, *What it costs*); no tier was re-run.
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5667,7 +5728,7 @@ Reduce, less the shipped build's +80 and +16 for the sixteenth image
 that holds it and Shrink. With `ovl_codecs` −1,224 and `ovl_exo` +76,
 the rows keeping the codecs image and not `ovl_exo` rose 2,344, tar
 2,268, and zip, which keeps `ovl_zipold` too, fell 406 — all against a
-control that grew 1,216 B (*Reduce*).
+control that grew 1,216 B (*Reduce*). And -> **136,112 B** the same day, +704: the control's `CODE` +728 and A5 −24 for `JPEG Lossy`, the shipped build +0; every row rose 704 but the two that keep `ovl_stuffit` or the bundle, which rose 28.
 So every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. **The exception is
@@ -5691,7 +5752,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 163,588 B held against 135,408 B saved. It costs nothing on the tiers
+it — 164,264 B held against 136,112 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5750,7 +5811,7 @@ re-read 2026-10-09 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
 **66,432 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **163,588 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **164,264 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -7880,7 +7941,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **163,588 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **164,264 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the

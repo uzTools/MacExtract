@@ -3556,6 +3556,52 @@ has never installed.
 What `--psmatrix` CANNOT see: `Custom Compression…`, the one method in
 the Options menu with no script word.
 
+### Every combination 2.0.1 will write — `sitcombo.py`
+
+    tools/vmac/sitcombo.py --psnew PSOdd 203x77            draw and save
+    tools/vmac/sitcombo.py --psnew PSGray 256x256 --gray
+    tools/vmac/sitcombo.py --psnew PSCmyk 128x128 --mode cmyk
+    tools/vmac/sitcombo.py --psnew PSWide 512x128 --zoom 2
+    tools/vmac/sitcombo.py --psnew PSSmall 21x13 --canvas 115,66 --margin 3
+    tools/vmac/sitcombo.py --cdocs                         no boot
+    tools/vmac/sitcombo.py --run b --limit 5400            one boot a set
+    tools/vmac/sitcombo.py --run q --quality 1,2,3,5,10 --tag setqlow
+
+Each `--run` copies `sitopt-ps.hfv`, puts its subjects and a script on
+it, and has 2.0.1 stuff and then unstuff in one boot; the sets are in
+the docstring and the grading is `tools/run_sitcombo.py` (TESTING.md).
+22 boots made the 121 archives on 2026-10-11.
+
+**It is closed-loop where `sitopt.py` types blind.** The password
+prompts are recognised by one thresholded strip of the screen
+(`specimens/sitopt/psdes1`'s two dialogs, which differ there and
+nowhere a typed password reaches), answered when they are up, and the
+run ends when the Finder's menu bar is back — every script ends in
+`Quit`. A screen still for a minute gets one Return and a photograph.
+It asked once per ARCHIVE, never per `Stuff`, scripted or not.
+
+Five things about the emulated screen, each of which cost a document:
+
+- **The pointer lands 3 px left and 6 px up of where it is sent**,
+  measured on PSGray's pencil rows. Harmless on a 256-pixel canvas;
+  every stroke missed a 21x13 one until `PTR_FIX`.
+- **A stroke that starts on the title bar drags the window**, and one
+  that leaves Photoshop's window switches MultiFinder to the Finder,
+  after which ⌘S is the Finder's. Keep a margin.
+- **A document wider than the screen opens at 1:2** (`--zoom 2`), and
+  **one smaller than the window is centred on grey** (`--canvas`, read
+  off the new-document shot).
+- **The JPEG module's dialog refuses Q = 1, 2 and 3 silently**: OK
+  does nothing and the next keystrokes go into the Q field. `--run q`
+  tries a list and photographs which one it took (5, and 255 at the
+  top).
+- **`macextract t` on a `.sit.bin` tests the MacBinary**, not the
+  archive inside — `l` and `t` never unwrap. Grade with `x`.
+
+What it CANNOT see: a coloured document Photoshop drew (`--cdocs`
+builds them in its layout instead), a real Sound Designer II file, and
+the Stuff dialog's own method popup, which no set drives.
+
 ### Running an Optimizer module — `dcmptest`, `--dcmp` and `--dcmpdata`
 
     cmake -B build/dcmptest -S tools/vmac/dcmptest \

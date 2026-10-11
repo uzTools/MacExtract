@@ -233,6 +233,12 @@ python3 tools/run_sit14wrap.py --macextract build/san/macextract \
 # Skips cleanly with no specimens (TESTING.md).
 python3 tools/run_sitopt.py --macextract build/san/macextract \
     || fail "StuffIt Optimizer tests"
+# ...and every combination of them 2.0.1 had not been asked for until
+# 2026-10-11: JPEG Lossy at every width, in every mode and in colour,
+# each Optimizer under each cipher, the ciphers' edges. Same oracle,
+# same skip (TESTING.md).
+python3 tools/run_sitcombo.py --macextract build/san/macextract \
+    || fail "StuffIt Optimizer combinations"
 # StuffIt SpaceSaver has no oracle and no committed fixture either: what
 # grades it is a file SpaceSaver itself wrote under Mini vMac, which
 # lives beside the emulator's other state. Skips cleanly when there is

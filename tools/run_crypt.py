@@ -573,13 +573,18 @@ def main():
         # the number.
         other = os.path.join(tmp, "unknown-enc.sit")
         raw = bytearray(open(p, "rb").read())
-        # id 3, which is NOT one of the three this engine knows what to
-        # do with: 0 (the field unset), 2 (`PassLock`, which enciphers
-        # nothing and is read without a password) and 4 (StuffItDES,
-        # which it decrypts). 2 was the id here until `PassLock` was
-        # measured, and the case then stopped testing a refusal at all.
-        raw[22 + 107] = 3                       # data fork's encryptor
-        raw[22 + 109] = 3                       # resource fork's
+        # id 5, which is NOT one this engine knows what to do with: 0
+        # (the field unset), 1 and 64 (`DES`, `DESex`), 2 (`PassLock`),
+        # 3 (`NewDEx`) and 4 (StuffItDES). 2 was the id here until
+        # `PassLock` was measured, and 3 until 2026-10-11 — implemented
+        # since 2026-10-02, and the case passed anyway, because the bent
+        # copy had no resource fork: with no 'MKey' every id is refused
+        # the same way. So it gets the sidecar fork now, and with it id 3
+        # decodes (into rubbish, *truncated*) and id 5 is refused —
+        # measured both ways (DECISIONS.md 2026-10-11, *the constant was a
+        # square*).
+        raw[22 + 107] = 5                       # data fork's encryptor
+        raw[22 + 109] = 5                       # resource fork's
         # AND optimized, which is the shape that actually broke: an
         # entry carrying both reported only its Optimizer, so the
         # encryptor was never noticed and the built-in cipher ran on
@@ -598,6 +603,7 @@ def main():
         raw[22 + 110] = (hdr_crc >> 8) & 0xff
         raw[22 + 111] = hdr_crc & 0xff
         open(other, "wb").write(bytes(raw))
+        shutil.copyfile(p + ".rsrc", other + ".rsrc")   # the 'MKey'
         # What this case CANNOT see: that the engine refuses BEFORE
         # trying the cipher. On this bent archive the entry is turned
         # away either way; on the real one (`run_sitopt.py`, section 9)

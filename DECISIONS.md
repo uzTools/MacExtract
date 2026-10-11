@@ -392,6 +392,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
 - 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
 - 2026-10-11 (the digest our own oracle could not compute) — `message/partial`'s two wrong anchors: `Content-MD5` catches both once mpack computes MD5, and the check was declined for its size
+- 2026-10-11 (the constant was a square) — asking 2.0.1 for every combination instead of searching for a stranger's
 
 ---
 
@@ -25664,3 +25665,83 @@ cannot grade what both get wrong the same way — two programs agreeing
 is one measurement when they share a bug. And the population a check
 serves is a number to take before the check is built, not after: the
 size was measured to the byte while the use was never measured at all.
+
+## 2026-10-11 (the constant was a square) — asking 2.0.1 for every combination instead of searching for a stranger's
+
+OPEN_ITEMS.md held one StuffIt 2.0 item: `Photoshop 1`, `JPEG Lossy` and
+the five ciphers *"graded only on archives this project made"*, to be
+closed by *"a file from somebody who has one"*. That framing had been
+argued against on 2026-10-02 (*the Optimizer that was in somebody else's
+corpus* rests on it): every specimen was StuffIt Deluxe 2.0.1's own, so
+a stranger's archive could add only a COMBINATION nobody here asked for,
+and the writer was on the emulator image. So the combinations were asked
+for: 22 boots, 121 archives, each set unstuffed by 2.0.1 in its own boot
+(`tools/vmac/sitcombo.py`; FORMATS.md, *Every other document 2.0.1 will
+optimize*).
+
+**What came back.** Everything but `JPEG Lossy` was already right:
+`Photoshop 1` on Photoshop's own documents under every method, a second
+painting under `MacPaint 1`, every Optimizer under each built-in cipher,
+the three plug-ins over optimized entries, the ciphers' edges, four
+Optimizers at once over a folder, and a dozen stale ids 2.0.1 leaves in
+104..109 without the bit that would make them mean something.
+`JPEG Lossy` was right on 2 of 33 new documents — the two its module
+declined — and **wrote garbage with exit 0 on 5**.
+
+**The constant was a square, twice.** `src/sit_ccube.c` decoded 7
+restart segments per MCU row because both subjects were 256 pixels wide,
+and FORMATS.md wrote *"a tile row is 7 segments = 21 MCUs"* as the
+format. CLAUDE.md names this smell — a constant where the input should
+vary — and it could not be seen from inside, because the input did not
+vary. The rule, `(w + 39) / 40` segments, was in C3a+0x4366 all along
+and took ten minutes to read once a second width existed. The header's
+width and height were swapped in `decode.py` for the same reason, and
+the rewrite inherited it until a 400x300 document failed.
+
+**Grey content hid the colour path entirely.** Every document Photoshop
+drew here was pencil on white, whose chroma is 128 everywhere, so
+replicating chroma and interpolating it give the same bytes, and the
+old `>> 14` conversion and CCOD+0xd98's 16-bit one agree. Twenty-one
+coloured documents (`cdocs/`, built in Photoshop's own layout and
+optimized by 2.0.1) were 56 % wrong at 256x256. Two models were tried
+against them and failed before the third, interpolation at the
+module's full precision with the image's own last column repeated,
+came out exact on every width from 1 to 512. CCOD+0x5b9a's byte-domain
+upsampler, the first thing found in the disassembly, is NOT the one
+the decoder runs: it is 31 bytes away on a 7x5 document.
+
+**What the search would have found.** All 196,139 classic StuffIt
+archives Discmaster lists had been searched for these modules and none
+carries either; a search has no result to find when the thing it wants
+does not exist. The loop over the writer found five silent failures in
+an afternoon. **Ask what the original software will do before asking
+who else has used it** — the provenance that matters is the writer's,
+and a reachable writer is a loop, not a search.
+
+**Two smaller things, same root.** `cli/main.c` told the owner of a
+forkless DES archive that the engine did not implement DES, a line
+written the day it started to; every encryptor it can name is
+implemented, so it fired only on a missing `'MKey'`. And an Optimizer's
+refusal printed *"method 64"* — the method byte with the Optimizer bit
+in it. Checking the first of those found a third: `run_crypt.py`'s
+*"unimplemented encryptor"* case bent id 3, which has been `NewDEx`
+and implemented since 2026-10-02, and passed anyway because its copy
+had no resource fork — every id is refused alike without an `'MKey'`.
+With the fork and id 5 it fails if the id check goes (measured: id 3
+there gives *"truncated"* against the expected *"encrypted"*).
+
+**Costs, measured.** The StuffIt overlay 27,938 -> 28,614 B (+676),
+resident `CODE` and A5 unchanged; peak RAM unchanged at 256x256 and
+51.9 KB at 400x300 (FORMATS.md, the `JPEG Lossy` table).
+
+**Transferable.**
+
+- **A specimen set is a sample of a format's PARAMETERS, not only of its
+  bytes.** Two specimens agreeing on every dimension measure nothing
+  about those dimensions; before calling a decoder exact, list what the
+  writer lets a user vary — size, mode, colour, quality — and check each
+  has more than one value.
+- **Content can hide a whole stage.** A stage whose input is constant
+  over the specimen (chroma 128) cannot fail, which is *a test that
+  passes may not be testing anything* one level down: the test did not
+  pass vacuously, the pipeline did.

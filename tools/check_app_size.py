@@ -196,7 +196,9 @@ TAKEN = "2026-10-09"
 # -> 163,596 2026-10-11: zip Reduce, `ovl_exo` +76 and a sixteenth image,
 # `ovl_zipold` (2,666 B), with Shrink gone from `ovl_codecs` (-1,224).
 # -> 163,588 the same evening: `ovl_zipold` -8, both decoders faster.
-EXPECT_BUNDLE = 163588
+# -> 164,264 the same day: `ovl_stuffit` +676 for `JPEG Lossy` at every
+# width and mode (DECISIONS.md 2026-10-11, *the constant was a square*).
+EXPECT_BUNDLE = 164264
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 

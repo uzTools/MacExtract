@@ -451,7 +451,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # vector. Shipped, the decoder is in that image beside Shrink and the
 # eager pair pays only the keep and the patch (FORMATS.md, *Reduce*).
 # LOWERED the same evening to 171,224, -8, with both decoders made faster.
-UNC_MAC_CODE_DEFAULT=171224
+# RAISED the same day to 171,952, +728, for `JPEG Lossy` at every width
+# and mode (DECISIONS.md 2026-10-11, *the constant was a square*); A5
+# fell 24 to 37,984 and its ceiling is left. Shipped, all of it is in
+# `ovl_stuffit`, 27,938 -> 28,614 B, the eager pair unmoved.
+UNC_MAC_CODE_DEFAULT=171952
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

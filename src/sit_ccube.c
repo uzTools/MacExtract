@@ -22,27 +22,54 @@
  * byte; nothing here is guessed, and `tools/run_sitopt.py` grades this
  * engine against the same specimen.
  *
- * WHAT THE FORMAT IS, in the order this file uses it:
+ * WHAT THE FORMAT IS, in the order this file uses it. Measured on 36
+ * payloads StuffIt Deluxe 2.0.1 wrote, every one decoded here to its own
+ * restored file byte for byte (FORMATS.md, *What an Optimizer did to
+ * the fork*; tools/run_sitcombo.py):
  *
- *   * 80 bytes of module header, then a TIFF (`MM\0*`). `Compression`
- *     is **32865**, C-Cube's own code from before TIFF 6.0 gave
- *     old-style JPEG the number 6; `libtiff` will not read it.
- *   * three quantisation tables at private tag **33606**, 64 words
- *     each, IN ZIGZAG ORDER; three DC Huffman tables at **33607** and
- *     three AC at **33608**, `BITS[16]` then `HUFFVAL`, 256 symbols
- *     apiece.
- *   * an MCU is **2 luma blocks, one Cb, one Cr — 4:2:2**, 16x8
- *     pixels, and a restart segment is **exactly 3 MCUs**.
- *   * a tile row is **7 segments = 21 MCUs = 336 pixels**: the encoder
- *     pads the width out and codes the padding flat, so a decoder
- *     decodes 21 MCUs of every row and keeps the ones inside the
- *     image.
+ *   * 80 bytes of module header: the module's colour code at +0 (1
+ *     RGB, 2 HSB, 3 HSL, 4 CMYK, 5 channels coded one by one), the
+ *     channel count at +2, WIDTH at +4 and height at +6 — the other
+ *     way round from what tools/ccube/decode.py said, which only ever
+ *     saw a square — the quality at
+ *     +8, the length after the header at +10, then the OFFSET OF EACH
+ *     TIFF from +14 on, ending with the total. An RGB document is one
+ *     three-channel TIFF; CMYK is a three-channel one for C, M and Y
+ *     and a one-channel one for K; everything else is one one-channel
+ *     TIFF per channel. Their planes, in order, are the document's.
+ *   * each TIFF (`MM\0*`) has `Compression` **32865**, C-Cube's own
+ *     code from before TIFF 6.0 gave old-style JPEG the number 6;
+ *     `libtiff` will not read it. Its offsets are its own.
+ *   * one quantisation table per channel at private tag **33606**, 64
+ *     words, IN ZIGZAG ORDER; the DC Huffman tables at **33607** and
+ *     the AC at **33608**, `BITS[16]` then `HUFFVAL`. One channel's
+ *     tag holds the table's offset; three channels' holds the offset
+ *     of three offsets.
+ *   * `TileOffsets` (324) holds the offset of an ARRAY of segment
+ *     offsets even when it declares one — which TIFF says should be
+ *     the offset itself; 7x5 and 1x1 documents are what showed it.
+ *   * a three-channel MCU is **2 luma blocks, one Cb, one Cr — 4:2:2**,
+ *     16x8 pixels; a one-channel MCU is one 8x8 block.
+ *   * the row layout is C3a+0x4366's arithmetic, read and then matched
+ *     against every width from 1 to 512: **(w + 39) / 40 restart
+ *     segments per MCU row**, each of **(segs * mcu + w - 1) / (segs *
+ *     mcu)** MCUs, the encoder coding the padding past the image flat.
+ *     So a 256-wide row is 7 segments of 3 MCUs = 336 pixels, which is
+ *     the one width this file assumed until 2026-10-11.
  *   * each segment ends `FF Dn` and **one pad byte**; the restart
  *     index runs continuously mod 8 and **does not reset the DC
  *     predictors**.
- *   * the output is PLANAR — R, then G, then B, each a whole plane —
- *     which is why this decodes the stream once per plane rather than
- *     buffering the image. Memory is then one MCU row, not one image.
+ *   * chroma is upsampled by INTERPOLATION in the module's own 16-bit
+ *     words — an odd column is the mean of its two neighbours' samples
+ *     at full precision, the last one past the image's own half-width
+ *     (rounded up) repeats — and converted at CCOD+0xd98, whose
+ *     arithmetic reduces to `y + (k * c2) >> 15` with `c2` that
+ *     doubled chroma. Measured: a grey document cannot tell this from
+ *     replication, which is what this file did until 2026-10-11, and
+ *     every coloured one can.
+ *   * the output is PLANAR, which is why this decodes a TIFF's stream
+ *     once per plane rather than buffering the image. Memory is one
+ *     MCU row, not one image.
  *
  * 68000 discipline: byte-wise big-endian reads, no recursion, 32-bit
  * arithmetic in the transform, every allocation through the caller's
@@ -63,12 +90,9 @@
 #define CC_C6 196
 #define CC_C7 100
 
-#define CC_MCU_W   16        /* 4:2:2 */
 #define CC_MCU_H    8
-#define CC_PER_SEG  3        /* MCUs between restart markers */
-#define CC_SEG_ROW  7        /* segments per tile row */
-#define CC_MCU_ROW  (CC_PER_SEG * CC_SEG_ROW)       /* 21 */
-#define CC_PAD_W    (CC_MCU_ROW * CC_MCU_W)         /* 336 */
+#define CC_HDR     80        /* the module's own header             */
+#define CC_MAXTIFF 16        /* offsets that fit in it after +14    */
 
 #define CC_COMPRESSION 32865u
 
@@ -298,9 +322,10 @@ static int cc_sample(int32_t x)
 /* ------------------------------------------------------------------ */
 
 typedef struct CcImage {
-    const uint8_t *t;        /* the TIFF, at the module header + 80 */
+    const uint8_t *t;        /* one TIFF, at its offset in the payload */
     uint32_t       len;
     uint32_t       w, h;
+    unsigned       spp;      /* 1 or 3 */
     uint32_t       qoff[3], dcoff[3], acoff[3];
     uint32_t       data;     /* first segment's offset */
 } CcImage;
@@ -312,34 +337,38 @@ static uint32_t cc_u32(const uint8_t *p)
            ((uint32_t)p[2] << 8) | p[3];
 }
 
-static int cc_triple(const CcImage *im, const uint8_t *e, uint32_t *out)
+/* A table tag: one offset per channel. A one-channel TIFF's entry
+ * holds the offset itself, as TIFF says; three channels' holds the
+ * offset of three. */
+static int cc_tables(const CcImage *im, const uint8_t *e, uint32_t *out)
 {
-    uint32_t cnt = cc_u32(e + 4), off, i;
-    if (cnt != 3) return UNC_ERR_CORRUPT;
-    off = cc_u32(e + 8);
-    if (off > im->len || im->len - off < 12) return UNC_ERR_CORRUPT;
-    for (i = 0; i < 3; i++) out[i] = cc_u32(im->t + off + i * 4);
+    uint32_t cnt = cc_u32(e + 4), off = cc_u32(e + 8), i;
+    if (cnt != im->spp) return UNC_ERR_CORRUPT;
+    if (cnt == 1) { out[0] = off; return UNC_OK; }
+    if (off > im->len || im->len - off < 4 * cnt) return UNC_ERR_CORRUPT;
+    for (i = 0; i < cnt; i++) out[i] = cc_u32(im->t + off + i * 4);
     return UNC_OK;
 }
 
 static int cc_parse(CcImage *im)
 {
-    uint32_t ifd, n, i;
+    uint32_t ifd, n, i, seg_off = 0, seg_cnt = 0, q = 0, dc = 0, ac = 0;
     int seen = 0;
 
     if (im->len < 16 || im->t[0] != 'M' || im->t[1] != 'M' ||
         cc_u16(im->t + 2) != 42)
         return UNC_ERR_UNSUPPORTED;
     ifd = cc_u32(im->t + 4);
-    if (ifd + 2 > im->len) return UNC_ERR_CORRUPT;
+    if (ifd > im->len || im->len - ifd < 2) return UNC_ERR_CORRUPT;
     n = cc_u16(im->t + ifd);
     if (n > 64 || ifd + 2 + n * 12 > im->len) return UNC_ERR_CORRUPT;
     im->w = im->h = 0;
+    im->spp = 0;
+    /* Two passes: the table tags' shape depends on SamplesPerPixel,
+     * and nothing says it comes first. */
     for (i = 0; i < n; i++) {
         const uint8_t *e = im->t + ifd + 2 + i * 12;
-        uint32_t tag = cc_u16(e);
-        int err = UNC_OK;
-        switch (tag) {
+        switch (cc_u16(e)) {
         case 256: im->w = cc_u16(e + 8); break;
         case 257: im->h = cc_u16(e + 8); break;
         case 259:
@@ -347,27 +376,34 @@ static int cc_parse(CcImage *im)
             seen |= 1;
             break;
         case 277:
-            if (cc_u16(e + 8) != 3) return UNC_ERR_UNSUPPORTED;
+            im->spp = cc_u16(e + 8);
+            if (im->spp != 1 && im->spp != 3) return UNC_ERR_UNSUPPORTED;
             break;
-        case 324: {                    /* the first segment's offset */
-            uint32_t cnt = cc_u32(e + 4), off = cc_u32(e + 8);
-            if (cnt == 0) return UNC_ERR_CORRUPT;
-            if (cnt == 1) im->data = off;
-            else {
-                if (off > im->len || im->len - off < 4) return UNC_ERR_CORRUPT;
-                im->data = cc_u32(im->t + off);
-            }
+        case 324:
+            seg_cnt = cc_u32(e + 4);
+            seg_off = cc_u32(e + 8);
             seen |= 2;
             break;
-        }
-        case 33606: err = cc_triple(im, e, im->qoff); seen |= 4; break;
-        case 33607: err = cc_triple(im, e, im->dcoff); seen |= 8; break;
-        case 33608: err = cc_triple(im, e, im->acoff); seen |= 16; break;
+        case 33606: q = i + 1; break;
+        case 33607: dc = i + 1; break;
+        case 33608: ac = i + 1; break;
         default: break;
         }
+    }
+    if (!im->spp || !q || !dc || !ac) return UNC_ERR_CORRUPT;
+    {
+        const uint8_t *base = im->t + ifd + 2;
+        int err = cc_tables(im, base + (q - 1) * 12, im->qoff);
+        if (err == UNC_OK) err = cc_tables(im, base + (dc - 1) * 12, im->dcoff);
+        if (err == UNC_OK) err = cc_tables(im, base + (ac - 1) * 12, im->acoff);
         if (err != UNC_OK) return err;
     }
-    if (seen != 31 || im->w == 0 || im->h == 0) return UNC_ERR_CORRUPT;
+    if (seen != 3 || im->w == 0 || im->h == 0 || seg_cnt == 0)
+        return UNC_ERR_CORRUPT;
+    /* The offset of the segment offsets, whatever the count says: a
+     * one-segment image declares 1 and still points at an array. */
+    if (seg_off > im->len || im->len - seg_off < 4) return UNC_ERR_CORRUPT;
+    im->data = cc_u32(im->t + seg_off);
     if (im->data >= im->len) return UNC_ERR_CORRUPT;
     /* The engine's own ceiling: a fork is uint32 and a row buffer is
      * 16 bytes per padded pixel of width, so a silly width is refused
@@ -383,9 +419,11 @@ static int cc_parse(CcImage *im)
 typedef struct CcState {
     CcHuff   dc[3], ac[3];
     uint16_t q[3][64];
-    uint8_t *yrow;           /* CC_PAD-wide, 8 rows, samples 0..255   */
-    int8_t  *cbrow, *crrow;  /* half width, 8 rows, centred           */
-    uint32_t stride;         /* padded width in pixels                */
+    uint8_t *yrow;           /* stride wide, 8 rows, samples 0..255   */
+    uint8_t *cbrow, *crrow;  /* half the stride, 8 rows               */
+    uint32_t segs, per_seg;  /* restart segments per row, MCUs in each */
+    uint32_t mcu_w;          /* 16 for three channels, 8 for one      */
+    uint32_t stride;         /* the coded row, in pixels              */
 } CcState;
 
 /* One 8x8 block: entropy, dequantise, de-zigzag, transform. */
@@ -424,79 +462,155 @@ static int cc_block(CcBits *b, CcState *s, int comp, int32_t *pred,
     return UNC_OK;
 }
 
-/* Decode the whole stream once, writing plane `plane` (0=R, 1=G, 2=B)
- * to the fork. Three passes rather than one buffered image: the output
- * is planar and an MCU row is all this needs to hold. */
-static int cc_plane(UncCtx *c, const CcImage *im, CcState *s,
-                    UncForkOut *f, int plane)
+/* Twice a chroma sample's distance from 128, at column x of an image w
+ * wide: an even column is its own sample, an odd one the sum of the
+ * two either side — the mean, kept at the module's full precision —
+ * and the last odd column of the image repeats its left neighbour,
+ * because the module stops at its own half-width, rounded up.
+ * Measured: every width from 1 to 512 is byte-exact this way, and a
+ * last column interpolated into the padding is not (C256, 642 bytes). */
+static int32_t cc_chroma2(const uint8_t *row, uint32_t x, uint32_t w)
+{
+    uint32_t j = x >> 1;
+    int32_t a = (int32_t)row[j] - 128;
+    if (!(x & 1)) return a + a;
+    if (j + 1 < (w + 1) / 2) return a + ((int32_t)row[j + 1] - 128);
+    return a + a;
+}
+
+static uint8_t cc_clamp(int32_t v)
+{
+    return v < 0 ? 0 : (v > 255 ? 255 : (uint8_t)v);
+}
+
+/* Decode one TIFF's stream once, writing plane `plane` of it (0=R,
+ * 1=G, 2=B for three channels; 0 for one) to the fork. Once per plane
+ * rather than one buffered image: the output is planar and an MCU row
+ * is all this needs to hold. */
+static int cc_plane(const CcImage *im, CcState *s, UncForkOut *f, int plane)
 {
     CcBits b;
     int32_t pred[3];
     int32_t blk[64];
     uint32_t mrows = (im->h + CC_MCU_H - 1) / CC_MCU_H;
-    uint32_t mr, m, seg, i, x, y;
+    uint32_t mr, m, seg, x, y;
+    int ncomp = im->spp == 3 ? 3 : 1;
     int err;
 
     cc_bits_at(&b, im->t, im->len, im->data);
     pred[0] = pred[1] = pred[2] = 0;
 
     for (mr = 0; mr < mrows; mr++) {
-        for (seg = 0; seg < CC_SEG_ROW; seg++) {
-            for (m = 0; m < CC_PER_SEG; m++) {
-                uint32_t mx = seg * CC_PER_SEG + m;
+        for (seg = 0; seg < s->segs; seg++) {
+            for (m = 0; m < s->per_seg; m++) {
+                uint32_t mx = seg * s->per_seg + m;
                 int comp, kb;
-                for (comp = 0; comp < 3; comp++) {
-                    int nb = comp == 0 ? 2 : 1;
+                for (comp = 0; comp < ncomp; comp++) {
+                    int nb = (comp == 0 && ncomp == 3) ? 2 : 1;
                     for (kb = 0; kb < nb; kb++) {
+                        uint8_t *d;
+                        uint32_t ox, st;
                         err = cc_block(&b, s, comp, &pred[comp], blk);
                         if (err != UNC_OK) return err;
-                        if (mx * CC_MCU_W >= s->stride) continue;
                         if (comp == 0) {
-                            uint32_t ox = mx * CC_MCU_W + (uint32_t)kb * 8;
-                            for (y = 0; y < 8; y++)
-                                for (x = 0; x < 8; x++)
-                                    s->yrow[y * s->stride + ox + x] =
-                                        (uint8_t)cc_sample(blk[y * 8 + x]);
+                            d = s->yrow;
+                            st = s->stride;
+                            ox = mx * s->mcu_w + (uint32_t)kb * 8;
                         } else {
-                            uint32_t ox = mx * 8;
-                            int8_t *d = comp == 1 ? s->cbrow : s->crrow;
-                            for (y = 0; y < 8; y++)
-                                for (x = 0; x < 8; x++)
-                                    d[y * (s->stride / 2) + ox + x] =
-                                        (int8_t)(cc_sample(blk[y * 8 + x]) - 128);
+                            d = comp == 1 ? s->cbrow : s->crrow;
+                            st = s->stride / 2;
+                            ox = mx * 8;
                         }
+                        for (y = 0; y < 8; y++)
+                            for (x = 0; x < 8; x++)
+                                d[y * st + ox + x] =
+                                    (uint8_t)cc_sample(blk[y * 8 + x]);
                     }
                 }
             }
             err = cc_restart(&b);
             if (err != UNC_OK) return err;
         }
-        /* The MCU row is complete: emit its rows of this plane.
-         * The module's own YCbCr to RGB, at CCOD+0xd98 — 1.402 and
-         * 1.772 at 2^14, and the two green terms at the same scale. */
+        /* The MCU row is complete: emit its rows of this plane. The
+         * colour conversion is CCOD+0xd98's: its 16-bit words reduce
+         * to `y + (k * c2) >> 15`, k being 1.402, 1.772 and the two
+         * green terms at 2^14 and c2 the doubled chroma above. */
         for (y = 0; y < 8; y++) {
             uint32_t row = mr * 8 + y;
+            const uint8_t *yr = s->yrow + y * s->stride;
+            const uint8_t *cb = s->cbrow, *cr = s->crrow;
             if (row >= im->h) break;
+            if (ncomp == 3) {
+                cb += y * (s->stride / 2);
+                cr += y * (s->stride / 2);
+            }
             for (x = 0; x < im->w; x++) {
-                int32_t yy = s->yrow[y * s->stride + x];
-                int32_t cb = s->cbrow[y * (s->stride / 2) + x / 2];
-                int32_t cr = s->crrow[y * (s->stride / 2) + x / 2];
-                int32_t v;
-                if (plane == 0)
-                    v = yy + (int32_t)(((int32_t)22965 * cr) >> 14);
-                else if (plane == 1)
-                    v = yy - (int32_t)(((int32_t)11703 * cr +
-                                        (int32_t)5631 * cb) >> 14);
-                else
-                    v = yy + (int32_t)(((int32_t)29036 * cb) >> 14);
-                if (v < 0) v = 0; else if (v > 255) v = 255;
-                if (unc_fork_put(f, (uint8_t)v) != UNC_OK) return UNC_ERR_SINK;
+                int32_t v = yr[x];
+                if (ncomp == 3) {
+                    if (plane == 0)
+                        v += ((int32_t)22965 * cc_chroma2(cr, x, im->w)) >> 15;
+                    else if (plane == 1)
+                        v += ((int32_t)-11703 * cc_chroma2(cr, x, im->w) -
+                              (int32_t)5631 * cc_chroma2(cb, x, im->w)) >> 15;
+                    else
+                        v += ((int32_t)29036 * cc_chroma2(cb, x, im->w)) >> 15;
+                }
+                if (unc_fork_put(f, cc_clamp(v)) != UNC_OK)
+                    return UNC_ERR_SINK;
             }
         }
     }
-    (void)c;
-    (void)i;
     return UNC_OK;
+}
+
+/* One TIFF: its tables, its row buffers, and its planes in order. */
+static int cc_tiff(UncCtx *c, const CcImage *im, UncForkOut *f)
+{
+    CcState *s;
+    uint32_t need, unit;
+    int err = UNC_OK, i, j, planes = im->spp == 3 ? 3 : 1;
+
+    s = (CcState *)unc_alloc(c->al, (uint32_t)sizeof *s);
+    if (!s) return UNC_ERR_MEM;
+    /* C3a+0x4366: the row is cut into (w + 39) / 40 restart segments
+     * and each holds as many MCUs as it takes to cover the width. */
+    s->mcu_w = im->spp == 3 ? 16 : 8;
+    s->segs = (im->w + 39) / 40;
+    unit = s->segs * s->mcu_w;
+    s->per_seg = (unit + im->w - 1) / unit;
+    s->stride = unit * s->per_seg;
+    need = s->stride * 8u;
+    if (im->spp == 3) need += s->stride * 8u;          /* both chroma */
+    s->yrow = (uint8_t *)unc_alloc(c->al, need);
+    if (!s->yrow) { unc_free(c->al, s); return UNC_ERR_MEM; }
+    s->cbrow = s->crrow = NULL;
+    if (im->spp == 3) {
+        s->cbrow = s->yrow + s->stride * 8u;
+        s->crrow = s->cbrow + (s->stride / 2) * 8u;
+    }
+
+    for (i = 0; i < (int)im->spp && err == UNC_OK; i++) {
+        for (j = 0; j < 64; j++) {
+            uint32_t o = im->qoff[i] + (uint32_t)j * 2;
+            if (o > im->len || im->len - o < 2) { err = UNC_ERR_CORRUPT; break; }
+            s->q[i][j] = (uint16_t)cc_u16(im->t + o);
+        }
+        if (err != UNC_OK) break;
+        if (im->dcoff[i] >= im->len || im->acoff[i] >= im->len) {
+            err = UNC_ERR_CORRUPT;
+            break;
+        }
+        err = cc_huff(&s->dc[i], im->t + im->dcoff[i], im->len - im->dcoff[i]);
+        if (err == UNC_OK)
+            err = cc_huff(&s->ac[i], im->t + im->acoff[i],
+                          im->len - im->acoff[i]);
+    }
+    for (i = 0; i < planes && err == UNC_OK; i++)
+        err = cc_plane(im, s, f, i);
+
+    unc_free(c->al, s->yrow);
+    unc_free(c->al, s);
+    return err;
 }
 
 /* ------------------------------------------------------------------ */
@@ -507,53 +621,45 @@ int unc_ccube_decode(UncCtx *c, UncFork fork, const uint8_t *stored,
                      uint32_t storedlen, uint32_t outlen,
                      uint8_t *obuf, uint32_t ocap)
 {
-    CcImage im;
-    CcState *s;
     UncForkOut f;
-    uint32_t stride, need;
-    int err, i, j;
+    uint32_t off[CC_MAXTIFF + 1];
+    uint32_t chans, w, h, total, k, n = 0, got = 0;
+    int err = UNC_OK;
 
-    /* 80 bytes of module header, then the TIFF. */
-    if (storedlen < 96) return UNC_ERR_TRUNCATED;
-    im.t = stored + 80;
-    im.len = storedlen - 80;
-    im.data = 0;
-    err = cc_parse(&im);
-    if (err != UNC_OK) return err;
-    if ((uint32_t)im.w * im.h * 3u != outlen) return UNC_ERR_CORRUPT;
-
-    stride = ((im.w + CC_PAD_W - 1) / CC_PAD_W) * CC_PAD_W;
-    s = (CcState *)unc_alloc(c->al, (uint32_t)sizeof *s);
-    if (!s) return UNC_ERR_MEM;
-    s->stride = stride;
-    need = stride * 8u + stride * 8u;          /* luma + both chroma */
-    s->yrow = (uint8_t *)unc_alloc(c->al, need);
-    if (!s->yrow) { unc_free(c->al, s); return UNC_ERR_MEM; }
-    s->cbrow = (int8_t *)(s->yrow + stride * 8u);
-    s->crrow = s->cbrow + (stride / 2) * 8;
-
-    for (i = 0; i < 3; i++) {
-        for (j = 0; j < 64; j++) {
-            uint32_t o = im.qoff[i] + (uint32_t)j * 2;
-            if (o + 2 > im.len) { err = UNC_ERR_CORRUPT; goto out; }
-            s->q[i][j] = (uint16_t)cc_u16(im.t + o);
-        }
-        if (im.dcoff[i] >= im.len || im.acoff[i] >= im.len) {
-            err = UNC_ERR_CORRUPT; goto out;
-        }
-        err = cc_huff(&s->dc[i], im.t + im.dcoff[i], im.len - im.dcoff[i]);
-        if (err != UNC_OK) goto out;
-        err = cc_huff(&s->ac[i], im.t + im.acoff[i], im.len - im.acoff[i]);
-        if (err != UNC_OK) goto out;
+    /* The module's header: which TIFFs, and where. */
+    if (storedlen < CC_HDR + 16) return UNC_ERR_TRUNCATED;
+    chans = cc_u16(stored + 2);
+    w = cc_u16(stored + 4);
+    h = cc_u16(stored + 6);
+    total = cc_u32(stored + 10);
+    if (total > storedlen - CC_HDR) return UNC_ERR_TRUNCATED;
+    total += CC_HDR;
+    for (k = 14; k + 4 <= CC_HDR; k += 4) {
+        uint32_t v = cc_u32(stored + k);
+        if (v >= total) break;
+        if (v < CC_HDR || (n && v <= off[n - 1]) || n == CC_MAXTIFF)
+            return UNC_ERR_CORRUPT;
+        off[n++] = v;
     }
+    if (n == 0 || chans == 0 || chans > 4) return UNC_ERR_CORRUPT;
+    if (w > 8192u || h > 8192u) return UNC_ERR_TOOLARGE;
+    off[n] = total;
+    if ((uint32_t)w * h * chans != outlen) return UNC_ERR_CORRUPT;
 
     unc_fork_out(&f, c, fork, !c->opt.test_only, UNC_CK_CRC16_ARC, obuf, ocap);
-    for (i = 0; i < 3 && err == UNC_OK; i++)
-        err = cc_plane(c, &im, s, &f, i);
+    for (k = 0; k < n && err == UNC_OK; k++) {
+        CcImage im;
+        im.t = stored + off[k];
+        im.len = off[k + 1] - off[k];
+        err = cc_parse(&im);
+        if (err != UNC_OK) break;
+        /* Every TIFF is the whole document's size, and between them
+         * they hold exactly its channels. */
+        got += im.spp;
+        if (im.w != w || im.h != h || got > chans) { err = UNC_ERR_CORRUPT; break; }
+        err = cc_tiff(c, &im, &f);
+    }
+    if (err == UNC_OK && got != chans) err = UNC_ERR_CORRUPT;
     if (err == UNC_OK) err = unc_fork_flush(&f);
-
-out:
-    unc_free(c->al, s->yrow);
-    unc_free(c->al, s);
     return err;
 }

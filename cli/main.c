@@ -921,7 +921,17 @@ static int sink_end(void *ctx, int status)
                                             : s->cur.method_rsrc;
             if (!s->unsupported) s->unsup_method = (int)m;
             s->unsupported++;
-            if (m)
+            if (s->cur.module_kind == UNC_MODULE_OPTIMIZER &&
+                module_name(UNC_MODULE_OPTIMIZER, s->cur.module_id))
+                /* The method byte of an optimized fork carries the
+                 * Optimizer bit, so "method 64" named nothing: it is
+                 * what a greyscale `JPEG Lossy` entry said until
+                 * 2026-10-11. Name the module instead. */
+                fprintf(stderr, "macextract: %s: what the \"%s\" StuffIt "
+                                "Optimizer stored here is not supported "
+                                "yet\n", name,
+                        module_name(UNC_MODULE_OPTIMIZER, s->cur.module_id));
+            else if (m)
                 fprintf(stderr, "macextract: %s: method %u is not "
                                 "supported yet\n", name, m);
             else
@@ -930,28 +940,20 @@ static int sink_end(void *ctx, int status)
         } else if (status == UNC_ERR_ENCRYPTED &&
                    s->cur.module_kind == UNC_MODULE_ENCRYPTOR &&
                    module_name(UNC_MODULE_ENCRYPTOR, s->cur.module_id)) {
-            /* UNC_ERR_ENCRYPTED only, since 2026-10-02: the engine
-             * implements 2.x's `DES` and `NewDE` now, so a wrong
-             * password on one of those is a wrong password and must say
-             * so. This branch is for the modules it does NOT implement,
-             * where no password helps. Including UNC_ERR_PASSWORD here
-             * told somebody with a typo that their archive was
-             * unopenable. */
-            /* A StuffIt 2.x entry names the encryptor MODULE that wrote
-             * it, and this engine implements the built-in scheme that
-             * replaced them — so the answer is not a better password,
-             * and saying "wrong password, or none given" would send the
-             * user looking for one.
-             *
-             * It does NOT say "nothing implements it", which is what
-             * stood here until 2026-10-02: StuffIt Deluxe 2.x with that
-             * module opens these archives perfectly well, and a message
-             * that tells somebody their data is unreachable when it is
-             * merely unreachable BY US is the kind of claim this
-             * project has had to withdraw before (BLOCKERS.md). */
-            fprintf(stderr, "macextract: %s: encrypted by StuffIt's \"%s\" "
-                            "module, which this engine does not implement "
-                            "— a password will not help\n",
+            /* Every encryptor this host can NAME, the engine implements
+             * — `DES`, `PassLock`, `NewDEx` and `DESex` (src/fmt_sit.c,
+             * sit_enc_known) — so UNC_ERR_ENCRYPTED on one of them
+             * means the cipher was never reached: its key is the
+             * archive's 'MKey' resource, and this copy has no resource
+             * fork. Until 2026-10-11 this said the engine "does not
+             * implement" the cipher, which was true of nothing it could
+             * fire on; a forkless DES archive is what showed it
+             * (tools/run_sitcombo.py). An id with no name is a third
+             * party's module and gets the generic refusal below. */
+            fprintf(stderr, "macextract: %s: encrypted with StuffIt's "
+                            "\"%s\", whose key is in the archive's "
+                            "resource fork — which this copy does not "
+                            "have\n",
                     name, module_name(UNC_MODULE_ENCRYPTOR,
                                       s->cur.module_id));
         } else {

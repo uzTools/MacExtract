@@ -133,20 +133,6 @@ being "needs a machine nobody has" and become two runs somebody can do.
 Short of them, read every tier sweep with the `-D UNC_AT_BUDGET` probe
 fields (`wa`, `kf`, `rf`, `fc`, `fn`) rather than on the tally alone.
 
-## StuffIt 2.0: the modules that are still only this project's own output
-
-Everything StuffIt Deluxe 2.0.1 writes with what was in its box extracts,
-graded against archives it wrote (FORMATS.md, *What an Optimizer did to the
-fork*, *The three ways 2.0.1 encrypts*). `Text 1`, `Sound 1` and
-`MacPaint 1` are graded on wild archives since 2026-10-06/07 (FORMATS.md,
-*Two optimized archives nobody here made*, *Two more, and these the engine
-UNDOES*).
-
-| what is left | what would close it |
-|---|---|
-| **`Photoshop 1` and `JPEG Lossy` are graded only on archives this project made** | **a file from somebody who has one.** All 196,139 classic StuffIt archives Discmaster lists have been searched, the 112 early-stopped walks re-walked 2026-10-10; none carries either (TESTING.md, *Searching somebody else's index by content*) |
-| **all five ciphers are graded only on archives this project made** — `DES`, `NewDE`, `NewDEx`, `DESex`, `PassLock` | **an encrypted archive and its password.** The same search found only `NewDE`, 8 forks in 3 wild archives with no password — the one read-me that speaks to it says the author mailed one on payment (DECISIONS.md 2026-10-07, *the key was what the archive CONTAINED*); `sitcrypt-wild-F7Menus.sit.bin` grades a refusal (FORMATS.md, *The one wild archive here that is encrypted*) |
-
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09).** The engine is portable C99

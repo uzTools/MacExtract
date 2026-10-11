@@ -1562,6 +1562,41 @@ exception. And it says nothing on a fresh clone: the specimens are emulator outp
 not committed, like `sitcrypt.py`'s, so the suite skips cleanly when they
 are absent.
 
+## Every combination 2.0.1 will write (`tools/run_sitcombo.py`, in `ci.sh`)
+
+**Same oracle as above, every parameter varied.** `tools/vmac/sitcombo.py`
+asked StuffIt Deluxe 2.0.1 for what one subject per module at the
+defaults never could (FORMATS.md, *Every other document 2.0.1 will
+optimize*), and each set unstuffed its own archives in the same boot.
+This replays 121 of them, 245 checks:
+
+| lane | graded against |
+|---|---|
+| `JPEG Lossy`, 37 entries: widths 1 to 512, grey, CMYK, HSL, HSB, multichannel, indexed, bitmap, colour, Q=5 and 255, under `DES` and `NewDE` | 2.0.1's own restore, byte for byte; the resource fork against the document, which 2.0.1 rewrites; each must say *"rebuilt"* |
+| `Photoshop 1`, 20 entries: two drawn documents under every method and a 1.5.1 archive, and the twelve `--psnew` documents | the document, both forks |
+| four Optimizers at once over a folder; `Text 1` under Best Guess and in a 1.5.1 archive | 2.0.1's restore of the folder; `run_sitopt.py`'s own graded controls |
+| `MacPaint 1` over a second painting, every method | 2.0.1's restore from byte 512; zeros before it |
+| every Optimizer under each built-in cipher; the three plug-ins over optimized entries; empty, resource-only, eight-block and 40 KB forks, a folder and 11 entries per archive | the same entry unencrypted, or the subject regenerated from `sitcombo.py`'s own generator; each encrypted one must refuse with no password |
+| two of those archives without their resource fork | the refusal names the missing fork, and never *"does not implement"* |
+
+**Measured able to fail**: the engine at HEAD before the `JPEG Lossy`
+rewrite reports **59 problems** here, 31 of them byte mismatches against
+2.0.1's restores and one the forkless message.
+
+What this CANNOT see:
+
+- **anything on a fresh clone** — the specimens are emulator output in
+  `~/.cache/macextract/vmac/specimens/sitcombo/` and are not committed;
+  it skips and says so.
+- **a coloured document Photoshop drew.** `cdocs/` are built by
+  `sitcombo.py --cdocs` in Photoshop 1.0's own layout (byte-identical
+  when rebuilt); what is graded is 2.0.1's archive and 2.0.1's
+  restore, both authentic.
+- **a real Sound Designer II file**, which nothing here can make; the
+  wild `Phantom` archive grades `Sound 1` (above).
+- **widths over 512, heights over 300**, or a quality the module's
+  dialog refuses (1..3).
+
 ## StuffIt method 14 (`tools/synth_sit14.py`, in `ci.sh` via `run_diff`)
 
 **The format had no fixture and no suite could ask for it.** Method 14
@@ -2845,7 +2880,9 @@ under System 6.0.8, the same four and seven fixtures by name. Since
 resident build returned on all three machines that evening (74/74, 70/74
 and 65/74 with `4alnch11.zip` and `synth-sqp-clear.pkg` in, since
 2026-10-11: the lane passes both, and the resident build has run neither), refusing the
-same four and nine fixtures the lane names, at budgets re-taken in the
+same four and nine fixtures the lane names — ten at System 6.0.8 since
+2026-10-11, DERIVED and not run: `derived-DD_Expand.sea`, 436 B short
+after the control grew 704 B for `JPEG Lossy` — at budgets re-taken in the
 same session (634,364, 205,476 and 110,076 B; `TIERS_MACHINE` holds each
 plus the control it was read against). All three budgets were re-taken twice on 2026-09-27 — +4,746 B
 and then +536 B, the three moving together each time — and no tally moved

@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (204260, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (108860, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (633148, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (203556, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (108156, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (632444, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -170,7 +170,10 @@ TIERS = {
 # **Lowered by 1,216 B 2026-10-11, DERIVED and not re-measured**: the
 # control's CODE +1,176 and A5 +40 for zip Reduce (FORMATS.md, *Reduce*);
 # the free figures in the labels are 2026-10-09's.
-TIERS_CONTROL = 209232     # build/mac-resident, CODE + A5, 2026-10-11
+# **Lowered by 704 B more the same day, DERIVED**: the control's CODE +728
+# and A5 -24 for `JPEG Lossy` at every width and mode (DECISIONS.md
+# 2026-10-11, *the constant was a square*); the shipped pair unmoved.
+TIERS_CONTROL = 209936     # build/mac-resident, CODE + A5, 2026-10-11
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -258,12 +261,18 @@ SHORT = re.compile(r"at least (\d+) bytes more memory")
 #
 # BY NAME since then, as the shipped lane is, and for the same reason: a
 # count cannot fail on two different refusals.
+# 65 -> 64 at sys6-512K on 2026-10-11, DERIVED and not run on the
+# machine: the control's +704 B for `JPEG Lossy` at every width and mode
+# puts `derived-DD_Expand.sea` 436 B short, where it had 268 B to spare.
+# The shipped lanes do not move: the material is all in `ovl_stuffit`
+# (DECISIONS.md 2026-10-11, *the constant was a square*).
 EXPECT = {
     "floor-1M": (),
     "sys3-512K": ("derived-Cool_Tools__.sit",
                   "derived-Library_ISBN_Barcoder.sit",
                   "derived-a2basic.dmg.sit", "synth-dd-m5.dd"),
-    "sys6-512K": ("derived-Cool_Tools__.sit", "derived-Expand_Now_1.0.1.sea",
+    "sys6-512K": ("derived-Cool_Tools__.sit", "derived-DD_Expand.sea",
+                  "derived-Expand_Now_1.0.1.sea",
                   "derived-LHA_Expander_1.0.3.sea",
                   "derived-Library_ISBN_Barcoder.sit",
                   "derived-Terrainman_2.0__.sea",
@@ -410,7 +419,11 @@ EXPECT = {
 # +1,176 and A5 +40, less the shipped build's +80 and +16 for the
 # sixteenth image's keep and its patch into the vector (FORMATS.md,
 # *Reduce*).
-OVL_SAVED = 135408
+# **+704 the same day, -> 136,112**: `JPEG Lossy` at every width and
+# mode, the control's CODE +728 and A5 -24 and the shipped pair +0; all
+# of it is `ovl_stuffit`'s +676, so a StuffIt archive's grant falls 676 B
+# less 28 of alignment and every other format's is unmoved.
+OVL_SAVED = 136112
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -504,6 +517,9 @@ OVL_RESIDUE = -666
 # Shrink gone from it — its size before Shrink came in (FORMATS.md,
 # *Reduce*). ZIPOLD -8 B the same evening, 2,666 -> 2,658, with both
 # decoders made faster (FORMATS.md, *Reduce*, *Speed*; *Shrink*).
+# **STUFFIT +676 B 2026-10-11**: `JPEG Lossy` at every width and mode,
+# its chroma interpolated (DECISIONS.md 2026-10-11, *the constant was a
+# square*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
@@ -516,13 +532,13 @@ IMAGES = {
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     27938,
+    "OVL_ID_STUFFIT":     28614,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11510,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 163588
+BUNDLE = 164264
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

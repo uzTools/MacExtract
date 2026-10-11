@@ -12,39 +12,46 @@ whose subject is emulator output (TESTING.md).
 `payload.bin` is an optimized entry's stored data fork — the 80-byte
 module header, then the TIFF. `--show` prints the IFD.
 
-WHAT THE FORMAT IS, all of it read out of one specimen and confirmed by
-decoding it (FORMATS.md, *What an Optimizer did to the fork*):
+WHAT THE FORMAT IS — read out of one specimen first, then corrected
+against 36 more on 2026-10-11 (FORMATS.md, *What an Optimizer did to the
+fork*; `tools/run_sitcombo.py` grades the engine on all of them):
 
-  * 80 bytes of module header: version, channels at +2, height at +4,
-    width at +6, quality at +8, the payload length at +12, the header
-    length at +16 and the total at +20. Then a TIFF, `MM\\0*`.
-  * `Compression` is **32865**, C-Cube's own code from before TIFF 6.0
-    gave old-style JPEG the number 6. Nothing reads it: `libtiff` parses
-    the directory and hands back a black frame.
-  * Three quantisation tables at private tag **33606**, 64 words each,
-    **in zigzag order** — Annex K's luminance and chrominance tables
-    scaled by the quality.
-  * Three DC Huffman tables at **33607** and three AC at **33608**,
-    `BITS[16]` then `HUFFVAL`, 256 symbols each (C-Cube pads a DC table
-    out to the full alphabet).
-  * `TileOffsets`/`TileByteCounts` (324/325) index the entropy data. The
-    declared count is 230 and **the last six entries are zero**.
-  * **An MCU is 2 luma blocks, one Cb and one Cr — 4:2:2** — and a
-    segment is **exactly 3 MCUs**, so 48 pixels wide by 8 tall.
-  * **Seven segments per tile row**, which is 21 MCUs = 336 pixels for
-    a 256-pixel image: the encoder pads the width out and codes the
-    padding flat, which is why the last two segments of every row are
-    11 bytes whatever the picture does.
+  * 80 bytes of module header: the module's colour code at +0 (1 RGB,
+    2 HSB, 3 HSL, 4 CMYK, 5 channels coded one by one), channels at +2,
+    WIDTH at +4 and height at +6 (this said the other way round until a
+    non-square document existed), quality at +8, the length after the
+    header at +10, then the offset of each TIFF from +14, ending with the
+    total. RGB is one three-channel TIFF; CMYK a three-channel one and a
+    one-channel one; the rest one one-channel TIFF per channel.
+  * Each TIFF's `Compression` is **32865**, C-Cube's own code from before
+    TIFF 6.0 gave old-style JPEG the number 6. Nothing reads it: `libtiff`
+    parses the directory and hands back a black frame.
+  * One quantisation table per channel at private tag **33606**, 64 words
+    **in zigzag order**; DC and AC Huffman tables at **33607**/**33608**,
+    `BITS[16]` then `HUFFVAL`. One channel's tag holds the table offset,
+    three channels' the offset of three.
+  * `TileOffsets` (324) holds the offset of an ARRAY of segment offsets,
+    even when its count is 1.
+  * **A three-channel MCU is 2 luma blocks, one Cb and one Cr — 4:2:2**,
+    16x8; a one-channel MCU is one 8x8 block.
+  * **(w + 39) // 40 restart segments per MCU row, each of
+    (segs*mcu + w - 1) // (segs*mcu) MCUs** — C3a+0x4366's arithmetic.
+    A 256-wide row is 7 segments of 3, which is the only width this file
+    knew; the encoder codes the padding flat.
   * Each segment ends `FF Dn` then **one pad byte**. The restart index
     runs continuously mod 8 across the whole image, and **the DC
-    predictors are NOT reset by it** — only the very first segment
-    carries a non-zero DC difference on a flat image.
+    predictors are NOT reset by it**.
+  * Chroma is upsampled by interpolation at the module's full precision
+    — an odd column is the mean of its neighbours, the image's last one
+    repeats — and converted at CCOD+0xd98, which reduces to
+    `y + (k * c2) >> 15` with `c2` twice the chroma's distance from 128.
+    Replication is indistinguishable on grey content, which is all this
+    file had until 2026-10-11.
   * Bits are MSB-first with JPEG's `FF 00` stuffing, and the last byte
     of a segment is padded with 1s.
 
-WHAT IT CANNOT SEE: one specimen, 256x256, quality 25, three channels.
-Nothing here has a second image, another quality or a greyscale
-document, so every "always" above is an always over one file.
+WHAT IT CANNOT SEE: widths over 512, heights over 300, and any quality
+the module's dialog refuses (it takes 5..255 and refuses 1..3).
 
 License: LGPL-2.1-or-later. See LICENSE and NOTICE.
 """
@@ -56,9 +63,6 @@ ZIG = [0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5,
        12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28,
        35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
        58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]
-MCU_W, MCU_H = 16, 8
-MCUS_PER_SEG = 3
-SEGS_PER_ROW = 7
 
 
 class Bits(object):
@@ -231,39 +235,57 @@ def sample(x):
     return 0 if v < 0 else (255 if v > 255 else v)
 
 
-def run(payload):
-    t = payload[80:]
-    if t[:4] != b"MM\x00\x2a":
-        raise SystemExit("decode: not a C-Cube payload (no TIFF after +80)")
+def chroma2(row, x, w):
+    """Twice the chroma's distance from 128 at column x, interpolated."""
+    j = x >> 1
+    a = row[j] - 128
+    if not x & 1:
+        return a + a
+    return a + (row[j + 1] - 128 if j + 1 < (w + 1) // 2 else a)
+
+
+def one_tiff(t):
+    """One TIFF's planes, as a list of bytes objects."""
     e = ifd(t)
     w = struct.unpack(">H", e[256][2])[0]
     h = struct.unpack(">H", e[257][2])[0]
-    q = [struct.unpack(">64H", t[o:o + 128])
-         for o in struct.unpack(">3I", e[33606][2])]
+    spp = struct.unpack(">H", e[277][2])[0]
+
+    def offsets(tag):
+        cnt = e[tag][1]
+        if cnt == 1:
+            return [struct.unpack(">I", e[tag][2])[0]]
+        return list(struct.unpack(">%dI" % cnt, e[tag][2]))
+    q = [struct.unpack(">64H", t[o:o + 128]) for o in offsets(33606)]
     dcs, acs = [], []
     for tag, into in ((33607, dcs), (33608, acs)):
-        for o in struct.unpack(">3I", e[tag][2]):
+        for o in offsets(tag):
             bits = t[o:o + 16]
             into.append(huff(bits, t[o + 16:o + 16 + sum(bits)]))
-    offs = struct.unpack(">%dI" % e[324][1], e[324][2])
-    cnts = struct.unpack(">%dI" % e[325][1], e[325][2])
-    segs = [(o, c) for o, c in zip(offs, cnts) if c]
-    stride = SEGS_PER_ROW * MCUS_PER_SEG * MCU_W
-    Y = [[0.0] * stride for _ in range(h)]
-    CB = [[0.0] * (stride // 2) for _ in range(h)]
-    CR = [[0.0] * (stride // 2) for _ in range(h)]
+    ptr = struct.unpack(">I", e[324][2])[0] if e[324][1] == 1 else None
+    if ptr is not None:     # one segment, and still the offset of an array
+        offs = [struct.unpack(">I", t[ptr:ptr + 4])[0]]
+    else:
+        offs = [o for o in offsets(324) if o]
+    mcu_w = 16 if spp == 3 else 8
+    segs_row = (w + 39) // 40
+    per_seg = (segs_row * mcu_w + w - 1) // (segs_row * mcu_w)
+    stride = segs_row * per_seg * mcu_w
+    rows = (h + 7) // 8
+    comps = ((0, 2), (1, 1), (2, 1)) if spp == 3 else ((0, 1),)
+    P = [[[0] * stride for _ in range(rows * 8)] for _ in range(3)]
     pred = [0, 0, 0]
-    for si, (o, c) in enumerate(segs):
-        seg = t[o:o + c]
+    for si in range(segs_row * rows):
+        seg = t[offs[si]:]
         for p in range(len(seg) - 1):
             if seg[p] == 0xFF and 0xD0 <= seg[p + 1] <= 0xD7:
                 seg = seg[:p]
                 break
         br = Bits(seg)
-        row, col0 = si // SEGS_PER_ROW, (si % SEGS_PER_ROW) * MCUS_PER_SEG
-        for m in range(MCUS_PER_SEG):
+        row, col0 = si // segs_row, (si % segs_row) * per_seg
+        for m in range(per_seg):
             mx = col0 + m
-            for comp, count in ((0, 2), (1, 1), (2, 1)):
+            for comp, count in comps:
                 for k in range(count):
                     co = block(br, dcs[comp], acs[comp])
                     pred[comp] += co[0]
@@ -272,31 +294,51 @@ def run(payload):
                     for z in range(64):
                         deq[ZIG[z]] = co[z] * q[comp][z]
                     px = idct(deq)
-                    if comp == 0:
-                        ox, oy = mx * MCU_W + k * 8, row * 8
-                        for yy in range(8):
-                            for xx in range(8):
-                                Y[oy + yy][ox + xx] = sample(px[yy * 8 + xx])
-                    else:
-                        ox, oy = mx * 8, row * 8
-                        tgt = CB if comp == 1 else CR
-                        for yy in range(8):
-                            for xx in range(8):
-                                tgt[oy + yy][ox + xx] = sample(px[yy * 8 + xx]) - 128
+                    ox = mx * mcu_w + k * 8 if comp == 0 else mx * 8
+                    for yy in range(8):
+                        for xx in range(8):
+                            P[comp][row * 8 + yy][ox + xx] = \
+                                sample(px[yy * 8 + xx])
+    if spp == 1:
+        return [bytes(P[0][y][x] for y in range(h) for x in range(w))], w, h
+
     def clamp(v):
         return 0 if v < 0 else (255 if v > 255 else v)
-    # The module's own YCbCr to RGB, at CCOD+0xd98: 1.402 and 1.772 at
-    # 2^14, and the two green terms at the same scale.
-    out = bytearray(w * h * 3)
+    # CCOD+0xd98's conversion: 1.402, 1.772 and the green terms at 2^14,
+    # applied to the doubled, interpolated chroma at 2^15.
+    out = [bytearray(w * h) for _ in range(3)]
     for y in range(h):
         for x in range(w):
-            yy = Y[y][x]
-            cb = CB[y][x // 2]
-            cr = CR[y][x // 2]
-            out[y * w + x] = clamp(yy + ((22965 * cr) >> 14))
-            out[w * h + y * w + x] = clamp(yy - ((11703 * cr + 5631 * cb) >> 14))
-            out[2 * w * h + y * w + x] = clamp(yy + ((29036 * cb) >> 14))
-    return bytes(out), w, h
+            yy = P[0][y][x]
+            cb = chroma2(P[1][y], x, w)
+            cr = chroma2(P[2][y], x, w)
+            out[0][y * w + x] = clamp(yy + ((22965 * cr) >> 15))
+            out[1][y * w + x] = clamp(yy + ((-11703 * cr - 5631 * cb) >> 15))
+            out[2][y * w + x] = clamp(yy + ((29036 * cb) >> 15))
+    return [bytes(o) for o in out], w, h
+
+
+def run(payload):
+    if payload[80:84] != b"MM\x00\x2a":
+        raise SystemExit("decode: not a C-Cube payload (no TIFF after +80)")
+    w, h = struct.unpack(">HH", payload[4:8])
+    total = 80 + struct.unpack(">I", payload[10:14])[0]
+    offs, k = [], 14
+    while k + 4 <= 80:
+        v = struct.unpack(">I", payload[k:k + 4])[0]
+        if v >= total:
+            break
+        offs.append(v)
+        k += 4
+    planes = b""
+    for i, o in enumerate(offs):
+        end = offs[i + 1] if i + 1 < len(offs) else total
+        got, tw, th = one_tiff(payload[o:end])
+        if (tw, th) != (w, h):
+            raise SystemExit("decode: a TIFF of %dx%d in a %dx%d document"
+                             % (tw, th, w, h))
+        planes += b"".join(got)
+    return planes, w, h
 
 
 def forks(path):
