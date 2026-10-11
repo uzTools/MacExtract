@@ -126,15 +126,15 @@ is PowerPC-only, so no 68k Mac runs it at all.
 
 | | Expander 4.0.2 (free, System 6) | Deluxe 5.5.1 (paid, last for 68k) | Deluxe 7.0.3 Classic (paid, last for Mac OS 9) | MacExtract |
 |---|---|---|---|---|
-| Oldest Mac it runs on | System 6.0.5 | System 7.5.3, 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
+| Oldest Mac it runs on | System 6.0.5 | System 7.1.1 (7.5.3 recommended), probably a 68020 | Mac OS 8.6, PowerPC, 32 MB | System 3.0, 68000, 512 KB |
 | StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅* |
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on | ✅ | ✅ | ✅ |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on, System 7 only | ✅ | ✅ | ✅ |
 | Type and creator in a zip made by MacZip | 🔴 ** | 🔴 ** | 🔴 ** | ✅ |
-| StuffIt SpaceSaver | ✅ with the add-on | ✅ | 🔴 | ✅ |
+| StuffIt SpaceSaver | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
-| AppleLink packages (`.pkg`) | ✅ with the add-on | ✅ | 🔴 | ✅ |
+| AppleLink packages (`.pkg`) | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
 | `.lzh` / `.lha` | 🔴 | ✅ | ✅ | ✅ |
 | DiskDoubler (`.dd`) | 🔴 | ✅ | 🔴 | ✅ |
 | Now Compress and Alysis SuperDisk! | 🔴 | 🔴 | 🔴 | ✅ |
@@ -142,11 +142,11 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | Private File (`.pf`) | 🔴 | ✅ | ✅ | ✅ |
 | Self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
 | A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
-| StuffIt sets split across floppies | ✅ with the add-on | ✅ | ✅ | ✅ |
+| StuffIt sets split across floppies | ✅ with the add-on, System 7 only | ✅ | ✅ | ✅ |
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
-| An archive that arrived as several mail messages | 🔴 | 🔴 | 🔴 | ✅ |
+| A MIME message split across several files (`message/partial`) | 🔴 | 🔴 | 🔴 | ✅ |
 | Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
-| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 | not tested here | not tested here | ✅*** |
+| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | not tested here *** | not tested here | not tested here | ✅*** |
 | Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
@@ -170,8 +170,10 @@ seen by running the older Expander 3.5.2 over a real MacZip archive; the three
 
 \*\*\* **Everything StuffIt Deluxe 2.0 wrote with what was in its box** —
 five Optimizers and five ciphers — each checked against an archive 2.0.1
-itself made. What the two later Deluxes do with these archives has not been
-tested.
+itself made. None of the three StuffIts in the table was run on these
+archives. The nearest measurement is Deluxe 3.5.1's StuffIt Engine, which
+opened a `Text 1` archive and refused a `MacPaint 1` one — *"Please use
+StuffIt Deluxe instead."*
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:
