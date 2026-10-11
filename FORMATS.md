@@ -8086,8 +8086,10 @@ silicon, like real 68k silicon, remains untouched.
 The free tool a user would otherwise run on the machine itself, and the only
 external yardstick this project has (why it was worth applying: DECISIONS.md
 2026-08-15). **The coverage and capability tables below are its documentation
-against our measurements** — no row in either is a head-to-head observation of
-its behaviour. The TIMES are: since 2026-08-29 both applications run on the
+against our measurements**, except where a row says *measured*: since
+2026-10-11 the rows on StuffIt Deluxe 2.0's archives, encrypted Compact Pro,
+multipart BinHex and MIME are runs of 4.0.2 itself (*Run over the hard cases*,
+below). The TIMES are: since 2026-08-29 both applications run on the
 same emulated Mac Plus, over the same archive, timed by one instrument
 (*Timed on the same Mac Plus*, below).
 
@@ -8138,11 +8140,11 @@ with this archive."*
 
 ### Capability by capability
 
-| | StuffIt Expander 4.0.2 | MacExtract 0.15 |
+| | StuffIt Expander 4.0.2 | MacExtract 0.38.0 |
 |---|---|---|
-| Floor system | System 6.0.5 (its Read Me) | System 6.0.8, measured on a 1 MB Mac Plus |
+| Floor system | System 6.0.5 (its Read Me) | System 3.0 on a 68000 with 512 KB, measured on a Macintosh 512Ke; 1 MB for every archive (BLOCKERS.md, *Status*) |
 | Everything beyond `.sit`/`.cpt`/`.hqx`/`.bin` | needs DropStuff with Expander Enhancer, *"a **System 7-only** shareware product"* | in the same free application, on System 6 |
-| Installed pieces | application + StuffIt Engine extension + the add-on | one 149 KB application, no extension, no installer |
+| Installed pieces | application + StuffIt Engine extension + the add-on | one 226 KB application (231,611 B, the resource fork of `dist/MacExtract.bin`), no extension, no installer |
 | StuffIt segmented sets | with the add-on, so System 7 only | yes, System 6 and up |
 | Compact Pro segmented sets | *"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"* | yes |
 | Spanned zip sets | same sentence — no | yes |
@@ -8150,21 +8152,23 @@ with this archive."*
 | Parts still inside per-part envelopes | not claimed | yes, StuffIt sets |
 | How a part is identified | not stated | by its header, never by its filename (zip and `.NNN` sets excepted — see "Segmented archives") |
 | Segment joining, known defect | *"if the `Delete segments after joining` preference is selected, and you run out of disk space during a join operation, the first segment will be deleted even though the joining is not complete"* | parts are never deleted; the Mac shell removes only what it wrote |
-| Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"* | yes, since 2026-08-23: StuffIt, StuffIt 5, PackIt, zip (PKWARE and WinZip AES), ARC — and **Compact Pro, which Expander cannot** (*"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"*) |
+| Encrypted archives | yes — it prompts, and knows *"You have entered an incorrect password"*. Measured 2026-10-11: Compact Pro 1.51's own encrypted archive is refused with no prompt, *"Unable to decompress this archive because the file is password protected."*; StuffIt Deluxe 2.0's five ciphers are prompted for and then refused (*Run over the hard cases*) | yes, since 2026-08-23: StuffIt, StuffIt 5, PackIt, zip (PKWARE and WinZip AES), ARC — and **Compact Pro, which Expander cannot** (*"StuffIt Expander cannot expand encrypted or segmented Zip or Compact Pro files"*) |
 | btoa (`.ascii`) | with the add-on: a `btoa/atob Translator` ships in `Extensions:Aladdin:Translators` | yes, both framings (*btoa*, above) |
-| Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
+| Multipart BinHex | *"Multipart BinHex files, such as those appearing in Internet newsgroup postings (e.g. comp.binaries.mac), are fully supported"* — multiple documents in one text file, and one file broken into several pieces. Measured 2026-10-11: a three-part posting with a mail header before each part, in one file, decodes byte-exact and chains into the archive inside | several documents in one file since 2026-08-15 (††, above); a document broken across FILES joins where the parts are named `.001`, `.002` … |
 | Archive comments | written out beside the extracted items | **saved since 2026-08-23** for Compact Pro and **2026-08-26** for zip: the Mac shell writes a `TEXT` document called `Comments` into the destination folder, the CLI writes `<archive>.comment.txt` and prints it on `l` and `t` |
 | `.lzh` / `.lha` (LZH / LHA) | not named anywhere in its documentation, and no translator for it ships in `Extensions:Aladdin:Translators` — a Macintosh user reached for a separate application, and the corpus holds one (`LHA Expander 1.0.3`) | **yes since 2026-08-23**, every method, all four header levels, and MacLHA's MacBinary payload split back into two forks (*LZH / LHA*, above) |
 | `.arc` (ARC / ArcMac) | with the add-on | **yes since 2026-08-15**, methods 1-9; ArcMac's two-fork payload since 2026-08-16 (★★★ above) |
 | uuencode (`.uu`) | with the add-on | **yes since 2026-08-15**, plain and UUTool's two-fork shape |
-| base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the thirteen are listed under *The paid box*, below | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
+| base64 and MIME (`.b64`, `.mim`) | no translator for either ships in `Extensions:Aladdin:Translators`, and neither is named in its documentation — the thirteen are listed under *The paid box*, below. Measured 2026-10-11, 4.0.2 alone: an mpack message and an mpack `message/partial` set each produce nothing and no alert | **yes since 2026-08-26**, including multipart/appledouble, which is the only one of these formats that carries a resource fork (*base64 and MIME*, above) |
 | AppleLink `.pkg` | with the add-on, and the add-on recognises one by its EXTENSION: its translator's Standard File dialog lists only directories and its `STR# 129` carries `.pkg` for stripping, not for matching | **extracted since 2026-10-05**, and recognised by the file rather than by its name — which is the one thing Aladdin's own reader never did (*AppleLink packages*, above). Named from 2026-08-23 to 2026-09-27 on a routine that was the translator API's command parser, shared verbatim with five of its siblings, and not recognised at all for the eight days between |
 | StuffIt SpaceSaver | with the add-on | **yes since 2026-08-22**, and since 2026-08-25 **every method the format has** — 0, 1, 2, 3 and 4 — with SpaceSaver's own dictionary built in so nothing else is needed (*StuffIt SpaceSaver*, above) |
 | Chained expansion (`.sit.hqx`) | yes, and can be turned off | yes, `-nr` turns it off |
-| System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | none; Standard File, one archive at a time |
+| System 7 conveniences | drag-and-drop of files, folders and whole disks; watch folders; background expansion; Apple events | an archive dropped on the application's icon opens it, whatever its type (System 7 and later, measured: DECISIONS.md 2026-08-31, *the drop the Finder does not make*); otherwise Standard File, one archive at a time; no watch folders, background expansion or Apple events |
+| Self-mounting disk images (`.img`, `.smi`) | **no, read from its own files 2026-10-11**: the `open` 128 resource lists the 21 types it accepts (`SIT!`, `SITD`, `PACT`, `HBSF`, `TEXT`, five segment types, `SPSV`, `mArc`, `m@rc`, `ZIVU`, `ZIVM`, `Gzip`, `pZIP`, `ZIP `, `fold`, `disk`, `****`) and none is a disk image; neither `dImg`, `rohd`, `dCpy`, `.img`, `.smi`, `DiskCopy` nor `Mount` occurs in the application, and the Read Me and *What's new* never mention one. Not run on a `.img` | no — disk images are out of scope (OPEN_ITEMS.md, Part 1) |
+| StuffIt Deluxe 2.0's Optimizers and ciphers | **measured 2026-10-11**: the `Text 1` archive extracts, byte-identical to this engine's; the other four Optimizers and all five ciphers are refused with *"Unable to decompress some items due to use of optimizers."* | all ten (*StuffIt 2.0's pluggable modules*, above) |
 | Verification | none published | 959 fixtures byte-exact against `unar`/`macunpack` — bar the three uuencode fixtures, which `unar` cannot read at all: one is its generator's input with `hexbin` agreeing, and the two wild ones are graded by `hexbin` and by the CRCs of the archive one of them decodes to |
 | Licence | free, closed | free, LGPL-2.1-or-later |
-| Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 4,096 KB preferred, 400 KB minimum; engine peak heap per format in the matrix above |
+| Memory partition | **512 KB preferred, 384 KB minimum** (`SIZE` (-1), measured 2026-08-29 — the claim that this could not be read here is withdrawn, BLOCKERS.md) | 2,048 KB preferred, 400 KB minimum (`SIZE` (-1) of `dist/MacExtract.bin`, read 2026-10-11; this cell said 4,096 KB); engine peak heap per format in the matrix above |
 
 ### The paid box: StuffIt Deluxe 3.5.1 (2026-09-27)
 
@@ -8275,7 +8279,9 @@ and gzip. Against 3.5.1 it loses nothing and gains six; against 7.0.3 it
 lacks StuffIt X, RAR, ARJ and the three plug-ins nobody here can name, and
 keeps the four Macintosh formats 7.0.3 drops. What it still does not do is
 Now Compress and SuperDisk!, Compact Pro encryption, mail-split archives, and
-segments other than StuffIt's.
+segments other than StuffIt's — the middle two measured on its Expander
+2026-10-11, along with StuffIt 2.0's own archives, of which it opens two
+ciphers out of ten modules (*Run over the hard cases*, below).
 
 **Where plain 68000 support ends, and what is only inferred.** Each Read Me
 states its own floor and no more. **4.5**: *"the minimum system is now 7.1.1
@@ -8335,8 +8341,11 @@ dropped the Macintosh ones. Comments it keeps: *"it is possible to add
 comments to StuffIt, StuffIt X and Zip archives"*.
 
 **What it does not do that this engine does**: those four Macintosh formats,
-Compact Pro encryption, mail-split archives, and segments other than StuffIt's
-— *"StuffIt Deluxe is able to expand and create encrypted Zip archives, but
+Compact Pro encryption, mail-split archives, and segments other than StuffIt's.
+The middle two are measured on its Expander 2026-10-11, and so are StuffIt
+2.0's own archives, none of which it opens (*Run over the hard cases*, below).
+The segment sentence is the Users Guide's:
+*"StuffIt Deluxe is able to expand and create encrypted Zip archives, but
 does not currently support segmented or spanned Zip archives"*, same chapter.
 
 **And it found a hole in this engine: StuffIt 5 method 14.** The
@@ -8346,6 +8355,56 @@ engine shell and the Deluxe application among them (80 of 258 by
 v0.36.0; four entries had gained support in between). **It is closed
 since 2026-10-03**: all 258 extract, and the figures are in *Method 14*
 below.
+
+### Run over the hard cases: 4.0.2, 5.5.1 and 7.0.3 (2026-10-11)
+
+**Measured**, all three StuffIts, over the same subjects. Expander 4.0.2
+ran alone on System 6.0.8 (`tools/vmac/exp402opt.py`, Mini vMac). For 5.5.1
+and 7.0.3 the subject was handed to **each box's own StuffIt Expander, with
+its own Engine and translators or plug-ins**, assembled on Mac OS 9.2
+(`tools/vmac/compat9.py`, the `sitzip.py` installation). Every output was
+read back off the disk and compared with this engine's. The subjects were
+StuffIt Deluxe 2.0.1's own archives (`tools/run_sitopt.py`'s specimens,
+one per Optimizer and one per cipher, password `swordfish`), Compact Pro
+1.51's own encrypted archive (`cptmade/Made.cpt`, `ohsecret`), and one
+payload, `MacROT13.cpt` out of `mac-rot13.hqx`, sent three ways: as an
+mpack `message/partial` set of three files, as one unsplit mpack message,
+and as a three-part BinHex posting in one file with a mail header before
+each part.
+
+| subject | Expander 4.0.2 | Deluxe 5.5.1's Expander | Deluxe 7.0.3's Expander |
+|---|---|---|---|
+| plain 2.0.1 archive (control) | ✅ | ✅ | ✅ |
+| `Text 1` | ✅ silently, byte-identical to this engine's, which `run_sitopt.py` grades against 2.0.1's own | ❌ a 1-byte file, *"The integrity of the data fork of "Subject" could not be verified. Use this file with caution."* | ❌ *"(Format error). Error #17540"*, an empty file left |
+| `MacPaint 1`, `Sound 1`, `Photoshop 1` | ❌ nothing written, *"Unable to decompress some items due to use of optimizers."* | ❌ each data fork 1 byte, the same integrity alert (both forks for `MacPaint 1`); the untouched resource forks are right | ❌ error #17540; resource forks only |
+| `JPEG Lossy` | ❌ as above | ❌ 14,127 B where the file is 196,608, integrity alert | ❌ error #17540 |
+| `DES`, `NewDE™` | ❌ password prompted for and accepted, then the optimizer alert | ✅ both, byte-exact | ❌ `DES` prompts, then *"(The archive may contain damaged content). Error #17538"*; `NewDE` gets #17540 with no prompt |
+| `PassLock` | ❌ as `DES` | ❌ prompts for a password the format does not use, writes 546 B of wrong data, two integrity alerts | ❌ prompt, then #17538 |
+| `NewDEx`, `DESex` | ❌ as `DES` | ❌ prompt, then *"Some items were encrypted or compressed with an optimizer that the StuffIt Engine does not currently support. They have been skipped."* | ❌ prompt, then #17538 |
+| encrypted Compact Pro | ❌ no prompt: *"Unable to decompress this archive because the file is password protected."* | ❌ the same sentence, word for word; an empty folder | ❌ no prompt: *"(Unspecified StuffIt Engine internal error). Error #17999"*; one empty file |
+| `message/partial`, part 1 opened | ❌ nothing, no alert | ❌ *"Decoding was incomplete because there appears to be a missing segment."*, and an empty `MacROT13.cpt` | ❌ nothing, no alert |
+| `message/partial`, all three opened together | not tried | ❌ *"Unable to find the first part of the multiple-part archive "rot13.mime.02"."*, then error −43; nothing written | ❌ nothing, no alert |
+| the same payload as ONE mpack message | ❌ nothing, no alert | ✅ byte-exact, and on into the archive | ✅ byte-exact, under the alert #17538 |
+| the three-part BinHex posting | ✅ byte-exact, and on into the archive | ✅ byte-exact, and on into the archive | ❌ a 0-byte `MacROT13.cpt`, no alert |
+
+**So every StuffIt opens some of 2.0's archives and none opens most.** That
+includes 2.0's own successors. 4.0.2 handles exactly the `Text 1` case its
+Engine could already decode: Deluxe 3.5.1's Engine did the same, and 3.5.1
+remains the only one of the four not run here (TESTING.md, *The optimized
+StuffIt archives*). 5.5.1 is the one that decrypts the two plain ciphers, and
+the one that writes a wrong file for every Optimizer rather than refusing.
+**No StuffIt joins a `message/partial` set**: 5.5.1 recognises one and says
+so, the other two say nothing. The multipart BinHex claim in 4.0.2's Read Me
+holds; 7.0.3, the newest, is the one that fails it.
+
+**What this cannot see.** Each box's Deluxe APPLICATION, which may differ
+from its Expander for the 2.0 modules: 5.5's will not start on an assembled
+installation (`tools/vmac/README.md`, *What `--probe` measured*), and 7.0.3's
+was not driven. 4.0.2 *with* DropStuff with Expander Enhancer was not run
+either: neither the 4.0 nor the 3.5 add-on carries a MIME translator (*The
+paid box*), so only its BinHex translator could have changed a row, and
+4.0.2 already reads the posting without it. And one subject per row: the
+7.0.3 BinHex failure is one posting.
 
 ### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 
@@ -8437,7 +8496,8 @@ on `macburger-helper.hqx` — and stand as taken.
 
 - The application itself, extracted as described above: `Read Me`, `What's new
   in Expander`, and the alert strings in `StuffIt Expander 4.0.2`; its `SIZE`
-  and `MENU` resources, and its behaviour under `tools/vmac/expander.py`.
+  and `MENU` resources, its `open` 128 type list, and its behaviour under
+  `tools/vmac/expander.py` and `tools/vmac/exp402opt.py`.
 - [Gryphel Project — Stuffit Expander](https://www.gryphel.com/c/sw/archive/stuffexp/),
   for which versions run under Mini vMac and on which systems.
 - [Macintosh Garden — StuffIt Expander 4.0.2](https://macintoshgarden.org/apps/stuffit-expander-402),
@@ -8446,7 +8506,8 @@ on `macburger-helper.hqx` — and stand as taken.
   for StuffIt 5 archives being unreadable by 4.x.
 - StuffIt Deluxe 5.5.1 and 6.0/6.0.1 as downloaded here: the installers'
   archive listings, the translators' own resources, `Read Us First!` in each,
-  and StuffIt Expander 5.5's preference panes. 6.0's full installer travels
+  and StuffIt Expander 5.5's preference panes; that Expander's behaviour
+  under `tools/vmac/compat9.py`. 6.0's full installer travels
   inside the 6.0.1 updater download, which is why no 169 MB CD was needed.
 - StuffIt Deluxe 4.5 and StuffIt Expander 5.5 as downloaded here, for the
   system and processor floors each states, and for Expander 5.5's own list of
@@ -8457,7 +8518,7 @@ on `macburger-helper.hqx` — and stand as taken.
 - StuffIt Deluxe 7.0.3 Classic as downloaded here: the installer's archive
   listing, the plug-in bundles, `Documentation/StuffIt Deluxe Read Me!` and
   `StuffIt Deluxe Users Guide.pdf`, and StuffIt Expander 7.0.3's own
-  preference panes.
+  preference panes and behaviour under `tools/vmac/compat9.py`.
 - StuffIt Deluxe 3.5.1 as installed here: the image's own folder listings, its
   `Read Us First!` files (`StuffIt Deluxe Read Me`, `What's New in Deluxe
   3.5.1`, `User's Guide Addenda`, `What was installed(and where)`) and the

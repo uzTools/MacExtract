@@ -387,6 +387,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table took the two copies from 52 s and 46 s to 9 and 15, and the tick probe now bills the read-back
 - 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
 - 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
+- 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
 
 ---
 
@@ -25429,3 +25430,36 @@ application into a folder moved the archive's icon, the double-click landed
 on empty space, and the control — expecting a refusal — read "no
 MacExtract dialog" as one. A control that expects nothing to happen passes
 when nothing is clicked; the grade now has to SEE the alert.
+
+
+## 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
+
+**Six cells of README.md's comparison table rested on documentation or on
+nothing.** Four of them were measured on 2026-10-11: the three StuffIt
+columns of the StuffIt 2.0 row, and the 5.5.1 and 7.0.3 encrypted Compact
+Pro cells. The two others got the best reading available: the disk-image
+cell by reading 4.0.2's own files, and the mail row by running all three
+StuffIts. Results: FORMATS.md, *Run over the hard cases*.
+
+**A box is graded by its own Expander, not by its Deluxe application.** It
+is what the box hands an archive to, through the same Engine and the same
+translators. It also installs from Linux (`sitzip.py`), whereas 5.5's
+Deluxe will not start on an assembled installation. The cost is said where
+the result is: an application with modules of its own could differ for the
+2.0 Optimizers, and that is not measured.
+
+**The mail row went back to "several mail messages", with the cells
+qualified.** 6f140b9 had narrowed it to `message/partial`, so that 4.0.2's
+documented multipart BinHex would not read as 🔴. The run made a narrower
+row unnecessary. Two StuffIts read the BinHex posting and the newest does
+not, and none joins a MIME set, so "BinHex postings only, not MIME" says
+what each one does.
+
+**Transferable.** Running all three showed what neither the documentation
+nor the line of versions predicted. Each StuffIt fails differently, and
+none of them is the same set as an older one plus additions. 4.0.2
+refuses what 5.5.1 decrypts. 5.5.1 hands back damaged files where 4.0.2
+and 7.0.3 refuse. 7.0.3, the newest, is the only one that loses a
+multipart BinHex posting. A column filled in from "a later version does
+everything the earlier one did" would have been wrong in both rows.
+

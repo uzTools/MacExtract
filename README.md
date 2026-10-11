@@ -144,9 +144,9 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt sets split across floppies | ✅ with the add-on, System 7 only | ✅ | ✅ | ✅ |
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
-| A MIME message split across several files (`message/partial`) | 🔴 | 🔴 | 🔴 | ✅ |
+| An archive that arrived as several mail messages | BinHex postings only, not MIME | BinHex postings only, not MIME | 🔴 | ✅ |
 | Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
-| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | not tested here *** | not tested here | not tested here | ✅*** |
+| Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 one of the ten *** | 🔴 two of the ten | 🔴 none | ✅*** |
 | Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
 | What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
@@ -170,10 +170,9 @@ seen by running the older Expander 3.5.2 over a real MacZip archive; the three
 
 \*\*\* **Everything StuffIt Deluxe 2.0 wrote with what was in its box** —
 five Optimizers and five ciphers — each checked against an archive 2.0.1
-itself made. None of the three StuffIts in the table was run on these
-archives. The nearest measurement is Deluxe 3.5.1's StuffIt Engine, which
-opened a `Text 1` archive and refused a `MacPaint 1` one — *"Please use
-StuffIt Deluxe instead."*
+itself made. All three StuffIts were run on the same archives. Expander 4.0.2
+opens only the `Text 1` one; 5.5.1 decrypts two of the ciphers and, for every
+Optimizer, hands back a damaged file with a warning; 7.0.3 opens none.
 
 **Speed is a wash.** Both were booted on the same 7 MHz Mac Plus, handed the
 same archives on the same disk, and timed by the same instrument:
