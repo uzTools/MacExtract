@@ -117,7 +117,8 @@ cannot open RAR files."*, not something that looks like a damaged download.
 
 Three yardsticks, one per machine you might be sitting at. **StuffIt Expander
 4.0.2** (1996) is the free one, and the newest StuffIt that still runs on
-System 6. **StuffIt Deluxe 5.5.1** (1999) is the high-water mark for a 68k
+System 6; it is counted without its paid add-on, which needed System 7.
+**StuffIt Deluxe 5.5.1** (1999) is the high-water mark for a 68k
 Mac: Aladdin dropped 68k support at 6.0 and said so — *"For users of 68K Macs
 that wish to have StuffIt technology, simply download any 5.5 version"* — and
 5.5 reads more Macintosh formats than any StuffIt before or after it.
@@ -130,12 +131,12 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on, System 7 only | ✅ | ✅ | ✅ |
-| zip's rare Reduce method, which no Mac program wrote | not tested | ✅ | 🔴 wrong bytes | 🔴 |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu` | 🔴 | ✅ | ✅ | ✅ |
+| zip's rare Reduce method, which no Mac program wrote | 🔴 | ✅ | 🔴 wrong bytes | 🔴 |
 | Type and creator in a zip made by MacZip | 🔴 * | 🔴 * | 🔴 * | ✅ |
-| StuffIt SpaceSaver | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
+| StuffIt SpaceSaver | 🔴 | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |
-| AppleLink packages (`.pkg`) | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
+| AppleLink packages (`.pkg`) | 🔴 | ✅ | 🔴 | ✅ |
 | `.lzh` / `.lha` | 🔴 | ✅ | ✅ | ✅ |
 | DiskDoubler (`.dd`) | 🔴 | ✅ | 🔴 | ✅ |
 | Now Compress and Alysis SuperDisk! | 🔴 | 🔴 | 🔴 | ✅ |
@@ -143,14 +144,14 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | Private File (`.pf`) | 🔴 | ✅ | ✅ | ✅ |
 | Self-mounting disk images | 🔴 | ✅ | ✅ | 🔴 |
 | A Mac file mailed as a MIME attachment | 🔴 | ✅ | ✅ | ✅ |
-| StuffIt sets split across floppies | ✅ with the add-on, System 7 only | ✅ | ✅ | ✅ |
+| StuffIt sets split across floppies | 🔴 | ✅ | ✅ | ✅ |
 | Compact Pro, zip or `.001` sets split across floppies | 🔴 | 🔴 | 🔴 | ✅ |
 | An archive that arrived as several mail messages | BinHex postings only, not MIME | BinHex postings only, not MIME | 🔴 | ✅ |
 | Encrypted StuffIt archives | ✅ | ✅ | ✅ | ✅ |
 | Anything StuffIt Deluxe 2.0 itself wrote — its five Optimizers, all five of its ciphers | 🔴 one of the ten ** | 🔴 two of the ten | 🔴 none | ✅** |
 | Encrypted Compact Pro archives | 🔴 | 🔴 | 🔴 | ✅ |
 | The note somebody typed into an archive | ✅ | ✅ | ✅ | ✅ |
-| What you install | an application, an extension and the add-on | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
+| What you install | an application and an extension | an installer, seven applications, the StuffIt Engine, Magic Menu and seventeen translators | an installer, twelve applications, CarbonLib and twenty-three format plug-ins | one application |
 | Source | free, closed | paid, closed | paid, closed | free, open (LGPL) |
 
 \* **A zip made by MacZip carries the Finder's type and creator, and
