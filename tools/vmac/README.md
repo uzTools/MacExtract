@@ -537,6 +537,42 @@ it relies on that no other harness here uses: **Tab selects the first
 icon in a Finder window by name**, which is how the installer on a disk
 whose contents are unknown gets opened.
 
+### The same boxes over the hard cases — `compat9.py`
+
+    compat9.py --assemble 55 -o <dir>     # or 703; sitzip's installation
+    compat9.py --boot -o <dir>            # detached; drive with os9mouse.Mac(attach=True)
+    compat9.py --stop -o <dir>            # kills the pid --boot wrote, nothing else
+    compat9.py --read -o <dir>            # every file on the transfer volume, both forks
+
+The results are FORMATS.md's, *Run over the hard cases*. The subjects are
+2.0.1's archives, an encrypted Compact Pro archive, an mpack set and a
+BinHex posting. **Each subject sits in a folder of its own** because most of
+them expand to the same name, and **each has creator `SITx`**, which is both
+Expanders' signature. The Finder then opens a subject with Tab and Cmd-Down
+and hands it over as an `odoc`: no Expand dialog, no Navigation Services,
+no pointer, on either box. A fresh transfer volume needed no desktop
+rebuild for this; the binding was there on the first subject.
+
+It is driven by hand, one frame at a time, and three things made that
+necessary:
+
+- **Close only the subject's folder window.** The volume window stays open
+  behind it, so typing the volume's name there selects `StuffIt Expander`,
+  and Cmd-Down then launches it with no document.
+- **Look before typing a password.** 7.0.3 asks for one on four of the five
+  2.0 ciphers and not on `NewDE`. There the password went into an error
+  alert and the Return dismissed it, which was luck: the same keystrokes
+  into the Finder would have renamed the selected icon.
+- **An archive that is refused still leaves files behind.** 7.0.3 leaves an
+  empty or resource-only stub for every entry it refuses, and 5.5's MIME
+  reader leaves an empty file. So the verdict is the bytes `--read`
+  reports, never the icon in the frame.
+
+**What it cannot see.** The Deluxe APPLICATIONS (5.5's will not start on
+this installation, *What `--probe` measured* below, and 7.0.3's was not
+driven); why a reader refused, beyond its own words; and more than one
+subject per question.
+
 ## The archive comment, and bit 5 — `sitcomment.py`
 
     tools/vmac/sitcomment.py --read              no emulator
@@ -4104,3 +4140,32 @@ was created from the BinHex header and then left empty is consistent
 with "aborted at the bad character" and with "decoded to a buffer and
 refused to commit it". Both are a line test's opposite, which is all
 the question needed; neither is evidence of the other.
+
+## StuffIt Expander 4.0.2 over 2.0.1's archives — `exp402opt.py`
+
+    tools/vmac/exp402opt.py -o <shots> --keep            # every subject
+    tools/vmac/exp402opt.py -o <shots> DES MimePartial   # some
+
+This is `expander.py`'s machine (System 6.0.8, Expander launched at boot)
+with nothing timed, so it runs on `mv-4M`. It boots once per subject.
+Subjects:
+
+- one 2.0.1 archive per Optimizer and per cipher;
+- Compact Pro's own encrypted archive (`CptCrypt`);
+- `compat9.py`'s three text subjects, the mpack set going onto the
+  volume whole.
+
+Each run selects the subject by name and presses Expand. When the subject
+has a password it types it, presses Return once for whatever alert is up,
+quits, and reads every new file off the image with `hcopy -m`. Results:
+FORMATS.md, *Run over the hard cases*.
+
+**Look at `-3-after-expand`, `-3b-typed` and `-3c-after-password`
+together.** A refusal and a password typed into nothing leave the same
+empty volume, and only the frames tell them apart: all five ciphers here
+show the prompt, then the masked password, then the refusal.
+
+**What it cannot see.** The alert TEXT, which is read off the frames.
+4.0.2 with DropStuff with Expander Enhancer, which this machine does not
+have installed. And a wrong password, which it never types.
+
