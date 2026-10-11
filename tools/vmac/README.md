@@ -540,11 +540,13 @@ whose contents are unknown gets opened.
 ### The same boxes over the hard cases — `compat9.py`
 
     compat9.py --assemble 55 -o <dir>     # or 703; sitzip's installation
+    compat9.py --assemble 55 --set zip -o <dir>   # the zip-method subjects instead
     compat9.py --boot -o <dir>            # detached; drive with os9mouse.Mac(attach=True)
     compat9.py --stop -o <dir>            # kills the pid --boot wrote, nothing else
     compat9.py --read -o <dir>            # every file on the transfer volume, both forks
 
-The results are FORMATS.md's, *Run over the hard cases*. The subjects are
+The results are FORMATS.md's, *Run over the hard cases* and, for
+`--set zip`, *Zip methods in the three boxes*. The subjects are
 2.0.1's archives, an encrypted Compact Pro archive, an mpack set and a
 BinHex posting. **Each subject sits in a folder of its own** because most of
 them expand to the same name, and **each has creator `SITx`**, which is both

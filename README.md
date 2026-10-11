@@ -130,7 +130,8 @@ is PowerPC-only, so no 68k Mac runs it at all.
 | StuffIt, Compact Pro, BinHex, MacBinary | ✅ | ✅ | ✅ | ✅ |
 | StuffIt 5 archives | 🔴 | ✅ | ✅ | ✅ |
 | StuffIt X (`.sitx`) | 🔴 | 🔴 | ✅ | 🔴 |
-| zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on, System 7 only | ✅ | ✅ | ✅ except zip's Reduce, which no Mac program wrote |
+| zip, gzip, tar, `.Z`, `.arc`, `.uu` | ✅ with the paid add-on, System 7 only | ✅ | ✅ | ✅ |
+| zip's rare Reduce method, which no Mac program wrote | not tested | ✅ | 🔴 wrong bytes | 🔴 |
 | Type and creator in a zip made by MacZip | 🔴 * | 🔴 * | 🔴 * | ✅ |
 | StuffIt SpaceSaver | ✅ with the add-on, System 7 only | ✅ | 🔴 | ✅ |
 | PackIt (`.pit`) | 🔴 | ✅ | 🔴 | ✅ |

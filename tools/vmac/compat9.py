@@ -9,6 +9,7 @@ OS 9.2 guest `sitzip.py` assembles them on (FORMATS.md, *Compared with
 StuffIt Expander 4.0.2*, has the results):
 
     compat9.py --assemble 55 -o <dir>     boot + transfer volume; no emulator
+    compat9.py --assemble 55 --set zip -o <dir>   the zip-method subjects
     compat9.py --boot -o <dir>            start the guest, detached
     # ... drive it with os9mouse.Mac(attach=True), looking at each frame
     compat9.py --stop -o <dir>            kill the pid --boot recorded
@@ -62,8 +63,18 @@ def mb_forks(path):
     return b[65:69].decode("mac-roman"), b[128:128 + dl], b[p:p + rl]
 
 
+# zip methods for README.md's zip row (FORMATS.md, *Zip methods in the
+# three boxes*): two wild Reduce archives, one Implode, a deflate control.
+ZIPS = (("z1", "123MACRO.ZIP"),               # 16 Reduce (method 5)
+        ("z2", "COVER.ZIP"),                  # Shrink + Reduce
+        ("z3", "4acalc.zip"),                 # Implode
+        ("z0", "synth-exo-zip-deflate.zip"))  # deflate, the control
+
+
 # (folder, name on the volume, host file, type, password or None)
-def subjects():
+def subjects(which="hard"):
+    if which == "zip":
+        return [(f, n, os.path.join(SUBJ, n), "ZIP ", None) for f, n in ZIPS]
     s = []
     for folder, rel, pw in (
             ("c0", "make2/Plain.sit.bin", None),
@@ -90,11 +101,11 @@ def subjects():
     return s
 
 
-def assemble(ver, outdir):
+def assemble(ver, outdir, which="hard"):
     boot, xfer = sitzip.assemble(ver, outdir)
     v = sitzip.Vol(xfer, partition=1)
     try:
-        for folder, name, host, kind, _pw in subjects():
+        for folder, name, host, kind, _pw in subjects(which):
             v.mkdir(folder)
             if kind == "macbin":
                 t, d, r = mb_forks(host)
@@ -103,7 +114,7 @@ def assemble(ver, outdir):
             v.put(macbinary(name, t, "SITx", d, r), "%s:%s" % (folder, name))
     finally:
         v.close()
-    print("compat9: %d subjects on %s" % (len(subjects()), xfer))
+    print("compat9: %d subjects on %s" % (len(subjects(which)), xfer))
 
 
 def boot(outdir):
@@ -154,10 +165,12 @@ def main():
     p.add_argument("--boot", action="store_true")
     p.add_argument("--stop", action="store_true")
     p.add_argument("--read", action="store_true")
+    p.add_argument("--set", choices=("hard", "zip"), default="hard",
+                   help="which subjects --assemble puts on the volume")
     p.add_argument("-o", "--out", required=True)
     a = p.parse_args()
     if a.assemble:
-        assemble(a.assemble, a.out)
+        assemble(a.assemble, a.out, a.set)
     elif a.boot:
         boot(a.out)
     elif a.stop:

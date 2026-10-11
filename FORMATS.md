@@ -8406,6 +8406,33 @@ paid box*), so only its BinHex translator could have changed a row, and
 4.0.2 already reads the posting without it. And one subject per row: the
 7.0.3 BinHex failure is one posting.
 
+### Zip methods in the three boxes (2026-10-11)
+
+**Measured** on 5.5.1's and 7.0.3's Expanders with `compat9.py --set zip`,
+the same installation as above; every output read back off the disk and
+checked against the archive's stored CRC-32, with Expander's CRLF→CR
+conversion of `TEXT` files undone first. Subjects: two wild Reduce archives
+from the Shrink sweep (*Shrink*, above) — `123MACRO.ZIP`, 16 entries all
+method 5, and `COVER.ZIP`, one Shrink entry and one method 5 — plus
+`4acalc.zip` (Implode) and `synth-exo-zip-deflate.zip` as the control.
+
+| subject | Deluxe 5.5.1's Expander | Deluxe 7.0.3's Expander |
+|---|---|---|
+| Reduce, `123MACRO.ZIP` | ✅ 16 of 16, no alert | ❌ *"(The archive may contain damaged content). Error #17538"*, then *"unexpectedly quit ... error of type 2"*: one entry written with 2,033 of its 2,180 bytes wrong, the other 15 never written |
+| Shrink + Reduce, `COVER.ZIP` | ✅ 2 of 2 | ❌ the Shrink entry right, the Reduce entry wrong (2,167 of 2,304 bytes), alert #17538 |
+| Implode, `4acalc.zip` | ✅ 3 of 3 | ✅ 3 of 3 |
+| deflate (control) | ✅ | ✅ |
+
+**Both boxes' binaries claim Reduce, and only one decodes it.** 7.0.3's
+`zip` plug-in carries a class `algorithm::zip::reduce_decompressor`; 5.5.1's
+Engine, and Deluxe 3.5.1's `UnZip Translator`, carry *"Only stored, shrunk,
+reduced and deflated formats are supported."* — and 5.5.1 then extracts
+Implode, which that sentence leaves out. Neither string predicted its
+row. **4.0.2 is not measured**: it reads zip only through DropStuff with
+Expander Enhancer, which is not on this machine; the 3.5 translator's
+sentence is the only evidence for that generation, and it is a claim.
+Only method 5 was run: no wild method 2–4 entry is in the cache.
+
 ### Timed on the same Mac Plus (2026-08-29; two rows re-run 2026-09-20)
 
 Both applications booted on Mini vMac `mv-4M-1x` — authentic 7 MHz, 4 MB,

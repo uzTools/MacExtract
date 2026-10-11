@@ -388,6 +388,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
 - 2026-10-11 (where the stubs can live) — a visible folder beside MacExtract, provided the companion writes each stub's Desktop entry and each stub carries a bundle under its own creator
 - 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
+- 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
 
 ---
 
@@ -25463,3 +25464,23 @@ and 7.0.3 refuse. 7.0.3, the newest, is the only one that loses a
 multipart BinHex posting. A column filled in from "a later version does
 everything the earlier one did" would have been wrong in both rows.
 
+## 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
+
+**README.md's zip row ticked all three StuffIts and qualified only
+MacExtract for Reduce**, which OPEN_ITEMS.md puts out of scope. Nobody had
+asked whether any StuffIt read Reduce. Two of the three boxes were run on
+two wild Reduce archives; the results are in FORMATS.md, *Zip methods in
+the three boxes*. 5.5.1 decodes Reduce byte for byte. 7.0.3 writes wrong
+bytes and then crashes.
+
+**The README gained a Reduce row rather than three qualified cells.** One
+row with a 🔴 in MacExtract's column is easier to read than "except
+Reduce" in two columns, and it keeps the zip row about zip.
+
+**Transferable.** Both binaries carry a string naming the method:
+7.0.3 a `reduce_decompressor` class, 5.5.1 an error message listing what
+it supports. That message omits Implode, which 5.5.1 then decodes.
+A capability string in a binary is a claim, like a Read Me, and it
+failed in both directions here. This is why 4.0.2's cell says "not
+tested" and not ✅, even though its add-on's translator carries the
+same sentence as 5.5.1.
