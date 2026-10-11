@@ -25424,9 +25424,17 @@ dialog; *refused* is the Finder's alert, identified positively:
 
 **Consequence.** The companion writes, per creator, a visible stub in a
 folder beside MacExtract whose bundle is filed under that creator, and
+| `MacExtract Helpers:`, `--stub-bundle --doc-icon 'SIT!'` | deleted, rebuilt at boot | handed, and **the archive drawn with the stub's icon** |
 writes its `APPL` entry; a rebuild then finds the stubs by their bundles,
-so nothing has to be re-run. Still open: which application wins when
-StuffIt is on the same disk, and how a stub hands the document on — the
+so nothing has to be re-run. **A stub can also give the archives their
+icon**: with an `FREF` for document type `SIT!` and an `ICN#` of its own
+(MacExtract's, inverted, for the test) the `SIT!` archive is drawn with it,
+where every earlier run drew a blank document — the `'****'` `FREF` the
+stubs inherit from MacExtract gives no icon. The frame cannot say whether
+the archive was also selected (the Finder draws selection inverted and
+its label is hidden); either way the artwork is the stub's. Icons are
+per TYPE, so a stub claims an icon for each type its creator writes.
+Still open: which application wins when StuffIt is on the same disk, and how a stub hands the document on — the
 stand-in was a whole application, and no stub exists yet.
 
 **Transferable.** Two runs were invalid and one of them passed: moving the

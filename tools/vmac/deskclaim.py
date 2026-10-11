@@ -13,6 +13,7 @@ whether the launched application is handed the FILE, or merely started.
         --app-creator C       retag the application FILE's creator (its BNDL
                               is untouched)
         --stub-bundle         ...and its BNDL owner and signature resource
+        --doc-icon TYPE       ...and an FREF and icon for document type TYPE
         --app-folder NAME     put the application in a folder never opened
                               (moves the archive's icon: --archive-at X,Y)
         --invisible           set the application's invisible bit
@@ -287,7 +288,24 @@ def hfs_get(img, path, out):
         hfs.close()
 
 
-def stub_bundle(macbin, creator):
+def bundle_add(bndl, rtype, local, rid):
+    """Append one (local ID -> resource ID) pair under `rtype` in a BNDL.
+    Source: Inside Macintosh: Macintosh Toolbox Essentials, Finder
+    Interface, the bundle resource — owner, owner ID, type count - 1, then
+    per type: the type, its pair count - 1 and the pairs."""
+    n = struct.unpack(">H", bndl[6:8])[0] + 1
+    p = 8
+    for _ in range(n):
+        t = bndl[p:p + 4]
+        c = struct.unpack(">H", bndl[p + 4:p + 6])[0] + 1
+        if t == rtype:
+            return (bndl[:p + 4] + struct.pack(">H", c) + bndl[p + 6:p + 6 + 4 * c]
+                    + struct.pack(">hh", local, rid) + bndl[p + 6 + 4 * c:])
+        p += 6 + 4 * c
+    raise SystemExit(f"deskclaim: the BNDL maps no {rtype!r}")
+
+
+def stub_bundle(macbin, creator, doc_type=None):
     """The application as a stub for `creator` would be: file creator,
     BNDL owner and signature resource all `creator`, so the Finder files
     its bundle under the creator it claims — which is what a desktop
@@ -302,6 +320,19 @@ def stub_bundle(macbin, creator):
         if t == sig and rid == 0:
             t = creator
         out.append((t, rid, a, n, dd))
+    if doc_type:
+        # A document icon for `doc_type`: MacExtract's own ICN# with the
+        # icon INVERTED and the mask kept, so it cannot be mistaken for
+        # the application's icon or for any other on the volume.
+        icn = next(dd for t, rid, a, n, dd in out if t == b"ICN#" and rid == 128)
+        inv = bytes(b ^ 0xFF for b in icn[:128]) + icn[128:]
+        out += [(b"ICN#", 200, 0x20, None, inv),
+                (b"FREF", 200, 0x20, None, doc_type + b"\0\x07\0")]
+        for k, (t, rid, a, n, dd) in enumerate(out):
+            if t == b"BNDL" and dd[:4] == creator:
+                dd = bundle_add(dd, b"ICN#", 7, 200)
+                dd = bundle_add(dd, b"FREF", 7, 200)
+                out[k] = (t, rid, a, n, dd)
     h = bytearray(h)
     h[69:73] = creator
     return macbin_join(bytes(h), d, rsrc_write(out, fattr))
@@ -347,6 +378,11 @@ def main():
     ap.add_argument("--stub-bundle", action="store_true",
                     help="with --app-creator, retag the BNDL owner and the "
                          "signature resource too, as a stub would carry them")
+    ap.add_argument("--doc-icon", metavar="TYPE",
+                    help="with --stub-bundle, declare document type TYPE in "
+                         "the stub's bundle with an icon of its own (the "
+                         "application's, inverted): does a stub give the "
+                         "archives their icon?")
     ap.add_argument("--app-folder",
                     help="put the application in this folder at the root, "
                          "which the run never opens")
@@ -385,8 +421,10 @@ def main():
         app = args.app
         if args.stub_bundle:
             app = os.path.join(work, "app.bin")
-            open(app, "wb").write(stub_bundle(open(args.app, "rb").read(),
-                                              args.app_creator.encode("mac_roman")))
+            open(app, "wb").write(stub_bundle(
+                open(args.app, "rb").read(),
+                args.app_creator.encode("mac_roman"),
+                args.doc_icon.encode("mac_roman") if args.doc_icon else None))
         boot = os.path.join(work, "boot-claim.hfv")
         extra = ()
         cmd = [sys.executable, os.path.join(HERE, "mkboot.py"), stock, app,

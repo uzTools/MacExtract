@@ -3193,7 +3193,8 @@ Double-clicks a `SIT!` archive in the Finder, after optionally adding a
 `SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
 bundle with `--bundle`), retagging the application file's creator, moving
 it into a folder the run never opens, giving it a bundle filed under its
-new creator (`--stub-bundle`, the shape a stub would have), deleting the
+new creator (`--stub-bundle`, the shape a stub would have; `--doc-icon
+TYPE` adds a document icon for TYPE to it), deleting the
 `Desktop` file so the Finder rebuilds it at boot (`--no-desktop`), or
 putting the archive on a second floppy. **It grades the DIALOG in
 `claim-3-launched.png`, not the volume**: a launch that was not handed the
