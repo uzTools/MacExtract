@@ -168,6 +168,13 @@ TIERS = {
 # 130,556 and 654,844 B, against this control. So TIERS is a machine
 # measurement again, and not a derivation.
 TIERS_CONTROL = 208016     # build/mac-resident, CODE + A5, 2026-10-09
+# **What this control cannot see: the autotest harness.** TIERS was read
+# on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
+# build/mac-resident has no harness in it, so harness growth lowers what a
+# sweep is granted and moves nothing --check-saved compares. It has grown
+# once since the re-take: the read-back CRC's 1 KB table, 2026-10-10. No
+# tally moves (measured 2026-10-11: every TIERS budget lowered by 1,100,
+# 4,000 and 8,000 B gives the same three shipped tallies by name).
 
 # What the MACHINE measured: each budget plus the control it was read
 # against, which a change to the application cannot move — so moving

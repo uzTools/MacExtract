@@ -384,7 +384,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-10 (the installer's own key) — the Shortcut updater wanted the product it updates, not a destination; with a stand-in it extracted, its key came off its memory, and the two stray ids were InstallerMaker's
 - 2026-10-10 (the six repairs that were a 16-bit check) — a CRC-16 cannot adjudicate a search of 592,576 candidates; the stream's own end symbol and the fork's own map could
 - 2026-10-10 (the application that was asked) — 3.5.1 cannot use an Encryptor module, measured by asking it for one; it had been launchable for twelve days
-- 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table halved it and the tick probe now bills the read-back
+- 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table took the two copies from 52 s and 46 s to 9 and 15, and the tick probe now bills the read-back
 - 2026-10-10 (the double-click that goes by the application's creator) — a Desktop-file entry launches MacExtract for a SIT! archive but hands it nothing; retagging the application's own creator hands it the file, with no Desktop edit at all
 
 ---
@@ -25301,7 +25301,7 @@ come out the other way.
   nothing to protect. The lane now asserts the 4, so a 3.x archive that
   says otherwise fails there first.
 
-## 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table halved it and the tick probe now bills the read-back
+## 2026-10-10 (the clock that was timing its own check) — the 1x wall-clock table was mostly the harness's bit-at-a-time CRC; a table took the two copies from 52 s and 46 s to 9 and 15, and the tick probe now bills the read-back
 
 **Claim (measured).** On the 7 MHz tier, the autotest build's read-back
 was 92 % and 83 % of the two copy-only fixtures' extract wall, and

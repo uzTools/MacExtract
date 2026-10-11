@@ -249,7 +249,7 @@ above is the only one. On a 1 MB Mac Plus, the slowest machine supported:
 | Archive | Time |
 |---|---|
 | A few KB, any format | seconds |
-| 300 KB StuffIt or BinHex | about a minute |
+| A few hundred KB, most formats | 1–2 minutes |
 | 150 KB StuffIt 5 | 6 minutes |
 | 200 KB StuffIt 5 unpacking to 640 KB, worst case measured | 12 minutes |
 
