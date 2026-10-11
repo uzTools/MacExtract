@@ -2826,9 +2826,9 @@ build — on 2026-09-22, all three: 71/71 at the 1 MB floor target, 67/71
 on a 512 KB Macintosh under System 3.0 and 64/71 on the same machine
 under System 6.0.8, the same four and seven fixtures by name. Since
 2026-10-09 it asserts **72/72, 68/72 and 63/72 BY NAME**, which the
-resident build returned on all three machines that evening (73/73, 69/73
-and 64/73 since `4alnch11.zip` joined on 2026-10-10: the lane passes it,
-and the resident build has not been run on it), refusing the
+resident build returned on all three machines that evening (74/74, 70/74
+and 65/74 with `4alnch11.zip` and `synth-sqp-clear.pkg` in, since
+2026-10-11: the lane passes both, and the resident build has run neither), refusing the
 same four and nine fixtures the lane names, at budgets re-taken in the
 same session (634,364, 205,476 and 110,076 B; `TIERS_MACHINE` holds each
 plus the control it was read against). All three budgets were re-taken twice on 2026-09-27 — +4,746 B
@@ -2839,9 +2839,9 @@ assertable the same day, when its budget was re-taken. A tally that moves is
 a memory regression or a memory win; either way the names in `EXPECT`
 are meant to be changed deliberately.
 
-The shipped lane asserts all three tiers a machine has run — **73/73 at
-the floor target, 71/73 at System 3.0 / 512 KB and 67/73 at System 6.0.8
-/ 512 KB**, the 72 on 2026-10-09 and `4alnch11.zip` on 2026-10-10 — and it asserts the REFUSED FIXTURES BY NAME rather than a
+The shipped lane asserts all three tiers a machine has run — **74/74 at
+the floor target, 72/74 at System 3.0 / 512 KB and 68/74 at System 6.0.8
+/ 512 KB**, the 72 on 2026-10-09, `4alnch11.zip` on 2026-10-10 and `synth-sqp-clear.pkg` on 2026-10-11 — and it asserts the REFUSED FIXTURES BY NAME rather than a
 tally, because a tier that refuses two different fixtures and still
 counts 69 is exactly what a count cannot fail on. The third joined
 2026-09-27, and it is the one this lane PREDICTED before any machine ran

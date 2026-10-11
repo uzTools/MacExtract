@@ -155,6 +155,12 @@ shrink-wild-titanic.zip                    # 172972 B
 # trees both; 22,730 B peak on Linux (FORMATS.md, *Implode*).
 4alnch11.zip                               # 41702 B
 
+# AppleLink package joined 2026-10-11. No real package is committable, so
+# this is tools/synth_sqp.py --case clear: the LZW table filled and cleared
+# twice at 13-bit codes, which no real package reaches, and the format's
+# heaviest allocation, 41,256 B on Linux (FORMATS.md, *AppleLink packages*).
+synth-sqp-clear.pkg                        # 28667 B
+
 # ARC and uuencode (M13, 2026-08-15). Neither format occurs in the
 # corpus, so both are generated: tools/synth_arc.py and tools/synth_uu.py.
 # The ARC one holds all nine implemented methods in one archive; the uu

@@ -10,8 +10,9 @@ DECISIONS.md 2026-09-04, *the field nobody assigned*). The engine and Linux
 CLI were never affected by anything in this file. The Retro68 Mac shell runs
 and extracts byte-exact on every system the project claims:
 
-The sample is **73 fixtures** since 2026-10-10, when `4alnch11.zip`
-joined it — the first Implode archive a Macintosh has run; it was 72 from
+The sample is **74 fixtures** since 2026-10-11, when `synth-sqp-clear.pkg` joined it
+— the first AppleLink package in it — and `4alnch11.zip`, the first Implode
+archive a Macintosh has run, the day before; it was 72 from
 2026-10-09, when `shrink-wild-titanic.zip` joined it. **Every Mini vMac
 tier has run the 72 on the v0.37.0 source**: both
 1 MB floors and both 512 KB machines on 2026-10-09 (the `dist/` binary less
@@ -23,17 +24,19 @@ first-entry error, no image wanted after its release and no failed keep on
 any of the 238 runs. **`4alnch11.zip` ran on all seven on 2026-10-10**,
 the same source, one boot each, passing at 22,740 B of peak heap (22,730
 on Linux), and on Mac OS 9.2 on its own, all four files byte-exact
-(`os9.py --launch`; it is not in `os9sample.txt`).
+(`os9.py --launch`; it is not in `os9sample.txt`). **`synth-sqp-clear.pkg` did the
+same on 2026-10-11**, graded against its committed manifest, at 41,274 B
+(41,256 on Linux).
 
 | tier | result |
 |---|---|
-| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **73/73**, 2026-10-10 |
-| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **73/73**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10 |
-| System 3.0, **512 KB** Macintosh 512Ke | **71/73**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09; the resident build has not run `4alnch11.zip`): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
-| System 6.0.8, 4 MB Mac Plus | **73/73**, 2026-10-10 |
-| System 6.0.8, **1 MB** — the RAM floor | **73/73**: the 72 on 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid), `4alnch11.zip` 2026-10-10; no memory-budget refusals remain |
-| System 6.0.8, **512 KB** Macintosh 512Ke | **67/73**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09; not run on `4alnch11.zip`) |
-| System 7.0.1, 4 MB | **73/73**, 2026-10-10 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
+| System 3.0 / Finder 5.1, 4 MB Mac Plus (Mini vMac, a true 68000) | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 |
+| System 3.0 / Finder 5.1, **1 MB** — the oldest system, at the RAM floor | **74/74**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 |
+| System 3.0, **512 KB** Macintosh 512Ke | **72/74**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — two per-entry memory refusals, not failures, the two `run_tiers.py --shipped` named. With every decoder resident it is 68/72, the four the resident lane names (2026-10-09; the resident build has run neither of the two): the overlays are what recovered the other two (FORMATS.md, *Overlays*) |
+| System 6.0.8, 4 MB Mac Plus | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 |
+| System 6.0.8, **1 MB** — the RAM floor | **74/74**: the 72 on 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid), `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11; no memory-budget refusals remain |
+| System 6.0.8, **512 KB** Macintosh 512Ke | **68/74**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09; not run on the two newest) |
+| System 7.0.1, 4 MB | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-10-10, through the interactive application (`--launch`, byte-identical to `dist/`) and the autotest build alike |
 
 The heaviest 4 MB allocations are the same to the byte on all three 4 MB
@@ -48,7 +51,8 @@ against this engine's Linux output, which its own suite adjudicates
 --fixture`):
 
 - **AppleLink `.pkg`**: all eight real packages byte-exact on **all seven
-  Mini vMac tiers** (2026-10-10), 8,490–41,274 B of peak heap; all
+  Mini vMac tiers** (2026-10-10), 8,490–41,274 B of peak heap; `synth-sqp-clear.pkg`,
+  a synthesised one, is in the sample since 2026-10-11; all
   fourteen had run on System 6.0.8 at 4 MB and 1 MB on 2026-10-05/06
   (FORMATS.md, *Run on a Macintosh*).
 - **Self-extracting zip**: the five ZipIt `.sea` specimens on all seven

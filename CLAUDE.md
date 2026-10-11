@@ -18,12 +18,13 @@ a copy of it. The engine passes a **959-fixture** differential suite against
 `unar` and, where `unar` fails, `macunpack`, plus 9,590 robustness variants.
 The Macintosh application extracts byte-exact on **System 3.0 and System
 6.0.8, each at 4 MB and at the 1 MB RAM floor, and on System 7.0.1** —
-**73/73** sampled fixtures on all five, on the v0.37.0 source (the floors
-2026-10-09, the 4 MB tiers and System 7.0.1 2026-10-10, and the 73rd,
-`4alnch11.zip` — Implode — on all seven tiers 2026-10-10) — and on Mac OS
+**74/74** sampled fixtures on all five, on the v0.37.0 source (the floors
+2026-10-09, the 4 MB tiers and System 7.0.1 2026-10-10; the 73rd,
+`4alnch11.zip` — Implode — on all seven tiers 2026-10-10, and the 74th,
+`synth-sqp-clear.pkg` — an AppleLink package — 2026-10-11) — and on Mac OS
 9.2 under QEMU — **22/22** there, 2026-10-10, on the same source; HFS+
-as a destination is an earlier run's (FORMATS.md, *Onto HFS+*). The **512 KB** machine is **71/73** under System
-3.0 and **67/73** under System 6.0.8 (2026-10-09, the 73rd 2026-10-10). The
+as a destination is an earlier run's (FORMATS.md, *Onto HFS+*). The **512 KB** machine is **72/74** under System
+3.0 and **68/74** under System 6.0.8 (2026-10-09, the two newest 2026-10-10/11). The
 same 22/22 on 2026-09-22 was the resident build; the 21/21 before it, on 2026-09-04,
 is the run that found a `UncOptions` field the shell had never assigned,
 which had bombed three formats there, and gained Now Compress (DECISIONS.md

@@ -20,13 +20,13 @@ paths, not just a different splash screen. Run the System 7 tier at 4 MB.
 
 **512 KB machines.** `--emu mv-512Ke` on either driver boots a Macintosh
 512Ke, the smallest machine this application runs on: `sys30.py --emu
-mv-512Ke` is **71/73** on the shipped build (the 72 on 2026-10-09 and
-`4alnch11.zip` on 2026-10-10; 69/71 on
+mv-512Ke` is **72/74** on the shipped build (the 72 on 2026-10-09 and
+`4alnch11.zip` and `synth-sqp-clear.pkg` on 2026-10-10/11; 69/71 on
 2026-09-25, 67/71 with every
 decoder resident, 66/69 before the sample grew, 65/69 before the reserve went
 flat, 64/69 before the LZW bound), `run.py --emu mv-512Ke --system
-System6.hfv` is **67/73** (the 72 on 2026-10-09, one fixture fewer than `run_tiers.py`
-predicted on a stale base, and `4alnch11.zip` on 2026-10-10; 66/71 on 2026-09-27, the tier it predicted
+System6.hfv` is **68/74** (the 72 on 2026-10-09, one fixture fewer than `run_tiers.py`
+predicted on a stale base, and the two newest on 2026-10-10/11; 66/71 on 2026-09-27, the tier it predicted
 before anything ran it; 64/71 on 2026-09-22 with
 every decoder resident, 63/69 on 2026-09-04, 58/69 before the stack was cut) (FORMATS.md, *512 KB machines*). With every decoder resident
 (`-D UNC_OVL_RESIDENT`) the two are **68/72** and **63/72** (2026-10-09).
