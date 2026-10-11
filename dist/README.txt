@@ -1,4 +1,4 @@
-MacExtract v0.38.0 — bootstrap distribution
+MacExtract v0.39.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
@@ -30,8 +30,19 @@ are the same story for the same reason: that method looks back over as much as
 and the rest of the archive still comes out. Every other format fits in
 512 KB, and with 1 MB the question does not arise.
 
-v0.38.0 opens the zip archives of PKZIP's first years, and two formats
-only Aladdin's own software ever read.
+v0.39.0 opens the last zip method of PKZIP's first years: Reducing, in
+all four of its strengths. No Macintosh program is known to have
+written it, but the PC disks that Mac CD-ROMs carried by the hundred
+did, and v0.38.0 skipped those files and pointed you to another
+program. They come out now. The same release makes Shrinking about an
+eighth faster on a 68000, and moves both old methods out of the memory
+every other format shares: an archive opened directly has about 1 KB
+more room than in v0.38.0, while a zip, or anything still inside a
+BinHex or MacBinary wrapper, has about 1.6 KB less. No test archive
+changed whether it fits.
+
+v0.38.0, before it, opened the zip archives of PKZIP's first years, and
+two formats only Aladdin's own software ever read.
 
 Old zip archives open -- the ones PKZIP 1 made in 1989 and 1990, with a
 method called Imploding. Nothing has written one since, but plenty are
@@ -57,10 +68,7 @@ really is damaged still says so.
 Zips that use Shrinking, the other method of PKZIP's first years, open
 too. Most such zips came from PCs, but a Macintosh made them as well --
 an EndNote style from 1993 is the one that was found -- and they turn up
-on Mac CD-ROMs by the hundred. So do zips that use Reducing, older
-still and rarer: no Macintosh program is known to have written it, but
-the PC disks those CD-ROMs carried did, and all four of its strengths
-are read.
+on Mac CD-ROMs by the hundred.
 
 Self-extracting zip archives open. ZipIt made these -- a .sea you
 double-click, which on a modern Mac of the day unpacked itself. The

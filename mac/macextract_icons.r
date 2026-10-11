@@ -266,13 +266,13 @@ data 'MExt' (0, "MacExtract") {
    README.md and dist/README.txt. */
 
 resource 'vers' (1, "MacExtract") {
-    0x00, 0x38, release, 0x00, verUS,
-    "0.38.0",
-    "0.38.0"
+    0x00, 0x39, release, 0x00, verUS,
+    "0.39.0",
+    "0.39.0"
 };
 
 resource 'vers' (2, "MacExtract") {
-    0x00, 0x38, release, 0x00, verUS,
-    "0.38.0",
-    "0.38.0"
+    0x00, 0x39, release, 0x00, verUS,
+    "0.39.0",
+    "0.39.0"
 };
