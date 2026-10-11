@@ -14,6 +14,7 @@ whether the launched application is handed the FILE, or merely started.
                               is untouched)
         --stub-bundle         ...and its BNDL owner and signature resource
         --doc-icon TYPE       ...and an FREF and icon for document type TYPE
+        --doc-icn FILE        ...that icon, not the application's inverted
         --app-folder NAME     put the application in a folder never opened
                               (moves the archive's icon: --archive-at X,Y)
         --invisible           set the application's invisible bit
@@ -305,7 +306,7 @@ def bundle_add(bndl, rtype, local, rid):
     raise SystemExit(f"deskclaim: the BNDL maps no {rtype!r}")
 
 
-def stub_bundle(macbin, creator, doc_type=None):
+def stub_bundle(macbin, creator, doc_type=None, doc_icn=None):
     """The application as a stub for `creator` would be: file creator,
     BNDL owner and signature resource all `creator`, so the Finder files
     its bundle under the creator it claims — which is what a desktop
@@ -325,7 +326,7 @@ def stub_bundle(macbin, creator, doc_type=None):
         # icon INVERTED and the mask kept, so it cannot be mistaken for
         # the application's icon or for any other on the volume.
         icn = next(dd for t, rid, a, n, dd in out if t == b"ICN#" and rid == 128)
-        inv = bytes(b ^ 0xFF for b in icn[:128]) + icn[128:]
+        inv = doc_icn or bytes(b ^ 0xFF for b in icn[:128]) + icn[128:]
         out += [(b"ICN#", 200, 0x20, None, inv),
                 (b"FREF", 200, 0x20, None, doc_type + b"\0\x07\0")]
         for k, (t, rid, a, n, dd) in enumerate(out):
@@ -383,6 +384,10 @@ def main():
                          "the stub's bundle with an icon of its own (the "
                          "application's, inverted): does a stub give the "
                          "archives their icon?")
+    ap.add_argument("--doc-icn", metavar="FILE",
+                    help="with --doc-icon, the 256-byte 'ICN#' to use instead "
+                         "of the inverted application icon "
+                         "(tools/icon/make_archive_icon.py --icn)")
     ap.add_argument("--app-folder",
                     help="put the application in this folder at the root, "
                          "which the run never opens")
@@ -424,7 +429,8 @@ def main():
             open(app, "wb").write(stub_bundle(
                 open(args.app, "rb").read(),
                 args.app_creator.encode("mac_roman"),
-                args.doc_icon.encode("mac_roman") if args.doc_icon else None))
+                args.doc_icon.encode("mac_roman") if args.doc_icon else None,
+                open(args.doc_icn, "rb").read() if args.doc_icn else None))
         boot = os.path.join(work, "boot-claim.hfv")
         extra = ()
         cmd = [sys.executable, os.path.join(HERE, "mkboot.py"), stock, app,

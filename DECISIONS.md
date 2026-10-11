@@ -25430,10 +25430,14 @@ so nothing has to be re-run. **A stub can also give the archives their
 icon**: with an `FREF` for document type `SIT!` and an `ICN#` of its own
 (MacExtract's, inverted, for the test) the `SIT!` archive is drawn with it,
 where every earlier run drew a blank document — the `'****'` `FREF` the
-stubs inherit from MacExtract gives no icon. The frame cannot say whether
-the archive was also selected (the Finder draws selection inverted and
-its label is hidden); either way the artwork is the stub's. Icons are
-per TYPE, so a stub claims an icon for each type its creator writes.
+stubs inherit from MacExtract gives no icon. Re-run with a drawn icon,
+the archive is drawn unselected with it, which settles that the inverted
+frame was not a selection. **The icon the stubs carry** is
+`tools/icon/make_archive_icon.py`'s: a dog-eared document whose lower half
+is the application's EXTRACT carton, pixel for pixel — chosen over a
+parcel tied with twine, which read as packed but not as MacExtract's.
+Icons are per TYPE, so a stub claims an icon for each type its creator
+writes.
 Still open: which application wins when StuffIt is on the same disk, and how a stub hands the document on — the
 stand-in was a whole application, and no stub exists yet.
 
