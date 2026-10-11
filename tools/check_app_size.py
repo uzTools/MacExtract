@@ -195,7 +195,8 @@ TAKEN = "2026-10-09"
 # -> 162,064: `ovl_stuffit` +24, a method-13 fork's encryptor id unread.
 # -> 163,596 2026-10-11: zip Reduce, `ovl_exo` +76 and a sixteenth image,
 # `ovl_zipold` (2,666 B), with Shrink gone from `ovl_codecs` (-1,224).
-EXPECT_BUNDLE = 163596
+# -> 163,588 the same evening: `ovl_zipold` -8, both decoders faster.
+EXPECT_BUNDLE = 163588
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-09"
 

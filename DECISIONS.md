@@ -390,6 +390,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (the cells that were run) — three StuffIts over 2.0's archives, encrypted Compact Pro and mail sets; each box graded by its own Expander
 - 2026-10-11 (the string that said reduced) — 5.5.1 decodes zip Reduce and 7.0.3 writes it wrong, though both binaries name it
 - 2026-10-11 (Reduce comes in) — the maintainer reversed the scope call; the source was graded against 2,379 stored CRCs, and the first version was redone: placed where only zip pays, twice as fast, and following the specification where its oracle does not
+- 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
 
 ---
 
@@ -25569,3 +25570,43 @@ is set by Reduce.
 **The CLI loses a mechanism, not just a message.** `method_out_of_scope`
 and its closing paragraph naming deark existed for Reduce alone. With no
 method out by decision, they are deleted rather than left empty.
+
+## 2026-10-11 (the bytes paid for the speed) — a second speed round on zip's two old methods, every change priced on five axes, and the one that saved space bought the one that cost it
+
+**Claim.** Reduce is 3.9 % and 2.1 % faster on two wild archives and
+Shrink 13.3 % and 13.2 % on two fixtures, on the tick probe, and the
+image both live in is 8 B SMALLER (FORMATS.md, *Reduce*, *Speed*;
+*Shrink*). Resident code, A5, heap and every tier tally are unmoved;
+Reduce's frame grew 4 B on a chain that is not the deepest.
+
+**Each change was measured alone, size first and ticks second, and two
+of the six were not taken.** Fewer live values (one countdown for a
+position and a size) was smaller and 4 ticks slower, twice; a mask table
+was 37 B larger and no faster, because a register-count shift of at most
+5 costs less than the indexed load that replaces it. Neither guess would
+have survived the instrument, and both were plausible from the
+listing.
+
+**The space came from the cold path, and that is where to look first.**
+The follower-set header is read once per entry and carried two inlined
+copies of the hot loop's window top-up: 92 B for no time anyone could
+measure. That paid for the copy loop's cursors (+4 B, −62 ticks) and for
+Shrink's inline bit fast path (+82 B, −474 ticks) in the same image.
+**Before calling a speed change a trade, look for the bytes in the
+same image's cold code.**
+
+**For Shrink the narrower change was faster than the fuller one.** A
+fully local bit reader, which is what made Reduce fast this morning,
+was −268 ticks for +112 B in Shrink. Its table-walking decoder had no
+registers to spare, so the reader's state went to the stack. Inlining
+only the fast path through the existing `UncBitIn`, and keeping the
+out-of-line call for the window's edge, was −474 for +82. **The same fix
+does not always work twice** (CLAUDE.md): the second decoder had a
+different shortage.
+
+**What is left is register pressure, and it is not free.** At `-Os` GCC
+keeps Reduce's copy destination in a data register and moves it to an
+address register every byte; a rewrite with fewer live values bought 63
+ticks for 34 B. Shrink's double walk of each string is an estimate of a
+few percent, in the code the free-slot rule runs through. Both are in
+FORMATS.md with their figures, not done.

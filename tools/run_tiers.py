@@ -502,7 +502,8 @@ OVL_RESIDUE = -666
 # SIXTEENTH image the same day, ZIPOLD, 2,666 B: Shrink and Reduce, which
 # only zip calls and only zip keeps. CODECS fell 7,628 -> 6,404 with
 # Shrink gone from it — its size before Shrink came in (FORMATS.md,
-# *Reduce*).
+# *Reduce*). ZIPOLD -8 B the same evening, 2,666 -> 2,658, with both
+# decoders made faster (FORMATS.md, *Reduce*, *Speed*; *Shrink*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
@@ -519,9 +520,9 @@ IMAGES = {
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11510,
-    "OVL_ID_ZIPOLD":      2666,
+    "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 163596
+BUNDLE = 163588
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

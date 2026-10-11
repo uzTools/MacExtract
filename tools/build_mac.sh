@@ -450,7 +450,8 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 2-5: the decoder, its call, and the shim's patch of `ovl_zipold` into the
 # vector. Shipped, the decoder is in that image beside Shrink and the
 # eager pair pays only the keep and the patch (FORMATS.md, *Reduce*).
-UNC_MAC_CODE_DEFAULT=171232
+# LOWERED the same evening to 171,224, -8, with both decoders made faster.
+UNC_MAC_CODE_DEFAULT=171224
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -596,7 +597,10 @@ UNC_MAC_CODE_DEFAULT=171232
 # RAISED 2026-10-11 to 38,000, +40, with the code ceiling's +1,176: no
 # data symbol changed size against the previous commit's build, only
 # `_sdata`'s padding. Alignment again.
-UNC_MAC_A5_DEFAULT=38000
+# RAISED the same evening to 38,008, +8, as the code ceiling fell 8: the
+# total is unmoved, and neither decoder has data in A5 — alignment, read
+# from the totals and not compared symbol by symbol.
+UNC_MAC_A5_DEFAULT=38008
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

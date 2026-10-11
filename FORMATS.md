@@ -4876,6 +4876,7 @@ follows; 0 in 2,246. And no fuzzer has a Shrink seed.
 | tier tallies | `run_tiers.py --check` moves none: 71/71, 67/71, 64/71 resident and 71/71, 69/71, 66/71 shipped. **Nor on 2026-10-09** for the tick: 72/72, 68/72, 63/72 resident and 72/72, 70/72, 66/72 shipped, the same fixtures by name; every grant falls 12 B and the three holding `ovl_exo` 32 |
 | heap | **+0** for the tick: it allocates nothing |
 | speed | the tick costs ~33 68000 instructions a clear: **+0.007 %** on `titanic`, +0.017 % on `dream` |
+| speed, 2026-10-11 | **`titanic` 3,573 → 3,099 engine ticks (−13.3 %) and `dream` 1,970 → 1,709 (−13.2 %)** on the tick probe, for +82 B of `unc_shrink_decode`, which the Reduce round's −92 B in the same image paid for (*Reduce*, *Speed*). `m68kprof` had a quarter of the instructions in the shared bit reader's out-of-line call per code; the code is now taken inline when the reader's window holds its bits, and the call is left for the once-per-window edge. Taking them through a fully local reader instead was −268 ticks for +112 B: it moved the decoder's own state onto the stack. **Not tried, an ESTIMATE**: a code's string is walked twice, once by `shr_len` and once by `shr_put`, and the first walk is ~8 % of the instructions; one walk would need the string written reversed and turned round, or a bound on string length, in code that the 1-in-2,246 free-slot rule runs through |
 
 **`ovl_exo` cannot take it, and that is a limit nothing recorded.** An
 image is `-mpcrel` code for a 68000, whose PC-relative references are 16
@@ -4991,16 +4992,36 @@ the bits now live in two locals topped up from the reader's window, and
 B(N) is a 33-byte table instead of a loop. CRC-32 is a quarter of what is
 left.
 
+**A second round the same evening, priced on all five axes and kept only
+where nothing else grew** (engine ticks, which exclude the File Manager):
+
+| change | image | Reduce, 549 KB out | taken |
+|---|---|---|---|
+| A — the window top-up adds ONE byte when fewer than 9 bits remain, not up to three: the register-count shift then never exceeds 8 | −4 B | 2,037 → 2,023 | yes |
+| B — one `left` countdown for the position and the size | −8 B | 2,023 → 2,027, **slower**, twice | no |
+| C — the copy loop on two cursors and an end pointer, `(An)+` where it was double-indexed, as `fmt_cpt.c` does | +4 B | 2,023 → 1,961 | yes |
+| D — the follower sets, read once per entry, through the reader proper alone, without two inlined top-ups | −92 B | 1,961 → 1,960 | yes |
+| E — the index mask from a table rather than a register-count shift | +37 B | 1,960 → 1,963 | no |
+| a shared `UNC_NOINLINE` flush for the three call sites | +40 B | not run | no |
+
+**Reduce 2,037 → 1,957 engine ticks, −3.9 %, and a second archive (579 KB,
+factor 2) 3,009 → 2,947, −2.1 %**, both against HEAD built in its own
+worktree on the same instrument. The three taken are −92 B together. The
+frame grew 84 → 88 B. What is left is register pressure: at `-Os` GCC
+keeps the copy loop's destination in a data register and moves it to an
+address register every byte, and a rewrite with fewer live values (+34 B)
+bought 63 ticks, which this round did not count as free.
+
 ### What it costs
 
 | | |
 |---|---|
 | resident `CODE` and A5, SHIPPED | **+80 and +16 B** (54,720 and 19,104), all of it for the sixteenth image, not for Reduce: the release's fourth keep, the zip shim patching `ovl_zipold` into the vector through one routine shared with the codecs, and a fourth keep slot plus `_sdata` padding (tools/build_mac.sh). The lazy pair +56 and +8 |
-| the images | **`ovl_zipold`, 2,666 B**: Shrink (moved unchanged from `src/unc_lzw.c` to `src/unc_shrink.c`) and Reduce, kept only for zip. `ovl_codecs` 7,628 → **6,404 B**, its size before Shrink came in; `ovl_exo` 32,084 → **32,160 B** for the call and the method guard, 608 B left. Bundle 162,064 → **163,596 B**; download 231,808 → **233,472 B** |
-| the heap a format is granted, ON THE MACHINE, against the tree before Reduce | **+1,128 B** for every format that keeps the codecs image and not `ovl_exo` (StuffIt, LZH, DiskDoubler, …), **+1,052 B** for tar, **−1,622 B** for zip, which now carries both of its old methods itself, and **−1,628 B** for an envelope, which keeps the bundle whole. No tally moves (`run_tiers.py --check`: 74/74, 72/74, 68/74 shipped, the same fixtures by name). The table under *What each format is granted* is the same arithmetic against the control |
-| resident CONTROL | `CODE` 170,056 → **171,232 B**, A5 37,960 → **38,000 B** (no data symbol changed size; alignment); `OVL_SAVED` → **135,408 B**; `TIERS` lowered 1,216 B by derivation, not re-taken on the machine |
+| the images | **`ovl_zipold`, 2,658 B** (2,666 until the second speed round, *Speed*): Shrink (moved unchanged from `src/unc_lzw.c` to `src/unc_shrink.c`) and Reduce, kept only for zip. `ovl_codecs` 7,628 → **6,404 B**, its size before Shrink came in; `ovl_exo` 32,084 → **32,160 B** for the call and the method guard, 608 B left. Bundle 162,064 → **163,588 B**; download 231,808 → **233,472 B** |
+| the heap a format is granted, ON THE MACHINE, against the tree before Reduce | **+1,128 B** for every format that keeps the codecs image and not `ovl_exo` (StuffIt, LZH, DiskDoubler, …), **+1,052 B** for tar, **−1,614 B** for zip, which now carries both of its old methods itself, and **−1,620 B** for an envelope, which keeps the bundle whole. No tally moves (`run_tiers.py --check`: 74/74, 72/74, 68/74 shipped, the same fixtures by name). The table under *What each format is granted* is the same arithmetic against the control |
+| resident CONTROL | `CODE` 170,056 → **171,224 B**, A5 37,960 → **38,008 B** (alignment); `OVL_SAVED` → **135,408 B**; `TIERS` lowered 1,216 B by derivation, not re-taken on the machine |
 | peak heap per Reduce ENTRY | **8,448 B** of follower sets (256 sets of up to 32 bytes plus a count each), a constant kept on purpose: the window is the zip reader's own output buffer, and the whole entry peaks at **21.8–21.9 KB**, under deflate's and Shrink's in the same reader. The sets use a median of 359 of their 8,192 value slots over the 2,379 entries, at most 7,936 (DECISIONS.md 2026-10-11, *Reduce comes in*) |
-| stack | `unc_reduce_decode` is an **84 B** frame and the Reduce chain `unc_zip_extract` (1,464) → `zip_decode` (56) → `unc_reduce_decode` → `zip_put` (0) → `exo_emit` (32) **1,636 B**, under Shrink's 1,672 and the Implode probe's 1,896 (*Stack*) |
+| stack | `unc_reduce_decode` is an **88 B** frame (84 before the second speed round) and the Reduce chain `unc_zip_extract` (1,464) → `zip_decode` (56) → `unc_reduce_decode` → `zip_put` (0) → `exo_emit` (32) **1,640 B**, under Shrink's 1,672 and the Implode probe's 1,896 (*Stack*) |
 
 ## What the zip pair claims, and what it costs
 
@@ -5380,7 +5401,7 @@ zip Reduce, which the control carries and the shipped build does not (134,288 B 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **163,596 B** — the sixteen images sum to 163,384 B, so its
+The bundle is **163,588 B** — the sixteen images sum to 163,376 B, so its
 index costs **212 B** (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
 of directory per image and 16 bytes of padding to 4, which accounts for
@@ -5421,9 +5442,9 @@ and to 161,868 the same day (`ovl_exo` +28, zip's dry passes putting the progres
 Shrink's tick and the zip peek's Cancel (*Shrink*), the index unmoved,
 and to 162,040 the same day: `ovl_cptdd` +144, `ovl_lzh` +18 and
 `ovl_text` +8 for the progress count put right in those three formats,
-and to 162,064 on 2026-10-10 for `ovl_stuffit` +24, and to 163,596 on
+and to 162,064 on 2026-10-10 for `ovl_stuffit` +24, and to 163,588 on
 2026-10-11 for zip Reduce: `ovl_exo` +76 and a sixteenth image,
-`ovl_zipold` (2,666 B), holding Shrink and Reduce, with Shrink gone from
+`ovl_zipold` (2,658 B), holding Shrink and Reduce, with Shrink gone from
 `ovl_codecs` (−1,224). The first commit of Reduce put it in `ovl_codecs`
 instead, at 162,980 (*Reduce*).
 It is not resident while an archive
@@ -5441,7 +5462,7 @@ than failing on it, exactly as its tolerance is meant to.)
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
 and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
-re-derived since) plus the **163,596 B** bundle, which is **229,996 B** (DECISIONS.md 2026-09-25, *the overlay
+re-derived since) plus the **163,588 B** bundle, which is **229,988 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5571,10 +5592,10 @@ budget per format, and one per layer*).
 | Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +102,162 B (arithmetic), and **+112,414 B** where the directory says no entry is encrypted (measured) |
 | Tar | exo, codecs | **+96,162 B** (measured) |
 | StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+90,132 B** (measured; the −24 B of 2026-10-10 with `ovl_stuffit` is arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +83,236 B (arithmetic), **+93,488 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,862 B** (measured; the −24 B of 2026-10-10 with the bundle is arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +83,244 B (arithmetic), **+93,496 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,854 B** (measured; the −24 B of 2026-10-10 with the bundle is arithmetic, no tier re-run) |
 
-**Every row moved on 2026-10-11 by arithmetic, for zip Reduce**, and is against a control that grew 1,216 B the same day: `OVL_SAVED` +1,120, `ovl_codecs` −1,224 with Shrink gone to `ovl_zipold`, which zip alone keeps. On the machine that is +1,128 B for the formats keeping the codecs image and not `ovl_exo`, +1,052 for tar, −1,622 for zip and −1,628 for an envelope (*Reduce*, *What it costs*); no tier was re-run.
+**Every row moved on 2026-10-11 by arithmetic, for zip Reduce**, and is against a control that grew 1,216 B the same day: `OVL_SAVED` +1,120, `ovl_codecs` −1,224 with Shrink gone to `ovl_zipold`, which zip alone keeps. On the machine that is +1,128 B for the formats keeping the codecs image and not `ovl_exo`, +1,052 for tar, −1,614 for zip and −1,620 for an envelope (*Reduce*, *What it costs*); no tier was re-run.
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5650,7 +5671,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 163,596 B held against 135,408 B saved. It costs nothing on the tiers
+it — 163,588 B held against 135,408 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5709,7 +5730,7 @@ re-read 2026-10-09 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
 **66,432 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **163,596 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **163,588 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside
@@ -7839,7 +7860,7 @@ is granted.
 resources plus the 19,052 B A5 world — **74,940 B** against an application
 heap that cannot exceed `ApplLimit − ApplZone` = **78,568 B**, leaving 3,628 B
 for every buffer an extraction needs; and the shipped eager loader then asks
-for the `'OVLY'` bundle as ONE **163,596 B** block (*Overlays*). That bound is
+for the `'OVLY'` bundle as ONE **163,588 B** block (*Overlays*). That bound is
 set by the RAM under the screen buffer, not by the System, so no smaller
 System moves it — and CODE is the one thing that costs a Macintosh anything
 here (*What the application costs the engine*). The verdict is unchanged; the

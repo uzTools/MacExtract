@@ -90,7 +90,9 @@ int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
     for (i = 256u; i-- > 0;) {
         uint8_t *s = set + i * RED_SET;
         uint32_t n, z;
-        RED_TOP();
+        /* Read once per entry, so through the reader proper alone: the
+         * window top-up is for the loop below, and inlined here twice it
+         * cost image bytes for no time anyone could see. */
         RED_NEED(6);
         n = bb & 63u;
         bb >>= 6;
@@ -98,7 +100,6 @@ int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
         if (n > RED_SETMAX) { err = UNC_ERR_CORRUPT; goto out; }
         s[0] = (uint8_t)n;
         for (z = 1; z <= n; z++) {
-            RED_TOP();
             RED_NEED(8);
             s[z] = (uint8_t)bb;
             bb >>= 8;
@@ -115,8 +116,13 @@ int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
         /* Stage 1, one byte (ozur_part1_getnextbyte): a literal if the
          * set is empty or a 1 bit says so, else an index into it. At
          * most 9 bits, so one top-up covers the symbol unless the
-         * window ends inside it. */
-        if (nb < 9) RED_TOP();
+         * window ends inside it — and ONE byte, not RED_TOP's three,
+         * so the register-count shift stays under 9 (FORMATS.md,
+         * *Reduce*, *Speed*). */
+        if (nb < 9 && in->pos < in->len) {
+            bb |= (uint32_t)in->buf[in->pos++] << nb;
+            nb += 8;
+        }
         if (s[0] != 0) {
             RED_NEED(1);
             c = bb & 1u;
@@ -171,10 +177,16 @@ int unc_reduce_decode(UncAlloc *al, UncBufIn *in, uint32_t factor,
              * and a byte at a time, so a copy longer than its distance
              * reads bytes it has just written — a repeated run. */
             while (n > 0) {
-                uint32_t run = n, j;
+                uint32_t run = n;
                 if (run > RED_WIN - w) run = RED_WIN - w;
                 if (run > RED_WIN - from) run = RED_WIN - from;
-                for (j = 0; j < run; j++) obuf[w + j] = obuf[from + j];
+                {
+                    /* Cursors and an end, not an index: (An)+ is 8
+                     * cycles where indexing is 14 (fmt_cpt.c). */
+                    const uint8_t *f = obuf + from, *fend = f + run;
+                    uint8_t *d = obuf + w;
+                    do *d++ = *f++; while (f < fend);
+                }
                 w += run;
                 from = (from + run) & (RED_WIN - 1u);
                 n -= run;

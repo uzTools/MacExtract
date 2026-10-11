@@ -184,9 +184,19 @@ int unc_shrink_decode(UncAlloc *al, UncBufIn *in, uint32_t usize,
 
     while (pos < usize) {
         uint32_t code, kind, out, n;
-        int32_t v = unc_bitin_bits_le(&bi, (int)width);
-        if (v < 0) { err = bi.err; break; }
-        code = (uint32_t)v;
+        /* The bits are taken here when the reader's window holds them,
+         * which is all but once per window: the shared reader's
+         * out-of-line call per code was a quarter of a Shrink run's
+         * 68000 instructions (FORMATS.md, *Shrink*). */
+        if (unc_bitin_fill(&bi, (int)width)) {
+            code = bi.bitbuf & ((1u << width) - 1u);
+            bi.bitbuf >>= width;
+            bi.nbits -= (int32_t)width;
+        } else {
+            int32_t v = unc_bitin_bits_le(&bi, (int)width);
+            if (v < 0) { err = bi.err; break; }
+            code = (uint32_t)v;
+        }
 
         if (esc) {
             esc = 0;
