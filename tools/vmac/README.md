@@ -2738,6 +2738,7 @@ only when somebody asks for it.
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
 | `UNC_AT_WD` | is `SFReply.vRefNum` handled as a System 7 working directory | DECISIONS.md 2026-08-01 |
 | `UNC_AT_CANCEL` | does an aborted entry leave anything behind | BLOCKERS.md, MANUAL_TESTS.md checklist |
+| `UNC_OVL_NOFLUSH` | whether the overlay loader's instruction-cache flush is NEEDED: the same application with `ovl_flush_code` a bare return (2 B against 106 shipped). Only a CPU with a cache can answer, so it is built with `tools/build_mac.sh` (`UNC_MAC_BUILD_DIR=build/mac-noflush`), renamed in its MacBinary header, and run on real hardware beside the shipped build | OPEN_ITEMS.md, *whether the flush is needed* |
 | `UNC_AT_TWICE` | what a second extraction of the same archive into the same folder makes of the first one's folders. FAILs by construction — the grid counts both runs; read the Out disk with `--keep-disks` and `hls -R` | DECISIONS.md 2026-10-11, *the folder that is already there* |
 | `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | yes — BLOCKERS.md; two things must be right before the test means anything: the pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES, since a path between rows disturbs nothing. `UNC_VMAC_PARK` overrides the parking position |
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |

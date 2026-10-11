@@ -110,6 +110,14 @@ static int ovl_trap_live(unsigned short trap)
 
 void ovl_flush_code(void)
 {
+#ifdef UNC_OVL_NOFLUSH
+    /* Probe build only: the question the flush's own comment says no tier
+     * here can answer is whether it is NEEDED. A build without it, run on a
+     * CPU with a cache beside the shipped one, answers it — a crash or a
+     * wrong byte there and not in the shipped build says it is
+     * (OPEN_ITEMS.md, *whether the flush is needed*). Never shipped. */
+    return;
+#endif
     if (!gFlushProbed) {
         /* ROM85, the low-memory global: >0 on a 128K ROM, which is where
          * either trap can exist at all. The ADDRESS is a macro for one
