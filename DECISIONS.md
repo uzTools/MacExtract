@@ -497,7 +497,11 @@ which fails CI if it drifts from the headings below it.
 - **PackIt date fields:** creation @84, modification @88 (macutils
   pit.h H_CTIMOFF/H_MTIMOFF + nocash). XADMaster reads them in the
   opposite order (`modification` then `creation`) — presumed swapped
-  there; harmless to us since manifests don't compare dates.
+  there; harmless to us since manifests don't compare dates. **Settled
+  2026-10-12**: every entry PackIt itself wrote in `derived-PackIt.pit`
+  has @84 ≤ @88 (`PackIt.doc` 1985-10-23 / 1988-01-28), and the LC 475's
+  Finder shows them as created and modified, so `lsar` reports the two
+  swapped.
 - **No real PMa4 fixtures exist** on the surviving mirrors (searched
   Info-Mac/funet/macgdn; every found .pit is stored-mode). Compressed
   coverage comes from `tools/synth_pit.py`: deterministic synthetic

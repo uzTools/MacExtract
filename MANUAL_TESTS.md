@@ -210,11 +210,16 @@ again, then the right one; the unknown StuffIt password refused, the
 `.sit` kept; several archives dropped at once all extracted; File > Quit
 and Cancel mid-run; switching to the Finder. Named: the window is slow to
 respond while extracting (OPEN_ITEMS.md, *A click during an extraction*).
+Dates right in the Finder (the NAS's Unix view shows them a century
+late; PackIt's are the order `lsar` swaps, DECISIONS.md, *PackIt date
+fields*). A full floppy (§1): `23 Troi.sit` stopped with *"The disk is
+full"*, the entry in flight (`.DS_Store`) deleted, the one before it
+exact in both forks once copied to the share — bar bytes 16–255 of its
+resource fork, the reserved header, which the Finder's copy rewrites.
 **Open from it:** the selected icon still darkens only its white — a
 desktop rebuild is the first thing to rule out, since the Finder keeps an
-application's icon from the first copy it saw; the dates, which the
-NAS's Unix view shows a century late and not consistently; the NOFLUSH
-probe (OPEN_ITEMS.md, *whether the flush is needed*).
+application's icon from the first copy it saw; the NOFLUSH probe
+(OPEN_ITEMS.md, *whether the flush is needed*).
 
 Launch and UI
 - [ ] Application launches; SFGetFile appears immediately.
