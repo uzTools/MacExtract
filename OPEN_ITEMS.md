@@ -129,12 +129,17 @@ that gap is lost and the button has to be held. On System 7.0.1 a 4 s hold
 was enough for `derived-EmpireBuilderDemo.sit` (DECISIONS.md 2026-10-12,
 *the application nobody could leave*). How long the slowest decoder makes
 the user wait is not measured. Closing this means measuring the longest
-gap between callbacks per method first.
+gap between callbacks per method first. **Seen on silicon, 2026-10-12**:
+switching to the Finder works on the LC 475, and the maintainer found
+MacExtract's window "not very reactive" while it extracts. Holding the
+File menu down pauses the extraction — inherent: `MenuSelect` keeps
+the machine until release, and the extraction runs in the same loop.
 
 ## The overlay loader: whether the flush is needed
 
 **The shipped bytes have run on silicon**: an LC 475 (68LC040) under
-System 7.6.1 extracted nine archives in five formats on 2026-10-11,
+System 7.6.1 extracted nine archives in five formats on 2026-10-11, and
+24 archives covering every decoder image byte-exact on 2026-10-12,
 no bomb (BLOCKERS.md, *Status*). What that run cannot say is whether the
 flush at both fixup sites is NEEDED, because it ran with the flush in
 place: a CPU-cache machine running a build WITHOUT `ovl_flush_code`

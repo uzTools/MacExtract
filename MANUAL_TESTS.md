@@ -201,6 +201,21 @@ found*); a second archive in the same launch, and the same archive
 twice, both changed by decision the same day (DECISIONS.md 2026-10-11,
 *one archive per launch*, *the folder that is already there*).
 
+**Round 2, 2026-10-12, `main` at 238feef, all as expected unless named:**
+24 archives, one per decoder image, extracted onto the AppleShare volume
+and graded from Linux — **188 files byte-exact in both forks** (the
+resource fork read out of the NAS's AppleDouble sidecar) and 108 of 108
+checkable types and creators; a wrong zip password refused and asked
+again, then the right one; the unknown StuffIt password refused, the
+`.sit` kept; several archives dropped at once all extracted; File > Quit
+and Cancel mid-run; switching to the Finder. Named: the window is slow to
+respond while extracting (OPEN_ITEMS.md, *A click during an extraction*).
+**Open from it:** the selected icon still darkens only its white — a
+desktop rebuild is the first thing to rule out, since the Finder keeps an
+application's icon from the first copy it saw; the dates, which the
+NAS's Unix view shows a century late and not consistently; the NOFLUSH
+probe (OPEN_ITEMS.md, *whether the flush is needed*).
+
 Launch and UI
 - [ ] Application launches; SFGetFile appears immediately.
 - [ ] Cancel in SFGetFile quits cleanly to the Finder.
