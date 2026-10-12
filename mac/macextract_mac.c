@@ -4385,6 +4385,36 @@ static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
 }
 #endif
 
+#ifdef UNC_AT_TICKGAP
+/* How long the user waits for the application to look at a click. The
+ * shipped shell pumps events only from the engine's progress callback,
+ * and run_ticks.py bounds the gap between two callbacks in INPUT BYTES,
+ * which says nothing about seconds (OPEN_ITEMS.md, *A click during an
+ * extraction*). This records the widest gap in TICKS, File Manager time
+ * included, with the input position either side of it; the gap before
+ * the first callback and after the last are kept apart, since the first
+ * includes the decoders' load and the last the final close. */
+static long gGapLast, gGapMax, gGapHead, gGapCount;
+static uint32_t gGapDone, gGapFrom, gGapTo;
+
+static int at_gap_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    StackSample();     /* with UNC_AT_STACK: how deep the pump would sit */
+    long now = TickCount();
+    (void)ctx; (void)total;
+    if (gGapCount == 0) gGapHead = now - gGapLast;
+    else if (now - gGapLast > gGapMax) {
+        gGapMax = now - gGapLast;
+        gGapFrom = gGapDone;
+        gGapTo = done;
+    }
+    gGapLast = now;
+    gGapDone = done;
+    gGapCount++;
+    return 1;
+}
+#endif
+
 /* The archive's NAME on the "In" volume: the first file in its root
  * called "archive.<something>", or "archive.sit" when there is none.
  * Until 2026-10-11 it was always "archive.sit", and that hid a whole
@@ -4741,9 +4771,20 @@ int main(void)
 #else
     {
         TK_T0;
+#ifdef UNC_AT_TICKGAP
+        UncProgress gprog;
+        gprog.ctx = NULL;
+        gprog.tick = at_gap_tick;
+        gGapLast = TickCount();
+        ret = RunExtract(inVol, fsRtDirID, gATName,
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         &gprog, &entries, &errors, NULL);
+        gGapLast = TickCount() - gGapLast;   /* now the tail */
+#else
         ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          NULL, &entries, &errors, NULL);
+#endif
 #ifdef UNC_AT_TWICE
         /* The same archive again, into the same folder, as a user does
          * who opens it twice: what the second run makes of the first
@@ -4915,6 +4956,23 @@ int main(void)
              * System 3.0 nor 6.0.8 (2026-10-10; tools/vmac/README.md, *A
              * run that drives the FINDER*). */
             at_report_file(bv, 14);
+            (void)Eject(NULL, gATreportVol);
+            at_report(vals, 8);
+        }
+#elif defined(UNC_AT_TICKGAP)
+        /* The grid is left alone, so the run still grades its bytes; the
+         * gaps go in the FILE, which run.py prints. Ticks, 60 Hz. */
+        {
+            uint32_t gv[14];
+            int k;
+            for (k = 0; k < 8; k++) gv[k] = vals[k];
+            gv[8]  = (uint32_t)gGapMax;    /* widest gap between two ticks */
+            gv[9]  = gGapFrom;             /* input position before it     */
+            gv[10] = gGapTo;               /* ... and after it             */
+            gv[11] = (uint32_t)gGapHead;   /* start to the first tick      */
+            gv[12] = (uint32_t)gGapLast;   /* last tick to return          */
+            gv[13] = (uint32_t)gGapCount;
+            at_report_file(gv, 14);        /* file, eject, grid: see above */
             (void)Eject(NULL, gATreportVol);
             at_report(vals, 8);
         }

@@ -491,6 +491,9 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # put the four tick counts in the grid. A Linux profile
                        # sees only the last of the four.
                        $<$<BOOL:$ENV{UNC_AT_TIMING}>:-DUNC_AT_TIMING>
+                       # UNC_AT_TICKGAP: the widest wait between two progress
+                       # callbacks, in ticks, written to the report file.
+                       $<$<BOOL:$ENV{UNC_AT_TICKGAP}>:-DUNC_AT_TICKGAP>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this

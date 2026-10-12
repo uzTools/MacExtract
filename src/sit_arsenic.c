@@ -436,6 +436,8 @@ typedef struct Arsenic {
     uint32_t   compcrc;     /* the CRC-32 the stream ends with; the
                              * running one is the fork writer's */
     int        has_compcrc;
+
+    uint32_t   ppos;        /* the position last reported */
 } Arsenic;
 
 /* ------------------------------------------------------------------ */
@@ -491,27 +493,46 @@ static inline void ars_transform_put(uint8_t *t, uint32_t k, uint32_t v)
     p[2] = (uint8_t)v;
 }
 
+/* Block bytes between two reports while either inverse is built: 14 s of
+ * a2basic's 205 KB block went by without one on a Mac Plus, and 18 s of
+ * its sampled index at 1 MB. Chunked so the inner loops test nothing. */
+#define ARS_BWT_CHUNK 8192u
+
 #ifndef UNC_ARS_FORCE_SAMPLED
+
 /* The standard inverse: count each value, turn the counts into the
  * first sorted index of each value, then a second pass places every
  * block position at its sorted index. Following transform[] from the
- * header's index walks the original byte order. */
-static void ars_inverse_bwt(uint8_t *transform, const uint8_t *block,
-                            uint32_t blocklen)
+ * header's index walks the original byte order. One array, turned into
+ * the running index in place: it is the frame the progress pump sits on. */
+static int ars_inverse_bwt(Arsenic *a)
 {
-    uint32_t counts[256], cumulative[256];
-    uint32_t i, total = 0;
-    for (i = 0; i < 256; i++) counts[i] = 0;
-    for (i = 0; i < blocklen; i++) counts[block[i]]++;
-    for (i = 0; i < 256; i++) {
-        cumulative[i] = total;
-        total += counts[i];
-        counts[i] = 0;
+    uint32_t next[256];
+    uint32_t i, end, c, total = 0, n = a->numbytes;
+    const uint8_t *block = a->block;
+    uint8_t *transform = a->transform;
+    int pass, e;
+
+    for (i = 0; i < 256; i++) next[i] = 0;
+    for (pass = 0; pass < 2; pass++) {
+        for (i = 0; i < n; ) {
+            if ((e = unc_progress_at(a->bi.in->ps, a->ppos)) != UNC_OK)
+                return e;
+            end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
+            if (pass == 0)
+                for (; i < end; i++) next[block[i]]++;
+            else
+                for (; i < end; i++)
+                    ars_transform_put(transform, next[block[i]]++, i);
+        }
+        if (pass == 0)
+            for (i = 0; i < 256; i++) {
+                c = next[i];
+                next[i] = total;
+                total += c;
+            }
     }
-    for (i = 0; i < blocklen; i++) {
-        ars_transform_put(transform, cumulative[block[i]] + counts[block[i]], i);
-        counts[block[i]]++;
-    }
+    return UNC_OK;
 }
 #endif
 
@@ -554,13 +575,22 @@ static uint32_t ars_index_plan(const uint32_t *counts, uint32_t target,
 /* Build the sampled index for the block currently in a->block. */
 static int ars_index_build(Arsenic *a, UncAlloc *al)
 {
-    uint32_t counts[256], occ[256];
+    uint32_t counts[256];
     uint8_t  shift[256];
-    uint32_t i, c, total = 0, target, running, n = a->numbytes;
+    uint32_t i, end, c, total = 0, target, running, n = a->numbytes;
     ArsIndex *ix = NULL;
+    int e;
 
+    /* Both passes over the block report between chunks, as the table's
+     * do: 18 s of a2basic's index went by without a callback on a 1 MB
+     * Mac Plus. */
     for (i = 0; i < 256; i++) counts[i] = 0;
-    for (i = 0; i < n; i++) counts[a->block[i]]++;
+    for (i = 0; i < n; ) {
+        if ((e = unc_progress_at(a->bi.in->ps, a->ppos)) != UNC_OK)
+            return e;
+        end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
+        for (; i < end; i++) counts[a->block[i]]++;
+    }
 
     for (target = ARS_INDEX_TARGET; ; target >>= 1) {
         total = ars_index_plan(counts, target, shift);
@@ -599,19 +629,26 @@ static int ars_index_build(Arsenic *a, UncAlloc *al)
         ix->base[c] = running;
         if (counts[c]) running += ((counts[c] - 1) >> shift[c]) + 1;
     }
-    for (i = 0; i < 256; i++) occ[i] = 0;
-    for (i = 0; i < n; i++) {
-        c = a->block[i];
-        if ((occ[c] & ((1u << shift[c]) - 1u)) == 0) {
-            uint8_t *p = &ix->pos[(ix->base[c] + (occ[c] >> shift[c])) * 3u];
-            p[0] = (uint8_t)(i >> 16);
-            p[1] = (uint8_t)(i >> 8);
-            p[2] = (uint8_t)i;
-        }
-        occ[c]++;
-    }
-
+    /* counts[] is spent; it counts occurrences from here, which keeps
+     * the frame the progress pump sits on 1 KB smaller. The index is the
+     * decoder's from here, so a Cancel frees it on the way out. */
     a->index = ix;
+    for (i = 0; i < 256; i++) counts[i] = 0;
+    for (i = 0; i < n; ) {
+        if ((e = unc_progress_at(a->bi.in->ps, a->ppos)) != UNC_OK)
+            return e;
+        end = n - i > ARS_BWT_CHUNK ? i + ARS_BWT_CHUNK : n;
+        for (; i < end; i++) {
+            c = a->block[i];
+            if ((counts[c] & ((1u << shift[c]) - 1u)) == 0) {
+                uint8_t *p = &ix->pos[(ix->base[c] + (counts[c] >> shift[c])) * 3u];
+                p[0] = (uint8_t)(i >> 16);
+                p[1] = (uint8_t)(i >> 8);
+                p[2] = (uint8_t)i;
+            }
+            counts[c]++;
+        }
+    }
     return UNC_OK;
 }
 
@@ -674,8 +711,7 @@ static int ars_bwt_prepare(Arsenic *a, UncAlloc *al)
     if (a->transform) {
         unc_free(al, a->index);
         a->index = NULL;
-        ars_inverse_bwt(a->transform, a->block, a->numbytes);
-        return UNC_OK;
+        return ars_inverse_bwt(a);
     }
 #endif
     /* Sized from this block's histogram, so it is rebuilt per block rather
@@ -775,6 +811,7 @@ static int ars_block_reserve(Arsenic *a, UncAlloc *al, uint32_t need)
 static int ars_read_block(Arsenic *a, UncAlloc *al)
 {
     int32_t sel, rank;
+    uint32_t pnext = ARS_PROGRESS_STEP;
 
     ars_mtf_reset(&a->mtf);
 
@@ -827,6 +864,19 @@ static int ars_read_block(Arsenic *a, UncAlloc *al)
             if (rerr != UNC_OK) return rerr;
         }
         a->block[a->numbytes++] = ars_mtf_decode(&a->mtf, rank);
+
+        /* Decoding a block emits nothing, and at 4 MB it is most of the
+         * fork's time: 254 of a2basic's 281 s on a Mac Plus went by with
+         * no callback at all (DECISIONS.md 2026-10-12, *the block nobody
+         * could cancel*). Report at the walk's position, so the bar holds
+         * still and the pump runs. A threshold, not a mask: a run of zeros
+         * steps over multiples, and a mask cost KeyGraphics a third of
+         * its reports. */
+        if (a->numbytes >= pnext) {
+            int perr = unc_progress_at(a->bi.in->ps, a->ppos);
+            if (perr != UNC_OK) return perr;
+            pnext = a->numbytes + ARS_PROGRESS_STEP;
+        }
     }
 
     if (a->transformindex >= a->numbytes) return UNC_ERR_CORRUPT;
@@ -906,6 +956,7 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
     a->block = NULL;
     a->transform = NULL;
     a->index = NULL;
+    a->ppos = pbase;
 
     unc_bitin_init(&a->bi, in);
     ars_dec_init(&a->dec, &a->bi);
@@ -969,8 +1020,8 @@ int unc_arsenic_decode(UncBufIn *in, UncAlloc *al, uint32_t outlen,
          * below re-enters the loop body without advancing `produced`. */
         if (produced >= nexttick) {
             nexttick = produced + ARS_PROGRESS_STEP;
-            err = unc_progress_at(in->ps,
-                                  pbase + ars_scale(pspan, produced, outlen));
+            a->ppos = pbase + ars_scale(pspan, produced, outlen);
+            err = unc_progress_at(in->ps, a->ppos);
             if (err != UNC_OK) goto out;
         }
 

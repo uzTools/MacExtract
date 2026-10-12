@@ -403,6 +403,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
 - 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
 - 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
+- 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
 
 ---
 
@@ -26226,3 +26227,66 @@ here".
 **Transferable.** Run the probe that can fail before the one that can
 only pass: the shipped build had already passed on this machine, which
 said nothing about the flush.
+
+## 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
+
+**Claim (measured, Mini vMac 1x, System 6.0.8, `-D UNC_AT_TICKGAP`).**
+The longest wait between two progress callbacks — which is the longest
+the window, Cancel, Cmd-. and the menu bar can go unanswered, since the
+shell pumps events nowhere else — was **254 s** of `derived-a2basic.dmg.sit`'s
+281 s extraction at 4 MB, and 140 s of the Barcoder's. Arsenic held the
+input pump for the whole fork and reported only from its output walk;
+the block decode before the walk, and the inverse built after it, called
+nothing. The 2026-08-07 change that gave Arsenic its 256-byte output
+tick was timed under the 1 MB sampled index, where the WALK is the slow
+part, and that is the half it fixed. After this change:
+
+| fixture, 1x | before | after | extraction |
+|---|---|---|---|
+| a2basic, 4 MB | 254 s | **0.8 s** | 281 → 281 s |
+| Barcoder, 4 MB | 140 s | **1.1 s** | 462 → 462 s |
+| KeyGraphics, 4 MB | 9.4 s | **0.3 s** | — |
+| a2basic, 1 MB | 18.3 s after the block fix | **0.6 s** | 341 → 342 s |
+| Barcoder, 1 MB | 24.1 s after the block fix | **1.9 s**, inside the walk | 745 → 742 s |
+
+All byte-exact. The other formats are FORMATS.md's (*How long a click
+waits*), and none was changed.
+
+**What it took.** Three ticks, each reporting the walk's last position,
+so the bar holds still and the pump runs: one per 256 bytes appended to
+the block (a threshold, not a mask — a mask on the low byte cost
+KeyGraphics a third of its reports, because a run of zeros steps over
+multiples), and one per 8 KB chunk of each pass of each inverse, with
+the inner loops left testing nothing. Both inverses lost a 1 KB array
+on the way: the table's counts become its running index in place, and
+the index's counts become its occurrence counter once the bases are
+taken — the frames the pump now sits on are 1,072 and 1,328 B, from
+2,060 and 2,348.
+
+**Price.** `ovl_stuffit` **+312 B** (28,614 → 28,926; the shipped
+application's resident `CODE` and A5 unmoved), the resident control
+`CODE` +328 and A5 −8 with its ratchet raised and `TIERS` lowered 320 B
+by derivation, the decoder's struct +4 B of heap, and no tier tally
+moved on either lane (`run_tiers.py --check`). Host instructions −0.3 % (table) and +0.05 to
++0.17 % (sampled). Stack, the autotest's SAMPLE, base → new: 3,044 →
+4,088 B at 4 MB and **5,372 → 4,356 B** at 1 MB, where the index's
+smaller frame is what the allocator was being called under — so the
+deepest point either path reaches fell. The interactive build's
+Toolbox under the pump is on top of those and was not measured
+(*hypothesis*: ~1 KB deeper than before on the table path, against a
+12,144 B stack). Four layouts were sized for the bytes: a shared helper
+for the chunk (−4 B, not taken) and a counting pass shared by the two
+inverses (+14 B) were not worth it, and handing the index to
+`a->index` before its second pass let a Cancel free it on the decoder's
+own way out (−12 B).
+
+**Evidence the Cancel path holds.** A scratch harness aborting at every
+one of KeyGraphics' 236 callbacks under ASan, in the default and the
+`UNC_ARS_FORCE_SAMPLED` build: 236 clean aborts each, nothing live. Its
+negative control — the index handed over after its loop, as it was —
+leaked 70 KB at four abort points.
+
+**Transferable.** `run_ticks.py` bounds the gap in input BYTES, and a
+decoder whose expensive work reads no input passes it at any duration;
+Arsenic is exactly that, and TESTING.md said so. A bound in the wrong
+unit is an instrument that cannot fail on the case that matters.

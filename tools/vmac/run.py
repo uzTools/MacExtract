@@ -419,6 +419,30 @@ def budget_probe(indsk):
     are the shortfall, FreeMem at start, the budget and the refusal reason.
     Returns a printable string, or None when there is no 14-value report —
     which is what a build without the overlay fields writes."""
+    v = read_report(indsk, 14)
+    if v is None:
+        return None
+    out = [f"{k}={v[8 + i]}" for i, k in enumerate(BUDGET_FIELDS)]
+    out += [f"bg={v[7]}", f"short={v[1]}", f"why={v[5]}", f"free0={v[3]}"]
+    return " ".join(out)
+
+
+def tickgap_probe(indsk):
+    """The `-D UNC_AT_TICKGAP` fields: the widest wait between two progress
+    callbacks and the input positions either side of it, the wait before
+    the first and after the last, and the callback count. Ticks are 60 Hz;
+    printed in seconds."""
+    v = read_report(indsk, 14)
+    if v is None:
+        return None
+    s = lambda t: f"{t / 60:.1f}s"
+    return (f"gap={s(v[8])} at {v[9]}->{v[10]} head={s(v[11])} "
+            f"tail={s(v[12])} ticks={v[13]}")
+
+
+def read_report(indsk, n):
+    """The first `n` values of the report file the autotest writes on the
+    In volume, or None when there is no report of at least that many."""
     home = tempfile.mkdtemp(prefix="hfs-")
     env = dict(os.environ, HOME=home)
     rep = os.path.join(home, "report")
@@ -435,12 +459,9 @@ def budget_probe(indsk):
     finally:
         shutil.rmtree(home, ignore_errors=True)
     u32 = lambda o: int.from_bytes(b[o:o + 4], "big")
-    if len(b) < 12 or b[:4] != b"UNCR" or u32(8) < 14:
+    if len(b) < 12 or b[:4] != b"UNCR" or u32(8) < n:
         return None
-    v = [signed32(u32(12 + 4 * i)) for i in range(14)]
-    out = [f"{k}={v[8 + i]}" for i, k in enumerate(BUDGET_FIELDS)]
-    out += [f"bg={v[7]}", f"short={v[1]}", f"why={v[5]}", f"free0={v[3]}"]
-    return " ".join(out)
+    return [signed32(u32(12 + 4 * i)) for i in range(n)]
 
 
 def check(fixture, png, manifest_dir, expect=False):
@@ -623,6 +644,9 @@ def main():
                 verdict = "PASS" if ok else ("SETUP" if ok is None else "FAIL")
             if "UNC_AT_BUDGET" in args.defines and vals is not None:
                 probe = budget_probe(os.path.join(workdir, "in.dsk"))
+                detail = f"[{probe or 'no probe report'}] {detail}"
+            if "UNC_AT_TICKGAP" in args.defines and vals is not None:
+                probe = tickgap_probe(os.path.join(workdir, "in.dsk"))
                 detail = f"[{probe or 'no probe report'}] {detail}"
             timing = ""
             if boot is not None and extract is not None:

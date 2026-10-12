@@ -3425,9 +3425,12 @@ times*). Reverting the uuencode fix alone fails both `uu-wild-*` rows
 saw it.
 
 **What it cannot see:** how long a gap takes. It counts input bytes, so a
-decoder that spends a minute inside one 8 KB step passes — Arsenic's
-sampled inverse BWT is exactly that shape, and it reports its own
-interpolated position for the purpose (`unc_progress_at`). **Nor a bar
+decoder that spends a minute inside one 8 KB step passes — Arsenic is
+exactly that shape, and reports its own position for the purpose
+(`unc_progress_at`). It passed Arsenic while a Mac Plus went 254 s
+without a callback (DECISIONS.md 2026-10-12, *the block nobody could
+cancel*). The gap in TIME is `-D UNC_AT_TICKGAP` on the emulator
+(tools/vmac/README.md), and it is not in `ci.sh`. **Nor a bar
 that goes backwards, or one that sits below 100 % with no work left:**
 only the excess over the total is graded. uuencode's scan ticks up to the
 end of a document and its writing pass then starts again from the

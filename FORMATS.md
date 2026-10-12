@@ -38,6 +38,7 @@ under *Table notes*.
 - Resident memory, stack and launch (Mac target)
 - Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)
 - Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
+- How long a click waits (Mac Plus, 1x)
 - What -O3 is worth, and where
 - Relative decode cost per format (Linux, same engine)
 - Hand-written 68000 assembly: the candidates, estimated
@@ -5501,13 +5502,13 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **135,920 B** since 2026-10-12's
-reload for a list of archives, 136,080 B after that day's menu bar, 136,064 B after 2026-10-11's fixes from the LC 475, 136,112 B after that day's `JPEG Lossy` work and
+measured 2026-09-27. The shipped pair is **136,240 B** since 2026-10-12's
+Arsenic progress, 135,920 B after that day's reload for a list of archives, 136,080 B after that day's menu bar, 136,064 B after 2026-10-11's fixes from the LC 475, 136,112 B after that day's `JPEG Lossy` work and
 135,408 B after its zip Reduce, both of which the control carries and the shipped build does not (134,288 B after 2026-10-09's
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **164,264 B** — the sixteen images sum to 164,052 B, so its
+The bundle is **164,576 B** — the sixteen images sum to 164,364 B, so its
 index costs **212 B** (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
 of directory per image and 16 bytes of padding to 4, which accounts for
@@ -5552,7 +5553,7 @@ and to 162,064 on 2026-10-10 for `ovl_stuffit` +24, and to 163,588 on
 2026-10-11 for zip Reduce: `ovl_exo` +76 and a sixteenth image,
 `ovl_zipold` (2,658 B), holding Shrink and Reduce, with Shrink gone from
 `ovl_codecs` (−1,224). The first commit of Reduce put it in `ovl_codecs`
-instead, at 162,980 (*Reduce*). And to 164,264 the same day for `ovl_stuffit` +676, `JPEG Lossy` at every width and mode, the index unmoved.
+instead, at 162,980 (*Reduce*). And to 164,264 the same day for `ovl_stuffit` +676, `JPEG Lossy` at every width and mode, the index unmoved, and to 164,576 on 2026-10-12 for `ovl_stuffit` +312, Arsenic's progress.
 It is not resident while an archive
 is extracted, which is the point of the build; `tools/check_app_size.py`
 therefore watches the 66,432 B `MacExtract.code.bin` and not the download.
@@ -5568,7 +5569,7 @@ than failing on it, exactly as its tolerance is meant to.)
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
 and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
-re-derived since) plus the **164,264 B** bundle, which is **230,664 B** (DECISIONS.md 2026-09-25, *the overlay
+re-derived since) plus the **164,576 B** bundle, which is **230,976 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5639,7 +5640,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 135,920 B of `CODE` and A5 the shipped build does not carry
+which is the 136,240 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5701,7 +5702,7 @@ budget per format, and one per layer*).
 | Zip, spanned zip | exo, zipold, ciphers, codecs | +83,916 B (arithmetic), **+94,168 B** unencrypted (measured) |
 | every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−28,858 B** (measured; the −24 B of 2026-10-10 and the +28 of 2026-10-11 with the bundle are arithmetic, no tier re-run) |
 
-**Every row fell 160 B on 2026-10-12, for the reload a list of archives needs**: `OVL_SAVED` −160, the shipped build +192 against a control +32 — which also lowers every TIERS budget, the base these rows are added to, by 32, so a shipped grant falls 192 in all — no image moved (DECISIONS.md 2026-10-12, *the reload that the list needs*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally. **Every row rose 16 B on 2026-10-12, for the menu bar**: `OVL_SAVED` +16, the shipped build −16 against a control +0, no image moved (DECISIONS.md 2026-10-12, *the application nobody could leave*); arithmetic, no tier re-run. **Every row fell 48 B on 2026-10-11, for the LC 475's fixes**: `OVL_SAVED` −48, the shipped build +144 against a control +96, no image moved (DECISIONS.md 2026-10-11, *one archive per launch*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally. **Every row moved again the same day, for `JPEG Lossy`**: `OVL_SAVED` +704 against a control that grew 704 B, so every row rose 704 and the two keeping `ovl_stuffit` (+676) or the bundle rose 28 — and on the machine nothing moves but those two, by −676 (*Every other document 2.0.1 will optimize*). **Every row moved on 2026-10-11 by arithmetic, for zip Reduce**, and is against a control that grew 1,216 B the same day: `OVL_SAVED` +1,120, `ovl_codecs` −1,224 with Shrink gone to `ovl_zipold`, which zip alone keeps. On the machine that is +1,128 B for the formats keeping the codecs image and not `ovl_exo`, +1,052 for tar, −1,614 for zip and −1,620 for an envelope (*Reduce*, *What it costs*); no tier was re-run.
+**Every row rose 320 B on 2026-10-12, for Arsenic's progress**: `OVL_SAVED` +320 against a control that grew 320 B, so every row rose 320 and the two keeping `ovl_stuffit` (+312) or the bundle rose 8 — and on the machine nothing moves but those two, by −312 (DECISIONS.md 2026-10-12, *the block nobody could cancel*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally. **Every row fell 160 B on 2026-10-12, for the reload a list of archives needs**: `OVL_SAVED` −160, the shipped build +192 against a control +32 — which also lowers every TIERS budget, the base these rows are added to, by 32, so a shipped grant falls 192 in all — no image moved (DECISIONS.md 2026-10-12, *the reload that the list needs*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally. **Every row rose 16 B on 2026-10-12, for the menu bar**: `OVL_SAVED` +16, the shipped build −16 against a control +0, no image moved (DECISIONS.md 2026-10-12, *the application nobody could leave*); arithmetic, no tier re-run. **Every row fell 48 B on 2026-10-11, for the LC 475's fixes**: `OVL_SAVED` −48, the shipped build +144 against a control +96, no image moved (DECISIONS.md 2026-10-11, *one archive per launch*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally. **Every row moved again the same day, for `JPEG Lossy`**: `OVL_SAVED` +704 against a control that grew 704 B, so every row rose 704 and the two keeping `ovl_stuffit` (+676) or the bundle rose 28 — and on the machine nothing moves but those two, by −676 (*Every other document 2.0.1 will optimize*). **Every row moved on 2026-10-11 by arithmetic, for zip Reduce**, and is against a control that grew 1,216 B the same day: `OVL_SAVED` +1,120, `ovl_codecs` −1,224 with Shrink gone to `ovl_zipold`, which zip alone keeps. On the machine that is +1,128 B for the formats keeping the codecs image and not `ovl_exo`, +1,052 for tar, −1,614 for zip and −1,620 for an envelope (*Reduce*, *What it costs*); no tier was re-run.
 
 **Every row moved twice on 2026-10-02, and for the same reason both
 times.** `OVL_SAVED` went 117,328 -> 123,776 B with `src/sit_ccube.c`
@@ -5753,7 +5754,7 @@ Reduce, less the shipped build's +80 and +16 for the sixteenth image
 that holds it and Shrink. With `ovl_codecs` −1,224 and `ovl_exo` +76,
 the rows keeping the codecs image and not `ovl_exo` rose 2,344, tar
 2,268, and zip, which keeps `ovl_zipold` too, fell 406 — all against a
-control that grew 1,216 B (*Reduce*). And -> **136,112 B** the same day, +704: the control's `CODE` +728 and A5 −24 for `JPEG Lossy`, the shipped build +0; every row rose 704 but the two that keep `ovl_stuffit` or the bundle, which rose 28. And -> **136,064 B** the same day, −48: the LC 475's fixes, the control's `CODE` +96 against the shipped build's +140 and A5 +4. And -> **136,080 B** on 2026-10-12, +16: the menu bar, the control's `CODE` −8 and A5 +8 against the shipped build's −8 and −8. And -> **135,920 B** the same day, −160: the reload a list of archives needs, the control's `CODE` +24 and A5 +8 against the shipped build's +192 and +0.
+control that grew 1,216 B (*Reduce*). And -> **136,112 B** the same day, +704: the control's `CODE` +728 and A5 −24 for `JPEG Lossy`, the shipped build +0; every row rose 704 but the two that keep `ovl_stuffit` or the bundle, which rose 28. And -> **136,064 B** the same day, −48: the LC 475's fixes, the control's `CODE` +96 against the shipped build's +140 and A5 +4. And -> **136,080 B** on 2026-10-12, +16: the menu bar, the control's `CODE` −8 and A5 +8 against the shipped build's −8 and −8. And -> **135,920 B** the same day, −160: the reload a list of archives needs, the control's `CODE` +24 and A5 +8 against the shipped build's +192 and +0. And -> **136,240 B** the same day, +320: Arsenic's progress, the control's `CODE` +328 and A5 −8, the shipped build +0 (DECISIONS.md 2026-10-12, *the block nobody could cancel*).
 So every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. **The exception is
@@ -5777,7 +5778,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 164,264 B held against 135,920 B saved. It costs nothing on the tiers
+it — 164,576 B held against 136,240 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -7044,6 +7045,46 @@ few kilobytes is instant, a quarter of a megabyte is about a minute.
 150 s then (46 s in the table above); the rate is very non-uniform (16% of the input in the first seven
 minutes, the last 205 KB in a hundred seconds), which is what made the
 timeouts chosen for it mislead three times. BLOCKERS.md.
+
+## How long a click waits (Mac Plus, 1x)
+
+The shell pumps events only from the engine's progress callback, so the
+widest gap between two callbacks is the longest the window, Cancel, Cmd-.
+and the menu bar go unanswered (OPEN_ITEMS.md, *A click during an
+extraction*). `-D UNC_AT_TICKGAP` at `--emu mv-4M-1x --poll 20`, 2026-10-12,
+`timing.txt`, all byte-exact; File Manager time between two callbacks is
+included, the shipped 10 Hz gate (up to 0.1 s) is not. **Before the first
+callback** is a separate column: it holds the decoders' load and the
+archive's directory.
+
+| fixture | format | widest gap | before the first | callbacks |
+|---|---|---|---|---|
+| `derived-a2basic.dmg.sit` | StuffIt 5 (Arsenic) | **0.8 s** (254 s before 2026-10-12) | 1.2 s | 1,472 |
+| `derived-Library_ISBN_Barcoder.sit` | StuffIt 5 (Arsenic) | **1.1 s** (140 s) | 1.4 s | 4,623 |
+| `derived-KeyGraphics.sit` | StuffIt 5 (Arsenic) | **0.3 s** (9.4 s) | 0.2 s | 235 |
+| `derived-Expand_Now_1.0.1.sea` | Now Compress | **6.1 s** | **5.5 s** | 3 |
+| `derived-XferIt_1.5b4.sea` | Compact Pro | **4.8 s** | 3.0 s | 34 |
+| `derived-MacPass390.sea` | DiskDoubler | **4.2 s** | 2.4 s | 18 |
+| `derived-EmpireBuilderDemo.sit` | StuffIt | 2.5 s | 2.1 s | 33 |
+| `derived-MUSFMT10.ZIP` | Zip | 2.2 s | 2.0 s | 18 |
+| `PCCTS.tar.gz` | gzip | 1.9 s | 1.9 s | 7 |
+| `popper-1.7.tar.Z` | compress | 1.5 s | 1.8 s | 7 |
+| `macburger-helper.hqx` | BinHex | 1.1 s | 3.3 s | 37 |
+| `derived-PCCTS.tar` | Tar | 0.9 s | 2.1 s | 22 |
+| `derived-PackIt.pit` | PackIt | 0.7 s | 1.2 s | 7 |
+| `kermitut9test.bin` | MacBinary | 0.0 s | 1.2 s | 37 |
+| `derived-Export.sit` | StuffIt | — (none; 1.4 s in all) | — | 0 |
+
+**At 1 MB, under the sampled index**: a2basic **0.6 s** (18.3 s with
+only the block decode ticking), the Barcoder **1.9 s** (24.1 s) — and
+that 1.9 s is inside the walk, where 256 output bytes under the
+sampled index can each be a long scan.
+
+Every row but Arsenic's is a decoder reporting every 8 KB of INPUT, two
+4 KB refills (`UNC_PROGRESS_STEP`, `UNC_IOBUF`), so its gap is what 8 KB
+of that format's input costs; Now Compress reads a 32 KB block whole.
+A 68LC040 at 25 MHz is several times faster (*hypothesis*: no machine
+here has timed one).
 
 ## What -O3 is worth, and where
 

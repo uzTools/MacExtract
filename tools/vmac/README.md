@@ -2744,6 +2744,7 @@ only when somebody asks for it.
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
 | `UNC_AT_TIMING` | split the extraction into File Manager reads, writes, the rest of the File Manager and the engine, in TICKS, in grid slots 3-6, and the harness read-back after it in slot 7 (so the CRC check FAILS by construction — read the numbers, not the verdict). The instrument that showed 98.5 % of a StuffIt run is the engine, and the one that resolves an optimiser change: FORMATS.md, *What -O3 is worth, and where* | FORMATS.md |
+| `UNC_AT_TICKGAP` | how long a click waits: the widest gap between two progress callbacks in TICKS, File Manager time included, with the input position either side, the gap before the first and after the last, and the count. The grid is untouched, so the run still grades its bytes; `run.py` prints the rest from the report file in seconds. Run it at `--emu mv-4M-1x`, or the ticks are the host's. **What it cannot see:** the 10 Hz gate in the shipped `prog_tick`, which adds up to 0.1 s, and anything an AppleShare or a slow disk adds to the File Manager | FORMATS.md, *How long a click waits* |
 | `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |
 
 ### Filling the destination on purpose — `--out-kb`

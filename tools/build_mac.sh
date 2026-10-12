@@ -468,7 +468,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # of it `main`, where DropNext is inlined. No overlay here, so no reload.
 # A5 38,000, +8, `_sdata`'s padding (DECISIONS.md 2026-10-12, *the reload
 # that the list needs*).
-UNC_MAC_CODE_DEFAULT=172064
+# RAISED 2026-10-12 to 172,392, +328, for Arsenic's progress while it
+# decodes a block and builds either inverse (DECISIONS.md 2026-10-12, *the
+# block nobody could cancel*). A5 37,992, -8, alignment, under its ceiling.
+# Shipped, all of it is `ovl_stuffit`, 28,614 -> 28,926 B (+312 at the
+# overlay's flags), the eager pair unmoved.
+UNC_MAC_CODE_DEFAULT=172392
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

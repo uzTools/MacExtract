@@ -123,17 +123,24 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
 
 ## A click during an extraction waits for the next progress callback
 
-The menu bar is read only in the progress pump, which runs every
-8–16 KB of input, so a click shorter than
-that gap is lost and the button has to be held. On System 7.0.1 a 4 s hold
-was enough for `derived-EmpireBuilderDemo.sit` (DECISIONS.md 2026-10-12,
-*the application nobody could leave*). How long the slowest decoder makes
-the user wait is not measured. Closing this means measuring the longest
-gap between callbacks per method first. **Seen on silicon, 2026-10-12**:
-switching to the Finder works on the LC 475, and the maintainer found
-MacExtract's window "not very reactive" while it extracts. Holding the
-File menu down pauses the extraction — inherent: `MenuSelect` keeps
-the machine until release, and the extraction runs in the same loop.
+The menu bar is read only in the progress pump, so a click shorter than
+the gap between two callbacks is lost and the button has to be held
+(DECISIONS.md 2026-10-12, *the application nobody could leave*). The gap
+is measured per format at 1x (FORMATS.md, *How long a click waits*):
+StuffIt 5 went 254 s without one until 2026-10-12 and is under 1.1 s now
+(DECISIONS.md 2026-10-12, *the block nobody could cancel*). **What is
+left is 4–6 s on a Mac Plus** for Now Compress, Compact Pro and
+DiskDoubler, and 2–2.5 s for StuffIt and Zip — the cost of 8 KB of
+input, which is where `UNC_PROGRESS_STEP` puts the tick. Halving it to
+4,096 matches the 4 KB refill every reader already does, so it adds no
+File Manager call (*hypothesis* for its cost: a callback per refill,
+gated at 10 Hz in the shell); it is CLAUDE.md's "every 8–16 KB", so it
+is the maintainer's to decide. Now Compress's gap is its 32 KB block
+and would not move. **Seen on silicon, 2026-10-12**: the LC 475's
+window "not very reactive" while it extracts, format not noted —
+re-test on a StuffIt 5 archive once this is on the machine. Holding the
+File menu down pauses the extraction — inherent: `MenuSelect` keeps the
+machine until release, and the extraction runs in the same loop.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 

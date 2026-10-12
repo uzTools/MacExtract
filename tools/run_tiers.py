@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (203428, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (108028, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (632316, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (203108, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (107708, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (631996, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -183,7 +183,11 @@ TIERS = {
 # and not re-measured**: the control's CODE +24 and A5 +8 for the Finder's
 # list read by position (tools/build_mac.sh; DECISIONS.md 2026-10-12, *the
 # reload that the list needs*).
-TIERS_CONTROL = 210064     # build/mac-resident, CODE + A5, 2026-10-12
+# **Raised by 320 B more the same day, and TIERS lowered by the same 320,
+# DERIVED**: the control's CODE +328 and A5 -8 for Arsenic's progress
+# while it decodes a block and builds either inverse (DECISIONS.md
+# 2026-10-12, *the block nobody could cancel*).
+TIERS_CONTROL = 210384     # build/mac-resident, CODE + A5, 2026-10-12
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -445,7 +449,12 @@ EXPECT = {
 # the shipped build's CODE +192 against the control's CODE +24 and A5 +8
 # (DECISIONS.md 2026-10-12, *the reload that the list needs*); no image
 # moved, so every shipped grant falls 160 on top of the control's 32.
-OVL_SAVED = 135920
+# **+320 the same day, -> 136,240**: Arsenic's progress, the control's
+# CODE +328 and A5 -8 against a shipped pair unmoved; all of it is
+# `ovl_stuffit`'s +312, so a StuffIt archive's grant falls 312 B (the
+# image) and every other format's is unmoved, TIERS having fallen the
+# same 320 (DECISIONS.md 2026-10-12, *the block nobody could cancel*).
+OVL_SAVED = 136240
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -542,6 +551,9 @@ OVL_RESIDUE = -666
 # **STUFFIT +676 B 2026-10-11**: `JPEG Lossy` at every width and mode,
 # its chroma interpolated (DECISIONS.md 2026-10-11, *the constant was a
 # square*).
+# **STUFFIT +312 B 2026-10-12**: Arsenic reports progress while it decodes
+# a block and builds either inverse, where a Mac Plus went 254 s without a
+# callback (DECISIONS.md 2026-10-12, *the block nobody could cancel*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      2590,
@@ -554,13 +566,13 @@ IMAGES = {
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     28614,
+    "OVL_ID_STUFFIT":     28926,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11510,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 164264
+BUNDLE = 164576
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still
