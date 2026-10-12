@@ -3258,6 +3258,10 @@ DECISIONS.md 2026-10-12, *the application nobody could leave*.
     deskclaim.py ... --app-creator 'SIT!' --app-folder "MacExtract Helpers" \
                      --archive-at 237,105 --claim --expect handed
     deskclaim.py ... (the same) --no-desktop --stub-bundle --expect handed
+    deskclaim.py ... --stub "SIT! Helper.bin" --open 365,107 --expect handed
+    deskclaim.py ... --system Sys7.img --stub ... --extra "Deluxe.bin:StuffIt Deluxe Folder:StuffIt Deluxe™" \
+                     --open "StuffIt Deluxe Folder" --open "MacExtract Helpers" \
+                     --archive-at archive.sit --expect handed
 
 Double-clicks a `SIT!` archive in the Finder, after optionally adding a
 `SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
@@ -3269,21 +3273,29 @@ TYPE` adds a document icon for TYPE to it), deleting the
 putting the archive on a second floppy. `--stub FILE` boots a REAL stub
 (`companion/make_stub.py`) in `MacExtract Helpers` beside an untouched
 MacExtract, and `--multifinder` puts System 6's MultiFinder back and
-starts it. **It grades the DIALOG in
+starts it. `--extra FILE:PATH` puts another application on the volume —
+StuffIt beside the stub — and `--open` opens folders before the archive,
+in order, because the Finder registers what it sees: by position, or on
+System 7 by NAME, type-selected (an icon there can land off the window's
+edge; `--archive-at` takes a name too). On System 7 `--no-desktop`
+deletes `Desktop DB` and `Desktop DF`. **It grades the DIALOG in
 `claim-3-launched.png`, not the volume**: a launch that was not handed the
 file shows the Open dialog, the run's Return opens the archive from it,
 and the entries land anyway — the first version passed on exactly that.
-The Finder's refusal alert is identified positively; a frame with none of
-the three is `nothing`, which is what a double-click that missed looks
-like. **`--app-folder` moves the archive's icon**: read its position off
+The Finder's refusal alert is identified positively, System 6's and
+System 7's; MacExtract's dialogs by all three rows of their frame, since
+one row matched StuffIt Deluxe's archive window. A frame with none of
+these is `nothing` — a double-click that missed, or another application:
+look at it. **`--app-folder` moves the archive's icon**: read its position off
 `claim-2-volume.png` and pass `--archive-at`. The expected names are
 `--want`, not derived, so a run needs no `build/rel` CLI and can share the
 machine with `./ci.sh`. Results are DECISIONS.md 2026-10-10, *the
 double-click that goes by the application's creator*, and 2026-10-11,
-*where the stubs can live*, and *the stub that hands it on*. **What it
-cannot see:** which of two
-applications under one creator wins (no StuffIt is on these volumes), and
-System 7, whose list is `Desktop DB`.
+*where the stubs can live*, and *the stub that hands it on*; and
+2026-10-12, *the stub beside StuffIt*. **What it cannot see:** System 7's
+`Desktop DB`, which it neither reads nor writes — there, which
+application registered is read off the icons; and whether StuffIt OPENED
+an archive beyond the frame that shows its window.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

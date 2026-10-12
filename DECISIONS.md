@@ -399,6 +399,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
 - 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
 - 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
+- 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
 
 ---
 
@@ -25992,3 +25993,79 @@ clicking.
 until today). What stays open: the check on real hardware (MANUAL_TESTS.md
 §2), and how long the button must be held on the slowest decoder
 (OPEN_ITEMS.md).
+
+## 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
+
+**Claim (measured, System 6.0.8; System 7.0.1 for the first row).** A stub
+in a never-opened `MacExtract Helpers` folder is registered by opening that
+folder once in the Finder — no rebuild and no `Desktop` entry written by
+anyone. With StuffIt Deluxe 2.0.1 (creator `SIT!`) on the same disk a
+double-clicked `SIT!` archive is opened in both install orders, by the
+application the Finder registered LAST; the `APPL` list holds both, newest
+first. The bundle the Finder keeps under `SIT!` is the one it registered
+FIRST, so the other application is drawn with its icons: StuffIt Deluxe
+with MacExtract's when the stub came first, the stub with Deluxe's when
+Deluxe did.
+
+**Evidence.** `tools/vmac/deskclaim.py --stub`, MacExtract as committed
+(`HEAD:dist/MacExtract.bin`), one boot each, graded on the dialog:
+
+| system | setup | result |
+|---|---|---|
+| 6.0.8 | helpers folder opened once (`--open`) | handed |
+| 6.0.8 | not opened — control | refused |
+| 7.0.1 | helpers folder opened once | handed |
+| 7.0.1 | not opened — control | refused (System 7's alert) |
+| 6.0.8 | Deluxe's folder opened, then the helpers' | handed to MacExtract; the stub drawn with Deluxe's icon |
+| 6.0.8 | the helpers' folder, then Deluxe's | Deluxe opens it in its archive window; Deluxe drawn with MacExtract's icon |
+| 6.0.8 | desktop rebuilt, `MacExtract Helpers` sorting first | Deluxe opens it; the archive drawn with the stub's archive icon |
+| 6.0.8 | desktop rebuilt, Deluxe in `A StuffIt Folder`, sorting first | handed to MacExtract; the archive drawn with Deluxe's |
+| 7.0.1, Deluxe 3.5.1 dated 2026-08-22, stub 2026-10-11 | Deluxe's folder opened, then the helpers' | handed to MacExtract; the stub drawn with Deluxe's icon |
+| 7.0.1, the same | the helpers', then Deluxe's | handed to MacExtract; Deluxe drawn with MacExtract's icon |
+| 7.0.1, Deluxe re-dated 2026-11-11 | Deluxe's, then the helpers' | Deluxe opens it in its archive window |
+| 7.0.1, the same | the helpers', then Deluxe's | Deluxe opens it in its archive window |
+| 7.0.1, stub newer | `Desktop DB`/`DF` deleted, rebuilt at boot, either folder sorting first (2 runs) | handed to MacExtract; the archive drawn with the stub's archive icon |
+| 7.0.1, Deluxe newer | rebuilt, either folder sorting first (2 runs) | Deluxe opens it; the archive drawn with Deluxe's |
+
+The Deluxe copy was lifted off `sitopt.hfv` with its Preferences and
+Engine, and had to have `hasBundle` set: as installed there its Finder
+flags were `0x0100`, so the Finder ignored its bundle and registered
+nothing — the first two Deluxe runs tested no competitor at all, and
+said "handed" anyway.
+
+**System 7 chooses differently: by date, not by order.** Its `Desktop DB`
+gave the archive to the stub in both orders while the stub was the newer
+file, and to Deluxe in both orders once Deluxe was dated later — the
+modification date in the MacBinary header (offsets 91 and 95) was the
+only thing changed. Creation or modification is not separated by these
+runs. Registered by opening folders, the icons follow System 6's rule —
+the first bundle seen keeps them, so one application wears the other's;
+after a REBUILD they follow the date too, and the archive is drawn with
+the icon of the application that opens it, in all four runs. The stub
+registered in the rebuild runs with no folder opened, where the stock
+`Desktop DB` refused it (2026-10-12, the System 7 control above), which
+is what says the rebuild happened.
+
+A desktop rebuild registers in catalog order — alphabetical, here — and
+follows the same two rules: the application in the folder that sorts last
+opens the archives, the one that sorts first gives them their icons
+(System 6).
+
+**Consequence.** Shipping the stubs ready-made needs no installer: copy
+the folder beside MacExtract and open it once. A StuffIt on the same disk
+does not stop archives opening, which is the requirement; the icon
+crossover is cosmetic and is the Finder's — one bundle per creator — so
+no stub can avoid it without giving up the bundle that makes a rebuild
+re-register it (2026-10-11, *where the stubs can live*). Not measured:
+which of the two dates System 7 compares.
+
+**The grader gained a false positive and lost it.** Deluxe 3.5.1's archive
+window has a solid border at y 82, which one-row matching read as
+MacExtract's Open dialog; MacExtract's dialogs are now matched on all
+three rows of their frame, and every frame saved so far still reads as it
+did by eye. Positioning on System 7 is by type-select (`--open NAME`,
+`--archive-at NAME`): Deluxe's folder had landed off the window's edge.
+
+**Transferable.** A competitor that the system never registered is no
+competitor: check that the second application is in the list before
+reading a result as "the first one won".
