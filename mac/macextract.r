@@ -14,10 +14,15 @@
  *      Manager, so it repaints on update events as well as on every tick
  *   4  detail   "45%   about 2 minutes left"
  *
- * 110 points tall rather than 80: the bar and the detail line are new. */
+ * 110 points tall rather than 80: the bar and the detail line are new.
+ *
+ * A titled window, not dBoxProc: a fixed modal box leaves System 7 nothing
+ * to switch away from. noGrowDocProc is in every System from 3.0 on, so
+ * there is one window everywhere (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*). */
 resource 'DLOG' (128, purgeable) {
     { 80, 80, 190, 400 },
-    dBoxProc, visible, noGoAway, 0, 128, "", noAutoCenter
+    noGrowDocProc, visible, noGoAway, 0, 128, "MacExtract", noAutoCenter
 };
 
 resource 'DITL' (128, purgeable) {
@@ -163,6 +168,37 @@ resource 'DITL' (133, purgeable) {
     }
 };
 
+/* The menu bar. File > Quit stops an extraction, and the application
+ * then quits. The Apple menu is not decoration: System 7.0.1 draws its
+ * Help and Application menus only beside one, and without the Application
+ * menu nothing can be switched to (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*). */
+resource 'MENU' (129) {
+    129, textMenuProc, allEnabled, enabled, apple,
+    { "About MacExtract\0xC9", noIcon, noKey, noMark, plain }
+};
+
+resource 'MENU' (128) {
+    128, textMenuProc, allEnabled, enabled, "File",
+    { "Quit", noIcon, "Q", noMark, plain }
+};
+
+/* About MacExtract. ^0 is 'vers' 1's short string (macextract_icons.r),
+ * so the number is written in one place fewer than it could have been. */
+resource 'ALRT' (134, purgeable) {
+    { 90, 100, 190, 412 }, 134, {
+        OK, visible, silent, OK, visible, silent,
+        OK, visible, silent, OK, visible, silent
+    }, noAutoCenter
+};
+
+resource 'DITL' (134, purgeable) {
+    {
+        { 68, 232, 88, 292 }, Button { enabled, "OK" };
+        { 12, 64, 60, 300 }, StaticText { disabled, "MacExtract ^0" };
+    }
+};
+
 /* MultiFinder/System 7 friendliness; System 6 Finder ignores it (there the
  * app just gets all free RAM). The actual budget is derived at runtime from
  * FreeMem(), so ONE binary adapts from a 1 MB Plus to a G3.
@@ -203,7 +239,12 @@ resource 'DITL' (133, purgeable) {
  * engine declined a 656 KB entry cleanly (peak 35.5 KB — the block refused at
  * request time), while System 6.0.8 ignored the partition and extracted the
  * same entry with 656.8 KB. FORMATS.md has the three-system table,
- * tools/vmac/README.md the method. */
+ * tools/vmac/README.md the method.
+ *
+ * acceptSuspendResumeEvents STAYS, though nothing handles those events:
+ * with ignoreSuspendResumeEvents System 7.0.1 held a switch out of an
+ * extraction until the extraction ended (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*). */
 resource 'SIZE' (-1) {
     reserved, acceptSuspendResumeEvents, reserved,
     canBackground, doesActivateOnFGSwitch, backgroundAndForeground,

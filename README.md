@@ -26,9 +26,10 @@ on the application's icon** — any file, whatever type it claims to be:
 
 Watch it work — with a real estimate, because on a Mac Plus some archives take
 twenty minutes. Change your mind at any point; anything half-written is
-cleaned up:
+cleaned up. On System 7 you can switch to another program and leave it
+working behind:
 
-![Progress dialog: Extracting archive.sit, 13%, about 1 minute left](docs/screens/2-extracting.png)
+![Progress window titled MacExtract: Extracting archive.sit, 30%, about 39 seconds left](docs/screens/2-extracting.png)
 
 ![Alert reading Extraction cancelled.](docs/screens/3-cancelled.png)
 

@@ -2197,6 +2197,164 @@ def phase_drop(args, appbin, workdir, shot):
         mac.close()
     return True
 
+# The progress window's title bar, for --switch: DLOG 128 is at (top 80,
+# left 80, right 400) and a titled window's bar is the 18 points above its
+# content. MOVES IF THE DLOG DOES, like PROGRESS_CANCEL.
+PROGRESS_TITLE = (240, 70)
+
+# The menu bar on System 7.0.1, measured off the Finder's in switch frames:
+# the Apple menu and its first item, and the Application menu (the icon at
+# the right-hand end) with ITS first item, "Hide <frontmost application>" —
+# the one row whose position does not depend on what else is running.
+APPLE_MENU = (23, 10)
+APPLE_MENU_ABOUT = (70, 28)
+APP_MENU = (486, 10)
+APP_MENU_HIDE = (440, 28)
+APP_MENU_LAST = (440, 110)      # the last application listed: MacExtract
+
+
+def hold_and_shoot(mac, x, y, path, hold=4.0):
+    """Press at (x, y), keep the button down, photograph, and return with it
+    still down. The application sees a press only at its next event pump,
+    and MenuSelect tracks only while the button is held, so a click would
+    be lost; Mac.shot cannot be used here because it parks the pointer."""
+    ox, oy = mac.origin()
+    mac._xdo("mousemove", str(ox + x), str(oy + y))
+    time.sleep(0.5)
+    mac._xdo("mousedown", "1")
+    time.sleep(hold)
+    for _ in range(40):
+        if mac.dpy.screenshot(path):
+            break
+        time.sleep(0.5)
+    subprocess.run(["convert", path, "-scale", "200%", path],
+                   check=True, capture_output=True)
+
+
+def pick(mac, menu, item, path):
+    """Pull `menu` down, photograph it open, and release on `item`.
+
+    Straight DOWN first, then across: a diagonal from the Application menu
+    passes over the Help menu's title, opens it, and releases on "About
+    Balloon Help…" — a system box the extraction then waits behind."""
+    hold_and_shoot(mac, *menu, path)
+    ox, oy = mac.origin()
+    for x, y in ([(menu[0], menu[1] + (item[1] - menu[1]) * i // 4)
+                  for i in range(1, 5)] +
+                 [(menu[0] + (item[0] - menu[0]) * i // 6, item[1])
+                  for i in range(1, 7)]):
+        mac._xdo("mousemove", str(ox + x), str(oy + y))
+        time.sleep(0.15)
+    time.sleep(0.8)
+    mac._xdo("mouseup", "1")
+
+
+def phase_switch(args, appbin, workdir, shot):
+    """Can the user switch out of an extraction, and what happens when it
+    finishes behind another application?
+
+    Launched from the Finder, because that is the only arrangement with
+    something to switch to; two launches in one boot, one per route out.
+
+        switch-1-progress.png    the progress window and the menu bar
+        switch-2-dragged.png     dragged down by its title bar
+        switch-3-applemenu.png   the Apple menu held open
+        switch-4-about.png       About MacExtract, mid-extraction
+        switch-5-clicked.png     the Finder's disk icon clicked: route 1
+        switch-5b-appmenu.png    the Application menu, from wherever that left us
+        switch-6-back.png        MacExtract chosen from it: in front again
+        switch-7-done.png        the first extraction over
+        switch-8-appmenu.png     second launch: the Application menu open
+        switch-9-hidden.png      "Hide MacExtract" chosen: route 2
+        switch-10-finder.png     the Finder answering while it extracts
+        switch-11-behind.png     the second extraction over, behind
+        switch-12-back.png       MacExtract double-clicked: what waits
+        switch-13-dismissed.png  that dismissed
+
+    Ends on the first launch's names on the volume, so a switch that cost
+    the extraction fails the run. **What it cannot see**: how much of the
+    processor the Finder got while the archive ran — switch-10 shows it
+    answered a click, not how fast; and the second launch's output, whose
+    names collide with the first's and are numbered."""
+    if args.system not in FINDER_ICONS:
+        raise SystemExit(f"interactive: no Finder icon geometry for "
+                         f"{args.system}")
+    icons = FINDER_ICONS[args.system]
+    bootimg = os.path.join(workdir, "boot-switch.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock_image(args),
+         appbin, bootimg, "--finder", "--data", f"{args.fixture}:archive.sit")
+    scratch = os.path.join(args.outdir, ".settle.png")
+    out = lambda n: os.path.join(args.outdir, n)
+
+    def launch():
+        mac.click(*icons["app"], double=True)
+        time.sleep(args.launch_wait)
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        accept_destination(mac)
+        time.sleep(args.extract_wait)
+
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0,
+                      timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never reached the Finder")
+        mac.click(*icons["volume"], double=True)
+        time.sleep(4.0)
+
+        launch()
+        shot(mac, "switch-1-progress.png")
+        mac.drag(*PROGRESS_TITLE, PROGRESS_TITLE[0], PROGRESS_TITLE[1] + 120,
+                 steps=24)
+        time.sleep(2.0)
+        shot(mac, "switch-2-dragged.png")
+        pick(mac, APPLE_MENU, APPLE_MENU_ABOUT, out("switch-3-applemenu.png"))
+        time.sleep(4.0)
+        shot(mac, "switch-4-about.png")
+        mac.key("Return")
+        time.sleep(2.0)
+        mac.click(*icons["volume"])                  # a Finder icon
+        time.sleep(6.0)
+        shot(mac, "switch-5-clicked.png")
+        pick(mac, APP_MENU, APP_MENU_LAST, out("switch-5b-appmenu.png"))
+        time.sleep(8.0)
+        shot(mac, "switch-6-back.png")
+        mac.settle(scratch, interval=10.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "switch-7-done.png")
+        mac.key("Return")
+        time.sleep(args.launch_wait)                 # it quits
+
+        launch()
+        pick(mac, APP_MENU, APP_MENU_HIDE, out("switch-8-appmenu.png"))
+        time.sleep(6.0)
+        shot(mac, "switch-9-hidden.png")
+        mac.click(*icons["volume"])
+        time.sleep(4.0)
+        shot(mac, "switch-10-finder.png")
+        elapsed = mac.settle(scratch, interval=10.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "switch-11-behind.png")
+        mac.click(*icons["app"], double=True)
+        time.sleep(args.launch_wait)
+        shot(mac, "switch-12-back.png")
+        mac.key("Return")
+        time.sleep(args.launch_wait)
+        shot(mac, "switch-13-dismissed.png")
+    finally:
+        mac.close()
+
+    want = expected_names(args.fixture, workdir)
+    got = volume_names(os.path.join(workdir, "boot.hfv"))
+    absent = sorted(n for n in want if n not in got)
+    print(f"interactive: switch settled after "
+          f"~{elapsed if elapsed is None else round(elapsed)}s")
+    if absent:
+        print("interactive: NOT on the volume: "
+              + ", ".join(CD.mac_path(n) for n in absent))
+    print("interactive: output " + ("INCOMPLETE" if absent else "COMPLETE"))
+    return bool(want) and not absent
+
 
 def stock_image(args):
     return os.path.join(R.VMAC_HOME, args.system)
@@ -2317,6 +2475,12 @@ def main():
                          "does, with a control drag first so a drag that was "
                          "never delivered cannot pass for a refusal. "
                          "Photographs Get Info in the same boot.")
+    ap.add_argument("--switch", action="store_true",
+                    help="the switching phase: launch from the Finder, drag "
+                         "the progress window, hide the application from "
+                         "System 7's Application menu mid-extraction, let "
+                         "it finish behind the Finder, then bring it back. "
+                         "Ends on the names on the volume.")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     help="probe build switch (repeatable), e.g. -D UNC_AT_RESERVE")
     ap.add_argument("--e2e", action="store_true",
@@ -2347,7 +2511,16 @@ def main():
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
         mac.shot(os.path.join(args.outdir, name),
-                 scale="200%" if (args.e2e or args.drop) else None)
+                 scale="200%" if (args.e2e or args.drop or args.switch)
+                 else None)
+
+    if args.switch:
+        try:
+            ok = phase_switch(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.drop:
         try:

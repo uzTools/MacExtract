@@ -118,13 +118,18 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
   international canceling is about this case, and it has not been read
   here. The Cancel button works. Closing it starts with that technote,
   and is priced in bytes like any shell change.
-- **There is no way to switch out of the application on System 7.**
-  It has no menu bar at all, so the Process Manager has nowhere to put
-  the Application menu, and the `SIZE` flag `canBackground` buys
-  nothing a user can reach. Closing it needs a menu bar, priced at the
-  floor.
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
+
+## A click during an extraction waits for the next progress callback
+
+The menu bar and the progress window's title bar are read only in the
+progress pump, which runs every 8–16 KB of input, so a click shorter than
+that gap is lost and the button has to be held. On System 7.0.1 a 4 s hold
+was enough for `derived-EmpireBuilderDemo.sit` (DECISIONS.md 2026-10-12,
+*the application nobody could leave*). How long the slowest decoder makes
+the user wait is not measured. Closing this means measuring the longest
+gap between callbacks per method first.
 
 ## The overlay loader: whether the flush is needed
 

@@ -3102,6 +3102,10 @@ exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
     interactive.py --diskswap       # insert the missing part's disk mid-run
     interactive.py --drop           # drag an archive onto the application's
                                     # icon: what does the FINDER do?
+    interactive.py --switch --system Sys7.img
+                                    # leave an extraction for the Finder and
+                                    # come back: a Finder click, then the
+                                    # Application menu
 
 Run them one at a time (see "This box has one core", above). **One at a
 time is not only about the core**: every phase builds the application
@@ -3219,6 +3223,29 @@ control drag moves up there rather than down.
 launch proves the Finder accepted the drop; `drop-7` is what says the
 application was told WHICH file, since it has read `AppParmHandle` from
 2026-08-31 (this paragraph said it did not until 2026-10-10).
+
+### Leaving an extraction — `interactive.py --switch`
+
+    interactive.py fixtures/derived-EmpireBuilderDemo.sit --switch --system Sys7.img
+
+Two launches from the Finder in one boot. The first drags the progress
+window, opens About mid-extraction, clicks the Finder's disk icon and comes
+back through the Application menu. The second hides MacExtract from that
+menu and lets the extraction finish behind the Finder. Thirteen frames, and
+it ends on the first launch's names on the volume. The result is
+DECISIONS.md 2026-10-12, *the application nobody could leave*.
+
+- **Hold, do not click.** A press is seen only at the next progress
+  callback, so `hold_and_shoot()` keeps the button down and photographs the
+  open menu without `Mac.shot`, which would park the pointer and release
+  nothing.
+- **Down, then across.** A diagonal path opens every menu whose title it
+  crosses, and it released on File > Quit once and on "About Balloon
+  Help…" once. `pick()` moves straight down, then sideways.
+- **What it cannot see:** how much of the processor the Finder got, and
+  the second launch's output, whose names collide with the first's and are
+  numbered. The menu coordinates are System 7.0.1's (`APPLE_MENU`,
+  `APP_MENU`).
 
 ### Who a double-click goes to — `deskclaim.py`
 

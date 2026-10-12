@@ -149,12 +149,16 @@ Toolbox revisions, sometimes a different CPU.
       instruction-timing assumptions that a 68000 hides can appear here.
 - [ ] **System 7 with MultiFinder in the background.** Start a long extraction
       and switch to another application: it must stay responsive and the
-      extraction must finish (the `WaitNextEvent` path).
+      extraction must finish. The application calls `GetNextEvent` on every
+      System since 2026-10-12; the emulator result is DECISIONS.md
+      2026-10-12, *the application nobody could leave*.
 **Done on the LC 475, 2026-10-11:** launch, nine archives in five formats
 with no bomb (StuffIt 5 with 45 entries in 29 s), and a 400 KB partition
 refusing one StuffIt 5 entry "at least 136K" short. Not done: MultiFinder
-switching, which the application gives no way to reach (OPEN_ITEMS.md,
-*What the LC 475 found*); counts and names were checked by eye, the bytes
+switching, which that build gave no way to reach. Since 2026-10-12 it can:
+click a Finder window or use the Application menu while the bar moves, and
+**hold the button** until the menu opens (DECISIONS.md 2026-10-12, *the
+application nobody could leave*). Counts and names were checked by eye, the bytes
 not at all — extract onto an AppleShare volume next time, and they can be.
 
 - [ ] **The `SIZE` partition on a small machine.** 2 MB preferred / 400 KB

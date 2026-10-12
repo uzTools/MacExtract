@@ -398,6 +398,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
 - 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
 - 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
+- 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
 
 ---
 
@@ -25927,3 +25928,61 @@ these stubs, one per creator, into a folder beside MacExtract, and their
 `Desktop DB` and may hand a non-high-level-event application its
 documents differently; which application wins when StuffIt is on the
 same disk; and more than one archive double-clicked at once.
+
+## 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
+
+**Claim (measured, System 7.0.1 under Mini vMac, launched from the
+Finder; `interactive.py --switch`).** During an extraction the user can
+now leave MacExtract two ways: click a Finder window or icon, or choose
+from the Application menu. The Finder comes to the front at once, and the
+extraction goes on behind it and finishes with every name on the volume.
+An extraction that ends in the background puts nothing in front of the
+Finder: its alert or report waits until MacExtract is brought back.
+About MacExtract opens mid-extraction, and the extraction waits behind it.
+
+**What it took.** Three things, all Toolbox calls a Mac Plus has under
+System 3.0, with no test of which System is running. The maintainer asked
+for exactly that: one behaviour everywhere.
+
+- A menu bar: the Apple menu holding About MacExtract…, and File holding
+  Quit (Cmd-Q), which stops the extraction and quits. **The Apple menu
+  is what makes it work.** With File alone, System 7.0.1 drew neither its
+  Help menu nor its Application menu.
+- The progress dialog becomes `noGrowDocProc`, a titled window with no
+  grow box, instead of `dBoxProc`. The pump uses `FindWindow`, then
+  `MenuSelect`/`MenuKey` or `DragWindow`.
+- One event path: `SystemTask` + `GetNextEvent`. The `WaitNextEvent`
+  branch and its trap test are gone from the application (the autotest
+  keeps them for `at_idle`).
+
+**Withdrawn before it shipped.** The plan was also to clear
+`acceptSuspendResumeEvents` and set `needsActivateOnFGSwitch`, so that a
+switch would arrive as the activate events every System sends. With
+those flags, System 7.0.1 held the switch until the extraction ended: the
+window hid, but the Finder's menu bar did not come up for over a minute,
+and a click on its disk icon was acted on only after the extraction. With
+the old flags it switches at once. Both were run on the same build and
+the same archive. **Cost: one emulator run**, and a design that would
+have shipped the same defect it was meant to fix, only in a different
+form.
+
+**Price.** Eager build +184 B of code and +8 B of A5 (alignment), so
+**192 B off every extraction's budget on a 1 MB Mac Plus**. The breakdown
+by symbol is in `tools/build_mac.sh`. About reads its number from `'vers'`
+1 instead of a literal, which would have cost 28 B more of A5. The stack
+probe (`-D UNC_AT_STACK`) read sp=4,068 and paint 7,706 of 12,190 B both
+with About opened mid-extraction and without it.
+
+**Two harness traps, both cost a run.** A pointer moving diagonally
+across the menu bar opens every menu whose title it crosses. From the
+Apple menu it released on File > Quit, which read as "About cancels the
+extraction". From the Application menu it released on Help's "About
+Balloon Help…", a system box the extraction then waits behind. `pick()`
+now moves straight down, then across. And a press is seen only at the
+next progress callback, so the harness holds the button instead of
+clicking.
+
+**Consequence.** Closes the System 7 item the LC 475 found (OPEN_ITEMS.md
+until today). What stays open: the check on real hardware (MANUAL_TESTS.md
+§2), and how long the button must be held on the slowest decoder
+(OPEN_ITEMS.md).
