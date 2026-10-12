@@ -218,8 +218,9 @@ exact in both forks once copied to the share — bar bytes 16–255 of its
 resource fork, the reserved header, which the Finder's copy rewrites.
 **Open from it:** the selected icon still darkens only its white — a
 desktop rebuild is the first thing to rule out, since the Finder keeps an
-application's icon from the first copy it saw; the NOFLUSH probe
-(OPEN_ITEMS.md, *whether the flush is needed*).
+application's icon from the first copy it saw. The NOFLUSH probe: six
+archives, 28 files byte-exact (DECISIONS.md 2026-10-12, *the flush the
+LC 475 did not need*).
 
 Launch and UI
 - [ ] Application launches; SFGetFile appears immediately.

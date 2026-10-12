@@ -402,6 +402,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
 - 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
 - 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
+- 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
 
 ---
 
@@ -26196,3 +26197,29 @@ guest may download once every 10 minutes, which is a day for this list,
 and an account is not this machine's to open. Its 190 category pages
 were read for what the programs are (OPEN_ITEMS.md, *Formats classic Mac
 programs wrote that nothing here opens*).
+
+## 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
+
+**Claim, measured once.** `-D UNC_OVL_NOFLUSH` makes `ovl_flush_code` a
+bare return. On the maintainer's LC 475 (68LC040, System 7.6.1, caches
+at their default, not checked) it extracted `08 BinHqx.cpt`, `10 DD
+Expand.sea`, `12 PackIt.pit`, `14 LhA.lha`, `16 ARCDOS.arc` and `23
+Troi.sit`, dropped on it together — so the bundle was read, relocated,
+released and READ AGAIN between archives — and all 28 files are
+byte-exact in both forks against the Linux CLI, graded off the share.
+No bomb, no error.
+
+**What it does not show.** A crash would have proved the flush needed;
+a clean run proves only that this machine, this time, did not stale an
+instruction. Other traps on the path may flush on their own, and a
+copyback data cache holding a relocated word is a race this run may
+simply have won. **The flush stays**: Inside Macintosh requires it after
+code is written as data (*Stale Instructions*), it is 104 B, and one
+negative on one machine does not license removing a documented
+requirement. The open item is closed because the one question only
+hardware could answer has been asked of hardware; the answer is "not
+here".
+
+**Transferable.** Run the probe that can fail before the one that can
+only pass: the shipped build had already passed on this machine, which
+said nothing about the flush.

@@ -115,7 +115,9 @@ void ovl_flush_code(void)
      * here can answer is whether it is NEEDED. A build without it, run on a
      * CPU with a cache beside the shipped one, answers it — a crash or a
      * wrong byte there and not in the shipped build says it is
-     * (OPEN_ITEMS.md, *whether the flush is needed*). Never shipped. */
+     * On an LC 475 it did not crash and wrote 28 files byte-exact, which
+     * does not license removing the flush (DECISIONS.md 2026-10-12, *the
+     * flush the LC 475 did not need*). Never shipped. */
     return;
 #endif
     if (!gFlushProbed) {

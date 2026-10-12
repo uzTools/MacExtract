@@ -135,22 +135,6 @@ MacExtract's window "not very reactive" while it extracts. Holding the
 File menu down pauses the extraction — inherent: `MenuSelect` keeps
 the machine until release, and the extraction runs in the same loop.
 
-## The overlay loader: whether the flush is needed
-
-**The shipped bytes have run on silicon**: an LC 475 (68LC040) under
-System 7.6.1 extracted nine archives in five formats on 2026-10-11, and
-24 archives covering every decoder image byte-exact on 2026-10-12,
-no bomb (BLOCKERS.md, *Status*). What that run cannot say is whether the
-flush at both fixup sites is NEEDED, because it ran with the flush in
-place: a CPU-cache machine running a build WITHOUT `ovl_flush_code`
-would answer it — a wrong byte or a crash there, and none here, says
-the call is load-bearing. That build is `-D UNC_OVL_NOFLUSH`
-(`tools/vmac/README.md`, the probe table), put on the maintainer's share
-for the LC 475 on 2026-10-11. The cache state on that machine was the
-7.6.1 default, not checked (*hypothesis*: on). Short of that run, read
-every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`, `kf`,
-`rf`, `fc`, `fn`) rather than on the tally alone.
-
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
 **Not started, by decision (2026-10-09).** The engine is portable C99
