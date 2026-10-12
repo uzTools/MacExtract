@@ -11,12 +11,13 @@ Eleven of them, all cheap enough to run first in ci.sh:
 2. No document cites another document by line number. Line numbers drift
    without anyone noticing; CLAUDE.md requires citing the section by name.
    Source files (`foo.c:41`) are fine - only `*.md:NN` is checked.
-3. The version agrees in all four places it is written: UNC_VERSION in
+3. The version agrees in all five places it is written: UNC_VERSION in
    include/macextract.h (the source of truth, which `macextract --version`
    prints), the download section of README.md, the first line of
    dist/README.txt, which make_dist.sh generates from the header, and the
    two 'vers' resources in mac/macextract_icons.r, which are what the
-   Finder's Get Info shows and which nothing on this machine reads. That
+   Finder's Get Info shows and which nothing on this machine reads, and
+   the About MacExtract alert's text in mac/macextract.r. That
    constant sat at "0.4.0" through four releases because nothing read it
    and nothing checked it; a reader who sees a stale version on the
    release page now knows the publish step did not run, which is the one
@@ -186,6 +187,15 @@ def check_version():
     if found != 2:
         bad.append(f"mac/macextract_icons.r: {found} 'vers' resources, "
                    f"expected 2 (ids 1 and 2)")
+
+    # About MacExtract writes the number into its own DITL rather than
+    # reading 'vers' 1, which cost 32 B of code and A5 (DECISIONS.md
+    # 2026-10-12, *the application nobody could leave*).
+    about = re.search(r'"MacExtract ([^"]*)"',
+                      (ROOT / "mac" / "macextract.r").read_text())
+    if not about or about.group(1) != ver:
+        bad.append("mac/macextract.r: the About alert says "
+                   f"{about.group(1) if about else 'nothing'!r}, not {ver!r}")
     return bad
 
 

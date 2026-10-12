@@ -239,11 +239,10 @@ data 'MExt' (0, "MacExtract") {
    'vers' 2 is the version of the package the file belongs to, which for a
    one-file distribution is the same number.
 
-   Costs the application nothing: they are read by the Finder out of the
-   resource fork, and enter this application's heap only when About
-   MacExtract shows 'vers' 1's short string, which is the only code that
-   opens them (BLOCKERS.md, the ballast row — only CODE is charged to the
-   engine's budget).
+   Costs the application nothing: no code here opens these, so they are read
+   by the Finder out of the resource fork and never enter this application's
+   heap (BLOCKERS.md, the ballast row — only CODE is charged to the engine's
+   budget).
 
    WHICH Finders display it is NOT measured here. System 7 and later do;
    whether Finder 5.1 under System 3.0 has a version line at all is open.
@@ -265,7 +264,8 @@ data 'MExt' (0, "MacExtract") {
    STRINGS carry the real number, and check_docs.py holds both of them
    against UNC_VERSION — this file is
    the fourth place the version is written, after include/macextract.h,
-   README.md and dist/README.txt. */
+   README.md and dist/README.txt, and the About alert in macextract.r is
+   the fifth. */
 
 resource 'vers' (1, "MacExtract") {
     0x00, 0x40, release, 0x00, verUS,

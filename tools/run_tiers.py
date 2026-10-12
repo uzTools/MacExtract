@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (203268, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (107868, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (632156, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (203460, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (108060, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (632348, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -175,11 +175,11 @@ TIERS = {
 # 2026-10-11, *the constant was a square*); the shipped pair unmoved.
 # **Lowered by 96 more the same day, DERIVED**: the control's CODE +96
 # for the LC 475's zip and top-folder fixes, A5 unmoved (tools/build_mac.sh).
-# **Lowered by 192 more 2026-10-12, DERIVED**: the control's CODE +180 and
-# A5 +12 for the menu bar and the titled progress window (DECISIONS.md
-# 2026-10-12, *the application nobody could leave*). The shipped pair moved
-# the same 192, so OVL_SAVED is unmoved.
-TIERS_CONTROL = 210224     # build/mac-resident, CODE + A5, 2026-10-12
+# **Unmoved 2026-10-12** by the menu bar and the titled progress window:
+# the control's CODE -8 and A5 +8 (DECISIONS.md 2026-10-12, *the
+# application nobody could leave*). The first commit had lowered all three
+# by 192 B; the trimmed shell put them back.
+TIERS_CONTROL = 210032     # build/mac-resident, CODE + A5, 2026-10-11
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -433,7 +433,11 @@ EXPECT = {
 # +96 against the shipped build's CODE +140 and A5 +4 — the shipped build
 # also quits after an archive, which the control has no overlay to need
 # (DECISIONS.md 2026-10-11, *one archive per launch*).
-OVL_SAVED = 136064
+# **+16 2026-10-12, -> 136,080**: the menu bar and the titled progress
+# window, the shipped build's CODE -8 and A5 -8 against a control +0
+# (DECISIONS.md 2026-10-12, *the application nobody could leave*); no
+# image moved, so every grant rises 16.
+OVL_SAVED = 136080
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

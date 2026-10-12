@@ -25945,12 +25945,12 @@ System 3.0, with no test of which System is running. The maintainer asked
 for exactly that: one behaviour everywhere.
 
 - A menu bar: the Apple menu holding About MacExtract…, and File holding
-  Quit (Cmd-Q), which stops the extraction and quits. **The Apple menu
-  is what makes it work.** With File alone, System 7.0.1 drew neither its
-  Help menu nor its Application menu.
+  Quit, which is Cancel (the application quits after an archive anyway).
+  **The Apple menu is what makes it work.** With File alone, System 7.0.1
+  drew neither its Help menu nor its Application menu.
 - The progress dialog becomes `noGrowDocProc`, a titled window with no
   grow box, instead of `dBoxProc`. The pump uses `FindWindow`, then
-  `MenuSelect`/`MenuKey` or `DragWindow`.
+  `MenuSelect`. (`dBoxProc` with the menu bar was never tried.)
 - One event path: `SystemTask` + `GetNextEvent`. The `WaitNextEvent`
   branch and its trap test are gone from the application (the autotest
   keeps them for `at_idle`).
@@ -25966,12 +25966,18 @@ the same archive. **Cost: one emulator run**, and a design that would
 have shipped the same defect it was meant to fix, only in a different
 form.
 
-**Price.** Eager build +184 B of code and +8 B of A5 (alignment), so
-**192 B off every extraction's budget on a 1 MB Mac Plus**. The breakdown
-by symbol is in `tools/build_mac.sh`. About reads its number from `'vers'`
-1 instead of a literal, which would have cost 28 B more of A5. The stack
-probe (`-D UNC_AT_STACK`) read sp=4,068 and paint 7,706 of 12,190 B both
-with About opened mid-extraction and without it.
+**Price: 16 B given BACK** to every extraction's budget, eager build −8 B
+of code and −8 of A5, measured against the build before it; part of that
+is `.data` alignment and can move with the next change. The first commit
+was **+192 B**, and the maintainer asked for less the same day. Each piece
+was priced by removing it alone: Cmd-Q (`MenuKey`) 32 B, dragging the
+window 32, a quit flag 48, NULL checks on our own `MENU`s at launch 32,
+and reading About's number from `'vers'` 1 rather than writing it in the
+DITL 64. The last three went for free (Quit became Cancel; `check_docs.py`
+holds the DITL's number to `UNC_VERSION`); Cmd-Q and dragging were the
+maintainer's call. By symbol in `tools/build_mac.sh`. The stack probe
+(`-D UNC_AT_STACK`) read sp=4,068 and paint 7,706 of 12,190 B, both with
+About opened mid-extraction and without it, on the first commit's build.
 
 **Two harness traps, both cost a run.** A pointer moving diagonally
 across the menu bar opens every menu whose title it crosses. From the

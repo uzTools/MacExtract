@@ -16,9 +16,10 @@
  *
  * 110 points tall rather than 80: the bar and the detail line are new.
  *
- * A titled window, not dBoxProc: a fixed modal box leaves System 7 nothing
- * to switch away from. noGrowDocProc is in every System from 3.0 on, so
- * there is one window everywhere (DECISIONS.md 2026-10-12, *the
+ * A titled window, not dBoxProc: the one System 7 has been seen switching
+ * away from (dBoxProc, with the menu bar, was not tried). It cannot be
+ * dragged — that was 32 B. noGrowDocProc is in every System from 3.0 on,
+ * so there is one window everywhere (DECISIONS.md 2026-10-12, *the
  * application nobody could leave*). */
 resource 'DLOG' (128, purgeable) {
     { 80, 80, 190, 400 },
@@ -169,7 +170,7 @@ resource 'DITL' (133, purgeable) {
 };
 
 /* The menu bar. File > Quit stops an extraction, and the application
- * then quits. The Apple menu is not decoration: System 7.0.1 draws its
+ * then quits; it has no Command key, to save MenuKey's bytes. The Apple menu is not decoration: System 7.0.1 draws its
  * Help and Application menus only beside one, and without the Application
  * menu nothing can be switched to (DECISIONS.md 2026-10-12, *the
  * application nobody could leave*). */
@@ -180,11 +181,12 @@ resource 'MENU' (129) {
 
 resource 'MENU' (128) {
     128, textMenuProc, allEnabled, enabled, "File",
-    { "Quit", noIcon, "Q", noMark, plain }
+    { "Quit", noIcon, noKey, noMark, plain }
 };
 
-/* About MacExtract. ^0 is 'vers' 1's short string (macextract_icons.r),
- * so the number is written in one place fewer than it could have been. */
+/* About MacExtract. The number is written here rather than read from
+ * 'vers' 1 at run time, which cost 32 B of code and A5; check_docs.py
+ * holds it to UNC_VERSION like the other copies. */
 resource 'ALRT' (134, purgeable) {
     { 90, 100, 190, 412 }, 134, {
         OK, visible, silent, OK, visible, silent,
@@ -195,7 +197,7 @@ resource 'ALRT' (134, purgeable) {
 resource 'DITL' (134, purgeable) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
-        { 12, 64, 60, 300 }, StaticText { disabled, "MacExtract ^0" };
+        { 12, 64, 60, 300 }, StaticText { disabled, "MacExtract 0.40.0" };
     }
 };
 

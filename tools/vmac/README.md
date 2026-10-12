@@ -3228,10 +3228,11 @@ application was told WHICH file, since it has read `AppParmHandle` from
 
     interactive.py fixtures/derived-EmpireBuilderDemo.sit --switch --system Sys7.img
 
-Two launches from the Finder in one boot. The first drags the progress
-window, opens About mid-extraction, clicks the Finder's disk icon and comes
-back through the Application menu. The second hides MacExtract from that
-menu and lets the extraction finish behind the Finder. Thirteen frames, and
+Two launches from the Finder in one boot. The first opens About
+mid-extraction, clicks the Finder's disk icon and comes back through the
+Application menu. The second hides MacExtract from that menu and lets the
+extraction finish behind the Finder. The third chooses File > Quit, which
+must cancel and quit. Fifteen frames, and
 it ends on the first launch's names on the volume. The result is
 DECISIONS.md 2026-10-12, *the application nobody could leave*.
 

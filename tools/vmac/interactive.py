@@ -2197,17 +2197,14 @@ def phase_drop(args, appbin, workdir, shot):
         mac.close()
     return True
 
-# The progress window's title bar, for --switch: DLOG 128 is at (top 80,
-# left 80, right 400) and a titled window's bar is the 18 points above its
-# content. MOVES IF THE DLOG DOES, like PROGRESS_CANCEL.
-PROGRESS_TITLE = (240, 70)
-
 # The menu bar on System 7.0.1, measured off the Finder's in switch frames:
 # the Apple menu and its first item, and the Application menu (the icon at
 # the right-hand end) with ITS first item, "Hide <frontmost application>" —
 # the one row whose position does not depend on what else is running.
 APPLE_MENU = (23, 10)
 APPLE_MENU_ABOUT = (70, 28)
+FILE_MENU = (42, 10)
+FILE_MENU_QUIT = (60, 28)
 APP_MENU = (486, 10)
 APP_MENU_HIDE = (440, 28)
 APP_MENU_LAST = (440, 110)      # the last application listed: MacExtract
@@ -2257,7 +2254,6 @@ def phase_switch(args, appbin, workdir, shot):
     something to switch to; two launches in one boot, one per route out.
 
         switch-1-progress.png    the progress window and the menu bar
-        switch-2-dragged.png     dragged down by its title bar
         switch-3-applemenu.png   the Apple menu held open
         switch-4-about.png       About MacExtract, mid-extraction
         switch-5-clicked.png     the Finder's disk icon clicked: route 1
@@ -2270,6 +2266,9 @@ def phase_switch(args, appbin, workdir, shot):
         switch-11-behind.png     the second extraction over, behind
         switch-12-back.png       MacExtract double-clicked: what waits
         switch-13-dismissed.png  that dismissed
+        switch-14-filemenu.png   third launch: the File menu held open
+        switch-15-quit.png       Quit chosen: "Extraction cancelled."
+        switch-16-gone.png       that dismissed: the application has quit
 
     Ends on the first launch's names on the volume, so a switch that cost
     the extraction fails the run. **What it cannot see**: how much of the
@@ -2304,10 +2303,6 @@ def phase_switch(args, appbin, workdir, shot):
 
         launch()
         shot(mac, "switch-1-progress.png")
-        mac.drag(*PROGRESS_TITLE, PROGRESS_TITLE[0], PROGRESS_TITLE[1] + 120,
-                 steps=24)
-        time.sleep(2.0)
-        shot(mac, "switch-2-dragged.png")
         pick(mac, APPLE_MENU, APPLE_MENU_ABOUT, out("switch-3-applemenu.png"))
         time.sleep(4.0)
         shot(mac, "switch-4-about.png")
@@ -2341,6 +2336,14 @@ def phase_switch(args, appbin, workdir, shot):
         mac.key("Return")
         time.sleep(args.launch_wait)
         shot(mac, "switch-13-dismissed.png")
+
+        launch()
+        pick(mac, FILE_MENU, FILE_MENU_QUIT, out("switch-14-filemenu.png"))
+        wait_for_alert(mac, scratch)
+        shot(mac, "switch-15-quit.png")
+        mac.key("Return")
+        time.sleep(args.launch_wait)
+        shot(mac, "switch-16-gone.png")
     finally:
         mac.close()
 

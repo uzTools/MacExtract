@@ -459,10 +459,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # fixes (the eager pair above names the pieces): ExtractOne +38, sink_begin
 # +58. No overlay here, so nothing quits. A5 unmoved at 37,984: `gTopLost`'s
 # byte went into padding.
-# RAISED 2026-10-12 to 172,228, +180, for the menu bar and the titled
-# progress window, the same pieces as the eager pair below. A5 37,996, +12,
-# under its ceiling: `gQuit` replacing `gHasWNE`, and `.data` alignment.
-UNC_MAC_CODE_DEFAULT=172228
+# LOWERED 2026-10-12 to 172,040, -8, for the menu bar and the titled
+# progress window, the same pieces as the eager pair below (+180 on the
+# first commit, before the shell was trimmed). A5 37,992, +8, under its
+# ceiling: `.data` alignment.
+UNC_MAC_CODE_DEFAULT=172040
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -841,18 +842,21 @@ UNC_MAC_A5_DEFAULT=38008
 # main 10), after its own 4-byte flag was cut; 10 of alignment
 # (DECISIONS.md 2026-10-11, *the zip that was a set of one*, *the folder
 # that is already there*, *one archive per launch*).
-# +184 code and +8 A5 on 2026-10-12 for a way out of the application on
-# System 7: **192 B off every extraction's budget on a 1 MB Mac Plus.** By
-# symbol: +226 in prog_tick, where ProgressPump is inlined — the menu bar
-# (About, Quit, and Cmd-Q through MenuKey) and dragging the window by its
-# title; +8 in main, which draws the menu bar and no longer asks whether
-# WaitNextEvent exists; -32 for NGetTrapAddress's glue, which only that
-# question used; -18 of alignment. The A5 is `.data` alignment: `gQuit`
-# took `gHasWNE`'s byte and no data symbol changed size. About's number is
-# read from 'vers' 1 rather than written as a literal, which was 28 B of A5
-# (DECISIONS.md 2026-10-12, *the application nobody could leave*).
-UNC_MAC_CODE_EAGER=55044
-UNC_MAC_A5_EAGER=19116
+# -8 code and -8 A5 on 2026-10-12 for a way out of the application on
+# System 7: **16 B BACK on every extraction's budget**, measured against
+# the build before it. By symbol: +64 in prog_tick, where ProgressPump is
+# inlined — FindWindow, MenuSelect, About's NoteAlert, Quit as Cancel;
+# -20 in main, which draws the menu bar and no longer asks whether
+# WaitNextEvent exists or keeps `gHasWNE`; -32 for NGetTrapAddress's glue,
+# which only that question used; -20 of alignment, and the A5 is `.data`
+# alignment too. **The first commit was +184 and +8**; trimmed the same
+# day: Cmd-Q (MenuKey) and dragging the window cost 32 B each, a quit flag
+# 48 (Quit is Cancel, and the application quits after an archive anyway),
+# NULL checks on our own MENUs 32, and reading About's number from 'vers'
+# 1 rather than writing it in the DITL 64 (DECISIONS.md 2026-10-12, *the
+# application nobody could leave*). The 16 B is partly alignment luck.
+UNC_MAC_CODE_EAGER=54852
+UNC_MAC_A5_EAGER=19100
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -882,9 +886,10 @@ UNC_MAC_A5_EAGER=19116
 # main +10, ovl_spent +4 (here it only answers 0), 10 of alignment. The
 # A5 FELL despite `gTopLost`'s byte: `.data` alignment stepped back, and
 # the ceiling comes down with it.
-# +184 code and +8 A5 on 2026-10-12 for the menu bar and the titled
-# progress window, the same pieces as the eager pair above.
-UNC_MAC_CODE_LAZY=53576
+# -8 code and +8 A5 on 2026-10-12 for the menu bar and the titled
+# progress window, the same pieces as the eager pair above; the A5 is
+# `.data` alignment.
+UNC_MAC_CODE_LAZY=53384
 UNC_MAC_A5_LAZY=19192
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

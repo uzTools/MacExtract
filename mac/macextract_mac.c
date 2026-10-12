@@ -844,7 +844,7 @@ typedef struct {
  * an update event, and prog_tick calls BarDraw directly in between. The
  * percentage lives in a file static because a userItem proc is handed
  * nothing but the dialog and the item number. (The no-global-state rule
- * is an ENGINE rule; the shell already keeps gQuit and friends.) */
+ * is an ENGINE rule; the shell already keeps gBarPct and friends.) */
 static short gBarPct = 0;
 
 static void BarDraw(const Rect *box)
@@ -889,56 +889,41 @@ static void PStrCatNum(Str255 d, long n)
     for (i = 1; i <= (short)t[0] && d[0] < 255; i++) d[++d[0]] = t[i];
 }
 
-/* Set by File > Quit: the extraction stops and main() leaves its loop. */
-static Boolean gQuit;
-
 /* One event path on every System, 3.0 to 9: GetNextEvent and SystemTask,
  * which MultiFinder and System 7 still give the processor away in, and
  * nothing that asks which System this is (DECISIONS.md 2026-10-12, *the
- * application nobody could leave*). The menu bar and the title bar are
- * what System 7 needs to let the user switch out; a press is only seen
- * at the next pump, so a click shorter than the gap between two of them
- * is lost — hold the button. */
+ * application nobody could leave*). The menu bar is what System 7 needs
+ * to let the user switch out; a press is only seen at the next pump, so a
+ * click shorter than the gap between two of them is lost — hold the
+ * button. No Cmd-Q and no dragging the window: 64 B between them, and
+ * Cmd-. and the Finder already cover both.
+ *
+ * Quit is Cancel: the application quits after an archive whose decoders
+ * it released, which every extraction that reaches this pump has. */
 static void ProgressPump(Progress *pr)
 {
     ReserveSample();
     EventRecord ev;
     WindowPtr w;
+    long r;
 
     SystemTask();
     if (GetNextEvent(everyEvent, &ev)) {
-        if (ev.what == keyDown && (ev.modifiers & cmdKey)) {
-            char c = (char)(ev.message & charCodeMask);
-            if (c == '.') {
-                pr->cancelled = true;
-                return;
-            }
-            if (MenuKey(c) >> 16) goto quit;   /* Cmd-Q, the only key */
+        if (ev.what == keyDown &&
+            (ev.modifiers & cmdKey) &&
+            (char)(ev.message & charCodeMask) == '.') {
+            pr->cancelled = true;
+            return;
         }
-        if (ev.what == mouseDown) {
-            short part = FindWindow(ev.where, &w);
-            if (part == inMenuBar) {
-                short m = (short)(MenuSelect(ev.where) >> 16);
-                HiliteMenu(0);
-                if (m == kFileMENU) goto quit;
-                if (m == kAppleMENU) {
-                    /* The number is 'vers' 1's short string, at offset 6
-                     * (Source: Multiverse.r, type 'vers'): a literal here
-                     * cost 28 B of A5, which every extraction pays. */
-                    Handle v = GetResource('vers', 1);
-                    if (v) {
-                        HLock(v);
-                        ParamText((StringPtr)(*v + 6), "\p", "\p", "\p");
-                        NoteAlert(kAboutALRT, NULL);
-                        if (pr->dlg) SetPort((GrafPtr)pr->dlg);
-                    }
-                }
-                return;
-            }
-            if (part == inDrag && w == (WindowPtr)pr->dlg) {
-                DragWindow(w, ev.where, &qd.screenBits.bounds);
-                return;
-            }
+        if (ev.what == mouseDown && FindWindow(ev.where, &w) == inMenuBar &&
+            (r = MenuSelect(ev.where)) != 0) {
+            HiliteMenu(0);
+            if ((short)(r >> 16) == kAppleMENU) {
+                NoteAlert(kAboutALRT, NULL);
+                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+            } else
+                pr->cancelled = true;
+            return;
         }
         if (IsDialogEvent(&ev)) {
             DialogPtr hit;
@@ -948,10 +933,6 @@ static void ProgressPump(Progress *pr)
                 pr->cancelled = true;
         }
     }
-    return;
-quit:
-    HiliteMenu(0);
-    gQuit = pr->cancelled = true;
 }
 
 static int prog_tick(void *ctx, uint32_t done, uint32_t total)
@@ -2988,7 +2969,7 @@ static void SegScanDir(SegHost *h, short vol, long dir)
 
 /* An alert filter takes no context, so these say which part the alert
  * currently on screen is waiting for. The shell already keeps state this
- * way (gQuit); the no-global rule is the engine's. */
+ * way (gBarPct); the no-global rule is the engine's. */
 static SegHost *gSegAsking = NULL;
 static int gSegWantPart = 0;
 static long gSegNextPoll = 0;    /* TickCount: throttles SegDiskFilter */
@@ -5827,14 +5808,9 @@ int main(void)
     TEInit();
     InitDialogs(NULL);
     InitCursor();
-    {
-        MenuHandle a = GetMenu(kAppleMENU), f = GetMenu(kFileMENU);
-        if (a && f) {
-            InsertMenu(a, 0);
-            InsertMenu(f, 0);
-            DrawMenuBar();
-        }
-    }
+    InsertMenu(GetMenu(kAppleMENU), 0);     /* resources of our own, */
+    InsertMenu(GetMenu(kFileMENU), 0);      /* read into a fresh heap */
+    DrawMenuBar();
 
 #ifdef UNC_AT_OVERLAY
     /* The overlay bundle, read ONCE, here, while the boot disk is certainly
@@ -5936,7 +5912,6 @@ int main(void)
          * and plain volume refNums on System 6; dirID 0 is correct for
          * either (FORMATS.md, the working-directory row). */
         ExtractOne(reply.vRefNum, 0, reply.fName, dest.vRefNum, 0);
-        if (gQuit) break;
 #ifdef UNC_AT_OVERLAY
         /* The decoders this archive did not need are gone, and reading
          * them again is a disk access the eager lifetime exists to avoid.

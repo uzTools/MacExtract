@@ -123,8 +123,8 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
 
 ## A click during an extraction waits for the next progress callback
 
-The menu bar and the progress window's title bar are read only in the
-progress pump, which runs every 8–16 KB of input, so a click shorter than
+The menu bar is read only in the progress pump, which runs every
+8–16 KB of input, so a click shorter than
 that gap is lost and the button has to be held. On System 7.0.1 a 4 s hold
 was enough for `derived-EmpireBuilderDemo.sit` (DECISIONS.md 2026-10-12,
 *the application nobody could leave*). How long the slowest decoder makes
