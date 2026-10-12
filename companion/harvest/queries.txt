@@ -1,0 +1,58 @@
+BinHex 2.0
+Tiny Transfer
+DeHQX
+OldHex
+StuffIt Classic
+StuffIt Lite
+UnStuffIt
+StuffIt Expander
+DropStuff
+Compact Pro
+Extractor
+CptExpand
+DiskDoubler
+AutoDoubler
+SuperDoubler
+DD Expand
+Now Compress
+Expand Now
+MacLHA
+LHA Expander
+ArcMac
+MacArc
+PackIt
+UnPit
+MacCompress
+MacGzip
+ZipIt
+MacZip
+UnZip
+suntar
+MacTar
+MacBinary II+
+MacBinary
+DropBin
+binUnpk
+mpack
+UULite
+UUTool
+UUCD
+uuUndo
+UUParser
+YA-Base64
+MIMEconvert
+Decoder
+SuperDisk
+Private File
+MindExpander
+Decode AppleFile
+TIGER
+unshar
+MacSQZ
+DeSEA
+SitExpand
+CPT2SIT
+SitToCpt
+StuffIt Converter
+Decode da Code
+xBin

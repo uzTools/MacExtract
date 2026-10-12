@@ -19,12 +19,14 @@ hands it on*).
 The stub goes in a folder beside MacExtract (`MacExtract Helpers`), and
 the Finder has to know it: a desktop rebuild registers it from its own
 bundle, or an entry in the volume's `Desktop` file does
-(`tools/vmac/deskclaim.py` writes one). Nothing yet writes the stubs or
-those entries on a Macintosh; that is the companion application, which
-does not exist.
+(`tools/vmac/deskclaim.py` writes one). No installer is needed: opening the helpers'
+folder once registers them (DECISIONS.md 2026-10-12, *the stub beside
+StuffIt*). What is left is OPEN_ITEMS.md, *The double-click helpers*.
 
 | file | what |
 |---|---|
 | `stub/stub.c`, `stub/stub.r` | the stub: find MacExtract, launch it |
 | `make_stub.py` | the stub for one creator: creator, bundle, icons |
 | `../tools/icon/make_archive_icon.py` | the archive icon the stubs carry |
+| `app-bundles.tsv` | the creator and bundles of 42 creators' programs, read off the programs |
+| `harvest/` | how that table was made: `dmget.py` (Discmaster, paced), `analyze.py`, `tabulate.py`, and Macintosh Repository's category list |

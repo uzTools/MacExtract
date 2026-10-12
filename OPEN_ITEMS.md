@@ -166,3 +166,43 @@ each, and fifteen suggestions not yet estimated — are FORMATS.md's
 |---|---|
 | **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py`, the differential suite (every CRC row) and a `UNC_ARS_FORCE_SAMPLED` build (the scan) | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
 | **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe (tools/vmac/README.md) is what prices a change here, and today it cannot reach any cipher |
+
+## Formats classic Mac programs wrote that nothing here opens — leads, not findings
+
+From the 190 entries of Macintosh Repository's *Compression & Archiving*
+category, read 2026-10-12 (`companion/harvest/macrepo-compression.tsv`):
+**every row below is from a program's NAME and DESCRIPTION, and none has
+been held against a file.** The modern macOS programs, video compressors and
+backup-to-disk tools in the category are left out, and so is what Part 1
+already covers (RAR, ARJ, Zoo, cpio, disk images).
+
+| format | programs there | here |
+|---|---|---|
+| BinHex 1.0/2.0 (`.hex`) and 3.0 (`.hcx`) | BinHex 2.0, OldHex 3.0 | only BinHex 4 is opened; the older two are named nowhere |
+| ShrinkIt / NuFX (`.shk`, `.bxy`), Apple II | ShrinkIt | named nowhere |
+| shell archives (`shar`) | unshar | named nowhere |
+| yEnc | yEnc TZ | named nowhere |
+| Apple Backup (Performa-era backup disks) | Apple Backup Extractor | named nowhere |
+| backup sets | Retrospect 1.x/2.1, Fastback, HFS Backup, MacBack, Network DiskFit, Diamond | named nowhere |
+| splitters that may add a header | MacHacha, SplitIt!, SplitsVille, Split & Join, Split&Concat | plain `.001` and DiskDoubler `SPLT` only; whether these write either is unknown |
+| unidentified | GIF Blast, MacSQZ!, The Parer, RadicalSqueeze, BKOS Compress, FileCrypt, Big Hairy Installer, MacToVax | the format is not known |
+
+Closing a row means a specimen written by the program, then the usual
+question of a second reader to grade against.
+
+## The double-click helpers: what is left before they ship
+
+`companion/` works (DECISIONS.md 2026-10-11 and 2026-10-12, *where the
+stubs can live*, *the stub that hands it on*, *the stub beside StuffIt*),
+and ships later, on MacExtract's own floppy. Left:
+
+- **Which creators.** `companion/app-bundles.tsv` has 42 creators read
+  off the programs themselves, with their bundles; the list of stubs is
+  not chosen. Text encodings
+  stay out (`TEXT` from editors), and so does `SITx`.
+- **A second double-click while MacExtract runs**, under MultiFinder and
+  System 7 — the stub asks to launch a running application. Not run.
+- **Several archives of DIFFERENT creators opened together** — two stubs
+  for one selection. Not run.
+- **Which of a file's two dates System 7 compares** to choose between two
+  applications of one creator. Not separated.

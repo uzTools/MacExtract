@@ -401,6 +401,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
 - 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
 - 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
+- 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
 
 ---
 
@@ -26151,3 +26152,43 @@ not traps; the same write through `PBHCreateSync`/`PBHOpenSync`/
 glue is at fault rather than something it calls — it was not read). And
 System 7's Finder put `In`'s neighbours off the window's edge, so the
 harness opens by type-select there.
+
+## 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
+
+**Claim (measured).** StuffIt Expander 4.0.2 (creator `SITx`) carries a
+second `BNDL` owned by `SIT!`, declaring `SITD` and `SIT!` — as do
+DropStuff and later Expanders. With Expander alone on the disk, a
+double-clicked `SIT!` archive is REFUSED on System 6.0.8 and System 7.0.1,
+the window opened and after a rebuild alike; System 6 registers Expander
+under `SITx` only, and System 7's rebuild draws the archive with StuffIt's
+icon from that second bundle and still refuses it (`tools/vmac/deskclaim.py
+--extra`). So the rule of 2026-10-10 stands — the Finder hands a document
+to an application whose OWN creator is the document's — and a bundle for
+another creator decorates and does not open. MacExtract cannot claim
+creators by carrying bundles; the stubs stay.
+
+**Where the creators come from.** `companion/app-bundles.tsv` is 42
+creators read off the applications themselves: the BinHex family (`BNHQ`
+4.0, `BnHq` 5.0, `HQXr`, `HQX `, `PnLh` DeHQX), StuffIt's (`SIT!`, `SITx`,
+`DStf`, `SITC`), Compact Pro's (`CPCT`, and `EXTC` for its Extractor),
+DiskDoubler's, Now Compress's (`NCdc`, `NCar`, `NCcm`), `LARC`, `LHAx`,
+`arc*`, `MARC`, `UPIT`, `LZIV`, `Gzip`, `ZIP `, `TAR `, `MB2P`, `GJBU`,
+the uu and base64 decoders, and more. Copies came from Discmaster — its
+`/file/` originals arrive as MacBinary, so the header carries the type
+and creator — two per program from different discs, one request every 3
+seconds (`companion/harvest/`), and from this machine's own cached disk
+images. Every copy is analysed on its own, and copies agree where two
+were found.
+
+**TCDB was the list of names and nothing more.** Where it was compared —
+BinHex 4.0 and 5.0, HQXer, HQXing, DeHQX — it named the same creators;
+the rest were not held against it. Its licence forbids redistributing a table built
+from its rows (MacStamp's DECISIONS.md, *TCDB's data is licensed*), and a
+stub list shipped on MacExtract's floppy would be one. So what a stub
+claims cites the program that defines the creator.
+
+**Macintosh Repository was not the source**, though it was the brief: a
+guest may download once every 10 minutes, which is a day for this list,
+and an account is not this machine's to open. Its 190 category pages
+were read for what the programs are (OPEN_ITEMS.md, *Formats classic Mac
+programs wrote that nothing here opens*).
