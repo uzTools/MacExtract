@@ -216,9 +216,9 @@ fields*). A full floppy (§1): `23 Troi.sit` stopped with *"The disk is
 full"*, the entry in flight (`.DS_Store`) deleted, the one before it
 exact in both forks once copied to the share — bar bytes 16–255 of its
 resource fork, the reserved header, which the Finder's copy rewrites.
-**Open from it:** the selected icon still darkens only its white — a
-desktop rebuild is the first thing to rule out, since the Finder keeps an
-application's icon from the first copy it saw. The NOFLUSH probe: six
+The selected icon darkens all over once the desktop is rebuilt — before,
+the Finder showed the old version's (DECISIONS.md 2026-10-11, *the icon
+that did not darken*). The NOFLUSH probe: six
 archives, 28 files byte-exact (DECISIONS.md 2026-10-12, *the flush the
 LC 475 did not need*).
 

@@ -92,7 +92,9 @@ archive into a folder where you already extracted it gives you a second
 folder, "Name~1", with the files inside under their own names, instead
 of "~1" copies scattered through the first. And in 256 colours or more
 the icon now darkens all over when you select it, as Apple's own do; it
-used to darken only its white.
+used to darken only its white. If an earlier MacExtract was ever on that
+Mac, the Finder keeps showing the old icon until you rebuild the desktop:
+restart holding Command and Option.
 
 And one from StuffIt Deluxe 2.0: a photograph its JPEG add-on had
 squeezed came back as the wrong picture -- silently -- unless it was 256

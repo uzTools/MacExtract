@@ -25873,7 +25873,10 @@ nothing to fix**: every selected icon, SimpleText's included, is drawn in
 flat grey, old and new alike (`0d-icon-selected-16.png`). The "16 colours"
 in the open item was this session's reading of the maintainer's note,
 which listed the depths the icon looks right at; it was never measured.
-Not seen on silicon, nor under 7.6.1.
+**Seen on silicon 2026-10-12**: on the LC 475 under System 7.6.1 the new
+icon still darkened only its white until the desktop was rebuilt, then
+darkened all over. The Finder had kept v0.39.0's `icl8` from the first
+copy it registered under `MExt`; the download notes now say to rebuild.
 
 **The generator had stopped being the source.** `macextract_icons.r`
 says "edit the script, not the hex", and has since gained a `'****'`
