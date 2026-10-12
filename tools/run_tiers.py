@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (203460, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (108060, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (632348, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (203428, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (108028, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (632316, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -179,7 +179,11 @@ TIERS = {
 # the control's CODE -8 and A5 +8 (DECISIONS.md 2026-10-12, *the
 # application nobody could leave*). The first commit had lowered all three
 # by 192 B; the trimmed shell put them back.
-TIERS_CONTROL = 210032     # build/mac-resident, CODE + A5, 2026-10-11
+# **Raised by 32 B 2026-10-12, and TIERS lowered by the same 32, DERIVED
+# and not re-measured**: the control's CODE +24 and A5 +8 for the Finder's
+# list read by position (tools/build_mac.sh; DECISIONS.md 2026-10-12, *the
+# reload that the list needs*).
+TIERS_CONTROL = 210064     # build/mac-resident, CODE + A5, 2026-10-12
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -437,7 +441,11 @@ EXPECT = {
 # window, the shipped build's CODE -8 and A5 -8 against a control +0
 # (DECISIONS.md 2026-10-12, *the application nobody could leave*); no
 # image moved, so every grant rises 16.
-OVL_SAVED = 136080
+# **-160 2026-10-12, -> 135,920**: the reload a list of archives needs,
+# the shipped build's CODE +192 against the control's CODE +24 and A5 +8
+# (DECISIONS.md 2026-10-12, *the reload that the list needs*); no image
+# moved, so every shipped grant falls 160 on top of the control's 32.
+OVL_SAVED = 135920
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

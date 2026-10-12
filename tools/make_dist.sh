@@ -85,11 +85,14 @@ Three more from the same afternoon. MacExtract now quits after an
 archive: it reads its decoders from disk once, at launch, and keeps only
 the ones that archive needs, so a second archive in another format could
 not be opened -- and it no longer offers you one. Open it again for the
-next archive. Extracting an archive into a folder where you already
-extracted it gives you a second folder, "Name~1", with the files inside
-under their own names, instead of "~1" copies scattered through the
-first. And in 256 colours or more the icon now darkens all over when you
-select it, as Apple's own do; it used to darken only its white.
+next archive, or select several archives in the Finder and open them
+together: between them it reads its decoders from disk again, which on a
+Mac with one floppy drive may ask for its own disk back. Extracting an
+archive into a folder where you already extracted it gives you a second
+folder, "Name~1", with the files inside under their own names, instead
+of "~1" copies scattered through the first. And in 256 colours or more
+the icon now darkens all over when you select it, as Apple's own do; it
+used to darken only its white.
 
 And one from StuffIt Deluxe 2.0: a photograph its JPEG add-on had
 squeezed came back as the wrong picture -- silently -- unless it was 256

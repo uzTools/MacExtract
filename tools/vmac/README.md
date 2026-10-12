@@ -3297,6 +3297,25 @@ double-click that goes by the application's creator*, and 2026-10-11,
 application registered is read off the icons; and whether StuffIt OPENED
 an archive beyond the frame that shows its window.
 
+### Several archives opened at once — `relaunch.py`
+
+    relaunch.py --app build/mac-interactive/MacExtract.bin --expect both --folder-at 115,107
+    relaunch.py ... --system Sys30.img --emu mv-512Ke --folder-at 174,95
+    relaunch.py ... --system Sys7.img --folder-at In          # type-selected
+    relaunch.py ... --multifinder
+    relaunch.py ... --system Sys30.img --emu mv-512Ke --in-disk 1440 --disk-at 472,107 \
+                    --first derived-Cool_Tools__.sit --second derived-a2basic.dmg.sit
+
+Opens a `.cpt` and a `.sit` TOGETHER from the Finder (Select All, Open) and
+grades both: the destination dialog for each, and every entry of both on
+the volume. `--expect first` is the control, for a build before the reload.
+`--in-disk` puts the pair on a second disk with room for its output, which
+System 3.0's boot disk does not have for `a2basic`; a `-D UNC_AT_HEAPLOG`
+build's `Heap Log` is printed at the end. Results are DECISIONS.md
+2026-10-12, *the reload that the list needs*. **What it cannot see:** an
+entry refused for memory and one refused for a full disk look the same to
+the volume check — read `r-6-second-done.png`.
+
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 
     cptsegment.py --list

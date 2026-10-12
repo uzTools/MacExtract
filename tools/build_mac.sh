@@ -463,7 +463,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # progress window, the same pieces as the eager pair below (+180 on the
 # first commit, before the shell was trimmed). A5 37,992, +8, under its
 # ceiling: `.data` alignment.
-UNC_MAC_CODE_DEFAULT=172040
+# RAISED 2026-10-12 to 172,064, +24, for the Finder's list read by
+# position rather than through a pointer into a block that can move: all
+# of it `main`, where DropNext is inlined. No overlay here, so no reload.
+# A5 38,000, +8, `_sdata`'s padding (DECISIONS.md 2026-10-12, *the reload
+# that the list needs*).
+UNC_MAC_CODE_DEFAULT=172064
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -855,7 +860,17 @@ UNC_MAC_A5_DEFAULT=38008
 # NULL checks on our own MENUs 32, and reading About's number from 'vers'
 # 1 rather than writing it in the DITL 64 (DECISIONS.md 2026-10-12, *the
 # application nobody could leave*). The 16 B is partly alignment luck.
-UNC_MAC_CODE_EAGER=54852
+# +192 code and +0 A5 on 2026-10-12 for the reload a list of archives
+# needs: **192 B off every extraction's budget on a 1 MB Mac Plus.** By
+# symbol: `ovl_reload` 114, new — dispose the kept copies, ReserveMem the
+# bundle's size so it lands low as at launch, read it again; `main` +62,
+# 24 of it DropNext reading the list by position and 38 the reload and its
+# alert, which is a resource (ALRT 135) so that its text is not A5; 16 of
+# alignment. The first version was +240 and +96: the alert's string was
+# 72 B of A5, and moving the copies high after each release, instead of
+# reserving low, was 76 B more (DECISIONS.md 2026-10-12, *the reload that
+# the list needs*).
+UNC_MAC_CODE_EAGER=55044
 UNC_MAC_A5_EAGER=19100
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
@@ -889,8 +904,12 @@ UNC_MAC_A5_EAGER=19100
 # -8 code and +8 A5 on 2026-10-12 for the menu bar and the titled
 # progress window, the same pieces as the eager pair above; the A5 is
 # `.data` alignment.
-UNC_MAC_CODE_LAZY=53384
-UNC_MAC_A5_LAZY=19192
+# +80 code and +16 A5 on 2026-10-12 for the same reload, which this
+# lifetime never runs: the branch is in `main` whatever the loader, `main`
+# +62 and a 4-byte `ovl_reload` that answers 1, and the A5 is `_sdata`'s
+# padding. Not shipped, so not trimmed further.
+UNC_MAC_CODE_LAZY=53464
+UNC_MAC_A5_LAZY=19208
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

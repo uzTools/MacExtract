@@ -70,12 +70,19 @@ OverlayEntry ovl_image_q(short id, int expected);
 void ovl_preload(void);
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
 
-/* Nonzero once a release has given decoders back. Eager never reloads, so
- * from then on this run can open only archives of the format it kept, and
- * the interactive application quits after the archive instead of offering
- * Standard File again (DECISIONS.md 2026-10-11, *one archive per launch*).
- * Lazy and resident: always 0. */
+/* Nonzero once a release has given decoders back. From then on this run
+ * can open only archives of the format it kept, so the interactive
+ * application quits after an archive chosen in Standard File (DECISIONS.md
+ * 2026-10-11, *one archive per launch*) and reloads for one the Finder
+ * handed over with it (ovl_reload). Lazy and resident: always 0. */
 int ovl_spent(void);
+
+/* Read the bundle again after a release, so the next archive in the
+ * Finder's list can be of any format (DECISIONS.md 2026-10-12, *the reload
+ * that the list needs*). Eager: gives back the kept copies and repeats the
+ * launch-time read; nonzero if the bundle is in memory again. Lazy: nothing
+ * was given back, so always nonzero. */
+int ovl_reload(void);
 
 /* The codec vector lives in the shim, which plants it; the eager release
  * invalidates it because the copy it keeps is at a different address. */

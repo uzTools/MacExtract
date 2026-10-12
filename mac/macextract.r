@@ -63,6 +63,27 @@ resource 'DITL' (130, purgeable) {
     }
 };
 
+/* The decoders could not be read again for the next archive the Finder
+ * handed over (ovl_reload). Its own alert with the text written in, rather
+ * than ShowNote and a string: a string literal is A5, and A5 comes off every
+ * extraction's budget one for one, for a message almost nobody will see
+ * (DECISIONS.md 2026-10-12, *the reload that the list needs*). */
+resource 'ALRT' (135, purgeable) {
+    { 90, 100, 190, 412 }, 135, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (135, purgeable) {
+    {
+        { 68, 232, 88, 292 }, Button { enabled, "OK" };
+        { 12, 64, 60, 300 }, StaticText { disabled,
+          "There is not enough memory to open the next archive. "
+          "Open it again." };
+    }
+};
+
 /* "Locate part N" alert, for a segmented archive whose next part was not
  * found beside the one that was opened. Three buttons, in the order the
  * code tests them (kSegFindItem..kSegCancelItem in macextract_mac.c):

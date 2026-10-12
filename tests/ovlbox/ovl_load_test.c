@@ -40,6 +40,7 @@ OverlayEntry ovl_image(short id);
 OverlayEntry ovl_image_q(short id, int expected);
 void ovl_preload(void);
 void ovl_release_if_unwanted(UncFormat fmt, UncIO *io);
+int ovl_reload(void);
 unsigned long ovl_be32(const unsigned char *p);
 unsigned short ovl_be16(const unsigned char *p);
 void ovl_fixup(unsigned char *base, unsigned long size, long delta);
@@ -345,6 +346,50 @@ int main(int argc, char **argv)
     printf("  rf=%d wa=%d kf=%d fc=%d fn=%d\n", (int)gRelFmt,
            (int)gWantedAfterRelease, (int)gKeepFail, (int)gFlushHas,
            (int)gFlushCalls);
+
+    /* The reload, for the next archive in a Finder list (DECISIONS.md
+     * 2026-10-12, *the reload that the list needs*): the three copies the
+     * StuffIt release kept go, the bundle comes back in ONE read after a
+     * reservation of exactly its size, what the release gave back is
+     * reachable again and correctly relocated, and a second release keeps
+     * what the next format wants. */
+    printf("the reload, for the next archive in a list\n");
+    {
+        long handles0 = ovlbox_handles, rawlen = 0;
+        unsigned char *raw;
+        OverlayEntry e;
+        reads0 = ovlbox_reads;
+        CHECK(ovl_reload() != 0, "the reload did not bring the bundle back");
+        CHECK(ovlbox_reads == reads0 + 1, "the reload took %ld read(s), not 1",
+              ovlbox_reads - reads0);
+        CHECK(ovlbox_reserves == 1 &&
+              ovlbox_reserved == ovlbox_resource_len(OVL_ID_BUNDLE),
+              "ReserveMem asked %ld time(s), last for %ld B, the bundle is %ld B",
+              ovlbox_reserves, ovlbox_reserved,
+              ovlbox_resource_len(OVL_ID_BUNDLE));
+        CHECK(ovlbox_handles == handles0 - 3 + 1,
+              "%ld handle(s) after the reload, %ld before: the three kept "
+              "copies were not given back", ovlbox_handles, handles0);
+        e = ovl_image_q(OVL_ID_LZH, 1);
+        CHECK(e != NULL, "an image the last release gave back is still gone");
+        raw = raw_image(rawdir, OVL_ID_STUFFIT, &rawlen);
+        e = ovl_image(OVL_ID_STUFFIT);
+        CHECK(e != NULL, "the StuffIt image is not in the reloaded bundle");
+        if (e && raw) check_relocs("reloaded", OVL_ID_STUFFIT,
+                                   (const unsigned char *)e, raw, rawlen);
+        free(raw);
+        ovl_release_if_unwanted(UNC_FORMAT_LZH, &io);
+        CHECK(gKeepFail == 0, "a keep failed after the reload: kf=%d",
+              (int)gKeepFail);
+        raw = raw_image(rawdir, OVL_ID_LZH, &rawlen);
+        e = ovl_image(OVL_ID_LZH);
+        CHECK(e != NULL, "the LZH image was not kept by the second release");
+        if (e && raw) check_relocs("kept after a reload", OVL_ID_LZH,
+                                   (const unsigned char *)e, raw, rawlen);
+        free(raw);
+        CHECK(ovl_image_q(OVL_ID_STUFFIT, 1) == NULL,
+              "the second release kept the first archive's decoder");
+    }
 #else
     /* The lazy lifetime releases nothing, and its release entry point must be
      * a no-op rather than a hole: the shell calls it either way. */

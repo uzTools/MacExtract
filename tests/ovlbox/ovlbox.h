@@ -38,6 +38,9 @@ extern long ovlbox_reads;        /* GetResource calls that hit the "disk"   */
 extern long ovlbox_flushes;      /* HWPriv/FlushCodeCache calls             */
 extern long ovlbox_moves;        /* relocatable blocks moved by the mock    */
 extern long ovlbox_handles;      /* handles currently allocated             */
+extern long ovlbox_reserves;     /* ReserveMem calls                        */
+extern long ovlbox_reserved;     /* ...and the size the last one asked for  */
+long ovlbox_resource_len(short id); /* a registered resource's size, or -1 */
 
 /* Every relocatable (unlocked) block moves on every allocation. A real
  * Memory Manager compacts only when it must, so a loader that depends on an

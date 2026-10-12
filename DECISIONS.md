@@ -400,6 +400,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
 - 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
 - 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
+- 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
 
 ---
 
@@ -26069,3 +26070,84 @@ did by eye. Positioning on System 7 is by type-select (`--open NAME`,
 **Transferable.** A competitor that the system never registered is no
 competitor: check that the second application is in the list before
 reading a result as "the first one won".
+
+## 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
+
+**Claim (measured).** The Finder hands a launch a LIST of documents on every
+system — select several and Open; on System 7 drop several — and since
+2026-10-11 the shipped build extracted the first and quit, losing the rest
+without a word (*one archive per launch*, whose cost line this reverses).
+It now disposes the decoders it kept, reads the overlay bundle again and
+carries on with the next archive in the list; an archive chosen in Standard
+File still quits after it, as decided then. Measured with
+`tools/vmac/relaunch.py`, a `.cpt` and a `.sit` opened together, graded on
+both destination dialogs and every entry of both on the volume: **both
+extracted on System 6.0.8 at 4 MB and on a 512Ke, System 3.0 on a 512Ke,
+System 6.0.8 under MultiFinder and System 7.0.1**, where the build before
+it extracts the first only.
+
+**Rejected first: relaunching itself.** Handing the rest of the list to a
+fresh launch of the application (`_Launch` of itself, the list left in
+`AppParmHandle` as the companion's stub does, 2026-10-11) extracted both on
+System 3.0 at 512 KB and System 6.0.8 under the Finder, and returned without
+launching under MultiFinder and on System 7, where an application cannot
+launch itself while it runs. A mechanism that needs the system told apart
+was not wanted; this one is the same everywhere.
+
+**The reload broke the heap up, and why (measured).** The first version
+passed the small pair everywhere and refused `derived-a2basic.dmg.sit` —
+one 205 KB block — when it came second on the System 3.0 512Ke: *"Memory is
+too broken up"*, where the same archive first got as far as writing. A
+probe, `-D UNC_AT_HEAPLOG`, logs at each archive's budget the free total,
+the largest block and every block that cannot move (its walk sums the free
+blocks itself and agreed with `FreeMem()` on every line; the 24-bit block
+header it reads is from memory of Inside Macintosh II, *Memory Manager*,
+not a source here). It showed the reloaded bundle, 164,272 B, landing
+locked at 239,626 — the MIDDLE of the heap, above what the first archive
+left — so the release's copies, moved high, stopped just under it, and its
+release left them an island: largest free block **317,692 B at the first
+archive, 175,478 B at the second.**
+
+**The fix: reserve the bundle low.** `ovl_reload` asks for the bundle's
+handle with resources not loaded, takes its size (`GetResourceSizeOnDisk`,
+trap A9A5, the classic `SizeRsrc`), and `ReserveMem`s it (A040, the
+classic `ResrvMem`, which makes room for a block at the lowest place it
+can — from memory of Inside Macintosh II, and confirmed by the log rather
+than by a source) before the launch-time read. The bundle then lands at
+62,896, directly above the application's own locked blocks, as at launch,
+and the next archive's largest free block is **295,422 B against 295,572 B
+after a fresh launch for `a2basic`, 317,594 against 318,530 B for a
+`.cpt`** — within 1 KB. `Cool_Tools__.sit` then `a2basic.dmg.sit`, both
+StuffIt 5 and both at the edge of that machine, extract one after the
+other. A first fix moved the copies high again after every release (76 B
+of code); reserving low makes that unnecessary. If the bundle cannot be
+read again, ALRT 135 says so — a resource with its text written in,
+because the same message as a string literal was 72 B of A5.
+
+**Cost, all five axes.** `CODE` +192 B and A5 +0 shipped (`ovl_reload` 114,
+`main` +62, 16 of alignment), the control +24 and +8 for the list read by
+position, lazy +80 and +16 for a branch it never runs (tools/build_mac.sh,
+by symbol). Heap: nothing during an archive; between two archives of a
+list, the 164 KB bundle a launch reads anyway. Stack: `ovl_reload` is
+called from `main`, not under an extraction. **Extractions lost: none** —
+`run_tiers.py --check`, both lanes, all three tiers, the same tallies by
+name; a shipped grant is 192 B lower everywhere (`OVL_SAVED` −160, TIERS
+−32, derived). And one disk access between archives of a list, which on a
+one-drive machine may be a disk swap: the cost the eager lifetime avoids
+for a single archive, paid only when the user asked for several.
+
+**The list is read by POSITION now**, not through a pointer into it:
+`AppParmHandle` is a relocatable block and an extraction can move it, and
+the list is read after one since the reload. HYPOTHESIS: that the block
+moved in any run so far — nothing here observed it; the pointer was a
+latent fault only, because the build that shipped it never read the list
+after an extraction.
+
+**Two things the probe met on the way.** Writing `Heap Log` from inside an
+extraction, and then between archives, hung the 512Ke at 0 % every time
+with Retro68 Multiversal's `HCreate`/`HOpen`/`FSWrite`, which are glue and
+not traps; the same write through `PBHCreateSync`/`PBHOpenSync`/
+`PBWriteSync` works (bisected: no walk, no write; HYPOTHESIS that the
+glue is at fault rather than something it calls — it was not read). And
+System 7's Finder put `In`'s neighbours off the window's edge, so the
+harness opens by type-select there.

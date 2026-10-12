@@ -237,8 +237,16 @@ Extraction correctness
 - [ ] Extract the same archive twice into the same folder: a top-level
       folder comes out as `Folder~1` with the files inside under their own
       names, a top-level file as `name~1`; no overwrite, no crash.
-- [ ] Extract an archive: the application quits afterwards (the shipped
-      build). Dropping two archives on its icon extracts the first.
+- [ ] Extract an archive chosen in Standard File: the application quits
+      afterwards (the shipped build).
+- [ ] **Two archives of different formats opened together** — a `.cpt` and
+      a `.sit` selected in the Finder, then File ▸ Open, or both dropped on
+      the icon on System 7: both are extracted, one after the other, with a
+      disk access between them, and the application then quits. Driven
+      under emulation on five configurations (`tools/vmac/relaunch.py`,
+      DECISIONS.md 2026-10-12, *the reload that the list needs*); on a
+      one-drive machine with the application on its own floppy, the second
+      should ask for that floppy back, which nothing here can show.
 - [ ] An archive with a member name over 31 characters (zip or tar): truncated
       to 31, extraction completes.
 - [ ] A truncated `.sit`: per-entry error alert, application stays alive.

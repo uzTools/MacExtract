@@ -54,6 +54,7 @@
 #define kFileMENU       128     /* File > Quit, its only item */
 #define kAppleMENU      129     /* About MacExtract..., its only item */
 #define kAboutALRT      134
+#define kNoReloadALRT   135     /* the next archive's decoders: no room */
 
 /* Extra stack over the 8 KB default, giving a 12 KB stack.
  *
@@ -2400,6 +2401,11 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 #define kSegMaxKnown 64      /* parts we can remember where to find */
 
 static void ShowNote(short alrtID, const unsigned char *msg);
+#ifdef UNC_AT_HEAPLOG
+static void HeapLog(const char *tag);
+static void HeapLogFlush(void);
+static short gHeapLogN;
+#endif
 
 typedef struct {
     short vRefNum;
@@ -3880,6 +3886,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * credited back, and a credit path would be code no run executes. */
         { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
           ovl_release_if_unwanted(extractedAs, &io); }
+#ifdef UNC_AT_HEAPLOG
+        { char t[4] = "A0"; t[1] = (char)('1' + gHeapLogN++); HeapLog(t); }
+#endif
 #endif
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the
@@ -5752,7 +5761,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
  * to offer the drop; what the file actually holds is unc_sniff's
  * business, and the whole point of the '****' file reference is to be
  * handed files whose type is wrong. */
-static const unsigned char *gDropNext;   /* the next record, or NULL */
+/* The next record as an OFFSET into the handle, not a pointer: the list
+ * is a relocatable block, an extraction can move it, and the list is read
+ * again after one since the reload (ovl_reload). */
+static long gDropOff;                    /* the next record, or 0    */
 static short gDropLeft;                  /* records not yet taken    */
 
 static void DropInit(void)
@@ -5763,23 +5775,154 @@ static void DropInit(void)
     q = (const unsigned char *)*h;
     if (q[0] || q[1]) return;                     /* appPrint: not ours */
     gDropLeft = (short)((q[2] << 8) | q[3]);
-    if (gDropLeft > 0) gDropNext = q + 4;
+    if (gDropLeft > 0) gDropOff = 4;
 }
 
 /* The next document, into the two fields SFGetFile would have filled.
  * Returns 0 when the list is exhausted. */
 static int DropNext(short *vol, Str63 name)
 {
-    const unsigned char *q = gDropNext;
+    Handle h = LMGetAppParmHandle();
+    const unsigned char *q;
     short len;
-    if (gDropLeft <= 0 || !q) return 0;
+    if (gDropLeft <= 0 || !gDropOff || !h || !*h) return 0;
+    q = (const unsigned char *)*h + gDropOff;
     *vol = (short)((q[0] << 8) | q[1]);
     len = (short)q[8];
     BlockMoveData(q + 8, name, (long)len + 1);
-    gDropNext = q + ((8 + 1 + len + 1) & ~1);
+    gDropOff += (8 + 1 + len + 1) & ~1;
     gDropLeft--;
     return 1;
 }
+
+#ifdef UNC_AT_HEAPLOG
+/* PROBE: one line per call appended to "Heap Log" beside the application —
+ * FreeMem, MaxBlock, and every block that cannot move: non-relocatable, or
+ * a locked handle. The walk is of the 24-bit Memory Manager's heap, from
+ * memory of Inside Macintosh II, Memory Manager, "Structure of Blocks" — an
+ * 8-byte header whose top two tag bits are 00 free, 01 non-relocatable, 10
+ * relocatable, whose low 24 bits are the block's whole physical size, and
+ * whose second long is, for a relocatable block, its master pointer's
+ * offset from the zone. Not a source in this repository; the line's own
+ * free total, summed by the walk, is checked against FreeMem() so a wrong
+ * reading shows itself. Zone layout: Multiverse.h's `Zone`, blocks from
+ * `heapData` to `bkLim`. */
+static void HL_num(unsigned char *b, short *n, long v)
+{
+    char t[12];
+    short k = 0;
+    if (v < 0) { b[(*n)++] = '-'; v = -v; }
+    do { t[k++] = (char)('0' + v % 10); v /= 10; } while (v && k < 11);
+    while (k) b[(*n)++] = (unsigned char)t[--k];
+}
+
+static void HL_str(unsigned char *b, short *n, const char *s)
+{
+    while (*s && *n < 1000) b[(*n)++] = (unsigned char)*s++;
+}
+
+/* Lines collect here and are written by HeapLogFlush BETWEEN archives:
+ * writing the file from inside an extraction hung the machine at 0% on the
+ * 512Ke, every time, with the heap walk taken out as well (2026-10-12). */
+static unsigned char gHeapLogBuf[2048];
+static short gHeapLogLen;
+static void HeapLog(const char *tag)
+{
+    unsigned char *b = gHeapLogBuf + gHeapLogLen;
+    short n = 0, fixed = 0;
+    THz z = ApplicationZone();
+    unsigned char *p = (unsigned char *)&z->heapData;
+    unsigned char *end = (unsigned char *)z->bkLim;
+    long freeSum = 0;
+    FCBPBRec fcb;
+    Str63 nm;
+    short ref;
+    long len;
+
+    if (gHeapLogLen > 2048 - 1024) return;
+    HL_str(b, &n, tag);
+    HL_str(b, &n, " free="); HL_num(b, &n, FreeMem());
+    HL_str(b, &n, " maxblk="); HL_num(b, &n, MaxBlock());
+    HL_str(b, &n, " fixed:");
+    while (p < end && n < 960) {
+        unsigned long hdr = ((unsigned long)p[0] << 24) | ((unsigned long)p[1] << 16)
+                          | ((unsigned long)p[2] << 8) | p[3];
+        unsigned long size = hdr & 0x00FFFFFFUL;
+        short tagbits = (short)(p[0] >> 6);
+        if (size < 8) { HL_str(b, &n, " BADSIZE"); break; }
+        if (tagbits == 0) freeSum += (long)size;
+        else {
+            int show = (tagbits == 1);
+            if (tagbits == 2) {
+                long rel = ((long)p[4] << 24) | ((long)p[5] << 16) | ((long)p[6] << 8) | p[7];
+                Handle h = (Handle)((unsigned char *)z + rel);
+                if (HGetState(h) & 0x80) show = 2;
+            }
+            if (show && fixed < 40) {
+                HL_str(b, &n, show == 1 ? " N@" : " L@");
+                HL_num(b, &n, (long)(p - (unsigned char *)z));
+                HL_str(b, &n, "+");
+                HL_num(b, &n, (long)size);
+                fixed++;
+            }
+        }
+        p += size;
+    }
+    HL_str(b, &n, " walkfree="); HL_num(b, &n, freeSum);
+    b[n++] = '\r';
+    gHeapLogLen += n;
+}
+
+static void HeapLogFlush(void)
+{
+    /* Parameter-block traps only. The high-level HCreate/HOpen/FSWrite are
+     * Multiversal GLUE rather than traps, and with them this hung the 512Ke
+     * between archives as well as inside one (2026-10-12) — the same
+     * library whose GetAppFiles loops for ever (DECISIONS.md 2026-08-31). */
+    FCBPBRec fcb;
+    HParamBlockRec hp;
+    ParamBlockRec pb;
+    Str63 nm;
+    short vol, ref;
+    long dir;
+    if (gHeapLogLen == 0) return;
+    fcb.ioCompletion = NULL; fcb.ioNamePtr = nm; fcb.ioVRefNum = 0;
+    fcb.ioRefNum = LMGetCurApRefNum(); fcb.ioFCBIndx = 0;
+    if (PBGetFCBInfoSync(&fcb)) return;
+    vol = fcb.ioFCBVRefNum;
+    dir = fcb.ioFCBParID;
+
+    hp.fileParam.ioCompletion = NULL;
+    hp.fileParam.ioNamePtr = (StringPtr)"\pHeap Log";
+    hp.fileParam.ioVRefNum = vol;
+    hp.fileParam.ioFVersNum = 0;
+    hp.fileParam.ioDirID = dir;
+    PBHCreateSync(&hp);                       /* dupFNErr is fine */
+
+    hp.ioParam.ioCompletion = NULL;
+    hp.ioParam.ioNamePtr = (StringPtr)"\pHeap Log";
+    hp.ioParam.ioVRefNum = vol;
+    hp.ioParam.ioVersNum = 0;
+    hp.ioParam.ioPermssn = fsWrPerm;
+    hp.ioParam.ioMisc = NULL;
+    hp.fileParam.ioDirID = dir;
+    if (PBHOpenSync(&hp)) return;
+    ref = hp.ioParam.ioRefNum;
+
+    pb.ioParam.ioCompletion = NULL;
+    pb.ioParam.ioRefNum = ref;
+    pb.ioParam.ioPosMode = fsFromLEOF;
+    pb.ioParam.ioPosOffset = 0;
+    PBSetFPosSync(&pb);
+    pb.ioParam.ioBuffer = (Ptr)gHeapLogBuf;
+    pb.ioParam.ioReqCount = gHeapLogLen;
+    pb.ioParam.ioPosMode = fsAtMark;
+    pb.ioParam.ioPosOffset = 0;
+    PBWriteSync(&pb);
+    PBCloseSync(&pb);
+    gHeapLogLen = 0;
+}
+#endif
 
 int main(void)
 {
@@ -5863,9 +6006,9 @@ int main(void)
          * POSITION below. DECISIONS.md, 2026-08-09. */
         /* A document the Finder handed over takes the place of the
          * Open dialog, one per pass, and the loop falls back to Standard
-         * File when the list runs out. Since 2026-10-11 the shipped
-         * (eager) build quits after the first archive it extracts, below,
-         * so of three dropped archives one is extracted. */
+         * File when the list runs out. The shipped (eager) build reloads
+         * its decoders between archives of one list and quits after an
+         * archive chosen in Standard File, below. */
         if (!DropNext(&reply.vRefNum, reply.fName)) {
 #ifdef UNC_AT_STACK
             SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
@@ -5921,9 +6064,33 @@ int main(void)
          * (DECISIONS.md 2026-10-11, *one archive per launch*). An archive
          * that never got as far as a release — not an archive, could
          * not be opened — still comes back here. */
-        { extern int ovl_spent(void); if (ovl_spent()) break; }
+        { extern int ovl_spent(void);
+          if (ovl_spent()) {
+              /* Archives still in the Finder's list: read the decoders
+               * again rather than drop them, and say so if that cannot be
+               * done (DECISIONS.md 2026-10-12, *the reload that the list
+               * needs*). One chosen in Standard File still quits. */
+              if (gDropLeft > 0) {
+                  extern int ovl_reload(void);
+#ifdef UNC_AT_HEAPLOG
+                  HeapLog("before-reload");
+                  HeapLogFlush();
+#endif
+                  if (ovl_reload()) {
+#ifdef UNC_AT_HEAPLOG
+                      HeapLog("after-reload");
+#endif
+                      continue;
+                  }
+                  StopAlert(kNoReloadALRT, NULL);
+              }
+              break;
+          } }
 #endif
     }
+#ifdef UNC_AT_HEAPLOG
+    HeapLogFlush();
+#endif
     return 0;
 }
 

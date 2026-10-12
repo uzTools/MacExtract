@@ -31,7 +31,10 @@
  *   - no Resource Manager, so a real GetResource's purging, its resource map
  *     and the file it reads from are all absent;
  *   - no FRAGMENTATION model. The mock always finds room; a Macintosh's
- *     "Memory is too broken up" is tools/run_tiers.py's blind spot too;
+ *     "Memory is too broken up" is tools/run_tiers.py's blind spot too.
+ *     So the reload's ReserveMem is checked for being ASKED, with the
+ *     bundle's size, and what it does to the heap only on the Macintosh
+ *     (tools/vmac/relaunch.py with -D UNC_AT_HEAPLOG);
  *   - not the Retro68 toolchain's code generation. The images here are built
  *     by m68k-linux-gnu-gcc from the same sources with the same flags, which
  *     is the same COMPILER FAMILY and not the same compiler;
@@ -49,6 +52,7 @@
 #include "toolbox/OSUtils.h"
 
 long ovlbox_reads, ovlbox_flushes, ovlbox_moves, ovlbox_handles;
+long ovlbox_reserves, ovlbox_reserved;
 
 static int gShuffle = 1;
 static int gFlushRoute = 1;
@@ -208,6 +212,13 @@ void MoveHHi(Handle h)
 
 OSErr MemError(void) { return 0; }
 
+/* Where a block lands is not modelled here — a mapping per block has no
+ * "low" — so this records the ask, and the test checks the loader asked for
+ * the bundle's size before reading it again. What the reservation DOES is
+ * measured on the Macintosh (DECISIONS.md 2026-10-12, *the reload that the
+ * list needs*). */
+void ReserveMem(Size n) { ovlbox_reserves++; ovlbox_reserved = (long)n; }
+
 /* ---- Resource Manager ----------------------------------------------- */
 
 int ovlbox_add_resource(short id, const void *bytes, size_t len)
@@ -265,6 +276,31 @@ int ovlbox_load_manifest(const char *path)
     return n;
 }
 
+/* SetResLoad(false): GetResource answers a handle whose master pointer is
+ * NIL and reads nothing, as the Resource Manager does — enough to ask the
+ * resource's size. One such handle at a time is all a loader makes. */
+static int   gResLoad = 1;
+static Ptr   gUnloadedCell;
+static short gUnloadedId = -1;
+
+void SetResLoad(Boolean load) { gResLoad = load != 0; }
+
+long ovlbox_resource_len(short id)
+{
+    int i;
+    for (i = 0; i < MAX_RES; i++)
+        if (gRes[i].used && gRes[i].id == id) return (long)gRes[i].len;
+    return -1;
+}
+
+long GetResourceSizeOnDisk(Handle h)
+{
+    Blk *b;
+    if (h == &gUnloadedCell) return ovlbox_resource_len(gUnloadedId);
+    b = blk_of(h);
+    return b ? ovlbox_resource_len(b->resid) : -1;
+}
+
 Handle GetResource(ResType type, short id)
 {
     int i;
@@ -274,6 +310,11 @@ Handle GetResource(ResType type, short id)
         Blk *b;
         if (!r->used || r->id != id) continue;
         if (r->open) return (Handle)&r->open->cell;   /* already in memory */
+        if (!gResLoad) {
+            gUnloadedCell = NULL;
+            gUnloadedId = id;
+            return (Handle)&gUnloadedCell;
+        }
         b = blk_new((Size)r->len, id);
         if (b == NULL) return NULL;
         memcpy(b->cell, r->bytes, r->len);

@@ -78,10 +78,12 @@ void ovl_preload(void)
     }
 }
 
-/* NEVER reloads. One disk read at launch is the whole of this lifetime's
- * argument, and a loader that quietly re-read the application's resource fork
- * mid-extraction would spend exactly what it exists to save — on a Mac Plus
- * with one drive, at the moment the archive's floppy is in.
+/* Never reloads by itself. One disk read at launch is the whole of this
+ * lifetime's argument, and a loader that quietly re-read the application's
+ * resource fork mid-extraction would spend exactly what it exists to save —
+ * on a Mac Plus with one drive, at the moment the archive's floppy is in.
+ * The only re-read is ovl_reload, BETWEEN archives, and only when the Finder
+ * handed over more than one.
  *
  * That makes the release decision load-bearing rather than an optimisation:
  * an image released is gone for this archive. It is safe because nothing is
@@ -240,6 +242,45 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     HUnlock(gBundle);
     ReleaseResource(gBundle);
     gBundle = NULL;
+
+}
+
+/* The one disk read after launch this lifetime makes, and only when the
+ * Finder handed over several archives at once: the release gave back what
+ * the next one may need (DECISIONS.md 2026-10-12, *the reload that the
+ * list needs*). The copies kept for the last archive go first, so that the
+ * bundle is read into as much of the heap as there is. */
+int ovl_reload(void)
+{
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (gKept[i] != NULL) {
+            DisposeHandle(gKept[i]);       /* locked is fine to dispose */
+            gKept[i] = NULL;
+        }
+    }
+    ovl_codecs_invalidate();
+    /* Only called once ovl_spent() says the bundle was released. */
+    {
+        /* LOW in the heap, as at launch. Left to itself the Memory Manager
+         * put the bundle in the MIDDLE — at 239,626 of a 512Ke's heap,
+         * above what the last archive left — the copies the release keeps
+         * were moved high only as far as just under it, and its release
+         * then left them an island: the largest free block fell from
+         * 317,692 B to 175,478 B (DECISIONS.md 2026-10-12). ResrvMem makes
+         * room for a block at the lowest place it can (ReserveMem, trap A040,
+         * the classic ResrvMem; the size by A9A5, SizeRsrc), which is what a
+         * block about to be locked wants. The size needs the handle and
+         * not its data, so the handle is fetched empty first. */
+        Handle h;
+        SetResLoad(false);
+        h = GetResource('OVLY', OVL_ID_BUNDLE);
+        SetResLoad(true);
+        if (h != NULL) ReserveMem(GetResourceSizeOnDisk(h));
+        gBundleTried = 0;
+        ovl_preload();
+    }
+    return gBundle != NULL;
 }
 
 /* Tried and gone is released: nothing else sets gBundle back to NULL.

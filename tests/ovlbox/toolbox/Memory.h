@@ -23,5 +23,6 @@ void   HUnlock(Handle h);
 void   HNoPurge(Handle h);
 void   MoveHHi(Handle h);
 OSErr  MemError(void);
+void   ReserveMem(Size n);                /* the classic ResrvMem, A040 */
 
 #endif /* OVLBOX_MEMORY_H */

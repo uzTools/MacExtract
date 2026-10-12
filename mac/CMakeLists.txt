@@ -465,6 +465,11 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # UNC_AT_TWICE: the same archive extracted twice into
                        # one folder; read the Out disk, not the grid.
                        $<$<BOOL:$ENV{UNC_AT_TWICE}>:-DUNC_AT_TWICE>
+                       # UNC_AT_HEAPLOG: append the heap's free total, largest
+                       # block and every block that cannot move to "Heap Log"
+                       # beside the application, written between archives.
+                       # Interactive build only. A probe.
+                       $<$<BOOL:$ENV{UNC_AT_HEAPLOG}>:-DUNC_AT_HEAPLOG>
                        # UNC_AT_NOHIDECURSOR: draw the result grid WITHOUT
                        # hiding the cursor first, to test the claim that the
                        # cursor's saved background stamps over the grid.
