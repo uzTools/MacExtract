@@ -1,8 +1,9 @@
-# Ready-to-post upstream issue (github.com/autc04/Retro68)
+# Upstream issue: autc04/Retro68#320
 
-**Not filed, and not to be filed from here.** The maintainer posts this from
-his own account (MANUAL_TESTS.md §7, CLAUDE.md Rules). Reproduction:
-`iomisc_repro.c` in this directory, pasted inline (this repository is private).
+**Filed 2026-10-13** by the maintainer as
+https://github.com/autc04/Retro68/issues/320. This is the text as drafted
+(the posted title is the longer *glue leaves `ioMisc` uninitialised; the File
+Manager writes an access path buffer through it*); the issue is the record.
 
 Re-verified 2026-10-13 against Retro68 master `d8b891a` (2026-10-09): its
 pinned multiversal `d124fa6` and multiversal master `28eac84` carry a

@@ -149,18 +149,14 @@ archive to the HD20. Record whether it extracts; if it bombs, the ID and
 the screen; the output's sizes and dates. A pass would not by itself move
 the floor — BLOCKERS.md's tiers would be re-run first.
 
-## 7. Two bug reports, written and not posted
+## 7. A bug report, written and not posted
 
-They need an account, not a Macintosh. **No session working in this
-repository submits them** (CLAUDE.md, *Rules*); the maintainer posts them.
+It needs an account, not a Macintosh. **No session working in this
+repository submits it** (CLAUDE.md, *Rules*); the maintainer posts it.
 
 - [ ] **XADMaster reads one byte past a DDn fork's compressed length** —
       `tools/xadmaster-ddn-repro/` (`ISSUE.md`, `make_repro.py`), for
       MacPaw/XADMaster.
-- [ ] **Retro68's `HOpen`/`HOpenRF`/`HOpenDF` leave `ioMisc` uninitialised**
-      — `tools/retro68-hopen-repro/ISSUE.md`, for autc04/Retro68, with
-      `iomisc_repro.c` inline. Re-verified against Retro68 master 2026-10-13. The
-      `paramErr` claim it replaced is withdrawn (BLOCKERS.md).
 
 **Record** the issue URL in BLOCKERS.md beside its claim. A rejection is a
 withdrawn claim, filed with what it cost.

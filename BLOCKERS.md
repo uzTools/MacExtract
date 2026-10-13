@@ -70,7 +70,8 @@ footnote*).
 stack garbage, and the File Manager writes through it** — measured 2026-10-13:
 524 bytes on System 6.0.8, 12 on System 7.0.1, into memory the caller never
 passed. MacExtract is unaffected (zeroed param blocks).
-`tools/retro68-hopen-repro/ISSUE.md`, deliberately not filed.
+Filed 2026-10-13 as https://github.com/autc04/Retro68/issues/320
+(`tools/retro68-hopen-repro/`).
 
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
 it, a pointer dragged through the grid flips one bit of the result
