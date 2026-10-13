@@ -26,6 +26,19 @@ resource 'DLOG' (128, purgeable) {
     noGrowDocProc, visible, noGoAway, 0, 128, "MacExtract", noAutoCenter
 };
 
+/* Mac OS 8 and later: the progress window takes the theme's background
+ * rather than white, as alerts already do; 'dlgx' 132 does the same for
+ * the password dialog. No code reads either; Systems before Appearance
+ * 1.0 ignore the type. Standard File's dialogs stay white: a 'dlgx' is
+ * read only from its DLOG's own file, and theirs are the System's.
+ * Source: flag bit — Mac OS 8 Toolbox Reference, Dialog Manager, *Dialog
+ * Feature Flag Constants* (kDialogFlagsUseThemeBackground = 1 << 0).
+ * Layout — measured on 100 of Apple's own 'dlgx' resources on the
+ * Mac OS 9.2 disk: 6 bytes, version word 0 then a 32-bit flags word. */
+data 'dlgx' (128, purgeable) {
+    $"0000 0000 0001"
+};
+
 resource 'DITL' (128, purgeable) {
     {
         { 78, 220, 98, 300 }, Button     { enabled,  "Cancel" };
@@ -153,6 +166,10 @@ resource 'DITL' (136, purgeable) {
 resource 'DLOG' (132, purgeable) {
     { 80, 60, 214, 452 }, dBoxProc, visible, noGoAway, 0, 132, "",
     noAutoCenter
+};
+
+data 'dlgx' (132, purgeable) {
+    $"0000 0000 0001"
 };
 
 resource 'DITL' (132, purgeable) {

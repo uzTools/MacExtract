@@ -407,6 +407,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
 - 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
 - 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
+- 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
 
 ---
 
@@ -26464,3 +26465,42 @@ because what fails is whatever the stale pointer happens to address.
 this one value is harmless. Ask what the field is *for*, then give it a value
 that would be used. And search the upstream tracker before writing an
 upstream report.
+
+## 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
+
+**Claim (measured, Mac OS 9.2, `os9.py --cancel` and `--encrypted`).** A
+`'dlgx'` beside `DLOG` 128 and `DLOG` 132, theme-background bit only, draws
+both dialogs in the theme's grey, as Mac OS 9 already draws every alert.
+The static text, the bar's empty part, the edit field (white, Platinum frame)
+and the refused-password message all draw cleanly on it. Code and A5 are
+unchanged (55,300 / 19,052 B); nothing reads the resource, and Systems
+before Appearance 1.0 never ask for the type.
+
+**The layout is measured, not documented in text.** Apple's Dialog Manager
+reference gives the flag bits (*Dialog Feature Flag Constants*) and the
+layout only as a figure. 100 `'dlgx'` resources on the Mac OS 9.2 disk are
+all 6 bytes: version word 0, then a 32-bit flags word.
+
+**The download stayed 235,776 B by paying for itself.** Each `'dlgx'` is
+22 B of resource fork (30 B for the first, which adds the type), and the
+fork had 21 B left in its last 128-byte MacBinary block, so the first alone
+grew the `.bin` by 128 B. The six icon-family members dropped their resource
+name `"MacExtract"`, which nothing reads: 66 B. Net fork change −14 B. The
+`.dsk` is a fixed 800K image and never moves.
+
+**Not taken:**
+- **Standard File** (-4000, -3999). A `'dlgx'` with those ids in our file
+  changed nothing, as Apple's same-file rule says: theirs are the System's
+  `DLOG`s. Owning copies via `SFPGetFile`/`SFPPutFile` costs code past the
+  ceiling and a template untested from System 3.0 up. The maintainer's
+  call: white Standard File with Platinum buttons is what every System 6
+  and 7 application shows there, and that is fine.
+- **The report dialog** (133). `RepListDraw` erases its list box with the
+  port's background, so the list would turn grey with the window.
+- **A blue bar** (`ForeColor(blueColor)` around the fill, as CD Player does):
+  +12 B of code, over the ceiling.
+
+**Transferable.** "Without making the download larger" had two axes, and the
+second was not the download: the code ceiling refused 12 B that the `.bin`
+would have absorbed. A resource-only change can still cross a 128-byte
+MacBinary block, so measure the fork, not just the code.

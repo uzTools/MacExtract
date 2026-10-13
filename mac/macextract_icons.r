@@ -35,7 +35,7 @@
    icl8, ics8, FREF and BNDL. */
 #include "Multiverse.r"
 
-resource 'ICN#' (128, "MacExtract") {
+resource 'ICN#' (128) {
     {  /* icon */
         $"00000000 00000000"
         $"00000000 00000000"
@@ -73,7 +73,7 @@ resource 'ICN#' (128, "MacExtract") {
     }
 };
 
-resource 'ics#' (128, "MacExtract") {
+resource 'ics#' (128) {
     {  /* icon */
         $"0000 0000 01F8 010C"
         $"7F0E 437A 4302 437A"
@@ -89,7 +89,7 @@ resource 'ics#' (128, "MacExtract") {
 
 /* 16 colours: 0 white, 2 orange, 7 cyan, 15 black. */
 
-resource 'icl4' (128, "MacExtract") {
+resource 'icl4' (128) {
         $"00000000000000000000000000000000"
         $"00000000000000000000000000000000"
         $"00000000000000000000000000000000"
@@ -124,7 +124,7 @@ resource 'icl4' (128, "MacExtract") {
         $"00000000000000000000000000000000"
 };
 
-resource 'ics4' (128, "MacExtract") {
+resource 'ics4' (128) {
         $"0000000000000000 0000000000000000"
         $"0000000FFFFFF000 0000000F0000FF00"
         $"0FFFFFFF0000FFF0 0F2222FF0FFFF0F0"
@@ -137,7 +137,7 @@ resource 'ics4' (128, "MacExtract") {
 
 /* 256 colours, three tones per surface, Apple's icon colours only - see PALETTE above. */
 
-resource 'icl8' (128, "MacExtract") {
+resource 'icl8' (128) {
         $"0000000000000000000000000000000000000000000000000000000000000000"
         $"0000000000000000000000000000000000000000000000000000000000000000"
         $"0000000000000000000000000000000000000000000000000000000000000000"
@@ -172,7 +172,7 @@ resource 'icl8' (128, "MacExtract") {
         $"0000000000000000000000000000000000000000000000000000000000000000"
 };
 
-resource 'ics8' (128, "MacExtract") {
+resource 'ics8' (128) {
         $"00000000000000000000000000000000"
         $"00000000000000000000000000000000"
         $"00000000000000FFFFFFFFFFFF000000"
