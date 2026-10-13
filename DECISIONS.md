@@ -26367,7 +26367,9 @@ part has been read — a StuffIt split has no directory, and asking for
 every disk up front to learn sizes is what `UncVolumeSource.size`
 exists to avoid. What part 1 does know, for StuffIt segments, is the
 joined archive's size, which is usually less than what it extracts to.
-Left for the maintainer to decide.
+**Decided by the maintainer, the same day: no warning.** The existing
+disk-full error, which stops the run at the first entry that does not
+fit, is enough for now.
 
 **Price.** Shipped `CODE` **+256 B**, A5 **−48 B**: **208 B off every
 extraction's budget.** By symbol, `SegAskUser` +156 (the eject is
