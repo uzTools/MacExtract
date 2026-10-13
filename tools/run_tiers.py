@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (202884, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (107484, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (631772, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (202692, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (107292, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (631580, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -191,7 +191,11 @@ TIERS = {
 # DERIVED**: the control's CODE +228 and A5 -4 for MIME's progress and
 # its walk's Cancel (DECISIONS.md 2026-10-13, *the mail that counted
 # itself three times*).
-TIERS_CONTROL = 210608     # build/mac-resident, CODE + A5, 2026-10-13
+# **Raised by 192 B more 2026-10-13, and TIERS lowered by the same 192,
+# DERIVED**: the control's CODE +256 and A5 -64 for ejecting the disk a
+# split set's last part came from (DECISIONS.md 2026-10-13, *the disk
+# that was still in the drive*).
+TIERS_CONTROL = 210800     # build/mac-resident, CODE + A5, 2026-10-13
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -464,7 +468,12 @@ EXPECT = {
 # envelope's grant falls 240 B and every other format's is unmoved,
 # TIERS having fallen the same 224 (DECISIONS.md 2026-10-13, *the mail
 # that counted itself three times*).
-OVL_SAVED = 136464
+# **-16 2026-10-13, -> 136,448**: the eject before a split set's next
+# part, the control's +192 against the shipped pair's +208 (CODE +256,
+# A5 -48); no image moved, so every format's grant falls 208 B, TIERS
+# having fallen 192 (DECISIONS.md 2026-10-13, *the disk that was still
+# in the drive*).
+OVL_SAVED = 136448
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

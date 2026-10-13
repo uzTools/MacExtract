@@ -490,6 +490,11 @@ def accept_destination(mac, pause=3.0):
 SFPUT_DRIVE = (337 + 30, 181 + 30)
 
 
+# System 7's SFPutFile, as this application places it: the Desktop button
+# and the list's second row. Measured off --diskeject's eject-2 frame.
+SFPUT7_DESKTOP = (410, 189)
+SFPUT7_SECOND_ROW = (230, 173)
+
 def volume_names(img, dirs=False):
     """Every file on an HFS image, as checkdisk.py's component tuples.
 
@@ -1399,6 +1404,131 @@ def phase_diskswap(args, appbin, workdir, shot):
         print(f"interactive: settled ~{elapsed:.0f}s after the disk went in")
     ok = ok and bool(still_asking)
     print("interactive: disk insertion " + ("HANDLED" if ok else "NOT HANDLED"))
+    return ok
+
+
+def image_open(mac, image):
+    """Whether the emulator still holds `image` open. Mini vMac fcloses a
+    disk's file when the Mac ejects it (vSonyEject0, OSGLUXWN.c), so this
+    is the eject seen from outside the machine rather than inferred from
+    a screenshot."""
+    want = os.path.realpath(image)
+    fd = "/proc/%d/fd" % mac.proc.pid
+    for n in os.listdir(fd):
+        try:
+            if os.path.realpath(os.readlink(os.path.join(fd, n))) == want:
+                return True
+        except OSError:
+            pass
+    return False
+
+
+def phase_diskeject(args, appbin, workdir, shot):
+    """Is the disk the last part came from ejected before the alert asks?
+
+    --diskswap keeps part 1 on the boot volume, which holds the
+    application and so must never be ejected. Here part 1 is on a floppy
+    of its own, as on a one-drive Mac: after it is read and part 2 is not
+    beside it, the application should eject that floppy and say so, and
+    the next disk going in should be the whole answer, with nothing
+    clicked. The output goes to the boot volume.
+
+    Three things are checked from outside: the boot image stays open
+    (the application's disk is not ejected), floppy A's image is CLOSED
+    while the alert is up (Mini vMac closes it on eject — a build without
+    the eject leaves it open, which is the control), and the set's
+    contents are on the boot volume afterwards.
+    """
+    original, name, parts = cut_into_parts(args.fixture, workdir)
+
+    bootimg = os.path.join(workdir, "boot-eject.hfv")
+    # System 3.0 reads no shell name (sys30.py), so there the application
+    # is double-clicked out of the Finder, as --e2e does it.
+    # The filler file puts the volume window in --e2e's layout (System
+    # Folder, a file, the application), which FINDER_APP_ICON is measured
+    # against: with two items the application sits one place to the left.
+    finder = args.system == "Sys30.img"
+    filler = os.path.join(workdir, "filler")
+    with open(filler, "wb") as f:
+        f.write(b"not part of any set\r")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin, bootimg,
+         *(["--finder", "--data", f"{filler}:archive.sit"] if finder else []))
+    flopa = os.path.join(workdir, "floppy-a.dsk")
+    # "A ...": System 3.0 lists the invisible DeskTop file, and this must
+    # sort above it to be the first row.
+    R.make_floppy(flopa, "Floppy A", extras=[(parts[0], "A part one")])
+    flopb = os.path.join(workdir, "floppy-b.dsk")
+    R.make_floppy(flopb, "Floppy B",
+                  extras=[(parts[1], "Part two"), (parts[2], "Part three")])
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    elapsed, a_open, boot_open = None, None, None
+    mac = Mac(bootimg, args.emu, workdir, extra=(flopa,))
+    boot = os.path.join(workdir, "boot.hfv")       # Mac()'s private copy
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        if finder:
+            mac.click(*FINDER_VOLUME_ICON, double=True)
+            time.sleep(4.0)
+            shot(mac, "eject-0-volume.png")
+            mac.click(*FINDER_APP_ICON, double=True)
+            time.sleep(args.launch_wait)
+        # Launched by the Finder, Standard File opens on the application's
+        # volume rather than on the floppy inserted last (eject-1 on 3.0).
+        if finder:
+            mac.click(*SF_DRIVE)
+            time.sleep(2.0)
+        shot(mac, "eject-1-launched.png")       # Floppy A's listing
+
+        mac.click(*SF_FIRST_ROW)                # "A part one"
+        mac.key("Return")
+        time.sleep(3.0)
+        # Destination: the boot disk. System 7's SFPutFile has no Drive
+        # button — the click lands on nothing, the output goes onto Floppy
+        # A, and the eject then makes the Mac ask for it back (measured
+        # 2026-10-13). There it is Desktop, then the volume's row, which
+        # lists after "Floppy A". Both points off this phase's own
+        # eject-2 frame.
+        if args.system == "Sys7.img":
+            mac.click(*SFPUT7_DESKTOP)
+            time.sleep(2.0)
+            mac.click(*SFPUT7_SECOND_ROW, double=True)
+        else:
+            mac.click(*SFPUT_DRIVE)
+        time.sleep(2.0)
+        shot(mac, "eject-2-destination.png")
+        accept_destination(mac, pause=0.5)
+        wait_for_alert(mac, scratch)
+        time.sleep(3.0)
+        shot(mac, "eject-3-alert.png")          # "...so it was ejected."
+        a_open = image_open(mac, flopa)
+        boot_open = image_open(mac, boot)
+
+        drop_disk(mac, flopb)                   # nothing clicked after this
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "eject-4-complete.png")
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    want = expected_names(args.fixture, workdir)
+    on_boot = volume_names(boot)
+    missing = sorted(n for n in want if n not in on_boot) if want else ["?"]
+    print("interactive: floppy A while the alert is up: "
+          + ("STILL IN THE DRIVE" if a_open else "ejected"))
+    print("interactive: the application's disk: "
+          + ("still in" if boot_open else "EJECTED"))
+    if missing:
+        print("interactive: MISSING after the swap: "
+              + ", ".join(CD.mac_path(n) for n in missing))
+    if elapsed is not None:
+        print(f"interactive: settled ~{elapsed:.0f}s after Floppy B went in")
+    ok = (a_open is False) and bool(boot_open) and not missing
+    print("interactive: eject before asking " + ("WORKS" if ok else "FAILS"))
     return ok
 
 
@@ -2408,6 +2538,13 @@ def main():
                          "application ask for one, and INSERT IT while the "
                          "alert is up. A decoy disk goes in first and must "
                          "not dismiss anything. Ends on the joined bytes.")
+    ap.add_argument("--diskeject", action="store_true",
+                    help="the eject phase: part 1 on a floppy of its own, "
+                         "the rest on a second one that is not in. The "
+                         "application should eject the first before it "
+                         "asks, and the second going in should finish the "
+                         "set with nothing clicked. Asserts the eject from "
+                         "the emulator's open files.")
     ap.add_argument("--wrapped", action="store_true",
                     help="drive a set whose parts are each inside an "
                          "envelope (Archive.sit.1.hqx)")
@@ -2544,6 +2681,14 @@ def main():
     if args.report_utf8:
         try:
             ok = phase_report_utf8(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.diskeject:
+        try:
+            ok = phase_diskeject(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

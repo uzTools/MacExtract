@@ -478,7 +478,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # up instead of ending the message (DECISIONS.md 2026-10-13, *the mail
 # that counted itself three times*). A5 37,988, -4, alignment. Shipped,
 # all of it is `ovl_text`, 11,510 -> 11,750 B, the eager pair unmoved.
-UNC_MAC_CODE_DEFAULT=172620
+# RAISED 2026-10-13 to 172,876, +256, for ejecting the disk a split
+# set's last part came from before asking for the next (DECISIONS.md
+# 2026-10-13, *the disk that was still in the drive*). A5 37,924, -64:
+# the two messages are DITLs, and `.data` alignment.
+UNC_MAC_CODE_DEFAULT=172876
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -627,7 +631,9 @@ UNC_MAC_CODE_DEFAULT=172620
 # RAISED the same evening to 38,008, +8, as the code ceiling fell 8: the
 # total is unmoved, and neither decoder has data in A5 — alignment, read
 # from the totals and not compared symbol by symbol.
-UNC_MAC_A5_DEFAULT=38008
+# LOWERED 2026-10-13 to 37,924, -84, with the code ceiling's +256: the
+# "has not been found" sentence moved into DITL 131, and alignment.
+UNC_MAC_A5_DEFAULT=37924
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -880,8 +886,15 @@ UNC_MAC_A5_DEFAULT=38008
 # 72 B of A5, and moving the copies high after each release, instead of
 # reserving low, was 76 B more (DECISIONS.md 2026-10-12, *the reload that
 # the list needs*).
-UNC_MAC_CODE_EAGER=55044
-UNC_MAC_A5_EAGER=19100
+# +256 code and -48 A5 on 2026-10-13 for ejecting the disk a split set's
+# last part came from: **208 B off every extraction's budget.** By
+# symbol: SegAskUser +156 (the eject, inlined, and the alert chosen by
+# it), SegDriveOfFile 82, new, 18 of alignment. Both sentences are DITLs
+# (131 and 136), so the alert's text left A5; the first version kept
+# them as strings and was +352 and +80 (DECISIONS.md 2026-10-13, *the
+# disk that was still in the drive*).
+UNC_MAC_CODE_EAGER=55300
+UNC_MAC_A5_EAGER=19052
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -918,8 +931,9 @@ UNC_MAC_A5_EAGER=19100
 # lifetime never runs: the branch is in `main` whatever the loader, `main`
 # +62 and a 4-byte `ovl_reload` that answers 1, and the A5 is `_sdata`'s
 # padding. Not shipped, so not trimmed further.
-UNC_MAC_CODE_LAZY=53464
-UNC_MAC_A5_LAZY=19208
+# +260 code and -52 A5 on 2026-10-13 for the same eject as the eager pair.
+UNC_MAC_CODE_LAZY=53724
+UNC_MAC_A5_LAZY=19156
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

@@ -3101,6 +3101,9 @@ exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
     interactive.py --diskswap       # insert the missing part's disk mid-run
+                                    # — needs a fixture that is NOT an archive
+    interactive.py --diskeject      # part 1 on its own floppy: is that floppy
+                                    # ejected before the alert asks?
     interactive.py --drop           # drag an archive onto the application's
                                     # icon: what does the FINDER do?
     interactive.py --switch --system Sys7.img
@@ -3112,6 +3115,20 @@ Run them one at a time (see "This box has one core", above). **One at a
 time is not only about the core**: every phase builds the application
 into the same `build/mac-interactive`, so two `interactive.py` runs
 started together fight over it and one dies in `cmake --build`.
+
+**`--diskswap` needs a fixture that is not an archive.** It reads back the
+joined FILE, and the application unpacks a joined archive, so with a `.sit`
+the file it looks for is never written and the phase fails on a correct
+run — on the build before 2026-10-13 too. A few KB of random bytes passes
+(DECISIONS.md 2026-10-13, *the disk that was still in the drive*).
+
+**`--diskeject` asserts the eject from outside the machine**: Mini vMac
+`fclose`s a disk image when the Mac ejects it, so the phase reads the
+emulator's `/proc/<pid>/fd`. Passed on `System6.hfv`, `Sys7.img` and
+`Sys30.img` (2026-10-13, `derived-ScrollbarPattern.sit`); the build before
+fails it. **What it cannot see:** a real one-drive Mac. Mini vMac puts
+every inserted disk in a new drive, so Floppy B never goes into the drive
+Floppy A left (MANUAL_TESTS.md §4).
 
 **`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks
 an archive split whatever its size, so a smaller payload makes one

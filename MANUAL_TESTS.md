@@ -107,10 +107,12 @@ open (OPEN_ITEMS.md, *What the LC 475 found*).
       puts the files there; Cancel returns to Standard File.
 - [ ] The destination dialog's prompt is not clipped by the machine's
       font (one fixed-width static text item; it does not wrap).
-- [ ] **A disk swap in ONE drive.** Inserting the missing part answers the
-      "part N has not been found" alert under emulation
-      (`interactive.py --diskswap`), but Mini vMac gives every insertion a
-      new drive. On a one-drive Plus, eject and re-insert.
+- [ ] **A disk swap in ONE drive.** Part 1 on one floppy, the rest on
+      another. Expected: the first floppy comes out by itself, the alert
+      says *"…is not on that disk, so it was ejected"*, and putting the
+      second floppy in finishes the set with nothing clicked. Measured
+      under emulation (`interactive.py --diskeject`), but Mini vMac gives
+      every insertion a new drive.
 - [ ] **Several archives on a one-drive machine** with the application on
       its own floppy: the second archive should ask for that floppy back.
 - [ ] The progress dialog repaints when a desk accessory covers it.

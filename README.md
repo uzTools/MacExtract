@@ -43,9 +43,10 @@ overwritten and nothing is folded together: the second one gets a `~1`.
 
 ![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders whose names shorten alike renamed to two different folders, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
-If an archive was split across floppies and a part is not where the first one
-was, you are asked for it — and told straight away if you point at the wrong
-one, because parts are recognised by what is inside them:
+If an archive was split across floppies and a part is not where the last one
+was, that floppy is ejected and you are asked for the next — and told straight
+away if you point at the wrong one, because parts are recognised by what is
+inside them:
 
 ![Alert reading: Part 2 of "derived-Cal.sit" has not been found. About 33K still to read. Locate it, skip it, or cancel. Buttons: Cancel, Skip, Find...](docs/screens/5-locate-part.png)
 

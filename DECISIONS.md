@@ -405,6 +405,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
 - 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
 - 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
+- 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
 
 ---
 
@@ -26338,3 +26339,60 @@ MIME's own loops cost +368 B and was replaced.
 the build before the fix and fail both: 836,211 and 638,931 B past the
 end. And at a 4 KB step `run_ticks.py` now passes all 1,399 archives,
 where it had failed `synth-os9-mime.mim`.
+
+## 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
+
+**Claim (measured, emulated).** When part N is not beside part N−1,
+the "Part N has not been found" alert came up with part N−1's floppy
+still in the drive. On a one-drive Mac the answer is to put the next
+floppy in, and the user had to eject the old one first (Cmd-Shift-1).
+Writing the manual test for it is what showed the extra step.
+
+**Decision, the maintainer's.** Before the alert, the disk that part
+N−1 came from is ejected, and the alert says so: *"Part N of "X" is not
+on that disk, so it was ejected. Insert the disk it is on."*, with Find…
+kept for a part that is somewhere else. A disk is ejected only if the
+drive queue calls it ejectable (byte 1 of the flags before the `DrvQEl`
+is 1 or 2, Inside Macintosh: Files, *Drive queue*), and not if it holds
+the application or the System, which the Toolbox reads while the alert
+is up. **The destination is deliberately not checked**: a rule skipping
+the eject when the output goes to that floppy was proposed and the
+maintainer declined it — a split set is split because it does not fit one
+floppy, so extracting it onto one of its parts is the user's mistake.
+The eject happens on two-drive machines too; it costs them nothing.
+
+**Not done: warning that the destination is too small.** The maintainer
+asked for it alongside. The EXTRACTED total is not known until the last
+part has been read — a StuffIt split has no directory, and asking for
+every disk up front to learn sizes is what `UncVolumeSource.size`
+exists to avoid. What part 1 does know, for StuffIt segments, is the
+joined archive's size, which is usually less than what it extracts to.
+Left for the maintainer to decide.
+
+**Price.** Shipped `CODE` **+256 B**, A5 **−48 B**: **208 B off every
+extraction's budget.** By symbol, `SegAskUser` +156 (the eject is
+inlined into it) and `SegDriveOfFile` 82, new; 18 B of alignment. Both
+alert sentences are now DITL text (131, and 136 for the new one), which
+took the old sentence out of A5. The first version kept them as strings
+and cost +352 and +80. The control +192 (`CODE` +256, A5 −64), so
+`OVL_SAVED` −16 and `TIERS` −192 by derivation; no tally moved at any
+tier, in either lane. `SegAskUser`'s frame 660 → 728 B for a `Str63`.
+`SegDriveOfFile`'s 188 B returns before the alert opens.
+
+**Evidence the test can fail.** `interactive.py --diskeject` puts part 1
+alone on Floppy A, sends the output to the boot volume, and asserts
+from the emulator's open files: Floppy A's image is closed while the
+alert is up (Mini vMac `fclose`s a disk on eject), the boot image stays
+open, and the set's contents land after Floppy B goes in with nothing
+clicked. It passes on System 3.0, 6.0.8 and 7.0.1. The build before
+fails it on 6.0.8 with *"floppy A ... STILL IN THE DRIVE"* and the old
+wording. `--segments` and `--diskswap` (part 1 on the application's
+own disk, which is not ejected) still pass.
+
+**Found on the way.** `--diskswap` fails on the build before this
+change too, when given an ARCHIVE as its fixture: it compares the joined
+file, and the application unpacks the joined file, so the file it looks
+for is never written. This is the same trap `--segments` hit on
+2026-08-31. It passes with a fixture that is not an archive. Written
+into `tools/vmac/README.md` rather than fixed.
+

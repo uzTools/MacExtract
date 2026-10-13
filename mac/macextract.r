@@ -93,9 +93,15 @@ resource 'DITL' (135, purgeable) {
  *   2  Skip      give up on this part; what was decoded so far is kept
  *   3  Cancel    stop the extraction
  *
- * The wording deliberately says "locate", not "insert the next disk": the
- * parts of a set are not assumed to be on separate floppies, or to be
- * named alike, or to be anywhere in particular. */
+ * The wording says "locate", not "insert the next disk": the parts of a
+ * set are not assumed to be on separate floppies, or to be named alike,
+ * or to be anywhere in particular. ALRT 136 is the same alert after the
+ * disk the previous part came from was ejected (SegEjectPrevious), when
+ * putting the next one in IS the likely answer.
+ *
+ * ^0 is `Part 2 of "Name"`, ^1 is ` About 33K still to read.` or empty.
+ * The sentences are here rather than in the code because a purgeable
+ * resource costs nothing until it is shown, and a string costs A5. */
 resource 'ALRT' (131, purgeable) {
     { 90, 80, 214, 452 }, 131, {
         OK, visible, sound1, OK, visible, sound1,
@@ -108,7 +114,26 @@ resource 'DITL' (131, purgeable) {
         { 92, 282, 112, 352 }, Button { enabled, "Find..." };
         { 92, 196, 112, 266 }, Button { enabled, "Skip" };
         { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
-        { 10, 16, 84, 356 }, StaticText { disabled, "^0" };
+        { 10, 16, 84, 356 }, StaticText { disabled,
+            "^0 has not been found.^1 Locate it, skip it, or cancel." };
+    }
+};
+
+resource 'ALRT' (136, purgeable) {
+    { 90, 80, 214, 452 }, 136, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (136, purgeable) {
+    {
+        { 92, 282, 112, 352 }, Button { enabled, "Find..." };
+        { 92, 196, 112, 266 }, Button { enabled, "Skip" };
+        { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
+        { 10, 16, 84, 356 }, StaticText { disabled,
+            "^0 is not on that disk, so it was ejected. Insert the disk "
+            "it is on.^1 Or locate it, skip it, or cancel." };
     }
 };
 

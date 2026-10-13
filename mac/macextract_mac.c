@@ -2966,6 +2966,7 @@ static void SegScanDir(SegHost *h, short vol, long dir)
 
 #ifndef UNC_MAC_AUTOTEST
 #define kSegALRT        131
+#define kSegEjectALRT   136     /* the same, after an eject */
 #define kSegFindItem    1
 #define kSegSkipItem    2
 #define kSegCancelItem  3
@@ -3109,16 +3110,83 @@ static void SegCatRemaining(Str255 msg, uint32_t left)
     PStrCat(msg, " still to read.");
 }
 
+/* The drive the volume `vol` is in, or 0 for none: a server volume, or
+ * one already ejected. `vol` may be a working directory. */
+static short SegDriveOf(short vol)
+{
+    HParamBlockRec pb;
+    pb.volumeParam.ioNamePtr = NULL;
+    pb.volumeParam.ioVRefNum = vol;
+    pb.volumeParam.ioVolIndex = 0;
+    if (PBHGetVInfoSync(&pb) != noErr) return 0;
+    return pb.volumeParam.ioVDrvInfo;
+}
+
+/* The drive holding the file `ref` is open on, or 0. */
+static short SegDriveOfFile(short ref)
+{
+    FCBPBRec fcb;
+    fcb.ioNamePtr = NULL;
+    fcb.ioVRefNum = 0;
+    fcb.ioRefNum = ref;
+    fcb.ioFCBIndx = 0;
+    if (PBGetFCBInfoSync(&fcb) != noErr) return 0;
+    return SegDriveOf(fcb.ioFCBVRefNum);
+}
+
+/* A part that is not beside the one before it is on another disk, and on
+ * a one-drive Mac the drive holds the disk the last part came from. So
+ * that disk is ejected before the alert asks, and putting the next one in
+ * is the whole answer (the maintainer's design, 2026-10-13).
+ *
+ * Not ejected: a disk the drive queue calls nonejectable, a volume in no
+ * drive (a server), and the disk holding this application or the System
+ * — the Toolbox reads both while the alert is up, so ejecting either
+ * starts a swap the user did not ask for. The destination is not
+ * checked: a split set is split because it does not fit one floppy, so
+ * extracting it onto one of its own is the user's mistake. Returns
+ * nonzero if a disk was ejected.
+ *
+ * Source for the flag byte: Inside Macintosh: Files, File Manager
+ * Reference, "Drive queue" — four flag bytes precede each DrvQEl; byte 1
+ * is "0 if no disk in drive; 1 or 2 if disk in drive; 8 if nonejectable
+ * disk in drive; $FC-$FF if disk was ejected within last 1.5 seconds;
+ * $48 if disk in drive is nonejectable but driver wants a call". */
+static int SegEjectPrevious(SegHost *h, int part)
+{
+    DrvQEl *q;
+    ParamBlockRec pb;
+    short drive;
+    unsigned char f;
+
+    if (part < 2 || !h->loc[part - 1].name[0]) return 0;
+    drive = SegDriveOf(h->loc[part - 1].vRefNum);
+    if (drive <= 0 || drive == SegDriveOfFile(LMGetCurApRefNum()) ||
+        drive == SegDriveOfFile(LMGetSysMap())) return 0;
+    for (q = (DrvQEl *)LMGetDrvQHdr().qHead; q; q = (DrvQEl *)q->qLink)
+        if (q->dQDrive == drive) break;
+    if (q == NULL) return 0;
+    f = ((unsigned char *)q)[-3];
+    if (f != 1 && f != 2) return 0;
+    pb.volumeParam.ioNamePtr = NULL;
+    pb.volumeParam.ioVRefNum = drive;          /* a drive number will do */
+    return PBEject(&pb) == noErr;
+}
+
 /* Ask the user to point at part `part`. Returns nonzero once it has been
  * located. The autotest build has no user, so this is not compiled there
  * and a part that was not found beside the archive is simply missing. */
 static int SegAskUser(SegHost *h, int part)
 {
     Str255 msg;
+    Str63 left;                  /* " About 12345K still to read." */
     SFReply reply;
     Point where;
     short hit;
     short savedMask;
+    /* Which alert: the two differ only in their wording, which lives in
+     * the DITLs so that neither costs the A5 world a byte. */
+    short alrt = SegEjectPrevious(h, part) ? kSegEjectALRT : kSegALRT;
 
     for (;;) {
         msg[0] = 0;
@@ -3127,10 +3195,10 @@ static int SegAskUser(SegHost *h, int part)
         PStrCat(msg, " of \"");
         { short i; for (i = 0; i < (short)h->desc.name_len && msg[0] < 200; i++)
                        msg[++msg[0]] = h->desc.name[i]; }
-        PStrCat(msg, "\" has not been found.");
-        SegCatRemaining(msg, SegRemaining(h));
-        PStrCat(msg, " Locate it, skip it, or cancel.");
-        ParamText(msg, "\p", "\p", "\p");
+        PStrCat(msg, "\"");
+        left[0] = 0;
+        SegCatRemaining(left, SegRemaining(h));     /* 30 bytes at most */
+        ParamText(msg, left, "\p", "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
         gSegAsking = h;
@@ -3142,7 +3210,7 @@ static int SegAskUser(SegHost *h, int part)
         LMSetSysEvtMask(savedMask | diskMask);
         gSegNextPoll = 0;
         ContigSample();
-        hit = CautionAlert(kSegALRT, NewModalFilterUPP(SegDiskFilter));
+        hit = CautionAlert(alrt, NewModalFilterUPP(SegDiskFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
         h->asked = 1;

@@ -5686,7 +5686,12 @@ character that was touched three times*).
     running emulator). A decoy disk holding no part of the set goes in
     first and must not dismiss anything — without that control the
     phase could not tell "reacted to the right disk" from "the alert
-    went away". It ends on the joined bytes.
+    went away". It ends on the joined bytes, so its fixture must not be
+    an archive (`tools/vmac/README.md`). `--diskeject` puts part 1 on a
+    floppy of its own and asserts, from the emulator's open files, that
+    the floppy is ejected before the alert asks and the application's
+    disk is not. **Neither can see a one-drive Mac**: Mini vMac gives
+    every insertion a new drive (MANUAL_TESTS.md §4).
 
     `--wd` covers the other half and asserts the same way: the archive
     goes inside a folder, Return accepts the default destination, and
