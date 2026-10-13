@@ -146,8 +146,13 @@ own constant rather than the step (it is their buffer too), and
 **MIME's count fixed** — at 4 KB `run_ticks.py` fails
 `synth-os9-mime.mim`, 4,366 B counted on 1,248, because every
 `mime_seek` and each part's decode re-reads and re-counts what an
-earlier refill counted (traced, 2026-10-13). At 8 KB no tick fires on a
-file that small, so the overcount is there and unseen. **Seen on silicon, 2026-10-12**: the LC 475's
+earlier refill counted (traced, 2026-10-13). **It is not a 4 KB problem:
+at the shipped 8 KB, mail of realistic size counts ~3× itself** — one
+walk, then a sizing and a writing pass per attachment — so the bar is
+full a third of the way through: 405,753 B counted 1,236,327 with one
+300 KB attachment, 272,318 B counted 882,843 with ten (`email`-generated,
+measured 2026-10-13). `run_ticks.py` cannot see it: the corpus's one
+MIME file is 1,248 B. **Seen on silicon, 2026-10-12**: the LC 475's
 window "not very reactive" while it extracts, format not noted —
 re-test on a StuffIt 5 archive once this is on the machine. Holding the
 File menu down pauses the extraction — inherent: `MenuSelect` keeps the
