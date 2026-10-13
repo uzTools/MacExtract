@@ -157,10 +157,10 @@ repository submits them** (CLAUDE.md, *Rules*); the maintainer posts them.
 - [ ] **XADMaster reads one byte past a DDn fork's compressed length** —
       `tools/xadmaster-ddn-repro/` (`ISSUE.md`, `make_repro.py`), for
       MacPaw/XADMaster.
-- [ ] **Retro68's `OpenDF`/`HOpenDF` do not fall back on System 6** —
-      `tools/retro68-hopen-repro/ISSUE.md`, for autc04/Retro68. The earlier
-      `HOpen` attribution was withdrawn (BLOCKERS.md); this is the narrower
-      claim that survived.
+- [ ] **Retro68's `HOpen`/`HOpenRF`/`HOpenDF` leave `ioMisc` uninitialised**
+      — `tools/retro68-hopen-repro/ISSUE.md`, for autc04/Retro68; attach
+      `iomisc_repro.c`. Re-verified against Retro68 master 2026-10-13. The
+      `paramErr` claim it replaced is withdrawn (BLOCKERS.md).
 
 **Record** the issue URL in BLOCKERS.md beside its claim. A rejection is a
 withdrawn claim, filed with what it cost.

@@ -65,8 +65,10 @@ attribution was disproved (below); "the old code passed partly
 uninitialised state" is a **hypothesis**, never reduced to a reproduction,
 and not being chased.
 
-**Upstream: `OpenDF` and `HOpenDF` return `paramErr` on System 6** — the
-`_OpenDF` trap is System 7 and neither falls back, where `FSOpen` does.
+**Upstream: Retro68's `HOpen`/`HOpenRF`/`HOpenDF` glue leaves `ioMisc` as
+stack garbage, and the File Manager writes through it** — measured 2026-10-13:
+524 bytes on System 6.0.8, 12 on System 7.0.1, into memory the caller never
+passed. MacExtract is unaffected (zeroed param blocks).
 `tools/retro68-hopen-repro/ISSUE.md`, deliberately not filed.
 
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
@@ -513,6 +515,7 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"Retro68's `OpenDF` and `HOpenDF` return `paramErr` on System 6 and do not fall back: a bug"** — ISSUE.md's headline since 2026-08-01 | **Measured, and Apple's documented contract**: Technote FL 1041 tells the caller to retry with `HOpen` on `paramErr`, and Retro68 issue #53 (closed 2018) settled it that way in `libretro/syscalls.c`. The same note requires `ioMisc` = 0, and the draft's "latent" `ioMisc` point was the real bug: its probe pointed outside a Mac Plus's RAM; one pointing into RAM is written through (DECISIONS.md 2026-10-13, *the bug was the footnote*). **Cost: two and a half months of a ready-to-post report** that would have been closed as a duplicate, with the real defect demoted to its last paragraph | 2026-10-13 |
 | **"The 16-colour icons are a hard limit: nothing here can display them"** — MANUAL_TESTS.md §3 and DECISIONS.md 2026-08-24, *the icon*, "measured 2026-08-27" against QEMU's one depth and "Mini vMac is a 1-bit Mac Plus" | **Mini vMac's own `-m II -depth 2`**: a Macintosh II at 16 colours, built from the source `setup.sh` already fetched, on a ROM in the collection it already downloads. It drew `icl4` and a selected icon on 2026-10-11 (`tools/vmac/colouricon.py`). **Cost: six weeks of the item filed as needing hardware, and it took the first real machine's report to make anyone look** — the measurement was of two TOOLS, and the sentence was about the machine (DECISIONS.md 2026-10-11, *the icon that did not darken*) | 2026-10-11 |
 | **"The Macintosh application opens zip archives"** — README.md's zip row and every release note since zip came in, implied by the zip fixtures passing every Mini vMac tier | **the maintainer's LC 475**, 2026-10-11: `Reduce.zip` and `Shrink.zip` both refused with *"This archive has more parts"* from a clean launch. Reduced under emulation to the NAME: the same bytes fail as `archive.zip` and pass as `archive.sit`, the only name any tier had used. **Cost: every plain `.zip` opened on a Macintosh failed from 2026-08-14 (`739c6814`) until this fix, through every release in between including v0.39.0, whose headline was a zip method** (DECISIONS.md 2026-10-11, *the zip that was a set of one*) | 2026-10-11 |
 | **`run_crypt.py`'s *"sit-des by an unimplemented encryptor"* grades the refusal of an encryptor id this engine does not implement** — the case since 2026-10-02, bent to id 3 | **id 3 is `NewDEx`, implemented the same day, and the copy had no resource fork**: with no `'MKey'` every id is refused identically, so the case passed whatever the id check did. Given its fork and id 5 it fails when the check is removed. **Cost: the third-party-encryptor refusal had no test that could fail for nine days** (DECISIONS.md 2026-10-11, *the constant was a square*) | 2026-10-11 |
@@ -1057,7 +1060,8 @@ refNum, and recorded as M10's root cause. Ten cases — real vRefNum, non-zero
 dirID, write permission, a poisoned stack, a cross-volume open — show `HOpen`
 writing the refNum every time and agreeing with a hand-filled `PBHOpenSync`.
 The same write-up also said `HOpenDF` was the odd one out "unlike the
-non-hierarchical `OpenDF` beside it"; wrong, they are broken identically.
+non-hierarchical `OpenDF` beside it"; wrong, they behave identically (and as
+Apple documents — corrected 2026-10-13, withdrawn above).
 **Cost:** the true cause of the M10 saga is still unknown and every conclusion
 from that period had to be re-tested — the next three entries. Twice a claim
 about one source file was wrong because the file was read rather than run.

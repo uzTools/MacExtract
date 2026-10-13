@@ -406,6 +406,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
 - 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
 - 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
+- 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through
 
 ---
 
@@ -971,7 +972,9 @@ BLOCKERS.md for the full write-up. Key decisions:
   a real vRefNum and non-zero dirID, with `fsWrPerm`, with `HOpenRF`, and
   across volumes (the app's own pattern). A theory that the glue's
   uninitialised `ioMisc` was to blame was also tested and disproved: poisoning
-  `ioMisc` with `0xA3A3A3A2` still opens and reads correctly.
+  `ioMisc` with `0xA3A3A3A2` still opens and reads correctly. **Corrected
+  2026-10-13:** that address is outside a Mac Plus's RAM; one inside it is
+  written through (*the bug was the footnote*), so this disproof does not hold.
   Consequence: the param-block rewrite (`MyOpenFork`/`MyHCreate`) is kept
   because it demonstrably works, but its justification is now "it zeroes the
   whole param block", not "the glue is broken". **The true root cause of the
@@ -992,6 +995,8 @@ BLOCKERS.md for the full write-up. Key decisions:
   write-up named only `HOpenDF`, and said `OpenDF` "already has the fallback".
   It does not — `FSOpen` does. Settled by running it (case 11), not by reading
   `glue.c` again, which is how the first version of this went wrong.
+  **Corrected 2026-10-13:** the `paramErr` is Apple's documented contract, not
+  a bug; the `ioMisc` point is the bug (*the bug was the footnote*).
 - **The on-Mac resource-fork mask is bytes 16..127 and it is header padding,
   not a fudge.** The autotest compares resource forks by CRC, and the System 6
   Resource Manager stamps session scratch into part of the header, so a raw CRC
@@ -9808,8 +9813,9 @@ Not stdio, then — the POSIX layer under it.
 (`libretro/syscalls.c`) does `HCreate(0,0,…)`, then `HOpenDF(0,0,…)`, then
 `HOpen` if that answered `paramErr`; which of the three hangs has not been
 reduced to a reproduction, so it is not a finding and it is not filed as one.
-It sits beside something this project HAS reduced: `OpenDF`/`HOpenDF` return
-`paramErr` on System 6 (`tools/retro68-hopen-repro/`).
+`HOpenDF`'s `paramErr` is documented behaviour, and zeroing the stack
+before `open()` does not change the hang (2026-10-13, *the bug was the
+footnote*).
 
 The fix needs none of that settled. newlib's `funopen()` builds a `FILE *` out
 of four callbacks, so every byte mpack reads or writes goes through the same
@@ -26398,3 +26404,45 @@ for is never written. This is the same trap `--segments` hit on
 2026-08-31. It passes with a fixture that is not an archive. Written
 into `tools/vmac/README.md` rather than fixed.
 
+## 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through
+
+Re-verifying `tools/retro68-hopen-repro/ISSUE.md` before the maintainer posts
+it. Upstream first: Retro68 master `d8b891a` pins a multiversal whose
+`custom/glue.c` is byte-identical to the one measured, so nothing was fixed.
+Then the issue tracker, which nobody had searched: **#53 (2018)** is this
+exact `HOpenDF` `paramErr` on System 6, closed by falling back in
+`libretro/syscalls.c`. Technote FL 1041 (*Inside Macintosh: Files* errata)
+says the same: on `paramErr`, the caller retries with `HOpen`. The headline
+would have been closed as a duplicate of documented behaviour.
+
+The same technote: "ioMisc must be initialized to zero before calling
+PBHOpenDF, PBHOpenRF, or PBHOpen. Failure to initialize ioMisc to zero on some
+Macintosh models will cause the system to crash." The report had that point
+as latent, because case 4 poisoned `ioMisc` with `0xA3A3A3A2` and the open
+succeeded. On a 24-bit Mac Plus that address is not RAM. `iomisc_repro.c`
+asks the question that probe could not answer: give the File Manager a
+pointer to a 1 KB decoy and count what changes.
+
+| case | System 6.0.8 | System 7.0.1 |
+|---|---|---|
+| `PBHOpenSync`, `ioMisc = NULL` | 0 longs | 0 |
+| `PBHOpenSync`, `ioMisc = &decoy` | 131 (524 B, one access path buffer) | 3 |
+| `HOpen`, `&decoy` left on the stack | 131 | 3 |
+
+The disassembly agrees: `HOPEN` reserves 124 bytes and writes four fields,
+never pb+28. The first run of case 3 read 0. GCC had inlined the poisoning
+function into `main`'s frame, so the pointer never reached `HOpen`'s frame.
+`noinline` fixed it. That is also a demonstration that the case can fail.
+
+A bare `open()`, `write()`, `close()` probe on System 6.0.8 returned from
+`open()` and `write()` and hung in `close()`, the same with the stack zeroed
+first (two runs, probe not kept), so `ioMisc` does not explain it. That is not
+where *Retro68's newlib cannot open a file* saw mpack stop (in `open()`);
+the difference is unexplained. Whether it explains M10's original
+failure (*M10 deep debugging*) is a **hypothesis**: the mechanism now exists,
+but the old code was never re-run against it.
+
+**Transferable:** a negative probe that writes a junk value proves only that
+this one value is harmless. Ask what the field is *for*, then give it a value
+that would be used. And search the upstream tracker before writing an
+upstream report.
