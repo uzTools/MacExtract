@@ -51,6 +51,11 @@ used to darken only its white. If an earlier MacExtract was ever on that
 Mac, the Finder keeps showing the old icon until you rebuild the desktop:
 restart holding Command and Option.
 
+An archive split across floppies is one step shorter on a one-drive Mac:
+when the next part is not on the floppy the last one came from,
+MacExtract ejects that floppy before it asks, so putting the next one in
+is all there is to do.
+
 And one from StuffIt Deluxe 2.0: a photograph its JPEG add-on had
 squeezed came back as the wrong picture -- silently -- unless it was 256
 pixels wide and grey. Every width and every colour mode the add-on
