@@ -2419,6 +2419,15 @@ was written for (munpack gets the LF form), compares BYTES rather than
 names, and the `=0D` case is asserted against a subject munpack is not
 asked to grade. Averaging those away would have hidden all three.
 
+**Progress** (2026-10-13) is three more, with `tick_probe` from beside
+the CLI: a 400 KB message with one attachment and an appledouble pair
+must report nothing past their size and end within 16 KB of it. The
+corpus's one message is 1,248 B, too small for `run_ticks.py` to see
+that mail counted ~3x itself; the build before the fix fails both, by
+836 KB and 639 KB (DECISIONS.md 2026-10-13, *the mail that counted
+itself three times*). That a Cancel anywhere in a message comes back
+as one was checked once, by a scratch harness, and is not here.
+
 **What it cannot see.** Neither grader knows what a resource fork is:
 the Unix munpack writes an `application/applefile` part out whole and
 deark has no notion of one, so **nothing here adjudicates the fork

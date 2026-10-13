@@ -141,18 +141,10 @@ is measured** (FORMATS.md, *What a 4 KB step buys*): gaps down by a
 third to a half, 0 B, at most +0.3 % on System 6 and +0.4 % on System 7
 with nothing else running; Now Compress's 32 KB block does not move. It
 is CLAUDE.md's "every 8–16 KB", so it is the maintainer's to decide, and
-it needs two things first: the three stored-fork copies sized by their
-own constant rather than the step (it is their buffer too), and
-**MIME's count fixed** — at 4 KB `run_ticks.py` fails
-`synth-os9-mime.mim`, 4,366 B counted on 1,248, because every
-`mime_seek` and each part's decode re-reads and re-counts what an
-earlier refill counted (traced, 2026-10-13). **It is not a 4 KB problem:
-at the shipped 8 KB, mail of realistic size counts ~3× itself** — one
-walk, then a sizing and a writing pass per attachment — so the bar is
-full a third of the way through: 405,753 B counted 1,236,327 with one
-300 KB attachment, 272,318 B counted 882,843 with ten (`email`-generated,
-measured 2026-10-13). `run_ticks.py` cannot see it: the corpus's one
-MIME file is 1,248 B. **Seen on silicon, 2026-10-12**: the LC 475's
+it needs the three stored-fork copies sized by their own constant
+first, the step being their buffer too. MIME, which failed
+`run_ticks.py` at 4 KB, passes it since 2026-10-13 (DECISIONS.md
+2026-10-13, *the mail that counted itself three times*). **Seen on silicon, 2026-10-12**: the LC 475's
 window "not very reactive" while it extracts, format not noted —
 re-test on a StuffIt 5 archive once this is on the machine. Holding the
 File menu down pauses the extraction — inherent: `MenuSelect` keeps the

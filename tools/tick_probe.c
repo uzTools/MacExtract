@@ -105,9 +105,9 @@ int main(int argc, char **argv)
 
         ticks = 0; last_done = 0; max_gap = 0; overrun = 0;
         ret = unc_extract(&io, &sink, &al, &prog, NULL);
-        printf("%s ret=%d ticks=%lu max_gap=%lu overrun=%lu size=%ld\n",
+        printf("%s ret=%d ticks=%lu max_gap=%lu overrun=%lu size=%ld last=%lu\n",
                argv[i], ret, (unsigned long)ticks, (unsigned long)max_gap,
-               (unsigned long)overrun, len);
+               (unsigned long)overrun, len, (unsigned long)last_done);
         fclose(pio.f);
     }
     return 0;

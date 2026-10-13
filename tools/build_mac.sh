@@ -473,7 +473,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # block nobody could cancel*). A5 37,992, -8, alignment, under its ceiling.
 # Shipped, all of it is `ovl_stuffit`, 28,614 -> 28,926 B (+312 at the
 # overlay's flags), the eager pair unmoved.
-UNC_MAC_CODE_DEFAULT=172392
+# RAISED 2026-10-13 to 172,620, +228, for MIME's progress (the input its
+# writing passes consumed, through a relay) and its walk passing a Cancel
+# up instead of ending the message (DECISIONS.md 2026-10-13, *the mail
+# that counted itself three times*). A5 37,988, -4, alignment. Shipped,
+# all of it is `ovl_text`, 11,510 -> 11,750 B, the eager pair unmoved.
+UNC_MAC_CODE_DEFAULT=172620
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the

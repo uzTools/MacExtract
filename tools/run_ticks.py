@@ -74,9 +74,9 @@ def measure(probe, paths):
             raise SystemExit(f"run_ticks: probe failed on {batch[0]}...: "
                              f"{r.stderr.strip()}")
         for line in r.stdout.splitlines():
-            # The path may contain spaces; the five fields never do.
-            parts = line.rsplit(" ", 5)
-            if len(parts) != 6:
+            # The path may contain spaces; the six fields never do.
+            parts = line.rsplit(" ", 6)
+            if len(parts) != 7:
                 raise SystemExit("run_ticks: unparsable probe line: " + line)
             path = parts[0]
             vals = {}

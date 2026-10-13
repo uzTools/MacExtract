@@ -130,6 +130,16 @@ typedef struct MimeCtx {
     uint32_t mnamelen[MIME_MAX_DEPTH];
     uint8_t  mnametrunc[MIME_MAX_DEPTH];
     uint8_t  hdrcut;             /* the header being read did not fit */
+    /* Progress. The walk and each entry's sizing pass read what its
+     * writing pass then reads again, and every refill counted, so mail
+     * reported ~3x its size. The readers count into `ps` instead, which
+     * still fires every UNC_PROGRESS_STEP bytes of reading, and `relay`
+     * reports the input the writing passes have consumed: `wdone`, and
+     * `fin`'s position while one runs. */
+    UncProgressState ps;
+    UncProgress relay;
+    uint32_t wdone;
+    UncBufIn *fin;
     int      depth;
     int      partno;             /* for the "part1", "part2" names  */
     /* The walk's working state lives here rather than on the stack:
@@ -180,7 +190,7 @@ static int32_t mime_len(const uint8_t *s)
 static int mime_seek(MimeCtx *m, uint32_t pos)
 {
     if (m->c->io->seek(m->c->io->ctx, pos) < 0) return UNC_ERR_IO;
-    unc_bufin_init(&m->in, m->c->io, &m->c->ps, m->iobuf, MIME_IOBUF);
+    unc_bufin_init(&m->in, m->c->io, &m->ps, m->iobuf, MIME_IOBUF);
     m->base = pos;
     return UNC_OK;
 }
@@ -188,6 +198,14 @@ static int mime_seek(MimeCtx *m, uint32_t pos)
 static uint32_t mime_tell(MimeCtx *m)
 {
     return m->base + unc_bufin_tell(&m->in);
+}
+
+static int mime_relay(void *ctx, uint32_t done, uint32_t total)
+{
+    MimeCtx *m = (MimeCtx *)ctx;
+    (void)done; (void)total;
+    return unc_progress_at(&m->c->ps, m->wdone +
+                           (m->fin ? unc_bufin_tell(m->fin) : 0)) == UNC_OK;
 }
 
 /* ------------------------------------------------------------------ */
@@ -258,6 +276,8 @@ static int mime_headers(MimeCtx *m, uint32_t pos, MimeHdrs *h)
         int eof = 0;
 
         err = unc_readline(&m->in, m->line, MIME_LINE_MAX + 1, &llen, &eof);
+        if (err != UNC_OK && err != UNC_ERR_TRUNCATED)
+            return err;                         /* a Cancel, or the disk */
         if (err != UNC_OK) {                    /* nothing left at all */
             mime_hdr_apply(m, h, which, hlen);
             h->body = mime_tell(m);
@@ -367,6 +387,8 @@ static int mime_scan(MimeCtx *m, uint32_t from, MimeStop *s)
         int eof = 0, final = 0, lvl;
 
         err = unc_readline(&m->in, m->line, MIME_LINE_MAX + 1, &llen, &eof);
+        if (err != UNC_OK && err != UNC_ERR_TRUNCATED)
+            return err;                         /* a Cancel, or the disk */
         if (err != UNC_OK) {
             s->level = -1;
             s->final = 0;
@@ -423,7 +445,7 @@ static int mime_dec_open(MimeDec *d, MimeCtx *m, const MimePart *p,
     d->udone = 0;
     unc_b64_reset(&d->b64);
     if (m->c->io->seek(m->c->io->ctx, p->start) < 0) return UNC_ERR_IO;
-    unc_bufin_init(&d->in, m->c->io, &m->c->ps, iobuf, MIME_IOBUF);
+    unc_bufin_init(&d->in, m->c->io, &m->ps, iobuf, MIME_IOBUF);
     d->in.limit = p->end > p->start ? p->end - p->start : 0;
     return UNC_OK;
 }
@@ -538,6 +560,7 @@ static int mime_dec_run(MimeCtx *m, const MimePart *p, UncFork fork,
     *bytes = 0;
     err = mime_dec_open(&d, m, p, m->iobuf);
     if (err != UNC_OK) return err;
+    m->fin = write ? &d.in : NULL;      /* only the writing pass moves the bar */
 
     while (skip > 0) {
         int ch = mime_dec_next(&d);
@@ -555,12 +578,15 @@ static int mime_dec_run(MimeCtx *m, const MimePart *p, UncFork fork,
         if (n == sizeof buf) {
             if (write && m->c->sink->write(m->c->sink->ctx, fork, buf,
                                            (int32_t)n) != 0)
-                return UNC_ERR_SINK;
+                break;
             n = 0;
         }
     }
-    if (n > 0 && write &&
-        m->c->sink->write(m->c->sink->ctx, fork, buf, (int32_t)n) != 0)
+    m->fin = NULL;                      /* `d` is about to go */
+    if (write) m->wdone += unc_bufin_tell(&d.in);
+    if (n == sizeof buf ||
+        (n > 0 && write &&
+         m->c->sink->write(m->c->sink->ctx, fork, buf, (int32_t)n) != 0))
         return UNC_ERR_SINK;
 
     if (d.in.err != UNC_OK && d.in.err != UNC_ERR_TRUNCATED) return d.in.err;
@@ -865,6 +891,12 @@ int unc_mime_extract(UncCtx *c)
     m->partno = 0;
     m->base = 0;
     m->hdrcut = 0;
+    m->ps.prog = &m->relay;             /* its done and total go unread */
+    m->ps.since_tick = m->ps.hold = 0;
+    m->relay.ctx = m;
+    m->relay.tick = mime_relay;
+    m->wdone = 0;
+    m->fin = NULL;
 
     /* Every part costs at least a header line, so a message cannot have
      * more parts than it has bytes; the guard is against a walk that

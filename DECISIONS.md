@@ -404,6 +404,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
 - 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
 - 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
+- 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
 
 ---
 
@@ -26290,3 +26291,50 @@ leaked 70 KB at four abort points.
 decoder whose expensive work reads no input passes it at any duration;
 Arsenic is exactly that, and TESTING.md said so. A bound in the wrong
 unit is an instrument that cannot fail on the case that matters.
+
+## 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
+
+**Claim (measured, host).** A MIME message counted every byte it read,
+and it reads most of them three times: the walk, then for each entry a
+pass that sizes the fork and a pass that writes it. A 405,753 B message
+with one 300 KB attachment counted 1,236,327 B, so on a Macintosh the
+bar was full a third of the way through and sat there. The corpus's
+only message is 1,248 B, which never reached a tick at 8 KB, so
+`run_ticks.py` passed it; trying a 4 KB step is what surfaced it.
+
+**What it took.** MIME's readers count into a private
+`UncProgressState` whose callback is a relay in `fmt_mime.c`: the
+readers still fire it every 8 KB of reading, any pass, and the relay
+reports the input the writing passes have consumed so far. The bar
+holds still during the walk and the sizing passes, moves during the
+writes, never goes back (an appledouble's resource fork, earlier in
+the message, is written after its data fork), and ends within one step
+of the size: 95–99 % on three generated messages, against 300 %+.
+The maintainer chose this over a bar spread across all three passes,
+which costs more code. The Macintosh never sets `test_only`, so a
+writing pass is the same thing as the entry's final one.
+
+**A second fault, found by the abort sweep.** The walk's header reader
+and boundary scan took any failed read for the end of the message, so
+a Cancel there was dropped: on HEAD, aborting once at each of
+`big.mim`'s 149 callbacks gave 98 aborts, **49 successes with entries
+missing** and 2 "not a MIME message". The Macintosh's Cancel is sticky —
+every later callback refuses too — which usually rescued it, but not
+near the end of a message. Both readers now pass anything but a clean
+end up. After: 353 of 353 callbacks across three messages abort, once
+or sticky, under ASan, nothing left allocated.
+
+**Price.** `ovl_text` **+240 B** (11,510 → 11,750): +158 B of the object
+for the progress and +52 for the Cancel (`-Os`, the overlay's flags).
+Only the bundle holds `ovl_text`, so it is the download and an
+envelope's grant; resident `CODE` and A5 unmoved; the control's `CODE`
++228 and A5 −4, `OVL_SAVED` +224 and `TIERS` −224 by derivation, no
+tally moved. `MimeCtx` 2,428 → 2,464 B of heap while a message is
+unwrapped; the relay adds a 16 B frame under the pump. Host
+instructions unchanged to 0.01 %. A first design that ticked from
+MIME's own loops cost +368 B and was replaced.
+
+**Evidence the test can fail.** `run_mime.py`'s new cases run against
+the build before the fix and fail both: 836,211 and 638,931 B past the
+end. And at a 4 KB step `run_ticks.py` now passes all 1,399 archives,
+where it had failed `synth-os9-mime.mim`.
