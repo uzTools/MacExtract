@@ -53,9 +53,6 @@ is least trustworthy. Do these first. The LC 475 cannot stand in: a
       (FORMATS.md, *What the reserve is for*). Repeat with a Chooser
       extension loaded, extracting onto a **floppy** and onto an
       **AppleShare volume**. Record the lowest free heap seen.
-- [ ] **MultiFinder at the 400 KB minimum.** Set the partition in Get Info
-      and open one archive of each format. Emulated: 285,812 B free,
-      265,332 B budget (FORMATS.md, *Budget*).
 - [ ] **Floppy to floppy.** Extract from a real 800K floppy onto another.
 - [ ] **A media error during a write.** A marginal disk. Expected: that
       entry fails with an alert, the partial file is removed, extraction
