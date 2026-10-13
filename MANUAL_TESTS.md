@@ -96,12 +96,10 @@ Driven end to end under emulation on System 3.0 and 6.0.8
 in Standard File, Cancel and File ▸ Quit mid-run, the 31-character cut,
 a `.cpt` tree, `.hqx`, `.bin`, a truncated `.sit`, a non-archive, zip and
 StuffIt passwords, several archives opened at once, 24 archives byte-exact
-with types, creators and dates, the destination dialog (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
+with types, creators and dates, the destination dialog, other volumes
+through Desktop (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
-- [ ] Standard File reaches another volume and comes back: the Drive
-      button on System 6, Desktop or the pop-up menu on System 7, which
-      has no Drive button.
 - [ ] **A disk swap in ONE drive.** Part 1 on one floppy, the rest on
       another. Expected: the first floppy comes out by itself, the alert
       says *"…is not on that disk, so it was ejected"*, and putting the
