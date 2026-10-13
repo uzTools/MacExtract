@@ -59,11 +59,12 @@ framebuffer; the host decodes a screenshot and compares it with the Linux
 output, and reads the Out volume for **names**. Only Mini vMac exercises the
 Toolbox glue: the qemu-m68k mock calls the sink directly.
 
-**The fix that unblocked M10 is not understood.** Explicit, fully zeroed HFS
-param blocks (`PBHOpenSync` and siblings) are what ships. The `HOpen`
-attribution was disproved (below); "the old code passed partly
-uninitialised state" is a **hypothesis**, never reduced to a reproduction,
-and not being chased.
+**The fix that unblocked M10 is understood: `ioMisc`.** Explicit, fully
+zeroed HFS param blocks (`PBHOpenSync` and siblings) are what ships. Measured
+2026-10-13 on the M10-era shell (`014ed25`), 4 fixtures per build: Retro68's
+glue fails 0/4, a verbatim copy of it fails 0/4, and the same copy with
+`ioMisc = NULL` alone passes 4/4 (DECISIONS.md 2026-10-13, *the bug was the
+footnote*).
 
 **Upstream: Retro68's `HOpen`/`HOpenRF`/`HOpenDF` glue leaves `ioMisc` as
 stack garbage, and the File Manager writes through it** — measured 2026-10-13:
@@ -1062,7 +1063,8 @@ writing the refNum every time and agreeing with a hand-filled `PBHOpenSync`.
 The same write-up also said `HOpenDF` was the odd one out "unlike the
 non-hierarchical `OpenDF` beside it"; wrong, they behave identically (and as
 Apple documents — corrected 2026-10-13, withdrawn above).
-**Cost:** the true cause of the M10 saga is still unknown and every conclusion
+**Cost:** the true cause of the M10 saga stayed unknown until 2026-10-13
+(`ioMisc`, the field the glue leaves unset) and every conclusion
 from that period had to be re-tested — the next three entries. Twice a claim
 about one source file was wrong because the file was read rather than run.
 

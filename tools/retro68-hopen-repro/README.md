@@ -13,6 +13,13 @@ Mac Plus under Mini vMac:
 | 2 `PBHOpenSync`, `ioMisc = &decoy` | 131 | 3 |
 | 3 `HOpen`, `&decoy` left on the stack | **131** | **3** |
 
+**`m10-variants.patch`** applies to commit `014ed25` and switches what the
+M10-era shell opens files with (`M10VAR` in `mac/m10variant.h`). It is the
+evidence that `ioMisc` is what broke M10: the verbatim glue copy fails 0/4,
+the same copy with `ioMisc = NULL` passes 4/4 (DECISIONS.md, *the bug was the
+footnote*). Run it with that commit's own `tools/vmac/run.py`, its CLI copied
+to `build/rel/` and the fixtures linked into its `fixtures/`.
+
 **`hopen_repro.c`** compares `HOpen`/`HOpenRF`/`HOpenDF` against hand-filled
 `PBHOpenSync` blocks. It is the evidence that withdrew "`HOpen` never writes
 back the refNum" (DECISIONS.md, *2026-08-01 — two claims reduced to

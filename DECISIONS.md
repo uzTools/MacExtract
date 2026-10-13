@@ -406,7 +406,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
 - 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
 - 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
-- 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through
+- 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
 
 ---
 
@@ -978,7 +978,8 @@ BLOCKERS.md for the full write-up. Key decisions:
   Consequence: the param-block rewrite (`MyOpenFork`/`MyHCreate`) is kept
   because it demonstrably works, but its justification is now "it zeroes the
   whole param block", not "the glue is broken". **The true root cause of the
-  original failure is unestablished and is deliberately not being chased
+  original failure is unestablished [corrected 2026-10-13: it is `ioMisc` —
+  *the bug was the footnote*] and is deliberately not being chased
   further** — the shell is verified byte-exact on-Mac as it stands, and a
   wrong explanation in the docs is worse than an admitted gap. Rule: a
   root cause that has never been reduced to a minimal reproduction is a
@@ -26404,7 +26405,7 @@ for is never written. This is the same trap `--segments` hit on
 2026-08-31. It passes with a fixture that is not an archive. Written
 into `tools/vmac/README.md` rather than fixed.
 
-## 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through
+## 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
 
 Re-verifying `tools/retro68-hopen-repro/ISSUE.md` before the maintainer posts
 it. Upstream first: Retro68 master `d8b891a` pins a multiversal whose
@@ -26438,9 +26439,26 @@ A bare `open()`, `write()`, `close()` probe on System 6.0.8 returned from
 `open()` and `write()` and hung in `close()`, the same with the stack zeroed
 first (two runs, probe not kept), so `ioMisc` does not explain it. That is not
 where *Retro68's newlib cannot open a file* saw mpack stop (in `open()`);
-the difference is unexplained. Whether it explains M10's original
-failure (*M10 deep debugging*) is a **hypothesis**: the mechanism now exists,
-but the old code was never re-run against it.
+the difference is unexplained.
+
+**It is what broke M10**, measured the same day. A worktree at `014ed25` (the
+first commit with the committed harness, and the M10 open/create code) was
+built six ways, switching only what `MyOpenFork`/`MyHCreate` call, and run
+through that commit's own `tools/vmac/run.py` on four fixtures, two of them
+with resource forks (`tools/retro68-hopen-repro/m10-variants.patch`):
+
+| variant | result |
+|---|---|
+| 0 zeroed param blocks, as committed | 4/4 |
+| 1 Retro68's `HOpen`/`HOpenRF`/`HCreate` (the pre-fix code) | hangs, still extracting at 300 s |
+| 2 Retro68's `HOpen`/`HOpenRF`, zeroed create | 0/4, all hang |
+| 3 verbatim copy of the glue's `HOpen`/`HOpenRF` | 0/4: 0 files, or never paints |
+| 4 that copy plus `ioMisc = NULL` | **4/4** |
+| 5 that copy plus `ioVersNum = 0` | 0/4 |
+
+3 and 4 differ by one line. The symptom moves with the stack layout (hang,
+zero files, a bomb before the first paint, and in 2026-07 a garbage refNum),
+because what fails is whatever the stale pointer happens to address.
 
 **Transferable:** a negative probe that writes a junk value proves only that
 this one value is harmless. Ask what the field is *for*, then give it a value

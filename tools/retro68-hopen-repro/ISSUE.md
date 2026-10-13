@@ -54,6 +54,14 @@ non-hierarchical `FSOpen`, `OpenDF` and `OpenRF` in the same file already set
 `pb.ioParam.ioMisc = NULL`, so the fix is to do the same in the three
 H-variants (TN1041 also asks for `ioFVersNum` = 0, which they also leave unset).
 
+This is not hypothetical. An application of ours (an archive extractor) opened
+its files through `HOpen`/`HOpenRF` and, on System 6.0.8, hung or wrote zero
+files. Rebuilt with a verbatim copy of the glue it still fails on 4 of 4
+archives; the same copy with only `pb.ioParam.ioMisc = NULL;` added passes
+4 of 4. The symptom changes with the stack layout (a hang, empty output, an
+application that never draws), because it depends on what the stale pointer
+addresses.
+
 **Reproduction:** `iomisc_repro.c`, attached (~130 lines, Toolbox only). Build
 it as an application, boot or launch it on System 6, and read the three
 "decoy longs changed" lines. It creates its own 512-byte file `T`.

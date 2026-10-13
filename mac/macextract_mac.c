@@ -1663,14 +1663,11 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
  * block first. This is what made the Mac shell work at all, after a long
  * period in which every open silently failed.
  *
- * It was attributed to Retro68's high-level HOpen/HOpenRF glue ("returns noErr
- * but never writes back the refNum on System 6"). That attribution is
- * WITHDRAWN: tools/retro68-hopen-repro/ tests exactly that against a
- * hand-filled PBHOpenSync on the same setup and they agree in all ten cases.
- * The honest statement is that zeroing the whole param block fixed it and we
- * do not know which field mattered; the one real glue finding that survives is
- * that HOpenDF returns paramErr on System 6 (PBHOpenDFSync issues a System 7
- * trap with no fallback), which is why nothing here calls it.
+ * The field that mattered is ioMisc, measured 2026-10-13: Retro68's
+ * HOpen/HOpenRF glue leaves it as stack garbage and the File Manager uses it
+ * as an access path buffer. Rebuilding the M10-era shell with a verbatim copy
+ * of that glue fails, and the same copy with ioMisc = NULL alone passes
+ * (DECISIONS.md, *the bug was the footnote*; tools/retro68-hopen-repro/).
  *
  * Field layout: Multiversal CIncludes HParamBlockRec. */
 static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
