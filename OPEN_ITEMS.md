@@ -64,7 +64,12 @@ the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
   resource. The engine says *"encrypted by a scheme we cannot read"*; the
   fork counts as present in a MacBinary or BinHex envelope or a sidecar
   (`load_mkey`, `cli/main.c`). It is the only one of the eight ciphers so
-  affected, measured 2026-10-07 (FORMATS.md, *Encryption*).
+  affected, measured 2026-10-07 (FORMATS.md, *Encryption*). With the
+  password in hand the fork's loss is not permanent after all — the
+  `'MKey'` only decrypts to the archive IV, and the IV is recoverable by a
+  2^32 search its own self-verifier enumerates, graded by the entries'
+  CRCs (measured 2026-10-13); how to implement it is left as an exercise to
+  the reader.
 - **A fork compressed by a third party's StuffIt compressor module (method
   nibble 7) is not decodable.** 2.0.1's own `STR# 267` names a
   `Compressors` folder among its eight; Aladdin's two disks fill five of
@@ -131,12 +136,18 @@ StuffIt 5 went 254 s without one until 2026-10-12 and is under 1.1 s now
 (DECISIONS.md 2026-10-12, *the block nobody could cancel*). **What is
 left is 4–6 s on a Mac Plus** for Now Compress, Compact Pro and
 DiskDoubler, and 2–2.5 s for StuffIt and Zip — the cost of 8 KB of
-input, which is where `UNC_PROGRESS_STEP` puts the tick. Halving it to
-4,096 matches the 4 KB refill every reader already does, so it adds no
-File Manager call (*hypothesis* for its cost: a callback per refill,
-gated at 10 Hz in the shell); it is CLAUDE.md's "every 8–16 KB", so it
-is the maintainer's to decide. Now Compress's gap is its 32 KB block
-and would not move. **Seen on silicon, 2026-10-12**: the LC 475's
+input, which is where `UNC_PROGRESS_STEP` puts the tick. **Halving it
+is measured** (FORMATS.md, *What a 4 KB step buys*): gaps down by a
+third to a half, 0 B, at most +0.3 % on System 6 and +0.4 % on System 7
+with nothing else running; Now Compress's 32 KB block does not move. It
+is CLAUDE.md's "every 8–16 KB", so it is the maintainer's to decide, and
+it needs two things first: the three stored-fork copies sized by their
+own constant rather than the step (it is their buffer too), and
+**MIME's count fixed** — at 4 KB `run_ticks.py` fails
+`synth-os9-mime.mim`, 4,366 B counted on 1,248, because every
+`mime_seek` and each part's decode re-reads and re-counts what an
+earlier refill counted (traced, 2026-10-13). At 8 KB no tick fires on a
+file that small, so the overcount is there and unseen. **Seen on silicon, 2026-10-12**: the LC 475's
 window "not very reactive" while it extracts, format not noted —
 re-test on a StuffIt 5 archive once this is on the machine. Holding the
 File menu down pauses the extraction — inherent: `MenuSelect` keeps the
