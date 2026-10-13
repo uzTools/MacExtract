@@ -1814,7 +1814,7 @@ def build_encrypted(workdir):
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
     import synth_crypt as SC
     import synth_wrapped as W
-    sit, rsrc = SC.build_sit_des(ENCRYPTED_PW.encode("mac_roman"))
+    sit, rsrc, _ = SC.build_sit_des(ENCRYPTED_PW.encode("mac_roman"))
     path = os.path.join(workdir, "secret.bin")
     os.makedirs(workdir, exist_ok=True)
     with open(path, "wb") as f:

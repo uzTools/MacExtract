@@ -2029,7 +2029,7 @@ def phase_password(args, appbin, workdir, shot):
     import synth_wrapped as W                               # noqa: E402
 
     password = "hushnow"
-    sit, rsrc = SC.build_sit_des(password.encode("mac_roman"))
+    sit, rsrc, _ = SC.build_sit_des(password.encode("mac_roman"))
     binpath = os.path.join(workdir, "secret.bin")
     open(binpath, "wb").write(W.macbinary("Secret.sit", sit, rsrc,
                                           b"SIT!", b"SIT!"))
