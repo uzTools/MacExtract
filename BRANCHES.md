@@ -14,7 +14,7 @@ undated figure here is one nobody can tell is stale.
 
 | branch | what it explores | state |
 |---|---|---|
-| `rom64k` | one guard, `Has128KROM()`, so the application starts on a 64K-ROM Macintosh instead of bombing on `MaxApplZone` | starts and its interface works under emulation; cannot extract without HFS, and no hardware has run it (MANUAL_TESTS.md §7) |
+| `rom64k` | one guard, `Has128KROM()`, so the application starts on a 64K-ROM Macintosh instead of bombing on `MaxApplZone` | starts and its interface works under emulation; cannot extract without HFS, and no hardware has run it (MANUAL_TESTS.md §6) |
 
 **`selective-extract` is PARKED BY DECISION, 2026-09-26.** Choosing which
 entries come out is out of scope for the Macintosh application, and the
