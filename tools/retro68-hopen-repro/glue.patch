@@ -1,0 +1,26 @@
+--- a/custom/glue.c
++++ b/custom/glue.c
+@@ -231,6 +231,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenRFSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+@@ -243,6 +244,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+@@ -256,6 +258,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenDFSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;

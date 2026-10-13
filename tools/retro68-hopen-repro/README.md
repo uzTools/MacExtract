@@ -13,6 +13,11 @@ Mac Plus under Mini vMac:
 | 2 `PBHOpenSync`, `ioMisc = &decoy` | 131 | 3 |
 | 3 `HOpen`, `&decoy` left on the stack | **131** | **3** |
 
+**`glue.patch`** is the fix offered upstream, against multiversal's
+`custom/glue.c` (`28eac84`): `ioMisc = NULL` in the three H-variants. It is
+the line variant 4 of `m10-variants.patch` measured, and is not otherwise
+built.
+
 **`m10-variants.patch`** applies to commit `014ed25` and switches what the
 M10-era shell opens files with (`M10VAR` in `mac/m10variant.h`). It is the
 evidence that `ioMisc` is what broke M10: the verbatim glue copy fails 0/4,

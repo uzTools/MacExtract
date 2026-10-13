@@ -26,7 +26,36 @@ Hi! `HOpen`, `HOpenRF` and `HOpenDF` in `multiversal/custom/glue.c` never set `i
 
 The File Manager really does write through it. With the address of a 1 KB array left on the stack, `HOpen` succeeds and the array gets overwritten (524 bytes on System 6.0.8, 12 on 7.0.1). That's how my application ended up hanging or writing nothing on System 6: with a copy of the glue it fails, and adding just `pb.ioParam.ioMisc = NULL;` fixes it.
 
-`FSOpen`, `OpenDF` and `OpenRF` in the same file already set it to NULL, so the H-variants just need the same line.
+`FSOpen`, `OpenDF` and `OpenRF` in the same file already set it to NULL, so the H-variants just need the same line:
+
+```diff
+--- a/custom/glue.c
++++ b/custom/glue.c
+@@ -231,6 +231,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenRFSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+@@ -243,6 +244,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+@@ -256,6 +258,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenDFSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+```
 
 Repro below: build it as an app, run it, and read the three lines. Mini vMac Mac Plus, System 6.0.8 and 7.0.1, Retro68 `335fa54f6d`; master still has the same `glue.c`.
 
