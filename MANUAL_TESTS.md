@@ -37,10 +37,11 @@ twice an item here turned out to need neither hardware nor a stranger
 
 ---
 
-## 1. A real Mac Plus, System 3.0 or 6.0.x, 1 MB — the floor target
+## 1. A real 68000 Mac (Plus, SE, Classic), System 3.0 or 6.0.x, 1 MB — the floor target
 
 The machine the project is designed around, and the one where an emulator
-is least trustworthy. Do these first.
+is least trustworthy. Do these first. The LC 475 cannot stand in: a
+68020-and-up CPU performs the misaligned accesses a 68000 bombs on.
 
 - [ ] **Free heap at launch.** Compare `FreeMem()` with the emulated 1 MB
       System 6.0.8 machine's **655,100 B** (budget 634,620 B after the
@@ -76,14 +77,6 @@ is least trustworthy. Do these first.
 - [ ] **StuffIt 5 at 1 MB.** `derived-a2basic.dmg.sit` (~6 min) and
       `derived-Library_ISBN_Barcoder.sit` (~12 min), on the sampled index. A per-entry refusal is
       acceptable; a crash is not.
-
-## 2. Another real 68k Mac (SE, Classic, II, LC…)
-
-Done on a 68LC040 (BLOCKERS.md, *Status*): launch, every decoder image,
-MultiFinder switching, and a 400 KB partition refusing per entry.
-
-- [ ] **A 68000 or 68020/030 machine other than a Plus** — an SE, a
-      Classic, a II, an SE/30.
 
 ## 3. Real PowerPC hardware, Mac OS 9
 

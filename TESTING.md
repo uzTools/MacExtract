@@ -4016,7 +4016,7 @@ emulator tiers are what cover these:
 
 - **No instruction cache, on either host.** The flush is counted, never
   needed; whether it WORKS is real 68020-and-up silicon's answer
-  (MANUAL_TESTS.md §2).
+  (BLOCKERS.md, *Status*: the LC 475, round 2).
 - **Not Retro68's code generation, where an image is EXECUTED.** The two
   toolchains do not even emit the same relocations: `m68k-linux-gnu-gcc`
   produces 15 in one image, Retro68 30 across six. The shipped images are

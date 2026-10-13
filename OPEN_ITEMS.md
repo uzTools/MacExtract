@@ -114,7 +114,7 @@ checked by `tools/check_provenance.py`.
 ## What the LC 475 found that is not fixed
 
 The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
-§2, §4). Each is measured on that machine and nowhere else.
+§4). Each is measured on that machine and nowhere else.
 
 - **Cmd-. does nothing on a French (AZERTY) keyboard.** The period
   needs Shift there, and the shell compares the event's character with
