@@ -1,6 +1,6 @@
 # MANUAL_TESTS.md — what only a person outside this machine can settle
 
-**Status: one machine on silicon.** The maintainer's LC 475 (68LC040,
+**Status: one machine on silicon.** The maintainer's LC 475 (68040,
 System 7.6.1, 12 MB) ran two sessions, 2026-10-11 and 2026-10-12; its
 results are BLOCKERS.md's (*Status*), and what it found open is
 OPEN_ITEMS.md's (*What the LC 475 found that is not fixed*). Nothing older
@@ -79,7 +79,7 @@ is least trustworthy. Do these first.
 
 ## 2. Another real 68k Mac (SE, Classic, II, LC…)
 
-Done on a 68LC040 (BLOCKERS.md, *Status*): launch, every decoder image,
+Done on a 68040 (BLOCKERS.md, *Status*): launch, every decoder image,
 MultiFinder switching, and a 400 KB partition refusing per entry.
 
 - [ ] **A 68000 or 68020/030 machine other than a Plus** — an SE, a
