@@ -430,14 +430,14 @@ def budget_probe(indsk):
 def tickgap_probe(indsk):
     """The `-D UNC_AT_TICKGAP` fields: the widest wait between two progress
     callbacks and the input positions either side of it, the wait before
-    the first and after the last, and the callback count. Ticks are 60 Hz;
-    printed in seconds."""
-    v = read_report(indsk, 14)
+    the first and after the last, the callback count, and the extraction's
+    own duration in ticks (60 Hz). Gaps are printed in seconds."""
+    v = read_report(indsk, 15)
     if v is None:
         return None
     s = lambda t: f"{t / 60:.1f}s"
     return (f"gap={s(v[8])} at {v[9]}->{v[10]} head={s(v[11])} "
-            f"tail={s(v[12])} ticks={v[13]}")
+            f"tail={s(v[12])} ticks={v[13]} run={v[14]}t")
 
 
 def read_report(indsk, n):

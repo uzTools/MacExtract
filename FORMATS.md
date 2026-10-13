@@ -7086,6 +7086,35 @@ of that format's input costs; Now Compress reads a 32 KB block whole.
 A 68LC040 at 25 MHz is several times faster (*hypothesis*: no machine
 here has timed one).
 
+### What a 4 KB step buys, measured 2026-10-13
+
+`UNC_PROGRESS_STEP` 8,192 → 4,096 with the stored-fork copy buffers left
+at 8 KB, NOT shipped (OPEN_ITEMS.md, *A click during an extraction*),
+against the tree it was cut from, both with `-D UNC_AT_TICKGAP` — whose
+callback runs the shipped `prog_tick` (10 Hz gate, `SystemTask`,
+`GetNextEvent`; not the bar's redraw) and times `RunExtract` in ticks.
+1x, `timing.txt` less the two large Arsenic fixtures, all byte-exact.
+
+| fixture | gap, 8 → 4 KB | extraction, System 6.0.8 | System 7.0.1 |
+|---|---|---|---|
+| `derived-XferIt_1.5b4.sea`, Compact Pro | 4.8 → **3.1 s** | 102.80 → 102.85 s, +3 ticks | +14 ticks, +0.22 % |
+| `derived-MacPass390.sea`, DiskDoubler | 4.2 → **2.8 s** | 53.75 → 53.78 s, +2 | +7, +0.21 % |
+| `derived-EmpireBuilderDemo.sit`, StuffIt | 2.5 → **1.6 s** | 52.18 → 52.25 s, +4 | +13, +0.40 % |
+| `derived-MUSFMT10.ZIP`, Zip | 2.2 → **1.5 s** | 32.05 → 32.07 s, +1 | +7, +0.35 % |
+| `PCCTS.tar.gz`, gzip | 1.9 → **1.2 s** | +1 | — |
+| `popper-1.7.tar.Z`, compress | 1.5 → **0.8 s** | +1 | — |
+| `macburger-helper.hqx`, BinHex | 1.1 → **0.6 s** | +4 | — |
+| `derived-Expand_Now_1.0.1.sea`, Now Compress | 6.1 → 6.1 s | +0 | — |
+
+The other five rows move by at most one tick either way. **Price: 0 B**
+in every image and in the resident `CODE` and A5, no heap; at most
+**+0.3 % on System 6 and +0.4 % on System 7**, about 1.5 and 7 ms per
+extra pump. The gaps fall by a third to a half, not by half (*hypothesis*:
+the widest gap holds File Manager writes, which do not halve). **What this cannot
+see:** System 7's autotest boots the application as the shell, so no
+other process was there to be given time; with the Finder running, each
+pump can switch to it (*hypothesis*: more than 7 ms).
+
 ## What -O3 is worth, and where
 
 Two measurements, 2026-08-30, both on `derived-EmpireBuilderDemo.sit` at

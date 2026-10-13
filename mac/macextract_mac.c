@@ -4393,9 +4393,14 @@ static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
  * extraction*). This records the widest gap in TICKS, File Manager time
  * included, with the input position either side of it; the gap before
  * the first callback and after the last are kept apart, since the first
- * includes the decoders' load and the last the final close. */
-static long gGapLast, gGapMax, gGapHead, gGapCount;
+ * includes the decoders' load and the last the final close.
+ *
+ * Each callback then runs the SHIPPED one, prog_tick, with no dialog:
+ * its 10 Hz gate, SystemTask and GetNextEvent, so what the pump costs
+ * is in the extraction's time. The bar's redraw is not. */
+static long gGapLast, gGapMax, gGapHead, gGapCount, gGapRun;
 static uint32_t gGapDone, gGapFrom, gGapTo;
+static Progress gGapPr;
 
 static int at_gap_tick(void *ctx, uint32_t done, uint32_t total)
 {
@@ -4411,7 +4416,7 @@ static int at_gap_tick(void *ctx, uint32_t done, uint32_t total)
     gGapLast = now;
     gGapDone = done;
     gGapCount++;
-    return 1;
+    return prog_tick(&gGapPr, done, total);
 }
 #endif
 
@@ -4775,11 +4780,12 @@ int main(void)
         UncProgress gprog;
         gprog.ctx = NULL;
         gprog.tick = at_gap_tick;
-        gGapLast = TickCount();
+        gGapPr.startTicks = gGapRun = gGapLast = TickCount();
         ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          &gprog, &entries, &errors, NULL);
         gGapLast = TickCount() - gGapLast;   /* now the tail */
+        gGapRun = TickCount() - gGapRun;     /* the whole extraction */
 #else
         ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
@@ -4963,7 +4969,7 @@ int main(void)
         /* The grid is left alone, so the run still grades its bytes; the
          * gaps go in the FILE, which run.py prints. Ticks, 60 Hz. */
         {
-            uint32_t gv[14];
+            uint32_t gv[15];
             int k;
             for (k = 0; k < 8; k++) gv[k] = vals[k];
             gv[8]  = (uint32_t)gGapMax;    /* widest gap between two ticks */
@@ -4972,7 +4978,8 @@ int main(void)
             gv[11] = (uint32_t)gGapHead;   /* start to the first tick      */
             gv[12] = (uint32_t)gGapLast;   /* last tick to return          */
             gv[13] = (uint32_t)gGapCount;
-            at_report_file(gv, 14);        /* file, eject, grid: see above */
+            gv[14] = (uint32_t)gGapRun;    /* RunExtract, read-back apart  */
+            at_report_file(gv, 15);        /* file, eject, grid: see above */
             (void)Eject(NULL, gATreportVol);
             at_report(vals, 8);
         }
