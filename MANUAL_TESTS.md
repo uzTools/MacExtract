@@ -158,8 +158,8 @@ repository submits them** (CLAUDE.md, *Rules*); the maintainer posts them.
       `tools/xadmaster-ddn-repro/` (`ISSUE.md`, `make_repro.py`), for
       MacPaw/XADMaster.
 - [ ] **Retro68's `HOpen`/`HOpenRF`/`HOpenDF` leave `ioMisc` uninitialised**
-      — `tools/retro68-hopen-repro/ISSUE.md`, for autc04/Retro68; attach
-      `iomisc_repro.c`. Re-verified against Retro68 master 2026-10-13. The
+      — `tools/retro68-hopen-repro/ISSUE.md`, for autc04/Retro68, with
+      `iomisc_repro.c` inline. Re-verified against Retro68 master 2026-10-13. The
       `paramErr` claim it replaced is withdrawn (BLOCKERS.md).
 
 **Record** the issue URL in BLOCKERS.md beside its claim. A rejection is a
