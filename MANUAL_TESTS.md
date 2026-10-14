@@ -88,7 +88,8 @@ Verified under QEMU only.
 - [ ] **A file over 2 GB**, against the engine's 32-bit arithmetic.
       Nothing in the corpus is that big.
 - [ ] **8-bit MacRoman names on screen**: `derived-Education7.1.cpt`'s
-      `spinning brain ƒ`, PackIt's synthetic `Appé`.
+      `spinning brain ƒ`, and `synth-packit-2.pit`'s MacRoman `CC A9`,
+      drawn `AppÃ©` (`tools/vmac/README.md`, `19-names.png`).
 
 ## 4. The interactive application, on any real machine
 
