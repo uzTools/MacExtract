@@ -35,8 +35,21 @@ What it CANNOT see:
   - Which disk is asked for, other than ME or C: the prompt's name is told
     apart by one crop of the "ME" prompt, measured off this walk's frames.
 
+`--drop` is the other walk, and a MEASUREMENT rather than a check: two
+archives on C carrying MacExtract's creator, opened together from the
+Finder with Cmd-O — the same list of documents a drop on an alias hands
+over, which 7.0.1 will not do from an alias here. It answers every prompt,
+picks the boot disk at each "Extract into", and prints the whole sequence;
+it fails only if it did not reach "Extract into" twice. Measured
+2026-10-14: ME C ME C ME C ME C before the first "Extract into" — every ME
+before MacExtract's main() runs (a probe build marking the screen at each
+step of main() drew nothing yet) — against SimpleText's ten launched the
+same way; then the reload's ME between the archives, and one ME more around
+the second "Extraction complete." that is neither the alert's resources
+nor its icon (DECISIONS.md 2026-10-14, *the swaps that are the System's*).
+
 Usage:
-    onedrive.py [--app MacExtract.bin] [-o DIR]
+    onedrive.py [--app MacExtract.bin] [-o DIR] [--drop]
 """
 import argparse, hashlib, os, shutil, subprocess, sys, tempfile, time
 
@@ -58,6 +71,9 @@ SF_EJECT = (374, 131)        # Standard File's Eject, System 7
 SF_ONLY_ROW = (150, 127)     # the archive: C holds nothing else
 SFPUT_DESKTOP = (410, 189)
 SFPUT_BOOT_ROW = (190, 173)  # under Desktop: C, then the boot disk
+SFPUT_LABEL = ("150x10+128+258", "099b455920dd")   # "Extract into this folder:"
+C_ICON = (471, 148)          # floppy C on the desktop, once ME is out
+SECOND = os.path.join(R.REPO, "fixtures", "derived-Education7.1.cpt")
 
 
 def crop(png, geom):
@@ -73,6 +89,9 @@ def main():
     ap.add_argument("--app", help="MacBinary to run (default: build the "
                                   "interactive application from this tree)")
     ap.add_argument("-o", "--outdir", default="vmac-onedrive")
+    ap.add_argument("--drop", action="store_true",
+                    help="open two archives on C with Cmd-O instead, and "
+                         "print every disk asked for (a measurement)")
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
     I.calibrate("Sys7.img")
@@ -97,7 +116,14 @@ def main():
         hfs("hformat", "-l", vol, img)
     hfs("hmount", me); hfs("hcopy", "-m", appbin, ":MacExtract"); hfs("humount")
     hfs("hmount", c); hfs("hcopy", "-r", FIXTURE, ":First.sit")
-    hfs("hattrib", "-t", "SITD", "-c", "SIT!", "First.sit"); hfs("humount")
+    if args.drop:
+        # MacExtract's creator, so that the Finder opens both with it.
+        hfs("hcopy", "-r", SECOND, ":Second.cpt")
+        hfs("hattrib", "-t", "SITD", "-c", "MExt", "First.sit")
+        hfs("hattrib", "-t", "PACT", "-c", "MExt", "Second.cpt")
+    else:
+        hfs("hattrib", "-t", "SITD", "-c", "SIT!", "First.sit")
+    hfs("humount")
 
     mac = I.Mac(boot, "mv-4M-1d", work)
     n = [0]
@@ -113,6 +139,8 @@ def main():
         if mac.settle(os.path.join(args.outdir, ".s.png"), interval=5.0,
                       timeout=300) is None:
             raise SystemExit("onedrive: the machine never settled")
+        if args.drop:
+            return drop_walk(mac, me, c, shot)
         I.drop_disk(mac, me); time.sleep(8)
         mac.click(*ME_ICON, double=True); time.sleep(6)
         mac.click(*APP_IN_ME, double=True); time.sleep(20)
@@ -146,6 +174,45 @@ def main():
     print("onedrive: screenshots in %s — the last one should read "
           "\"Extraction complete.\"" % args.outdir)
     return 0 if not asked else 1
+
+
+def drop_walk(mac, me, c, shot):
+    """--drop: the sequence, printed; 1 if "Extract into" was not reached
+    twice. The waits are what the walk needed: ejected sooner, the Finder
+    asked for ME back before C could go in."""
+    I.drop_disk(mac, me); time.sleep(30)
+    mac.click(*ME_ICON, double=True); time.sleep(10)    # ME's window, once
+    mac.command_key("w"); time.sleep(5)
+    mac.click(*ME_ICON); time.sleep(2)
+    mac.command_key("e"); time.sleep(15)
+    I.drop_disk(mac, c); time.sleep(30)
+    mac.click(*C_ICON, double=True); time.sleep(6)
+    shot("C-window")
+    mac.command_key("a"); time.sleep(2)
+    mac.command_key("o"); time.sleep(4)
+    seq, quiet, t0 = [], 0, time.time()
+    while time.time() - t0 < 900:
+        time.sleep(4)
+        p = shot("t")
+        if crop(p, PROMPT_ICON[0]) == PROMPT_ICON[1]:
+            disk = "ME" if crop(p, PROMPT_NAME[0]) == PROMPT_NAME[1] else "C"
+            seq.append(disk); quiet = 0
+            I.drop_disk(mac, me if disk == "ME" else c); time.sleep(6)
+        elif crop(p, SFPUT_LABEL[0]) == SFPUT_LABEL[1]:
+            seq.append("[Extract into]"); quiet = 0
+            mac.click(*SFPUT_DESKTOP); time.sleep(4)
+            mac.click(*SFPUT_BOOT_ROW, double=True); time.sleep(3)
+            mac.key("Return"); time.sleep(4)
+        else:
+            quiet += 1
+            if quiet >= 4:                  # an alert waiting: OK it
+                seq.append("[alert]"); quiet = 0
+                mac.key("Return")
+                if seq.count("[alert]") >= 2:
+                    break
+    shot("end")
+    print("onedrive --drop: " + " ".join(seq))
+    return 0 if seq.count("[Extract into]") >= 2 else 1
 
 
 if __name__ == "__main__":

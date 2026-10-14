@@ -123,20 +123,16 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
   international canceling is about this case, and it has not been read
   here. The Cancel button works. Closing it starts with that technote,
   and is priced in bytes like any shell change.
-- **Eleven floppy swaps before the first dialog**, with two archives on
-  one floppy dropped onto an alias of MacExtract on another, one drive,
-  System 7.6.1: MacExtract's floppy (ME) and the archives' (C) alternate
-  five times and a half before *"Extract into this folder"* — measured
-  2026-10-13 and again 2026-10-14 on the preloading build, and the same
-  with C's window CLOSED and the archives dropped from the desktop, so it
-  is not the Finder redrawing that window. The application reads nothing
-  from C before that dialog. After it, 2026-10-14: C, then ME before the
-  first *"Extraction complete."*, none before the second, and ME after.
-  On a one-drive Mini vMac, System 7.0.1 (`tools/vmac/onedrive.py`):
-  launching from ME through Standard File costs ME, C, ME; nothing after
-  Save since the preload (DECISIONS.md 2026-10-14, *the disk the dialogs
-  were on*); and 7.0.1's Finder does not take a drop on an alias of an
-  application on an ejected disk, so the drop itself is unreproduced.
+- **One floppy swap after the second archive that is not explained.**
+  Two archives on one floppy opened with MacExtract on another, one
+  drive: after the reload's expected ME, the second *"Extraction
+  complete."* asks for ME again (System 7.0.1, `onedrive.py --drop`;
+  the LC 475 showed one ME around an alert too). Not the alert's
+  resources, purgeable or not, nor its icon, nor a code segment —
+  each excluded by a build without it. *Hypothesis*: the Finder,
+  which runs during the alert's modal loop. The eleven swaps BEFORE
+  *"Extract into"* are the System's (DECISIONS.md 2026-10-14, *the
+  swaps that are the System's*).
 - **The system crawled for about two minutes** when the Calculator was
   opened over the progress window and dragged, during `Barcoder.sit`
   (30 s undisturbed; the pointer moved; the extraction finished). Not

@@ -3126,9 +3126,12 @@ Mac does. The walk launches MacExtract from floppy ME, ejects it in the Open
 dialog, opens an archive on floppy C and saves to the boot disk; it then
 answers every *"Please insert the disk"* and fails if there was any. The build
 before `preload` (2026-10-14) asks ME, C, ME, C and fails; after, nothing.
-**What it cannot see** is in its docstring: a drop on an alias (System 7.0.1's
-Finder will not take one for an application on an ejected disk), and the
-Finder's own swaps before the Open dialog. Coordinates are System 7's.
+`onedrive.py --drop` is the drop's list of documents, given by Cmd-O on two
+archives carrying MacExtract's creator; it prints every disk asked for and is
+a measurement, not a check (DECISIONS.md 2026-10-14, *the swaps that are the
+System's*). **What neither can see** is in the docstring: an actual drop on an
+alias (System 7.0.1's Finder will not take one for an application on an ejected
+disk). Coordinates are System 7's.
 
 **`--diskswap` needs a fixture that is not an archive.** It reads back the
 joined FILE, and the application unpacks a joined archive, so with a `.sit`

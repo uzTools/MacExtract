@@ -410,6 +410,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
 - 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
 - 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
+- 2026-10-14 (the swaps that are the System's) — the swaps before the first dialog happen before MacExtract's main() runs, and a stock application takes as many
 
 ---
 
@@ -26567,4 +26568,34 @@ Finder's.
 before: *"asked for after Save: ME, C, ME, C"*, exit 1; with this one:
 nothing, exit 0. The old build's *"Extraction complete."* also came up
 without its icon.
+
+## 2026-10-14 (the swaps that are the System's) — the swaps before the first dialog happen before MacExtract's main() runs, and a stock application takes as many
+
+**Claim (measured, one-drive Mini vMac, System 7.0.1).** Two archives on
+floppy C opened together with MacExtract on floppy ME — Cmd-O on
+archives carrying its creator, the list a drop on an alias hands over —
+take ME, C, ME, C, ME, C, ME, C before *"Extract into"*. The LC 475 took
+eleven the same way on 7.6.1, with C's window open or closed.
+
+**Evidence that MacExtract cannot change it.**
+
+- A probe build painting a mark on the screen at each step of `main()`
+  — after `InitGraf`, the Toolbox, the menu bar, the decoders, the
+  Finder's list, just before Standard File — shows **no mark in any of
+  the ME prompts** and all six in the next frame: every ME is asked for
+  before `main()` starts, while the System loads the application.
+- Preloading every resource but the decoder bundle, the lazy build that
+  reads no bundle at launch, and a copy without its colour and small
+  icons: the same eight.
+- **SimpleText** from System 7.0.1, on ME, with two text files on C
+  opened the same way: **ten**.
+
+**After Save.** The reload's ME between archives is by design. One more
+ME around the second *"Extraction complete."* is not explained: a copy
+with the alerts not purgeable, a probe build using `Alert` (no icon)
+instead of `NoteAlert`, and a copy with every code segment preloaded
+all still ask for it (OPEN_ITEMS.md, *What the LC 475 found*).
+
+**Kept.** `onedrive.py --drop` prints the sequence; it is a measurement,
+failing only if it never reaches *"Extract into"* twice.
 

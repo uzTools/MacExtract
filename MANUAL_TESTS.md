@@ -101,8 +101,9 @@ through Desktop, `/` in names, `~1` on a second run (BLOCKERS.md, *Status*). Cmd
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
 - [ ] **Several archives on a one-drive machine** with the application on
-      its own floppy: count the swaps before *"Extract into"* and after
-      Save, separately (OPEN_ITEMS.md, *What the LC 475 found*).
+      its own floppy, opened through Standard File rather than dropped:
+      nothing should be asked for after Save (`onedrive.py` measures
+      this under emulation).
 - [ ] The progress dialog repaints when a desk accessory covers it, and
       the machine stays usable meanwhile (the LC 475 crawled for two
       minutes once: OPEN_ITEMS.md, *What the LC 475 found*).
