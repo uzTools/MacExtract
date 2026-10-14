@@ -411,6 +411,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
 - 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
 - 2026-10-14 (the swaps that are the System's) — the swaps before the first dialog happen before MacExtract's main() runs, and a stock application takes as many
+- 2026-10-14 (the floppy a USB drive can write) — a 1.44 MB HFS image joins the download, and why it is not a self-extracting archive
 
 ---
 
@@ -26598,4 +26599,29 @@ all still ask for it (OPEN_ITEMS.md, *What the LC 475 found*).
 
 **Kept.** `onedrive.py --drop` prints the sequence; it is a measurement,
 failing only if it never reaches *"Extract into"* twice.
+
+## 2026-10-14 (the floppy a USB drive can write) — a 1.44 MB HFS image joins the download, and why it is not a self-extracting archive
+
+**Claim.** The download had no form a Mac-only owner with a USB floppy
+drive could use. A USB drive writes MFM only (720K, 1.44 MB) and cannot
+make the 800K GCR disk `MacExtract.dsk` is; a `.bin` copied onto a
+PC-formatted disk reaches the Mac still MacBinary, with nothing to decode
+it. `dist/MacExtract-1440K.img`, the same HFS volume at 1,474,560 B,
+written raw, is a disk a SuperDrive Mac mounts as its own (*hypothesis*
+until MANUAL_TESTS.md §9: it is the format a Mac formats a 1.44 MB disk
+in, and hfsutils reads it back byte-exact).
+
+**Why not a self-extracting archive**, which was the question asked. A
+`.sea` is an application: its code is in the resource fork, so every
+channel that loses MacExtract's fork loses the `.sea`'s, and every channel
+that keeps one keeps both. It saves size and nothing else, and size was
+not the obstacle — the application fits an 800K disk with room to spare.
+The obstacle is the channel; an image written raw carries both forks
+because it carries the whole volume.
+
+**Left out.** The Plus, 512Ke and original SE read GCR only, so this does
+nothing for the floor target; that owner still needs an 800K writer, a
+FloppyEmu or a second Mac. A 720K image is not shipped until a SuperDrive
+is seen mounting one. `make_dist.sh` now requires hfsutils rather than
+falling back to a weaker check, since the image cannot be built without it.
 

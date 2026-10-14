@@ -3948,10 +3948,11 @@ source produced the same payload hash.
 
 **What it cannot see:**
 
-- **`dist/MacExtract.dsk`.** `make_dist.sh` copies both files in one run, so
-  a current `.bin` implies a current `.dsk` unless somebody edits one by
-  hand. The `.dsk` is an HFS volume carrying its own dates and cannot be
-  compared byte for byte without mounting it.
+- **`dist/MacExtract.dsk` and `dist/MacExtract-1440K.img`.** `make_dist.sh`
+  writes all three in one run and round-trips each image's application
+  against the `.bin`, so a current `.bin` implies current images unless
+  somebody edits one by hand. They are HFS volumes carrying their own dates
+  and cannot be compared byte for byte without mounting them.
 - **Anything, without a Retro68 toolchain.** No `build/mac/MacExtract.bin`,
   no comparison; the whole variant already skips there.
 - **A docs-only change**, which does not run `ci.sh` (CLAUDE.md, Rules).

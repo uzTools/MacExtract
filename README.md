@@ -59,8 +59,9 @@ currently **v0.40.0**. Or take it straight from the tree:
 |---|---|
 | [`dist/MacExtract.bin`](dist/MacExtract.bin) | the application as uncompressed MacBinary — transfer it with anything MacBinary-aware |
 | [`dist/MacExtract.dsk`](dist/MacExtract.dsk) | an 800K HFS floppy image — write it to a real floppy, or mount it in Mini vMac, Basilisk II or SheepShaver |
+| [`dist/MacExtract-1440K.img`](dist/MacExtract-1440K.img) | the same disk at 1.44 MB — write it with a USB floppy drive to a high-density disk, and any Mac with a 1.44 MB SuperDrive mounts it |
 
-Neither needs an unarchiver to open, which is the point: a bare Mac has no way
+None needs an unarchiver to open, which is the point: a bare Mac has no way
 to unpack a `.sit` until it already has something that can.
 [`dist/README.txt`](dist/README.txt) has the transfer notes.
 

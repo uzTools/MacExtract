@@ -2,7 +2,7 @@ MacExtract v0.40.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in two forms that need no unarchiver:
+unarchiver, so MacExtract ships in three forms that need no unarchiver:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
@@ -14,6 +14,16 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
                   floppies only), or mount it in an emulator (Mini vMac,
                   Basilisk II, SheepShaver), then drag MacExtract onto your
                   startup disk.
+
+  MacExtract-1440K.img  The same disk at 1.44 MB, for a USB floppy drive.
+                  Write the image itself, not a copy of the file, to a
+                  high-density disk (dd on Linux or a Mac, a raw image writer
+                  on Windows), and any Mac with a 1.44 MB SuperDrive mounts
+                  it. A USB drive cannot write an 800K Mac disk, and a Mac
+                  Plus, 512Ke or original SE cannot read a 1.44 MB one.
+                  Copying MacExtract.bin onto a PC-formatted disk does not
+                  work either: it arrives still wrapped, with nothing on the
+                  Mac to unwrap it. Not yet tried on a real SuperDrive.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.

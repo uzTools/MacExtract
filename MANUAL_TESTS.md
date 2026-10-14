@@ -26,7 +26,8 @@ twice an item here turned out to need neither hardware nor a stranger
 ## Before you start
 
 - **Get the application.** `dist/` holds `MacExtract.dsk` (an 800K floppy
-  image) and a MacBinary `MacExtract.bin`.
+  image), `MacExtract-1440K.img` (a 1.44 MB one, §9) and a MacBinary
+  `MacExtract.bin`.
 - **Bring archives over as MacBinary (`.bin`)**, or over AppleShare, which
   keeps both forks and lets the result be graded from Linux (how round 2
   was graded).
@@ -156,6 +157,21 @@ withdrawn claim, filed with what it cost.
 the downloads apart. Whether to cut a release is the maintainer's call
 (CLAUDE.md, *Cutting a release*); the release page is visible only from
 outside this machine.
+
+## 9. The 1.44 MB image, written with a USB floppy drive
+
+`dist/MacExtract-1440K.img` is checked here only through hfsutils, which
+reads it back byte-exact (`make_dist.sh`); no Macintosh has mounted it
+(DECISIONS.md 2026-10-14, *the floppy a USB drive can write*).
+
+- [ ] **Write it raw to a high-density disk** with a USB floppy drive
+      (`dd`, or a raw image writer on Windows) and insert it in a
+      SuperDrive Mac — the LC 475 has one. Record whether it mounts, and
+      whether MacExtract dragged off it shows its own icon and runs.
+- [ ] **Optional: the same at 720K**, on a double-density disk, from an
+      image `hformat` makes at 737,280 B. Whether a SuperDrive mounts an
+      HFS volume on a 720K MFM disk is a *hypothesis* either way; a yes
+      would make a fourth image worth shipping.
 
 ---
 
