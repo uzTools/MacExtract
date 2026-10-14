@@ -78,18 +78,14 @@ is least trustworthy. Do these first. The LC 475 cannot stand in: a
 
 ## 3. Real PowerPC hardware, Mac OS 9
 
-Verified under QEMU only.
+Done on Mac OS 9.2.2, HFS+, 2026-10-14: launch, extraction onto HFS+, the
+cut to 31 characters, 8-bit names in the Finder and Standard File
+(BLOCKERS.md, *Status*).
 
-- [ ] **Launch and extract.**
-- [ ] **Onto HFS+.**
-- [ ] **Names HFS+ permits and HFS does not.** The classic File Manager
-      caps a 68k application at 31 characters, so this may be unreachable;
-      an archive with long names settles it.
-- [ ] **A file over 2 GB**, against the engine's 32-bit arithmetic.
-      Nothing in the corpus is that big.
-- [ ] **8-bit MacRoman names on screen**: `derived-Education7.1.cpt`'s
-      `spinning brain ƒ`, and `synth-packit-2.pit`'s MacRoman `CC A9`,
-      drawn `AppÃ©` (`tools/vmac/README.md`, `19-names.png`).
+- [ ] **A file over 2 GB**: refused as one entry, *"Big.bin is over 2 GB,
+      too large here"*, since 2026-10-14 — measured under emulation only;
+      the build before ended the run on *"The disk is full"* there
+      (DECISIONS.md 2026-10-14, *the file the disk was too full for*).
 
 ## 4. The interactive application, on any real machine
 
@@ -108,7 +104,7 @@ open (OPEN_ITEMS.md, *What the LC 475 found*).
 
 - [ ] **`SFReply.vRefNum`** is a working-directory reference passed with
       `dirID` 0: output lands beside the archive, not at the volume root,
-      on System 6 and Mac OS 9 (passed on 7.6.1, the LC 475).
+      on System 6 (passed on 7.6.1 and Mac OS 9.2.2).
 
 ## 6. A Macintosh 512K with a Hard Disk 20
 

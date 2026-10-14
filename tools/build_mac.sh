@@ -491,7 +491,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # the decoder is `ovl_binhex`, 2,590 -> 4,986 B.
 # RAISED the same day to 175,348, +36: the shim went in the shipped build,
 # and this one, which never had it, pays the dispatch on UncCtx.fmt.
-UNC_MAC_CODE_DEFAULT=175348
+# RAISED 2026-10-14 to 175,408, +60, for refusing a fork of 2 GB or more
+# as one entry instead of ending the run on "The disk is full"
+# (DECISIONS.md 2026-10-14, *the file the disk was too full for*). A5
+# 38,032, +4, the message and alignment.
+UNC_MAC_CODE_DEFAULT=175408
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -648,7 +652,8 @@ UNC_MAC_CODE_DEFAULT=175348
 # format's name and table row, and alignment.
 # RAISED the same day to 38,028, +28, with the code ceiling's +36:
 # alignment, no data added.
-UNC_MAC_A5_DEFAULT=38028
+# RAISED 2026-10-14 to 38,032, +4, with the code ceiling's +60.
+UNC_MAC_A5_DEFAULT=38032
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -924,8 +929,14 @@ UNC_MAC_A5_DEFAULT=38028
 # -68 code and +4 A5 the same day: the shim went, both encodings now
 # entering through `unc_binhex_extract`, which reads the new UncCtx.fmt.
 # `ovl_binhex` +8 (DECISIONS.md, same entry). The A5 is alignment.
-UNC_MAC_CODE_EAGER=55712
-UNC_MAC_A5_EAGER=19088
+# +60 code and +36 A5 on 2026-10-14 for refusing a fork of 2 GB or more
+# as one entry: **96 B off every extraction's budget.** sink_begin +56, in
+# the create loop's existing failure path — a check of its own with its own
+# RepEntryFailed call cost +144, the call making RepEntryFailed a 78 B
+# function where it had been inlined; the A5 is the message (DECISIONS.md
+# 2026-10-14, *the file the disk was too full for*).
+UNC_MAC_CODE_EAGER=55772
+UNC_MAC_A5_EAGER=19124
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -968,8 +979,9 @@ UNC_MAC_A5_EAGER=19088
 # resident pieces as the eager pair above; the A5 is 32 B more than there,
 # `.data` alignment again.
 # -64 code the same day, the shim gone as in the eager pair above.
-UNC_MAC_CODE_LAZY=54136
-UNC_MAC_A5_LAZY=19192
+# +56 code and +8 A5 on 2026-10-14 for the same refusal.
+UNC_MAC_CODE_LAZY=54192
+UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

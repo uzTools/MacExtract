@@ -414,6 +414,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the floppy a USB drive can write) — a 1.44 MB HFS image joins the download, and why it is not a self-extracting archive
 - 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
 - 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
+- 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
 
 ---
 
@@ -26712,3 +26713,30 @@ wanting the same path still meets the clobber check.
 gzip pair, gives an empty directory on the build before and the payload
 after. The Macintosh shell unwraps through its own sink and was not
 affected.
+
+## 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
+
+**Claim (measured).** On Mac OS 9.2.2, HFS+, 110 GB free, a zip holding
+one 2,300,000,000-byte file ended the run on *"The disk is full."* The
+shell asks for each fork's whole size first, `SetEOF(ref, (long)want)`,
+and 2,300,000,000 does not fit a signed `long`; the classic File
+Manager's offsets are signed 32-bit, so no file of 2 GB or more can be
+written by this application in any case. The engine is not the limit:
+the Linux CLI decodes the same entry, CRC checked.
+
+**Change.** In the create loop, before the file is made, an entry whose
+data or resource fork is 2 GB or more (and not `UNC_SIZE_UNKNOWN`) fails
+alone through the existing failure path: *"Big.bin is over 2 GB, too
+large here"*, and the run goes on. Measured under Mini vMac, System
+6.0.8: that line and *"Extraction finished."*; the build before gives
+*"The disk is full"*, as the real Mac did.
+
+**Not done.** An entry of unknown size (a streamed gzip) that grows past
+2 GB still fails at the write and ends the run with the File Manager's
+error — the size is not known until it is too late.
+
+**Price.** Shipped `CODE` +60, A5 +36: **96 B off every grant**; control
++64, `OVL_SAVED` −32, `TIERS` −64, no tally moved. The first version
+called `RepEntryFailed` from a check of its own and cost +144: the third
+call made the compiler stop inlining it, a 78 B function.
+

@@ -1732,6 +1732,8 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 #define SINK_BEGIN sink_begin
 #endif
 
+#define kTooBig 1        /* not an OSErr: see SINK_BEGIN's create loop */
+
 static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
@@ -1825,7 +1827,18 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
         Str63 base;
         BlockMoveData(s->curName, base, s->curName[0] + 1);
         for (attempt = 0; ; attempt++) {
-            err = MyHCreate(s->vRefNum, s->curDirID, s->curName);
+            /* A fork of 2 GB or more cannot be written here: the File
+             * Manager's offsets are a signed long, so SetEOF took
+             * 2,300,000,000 as negative and the run ended on "The disk is
+             * full" with 110 GB free (Mac OS 9.2.2, HFS+, 2026-10-14). So it
+             * fails here, as this entry alone, before the file is made: the
+             * test is 0x80000000 up to, not including, UNC_SIZE_UNKNOWN, and
+             * kTooBig is no OSErr — they are all negative (DECISIONS.md
+             * 2026-10-14, *the file the disk was too full for*). */
+            err = (info->data_size - 0x80000000UL < 0x7FFFFFFFUL ||
+                   info->rsrc_size - 0x80000000UL < 0x7FFFFFFFUL)
+                  ? kTooBig
+                  : MyHCreate(s->vRefNum, s->curDirID, s->curName);
             if (err == noErr) break;
             if (err == dskFulErr) return -1;     /* nothing else will fit */
             if (err != dupFNErr || attempt >= 99) {
@@ -1837,6 +1850,8 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 RepEntryFailed(nm + leafStart, leafLen,
                                err == dupFNErr
                                ? " could not be given a name of its own"
+                               : err == kTooBig
+                               ? " is over 2 GB, too large here"
                                : " could not be created on the disk");
                 s->errors++;
                 return 1;

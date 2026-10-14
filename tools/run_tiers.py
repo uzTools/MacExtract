@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (200116, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (104716, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (629004, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200052, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (104652, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (628940, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -206,7 +206,11 @@ TIERS = {
 # 2026-10-14, *the BinHex before 4.0*). **And by 64 more the same day,
 # DERIVED**: CODE +36 and A5 +28 when the shim left the shipped build and
 # this one took the dispatch on UncCtx.fmt instead.
-TIERS_CONTROL = 213376     # build/mac-resident, CODE + A5, 2026-10-14
+# **Raised by 64 B more 2026-10-14, and TIERS lowered by the same 64,
+# DERIVED**: the control's CODE +60 and A5 +4 for refusing a fork of 2 GB
+# or more as one entry (DECISIONS.md 2026-10-14, *the file the disk was
+# too full for*).
+TIERS_CONTROL = 213440     # build/mac-resident, CODE + A5, 2026-10-14
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -491,7 +495,11 @@ EXPECT = {
 # (DECISIONS.md 2026-10-14, *the BinHex before 4.0*). **+128 the same
 # day, -> 138,576**: the shim gone, the shipped pair -64 against the
 # control's +64; `ovl_binhex` +8.
-OVL_SAVED = 138576
+# **-32 2026-10-14, -> 138,544**: the 2 GB refusal, the control's +64
+# against the shipped pair's +96 (CODE +60, A5 +36); no image moved, so
+# every format's grant falls 96 B, TIERS having fallen 64 (DECISIONS.md
+# 2026-10-14, *the file the disk was too full for*).
+OVL_SAVED = 138544
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
