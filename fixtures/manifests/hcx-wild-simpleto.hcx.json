@@ -1,0 +1,17 @@
+{
+ "entries": [
+  {
+   "data_sha256": "59d9a3f5b8cd252512190b4c63bb0d13405384a6f827a678a7ccdbd10d96f8fb",
+   "data_size": 11347,
+   "name": "hcx-wild-simpleto",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "COBJ"
+  }
+ ],
+ "fixture": "hcx-wild-simpleto.hcx",
+ "format": "BinHex hex/hcx",
+ "oracle": "macutils' hexbin on both forks (tools/run_hecx.py)",
+ "sha256": "f491262d12cf554fa1fbabcc1e687117be00a2a047b75c5e6ce7754ce6b63b56",
+ "size": 16069
+}

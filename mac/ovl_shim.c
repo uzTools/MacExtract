@@ -369,6 +369,16 @@ int unc_binhex_extract(UncCtx *c)
     return (int)e(&gOvlHost, OVL_BINHEX_EXTRACT, c, NULL);
 }
 
+/* BinHex before 4.0: the same image. */
+int unc_hecx_extract(UncCtx *c)
+{
+    OverlayEntry e;
+    if (!ovl_codecs_ready()) return UNC_ERR_MEM;
+    e = ovl_image(OVL_ID_BINHEX);
+    if (!e) return UNC_ERR_MEM;
+    return (int)e(&gOvlHost, OVL_HECX_EXTRACT, c, NULL);
+}
+
 /* StuffIt classic. Probe resident; decoder from the bundle. */
 int unc_sit_extract(UncCtx *c)
 {

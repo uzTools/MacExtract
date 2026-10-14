@@ -44,6 +44,9 @@ static const UncFormatDesc unc_formats[] = {
     { UNC_FORMAT_APPLESINGLE, "AppleSingle",         1, 1, unc_appledouble_extract },
     { UNC_FORMAT_APPLEDOUBLE, "AppleDouble",         1, 1, unc_appledouble_extract },
     { UNC_FORMAT_BINHEX,      "BinHex 4",            1, 1, unc_binhex_extract },
+    /* .hex and .hcx, both written by BinHex 2.0 (src/fmt_hecx.c). An
+     * envelope on the same terms as BinHex 4: it carries its own forks. */
+    { UNC_FORMAT_BINHEX_OLD,  "BinHex hex/hcx",      1, 1, unc_hecx_extract },
     { UNC_FORMAT_PACKIT,      "PackIt",              1, 0, unc_packit_extract },
     { UNC_FORMAT_COMPACTPRO,  "Compact Pro",         1, 0, unc_cpt_extract },
     { UNC_FORMAT_SIT,         "StuffIt",             1, 0, unc_sit_extract },

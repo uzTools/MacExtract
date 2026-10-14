@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "    ",
+   "data_sha256": "79ca8ae6458dcd1b3d0089c495d8096dd46ac51e9f6afa7caac208348ddc3a03",
+   "data_size": 3680,
+   "name": "derived-bh2-YN",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "derived-bh2-YN.hex",
+ "format": "BinHex hex/hcx",
+ "oracle": "macutils' hexbin on both forks (tools/run_hecx.py); written by BinHex 2.0 itself (tools/vmac/binhex2.py)",
+ "sha256": "895dd0a0b8e836d71f71457b2664b1666475371f8bf7ceab0e3cb22f10725fde",
+ "size": 7699
+}

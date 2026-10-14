@@ -798,7 +798,10 @@ anything about the suite.**
    fixtures (.sit.bin, .sit.hqx, .tar.Z) extracted with auto-unwrap
    must match the inner layer's manifest exactly, with the
    intermediate file removed. The single-layer diff harness passes
-   `-nr` to disable unwrapping.
+   `-nr` to disable unwrapping. Since 2026-10-14 it also builds two
+   nameless gzip layers in a file called `Same`, whose inner entry has
+   the envelope's own path: an empty directory on the build before
+   (DECISIONS.md 2026-10-14, *the layer that had its envelope's name*).
 5. **Budget sweep** (`tools/run_budget.py`): the whole corpus under
    `--budget 409600` (a small Mac). Everything verifies fully except
    part of StuffIt 5/Arsenic; since the sampled inverse BWT landed
@@ -1964,6 +1967,29 @@ that date; re-running it needs the hand edit above, and what matters is that it
 fails at all, not the count. The LZW-path figure is from the same day.
 
 
+## BinHex before 4.0 (`tools/run_hecx.py`, in `ci.sh`)
+
+`unar` reads neither `.hex` nor `.hcx`, so the seven manifests are
+macutils' `hexbin`, and four of the seven fixtures were written by BinHex
+2.0 itself (`tools/vmac/binhex2.py`): their forks are also checked against
+the subject that went in, which is the half no transcription can mark.
+Each fixture is graded fork for fork and type/creator against hexbin; then
+forty variants of three of them (endings, mail in front, the banner
+removed, fork order, a byte or the sum changed, cut, lower-case digits,
+the same fork twice), each with what must happen and hexbin asked where it
+can be — and where this reader departs from it on purpose, the departure
+is asserted rather than skipped.
+
+Shown to fail: a build that ignores the sum fails six checks, and one
+that does not put back the space a one-character `.hcx` line lost fails
+the stripped-spaces variant.
+
+**What it cannot see.** Only BinHex 2.0 has written anything here; a
+`.hex` from BinHex 1.0 or the BASIC BinHexes would be graded by hexbin
+alone. It runs the CLI only; the Mac application's three runs (System
+6.0.8 and System 3.0, 1 MB) are `tools/vmac/run.py` and `sys30.py`, not
+`ci.sh`.
+
 ## ARC and uuencode (`tools/run_arc.py`, `tools/run_uu.py`, in `ci.sh`)
 
 Neither format occurs in the corpus — measured 2026-08-15 by innermost
@@ -2346,7 +2372,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-11 over all 976 corpus files, exactly one sniffs as a MIME
+2026-10-11 over all 983 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -4852,7 +4878,7 @@ give up on a short read (953 of 959 fixtures failed, 2026-10-09), and a binary b
 before the hook (refused outright — the CLI's announcement is what tells
 a binary that honours the cap from one that passes by ignoring it, and
 the first run of this lane was exactly that, green on a stale build).
-964 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
+971 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
 
 **What it cannot see**: a decoder that is right under any cap and slow
 under a small one — nothing times the calls — and the Macintosh host,
@@ -5568,7 +5594,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 976 files, and the
+  the population you give it: the corpus is 983 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

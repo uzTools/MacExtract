@@ -68,7 +68,7 @@ to unpack a `.sit` until it already has something that can.
 ## What it opens
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
-(`.hqx`), MacBinary, PackIt (`.pit`), AppleLink packages (`.pkg`),
+(`.hqx`, and the older `.hex` and `.hcx`), MacBinary, PackIt (`.pit`), AppleLink packages (`.pkg`),
 DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files

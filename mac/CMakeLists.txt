@@ -104,6 +104,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_btoa\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_b64\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_binhex\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_hecx\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit5\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_pf\\.c$")
@@ -684,11 +685,13 @@ add_custom_command(
             ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_hecx.c
             ${ENGINE_DIR}/src/fmt_binhex_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_hecx.c
             ${ENGINE_DIR}/src/fmt_binhex_probe.c
             ${OVL_DEPS})
 

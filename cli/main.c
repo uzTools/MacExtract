@@ -347,6 +347,8 @@ typedef struct {
     int         overwrite;      /* write over existing output files    */
     int         clobber;        /* last open refused: path existed     */
     const char *unwrap_src;     /* envelope being unwrapped, or NULL   */
+    int         deferred[2];    /* a fork written beside unwrap_src,
+                                 * renamed onto it once it is deleted  */
     /* --only: the entries the user named, and one flag each recording
      * whether anything matched. NULL/0 means "every entry", which is
      * what every run did before 2026-08-28. */
@@ -761,7 +763,13 @@ static int cli_ask_password(void *ctx, uint8_t *buf, uint16_t cap,
 
 /* The envelope currently being unwrapped is exempt from the clobber
  * check: it is deleted moments after the inner layer succeeds, and an
- * inner entry may legitimately carry its name. */
+ * inner entry may legitimately carry its name. Such an entry is written
+ * BESIDE it (DEFER_SUFFIX) and renamed onto it after the deletion: written
+ * in place, it truncated the envelope while the engine was still reading
+ * it, and the deletion then removed the entry instead — exit 0 and
+ * nothing on disk, measured 2026-10-14 on a .hcx inside a .hex, where the
+ * name hint gives both layers the same name. */
+#define DEFER_SUFFIX ".unwrap~"
 static int sink_unwrap_exempt(DiskSink *s, const char *path)
 {
     char rp[1100];
@@ -787,8 +795,16 @@ static FILE *sink_open_fork(DiskSink *s, UncFork fork)
     else
         rsrc_path(s->cur_path, s->hidden_forks, path, sizeof path);
     s->clobber = 0;
-    if (!s->overwrite && stat(path, &st) == 0 &&
-        !sink_unwrap_exempt(s, path)) {
+    /* Whether or not the envelope HAS that fork: the deletion below
+     * removes both of its paths either way. */
+    if (sink_unwrap_exempt(s, path) && !s->deferred[fork == UNC_FORK_RSRC]) {
+        size_t n = strlen(path);
+        if (n + sizeof DEFER_SUFFIX > sizeof path) return NULL;
+        memcpy(path + n, DEFER_SUFFIX, sizeof DEFER_SUFFIX);
+        s->deferred[fork == UNC_FORK_RSRC] = 1;
+        return fopen(path, "wb");
+    }
+    if (!s->overwrite && stat(path, &st) == 0) {
         s->clobber = 1;
         fprintf(stderr, "macextract: %s: output path already exists; re-run "
                 "with --forks hidden to keep both forks, or --overwrite\n",
@@ -2770,10 +2786,18 @@ nextlayer:
     /* This layer extracted cleanly: the previous layer's envelope file
      * (if any) is no longer needed. */
     if (delfile[0]) {
-        char rp[1100];
+        char rp[1100], tmp[1200];
         remove(delfile);
         rsrc_path(delfile, hidden_forks, rp, sizeof rp);
         remove(rp);
+        if (sink.deferred[0]) {
+            snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, delfile);
+            rename(tmp, delfile);
+        }
+        if (sink.deferred[1]) {
+            snprintf(tmp, sizeof tmp, "%s" DEFER_SUFFIX, rp);
+            rename(tmp, rp);
+        }
         delfile[0] = 0;
     }
 

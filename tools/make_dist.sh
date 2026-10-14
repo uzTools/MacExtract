@@ -143,6 +143,10 @@ squeezed came back as the wrong picture -- silently -- unless it was 256
 pixels wide and grey. Every width and every colour mode the add-on
 writes now comes back exactly as StuffIt Deluxe 2.0 itself restores it.
 
+BinHex files from before BinHex 4 open too: the .hex and .hcx that
+BinHex 2.0 wrote, which is how Macintosh software was passed around in
+1984 and 1985.
+
 v0.39.0, before it, opened the last zip method of PKZIP's first years:
 Reducing, in all four of its strengths. No Macintosh program is known
 to have written it, but the PC disks that Mac CD-ROMs carried by the

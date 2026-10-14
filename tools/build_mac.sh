@@ -485,7 +485,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # RAISED 2026-10-14 to 172,956, +80, for unmounting that disk as well as
 # ejecting it (DECISIONS.md 2026-10-14, *the icon the eject left behind*).
 # A5 37,940, +16, alignment.
-UNC_MAC_CODE_DEFAULT=172956
+# RAISED 2026-10-14 to 175,312, +2,356, for `.hex` and `.hcx`, BinHex
+# before 4.0 (DECISIONS.md 2026-10-14, *the BinHex before 4.0*): the
+# decoder, resident in this build, and the probe in every build. Shipped,
+# the decoder is `ovl_binhex`, 2,590 -> 4,986 B.
+UNC_MAC_CODE_DEFAULT=175312
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -638,7 +642,9 @@ UNC_MAC_CODE_DEFAULT=172956
 # "has not been found" sentence moved into DITL 131, and alignment.
 # RAISED 2026-10-14 to 37,940, +16, with the code ceiling's +80: no data
 # was added, alignment.
-UNC_MAC_A5_DEFAULT=37940
+# RAISED 2026-10-14 to 38,000, +60, with the code ceiling's +2,356: the
+# format's name and table row, and alignment.
+UNC_MAC_A5_DEFAULT=38000
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -903,8 +909,16 @@ UNC_MAC_A5_DEFAULT=37940
 # extraction's budget.** The loop that forgets the parts on it, the
 # UnmountVol, and SegDriveOf no longer inlined; the A5 is alignment
 # (DECISIONS.md 2026-10-14, *the icon the eject left behind*).
-UNC_MAC_CODE_EAGER=55380
-UNC_MAC_A5_EAGER=19068
+# +400 code and +16 A5 on 2026-10-14 for `.hex` and `.hcx`, BinHex before
+# 4.0: **416 B off every extraction's budget.** By symbol: the BinHex probe
+# +222 (it now tells the two encodings from 4.0 in the same scan),
+# `unc_hecx_is_header` 76, new, shared with the decoder; the shim 56; the
+# table row 20; the release switch's case and alignment 26; and the name,
+# 16, which is the A5. The decoder is in
+# `ovl_binhex`, 2,590 -> 4,986 B (DECISIONS.md 2026-10-14, *the BinHex
+# before 4.0*).
+UNC_MAC_CODE_EAGER=55780
+UNC_MAC_A5_EAGER=19084
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -943,8 +957,11 @@ UNC_MAC_A5_EAGER=19068
 # padding. Not shipped, so not trimmed further.
 # +260 code and -52 A5 on 2026-10-13 for the same eject as the eager pair.
 # +76 code and -12 A5 on 2026-10-14 for the same unmount.
-UNC_MAC_CODE_LAZY=53800
-UNC_MAC_A5_LAZY=19144
+# +400 code and +48 A5 on 2026-10-14 for BinHex before 4.0, the same
+# resident pieces as the eager pair above; the A5 is 32 B more than there,
+# `.data` alignment again.
+UNC_MAC_CODE_LAZY=54200
+UNC_MAC_A5_LAZY=19192
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

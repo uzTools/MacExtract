@@ -412,6 +412,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
 - 2026-10-14 (the swaps that are the System's) — the swaps before the first dialog happen before MacExtract's main() runs, and a stock application takes as many
 - 2026-10-14 (the floppy a USB drive can write) — a 1.44 MB HFS image joins the download, and why it is not a self-extracting archive
+- 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
+- 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
 
 ---
 
@@ -26625,3 +26627,77 @@ FloppyEmu or a second Mac. A 720K image is not shipped until a SuperDrive
 is seen mounting one. `make_dist.sh` now requires hfsutils rather than
 falling back to a weaker check, since the image cannot be built without it.
 
+## 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
+
+**Claim (measured).** The two encodings before BinHex 4.0 are one
+program's: **BinHex 2.0 (Yves Lempereur, 1984) writes both** — `.hcx`
+with File ▸ *Compressed* checked, its default, and `.hex` without — and
+`***COMPRESSED`, `***CRC:` and `***CHECKSUM:` are all strings in its
+`CODE` (`tools/vmac/binhex2.py`). The version labels were never evidence:
+macutils' author asked "Is it BinHex 2.0?" of `.hex` and "3.0?" of `.hcx`
+in his README, and `reference/notes/BinHex.md` gives `.hcx` to 2.0.
+
+**The only reader is hexbin's `hecx.c`, and it is what `src/fmt_hecx.c`
+transcribes.** What grades the transcription is not hexbin: it is four
+files BinHex 2.0 wrote on System 6.0.8 from a two-fork subject whose bytes
+are known — `.hcx`, `.hex`, `.hex` with line feeds, and that `.hcx` inside
+a `.hex` — each coming back byte for byte, plus three `.hcx` files from
+the 1985 *mactosh* archive whose 16-bit sums verify. `unar` reads neither
+encoding.
+
+**What the transcription did not say, settled by the writer.**
+- **The `.hcx` sum adds bytes unsigned.** `hecx.c` passes a plain
+  `char`, which leaves the sign to the compiler; the 131 high bytes of
+  BinHex 2.0's own `.hcx` and the 2,037 to 13,697 of the three 1985 files
+  agree with the unsigned sum and with no signed one.
+- **The `.hcx` sum fixes the fork order** (it rotates), and BinHex 2.0
+  writes the resource fork first; the `.hex` sum is an 8-bit add and
+  does not.
+
+**Two departures from hexbin, each a file one of them loses.** hexbin
+will not look for the `#TYPECREA$FFFF` line until it has seen the
+"(This file" banner, and two of the three 1985 files have none: this
+reads them, and `tools/run_hecx.py` asserts that hexbin does not. And
+hexbin reads a `.hcx` line's count BEFORE putting back the spaces a
+mailer stripped, so a line cut to one character reads its NUL as data and
+its count 2 too high; seven lines of BinHex 2.0's own `.hcx` are such a
+line once stripped, and hexbin loses the file where this does not.
+
+**The probe.** The old banner matches BinHex 4's 40 compared characters
+and two of the files have no banner, so what tells them apart is a
+`#TYPECREA$FFFF` line (four hex digits, which the writer always puts
+there and `hecx.c` does not require) followed by a `***` marker. After
+a banner, the first line that is not such a header settles BinHex 4, so
+every `.hqx` still sniffs as before (`run_diff.py`, 204 of them).
+
+**Price, shipped (CODE + A5): +416 B off every grant** — the probe +222
+(+76 for the header test it shares), the shim 56, the table row and name
+36, the release switch's case and alignment 26 — and `ovl_binhex` 2,590 → 4,986 B, which only an envelope's bundle
+holds. The control +2,416. `run_tiers.py --check`: no tally moves.
+
+**What is not graded.** Only BinHex 2.0 has been run. BinHex 1.0 and the
+BASIC BinHexes before it wrote `.hex` too (`BinHex.md`), and none of
+their output has been found; SUMacC's `.dl`, which hexbin also reads, is
+a lead in OPEN_ITEMS.md and not this format.
+
+## 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
+
+**Claim (measured).** A layer with no name of its own is named after its
+file minus an extension, so when that file has none the entry and the
+envelope being unwrapped are ONE path. The CLI exempted that path from
+its clobber check on purpose — and then opened it `wb` while the engine
+was still reading it, and deleted "the envelope" once the layer
+succeeded, which by then was the entry: **exit 0 and nothing on disk.**
+Found on BinHex 2.0's `.hcx` inside a `.hex` (`YN.hex` → `YN` → `YN`),
+and the format is incidental: two nameless gzip layers in a file called
+`Same` lose it the same way on the build before.
+
+**Change.** An entry whose path is the envelope's (either fork, whether
+or not the envelope has that fork) is written beside it as
+`NAME.unwrap~`, and renamed onto it after the deletion. A second entry
+wanting the same path still meets the clobber check.
+
+**Evidence the test can fail.** `tools/run_unwrap.py`'s new case, the
+gzip pair, gives an empty directory on the build before and the payload
+after. The Macintosh shell unwraps through its own sink and was not
+affected.

@@ -24,6 +24,8 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return 0x4F4B;
     case OVL_BINHEX_EXTRACT:
         return (int32_t)unc_binhex_extract((UncCtx *)a);
+    case OVL_HECX_EXTRACT:
+        return (int32_t)unc_hecx_extract((UncCtx *)a);
     default:
         return -1;
     }

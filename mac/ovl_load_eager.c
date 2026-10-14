@@ -186,7 +186,8 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
      * keeps the whole bundle for it exactly as before. The split buys the
      * LAZY lifetime a smaller load; here it buys nothing, and pretending
      * otherwise would strand the archive inside. */
-    case UNC_FORMAT_BINHEX:      case UNC_FORMAT_MACBINARY:
+    case UNC_FORMAT_BINHEX:      case UNC_FORMAT_BINHEX_OLD:
+    case UNC_FORMAT_MACBINARY:
     case UNC_FORMAT_APPLESINGLE: case UNC_FORMAT_APPLEDOUBLE:
     case UNC_FORMAT_GZIP:        case UNC_FORMAT_COMPRESS_Z:
     case UNC_FORMAT_MIME:        case UNC_FORMAT_UU:

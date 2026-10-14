@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Manx",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "name": "hcx-wild-xlisptin",
+   "rsrc_sha256": "c728371da5b4c0b2bad28930e190e0e49542998086367d5e105ecaf2f4565689",
+   "rsrc_size": 47165,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "hcx-wild-xlisptin.hcx",
+ "format": "BinHex hex/hcx",
+ "oracle": "macutils' hexbin on both forks (tools/run_hecx.py), handed a copy with the banner it requires",
+ "sha256": "666eb3812f7f0d18831b534218d9f6e12850183c952e54ac0cd7f6eb2bf7bc91",
+ "size": 66399
+}

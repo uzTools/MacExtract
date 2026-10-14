@@ -6,7 +6,7 @@ the OUTER fixture with auto-unwrap enabled (the default) must produce
 exactly the INNER layer's oracle manifest contents, with the
 intermediate envelope file removed.
 """
-import json, os, subprocess, sys, tempfile
+import gzip, json, os, subprocess, sys, tempfile
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 FIXDIR = os.path.join(ROOT, "fixtures")
@@ -55,6 +55,31 @@ def check(macextract, outer, manifest):
     return problems
 
 
+def check_same_name(macextract):
+    """A layer with no name of its own is named after the file it came
+    from, minus an extension — so when that file HAS none, the inner
+    entry and the envelope being unwrapped are the same path. Until
+    2026-10-14 the entry was written over the envelope while it was read,
+    and the deletion of the envelope then removed the entry: exit 0 and
+    an empty directory. Two nameless gzip layers in a file called `Same`
+    are the smallest file that does it."""
+    payload = b"the payload of two nameless layers\n" * 50
+    with tempfile.TemporaryDirectory() as src, \
+         tempfile.TemporaryDirectory() as tmp:
+        fx = os.path.join(src, "Same")
+        with open(fx, "wb") as f:
+            f.write(gzip.compress(gzip.compress(payload, mtime=0), mtime=0))
+        r = subprocess.run([macextract, "x", "-o", tmp, fx],
+                           capture_output=True, timeout=120)
+        got = sorted(os.listdir(tmp))
+        p = os.path.join(tmp, "Same")
+        if r.returncode != 0:
+            return [f"exit {r.returncode}: {r.stderr.decode()[:200]}"]
+        if got != ["Same"] or open(p, "rb").read() != payload:
+            return [f"wanted Same holding the payload, got {got}"]
+    return []
+
+
 def main():
     macextract = sys.argv[1] if len(sys.argv) > 1 else \
         os.path.join(ROOT, "build/san/macextract")
@@ -74,6 +99,15 @@ def main():
                 print(f"    {p}")
         else:
             print(f"unwrap ok: {outer} -> {manifest}")
+    problems = check_same_name(macextract)
+    ran += 1
+    if problems:
+        fails += 1
+        print("UNWRAP FAIL two layers with one name")
+        for p in problems:
+            print(f"    {p}")
+    else:
+        print("unwrap ok: two nameless layers that share a name")
     print(f"unwrap: {ran - fails}/{ran} chains ok")
     return 1 if fails else 0
 

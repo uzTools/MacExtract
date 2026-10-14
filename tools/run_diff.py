@@ -56,6 +56,10 @@ IMPLEMENTED = {
     # tools/run_sqp.py. The manifest says so in its "oracle" field
     # (TESTING.md, *AppleLink packages: SqueezePlay*).
     "SqueezePlay": "AppleLink package",    # M56
+    # Nor `.hex` and `.hcx`, BinHex before 4.0: these manifests are
+    # hexbin's reading, and four of them were written by BinHex 2.0 from
+    # a subject whose bytes are known (tools/run_hecx.py).
+    "BinHex hex/hcx": "BinHex hex/hcx",
 }
 
 # Formats v1 names but does not extract. Until 2026-08-14 a fixture of one

@@ -6,8 +6,8 @@ DECISIONS.md, how a suite runs in TESTING.md, what is still missing in
 OPEN_ITEMS.md. A row is one sentence and a citation; a row that starts
 explaining itself belongs in DECISIONS.md instead.
 
-**The suite is 964 fixtures**, byte-exact against `unar` and, where `unar`
-fails, `macunpack`; 9,640 robustness variants clean. The Macintosh tiers and
+**The suite is 971 fixtures**, byte-exact against `unar` and, where `unar`
+fails, `macunpack`; 9,710 robustness variants clean. The Macintosh tiers and
 their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 
 | Milestone | Delivered | Detail |
@@ -79,3 +79,4 @@ their tallies are BLOCKERS.md's (*Status*); per-tier tables are FORMATS.md's.
 | M65 Shrink, the method a Macintosh wrote once | Zip Shrink (method 1) decodes, transcribed from deark; Reduce (methods 2–5) filed out of scope, until M67; +0 shipped | FORMATS.md (*Shrink*), DECISIONS.md 2026-10-08 (*the method a Macintosh wrote once*), OPEN_ITEMS.md Part 1, TESTING.md, NOTICE |
 | M66 Private File, graded by its own writer | Aladdin Private File decrypts and extracts, graded on three files PF Encrypt wrote under Mini vMac; +368 B resident | FORMATS.md (*Private File*), DECISIONS.md 2026-10-09 (*the specimen was one search away*), TESTING.md (*Private File*), tools/vmac/README.md (*Making a Private File*), NOTICE |
 | M67 Reduce comes in | Zip Reduce (methods 2–5) decodes, from APPNOTE.TXT 5.2 beside deark's `ozunreduce.h`: 2,371 of 2,379 wild entries match their stored CRC-32 and deark fails the other 8 too; Shrink and Reduce share a sixteenth image only zip keeps, +80 B resident | FORMATS.md (*Reduce*), DECISIONS.md 2026-10-11 (*Reduce comes in*), TESTING.md, BLOCKERS.md (*Withdrawn claims*), NOTICE |
+| M68 The BinHex before 4.0 | `.hex` and `.hcx` extract, transcribed from hexbin and graded on four files BinHex 2.0 itself wrote under Mini vMac and three from 1985; an envelope's same-named layer no longer deleted by the CLI; +416 B resident | FORMATS.md, DECISIONS.md 2026-10-14 (*the BinHex before 4.0*, *the layer that had its envelope's name*), OPEN_ITEMS.md, TESTING.md, NOTICE |

@@ -87,6 +87,8 @@ python3 tools/run_pak.py --macextract build/san/macextract || fail "PAK method t
 python3 tools/run_arcplus.py --macextract build/san/macextract \
     || fail "ARC+Plus (Trimmed) tests"
 python3 tools/run_uu.py --macextract build/san/macextract || fail "uuencode tests"
+python3 tools/run_hecx.py --macextract build/san/macextract \
+    || fail "BinHex .hex/.hcx tests"
 # A zip counts its entries in 16 bits, so past 65,535 the count comes
 # from the Zip64 record instead. Generated: nothing in the corpus is
 # that large, and the failure it guards against is silent. Also the

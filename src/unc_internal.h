@@ -1169,6 +1169,8 @@ UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
 int unc_appledouble_extract(UncCtx *c);
 UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
+int unc_hecx_extract(UncCtx *c);
+int unc_hecx_is_header(const uint8_t *l, int32_t n);
 UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_packit_extract(UncCtx *c);
 

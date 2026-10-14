@@ -1014,6 +1014,27 @@ Four things to know before re-running it:
   it is what the Finder showing `Test.ARC` on screen and the host's copy of
   the image not having it cost.
 
+## BinHex 2.0 writes `.hex` and `.hcx` — `binhex2.py`
+
+    tools/vmac/binhex2.py --make     boot System 6.0.8, encode four times
+    tools/vmac/binhex2.py --check    our CLI against the subject's forks
+
+BinHex 2.0 (1984) is `binhex_2.0.bin` from Macintosh Repository, fetched
+by hand into `$UNC_VMAC_HOME/specimens/binhex2/` and checked by SHA-1; it
+is re-wrapped from its forks because `hcopy -m` refuses its MacBinary I
+header. File ▸ *Application -> Upload* encodes, *Compressed* (checked at
+launch) picks `.hcx` over `.hex`, and every run ends with an alert that
+Return dismisses. `--make` writes `XF.hcx`, `XF.hex`, `XFlf.hex` (*Send
+line feeds*) and `YN.hex` (`XF.hcx` encoded again), and builds a fresh
+volume first: a killed run leaves the old one "damaged". That volume is
+where `tools/harvest.py --restore` lifts the four `derived-bh2-*` fixtures
+from.
+
+Standard File is clicked by row, and the rows are the volume's files by
+name: every output is named to sort after `TwoForks`, or the next encode
+picks up the previous output instead — which is how the first `.hex`
+held a `.hcx`.
+
 ## Asking DiskDoubler what it can write — `diskdoubler.py`
 
 Six of DiskDoubler's eleven methods were declined because "nothing reachable

@@ -8,7 +8,7 @@
    numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 964 fixtures in `./ci.sh`. Detail lives once — status in
+oracle across 971 fixtures in `./ci.sh`. Detail lives once — status in
 BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
 TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
@@ -199,7 +199,7 @@ already covers (RAR, ARJ, Zoo, cpio, disk images).
 
 | format | programs there | here |
 |---|---|---|
-| BinHex 1.0/2.0 (`.hex`) and 3.0 (`.hcx`) | BinHex 2.0, OldHex 3.0 | only BinHex 4 is opened; the older two are named nowhere |
+| SUMacC `.dl` (resource fork only, 4 bits a character) | none there; hexbin's `dl.c` reads it | named nowhere; one wild file, `mactosh/lang/xlispold.dl` on Discmaster's carousel disc, which hexbin decodes with its sum verifying |
 | ShrinkIt / NuFX (`.shk`, `.bxy`), Apple II | ShrinkIt | named nowhere |
 | shell archives (`shar`) | unshar | named nowhere |
 | yEnc | yEnc TZ | named nowhere |
@@ -210,6 +210,18 @@ already covers (RAR, ARJ, Zoo, cpio, disk images).
 
 Closing a row means a specimen written by the program, then the usual
 question of a second reader to grade against.
+
+## BinHex before 4.0: what is not graded
+
+`.hex` and `.hcx` extract since 2026-10-14 (DECISIONS.md, *the BinHex
+before 4.0*). Left:
+
+- **No `.hex` from any writer but BinHex 2.0.** BinHex 1.0 and the BASIC
+  BinHexes before it wrote the format too (`reference/notes/BinHex.md`).
+  Closing it is a specimen from one of them, or the program.
+- **`src/fmt_hecx.c` is hexbin's.** BinHex 2.0's own `CODE` (5.6 KB) is
+  the writer, and reading the layout out of it is the route Packit III
+  1.3 gave PackIt's ciphers (NOTICE).
 
 ## The double-click helpers: what is left before they ship
 

@@ -122,6 +122,9 @@ typedef enum UncFormat {
     /* Brought in scope 2026-10-07; appended for the same ABI reason. */
     UNC_FORMAT_PRIVATEFILE,   /* .pf — Aladdin Private File           */
 
+    /* Brought in scope 2026-10-14; appended for the same ABI reason. */
+    UNC_FORMAT_BINHEX_OLD,    /* .hex/.hcx — BinHex before 4.0        */
+
     UNC_FORMAT__COUNT
 } UncFormat;
 

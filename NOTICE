@@ -86,6 +86,14 @@ hand.
                        plus DiskDoubler's two older headers, which are
                        macutils' dd.h. Checked against deark on
                        2026-09-27: it states none of them.
+  src/fmt_hecx.c,      BinHex before 4.0, `.hex` and `.hcx`: the
+  src/fmt_binhex_probe.c  layout, both line codings and both sums, from
+                       macutils' hexbin/hecx.c, and the header-line
+                       rule the probe shares. No other reader of
+                       either encoding is in reference/; what grades
+                       the transcription is BinHex 2.0's own output
+                       from known input (tools/vmac/binhex2.py) and
+                       three 1985 files whose sums verify.
   src/unc_internal.h   the LZAH preload above. The MIME line rule left
                        on 2026-10-05 for deark's dbuf_find_line, which
                        is in the same file this header already cited
