@@ -112,7 +112,7 @@ open (OPEN_ITEMS.md, *What the LC 475 found*).
 
 - [ ] **`SFReply.vRefNum`** is a working-directory reference passed with
       `dirID` 0: output lands beside the archive, not at the volume root,
-      on System 6 and Mac OS 9.
+      on System 6 and Mac OS 9 (passed on 7.6.1, the LC 475).
 
 ## 6. A Macintosh 512K with a Hard Disk 20
 
