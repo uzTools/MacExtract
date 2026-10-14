@@ -26567,6 +26567,9 @@ ejected disk instead of opening them. It did show that launching from
 the floppy costs ME, C, ME before the application runs, which is the
 Finder's.
 
+**Confirmed on the LC 475, 2026-10-14**: the same walk, no swap after
+Save; with the previous day's copy on the floppy, ME, C, ME.
+
 **Evidence the test can fail.** `onedrive.py --app` with the build
 before: *"asked for after Save: ME, C, ME, C"*, exit 1; with this one:
 nothing, exit 0. The old build's *"Extraction complete."* also came up

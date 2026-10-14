@@ -103,10 +103,6 @@ through Desktop, `/` in names, `~1` on a second run, a desk accessory over
 the progress window, Cmd-. on a U.S. layout (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
-- [ ] **Several archives on a one-drive machine** with the application on
-      its own floppy, opened through Standard File rather than dropped:
-      nothing should be asked for after Save (`onedrive.py` measures
-      this under emulation).
 
 ## 5. Things the Toolbox promises
 
