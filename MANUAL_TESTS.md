@@ -79,13 +79,9 @@ is least trustworthy. Do these first. The LC 475 cannot stand in: a
 ## 3. Real PowerPC hardware, Mac OS 9
 
 Done on Mac OS 9.2.2, HFS+, 2026-10-14: launch, extraction onto HFS+, the
-cut to 31 characters, 8-bit names in the Finder and Standard File
-(BLOCKERS.md, *Status*).
-
-- [ ] **A file over 2 GB**: refused as one entry, *"Big.bin is over 2 GB,
-      too large here"*, since 2026-10-14 — measured under emulation only;
-      the build before ended the run on *"The disk is full"* there
-      (DECISIONS.md 2026-10-14, *the file the disk was too full for*).
+cut to 31 characters, 8-bit names in the Finder and Standard File, a file
+over 2 GB refused as one entry (BLOCKERS.md, *Status*). Nothing is left in
+this section.
 
 ## 4. The interactive application, on any real machine
 

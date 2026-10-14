@@ -26730,6 +26730,7 @@ alone through the existing failure path: *"Big.bin is over 2 GB, too
 large here"*, and the run goes on. Measured under Mini vMac, System
 6.0.8: that line and *"Extraction finished."*; the build before gives
 *"The disk is full"*, as the real Mac did.
+Confirmed on Mac OS 9.2.2 the same day: the same line, nothing written.
 
 **Not done.** An entry of unknown size (a streamed gzip) that grows past
 2 GB still fails at the write and ends the run with the File Manager's
