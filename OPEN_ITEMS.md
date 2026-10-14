@@ -116,13 +116,6 @@ checked by `tools/check_provenance.py`.
 The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
 §4). Each is measured on that machine and nowhere else.
 
-- **Cmd-. does nothing on a French (AZERTY) keyboard.** The period
-  needs Shift there, and the shell compares the event's character with
-  `'.'` (`mac/macextract_mac.c`, the progress pump). *Hypothesis*: with
-  Command down, that key does not report a period — Apple's technote on
-  international canceling is about this case, and it has not been read
-  here. The Cancel button works. Closing it starts with that technote,
-  and is priced in bytes like any shell change.
 - **One floppy swap after the second archive that is not explained.**
   Two archives on one floppy opened with MacExtract on another, one
   drive: after the reload's expected ME, the second *"Extraction

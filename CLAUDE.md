@@ -33,8 +33,8 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
 That session-start reading is **~10.9k tokens** (PROGRESS 4.3k,
-OPEN_ITEMS 4.3k, BLOCKERS' first two sections 2.3k); BLOCKERS'
-withdrawn-claims archive is another **~75.4k** and is reference, not
+OPEN_ITEMS 4.2k, BLOCKERS' first two sections 2.3k); BLOCKERS'
+withdrawn-claims archive is another **~75.6k** and is reference, not
 orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-14; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you

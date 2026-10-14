@@ -92,8 +92,7 @@ a `.cpt` tree, `.hqx`, `.bin`, a truncated `.sit`, a non-archive, zip and
 StuffIt passwords, several archives opened at once, 24 archives byte-exact
 with types, creators and dates, the destination dialog, other volumes
 through Desktop, `/` in names, `~1` on a second run, a desk accessory over
-the progress window, Cmd-. on a U.S. layout (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
-open (OPEN_ITEMS.md, *What the LC 475 found*).
+the progress window, Cmd-. on a U.S. layout and on AZERTY (BLOCKERS.md, *Status*).
 
 
 ## 5. Things the Toolbox promises
