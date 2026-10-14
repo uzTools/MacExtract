@@ -116,16 +116,6 @@ checked by `tools/check_provenance.py`.
 The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
 §4). Each is measured on that machine and nowhere else.
 
-- **One floppy swap after the second archive that is not explained.**
-  Two archives on one floppy opened with MacExtract on another, one
-  drive: after the reload's expected ME, the second *"Extraction
-  complete."* asks for ME again (System 7.0.1, `onedrive.py --drop`;
-  the LC 475 showed one ME around an alert too). Not the alert's
-  resources, purgeable or not, nor its icon, nor a code segment —
-  each excluded by a build without it. *Hypothesis*: the Finder,
-  which runs during the alert's modal loop. The eleven swaps BEFORE
-  *"Extract into"* are the System's (DECISIONS.md 2026-10-14, *the
-  swaps that are the System's*).
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
 

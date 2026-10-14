@@ -44,9 +44,10 @@ it fails only if it did not reach "Extract into" twice. Measured
 2026-10-14: ME C ME C ME C ME C before the first "Extract into" — every ME
 before MacExtract's main() runs (a probe build marking the screen at each
 step of main() drew nothing yet) — against SimpleText's ten launched the
-same way; then the reload's ME between the archives, and one ME more around
-the second "Extraction complete." that is neither the alert's resources
-nor its icon (DECISIONS.md 2026-10-14, *the swaps that are the System's*).
+same way; then the reload's ME between the archives, and one ME more
+inside the second "Extraction complete." that the background Finder asks
+for once a modal wait gives it idle time (DECISIONS.md 2026-10-14, *the
+swaps that are the System's*).
 
 Usage:
     onedrive.py [--app MacExtract.bin] [-o DIR] [--drop]

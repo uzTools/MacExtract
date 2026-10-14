@@ -26598,10 +26598,16 @@ eleven the same way on 7.6.1, with C's window open or closed.
   opened the same way: **ten**.
 
 **After Save.** The reload's ME between archives is by design. One more
-ME around the second *"Extraction complete."* is not explained: a copy
-with the alerts not purgeable, a probe build using `Alert` (no icon)
-instead of `NoteAlert`, and a copy with every code segment preloaded
-all still ask for it (OPEN_ITEMS.md, *What the LC 475 found*).
+ME comes inside the second *"Extraction complete."* — a probe marking the
+screen before and after the call shows the first mark only — and **it is
+the Finder's**, measured: with the alert's `ALRT`/`DITL` still in memory
+(a probe tested them with `SetResLoad(false)` just before), without its
+icon, without a sound, and with every code segment preloaded, it is still
+asked for; with no alert and 20 s of `GetNextEvent` it is not; with no
+alert and 20 s of `WaitNextEvent` at sleep 30, the idle time a modal
+dialog gives the background, it is, while MacExtract does nothing but
+wait. A second ME comes after MacExtract quits, with the Finder in front.
+Neither is MacExtract's to remove: an alert has to wait.
 
 **Kept.** `onedrive.py --drop` prints the sequence; it is a measurement,
 failing only if it never reaches *"Extract into"* twice.
