@@ -4798,6 +4798,37 @@ not in `ci.sh`: the shipped application extracts the `Forked` specimen
 on System 6.0.8, answering its password dialog wrongly once, and both
 forks are read back off the volume.
 
+## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
+
+Added 2026-10-14. Every gzip fixture came from Unix `gzip` or
+`synth_exo.py`; these are eleven files **MacGzip 1.1.3 68K** wrote on
+emulated Mac OS 8.1 from one two-fork subject (TEXT/ttxt, 292 + 391 B):
+MacBinary mode at each of levels 1–9 (its stepper has no 0), Binary
+mode and ASCII mode. Made by the MacStamp session; the docstring has
+how.
+
+    python3 tools/run_macgzip.py --macextract build/macextract
+
+    ~/.cache/macextract/vmac/specimens/macgzip/{lvl1..9,binary,ascii}.gz
+    ~/.cache/macextract/vmac/specimens/macgzip/source-A_Document.macbinary.bin
+
+Each must sniff as Gzip and extract to: both forks of the subject under
+its MacBinary name (MacBinary mode, two envelopes deep); its data fork
+(Binary); its data fork with CR→LF (ASCII — what MacGzip wrote). The
+subject's forks are read by the script from the MacBinary II header, not
+by the engine. The MacBinary layer, taken off with `-nr`, must list
+with the subject's type, creator and fork lengths.
+
+**Made to fail before it was believed** (measured 2026-10-14): a flipped
+deflate byte (checksum mismatch, 1 failed), one resource byte changed in
+the subject (9 failed), a missing specimen (*incomplete*), and a CLI
+forced to `-nr` that leaves the MacBinary layer on (9 failed).
+
+**What it cannot see**: stored deflate blocks — MacGzip cannot write
+one — or any MacGzip other than 1.1.3 68K; the name in the gzip header,
+which the engine ignores as `unar` does; and the Macintosh host. With no
+specimen directory it skips and returns 0; a partial set fails.
+
 ## Short reads (`tools/run_shortread.py`, in `ci.sh`)
 
 Added 2026-10-09. `UncIO` lets a read return fewer bytes than asked

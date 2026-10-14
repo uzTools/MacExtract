@@ -263,6 +263,12 @@ python3 tools/ssmodule/run_ssmodule.py --macextract build/san/macextract \
 # with no specimens (TESTING.md).
 python3 tools/run_zipit.py --macextract build/san/macextract \
     || fail "ZipIt tests"
+# Eleven files MacGzip 1.1.3 wrote on emulated Mac OS 8.1, one per mode
+# and compression level, extracted through gzip and MacBinary and compared
+# fork by fork with the subject they were made from. Skips cleanly with
+# no specimens (TESTING.md).
+python3 tools/run_macgzip.py --macextract build/san/macextract \
+    || fail "MacGzip tests"
 # Aladdin Private File. Nothing else reads it, so the grader is the
 # writer: files Private File 2.0 encrypted under Mini vMac from subjects
 # whose bytes and passwords are fixed, extracted through every layer and
