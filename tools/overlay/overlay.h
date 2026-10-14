@@ -138,7 +138,6 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
 #define OVL_CODEC_EXPORTS      49
 #define OVL_SQP_EXTRACT        50
 #define OVL_PF_EXTRACT         51
-#define OVL_HECX_EXTRACT       52
 
 /* One struct for every entry, because the entry signature is fixed. Fields
  * are named for their role rather than their type so a reader can follow a

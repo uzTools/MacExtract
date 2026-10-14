@@ -104,8 +104,9 @@ import sys
 # eager pair has them by symbol), which moved this file 67,072 -> 67,584;
 # the other 640 of the 1,152 is what the 2026-10-12 to -14 shell changes
 # left inside the tolerance. `run_tiers.py --check` moves no tally in
-# either lane.
-EXPECT = 67584
+# either lane. -> 67,456 the same day, -128: the shim went (CODE -68,
+# A5 +4), both encodings entering through one overlay call.
+EXPECT = 67456
 TOLERANCE = 2048
 TAKEN = "2026-10-14"
 
@@ -208,8 +209,9 @@ TAKEN = "2026-10-14"
 # -> 167,212 2026-10-14: `ovl_binhex` 2,590 -> 4,986 for BinHex before
 # 4.0 (DECISIONS.md 2026-10-14, *the BinHex before 4.0*); the 552 B before
 # it is `ovl_stuffit` +312 and `ovl_text` +240 (2026-10-12/13), which sat
-# inside the tolerance.
-EXPECT_BUNDLE = 167212
+# inside the tolerance. -> 167,220 the same day, `ovl_binhex` +8 for the
+# dispatch that replaced the shim.
+EXPECT_BUNDLE = 167220
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-14"
 

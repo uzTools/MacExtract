@@ -588,6 +588,10 @@ int unc_binhex_extract(UncCtx *c)
     uint32_t docs;
     int err;
 
+    /* BinHex before 4.0 is another decoder in the same overlay; one
+     * entry point means one Macintosh shim (src/fmt_hecx.c). */
+    if (c->fmt == UNC_FORMAT_BINHEX_OLD) return unc_hecx_extract(c);
+
     iobuf = (uint8_t *)unc_alloc(c->al, iocap + ocap);
     if (!iobuf) return UNC_ERR_MEM;
     obuf = iobuf + iocap;

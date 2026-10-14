@@ -843,6 +843,10 @@ typedef struct UncCtx {
     uint8_t           pw[UNC_PASSWORD_MAX];
     uint16_t          pwlen;
     uint8_t           pwstate;
+    /* The UncFormat being extracted, for an extractor that serves two:
+     * unc_binhex_extract also reads BinHex before 4.0, so that one
+     * overlay entry and one Macintosh shim carry both. */
+    uint8_t           fmt;
     int               pwattempt;
 } UncCtx;
 

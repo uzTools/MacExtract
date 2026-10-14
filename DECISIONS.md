@@ -26670,10 +26670,18 @@ there and `hecx.c` does not require) followed by a `***` marker. After
 a banner, the first line that is not such a header settles BinHex 4, so
 every `.hqx` still sniffs as before (`run_diff.py`, 204 of them).
 
-**Price, shipped (CODE + A5): +416 B off every grant** — the probe +222
-(+76 for the header test it shares), the shim 56, the table row and name
-36, the release switch's case and alignment 26 — and `ovl_binhex` 2,590 → 4,986 B, which only an envelope's bundle
-holds. The control +2,416. `run_tiers.py --check`: no tally moves.
+**Price, shipped (CODE + A5): +352 B off every grant** — the probe +222
+(+76 for the header test it shares), the table row and name 36, the
+release switch's case and alignment — and `ovl_binhex` 2,590 → 4,994 B,
+which only an envelope's bundle holds. The control +2,480. `run_tiers.py
+--check`: no tally moves. (CORRECTED the same day from +416: the first
+version had its own Macintosh shim and overlay call, 56 B resident, a
+copy of BinHex 4's. Both encodings now enter through
+`unc_binhex_extract`, which reads a new `UncCtx.fmt` — −64 B shipped,
++8 in the overlay, +64 in the control. Reusing `UncForkOut` for the
+decoder's output staging was tried in the same pass and left out: +54 B
+of overlay for no change in behaviour, its two calls going through the
+host vector.)
 
 **What is not graded.** Only BinHex 2.0 has been run. BinHex 1.0 and the
 BASIC BinHexes before it wrote `.hex` too (`BinHex.md`), and none of

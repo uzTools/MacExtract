@@ -204,7 +204,10 @@ static int hx_walk(UncCtx *c, UncBufIn *in, uint8_t *line, uint8_t *obuf,
                     sum += line[k];
                 }
                 /* Gathered, not handed over a line at a time: a .hcx line
-                 * is 33 bytes, and the Mac sink is an FSWrite per call. */
+                 * is 33 bytes, and the Mac sink is an FSWrite per call.
+                 * By hand rather than through UncForkOut, which does the
+                 * same and costs this overlay 54 B more: its two calls go
+                 * through the host vector (measured 2026-10-14). */
                 if (write) {
                     obuf[have++] = line[k];
                     if (have == ocap) {
