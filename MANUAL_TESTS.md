@@ -100,11 +100,6 @@ with types, creators and dates, the destination dialog, other volumes
 through Desktop, `/` in names, `~1` on a second run (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
-- [ ] **No dimmed icon after a disk swap in one drive.** The swap itself
-      passed on the LC 475 (BLOCKERS.md, *Status*) but left the first
-      floppy as a dimmed icon; it is unmounted now, measured under
-      emulation only (DECISIONS.md 2026-10-14, *the icon the eject left
-      behind*).
 - [ ] **Several archives on a one-drive machine** with the application on
       its own floppy: count the swaps before *"Extract into"* and after
       Save, separately (OPEN_ITEMS.md, *What the LC 475 found*).
