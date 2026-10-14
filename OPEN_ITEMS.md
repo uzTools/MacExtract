@@ -133,13 +133,6 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
   which runs during the alert's modal loop. The eleven swaps BEFORE
   *"Extract into"* are the System's (DECISIONS.md 2026-10-14, *the
   swaps that are the System's*).
-- **The system crawled for about two minutes** when the Calculator was
-  opened over the progress window and dragged, during `Barcoder.sit`
-  (30 s undisturbed; the pointer moved; the extraction finished). Not
-  reproduced on System 7.0.1 at Mac Plus speed: the Finder brought
-  forward, the Calculator opened over the window, dragged three times and
-  the window clicked back cost the time of the drags and no more —
-  `Barcoder.sit` 503 → 523 s, `EmpireBuilderDemo.sit` 60 → 74 s.
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
 

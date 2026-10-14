@@ -99,16 +99,14 @@ in Standard File, Cancel and File ▸ Quit mid-run, the 31-character cut,
 a `.cpt` tree, `.hqx`, `.bin`, a truncated `.sit`, a non-archive, zip and
 StuffIt passwords, several archives opened at once, 24 archives byte-exact
 with types, creators and dates, the destination dialog, other volumes
-through Desktop, `/` in names, `~1` on a second run (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
+through Desktop, `/` in names, `~1` on a second run, a desk accessory over
+the progress window (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
 - [ ] **Several archives on a one-drive machine** with the application on
       its own floppy, opened through Standard File rather than dropped:
       nothing should be asked for after Save (`onedrive.py` measures
       this under emulation).
-- [ ] The progress dialog repaints when a desk accessory covers it, and
-      the machine stays usable meanwhile (the LC 475 crawled for two
-      minutes once: OPEN_ITEMS.md, *What the LC 475 found*).
 - [ ] Cmd-. on a US keyboard behaves like the Cancel button.
 
 ## 5. Things the Toolbox promises
