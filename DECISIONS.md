@@ -408,6 +408,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
 - 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
 - 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
+- 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
 
 ---
 
@@ -26504,3 +26505,30 @@ name `"MacExtract"`, which nothing reads: 66 B. Net fork change −14 B. The
 second was not the download: the code ceiling refused 12 B that the `.bin`
 would have absorbed. A resource-only change can still cross a 128-byte
 MacBinary block, so measure the fork, not just the code.
+
+## 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
+
+**Claim (measured, silicon then emulated).** On the LC 475 the eject of
+2026-10-13 worked, and the first floppy stayed on the desktop as a dimmed
+icon: `Eject` "flushes the specified volume, places it offline, and then
+ejects" it, and does not unmount it (Inside Macintosh: Files, *Eject*). A
+set of a dozen floppies would leave a dozen. Reproduced under System 7.0.1
+in Mini vMac; System 6's Finder shows no dimmed icon either way.
+
+**Change.** `UnmountVol` and then `Eject`, both by drive number.
+`UnmountVol` fails with `fBsyErr` while a file on the volume is open
+(*UnmountVol*) — the destination-on-that-floppy case — and then the eject
+goes ahead and the volume stays offline, as before. Parts remembered on
+that drive are forgotten first, since their refNums die with the volume;
+one needed again is asked for again.
+
+**Price.** `CODE` +80, A5 +16 (alignment) in the shipped build and the
+control alike: **96 B off every grant**, `OVL_SAVED` unmoved, `TIERS`
+−96 by derivation, no tally moved.
+
+**Evidence the test can fail.** `interactive.py --diskeject` on System 7
+now reads the Finder's desktop after the application quits, where a
+third disk icon would be: 0 px off the desktop pattern with the unmount,
+**636 px** — a dimmed Floppy A — on the build before, which fails the
+phase. Passes on System 3.0, 6.0.8 and 7.0.1.
+

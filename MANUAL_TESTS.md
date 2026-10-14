@@ -100,14 +100,14 @@ with types, creators and dates, the destination dialog, other volumes
 through Desktop (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
-- [ ] **A disk swap in ONE drive.** Part 1 on one floppy, the rest on
-      another. Expected: the first floppy comes out by itself, the alert
-      says *"…is not on that disk, so it was ejected"*, and putting the
-      second floppy in finishes the set with nothing clicked. Measured
-      under emulation (`interactive.py --diskeject`), but Mini vMac gives
-      every insertion a new drive.
+- [ ] **No dimmed icon after a disk swap in one drive.** The swap itself
+      passed on the LC 475 (BLOCKERS.md, *Status*) but left the first
+      floppy as a dimmed icon; it is unmounted now, measured under
+      emulation only (DECISIONS.md 2026-10-14, *the icon the eject left
+      behind*).
 - [ ] **Several archives on a one-drive machine** with the application on
-      its own floppy: the second archive should ask for that floppy back.
+      its own floppy, after the swaps the LC 475 found are understood
+      (OPEN_ITEMS.md, *What the LC 475 found*).
 - [ ] The progress dialog repaints when a desk accessory covers it.
 - [ ] Cmd-. on a US keyboard behaves like the Cancel button.
 - [ ] A name containing `/` appears with the `/` in the Finder.
@@ -120,8 +120,6 @@ open (OPEN_ITEMS.md, *What the LC 475 found*).
 - [ ] **`SFReply.vRefNum`** is a working-directory reference passed with
       `dirID` 0: output lands beside the archive, not at the volume root,
       on System 6 and Mac OS 9.
-- [ ] **The progress dialog's Cancel button highlights** when clicked
-      (`DialogSelect`, no filterProc).
 
 ## 6. A Macintosh 512K with a Hard Disk 20
 

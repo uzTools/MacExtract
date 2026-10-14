@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (202692, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (107292, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (631580, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (202596, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (107196, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (631484, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -195,7 +195,11 @@ TIERS = {
 # DERIVED**: the control's CODE +256 and A5 -64 for ejecting the disk a
 # split set's last part came from (DECISIONS.md 2026-10-13, *the disk
 # that was still in the drive*).
-TIERS_CONTROL = 210800     # build/mac-resident, CODE + A5, 2026-10-13
+# **Raised by 96 B more 2026-10-14, and TIERS lowered by the same 96,
+# DERIVED**: the control's CODE +80 and A5 +16 for unmounting the disk the
+# eject leaves (DECISIONS.md 2026-10-14, *the icon the eject left
+# behind*). The shipped pair moved the same 96, so OVL_SAVED did not.
+TIERS_CONTROL = 210896     # build/mac-resident, CODE + A5, 2026-10-14
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a

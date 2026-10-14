@@ -123,6 +123,14 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
   international canceling is about this case, and it has not been read
   here. The Cancel button works. Closing it starts with that technote,
   and is priced in bytes like any shell change.
+- **Eleven floppy swaps before the first dialog**, with two archives on
+  one floppy dropped onto an alias of MacExtract on another, one drive,
+  System 7.6.1 (2026-10-13): MacExtract's floppy and the archives'
+  alternated five times and a half before *"Extract into this folder"*.
+  After it, the swaps were the expected ones. *Hypothesis*: the Finder
+  working on the archives' floppy while the application loads from its
+  own — the application reads nothing from the archives' floppy before
+  that dialog. Unreproduced: Mini vMac gives every disk its own drive.
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
 

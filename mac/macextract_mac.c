@@ -3165,8 +3165,23 @@ static int SegEjectPrevious(SegHost *h, int part)
     if (q == NULL) return 0;
     f = ((unsigned char *)q)[-3];
     if (f != 1 && f != 2) return 0;
+    /* Unmounted as well as ejected: Eject alone leaves the volume mounted
+     * offline, and the Finder keeps a dimmed icon for it — one per disk of
+     * a long set (the LC 475, 2026-10-13). UnmountVol "does not eject the
+     * volume" and fails with fBsyErr while a file on it is open (Inside
+     * Macintosh: Files, UnmountVol), which is the destination-on-this-
+     * floppy case; that disk is still ejected, and stays offline as
+     * before. Parts remembered on it are forgotten first, because their
+     * refNums die with the volume and a part needed again must be asked
+     * for again. Both calls take a drive number. */
+    { int p;
+      for (p = 1; p <= kSegMaxKnown; p++)
+          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive)
+              h->loc[p].name[0] = 0; }
     pb.volumeParam.ioNamePtr = NULL;
-    pb.volumeParam.ioVRefNum = drive;          /* a drive number will do */
+    pb.volumeParam.ioVRefNum = drive;
+    (void)PBUnmountVol(&pb);
+    pb.volumeParam.ioVRefNum = drive;
     return PBEject(&pb) == noErr;
 }
 

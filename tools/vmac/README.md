@@ -3126,7 +3126,11 @@ run — on the build before 2026-10-13 too. A few KB of random bytes passes
 `fclose`s a disk image when the Mac ejects it, so the phase reads the
 emulator's `/proc/<pid>/fd`. Passed on `System6.hfv`, `Sys7.img` and
 `Sys30.img` (2026-10-13, `derived-ScrollbarPattern.sit`); the build before
-fails it. **What it cannot see:** a real one-drive Mac. Mini vMac puts
+fails it. **Since 2026-10-14 it also checks the System 7 Finder afterwards**
+(`DESK7_THIRD_DISK`): an ejected but still mounted Floppy A stays there as a
+dimmed icon, 636 px off the desktop pattern on the build without the
+unmount and 0 with it. On System 3.0 and 6 that frame shows no dimmed icon
+on either build, so there the check is not made. **What it cannot see:** a real one-drive Mac. Mini vMac puts
 every inserted disk in a new drive, so Floppy B never goes into the drive
 Floppy A left (MANUAL_TESTS.md §4).
 

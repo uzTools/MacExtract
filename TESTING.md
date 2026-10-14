@@ -5690,7 +5690,8 @@ character that was touched three times*).
     an archive (`tools/vmac/README.md`). `--diskeject` puts part 1 on a
     floppy of its own and asserts, from the emulator's open files, that
     the floppy is ejected before the alert asks and the application's
-    disk is not. **Neither can see a one-drive Mac**: Mini vMac gives
+    disk is not, and on System 7 that no dimmed Floppy A is left on the
+    Finder's desktop. **Neither can see a one-drive Mac**: Mini vMac gives
     every insertion a new drive (MANUAL_TESTS.md §4).
 
     `--wd` covers the other half and asserts the same way: the archive

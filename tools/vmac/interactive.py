@@ -1423,6 +1423,23 @@ def image_open(mac, image):
     return False
 
 
+# The THIRD disk icon down the right edge of System 7's desktop, below the
+# boot volume and Floppy B: where a dimmed Floppy A sits if it was ejected
+# but left mounted. Measured off --diskeject's eject-5 frames, 2026-10-14:
+# 0 pixels off the desktop's period-2 pattern with the unmount, 636 without.
+DESK7_THIRD_DISK = (450, 126, 505, 172)
+
+
+def off_pattern(png, rect):
+    """Pixels in `rect` that break the desktop's period-2 pattern: 0 means
+    nothing is drawn there."""
+    px = subprocess.run(["convert", png, "-scale", "512x342!", "-depth", "8",
+                         "gray:-"], capture_output=True, check=True).stdout
+    x0, y0, x1, y1 = rect
+    return sum(1 for y in range(y0, y1) for x in range(x0, x1)
+               if px[y * 512 + x] != px[y * 512 + x + 2]
+               or px[y * 512 + x] != px[(y + 2) * 512 + x])
+
 def phase_diskeject(args, appbin, workdir, shot):
     """Is the disk the last part came from ejected before the alert asks?
 
@@ -1447,7 +1464,12 @@ def phase_diskeject(args, appbin, workdir, shot):
     # The filler file puts the volume window in --e2e's layout (System
     # Folder, a file, the application), which FINDER_APP_ICON is measured
     # against: with two items the application sits one place to the left.
-    finder = args.system == "Sys30.img"
+    # And on System 7 too, for the reverse reason: its Finder keeps running
+    # beside the application, and what it shows at the end is the last
+    # check — no dimmed "Floppy A" (eject-5-finder.png). System 6's Finder
+    # shows no dimmed icon for an offline volume either way (measured
+    # 2026-10-14, both builds), so that frame says nothing there.
+    finder = args.system in ("Sys30.img", "Sys7.img")
     filler = os.path.join(workdir, "filler")
     with open(filler, "wb") as f:
         f.write(b"not part of any set\r")
@@ -1463,7 +1485,7 @@ def phase_diskeject(args, appbin, workdir, shot):
                   extras=[(parts[1], "Part two"), (parts[2], "Part three")])
 
     scratch = os.path.join(args.outdir, ".settle.png")
-    elapsed, a_open, boot_open = None, None, None
+    elapsed, a_open, boot_open, ghost = None, None, None, None
     mac = Mac(bootimg, args.emu, workdir, extra=(flopa,))
     boot = os.path.join(workdir, "boot.hfv")       # Mac()'s private copy
     try:
@@ -1476,8 +1498,13 @@ def phase_diskeject(args, appbin, workdir, shot):
             mac.click(*FINDER_APP_ICON, double=True)
             time.sleep(args.launch_wait)
         # Launched by the Finder, Standard File opens on the application's
-        # volume rather than on the floppy inserted last (eject-1 on 3.0).
-        if finder:
+        # volume rather than on the floppy inserted last (eject-1).
+        if finder and args.system == "Sys7.img":
+            mac.click(*SF7_DESKTOP)             # no Drive button there
+            time.sleep(2.0)
+            mac.click(*SF_FIRST_ROW, double=True)   # "Floppy A"
+            time.sleep(2.0)
+        elif finder:
             mac.click(*SF_DRIVE)
             time.sleep(2.0)
         shot(mac, "eject-1-launched.png")       # Floppy A's listing
@@ -1510,6 +1537,13 @@ def phase_diskeject(args, appbin, workdir, shot):
         elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
                              timeout=args.complete_timeout)
         shot(mac, "eject-4-complete.png")
+        if finder:
+            mac.key("Return")                   # OK: the application quits
+            time.sleep(15.0)
+            shot(mac, "eject-5-finder.png")     # Floppy B, and no Floppy A
+            if args.system == "Sys7.img":
+                mac.shot(scratch)
+                ghost = off_pattern(scratch, DESK7_THIRD_DISK)
     finally:
         mac.close()
         if os.path.exists(scratch):
@@ -1527,7 +1561,11 @@ def phase_diskeject(args, appbin, workdir, shot):
               + ", ".join(CD.mac_path(n) for n in missing))
     if elapsed is not None:
         print(f"interactive: settled ~{elapsed:.0f}s after Floppy B went in")
-    ok = (a_open is False) and bool(boot_open) and not missing
+    if ghost is not None:
+        print("interactive: the Finder afterwards: "
+              + ("a DIMMED FLOPPY A is left on the desktop (%d px)" % ghost
+                 if ghost else "no Floppy A"))
+    ok = (a_open is False) and bool(boot_open) and not missing and not ghost
     print("interactive: eject before asking " + ("WORKS" if ok else "FAILS"))
     return ok
 
