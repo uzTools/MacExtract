@@ -190,7 +190,7 @@ SUBJECTS = [
 
 def session(tag, subjects=None):
     from ndd import macbinary_dated                      # noqa: E402
-    work = tempfile.mkdtemp(prefix="sdwork-")
+    work = R.work_tmp("sdwork-")
     mbs = []
     for i, (n, t, c, d, r, dates) in enumerate(subjects or SUBJECTS):
         p = os.path.join(work, "s%d.bin" % i)
@@ -879,6 +879,8 @@ def main():
                          "bitmap on a 32-bit refill boundary")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.setup:
         fetch()
     elif a.install:

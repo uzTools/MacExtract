@@ -19,7 +19,7 @@ reported an extraction "settled after ~134s" having spent all of it in a
 photograph, an extracted application drawing its own splash screen.) The checks
 that still need a real machine are in MANUAL_TESTS.md.
 
-    tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o /tmp/shots
+    tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o vmac-shots
 
 **Run one phase at a time.** The waits between clicks are seconds, and a Mac
 sharing its core with a second emulator drops below 1x and desynchronises the
@@ -67,6 +67,7 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
+import guard                                                 # noqa: E402
 from mkboot import FINDER_OWN                                # noqa: E402
 
 # `hdir`'s name column on a BYTES listing — a text listing cannot carry the
@@ -105,19 +106,32 @@ def build_interactive_app(defines=()):
 class Mac:
     """A booted Mini vMac with keyboard and mouse."""
 
+    # Hard seconds for one boot, emulator and X server alike (tools/guard.py).
+    # main() sets it from --boot-timeout and --complete-timeout. The default
+    # is for every other harness that boots a Mac through this class, whose
+    # longest sessions are a few settles of up to 900 s each: an hour.
+    limit = 3600
+
     def __init__(self, bootimg, emudir, workdir, extra=()):
         emu = os.path.join(R.VMAC_HOME, emudir, "minivmac")
         rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
         if not os.path.exists(emu):
             raise SystemExit(f"interactive: no emulator at {emu} — run setup.sh")
         boot = os.path.join(workdir, "boot.hfv")
-        shutil.copyfile(bootimg, boot)
-        self.dpy = R.Display()
-        self.proc = subprocess.Popen([emu, "-r", rom, boot, *extra],
-                                     env=dict(os.environ, DISPLAY=self.dpy.name),
-                                     stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL,
-                                     start_new_session=True)
+        # Mini vMac cannot open qcow2, so the private copy is a sparse one,
+        # in the run's work directory, which main() deletes.
+        R.sh("cp", "--sparse=always", bootimg, boot)
+        self.proc = None
+        self.dpy = R.Display(limit=self.limit + 30)
+        try:
+            self.proc = guard.spawn([emu, "-r", rom, boot, *extra],
+                                    limit=self.limit,
+                                    env=dict(os.environ, DISPLAY=self.dpy.name),
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL)
+        except BaseException:
+            self.dpy.close()
+            raise
         self.env = dict(os.environ, DISPLAY=self.dpy.name)
         self._origin = None
 
@@ -228,10 +242,15 @@ class Mac:
         raise SystemExit("interactive: could not screenshot the emulator")
 
     def close(self):
-        try:
-            os.killpg(os.getpgid(self.proc.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError):
-            pass
+        # SIGKILL first, as before guard.py: what Mini vMac has not flushed
+        # by now is lost, and phases wait FLUSH_WAIT for that reason. Then
+        # guard.reap() collects the group, timeout(1) included.
+        if self.proc is not None and self.proc.poll() is None:
+            try:
+                os.killpg(self.proc.pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+        guard.reap(self.proc)
         self.dpy.close()
 
     def settle(self, path, interval=10.0, timeout=900.0, stable=2, quiet=None):
@@ -1006,7 +1025,7 @@ def phase_report_utf8(args, appbin, workdir, shot):
     written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
     if getattr(args, "utf8_to_boot", False):
         keep = os.path.join(args.outdir, "utf8-boot.hfv")
-        shutil.copyfile(written, keep)
+        R.sh("cp", "--sparse=always", written, keep)
         print("interactive: the boot volume this run wrote is kept at "
               + keep)
         report_reached_image(keep, second=getattr(args, "utf8_second", False))
@@ -2678,7 +2697,10 @@ def main():
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
     appbin = build_interactive_app(tuple(args.defines))
-    workdir = tempfile.mkdtemp(prefix="vmac-interactive-")
+    Mac.limit = int(args.boot_timeout + args.complete_timeout) + 900
+    # In <repo>/.tmp/ (tools/guard.py): every phase below removes it, and
+    # guard deletes its images at exit if a phase dies first.
+    workdir = guard.run_dir("vmac-interactive")
     bootimg = os.path.join(workdir, "boot-interactive.hfv")
     stock = os.path.join(R.VMAC_HOME, args.system)
     if not os.path.exists(stock):

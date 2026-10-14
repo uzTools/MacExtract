@@ -207,7 +207,7 @@ def run_selfextractor(work, name, ftype, creator, data, rsrc, tag):
 
 def adjudicate(fixture, keep=False):
     from vmac_check import mask_reserved                # noqa: E402
-    work = tempfile.mkdtemp(prefix="sdadj-")
+    work = R.work_tmp("sdadj-")
     tag = os.path.basename(fixture).split(".")[0]
     name, ftype, creator, data, rsrc = unwrap(fixture, work)
     print("superdisk: %s — %s %s/%s, %d B data, %d B rsrc"
@@ -292,7 +292,7 @@ def rootfile_probe(keep=False, invented=False):
     half that costs nothing to build — a file at the root, before any
     folder record, which is the one thing neither corpus archive does.
     """
-    work = tempfile.mkdtemp(prefix="sdroot-")
+    work = R.work_tmp("sdroot-")
     name, ftype, creator, orig, rsrc = unwrap(
         os.path.join(REPO, "fixtures", "super-disk-utility.hqx"), work)
     blob, dlen = synth_sd.one_file(orig, invented)
@@ -324,7 +324,7 @@ def rootfile_probe(keep=False, invented=False):
 
 def stored_probe(keep=False):
     """Does the format's own extractor read a stored block at all?"""
-    work = tempfile.mkdtemp(prefix="sdstore-")
+    work = R.work_tmp("sdstore-")
     name, ftype, creator, orig, rsrc = unwrap(
         os.path.join(REPO, "fixtures", "super-disk-utility.hqx"), work)
     plain = decoded(work, orig)
@@ -398,7 +398,7 @@ def nest(depth=10, keep=False):
     cuts one.
     """
     from vmac_check import mask_reserved                # noqa: E402
-    work = tempfile.mkdtemp(prefix="sdnest-")
+    work = R.work_tmp("sdnest-")
     archive = os.path.join(work, "nest.x")
     name, ftype, creator, orig, rsrc = unwrap(
         os.path.join(REPO, "fixtures", "super-disk-utility.hqx"), work)
@@ -538,6 +538,8 @@ def main():
     ap.add_argument("--system", default="System6.hfv")
     ap.add_argument("--keep", action="store_true", help="keep the work volume")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.list:
         listing()
         return 0

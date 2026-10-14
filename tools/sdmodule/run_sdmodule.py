@@ -271,7 +271,12 @@ def run_module(mods, method, src, cap, prefix=None, selector=3):
             pp = os.path.join(tmp, "pre.bin")
             open(pp, "wb").write(prefix)
             cmd.append(pp)
-        r = sh(*cmd)
+        # Bounded, as run_ssmodule.py's runner is: a module that loops
+        # under qemu-m68k is a failed call, never a hung CI.
+        try:
+            r = sh(*cmd, timeout=60)
+        except subprocess.TimeoutExpired:
+            return None, "timeout after 60s under qemu-m68k"
         if r.returncode != 0:
             return None, r.stdout.strip() or f"exit {r.returncode}"
         status = int(r.stdout.split("status=")[1].split()[0])

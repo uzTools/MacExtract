@@ -49,6 +49,7 @@ sys.path.insert(0, HERE)
 
 import run as R                                              # noqa: E402
 import os9                                                   # noqa: E402
+import guard                                                 # noqa: E402
 
 CACHE = os.path.join(os.path.dirname(R.VMAC_HOME), "sitcomment")
 MACOS86 = os.path.join(os.path.dirname(R.VMAC_HOME), "macos86")
@@ -390,37 +391,45 @@ def macos86(outdir, machine, shots, interval):
     machine. What it stops on is Mac OS itself."""
     import subprocess
     import socket
-    import tempfile
     img = os.path.join(MACOS86, "MacOS8.6-apm-pm31.img")
     if not os.path.exists(img):
         raise SystemExit("sitcomment: no %s — tools/vmac/README.md, "
                          "*Mac OS 8.6 under QEMU*, builds it" % img)
     os.makedirs(outdir, exist_ok=True)
-    scratch = tempfile.mkdtemp(prefix="sitcomment-")
+    # Monitor socket and QEMU's log in a run directory under <repo>/.tmp/
+    # (tools/guard.py), pruned to the last few runs.
+    scratch = guard.run_dir("sitcomment86")
     mon = os.path.join(scratch, "mon")
+    log = os.path.join(scratch, "qemu.log")
+    # snapshot=on: the prepared image is never written. It used to be
+    # booted writable in place, so every probe changed the image the next
+    # one started from.
     argv = ["qemu-system-ppc", "-M", machine, "-m", "512", "-boot", "c",
             "-g", "1024x768x32", "-display", "none",
             "-monitor", "unix:%s,server,nowait" % mon,
-            "-drive", "file=%s,format=raw,media=disk,index=0" % img]
+            "-drive", "file=%s,format=raw,media=disk,index=0,snapshot=on"
+                      % img]
     print("sitcomment: " + " ".join(argv), flush=True)
     q = os9.Qemu.__new__(os9.Qemu)
-    q.mon_path, q._scratchdir = mon, scratch
-    q.proc = subprocess.Popen(argv, stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT, text=True,
-                              start_new_session=True)
-    for _ in range(240):
-        if os.path.exists(mon):
-            try:
-                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                s.connect(mon)
-                s.close()
-                break
-            except OSError:
-                pass
-        if q.proc.poll() is not None:
-            raise SystemExit("sitcomment: qemu exited:\n" + q.proc.stdout.read())
-        time.sleep(0.5)
+    q.mon_path, q._scratchdir, q.proc = mon, scratch, None
     try:
+        with open(log, "w") as f:
+            q.proc = guard.spawn(argv, limit=interval * shots + 300,
+                                 stdout=f, stderr=subprocess.STDOUT)
+        for _ in range(240):
+            if os.path.exists(mon):
+                try:
+                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    s.connect(mon)
+                    s.close()
+                    break
+                except OSError:
+                    pass
+            if q.proc.poll() is not None:
+                with open(log, errors="replace") as f:
+                    raise SystemExit("sitcomment: %s:\n%s" % (
+                        guard.why(q.proc, "qemu"), f.read()))
+            time.sleep(0.5)
         for i in range(shots):
             time.sleep(interval)
             if q.proc.poll() is not None:
@@ -445,8 +454,12 @@ def probe(outdir, args):
     sitzip.APP_NAME = APP_NAME
     os.makedirs(outdir, exist_ok=True)
     boot, xfer = sitzip.assemble("55", outdir)
-    q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
+    q = None
     try:
+        # The boot volume with snapshot=on, as in sitzip.run().
+        q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
+                     limit=int(args.boot_wait + args.launch_wait) + 900,
+                     snapshot={boot})
         scratch = os.path.join(outdir, ".settle.png")
         waited = q.settle(scratch, timeout=args.boot_wait)
         if waited is None:
@@ -492,7 +505,8 @@ def probe(outdir, args):
         q.wait_change(back, os9.WINDOW_RECT, scratch, timeout=120.0)
         shot("15-stuff", wait=10.0)
     finally:
-        q.close()
+        if q:
+            q.close()
     print("\nsitcomment: LOOK at every frame. A registration sheet, an "
           "alert, a Finder desktop and a document window are four different "
           "answers and none of them is 'the screen changed'.")
@@ -574,8 +588,14 @@ def specimen(outdir, args):
     extra.append((sub, "Subject"))
     boot, xfer = sitzip.assemble(ver, outdir, extra=extra)
 
-    q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
+    q = None
     try:
+        # The boot volume with snapshot=on, as in sitzip.run(); `aesit`
+        # writes its results to the transfer volume, which is real.
+        q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
+                     limit=int(args.boot_wait + args.launch_wait
+                               + args.interval * args.shots) + 900,
+                     snapshot={boot})
         scratch = os.path.join(outdir, ".settle.png")
         waited = q.settle(scratch, timeout=args.boot_wait)
         if waited is None:
@@ -613,7 +633,8 @@ def specimen(outdir, args):
             shot("%02d-t%04d" % (13 + i, args.interval * (i + 1)),
                  wait=args.interval)
     finally:
-        q.close()
+        if q:
+            q.close()
 
     read_back(xfer, outdir)
 

@@ -12,7 +12,10 @@ StuffIt Expander 4.0.2*, has the results):
     compat9.py --assemble 55 --set zip -o <dir>   the zip-method subjects
     compat9.py --boot -o <dir>            start the guest, detached
     # ... drive it with os9mouse.Mac(attach=True), looking at each frame
-    compat9.py --stop -o <dir>            kill the pid --boot recorded
+    compat9.py --stop -o <dir>            stop the process group --boot made
+
+The detached guest is still bounded: it runs under `timeout --limit`
+seconds (default 3 hours), so a session nobody stops ends on its own.
     compat9.py --read -o <dir>            what each subject's folder holds now
 
 **Every subject is in a folder of its own**, because most of them expand
@@ -117,31 +120,46 @@ def assemble(ver, outdir, which="hard"):
     print("compat9: %d subjects on %s" % (len(subjects(which)), xfer))
 
 
-def boot(outdir):
+def boot(outdir, limit):
     disks = [os.path.join(outdir, "boot.img"),
              os.path.join(outdir, "transfer.img")]
     argv = ["qemu-system-ppc", "-M", "mac99,via=pmu", "-m", "512",
             "-boot", "c", "-g", "1024x768x32", "-display", "none",
             "-device", "usb-mouse",
             "-monitor", "unix:%s,server,nowait" % os9mouse.MON]
+    # The boot volume with snapshot=on, as in sitzip.run(): the guest's
+    # writes to it are discarded and the assembled volume stays as built.
+    # The answers are read off the transfer volume, written for real.
     for i, d in enumerate(disks):
-        argv += ["-drive", "file=%s,format=raw,media=disk,index=%d" % (d, i)]
+        argv += ["-drive", "file=%s,format=raw,media=disk,index=%d%s"
+                 % (d, i, ",snapshot=on" if i == 0 else "")]
     if os.path.exists(os9mouse.MON):
         os.remove(os9mouse.MON)
-    log = open(os.path.join(outdir, "qemu.log"), "w")
-    p = subprocess.Popen(argv, stdout=log, stderr=subprocess.STDOUT,
-                         start_new_session=True)
+    # Deliberately NOT guard.spawn(): that reaps the guest when this script
+    # exits, and the whole point of --boot is a guest that outlives it. It
+    # is bounded all the same -- timeout(1), in a session of its own whose
+    # id is the recorded pid, so --stop takes the whole group. TMPDIR is
+    # the output directory, because guard's own goes when this exits and
+    # QEMU keeps its snapshot overlay there.
+    with open(os.path.join(outdir, "qemu.log"), "w") as log:
+        p = subprocess.Popen(["timeout", "--kill-after=10", str(int(limit))]
+                             + argv, stdout=log, stderr=subprocess.STDOUT,
+                             env=dict(os.environ,
+                                      TMPDIR=os.path.abspath(outdir)),
+                             start_new_session=True)
     open(os.path.join(outdir, "qemu.pid"), "w").write(str(p.pid))
-    print("compat9: qemu pid %d" % p.pid)
+    print("compat9: qemu group %d, hard limit %ds" % (p.pid, limit))
 
 
 def stop(outdir):
     pid = int(open(os.path.join(outdir, "qemu.pid")).read())
+    # The pid --boot recorded leads a session of its own (timeout(1) and
+    # QEMU under it), so the group goes, and nothing outside it.
     try:
-        os.kill(pid, signal.SIGTERM)
+        os.killpg(pid, signal.SIGTERM)
     except ProcessLookupError:
         pass
-    print("compat9: sent SIGTERM to %d" % pid)
+    print("compat9: sent SIGTERM to process group %d" % pid)
 
 
 def read(outdir):
@@ -168,11 +186,14 @@ def main():
     p.add_argument("--set", choices=("hard", "zip"), default="hard",
                    help="which subjects --assemble puts on the volume")
     p.add_argument("-o", "--out", required=True)
+    p.add_argument("--limit", type=int, default=3 * 3600,
+                   help="with --boot: hard seconds before the detached guest "
+                        "is killed (default 3 hours)")
     a = p.parse_args()
     if a.assemble:
         assemble(a.assemble, a.out, a.set)
     elif a.boot:
-        boot(a.out)
+        boot(a.out, a.limit)
     elif a.stop:
         stop(a.out)
     elif a.read:

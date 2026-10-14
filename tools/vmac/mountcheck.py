@@ -16,11 +16,12 @@ exists for.
 
 Not self-checking: the screenshot is the result.
 """
-import argparse, os, shutil, signal, subprocess, sys, tempfile, time
+import argparse, os, shutil, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
+import guard                                                 # noqa: E402
 
 
 def open_volume(dpy, args):
@@ -96,22 +97,27 @@ def main():
     try:
         # Copies, not the originals: System 6 writes to every volume it
         # mounts (the Desktop file), and a distribution artifact must come
-        # out of this check exactly as it went in.
+        # out of this check exactly as it went in. Mini vMac cannot open
+        # qcow2, so they are sparse copies, in `work`, deleted with it.
         boot = os.path.join(work, "boot.hfv")
-        shutil.copyfile(stock, boot)
+        R.sh("cp", "--sparse=always", stock, boot)
         attached = []
         for img in args.images:
             dst = os.path.join(work, os.path.basename(img))
-            shutil.copyfile(img, dst)
+            R.sh("cp", "--sparse=always", img, dst)
             attached.append(dst)
 
-        dpy = R.Display()
-        proc = subprocess.Popen([emu, "-r", rom, boot, *attached],
-                                env=dict(os.environ, DISPLAY=dpy.name),
-                                stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL,
-                                start_new_session=True)
+        # Hard limit (tools/guard.py): the settle, the screenshot wait and
+        # --open's clicks, plus slack.
+        limit = int(args.settle) + 120
+        dpy = R.Display(limit=limit + 30)
+        proc = None
         try:
+            proc = guard.spawn([emu, "-r", rom, boot, *attached],
+                               limit=limit,
+                               env=dict(os.environ, DISPLAY=dpy.name),
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
             time.sleep(args.settle)
             subprocess.run(["xdotool", "mousemove", "790", "590"],
                            env=dict(os.environ, DISPLAY=dpy.name),
@@ -131,10 +137,7 @@ def main():
                 print(f"mountcheck: {open_volume(dpy, args)} — the volume's "
                       f"own window")
         finally:
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
-                pass
+            guard.reap(proc)
             dpy.close()
     finally:
         shutil.rmtree(work, ignore_errors=True)

@@ -68,6 +68,7 @@ sys.path.insert(0, HERE)
 
 import run as R                                              # noqa: E402
 import os9                                                   # noqa: E402
+import guard                                                 # noqa: E402
 from arcmac import macbinary                                 # noqa: E402
 from superdisk import read_forks                             # noqa: E402
 from zipmeta import SUBJECT, report                          # noqa: E402
@@ -348,10 +349,14 @@ def assemble(ver, outdir, extra=()):
                              % (ver, d["carbonlib"], carbon_version(HFSBOOT)))
         base = CARBON_BOOT
 
+    # Copied ONCE per output directory, not per run: hfsutils assembles the
+    # System Folder into it below and cannot write a qcow2. Sparse, so only
+    # the blocks that hold data are written. run() boots it with
+    # snapshot=on, so a run never changes it.
     boot = os.path.join(outdir, "boot.img")
     if not os.path.exists(boot):
-        print("sitzip: copying %s (1 GB)" % base)
-        shutil.copyfile(base, boot)
+        print("sitzip: copying %s (1 GB, sparse)" % base)
+        R.sh("cp", "--sparse=always", base, boot)
     print("sitzip: CarbonLib on the boot volume: %s" % carbon_version(boot))
 
     v = Vol(boot, partition=1)
@@ -530,9 +535,17 @@ def drive(q, outdir, settle_wait, expand_key, pick, choose=None):
 def run(ver, outdir, args):
     d = DIST[ver]
     boot, xfer = assemble(ver, outdir)
-    q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
-                 tablet=not d.get("choose"), pointer=bool(d.get("choose")))
+    q = None
     try:
+        # The boot volume with snapshot=on: what the guest writes to it
+        # (Desktop DB, the dirty flag of a killed run) is discarded, so the
+        # next run boots the volume assemble() made. The verdict is read off
+        # the transfer volume, which is written for real.
+        q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
+                     tablet=not d.get("choose"),
+                     pointer=bool(d.get("choose")),
+                     limit=int(args.boot_wait + args.settle_wait) + 900,
+                     snapshot={boot})
         scratch = os.path.join(outdir, ".settle.png")
         waited = q.settle(scratch, timeout=args.boot_wait)
         if waited is None:
@@ -542,7 +555,8 @@ def run(ver, outdir, args):
         drive(q, outdir, args.settle_wait, d["expand_key"], d["pick"],
               d.get("choose"))
     finally:
-        q.close()
+        if q:
+            q.close()
 
     part = os.path.join(outdir, "transfer.hfs")
     os9.hfs_partition(xfer, part)
@@ -619,10 +633,12 @@ def carbonlib(outdir, args):
         raise SystemExit("sitzip: %s is not the file this was written "
                          "against (md5 %s)" % (CARBON, CARBON_MD5))
 
+    # The installer has to write to this one for real, so it is a copy of
+    # HFSBOOT, never HFSBOOT itself; once per output directory, and sparse.
     boot = os.path.join(outdir, "boot.img")
     if not os.path.exists(boot):
-        print("sitzip: copying %s (1 GB)" % HFSBOOT, flush=True)
-        shutil.copyfile(HFSBOOT, boot)
+        print("sitzip: copying %s (1 GB, sparse)" % HFSBOOT, flush=True)
+        R.sh("cp", "--sparse=always", HFSBOOT, boot)
     print("sitzip: CarbonLib on the image before: %s" % carbon_version(boot),
           flush=True)
 
@@ -636,9 +652,12 @@ def carbonlib(outdir, args):
     # default: Apple's licence sheet draws `Disagree` and `Agree` with
     # identical frames and Return selects neither (`c13-mounted.png`,
     # measured 2026-10-04). Everything else here is keyboard.
-    q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
-                 tablet=False, pointer=True)
+    q = None
     try:
+        q = os9.Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
+                     tablet=False, pointer=True,
+                     limit=int(args.boot_wait) + 600 + 40 * args.returns
+                     + 900)
         scratch = os.path.join(outdir, ".settle.png")
         if q.settle(scratch, timeout=args.boot_wait) is None:
             raise SystemExit("sitzip: never reached the desktop")
@@ -707,12 +726,13 @@ def carbonlib(outdir, args):
             q.key("ret")
             shot("c2%d-return" % i, wait=40.0)
     finally:
-        q.close()
+        if q:
+            q.close()
 
     got = carbon_version(boot)
     print("sitzip: CarbonLib on the image after: %s" % got, flush=True)
     if got and got.startswith("1.6"):
-        shutil.copyfile(boot, CARBON_BOOT)
+        R.sh("cp", "--sparse=always", boot, CARBON_BOOT)
         print("sitzip: kept the installed boot volume as %s" % CARBON_BOOT)
         return 0
     return 1

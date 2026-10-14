@@ -108,7 +108,7 @@ SUBJECTS = [("Alpha", "TEXT", "ttxt", SUBJECT, b""),
 
 
 def session(tag, with_installer=True):
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     if with_installer:
         p = os.path.join(work, "inst.bin")
@@ -307,7 +307,7 @@ def setup351():
 def probe351(keep=False):
     """Boot with both floppies mounted and photograph the desktop."""
     d1, d2 = disks351()
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     for i, (n, t, c, d, r) in enumerate(SUBJECTS):
         q = os.path.join(work, "s%d.bin" % i)
@@ -332,7 +332,7 @@ def probe351(keep=False):
 
 def session351(tag):
     d1, d2 = disks351()
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     for i, (n, t, c, d, r) in enumerate(SUBJECTS):
         q = os.path.join(work, "s%d.bin" % i)
@@ -472,7 +472,7 @@ def install40(keep=False):
     the machine again.
     """
     disks = disks40()
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     for i, (n, t, c, d, r) in enumerate(SUBJECTS):
         q = os.path.join(work, "s%d.bin" % i)
@@ -560,7 +560,7 @@ def probe_installed(keep=False):
     if not os.path.exists(INSTALLED):
         raise SystemExit("spacesaver: no installed image — run --install351 "
                          "then --keep-installed")
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     for i, (n, t, c, d, r) in enumerate(SUBJECTS):
         q = os.path.join(work, "s%d.bin" % i)
@@ -593,7 +593,7 @@ def make(keep=False):
     """Compress subjects with SpaceSaver and keep what it wrote."""
     if not os.path.exists(INSTALLED):
         raise SystemExit("spacesaver: no installed image")
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     for i, (n, t, c, d, r) in enumerate(SUBJECTS):
         q = os.path.join(work, "s%d.bin" % i)
@@ -667,7 +667,7 @@ def panel(keep=False):
     reason is that SpaceSaver ships switched OFF, and its control panel
     is where that lives.
     """
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     img = os.path.join(work, "sswork.img")
     make_volume(img, "SSwork", [], size_kb=4096)
     s = Session(INSTALLED, [img], os.path.join(SPECIMENS, "panel"))
@@ -824,7 +824,7 @@ def idle(keep=False):
     delay before it acts is set. What the choices ARE decides how long a
     run has to sit still afterwards.
     """
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     img = os.path.join(work, "sswork.img")
     make_volume(img, "SSwork", [], size_kb=4096)
     s = Session(INSTALLED, [img], os.path.join(SPECIMENS, "idle"))
@@ -1188,7 +1188,7 @@ def namevol(keep=False):
     shutil.copyfile(base, boot)
 
     from ndd import macbinary_dated, MAC_EPOCH_1990       # noqa: E402
-    work = tempfile.mkdtemp(prefix="sswork-")
+    work = R.work_tmp("sswork-")
     mbs = []
     for n, t, c, d, r in SUBJECTS:
         q = os.path.join(work, n + ".bin")
@@ -4572,6 +4572,8 @@ def main():
                          "control panel and engine")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.setup:
         fetch()
     elif a.probe:

@@ -128,7 +128,8 @@ def pull(img, names, work):
 
 
 def run_one(label, rel, pw, args):
-    work = tempfile.mkdtemp(prefix=f"exp402-{label}-", dir=args.workroot)
+    work = (tempfile.mkdtemp(prefix=f"exp402-{label}-", dir=args.workroot)
+            if args.workroot else R.work_tmp(f"exp402-{label}-"))
     shots = args.outdir
     boot = os.path.join(work, "boot-in.hfv")
     if label == CPT[0]:
@@ -219,6 +220,8 @@ def main():
     p.add_argument("--keep", action="store_true")
     p.add_argument("--json")
     args = p.parse_args()
+    if args.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     os.makedirs(args.outdir, exist_ok=True)
     every = SUBJECTS + [(lbl, (files, opened), False)
                         for lbl, files, opened in TEXTS] + [(CPT[0], None, True)]

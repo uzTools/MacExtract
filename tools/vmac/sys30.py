@@ -45,6 +45,7 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 sys.path.insert(0, os.path.join(R.REPO, "tools"))
 from decode_grid import decode                               # noqa: E402
+import guard                                                 # noqa: E402
 
 SYSTEM = "Sys30.img"        # System 3.0 / Finder 5.1, "System Tools" (800K)
 # Both measured off this harness's own screenshots. The volume icon is where
@@ -95,26 +96,35 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False):
 
     With `probe`, also returns run.py's budget_probe() of the In volume,
     read after the emulator is gone and before the disks are."""
-    work = tempfile.mkdtemp(prefix="sys30-")
-    boot = os.path.join(work, "boot.hfv")
-    indsk = os.path.join(work, "in.dsk")
-    outdsk = os.path.join(work, "out.dsk")
-    shutil.copyfile(bootimg, boot)          # every run starts from a pristine
-    R.make_floppy(indsk, "In", payload=fixture)                     # image
-    R.make_floppy(outdsk, "Out")
-
     emu = os.path.join(R.VMAC_HOME, emu_dir, "minivmac")
     rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
     if not os.path.exists(emu):
         raise SystemExit(f"sys30: no emulator at {emu} — run tools/vmac/setup.sh")
 
-    dpy = R.Display()
-    env = dict(os.environ, DISPLAY=dpy.name)
+    # In <repo>/.tmp/ (tools/guard.py), and removed in the finally below
+    # however the run ends, including a make_floppy() that fails.
+    work = tempfile.mkdtemp(prefix="sys30-")
+    boot = os.path.join(work, "boot.hfv")
+    indsk = os.path.join(work, "in.dsk")
+    outdsk = os.path.join(work, "out.dsk")
     vals, started = None, time.time()
-    proc = subprocess.Popen([emu, "-r", rom, boot, indsk, outdsk], env=env,
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                            start_new_session=True)
+    dpy = proc = None
+    # Hard limit for the emulator and its X server (tools/guard.py): the
+    # window wait, both clicks and the poll loop, plus slack.
+    limit = int(timeout) + 60 + 60 + int(DESKTOP_WAIT + WINDOW_WAIT)
     try:
+        # Every run starts from a pristine image. Mini vMac cannot open
+        # qcow2, so this is a copy -- sparse, in this run's directory,
+        # deleted with it.
+        R.sh("cp", "--sparse=always", bootimg, boot)
+        R.make_floppy(indsk, "In", payload=fixture)
+        R.make_floppy(outdsk, "Out")
+        dpy = R.Display(limit=limit + 30)
+        env = dict(os.environ, DISPLAY=dpy.name)
+        started = time.time()
+        proc = guard.spawn([emu, "-r", rom, boot, indsk, outdsk], limit=limit,
+                           env=env, stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
         for _ in range(120):
             if dpy.window():
                 break
@@ -147,12 +157,9 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False):
                 if R.signed32(got[1]) != R.AT_RUNNING:
                     break
     finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        dpy.close()
+        guard.reap(proc)
+        if dpy:
+            dpy.close()
         fields = (R.budget_probe(indsk) if probe and vals is not None
                   else None)
         shutil.rmtree(work, ignore_errors=True)
@@ -193,7 +200,6 @@ def main():
     os.makedirs(a.outdir, exist_ok=True)
     work = tempfile.mkdtemp(prefix="sys30-boot-")
     bootimg = os.path.join(work, "boot30.hfv")
-    build_boot(R.build_autotest_app(tuple(a.defines)), bootimg)
     emu_dir = a.emu or f"mv-{a.mem}"
     # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
     # summary that reports --mem's default while a different machine ran is
@@ -203,6 +209,7 @@ def main():
 
     results, npass, nbad = [], 0, 0
     try:
+        build_boot(R.build_autotest_app(tuple(a.defines)), bootimg)
         for fixture in fixtures:
             base = os.path.basename(fixture)
             png = os.path.join(a.outdir, base + ".png")

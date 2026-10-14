@@ -92,6 +92,10 @@ usually a declared ceiling nobody questioned.
   elsewhere — a System 6 one worked.
 - An emulator run is minutes; do not poll it every few seconds, and **do not
   read a timeout as a measurement of anything**.
+- **Harness temp files go in `.tmp/` via `tools/guard.py`, never `/tmp`**;
+  every emulator and Xvfb starts through `guard.spawn()`. Never wrap a
+  harness in a retry loop, and never copy a full disk image per run (a qcow2
+  overlay or `snapshot=on` for QEMU; a sparse copy for Mini vMac).
 
 ## Rules
 
