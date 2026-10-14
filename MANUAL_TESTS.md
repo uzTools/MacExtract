@@ -106,9 +106,11 @@ open (OPEN_ITEMS.md, *What the LC 475 found*).
       emulation only (DECISIONS.md 2026-10-14, *the icon the eject left
       behind*).
 - [ ] **Several archives on a one-drive machine** with the application on
-      its own floppy, after the swaps the LC 475 found are understood
-      (OPEN_ITEMS.md, *What the LC 475 found*).
-- [ ] The progress dialog repaints when a desk accessory covers it.
+      its own floppy: count the swaps before *"Extract into"* and after
+      Save, separately (OPEN_ITEMS.md, *What the LC 475 found*).
+- [ ] The progress dialog repaints when a desk accessory covers it, and
+      the machine stays usable meanwhile (the LC 475 crawled for two
+      minutes once: OPEN_ITEMS.md, *What the LC 475 found*).
 - [ ] Cmd-. on a US keyboard behaves like the Cancel button.
 - [ ] A name containing `/` appears with the `/` in the Finder.
 - [ ] The same archive twice into one folder: `Folder~1` / `name~1`, no

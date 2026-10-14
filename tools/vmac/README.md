@@ -3116,6 +3116,20 @@ time is not only about the core**: every phase builds the application
 into the same `build/mac-interactive`, so two `interactive.py` runs
 started together fight over it and one dies in `cmake --build`.
 
+### A one-drive Mac — `onedrive.py`
+
+    onedrive.py [--app MacExtract.bin]     # 0 = nothing asked for after Save
+
+`mv-4M-1d` (setup.sh) has two drives: the boot disk and one floppy, so the
+System asks for disks by name and ejects the one in the drive, as a one-drive
+Mac does. The walk launches MacExtract from floppy ME, ejects it in the Open
+dialog, opens an archive on floppy C and saves to the boot disk; it then
+answers every *"Please insert the disk"* and fails if there was any. The build
+before `preload` (2026-10-14) asks ME, C, ME, C and fails; after, nothing.
+**What it cannot see** is in its docstring: a drop on an alias (System 7.0.1's
+Finder will not take one for an application on an ejected disk), and the
+Finder's own swaps before the Open dialog. Coordinates are System 7's.
+
 **`--diskswap` needs a fixture that is not an archive.** It reads back the
 joined FILE, and the application unpacks a joined archive, so with a `.sit`
 the file it looks for is never written and the phase fails on a correct

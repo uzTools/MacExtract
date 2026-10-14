@@ -5692,7 +5692,9 @@ character that was touched three times*).
     the floppy is ejected before the alert asks and the application's
     disk is not, and on System 7 that no dimmed Floppy A is left on the
     Finder's desktop. **Neither can see a one-drive Mac**: Mini vMac gives
-    every insertion a new drive (MANUAL_TESTS.md §4).
+    every insertion a new drive (MANUAL_TESTS.md §4) — except
+    `onedrive.py`'s, on a Mini vMac built with one floppy drive, which
+    counts the disks the System asks for after Save.
 
     `--wd` covers the other half and asserts the same way: the archive
     goes inside a folder, Return accepts the default destination, and

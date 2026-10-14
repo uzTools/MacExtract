@@ -20,8 +20,16 @@
  * away from (dBoxProc, with the menu bar, was not tried). It cannot be
  * dragged — that was 32 B. noGrowDocProc is in every System from 3.0 on,
  * so there is one window everywhere (DECISIONS.md 2026-10-12, *the
- * application nobody could leave*). */
-resource 'DLOG' (128, purgeable) {
+ * application nobody could leave*).
+ *
+ * EVERY dialog, alert and 'dlgx' here is `preload` as well as purgeable
+ * (2026-10-14): read once at launch, while the application's disk is
+ * certainly in, instead of when each first appears. Otherwise a one-drive
+ * Mac whose archive is on another floppy asked for the application's disk
+ * back for the progress window and again for "Extraction complete."
+ * Purgeable still, so the budget, taken with PurgeSpace, is the same
+ * (DECISIONS.md 2026-10-14, *the disk the dialogs were on*). */
+resource 'DLOG' (128, purgeable, preload) {
     { 80, 80, 190, 400 },
     noGrowDocProc, visible, noGoAway, 0, 128, "MacExtract", noAutoCenter
 };
@@ -35,11 +43,11 @@ resource 'DLOG' (128, purgeable) {
  * Feature Flag Constants* (kDialogFlagsUseThemeBackground = 1 << 0).
  * Layout — measured on 100 of Apple's own 'dlgx' resources on the
  * Mac OS 9.2 disk: 6 bytes, version word 0 then a 32-bit flags word. */
-data 'dlgx' (128, purgeable) {
+data 'dlgx' (128, purgeable, preload) {
     $"0000 0000 0001"
 };
 
-resource 'DITL' (128, purgeable) {
+resource 'DITL' (128, purgeable, preload) {
     {
         { 78, 220, 98, 300 }, Button     { enabled,  "Cancel" };
         { 10,  16, 26, 300 }, StaticText { disabled, "Extracting" };
@@ -48,28 +56,28 @@ resource 'DITL' (128, purgeable) {
     }
 };
 
-resource 'ALRT' (129, purgeable) {
+resource 'ALRT' (129, purgeable, preload) {
     { 90, 100, 190, 412 }, 129, {
         OK, visible, silent, OK, visible, silent,
         OK, visible, silent, OK, visible, silent
     }, noAutoCenter
 };
 
-resource 'DITL' (129, purgeable) {
+resource 'DITL' (129, purgeable, preload) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
         { 12, 64, 60, 300 }, StaticText { disabled, "^0" };
     }
 };
 
-resource 'ALRT' (130, purgeable) {
+resource 'ALRT' (130, purgeable, preload) {
     { 90, 100, 190, 412 }, 130, {
         OK, visible, sound1, OK, visible, sound1,
         OK, visible, sound1, OK, visible, sound1
     }, noAutoCenter
 };
 
-resource 'DITL' (130, purgeable) {
+resource 'DITL' (130, purgeable, preload) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
         { 12, 64, 60, 300 }, StaticText { disabled, "^0" };
@@ -81,14 +89,14 @@ resource 'DITL' (130, purgeable) {
  * than ShowNote and a string: a string literal is A5, and A5 comes off every
  * extraction's budget one for one, for a message almost nobody will see
  * (DECISIONS.md 2026-10-12, *the reload that the list needs*). */
-resource 'ALRT' (135, purgeable) {
+resource 'ALRT' (135, purgeable, preload) {
     { 90, 100, 190, 412 }, 135, {
         OK, visible, sound1, OK, visible, sound1,
         OK, visible, sound1, OK, visible, sound1
     }, noAutoCenter
 };
 
-resource 'DITL' (135, purgeable) {
+resource 'DITL' (135, purgeable, preload) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
         { 12, 64, 60, 300 }, StaticText { disabled,
@@ -115,14 +123,14 @@ resource 'DITL' (135, purgeable) {
  * ^0 is `Part 2 of "Name"`, ^1 is ` About 33K still to read.` or empty.
  * The sentences are here rather than in the code because a purgeable
  * resource costs nothing until it is shown, and a string costs A5. */
-resource 'ALRT' (131, purgeable) {
+resource 'ALRT' (131, purgeable, preload) {
     { 90, 80, 214, 452 }, 131, {
         OK, visible, sound1, OK, visible, sound1,
         OK, visible, sound1, OK, visible, sound1
     }, noAutoCenter
 };
 
-resource 'DITL' (131, purgeable) {
+resource 'DITL' (131, purgeable, preload) {
     {
         { 92, 282, 112, 352 }, Button { enabled, "Find..." };
         { 92, 196, 112, 266 }, Button { enabled, "Skip" };
@@ -132,14 +140,14 @@ resource 'DITL' (131, purgeable) {
     }
 };
 
-resource 'ALRT' (136, purgeable) {
+resource 'ALRT' (136, purgeable, preload) {
     { 90, 80, 214, 452 }, 136, {
         OK, visible, sound1, OK, visible, sound1,
         OK, visible, sound1, OK, visible, sound1
     }, noAutoCenter
 };
 
-resource 'DITL' (136, purgeable) {
+resource 'DITL' (136, purgeable, preload) {
     {
         { 92, 282, 112, 352 }, Button { enabled, "Find..." };
         { 92, 196, 112, 266 }, Button { enabled, "Skip" };
@@ -163,16 +171,16 @@ resource 'DITL' (136, purgeable) {
  *   4  the message, which names the archive and, on a second ask, says
  *      the last one was refused
  */
-resource 'DLOG' (132, purgeable) {
+resource 'DLOG' (132, purgeable, preload) {
     { 80, 60, 214, 452 }, dBoxProc, visible, noGoAway, 0, 132, "",
     noAutoCenter
 };
 
-data 'dlgx' (132, purgeable) {
+data 'dlgx' (132, purgeable, preload) {
     $"0000 0000 0001"
 };
 
-resource 'DITL' (132, purgeable) {
+resource 'DITL' (132, purgeable, preload) {
     {
         { 102, 302, 122, 372 }, Button     { enabled, "OK" };
         { 102, 216, 122, 286 }, Button     { enabled, "Cancel" };
@@ -218,12 +226,12 @@ resource 'DITL' (132, purgeable) {
  * 486, so the whole of it sits on a 512x342 Mac Plus screen with the
  * menu bar above it. Nothing here is ever centered on a bigger screen,
  * which is this application's existing habit (noAutoCenter). */
-resource 'DLOG' (133, purgeable) {
+resource 'DLOG' (133, purgeable, preload) {
     { 30, 26, 330, 486 }, dBoxProc, visible, noGoAway, 0, 133, "",
     noAutoCenter
 };
 
-resource 'DITL' (133, purgeable) {
+resource 'DITL' (133, purgeable, preload) {
     {
         { 264, 376, 284, 446 }, Button     { enabled, "OK" };
         { 264, 236, 284, 356 }, Button     { enabled, "Save as Text\0xC9" };
@@ -250,14 +258,14 @@ resource 'MENU' (128) {
 /* About MacExtract. The number is written here rather than read from
  * 'vers' 1 at run time, which cost 32 B of code and A5; check_docs.py
  * holds it to UNC_VERSION like the other copies. */
-resource 'ALRT' (134, purgeable) {
+resource 'ALRT' (134, purgeable, preload) {
     { 90, 100, 190, 412 }, 134, {
         OK, visible, silent, OK, visible, silent,
         OK, visible, silent, OK, visible, silent
     }, noAutoCenter
 };
 
-resource 'DITL' (134, purgeable) {
+resource 'DITL' (134, purgeable, preload) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
         { 12, 64, 60, 300 }, StaticText { disabled, "MacExtract 0.40.0" };

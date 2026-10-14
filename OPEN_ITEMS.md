@@ -127,10 +127,21 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
   one floppy dropped onto an alias of MacExtract on another, one drive,
   System 7.6.1 (2026-10-13): MacExtract's floppy and the archives'
   alternated five times and a half before *"Extract into this folder"*.
-  After it, the swaps were the expected ones. *Hypothesis*: the Finder
-  working on the archives' floppy while the application loads from its
-  own — the application reads nothing from the archives' floppy before
-  that dialog. Unreproduced: Mini vMac gives every disk its own drive.
+  The application reads nothing from the archives' floppy before that
+  dialog. Measured on a one-drive Mini vMac, System 7.0.1
+  (`tools/vmac/onedrive.py`): launching from its floppy with the other's
+  window open costs ME, C, ME by itself — the Finder; and 7.0.1's Finder
+  does not take a drop on an alias of an application on an ejected disk,
+  so the drop is not reproducible here. The swaps AFTER Save were the
+  application's, and are gone (DECISIONS.md 2026-10-14, *the disk the
+  dialogs were on*).
+- **The system crawled for about two minutes** when the Calculator was
+  opened over the progress window and dragged, during `Barcoder.sit`
+  (30 s undisturbed; the pointer moved; the extraction finished). Not
+  reproduced on System 7.0.1 at Mac Plus speed: the Finder brought
+  forward, the Calculator opened over the window, dragged three times and
+  the window clicked back cost the time of the drags and no more —
+  `Barcoder.sit` 503 → 523 s, `EmpireBuilderDemo.sit` 60 → 74 s.
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
 

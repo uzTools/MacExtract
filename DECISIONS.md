@@ -409,6 +409,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
 - 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
 - 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
+- 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
 
 ---
 
@@ -26531,4 +26532,39 @@ now reads the Finder's desktop after the application quits, where a
 third disk icon would be: 0 px off the desktop pattern with the unmount,
 **636 px** — a dimmed Floppy A — on the build before, which fails the
 phase. Passes on System 3.0, 6.0.8 and 7.0.1.
+
+## 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
+
+**Claim (measured, one-drive Mini vMac, System 7.0.1).** With MacExtract
+on one floppy and the archive on another, the extraction after Save
+asked for MacExtract's floppy, the archive's, MacExtract's, the
+archive's: the progress window's `DLOG`/`DITL`/`'dlgx'` and the closing
+alert's `ALRT`/`DITL` were purgeable resources read from the
+application's file when each first appeared. Now every dialog, alert and
+`'dlgx'` is `preload` as well as purgeable, read once at launch while
+that floppy is in, and the same walk asks for nothing.
+
+**Why it costs nothing.** The budget is taken with `PurgeSpace`, which
+counts purgeable blocks as free: measured with `-D UNC_AT_BUDGET` on the
+System 6.0.8 / 512 KB machine, 196,184 B against 196,186 B before (−2 B);
+the other tiers not re-run. `CODE` and A5 unmoved. When memory is short
+the Memory Manager purges them, and the floppy is asked for again — the
+old behaviour, only then.
+
+**How it was found.** The LC 475 took eleven swaps before the first
+dialog with two archives dropped on an alias (OPEN_ITEMS.md, *What the
+LC 475 found*), and Mini vMac, which gives every disk its own drive,
+could not show a swap at all. `NumDrives` is a compile-time option, and
+two — the boot disk and one floppy — make the System ask for disks by
+name and eject the one in the drive. That build is `mv-4M-1d`, and
+`tools/vmac/onedrive.py` the walk. It did not reproduce the drop: System
+7.0.1's Finder copies files dropped on an alias of an application on an
+ejected disk instead of opening them. It did show that launching from
+the floppy costs ME, C, ME before the application runs, which is the
+Finder's.
+
+**Evidence the test can fail.** `onedrive.py --app` with the build
+before: *"asked for after Save: ME, C, ME, C"*, exit 1; with this one:
+nothing, exit 0. The old build's *"Extraction complete."* also came up
+without its icon.
 
