@@ -178,7 +178,7 @@ machine (DECISIONS.md 2026-10-09, *what GCC will not do with an
 index*).
 
 The candidates — twelve loops with a C and an assembly cycle estimate
-each, and fifteen suggestions not yet estimated — are FORMATS.md's
+each, and sixteen suggestions not yet estimated — are FORMATS.md's
 (*Hand-written 68000 assembly: the candidates, estimated*).
 
 **Prerequisites for the pass**, once for every row:
