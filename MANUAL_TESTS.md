@@ -97,7 +97,7 @@ in Standard File, Cancel and File ▸ Quit mid-run, the 31-character cut,
 a `.cpt` tree, `.hqx`, `.bin`, a truncated `.sit`, a non-archive, zip and
 StuffIt passwords, several archives opened at once, 24 archives byte-exact
 with types, creators and dates, the destination dialog, other volumes
-through Desktop (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
+through Desktop, `/` in names, `~1` on a second run (BLOCKERS.md, *Status*). Cmd-. on AZERTY is
 open (OPEN_ITEMS.md, *What the LC 475 found*).
 
 - [ ] **No dimmed icon after a disk swap in one drive.** The swap itself
@@ -112,10 +112,6 @@ open (OPEN_ITEMS.md, *What the LC 475 found*).
       the machine stays usable meanwhile (the LC 475 crawled for two
       minutes once: OPEN_ITEMS.md, *What the LC 475 found*).
 - [ ] Cmd-. on a US keyboard behaves like the Cancel button.
-- [ ] A name containing `/` appears with the `/` in the Finder.
-- [ ] The same archive twice into one folder: `Folder~1` / `name~1`, no
-      overwrite (DECISIONS.md 2026-10-11, *the folder that is already
-      there*).
 
 ## 5. Things the Toolbox promises
 
