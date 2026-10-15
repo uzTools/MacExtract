@@ -26796,9 +26796,6 @@ second path was estimated, not built, at 1.5–3 KB of `CODE` (a folderless
 `sink_begin`/`sink_end`, flattened names, and the split-set search, disk
 filter and launch kept off HFS traps).
 
-**Not affected.** MFS disks on a machine WITH HFS — the 400K floppies of the
-floor System — are written through HFS's File Manager as before.
-
 **Consequence.** The Hard Disk 20 is the only route left for a 64K ROM: its
 driver file supplies HFS, and the branch would then run the code every other
 Macintosh runs (MANUAL_TESTS.md §6).
