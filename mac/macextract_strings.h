@@ -85,7 +85,7 @@
 #define S_SEG_OTHER_PART    "This is part "
 #define S_SEG_OTHER_SAME    ". Please choose Part "
 #define S_SEG_OTHER_NEEDED  "."
-#define S_SEG_NOT_PART      "That file is not part of this archive."
+#define S_SEG_NOT_PART      "Incorrect file."
 
 /* ---- C: Standard File ----------------------------------------------- */
 
