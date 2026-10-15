@@ -44,8 +44,7 @@
  * `Part <N> of "<name>"`, ^1 is S_SEG_LEFT_* or empty. */
 #define S_SEG_FIND          "Find..."
 #define S_SEG_SKIP          "Skip"
-#define S_SEG_MISSING       "^0 has not been found.^1 Locate it, skip it, " \
-                            "or cancel."
+#define S_SEG_MISSING       "^0 has not been found.^1"
 #define S_SEG_EJECTED       "^0 is not on that disk, so it was ejected. " \
                             "Insert the disk it is on.^1 Or locate it, " \
                             "skip it, or cancel."
