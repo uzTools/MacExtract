@@ -28,6 +28,7 @@ import os, re, socket, subprocess, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                          # noqa: E402
+import guard                                            # noqa: E402
 
 CACHE = os.path.join(os.path.dirname(R.VMAC_HOME), "sit5")
 MASTER = os.path.join(os.path.dirname(R.VMAC_HOME), "qemu-ppc", "MacOS9.img")
@@ -317,7 +318,13 @@ class Mac:
     boot is three minutes; attaching is instant, and an install is a dozen
     steps that each need a look at a screenshot before the next one."""
 
-    def __init__(self, cd=True, fresh=False, attach=False, xfer=True):
+    # Hard seconds for the guest (tools/guard.py). A session here is driven
+    # by hand, frame by frame, so the bound is generous; pass limit= for
+    # more. A Python that exits takes its guest with it.
+    LIMIT = 3 * 3600
+
+    def __init__(self, cd=True, fresh=False, attach=False, xfer=True,
+                 limit=None):
         self.ptr = Pointer(self.burst, self.shot)
         if attach:
             if not os.path.exists(MON):
@@ -343,21 +350,31 @@ class Mac:
             argv += ["-drive", f"file={XFER},format=raw,media=disk,index=1"]
         if cd:
             argv += ["-drive", f"file={ISO},format=raw,media=cdrom,index=2"]
-        self.proc = subprocess.Popen(argv, stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT, text=True,
-                                     start_new_session=True)
-        for _ in range(240):
-            if os.path.exists(MON):
-                try:
-                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                    s.connect(MON); s.close(); break
-                except OSError:
-                    pass
-            if self.proc.poll() is not None:
-                raise SystemExit("qemu exited:\n" + self.proc.stdout.read())
-            time.sleep(0.5)
-        else:
-            raise SystemExit("monitor never came up")
+        # Output to a log, not a pipe nobody drains; under guard.spawn,
+        # with a hard limit, in a process group kill() takes whole.
+        log = os.path.join(CACHE, "qemu.log")
+        self.proc = None
+        with open(log, "w") as f:
+            self.proc = guard.spawn(argv, limit=limit or self.LIMIT,
+                                    stdout=f, stderr=subprocess.STDOUT)
+        try:
+            for _ in range(240):
+                if os.path.exists(MON):
+                    try:
+                        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                        s.connect(MON); s.close(); break
+                    except OSError:
+                        pass
+                if self.proc.poll() is not None:
+                    with open(log, errors="replace") as f:
+                        raise SystemExit("%s:\n%s" % (
+                            guard.why(self.proc, "qemu"), f.read()))
+                time.sleep(0.5)
+            else:
+                raise SystemExit("monitor never came up")
+        except BaseException:
+            self.kill()
+            raise
         self.pos = None
 
     # ---- monitor plumbing -------------------------------------------
@@ -481,9 +498,5 @@ class Mac:
         time.sleep(8)
 
     def kill(self):
-        if self.proc is None:
-            return
-        try:
-            self.proc.terminate(); self.proc.wait(timeout=15)
-        except Exception:
-            self.proc.kill()
+        guard.reap(self.proc, grace=15.0)
+        self.proc = None

@@ -4,6 +4,13 @@
 # once, inside a commit about something else.
 sys30-shots/
 shots/
+vmac-shots/
+qd-repro-shots/
+os9probe-out/
+
+# Harness temporary files: tools/guard.py puts every run's work directory,
+# disk images and logs here, never in /tmp.
+/.tmp/
 
 # Build outputs
 build/

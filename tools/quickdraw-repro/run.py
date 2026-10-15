@@ -23,7 +23,7 @@ comfortable to read and a bomb or a Sad Mac is unmistakable. They are also
 decoded back to text and checked (decode_log.py), so a sweep gives a verdict
 without anyone having to squint at twelve pictures.
 """
-import argparse, os, shutil, signal, subprocess, sys, tempfile, time
+import argparse, os, shutil, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -34,6 +34,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools", "vmac"))
 import decode_log                                            # noqa: E402
 import run as R                                              # noqa: E402
+import guard                                                 # noqa: E402
 
 APP = "qd_repro"
 
@@ -90,19 +91,26 @@ class Mac:
     window manager, so input focus has to be set by hand, and the host pointer
     is parked off-screen before every screenshot."""
 
-    def __init__(self, bootimg, emudir, workdir):
+    def __init__(self, bootimg, emudir, workdir, limit=None):
         emu = os.path.join(R.VMAC_HOME, emudir, "minivmac")
         rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
         if not os.path.exists(emu):
             raise SystemExit(f"qd_repro: no emulator at {emu} — run setup.sh")
         boot = os.path.join(workdir, "boot.hfv")
-        shutil.copyfile(bootimg, boot)
-        self.dpy = R.Display()
-        self.proc = subprocess.Popen([emu, "-r", rom, boot],
-                                     env=dict(os.environ, DISPLAY=self.dpy.name),
-                                     stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL,
-                                     start_new_session=True)
+        # Mini vMac cannot open qcow2, so this is a sparse copy, in the
+        # caller's work directory, which one() deletes.
+        R.sh("cp", "--sparse=always", bootimg, boot)
+        limit = limit or guard.LIMIT
+        self.proc = None
+        self.dpy = R.Display(limit=limit + 30)
+        try:
+            self.proc = guard.spawn([emu, "-r", rom, boot], limit=limit,
+                                    env=dict(os.environ, DISPLAY=self.dpy.name),
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL)
+        except BaseException:
+            self.dpy.close()
+            raise
         self.env = dict(os.environ, DISPLAY=self.dpy.name)
         self._origin = None
 
@@ -141,10 +149,7 @@ class Mac:
         raise SystemExit("qd_repro: could not screenshot the emulator")
 
     def close(self):
-        try:
-            os.killpg(os.getpgid(self.proc.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError):
-            pass
+        guard.reap(self.proc)
         self.dpy.close()
 
 
@@ -156,7 +161,9 @@ def one(variant, finder, mem, outdir, settle, inspect=False):
     bootimg = os.path.join(workdir, "boot-master.hfv")
     try:
         make_boot(build(variant), bootimg, finder)
-        mac = Mac(bootimg, f"mv-{mem}", workdir)
+        # Hard limit (tools/guard.py): two settles, the clicks, slack.
+        mac = Mac(bootimg, f"mv-{mem}", workdir,
+                  limit=int(2 * settle) + 120)
         try:
             time.sleep(settle)
             if finder:

@@ -50,7 +50,8 @@ application reaching it through the classic File Manager is capped at 31
 characters either way, so they may be unreachable at all — unproven), and real
 PowerPC silicon. See OPEN_ITEMS.md.
 """
-import argparse, os, re, shutil, signal, socket, subprocess, sys, time
+import argparse, contextlib, os, re, shutil, signal, socket, subprocess, sys
+import time
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -58,6 +59,7 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 sys.path.insert(0, os.path.join(R.REPO, "tools"))
 from vmac_check import mac_component, names_are_utf8         # noqa: E402
+import guard                                                 # noqa: E402
 
 
 def _die_cleanly(signum, frame):
@@ -116,8 +118,39 @@ DISK_URL = "https://archive.org/download/mac-os9/MacOS9.img"
 DISK_SHA1 = "a6e39e049d99c56d0a2c08bf2631079f6f14bd56"
 
 
+def image_format(path):
+    """"qcow2" or "raw", read off the file, never assumed: a run boots a
+    qcow2 overlay on the master (boot_copy) beside raw transfer images."""
+    with open(path, "rb") as f:
+        return "qcow2" if f.read(4) == b"QFI\xfb" else "raw"
+
+
+@contextlib.contextmanager
+def raw_view(path):
+    """`path` as a raw image hfsutils can read, deleted afterwards.
+
+    A qcow2 overlay is converted to a sparse raw file beside it -- only the
+    blocks that hold data are written -- and the conversion goes when the
+    `with` ends. A raw image is yielded as it is."""
+    if image_format(path) != "qcow2":
+        yield path
+        return
+    raw = path + ".raw"
+    try:
+        R.sh("qemu-img", "convert", "-q", "-O", "raw", path, raw)
+        yield raw
+    finally:
+        if os.path.exists(raw):
+            os.remove(raw)
+
+
 class Qemu:
-    def __init__(self, disks, monitor, tablet=True, pointer=False):
+    # Hard seconds for one QEMU (tools/guard.py). main() sets it from
+    # --boot-wait and --launch-wait; this default covers their defaults.
+    limit = 1800 + 6 * 240 + 600
+
+    def __init__(self, disks, monitor, tablet=True, pointer=False,
+                 limit=None, snapshot=()):
         # -device usb-tablet makes an ABSOLUTE pointer available, so the
         # monitor's `mouse_move X Y` means "go to X, Y" rather than "move by
         # X, Y". mac99's built-in pointer is an ADB mouse, which is relative —
@@ -143,28 +176,46 @@ class Qemu:
             argv[-2:-2] = ["-device", "usb-mouse"]
         elif tablet:
             argv[-2:-2] = ["-device", "usb-tablet"]
+        # A disk in `snapshot` is opened with snapshot=on: the guest's
+        # writes go to a temporary overlay QEMU deletes on exit, and the
+        # file itself is never written. For a boot volume that is reused
+        # from run to run and must come back to each one as it was.
         for i, d in enumerate(disks):
-            argv += ["-drive", f"file={d},format=raw,media=disk,index={i}"]
+            snap = ",snapshot=on" if d in snapshot else ""
+            argv += ["-drive", f"file={d},format={image_format(d)},"
+                               f"media=disk,index={i}{snap}"]
         self.mon_path = monitor
         self._scratchdir = os.path.dirname(monitor)   # where frame() writes
         if os.path.exists(monitor):
             os.remove(monitor)
-        self.proc = subprocess.Popen(argv, stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT, text=True,
-                                     start_new_session=True)
-        for _ in range(240):        # wait for the monitor to accept a client
-            if os.path.exists(monitor):
-                try:
-                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                    s.connect(monitor)
-                    s.close()
-                    return
-                except OSError:
-                    pass
-            if self.proc.poll() is not None:
-                raise SystemExit("os9: qemu exited:\n" + self.proc.stdout.read())
-            time.sleep(0.5)
-        raise SystemExit("os9: qemu monitor never came up")
+        # QEMU's output goes to a log beside the monitor socket, not to a
+        # pipe: nothing drained the pipe, so a chatty QEMU could block on
+        # it. Under guard.spawn, with a hard limit, in a group of its own.
+        self.log = os.path.join(self._scratchdir, "qemu.log")
+        self.proc = None
+        with open(self.log, "w") as log:
+            self.proc = guard.spawn(argv, limit=limit or self.limit,
+                                    stdout=log, stderr=subprocess.STDOUT)
+        try:
+            for _ in range(240):    # wait for the monitor to accept a client
+                if os.path.exists(monitor):
+                    try:
+                        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                        s.connect(monitor)
+                        s.close()
+                        return
+                    except OSError:
+                        pass
+                if self.proc.poll() is not None:
+                    with open(self.log, errors="replace") as f:
+                        raise SystemExit("os9: %s:\n%s"
+                                         % (guard.why(self.proc, "qemu"),
+                                            f.read()))
+                time.sleep(0.5)
+            raise SystemExit("os9: qemu monitor never came up")
+        except BaseException:
+            self.close()
+            raise
 
     def use_absolute_pointer(self):
         """Make the USB tablet the ACTIVE pointer.
@@ -459,10 +510,9 @@ class Qemu:
         return frac, time.time() - started
 
     def close(self):
-        try:
-            os.killpg(os.getpgid(self.proc.pid), 9)
-        except (ProcessLookupError, PermissionError):
-            pass
+        guard.reap(self.proc)
+        if os.path.exists(self.mon_path):
+            os.remove(self.mon_path)
 
 
 # Middle of the screen: where a Finder window, SFGetFile and the application's
@@ -1278,12 +1328,16 @@ def wrapper_names(boot, workdir):
     home = os.path.join(workdir, "wraphome")
     os.makedirs(home, exist_ok=True)
     env = dict(os.environ, HOME=home)
-    # hfsutils takes a partition number, so the 2 GB image needs no copy.
-    if subprocess.run(["hmount", boot, "1"], capture_output=True,
-                      env=env).returncode != 0:
-        return None
-    out = subprocess.run(["hls", "-a", "-1"], capture_output=True, env=env)
-    subprocess.run(["humount"], capture_output=True, env=env)
+    # hfsutils takes a partition number, but cannot read qcow2: the boot
+    # disk is an overlay (boot_copy), so it is read through a sparse raw
+    # view that is deleted as soon as the listing is taken.
+    with raw_view(boot) as raw:
+        if subprocess.run(["hmount", raw, "1"], capture_output=True,
+                          env=env).returncode != 0:
+            return None
+        out = subprocess.run(["hls", "-a", "-1"], capture_output=True,
+                             env=env)
+        subprocess.run(["humount"], capture_output=True, env=env)
     return [l.decode("mac_roman") for l in out.stdout.split(b"\n") if l.strip()]
 
 
@@ -1305,8 +1359,9 @@ def run_hfsplus(fixture, outdir, args):
 
     verify_disk()
     boot = boot_copy(outdir)
-    q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
+    q = None
     try:
+        q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"))
         scratch = os.path.join(outdir, ".settle.png")
         waited = q.settle(scratch, timeout=args.boot_wait)
         if waited is None:
@@ -1370,7 +1425,8 @@ def run_hfsplus(fixture, outdir, args):
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
-        q.close()
+        if q:
+            q.close()
 
     # Before the boot copy is thrown away: what can a plain-HFS tool see on
     # the volume that was just written to?
@@ -1545,8 +1601,9 @@ def run_autotest_hfs(fixture, outdir, args):
 
     verify_disk()
     boot = boot_copy(outdir)
-    q = Qemu([boot, inimg, outimg], os.path.join(outdir, "mon.sock"))
+    q = None
     try:
+        q = Qemu([boot, inimg, outimg], os.path.join(outdir, "mon.sock"))
         scratch = os.path.join(outdir, ".settle.png")
         waited = q.settle(scratch, timeout=args.boot_wait)
         if waited is None:
@@ -1589,7 +1646,8 @@ def run_autotest_hfs(fixture, outdir, args):
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
-        q.close()
+        if q:
+            q.close()
         if not args.keep_boot:
             try:
                 os.remove(boot)
@@ -1814,7 +1872,7 @@ def build_encrypted(workdir):
     sys.path.insert(0, os.path.join(R.REPO, "tools"))
     import synth_crypt as SC
     import synth_wrapped as W
-    sit, rsrc = SC.build_sit_des(ENCRYPTED_PW.encode("mac_roman"))
+    sit, rsrc, _ = SC.build_sit_des(ENCRYPTED_PW.encode("mac_roman"))
     path = os.path.join(workdir, "secret.bin")
     os.makedirs(workdir, exist_ok=True)
     with open(path, "wb") as f:
@@ -1838,8 +1896,22 @@ def verify_disk(fatal=True):
     matter of course — Desktop DB, temporary items, the "unmounted cleanly"
     flag — so a single boot leaves the image different from what was fetched,
     and a QEMU run that is killed rather than shut down leaves it dirty. That
-    is why nothing may boot this file directly; see boot_copy()."""
-    got = sha1(DISK)
+    is why nothing may boot this file directly; see boot_copy().
+
+    The hash is cached under <repo>/.tmp/ against the file's size and
+    mtime, so a sweep reads the 2 GB once rather than once per fixture; any
+    write to the master changes its mtime and forces a re-hash."""
+    st = os.stat(DISK)
+    key = f"{st.st_size} {st.st_mtime_ns} "
+    cache = os.path.join(guard.TMP, "os9-master.sha1")
+    try:
+        with open(cache) as f:
+            line = f.read().strip()
+        got = line[len(key):] if line.startswith(key) else sha1(DISK)
+    except OSError:
+        got = sha1(DISK)
+    with open(cache, "w") as f:
+        f.write(key + got + "\n")
     if got == DISK_SHA1:
         return True
     msg = (f"os9: {DISK} does not match the published SHA-1\n"
@@ -1852,54 +1924,42 @@ def verify_disk(fatal=True):
     return False
 
 
-def filesystem_kind(path):
-    """The filesystem type `path` sits on, or "" when it cannot be told.
-
-    Walks /proc/self/mounts for the longest mount point that is a prefix of
-    the resolved path; no psutil, no findmnt, nothing this harness does not
-    already depend on."""
-    try:
-        real = os.path.realpath(path)
-        best, kind = "", ""
-        with open("/proc/self/mounts") as f:
-            for line in f:
-                parts = line.split()
-                if len(parts) < 3:
-                    continue
-                mnt, ty = parts[1].replace("\\040", " "), parts[2]
-                if (real == mnt or real.startswith(mnt.rstrip("/") + "/")) \
-                        and len(mnt) >= len(best):
-                    best, kind = mnt, ty
-        return kind
-    except OSError:
-        return ""
-
-
 def boot_copy(workdir):
-    """A throwaway copy of the master image to actually boot.
+    """A throwaway qcow2 overlay on the master image, to actually boot.
 
     tools/vmac/run.py has done this since M10 ("every run starts from a
     pristine image: System 6 writes to the boot volume as it goes"), and
     BLOCKERS.md records that repeated boot-and-kill cycles corrupt it. That
     lesson was never carried over here: os9.py booted the master in place, so
     every run quietly damaged the one artifact it depends on, and there was no
-    hash to notice."""
-    dst = os.path.join(workdir, "boot.img")
-    # A 2 GB copy per fixture onto a tmpfs is 2 GB of RAM per fixture, on a
-    # host that is also running the emulator. Measured 2026-09-25 with -o
-    # under /tmp on an 8 GB machine: the host went into swap and the guest
-    # missed its settle timeout, which the harness can only report as "never
-    # reached the Finder desktop" — a boot failure's symptom for a host
-    # memory problem. Say so before spending the copy, since the fix is one
-    # argument.
-    fs = filesystem_kind(workdir)
-    if fs in ("tmpfs", "ramfs"):
-        print(f"os9: WARNING — {workdir} is on {fs}, which is RAM. Each "
-              f"fixture copies a 2 GB boot image there and the guest runs "
-              f"beside it; pass -o somewhere on disk if this host is small.")
-    print(f"os9: copying the master image to {dst} (2 GB; the master is never booted)")
-    shutil.copyfile(DISK, dst)
+    hash to notice.
+
+    It was a full 2 GB copy per fixture until 2026-10-14, which on a tmpfs
+    /tmp is 2 GB of RAM per fixture (measured 2026-09-25: the host swapped
+    and the guest missed its settle timeout). The overlay starts empty, holds
+    only what the guest writes, and leaves the master read-only. Read it
+    back through raw_view(): hfsutils cannot open qcow2."""
+    dst = os.path.join(workdir, "boot.qcow2")
+    if os.path.exists(dst):
+        os.remove(dst)
+    R.sh("qemu-img", "create", "-q", "-f", "qcow2", "-F", "raw",
+         "-b", os.path.abspath(DISK), dst)
     return dst
+
+
+SHOTS = os.path.join(os.path.dirname(R.VMAC_HOME), "os9-shots")
+
+
+def prune_shots():
+    """A fresh SHOTS/run-<time>-<pid>/, with older run-* directories pruned
+    so that this one makes guard.KEEP. Anything else in SHOTS is left alone."""
+    os.makedirs(SHOTS, exist_ok=True)
+    runs = sorted(d for d in os.listdir(SHOTS) if d.startswith("run-")
+                  and os.path.isdir(os.path.join(SHOTS, d)))
+    for d in runs[:max(0, len(runs) - (guard.KEEP - 1))]:
+        shutil.rmtree(os.path.join(SHOTS, d), ignore_errors=True)
+    return os.path.join(SHOTS, "run-%s-%d" % (time.strftime("%Y%m%d-%H%M%S"),
+                                              os.getpid()))
 
 
 def setup(force=False):
@@ -1939,9 +1999,10 @@ def run_one(fixture, appbin, outdir, args):
 
     verify_disk()
     boot = boot_copy(outdir)
-    q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
-             pointer=args.cancel_click)
+    q = None
     try:
+        q = Qemu([boot, xfer], os.path.join(outdir, "mon.sock"),
+                 pointer=args.cancel_click)
         # use_absolute_pointer() is deliberately NOT called. It succeeds — QEMU
         # really does offer the tablet and really does select it — and it buys
         # nothing, because the guest does not position the cursor from it
@@ -1973,9 +2034,10 @@ def run_one(fixture, appbin, outdir, args):
         if os.path.exists(scratch):
             os.remove(scratch)
     finally:
-        q.close()
+        if q:
+            q.close()
         if not args.keep_boot:
-            # 2 GB per fixture; a sweep fills the disk otherwise.
+            # The overlay holds everything the guest wrote to its boot disk.
             try:
                 os.remove(boot)
             except OSError:
@@ -2042,13 +2104,16 @@ def main():
                          "where a clean per-entry refusal is the correct "
                          "outcome — see tools/vmac/README.md")
     ap.add_argument("--keep-boot", action="store_true",
-                    help="keep each run's 2 GB boot copy instead of deleting "
-                         "it (a sweep would otherwise need 2 GB per fixture)")
-    # Under the cache dir, not the working directory: a run puts a 2 GB boot
-    # copy and a 34 MB transfer image here, and neither belongs in the repo.
-    ap.add_argument("-o", "--outdir",
-                    default=os.path.join(os.path.dirname(R.VMAC_HOME),
-                                         "os9-shots"))
+                    help="keep each run's boot overlay (qcow2 over the "
+                         "master; read it with qemu-img convert -O raw) and "
+                         "transfer images instead of deleting them")
+    # Under the cache dir, not the working directory: a run puts its boot
+    # overlay and a 34 MB transfer image here, and neither belongs in the
+    # repo. Each run without -o gets its own run-* directory there, and only
+    # the last few are kept (prune_shots).
+    ap.add_argument("-o", "--outdir", default=None,
+                    help="where screenshots and images go (default a fresh "
+                         "directory under %s)" % SHOTS)
     ap.add_argument("--launch", action="store_true",
                     help="after the desktop settles, open the transfer volume "
                          "from the keyboard, launch the application, extract "
@@ -2148,6 +2213,15 @@ def main():
     if not os.path.exists(DISK):
         raise SystemExit("os9: no Mac OS 9 disk — run tools/vmac/os9.py --setup")
 
+    if args.outdir is None:
+        args.outdir = prune_shots()
+    # guard deletes this directory's images at exit unless --keep-boot, and
+    # refuses /tmp outright: a tmpfs there is RAM.
+    if args.keep_boot:
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
+    args.outdir = guard.work_dir(args.outdir, "os9")
+    Qemu.limit = int(args.boot_wait + 6 * args.launch_wait) + 600
+
     fixtures = [args.fixture] if args.fixture else []
     if args.encrypted:
         fixtures = [build_encrypted(args.outdir)]
@@ -2190,6 +2264,8 @@ def main():
             print(f"os9: screenshots in {out}")
         else:
             ok, _ = run_one(fixture, appbin, out, args)
+        if not args.keep_boot:
+            guard.finish(out)       # images go; screenshots and logs stay
         results.append((name, ok))
 
     if len(results) > 1:

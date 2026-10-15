@@ -26,9 +26,10 @@ on the application's icon** — any file, whatever type it claims to be:
 
 Watch it work — with a real estimate, because on a Mac Plus some archives take
 twenty minutes. Change your mind at any point; anything half-written is
-cleaned up:
+cleaned up. On System 7 you can switch to another program and leave it
+working behind:
 
-![Progress dialog: Extracting archive.sit, 13%, about 1 minute left](docs/screens/2-extracting.png)
+![Progress window titled MacExtract: Extracting archive.sit, 30%, about 39 seconds left](docs/screens/2-extracting.png)
 
 ![Alert reading Extraction cancelled.](docs/screens/3-cancelled.png)
 
@@ -42,9 +43,10 @@ overwritten and nothing is folded together: the second one gets a `~1`.
 
 ![A scrolling list: MyQuarterlyReportForTheBoard.rtf renamed to MyQuarterlyReportForTheBoar.rtf, Notes.txt renamed to Notes~1.txt, two folders whose names shorten alike renamed to two different folders, an entry damaged, and eighteen photographs each named in full with what it became; under the list, in bold, Extraction finished, and the buttons Save as Text and OK](docs/screens/4b-report.png)
 
-If an archive was split across floppies and a part is not where the first one
-was, you are asked for it — and told straight away if you point at the wrong
-one, because parts are recognised by what is inside them:
+If an archive was split across floppies and a part is not where the last one
+was, that floppy is ejected and you are asked for the next — and told straight
+away if you point at the wrong one, because parts are recognised by what is
+inside them:
 
 ![Alert reading: Part 2 of "derived-Cal.sit" has not been found. About 33K still to read. Locate it, skip it, or cancel. Buttons: Cancel, Skip, Find...](docs/screens/5-locate-part.png)
 
@@ -57,15 +59,16 @@ currently **v0.40.0**. Or take it straight from the tree:
 |---|---|
 | [`dist/MacExtract.bin`](dist/MacExtract.bin) | the application as uncompressed MacBinary — transfer it with anything MacBinary-aware |
 | [`dist/MacExtract.dsk`](dist/MacExtract.dsk) | an 800K HFS floppy image — write it to a real floppy, or mount it in Mini vMac, Basilisk II or SheepShaver |
+| [`dist/MacExtract-1440K.img`](dist/MacExtract-1440K.img) | the same disk at 1.44 MB — write it with a USB floppy drive to a high-density disk, and any Mac with a 1.44 MB SuperDrive mounts it |
 
-Neither needs an unarchiver to open, which is the point: a bare Mac has no way
+None needs an unarchiver to open, which is the point: a bare Mac has no way
 to unpack a `.sit` until it already has something that can.
 [`dist/README.txt`](dist/README.txt) has the transfer notes.
 
 ## What it opens
 
 **Extracts:** StuffIt (`.sit`, classic and 5.x), Compact Pro (`.cpt`), BinHex
-(`.hqx`), MacBinary, PackIt (`.pit`), AppleLink packages (`.pkg`),
+(`.hqx`, and the older `.hex` and `.hcx`), MacBinary, PackIt (`.pit`), AppleLink packages (`.pkg`),
 DiskDoubler (`.dd`, `DDAR`, `DDA2`), Now
 Compress, StuffIt SpaceSaver, Alysis SuperDisk! (`.X`), ARC (`.arc`), LZH /
 LHA (`.lzh`, `.lha`, including the ones MacLHA wrote), uuencoded files

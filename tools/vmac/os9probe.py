@@ -269,10 +269,11 @@ def main():
     O.verify_disk()
     boot = O.boot_copy(args.outdir)
 
-    q = O.Qemu([boot, xfer], os.path.join(args.outdir, "mon.sock"),
-               tablet=(args.pointer == "tablet"))
+    q = None
     results = []
     try:
+        q = O.Qemu([boot, xfer], os.path.join(args.outdir, "mon.sock"),
+                   tablet=(args.pointer == "tablet"))
         if args.pointer == "tablet":
             print(f"os9probe: absolute pointer is mouse #{q.use_absolute_pointer()}")
         else:
@@ -381,7 +382,11 @@ def main():
               f"in SFGetFile")
         results.append(("10 extraction runs and reports", d10, 0.02))
     finally:
-        q.close()
+        if q:
+            q.close()
+        # The boot overlay (os9.boot_copy) is this run's alone.
+        if os.path.exists(boot):
+            os.remove(boot)
 
     print("\nos9probe results — fraction of pixels changed in the watched rect:")
     verdict = 0

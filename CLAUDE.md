@@ -11,10 +11,10 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M67 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M68 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts; the rest of that table is named-only or
-detect-only by decision. The engine passes a **964-fixture** differential suite
-against `unar` and, where `unar` fails, `macunpack`, plus 9,640 robustness variants. The Macintosh application extracts byte-exact on every
+detect-only by decision. The engine passes a **971-fixture** differential suite
+against `unar` and, where `unar` fails, `macunpack`, plus 9,710 robustness variants. The Macintosh application extracts byte-exact on every
 emulated tier from System 3.0 at 1 MB to Mac OS 9.2; the tallies are
 BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 3.0 and System 6; above those it is deliberate scope, not an open item.
@@ -32,10 +32,10 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~9.1k tokens** (PROGRESS 4.2k,
-OPEN_ITEMS 3.2k, BLOCKERS' first two sections 1.7k); BLOCKERS'
-withdrawn-claims archive is another **~74.3k** and is reference, not
-orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-11; no
+That session-start reading is **~10.7k tokens** (PROGRESS 4.3k,
+OPEN_ITEMS 4.0k, BLOCKERS' first two sections 2.4k); BLOCKERS'
+withdrawn-claims archive is another **~75.6k** and is reference, not
+orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-14; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you
 touch these files.** What makes them grow is table cells turning into
@@ -92,12 +92,16 @@ usually a declared ceiling nobody questioned.
   elsewhere — a System 6 one worked.
 - An emulator run is minutes; do not poll it every few seconds, and **do not
   read a timeout as a measurement of anything**.
+- **Harness temp files go in `.tmp/` via `tools/guard.py`, never `/tmp`**;
+  every emulator and Xvfb starts through `guard.spawn()`. Never wrap a
+  harness in a retry loop, and never copy a full disk image per run (a qcow2
+  overlay or `snapshot=on` for QEMU; a sparse copy for Mini vMac).
 
 ## Rules
 
 - **Never invent format details.** Magic numbers, header layouts and algorithm parameters come from a reference implementation or spec, with a `/* Source: ... */` comment. Never guess from memory. `reference/` is read-only and never modified; `tools/fetch_references.sh` repopulates it.
 - **A root cause that has never been reduced to a minimal reproduction is a hypothesis, not a finding.** Label it as such, and build the repro before acting on it or reporting it upstream (BLOCKERS.md, the withdrawn `HOpen` attribution).
-- **Never file the upstream bug reports.** `tools/xadmaster-ddn-repro/` and `tools/retro68-hopen-repro/` are ready to post; the maintainer posts them from his own account (MANUAL_TESTS.md §7). Improve a repro if you have reason to — do not submit one.
+- **Never file the upstream bug reports.** `tools/xadmaster-ddn-repro/` is ready to post; the maintainer posts it from his own account (MANUAL_TESTS.md §7). The Retro68 one is filed (BLOCKERS.md). Improve a repro if you have reason to — do not submit one.
 - **Never weaken a test to make it pass.** CRC mismatches are per-entry errors, not skips.
 - **When adding a harness, write down what it CANNOT see.** An aggregate check cannot fail on a property it never aggregates — a wrong gzip/.Z fallback NAME survived for weeks under the file-count-and-CRC grid.
 - **68000 discipline** (non-negotiable): byte-wise big-endian reads only, zero unaligned dereferences; no recursion, call depth ≤ 4 KB — **measure it, do not assume it** (it was exceeded by 66 % for months; FORMATS.md, *Stack*, has the method); 32-bit arithmetic in hot paths; no libc in the engine — all I/O, allocation and progress via caller callbacks; no global mutable state; allocation failure is a per-entry error, never per-archive; progress callback every 8–16 KB with clean abort.

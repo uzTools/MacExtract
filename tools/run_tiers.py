@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (203428, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (108028, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (632316, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200020, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (104620, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (628908, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -175,10 +175,45 @@ TIERS = {
 # 2026-10-11, *the constant was a square*); the shipped pair unmoved.
 # **Lowered by 96 more the same day, DERIVED**: the control's CODE +96
 # for the LC 475's zip and top-folder fixes, A5 unmoved (tools/build_mac.sh).
-# **Branch rom64k only, lowered by 32 B more 2026-10-11, DERIVED**: the
-# Has128KROM guard, the control's CODE + A5 +32 against main's
-# (tools/build_mac.sh); the shipped build moves +32 too, so OVL_SAVED does not.
-TIERS_CONTROL = 210064     # build/mac-resident, CODE + A5, 2026-10-11
+# **Unmoved 2026-10-12** by the menu bar and the titled progress window:
+# the control's CODE -8 and A5 +8 (DECISIONS.md 2026-10-12, *the
+# application nobody could leave*). The first commit had lowered all three
+# by 192 B; the trimmed shell put them back.
+# **Raised by 32 B 2026-10-12, and TIERS lowered by the same 32, DERIVED
+# and not re-measured**: the control's CODE +24 and A5 +8 for the Finder's
+# list read by position (tools/build_mac.sh; DECISIONS.md 2026-10-12, *the
+# reload that the list needs*).
+# **Raised by 320 B more the same day, and TIERS lowered by the same 320,
+# DERIVED**: the control's CODE +328 and A5 -8 for Arsenic's progress
+# while it decodes a block and builds either inverse (DECISIONS.md
+# 2026-10-12, *the block nobody could cancel*).
+# **Raised by 224 B more 2026-10-13, and TIERS lowered by the same 224,
+# DERIVED**: the control's CODE +228 and A5 -4 for MIME's progress and
+# its walk's Cancel (DECISIONS.md 2026-10-13, *the mail that counted
+# itself three times*).
+# **Raised by 192 B more 2026-10-13, and TIERS lowered by the same 192,
+# DERIVED**: the control's CODE +256 and A5 -64 for ejecting the disk a
+# split set's last part came from (DECISIONS.md 2026-10-13, *the disk
+# that was still in the drive*).
+# **Raised by 96 B more 2026-10-14, and TIERS lowered by the same 96,
+# DERIVED**: the control's CODE +80 and A5 +16 for unmounting the disk the
+# eject leaves (DECISIONS.md 2026-10-14, *the icon the eject left
+# behind*). The shipped pair moved the same 96, so OVL_SAVED did not.
+# **Raised by 2,416 B more 2026-10-14, and TIERS lowered by the same
+# 2,416, DERIVED**: the control's CODE +2,356 and A5 +60 for `.hex` and
+# `.hcx`, BinHex before 4.0 — the decoder is resident in this build, and
+# the probe, its shim and its table row in every build (DECISIONS.md
+# 2026-10-14, *the BinHex before 4.0*). **And by 64 more the same day,
+# DERIVED**: CODE +36 and A5 +28 when the shim left the shipped build and
+# this one took the dispatch on UncCtx.fmt instead.
+# **Raised by 64 B more 2026-10-14, and TIERS lowered by the same 64,
+# DERIVED**: the control's CODE +60 and A5 +4 for refusing a fork of 2 GB
+# or more as one entry (DECISIONS.md 2026-10-14, *the file the disk was
+# too full for*).
+# **Branch rom64k only, raised by 32 B 2026-10-15, and TIERS lowered by the
+# same 32, DERIVED**: the Has128KROM guard, the control's CODE +16 and A5
+# +16 against main's (tools/build_mac.sh).
+TIERS_CONTROL = 213472     # build/mac-resident, CODE + A5, 2026-10-15
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -432,7 +467,44 @@ EXPECT = {
 # +96 against the shipped build's CODE +140 and A5 +4 — the shipped build
 # also quits after an archive, which the control has no overlay to need
 # (DECISIONS.md 2026-10-11, *one archive per launch*).
-OVL_SAVED = 136064
+# **+16 2026-10-12, -> 136,080**: the menu bar and the titled progress
+# window, the shipped build's CODE -8 and A5 -8 against a control +0
+# (DECISIONS.md 2026-10-12, *the application nobody could leave*); no
+# image moved, so every grant rises 16.
+# **-160 2026-10-12, -> 135,920**: the reload a list of archives needs,
+# the shipped build's CODE +192 against the control's CODE +24 and A5 +8
+# (DECISIONS.md 2026-10-12, *the reload that the list needs*); no image
+# moved, so every shipped grant falls 160 on top of the control's 32.
+# **+320 the same day, -> 136,240**: Arsenic's progress, the control's
+# CODE +328 and A5 -8 against a shipped pair unmoved; all of it is
+# `ovl_stuffit`'s +312, so a StuffIt archive's grant falls 312 B (the
+# image) and every other format's is unmoved, TIERS having fallen the
+# same 320 (DECISIONS.md 2026-10-12, *the block nobody could cancel*).
+# **+224 2026-10-13, -> 136,464**: MIME's progress and its walk's Cancel,
+# the control's CODE +228 and A5 -4 against a shipped pair unmoved; the
+# image is `ovl_text`'s +240, which only the bundle holds, so an
+# envelope's grant falls 240 B and every other format's is unmoved,
+# TIERS having fallen the same 224 (DECISIONS.md 2026-10-13, *the mail
+# that counted itself three times*).
+# **-16 2026-10-13, -> 136,448**: the eject before a split set's next
+# part, the control's +192 against the shipped pair's +208 (CODE +256,
+# A5 -48); no image moved, so every format's grant falls 208 B, TIERS
+# having fallen 192 (DECISIONS.md 2026-10-13, *the disk that was still
+# in the drive*).
+# **+2,000 2026-10-14, -> 138,448**: BinHex before 4.0, the control's
+# +2,416 against the shipped pair's +416 (CODE +400, A5 +16); the decoder
+# is in `ovl_binhex`, +2,396, which only the bundle holds — so an
+# envelope's grant falls by that and every other format's by the 416
+# (DECISIONS.md 2026-10-14, *the BinHex before 4.0*). **+128 the same
+# day, -> 138,576**: the shim gone, the shipped pair -64 against the
+# control's +64; `ovl_binhex` +8.
+# **-32 2026-10-14, -> 138,544**: the 2 GB refusal, the control's +64
+# against the shipped pair's +96 (CODE +60, A5 +36); no image moved, so
+# every format's grant falls 96 B, TIERS having fallen 64 (DECISIONS.md
+# 2026-10-14, *the file the disk was too full for*).
+# **Branch rom64k only, +32 2026-10-15, -> 138,576**: the Has128KROM
+# guard, the control's +32 against the shipped pair's 0 (CODE +16, A5 -16).
+OVL_SAVED = 138576
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -529,9 +601,16 @@ OVL_RESIDUE = -666
 # **STUFFIT +676 B 2026-10-11**: `JPEG Lossy` at every width and mode,
 # its chroma interpolated (DECISIONS.md 2026-10-11, *the constant was a
 # square*).
+# **STUFFIT +312 B 2026-10-12**: Arsenic reports progress while it decodes
+# a block and builds either inverse, where a Mac Plus went 254 s without a
+# callback (DECISIONS.md 2026-10-12, *the block nobody could cancel*).
+# **TEXT +240 B 2026-10-13**: MIME reports the input its writing passes
+# consumed instead of every read, and a Cancel in its walk is no longer
+# taken for the end of the message (DECISIONS.md 2026-10-13, *the mail
+# that counted itself three times*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
-    "OVL_ID_BINHEX":      2590,
+    "OVL_ID_BINHEX":      4994,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15908,
@@ -541,13 +620,13 @@ IMAGES = {
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     28614,
+    "OVL_ID_STUFFIT":     28926,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
-    "OVL_ID_TEXT":        11510,
+    "OVL_ID_TEXT":        11750,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 164264
+BUNDLE = 167220
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

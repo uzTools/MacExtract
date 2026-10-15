@@ -140,7 +140,7 @@ def boot_image(work, subjects=SUBJECTS):
 
 
 def probe(keep=False):
-    work = tempfile.mkdtemp(prefix="pf-")
+    work = R.work_tmp("pf-")
     s = Session(boot_image(work), [], os.path.join(SPECIMENS, "probe"))
     try:
         s.boot()
@@ -220,7 +220,7 @@ def harvest(boot, out):
 
 
 def make(tag, keep=False):
-    work = tempfile.mkdtemp(prefix="pf-")
+    work = R.work_tmp("pf-")
     shots = os.path.join(SPECIMENS, tag)
     s = Session(boot_image(work), [], shots)
     try:
@@ -254,6 +254,8 @@ def main():
     ap.add_argument("--make", metavar="TAG")
     ap.add_argument("--keep", action="store_true")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.fetch:
         fetch()
     elif a.make:

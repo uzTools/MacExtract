@@ -1,0 +1,67 @@
+diff --git a/mac/m10variant.h b/mac/m10variant.h
+new file mode 100644
+index 0000000..a4704d4
+--- /dev/null
++++ b/mac/m10variant.h
+@@ -0,0 +1 @@
++#define M10VAR 4
+diff --git a/mac/unclassic_mac.c b/mac/unclassic_mac.c
+index 90a5294..31d04d8 100644
+--- a/mac/unclassic_mac.c
++++ b/mac/unclassic_mac.c
+@@ -371,8 +371,40 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, long *dirID)
+  * (so GetEOF/FSRead then operate on garbage and the whole extraction silently
+  * fails), and HOpenDF returns paramErr. Drive the traps through param blocks
+  * we fill in ourselves. Field layout: Multiversal CIncludes HParamBlockRec. */
++#include "m10variant.h"
++/* M10VAR 0 = param blocks (as committed); 1 = real Retro68 glue for open AND
++ * create (the pre-fix code); 2 = real glue for open only; 3 = verbatim copy of
++ * the glue's HOpen/HOpenRF; 4 = that copy with ioMisc = NULL; 5 = that copy
++ * with ioVersNum = 0. */
++#if M10VAR >= 3
++static __attribute__((noinline)) OSErr CopyOpen(short vref, long dirid,
++        ConstStr255Param name, SignedByte perm, int rsrc, short *refp)
++{
++    HParamBlockRec pb;
++    OSErr err;
++    pb.fileParam.ioVRefNum = vref;
++    pb.fileParam.ioDirID = dirid;
++    pb.fileParam.ioNamePtr = (StringPtr)name;
++    pb.ioParam.ioPermssn = perm;
++#if M10VAR == 4
++    pb.ioParam.ioMisc = NULL;
++#elif M10VAR == 5
++    pb.ioParam.ioVersNum = 0;
++#endif
++    err = rsrc ? PBHOpenRFSync(&pb) : PBHOpenSync(&pb);
++    *refp = pb.ioParam.ioRefNum;
++    return err;
++}
++#endif
+ static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
+                         SignedByte perm, int rsrc, short *refOut)
++{
++#if M10VAR == 1 || M10VAR == 2
++    return rsrc ? HOpenRF(vol, dir, name, perm, refOut)
++                : HOpen(vol, dir, name, perm, refOut);
++#elif M10VAR >= 3
++    return CopyOpen(vol, dir, name, perm, rsrc, refOut);
++#endif
+ {
+     HParamBlockRec pb;
+     long z;
+@@ -387,10 +419,14 @@ static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
+     *refOut = pb.ioParam.ioRefNum;
+     return err;
+ }
++}
+ 
+ /* Create a file (type/creator are stamped later by sink_end). */
+ static OSErr MyHCreate(short vol, long dir, ConstStr255Param name)
+ {
++#if M10VAR == 1
++    return HCreate(vol, dir, name, 0x3F3F3F3FL, 0x3F3F3F3FL);
++#endif
+     HParamBlockRec pb;
+     long z;
+     for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;

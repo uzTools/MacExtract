@@ -801,6 +801,48 @@ def main():
         check("a truncated message decodes short, and silently",
               len(got) == 1 and 0 < len(list(got.values())[0]) < len(DATA),
               "wrote %r" % {k: len(v) for k, v in got.items()})
+
+        # ---------------------------------------------------------- #
+        # Progress on mail of a realistic size                        #
+        # ---------------------------------------------------------- #
+        # The walk and each entry's sizing pass read what the writing
+        # pass reads again, and until 2026-10-13 every read counted:
+        # a 400 KB message reported 1.2 MB and the bar was full a third
+        # of the way through (DECISIONS.md 2026-10-13, *the mail that
+        # counted itself three times*). run_ticks.py cannot see it — the
+        # corpus's one message is 1,248 B — so it is graded here: no
+        # report past the message's size, and the last one within 16 KB
+        # of it — a reporting step can end unreported, and headers and
+        # the note the sender typed are never written — for one large
+        # attachment and for an appledouble pair whose resource fork is
+        # written after the data fork it precedes in the message.
+        probe = os.path.join(os.path.dirname(macextract), "tick_probe")
+        big = bytes((i * 131 + (i >> 8)) & 255 for i in range(300000))
+        mails = {
+            "one attachment": message(
+                [(b"Content-Type: text/plain\r\n", TEXT),
+                 (b'Content-Type: application/octet-stream; name="Big.sit"\r\n'
+                  b"Content-Transfer-Encoding: base64\r\n", b64(big))],
+                ctype=b"multipart/mixed"),
+            "appledouble": message(
+                [(b'Content-Type: application/applefile; name="App"\r\n'
+                  b"Content-Transfer-Encoding: base64\r\n",
+                  b64(applefile(b"App", big[:150000]))),
+                 (b'Content-Type: application/octet-stream; name="App"\r\n'
+                  b"Content-Transfer-Encoding: base64\r\n", b64(big[150000:]))],
+                ctype=b'multipart/appledouble; name="App"'),
+        }
+        check("progress: %s is there" % probe, os.path.exists(probe))
+        for label, msg in sorted(mails.items()):
+            p = write("progress.mim", msg)
+            r = subprocess.run([probe, p], capture_output=True, text=True)
+            v = dict(kv.split("=", 1) for kv in r.stdout.split()[1:]
+                     if "=" in kv) if r.returncode == 0 else {}
+            ok = (v.get("ret") == "0" and v.get("overrun") == "0" and
+                  int(v.get("ticks", 0)) > 0 and
+                  int(v.get("last", 0)) >= len(msg) - 16384)
+            check("progress, %s: bar ends at the size, not past it" % label,
+                  ok, r.stdout.strip() + " (size %d)" % len(msg))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

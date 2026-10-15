@@ -22,12 +22,18 @@ as the host allows, so --timeout bounds host seconds and says nothing about how
 long a real 7 MHz 68000 would take. Correctness results are speed-independent;
 timing claims must not be drawn from this harness.
 """
-import argparse, json, os, shutil, signal, subprocess, sys, tempfile, time
+import argparse, json, os, select, shutil, signal, subprocess, sys, tempfile
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(REPO, "tools"))
 from decode_grid import decode                                # noqa: E402
+# Every emulator and Xvfb any harness here starts goes through guard: a hard
+# limit, its own process group reaped on any exit, temporary files in the
+# repository's .tmp/ and never /tmp. Every harness in this directory imports
+# this module, so importing guard here covers their mkdtemp() calls too.
+import guard                                                  # noqa: E402
 
 # Deliberately NOT under build/: `make clean` removes that whole tree, which
 # would silently throw away ~80 MB of downloads and both emulator builds.
@@ -67,6 +73,23 @@ def _die_cleanly(signum, frame):
 
 signal.signal(signal.SIGTERM, _die_cleanly)
 signal.signal(signal.SIGINT, _die_cleanly)
+
+_work_root = None
+
+
+def work_tmp(prefix):
+    """A work directory that a --keep may need after this process exits.
+
+    tempfile's default directory is guard's .tmp/proc-<pid>/, which goes
+    when the process does, so a kept work volume would vanish with it.
+    These go in one run directory per process (guard.run_dir, pruned to the
+    last few runs) instead. Its images are still deleted at exit unless
+    HARNESS_KEEP_IMAGES=1, which each harness sets for --keep."""
+    global _work_root
+    if _work_root is None:
+        _work_root = guard.run_dir("vmac-work")
+    return tempfile.mkdtemp(prefix=prefix, dir=_work_root)
+
 
 def signed32(v):
     return v - (1 << 32) if v >= (1 << 31) else v
@@ -143,8 +166,9 @@ class Display:
     """A private Xvfb. Each run gets its own so runs cannot see, or steal
     input focus from, each other."""
 
-    def __init__(self):
+    def __init__(self, limit=None):
         self._win = None
+        self.proc = None
         # Xvfb picks the display and tells us which one, over a pipe. This
         # used to look for a free number by testing /tmp/.X<n>-lock and then
         # starting Xvfb on it, which is check-then-act: two runs started
@@ -159,20 +183,35 @@ class Display:
         # Depth 24: Mini vMac's X11 glue picks a visual it can XPutImage
         # into, and on an 8-bit Xvfb the very first PutImage dies with
         # BadMatch, taking the emulator with it a few seconds after boot.
+        #
+        # Under guard.spawn, with a hard limit of `limit` seconds: an X
+        # server nobody reaps outlives its run and competes for the CPU the
+        # next one needs. timeout(1) sits between us and Xvfb and holds its
+        # own copy of the write end, so the pipe never reaches EOF: read up
+        # to the newline Xvfb writes, never to end of file.
         r, w = os.pipe()
-        self.proc = subprocess.Popen(
-            ["Xvfb", "-displayfd", str(w), "-screen", "0", "800x600x24",
-             "-nolisten", "tcp"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, pass_fds=(w,))
-        os.close(w)
+        try:
+            self.proc = guard.spawn(
+                ["Xvfb", "-displayfd", str(w), "-screen", "0", "800x600x24",
+                 "-nolisten", "tcp"], limit=limit,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                pass_fds=(w,))
+        finally:
+            os.close(w)
         got = b""
-        with os.fdopen(r, "rb") as pipe:
-            for _ in range(200):
-                chunk = pipe.read()
-                if chunk:
-                    got += chunk
+        try:
+            deadline = time.time() + 10
+            while b"\n" not in got and time.time() < deadline:
+                if self.proc.poll() is not None:
                     break
-                time.sleep(0.05)
+                ready, _, _ = select.select([r], [], [], 0.05)
+                if ready:
+                    chunk = os.read(r, 64)
+                    if not chunk:
+                        break
+                    got += chunk
+        finally:
+            os.close(r)
         if not got.strip().isdigit():
             self.close()
             raise SystemExit("run: Xvfb did not report a display number")
@@ -217,11 +256,8 @@ class Display:
         return True
 
     def close(self):
-        self.proc.terminate()
-        try:
-            self.proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            self.proc.kill()
+        guard.reap(self.proc)
+        self.proc = None
 
 
 def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
@@ -242,14 +278,20 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
     indsk = os.path.join(workdir, "in.dsk")
     outdsk = os.path.join(workdir, "out.dsk")
     png = os.path.join(workdir, "screen.png")
-    shutil.copyfile(bootimg, boot)          # every run starts from a pristine
-    make_floppy(indsk, "In", payload=fixture, extras=extras)  # image: System 6
+    # Every run starts from a pristine image: System 6 rewrites its boot
+    # volume as it goes. Mini vMac cannot open qcow2, so this is a copy --
+    # sparse, into the run's own directory, which the caller deletes.
+    sh("cp", "--sparse=always", bootimg, boot)
+    make_floppy(indsk, "In", payload=fixture, extras=extras)
     # `out_kb` exists to make the DESTINATION run out of room on purpose:
     # the full-disk path is otherwise unreachable, and a path nothing has
     # ever executed is not a path anyone should trust. See --out-kb.
-    make_floppy(outdsk, "Out", size_kb=out_kb)  # boot volume as it goes
+    make_floppy(outdsk, "Out", size_kb=out_kb)
 
-    dpy = Display()
+    # Hard limits (tools/guard.py): the poll loop ends at `timeout`, so
+    # anything alive a minute past that is a harness that lost track of it.
+    limit = int(timeout) + 60
+    dpy = Display(limit=limit + 30)
     started = time.time()
     vals = None
     died = False
@@ -258,14 +300,16 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
     # the final grid is the extraction alone, with the boot excluded — which
     # is the only number worth quoting on a 1x machine.
     t_alive = None
+    proc = None
     try:
-        # start_new_session: the emulator must not share our process group, or
-        # a stray signal to the group takes it down mid-write.
-        proc = subprocess.Popen([emu, "-r", rom, boot, indsk, outdsk],
-                                env=dict(os.environ, DISPLAY=dpy.name),
-                                stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL,
-                                start_new_session=True)
+        # A session of its own (guard.spawn): the emulator must not share our
+        # process group, or a stray signal to the group takes it down
+        # mid-write.
+        proc = guard.spawn([emu, "-r", rom, boot, indsk, outdsk],
+                           limit=limit,
+                           env=dict(os.environ, DISPLAY=dpy.name),
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
         # Park the host pointer away from the result grid. Mini vMac drives the
         # Mac cursor from it, and the cursor's saved background can stamp the
         # desktop pattern back over cells the app has already painted.
@@ -297,10 +341,7 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
                     break
     finally:
         elapsed = time.time() - started
-        try:
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError):
-            pass
+        guard.reap(proc)
         if keep_png and os.path.exists(png):
             shutil.copyfile(png, keep_png)
         dpy.close()
@@ -419,6 +460,30 @@ def budget_probe(indsk):
     are the shortfall, FreeMem at start, the budget and the refusal reason.
     Returns a printable string, or None when there is no 14-value report —
     which is what a build without the overlay fields writes."""
+    v = read_report(indsk, 14)
+    if v is None:
+        return None
+    out = [f"{k}={v[8 + i]}" for i, k in enumerate(BUDGET_FIELDS)]
+    out += [f"bg={v[7]}", f"short={v[1]}", f"why={v[5]}", f"free0={v[3]}"]
+    return " ".join(out)
+
+
+def tickgap_probe(indsk):
+    """The `-D UNC_AT_TICKGAP` fields: the widest wait between two progress
+    callbacks and the input positions either side of it, the wait before
+    the first and after the last, the callback count, and the extraction's
+    own duration in ticks (60 Hz). Gaps are printed in seconds."""
+    v = read_report(indsk, 15)
+    if v is None:
+        return None
+    s = lambda t: f"{t / 60:.1f}s"
+    return (f"gap={s(v[8])} at {v[9]}->{v[10]} head={s(v[11])} "
+            f"tail={s(v[12])} ticks={v[13]} run={v[14]}t")
+
+
+def read_report(indsk, n):
+    """The first `n` values of the report file the autotest writes on the
+    In volume, or None when there is no report of at least that many."""
     home = tempfile.mkdtemp(prefix="hfs-")
     env = dict(os.environ, HOME=home)
     rep = os.path.join(home, "report")
@@ -435,12 +500,9 @@ def budget_probe(indsk):
     finally:
         shutil.rmtree(home, ignore_errors=True)
     u32 = lambda o: int.from_bytes(b[o:o + 4], "big")
-    if len(b) < 12 or b[:4] != b"UNCR" or u32(8) < 14:
+    if len(b) < 12 or b[:4] != b"UNCR" or u32(8) < n:
         return None
-    v = [signed32(u32(12 + 4 * i)) for i in range(14)]
-    out = [f"{k}={v[8 + i]}" for i, k in enumerate(BUDGET_FIELDS)]
-    out += [f"bg={v[7]}", f"short={v[1]}", f"why={v[5]}", f"free0={v[3]}"]
-    return " ".join(out)
+    return [signed32(u32(12 + 4 * i)) for i in range(n)]
 
 
 def check(fixture, png, manifest_dir, expect=False):
@@ -575,8 +637,21 @@ def main():
     # rewrite the boot image while this one is copying it, which shows up as
     # an emulator that dies seconds after launch — a confusing way to
     # discover that two sweeps were overlapping.
-    bootdir = tempfile.mkdtemp(prefix="vmacboot-")
-    bootimg = os.path.join(bootdir, "boot-autotest.hfv")
+    # In <repo>/.tmp/ (tools/guard.py), with every per-fixture directory
+    # inside it; its images are deleted when the sweep ends however it ends.
+    # --keep-disks also tells guard not to delete them at exit.
+    if args.keep_disks:
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
+    rundir = guard.run_dir("vmacrun")
+    try:
+        return sweep(args, fixtures, extras, appbin, rundir)
+    finally:
+        if not args.keep_disks:
+            guard.finish(rundir)
+
+
+def sweep(args, fixtures, extras, appbin, rundir):
+    bootimg = os.path.join(rundir, "boot-autotest.hfv")
     build_boot_image(appbin, bootimg, args.system)
     if args.pngdir:
         os.makedirs(args.pngdir, exist_ok=True)
@@ -585,7 +660,7 @@ def main():
     results, npass = [], 0
     for fixture in fixtures:
         name = os.path.basename(fixture)
-        workdir = tempfile.mkdtemp(prefix="vmacrun-")
+        workdir = tempfile.mkdtemp(prefix="fixture-", dir=rundir)
         keep = os.path.join(args.pngdir, name + ".png") if args.pngdir else None
         try:
             vals, secs, png, died, boot, extract = run_one(
@@ -624,6 +699,9 @@ def main():
             if "UNC_AT_BUDGET" in args.defines and vals is not None:
                 probe = budget_probe(os.path.join(workdir, "in.dsk"))
                 detail = f"[{probe or 'no probe report'}] {detail}"
+            if "UNC_AT_TICKGAP" in args.defines and vals is not None:
+                probe = tickgap_probe(os.path.join(workdir, "in.dsk"))
+                detail = f"[{probe or 'no probe report'}] {detail}"
             timing = ""
             if boot is not None and extract is not None:
                 timing = f" [boot {boot:.0f}s + extract {extract:.0f}s]"
@@ -643,7 +721,6 @@ def main():
             else:
                 shutil.rmtree(workdir, ignore_errors=True)
 
-    shutil.rmtree(bootdir, ignore_errors=True)
     # The machine is the EMULATOR BUILD, not --mem: --emu overrides it, and a
     # summary that reports --mem's default while a different machine ran is how
     # a 512 KB result gets filed as a 4 MB one. sys30.py beside this file has

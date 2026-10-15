@@ -35,7 +35,7 @@ jobs:
       - name: Check the artifacts are present
         run: |
           set -eu
-          for f in dist/MacExtract.bin dist/MacExtract.dsk dist/README.txt; do
+          for f in dist/MacExtract.bin dist/MacExtract.dsk dist/MacExtract-1440K.img dist/README.txt; do
             test -s "$f" || { echo "release: $f missing or empty"; exit 1; }
           done
           ls -l dist/
@@ -45,6 +45,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            dist/MacExtract.bin dist/MacExtract.dsk \
+            dist/MacExtract.bin dist/MacExtract.dsk dist/MacExtract-1440K.img \
             --title "$GITHUB_REF_NAME" \
             --notes-file dist/README.txt

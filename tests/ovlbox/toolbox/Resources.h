@@ -18,5 +18,7 @@ Handle GetResource(ResType type, short id);
 void   ReleaseResource(Handle h);
 void   DetachResource(Handle h);
 short  ResError(void);
+void   SetResLoad(Boolean load);
+long   GetResourceSizeOnDisk(Handle h);   /* the classic SizeRsrc, A9A5 */
 
 #endif /* OVLBOX_RESOURCES_H */

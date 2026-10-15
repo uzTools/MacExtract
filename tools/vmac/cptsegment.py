@@ -496,6 +496,8 @@ def main():
     ap.add_argument("--max-segments", type=int, default=24)
     ap.add_argument("--keep", action="store_true")
     args = ap.parse_args()
+    if args.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
 
     if args.verify:
         return phase_verify(args)
@@ -506,7 +508,7 @@ def main():
         return 0
 
     os.makedirs(args.outdir, exist_ok=True)
-    workdir = tempfile.mkdtemp(prefix="cptseg-")
+    workdir = R.work_tmp("cptseg-")
 
     def shot(mac, name):
         p = os.path.join(args.outdir, name)

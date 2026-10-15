@@ -16,10 +16,16 @@ whether the launched application is handed the FILE, or merely started.
         --doc-icon TYPE       ...and an FREF and icon for document type TYPE
         --doc-icn FILE        ...that icon, not the application's inverted
         --doc-ics FILE        ...and that small icon
+        --stub FILE           a real stub in a helpers folder, MacExtract
+                              untouched at the root
+        --multifinder         System 6 under MultiFinder
+        --extra FILE:PATH     another application on the volume (StuffIt)
+        --open X,Y            open this folder first (repeatable, in order)
         --app-folder NAME     put the application in a folder never opened
                               (moves the archive's icon: --archive-at X,Y)
         --invisible           set the application's invisible bit
-        --no-desktop          no Desktop file: the Finder rebuilds it at boot
+        --no-desktop          no Desktop file (System 7: no Desktop DB/DF):
+                              the Finder rebuilds it at boot
         --floppy              the archive on a second floppy
         --expect handed|open|refused|nothing
 
@@ -60,7 +66,7 @@ the folder and floppy layouts on System 6.0.8 alone; System
 the stock Desktop file, which predates MacExtract, so icons are whatever
 that cache says.
 """
-import argparse, os, shutil, struct, subprocess, sys, tempfile, time
+import argparse, os, re, shutil, struct, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -256,7 +262,16 @@ def desktop_claim(macbin, creator, dirid, name, front=True, bundle=False):
 # with none of them is `nothing` — a double-click that missed reads that
 # way, and was read as a refusal until 2026-10-11, when a moved icon made
 # exactly that happen.
-DIALOG_ROWS = (("open", 82), ("handed", 112), ("refused", 72))
+# MacExtract's two dialogs by all three rows of their frame (82/85/86 and
+# 112/115/116): a single row matched StuffIt Deluxe 3.5.1's archive window,
+# whose border is at 80 and 82, and read it as the Open dialog (2026-10-12).
+DIALOG_ROWS = (("open", (82, 85, 86)), ("handed", (112, 115, 116)),
+               ("refused", (72,)),
+               # System 7.0.1's "could not be opened, because the
+               # application program that created it could not be found":
+               # its borders at 64 and 170. Not 61, which a plain System 7
+               # Finder frame has too (2026-10-12).
+               ("refused", (64, 170)))
 
 
 def solid_rows(png, minrun=75):
@@ -276,8 +291,8 @@ def solid_rows(png, minrun=75):
 
 def which_dialog(png):
     rows = solid_rows(png)
-    for name, y in DIALOG_ROWS:
-        if y in rows:
+    for name, ys in DIALOG_ROWS:
+        if all(y in rows for y in ys):
             return name
     return "nothing"
 
@@ -305,6 +320,14 @@ def bundle_add(bndl, rtype, local, rid):
                     + struct.pack(">hh", local, rid) + bndl[p + 6 + 4 * c:])
         p += 6 + 4 * c
     raise SystemExit(f"deskclaim: the BNDL maps no {rtype!r}")
+
+
+def _has_file(img, name):
+    hfs = MB.HFS(img)
+    try:
+        return any(n == name for _d, n in hfs.ls(hfs.path(), invisible=True))
+    finally:
+        hfs.close()
 
 
 def stub_bundle(macbin, creator, doc_type=None, doc_icn=None, doc_ics=None):
@@ -395,6 +418,23 @@ def main():
     ap.add_argument("--doc-ics", metavar="FILE",
                     help="with --doc-icn, the 64-byte 'ics#' to go with it "
                          "(make_archive_icon.py --ics)")
+    ap.add_argument("--stub", metavar="FILE",
+                    help="a real stub (companion/make_stub.py): MacExtract "
+                         "goes at the root UNTOUCHED, and this goes in "
+                         "--app-folder (default 'MacExtract Helpers')")
+    ap.add_argument("--multifinder", action="store_true",
+                    help="System 6: put MultiFinder, DA Handler, "
+                         "Backgrounder and Finder Startup back in the System "
+                         "Folder (look for the menu bar's application icon "
+                         "in claim-1 to know MultiFinder ran)")
+    ap.add_argument("--extra", action="append", default=[], metavar="FILE:PATH",
+                    help="another MacBinary application onto the boot volume "
+                         "at PATH (folders created) — StuffIt beside the stub")
+    ap.add_argument("--open", action="append", default=[], metavar="X,Y|NAME",
+                    help="double-click this icon (or, on System 7, type-select "
+                         "it by NAME and Open) in the volume window before "
+                         "the archive, photograph it, and close it (Cmd-W): "
+                         "the Finder registers what it sees, in this order")
     ap.add_argument("--app-folder",
                     help="put the application in this folder at the root, "
                          "which the run never opens")
@@ -409,7 +449,9 @@ def main():
     ap.add_argument("--floppy-icon", default="472,110",
                     help="the floppy on the desktop, Mac x,y")
     ap.add_argument("--archive-at",
-                    help="the archive in the boot volume's window, Mac x,y, "
+                    help="the archive in the boot volume's window, Mac x,y "
+                         "(or, on System 7, its NAME, type-selected and "
+                         "opened), "
                          "when the layout is not FINDER_ICONS' — "
                          "--app-folder moves it. Check claim-2 for it")
     ap.add_argument("--want", nargs="*", default=list(WANT),
@@ -419,6 +461,10 @@ def main():
     args = ap.parse_args()
     if args.stub_bundle and not args.app_creator:
         ap.error("--stub-bundle needs --app-creator")
+    if args.stub and (args.app_creator or args.stub_bundle):
+        ap.error("--stub carries its own creator and bundle")
+    if args.stub and not args.app_folder:
+        args.app_folder = "MacExtract Helpers"
 
     I.calibrate(args.system)
     icons = I.FINDER_ICONS[args.system]
@@ -458,11 +504,30 @@ def main():
             finally:
                 fh.close()
 
+        if args.multifinder:
+            # The stock boot blocks already name MultiFinder (their field
+            # at 0x5A) with the shell field left at Finder, so nothing is
+            # patched: what decides is the Finder's Set Startup choice,
+            # kept in `Finder Startup` (hypothesis, which claim-1 settles).
+            for n in ("MultiFinder", "DA Handler", "Backgrounder",
+                      "Finder Startup"):
+                tmp = os.path.join(work, n + ".bin")
+                hfs_get(stock, "System Folder:" + n, tmp)
+                bh = MB.HFS(boot)
+                try:
+                    bh.run("hcopy", "-m", tmp, bh.path("System Folder", n))
+                finally:
+                    bh.close()
         hfs = MB.HFS(boot)
         try:
             where = hfs.path(APP_NAME)
             dirid = ROOT_DIRID
-            if args.app_folder:
+            if args.stub:
+                hfs.run("hmkdir", hfs.path(args.app_folder))
+                where = hfs.path(args.app_folder, "SIT! Helper")
+                hfs.run("hcopy", "-m", args.stub, where)
+                dirid = dir_id(hfs, hfs.path(), args.app_folder)
+            elif args.app_folder:
                 hfs.run("hmkdir", hfs.path(args.app_folder))
                 hfs.run("hrename", where, hfs.path(args.app_folder, APP_NAME))
                 where = hfs.path(args.app_folder, APP_NAME)
@@ -471,24 +536,43 @@ def main():
                 hfs.run("hattrib", "-c", args.app_creator, where)
             if args.invisible:
                 hfs.run("hattrib", "+i", where)
+            for spec in args.extra:
+                src, _, mpath = spec.partition(":")
+                # HFS names are MacRoman bytes; hfsutils takes them as
+                # bytes, so "™" has to arrive as 0xAA, not as UTF-8.
+                mpath = mpath.encode("mac_roman").decode(
+                    sys.getfilesystemencoding(), "surrogateescape")
+                parts = mpath.split(":")
+                for k in range(1, len(parts)):
+                    hfs.run("hmkdir", hfs.path(*parts[:k]), check=False)
+                hfs.run("hcopy", "-m", src, hfs.path(*parts))
             if not args.floppy:
                 hfs.run("hattrib", "-t", "SIT!", "-c", args.creator,
                         hfs.path("archive.sit"))
-            if not args.no_desktop:
+            # System 7 keeps the list in `Desktop DB`, which nothing here
+            # reads or writes: no `Desktop` file to restore or patch.
+            has_desk = _has_file(stock, "Desktop")
+            if args.no_desktop:
+                # System 7's list: deleted, the Finder rebuilds it at boot
+                # as it rebuilds a missing `Desktop` file on System 6.
+                for n in ("Desktop DB", "Desktop DF"):
+                    hfs.run("hdel", hfs.path(n), check=False)
+            if not args.no_desktop and has_desk:
                 # mkboot --finder deletes the Desktop file; put the stock
                 # one back, patched or not.
                 desk = os.path.join(work, "Desktop.bin")
                 hfs_get(stock, "Desktop", desk)
                 mb = open(desk, "rb").read()
                 if args.claim:
-                    mb = desktop_claim(mb, b"SIT!", dirid, APP_NAME.encode(),
+                    mb = desktop_claim(mb, b"SIT!", dirid, where.rsplit(":", 1)[1].encode("mac_roman"),
                                        bundle=args.bundle)
                 open(desk, "wb").write(mb)
                 hfs.run("hcopy", "-m", desk, hfs.path("Desktop"))
                 print("deskclaim: APPL on the boot image:",
                       names(desktop_appl(mb))[:3], "...")
             elif args.claim:
-                raise SystemExit("deskclaim: --claim needs a Desktop file")
+                raise SystemExit("deskclaim: --claim needs a Desktop file "
+                                 "(System 7's Desktop DB is not written)")
             print("deskclaim: application at", where, "dirID", dirid)
         finally:
             hfs.close()
@@ -517,8 +601,28 @@ def main():
                 mac.click(*icons["volume"], double=True)
                 time.sleep(4.0)
                 shot(mac, "claim-2-volume.png")
-                mac.click(*(xy(args.archive_at) if args.archive_at
-                            else icons["archive"]), double=True)
+                for k, at in enumerate(args.open, 1):
+                    if re.fullmatch(r"\d+,\d+", at):
+                        mac.click(*xy(at), double=True)
+                    else:
+                        # System 7 only: type-select the icon by name in
+                        # the front window, then Open — no coordinate, so
+                        # an icon off the window's edge is still reached.
+                        mac._xdo("type", "--delay", "150", at)
+                        time.sleep(1.5)
+                        mac.command_key("o")
+                    time.sleep(4.0)
+                    shot(mac, f"claim-2-open{k}.png")
+                    mac.command_key("w")
+                    time.sleep(2.0)
+                if args.archive_at and not re.fullmatch(r"\d+,\d+",
+                                                         args.archive_at):
+                    mac._xdo("type", "--delay", "150", args.archive_at)
+                    time.sleep(1.5)
+                    mac.command_key("o")
+                else:
+                    mac.click(*(xy(args.archive_at) if args.archive_at
+                                else icons["archive"]), double=True)
             time.sleep(args.launch_wait)
             shot(mac, "claim-3-launched.png")
             I.accept_destination(mac)
@@ -546,9 +650,12 @@ def main():
         print("deskclaim: entries on the archive's volume after:",
               "ALL" if got else sorted(want - have))
         d2 = os.path.join(work, "Desktop-after.bin")
-        hfs_get(after, "Desktop", d2)
-        print("deskclaim: APPL after the run:",
-              names(desktop_appl(open(d2, "rb").read())))
+        if _has_file(after, "Desktop"):
+            hfs_get(after, "Desktop", d2)
+            print("deskclaim: APPL after the run:",
+                  names(desktop_appl(open(d2, "rb").read())))
+        else:
+            print("deskclaim: no Desktop file after the run (Desktop DB)")
         # A handed-over document must also have come out; the volume is
         # the second half of that, never the whole of it (docstring).
         ok = seen == args.expect and (seen != "handed" or got)

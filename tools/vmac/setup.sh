@@ -18,6 +18,7 @@
 #     mv-1M/minivmac    1 MB Mac Plus, all out (the floor target)
 #     mv-4M-1x/minivmac 4 MB Mac Plus, authentic 7 MHz
 #     mv-1M-1x/minivmac 1 MB Mac Plus, authentic 7 MHz
+#     mv-4M-1d/minivmac 4 MB Mac Plus, all out, ONE floppy drive (onedrive.py)
 #     mv-512Ke/minivmac 512 KB Macintosh 512Ke, all out (the 512 KB tier)
 #     mv-512K/minivmac  512 KB Macintosh 512K, 64 KB ROM (the negative below)
 #     mv-128K/minivmac  128 KB Macintosh 128K, 64 KB ROM (too small to run it)
@@ -166,7 +167,7 @@ fetch "$ROMII_URL" MacII.ROM "$ROMII_SHA"
 # Mini vMac's setup tool emits a shell script that writes the config headers
 # and a Makefile; -speed a is "all out" (see run.py --speed for why the
 # default is NOT authentic 1x).
-build_mv() {    # build_mv <dir> <memsize> <speed>
+build_mv() {    # build_mv <dir> <memsize> <speed> [drives, default 6]
     [ -x "$1/minivmac" ] && { echo "have $1/minivmac"; return 0; }
     rm -rf "$1"
     mkdir -p "$1"
@@ -174,7 +175,7 @@ build_mv() {    # build_mv <dir> <memsize> <speed>
     ( cd "$1"
       gcc -o setup_t setup/tool.c
       ./setup_t -t lx64 -m Plus -mem "$2" -speed "$3" -as 0 -bg 1 \
-                -sound 0 -magnify 0 -drives 6 -n "macextract-$2" > setup.sh
+                -sound 0 -magnify 0 -drives "${4:-6}" -n "macextract-$2" > setup.sh
       bash setup.sh >/dev/null
       make >/dev/null 2>&1 )
     [ -x "$1/minivmac" ] || { echo "setup: failed to build $1/minivmac" >&2; exit 1; }
@@ -186,6 +187,13 @@ build_mv() {    # build_mv <dir> <memsize> <speed>
 # sizes at Mac Plus speed would take all day.
 build_mv mv-4M 4M a
 build_mv mv-1M 1M a
+
+# Two drives: the boot disk and ONE floppy drive, so a second floppy goes in
+# only once the first is out and the System asks for disks by name, as on a
+# one-drive Mac. Every other build here gives each insertion a drive of its
+# own, which can never show a swap (tools/vmac/onedrive.py; DECISIONS.md
+# 2026-10-14, *the disk the dialogs were on*).
+build_mv mv-4M-1d 4M a 2
 
 # 'z' = 1x, authentic 7 MHz Mac Plus timing. Needed for anything that has to
 # observe the machine WHILE it works — the progress dialog and Cmd-. cancel

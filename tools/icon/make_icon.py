@@ -405,7 +405,7 @@ SIGNATURE = signature_hex()
 
 def emit(i32, m32, i16, m16, f32, f16, t32, t16):
     return f"""{HEADER}
-resource 'ICN#' (128, "MacExtract") {{
+resource 'ICN#' (128) {{
     {{  /* icon */
 {block(to_hex(i32.g, 32, 32), 2)}
     ,   /* mask */
@@ -413,7 +413,7 @@ resource 'ICN#' (128, "MacExtract") {{
     }}
 }};
 
-resource 'ics#' (128, "MacExtract") {{
+resource 'ics#' (128) {{
     {{  /* icon */
 {block(to_hex(i16.g, 16, 16), 4)}
     ,   /* mask */
@@ -423,21 +423,21 @@ resource 'ics#' (128, "MacExtract") {{
 
 /* 16 colours: 0 white, 2 orange, 7 cyan, 15 black. */
 
-resource 'icl4' (128, "MacExtract") {{
+resource 'icl4' (128) {{
 {block(hex4(f32, 32, 32), 1)}
 }};
 
-resource 'ics4' (128, "MacExtract") {{
+resource 'ics4' (128) {{
 {block(hex4(f16, 16, 16), 2)}
 }};
 
 /* 256 colours, three tones per surface, Apple's icon colours only - see PALETTE above. */
 
-resource 'icl8' (128, "MacExtract") {{
+resource 'icl8' (128) {{
 {block(hex8(t32, 32, 32), 1)}
 }};
 
-resource 'ics8' (128, "MacExtract") {{
+resource 'ics8' (128) {{
 {block(hex8(t16, 16, 16), 1)}
 }};
 

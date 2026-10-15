@@ -276,11 +276,18 @@ class Session:
     """A booted Mac with screenshots kept per step."""
 
     def __init__(self, boot, extra, shots, mem="mv-4M"):
+        # Under <repo>/.tmp/proc-<pid>/ (tools/guard.py, by way of
+        # run.py), which guard removes when this process exits: callers
+        # read the boot image back out of it AFTER close().
         self.work = tempfile.mkdtemp(prefix="nowcompress-")
         self.shots = shots
         os.makedirs(shots, exist_ok=True)
         self.n = 0
-        self.mac = Mac(boot, mem, self.work, extra=tuple(extra))
+        try:
+            self.mac = Mac(boot, mem, self.work, extra=tuple(extra))
+        except BaseException:
+            shutil.rmtree(self.work, ignore_errors=True)
+            raise
 
     def shot(self, tag, wait=2.0):
         """Screenshot WITHOUT parking the pointer: parking closes a menu

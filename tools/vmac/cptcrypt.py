@@ -577,6 +577,8 @@ def main():
                          "stores as CR")
     ap.add_argument("--keep", action="store_true")
     args = ap.parse_args()
+    if args.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if args.fixture:
         args.plain = True
     os.makedirs(args.outdir, exist_ok=True)
@@ -586,7 +588,7 @@ def main():
         mac.shot(p)
         print("  " + name)
 
-    workdir = tempfile.mkdtemp(prefix="cptcrypt-")
+    workdir = R.work_tmp("cptcrypt-")
     try:
         img = boot_image(workdir, None if args.plain else args.password,
                          fixture=args.fixture, make=args.make,

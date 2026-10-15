@@ -1,114 +1,140 @@
-# Ready-to-post upstream issue (github.com/autc04/Retro68)
+# Upstream issue: autc04/Retro68#320
 
-**Not filed, and not to be filed from here.** The maintainer posts this from
-his own account (MANUAL_TESTS.md §7, CLAUDE.md Rules) — no session working in
-this repository should submit it. It is also not possible from here: there is
-no `gh` CLI and no GitHub credentials (an unauthenticated POST to the issues
-API returns 401). Reproduction code: `tools/retro68-hopen-repro/`.
+**Filed 2026-10-13** by the maintainer as
+https://github.com/autc04/Retro68/issues/320. This is the text as drafted
+(the posted title is the longer *glue leaves `ioMisc` uninitialised; the File
+Manager writes an access path buffer through it*); the issue is the record.
 
-Scope note: this is a *small* issue. The much larger claim this investigation
-started from — "`HOpen` returns `noErr` without writing the refNum on System 6"
-— was tested across ten cases and **does not reproduce**; it has been withdrawn
-(see `DECISIONS.md`). Please do not file that part.
+Re-verified 2026-10-13 against Retro68 master `d8b891a` (2026-10-09): its
+pinned multiversal `d124fa6` and multiversal master `28eac84` carry a
+`custom/glue.c` byte-identical to the one measured here.
 
-**Corrected 2026-08-01, before filing.** The first draft of this write-up said
-the bug was that `HOpenDF` lacks a fallback "unlike the non-hierarchical
-`OpenDF` in the same file, which already has it". That is wrong, and it was
-wrong in the direction that would have understated the bug: the fallback is in
-**`FSOpen`**, and `OpenDF` calls `PBOpenDFSync` bare exactly as `HOpenDF` does.
-Case 11 was added to the reproduction to settle it on the machine rather than
-by reading, and plain `OpenDF` returns `paramErr` too. So this is two broken
-functions, not one. Reading `glue.c` carelessly is how this project got the
-first, withdrawn claim wrong as well.
+**What is NOT in this issue, and why.** The 2026-08 draft led with "`OpenDF`
+and `HOpenDF` return `paramErr` on System 6 and do not fall back". That is
+Apple's documented contract, not a bug: Technote FL 1041 tells the caller to
+retry with `HOpen` on `paramErr`, and Retro68 already settled exactly this in
+issue #53 (2018) by doing so in `libretro/syscalls.c`. Withdrawn (BLOCKERS.md).
 
 ---
 
-**Title:** `OpenDF` and `HOpenDF` are unusable on System 6 (return paramErr);
-`FSOpen` has the fallback they need
+**Title:** `HOpen`/`HOpenRF`/`HOpenDF` don't initialise `ioMisc`, and the File Manager writes through it
 
 **Body:**
 
-`multiversal/custom/glue.c` has three entry points that reach the `_OpenDF`
-trap. Only one of them copes with that trap not existing before System 7.
+Hi! `HOpen`, `HOpenRF` and `HOpenDF` in `multiversal/custom/glue.c` never set `ioMisc`, so it holds whatever was on the stack. But for `_HOpen` it's an input (a pointer to an access path buffer, or NULL), and Technote FL 1041 says:
 
-`FSOpen` does it correctly:
+> ioMisc must be initialized to zero before calling PBHOpenDF, PBHOpenRF, or PBHOpen. Failure to initialize ioMisc to zero on some Macintosh models will cause the system to crash.
 
-```c
-    // Try newer OpenDF first, because it does not open drivers
-    err = PBOpenDFSync(&pb);
-    if(err == paramErr)
-    {
-        // OpenDF not implemented, so use regular Open.
-        err = PBOpenSync(&pb);
-    }
+The File Manager really does write through it. With the address of a 1 KB array left on the stack, `HOpen` succeeds and the array gets overwritten (524 bytes on System 6.0.8, 12 on 7.0.1). That's how my application ended up hanging or writing nothing on System 6: with a copy of the glue it fails, and adding just `pb.ioParam.ioMisc = NULL;` fixes it.
+
+`FSOpen`, `OpenDF` and `OpenRF` in the same file already set it to NULL, so the H-variants just need the same line:
+
+```diff
+--- a/custom/glue.c
++++ b/custom/glue.c
+@@ -231,6 +231,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenRFSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+@@ -243,6 +244,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
+@@ -256,6 +258,7 @@
+     pb.fileParam.ioDirID = dirid;
+     pb.fileParam.ioNamePtr = (StringPtr)name;
+     pb.ioParam.ioPermssn = perm;
++    pb.ioParam.ioMisc = NULL;
+     OSErr err = PBHOpenDFSync(&pb);
+     *refp = pb.ioParam.ioRefNum;
+     return err;
 ```
 
-`OpenDF` does not:
+Repro below: build it as an app, run it, and read the three lines. Mini vMac Mac Plus, System 6.0.8 and 7.0.1, Retro68 `335fa54f6d`; master still has the same `glue.c`.
+
+<details><summary>iomisc_repro.c (70 lines)</summary>
 
 ```c
-pascal OSErr OpenDF(ConstStr255Param fileName, short vRefNum, short *refNum)
-{
-    ...
-    err = PBOpenDFSync(&pb);
+/* HOpen leaves ioMisc uninitialised; the File Manager writes through it.
+ * Prints how many longs of a 1 KB decoy each open + FSRead + FSClose changed. */
+#include <Quickdraw.h>
+#include <Windows.h>
+#include <Fonts.h>
+#include <Files.h>
+#include <Menus.h>
+#include <TextEdit.h>
+#include <Dialogs.h>
+#include <Events.h>
+#include <stdio.h>
+#include <string.h>
 
-    *refNum = pb.ioParam.ioRefNum;
-    return err;
+static long decoy[256];
+static volatile long sink;
+static short row;
+
+static __attribute__((noinline)) void PoisonStack(void)
+{   /* leave &decoy all over the stack HOpen is about to use */
+    long p[128]; int i;
+    for (i = 0; i < 128; i++) p[i] = (long)decoy;
+    sink += p[0] + p[127];
+}
+
+static void Check(const char *label, OSErr err, short ref)
+{
+    char buf[4], line[64]; long n = 4, changed = 0; int i;
+    FSRead(ref, &n, buf);
+    FSClose(ref);
+    for (i = 0; i < 256; i++) if (decoy[i] != 0x55555555L) changed++;
+    sprintf(line, "%s err=%d, decoy longs changed: %ld", label, err, changed);
+    MoveTo(10, 20 + 14 * row++);
+    DrawText(line, 0, strlen(line));
+    for (i = 0; i < 256; i++) decoy[i] = 0x55555555L;
+}
+
+int main(void)
+{
+    WindowPtr w; Rect r; HParamBlockRec pb; short ref; long n = 512;
+    static char data[512]; OSErr err;
+
+    InitGraf(&qd.thePort); InitFonts(); InitWindows(); InitMenus();
+    TEInit(); InitDialogs(NULL); InitCursor();
+    SetRect(&r, 10, 40, 500, 200);
+    w = NewWindow(NULL, &r, "\p", true, plainDBox, (WindowPtr)-1, false, 0);
+    SetPort(w);
+    for (n = 0; n < 256; n++) decoy[n] = 0x55555555L;
+    n = 512;
+
+    HDelete(0, 0, "\pT");                    /* a 512-byte test file */
+    HCreate(0, 0, "\pT", 'test', 'TEXT');
+    FSOpen("\pT", 0, &ref); FSWrite(ref, &n, data); FSClose(ref);
+
+    memset(&pb, 0, sizeof pb);               /* 1: control */
+    pb.ioParam.ioNamePtr = "\pT";
+    err = PBHOpenSync(&pb);
+    Check("1 PBHOpen, ioMisc=NULL  ", err, pb.ioParam.ioRefNum);
+
+    memset(&pb, 0, sizeof pb);               /* 2: the File Manager uses ioMisc */
+    pb.ioParam.ioNamePtr = "\pT";
+    pb.ioParam.ioMisc = (Ptr)decoy;
+    err = PBHOpenSync(&pb);
+    Check("2 PBHOpen, ioMisc=decoy ", err, pb.ioParam.ioRefNum);
+
+    PoisonStack();                           /* 3: the glue */
+    err = HOpen(0, 0, "\pT", fsRdPerm, &ref);
+    Check("3 HOpen, poisoned stack ", err, ref);
+
+    for (;;) SystemTask();
 }
 ```
 
-and neither does `HOpenDF`:
+</details>
 
-```c
-pascal OSErr HOpenDF(INTEGER vref, LONGINT dirid, ConstStringPtr name,
-                     SignedByte perm, INTEGER *refp)
-{
-    HParamBlockRec pb;
-    pb.fileParam.ioVRefNum = vref;
-    pb.fileParam.ioDirID   = dirid;
-    pb.fileParam.ioNamePtr = (StringPtr)name;
-    pb.ioParam.ioPermssn   = perm;
-    OSErr err = PBHOpenDFSync(&pb);
-    *refp = pb.ioParam.ioRefNum;
-    return err;
-}
-```
-
-so on System 6 **every `OpenDF` and `HOpenDF` call fails with `paramErr`
-(-50)**, measured, on a file that `HOpen` and a hand-filled `PBHOpenSync` open
-successfully in the same run:
-
-```
-1  HOpen   dirty stack   err=0   ref=378  eof=512  got=4     ok
-4  PB      ioMisc=junk   err=0   ref=378  eof=512  got=4     ok
-8  HOpenDF vref, rd      err=-50                             BUG
-11 OpenDF  (plain)       err=-50                             BUG
-```
-
-Case 11 opens the same file, on the same default volume, that cases 1-4 open
-without trouble, so this is the trap being absent rather than the file being
-missing — and `paramErr` is exactly what `FSOpen`'s own fallback tests for.
-
-Suggested fix is the shape `FSOpen` already uses: fall back to `PBOpenSync` /
-`PBHOpenSync` when the DF call returns `paramErr`.
-
-Second, smaller point, in the hierarchical functions: `HOpen`, `HOpenRF` and
-`HOpenDF` declare `HParamBlockRec pb;` as an uninitialised stack local and fill
-in only `ioVRefNum`, `ioDirID`, `ioNamePtr` and `ioPermssn`. `ioMisc` is left as
-stack garbage, and for `_Open`/`PBHOpen` `ioMisc` is an *input* — a pointer to
-an optional access path buffer, or NULL to use the volume buffer (Inside
-Macintosh: Files, `PBHOpen`). `FSOpen()`, `OpenDF()` and `OpenRF()` in the same
-file all set `pb.ioParam.ioMisc = NULL`; the three H-variants do not.
-
-In practice System 6.0.8 tolerates the garbage — I deliberately poisoned
-`ioMisc` with `0xA3A3A3A2` and the open still succeeded and read correctly
-(case 4 above) — so this is a latent inconsistency rather than an observed
-failure. Still worth zeroing for the same reason the non-H versions do.
-
-**Environment:** System 6.0.8, Mac Plus (68000), Mini vMac 36.04, Retro68 at
-`335fa54f6d` ("update multiversal", 2026-06-06), `-mcpu=68000 -Os`.
-
-**Reproduction:** `hopen_repro.c` (attached / linked). It creates its own
-512-byte test file next to the application, then runs eleven open cases and
-prints `err`, `refNum`, `GetEOF` and a 4-byte `FSRead` for each. Cases 8 and 11
-are the two `paramErr` bugs; cases 1 and 4 are the `ioMisc` probes. Full result
-table in the README.
+Thanks for Retro68!

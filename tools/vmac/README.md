@@ -1014,6 +1014,27 @@ Four things to know before re-running it:
   it is what the Finder showing `Test.ARC` on screen and the host's copy of
   the image not having it cost.
 
+## BinHex 2.0 writes `.hex` and `.hcx` — `binhex2.py`
+
+    tools/vmac/binhex2.py --make     boot System 6.0.8, encode four times
+    tools/vmac/binhex2.py --check    our CLI against the subject's forks
+
+BinHex 2.0 (1984) is `binhex_2.0.bin` from Macintosh Repository, fetched
+by hand into `$UNC_VMAC_HOME/specimens/binhex2/` and checked by SHA-1; it
+is re-wrapped from its forks because `hcopy -m` refuses its MacBinary I
+header. File ▸ *Application -> Upload* encodes, *Compressed* (checked at
+launch) picks `.hcx` over `.hex`, and every run ends with an alert that
+Return dismisses. `--make` writes `XF.hcx`, `XF.hex`, `XFlf.hex` (*Send
+line feeds*) and `YN.hex` (`XF.hcx` encoded again), and builds a fresh
+volume first: a killed run leaves the old one "damaged". That volume is
+where `tools/harvest.py --restore` lifts the four `derived-bh2-*` fixtures
+from.
+
+Standard File is clicked by row, and the rows are the volume's files by
+name: every output is named to sort after `TwoForks`, or the next encode
+picks up the previous output instead — which is how the first `.hex`
+held a `.hcx`.
+
 ## Asking DiskDoubler what it can write — `diskdoubler.py`
 
 Six of DiskDoubler's eleven methods were declined because "nothing reachable
@@ -2738,12 +2759,13 @@ only when somebody asks for it.
 | `UNC_AT_SAMEVOL` | does extraction onto the archive's own volume work | DECISIONS.md 2026-08-02 |
 | `UNC_AT_WD` | is `SFReply.vRefNum` handled as a System 7 working directory | DECISIONS.md 2026-08-01 |
 | `UNC_AT_CANCEL` | does an aborted entry leave anything behind | BLOCKERS.md, MANUAL_TESTS.md checklist |
-| `UNC_OVL_NOFLUSH` | whether the overlay loader's instruction-cache flush is NEEDED: the same application with `ovl_flush_code` a bare return (2 B against 106 shipped). Only a CPU with a cache can answer, so it is built with `tools/build_mac.sh` (`UNC_MAC_BUILD_DIR=build/mac-noflush`), renamed in its MacBinary header, and run on real hardware beside the shipped build | OPEN_ITEMS.md, *whether the flush is needed* |
+| `UNC_OVL_NOFLUSH` | whether the overlay loader's instruction-cache flush is NEEDED: the same application with `ovl_flush_code` a bare return (2 B against 106 shipped). Only a CPU with a cache can answer, so it is built with `tools/build_mac.sh` (`UNC_MAC_BUILD_DIR=build/mac-noflush`), renamed in its MacBinary header, and run on real hardware beside the shipped build | DECISIONS.md 2026-10-12, *the flush the LC 475 did not need* |
 | `UNC_AT_TWICE` | what a second extraction of the same archive into the same folder makes of the first one's folders. FAILs by construction — the grid counts both runs; read the Out disk with `--keep-disks` and `hls -R` | DECISIONS.md 2026-10-11, *the folder that is already there* |
 | `UNC_AT_NOHIDECURSOR` | is `HideCursor()` before painting the grid necessary | yes — BLOCKERS.md; two things must be right before the test means anything: the pointer must be INSIDE the emulator window (at (144,129) on the 800x600 Xvfb) and the drag must cross cell CENTRES, since a path between rows disturbs nothing. `UNC_VMAC_PARK` overrides the parking position |
 | `UNC_AT_PROGRESS` | how fast is the engine actually going, mid-run | BLOCKERS.md "Timing on a 7 MHz Mac Plus" |
 | `UNC_MAC_SLURP_ARCHIVE` | rebuilds the old read-whole-archive-into-RAM path | DECISIONS.md 2026-08-02 |
 | `UNC_AT_TIMING` | split the extraction into File Manager reads, writes, the rest of the File Manager and the engine, in TICKS, in grid slots 3-6, and the harness read-back after it in slot 7 (so the CRC check FAILS by construction — read the numbers, not the verdict). The instrument that showed 98.5 % of a StuffIt run is the engine, and the one that resolves an optimiser change: FORMATS.md, *What -O3 is worth, and where* | FORMATS.md |
+| `UNC_AT_TICKGAP` | how long a click waits: the widest gap between two progress callbacks in TICKS, File Manager time included, with the input position either side, the gap before the first and after the last, the count, and `RunExtract`'s own duration in ticks (`run=`, to 1/60 s where the poll gives 20 s). Each callback runs the shipped `prog_tick` with no dialog, so the pump's cost is in that duration. The grid is untouched, so the run still grades its bytes; `run.py` prints the rest from the report file. Run it at `--emu mv-4M-1x`, or the ticks are the host's. **What it cannot see:** the bar's redraw, the 10 Hz gate's up to 0.1 s on top of a gap, another process to switch to (the application is the boot shell, on System 7 too), and anything an AppleShare or a slow disk adds to the File Manager | FORMATS.md, *How long a click waits* |
 | `UNC_MAC_STAGE_WRITES` | the older whole-fork staging write path (also in `ci.sh`) | TESTING.md |
 
 ### Filling the destination on purpose — `--out-kb`
@@ -3100,13 +3122,55 @@ exits 0. DECISIONS.md 2026-09-22, *the entry a second write placed*.
     interactive.py --wd             # output lands in the archive's folder, not at /
     interactive.py --dest           # output lands on the volume the user CHOSE
     interactive.py --diskswap       # insert the missing part's disk mid-run
+                                    # — needs a fixture that is NOT an archive
+    interactive.py --diskeject      # part 1 on its own floppy: is that floppy
+                                    # ejected before the alert asks?
     interactive.py --drop           # drag an archive onto the application's
                                     # icon: what does the FINDER do?
+    interactive.py --switch --system Sys7.img
+                                    # leave an extraction for the Finder and
+                                    # come back: a Finder click, then the
+                                    # Application menu
 
 Run them one at a time (see "This box has one core", above). **One at a
 time is not only about the core**: every phase builds the application
 into the same `build/mac-interactive`, so two `interactive.py` runs
 started together fight over it and one dies in `cmake --build`.
+
+### A one-drive Mac — `onedrive.py`
+
+    onedrive.py [--app MacExtract.bin]     # 0 = nothing asked for after Save
+
+`mv-4M-1d` (setup.sh) has two drives: the boot disk and one floppy, so the
+System asks for disks by name and ejects the one in the drive, as a one-drive
+Mac does. The walk launches MacExtract from floppy ME, ejects it in the Open
+dialog, opens an archive on floppy C and saves to the boot disk; it then
+answers every *"Please insert the disk"* and fails if there was any. The build
+before `preload` (2026-10-14) asks ME, C, ME, C and fails; after, nothing.
+`onedrive.py --drop` is the drop's list of documents, given by Cmd-O on two
+archives carrying MacExtract's creator; it prints every disk asked for and is
+a measurement, not a check (DECISIONS.md 2026-10-14, *the swaps that are the
+System's*). **What neither can see** is in the docstring: an actual drop on an
+alias (System 7.0.1's Finder will not take one for an application on an ejected
+disk). Coordinates are System 7's.
+
+**`--diskswap` needs a fixture that is not an archive.** It reads back the
+joined FILE, and the application unpacks a joined archive, so with a `.sit`
+the file it looks for is never written and the phase fails on a correct
+run — on the build before 2026-10-13 too. A few KB of random bytes passes
+(DECISIONS.md 2026-10-13, *the disk that was still in the drive*).
+
+**`--diskeject` asserts the eject from outside the machine**: Mini vMac
+`fclose`s a disk image when the Mac ejects it, so the phase reads the
+emulator's `/proc/<pid>/fd`. Passed on `System6.hfv`, `Sys7.img` and
+`Sys30.img` (2026-10-13, `derived-ScrollbarPattern.sit`); the build before
+fails it. **Since 2026-10-14 it also checks the System 7 Finder afterwards**
+(`DESK7_THIRD_DISK`): an ejected but still mounted Floppy A stays there as a
+dimmed icon, 636 px off the desktop pattern on the build without the
+unmount and 0 with it. On System 3.0 and 6 that frame shows no dimmed icon
+on either build, so there the check is not made. **What it cannot see:** a real one-drive Mac. Mini vMac puts
+every inserted disk in a new drive, so Floppy B never goes into the drive
+Floppy A left (MANUAL_TESTS.md §4).
 
 **`--named zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks
 an archive split whatever its size, so a smaller payload makes one
@@ -3220,6 +3284,30 @@ launch proves the Finder accepted the drop; `drop-7` is what says the
 application was told WHICH file, since it has read `AppParmHandle` from
 2026-08-31 (this paragraph said it did not until 2026-10-10).
 
+### Leaving an extraction — `interactive.py --switch`
+
+    interactive.py fixtures/derived-EmpireBuilderDemo.sit --switch --system Sys7.img
+
+Two launches from the Finder in one boot. The first opens About
+mid-extraction, clicks the Finder's disk icon and comes back through the
+Application menu. The second hides MacExtract from that menu and lets the
+extraction finish behind the Finder. The third chooses File > Quit, which
+must cancel and quit. Fifteen frames, and
+it ends on the first launch's names on the volume. The result is
+DECISIONS.md 2026-10-12, *the application nobody could leave*.
+
+- **Hold, do not click.** A press is seen only at the next progress
+  callback, so `hold_and_shoot()` keeps the button down and photographs the
+  open menu without `Mac.shot`, which would park the pointer and release
+  nothing.
+- **Down, then across.** A diagonal path opens every menu whose title it
+  crosses, and it released on File > Quit once and on "About Balloon
+  Help…" once. `pick()` moves straight down, then sideways.
+- **What it cannot see:** how much of the processor the Finder got, and
+  the second launch's output, whose names collide with the first's and are
+  numbered. The menu coordinates are System 7.0.1's (`APPLE_MENU`,
+  `APP_MENU`).
+
 ### Who a double-click goes to — `deskclaim.py`
 
     deskclaim.py fixtures/derived-ScrollbarPattern.sit -o /tmp/c --expect refused
@@ -3230,6 +3318,10 @@ application was told WHICH file, since it has read `AppParmHandle` from
     deskclaim.py ... --app-creator 'SIT!' --app-folder "MacExtract Helpers" \
                      --archive-at 237,105 --claim --expect handed
     deskclaim.py ... (the same) --no-desktop --stub-bundle --expect handed
+    deskclaim.py ... --stub "SIT! Helper.bin" --open 365,107 --expect handed
+    deskclaim.py ... --system Sys7.img --stub ... --extra "Deluxe.bin:StuffIt Deluxe Folder:StuffIt Deluxe™" \
+                     --open "StuffIt Deluxe Folder" --open "MacExtract Helpers" \
+                     --archive-at archive.sit --expect handed
 
 Double-clicks a `SIT!` archive in the Finder, after optionally adding a
 `SIT!` → MacExtract entry to the volume's `Desktop` file (`--claim`, plus a
@@ -3238,20 +3330,51 @@ it into a folder the run never opens, giving it a bundle filed under its
 new creator (`--stub-bundle`, the shape a stub would have; `--doc-icon
 TYPE` adds a document icon for TYPE to it), deleting the
 `Desktop` file so the Finder rebuilds it at boot (`--no-desktop`), or
-putting the archive on a second floppy. **It grades the DIALOG in
+putting the archive on a second floppy. `--stub FILE` boots a REAL stub
+(`companion/make_stub.py`) in `MacExtract Helpers` beside an untouched
+MacExtract, and `--multifinder` puts System 6's MultiFinder back and
+starts it. `--extra FILE:PATH` puts another application on the volume —
+StuffIt beside the stub — and `--open` opens folders before the archive,
+in order, because the Finder registers what it sees: by position, or on
+System 7 by NAME, type-selected (an icon there can land off the window's
+edge; `--archive-at` takes a name too). On System 7 `--no-desktop`
+deletes `Desktop DB` and `Desktop DF`. **It grades the DIALOG in
 `claim-3-launched.png`, not the volume**: a launch that was not handed the
 file shows the Open dialog, the run's Return opens the archive from it,
 and the entries land anyway — the first version passed on exactly that.
-The Finder's refusal alert is identified positively; a frame with none of
-the three is `nothing`, which is what a double-click that missed looks
-like. **`--app-folder` moves the archive's icon**: read its position off
+The Finder's refusal alert is identified positively, System 6's and
+System 7's; MacExtract's dialogs by all three rows of their frame, since
+one row matched StuffIt Deluxe's archive window. A frame with none of
+these is `nothing` — a double-click that missed, or another application:
+look at it. **`--app-folder` moves the archive's icon**: read its position off
 `claim-2-volume.png` and pass `--archive-at`. The expected names are
 `--want`, not derived, so a run needs no `build/rel` CLI and can share the
 machine with `./ci.sh`. Results are DECISIONS.md 2026-10-10, *the
 double-click that goes by the application's creator*, and 2026-10-11,
-*where the stubs can live*. **What it cannot see:** which of two
-applications under one creator wins (no StuffIt is on these volumes), and
-System 7, whose list is `Desktop DB`.
+*where the stubs can live*, and *the stub that hands it on*; and
+2026-10-12, *the stub beside StuffIt*. **What it cannot see:** System 7's
+`Desktop DB`, which it neither reads nor writes — there, which
+application registered is read off the icons; and whether StuffIt OPENED
+an archive beyond the frame that shows its window.
+
+### Several archives opened at once — `relaunch.py`
+
+    relaunch.py --app build/mac-interactive/MacExtract.bin --expect both --folder-at 115,107
+    relaunch.py ... --system Sys30.img --emu mv-512Ke --folder-at 174,95
+    relaunch.py ... --system Sys7.img --folder-at In          # type-selected
+    relaunch.py ... --multifinder
+    relaunch.py ... --system Sys30.img --emu mv-512Ke --in-disk 1440 --disk-at 472,107 \
+                    --first derived-Cool_Tools__.sit --second derived-a2basic.dmg.sit
+
+Opens a `.cpt` and a `.sit` TOGETHER from the Finder (Select All, Open) and
+grades both: the destination dialog for each, and every entry of both on
+the volume. `--expect first` is the control, for a build before the reload.
+`--in-disk` puts the pair on a second disk with room for its output, which
+System 3.0's boot disk does not have for `a2basic`; a `-D UNC_AT_HEAPLOG`
+build's `Heap Log` is printed at the end. Results are DECISIONS.md
+2026-10-12, *the reload that the list needs*. **What it cannot see:** an
+entry refused for memory and one refused for a full disk look the same to
+the volume check — read `r-6-second-done.png`.
 
 ### Making a segmented Compact Pro archive — `cptsegment.py`
 

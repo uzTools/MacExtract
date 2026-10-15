@@ -122,7 +122,7 @@ def session(tag, subject=None, extra=()):
     if not os.path.exists(INSTALLED):
         raise SystemExit("sitcrypt: no %s — tools/vmac/spacesaver.py "
                          "--install351 makes it" % INSTALLED)
-    work = tempfile.mkdtemp(prefix="sitcrypt-")
+    work = R.work_tmp("sitcrypt-")
     boot = os.path.join(work, "boot-sit.hfv")
     shutil.copyfile(INSTALLED, boot)
     env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-"))
@@ -633,6 +633,8 @@ def main():
                          "password lengths do not overwrite each other")
     ap.add_argument("--keep", action="store_true")
     args = ap.parse_args()
+    if args.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     os.makedirs(SPECIMENS, exist_ok=True)
 
     tag = args.tag or ("map" if args.map

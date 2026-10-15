@@ -2,7 +2,7 @@ MacExtract v0.40.0 — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in two forms that need no unarchiver:
+unarchiver, so MacExtract ships in three forms that need no unarchiver:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
@@ -14,6 +14,16 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
                   floppies only), or mount it in an emulator (Mini vMac,
                   Basilisk II, SheepShaver), then drag MacExtract onto your
                   startup disk.
+
+  MacExtract-1440K.img  The same disk at 1.44 MB, for a USB floppy drive.
+                  Write the image itself, not a copy of the file, to a
+                  high-density disk (dd on Linux or a Mac, a raw image writer
+                  on Windows), and any Mac with a 1.44 MB SuperDrive mounts
+                  it. A USB drive cannot write an 800K Mac disk, and a Mac
+                  Plus, 512Ke or original SE cannot read a 1.44 MB one.
+                  Copying MacExtract.bin onto a PC-formatted disk does not
+                  work either: it arrives still wrapped, with nothing on the
+                  Mac to unwrap it. Not yet tried on a real SuperDrive.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
@@ -45,16 +55,30 @@ Three more from the same afternoon. MacExtract now quits after an
 archive: it reads its decoders from disk once, at launch, and keeps only
 the ones that archive needs, so a second archive in another format could
 not be opened -- and it no longer offers you one. Open it again for the
-next archive. Extracting an archive into a folder where you already
-extracted it gives you a second folder, "Name~1", with the files inside
-under their own names, instead of "~1" copies scattered through the
-first. And in 256 colours or more the icon now darkens all over when you
-select it, as Apple's own do; it used to darken only its white.
+next archive, or select several archives in the Finder and open them
+together: between them it reads its decoders from disk again, which on a
+Mac with one floppy drive may ask for its own disk back. Extracting an
+archive into a folder where you already extracted it gives you a second
+folder, "Name~1", with the files inside under their own names, instead
+of "~1" copies scattered through the first. And in 256 colours or more
+the icon now darkens all over when you select it, as Apple's own do; it
+used to darken only its white. If an earlier MacExtract was ever on that
+Mac, the Finder keeps showing the old icon until you rebuild the desktop:
+restart holding Command and Option.
+
+An archive split across floppies is one step shorter on a one-drive Mac:
+when the next part is not on the floppy the last one came from,
+MacExtract ejects that floppy before it asks, so putting the next one in
+is all there is to do.
 
 And one from StuffIt Deluxe 2.0: a photograph its JPEG add-on had
 squeezed came back as the wrong picture -- silently -- unless it was 256
 pixels wide and grey. Every width and every colour mode the add-on
 writes now comes back exactly as StuffIt Deluxe 2.0 itself restores it.
+
+BinHex files from before BinHex 4 open too: the .hex and .hcx that
+BinHex 2.0 wrote, which is how Macintosh software was passed around in
+1984 and 1985.
 
 v0.39.0, before it, opened the last zip method of PKZIP's first years:
 Reducing, in all four of its strengths. No Macintosh program is known

@@ -611,6 +611,7 @@ int unc_extract_segments(const UncSegmentDesc *desc, UncVolumeSource *vs,
     c.ps.done = 0;
     c.ps.since_tick = 0;
     c.ps.hold = 0;
+    c.fmt = UNC_FORMAT_UNKNOWN;     /* no scheme here serves two formats */
     if (opt) c.opt = *opt;
     else { c.opt.list_only = 0; c.opt.test_only = 0;
            c.opt.name_hint = 0; c.opt.name_hint_len = 0; }

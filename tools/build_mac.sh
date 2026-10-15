@@ -459,12 +459,46 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # fixes (the eager pair above names the pieces): ExtractOne +38, sink_begin
 # +58. No overlay here, so nothing quits. A5 unmoved at 37,984: `gTopLost`'s
 # byte went into padding.
-# On this branch, 2026-10-11, measured on the merged build: the Has128KROM
-# guard costs +20 B of code and +12 B of A5 on the eager and lazy builds and
-# +32 B of code + A5 on the resident one (tools/run_tiers.py, TIERS_CONTROL),
-# which crosses the code ceiling by 16; each ceiling it crosses is raised to
-# the measured size. (It was +20/-20 on 2026-09-09, before the overlays.)
-UNC_MAC_CODE_DEFAULT=172064
+# LOWERED 2026-10-12 to 172,040, -8, for the menu bar and the titled
+# progress window, the same pieces as the eager pair below (+180 on the
+# first commit, before the shell was trimmed). A5 37,992, +8, under its
+# ceiling: `.data` alignment.
+# RAISED 2026-10-12 to 172,064, +24, for the Finder's list read by
+# position rather than through a pointer into a block that can move: all
+# of it `main`, where DropNext is inlined. No overlay here, so no reload.
+# A5 38,000, +8, `_sdata`'s padding (DECISIONS.md 2026-10-12, *the reload
+# that the list needs*).
+# RAISED 2026-10-12 to 172,392, +328, for Arsenic's progress while it
+# decodes a block and builds either inverse (DECISIONS.md 2026-10-12, *the
+# block nobody could cancel*). A5 37,992, -8, alignment, under its ceiling.
+# Shipped, all of it is `ovl_stuffit`, 28,614 -> 28,926 B (+312 at the
+# overlay's flags), the eager pair unmoved.
+# RAISED 2026-10-13 to 172,620, +228, for MIME's progress (the input its
+# writing passes consumed, through a relay) and its walk passing a Cancel
+# up instead of ending the message (DECISIONS.md 2026-10-13, *the mail
+# that counted itself three times*). A5 37,988, -4, alignment. Shipped,
+# all of it is `ovl_text`, 11,510 -> 11,750 B, the eager pair unmoved.
+# RAISED 2026-10-13 to 172,876, +256, for ejecting the disk a split
+# set's last part came from before asking for the next (DECISIONS.md
+# 2026-10-13, *the disk that was still in the drive*). A5 37,924, -64:
+# the two messages are DITLs, and `.data` alignment.
+# RAISED 2026-10-14 to 172,956, +80, for unmounting that disk as well as
+# ejecting it (DECISIONS.md 2026-10-14, *the icon the eject left behind*).
+# A5 37,940, +16, alignment.
+# RAISED 2026-10-14 to 175,312, +2,356, for `.hex` and `.hcx`, BinHex
+# before 4.0 (DECISIONS.md 2026-10-14, *the BinHex before 4.0*): the
+# decoder, resident in this build, and the probe in every build. Shipped,
+# the decoder is `ovl_binhex`, 2,590 -> 4,986 B.
+# RAISED the same day to 175,348, +36: the shim went in the shipped build,
+# and this one, which never had it, pays the dispatch on UncCtx.fmt.
+# RAISED 2026-10-14 to 175,408, +60, for refusing a fork of 2 GB or more
+# as one entry instead of ending the run on "The disk is full"
+# (DECISIONS.md 2026-10-14, *the file the disk was too full for*). A5
+# 38,032, +4, the message and alignment.
+# Branch rom64k only, 2026-10-15, measured against main's build: the
+# Has128KROM guard, +16 B code and +16 B A5 here, +16/-16 eager, +20/+12
+# lazy; each ceiling it crosses is raised to the measured size.
+UNC_MAC_CODE_DEFAULT=175424
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -613,7 +647,16 @@ UNC_MAC_CODE_DEFAULT=172064
 # RAISED the same evening to 38,008, +8, as the code ceiling fell 8: the
 # total is unmoved, and neither decoder has data in A5 — alignment, read
 # from the totals and not compared symbol by symbol.
-UNC_MAC_A5_DEFAULT=38008
+# LOWERED 2026-10-13 to 37,924, -84, with the code ceiling's +256: the
+# "has not been found" sentence moved into DITL 131, and alignment.
+# RAISED 2026-10-14 to 37,940, +16, with the code ceiling's +80: no data
+# was added, alignment.
+# RAISED 2026-10-14 to 38,000, +60, with the code ceiling's +2,356: the
+# format's name and table row, and alignment.
+# RAISED the same day to 38,028, +28, with the code ceiling's +36:
+# alignment, no data added.
+# RAISED 2026-10-14 to 38,032, +4, with the code ceiling's +60.
+UNC_MAC_A5_DEFAULT=38048   # rom64k: +16, the guard (see CODE_DEFAULT)
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -843,8 +886,61 @@ UNC_MAC_A5_DEFAULT=38008
 # main 10), after its own 4-byte flag was cut; 10 of alignment
 # (DECISIONS.md 2026-10-11, *the zip that was a set of one*, *the folder
 # that is already there*, *one archive per launch*).
-UNC_MAC_CODE_EAGER=54880
-UNC_MAC_A5_EAGER=19120
+# -8 code and -8 A5 on 2026-10-12 for a way out of the application on
+# System 7: **16 B BACK on every extraction's budget**, measured against
+# the build before it. By symbol: +64 in prog_tick, where ProgressPump is
+# inlined — FindWindow, MenuSelect, About's NoteAlert, Quit as Cancel;
+# -20 in main, which draws the menu bar and no longer asks whether
+# WaitNextEvent exists or keeps `gHasWNE`; -32 for NGetTrapAddress's glue,
+# which only that question used; -20 of alignment, and the A5 is `.data`
+# alignment too. **The first commit was +184 and +8**; trimmed the same
+# day: Cmd-Q (MenuKey) and dragging the window cost 32 B each, a quit flag
+# 48 (Quit is Cancel, and the application quits after an archive anyway),
+# NULL checks on our own MENUs 32, and reading About's number from 'vers'
+# 1 rather than writing it in the DITL 64 (DECISIONS.md 2026-10-12, *the
+# application nobody could leave*). The 16 B is partly alignment luck.
+# +192 code and +0 A5 on 2026-10-12 for the reload a list of archives
+# needs: **192 B off every extraction's budget on a 1 MB Mac Plus.** By
+# symbol: `ovl_reload` 114, new — dispose the kept copies, ReserveMem the
+# bundle's size so it lands low as at launch, read it again; `main` +62,
+# 24 of it DropNext reading the list by position and 38 the reload and its
+# alert, which is a resource (ALRT 135) so that its text is not A5; 16 of
+# alignment. The first version was +240 and +96: the alert's string was
+# 72 B of A5, and moving the copies high after each release, instead of
+# reserving low, was 76 B more (DECISIONS.md 2026-10-12, *the reload that
+# the list needs*).
+# +256 code and -48 A5 on 2026-10-13 for ejecting the disk a split set's
+# last part came from: **208 B off every extraction's budget.** By
+# symbol: SegAskUser +156 (the eject, inlined, and the alert chosen by
+# it), SegDriveOfFile 82, new, 18 of alignment. Both sentences are DITLs
+# (131 and 136), so the alert's text left A5; the first version kept
+# them as strings and was +352 and +80 (DECISIONS.md 2026-10-13, *the
+# disk that was still in the drive*).
+# +80 code and +16 A5 on 2026-10-14 for unmounting that disk too, so the
+# Finder keeps no dimmed icon per floppy of a set: **96 B off every
+# extraction's budget.** The loop that forgets the parts on it, the
+# UnmountVol, and SegDriveOf no longer inlined; the A5 is alignment
+# (DECISIONS.md 2026-10-14, *the icon the eject left behind*).
+# +400 code and +16 A5 on 2026-10-14 for `.hex` and `.hcx`, BinHex before
+# 4.0: **416 B off every extraction's budget.** By symbol: the BinHex probe
+# +222 (it now tells the two encodings from 4.0 in the same scan),
+# `unc_hecx_is_header` 76, new, shared with the decoder; the shim 56; the
+# table row 20; the release switch's case and alignment 26; and the name,
+# 16, which is the A5. The decoder is in
+# `ovl_binhex`, 2,590 -> 4,986 B (DECISIONS.md 2026-10-14, *the BinHex
+# before 4.0*).
+# -68 code and +4 A5 the same day: the shim went, both encodings now
+# entering through `unc_binhex_extract`, which reads the new UncCtx.fmt.
+# `ovl_binhex` +8 (DECISIONS.md, same entry). The A5 is alignment.
+# +60 code and +36 A5 on 2026-10-14 for refusing a fork of 2 GB or more
+# as one entry: **96 B off every extraction's budget.** sink_begin +56, in
+# the create loop's existing failure path — a check of its own with its own
+# RepEntryFailed call cost +144, the call making RepEntryFailed a 78 B
+# function where it had been inlined; the A5 is the message (DECISIONS.md
+# 2026-10-14, *the file the disk was too full for*).
+# rom64k: +16 code, the guard; its A5 -16 is alignment, under the ceiling.
+UNC_MAC_CODE_EAGER=55788
+UNC_MAC_A5_EAGER=19124
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -874,8 +970,23 @@ UNC_MAC_A5_EAGER=19120
 # main +10, ovl_spent +4 (here it only answers 0), 10 of alignment. The
 # A5 FELL despite `gTopLost`'s byte: `.data` alignment stepped back, and
 # the ceiling comes down with it.
-UNC_MAC_CODE_LAZY=53412
-UNC_MAC_A5_LAZY=19196
+# -8 code and +8 A5 on 2026-10-12 for the menu bar and the titled
+# progress window, the same pieces as the eager pair above; the A5 is
+# `.data` alignment.
+# +80 code and +16 A5 on 2026-10-12 for the same reload, which this
+# lifetime never runs: the branch is in `main` whatever the loader, `main`
+# +62 and a 4-byte `ovl_reload` that answers 1, and the A5 is `_sdata`'s
+# padding. Not shipped, so not trimmed further.
+# +260 code and -52 A5 on 2026-10-13 for the same eject as the eager pair.
+# +76 code and -12 A5 on 2026-10-14 for the same unmount.
+# +400 code and +48 A5 on 2026-10-14 for BinHex before 4.0, the same
+# resident pieces as the eager pair above; the A5 is 32 B more than there,
+# `.data` alignment again.
+# -64 code the same day, the shim gone as in the eager pair above.
+# +56 code and +8 A5 on 2026-10-14 for the same refusal.
+# rom64k: +20 code and +12 A5, the guard.
+UNC_MAC_CODE_LAZY=54212
+UNC_MAC_A5_LAZY=19212
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

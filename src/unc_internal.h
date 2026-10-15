@@ -843,6 +843,10 @@ typedef struct UncCtx {
     uint8_t           pw[UNC_PASSWORD_MAX];
     uint16_t          pwlen;
     uint8_t           pwstate;
+    /* The UncFormat being extracted, for an extractor that serves two:
+     * unc_binhex_extract also reads BinHex before 4.0, so that one
+     * overlay entry and one Macintosh shim carry both. */
+    uint8_t           fmt;
     int               pwattempt;
 } UncCtx;
 
@@ -1169,6 +1173,8 @@ UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
 int unc_appledouble_extract(UncCtx *c);
 UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
+int unc_hecx_extract(UncCtx *c);
+int unc_hecx_is_header(const uint8_t *l, int32_t n);
 UncFormat unc_packit_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_packit_extract(UncCtx *c);
 

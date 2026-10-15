@@ -433,7 +433,7 @@ def build(outdir=None):
     transcription and not the format — but it is the step that has to
     pass before an emulator run is worth booting."""
     _emu()                      # for `header`; imports only, no emulator
-    outdir = outdir or tempfile.mkdtemp(prefix="ddenc-")
+    outdir = outdir or R.work_tmp("ddenc-")      # outlives the process
     os.makedirs(outdir, exist_ok=True)
     bad = 0
     for c in SUBJECTS:
@@ -528,7 +528,7 @@ def session(tag, era="1991"):
     _emu()
     """A booted Mac with the 1991 INIT loaded and a work volume holding
     the application, the four synthetic files and one plain subject."""
-    work = tempfile.mkdtemp(prefix="ddencwork-")
+    work = R.work_tmp("ddencwork-")
     mbs = []
     if era == "1991":
         files = disk_files()
@@ -806,6 +806,8 @@ def main():
                     help="which expander --expand uses (default 1991)")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.emit:
         if not a.outdir:
             raise SystemExit("ddencode: --emit needs -o <path>")

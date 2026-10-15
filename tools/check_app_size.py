@@ -98,9 +98,17 @@ import sys
 # decrypts to. Re-taken rather than absorbed into the tolerance, on the
 # same terms as tools/build_mac.sh's six ratchets, which moved in the
 # same commit. `run_tiers.py --check` moves no tally in either lane.
-EXPECT = 66432
+# RE-TAKEN 2026-10-14, 66,432 -> 67,584, for `.hex` and `.hcx`, BinHex
+# before 4.0: resident `CODE` +400 and A5 +16 in the shipped build, the
+# probe, its header test, the shim and the table row (tools/build_mac.sh's
+# eager pair has them by symbol), which moved this file 67,072 -> 67,584;
+# the other 640 of the 1,152 is what the 2026-10-12 to -14 shell changes
+# left inside the tolerance. `run_tiers.py --check` moves no tally in
+# either lane. -> 67,456 the same day, -128: the shim went (CODE -68,
+# A5 +4), both encodings entering through one overlay call.
+EXPECT = 67456
 TOLERANCE = 2048
-TAKEN = "2026-10-09"
+TAKEN = "2026-10-14"
 
 # And the BUNDLE, watched from 2026-09-26 for one reason: FORMATS.md quotes it
 # in three places and nothing measured it, so it was wrong by 544 B — the
@@ -198,9 +206,14 @@ TAKEN = "2026-10-09"
 # -> 163,588 the same evening: `ovl_zipold` -8, both decoders faster.
 # -> 164,264 the same day: `ovl_stuffit` +676 for `JPEG Lossy` at every
 # width and mode (DECISIONS.md 2026-10-11, *the constant was a square*).
-EXPECT_BUNDLE = 164264
+# -> 167,212 2026-10-14: `ovl_binhex` 2,590 -> 4,986 for BinHex before
+# 4.0 (DECISIONS.md 2026-10-14, *the BinHex before 4.0*); the 552 B before
+# it is `ovl_stuffit` +312 and `ovl_text` +240 (2026-10-12/13), which sat
+# inside the tolerance. -> 167,220 the same day, `ovl_binhex` +8 for the
+# dispatch that replaced the shim.
+EXPECT_BUNDLE = 167220
 TOLERANCE_BUNDLE = 2048
-TAKEN_BUNDLE = "2026-10-09"
+TAKEN_BUNDLE = "2026-10-14"
 
 
 def main():

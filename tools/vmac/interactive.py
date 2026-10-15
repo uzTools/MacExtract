@@ -19,7 +19,7 @@ reported an extraction "settled after ~134s" having spent all of it in a
 photograph, an extracted application drawing its own splash screen.) The checks
 that still need a real machine are in MANUAL_TESTS.md.
 
-    tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o /tmp/shots
+    tools/vmac/interactive.py fixtures/derived-EmpireBuilderDemo.sit -o vmac-shots
 
 **Run one phase at a time.** The waits between clicks are seconds, and a Mac
 sharing its core with a second emulator drops below 1x and desynchronises the
@@ -67,6 +67,7 @@ sys.path.insert(0, HERE)
 import run as R                                              # noqa: E402
 from mkboot import LISTING_DATE                              # noqa: E402
 import checkdisk as CD                                       # noqa: E402
+import guard                                                 # noqa: E402
 from mkboot import FINDER_OWN                                # noqa: E402
 
 # `hdir`'s name column on a BYTES listing — a text listing cannot carry the
@@ -105,19 +106,32 @@ def build_interactive_app(defines=()):
 class Mac:
     """A booted Mini vMac with keyboard and mouse."""
 
+    # Hard seconds for one boot, emulator and X server alike (tools/guard.py).
+    # main() sets it from --boot-timeout and --complete-timeout. The default
+    # is for every other harness that boots a Mac through this class, whose
+    # longest sessions are a few settles of up to 900 s each: an hour.
+    limit = 3600
+
     def __init__(self, bootimg, emudir, workdir, extra=()):
         emu = os.path.join(R.VMAC_HOME, emudir, "minivmac")
         rom = os.path.join(R.VMAC_HOME, "vMac.ROM")
         if not os.path.exists(emu):
             raise SystemExit(f"interactive: no emulator at {emu} — run setup.sh")
         boot = os.path.join(workdir, "boot.hfv")
-        shutil.copyfile(bootimg, boot)
-        self.dpy = R.Display()
-        self.proc = subprocess.Popen([emu, "-r", rom, boot, *extra],
-                                     env=dict(os.environ, DISPLAY=self.dpy.name),
-                                     stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL,
-                                     start_new_session=True)
+        # Mini vMac cannot open qcow2, so the private copy is a sparse one,
+        # in the run's work directory, which main() deletes.
+        R.sh("cp", "--sparse=always", bootimg, boot)
+        self.proc = None
+        self.dpy = R.Display(limit=self.limit + 30)
+        try:
+            self.proc = guard.spawn([emu, "-r", rom, boot, *extra],
+                                    limit=self.limit,
+                                    env=dict(os.environ, DISPLAY=self.dpy.name),
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL)
+        except BaseException:
+            self.dpy.close()
+            raise
         self.env = dict(os.environ, DISPLAY=self.dpy.name)
         self._origin = None
 
@@ -228,10 +242,15 @@ class Mac:
         raise SystemExit("interactive: could not screenshot the emulator")
 
     def close(self):
-        try:
-            os.killpg(os.getpgid(self.proc.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError):
-            pass
+        # SIGKILL first, as before guard.py: what Mini vMac has not flushed
+        # by now is lost, and phases wait FLUSH_WAIT for that reason. Then
+        # guard.reap() collects the group, timeout(1) included.
+        if self.proc is not None and self.proc.poll() is None:
+            try:
+                os.killpg(self.proc.pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+        guard.reap(self.proc)
         self.dpy.close()
 
     def settle(self, path, interval=10.0, timeout=900.0, stable=2, quiet=None):
@@ -489,6 +508,11 @@ def accept_destination(mac, pause=3.0):
 # `mac/macextract_mac.c`, this moves with it.
 SFPUT_DRIVE = (337 + 30, 181 + 30)
 
+
+# System 7's SFPutFile, as this application places it: the Desktop button
+# and the list's second row. Measured off --diskeject's eject-2 frame.
+SFPUT7_DESKTOP = (410, 189)
+SFPUT7_SECOND_ROW = (230, 173)
 
 def volume_names(img, dirs=False):
     """Every file on an HFS image, as checkdisk.py's component tuples.
@@ -1001,7 +1025,7 @@ def phase_report_utf8(args, appbin, workdir, shot):
     written = os.path.join(workdir, "boot.hfv")     # Mac()'s private copy
     if getattr(args, "utf8_to_boot", False):
         keep = os.path.join(args.outdir, "utf8-boot.hfv")
-        shutil.copyfile(written, keep)
+        R.sh("cp", "--sparse=always", written, keep)
         print("interactive: the boot volume this run wrote is kept at "
               + keep)
         report_reached_image(keep, second=getattr(args, "utf8_second", False))
@@ -1399,6 +1423,169 @@ def phase_diskswap(args, appbin, workdir, shot):
         print(f"interactive: settled ~{elapsed:.0f}s after the disk went in")
     ok = ok and bool(still_asking)
     print("interactive: disk insertion " + ("HANDLED" if ok else "NOT HANDLED"))
+    return ok
+
+
+def image_open(mac, image):
+    """Whether the emulator still holds `image` open. Mini vMac fcloses a
+    disk's file when the Mac ejects it (vSonyEject0, OSGLUXWN.c), so this
+    is the eject seen from outside the machine rather than inferred from
+    a screenshot."""
+    want = os.path.realpath(image)
+    fd = "/proc/%d/fd" % mac.proc.pid
+    for n in os.listdir(fd):
+        try:
+            if os.path.realpath(os.readlink(os.path.join(fd, n))) == want:
+                return True
+        except OSError:
+            pass
+    return False
+
+
+# The THIRD disk icon down the right edge of System 7's desktop, below the
+# boot volume and Floppy B: where a dimmed Floppy A sits if it was ejected
+# but left mounted. Measured off --diskeject's eject-5 frames, 2026-10-14:
+# 0 pixels off the desktop's period-2 pattern with the unmount, 636 without.
+DESK7_THIRD_DISK = (450, 126, 505, 172)
+
+
+def off_pattern(png, rect):
+    """Pixels in `rect` that break the desktop's period-2 pattern: 0 means
+    nothing is drawn there."""
+    px = subprocess.run(["convert", png, "-scale", "512x342!", "-depth", "8",
+                         "gray:-"], capture_output=True, check=True).stdout
+    x0, y0, x1, y1 = rect
+    return sum(1 for y in range(y0, y1) for x in range(x0, x1)
+               if px[y * 512 + x] != px[y * 512 + x + 2]
+               or px[y * 512 + x] != px[(y + 2) * 512 + x])
+
+def phase_diskeject(args, appbin, workdir, shot):
+    """Is the disk the last part came from ejected before the alert asks?
+
+    --diskswap keeps part 1 on the boot volume, which holds the
+    application and so must never be ejected. Here part 1 is on a floppy
+    of its own, as on a one-drive Mac: after it is read and part 2 is not
+    beside it, the application should eject that floppy and say so, and
+    the next disk going in should be the whole answer, with nothing
+    clicked. The output goes to the boot volume.
+
+    Three things are checked from outside: the boot image stays open
+    (the application's disk is not ejected), floppy A's image is CLOSED
+    while the alert is up (Mini vMac closes it on eject — a build without
+    the eject leaves it open, which is the control), and the set's
+    contents are on the boot volume afterwards.
+    """
+    original, name, parts = cut_into_parts(args.fixture, workdir)
+
+    bootimg = os.path.join(workdir, "boot-eject.hfv")
+    # System 3.0 reads no shell name (sys30.py), so there the application
+    # is double-clicked out of the Finder, as --e2e does it.
+    # The filler file puts the volume window in --e2e's layout (System
+    # Folder, a file, the application), which FINDER_APP_ICON is measured
+    # against: with two items the application sits one place to the left.
+    # And on System 7 too, for the reverse reason: its Finder keeps running
+    # beside the application, and what it shows at the end is the last
+    # check — no dimmed "Floppy A" (eject-5-finder.png). System 6's Finder
+    # shows no dimmed icon for an offline volume either way (measured
+    # 2026-10-14, both builds), so that frame says nothing there.
+    finder = args.system in ("Sys30.img", "Sys7.img")
+    filler = os.path.join(workdir, "filler")
+    with open(filler, "wb") as f:
+        f.write(b"not part of any set\r")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"),
+         os.path.join(R.VMAC_HOME, args.system), appbin, bootimg,
+         *(["--finder", "--data", f"{filler}:archive.sit"] if finder else []))
+    flopa = os.path.join(workdir, "floppy-a.dsk")
+    # "A ...": System 3.0 lists the invisible DeskTop file, and this must
+    # sort above it to be the first row.
+    R.make_floppy(flopa, "Floppy A", extras=[(parts[0], "A part one")])
+    flopb = os.path.join(workdir, "floppy-b.dsk")
+    R.make_floppy(flopb, "Floppy B",
+                  extras=[(parts[1], "Part two"), (parts[2], "Part three")])
+
+    scratch = os.path.join(args.outdir, ".settle.png")
+    elapsed, a_open, boot_open, ghost = None, None, None, None
+    mac = Mac(bootimg, args.emu, workdir, extra=(flopa,))
+    boot = os.path.join(workdir, "boot.hfv")       # Mac()'s private copy
+    try:
+        if mac.settle(scratch, interval=5.0, timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never settled")
+        if finder:
+            mac.click(*FINDER_VOLUME_ICON, double=True)
+            time.sleep(4.0)
+            shot(mac, "eject-0-volume.png")
+            mac.click(*FINDER_APP_ICON, double=True)
+            time.sleep(args.launch_wait)
+        # Launched by the Finder, Standard File opens on the application's
+        # volume rather than on the floppy inserted last (eject-1).
+        if finder and args.system == "Sys7.img":
+            mac.click(*SF7_DESKTOP)             # no Drive button there
+            time.sleep(2.0)
+            mac.click(*SF_FIRST_ROW, double=True)   # "Floppy A"
+            time.sleep(2.0)
+        elif finder:
+            mac.click(*SF_DRIVE)
+            time.sleep(2.0)
+        shot(mac, "eject-1-launched.png")       # Floppy A's listing
+
+        mac.click(*SF_FIRST_ROW)                # "A part one"
+        mac.key("Return")
+        time.sleep(3.0)
+        # Destination: the boot disk. System 7's SFPutFile has no Drive
+        # button — the click lands on nothing, the output goes onto Floppy
+        # A, and the eject then makes the Mac ask for it back (measured
+        # 2026-10-13). There it is Desktop, then the volume's row, which
+        # lists after "Floppy A". Both points off this phase's own
+        # eject-2 frame.
+        if args.system == "Sys7.img":
+            mac.click(*SFPUT7_DESKTOP)
+            time.sleep(2.0)
+            mac.click(*SFPUT7_SECOND_ROW, double=True)
+        else:
+            mac.click(*SFPUT_DRIVE)
+        time.sleep(2.0)
+        shot(mac, "eject-2-destination.png")
+        accept_destination(mac, pause=0.5)
+        wait_for_alert(mac, scratch)
+        time.sleep(3.0)
+        shot(mac, "eject-3-alert.png")          # "...so it was ejected."
+        a_open = image_open(mac, flopa)
+        boot_open = image_open(mac, boot)
+
+        drop_disk(mac, flopb)                   # nothing clicked after this
+        elapsed = mac.settle(scratch, interval=5.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "eject-4-complete.png")
+        if finder:
+            mac.key("Return")                   # OK: the application quits
+            time.sleep(15.0)
+            shot(mac, "eject-5-finder.png")     # Floppy B, and no Floppy A
+            if args.system == "Sys7.img":
+                mac.shot(scratch)
+                ghost = off_pattern(scratch, DESK7_THIRD_DISK)
+    finally:
+        mac.close()
+        if os.path.exists(scratch):
+            os.remove(scratch)
+
+    want = expected_names(args.fixture, workdir)
+    on_boot = volume_names(boot)
+    missing = sorted(n for n in want if n not in on_boot) if want else ["?"]
+    print("interactive: floppy A while the alert is up: "
+          + ("STILL IN THE DRIVE" if a_open else "ejected"))
+    print("interactive: the application's disk: "
+          + ("still in" if boot_open else "EJECTED"))
+    if missing:
+        print("interactive: MISSING after the swap: "
+              + ", ".join(CD.mac_path(n) for n in missing))
+    if elapsed is not None:
+        print(f"interactive: settled ~{elapsed:.0f}s after Floppy B went in")
+    if ghost is not None:
+        print("interactive: the Finder afterwards: "
+              + ("a DIMMED FLOPPY A is left on the desktop (%d px)" % ghost
+                 if ghost else "no Floppy A"))
+    ok = (a_open is False) and bool(boot_open) and not missing and not ghost
+    print("interactive: eject before asking " + ("WORKS" if ok else "FAILS"))
     return ok
 
 
@@ -1899,7 +2086,7 @@ def phase_password(args, appbin, workdir, shot):
     import synth_wrapped as W                               # noqa: E402
 
     password = "hushnow"
-    sit, rsrc = SC.build_sit_des(password.encode("mac_roman"))
+    sit, rsrc, _ = SC.build_sit_des(password.encode("mac_roman"))
     binpath = os.path.join(workdir, "secret.bin")
     open(binpath, "wb").write(W.macbinary("Secret.sit", sit, rsrc,
                                           b"SIT!", b"SIT!"))
@@ -2197,6 +2384,167 @@ def phase_drop(args, appbin, workdir, shot):
         mac.close()
     return True
 
+# The menu bar on System 7.0.1, measured off the Finder's in switch frames:
+# the Apple menu and its first item, and the Application menu (the icon at
+# the right-hand end) with ITS first item, "Hide <frontmost application>" —
+# the one row whose position does not depend on what else is running.
+APPLE_MENU = (23, 10)
+APPLE_MENU_ABOUT = (70, 28)
+FILE_MENU = (42, 10)
+FILE_MENU_QUIT = (60, 28)
+APP_MENU = (486, 10)
+APP_MENU_HIDE = (440, 28)
+APP_MENU_LAST = (440, 110)      # the last application listed: MacExtract
+
+
+def hold_and_shoot(mac, x, y, path, hold=4.0):
+    """Press at (x, y), keep the button down, photograph, and return with it
+    still down. The application sees a press only at its next event pump,
+    and MenuSelect tracks only while the button is held, so a click would
+    be lost; Mac.shot cannot be used here because it parks the pointer."""
+    ox, oy = mac.origin()
+    mac._xdo("mousemove", str(ox + x), str(oy + y))
+    time.sleep(0.5)
+    mac._xdo("mousedown", "1")
+    time.sleep(hold)
+    for _ in range(40):
+        if mac.dpy.screenshot(path):
+            break
+        time.sleep(0.5)
+    subprocess.run(["convert", path, "-scale", "200%", path],
+                   check=True, capture_output=True)
+
+
+def pick(mac, menu, item, path):
+    """Pull `menu` down, photograph it open, and release on `item`.
+
+    Straight DOWN first, then across: a diagonal from the Application menu
+    passes over the Help menu's title, opens it, and releases on "About
+    Balloon Help…" — a system box the extraction then waits behind."""
+    hold_and_shoot(mac, *menu, path)
+    ox, oy = mac.origin()
+    for x, y in ([(menu[0], menu[1] + (item[1] - menu[1]) * i // 4)
+                  for i in range(1, 5)] +
+                 [(menu[0] + (item[0] - menu[0]) * i // 6, item[1])
+                  for i in range(1, 7)]):
+        mac._xdo("mousemove", str(ox + x), str(oy + y))
+        time.sleep(0.15)
+    time.sleep(0.8)
+    mac._xdo("mouseup", "1")
+
+
+def phase_switch(args, appbin, workdir, shot):
+    """Can the user switch out of an extraction, and what happens when it
+    finishes behind another application?
+
+    Launched from the Finder, because that is the only arrangement with
+    something to switch to; two launches in one boot, one per route out.
+
+        switch-1-progress.png    the progress window and the menu bar
+        switch-3-applemenu.png   the Apple menu held open
+        switch-4-about.png       About MacExtract, mid-extraction
+        switch-5-clicked.png     the Finder's disk icon clicked: route 1
+        switch-5b-appmenu.png    the Application menu, from wherever that left us
+        switch-6-back.png        MacExtract chosen from it: in front again
+        switch-7-done.png        the first extraction over
+        switch-8-appmenu.png     second launch: the Application menu open
+        switch-9-hidden.png      "Hide MacExtract" chosen: route 2
+        switch-10-finder.png     the Finder answering while it extracts
+        switch-11-behind.png     the second extraction over, behind
+        switch-12-back.png       MacExtract double-clicked: what waits
+        switch-13-dismissed.png  that dismissed
+        switch-14-filemenu.png   third launch: the File menu held open
+        switch-15-quit.png       Quit chosen: "Extraction cancelled."
+        switch-16-gone.png       that dismissed: the application has quit
+
+    Ends on the first launch's names on the volume, so a switch that cost
+    the extraction fails the run. **What it cannot see**: how much of the
+    processor the Finder got while the archive ran — switch-10 shows it
+    answered a click, not how fast; and the second launch's output, whose
+    names collide with the first's and are numbered."""
+    if args.system not in FINDER_ICONS:
+        raise SystemExit(f"interactive: no Finder icon geometry for "
+                         f"{args.system}")
+    icons = FINDER_ICONS[args.system]
+    bootimg = os.path.join(workdir, "boot-switch.hfv")
+    R.sh(sys.executable, os.path.join(HERE, "mkboot.py"), stock_image(args),
+         appbin, bootimg, "--finder", "--data", f"{args.fixture}:archive.sit")
+    scratch = os.path.join(args.outdir, ".settle.png")
+    out = lambda n: os.path.join(args.outdir, n)
+
+    def launch():
+        mac.click(*icons["app"], double=True)
+        time.sleep(args.launch_wait)
+        mac.click(*SF_FIRST_ROW)
+        mac.key("Return")
+        accept_destination(mac)
+        time.sleep(args.extract_wait)
+
+    mac = Mac(bootimg, args.emu, workdir)
+    try:
+        if mac.settle(scratch, interval=5.0,
+                      timeout=args.boot_timeout) is None:
+            raise SystemExit("interactive: the machine never reached the Finder")
+        mac.click(*icons["volume"], double=True)
+        time.sleep(4.0)
+
+        launch()
+        shot(mac, "switch-1-progress.png")
+        pick(mac, APPLE_MENU, APPLE_MENU_ABOUT, out("switch-3-applemenu.png"))
+        time.sleep(4.0)
+        shot(mac, "switch-4-about.png")
+        mac.key("Return")
+        time.sleep(2.0)
+        mac.click(*icons["volume"])                  # a Finder icon
+        time.sleep(6.0)
+        shot(mac, "switch-5-clicked.png")
+        pick(mac, APP_MENU, APP_MENU_LAST, out("switch-5b-appmenu.png"))
+        time.sleep(8.0)
+        shot(mac, "switch-6-back.png")
+        mac.settle(scratch, interval=10.0, quiet=EXTRACT_QUIET,
+                   timeout=args.complete_timeout)
+        shot(mac, "switch-7-done.png")
+        mac.key("Return")
+        time.sleep(args.launch_wait)                 # it quits
+
+        launch()
+        pick(mac, APP_MENU, APP_MENU_HIDE, out("switch-8-appmenu.png"))
+        time.sleep(6.0)
+        shot(mac, "switch-9-hidden.png")
+        mac.click(*icons["volume"])
+        time.sleep(4.0)
+        shot(mac, "switch-10-finder.png")
+        elapsed = mac.settle(scratch, interval=10.0, quiet=EXTRACT_QUIET,
+                             timeout=args.complete_timeout)
+        shot(mac, "switch-11-behind.png")
+        mac.click(*icons["app"], double=True)
+        time.sleep(args.launch_wait)
+        shot(mac, "switch-12-back.png")
+        mac.key("Return")
+        time.sleep(args.launch_wait)
+        shot(mac, "switch-13-dismissed.png")
+
+        launch()
+        pick(mac, FILE_MENU, FILE_MENU_QUIT, out("switch-14-filemenu.png"))
+        wait_for_alert(mac, scratch)
+        shot(mac, "switch-15-quit.png")
+        mac.key("Return")
+        time.sleep(args.launch_wait)
+        shot(mac, "switch-16-gone.png")
+    finally:
+        mac.close()
+
+    want = expected_names(args.fixture, workdir)
+    got = volume_names(os.path.join(workdir, "boot.hfv"))
+    absent = sorted(n for n in want if n not in got)
+    print(f"interactive: switch settled after "
+          f"~{elapsed if elapsed is None else round(elapsed)}s")
+    if absent:
+        print("interactive: NOT on the volume: "
+              + ", ".join(CD.mac_path(n) for n in absent))
+    print("interactive: output " + ("INCOMPLETE" if absent else "COMPLETE"))
+    return bool(want) and not absent
+
 
 def stock_image(args):
     return os.path.join(R.VMAC_HOME, args.system)
@@ -2247,6 +2595,13 @@ def main():
                          "application ask for one, and INSERT IT while the "
                          "alert is up. A decoy disk goes in first and must "
                          "not dismiss anything. Ends on the joined bytes.")
+    ap.add_argument("--diskeject", action="store_true",
+                    help="the eject phase: part 1 on a floppy of its own, "
+                         "the rest on a second one that is not in. The "
+                         "application should eject the first before it "
+                         "asks, and the second going in should finish the "
+                         "set with nothing clicked. Asserts the eject from "
+                         "the emulator's open files.")
     ap.add_argument("--wrapped", action="store_true",
                     help="drive a set whose parts are each inside an "
                          "envelope (Archive.sit.1.hqx)")
@@ -2317,6 +2672,12 @@ def main():
                          "does, with a control drag first so a drag that was "
                          "never delivered cannot pass for a refusal. "
                          "Photographs Get Info in the same boot.")
+    ap.add_argument("--switch", action="store_true",
+                    help="the switching phase: launch from the Finder, drag "
+                         "the progress window, hide the application from "
+                         "System 7's Application menu mid-extraction, let "
+                         "it finish behind the Finder, then bring it back. "
+                         "Ends on the names on the volume.")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     help="probe build switch (repeatable), e.g. -D UNC_AT_RESERVE")
     ap.add_argument("--e2e", action="store_true",
@@ -2336,7 +2697,10 @@ def main():
     calibrate(args.system)
     os.makedirs(args.outdir, exist_ok=True)
     appbin = build_interactive_app(tuple(args.defines))
-    workdir = tempfile.mkdtemp(prefix="vmac-interactive-")
+    Mac.limit = int(args.boot_timeout + args.complete_timeout) + 900
+    # In <repo>/.tmp/ (tools/guard.py): every phase below removes it, and
+    # guard deletes its images at exit if a phase dies first.
+    workdir = guard.run_dir("vmac-interactive")
     bootimg = os.path.join(workdir, "boot-interactive.hfv")
     stock = os.path.join(R.VMAC_HOME, args.system)
     if not os.path.exists(stock):
@@ -2347,7 +2711,16 @@ def main():
         # for dialog text, not decoded, and a 512x342 1bpp screen is hard work
         # at native size.
         mac.shot(os.path.join(args.outdir, name),
-                 scale="200%" if (args.e2e or args.drop) else None)
+                 scale="200%" if (args.e2e or args.drop or args.switch)
+                 else None)
+
+    if args.switch:
+        try:
+            ok = phase_switch(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
 
     if args.drop:
         try:
@@ -2368,6 +2741,14 @@ def main():
     if args.report_utf8:
         try:
             ok = phase_report_utf8(args, appbin, workdir, shot)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+        print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")
+        return 0 if ok else 1
+
+    if args.diskeject:
+        try:
+            ok = phase_diskeject(args, appbin, workdir, shot)
         finally:
             shutil.rmtree(workdir, ignore_errors=True)
         print(f"interactive: screenshots in {args.outdir} — LOOK AT THEM.")

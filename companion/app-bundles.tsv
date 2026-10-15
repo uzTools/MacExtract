@@ -1,0 +1,153 @@
+# app-bundles.tsv — classic Macintosh archivers and encoders, and the
+# creator and BNDL each one actually carries, read from the application.
+#
+# One row per BNDL of every application in every copy examined. A stub
+# claims a CREATOR, so this is the evidence for which creators exist and
+# what each application says its documents are (DECISIONS.md 2026-10-12,
+# *the second bundle that only paints*).
+#
+#   query         what was searched for (harvest/queries.txt), or "local"
+#   application   the application's name as it was found
+#   creator       the application file's creator — what the Finder hands
+#                 a double-clicked document to
+#   bundle_owner  the BNDL's owner; an application may carry bundles for
+#                 creators that are not its own (StuffIt Expander's for
+#                 SIT!), which paint icons and open nothing
+#   declared_types the FREF types of that BNDL, in order
+#   source        discmaster:<path> — https://discmaster.textfiles.com/file/
+#                 + the path is the original, served as MacBinary — or
+#                 local:<image>, a disk image in ~/.cache/macextract built
+#                 by tools/vmac from the vendors' own distributions
+#   sha256        of the MacBinary as downloaded (discmaster rows)
+#
+# "(no application found)": the copy could not be opened — usually a row
+# Discmaster itself could not extract, or a PowerPC-only build.
+#
+# Harvested 2026-10-12 with harvest/dmget.py (one request every 3 s) and
+# harvest/analyze.py through MacExtract's own CLI. TCDB was used only as a
+# list of names to look for: nothing here comes from it (its licence
+# forbids a table built from its rows; MacStamp's DECISIONS.md, *TCDB's
+# data is licensed*).
+# query	application	creator	bundle_owner	declared_types	source	sha256
+ArcMac	ArcMac	arc*	arc*	APPL mArc m@rc TEXT	discmaster:/browse/14747/Info-Mac_II_May_1993.to_/Info-Mac II (May 1993).toast/Utility/ArcMac/ArcMac	2c6d49a465f6230590c956142cf13f61ce52336e43640f98f7310aa7a096a0f0
+ArcMac	ArcMac	arc*	arc*	APPL mArc m@rc	discmaster:/browse/11599/www.compmuseum.org.tar/www.compmuseum.org/upload/mac/diskimages/Utils 15.image.hqx/Utils 15.image/ArcMac/ArcMac	6bbf63fc05d6445ccae8a6eaa8499f8b224873742199e671ef241c02829eeb65
+BinHex_4_0	BinHex 4.0	BNHQ	BNHQ	APPL TEXT	discmaster:/browse/70/Visions_CD-ROM_Walnut_Creek_July_1994.iso/mac/MacUtils/Misc/BinHex 4.0	f1552cb0372df609c9d4072fc0d1f92dc7d7356e44fe7b8591aa04f834e84c20
+BinHex_4_0	BinHex 4.0	BNHQ	BNHQ	APPL TEXT	discmaster:/browse/69/Visions 9 - California.iso/mac/MacUtils/Conversion/BinHex 4.0	f76981d20d86a9889bef0e8c7a2844d68691efe2fc403faa2a15d3d65901678c
+BinHex_4_0	BinHex 4.0	BNHQ	BNHQ	APPL TEXT	discmaster:/browse/21229/Font Garden (Walnut Creek) (October 1995) (1995).iso/mac/MacUtils/Conversion/BinHex 4.0	f76981d20d86a9889bef0e8c7a2844d68691efe2fc403faa2a15d3d65901678c
+BinHex_5_0	BinHex 5.0	BnHq	BnHq	APPL TEXT	discmaster:/browse/16624/Shareware Universe The Gold Collection.iso/business/executor/executor.zip/EXSYSTEM.HFV/Utilities/BinHex 5.0	8aa5b1fcf22c926838d4a3706dcdc4b60a28ef9426e60e2b2cbe9366a9e8b124
+BinHex_5_0	BinHex 5.0	BnHq	BnHq	APPL TEXT	discmaster:/browse/17275/TREASURE.ISO/dos/util/emulator/exctr12a.zip/executor/exsystem.hfv/Utilities/BinHex 5.0	8aa5b1fcf22c926838d4a3706dcdc4b60a28ef9426e60e2b2cbe9366a9e8b124
+BinHex_5_0	BinHex 5.0	BnHq	BnHq	APPL TEXT	discmaster:/browse/32594/INFPROG.iso/emular/exec199k.zip/EXECUTOR/EXSYSTEM.HFV/Utilities/BinHex 5.0	220ccd5596e64930d25a39cded66f3682aa49473c14738977849cc8e378f56c0
+CPT2SIT	CPT2SIT™	2SIT	2SIT	APPL **** fold disk	discmaster:/browse/30839/The Macintosh Demo Applications CD - Business Productivity (Apple Computer)(1993).iso/Utilities/StuffIt Lite™/CPT2SIT™ Folder/CPT2SIT™	b868241722f61d1bf023a1e5a2809ab67c15ea77b5113fb92e619d6cf1f71c75
+CPT2SIT	CPT2SIT™	2SIT	2SIT	APPL **** fold disk	discmaster:/browse/4612/alles voor internet.iso/MacInternet™/Compression/CPT2SIT™/CPT2SIT™	3ab5cb935e74b83acf4121ab10b20e8dce724827ec33081f0bc00bb6452b254c
+Compact_Pro	Compact Pro	CPCT	CPCT	APPL PACT SIT!	discmaster:/browse/839/Deutsche Edition 2.iso/mac/KOMPRESSION/Compact Pro 1.50/Compact Pro	6dd8c780b48a63ca240d7ba8ef4039325d05625a6e455edaaac2fc79087c847d
+Compact_Pro	Compact Pro			(no application found)	discmaster:/view/6284/PD-ROM F95.toast/ BMUG Essentials/Other Tools ƒ/Compact Pro 1.51 ƒ/Compact Pro/Compact Pro	ca8946a0373142067e3922cafcda5a370655dd0f90f2207236f2b1d77ad83eb2
+CptExpand	CptExpand	CPCT	CPCT	APPL PACT	discmaster:/browse/26990/macformat-018.iso/Utility Spectacular/Compression/CptExpand ƒ/CptExpand	b74945c60fef4f62675ae733a435daceec65b6e9f25728de371cf466fca841e0
+CptExpand	CptExpand	CPCT	CPCT	APPL PACT	discmaster:/browse/4612/alles voor internet.iso/MacInternet™/Gophers/TurboGopher2.0b8/Helper applications/CptExpand ƒ/CptExpand	ba8c941c180ac458974ca63dbfdc77025bacf7c7540474a8a7b9c1bc010a9cf8
+DD_Expand	DD Expand	DDAP	DDAP	APPL DD01 DDDA DD02 DDTM DDSP DDAR DDTD DDCR DDF0 DDF1 DDF2 DDF3 DDF4 DDF5 DDF6 DDF7 DDCP DDCT **** fold disk DDFL ADDA DDA2	discmaster:/browse/17706/MacMania 6.toast/  /Tools&Utilities/Expanders/Doublertools.sea.1•/DD Expand	c3b4ed521c11ac55e9f452033bd2f03a96537204a64c4f432b34c2e8848d3f06
+DD_Expand	DD Expand	DDAP	DDAP	APPL DD01 DDDA DD02 DDTM DDSP DDAR DDTD DDCR DDF0 DDF1 DDF2 DDF3 DDF4 DDF5 DDF6 DDF7 DDCP DDCT **** fold disk DDFL ADDA DDA2	discmaster:/browse/2260/Artbeats - Marble & Granite 2.iso/Extras/DD Expand™	c3b4ed521c11ac55e9f452033bd2f03a96537204a64c4f432b34c2e8848d3f06
+DD_Expand	DD Expand	DDAP	DDAP	APPL DD01 DDDA DD02 DDTM DDSP DDAR DDTD DDCR DDF0 DDF1 DDF2 DDF3 DDF4 DDF5 DDF6 DDF7 DDCP DDCT **** fold disk DDFL ADDA DDA2	discmaster:/browse/17706/MacMania 6.toast/  /Tools&Utilities/Disk tools/DoublerTools□/DoublerTools/DD Expand	c3b4ed521c11ac55e9f452033bd2f03a96537204a64c4f432b34c2e8848d3f06
+DeHQX	DeHQX	PnLh	PnLh	APPL TEXT PnLh fold disk	discmaster:/browse/1187/Walnut Creek GIFs Galore CDROM WIN-MAC (Walnut Creek CDROM)(September 1993).iso/mac/viewers/MAC/ DeHQX Folder/DeHQX	8a83f7fdc94f6ca4891348940d447c17e9610678e9924331e8951d7df35e07f2
+DeHQX	DeHQX	PnLh	PnLh	APPL TEXT PnLh fold disk	discmaster:/browse/6288/BMUG Spring 1997 Newsletter (1997).bin/Newletter PD Collection/Utilities/Compression/DeHQX 2.01 ƒ/DeHQX	64915e83adc2ca9fcbf2095cb3c80c3fe348ae0156735861b4bae46fbf671c49
+DeSEA	DeSEA	dSEA	dSEA	APPL pref **** fold	discmaster:/browse/10597/Project_Gutenberg_Walnut_Creek_CD-ROM_March_1997.iso/mac/MacUtils/Compression/DeSEA 1.5/DeSEA	eafa0cf432eecbc3e3a810d67e2e7c363d52c6623b5f951feca65afb4e4e55ac
+DeSEA	DeSEA	dSEA	dSEA	APPL pref **** fold	discmaster:/browse/4612/alles voor internet.iso/MacInternet™/Archive-tools/DeSEA 1.5/DeSEA	48eb0163217d9d2412fa0d25e014e77339013f46891d5cddfdee209b21fd2cc5
+Decode_da_Code	Decode da Code			(no application found)	discmaster:/view/32042/MW_UK_2001_03.iso/Shareware World/Utilities/Conversion/Decode da Code 1.5/Decode da Code/Decode da Code	846c4df8519953b40317dae9483f0aa0e4d83a3c629b09ff9d9d41039e1af700
+Decode_da_Code	Decode da Code	lkDe	lkDe	APPL TEXT pref	discmaster:/browse/32860/Mac Magazin CD 48.iso/Software/Utilities/Sonstige/Decode da Code Folder/Decode da Code	c4c06896472f4ca048ca70e09729e53f80be1dc42173c03fee6d01d2194b527b
+Decoder	Decoder			(no application found)	discmaster:/view/10420/HYPERLIB-1997-Spring-CD1.ISO/HYPERLIB-1997-Spring-CD1.ISO/Util/Decoder.sit/Decoder/Decoder	cc08ae794b49a9d2e72b558cda77b98081702c50c629f1624cd58cdfffceaf29
+Decoder	Decoder			(no application found)	discmaster:/view/10336/MACPOWER-1997-07.ISO/MACPOWER-1997-07.ISO/AMUG/COMMUNICATION/Decoder 1.2.sit/Decoder/Decoder	7229e2ef1eb79f69f3ebe9f794f7084df90a7570227caaecd41bbab35815b629
+DiskDoubler	DiskDoubler™			(no application found)	discmaster:/view/21430/Macintosh Compilation CD Number 1 (December 1995).iso/Utilities/SuperDoubler™ Pro 1.1/SuperDoubler™ Pro 1.1/DiskDoubler™/DiskDoubler™/DiskDoubler™	0904ff1ee73c3d3db0f386d7b064160a83cb77b632253cd17056226de620cfd4
+DiskDoubler	DiskDoubler™			(no application found)	discmaster:/view/21170/Eagles_Nest_Mac_Collection_Disc_1.TOAST/Compression & Images/DiskDoublP11/DiskDoublP11/Norton DiskDoubler Pro™ 1.1/Norton DiskDoubler Pro/DiskDoubler™/DiskDoubler™/DiskDoubler™	0904ff1ee73c3d3db0f386d7b064160a83cb77b632253cd17056226de620cfd4
+DropBin	DropBin	√âdb	Édbn	APPL ****	discmaster:/browse/14148/MacHack 2001.toast/mac/The Hacks/99 Bottles hack/Put in MacHTTP folder/http/sepia-hack.dyndns.org/sepia/DropBin	a70a9a6b2336a7a5b0daefa4aeb84ed3d83e2b12f96953b9b20148c4e969c46d
+DropBin	DropBin	√âdb	Édbn	APPL ****	discmaster:/browse/6518/Apprentice-Release7.iso/Source Code/Pascal/Applications/DropBin 1.5/DropBin	f81a04b9c4dbb814fdae281fe8b5b5d99fbd02ef52d3df721fecb323a6094318
+DropStuff	DropStuff™	DStf	SIT!	SITD SIT! SPSV SIT5 SegM Seg1 Seg2 Seg3 SegN Part	discmaster:/browse/11718/ftp.hypersurf.com.tar/ftp.hypersurf.com/pub/mac/util/aladdin_dropstuff_55_instal.sit/Aladdin DropStuff™ 5.5 Install/Aladdin DropStuff™ 5.5 Install/DropStuff™	102748a9726c136375e24abf2363f832d2eaadf906db37955204d9ca112f2845
+DropStuff	DropStuff™	DStf	SITx	BINA TEXT	discmaster:/browse/11718/ftp.hypersurf.com.tar/ftp.hypersurf.com/pub/mac/util/aladdin_dropstuff_55_instal.sit/Aladdin DropStuff™ 5.5 Install/Aladdin DropStuff™ 5.5 Install/DropStuff™	102748a9726c136375e24abf2363f832d2eaadf906db37955204d9ca112f2845
+DropStuff	DropStuff™	DStf	crsX	PCFA	discmaster:/browse/11718/ftp.hypersurf.com.tar/ftp.hypersurf.com/pub/mac/util/aladdin_dropstuff_55_instal.sit/Aladdin DropStuff™ 5.5 Install/Aladdin DropStuff™ 5.5 Install/DropStuff™	102748a9726c136375e24abf2363f832d2eaadf906db37955204d9ca112f2845
+DropStuff	DropStuff™	DStf	DStf	APPL **** fold disk alis	discmaster:/browse/11718/ftp.hypersurf.com.tar/ftp.hypersurf.com/pub/mac/util/aladdin_dropstuff_55_instal.sit/Aladdin DropStuff™ 5.5 Install/Aladdin DropStuff™ 5.5 Install/DropStuff™	102748a9726c136375e24abf2363f832d2eaadf906db37955204d9ca112f2845
+DropStuff	DropStuff™	DStf	DStf	APPL **** fold disk	discmaster:/browse/13891/L'Effet Pommier - Volume 03.iso/Compacteurs/DropStuff™ Folder/DropStuff™	7496236786cae488cb89309a73e79faf663ba4be93143b79b77b989bbcd06b08
+DropStuff	DropStuff™	DStf	SIT!	SITD SIT!	discmaster:/browse/13891/L'Effet Pommier - Volume 03.iso/Compacteurs/DropStuff™ Folder/DropStuff™	7496236786cae488cb89309a73e79faf663ba4be93143b79b77b989bbcd06b08
+Expand_Now	Expand Now	NCdc	NCdc	APPL fold **** NCdo NCap NCar NCsg	discmaster:/browse/21170/Eagles_Nest_Mac_Collection_Disc_1.TOAST/Compression & Images/NOWComp10/NOWComp10/Now Compress.image/Expand Now	18750d47c26180c1af37faf616d38a80dbe9013c1ffed331e1e640fd70d2c105
+Expand_Now	Expand Now			(no application found)	discmaster:/browse/36069/Software Vault - The Collection for Macintosh.iso/Utilities/Compression/Expand Now	b9f3ecaaca85e2a5e8ff1c4842cf351241707c1f5ca51b420740be39c04c90fd
+Extractor	Extractor	EXTC	EXTC	APPL	discmaster:/browse/36129/Multimedia Shareware CD-ROM - BetaCorp.iso/Toolsƒ/Extractor	f71d32e67e2b72de5d3b4d71d13c07ba6ad20cc80fd30c1bdd613d736793d2ef
+Extractor	Extractor	EXTC	EXTC	APPL	discmaster:/browse/46456/Classic Mac Survival Kit.bin/UTILITIES/Compactor V1.21/Extractor	56b5103829f6fb1b8aa066f8cb3d9b9df5fc0aac1e896eca2ce7ae893fd148ec
+HQXer	HQXer	HQXr	HQXr	APPL TEXT Pref ****	discmaster:/browse/17702/MacMania 2.toast/Demo's/Tools&Utilities/HQXer 1.1 Folder/HQXer	59e12d324eb1849d29aa6052397f8bf48d40e2f0758112102caca530470388e6
+HQXer	HQXer	HQXr	HQXr	APPL TEXT Pref ****	discmaster:/browse/23811/Macworld (1996-04).dmg/Shareware World/Utilities/Utilities/HQXer 1.1 folder/HQXer	b21384b650abb4fb7428413a8b199248bc40c3fb9abedb943dc52227b3679b8f
+HQXer	HQXer	HQXr	HQXr	APPL TEXT Pref ****	discmaster:/browse/1095/CU Amiga Magazine's Super CD-ROM 21 (1998)(EMAP Images)(GB)[!][issue 1998-04].iso/ShapeShifter/GraphicsCommsDisk/Archivers/HQXer 1.1 Folder/HQXer	2bf93dd79b6af80627b1b67649667da359b7e0b20101a1df5db80116a2c8a104
+HQXing	HQXing	HQX	HQX 	APPL TEXT ****	discmaster:/browse/10301/MACLIFE156-2001-08.ISO/MACLIFE156-2001-08.ISO/MACLIFE連載/FreeWare/個性的なメールソフト/Mac OSメール環境/OME20010614.sit/Mac OS磬ル環Ζンストール/Scripts/mboxer and UVJ Mailer/HQXing 1.3.1 PPC/HQXing	231d145a75863de866ad1811e7882cdf076d77d4bd6e41d9e496ab58b13e8b73
+HQXing	HQXing			(no application found)	discmaster:/view/10301/MACLIFE156-2001-08.ISO/MACLIFE156-2001-08.ISO/MACLIFE連載/FreeWare/個性的なメールソフト/Mac OSメール環境/OME20010614.sit/Mac OS磬ル環Ζンストール/Scripts/mboxer and UVJ Mailer/HQXing 1.3.1 PPC/HQXing/HQXing	f1b01464076d7b722f015447abff57f74700bc75001d68b933ab397687927a3e
+HQXing	HQXing 1.3.1 FAT_HQXing			(no application found)	discmaster:/view/17758/MacAddict_052_2000_12.iso/Software/Utilities/HQXingFAT.img/HQXing 1.3.1 FAT_HQXing	a1f4077ad0ea96132af9d2dbff909ea1ba91a79edbe3fdd3fab0a1530c84526f
+LHA_Expander	LHA Expander	LHAx	LHAx	APPL LHA  LARC Part RnDb **** fold disk	discmaster:/browse/9396/MACPEOPLE-2001-04-01.ISO/MACPEOPLE-2001-04-01.ISO/オンラインウエア/厳選オンラインウエア100/圧縮／解凍/LHA Expander 1.0.8.sit/LHA Expander 1.0.8/LHA Expander	18b85e648b76c7bc41ea35b43f8463a10bd8a62d0efdcd8471361d894aa8e562
+LHA_Expander	LHA Expander			(no application found)	discmaster:/view/9393/MACPEOPLE-2001-02-01.ISO/MACPEOPLE-2001-02-01.ISO/オンラインウエア/厳選オンラインウエア100/圧縮／解凍/LHA Expander 1.0.8.sit/LHA Expander 1.0.8/LHA Expander/LHA Expander	4dfd30114bf78e150cb56b0b1b63f56979716abd6632804da6b4743ef7546641
+MIMEconvert	MIMEconvert 1.07			(no application found)	discmaster:/view/36164/MaxiMac 95.iso/Macworld on CD N°95/Découverte d'Internet/Consultation/MIMEconvert_107 Folder/MIMEconvert 1.07/MIMEconvert 1.07	90f00cd49f157fa095478e84b62adb966704bf63462d99eb53e8cd18edec7f99
+MIMEconvert	MIMEconvert 1.07	MiCo	MiCo	APPL TEXT	discmaster:/browse/32012/Sep99.iso/Shareware World/Comms & Internet/MIMEconvert_107/MIMEconvert 1.07	8056562a6982b9cc80772ddde90c2c95bae20bf60de7f0a5310a892933491d31
+MacArc	MacArc	MARC	MARC	APPL	discmaster:/browse/14142/MacHack 1995.toast/Other Stuff/Other Stuff ’87/Utilities/comm ƒ/MacArc	683796b468b04e78f1fec3a6bb365e356119ac63f21a700647227a641697507d
+MacArc	MacArc	MARC	MARC	APPL MARC	discmaster:/browse/1963/BBS in a Box - Macintosh - Volume IV (January 1992) (BBS in a Box).iso/Files/Util/M-Mc/MacArc	692afd7747a2f380345ae0007bee506073cdacd27949008b3aae0c6084160280
+MacBinary	MacBinary	GJBU	GJBU	APPL TEXT	discmaster:/browse/679/WalnutCreekFractalFrenzy-1.iso/mac/MacUtils/MacBinary/MacBinary	14607081aed118e2af7eea2a3238bb0282c7fd56f442af65294493ba7de5938c
+MacBinary	MacBinary	GJBU	GJBU	APPL TEXT	discmaster:/browse/37/Clip-Art_Cornucopeia_CD-ROM_February_1994.iso/mac/MAC/MacBinary	95a639a0740c2e99ee085dfd3c0ee775eb6c08acfa53c3644da10b4391286b83
+MacBinary_II_	MacBinary II+	MB2P	MB2P	APPL **** fold TEXT	discmaster:/browse/17114/TEKNO 5-1996.iso/mac/[Tekno CD-ROM %235]/Compression/MacBinary II+/MacBinary II+	a4b61c76fe50699f11b06d9a4d44686d5c3f89e66303c4c3c29748593d70e533
+MacBinary_II_	MacBinary II+	MB2P	MB2P	APPL **** fold TEXT	discmaster:/browse/34149/GUTEN2_0299.ISO/mac/MacUtils/Conversion/MacBinary/MacBinary II+ 1.0.1/MacBinary II+	e6fbe89017c49ba7f970437d2225c20acf42fd0d2519349451aac4a0241ad71d
+MacCompress	MacCompress	LZIV	LZIV	APPL ZIVU ZIVM	discmaster:/browse/27149/BBS in a box - Trilogy III.iso/Files/Util/M-Mc/MacCompress	db4393cf831d72e966fbdcdf4b7486ca4b9923a4642edc600f13071e96fedcd8
+MacCompress	MacCompress	LZIV		(no BNDL)	discmaster:/browse/14137/Macademic for Students and Teachers (Quantum Leap)(1992).iso/Utilities/Misc Utils/M/MacCompress	72c6fa834454235b3a51b4e8195ae659fa0a6e68500e84f3f15cb8454101061f
+MacGzip	MacGzip	Gzip	Gzip	APPL Gzip ZIVU pZIP **** fold disk	discmaster:/browse/6517/Apprentice-Release5.iso/Source Code/C/Applications/MacGzip 1.0/MacGzip	cd4be0384c4967921af3a18e3d25ce21d4fd6981dd09c83eecfb4321b9b3d14b
+MacGzip	MacGzip	Gzip	Gzip	APPL Gzip ZIVU pZIP **** fold disk	discmaster:/browse/10407/MACUSER-MACBIN41A-1997-04.ISO/MACUSER-MACBIN41A-1997-04.ISO/ONLINE SOFTWARE/オンラインソフト⁄毎号掲載/圧縮ソフト/MacGzip/MacGzip	326026ef19059933107ae78ec2345402b427c91798bddeebb6237f25444aa677
+MacTar	MacTar			(no application found)	discmaster:/view/32012/Sep99.iso/Shareware World/Utilities/Compression/MacTar/MacTar/MacTar	0af4c43dff60c341db459708a76dfa101d6a096a0d1f210b13b1b0ca904439e2
+MacTar	MacTar	TAR	TAR 	APPL TARF PREF ????	discmaster:/browse/38344/CD-ROM N°49.dmg/Les logiciels/Trésors du domaine public/Communication/MacTar folder/MacTar	c867d1515cbac405b32741bc62cc98dbc6de8e540927b70a2677c7d9942a1a29
+MacZip	MacZip (FAT)			(no application found)	discmaster:/view/10389/NIKKEI-MAC-CD-VOL-26-1999-07.ISO/NIKKEI-MAC-CD-VOL-26-1999-07.ISO/オンライン・ソフト/5.圧縮・解凍/MacZip 1.03 final.sit/MacZip 1.03 final/MacZip (FAT)/MacZip (FAT)	aaf8ef225772a2712b26feb48685712713d6620283395171e570798c6ecbb508
+MacZip	MacZip (FAT)			(no application found)	discmaster:/view/27137/MF_UK_88_1.iso/Shareware Plus/Utilities/MacZip 1.04 final/MacZip (FAT)/MacZip (FAT)	8a0a344c2b56421cf9fd1f217e2112779adb5635c1062cb40da2cbb6a536145a
+MindExpander	MindExpander™	MV50	MV50	APPL ****	discmaster:/browse/23830/Macworld (1999-03) (Disk 1).dmg/Serious Demos/MindExpander™	46e479bbe5219742f7e9d180904fa30c15bb944c42c36f5eac353d670a53d793
+MindExpander	MindExpander™	MV50	MV50	APPL **** fold	discmaster:/browse/32024/UniversMacworld.90/UniversMacworld.90.iso/Macworld on CD°90/Macworld Pratique/Utilitaires/MindExpander™ 0.9.2 Preview/MindExpander™	593354634d91f62f159fa1bd77b6abbd1537ddc689c670cb6fdb79b7071ecb3b
+Now_Compress	Now Compress Demo			(no application found)	discmaster:/browse/36069/Software Vault - The Collection for Macintosh.iso/Bright Ideas/Demos/Now Compress Demo	63fb6fbc9e33df9de0a0b616e11ee402f3f1b6c68782e45f5fa5c0712f711312
+SitExpand	SitExpand	SIT!	SIT!	APPL SIT!	discmaster:/browse/20880/Mac Magazin and MacEasy Magazine CD - Issue 40.iso/Magazin/Kompressionsprogramme/Software/SitExpand ƒ/SitExpand	d047e536fc88b84ec1e3638ec2a31fd231876362ff32235288079314316e6a79
+SitExpand	SitExpand	SIT!	SIT!	APPL SIT!	discmaster:/browse/38761/maccd 112.iso/Spezial/68K-Software/Utilities/• Kompression/SitExpand ƒ/SitExpand	ddbe61b5b37555b4580bbcaef0fa14ffa8eb1b370078f3de5c4cb73652b540b8
+SitToCpt	SitToCpt	CPT1	CPT1	APPL	discmaster:/browse/22447/XENIATGM83.iso/Goodies/IF Italia/Sito/1/Files/PAdventure.zip/PornoAdventure/disk1.dsk/Compact/SitToCpt	ed11554b0e7922c5f502c822d708f362a1e7ca5c1ca5d918ba0222eafdb753f8
+SitToCpt	SitToCpt	CPT1	CPT1	APPL	discmaster:/browse/27146/BBS in a box XII-1.iso/Sysops/SitToCpt	b6826bc30fe7f093086f800e3c0823194491e24947a8f2db6afe9494c56f6f8a
+StuffIt_Classic	StuffIt Classic™	SIT!	SIT!	APPL SIT! SegM SIT2 Pref TEXT SITv SITD SITo SITe	discmaster:/browse/6958/CD Line - Limited Edition Wayzata's Best of Shareware for Macintosh for MacWorld Exposition Milano 1994 (050594)(1994).iso/pc/compacte/utilitie/all_syst/stuffit_.cpt/StuffIt Classic™ Installer/StuffIt Classic™ Installer/StuffIt Classic™	2cfcef04ca6beec81b09e4c9a83441b37351d8b2bfc2e7c22a6328b2344f6203
+StuffIt_Classic	StuffIt Classic™	SIT!	SIT!	APPL SIT! SegM SIT2 Pref TEXT SITv SITD SITo SITe	discmaster:/browse/27144/BBS In a Box - Macintosh - Volume VIII - April 1993 (MacWizards)(1993).bin/Files/Unstuffers/Other Compression/StuffIt Classic.cpt/StuffIt Classic™	e7b54a71467771b504be95f43537045dffe196baa2cafbc413d473e33420bd9d
+StuffIt_Converter	StuffIt Converter™	SITC	SITC	APPL **** fold disk	discmaster:/browse/18032/Wayzata's Best of Shareware 2.0 Macintosh (Wayzata Technology).iso/mac/Utilities/All Systems/StuffIt Converter 3.0.2/StuffIt Converter™	1ba4d584834467c88a4cdc605a1e9e156700efa8795753c8df7a55c8362f8c07
+StuffIt_Converter	StuffIt Converter™	SITC	SITC	APPL **** fold disk	discmaster:/browse/26990/macformat-018.iso/Utility Spectacular/Compression/StuffIt Converter 3.0.2/StuffIt Converter™	4de0a736ed7bf6b0acdd6da9bd522f87958a8d7a4aff0263d2f1227803b9a929
+StuffIt_Expander	StuffIt Expander™	SITx	SITx	APPL **** fold disk	discmaster:/browse/1062/Amiga Format CD51 (2000-03-10)(Future Publishing)(GB)[!][issue 2000-04].iso/-in_the_mag-/fusion/mshardfile1/StuffIt Expander™ 4.0.2/StuffIt Expander™	a8ab8db897bae3976a040f67627d060856340eb3c710bc05de29abd8c8726c5a
+StuffIt_Expander	StuffIt Expander™	SITx	SIT!	SITD SIT!	discmaster:/browse/1062/Amiga Format CD51 (2000-03-10)(Future Publishing)(GB)[!][issue 2000-04].iso/-in_the_mag-/fusion/mshardfile1/StuffIt Expander™ 4.0.2/StuffIt Expander™	a8ab8db897bae3976a040f67627d060856340eb3c710bc05de29abd8c8726c5a
+StuffIt_Expander	StuffIt Expander˛	SITx	SITx	APPL **** fold disk	discmaster:/browse/9367/MACPEOPLE-1999-07-01.ISO/MACPEOPLE-1999-07-01.ISO/オンラインウエア/厳選オンラインウエア100/圧縮／解凍/Aladdin Expanderｪ 5.1.2 Install/Aladdin Expander™ 5.1.2 Install/StuffIt Expander™	8573249946571b5293fca9882c116307f63471f658469e5d0f2e31357a205691
+StuffIt_Expander	StuffIt Expander˛	SITx	SIT!	SITD SIT! SIT5	discmaster:/browse/9367/MACPEOPLE-1999-07-01.ISO/MACPEOPLE-1999-07-01.ISO/オンラインウエア/厳選オンラインウエア100/圧縮／解凍/Aladdin Expanderｪ 5.1.2 Install/Aladdin Expander™ 5.1.2 Install/StuffIt Expander™	8573249946571b5293fca9882c116307f63471f658469e5d0f2e31357a205691
+StuffIt_Lite	StuffIt Lite™	SIT!	SIT!	APPL SIT! SegM SIT2 Pref TEXT SITv SITD SITo Seg1 Seg2 Seg3 SegN SPSV Part lttr	discmaster:/browse/2846/Software of the Month Club 1997 February.iso/mac/Utilities/StuffIt Lite™ 3.5 Installer/StuffIt Lite™ 3.5 Installer/StuffIt Lite™	261d63ff07c3e8875a07acb67ccf0686388dacae21b50d10b8622135ee16a061
+SuperDisk	SuperDisk! Utilities	Alys	Alys	APPL	discmaster:/browse/839/Deutsche Edition 2.iso/mac/DISKETTEN⁄FESTPLATTEN/SuperDisk! Utilities/Application/SuperDisk! Utilities	e6e328c67d9eabac3e8304019090eceef06a9da3bceffedc438028f16eecb6dc
+SuperDoubler	SuperDoubler™ Installer	DINS	DINS	APPL	discmaster:/browse/21170/Eagles_Nest_Mac_Collection_Disc_1.TOAST/CPs & Extensions/SuperDoub101/SuperDoub101/SuperDoubler™ Disk 1.0.1.image/SuperDoubler™ Disk 1.0.1.image/SuperDoubler™ Installer	9f899ae0836a11b56e56748915815aaf0ecd9cdddbd1fb9ecbfc5e5be388aefb
+SuperDoubler	SuperDoubler™ Pro Installer	DINS	DINS	APPL	discmaster:/browse/21430/Macintosh Compilation CD Number 1 (December 1995).iso/Utilities/SuperDoubler™ Pro 1.1/SuperDoubler™ Pro 1.1/SuperDoubler™ Pro Installer	536249e79dbee1c468cd3dd3150586548f7663ce53188f0cc89c5450f5fde220
+UUCD	uucd	UUCD	UUCD	APPL uupf ****	discmaster:/browse/21254/GRAVIS CD No6_Fruhjahr_96.cdr/GRAVIS/Komprimierung/uucd 2.4.3/uucd	00e193bbc32abfd648e15dca7cebb240a52e8d2304f7040b6bc6e2b204297614
+UUCD	uucd	UUCD	UUCD	APPL uupf ****	discmaster:/browse/21253/GRAVIS CD No5_Herbst_95.cdr/GRAVIS/PD ⁄ Shareware/Komprimierung/uucd 2.4.3/uucd	6806583c9315f35463fcc0aa5bcd626242cdfcad670a1a80408bbca0afc750af
+UULite	UULite 1.7	JeFF	JeFF	APPL TEXT ????     	discmaster:/browse/21442/macworld_es_13.iso/Share World 13/Por Categorías/Compresión/UULite 1.7 ƒ/UULite 1.7	9a914973c90d97577731c50817903d0196acdfd04a540c9243a056943df4d677
+UULite	UULite 1.5	JeFF	JeFF	APPL TEXT ????     	discmaster:/browse/13620/Info_Mac_1994-01.iso/Compression/UULite 1.5	c84d676dc1eecc4fdf8af51c4905ef6e94cf615995a7df6f2d597f9b75d6c696
+UUParser	UUParser v1.71a	JSRL	JSRL	APPL TEXT Pref	discmaster:/browse/69/Visions 9 - California.iso/mac/MacUtils/Conversion/uuparser1.71a/UUParser v1.71a	0118cb62500f99050b53ed6e90838b711797daf1f30d15b24cd03c0da9494967
+UUParser	UUParser v1.71a	JSRL	JSRL	APPL TEXT Pref	discmaster:/browse/6093/1-57176-081-4_Best_of_Walnut_Creek_1995-04.iso/mac/MacUtils/Misc/uuparser1.71a/UUParser v1.71a	8eef076ddddec3548aadf412d894a4810d170830c57d3064236d85b76e4c4d2b
+UUTool	UUTool-FAT			(no application found)	discmaster:/view/27125/MF_UK_28_1.iso/mac/Shareware City/Utilities/uu-tool-24/UUTool-FAT/UUTool-FAT	87cd5895ba11314ea96404854fbcd457377c49bbbf0cae5f1d49fbdd6961cd62
+UUTool	UUTool-FAT			(no application found)	discmaster:/view/44063/BBS in a Box 16 - Disc 1.iso/Files/Unstuff/Other Compression/UUTool 2.4 FAT.sit/UUTool-FAT/UUTool-FAT	87cd5895ba11314ea96404854fbcd457377c49bbbf0cae5f1d49fbdd6961cd62
+UnPit	unpit	UPIT	UPIT	APPL PIT 	discmaster:/browse/7951/Disc Tracy (Wayzata Technology)(6011)(1990).bin/C/THINK⁄LSC/Unpit ƒ/unpit	036539d0d767841ad3f93410a510190f8f98e158d94d73ad55b1a2b34c0d8ffb
+UnPit	Unpit	UPIT	UPIT	APPL PIT 	discmaster:/browse/507/Disc to the Future - Programmer's Reference Volume 2 (Wayzata Technology) (1991).iso/mac/C/ThinkC/3.0.x/Unpit/Unpit	d20390559a602570cf90bd428074111d281cac9423ea74fe7cff1975013bd120
+UnStuffIt	UnStuffIt™	SIT!	SIT!	APPL SIT! SITD SPSV SegM Seg1 Seg2 Seg3 SegN	discmaster:/browse/1187/Walnut Creek GIFs Galore CDROM WIN-MAC (Walnut Creek CDROM)(September 1993).iso/mac/MacUtils/StufffIt Utils/UnStuffIt™	9b5d4c406dbf739f83eb2d774b9faa37f0d7022642592d0798f5e99c2e0ab7ed
+UnStuffIt	UnStuffIt™	SIT!	SIT!	APPL SIT! SITD SPSV SegM Seg1 Seg2 Seg3 SegN	discmaster:/browse/14056/The Little Mac Toolkit (Peachpit Press) (1994).bin/Compression ƒ/UnStuffIt/UnStuffIt™	51ce070f5826cdb8d498180a13313c14f492d5d498111810cb3d913536b01ed4
+YA_Base64	YA-Base64	YA64	YA64	APPL ****	discmaster:/browse/9354/MACPEOPLE-1998-03-01.ISO/MACPEOPLE-1998-03-01.ISO/電子メール＆体験版/ya-base64-129.sit/ya-base64-129/YA-Base64	fd48a3bed882d751ef586de9d5531fa121b2fcd5c9ad5132fc984b7617d213cd
+YA_Base64	YA-Base64	YA64	YA64	APPL ****	discmaster:/browse/17929/SVM Mac CD-ROM - No 16.iso/Accès direct/Trésors du domaine public/Communications/YA-Base64 1.2.2/YA-Base64	4a8c745d402d2107481cc00ab71e4b71277bc06a775f282f54402175678c4698
+ZipIt	ZipIt			(no application found)	discmaster:/view/2688/Software of the Month Club (September 1997) (241) (Business Shareware).ISO/mac/Utilities/ZipIt/ZipIt/ZipIt	9ad7fb07ef2cfc0fd08ae0e57867fd282363c54f20671fb7ce3cac42899ab58b
+ZipIt	ZipIt	ZIP	ZIP 	APPL ZIP  pZIP TEXT ZPRF ****	discmaster:/browse/2236/amigaacscoverdisc/utilities/shareware/emulators/shapeshifter/macsoftware/tools/Compression/ZipIt 1.2/ZipIt	c04b6a2f240e2de0366ebf574ba90e28f69d33f9901ec201bb6c55946cf54c48
+unshar	unshar	UnSh	UnSh	APPL TEXT	discmaster:/browse/508/Disc to the Future Part II Programmer's Reference (Wayzata Technology)(6013)(1992).bin/mac/Mac/MPW C/unshar v.1.5/unshar	eead3b95daadfd5c74dd82e6e7792df07c55813f9da1223ae16362a632cb737f
+unshar	unshar			(no application found)	discmaster:/view/11869/www.umich.edu.archive.2014.03.zip/www.umich.edu/~archive/mac/util/compression/unshar1.10.sit.hqx/unshar	c928bc68502b96b039841308431e1d16115b741a1589a696e86d3dd01f73ef8e
+uuUndo	uuUndo			(no application found)	discmaster:/view/10333/MACPOWER-1997-03.ISO/MACPOWER-1997-03.ISO/第２特集/エンコード／デコード/uuundo1.0.sit/uuUndo 1.0 ƒ/uuUndo/uuUndo	876aaa1aa5e72f20aa7b9f007bccd8b2914b7d3d00c8c228764ba90f3e791faf
+uuUndo	uuUndo	uuUN	uuUN	APPL ****	discmaster:/browse/23814/Macworld (1997-02).dmg/Shareware World/Comms & Internet/InterNews 2.0.2 FAT/IN Helper Files/uuUndo_1.0.sea/uuUndo 1.0 ƒ/uuUndo	6ed6f3c4db6032457e23d462f72f5e7cf109672a11d23cfc5dde65bc4c7f77c9
+xBin	xbin			(no application found)	discmaster:/view/2036/Amiga_Dream_52.iso/Beos/util/xbin.zip/xbin/xbin	024da4294944aca05231144f0727b6b88df2508f20037edfd5216ccbf356e801
+local	ArcMac	arc*	arc*	APPL mArc m@rc TEXT	local:vmac/specimens/arcmac/volume.img	
+local	Archive Now	NCar	NCar	APPL fold **** disk	local:vmac/nowcompress/nu6boot.hfv	
+local	Compress Now	NCcm	NCcm	APPL fold **** disk	local:vmac/nowcompress/nu6boot.hfv	
+local	DiskDoubler™ App	DDAP	DDAP	APPL DD01 DDDA DD02 DDTM DDSP DDAR DDTD DDCR DDF0 DDF1 DDF2 DDF3 DDF4 DDF5 DDF6 DDf0 DDf1 DDf2 DDf3 DDf4 DDf5 DDf6 DDf7 DDf8 DDf9 DDfa DDfb DDfc DDfd DDfe DDff DDfg DDfh DDfi DDfj DDfk DDfl DDfm DDfn DDfo DDfp DDfq DDF7 DDCP DDCT	local:vmac/ndd/dd312/DiskDoubler 3.1.2 for Macintosh (3.5-800k)/Disk Doubler 3.1 (Salient).img	
+local	DiskDoubler™ App	DDAP	DDAP	APPL DD01 DDDA DD02 DDTM DDSP DDAR DDTD DDCR DDF0 DDF1 DDF2 DDF3 DDF4 DDF5 DDF6 DDf0 DDf1 DDf2 DDf3 DDf4 DDf5 DDf6 DDf7 DDf8 DDf9 DDfa DDfb DDfc DDfd DDfe DDff DDfg DDfh DDfi DDfj DDfk DDfl DDfm DDfn DDfo DDfp DDfq DDF7 DDCP DDCT **** fold disk DDfr DDfs	local:vmac/diskdoubler/dd37.hfv	
+local	DropCompress™	DCmp	DCmp	APPL **** fold disk	local:vmac/sitopt/run-sitenc351.hfv	
+local	DropConvert™	SITC	SITC	APPL **** fold disk	local:vmac/sitopt/run-sitenc351.hfv	
+local	DropStuff™	DStf	DStf	APPL **** fold disk	local:vmac/sitopt/run-sitenc351.hfv	
+local	DropStuff™	DStf	SIT!	SITD SIT!	local:vmac/sitopt/run-sitenc351.hfv	
+local	Expand Now	NCdc	NCdc	APPL fold **** NCdo NCap NCar NCsg disk	local:vmac/nowcompress/nu6boot.hfv	
+local	Expander	SITx	SIT!	SITD SIT!	local:exp402opt/exp402-CptCrypt-umakfvkh/boot-in.hfv	
+local	Expander	SITx	SITx	APPL **** fold disk	local:exp402opt/exp402-CptCrypt-umakfvkh/boot-in.hfv	
+local	MacLHa 2.00	LARC	LARC	APPL LARC LHA 	local:vmac/specimens/maclha/volume.img	
+local	StuffIt Deluxe™	SIT!	SIT!	APPL SIT! SegM SIT2 Pref TEXT SITv SITD SITo SITe AUSt	local:vmac/sitopt/run-combo-setk.hfv	
+local	StuffIt Deluxe™	SIT!	SIT!	APPL SIT! SegM SIT2 Pref TEXT SITv SITD SITo Seg1 Seg2 Seg3 SegN SPSV Part lttr	local:vmac/sitopt/run-sitenc351.hfv	
+local	StuffIt Expander™	SITx	SIT!	SITD SIT!	local:vmac/System6.hfv	
+local	StuffIt Expander™	SITx	SIT!	SITD SIT! **** fold disk	local:vmac/sitopt/run-sitenc351.hfv	
+local	StuffIt Expander™	SITx	SITx	APPL **** fold disk	local:vmac/System6.hfv	
+local	StuffIt Expander™	SITx	SITx	APPL **** fold disk	local:vmac/sitopt/run-sitenc351.hfv	

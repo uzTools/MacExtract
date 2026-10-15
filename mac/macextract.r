@@ -14,13 +14,40 @@
  *      Manager, so it repaints on update events as well as on every tick
  *   4  detail   "45%   about 2 minutes left"
  *
- * 110 points tall rather than 80: the bar and the detail line are new. */
-resource 'DLOG' (128, purgeable) {
+ * 110 points tall rather than 80: the bar and the detail line are new.
+ *
+ * A titled window, not dBoxProc: the one System 7 has been seen switching
+ * away from (dBoxProc, with the menu bar, was not tried). It cannot be
+ * dragged — that was 32 B. noGrowDocProc is in every System from 3.0 on,
+ * so there is one window everywhere (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*).
+ *
+ * EVERY dialog, alert and 'dlgx' here is `preload` as well as purgeable
+ * (2026-10-14): read once at launch, while the application's disk is
+ * certainly in, instead of when each first appears. Otherwise a one-drive
+ * Mac whose archive is on another floppy asked for the application's disk
+ * back for the progress window and again for "Extraction complete."
+ * Purgeable still, so the budget, taken with PurgeSpace, is the same
+ * (DECISIONS.md 2026-10-14, *the disk the dialogs were on*). */
+resource 'DLOG' (128, purgeable, preload) {
     { 80, 80, 190, 400 },
-    dBoxProc, visible, noGoAway, 0, 128, "", noAutoCenter
+    noGrowDocProc, visible, noGoAway, 0, 128, "MacExtract", noAutoCenter
 };
 
-resource 'DITL' (128, purgeable) {
+/* Mac OS 8 and later: the progress window takes the theme's background
+ * rather than white, as alerts already do; 'dlgx' 132 does the same for
+ * the password dialog. No code reads either; Systems before Appearance
+ * 1.0 ignore the type. Standard File's dialogs stay white: a 'dlgx' is
+ * read only from its DLOG's own file, and theirs are the System's.
+ * Source: flag bit — Mac OS 8 Toolbox Reference, Dialog Manager, *Dialog
+ * Feature Flag Constants* (kDialogFlagsUseThemeBackground = 1 << 0).
+ * Layout — measured on 100 of Apple's own 'dlgx' resources on the
+ * Mac OS 9.2 disk: 6 bytes, version word 0 then a 32-bit flags word. */
+data 'dlgx' (128, purgeable, preload) {
+    $"0000 0000 0001"
+};
+
+resource 'DITL' (128, purgeable, preload) {
     {
         { 78, 220, 98, 300 }, Button     { enabled,  "Cancel" };
         { 10,  16, 26, 300 }, StaticText { disabled, "Extracting" };
@@ -29,31 +56,52 @@ resource 'DITL' (128, purgeable) {
     }
 };
 
-resource 'ALRT' (129, purgeable) {
+resource 'ALRT' (129, purgeable, preload) {
     { 90, 100, 190, 412 }, 129, {
         OK, visible, silent, OK, visible, silent,
         OK, visible, silent, OK, visible, silent
     }, noAutoCenter
 };
 
-resource 'DITL' (129, purgeable) {
+resource 'DITL' (129, purgeable, preload) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
         { 12, 64, 60, 300 }, StaticText { disabled, "^0" };
     }
 };
 
-resource 'ALRT' (130, purgeable) {
+resource 'ALRT' (130, purgeable, preload) {
     { 90, 100, 190, 412 }, 130, {
         OK, visible, sound1, OK, visible, sound1,
         OK, visible, sound1, OK, visible, sound1
     }, noAutoCenter
 };
 
-resource 'DITL' (130, purgeable) {
+resource 'DITL' (130, purgeable, preload) {
     {
         { 68, 232, 88, 292 }, Button { enabled, "OK" };
         { 12, 64, 60, 300 }, StaticText { disabled, "^0" };
+    }
+};
+
+/* The decoders could not be read again for the next archive the Finder
+ * handed over (ovl_reload). Its own alert with the text written in, rather
+ * than ShowNote and a string: a string literal is A5, and A5 comes off every
+ * extraction's budget one for one, for a message almost nobody will see
+ * (DECISIONS.md 2026-10-12, *the reload that the list needs*). */
+resource 'ALRT' (135, purgeable, preload) {
+    { 90, 100, 190, 412 }, 135, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (135, purgeable, preload) {
+    {
+        { 68, 232, 88, 292 }, Button { enabled, "OK" };
+        { 12, 64, 60, 300 }, StaticText { disabled,
+          "There is not enough memory to open the next archive. "
+          "Open it again." };
     }
 };
 
@@ -66,22 +114,47 @@ resource 'DITL' (130, purgeable) {
  *   2  Skip      give up on this part; what was decoded so far is kept
  *   3  Cancel    stop the extraction
  *
- * The wording deliberately says "locate", not "insert the next disk": the
- * parts of a set are not assumed to be on separate floppies, or to be
- * named alike, or to be anywhere in particular. */
-resource 'ALRT' (131, purgeable) {
+ * The wording says "locate", not "insert the next disk": the parts of a
+ * set are not assumed to be on separate floppies, or to be named alike,
+ * or to be anywhere in particular. ALRT 136 is the same alert after the
+ * disk the previous part came from was ejected (SegEjectPrevious), when
+ * putting the next one in IS the likely answer.
+ *
+ * ^0 is `Part 2 of "Name"`, ^1 is ` About 33K still to read.` or empty.
+ * The sentences are here rather than in the code because a purgeable
+ * resource costs nothing until it is shown, and a string costs A5. */
+resource 'ALRT' (131, purgeable, preload) {
     { 90, 80, 214, 452 }, 131, {
         OK, visible, sound1, OK, visible, sound1,
         OK, visible, sound1, OK, visible, sound1
     }, noAutoCenter
 };
 
-resource 'DITL' (131, purgeable) {
+resource 'DITL' (131, purgeable, preload) {
     {
         { 92, 282, 112, 352 }, Button { enabled, "Find..." };
         { 92, 196, 112, 266 }, Button { enabled, "Skip" };
         { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
-        { 10, 16, 84, 356 }, StaticText { disabled, "^0" };
+        { 10, 16, 84, 356 }, StaticText { disabled,
+            "^0 has not been found.^1 Locate it, skip it, or cancel." };
+    }
+};
+
+resource 'ALRT' (136, purgeable, preload) {
+    { 90, 80, 214, 452 }, 136, {
+        OK, visible, sound1, OK, visible, sound1,
+        OK, visible, sound1, OK, visible, sound1
+    }, noAutoCenter
+};
+
+resource 'DITL' (136, purgeable, preload) {
+    {
+        { 92, 282, 112, 352 }, Button { enabled, "Find..." };
+        { 92, 196, 112, 266 }, Button { enabled, "Skip" };
+        { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
+        { 10, 16, 84, 356 }, StaticText { disabled,
+            "^0 is not on that disk, so it was ejected. Insert the disk "
+            "it is on.^1 Or locate it, skip it, or cancel." };
     }
 };
 
@@ -98,12 +171,16 @@ resource 'DITL' (131, purgeable) {
  *   4  the message, which names the archive and, on a second ask, says
  *      the last one was refused
  */
-resource 'DLOG' (132, purgeable) {
+resource 'DLOG' (132, purgeable, preload) {
     { 80, 60, 214, 452 }, dBoxProc, visible, noGoAway, 0, 132, "",
     noAutoCenter
 };
 
-resource 'DITL' (132, purgeable) {
+data 'dlgx' (132, purgeable, preload) {
+    $"0000 0000 0001"
+};
+
+resource 'DITL' (132, purgeable, preload) {
     {
         { 102, 302, 122, 372 }, Button     { enabled, "OK" };
         { 102, 216, 122, 286 }, Button     { enabled, "Cancel" };
@@ -149,17 +226,49 @@ resource 'DITL' (132, purgeable) {
  * 486, so the whole of it sits on a 512x342 Mac Plus screen with the
  * menu bar above it. Nothing here is ever centered on a bigger screen,
  * which is this application's existing habit (noAutoCenter). */
-resource 'DLOG' (133, purgeable) {
+resource 'DLOG' (133, purgeable, preload) {
     { 30, 26, 330, 486 }, dBoxProc, visible, noGoAway, 0, 133, "",
     noAutoCenter
 };
 
-resource 'DITL' (133, purgeable) {
+resource 'DITL' (133, purgeable, preload) {
     {
         { 264, 376, 284, 446 }, Button     { enabled, "OK" };
         { 264, 236, 284, 356 }, Button     { enabled, "Save as Text\0xC9" };
         {  12,  12, 246, 428 }, UserItem   { disabled };
         { 260, 372, 288, 450 }, UserItem   { disabled };
+    }
+};
+
+/* The menu bar. File > Quit stops an extraction, and the application
+ * then quits; it has no Command key, to save MenuKey's bytes. The Apple menu is not decoration: System 7.0.1 draws its
+ * Help and Application menus only beside one, and without the Application
+ * menu nothing can be switched to (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*). */
+resource 'MENU' (129) {
+    129, textMenuProc, allEnabled, enabled, apple,
+    { "About MacExtract\0xC9", noIcon, noKey, noMark, plain }
+};
+
+resource 'MENU' (128) {
+    128, textMenuProc, allEnabled, enabled, "File",
+    { "Quit", noIcon, noKey, noMark, plain }
+};
+
+/* About MacExtract. The number is written here rather than read from
+ * 'vers' 1 at run time, which cost 32 B of code and A5; check_docs.py
+ * holds it to UNC_VERSION like the other copies. */
+resource 'ALRT' (134, purgeable, preload) {
+    { 90, 100, 190, 412 }, 134, {
+        OK, visible, silent, OK, visible, silent,
+        OK, visible, silent, OK, visible, silent
+    }, noAutoCenter
+};
+
+resource 'DITL' (134, purgeable, preload) {
+    {
+        { 68, 232, 88, 292 }, Button { enabled, "OK" };
+        { 12, 64, 60, 300 }, StaticText { disabled, "MacExtract 0.40.0" };
     }
 };
 
@@ -203,7 +312,12 @@ resource 'DITL' (133, purgeable) {
  * engine declined a 656 KB entry cleanly (peak 35.5 KB — the block refused at
  * request time), while System 6.0.8 ignored the partition and extracted the
  * same entry with 656.8 KB. FORMATS.md has the three-system table,
- * tools/vmac/README.md the method. */
+ * tools/vmac/README.md the method.
+ *
+ * acceptSuspendResumeEvents STAYS, though nothing handles those events:
+ * with ignoreSuspendResumeEvents System 7.0.1 held a switch out of an
+ * extraction until the extraction ended (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*). */
 resource 'SIZE' (-1) {
     reserved, acceptSuspendResumeEvents, reserved,
     canBackground, doesActivateOnFGSwitch, backgroundAndForeground,

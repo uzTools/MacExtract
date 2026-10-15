@@ -8,7 +8,7 @@
    numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 964 fixtures in `./ci.sh`. Detail lives once — status in
+oracle across 971 fixtures in `./ci.sh`. Detail lives once — status in
 BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
 TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
@@ -64,7 +64,12 @@ the Macintosh application's alert reads *"MacExtract cannot open RAR files."*
   resource. The engine says *"encrypted by a scheme we cannot read"*; the
   fork counts as present in a MacBinary or BinHex envelope or a sidecar
   (`load_mkey`, `cli/main.c`). It is the only one of the eight ciphers so
-  affected, measured 2026-10-07 (FORMATS.md, *Encryption*).
+  affected, measured 2026-10-07 (FORMATS.md, *Encryption*). With the
+  password in hand the fork's loss is not permanent after all — the
+  `'MKey'` only decrypts to the archive IV, and the IV is recoverable by a
+  2^32 search its own self-verifier enumerates, graded by the entries'
+  CRCs (measured 2026-10-13); how to implement it is left as an exercise to
+  the reader.
 - **A fork compressed by a third party's StuffIt compressor module (method
   nibble 7) is not decodable.** 2.0.1's own `STR# 267` names a
   `Compressors` folder among its eight; Aladdin's two disks fill five of
@@ -109,37 +114,34 @@ checked by `tools/check_provenance.py`.
 ## What the LC 475 found that is not fixed
 
 The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
-§2, §4). Each is measured on that machine and nowhere else.
+§4). Each is measured on that machine and nowhere else.
 
-- **Cmd-. does nothing on a French (AZERTY) keyboard.** The period
-  needs Shift there, and the shell compares the event's character with
-  `'.'` (`mac/macextract_mac.c`, the progress pump). *Hypothesis*: with
-  Command down, that key does not report a period — Apple's technote on
-  international canceling is about this case, and it has not been read
-  here. The Cancel button works. Closing it starts with that technote,
-  and is priced in bytes like any shell change.
-- **There is no way to switch out of the application on System 7.**
-  It has no menu bar at all, so the Process Manager has nowhere to put
-  the Application menu, and the `SIZE` flag `canBackground` buys
-  nothing a user can reach. Closing it needs a menu bar, priced at the
-  floor.
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
 
-## The overlay loader: whether the flush is needed
+## A click during an extraction waits for the next progress callback
 
-**The shipped bytes have run on silicon**: an LC 475 (68LC040) under
-System 7.6.1 extracted nine archives in five formats on 2026-10-11,
-no bomb (BLOCKERS.md, *Status*). What that run cannot say is whether the
-flush at both fixup sites is NEEDED, because it ran with the flush in
-place: a CPU-cache machine running a build WITHOUT `ovl_flush_code`
-would answer it — a wrong byte or a crash there, and none here, says
-the call is load-bearing. That build is `-D UNC_OVL_NOFLUSH`
-(`tools/vmac/README.md`, the probe table), put on the maintainer's share
-for the LC 475 on 2026-10-11. The cache state on that machine was the
-7.6.1 default, not checked (*hypothesis*: on). Short of that run, read
-every tier sweep with the `-D UNC_AT_BUDGET` probe fields (`wa`, `kf`,
-`rf`, `fc`, `fn`) rather than on the tally alone.
+The menu bar is read only in the progress pump, so a click shorter than
+the gap between two callbacks is lost and the button has to be held
+(DECISIONS.md 2026-10-12, *the application nobody could leave*). The gap
+is measured per format at 1x (FORMATS.md, *How long a click waits*):
+StuffIt 5 went 254 s without one until 2026-10-12 and is under 1.1 s now
+(DECISIONS.md 2026-10-12, *the block nobody could cancel*). **What is
+left is 4–6 s on a Mac Plus** for Now Compress, Compact Pro and
+DiskDoubler, and 2–2.5 s for StuffIt and Zip — the cost of 8 KB of
+input, which is where `UNC_PROGRESS_STEP` puts the tick. **Halving it
+is measured** (FORMATS.md, *What a 4 KB step buys*): gaps down by a
+third to a half, 0 B, at most +0.3 % on System 6 and +0.4 % on System 7
+with nothing else running; Now Compress's 32 KB block does not move. It
+is CLAUDE.md's "every 8–16 KB", so it is the maintainer's to decide, and
+it needs the three stored-fork copies sized by their own constant
+first, the step being their buffer too. MIME, which failed
+`run_ticks.py` at 4 KB, passes it since 2026-10-13 (DECISIONS.md
+2026-10-13, *the mail that counted itself three times*). **Seen on silicon, 2026-10-12**: the LC 475's
+window "not very reactive" while it extracts, format not noted —
+re-test on a StuffIt 5 archive once this is on the machine. Holding the
+File menu down pauses the extraction — inherent: `MenuSelect` keeps the
+machine until release, and the extraction runs in the same loop.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 
@@ -152,7 +154,7 @@ machine (DECISIONS.md 2026-10-09, *what GCC will not do with an
 index*).
 
 The candidates — twelve loops with a C and an assembly cycle estimate
-each, and fifteen suggestions not yet estimated — are FORMATS.md's
+each, and sixteen suggestions not yet estimated — are FORMATS.md's
 (*Hand-written 68000 assembly: the candidates, estimated*).
 
 **Prerequisites for the pass**, once for every row:
@@ -161,3 +163,55 @@ each, and fifteen suggestions not yet estimated — are FORMATS.md's
 |---|---|
 | **a `qemu-m68k` lane in `ci.sh`**: the m68k-linux CLI (TESTING.md, *The 68000 profile*, has the build line) running `run_crypt.py`, `run_privatefile.py`, the differential suite (every CRC row) and a `UNC_ARS_FORCE_SAMPLED` build (the scan) | `ci.sh` runs x86, which compiles the C path, so without this lane an assembly path is graded by nothing |
 | **a timing build that can open an encrypted archive**: the autotest app with a compile-time password beside `UNC_AT_TIMING` | the tick probe (tools/vmac/README.md) is what prices a change here, and today it cannot reach any cipher |
+
+## Formats classic Mac programs wrote that nothing here opens — leads, not findings
+
+From the 190 entries of Macintosh Repository's *Compression & Archiving*
+category, read 2026-10-12 (`companion/harvest/macrepo-compression.tsv`):
+**every row below is from a program's NAME and DESCRIPTION, and none has
+been held against a file.** The modern macOS programs, video compressors and
+backup-to-disk tools in the category are left out, and so is what Part 1
+already covers (RAR, ARJ, Zoo, cpio, disk images).
+
+| format | programs there | here |
+|---|---|---|
+| SUMacC `.dl` (resource fork only, 4 bits a character) | none there; hexbin's `dl.c` reads it | named nowhere; one wild file, `mactosh/lang/xlispold.dl` on Discmaster's carousel disc, which hexbin decodes with its sum verifying |
+| ShrinkIt / NuFX (`.shk`, `.bxy`), Apple II | ShrinkIt | named nowhere |
+| shell archives (`shar`) | unshar | named nowhere |
+| yEnc | yEnc TZ | named nowhere |
+| Apple Backup (Performa-era backup disks) | Apple Backup Extractor | named nowhere |
+| backup sets | Retrospect 1.x/2.1, Fastback, HFS Backup, MacBack, Network DiskFit, Diamond | named nowhere |
+| splitters that may add a header | MacHacha, SplitIt!, SplitsVille, Split & Join, Split&Concat | plain `.001` and DiskDoubler `SPLT` only; whether these write either is unknown |
+| unidentified | GIF Blast, MacSQZ!, The Parer, RadicalSqueeze, BKOS Compress, FileCrypt, Big Hairy Installer, MacToVax | the format is not known |
+
+Closing a row means a specimen written by the program, then the usual
+question of a second reader to grade against.
+
+## BinHex before 4.0: what is not graded
+
+`.hex` and `.hcx` extract since 2026-10-14 (DECISIONS.md, *the BinHex
+before 4.0*). Left:
+
+- **No `.hex` from any writer but BinHex 2.0.** BinHex 1.0 and the BASIC
+  BinHexes before it wrote the format too (`reference/notes/BinHex.md`).
+  Closing it is a specimen from one of them, or the program.
+- **`src/fmt_hecx.c` is hexbin's.** BinHex 2.0's own `CODE` (5.6 KB) is
+  the writer, and reading the layout out of it is the route Packit III
+  1.3 gave PackIt's ciphers (NOTICE).
+
+## The double-click helpers: what is left before they ship
+
+`companion/` works (DECISIONS.md 2026-10-11 and 2026-10-12, *where the
+stubs can live*, *the stub that hands it on*, *the stub beside StuffIt*),
+and ships later, on MacExtract's own floppy. Left:
+
+- **Which creators.** `companion/app-bundles.tsv` has 42 creators read
+  off the programs themselves, with their bundles; the list of stubs is
+  not chosen. Text encodings
+  stay out (`TEXT` from editors), and so does `SITx`.
+- **A second double-click while MacExtract runs**, under MultiFinder and
+  System 7 — the stub asks to launch a running application. Not run.
+- **Several archives of DIFFERENT creators opened together** — two stubs
+  for one selection. Not run.
+- **Which of a file's two dates System 7 compares** to choose between two
+  applications of one creator. Not separated.

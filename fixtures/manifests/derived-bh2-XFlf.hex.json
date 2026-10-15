@@ -1,0 +1,18 @@
+{
+ "entries": [
+  {
+   "creator": "Test",
+   "data_sha256": "6484b5b3952a7bc453123965334f216b006721dd5e4a0e29298f0ea4806dcff9",
+   "data_size": 2176,
+   "name": "derived-bh2-XFlf",
+   "rsrc_sha256": "0cd726d50123a239ddb087b847fc4ea94cfb8871599cec3484e8290823a70dac",
+   "rsrc_size": 335,
+   "type": "Junk"
+  }
+ ],
+ "fixture": "derived-bh2-XFlf.hex",
+ "format": "BinHex hex/hcx",
+ "oracle": "macutils' hexbin on both forks (tools/run_hecx.py); written by BinHex 2.0 itself (tools/vmac/binhex2.py)",
+ "sha256": "799cc4f55bb463afa6772dc4e5ecf5e5c5adf350046d90c6618f6558936e7455",
+ "size": 5323
+}

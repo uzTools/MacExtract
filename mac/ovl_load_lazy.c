@@ -86,3 +86,8 @@ int ovl_spent(void)
 {
     return 0;
 }
+
+int ovl_reload(void)
+{
+    return 1;
+}

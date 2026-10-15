@@ -16,6 +16,12 @@
  *
  * WHAT IS ACTUALLY WRONG (small, and both in multiversal/custom/glue.c)
  * --------------------------------------------------------------------
+ * Corrected 2026-10-13: (1) is not a bug. Technote FL 1041 documents paramErr
+ * as how a caller detects a missing _OpenDF and tells it to retry with HOpen;
+ * Retro68 issue #53 settled it that way in 2018. (2) is real and worse than
+ * written: case 4's junk pointer was outside RAM, and a pointer into RAM is
+ * written through (iomisc_repro.c, ISSUE.md).
+ *
  * 1. BOTH OpenDF() and HOpenDF() return paramErr (-50) on System 6, because
  *    the _OpenDF trap is System 7 and later and neither falls back. Only
  *    FSOpen() in the same file handles it, with the comment "OpenDF not

@@ -798,7 +798,10 @@ anything about the suite.**
    fixtures (.sit.bin, .sit.hqx, .tar.Z) extracted with auto-unwrap
    must match the inner layer's manifest exactly, with the
    intermediate file removed. The single-layer diff harness passes
-   `-nr` to disable unwrapping.
+   `-nr` to disable unwrapping. Since 2026-10-14 it also builds two
+   nameless gzip layers in a file called `Same`, whose inner entry has
+   the envelope's own path: an empty directory on the build before
+   (DECISIONS.md 2026-10-14, *the layer that had its envelope's name*).
 5. **Budget sweep** (`tools/run_budget.py`): the whole corpus under
    `--budget 409600` (a small Mac). Everything verifies fully except
    part of StuffIt 5/Arsenic; since the sampled inverse BWT landed
@@ -1964,6 +1967,29 @@ that date; re-running it needs the hand edit above, and what matters is that it
 fails at all, not the count. The LZW-path figure is from the same day.
 
 
+## BinHex before 4.0 (`tools/run_hecx.py`, in `ci.sh`)
+
+`unar` reads neither `.hex` nor `.hcx`, so the seven manifests are
+macutils' `hexbin`, and four of the seven fixtures were written by BinHex
+2.0 itself (`tools/vmac/binhex2.py`): their forks are also checked against
+the subject that went in, which is the half no transcription can mark.
+Each fixture is graded fork for fork and type/creator against hexbin; then
+forty variants of three of them (endings, mail in front, the banner
+removed, fork order, a byte or the sum changed, cut, lower-case digits,
+the same fork twice), each with what must happen and hexbin asked where it
+can be — and where this reader departs from it on purpose, the departure
+is asserted rather than skipped.
+
+Shown to fail: a build that ignores the sum fails six checks, and one
+that does not put back the space a one-character `.hcx` line lost fails
+the stripped-spaces variant.
+
+**What it cannot see.** Only BinHex 2.0 has written anything here; a
+`.hex` from BinHex 1.0 or the BASIC BinHexes would be graded by hexbin
+alone. It runs the CLI only; the Mac application's three runs (System
+6.0.8 and System 3.0, 1 MB) are `tools/vmac/run.py` and `sys30.py`, not
+`ci.sh`.
+
 ## ARC and uuencode (`tools/run_arc.py`, `tools/run_uu.py`, in `ci.sh`)
 
 Neither format occurs in the corpus — measured 2026-08-15 by innermost
@@ -2346,7 +2372,7 @@ nothing in `ci.sh` replays it.
 ## base64 and MIME (`tools/run_mime.py`, in `ci.sh`)
 
 Added 2026-08-26. The differential suite has neither: re-measured
-2026-10-11 over all 976 corpus files, exactly one sniffs as a MIME
+2026-10-11 over all 983 corpus files, exactly one sniffs as a MIME
 message and none as base64, and that one — `synth-os9-mime.mim` — is
 written here for the Mac OS 9 tier and has no manifest. So every case
 is generated, and a generated case graded by its
@@ -2418,6 +2444,15 @@ decoded `=0D`. So the comparison gives each implementation the input it
 was written for (munpack gets the LF form), compares BYTES rather than
 names, and the `=0D` case is asserted against a subject munpack is not
 asked to grade. Averaging those away would have hidden all three.
+
+**Progress** (2026-10-13) is three more, with `tick_probe` from beside
+the CLI: a 400 KB message with one attachment and an appledouble pair
+must report nothing past their size and end within 16 KB of it. The
+corpus's one message is 1,248 B, too small for `run_ticks.py` to see
+that mail counted ~3x itself; the build before the fix fails both, by
+836 KB and 639 KB (DECISIONS.md 2026-10-13, *the mail that counted
+itself three times*). That a Cancel anywhere in a message comes back
+as one was checked once, by a scratch harness, and is not here.
 
 **What it cannot see.** Neither grader knows what a resource fork is:
 the Unix munpack writes an `application/applefile` part out whole and
@@ -3425,9 +3460,12 @@ times*). Reverting the uuencode fix alone fails both `uu-wild-*` rows
 saw it.
 
 **What it cannot see:** how long a gap takes. It counts input bytes, so a
-decoder that spends a minute inside one 8 KB step passes — Arsenic's
-sampled inverse BWT is exactly that shape, and it reports its own
-interpolated position for the purpose (`unc_progress_at`). **Nor a bar
+decoder that spends a minute inside one 8 KB step passes — Arsenic is
+exactly that shape, and reports its own position for the purpose
+(`unc_progress_at`). It passed Arsenic while a Mac Plus went 254 s
+without a callback (DECISIONS.md 2026-10-12, *the block nobody could
+cancel*). The gap in TIME is `-D UNC_AT_TICKGAP` on the emulator
+(tools/vmac/README.md), and it is not in `ci.sh`. **Nor a bar
 that goes backwards, or one that sits below 100 % with no work left:**
 only the excess over the total is graded. uuencode's scan ticks up to the
 end of a document and its writing pass then starts again from the
@@ -3936,10 +3974,11 @@ source produced the same payload hash.
 
 **What it cannot see:**
 
-- **`dist/MacExtract.dsk`.** `make_dist.sh` copies both files in one run, so
-  a current `.bin` implies a current `.dsk` unless somebody edits one by
-  hand. The `.dsk` is an HFS volume carrying its own dates and cannot be
-  compared byte for byte without mounting it.
+- **`dist/MacExtract.dsk` and `dist/MacExtract-1440K.img`.** `make_dist.sh`
+  writes all three in one run and round-trips each image's application
+  against the `.bin`, so a current `.bin` implies current images unless
+  somebody edits one by hand. They are HFS volumes carrying their own dates
+  and cannot be compared byte for byte without mounting them.
 - **Anything, without a Retro68 toolchain.** No `build/mac/MacExtract.bin`,
   no comparison; the whole variant already skips there.
 - **A docs-only change**, which does not run `ci.sh` (CLAUDE.md, Rules).
@@ -4004,7 +4043,7 @@ emulator tiers are what cover these:
 
 - **No instruction cache, on either host.** The flush is counted, never
   needed; whether it WORKS is real 68020-and-up silicon's answer
-  (MANUAL_TESTS.md §2).
+  (BLOCKERS.md, *Status*: the LC 475, round 2).
 - **Not Retro68's code generation, where an image is EXECUTED.** The two
   toolchains do not even emit the same relocations: `m68k-linux-gnu-gcc`
   produces 15 in one image, Retro68 30 across six. The shipped images are
@@ -4785,6 +4824,37 @@ not in `ci.sh`: the shipped application extracts the `Forked` specimen
 on System 6.0.8, answering its password dialog wrongly once, and both
 forks are read back off the volume.
 
+## MacGzip's own output (`tools/run_macgzip.py`, in `ci.sh`)
+
+Added 2026-10-14. Every gzip fixture came from Unix `gzip` or
+`synth_exo.py`; these are eleven files **MacGzip 1.1.3 68K** wrote on
+emulated Mac OS 8.1 from one two-fork subject (TEXT/ttxt, 292 + 391 B):
+MacBinary mode at each of levels 1–9 (its stepper has no 0), Binary
+mode and ASCII mode. Made by the MacStamp session; the docstring has
+how.
+
+    python3 tools/run_macgzip.py --macextract build/macextract
+
+    ~/.cache/macextract/vmac/specimens/macgzip/{lvl1..9,binary,ascii}.gz
+    ~/.cache/macextract/vmac/specimens/macgzip/source-A_Document.macbinary.bin
+
+Each must sniff as Gzip and extract to: both forks of the subject under
+its MacBinary name (MacBinary mode, two envelopes deep); its data fork
+(Binary); its data fork with CR→LF (ASCII — what MacGzip wrote). The
+subject's forks are read by the script from the MacBinary II header, not
+by the engine. The MacBinary layer, taken off with `-nr`, must list
+with the subject's type, creator and fork lengths.
+
+**Made to fail before it was believed** (measured 2026-10-14): a flipped
+deflate byte (checksum mismatch, 1 failed), one resource byte changed in
+the subject (9 failed), a missing specimen (*incomplete*), and a CLI
+forced to `-nr` that leaves the MacBinary layer on (9 failed).
+
+**What it cannot see**: stored deflate blocks — MacGzip cannot write
+one — or any MacGzip other than 1.1.3 68K; the name in the gzip header,
+which the engine ignores as `unar` does; and the Macintosh host. With no
+specimen directory it skips and returns 0; a partial set fails.
+
 ## Short reads (`tools/run_shortread.py`, in `ci.sh`)
 
 Added 2026-10-09. `UncIO` lets a read return fewer bytes than asked
@@ -4808,7 +4878,7 @@ give up on a short read (953 of 959 fixtures failed, 2026-10-09), and a binary b
 before the hook (refused outright — the CLI's announcement is what tells
 a binary that honours the cap from one that passes by ignoring it, and
 the first run of this lane was exactly that, green on a stale build).
-964 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
+971 fixtures at 1 B, 3 and 7 all agreed with uncapped on the fixed build.
 
 **What it cannot see**: a decoder that is right under any cap and slow
 under a small one — nothing times the calls — and the Macintosh host,
@@ -5524,7 +5594,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 976 files, and the
+  the population you give it: the corpus is 983 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is
@@ -5674,7 +5744,15 @@ character that was touched three times*).
     running emulator). A decoy disk holding no part of the set goes in
     first and must not dismiss anything — without that control the
     phase could not tell "reacted to the right disk" from "the alert
-    went away". It ends on the joined bytes.
+    went away". It ends on the joined bytes, so its fixture must not be
+    an archive (`tools/vmac/README.md`). `--diskeject` puts part 1 on a
+    floppy of its own and asserts, from the emulator's open files, that
+    the floppy is ejected before the alert asks and the application's
+    disk is not, and on System 7 that no dimmed Floppy A is left on the
+    Finder's desktop. **Neither can see a one-drive Mac**: Mini vMac gives
+    every insertion a new drive (MANUAL_TESTS.md §4) — except
+    `onedrive.py`'s, on a Mini vMac built with one floppy drive, which
+    counts the disks the System asks for after Save.
 
     `--wd` covers the other half and asserts the same way: the archive
     goes inside a folder, Return accepts the default destination, and

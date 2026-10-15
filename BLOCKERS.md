@@ -24,7 +24,10 @@ error, late image or failed keep on any of the 238 runs.
 | System 6.0.8, **1 MB** — the RAM floor | **74/74**: the 72 on 2026-10-09 (one fixture re-run after an `EMUDIED`, a host-side exit before any grid), `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11; no memory-budget refusals remain |
 | System 6.0.8, **512 KB** Macintosh 512Ke | **68/74**: the 72 on 2026-10-09, `4alnch11.zip` 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — six per-entry refusals. **The model said 67/72**: `a2ps.V4.3.tar.Z`, which passed here on 2026-09-27, is refused 4,142 B short, and the model passed it on budgets 16,888 B stale (*Withdrawn claims*). With every decoder resident, 63/72, the nine the resident lane names (2026-10-09; not run on the two newest) — ten since 2026-10-11, DERIVED: `derived-DD_Expand.sea` is 436 B short after `JPEG Lossy`'s +704 B to the control |
 | System 7.0.1, 4 MB | **74/74**, 2026-10-10, `synth-sqp-clear.pkg` 2026-10-11 — the only tier with a code-cache flush route: `_HWPriv` called on all 72 of the `UNC_AT_BUDGET` sweep, once per kept image plus the bundle fixup |
-| **Macintosh LC 475, real** (68LC040, System 7.6.1, 12 MB) — the first silicon | **9/11 on `dist/` v0.39.0**, 2026-10-11, by the maintainer: `.cpt`, StuffIt 1.5, methods 13 and 14, StuffIt 5 (to 45 entries, 29 s), MacBinary and BinHex, no bomb; counts and names checked by eye, not bytes. The two zips failed and were a shell defect every tier was blind to, fixed and re-run under emulation only (DECISIONS.md 2026-10-11, *the zip that was a set of one*). Truncated and non-archive files refused as designed |
+| **Macintosh LC 475, real, round 3** (2026-10-13, `main` at f4e87ac, MANUAL_TESTS.md §4–§5, in progress) | By eye: Standard File's Desktop to other volumes and back; the destination dialog (opens in the archive's folder, Cancel back, prompt whole); a two-floppy split set in one drive, the first ejected by itself, left dimmed — unmounted since, confirmed on the LC 2026-10-14 (DECISIONS.md 2026-10-14); Cancel highlights; Cmd-. cancels on a U.S. layout, and on AZERTY with the period typed as it is there, with Shift; output chosen two folders deep lands there, not at the root; MacExtract on one floppy, the archive opened from another through Standard File: no swap after Save (the preloading build; the day before's copy asked ME, C, ME, as under emulation). A `/` in names reached the disk as `/` (the share stores U+F022); the same archive twice gave `fold~1`, `fold~2`, `README~1`, nothing overwritten, per the saved reports. Two dropped archives: eleven swaps before the first dialog and one inside the second alert, the System's and the Finder's (DECISIONS.md 2026-10-14); a Calculator dragged over the progress window once crawled for two minutes, not reproduced on the LC nor under emulation; while any window is held the extraction stops and resumes on release, as every background process does under cooperative multitasking |
+| **Macintosh LC 475, real, round 2** (2026-10-12, `main` at 238feef) | **24/24 archives, 188 files byte-exact in both forks**, written over AppleShare and graded from Linux: every decoder image on a CPU with a cache, no bomb (MANUAL_TESTS.md §4). A full floppy stopped with *"The disk is full"*, the entry in flight deleted. The build WITHOUT the cache flush: 6 archives, 28 files byte-exact (DECISIONS.md 2026-10-12, *the flush the LC 475 did not need*) |
+| **Macintosh LC 475, real** (68LC040, System 7.6.1, 12 MB) — the first silicon | **9/11 on `dist/` v0.39.0**, 2026-10-11, by the maintainer: `.cpt`, StuffIt 1.5, methods 13 and 14, StuffIt 5 (to 45 entries, 29 s), MacBinary and BinHex, no bomb; counts and names checked by eye, not bytes. The two zips failed and were a shell defect every tier was blind to, fixed and re-run under emulation only (DECISIONS.md 2026-10-11, *the zip that was a set of one*). Truncated and non-archive files refused as designed. **At the declared 400 KB minimum partition** (set in Get Info), a StuffIt 5 archive refused one entry per entry, *"at least 136K"* short, and the rest came out, no bomb; free heap not read, one archive only |
+| **Mac OS 9.2.2, real PowerPC, HFS+** (2026-10-14, MANUAL_TESTS.md §3) | By the maintainer: launch, PackIt and StuffIt 5 onto HFS+ byte-exact (data forks, read back), 8-bit names drawn right, a 32-character name cut to 31, output two folders deep. A 2.3 GB entry ended the run on *"The disk is full"*; refused as one entry since, confirmed there (DECISIONS.md 2026-10-14) |
 | Mac OS 9.2 (QEMU PowerPC, 68LC040 emulation) | **22/22 in one sweep**, the whole of `os9sample.txt`, one boot per fixture — 2026-10-10, through the interactive application (`--launch`, byte-identical to `dist/`) and the autotest build alike |
 
 The heaviest 4 MB allocation is the same to the byte on all three 4 MB
@@ -58,15 +61,19 @@ framebuffer; the host decodes a screenshot and compares it with the Linux
 output, and reads the Out volume for **names**. Only Mini vMac exercises the
 Toolbox glue: the qemu-m68k mock calls the sink directly.
 
-**The fix that unblocked M10 is not understood.** Explicit, fully zeroed HFS
-param blocks (`PBHOpenSync` and siblings) are what ships. The `HOpen`
-attribution was disproved (below); "the old code passed partly
-uninitialised state" is a **hypothesis**, never reduced to a reproduction,
-and not being chased.
+**The fix that unblocked M10 is understood: `ioMisc`.** Explicit, fully
+zeroed HFS param blocks (`PBHOpenSync` and siblings) are what ships. Measured
+2026-10-13 on the M10-era shell (`014ed25`), 4 fixtures per build: Retro68's
+glue fails 0/4, a verbatim copy of it fails 0/4, and the same copy with
+`ioMisc = NULL` alone passes 4/4 (DECISIONS.md 2026-10-13, *the bug was the
+footnote*).
 
-**Upstream: `OpenDF` and `HOpenDF` return `paramErr` on System 6** — the
-`_OpenDF` trap is System 7 and neither falls back, where `FSOpen` does.
-`tools/retro68-hopen-repro/ISSUE.md`, deliberately not filed.
+**Upstream: Retro68's `HOpen`/`HOpenRF`/`HOpenDF` glue leaves `ioMisc` as
+stack garbage, and the File Manager writes through it** — measured 2026-10-13:
+524 bytes on System 6.0.8, 12 on System 7.0.1, into memory the caller never
+passed. MacExtract is unaffected (zeroed param blocks).
+Filed 2026-10-13 as https://github.com/autc04/Retro68/issues/320
+(`tools/retro68-hopen-repro/`).
 
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
 it, a pointer dragged through the grid flips one bit of the result
@@ -512,6 +519,8 @@ line is what makes the next one worth re-testing.
 
 | claim | disproved by | withdrawn |
 |---|---|---|
+| **"Cmd-. does nothing on a French (AZERTY) keyboard"** — OPEN_ITEMS.md, *What the LC 475 found*, from 2026-10-11, with a *hypothesis* that with Command down that key reports no period | **The maintainer on the LC 475, 2026-10-14**: Cmd-Shift with the period key, which is how a period is typed on AZERTY, cancels like the Cancel button; the first try had been Command and the key without Shift, which is not a period there. **Cost: three days as an open item and a technote queued to be read for it; no code was written** | 2026-10-14 |
+| **"Retro68's `OpenDF` and `HOpenDF` return `paramErr` on System 6 and do not fall back: a bug"** — ISSUE.md's headline since 2026-08-01 | **Measured, and Apple's documented contract**: Technote FL 1041 tells the caller to retry with `HOpen` on `paramErr`, and Retro68 issue #53 (closed 2018) settled it that way in `libretro/syscalls.c`. The same note requires `ioMisc` = 0, and the draft's "latent" `ioMisc` point was the real bug: its probe pointed outside a Mac Plus's RAM; one pointing into RAM is written through (DECISIONS.md 2026-10-13, *the bug was the footnote*). **Cost: two and a half months of a ready-to-post report** that would have been closed as a duplicate, with the real defect demoted to its last paragraph | 2026-10-13 |
 | **"The 16-colour icons are a hard limit: nothing here can display them"** — MANUAL_TESTS.md §3 and DECISIONS.md 2026-08-24, *the icon*, "measured 2026-08-27" against QEMU's one depth and "Mini vMac is a 1-bit Mac Plus" | **Mini vMac's own `-m II -depth 2`**: a Macintosh II at 16 colours, built from the source `setup.sh` already fetched, on a ROM in the collection it already downloads. It drew `icl4` and a selected icon on 2026-10-11 (`tools/vmac/colouricon.py`). **Cost: six weeks of the item filed as needing hardware, and it took the first real machine's report to make anyone look** — the measurement was of two TOOLS, and the sentence was about the machine (DECISIONS.md 2026-10-11, *the icon that did not darken*) | 2026-10-11 |
 | **"The Macintosh application opens zip archives"** — README.md's zip row and every release note since zip came in, implied by the zip fixtures passing every Mini vMac tier | **the maintainer's LC 475**, 2026-10-11: `Reduce.zip` and `Shrink.zip` both refused with *"This archive has more parts"* from a clean launch. Reduced under emulation to the NAME: the same bytes fail as `archive.zip` and pass as `archive.sit`, the only name any tier had used. **Cost: every plain `.zip` opened on a Macintosh failed from 2026-08-14 (`739c6814`) until this fix, through every release in between including v0.39.0, whose headline was a zip method** (DECISIONS.md 2026-10-11, *the zip that was a set of one*) | 2026-10-11 |
 | **`run_crypt.py`'s *"sit-des by an unimplemented encryptor"* grades the refusal of an encryptor id this engine does not implement** — the case since 2026-10-02, bent to id 3 | **id 3 is `NewDEx`, implemented the same day, and the copy had no resource fork**: with no `'MKey'` every id is refused identically, so the case passed whatever the id check did. Given its fork and id 5 it fails when the check is removed. **Cost: the third-party-encryptor refusal had no test that could fail for nine days** (DECISIONS.md 2026-10-11, *the constant was a square*) | 2026-10-11 |
@@ -1056,8 +1065,10 @@ refNum, and recorded as M10's root cause. Ten cases — real vRefNum, non-zero
 dirID, write permission, a poisoned stack, a cross-volume open — show `HOpen`
 writing the refNum every time and agreeing with a hand-filled `PBHOpenSync`.
 The same write-up also said `HOpenDF` was the odd one out "unlike the
-non-hierarchical `OpenDF` beside it"; wrong, they are broken identically.
-**Cost:** the true cause of the M10 saga is still unknown and every conclusion
+non-hierarchical `OpenDF` beside it"; wrong, they behave identically (and as
+Apple documents — corrected 2026-10-13, withdrawn above).
+**Cost:** the true cause of the M10 saga stayed unknown until 2026-10-13
+(`ioMisc`, the field the glue leaves unset) and every conclusion
 from that period had to be re-tested — the next three entries. Twice a claim
 about one source file was wrong because the file was read rather than run.
 

@@ -523,7 +523,7 @@ def session(tag, files, which="norton", folder=None, dated=None):
     experiment from the one being run.
     """
     apps = app_files(which)
-    work = tempfile.mkdtemp(prefix="nddwork-")
+    work = R.work_tmp("nddwork-")
 
     def write(seq, tag, stamp=False):
         out = []
@@ -1054,6 +1054,8 @@ def main():
                     help="which release to run (default norton)")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.setup:
         setup()
     elif a.harvest:

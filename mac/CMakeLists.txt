@@ -104,6 +104,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_btoa\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_b64\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_binhex\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_hecx\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_sit5\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_pf\\.c$")
@@ -465,6 +466,11 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # UNC_AT_TWICE: the same archive extracted twice into
                        # one folder; read the Out disk, not the grid.
                        $<$<BOOL:$ENV{UNC_AT_TWICE}>:-DUNC_AT_TWICE>
+                       # UNC_AT_HEAPLOG: append the heap's free total, largest
+                       # block and every block that cannot move to "Heap Log"
+                       # beside the application, written between archives.
+                       # Interactive build only. A probe.
+                       $<$<BOOL:$ENV{UNC_AT_HEAPLOG}>:-DUNC_AT_HEAPLOG>
                        # UNC_AT_NOHIDECURSOR: draw the result grid WITHOUT
                        # hiding the cursor first, to test the claim that the
                        # cursor's saved background stamps over the grid.
@@ -486,6 +492,9 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # put the four tick counts in the grid. A Linux profile
                        # sees only the last of the four.
                        $<$<BOOL:$ENV{UNC_AT_TIMING}>:-DUNC_AT_TIMING>
+                       # UNC_AT_TICKGAP: the widest wait between two progress
+                       # callbacks, in ticks, written to the report file.
+                       $<$<BOOL:$ENV{UNC_AT_TICKGAP}>:-DUNC_AT_TICKGAP>
                        # UNC_MAC_STAGE_WRITES: go back to accumulating each
                        # whole fork in RAM and writing it in sink_end. The
                        # default streams straight to the File Manager; this
@@ -676,11 +685,13 @@ add_custom_command(
             ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_hecx.c
             ${ENGINE_DIR}/src/fmt_binhex_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_binhex.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_host_gen.h
             ${ENGINE_DIR}/src/fmt_binhex.c
+            ${ENGINE_DIR}/src/fmt_hecx.c
             ${ENGINE_DIR}/src/fmt_binhex_probe.c
             ${OVL_DEPS})
 

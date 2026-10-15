@@ -10,10 +10,15 @@
 #   MacExtract.dsk  — an 800K HFS floppy image holding the application. Write it
 #                    to a real 800K floppy, or mount it in Mini vMac / Basilisk /
 #                    SheepShaver, then drag the app onto your startup disk.
-#   README.txt     — the two paragraphs above, for the download.
+#   MacExtract-1440K.img — the same volume at 1.44 MB, for a USB floppy drive,
+#                    which writes MFM only and so cannot make an 800K GCR disk;
+#                    a SuperDrive Mac mounts it (DECISIONS.md 2026-10-14,
+#                    *the floppy a USB drive can write*).
+#   README.txt     — the paragraphs above, for the download.
 #
-# Builds the application first (needs a Retro68 toolchain). Getting the result
-# onto a real machine: MANUAL_TESTS.md, "Before you start".
+# Builds the application first (needs a Retro68 toolchain, and hfsutils for
+# the 1.44 MB image and the round-trip check). Getting the result onto a real
+# machine: MANUAL_TESTS.md, "Before you start".
 #
 # NOT REPRODUCIBLE, and that is not a bug: MacBinary carries the file's
 # creation and modification dates, so two runs over identical code differ at
@@ -22,6 +27,18 @@
 # therefore not evidence that the application changed; compare the payload.
 set -e
 cd "$(dirname "$0")/.."
+
+# Checked before anything is built or written, so a machine without hfsutils
+# stops here rather than leaving a dist/ with no 1.44 MB image in it.
+for t in hformat hmount hcopy humount; do
+    command -v "$t" >/dev/null 2>&1 || {
+        echo "make_dist: $t not found — hfsutils is required" >&2; exit 1; }
+done
+
+# hfsutils keeps its current-volume state in $HOME/.hcwd; each use below
+# gets a scratch HOME of its own rather than the user's.
+HFS_TMP=$(mktemp -d)
+trap 'rm -rf "$HFS_TMP"' EXIT
 
 # Build rather than pick up whatever is lying around. The first version of
 # this script copied an existing build/, and the distribution silently went
@@ -39,6 +56,16 @@ fi
 mkdir -p dist
 cp "$SRC/MacExtract.bin" dist/MacExtract.bin
 cp "$SRC/MacExtract.dsk" dist/MacExtract.dsk
+
+# Built from the MacBinary the way set_bundle_bit.py rebuilds the .dsk:
+# `hcopy -m` carries the Finder flags, hasBundle included.
+IMG=dist/MacExtract-1440K.img
+rm -f "$IMG"
+truncate -s 1474560 "$IMG"
+HOME=$HFS_TMP hformat -l MacExtract "$IMG" >/dev/null
+HOME=$HFS_TMP hmount "$IMG" >/dev/null
+HOME=$HFS_TMP hcopy -m dist/MacExtract.bin ":"
+HOME=$HFS_TMP humount >/dev/null
 VERSION=$(sed -n 's/^#define UNC_VERSION "\(.*\)"/\1/p' include/macextract.h)
 [ -n "$VERSION" ] || { echo "make_dist: no UNC_VERSION in include/macextract.h" >&2; exit 1; }
 
@@ -47,7 +74,7 @@ MacExtract v$VERSION — bootstrap distribution
 ==========================================
 
 A bare Classic Mac has no way to open a .sit/.cpt/.hqx until it HAS an
-unarchiver, so MacExtract ships in two forms that need no unarchiver:
+unarchiver, so MacExtract ships in three forms that need no unarchiver:
 
   MacExtract.bin  The application as uncompressed MacBinary. Transfer it to
                   the Mac with any MacBinary-aware method (ImportFl, a terminal
@@ -59,6 +86,16 @@ unarchiver, so MacExtract ships in two forms that need no unarchiver:
                   floppies only), or mount it in an emulator (Mini vMac,
                   Basilisk II, SheepShaver), then drag MacExtract onto your
                   startup disk.
+
+  MacExtract-1440K.img  The same disk at 1.44 MB, for a USB floppy drive.
+                  Write the image itself, not a copy of the file, to a
+                  high-density disk (dd on Linux or a Mac, a raw image writer
+                  on Windows), and any Mac with a 1.44 MB SuperDrive mounts
+                  it. A USB drive cannot write an 800K Mac disk, and a Mac
+                  Plus, 512Ke or original SE cannot read a 1.44 MB one.
+                  Copying MacExtract.bin onto a PC-formatted disk does not
+                  work either: it arrives still wrapped, with nothing on the
+                  Mac to unwrap it. Not yet tried on a real SuperDrive.
 
 Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
@@ -90,16 +127,30 @@ Three more from the same afternoon. MacExtract now quits after an
 archive: it reads its decoders from disk once, at launch, and keeps only
 the ones that archive needs, so a second archive in another format could
 not be opened -- and it no longer offers you one. Open it again for the
-next archive. Extracting an archive into a folder where you already
-extracted it gives you a second folder, "Name~1", with the files inside
-under their own names, instead of "~1" copies scattered through the
-first. And in 256 colours or more the icon now darkens all over when you
-select it, as Apple's own do; it used to darken only its white.
+next archive, or select several archives in the Finder and open them
+together: between them it reads its decoders from disk again, which on a
+Mac with one floppy drive may ask for its own disk back. Extracting an
+archive into a folder where you already extracted it gives you a second
+folder, "Name~1", with the files inside under their own names, instead
+of "~1" copies scattered through the first. And in 256 colours or more
+the icon now darkens all over when you select it, as Apple's own do; it
+used to darken only its white. If an earlier MacExtract was ever on that
+Mac, the Finder keeps showing the old icon until you rebuild the desktop:
+restart holding Command and Option.
+
+An archive split across floppies is one step shorter on a one-drive Mac:
+when the next part is not on the floppy the last one came from,
+MacExtract ejects that floppy before it asks, so putting the next one in
+is all there is to do.
 
 And one from StuffIt Deluxe 2.0: a photograph its JPEG add-on had
 squeezed came back as the wrong picture -- silently -- unless it was 256
 pixels wide and grey. Every width and every colour mode the add-on
 writes now comes back exactly as StuffIt Deluxe 2.0 itself restores it.
+
+BinHex files from before BinHex 4 open too: the .hex and .hcx that
+BinHex 2.0 wrote, which is how Macintosh software was passed around in
+1984 and 1985.
 
 v0.39.0, before it, opened the last zip method of PKZIP's first years:
 Reducing, in all four of its strengths. No Macintosh program is known
@@ -396,46 +447,31 @@ License: LGPL-2.1-or-later. See LICENSE and NOTICE in the source tree.
 TXT
 
 echo "make_dist: wrote dist/MacExtract.bin ($(wc -c < dist/MacExtract.bin) B),"
-echo "make_dist:       dist/MacExtract.dsk ($(wc -c < dist/MacExtract.dsk) B), dist/README.txt"
+echo "make_dist:       dist/MacExtract.dsk ($(wc -c < dist/MacExtract.dsk) B),"
+echo "make_dist:       $IMG ($(wc -c < "$IMG") B), dist/README.txt"
 
-# Cheap proof that the two artifacts carry the same application: the .dsk's
-# copy round-trips back to a MacBinary whose resource fork — which is the
-# whole of an APPL — matches the one in dist/MacExtract.bin byte for byte.
-#
-# hfsutils does that properly, through the catalog. Without it the check
-# still runs, weaker: the fork must appear verbatim in the image. A machine
-# with no hfsutils used to reach this line and die with `hmount: not found`
-# AFTER writing dist/, which read as "the build failed" when the artifacts
-# were in fact sitting there unverified (2026-08-15).
-if command -v hmount >/dev/null 2>&1; then
-    HOME_SAVE=$HOME
-    HOME=$(mktemp -d); export HOME
-    hmount dist/MacExtract.dsk >/dev/null
-    hcopy -m "MacExtract:MacExtract" "$HOME/roundtrip.bin"
-    humount >/dev/null
-    python3 - "$HOME/roundtrip.bin" <<'PY'
+# Cheap proof that the three artifacts carry the same application: each
+# image's copy round-trips back to a MacBinary whose resource fork — which is
+# the whole of an APPL — matches the one in dist/MacExtract.bin byte for byte,
+# with hasBundle still set. hfsutils does that through the catalog; it is
+# checked for at the top, because a machine without it used to reach this
+# point and die AFTER writing dist/, which read as "the build failed" when
+# the artifacts were in fact sitting there unverified (2026-08-15).
+for img in dist/MacExtract.dsk "$IMG"; do
+    HOME=$HFS_TMP hmount "$img" >/dev/null
+    HOME=$HFS_TMP hcopy -m "MacExtract:MacExtract" "$HFS_TMP/roundtrip.bin"
+    HOME=$HFS_TMP humount >/dev/null
+    python3 - "$HFS_TMP/roundtrip.bin" "$img" <<'PY'
 import sys
 a = open(sys.argv[1], 'rb').read()
 b = open('dist/MacExtract.bin', 'rb').read()
 rl = int.from_bytes(b[87:91], 'big')
 same = a[128:128 + rl] == b[128:128 + rl]
-print(f"make_dist: .dsk round-trip: {rl} B resource fork, "
-      f"{'identical' if same else 'DIFFERENT'} to the MacBinary")
-sys.exit(0 if same else 1)
+flags = (a[73] << 8) | a[101]
+print(f"make_dist: {sys.argv[2]} round-trip: {rl} B resource fork, "
+      f"{'identical' if same else 'DIFFERENT'} to the MacBinary, "
+      f"Finder flags 0x{flags:04X}")
+sys.exit(0 if same and flags & 0x2000 else 1)
 PY
-    rm -rf "$HOME"
-    HOME=$HOME_SAVE; export HOME
-else
-    python3 - <<'PY'
-import sys
-b = open('dist/MacExtract.bin', 'rb').read()
-img = open('dist/MacExtract.dsk', 'rb').read()
-rl = int.from_bytes(b[87:91], 'big')
-fork = b[128:128 + rl]
-found = fork in img
-print(f"make_dist: no hfsutils, weaker check: {rl} B resource fork "
-      f"{'found verbatim in' if found else 'NOT FOUND in'} the .dsk "
-      f"(the catalog itself is unchecked)")
-sys.exit(0 if found else 1)
-PY
-fi
+    rm -f "$HFS_TMP/roundtrip.bin"
+done

@@ -8,9 +8,9 @@
  *   - SFGetFile to pick an archive, then SFPutFile to pick where the
  *     output goes — opening in the archive's own folder, so Return
  *     means "beside it"; loop back to SFGetFile until Cancel.
- *   - Event loop on GetNextEvent + SystemTask; WaitNextEvent is used
- *     only after a runtime trap check.
- *   - Modal progress dialog with a Cancel button (and Cmd-.).
+ *   - Event loop on GetNextEvent + SystemTask, on every System.
+ *   - Progress in a titled window with a Cancel button (and Cmd-.),
+ *     under an Apple menu and a File menu, so System 7 can switch out.
  *   - Streaming writes to the data fork and resource fork (HOpenRF),
  *     then PBSetCatInfo for type/creator/Finder flags/dates.
  *   - 31-character, colon-free name sanitization with collision
@@ -51,6 +51,10 @@
 #define kStatusItem     2
 #define kBarItem        3
 #define kDetailItem     4
+#define kFileMENU       128     /* File > Quit, its only item */
+#define kAppleMENU      129     /* About MacExtract..., its only item */
+#define kAboutALRT      134
+#define kNoReloadALRT   135     /* the next archive's decoders: no room */
 
 /* Extra stack over the 8 KB default, giving a 12 KB stack.
  *
@@ -191,7 +195,9 @@ static long gTkRun, gTkRead, gTkWrite, gTkMeta, gTkBack;
 /* ------------------------------------------------------------------ */
 
 #ifndef UNC_SINK_TEST
-static Boolean gHasWNE;
+#ifdef UNC_MAC_AUTOTEST
+static Boolean gHasWNE;     /* at_idle only; the application has one path */
+#endif
 
 #ifdef UNC_AT_CONTIG
 /* The reserve's real job, measured for the first time.
@@ -272,6 +278,7 @@ static Boolean Has128KROM(void)
     return (Boolean)!(rom[8] == 0 && rom[9] < 0x75);
 }
 
+#ifdef UNC_MAC_AUTOTEST
 static Boolean TrapAvailable(short trap)
 {
     /* Multiversal names: kToolboxTrapType/kOSTrapType. */
@@ -279,6 +286,7 @@ static Boolean TrapAvailable(short trap)
     return NGetTrapAddress((uint16_t)trap, tt) !=
            NGetTrapAddress(_Unimplemented, kToolboxTrapType);
 }
+#endif
 #endif
 
 /* ------------------------------------------------------------------ */
@@ -866,7 +874,7 @@ typedef struct {
  * an update event, and prog_tick calls BarDraw directly in between. The
  * percentage lives in a file static because a userItem proc is handed
  * nothing but the dialog and the item number. (The no-global-state rule
- * is an ENGINE rule; the shell already keeps gHasWNE and friends.) */
+ * is an ENGINE rule; the shell already keeps gBarPct and friends.) */
 static short gBarPct = 0;
 
 static void BarDraw(const Rect *box)
@@ -911,22 +919,40 @@ static void PStrCatNum(Str255 d, long n)
     for (i = 1; i <= (short)t[0] && d[0] < 255; i++) d[++d[0]] = t[i];
 }
 
+/* One event path on every System, 3.0 to 9: GetNextEvent and SystemTask,
+ * which MultiFinder and System 7 still give the processor away in, and
+ * nothing that asks which System this is (DECISIONS.md 2026-10-12, *the
+ * application nobody could leave*). The menu bar is what System 7 needs
+ * to let the user switch out; a press is only seen at the next pump, so a
+ * click shorter than the gap between two of them is lost — hold the
+ * button. No Cmd-Q and no dragging the window: 64 B between them, and
+ * Cmd-. and the Finder already cover both.
+ *
+ * Quit is Cancel: the application quits after an archive whose decoders
+ * it released, which every extraction that reaches this pump has. */
 static void ProgressPump(Progress *pr)
 {
     ReserveSample();
     EventRecord ev;
-    Boolean got;
+    WindowPtr w;
+    long r;
 
-    if (gHasWNE) got = WaitNextEvent(everyEvent, &ev, 1, NULL);
-    else {
-        SystemTask();
-        got = GetNextEvent(everyEvent, &ev);
-    }
-    if (got) {
+    SystemTask();
+    if (GetNextEvent(everyEvent, &ev)) {
         if (ev.what == keyDown &&
             (ev.modifiers & cmdKey) &&
             (char)(ev.message & charCodeMask) == '.') {
             pr->cancelled = true;
+            return;
+        }
+        if (ev.what == mouseDown && FindWindow(ev.where, &w) == inMenuBar &&
+            (r = MenuSelect(ev.where)) != 0) {
+            HiliteMenu(0);
+            if ((short)(r >> 16) == kAppleMENU) {
+                NoteAlert(kAboutALRT, NULL);
+                if (pr->dlg) SetPort((GrafPtr)pr->dlg);
+            } else
+                pr->cancelled = true;
             return;
         }
         if (IsDialogEvent(&ev)) {
@@ -1666,14 +1692,11 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
  * block first. This is what made the Mac shell work at all, after a long
  * period in which every open silently failed.
  *
- * It was attributed to Retro68's high-level HOpen/HOpenRF glue ("returns noErr
- * but never writes back the refNum on System 6"). That attribution is
- * WITHDRAWN: tools/retro68-hopen-repro/ tests exactly that against a
- * hand-filled PBHOpenSync on the same setup and they agree in all ten cases.
- * The honest statement is that zeroing the whole param block fixed it and we
- * do not know which field mattered; the one real glue finding that survives is
- * that HOpenDF returns paramErr on System 6 (PBHOpenDFSync issues a System 7
- * trap with no fallback), which is why nothing here calls it.
+ * The field that mattered is ioMisc, measured 2026-10-13: Retro68's
+ * HOpen/HOpenRF glue leaves it as stack garbage and the File Manager uses it
+ * as an access path buffer. Rebuilding the M10-era shell with a verbatim copy
+ * of that glue fails, and the same copy with ioMisc = NULL alone passes
+ * (DECISIONS.md, *the bug was the footnote*; tools/retro68-hopen-repro/).
  *
  * Field layout: Multiversal CIncludes HParamBlockRec. */
 static OSErr MyOpenFork(short vol, long dir, ConstStr255Param name,
@@ -1737,6 +1760,8 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 #else
 #define SINK_BEGIN sink_begin
 #endif
+
+#define kTooBig 1        /* not an OSErr: see SINK_BEGIN's create loop */
 
 static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 {
@@ -1831,7 +1856,18 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
         Str63 base;
         BlockMoveData(s->curName, base, s->curName[0] + 1);
         for (attempt = 0; ; attempt++) {
-            err = MyHCreate(s->vRefNum, s->curDirID, s->curName);
+            /* A fork of 2 GB or more cannot be written here: the File
+             * Manager's offsets are a signed long, so SetEOF took
+             * 2,300,000,000 as negative and the run ended on "The disk is
+             * full" with 110 GB free (Mac OS 9.2.2, HFS+, 2026-10-14). So it
+             * fails here, as this entry alone, before the file is made: the
+             * test is 0x80000000 up to, not including, UNC_SIZE_UNKNOWN, and
+             * kTooBig is no OSErr — they are all negative (DECISIONS.md
+             * 2026-10-14, *the file the disk was too full for*). */
+            err = (info->data_size - 0x80000000UL < 0x7FFFFFFFUL ||
+                   info->rsrc_size - 0x80000000UL < 0x7FFFFFFFUL)
+                  ? kTooBig
+                  : MyHCreate(s->vRefNum, s->curDirID, s->curName);
             if (err == noErr) break;
             if (err == dskFulErr) return -1;     /* nothing else will fit */
             if (err != dupFNErr || attempt >= 99) {
@@ -1843,6 +1879,8 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 RepEntryFailed(nm + leafStart, leafLen,
                                err == dupFNErr
                                ? " could not be given a name of its own"
+                               : err == kTooBig
+                               ? " is over 2 GB, too large here"
                                : " could not be created on the disk");
                 s->errors++;
                 return 1;
@@ -2404,6 +2442,11 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 #define kSegMaxKnown 64      /* parts we can remember where to find */
 
 static void ShowNote(short alrtID, const unsigned char *msg);
+#ifdef UNC_AT_HEAPLOG
+static void HeapLog(const char *tag);
+static void HeapLogFlush(void);
+static short gHeapLogN;
+#endif
 
 typedef struct {
     short vRefNum;
@@ -2964,6 +3007,7 @@ static void SegScanDir(SegHost *h, short vol, long dir)
 
 #ifndef UNC_MAC_AUTOTEST
 #define kSegALRT        131
+#define kSegEjectALRT   136     /* the same, after an eject */
 #define kSegFindItem    1
 #define kSegSkipItem    2
 #define kSegCancelItem  3
@@ -2973,7 +3017,7 @@ static void SegScanDir(SegHost *h, short vol, long dir)
 
 /* An alert filter takes no context, so these say which part the alert
  * currently on screen is waiting for. The shell already keeps state this
- * way (gHasWNE); the no-global rule is the engine's. */
+ * way (gBarPct); the no-global rule is the engine's. */
 static SegHost *gSegAsking = NULL;
 static int gSegWantPart = 0;
 static long gSegNextPoll = 0;    /* TickCount: throttles SegDiskFilter */
@@ -3107,16 +3151,98 @@ static void SegCatRemaining(Str255 msg, uint32_t left)
     PStrCat(msg, " still to read.");
 }
 
+/* The drive the volume `vol` is in, or 0 for none: a server volume, or
+ * one already ejected. `vol` may be a working directory. */
+static short SegDriveOf(short vol)
+{
+    HParamBlockRec pb;
+    pb.volumeParam.ioNamePtr = NULL;
+    pb.volumeParam.ioVRefNum = vol;
+    pb.volumeParam.ioVolIndex = 0;
+    if (PBHGetVInfoSync(&pb) != noErr) return 0;
+    return pb.volumeParam.ioVDrvInfo;
+}
+
+/* The drive holding the file `ref` is open on, or 0. */
+static short SegDriveOfFile(short ref)
+{
+    FCBPBRec fcb;
+    fcb.ioNamePtr = NULL;
+    fcb.ioVRefNum = 0;
+    fcb.ioRefNum = ref;
+    fcb.ioFCBIndx = 0;
+    if (PBGetFCBInfoSync(&fcb) != noErr) return 0;
+    return SegDriveOf(fcb.ioFCBVRefNum);
+}
+
+/* A part that is not beside the one before it is on another disk, and on
+ * a one-drive Mac the drive holds the disk the last part came from. So
+ * that disk is ejected before the alert asks, and putting the next one in
+ * is the whole answer (the maintainer's design, 2026-10-13).
+ *
+ * Not ejected: a disk the drive queue calls nonejectable, a volume in no
+ * drive (a server), and the disk holding this application or the System
+ * — the Toolbox reads both while the alert is up, so ejecting either
+ * starts a swap the user did not ask for. The destination is not
+ * checked: a split set is split because it does not fit one floppy, so
+ * extracting it onto one of its own is the user's mistake. Returns
+ * nonzero if a disk was ejected.
+ *
+ * Source for the flag byte: Inside Macintosh: Files, File Manager
+ * Reference, "Drive queue" — four flag bytes precede each DrvQEl; byte 1
+ * is "0 if no disk in drive; 1 or 2 if disk in drive; 8 if nonejectable
+ * disk in drive; $FC-$FF if disk was ejected within last 1.5 seconds;
+ * $48 if disk in drive is nonejectable but driver wants a call". */
+static int SegEjectPrevious(SegHost *h, int part)
+{
+    DrvQEl *q;
+    ParamBlockRec pb;
+    short drive;
+    unsigned char f;
+
+    if (part < 2 || !h->loc[part - 1].name[0]) return 0;
+    drive = SegDriveOf(h->loc[part - 1].vRefNum);
+    if (drive <= 0 || drive == SegDriveOfFile(LMGetCurApRefNum()) ||
+        drive == SegDriveOfFile(LMGetSysMap())) return 0;
+    for (q = (DrvQEl *)LMGetDrvQHdr().qHead; q; q = (DrvQEl *)q->qLink)
+        if (q->dQDrive == drive) break;
+    if (q == NULL) return 0;
+    f = ((unsigned char *)q)[-3];
+    if (f != 1 && f != 2) return 0;
+    /* Unmounted as well as ejected: Eject alone leaves the volume mounted
+     * offline, and the Finder keeps a dimmed icon for it — one per disk of
+     * a long set (the LC 475, 2026-10-13). UnmountVol "does not eject the
+     * volume" and fails with fBsyErr while a file on it is open (Inside
+     * Macintosh: Files, UnmountVol), which is the destination-on-this-
+     * floppy case; that disk is still ejected, and stays offline as
+     * before. Parts remembered on it are forgotten first, because their
+     * refNums die with the volume and a part needed again must be asked
+     * for again. Both calls take a drive number. */
+    { int p;
+      for (p = 1; p <= kSegMaxKnown; p++)
+          if (h->loc[p].name[0] && SegDriveOf(h->loc[p].vRefNum) == drive)
+              h->loc[p].name[0] = 0; }
+    pb.volumeParam.ioNamePtr = NULL;
+    pb.volumeParam.ioVRefNum = drive;
+    (void)PBUnmountVol(&pb);
+    pb.volumeParam.ioVRefNum = drive;
+    return PBEject(&pb) == noErr;
+}
+
 /* Ask the user to point at part `part`. Returns nonzero once it has been
  * located. The autotest build has no user, so this is not compiled there
  * and a part that was not found beside the archive is simply missing. */
 static int SegAskUser(SegHost *h, int part)
 {
     Str255 msg;
+    Str63 left;                  /* " About 12345K still to read." */
     SFReply reply;
     Point where;
     short hit;
     short savedMask;
+    /* Which alert: the two differ only in their wording, which lives in
+     * the DITLs so that neither costs the A5 world a byte. */
+    short alrt = SegEjectPrevious(h, part) ? kSegEjectALRT : kSegALRT;
 
     for (;;) {
         msg[0] = 0;
@@ -3125,10 +3251,10 @@ static int SegAskUser(SegHost *h, int part)
         PStrCat(msg, " of \"");
         { short i; for (i = 0; i < (short)h->desc.name_len && msg[0] < 200; i++)
                        msg[++msg[0]] = h->desc.name[i]; }
-        PStrCat(msg, "\" has not been found.");
-        SegCatRemaining(msg, SegRemaining(h));
-        PStrCat(msg, " Locate it, skip it, or cancel.");
-        ParamText(msg, "\p", "\p", "\p");
+        PStrCat(msg, "\"");
+        left[0] = 0;
+        SegCatRemaining(left, SegRemaining(h));     /* 30 bytes at most */
+        ParamText(msg, left, "\p", "\p");
 
         if (h->hide) HideWindow((WindowPtr)h->hide);
         gSegAsking = h;
@@ -3140,7 +3266,7 @@ static int SegAskUser(SegHost *h, int part)
         LMSetSysEvtMask(savedMask | diskMask);
         gSegNextPoll = 0;
         ContigSample();
-        hit = CautionAlert(kSegALRT, NewModalFilterUPP(SegDiskFilter));
+        hit = CautionAlert(alrt, NewModalFilterUPP(SegDiskFilter));
         LMSetSysEvtMask(savedMask);
         gSegAsking = NULL;
         h->asked = 1;
@@ -3884,6 +4010,9 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
          * credited back, and a credit path would be code no run executes. */
         { extern void ovl_release_if_unwanted(UncFormat, UncIO *);
           ovl_release_if_unwanted(extractedAs, &io); }
+#ifdef UNC_AT_HEAPLOG
+        { char t[4] = "A0"; t[1] = (char)('1' + gHeapLogN++); HeapLog(t); }
+#endif
 #endif
         /* SpaceSaver is the exception to the strip above: it compresses a
          * file IN PLACE and adds no extension, so the whole name is the
@@ -4380,6 +4509,41 @@ static int at_prog_tick(void *ctx, uint32_t done, uint32_t total)
 }
 #endif
 
+#ifdef UNC_AT_TICKGAP
+/* How long the user waits for the application to look at a click. The
+ * shipped shell pumps events only from the engine's progress callback,
+ * and run_ticks.py bounds the gap between two callbacks in INPUT BYTES,
+ * which says nothing about seconds (OPEN_ITEMS.md, *A click during an
+ * extraction*). This records the widest gap in TICKS, File Manager time
+ * included, with the input position either side of it; the gap before
+ * the first callback and after the last are kept apart, since the first
+ * includes the decoders' load and the last the final close.
+ *
+ * Each callback then runs the SHIPPED one, prog_tick, with no dialog:
+ * its 10 Hz gate, SystemTask and GetNextEvent, so what the pump costs
+ * is in the extraction's time. The bar's redraw is not. */
+static long gGapLast, gGapMax, gGapHead, gGapCount, gGapRun;
+static uint32_t gGapDone, gGapFrom, gGapTo;
+static Progress gGapPr;
+
+static int at_gap_tick(void *ctx, uint32_t done, uint32_t total)
+{
+    StackSample();     /* with UNC_AT_STACK: how deep the pump would sit */
+    long now = TickCount();
+    (void)ctx; (void)total;
+    if (gGapCount == 0) gGapHead = now - gGapLast;
+    else if (now - gGapLast > gGapMax) {
+        gGapMax = now - gGapLast;
+        gGapFrom = gGapDone;
+        gGapTo = done;
+    }
+    gGapLast = now;
+    gGapDone = done;
+    gGapCount++;
+    return prog_tick(&gGapPr, done, total);
+}
+#endif
+
 /* The archive's NAME on the "In" volume: the first file in its root
  * called "archive.<something>", or "archive.sit" when there is none.
  * Until 2026-10-11 it was always "archive.sit", and that hid a whole
@@ -4739,9 +4903,21 @@ int main(void)
 #else
     {
         TK_T0;
+#ifdef UNC_AT_TICKGAP
+        UncProgress gprog;
+        gprog.ctx = NULL;
+        gprog.tick = at_gap_tick;
+        gGapPr.startTicks = gGapRun = gGapLast = TickCount();
+        ret = RunExtract(inVol, fsRtDirID, gATName,
+                         outVol, fsRtDirID, inVol, fsRtDirID,
+                         &gprog, &entries, &errors, NULL);
+        gGapLast = TickCount() - gGapLast;   /* now the tail */
+        gGapRun = TickCount() - gGapRun;     /* the whole extraction */
+#else
         ret = RunExtract(inVol, fsRtDirID, gATName,
                          outVol, fsRtDirID, inVol, fsRtDirID,
                          NULL, &entries, &errors, NULL);
+#endif
 #ifdef UNC_AT_TWICE
         /* The same archive again, into the same folder, as a user does
          * who opens it twice: what the second run makes of the first
@@ -4913,6 +5089,24 @@ int main(void)
              * System 3.0 nor 6.0.8 (2026-10-10; tools/vmac/README.md, *A
              * run that drives the FINDER*). */
             at_report_file(bv, 14);
+            (void)Eject(NULL, gATreportVol);
+            at_report(vals, 8);
+        }
+#elif defined(UNC_AT_TICKGAP)
+        /* The grid is left alone, so the run still grades its bytes; the
+         * gaps go in the FILE, which run.py prints. Ticks, 60 Hz. */
+        {
+            uint32_t gv[15];
+            int k;
+            for (k = 0; k < 8; k++) gv[k] = vals[k];
+            gv[8]  = (uint32_t)gGapMax;    /* widest gap between two ticks */
+            gv[9]  = gGapFrom;             /* input position before it     */
+            gv[10] = gGapTo;               /* ... and after it             */
+            gv[11] = (uint32_t)gGapHead;   /* start to the first tick      */
+            gv[12] = (uint32_t)gGapLast;   /* last tick to return          */
+            gv[13] = (uint32_t)gGapCount;
+            gv[14] = (uint32_t)gGapRun;    /* RunExtract, read-back apart  */
+            at_report_file(gv, 15);        /* file, eject, grid: see above */
             (void)Eject(NULL, gATreportVol);
             at_report(vals, 8);
         }
@@ -5759,7 +5953,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
  * to offer the drop; what the file actually holds is unc_sniff's
  * business, and the whole point of the '****' file reference is to be
  * handed files whose type is wrong. */
-static const unsigned char *gDropNext;   /* the next record, or NULL */
+/* The next record as an OFFSET into the handle, not a pointer: the list
+ * is a relocatable block, an extraction can move it, and the list is read
+ * again after one since the reload (ovl_reload). */
+static long gDropOff;                    /* the next record, or 0    */
 static short gDropLeft;                  /* records not yet taken    */
 
 static void DropInit(void)
@@ -5770,23 +5967,154 @@ static void DropInit(void)
     q = (const unsigned char *)*h;
     if (q[0] || q[1]) return;                     /* appPrint: not ours */
     gDropLeft = (short)((q[2] << 8) | q[3]);
-    if (gDropLeft > 0) gDropNext = q + 4;
+    if (gDropLeft > 0) gDropOff = 4;
 }
 
 /* The next document, into the two fields SFGetFile would have filled.
  * Returns 0 when the list is exhausted. */
 static int DropNext(short *vol, Str63 name)
 {
-    const unsigned char *q = gDropNext;
+    Handle h = LMGetAppParmHandle();
+    const unsigned char *q;
     short len;
-    if (gDropLeft <= 0 || !q) return 0;
+    if (gDropLeft <= 0 || !gDropOff || !h || !*h) return 0;
+    q = (const unsigned char *)*h + gDropOff;
     *vol = (short)((q[0] << 8) | q[1]);
     len = (short)q[8];
     BlockMoveData(q + 8, name, (long)len + 1);
-    gDropNext = q + ((8 + 1 + len + 1) & ~1);
+    gDropOff += (8 + 1 + len + 1) & ~1;
     gDropLeft--;
     return 1;
 }
+
+#ifdef UNC_AT_HEAPLOG
+/* PROBE: one line per call appended to "Heap Log" beside the application —
+ * FreeMem, MaxBlock, and every block that cannot move: non-relocatable, or
+ * a locked handle. The walk is of the 24-bit Memory Manager's heap, from
+ * memory of Inside Macintosh II, Memory Manager, "Structure of Blocks" — an
+ * 8-byte header whose top two tag bits are 00 free, 01 non-relocatable, 10
+ * relocatable, whose low 24 bits are the block's whole physical size, and
+ * whose second long is, for a relocatable block, its master pointer's
+ * offset from the zone. Not a source in this repository; the line's own
+ * free total, summed by the walk, is checked against FreeMem() so a wrong
+ * reading shows itself. Zone layout: Multiverse.h's `Zone`, blocks from
+ * `heapData` to `bkLim`. */
+static void HL_num(unsigned char *b, short *n, long v)
+{
+    char t[12];
+    short k = 0;
+    if (v < 0) { b[(*n)++] = '-'; v = -v; }
+    do { t[k++] = (char)('0' + v % 10); v /= 10; } while (v && k < 11);
+    while (k) b[(*n)++] = (unsigned char)t[--k];
+}
+
+static void HL_str(unsigned char *b, short *n, const char *s)
+{
+    while (*s && *n < 1000) b[(*n)++] = (unsigned char)*s++;
+}
+
+/* Lines collect here and are written by HeapLogFlush BETWEEN archives:
+ * writing the file from inside an extraction hung the machine at 0% on the
+ * 512Ke, every time, with the heap walk taken out as well (2026-10-12). */
+static unsigned char gHeapLogBuf[2048];
+static short gHeapLogLen;
+static void HeapLog(const char *tag)
+{
+    unsigned char *b = gHeapLogBuf + gHeapLogLen;
+    short n = 0, fixed = 0;
+    THz z = ApplicationZone();
+    unsigned char *p = (unsigned char *)&z->heapData;
+    unsigned char *end = (unsigned char *)z->bkLim;
+    long freeSum = 0;
+    FCBPBRec fcb;
+    Str63 nm;
+    short ref;
+    long len;
+
+    if (gHeapLogLen > 2048 - 1024) return;
+    HL_str(b, &n, tag);
+    HL_str(b, &n, " free="); HL_num(b, &n, FreeMem());
+    HL_str(b, &n, " maxblk="); HL_num(b, &n, MaxBlock());
+    HL_str(b, &n, " fixed:");
+    while (p < end && n < 960) {
+        unsigned long hdr = ((unsigned long)p[0] << 24) | ((unsigned long)p[1] << 16)
+                          | ((unsigned long)p[2] << 8) | p[3];
+        unsigned long size = hdr & 0x00FFFFFFUL;
+        short tagbits = (short)(p[0] >> 6);
+        if (size < 8) { HL_str(b, &n, " BADSIZE"); break; }
+        if (tagbits == 0) freeSum += (long)size;
+        else {
+            int show = (tagbits == 1);
+            if (tagbits == 2) {
+                long rel = ((long)p[4] << 24) | ((long)p[5] << 16) | ((long)p[6] << 8) | p[7];
+                Handle h = (Handle)((unsigned char *)z + rel);
+                if (HGetState(h) & 0x80) show = 2;
+            }
+            if (show && fixed < 40) {
+                HL_str(b, &n, show == 1 ? " N@" : " L@");
+                HL_num(b, &n, (long)(p - (unsigned char *)z));
+                HL_str(b, &n, "+");
+                HL_num(b, &n, (long)size);
+                fixed++;
+            }
+        }
+        p += size;
+    }
+    HL_str(b, &n, " walkfree="); HL_num(b, &n, freeSum);
+    b[n++] = '\r';
+    gHeapLogLen += n;
+}
+
+static void HeapLogFlush(void)
+{
+    /* Parameter-block traps only. The high-level HCreate/HOpen/FSWrite are
+     * Multiversal GLUE rather than traps, and with them this hung the 512Ke
+     * between archives as well as inside one (2026-10-12) — the same
+     * library whose GetAppFiles loops for ever (DECISIONS.md 2026-08-31). */
+    FCBPBRec fcb;
+    HParamBlockRec hp;
+    ParamBlockRec pb;
+    Str63 nm;
+    short vol, ref;
+    long dir;
+    if (gHeapLogLen == 0) return;
+    fcb.ioCompletion = NULL; fcb.ioNamePtr = nm; fcb.ioVRefNum = 0;
+    fcb.ioRefNum = LMGetCurApRefNum(); fcb.ioFCBIndx = 0;
+    if (PBGetFCBInfoSync(&fcb)) return;
+    vol = fcb.ioFCBVRefNum;
+    dir = fcb.ioFCBParID;
+
+    hp.fileParam.ioCompletion = NULL;
+    hp.fileParam.ioNamePtr = (StringPtr)"\pHeap Log";
+    hp.fileParam.ioVRefNum = vol;
+    hp.fileParam.ioFVersNum = 0;
+    hp.fileParam.ioDirID = dir;
+    PBHCreateSync(&hp);                       /* dupFNErr is fine */
+
+    hp.ioParam.ioCompletion = NULL;
+    hp.ioParam.ioNamePtr = (StringPtr)"\pHeap Log";
+    hp.ioParam.ioVRefNum = vol;
+    hp.ioParam.ioVersNum = 0;
+    hp.ioParam.ioPermssn = fsWrPerm;
+    hp.ioParam.ioMisc = NULL;
+    hp.fileParam.ioDirID = dir;
+    if (PBHOpenSync(&hp)) return;
+    ref = hp.ioParam.ioRefNum;
+
+    pb.ioParam.ioCompletion = NULL;
+    pb.ioParam.ioRefNum = ref;
+    pb.ioParam.ioPosMode = fsFromLEOF;
+    pb.ioParam.ioPosOffset = 0;
+    PBSetFPosSync(&pb);
+    pb.ioParam.ioBuffer = (Ptr)gHeapLogBuf;
+    pb.ioParam.ioReqCount = gHeapLogLen;
+    pb.ioParam.ioPosMode = fsAtMark;
+    pb.ioParam.ioPosOffset = 0;
+    PBWriteSync(&pb);
+    PBCloseSync(&pb);
+    gHeapLogLen = 0;
+}
+#endif
 
 int main(void)
 {
@@ -5818,6 +6146,9 @@ int main(void)
     TEInit();
     InitDialogs(NULL);
     InitCursor();
+    InsertMenu(GetMenu(kAppleMENU), 0);     /* resources of our own, */
+    InsertMenu(GetMenu(kFileMENU), 0);      /* read into a fresh heap */
+    DrawMenuBar();
 
 #ifdef UNC_AT_OVERLAY
     /* The overlay bundle, read ONCE, here, while the boot disk is certainly
@@ -5836,7 +6167,6 @@ int main(void)
 #endif
     FlushEvents(everyEvent, 0);
 
-    gHasWNE = TrapAvailable(_WaitNextEvent);
     DropInit();
 
     where.h = 82;
@@ -5871,9 +6201,9 @@ int main(void)
          * POSITION below. DECISIONS.md, 2026-08-09. */
         /* A document the Finder handed over takes the place of the
          * Open dialog, one per pass, and the loop falls back to Standard
-         * File when the list runs out. Since 2026-10-11 the shipped
-         * (eager) build quits after the first archive it extracts, below,
-         * so of three dropped archives one is extracted. */
+         * File when the list runs out. The shipped (eager) build reloads
+         * its decoders between archives of one list and quits after an
+         * archive chosen in Standard File, below. */
         if (!DropNext(&reply.vRefNum, reply.fName)) {
 #ifdef UNC_AT_STACK
             SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
@@ -5929,9 +6259,33 @@ int main(void)
          * (DECISIONS.md 2026-10-11, *one archive per launch*). An archive
          * that never got as far as a release — not an archive, could
          * not be opened — still comes back here. */
-        { extern int ovl_spent(void); if (ovl_spent()) break; }
+        { extern int ovl_spent(void);
+          if (ovl_spent()) {
+              /* Archives still in the Finder's list: read the decoders
+               * again rather than drop them, and say so if that cannot be
+               * done (DECISIONS.md 2026-10-12, *the reload that the list
+               * needs*). One chosen in Standard File still quits. */
+              if (gDropLeft > 0) {
+                  extern int ovl_reload(void);
+#ifdef UNC_AT_HEAPLOG
+                  HeapLog("before-reload");
+                  HeapLogFlush();
+#endif
+                  if (ovl_reload()) {
+#ifdef UNC_AT_HEAPLOG
+                      HeapLog("after-reload");
+#endif
+                      continue;
+                  }
+                  StopAlert(kNoReloadALRT, NULL);
+              }
+              break;
+          } }
 #endif
     }
+#ifdef UNC_AT_HEAPLOG
+    HeapLogFlush();
+#endif
     return 0;
 }
 

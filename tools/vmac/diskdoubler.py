@@ -365,11 +365,18 @@ class Session:
     """A booted Mac with screenshots kept per step."""
 
     def __init__(self, boot, extra, shots, mem="mv-4M"):
+        # Under <repo>/.tmp/proc-<pid>/ (tools/guard.py, by way of
+        # run.py), which guard removes when this process exits: callers
+        # read the boot image back out of it AFTER close().
         self.work = tempfile.mkdtemp(prefix="dd-")
         self.shots = shots
         os.makedirs(shots, exist_ok=True)
         self.n = 0
-        self.mac = Mac(boot, mem, self.work, extra=tuple(extra))
+        try:
+            self.mac = Mac(boot, mem, self.work, extra=tuple(extra))
+        except BaseException:
+            shutil.rmtree(self.work, ignore_errors=True)
+            raise
 
     def shot(self, tag, wait=2.0):
         """Screenshot WITHOUT parking the pointer: parking closes a menu
@@ -542,7 +549,7 @@ def make_volume_tree(path, volname, items, size_kb=4096):
 
 
 def session_with_tree(tag, tree):
-    work = tempfile.mkdtemp(prefix="ddwork-")
+    work = R.work_tmp("ddwork-")
     apps = extract_app(work)
     items = [((), a) for a in apps]
     for i, (folder, name, data, extra) in enumerate(tree):
@@ -678,7 +685,7 @@ def verify_combine():
 def session_with_subject(tag):
     """A booted Mac with the DiskDoubler INIT loaded and a work volume
     holding the subject file."""
-    work = tempfile.mkdtemp(prefix="ddwork-")
+    work = R.work_tmp("ddwork-")
     apps = extract_app(work)
     subj = os.path.join(work, "subject.bin")
     open(subj, "wb").write(macbinary(SUBJECT_NAME, "TEXT", "ttxt",
@@ -816,7 +823,7 @@ def install_beta():
 def beta_session(tag, subject=None):
     """A booted Mac with the 1990 INIT loaded and a work volume holding
     the subject file."""
-    work = tempfile.mkdtemp(prefix="ddbetawork-")
+    work = R.work_tmp("ddbetawork-")
     subj = os.path.join(work, "subject.bin")
     open(subj, "wb").write(macbinary(SUBJECT_NAME, "TEXT", "ttxt",
                                      SUBJECT_DATA if subject is None else subject,
@@ -1059,7 +1066,7 @@ SPLIT_FILES = [("Twin A", split_subject(1)),
 def session_with_files(tag, files):
     """A booted Mac with the DiskDoubler INIT loaded and a work volume
     holding `files` — [(name, data)] — beside the application."""
-    work = tempfile.mkdtemp(prefix="ddwork-")
+    work = R.work_tmp("ddwork-")
     apps = extract_app(work)
     mbs = []
     for i, (name, data) in enumerate(files):
@@ -1243,7 +1250,7 @@ def adjudicate(fixture, keep=False, write=False):
         raise SystemExit("diskdoubler: no such fixture: %s" % fixture)
     inner = os.path.join(REPO, "fixtures", payload) if payload else fixpath
 
-    work = tempfile.mkdtemp(prefix="ddadj-")
+    work = R.work_tmp("ddadj-")
     tag = "adj-" + name_only.split(".")[0]
     name, ftype, creator, data, rsrc = unwrap(fixpath, work)
     print("diskdoubler: %s — %s %s/%s, %d B data, %d B rsrc"
@@ -1582,6 +1589,8 @@ def main():
                          "forks no oracle could grade")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     args = ap.parse_args()
+    if args.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if args.setup:
         fetch()
     if args.install:

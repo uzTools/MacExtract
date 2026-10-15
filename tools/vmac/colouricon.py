@@ -24,14 +24,15 @@ photographs as a plausible Finder. The machine is a Mac II at one depth,
 so it says nothing about a different video card's palette, nor about
 4-grey or millions — and nothing about System 7.6.1, which is what the
 LC 475 runs. The emulator is killed rather than shut down, so the next
-boot of the same image shows the "not shut down properly" alert; copy a
-fresh image per run.
+boot of the same image shows the "not shut down properly" alert, so
+the image is booted from a private copy and comes out as it went in.
 """
 import argparse, os, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run as R                                   # noqa: E402
+import guard                                      # noqa: E402
 
 
 def main():
@@ -49,16 +50,25 @@ def main():
     for p in (emu, rom):
         if not os.path.exists(p):
             raise SystemExit(f"colouricon: no {p} — run setup.sh")
-    dpy = R.Display()
+    # Mini vMac cannot open qcow2, so the private copy is a sparse one, in
+    # a run directory under <repo>/.tmp/ whose images guard deletes at exit.
+    image = os.path.join(guard.run_dir("colouricon"),
+                         os.path.basename(a.image))
+    R.sh("cp", "--sparse=always", a.image, image)
+    # Hard limit (tools/guard.py): the boot wait, and the default for the
+    # steps, whose own waits are the caller's.
+    limit = int(a.boot_wait) + guard.LIMIT
+    dpy = R.Display(limit=limit + 30)
     env = dict(os.environ, DISPLAY=dpy.name)
-    proc = subprocess.Popen([emu, "-r", rom, a.image], env=env,
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL, start_new_session=True)
+    proc = None
 
     def xdo(*args):
         subprocess.run(["xdotool", *args], env=env, capture_output=True)
 
     try:
+        proc = guard.spawn([emu, "-r", rom, image], limit=limit, env=env,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
         time.sleep(a.boot_wait)
         geo = subprocess.run(["xdotool", "getwindowgeometry", dpy.window()],
                              env=env, capture_output=True, text=True).stdout
@@ -85,8 +95,7 @@ def main():
                 raise SystemExit(f"colouricon: unknown step {st!r}")
         print(f"colouricon: {n} frame(s), screen origin {ox},{oy}")
     finally:
-        proc.terminate()
-        proc.wait()
+        guard.reap(proc)
         dpy.close()
 
 

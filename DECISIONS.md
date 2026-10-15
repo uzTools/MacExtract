@@ -397,6 +397,24 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-11 (one archive per launch) — the eager overlay lifetime cannot open a second format, so the application quits after an archive instead of offering one
 - 2026-10-11 (the folder that is already there) — a top-level folder already on the disk is numbered, not merged into
 - 2026-10-11 (the icon that did not darken) — the 8-bit icons used colours the Finder does not darken, and the generator had stopped being the source
+- 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
+- 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
+- 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
+- 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
+- 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
+- 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
+- 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
+- 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
+- 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
+- 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
+- 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
+- 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
+- 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
+- 2026-10-14 (the swaps that are the System's) — the swaps before the first dialog happen before MacExtract's main() runs, and a stock application takes as many
+- 2026-10-14 (the floppy a USB drive can write) — a 1.44 MB HFS image joins the download, and why it is not a self-extracting archive
+- 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
+- 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
+- 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
 
 ---
 
@@ -492,7 +510,11 @@ which fails CI if it drifts from the headings below it.
 - **PackIt date fields:** creation @84, modification @88 (macutils
   pit.h H_CTIMOFF/H_MTIMOFF + nocash). XADMaster reads them in the
   opposite order (`modification` then `creation`) — presumed swapped
-  there; harmless to us since manifests don't compare dates.
+  there; harmless to us since manifests don't compare dates. **Settled
+  2026-10-12**: every entry PackIt itself wrote in `derived-PackIt.pit`
+  has @84 ≤ @88 (`PackIt.doc` 1985-10-23 / 1988-01-28), and the LC 475's
+  Finder shows them as created and modified, so `lsar` reports the two
+  swapped.
 - **No real PMa4 fixtures exist** on the surviving mirrors (searched
   Info-Mac/funet/macgdn; every found .pit is stored-mode). Compressed
   coverage comes from `tools/synth_pit.py`: deterministic synthetic
@@ -958,11 +980,14 @@ BLOCKERS.md for the full write-up. Key decisions:
   a real vRefNum and non-zero dirID, with `fsWrPerm`, with `HOpenRF`, and
   across volumes (the app's own pattern). A theory that the glue's
   uninitialised `ioMisc` was to blame was also tested and disproved: poisoning
-  `ioMisc` with `0xA3A3A3A2` still opens and reads correctly.
+  `ioMisc` with `0xA3A3A3A2` still opens and reads correctly. **Corrected
+  2026-10-13:** that address is outside a Mac Plus's RAM; one inside it is
+  written through (*the bug was the footnote*), so this disproof does not hold.
   Consequence: the param-block rewrite (`MyOpenFork`/`MyHCreate`) is kept
   because it demonstrably works, but its justification is now "it zeroes the
   whole param block", not "the glue is broken". **The true root cause of the
-  original failure is unestablished and is deliberately not being chased
+  original failure is unestablished [corrected 2026-10-13: it is `ioMisc` —
+  *the bug was the footnote*] and is deliberately not being chased
   further** — the shell is verified byte-exact on-Mac as it stands, and a
   wrong explanation in the docs is worse than an admitted gap. Rule: a
   root cause that has never been reduced to a minimal reproduction is a
@@ -979,6 +1004,8 @@ BLOCKERS.md for the full write-up. Key decisions:
   write-up named only `HOpenDF`, and said `OpenDF` "already has the fallback".
   It does not — `FSOpen` does. Settled by running it (case 11), not by reading
   `glue.c` again, which is how the first version of this went wrong.
+  **Corrected 2026-10-13:** the `paramErr` is Apple's documented contract, not
+  a bug; the `ioMisc` point is the bug (*the bug was the footnote*).
 - **The on-Mac resource-fork mask is bytes 16..127 and it is header padding,
   not a fudge.** The autotest compares resource forks by CRC, and the System 6
   Resource Manager stamps session scratch into part of the header, so a raw CRC
@@ -9795,8 +9822,9 @@ Not stdio, then — the POSIX layer under it.
 (`libretro/syscalls.c`) does `HCreate(0,0,…)`, then `HOpenDF(0,0,…)`, then
 `HOpen` if that answered `paramErr`; which of the three hangs has not been
 reduced to a reproduction, so it is not a finding and it is not filed as one.
-It sits beside something this project HAS reduced: `OpenDF`/`HOpenDF` return
-`paramErr` on System 6 (`tools/retro68-hopen-repro/`).
+`HOpenDF`'s `paramErr` is documented behaviour, and zeroing the stack
+before `open()` does not change the hang (2026-10-13, *the bug was the
+footnote*).
 
 The fix needs none of that settled. newlib's `funopen()` builds a `FILE *` out
 of four callbacks, so every byte mpack reads or writes goes through the same
@@ -25863,7 +25891,10 @@ nothing to fix**: every selected icon, SimpleText's included, is drawn in
 flat grey, old and new alike (`0d-icon-selected-16.png`). The "16 colours"
 in the open item was this session's reading of the maintainer's note,
 which listed the depths the icon looks right at; it was never measured.
-Not seen on silicon, nor under 7.6.1.
+**Seen on silicon 2026-10-12**: on the LC 475 under System 7.6.1 the new
+icon still darkened only its white until the desktop was rebuilt, then
+darkened all over. The Finder had kept v0.39.0's `icl8` from the first
+copy it registered under `MExt`; the download notes now say to rebuild.
 
 **The generator had stopped being the source.** `macextract_icons.r`
 says "edit the script, not the hex", and has since gained a `'****'`
@@ -25874,3 +25905,845 @@ were spliced in, and the script now says so at its top.
 **Transferable.** "Generated, do not edit" is a claim about a file like
 any other, and it decays the first time somebody edits it anyway. Diff a
 regeneration before trusting it.
+
+## 2026-10-11 (the stub that hands it on) — a 7 KB application per claimed creator launches MacExtract with the Finder's document list intact, so MacExtract is not changed at all
+
+**Claim (measured, System 6.0.8 under the Finder and under MultiFinder,
+and System 3.0).** A stub whose creator is `SIT!`, in `MacExtract
+Helpers` beside an UNCHANGED MacExtract, is launched by the Finder for a
+double-clicked `SIT!` archive and starts MacExtract, which is handed the
+archive: it opens on its destination dialog and extracts. The Segment
+Loader keeps the Finder information (`AppParmHandle`) across a `_Launch`
+from the stub to MacExtract — the hypothesis the stub was written to
+test, which held on every system tried.
+
+**Evidence.** `tools/vmac/deskclaim.py --stub`, the stub from
+`companion/make_stub.py`, one boot each, graded on the dialog:
+
+| system | stub registered by | result |
+|---|---|---|
+| 6.0.8, Finder | a desktop rebuild, from the stub's own bundle | handed, entries on the volume |
+| 6.0.8, Finder — control, the stub claiming `ZZZZ` | a rebuild | refused (the Finder's alert) |
+| 6.0.8, MultiFinder (its icon in the menu bar) | a rebuild | handed |
+| 3.0 | the companion's `Desktop` entry | handed |
+
+The rebuilt `Desktop` file holds `SIT!` → `SIT! Helper` beside `MExt` →
+`MacExtract`, and the archive is drawn with the stub's archive icon.
+
+**How it works.** `companion/stub/stub.c`: the folder above its own, from
+`GetAppParms`, `PBGetFCBInfo` and `PBGetCatInfo`; MacExtract in it by type
+`APPL` and creator `MExt`, not by name; that folder made the default with
+`PBOpenWD` and `SetVol`; then the original `_Launch` form, a name pointer
+and a configuration word — Multiverse.h's `reserved1`/`reserved2`, with
+`launchBlockID` 0 — leaving `AppParmHandle` alone. An alert says so when
+MacExtract is not there or does not start. It is 7,424 bytes as MacBinary,
+most of it Retro68's runtime; the "1-2 KB" estimated before it existed was
+wrong. One build serves every creator: `make_stub.py` sets the creator and
+`hasBundle`, and writes a `BNDL` owned by that creator, its signature,
+`FREF`s for itself and for the creator's document types, MacExtract's icon
+family for the stub and the archive icon family for the documents.
+
+**Two wrong first attempts, both caught by a frame.** The stub was first
+built `onlyBackground` — a faceless background application — read off the
+`SIZE` bytes before any boot. And MultiFinder was first started by writing
+it into the boot blocks' shell field, which stopped the boot at an empty
+alert; the stock boot blocks already name it in their field at 0x5A with
+the shell left at `Finder`, and copying back `MultiFinder`, `DA Handler`,
+`Backgrounder` and `Finder Startup` is what starts it.
+
+**Consequence.** The companion needs no change to MacExtract: it writes
+these stubs, one per creator, into a folder beside MacExtract, and their
+`Desktop` entries. Not yet measured: System 7, which keeps its list in
+`Desktop DB` and may hand a non-high-level-event application its
+documents differently; which application wins when StuffIt is on the
+same disk; and more than one archive double-clicked at once.
+
+## 2026-10-12 (the application nobody could leave) — a menu bar and a titled progress window let System 7 switch out of an extraction; the same code on every System, and the `SIZE` flags left alone
+
+**Claim (measured, System 7.0.1 under Mini vMac, launched from the
+Finder; `interactive.py --switch`).** During an extraction the user can
+now leave MacExtract two ways: click a Finder window or icon, or choose
+from the Application menu. The Finder comes to the front at once, and the
+extraction goes on behind it and finishes with every name on the volume.
+An extraction that ends in the background puts nothing in front of the
+Finder: its alert or report waits until MacExtract is brought back.
+About MacExtract opens mid-extraction, and the extraction waits behind it.
+
+**What it took.** Three things, all Toolbox calls a Mac Plus has under
+System 3.0, with no test of which System is running. The maintainer asked
+for exactly that: one behaviour everywhere.
+
+- A menu bar: the Apple menu holding About MacExtract…, and File holding
+  Quit, which is Cancel (the application quits after an archive anyway).
+  **The Apple menu is what makes it work.** With File alone, System 7.0.1
+  drew neither its Help menu nor its Application menu.
+- The progress dialog becomes `noGrowDocProc`, a titled window with no
+  grow box, instead of `dBoxProc`. The pump uses `FindWindow`, then
+  `MenuSelect`. (`dBoxProc` with the menu bar was never tried.)
+- One event path: `SystemTask` + `GetNextEvent`. The `WaitNextEvent`
+  branch and its trap test are gone from the application (the autotest
+  keeps them for `at_idle`).
+
+**Withdrawn before it shipped.** The plan was also to clear
+`acceptSuspendResumeEvents` and set `needsActivateOnFGSwitch`, so that a
+switch would arrive as the activate events every System sends. With
+those flags, System 7.0.1 held the switch until the extraction ended: the
+window hid, but the Finder's menu bar did not come up for over a minute,
+and a click on its disk icon was acted on only after the extraction. With
+the old flags it switches at once. Both were run on the same build and
+the same archive. **Cost: one emulator run**, and a design that would
+have shipped the same defect it was meant to fix, only in a different
+form.
+
+**Price: 16 B given BACK** to every extraction's budget, eager build −8 B
+of code and −8 of A5, measured against the build before it; part of that
+is `.data` alignment and can move with the next change. The first commit
+was **+192 B**, and the maintainer asked for less the same day. Each piece
+was priced by removing it alone: Cmd-Q (`MenuKey`) 32 B, dragging the
+window 32, a quit flag 48, NULL checks on our own `MENU`s at launch 32,
+and reading About's number from `'vers'` 1 rather than writing it in the
+DITL 64. The last three went for free (Quit became Cancel; `check_docs.py`
+holds the DITL's number to `UNC_VERSION`); Cmd-Q and dragging were the
+maintainer's call. By symbol in `tools/build_mac.sh`. The stack probe
+(`-D UNC_AT_STACK`) read sp=4,068 and paint 7,706 of 12,190 B, both with
+About opened mid-extraction and without it, on the first commit's build.
+
+**Two harness traps, both cost a run.** A pointer moving diagonally
+across the menu bar opens every menu whose title it crosses. From the
+Apple menu it released on File > Quit, which read as "About cancels the
+extraction". From the Application menu it released on Help's "About
+Balloon Help…", a system box the extraction then waits behind. `pick()`
+now moves straight down, then across. And a press is seen only at the
+next progress callback, so the harness holds the button instead of
+clicking.
+
+**Consequence.** Closes the System 7 item the LC 475 found (OPEN_ITEMS.md
+until today). What stays open: the check on real hardware (MANUAL_TESTS.md
+§2), and how long the button must be held on the slowest decoder
+(OPEN_ITEMS.md).
+
+## 2026-10-12 (the stub beside StuffIt) — opening the helpers folder once registers a stub, on System 6 and 7; with StuffIt Deluxe on the same disk the archive still opens — on System 6 in whichever the Finder registered last, on System 7 in whichever file is newer — and the icons stay with whichever was registered first
+
+**Claim (measured, System 6.0.8; System 7.0.1 for the first row).** A stub
+in a never-opened `MacExtract Helpers` folder is registered by opening that
+folder once in the Finder — no rebuild and no `Desktop` entry written by
+anyone. With StuffIt Deluxe 2.0.1 (creator `SIT!`) on the same disk a
+double-clicked `SIT!` archive is opened in both install orders, by the
+application the Finder registered LAST; the `APPL` list holds both, newest
+first. The bundle the Finder keeps under `SIT!` is the one it registered
+FIRST, so the other application is drawn with its icons: StuffIt Deluxe
+with MacExtract's when the stub came first, the stub with Deluxe's when
+Deluxe did.
+
+**Evidence.** `tools/vmac/deskclaim.py --stub`, MacExtract as committed
+(`HEAD:dist/MacExtract.bin`), one boot each, graded on the dialog:
+
+| system | setup | result |
+|---|---|---|
+| 6.0.8 | helpers folder opened once (`--open`) | handed |
+| 6.0.8 | not opened — control | refused |
+| 7.0.1 | helpers folder opened once | handed |
+| 7.0.1 | not opened — control | refused (System 7's alert) |
+| 6.0.8 | Deluxe's folder opened, then the helpers' | handed to MacExtract; the stub drawn with Deluxe's icon |
+| 6.0.8 | the helpers' folder, then Deluxe's | Deluxe opens it in its archive window; Deluxe drawn with MacExtract's icon |
+| 6.0.8 | desktop rebuilt, `MacExtract Helpers` sorting first | Deluxe opens it; the archive drawn with the stub's archive icon |
+| 6.0.8 | desktop rebuilt, Deluxe in `A StuffIt Folder`, sorting first | handed to MacExtract; the archive drawn with Deluxe's |
+| 7.0.1, Deluxe 3.5.1 dated 2026-08-22, stub 2026-10-11 | Deluxe's folder opened, then the helpers' | handed to MacExtract; the stub drawn with Deluxe's icon |
+| 7.0.1, the same | the helpers', then Deluxe's | handed to MacExtract; Deluxe drawn with MacExtract's icon |
+| 7.0.1, Deluxe re-dated 2026-11-11 | Deluxe's, then the helpers' | Deluxe opens it in its archive window |
+| 7.0.1, the same | the helpers', then Deluxe's | Deluxe opens it in its archive window |
+| 7.0.1, stub newer | `Desktop DB`/`DF` deleted, rebuilt at boot, either folder sorting first (2 runs) | handed to MacExtract; the archive drawn with the stub's archive icon |
+| 7.0.1, Deluxe newer | rebuilt, either folder sorting first (2 runs) | Deluxe opens it; the archive drawn with Deluxe's |
+
+The Deluxe copy was lifted off `sitopt.hfv` with its Preferences and
+Engine, and had to have `hasBundle` set: as installed there its Finder
+flags were `0x0100`, so the Finder ignored its bundle and registered
+nothing — the first two Deluxe runs tested no competitor at all, and
+said "handed" anyway.
+
+**System 7 chooses differently: by date, not by order.** Its `Desktop DB`
+gave the archive to the stub in both orders while the stub was the newer
+file, and to Deluxe in both orders once Deluxe was dated later — the
+modification date in the MacBinary header (offsets 91 and 95) was the
+only thing changed. Creation or modification is not separated by these
+runs. Registered by opening folders, the icons follow System 6's rule —
+the first bundle seen keeps them, so one application wears the other's;
+after a REBUILD they follow the date too, and the archive is drawn with
+the icon of the application that opens it, in all four runs. The stub
+registered in the rebuild runs with no folder opened, where the stock
+`Desktop DB` refused it (2026-10-12, the System 7 control above), which
+is what says the rebuild happened.
+
+A desktop rebuild registers in catalog order — alphabetical, here — and
+follows the same two rules: the application in the folder that sorts last
+opens the archives, the one that sorts first gives them their icons
+(System 6).
+
+**Consequence.** Shipping the stubs ready-made needs no installer: copy
+the folder beside MacExtract and open it once. A StuffIt on the same disk
+does not stop archives opening, which is the requirement; the icon
+crossover is cosmetic and is the Finder's — one bundle per creator — so
+no stub can avoid it without giving up the bundle that makes a rebuild
+re-register it (2026-10-11, *where the stubs can live*). Not measured:
+which of the two dates System 7 compares.
+
+**The grader gained a false positive and lost it.** Deluxe 3.5.1's archive
+window has a solid border at y 82, which one-row matching read as
+MacExtract's Open dialog; MacExtract's dialogs are now matched on all
+three rows of their frame, and every frame saved so far still reads as it
+did by eye. Positioning on System 7 is by type-select (`--open NAME`,
+`--archive-at NAME`): Deluxe's folder had landed off the window's edge.
+
+**Transferable.** A competitor that the system never registered is no
+competitor: check that the second application is in the list before
+reading a result as "the first one won".
+
+## 2026-10-12 (the reload that the list needs) — several archives opened at once are all extracted: the eager build reads its decoders again between archives of one Finder list, with the bundle reserved low so the next archive gets a launch's heap
+
+**Claim (measured).** The Finder hands a launch a LIST of documents on every
+system — select several and Open; on System 7 drop several — and since
+2026-10-11 the shipped build extracted the first and quit, losing the rest
+without a word (*one archive per launch*, whose cost line this reverses).
+It now disposes the decoders it kept, reads the overlay bundle again and
+carries on with the next archive in the list; an archive chosen in Standard
+File still quits after it, as decided then. Measured with
+`tools/vmac/relaunch.py`, a `.cpt` and a `.sit` opened together, graded on
+both destination dialogs and every entry of both on the volume: **both
+extracted on System 6.0.8 at 4 MB and on a 512Ke, System 3.0 on a 512Ke,
+System 6.0.8 under MultiFinder and System 7.0.1**, where the build before
+it extracts the first only.
+
+**Rejected first: relaunching itself.** Handing the rest of the list to a
+fresh launch of the application (`_Launch` of itself, the list left in
+`AppParmHandle` as the companion's stub does, 2026-10-11) extracted both on
+System 3.0 at 512 KB and System 6.0.8 under the Finder, and returned without
+launching under MultiFinder and on System 7, where an application cannot
+launch itself while it runs. A mechanism that needs the system told apart
+was not wanted; this one is the same everywhere.
+
+**The reload broke the heap up, and why (measured).** The first version
+passed the small pair everywhere and refused `derived-a2basic.dmg.sit` —
+one 205 KB block — when it came second on the System 3.0 512Ke: *"Memory is
+too broken up"*, where the same archive first got as far as writing. A
+probe, `-D UNC_AT_HEAPLOG`, logs at each archive's budget the free total,
+the largest block and every block that cannot move (its walk sums the free
+blocks itself and agreed with `FreeMem()` on every line; the 24-bit block
+header it reads is from memory of Inside Macintosh II, *Memory Manager*,
+not a source here). It showed the reloaded bundle, 164,272 B, landing
+locked at 239,626 — the MIDDLE of the heap, above what the first archive
+left — so the release's copies, moved high, stopped just under it, and its
+release left them an island: largest free block **317,692 B at the first
+archive, 175,478 B at the second.**
+
+**The fix: reserve the bundle low.** `ovl_reload` asks for the bundle's
+handle with resources not loaded, takes its size (`GetResourceSizeOnDisk`,
+trap A9A5, the classic `SizeRsrc`), and `ReserveMem`s it (A040, the
+classic `ResrvMem`, which makes room for a block at the lowest place it
+can — from memory of Inside Macintosh II, and confirmed by the log rather
+than by a source) before the launch-time read. The bundle then lands at
+62,896, directly above the application's own locked blocks, as at launch,
+and the next archive's largest free block is **295,422 B against 295,572 B
+after a fresh launch for `a2basic`, 317,594 against 318,530 B for a
+`.cpt`** — within 1 KB. `Cool_Tools__.sit` then `a2basic.dmg.sit`, both
+StuffIt 5 and both at the edge of that machine, extract one after the
+other. A first fix moved the copies high again after every release (76 B
+of code); reserving low makes that unnecessary. If the bundle cannot be
+read again, ALRT 135 says so — a resource with its text written in,
+because the same message as a string literal was 72 B of A5.
+
+**Cost, all five axes.** `CODE` +192 B and A5 +0 shipped (`ovl_reload` 114,
+`main` +62, 16 of alignment), the control +24 and +8 for the list read by
+position, lazy +80 and +16 for a branch it never runs (tools/build_mac.sh,
+by symbol). Heap: nothing during an archive; between two archives of a
+list, the 164 KB bundle a launch reads anyway. Stack: `ovl_reload` is
+called from `main`, not under an extraction. **Extractions lost: none** —
+`run_tiers.py --check`, both lanes, all three tiers, the same tallies by
+name; a shipped grant is 192 B lower everywhere (`OVL_SAVED` −160, TIERS
+−32, derived). And one disk access between archives of a list, which on a
+one-drive machine may be a disk swap: the cost the eager lifetime avoids
+for a single archive, paid only when the user asked for several.
+
+**The list is read by POSITION now**, not through a pointer into it:
+`AppParmHandle` is a relocatable block and an extraction can move it, and
+the list is read after one since the reload. HYPOTHESIS: that the block
+moved in any run so far — nothing here observed it; the pointer was a
+latent fault only, because the build that shipped it never read the list
+after an extraction.
+
+**Two things the probe met on the way.** Writing `Heap Log` from inside an
+extraction, and then between archives, hung the 512Ke at 0 % every time
+with Retro68 Multiversal's `HCreate`/`HOpen`/`FSWrite`, which are glue and
+not traps; the same write through `PBHCreateSync`/`PBHOpenSync`/
+`PBWriteSync` works (bisected: no walk, no write; HYPOTHESIS that the
+glue is at fault rather than something it calls — it was not read). And
+System 7's Finder put `In`'s neighbours off the window's edge, so the
+harness opens by type-select there.
+
+## 2026-10-12 (the second bundle that only paints) — an application's BNDL for another creator gives that creator's documents icons on System 7 and opens none of them; the creators come from the programs, and TCDB only says where to look
+
+**Claim (measured).** StuffIt Expander 4.0.2 (creator `SITx`) carries a
+second `BNDL` owned by `SIT!`, declaring `SITD` and `SIT!` — as do
+DropStuff and later Expanders. With Expander alone on the disk, a
+double-clicked `SIT!` archive is REFUSED on System 6.0.8 and System 7.0.1,
+the window opened and after a rebuild alike; System 6 registers Expander
+under `SITx` only, and System 7's rebuild draws the archive with StuffIt's
+icon from that second bundle and still refuses it (`tools/vmac/deskclaim.py
+--extra`). So the rule of 2026-10-10 stands — the Finder hands a document
+to an application whose OWN creator is the document's — and a bundle for
+another creator decorates and does not open. MacExtract cannot claim
+creators by carrying bundles; the stubs stay.
+
+**Where the creators come from.** `companion/app-bundles.tsv` is 42
+creators read off the applications themselves: the BinHex family (`BNHQ`
+4.0, `BnHq` 5.0, `HQXr`, `HQX `, `PnLh` DeHQX), StuffIt's (`SIT!`, `SITx`,
+`DStf`, `SITC`), Compact Pro's (`CPCT`, and `EXTC` for its Extractor),
+DiskDoubler's, Now Compress's (`NCdc`, `NCar`, `NCcm`), `LARC`, `LHAx`,
+`arc*`, `MARC`, `UPIT`, `LZIV`, `Gzip`, `ZIP `, `TAR `, `MB2P`, `GJBU`,
+the uu and base64 decoders, and more. Copies came from Discmaster — its
+`/file/` originals arrive as MacBinary, so the header carries the type
+and creator — two per program from different discs, one request every 3
+seconds (`companion/harvest/`), and from this machine's own cached disk
+images. Every copy is analysed on its own, and copies agree where two
+were found.
+
+**TCDB was the list of names and nothing more.** Where it was compared —
+BinHex 4.0 and 5.0, HQXer, HQXing, DeHQX — it named the same creators;
+the rest were not held against it. Its licence forbids redistributing a table built
+from its rows (MacStamp's DECISIONS.md, *TCDB's data is licensed*), and a
+stub list shipped on MacExtract's floppy would be one. So what a stub
+claims cites the program that defines the creator.
+
+**Macintosh Repository was not the source**, though it was the brief: a
+guest may download once every 10 minutes, which is a day for this list,
+and an account is not this machine's to open. Its 190 category pages
+were read for what the programs are (OPEN_ITEMS.md, *Formats classic Mac
+programs wrote that nothing here opens*).
+
+## 2026-10-12 (the flush the LC 475 did not need) — a build without the instruction-cache flush ran six decoders byte-exact on a 68LC040, and the flush stays
+
+**Claim, measured once.** `-D UNC_OVL_NOFLUSH` makes `ovl_flush_code` a
+bare return. On the maintainer's LC 475 (68LC040, System 7.6.1, caches
+at their default, not checked) it extracted `08 BinHqx.cpt`, `10 DD
+Expand.sea`, `12 PackIt.pit`, `14 LhA.lha`, `16 ARCDOS.arc` and `23
+Troi.sit`, dropped on it together — so the bundle was read, relocated,
+released and READ AGAIN between archives — and all 28 files are
+byte-exact in both forks against the Linux CLI, graded off the share.
+No bomb, no error.
+
+**What it does not show.** A crash would have proved the flush needed;
+a clean run proves only that this machine, this time, did not stale an
+instruction. Other traps on the path may flush on their own, and a
+copyback data cache holding a relocated word is a race this run may
+simply have won. **The flush stays**: Inside Macintosh requires it after
+code is written as data (*Stale Instructions*), it is 104 B, and one
+negative on one machine does not license removing a documented
+requirement. The open item is closed because the one question only
+hardware could answer has been asked of hardware; the answer is "not
+here".
+
+**Transferable.** Run the probe that can fail before the one that can
+only pass: the shipped build had already passed on this machine, which
+said nothing about the flush.
+
+## 2026-10-12 (the block nobody could cancel) — StuffIt 5 went four minutes without looking at the event queue; Arsenic now reports while it decodes a block and builds either inverse
+
+**Claim (measured, Mini vMac 1x, System 6.0.8, `-D UNC_AT_TICKGAP`).**
+The longest wait between two progress callbacks — which is the longest
+the window, Cancel, Cmd-. and the menu bar can go unanswered, since the
+shell pumps events nowhere else — was **254 s** of `derived-a2basic.dmg.sit`'s
+281 s extraction at 4 MB, and 140 s of the Barcoder's. Arsenic held the
+input pump for the whole fork and reported only from its output walk;
+the block decode before the walk, and the inverse built after it, called
+nothing. The 2026-08-07 change that gave Arsenic its 256-byte output
+tick was timed under the 1 MB sampled index, where the WALK is the slow
+part, and that is the half it fixed. After this change:
+
+| fixture, 1x | before | after | extraction |
+|---|---|---|---|
+| a2basic, 4 MB | 254 s | **0.8 s** | 281 → 281 s |
+| Barcoder, 4 MB | 140 s | **1.1 s** | 462 → 462 s |
+| KeyGraphics, 4 MB | 9.4 s | **0.3 s** | — |
+| a2basic, 1 MB | 18.3 s after the block fix | **0.6 s** | 341 → 342 s |
+| Barcoder, 1 MB | 24.1 s after the block fix | **1.9 s**, inside the walk | 745 → 742 s |
+
+All byte-exact. The other formats are FORMATS.md's (*How long a click
+waits*), and none was changed.
+
+**What it took.** Three ticks, each reporting the walk's last position,
+so the bar holds still and the pump runs: one per 256 bytes appended to
+the block (a threshold, not a mask — a mask on the low byte cost
+KeyGraphics a third of its reports, because a run of zeros steps over
+multiples), and one per 8 KB chunk of each pass of each inverse, with
+the inner loops left testing nothing. Both inverses lost a 1 KB array
+on the way: the table's counts become its running index in place, and
+the index's counts become its occurrence counter once the bases are
+taken — the frames the pump now sits on are 1,072 and 1,328 B, from
+2,060 and 2,348.
+
+**Price.** `ovl_stuffit` **+312 B** (28,614 → 28,926; the shipped
+application's resident `CODE` and A5 unmoved), the resident control
+`CODE` +328 and A5 −8 with its ratchet raised and `TIERS` lowered 320 B
+by derivation, the decoder's struct +4 B of heap, and no tier tally
+moved on either lane (`run_tiers.py --check`). Host instructions −0.3 % (table) and +0.05 to
++0.17 % (sampled). Stack, the autotest's SAMPLE, base → new: 3,044 →
+4,088 B at 4 MB and **5,372 → 4,356 B** at 1 MB, where the index's
+smaller frame is what the allocator was being called under — so the
+deepest point either path reaches fell. The interactive build's
+Toolbox under the pump is on top of those and was not measured
+(*hypothesis*: ~1 KB deeper than before on the table path, against a
+12,144 B stack). Four layouts were sized for the bytes: a shared helper
+for the chunk (−4 B, not taken) and a counting pass shared by the two
+inverses (+14 B) were not worth it, and handing the index to
+`a->index` before its second pass let a Cancel free it on the decoder's
+own way out (−12 B).
+
+**Evidence the Cancel path holds.** A scratch harness aborting at every
+one of KeyGraphics' 236 callbacks under ASan, in the default and the
+`UNC_ARS_FORCE_SAMPLED` build: 236 clean aborts each, nothing live. Its
+negative control — the index handed over after its loop, as it was —
+leaked 70 KB at four abort points.
+
+**Transferable.** `run_ticks.py` bounds the gap in input BYTES, and a
+decoder whose expensive work reads no input passes it at any duration;
+Arsenic is exactly that, and TESTING.md said so. A bound in the wrong
+unit is an instrument that cannot fail on the case that matters.
+
+## 2026-10-13 (the mail that counted itself three times) — MIME's bar is the input its writing passes consumed, and a Cancel in its walk is no longer taken for the end of the message
+
+**Claim (measured, host).** A MIME message counted every byte it read,
+and it reads most of them three times: the walk, then for each entry a
+pass that sizes the fork and a pass that writes it. A 405,753 B message
+with one 300 KB attachment counted 1,236,327 B, so on a Macintosh the
+bar was full a third of the way through and sat there. The corpus's
+only message is 1,248 B, which never reached a tick at 8 KB, so
+`run_ticks.py` passed it; trying a 4 KB step is what surfaced it.
+
+**What it took.** MIME's readers count into a private
+`UncProgressState` whose callback is a relay in `fmt_mime.c`: the
+readers still fire it every 8 KB of reading, any pass, and the relay
+reports the input the writing passes have consumed so far. The bar
+holds still during the walk and the sizing passes, moves during the
+writes, never goes back (an appledouble's resource fork, earlier in
+the message, is written after its data fork), and ends within one step
+of the size: 95–99 % on three generated messages, against 300 %+.
+The maintainer chose this over a bar spread across all three passes,
+which costs more code. The Macintosh never sets `test_only`, so a
+writing pass is the same thing as the entry's final one.
+
+**A second fault, found by the abort sweep.** The walk's header reader
+and boundary scan took any failed read for the end of the message, so
+a Cancel there was dropped: on HEAD, aborting once at each of
+`big.mim`'s 149 callbacks gave 98 aborts, **49 successes with entries
+missing** and 2 "not a MIME message". The Macintosh's Cancel is sticky —
+every later callback refuses too — which usually rescued it, but not
+near the end of a message. Both readers now pass anything but a clean
+end up. After: 353 of 353 callbacks across three messages abort, once
+or sticky, under ASan, nothing left allocated.
+
+**Price.** `ovl_text` **+240 B** (11,510 → 11,750): +158 B of the object
+for the progress and +52 for the Cancel (`-Os`, the overlay's flags).
+Only the bundle holds `ovl_text`, so it is the download and an
+envelope's grant; resident `CODE` and A5 unmoved; the control's `CODE`
++228 and A5 −4, `OVL_SAVED` +224 and `TIERS` −224 by derivation, no
+tally moved. `MimeCtx` 2,428 → 2,464 B of heap while a message is
+unwrapped; the relay adds a 16 B frame under the pump. Host
+instructions unchanged to 0.01 %. A first design that ticked from
+MIME's own loops cost +368 B and was replaced.
+
+**Evidence the test can fail.** `run_mime.py`'s new cases run against
+the build before the fix and fail both: 836,211 and 638,931 B past the
+end. And at a 4 KB step `run_ticks.py` now passes all 1,399 archives,
+where it had failed `synth-os9-mime.mim`.
+
+## 2026-10-13 (the disk that was still in the drive) — a split set's next part is asked for after the floppy the last one came from is ejected
+
+**Claim (measured, emulated).** When part N is not beside part N−1,
+the "Part N has not been found" alert came up with part N−1's floppy
+still in the drive. On a one-drive Mac the answer is to put the next
+floppy in, and the user had to eject the old one first (Cmd-Shift-1).
+Writing the manual test for it is what showed the extra step.
+
+**Decision, the maintainer's.** Before the alert, the disk that part
+N−1 came from is ejected, and the alert says so: *"Part N of "X" is not
+on that disk, so it was ejected. Insert the disk it is on."*, with Find…
+kept for a part that is somewhere else. A disk is ejected only if the
+drive queue calls it ejectable (byte 1 of the flags before the `DrvQEl`
+is 1 or 2, Inside Macintosh: Files, *Drive queue*), and not if it holds
+the application or the System, which the Toolbox reads while the alert
+is up. **The destination is deliberately not checked**: a rule skipping
+the eject when the output goes to that floppy was proposed and the
+maintainer declined it — a split set is split because it does not fit one
+floppy, so extracting it onto one of its parts is the user's mistake.
+The eject happens on two-drive machines too; it costs them nothing.
+
+**Not done: warning that the destination is too small.** The maintainer
+asked for it alongside. The EXTRACTED total is not known until the last
+part has been read — a StuffIt split has no directory, and asking for
+every disk up front to learn sizes is what `UncVolumeSource.size`
+exists to avoid. What part 1 does know, for StuffIt segments, is the
+joined archive's size, which is usually less than what it extracts to.
+**Decided by the maintainer, the same day: no warning.** The existing
+disk-full error, which stops the run at the first entry that does not
+fit, is enough for now.
+
+**Price.** Shipped `CODE` **+256 B**, A5 **−48 B**: **208 B off every
+extraction's budget.** By symbol, `SegAskUser` +156 (the eject is
+inlined into it) and `SegDriveOfFile` 82, new; 18 B of alignment. Both
+alert sentences are now DITL text (131, and 136 for the new one), which
+took the old sentence out of A5. The first version kept them as strings
+and cost +352 and +80. The control +192 (`CODE` +256, A5 −64), so
+`OVL_SAVED` −16 and `TIERS` −192 by derivation; no tally moved at any
+tier, in either lane. `SegAskUser`'s frame 660 → 728 B for a `Str63`.
+`SegDriveOfFile`'s 188 B returns before the alert opens.
+
+**Evidence the test can fail.** `interactive.py --diskeject` puts part 1
+alone on Floppy A, sends the output to the boot volume, and asserts
+from the emulator's open files: Floppy A's image is closed while the
+alert is up (Mini vMac `fclose`s a disk on eject), the boot image stays
+open, and the set's contents land after Floppy B goes in with nothing
+clicked. It passes on System 3.0, 6.0.8 and 7.0.1. The build before
+fails it on 6.0.8 with *"floppy A ... STILL IN THE DRIVE"* and the old
+wording. `--segments` and `--diskswap` (part 1 on the application's
+own disk, which is not ejected) still pass.
+
+**Found on the way.** `--diskswap` fails on the build before this
+change too, when given an ARCHIVE as its fixture: it compares the joined
+file, and the application unpacks the joined file, so the file it looks
+for is never written. This is the same trap `--segments` hit on
+2026-08-31. It passes with a fixture that is not an archive. Written
+into `tools/vmac/README.md` rather than fixed.
+
+## 2026-10-13 (the bug was the footnote) — Retro68's `paramErr` is Apple's documented contract; the uninitialised `ioMisc` the report called latent is written through, and is what broke M10
+
+Re-verifying `tools/retro68-hopen-repro/ISSUE.md` before the maintainer posts
+it. Upstream first: Retro68 master `d8b891a` pins a multiversal whose
+`custom/glue.c` is byte-identical to the one measured, so nothing was fixed.
+Then the issue tracker, which nobody had searched: **#53 (2018)** is this
+exact `HOpenDF` `paramErr` on System 6, closed by falling back in
+`libretro/syscalls.c`. Technote FL 1041 (*Inside Macintosh: Files* errata)
+says the same: on `paramErr`, the caller retries with `HOpen`. The headline
+would have been closed as a duplicate of documented behaviour.
+
+The same technote: "ioMisc must be initialized to zero before calling
+PBHOpenDF, PBHOpenRF, or PBHOpen. Failure to initialize ioMisc to zero on some
+Macintosh models will cause the system to crash." The report had that point
+as latent, because case 4 poisoned `ioMisc` with `0xA3A3A3A2` and the open
+succeeded. On a 24-bit Mac Plus that address is not RAM. `iomisc_repro.c`
+asks the question that probe could not answer: give the File Manager a
+pointer to a 1 KB decoy and count what changes.
+
+| case | System 6.0.8 | System 7.0.1 |
+|---|---|---|
+| `PBHOpenSync`, `ioMisc = NULL` | 0 longs | 0 |
+| `PBHOpenSync`, `ioMisc = &decoy` | 131 (524 B, one access path buffer) | 3 |
+| `HOpen`, `&decoy` left on the stack | 131 | 3 |
+
+The disassembly agrees: `HOPEN` reserves 124 bytes and writes four fields,
+never pb+28. The first run of case 3 read 0. GCC had inlined the poisoning
+function into `main`'s frame, so the pointer never reached `HOpen`'s frame.
+`noinline` fixed it. That is also a demonstration that the case can fail.
+
+A bare `open()`, `write()`, `close()` probe on System 6.0.8 returned from
+`open()` and `write()` and hung in `close()`, the same with the stack zeroed
+first (two runs, probe not kept), so `ioMisc` does not explain it. That is not
+where *Retro68's newlib cannot open a file* saw mpack stop (in `open()`);
+the difference is unexplained.
+
+**It is what broke M10**, measured the same day. A worktree at `014ed25` (the
+first commit with the committed harness, and the M10 open/create code) was
+built six ways, switching only what `MyOpenFork`/`MyHCreate` call, and run
+through that commit's own `tools/vmac/run.py` on four fixtures, two of them
+with resource forks (`tools/retro68-hopen-repro/m10-variants.patch`):
+
+| variant | result |
+|---|---|
+| 0 zeroed param blocks, as committed | 4/4 |
+| 1 Retro68's `HOpen`/`HOpenRF`/`HCreate` (the pre-fix code) | hangs, still extracting at 300 s |
+| 2 Retro68's `HOpen`/`HOpenRF`, zeroed create | 0/4, all hang |
+| 3 verbatim copy of the glue's `HOpen`/`HOpenRF` | 0/4: 0 files, or never paints |
+| 4 that copy plus `ioMisc = NULL` | **4/4** |
+| 5 that copy plus `ioVersNum = 0` | 0/4 |
+
+3 and 4 differ by one line. The symptom moves with the stack layout (hang,
+zero files, a bomb before the first paint, and in 2026-07 a garbage refNum),
+because what fails is whatever the stale pointer happens to address.
+
+**Transferable:** a negative probe that writes a junk value proves only that
+this one value is harmless. Ask what the field is *for*, then give it a value
+that would be used. And search the upstream tracker before writing an
+upstream report.
+
+## 2026-10-13 (the grey that cost no code) — two 'dlgx' resources give the progress and password dialogs Mac OS 8/9's background, paid for with the icons' resource names
+
+**Claim (measured, Mac OS 9.2, `os9.py --cancel` and `--encrypted`).** A
+`'dlgx'` beside `DLOG` 128 and `DLOG` 132, theme-background bit only, draws
+both dialogs in the theme's grey, as Mac OS 9 already draws every alert.
+The static text, the bar's empty part, the edit field (white, Platinum frame)
+and the refused-password message all draw cleanly on it. Code and A5 are
+unchanged (55,300 / 19,052 B); nothing reads the resource, and Systems
+before Appearance 1.0 never ask for the type.
+
+**The layout is measured, not documented in text.** Apple's Dialog Manager
+reference gives the flag bits (*Dialog Feature Flag Constants*) and the
+layout only as a figure. 100 `'dlgx'` resources on the Mac OS 9.2 disk are
+all 6 bytes: version word 0, then a 32-bit flags word.
+
+**The download stayed 235,776 B by paying for itself.** Each `'dlgx'` is
+22 B of resource fork (30 B for the first, which adds the type), and the
+fork had 21 B left in its last 128-byte MacBinary block, so the first alone
+grew the `.bin` by 128 B. The six icon-family members dropped their resource
+name `"MacExtract"`, which nothing reads: 66 B. Net fork change −14 B. The
+`.dsk` is a fixed 800K image and never moves.
+
+**Not taken:**
+- **Standard File** (-4000, -3999). A `'dlgx'` with those ids in our file
+  changed nothing, as Apple's same-file rule says: theirs are the System's
+  `DLOG`s. Owning copies via `SFPGetFile`/`SFPPutFile` costs code past the
+  ceiling and a template untested from System 3.0 up. The maintainer's
+  call: white Standard File with Platinum buttons is what every System 6
+  and 7 application shows there, and that is fine.
+- **The report dialog** (133). `RepListDraw` erases its list box with the
+  port's background, so the list would turn grey with the window.
+- **A blue bar** (`ForeColor(blueColor)` around the fill, as CD Player does):
+  +12 B of code, over the ceiling.
+
+**Transferable.** "Without making the download larger" had two axes, and the
+second was not the download: the code ceiling refused 12 B that the `.bin`
+would have absorbed. A resource-only change can still cross a 128-byte
+MacBinary block, so measure the fork, not just the code.
+
+## 2026-10-14 (the icon the eject left behind) — the floppy a split set's last part came from is unmounted as well as ejected
+
+**Claim (measured, silicon then emulated).** On the LC 475 the eject of
+2026-10-13 worked, and the first floppy stayed on the desktop as a dimmed
+icon: `Eject` "flushes the specified volume, places it offline, and then
+ejects" it, and does not unmount it (Inside Macintosh: Files, *Eject*). A
+set of a dozen floppies would leave a dozen. Reproduced under System 7.0.1
+in Mini vMac; System 6's Finder shows no dimmed icon either way.
+
+**Change.** `UnmountVol` and then `Eject`, both by drive number.
+`UnmountVol` fails with `fBsyErr` while a file on the volume is open
+(*UnmountVol*) — the destination-on-that-floppy case — and then the eject
+goes ahead and the volume stays offline, as before. Parts remembered on
+that drive are forgotten first, since their refNums die with the volume;
+one needed again is asked for again.
+
+**Price.** `CODE` +80, A5 +16 (alignment) in the shipped build and the
+control alike: **96 B off every grant**, `OVL_SAVED` unmoved, `TIERS`
+−96 by derivation, no tally moved.
+
+**Evidence the test can fail.** `interactive.py --diskeject` on System 7
+now reads the Finder's desktop after the application quits, where a
+third disk icon would be: 0 px off the desktop pattern with the unmount,
+**636 px** — a dimmed Floppy A — on the build before, which fails the
+phase. Passes on System 3.0, 6.0.8 and 7.0.1.
+
+## 2026-10-14 (the disk the dialogs were on) — every dialog and alert is preloaded, so a one-drive Mac is not asked for the application's floppy mid-extraction
+
+**Claim (measured, one-drive Mini vMac, System 7.0.1).** With MacExtract
+on one floppy and the archive on another, the extraction after Save
+asked for MacExtract's floppy, the archive's, MacExtract's, the
+archive's: the progress window's `DLOG`/`DITL`/`'dlgx'` and the closing
+alert's `ALRT`/`DITL` were purgeable resources read from the
+application's file when each first appeared. Now every dialog, alert and
+`'dlgx'` is `preload` as well as purgeable, read once at launch while
+that floppy is in, and the same walk asks for nothing.
+
+**Why it costs nothing.** The budget is taken with `PurgeSpace`, which
+counts purgeable blocks as free: measured with `-D UNC_AT_BUDGET` on the
+System 6.0.8 / 512 KB machine, 196,184 B against 196,186 B before (−2 B);
+the other tiers not re-run. `CODE` and A5 unmoved. When memory is short
+the Memory Manager purges them, and the floppy is asked for again — the
+old behaviour, only then.
+
+**How it was found.** The LC 475 took eleven swaps before the first
+dialog with two archives dropped on an alias (OPEN_ITEMS.md, *What the
+LC 475 found*), and Mini vMac, which gives every disk its own drive,
+could not show a swap at all. `NumDrives` is a compile-time option, and
+two — the boot disk and one floppy — make the System ask for disks by
+name and eject the one in the drive. That build is `mv-4M-1d`, and
+`tools/vmac/onedrive.py` the walk. It did not reproduce the drop: System
+7.0.1's Finder copies files dropped on an alias of an application on an
+ejected disk instead of opening them. It did show that launching from
+the floppy costs ME, C, ME before the application runs, which is the
+Finder's.
+
+**Confirmed on the LC 475, 2026-10-14**: the same walk, no swap after
+Save; with the previous day's copy on the floppy, ME, C, ME.
+
+**Evidence the test can fail.** `onedrive.py --app` with the build
+before: *"asked for after Save: ME, C, ME, C"*, exit 1; with this one:
+nothing, exit 0. The old build's *"Extraction complete."* also came up
+without its icon.
+
+## 2026-10-14 (the swaps that are the System's) — the swaps before the first dialog happen before MacExtract's main() runs, and a stock application takes as many
+
+**Claim (measured, one-drive Mini vMac, System 7.0.1).** Two archives on
+floppy C opened together with MacExtract on floppy ME — Cmd-O on
+archives carrying its creator, the list a drop on an alias hands over —
+take ME, C, ME, C, ME, C, ME, C before *"Extract into"*. The LC 475 took
+eleven the same way on 7.6.1, with C's window open or closed.
+
+**Evidence that MacExtract cannot change it.**
+
+- A probe build painting a mark on the screen at each step of `main()`
+  — after `InitGraf`, the Toolbox, the menu bar, the decoders, the
+  Finder's list, just before Standard File — shows **no mark in any of
+  the ME prompts** and all six in the next frame: every ME is asked for
+  before `main()` starts, while the System loads the application.
+- Preloading every resource but the decoder bundle, the lazy build that
+  reads no bundle at launch, and a copy without its colour and small
+  icons: the same eight.
+- **SimpleText** from System 7.0.1, on ME, with two text files on C
+  opened the same way: **ten**.
+
+**After Save.** The reload's ME between archives is by design. One more
+ME comes inside the second *"Extraction complete."* — a probe marking the
+screen before and after the call shows the first mark only — and **it is
+the Finder's**, measured: with the alert's `ALRT`/`DITL` still in memory
+(a probe tested them with `SetResLoad(false)` just before), without its
+icon, without a sound, and with every code segment preloaded, it is still
+asked for; with no alert and 20 s of `GetNextEvent` it is not; with no
+alert and 20 s of `WaitNextEvent` at sleep 30, the idle time a modal
+dialog gives the background, it is, while MacExtract does nothing but
+wait. A second ME comes after MacExtract quits, with the Finder in front.
+Neither is MacExtract's to remove: an alert has to wait.
+
+**Kept.** `onedrive.py --drop` prints the sequence; it is a measurement,
+failing only if it never reaches *"Extract into"* twice.
+
+## 2026-10-14 (the floppy a USB drive can write) — a 1.44 MB HFS image joins the download, and why it is not a self-extracting archive
+
+**Claim.** The download had no form a Mac-only owner with a USB floppy
+drive could use. A USB drive writes MFM only (720K, 1.44 MB) and cannot
+make the 800K GCR disk `MacExtract.dsk` is; a `.bin` copied onto a
+PC-formatted disk reaches the Mac still MacBinary, with nothing to decode
+it. `dist/MacExtract-1440K.img`, the same HFS volume at 1,474,560 B,
+written raw, is a disk a SuperDrive Mac mounts as its own (*hypothesis*
+until MANUAL_TESTS.md §9: it is the format a Mac formats a 1.44 MB disk
+in, and hfsutils reads it back byte-exact).
+
+**Why not a self-extracting archive**, which was the question asked. A
+`.sea` is an application: its code is in the resource fork, so every
+channel that loses MacExtract's fork loses the `.sea`'s, and every channel
+that keeps one keeps both. It saves size and nothing else, and size was
+not the obstacle — the application fits an 800K disk with room to spare.
+The obstacle is the channel; an image written raw carries both forks
+because it carries the whole volume.
+
+**Left out.** The Plus, 512Ke and original SE read GCR only, so this does
+nothing for the floor target; that owner still needs an 800K writer, a
+FloppyEmu or a second Mac. A 720K image is not shipped until a SuperDrive
+is seen mounting one. `make_dist.sh` now requires hfsutils rather than
+falling back to a weaker check, since the image cannot be built without it.
+
+## 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
+
+**Claim (measured).** The two encodings before BinHex 4.0 are one
+program's: **BinHex 2.0 (Yves Lempereur, 1984) writes both** — `.hcx`
+with File ▸ *Compressed* checked, its default, and `.hex` without — and
+`***COMPRESSED`, `***CRC:` and `***CHECKSUM:` are all strings in its
+`CODE` (`tools/vmac/binhex2.py`). The version labels were never evidence:
+macutils' author asked "Is it BinHex 2.0?" of `.hex` and "3.0?" of `.hcx`
+in his README, and `reference/notes/BinHex.md` gives `.hcx` to 2.0.
+
+**The only reader is hexbin's `hecx.c`, and it is what `src/fmt_hecx.c`
+transcribes.** What grades the transcription is not hexbin: it is four
+files BinHex 2.0 wrote on System 6.0.8 from a two-fork subject whose bytes
+are known — `.hcx`, `.hex`, `.hex` with line feeds, and that `.hcx` inside
+a `.hex` — each coming back byte for byte, plus three `.hcx` files from
+the 1985 *mactosh* archive whose 16-bit sums verify. `unar` reads neither
+encoding.
+
+**What the transcription did not say, settled by the writer.**
+- **The `.hcx` sum adds bytes unsigned.** `hecx.c` passes a plain
+  `char`, which leaves the sign to the compiler; the 131 high bytes of
+  BinHex 2.0's own `.hcx` and the 2,037 to 13,697 of the three 1985 files
+  agree with the unsigned sum and with no signed one.
+- **The `.hcx` sum fixes the fork order** (it rotates), and BinHex 2.0
+  writes the resource fork first; the `.hex` sum is an 8-bit add and
+  does not.
+
+**Two departures from hexbin, each a file one of them loses.** hexbin
+will not look for the `#TYPECREA$FFFF` line until it has seen the
+"(This file" banner, and two of the three 1985 files have none: this
+reads them, and `tools/run_hecx.py` asserts that hexbin does not. And
+hexbin reads a `.hcx` line's count BEFORE putting back the spaces a
+mailer stripped, so a line cut to one character reads its NUL as data and
+its count 2 too high; seven lines of BinHex 2.0's own `.hcx` are such a
+line once stripped, and hexbin loses the file where this does not.
+
+**The probe.** The old banner matches BinHex 4's 40 compared characters
+and two of the files have no banner, so what tells them apart is a
+`#TYPECREA$FFFF` line (four hex digits, which the writer always puts
+there and `hecx.c` does not require) followed by a `***` marker. After
+a banner, the first line that is not such a header settles BinHex 4, so
+every `.hqx` still sniffs as before (`run_diff.py`, 204 of them).
+
+**Price, shipped (CODE + A5): +352 B off every grant** — the probe +222
+(+76 for the header test it shares), the table row and name 36, the
+release switch's case and alignment — and `ovl_binhex` 2,590 → 4,994 B,
+which only an envelope's bundle holds. The control +2,480. `run_tiers.py
+--check`: no tally moves. (CORRECTED the same day from +416: the first
+version had its own Macintosh shim and overlay call, 56 B resident, a
+copy of BinHex 4's. Both encodings now enter through
+`unc_binhex_extract`, which reads a new `UncCtx.fmt` — −64 B shipped,
++8 in the overlay, +64 in the control. Reusing `UncForkOut` for the
+decoder's output staging was tried in the same pass and left out: +54 B
+of overlay for no change in behaviour, its two calls going through the
+host vector.)
+
+**What is not graded.** Only BinHex 2.0 has been run. BinHex 1.0 and the
+BASIC BinHexes before it wrote `.hex` too (`BinHex.md`), and none of
+their output has been found; SUMacC's `.dl`, which hexbin also reads, is
+a lead in OPEN_ITEMS.md and not this format.
+
+## 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
+
+**Claim (measured).** A layer with no name of its own is named after its
+file minus an extension, so when that file has none the entry and the
+envelope being unwrapped are ONE path. The CLI exempted that path from
+its clobber check on purpose — and then opened it `wb` while the engine
+was still reading it, and deleted "the envelope" once the layer
+succeeded, which by then was the entry: **exit 0 and nothing on disk.**
+Found on BinHex 2.0's `.hcx` inside a `.hex` (`YN.hex` → `YN` → `YN`),
+and the format is incidental: two nameless gzip layers in a file called
+`Same` lose it the same way on the build before.
+
+**Change.** An entry whose path is the envelope's (either fork, whether
+or not the envelope has that fork) is written beside it as
+`NAME.unwrap~`, and renamed onto it after the deletion. A second entry
+wanting the same path still meets the clobber check.
+
+**Evidence the test can fail.** `tools/run_unwrap.py`'s new case, the
+gzip pair, gives an empty directory on the build before and the payload
+after. The Macintosh shell unwraps through its own sink and was not
+affected.
+
+## 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
+
+**Claim (measured).** On Mac OS 9.2.2, HFS+, 110 GB free, a zip holding
+one 2,300,000,000-byte file ended the run on *"The disk is full."* The
+shell asks for each fork's whole size first, `SetEOF(ref, (long)want)`,
+and 2,300,000,000 does not fit a signed `long`; the classic File
+Manager's offsets are signed 32-bit, so no file of 2 GB or more can be
+written by this application in any case. The engine is not the limit:
+the Linux CLI decodes the same entry, CRC checked.
+
+**Change.** In the create loop, before the file is made, an entry whose
+data or resource fork is 2 GB or more (and not `UNC_SIZE_UNKNOWN`) fails
+alone through the existing failure path: *"Big.bin is over 2 GB, too
+large here"*, and the run goes on. Measured under Mini vMac, System
+6.0.8: that line and *"Extraction finished."*; the build before gives
+*"The disk is full"*, as the real Mac did.
+Confirmed on Mac OS 9.2.2 the same day: the same line, nothing written.
+
+**Not done.** An entry of unknown size (a streamed gzip) that grows past
+2 GB still fails at the write and ends the run with the File Manager's
+error — the size is not known until it is too late.
+
+**Price.** Shipped `CODE` +60, A5 +36: **96 B off every grant**; control
++64, `OVL_SAVED` −32, `TIERS` −64, no tally moved. The first version
+called `RepEntryFailed` from a check of its own and cost +144: the third
+call made the compiler stop inlining it, a 78 B function.
+

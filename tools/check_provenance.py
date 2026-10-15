@@ -59,6 +59,8 @@ CARRIES = {
     "fmt_sitseg.c":     "the whole StuffIt split header",
     "fmt_stubs.c":      "DiskDoubler's two older headers (macutils dd.h)",
     "unc_internal.h":   "the LZAH preload",
+    "fmt_hecx.c":       "BinHex before 4.0, the whole decoder (hexbin's hecx.c)",
+    "fmt_binhex_probe.c": "the .hex/.hcx header-line rule (hexbin's hecx.c)",
 }
 
 # Mentions a reference only to say what it no longer owes, or to

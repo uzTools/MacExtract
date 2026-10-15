@@ -199,7 +199,7 @@ def session(tag, files):
     """A booted Mac with the menu loaded and a work volume holding the
     application and `files`, each (name, type, creator, data, rsrc)."""
     files = app_files() + list(files)
-    work = tempfile.mkdtemp(prefix="ddprowork-")
+    work = R.work_tmp("ddprowork-")
     mbs = []
     for i, (name, ftype, creator, data, rsrc) in enumerate(files):
         p = os.path.join(work, "f%d.bin" % i)
@@ -480,6 +480,8 @@ def main():
                          "file with a resource fork, then three splits")
     ap.add_argument("--keep", action="store_true", help="keep the work dir")
     a = ap.parse_args()
+    if a.keep:      # guard deletes images at exit otherwise
+        os.environ["HARNESS_KEEP_IMAGES"] = "1"
     if a.setup:
         fetch()
     if a.install:
