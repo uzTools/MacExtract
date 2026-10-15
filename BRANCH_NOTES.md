@@ -84,6 +84,9 @@ HD20** can answer in an afternoon, and nobody here can answer at all. That is
 MANUAL_TESTS.md §6, and it is askable only because this branch's `dist/`
 starts.
 
+It is the only route: writing without HFS is out of scope (`main`'s
+DECISIONS.md 2026-10-15, *the File Manager a 64K ROM has*).
+
 ## Why it is not on `main`
 
 Because whether it goes there is the maintainer's decision, and nothing has
