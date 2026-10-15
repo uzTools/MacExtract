@@ -133,7 +133,7 @@
 #define S_REP_MEM           ": not enough memory"
 #define S_REP_UNSUPPORTED   ": unsupported method"
 #define S_REP_CRC           ": checksum mismatch"
-#define S_REP_TRUNCATED     " ends early: the archive is incomplete"
+#define S_REP_TRUNCATED     ": archive incomplete"
 #define S_REP_ENCRYPTED     " is encrypted and was skipped"
 #define S_REP_SINK          " could not be written to the disk"
 #define S_REP_IO            " could not be read from the archive"
