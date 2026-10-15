@@ -415,6 +415,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
 - 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
 - 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
+- 2026-10-15 (the purge MaxApplZone never did) — branch `rom64k`: one launch path for every ROM, and the four bytes it is not neutral by
 
 ---
 
@@ -10775,8 +10776,11 @@ correct on every machine the project claims.
 
 ## 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
 
+**Superseded on this branch 2026-10-15** by `GrowApplZone()`, which runs on
+every ROM alike (*the purge MaxApplZone never did*, below).
+
 **Claim: one guard makes the application start on a 64K ROM, and it costs
-nothing anywhere else.** It lives on this branch, `rom64k`, and not on `main`: the
+nothing anywhere else.** It lived on this branch, `rom64k`, and not on `main`: the
 guard is provably neutral on every tier this project claims, but no real
 machine has ever run the thing it enables, and a capability nobody has
 exercised does not belong in the download people are told works. `Has128KROM()` reads the ROM
@@ -26747,3 +26751,42 @@ error — the size is not known until it is too late.
 called `RepEntryFailed` from a check of its own and cost +144: the third
 call made the compiler stop inlining it, a 78 B function.
 
+
+## 2026-10-15 (the purge MaxApplZone never did) — branch `rom64k`: one launch path for every ROM, and the four bytes it is not neutral by
+
+**Claim: `MaxApplZone` can be replaced on every machine by three calls the
+64K ROM has, and the zone ends where it did.** `GrowApplZone()` issues
+`_MaxMem` (largest free block in D0, growth in A0; Inside Macintosh II-38),
+asks `NewPtr` for their sum, which the Memory Manager can only satisfy by
+growing the zone (II-13), and frees it. Measured on System 6.0.8 at 1 MB: the
+zone's end equals `ApplLimit` in both builds. The maintainer asked for one
+behaviour on every machine; the `Has128KROM()` guard was two.
+
+**It is not budget-neutral, and the cause is not the code.** The budget came
+out +4, +4 and +6 B against `main` on the three asserted tiers, with the probe
+builds' `CODE` + A5 summing to the same 212,368 B. Arithmetic from section
+sizes would have called that alignment. Two hybrids settled it instead,
+byte-identical to the candidate except for one trap word: `_MaxApplZone` where
+`_MaxMem` was, then also a register clear where `_NewPtr` was. With no
+`NewPtr` the budget is `main`'s to the byte on both systems tried; with a
+`NewPtr` that fails, and so purges (II-13), it is `main`'s +4 on System 6
+and +14 on System 3.0. `_MaxMem` purges every purgeable block (II-38);
+`MaxApplZone` purges none (II-30). The blocks come back by the time the
+engine takes its budget, a few bytes differently arranged. **A same-size
+hybrid splits layout from behaviour in two runs**, where comparing two
+different builds can only report that they differ.
+
+**Why not avoid the purge.** A request sized to the free space exactly would
+grow the zone without purging, since growth comes before purging in II-13,
+but only `_MaxMem` reports how far the zone can grow. Anything else means
+reading the zone header, which the Modern Memory Manager does not keep in the
+classic layout. The difference is in the engine's favour; it is
+recorded, not removed.
+
+**Why `_MaxMem` is inline asm, the first in `mac/`.** It returns two values in
+two registers, and Multiverse declares it as Pascal glue: +44 B of `CODE`
+against +12 B inline.
+
+**Price** (BRANCH_NOTES.md): `CODE` +12 B in `main()` in every configuration;
+A5 −12 B shipped and +20 B elsewhere, `.data` padding only; stack 0; no
+extraction lost on any Mini vMac tier or under Mac OS 9.2.

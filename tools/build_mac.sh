@@ -495,10 +495,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # as one entry instead of ending the run on "The disk is full"
 # (DECISIONS.md 2026-10-14, *the file the disk was too full for*). A5
 # 38,032, +4, the message and alignment.
-# Branch rom64k only, 2026-10-15, measured against main's build: the
-# Has128KROM guard, +16 B code and +16 B A5 here, +16/-16 eager, +20/+12
-# lazy; each ceiling it crosses is raised to the measured size.
-UNC_MAC_CODE_DEFAULT=175424
+# Branch rom64k only, 2026-10-15, measured against main's build:
+# GrowApplZone, +12 B code in main() in every configuration and nothing
+# else; A5 +20 here and in lazy, -12 eager, which is .data padding behind
+# the longer text (no symbol in it changed size). Each ceiling is the
+# branch build's measured size.
+UNC_MAC_CODE_DEFAULT=175420
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -656,7 +658,7 @@ UNC_MAC_CODE_DEFAULT=175424
 # RAISED the same day to 38,028, +28, with the code ceiling's +36:
 # alignment, no data added.
 # RAISED 2026-10-14 to 38,032, +4, with the code ceiling's +60.
-UNC_MAC_A5_DEFAULT=38048   # rom64k: +16, the guard (see CODE_DEFAULT)
+UNC_MAC_A5_DEFAULT=38052   # rom64k: +20, padding (see CODE_DEFAULT)
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -938,9 +940,9 @@ UNC_MAC_A5_DEFAULT=38048   # rom64k: +16, the guard (see CODE_DEFAULT)
 # RepEntryFailed call cost +144, the call making RepEntryFailed a 78 B
 # function where it had been inlined; the A5 is the message (DECISIONS.md
 # 2026-10-14, *the file the disk was too full for*).
-# rom64k: +16 code, the guard; its A5 -16 is alignment, under the ceiling.
-UNC_MAC_CODE_EAGER=55788
-UNC_MAC_A5_EAGER=19124
+# rom64k: +12 code, GrowApplZone; its A5 -12 is padding.
+UNC_MAC_CODE_EAGER=55784
+UNC_MAC_A5_EAGER=19112
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -984,9 +986,9 @@ UNC_MAC_A5_EAGER=19124
 # `.data` alignment again.
 # -64 code the same day, the shim gone as in the eager pair above.
 # +56 code and +8 A5 on 2026-10-14 for the same refusal.
-# rom64k: +20 code and +12 A5, the guard.
-UNC_MAC_CODE_LAZY=54212
-UNC_MAC_A5_LAZY=19212
+# rom64k: +12 code, GrowApplZone, and +20 A5 of padding.
+UNC_MAC_CODE_LAZY=54204
+UNC_MAC_A5_LAZY=19220
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
     UNC_MAC_MAX_A5=${UNC_MAC_MAX_A5:-$UNC_MAC_A5_DEFAULT}

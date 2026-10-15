@@ -107,8 +107,8 @@ the progress window, Cmd-. on a U.S. layout and on AZERTY (BLOCKERS.md, *Status*
 Macintosh 128K*). Mini vMac does not emulate the HD20, so this cannot be
 booted here (FORMATS.md, *A true Macintosh 512K*).
 
-**`dist/` on this branch is the binary to use**: here `Has128KROM()` guards
-`MaxApplZone`, so it starts on a 64K ROM; `main`'s download bombs there by
+**`dist/` on this branch is the binary to use**: here `GrowApplZone()`
+replaces `MaxApplZone`, so it starts on a 64K ROM; `main`'s download bombs there by
 design (`BRANCH_NOTES.md`).
 
 | configuration | status |

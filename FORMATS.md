@@ -5515,7 +5515,7 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **138,576 B** on branch `rom64k`, +32 for the Has128KROM guard, and 138,544 B on `main` since 2026-10-14's
+measured 2026-09-27. The shipped pair is **138,576 B** on branch `rom64k`, +32 for `GrowApplZone`, and 138,544 B on `main` since 2026-10-14's
 refusal of a fork over 2 GB, 138,576 B after that day's BinHex before 4.0, 136,448 B after 2026-10-13's
 eject before a split set's next part, 136,464 B after that day's MIME progress, 136,240 B after 2026-10-12's Arsenic progress, 135,920 B after that day's reload for a list of archives, 136,080 B after that day's menu bar, 136,064 B after 2026-10-11's fixes from the LC 475, 136,112 B after that day's `JPEG Lossy` work and
 135,408 B after its zip Reduce, both of which the control carries and the shipped build does not (134,288 B after 2026-10-09's
@@ -5716,7 +5716,7 @@ budget per format, and one per layer*).
 | Zip, spanned zip | exo, zipold, ciphers, codecs | +86,028 B (arithmetic), **+96,280 B** unencrypted (measured) |
 | every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,150 B** (measured; the −24 B of 2026-10-10 and the +28 of 2026-10-11 with the bundle are arithmetic, no tier re-run) |
 
-**Every row rose 32 B on 2026-10-15, branch `rom64k` only, for the Has128KROM guard**: `OVL_SAVED` +32, the control +32 (CODE +16, A5 +16) against a shipped build +0 (CODE +16, A5 −16), no image moved, and `TIERS` fell the same 32 — so on the machine no grant moves (`tools/build_mac.sh`); arithmetic, no tier re-run.
+**Every row rose 32 B on 2026-10-15, branch `rom64k` only, for `GrowApplZone`**: `OVL_SAVED` +32, the control +32 (CODE +12, A5 +20) against a shipped build +0 (CODE +12, A5 −12), no image moved, and `TIERS` fell the same 32 — so on the machine no grant moves (`tools/build_mac.sh`); arithmetic, and the tiers re-run give `main`'s tallies by name.
 
 **Every row fell 32 B on 2026-10-14, for refusing a fork over 2 GB**: `OVL_SAVED` −32, the shipped build +96 (CODE +60, A5 +36) against a control +64, no image moved — so on the machine every grant falls 96 B (DECISIONS.md 2026-10-14, *the file the disk was too full for*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally.
 
@@ -5778,7 +5778,7 @@ Reduce, less the shipped build's +80 and +16 for the sixteenth image
 that holds it and Shrink. With `ovl_codecs` −1,224 and `ovl_exo` +76,
 the rows keeping the codecs image and not `ovl_exo` rose 2,344, tar
 2,268, and zip, which keeps `ovl_zipold` too, fell 406 — all against a
-control that grew 1,216 B (*Reduce*). And -> **136,112 B** the same day, +704: the control's `CODE` +728 and A5 −24 for `JPEG Lossy`, the shipped build +0; every row rose 704 but the two that keep `ovl_stuffit` or the bundle, which rose 28. And -> **136,064 B** the same day, −48: the LC 475's fixes, the control's `CODE` +96 against the shipped build's +140 and A5 +4. And -> **136,080 B** on 2026-10-12, +16: the menu bar, the control's `CODE` −8 and A5 +8 against the shipped build's −8 and −8. And -> **135,920 B** the same day, −160: the reload a list of archives needs, the control's `CODE` +24 and A5 +8 against the shipped build's +192 and +0. And -> **136,240 B** the same day, +320: Arsenic's progress, the control's `CODE` +328 and A5 −8, the shipped build +0 (DECISIONS.md 2026-10-12, *the block nobody could cancel*). And -> **136,464 B** on 2026-10-13, +224: MIME's progress and its walk's Cancel, the control's `CODE` +228 and A5 −4, the shipped build +0 (DECISIONS.md 2026-10-13, *the mail that counted itself three times*). And -> **136,448 B** the same day, −16: the eject before a split set's next part, the control's `CODE` +256 and A5 −64 against the shipped build's +256 and −48 (DECISIONS.md 2026-10-13, *the disk that was still in the drive*). And -> **138,576 B** on 2026-10-14, +2,128, for BinHex before 4.0 (the row note above). And -> **138,544 B** the same day, −32: the refusal of a fork over 2 GB, the control's `CODE` +60 and A5 +4 against the shipped build's +60 and +36 (DECISIONS.md 2026-10-14, *the file the disk was too full for*). And -> **138,576 B** on 2026-10-15, branch `rom64k` only, +32: the Has128KROM guard, the control's `CODE` +16 and A5 +16 against the shipped build's +16 and −16.
+control that grew 1,216 B (*Reduce*). And -> **136,112 B** the same day, +704: the control's `CODE` +728 and A5 −24 for `JPEG Lossy`, the shipped build +0; every row rose 704 but the two that keep `ovl_stuffit` or the bundle, which rose 28. And -> **136,064 B** the same day, −48: the LC 475's fixes, the control's `CODE` +96 against the shipped build's +140 and A5 +4. And -> **136,080 B** on 2026-10-12, +16: the menu bar, the control's `CODE` −8 and A5 +8 against the shipped build's −8 and −8. And -> **135,920 B** the same day, −160: the reload a list of archives needs, the control's `CODE` +24 and A5 +8 against the shipped build's +192 and +0. And -> **136,240 B** the same day, +320: Arsenic's progress, the control's `CODE` +328 and A5 −8, the shipped build +0 (DECISIONS.md 2026-10-12, *the block nobody could cancel*). And -> **136,464 B** on 2026-10-13, +224: MIME's progress and its walk's Cancel, the control's `CODE` +228 and A5 −4, the shipped build +0 (DECISIONS.md 2026-10-13, *the mail that counted itself three times*). And -> **136,448 B** the same day, −16: the eject before a split set's next part, the control's `CODE` +256 and A5 −64 against the shipped build's +256 and −48 (DECISIONS.md 2026-10-13, *the disk that was still in the drive*). And -> **138,576 B** on 2026-10-14, +2,128, for BinHex before 4.0 (the row note above). And -> **138,544 B** the same day, −32: the refusal of a fork over 2 GB, the control's `CODE` +60 and A5 +4 against the shipped build's +60 and +36 (DECISIONS.md 2026-10-14, *the file the disk was too full for*). And -> **138,576 B** on 2026-10-15, branch `rom64k` only, +32: `GrowApplZone`, the control's `CODE` +12 and A5 +20 against the shipped build's +12 and −12.
 So every grant rises with
 it: a release build keeps what the control has to carry, and the
 control carrying more is what the release does not. **The exception is
@@ -7946,19 +7946,21 @@ block returns. Behind `MaxApplZone` there is a second wall, `PBGetCatInfo`'s
 directory and to size a file. The verdict is unchanged and now has a
 reproduction: **a 64K-ROM Macintosh cannot run this.**
 
-**One guard makes it start on a 64K ROM, and on this branch it is IN** —
-`main` does not carry it, because nothing has ever run it on the machine it is
-for (`BRANCH_NOTES.md`).
-`MaxApplZone` is guarded by `Has128KROM()`, two byte reads of the ROM
-version word at `ROMBase+8` — Inside Macintosh II's `Environs` note for where
-it lives, Inside Macintosh IV's preface for the threshold, `>= 117 ($75)` — so
-the call is made on every machine that has it and skipped on the one that does
-not. `TrapAvailable` cannot do this job: it reports `_MaxApplZone` as PRESENT
-on a 64K ROM, because it compares against `_Unimplemented` and that entry is
-neither.
+**One launch path makes it start on a 64K ROM, and on this branch it is
+IN** — `main` does not carry it, because nothing has ever run it on the
+machine it is for (`BRANCH_NOTES.md`). `MaxApplZone` is gone: `GrowApplZone()`
+grows the zone with `_MaxMem`, one `NewPtr` that large and its `DisposPtr`,
+traps the 64K ROM has (Inside Macintosh II-36, II-38), on every machine
+alike. Until 2026-10-15 this branch skipped `MaxApplZone` on a ROM version
+word below `$75` instead (`Has128KROM()`; DECISIONS.md 2026-09-01, *two
+byte reads*). Measured: the zone ends exactly at `ApplLimit` (System 6.0.8,
+1 MB), and the budget is +4, +4 and +6 B against `main` on the three
+asserted tiers, the whole of it `_MaxMem`'s purge (DECISIONS.md 2026-10-15,
+*the purge MaxApplZone never did*).
 
 Measured on the emulated 512K under Apple's MFS System 3.0, with this
-branch's `dist/`: Standard File opens, a file is chosen, the destination
+branch's build (re-taken 2026-10-15 with `GrowApplZone`; `main`'s bombs
+`ID = 03` on the same disk): Standard File opens, a file is chosen, the destination
 dialog appears, and a non-archive is opened, sniffed and refused with the
 application's own alert, *"This file could not be extracted."* **Extracting a
 real StuffIt archive still bombs `ID = 12`** at an HFS call, because this
