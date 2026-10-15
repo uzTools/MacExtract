@@ -416,6 +416,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
 - 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
 - 2026-10-15 (the rest of the block) — the shell moves to Retro68's File Manager glue only once the glue sets every input field
+- 2026-10-15 (the File Manager a 64K ROM has) — extracting on a 64K ROM without HFS is out of scope
 
 ---
 
@@ -26778,3 +26779,26 @@ dirty stack" could have been the test's own pattern.
 **Consequence.** The switch waits for that patch upstream (OPEN_ITEMS.md,
 *The shell's own File Manager blocks*); the issue is for the maintainer to
 post (MANUAL_TESTS.md §7).
+
+## 2026-10-15 (the File Manager a 64K ROM has) — extracting on a 64K ROM without HFS is out of scope
+
+**Decision (the maintainer's).** On a Macintosh 512K with no Hard Disk 20,
+the branch `rom64k` starts and opens Standard File, then bombs
+`ID = 12` at its first HFS call (measured, BRANCH_NOTES.md on that branch).
+Writing there was considered and is not taken.
+
+**Why.** Without HFS, an HFS trap is not an error a call returns: the trap
+does not exist, so it bombs. The shell could therefore not try HFS and fall
+back; it would have to know beforehand whether HFS is present and run a
+second path — the per-machine behaviour the maintainer rules out. The single path, pre-HFS calls on
+every machine, cannot create folders, so every Mac would lose them. The
+second path was estimated, not built, at 1.5–3 KB of `CODE` (a folderless
+`sink_begin`/`sink_end`, flattened names, and the split-set search, disk
+filter and launch kept off HFS traps).
+
+**Not affected.** MFS disks on a machine WITH HFS — the 400K floppies of the
+floor System — are written through HFS's File Manager as before.
+
+**Consequence.** The Hard Disk 20 is the only route left for a 64K ROM: its
+driver file supplies HFS, and the branch would then run the code every other
+Macintosh runs (MANUAL_TESTS.md §6).
