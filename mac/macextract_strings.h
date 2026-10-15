@@ -134,7 +134,7 @@
 #define S_REP_UNSUPPORTED   ": unsupported method"
 #define S_REP_CRC           ": checksum mismatch"
 #define S_REP_TRUNCATED     ": archive incomplete"
-#define S_REP_ENCRYPTED     " is encrypted and was skipped"
+#define S_REP_ENCRYPTED     ": skipped (encrypted)"
 #define S_REP_SINK          " could not be written to the disk"
 #define S_REP_IO            " could not be read from the archive"
 #define S_REP_FAILED        " could not be extracted"
