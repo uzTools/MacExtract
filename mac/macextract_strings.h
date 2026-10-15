@@ -105,9 +105,11 @@
 
 /* Every line starts with the entry's name, <name> below. */
 #define S_REP_UNNAMED       "An unnamed entry"
-/* "and <N> more, which this list had no room for" */
-#define S_REP_MORE          "and "
-#define S_REP_MORE_END      " more, which this list had no room for"
+/* "...and <N> more": lines the report had no room for. The ellipsis is
+ * MacRoman 0xC9, a literal of its own so the "a" is not read as one more
+ * hex digit of the escape. */
+#define S_REP_MORE          "\xC9" "and "
+#define S_REP_MORE_END      " more"
 
 /* "[Folder ]<name> renamed to <new>", "Folder <name> combined with <other>" */
 #define S_REP_FOLDER        "Folder "
