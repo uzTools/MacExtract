@@ -115,9 +115,8 @@
 #define S_REP_FOLDER        "Folder "
 #define S_REP_RENAMED       " renamed to "
 #define S_REP_COMBINED      " combined with "
-#define S_REP_LOST_CHARS    " was named in characters this Macintosh " \
-                            "cannot write"
-#define S_REP_PATH_CUT      " is in a folder whose path had to be shortened"
+#define S_REP_LOST_CHARS    ": unknown characters replaced"
+#define S_REP_PATH_CUT      ": folder path shortened"
 /* "The archive's comment: Comments written as <new>" */
 #define S_REP_COMMENT       "The archive's comment: "
 #define S_REP_WRITTEN_AS    " written as "
