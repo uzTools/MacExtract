@@ -145,8 +145,7 @@
  * they are tested in: the first that applies is the one shown. The alert
  * wraps between 32 and 36 characters, and a third line sits level with
  * the OK button. */
-#define S_OUT_DISK_FULL     "The disk is full. Free up some space and " \
-                            "try again."
+#define S_OUT_DISK_FULL     "Disk full."
 #define S_OUT_CANCELLED     "Extraction cancelled."
 #define S_OUT_MORE_PARTS    "This archive has more parts. Find them and " \
                             "try again."
