@@ -117,9 +117,8 @@
 #define S_REP_COMBINED      " combined with "
 #define S_REP_LOST_CHARS    ": unknown characters replaced"
 #define S_REP_PATH_CUT      ": folder path shortened"
-/* "The archive's comment: Comments written as <new>" */
-#define S_REP_COMMENT       "The archive's comment: "
-#define S_REP_WRITTEN_AS    " written as "
+/* "Archive comment saved as <new>", when "Comments" was taken */
+#define S_REP_COMMENT       "Archive comment saved as "
 #define S_REP_NOTE_LOST     "The note this archive carries could not be " \
                             "written to the disk"
 
