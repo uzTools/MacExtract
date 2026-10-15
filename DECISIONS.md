@@ -416,7 +416,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
 - 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
 - 2026-10-15 (the rest of the block) — the shell moves to Retro68's File Manager glue only once the glue sets every input field
-- 2026-10-15 (the File Manager a 64K ROM has) — extracting on a 64K ROM without HFS is out of scope
+- 2026-10-15 (the File Manager a 64K ROM has) — extracting onto an MFS disk is out of scope, and so is a 64K ROM without HFS
 
 ---
 
@@ -26780,7 +26780,7 @@ dirty stack" could have been the test's own pattern.
 *The shell's own File Manager blocks*); the issue is for the maintainer to
 post (MANUAL_TESTS.md §7).
 
-## 2026-10-15 (the File Manager a 64K ROM has) — extracting on a 64K ROM without HFS is out of scope
+## 2026-10-15 (the File Manager a 64K ROM has) — extracting onto an MFS disk is out of scope, and so is a 64K ROM without HFS
 
 **Decision (the maintainer's).** On a Macintosh 512K with no Hard Disk 20,
 the branch `rom64k` starts and opens Standard File, then bombs
@@ -26795,6 +26795,11 @@ every machine, cannot create folders, so every Mac would lose them. The
 second path was estimated, not built, at 1.5–3 KB of `CODE` (a folderless
 `sink_begin`/`sink_end`, flattened names, and the split-set search, disk
 filter and launch kept off HFS traps).
+
+**MFS destinations, on every Macintosh.** The same decision, taken the same
+day: MFS has no folders, so any MFS destination needs that second write path
+even where HFS is present. Out of scope; what a user gets by choosing one is
+deliberately not documented, and no harness here writes to one.
 
 **Consequence.** The Hard Disk 20 is the only route left for a 64K ROM: its
 driver file supplies HFS, and the branch would then run the code every other
