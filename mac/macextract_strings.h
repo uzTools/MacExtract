@@ -124,11 +124,12 @@
 /* "<name>" followed by one of these. */
 #define S_REP_DIR_FAILED    " could not be made on the disk"
 #define S_REP_NO_NAME       " could not be given a name of its own"
-#define S_REP_OVER_2GB      " is over 2 GB, too large here"
 #define S_REP_NOT_CREATED   " could not be created on the disk"
 #define S_REP_INEXACT       " opens, but is not the original file"
-#define S_REP_TOOLARGE      " is too large for this version and was not " \
-                            "extracted"
+/* The same words for both: what the engine cannot hold, and a fork the
+ * File Manager cannot write, which is 2 GB on every Macintosh. */
+#define S_REP_TOOLARGE      ": file too large (<2GB)"
+#define S_REP_OVER_2GB      S_REP_TOOLARGE
 #define S_REP_MEM           " needs more memory than was free"
 #define S_REP_UNSUPPORTED   " uses a method this version cannot read"
 #define S_REP_CRC           " is damaged: its checksum does not match"
