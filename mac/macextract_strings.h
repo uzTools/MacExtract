@@ -64,11 +64,11 @@
 
 /* ---- C: password dialog --------------------------------------------- */
 
-/* "[Incorrect password. ]"<archive>" is encrypted. ..." */
-#define S_PASS_REFUSED      "Incorrect password. "
+/* The first ask: '"<archive>" is encrypted. ...'. Every ask after it:
+ * S_PASS_REFUSED alone. */
 #define S_PASS_OPEN_QUOTE   "\""
-#define S_PASS_ENCRYPTED    "\" is encrypted. Type its password, or click " \
-                            "Cancel to skip the entries that need one."
+#define S_PASS_ENCRYPTED    "\" is encrypted. Please enter its password."
+#define S_PASS_REFUSED      "Incorrect password."
 
 /* ---- C: segmented archives ------------------------------------------ */
 
