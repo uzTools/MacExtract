@@ -546,8 +546,9 @@ CANCEL_BUTTON = (340, 168)
 
 # The password dialog's MESSAGE area — item 4 of 'DITL' 132, local
 # (20,10)-(372,64) inside a 'DLOG' at global (60,80)-(452,214), so
-# (80,90)+352x54. It is what the refusal changes: the second ask prepends
-# "That password was refused. " and the text rewraps from two lines to three.
+# (80,90)+352x54. It is what the refusal changes: the second ask replaces the
+# message with "Incorrect password." (until 2026-10-15 it prepended "That
+# password was refused. " and the text rewrapped from two lines to three).
 # WINDOW_RECT cannot see that — the whole dialog is a small part of it, and one
 # rewrapped message moved 0.43 % of it, under the 2 % threshold, so the wait
 # ran to its 120 s timeout and printed "NO CHANGE" about a dialog that had in

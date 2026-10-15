@@ -17,7 +17,7 @@ Eleven of them, all cheap enough to run first in ci.sh:
    dist/README.txt, which make_dist.sh generates from the header, and the
    two 'vers' resources in mac/macextract_icons.r, which are what the
    Finder's Get Info shows and which nothing on this machine reads, and
-   the About MacExtract alert's text in mac/macextract.r. That
+   the About MacExtract alert's text in mac/macextract_strings.h. That
    constant sat at "0.4.0" through four releases because nothing read it
    and nothing checked it; a reader who sees a stale version on the
    release page now knows the publish step did not run, which is the one
@@ -192,9 +192,9 @@ def check_version():
     # reading 'vers' 1, which cost 32 B of code and A5 (DECISIONS.md
     # 2026-10-12, *the application nobody could leave*).
     about = re.search(r'"MacExtract ([^"]*)"',
-                      (ROOT / "mac" / "macextract.r").read_text())
+                      (ROOT / "mac" / "macextract_strings.h").read_text())
     if not about or about.group(1) != ver:
-        bad.append("mac/macextract.r: the About alert says "
+        bad.append("mac/macextract_strings.h: the About alert says "
                    f"{about.group(1) if about else 'nothing'!r}, not {ver!r}")
     return bad
 

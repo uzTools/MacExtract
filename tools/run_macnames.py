@@ -347,7 +347,7 @@ def failure_case(sink, tmp, problems):
                         corrupt=b"BROKENBROKEN")
     check(problems, got.get("good.txt") == b"GOOD\n",
           "fail: the sound entry did not come out: %r" % sorted(got))
-    check(problems, any(l.startswith("broken.txt is damaged") for l in rep),
+    check(problems, any(l == "broken.txt: checksum mismatch" for l in rep),
           "fail: the damaged entry is not named in the report: %r" % rep)
     check(problems, not any(l.startswith("good.txt") for l in rep),
           "fail: a sound entry was reported as a problem: %r" % rep)
@@ -377,7 +377,7 @@ def crowd_case(sink, tmp, problems):
     check(problems, base[:28] + "~99" in got,
           "crowd: the numbering did not reach two digits: %r"
           % sorted(got)[-3:])
-    failed = [l for l in rep if "could not be given a name of its own" in l]
+    failed = [l for l in rep if l.endswith(": no free name")]
     check(problems, len(failed) == 2,
           "crowd: wanted the 2 unplaceable entries reported, got %r" % failed)
     return 1
@@ -460,11 +460,11 @@ def utf8_case(sink, tmp, problems):
     check(problems, got == want,
           "utf8: on disk %r, wanted %r" % (sorted(got - want),
                                            sorted(want - got)))
-    lost = [l for l in rep if "cannot write" in l]
+    lost = [l for l in rep if l.endswith(": unknown characters replaced")]
     check(problems, len(lost) == 4,
           "utf8: %d report line(s) about unwritable characters, wanted 4: %r"
           % (len(lost), rep))
-    check(problems, any(l.startswith("Folder __ ") for l in lost),
+    check(problems, any(l.startswith("Folder __:") for l in lost),
           "utf8: the folder that lost characters is not named: %r" % (lost,))
     # A file inside a folder that lost characters is not itself
     # reported: the folder is said once, and an archive of Japanese

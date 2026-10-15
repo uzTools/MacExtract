@@ -455,6 +455,9 @@ def main():
                     help="what --psdoc draws: the original five zigzag "
                          "strokes, or a dense grid (high-frequency, which "
                          "is what exercises the IDCT's rounding)")
+    ap.add_argument("--pssynth", metavar="NAME:ROWS:COLS",
+                    help="build a Photoshop 1.0 document of that size "
+                         "from psdoc2's, into specimens/sitopt/pssynth")
     ap.add_argument("--psname", default=PS_DOC,
                     help="the Photoshop document's name on the volume")
     ap.add_argument("--add-archive",
@@ -541,6 +544,8 @@ def main():
         return phase_psmatrix(args)
     if args.psdoc:
         return phase_psdoc(args)
+    if args.pssynth:
+        return phase_pssynth(args)
     if args.psjpeg:
         return phase_psjpeg(args)
     if args.magic:
@@ -2069,6 +2074,44 @@ def psj_script(doc):
         "Quit",
         "",
     ])
+
+
+def phase_pssynth(args):
+    """A Photoshop 1.0 document of any size, without driving Photoshop:
+    `psdoc2`'s own resource fork with its `'8BIM'` 1000 rewritten, and a
+    ramp for pixels. Then `--psjpeg --against pssynth --psname NAME`.
+
+    `'8BIM'` 1000 is five big-endian words — channels, ROWS, COLUMNS,
+    depth, mode — read out of `Photoshop/JPEG Lossy`'s COMP (it keeps +0,
+    +2 and +4, and accepts mode 1 or 3..7 at +8). Rows before columns is
+    measured, not read: a document with 8,208 at +2 decodes here to a
+    TIFF whose ImageWidth is 16 (2026-10-15).
+
+    What this CANNOT see: a real Photoshop document of that size. The
+    construction is checked only by a 256 x 256 control, whose resource
+    fork comes out byte-identical to psdoc2's and which the module
+    accepts.
+    """
+    name, rows, cols = args.pssynth.split(":")
+    rows, cols = int(rows), int(cols)
+    src = os.path.join(SPECIMENS, "psdoc2", "PSDoc2.bin")
+    if not os.path.exists(src):
+        raise SystemExit("sitopt: no %s — --psdoc makes it" % src)
+    _d, rsrc = forks(src)
+    old = struct.pack(">HHHHH", 3, 256, 256, 8, 3)
+    if rsrc.count(old) != 1:
+        raise SystemExit("sitopt: psdoc2's '8BIM' 1000 is not 256x256 RGB")
+    rsrc = rsrc.replace(old, struct.pack(">HHHHH", 3, rows, cols, 8, 3))
+    n = rows * cols
+    data = bytes(((i * 255) // n + k * 60) & 255
+                 for k in range(3) for i in range(n))
+    outdir = os.path.join(SPECIMENS, "pssynth")
+    os.makedirs(outdir, exist_ok=True)
+    out = os.path.join(outdir, name + ".bin")
+    open(out, "wb").write(macbinary(name, "8BIM", "8BIM", data, rsrc))
+    print("sitopt: %s, %d rows x %d columns, %d B of pixels"
+          % (out, rows, cols, len(data)))
+    return 0
 
 
 def phase_psjpeg(args):

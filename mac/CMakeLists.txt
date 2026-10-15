@@ -150,6 +150,12 @@ add_application(MacExtract
 # includes it.
 target_include_directories(MacExtract PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
+# Retro68's rule for a .r depends on that file alone, so without this an
+# edit to the text in macextract_strings.h rebuilt the code and left the
+# dialogs saying the old words.
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/macextract.r.rsrc.bin
+    APPEND DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/macextract_strings.h)
+
 # What EVERY image is built from, in one list because it was in fifteen.
 #
 # Each rule below named its own sources and then repeated the shared ones, and

@@ -4,6 +4,7 @@
  */
 #include "Dialogs.r"
 #include "Processes.r"
+#include "macextract_strings.h"   /* every word the user reads */
 
 /* Progress dialog. Four items, and the order is the item numbering the
  * code uses (kCancelItem..kDetailItem in macextract_mac.c):
@@ -31,7 +32,7 @@
  * (DECISIONS.md 2026-10-14, *the disk the dialogs were on*). */
 resource 'DLOG' (128, purgeable, preload) {
     { 80, 80, 190, 400 },
-    noGrowDocProc, visible, noGoAway, 0, 128, "MacExtract", noAutoCenter
+    noGrowDocProc, visible, noGoAway, 0, 128, S_PROGRESS_TITLE, noAutoCenter
 };
 
 /* Mac OS 8 and later: the progress window takes the theme's background
@@ -49,8 +50,8 @@ data 'dlgx' (128, purgeable, preload) {
 
 resource 'DITL' (128, purgeable, preload) {
     {
-        { 78, 220, 98, 300 }, Button     { enabled,  "Cancel" };
-        { 10,  16, 26, 300 }, StaticText { disabled, "Extracting" };
+        { 78, 220, 98, 300 }, Button     { enabled,  S_BTN_CANCEL };
+        { 10,  16, 26, 300 }, StaticText { disabled, S_PROGRESS_STATUS };
         { 34,  16, 50, 300 }, UserItem   { enabled };
         { 56,  16, 72, 300 }, StaticText { disabled, "" };
     }
@@ -65,7 +66,7 @@ resource 'ALRT' (129, purgeable, preload) {
 
 resource 'DITL' (129, purgeable, preload) {
     {
-        { 68, 232, 88, 292 }, Button { enabled, "OK" };
+        { 68, 232, 88, 292 }, Button { enabled, S_BTN_OK };
         { 12, 64, 60, 300 }, StaticText { disabled, "^0" };
     }
 };
@@ -79,7 +80,7 @@ resource 'ALRT' (130, purgeable, preload) {
 
 resource 'DITL' (130, purgeable, preload) {
     {
-        { 68, 232, 88, 292 }, Button { enabled, "OK" };
+        { 68, 232, 88, 292 }, Button { enabled, S_BTN_OK };
         { 12, 64, 60, 300 }, StaticText { disabled, "^0" };
     }
 };
@@ -98,10 +99,8 @@ resource 'ALRT' (135, purgeable, preload) {
 
 resource 'DITL' (135, purgeable, preload) {
     {
-        { 68, 232, 88, 292 }, Button { enabled, "OK" };
-        { 12, 64, 60, 300 }, StaticText { disabled,
-          "There is not enough memory to open the next archive. "
-          "Open it again." };
+        { 68, 232, 88, 292 }, Button { enabled, S_BTN_OK };
+        { 12, 64, 60, 300 }, StaticText { disabled, S_NO_RELOAD };
     }
 };
 
@@ -109,20 +108,22 @@ resource 'DITL' (135, purgeable, preload) {
  * found beside the one that was opened. Three buttons, in the order the
  * code tests them (kSegFindItem..kSegCancelItem in macextract_mac.c):
  *
- *   1  Find...   opens Standard File so the user can point at it, on any
+ *   1  Find…     opens Standard File so the user can point at it, on any
  *                mounted volume — including a disk inserted just now
  *   2  Skip      give up on this part; what was decoded so far is kept
  *   3  Cancel    stop the extraction
  *
- * The wording says "locate", not "insert the next disk": the parts of a
- * set are not assumed to be on separate floppies, or to be named alike,
- * or to be anywhere in particular. ALRT 136 is the same alert after the
- * disk the previous part came from was ejected (SegEjectPrevious), when
- * putting the next one in IS the likely answer.
+ * It only says the part has not been found, not "insert the next disk":
+ * the parts of a set are not assumed to be on separate floppies, or to be
+ * named alike, or to be anywhere in particular. ALRT 136 is the same alert
+ * after the disk the previous part came from was ejected
+ * (SegEjectPrevious), when putting the next one in IS the likely answer,
+ * and it asks for that disk.
  *
  * ^0 is `Part 2 of "Name"`, ^1 is ` About 33K still to read.` or empty.
- * The sentences are here rather than in the code because a purgeable
- * resource costs nothing until it is shown, and a string costs A5. */
+ * The sentences are in the DITL rather than in the code because a purgeable
+ * resource costs nothing until it is shown, and a string costs A5. Their
+ * text, like every other word here, is in macextract_strings.h. */
 resource 'ALRT' (131, purgeable, preload) {
     { 90, 80, 214, 452 }, 131, {
         OK, visible, sound1, OK, visible, sound1,
@@ -132,11 +133,10 @@ resource 'ALRT' (131, purgeable, preload) {
 
 resource 'DITL' (131, purgeable, preload) {
     {
-        { 92, 282, 112, 352 }, Button { enabled, "Find..." };
-        { 92, 196, 112, 266 }, Button { enabled, "Skip" };
-        { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
-        { 10, 16, 84, 356 }, StaticText { disabled,
-            "^0 has not been found.^1 Locate it, skip it, or cancel." };
+        { 92, 282, 112, 352 }, Button { enabled, S_SEG_FIND };
+        { 92, 196, 112, 266 }, Button { enabled, S_SEG_SKIP };
+        { 92, 110, 112, 180 }, Button { enabled, S_BTN_CANCEL };
+        { 10, 16, 84, 356 }, StaticText { disabled, S_SEG_MISSING };
     }
 };
 
@@ -149,12 +149,10 @@ resource 'ALRT' (136, purgeable, preload) {
 
 resource 'DITL' (136, purgeable, preload) {
     {
-        { 92, 282, 112, 352 }, Button { enabled, "Find..." };
-        { 92, 196, 112, 266 }, Button { enabled, "Skip" };
-        { 92, 110, 112, 180 }, Button { enabled, "Cancel" };
-        { 10, 16, 84, 356 }, StaticText { disabled,
-            "^0 is not on that disk, so it was ejected. Insert the disk "
-            "it is on.^1 Or locate it, skip it, or cancel." };
+        { 92, 282, 112, 352 }, Button { enabled, S_SEG_FIND };
+        { 92, 196, 112, 266 }, Button { enabled, S_SEG_SKIP };
+        { 92, 110, 112, 180 }, Button { enabled, S_BTN_CANCEL };
+        { 10, 16, 84, 356 }, StaticText { disabled, S_SEG_EJECTED };
     }
 };
 
@@ -168,8 +166,8 @@ resource 'DITL' (136, purgeable, preload) {
  *               filter in PassFilter swaps the character on its way in,
  *               which is how a Mac hid a password before there was a
  *               password field to ask for
- *   4  the message, which names the archive and, on a second ask, says
- *      the last one was refused
+ *   4  the message, which names the archive, and on every later ask only
+ *      says the last password was incorrect
  */
 resource 'DLOG' (132, purgeable, preload) {
     { 80, 60, 214, 452 }, dBoxProc, visible, noGoAway, 0, 132, "",
@@ -182,8 +180,8 @@ data 'dlgx' (132, purgeable, preload) {
 
 resource 'DITL' (132, purgeable, preload) {
     {
-        { 102, 302, 122, 372 }, Button     { enabled, "OK" };
-        { 102, 216, 122, 286 }, Button     { enabled, "Cancel" };
+        { 102, 302, 122, 372 }, Button     { enabled, S_BTN_OK };
+        { 102, 216, 122, 286 }, Button     { enabled, S_BTN_CANCEL };
         {  72,  20,  88, 372 }, EditText   { enabled, "" };
         {  10,  20,  64, 372 }, StaticText { disabled, "^0" };
     }
@@ -233,8 +231,8 @@ resource 'DLOG' (133, purgeable, preload) {
 
 resource 'DITL' (133, purgeable, preload) {
     {
-        { 264, 376, 284, 446 }, Button     { enabled, "OK" };
-        { 264, 236, 284, 356 }, Button     { enabled, "Save as Text\0xC9" };
+        { 264, 376, 284, 446 }, Button     { enabled, S_BTN_OK };
+        { 264, 236, 284, 356 }, Button     { enabled, S_REPORT_SAVE };
         {  12,  12, 246, 428 }, UserItem   { disabled };
         { 260, 372, 288, 450 }, UserItem   { disabled };
     }
@@ -247,15 +245,15 @@ resource 'DITL' (133, purgeable, preload) {
  * application nobody could leave*). */
 resource 'MENU' (129) {
     129, textMenuProc, allEnabled, enabled, apple,
-    { "About MacExtract\0xC9", noIcon, noKey, noMark, plain }
+    { S_MENU_ABOUT, noIcon, noKey, noMark, plain }
 };
 
 resource 'MENU' (128) {
-    128, textMenuProc, allEnabled, enabled, "File",
-    { "Quit", noIcon, noKey, noMark, plain }
+    128, textMenuProc, allEnabled, enabled, S_MENU_FILE,
+    { S_MENU_QUIT, noIcon, noKey, noMark, plain }
 };
 
-/* About MacExtract. The number is written here rather than read from
+/* About MacExtract. The number is written in (S_ABOUT) rather than read from
  * 'vers' 1 at run time, which cost 32 B of code and A5; check_docs.py
  * holds it to UNC_VERSION like the other copies. */
 resource 'ALRT' (134, purgeable, preload) {
@@ -267,8 +265,8 @@ resource 'ALRT' (134, purgeable, preload) {
 
 resource 'DITL' (134, purgeable, preload) {
     {
-        { 68, 232, 88, 292 }, Button { enabled, "OK" };
-        { 12, 64, 60, 300 }, StaticText { disabled, "MacExtract 0.40.0" };
+        { 68, 232, 88, 292 }, Button { enabled, S_BTN_OK };
+        { 12, 64, 60, 300 }, StaticText { disabled, S_ABOUT };
     }
 };
 

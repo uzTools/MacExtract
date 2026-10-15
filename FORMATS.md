@@ -3989,6 +3989,7 @@ passes are testing something.
 | entry POSITION, zip | 4 GiB | past 2 GB the directory holds `0xFFFFFFFF` and the real offset is in extra field 0x0001, read since 2026-08-27 (below); an offset whose high half is set is refused per entry |
 | decoded output, streamed (gzip) | **none found** | 3 GiB and 5 GiB both verify, exit 0. The output size is never held, so nothing bounds it |
 | zip entry count | 4,294,967,295 | the Zip64 record's count is read as a `uint32`; a 70,000-entry archive extracts all 70,000 (below) |
+| `JPEG Lossy` image (StuffIt 2.0 Optimizer) | **8,192 pixels wide**; any height a TIFF states | `src/sit_ccube.c` refuses a wider image per entry (`UNC_ERR_TOOLARGE`): the cap keeps `w * h * channels` inside a `uint32`. Height uncapped since 2026-10-15; 16 x 8,208 matches 2.0.1's own restore. A 8,208-pixel width crashed 2.0.1 under emulation, once (DECISIONS.md 2026-10-15, *the height nothing needed*) |
 | Mac binary | 2 GiB, **not measured** | `SetFPos` takes a signed `long` (`mac/macextract_mac.c`), and HFS caps a fork at 2 GB anyway; exercising it needs real hardware (MANUAL_TESTS.md §3) |
 
 The tar boundary is exact: a 2 GiB − 1024 member lists its size, a 2 GiB one
@@ -5522,7 +5523,7 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **167,220 B** — the sixteen images sum to 167,008 B, so its
+The bundle is **167,208 B** — the sixteen images sum to 166,996 B, so its
 index costs **212 B** (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
 of directory per image and 16 bytes of padding to 4, which accounts for
@@ -5583,7 +5584,7 @@ than failing on it, exactly as its tolerance is meant to.)
 **The launch READ is not a new cost.** A resident build's whole `CODE` is
 read at launch by the Segment Loader — 196,608 B, 2026-10-06's figure —
 and the shipped build reads 66,400 B of `CODE` (2026-10-06's figure, not
-re-derived since) plus the **167,220 B** bundle, which is **233,620 B** (DECISIONS.md 2026-09-25, *the overlay
+re-derived since) plus the **167,208 B** bundle, which is **233,608 B** (DECISIONS.md 2026-09-25, *the overlay
 launch read was counted as a cost twice*). **The single difference this
 paragraph used to quote is gone, and it is gone because it went stale
 twice**: it read "plus 25,860 B", which is 222,468 − 196,608 — the sum
@@ -5712,9 +5713,9 @@ budget per format, and one per layer*).
 | ARC | arc, ciphers, codecs | **+112,702 B** (measured) |
 | Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +104,914 B (arithmetic), and **+115,166 B** where the directory says no entry is encrypted (measured) |
 | Tar | exo, codecs | **+98,914 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+92,208 B** (measured; the −24 B of 2026-10-10 and the +28 of 2026-10-11 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+92,220 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
 | Zip, spanned zip | exo, zipold, ciphers, codecs | +85,996 B (arithmetic), **+96,248 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,182 B** (measured; the −24 B of 2026-10-10 and the +28 of 2026-10-11 with the bundle are arithmetic, no tier re-run) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,170 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
 
 **Every row fell 32 B on 2026-10-14, for refusing a fork over 2 GB**: `OVL_SAVED` −32, the shipped build +96 (CODE +60, A5 +36) against a control +64, no image moved — so on the machine every grant falls 96 B (DECISIONS.md 2026-10-14, *the file the disk was too full for*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally.
 
@@ -5800,7 +5801,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 167,220 B held against 138,544 B saved. It costs nothing on the tiers
+it — 167,208 B held against 138,544 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -5860,7 +5861,7 @@ re-read 2026-10-14 off the build `tools/make_dist.sh` copies), and since
 2026-09-25 that is no longer all resident:
 **67,456 B** is
 `MacExtract.code.bin`, which the Segment Loader reads at launch and never
-purges, and **167,220 B** is the `'OVLY'` bundle, which is read at launch and
+purges, and **167,208 B** is the `'OVLY'` bundle, which is read at launch and
 mostly given back before the engine takes its budget (*Overlays*). What stays
 costs the heap one for one: the link line produces a single
 `MacExtract.code.bin`, and `Elf2Mac/LdScript.cc` emits `*(.rodata*)` inside

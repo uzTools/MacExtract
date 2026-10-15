@@ -417,6 +417,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
 - 2026-10-15 (the rest of the block) — the shell moves to Retro68's File Manager glue only once the glue sets every input field
 - 2026-10-15 (the File Manager a 64K ROM has) — extracting onto an MFS disk is out of scope, and so is a 64K ROM without HFS
+- 2026-10-15 (the words in one file) — every string the application shows is in mac/macextract_strings.h
+- 2026-10-15 (the height nothing needed) — a `JPEG Lossy` image is capped in width only, and a tall one StuffIt restores now extracts
 
 ---
 
@@ -26804,3 +26806,56 @@ deliberately not documented, and no harness here writes to one.
 **Consequence.** The Hard Disk 20 is the only route left for a 64K ROM: its
 driver file supplies HFS, and the branch would then run the code every other
 Macintosh runs (MANUAL_TESTS.md §6).
+
+## 2026-10-15 (the words in one file) — every string the application shows is in mac/macextract_strings.h
+
+**Decision (the maintainer's).** The text of every menu, dialog, alert,
+report line and Standard File prompt moved out of `macextract_mac.c` and
+`macextract.r` into one header both include, as `#define`d literals, so the
+wording can be reviewed and changed in one place.
+
+**What it costs: nothing, measured.** The application's MacBinary payload
+(offset 128 on) is byte-identical to the build before the move. Editing one
+string the code uses and one that two DITLs use both reached the binary
+on an incremental build.
+
+**The dependency that had to be added.** Retro68's `add_application` makes
+each `.r` depend on that file alone, so an edited header rebuilt the code
+and left the dialogs on the old words; `mac/CMakeLists.txt` appends the
+header to the rule. Rez and C differ on escapes (`\0xC9` against `\xC9`), so
+no string is shared between the two halves of the file.
+
+**Not moved.** Format names and `unc_strerror` stay in `src/unc_engine.c`,
+shared with the CLI; the `'vers'` strings stay in `macextract_icons.r`.
+
+## 2026-10-15 (the height nothing needed) — a `JPEG Lossy` image is capped in width only, and a tall one StuffIt restores now extracts
+
+**Claim (measured).** `src/sit_ccube.c` refused any `JPEG Lossy` image over
+8,192 pixels in EITHER dimension. Nothing recorded why for the height. Under
+Mini vMac, StuffIt Deluxe 2.0.1 compressed a 16 x 8,208 RGB document with the
+Optimizer and restored it; this engine refused the archive ("past this
+engine's 32-bit reach", at 394 KB) and, with the height cap lifted, matches
+2.0.1's restore byte for byte in the data fork. The resource fork differs
+only in bytes 16-255, the header area the Resource Manager reserves, exactly
+as on the 256 x 256 control.
+
+**Why the width cap stays.** It is what keeps the format check
+`w * h * channels == outlen` inside 32 bits: 8,192 x 65,535 x 4 fits, so no
+height a TIFF short can state overflows it; and the row buffers grow with the
+width alone. A 8,208-pixel WIDTH crashed the emulated Mac mid-script once,
+leaving no archive (hypothesis: `JPEG Lossy`'s COMP keeps width x 4 and
+width x rows in 16-bit words). So no archive past the width cap is known to
+exist, and the cap refuses nothing anybody has made.
+
+**How the documents were made.** Photoshop 1.0's native file is raw pixels
+plus a 10-byte `'8BIM'` 1000 resource: channels, rows, columns, depth, mode
+(read from the module's COMP; rows-before-columns measured by the decoder's
+ImageWidth). `sitopt.py --pssynth` writes one from `psdoc2`'s resource fork;
+a 256 x 256 control comes out byte-identical to `psdoc2` and is accepted.
+The first attempt packed six words instead of five, so the mode read as 8
+and the module declined it silently — a run that measured the construction,
+not the size.
+
+**Consequence.** `run_sitcombo.py` grades the tall archive against 2.0.1's
+restore (set `settall`, optional); it fails on the capped engine. FORMATS.md,
+*Size limits*, has the row.

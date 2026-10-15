@@ -18,6 +18,9 @@ else it will do (2026-10-11), and this replays the result:
   setd        both ciphers over empty and resource-only forks, a fork of
               exactly eight blocks, every method, a folder, 11 entries
   sete        `PassLock`, `NewDEx` and `DESex` over optimized entries
+  settall     `JPEG Lossy` over a 16 x 8,208 document, past the height
+              this engine refused until 2026-10-15 (`sitopt.py
+              --pssynth`, then `--psjpeg`); optional, graded when present
 
 **The oracle is the writer.** A lossy or inexact module's answer is what
 2.0.1 itself restored — each set unstuffed its own archives in the same
@@ -34,7 +37,10 @@ What this CANNOT see:
   its `8BIM` 1000 rewritten — because driving the colour picker was not
   needed to answer the question: what is graded is 2.0.1's archive and
   2.0.1's restore of it, both authentic.
-- **2.0.1's handling of a width over 512 or a height over 300.**
+- **2.0.1's handling of a width over 512, or of a height over 300 but
+  8,208.** A 8,208-pixel WIDTH crashed the emulated Mac once, mid-script,
+  and left no archive to grade (DECISIONS.md 2026-10-15, *the height
+  nothing needed*).
 
     tools/run_sitcombo.py --macextract build/macextract
 """
@@ -159,6 +165,11 @@ def jpeg(g):
     for s in ("setqlow", "setqhigh"):
         cases.append((p(s, "Q.sit.bin"), "PSDoc2", p(s, "PSDoc2.bin"),
                       os.path.join(OLD, "psdoc2", "PSDoc2.bin")))
+    # Optional, so that a machine with the older sets still grades them.
+    if os.path.isdir(p("settall")):
+        cases.append((p("settall", "JTall8208.sit.bin"), "Tall8208",
+                      p("settall", "Tall8208.bin"),
+                      p("settall", "doc", "Tall8208.bin")))
     ref2 = os.path.join(OLD, "ps-jpeg2", "PSDoc2.bin")
     for a in ("DJpg", "NJpg"):
         cases.append((p("setc", a + ".sit.bin"), "PSDoc2", ref2,

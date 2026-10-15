@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (200052, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (104652, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (628940, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200612, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (105212, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (629500, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -210,7 +210,12 @@ TIERS = {
 # DERIVED**: the control's CODE +60 and A5 +4 for refusing a fork of 2 GB
 # or more as one entry (DECISIONS.md 2026-10-14, *the file the disk was
 # too full for*).
-TIERS_CONTROL = 213440     # build/mac-resident, CODE + A5, 2026-10-14
+# **Lowered by 560 B 2026-10-15, and TIERS raised by the same 560,
+# DERIVED**: the control's CODE -12 for `JPEG Lossy` capped in width only
+# (DECISIONS.md 2026-10-15, *the height nothing needed*) and A5 -548 for
+# the shortened strings (*the words in one file*). The shipped pair fell
+# the same 560, so OVL_SAVED did not move.
+TIERS_CONTROL = 212880     # build/mac-resident, CODE + A5, 2026-10-15
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -603,6 +608,8 @@ OVL_RESIDUE = -666
 # consumed instead of every read, and a Cancel in its walk is no longer
 # taken for the end of the message (DECISIONS.md 2026-10-13, *the mail
 # that counted itself three times*).
+# **STUFFIT -12 B 2026-10-15**: a `JPEG Lossy` image is capped in width
+# only (DECISIONS.md 2026-10-15, *the height nothing needed*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      4994,
@@ -615,13 +622,13 @@ IMAGES = {
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     28926,
+    "OVL_ID_STUFFIT":     28914,
     "OVL_ID_SQP":         2000,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11750,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 167220
+BUNDLE = 167208
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

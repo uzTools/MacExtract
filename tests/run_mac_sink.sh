@@ -151,7 +151,22 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # generated, because no fixture reaches either cap (TESTING.md).
 python3 tools/run_macnames.py --sink ./build/mac_sink_asan || {
     echo "mac-sink: name-shortening FAILED"; exit 1; }
-echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + names)"
+# The archive's comment, when `Comments` and `Comments~1` are already there:
+# the report must name the file it wrote. It named the first number tried,
+# `Comments~1`, for a note written as `Comments~2` until 2026-10-15. Sees
+# that one line and that the file exists; not what is in it (verify does).
+if [ -f fixtures/derived-Compact_Pro_Package ]; then
+    out="$(mktemp -d)"
+    echo x > "$out/Comments"; echo x > "$out/Comments~1"
+    rep=$(./build/mac_sink_asan fixtures/derived-Compact_Pro_Package "$out" 2>&1 \
+          | grep '^report: Archive comment' || true)
+    if [ "$rep" != "report: Archive comment saved as Comments~2" ] \
+       || [ ! -f "$out/Comments~2" ]; then
+        echo "mac-sink: comment rename FAILED: '$rep'"; rm -rf "$out"; exit 1
+    fi
+    rm -rf "$out"
+fi
+echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + names + comment)"
 
 # The alternative write path. The default streams each chunk straight to the
 # File Manager; UNC_MAC_STAGE_WRITES accumulates whole forks in RAM and writes

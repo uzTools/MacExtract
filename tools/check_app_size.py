@@ -210,8 +210,10 @@ TAKEN = "2026-10-14"
 # 4.0 (DECISIONS.md 2026-10-14, *the BinHex before 4.0*); the 552 B before
 # it is `ovl_stuffit` +312 and `ovl_text` +240 (2026-10-12/13), which sat
 # inside the tolerance. -> 167,220 the same day, `ovl_binhex` +8 for the
-# dispatch that replaced the shim.
-EXPECT_BUNDLE = 167220
+# dispatch that replaced the shim. -> 167,208 2026-10-15: `ovl_stuffit` -12,
+# `JPEG Lossy` capped in width only (DECISIONS.md 2026-10-15, *the height
+# nothing needed*).
+EXPECT_BUNDLE = 167208
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-14"
 

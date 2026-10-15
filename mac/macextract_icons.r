@@ -264,7 +264,7 @@ data 'MExt' (0, "MacExtract") {
    STRINGS carry the real number, and check_docs.py holds both of them
    against UNC_VERSION — this file is
    the fourth place the version is written, after include/macextract.h,
-   README.md and dist/README.txt, and the About alert in macextract.r is
+   README.md and dist/README.txt, and the About alert in macextract_strings.h is
    the fifth. */
 
 resource 'vers' (1, "MacExtract") {

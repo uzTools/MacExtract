@@ -43,6 +43,7 @@
 #endif
 
 #include "macextract.h"
+#include "macextract_strings.h"   /* every word the user reads */
 
 #define kProgressDLOG   128
 #define kDoneALRT       129
@@ -982,18 +983,18 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
         Str255 s;
         s[0] = 0;
         PStrCatNum(s, pct);
-        PStrCat(s, "%");
+        PStrCat(s, S_PROG_PERCENT);
         if (rem < 0) {
-            PStrCat(s, "   estimating time left");
+            PStrCat(s, S_PROG_ESTIMATING);
         } else if (rem < 60) {
-            PStrCat(s, "   about ");
+            PStrCat(s, S_PROG_ABOUT);
             PStrCatNum(s, rem < 5 ? 5 : rem);
-            PStrCat(s, " seconds left");
+            PStrCat(s, S_PROG_SECONDS);
         } else {
             long mins = (rem + 30) / 60;
-            PStrCat(s, "   about ");
+            PStrCat(s, S_PROG_ABOUT);
             PStrCatNum(s, mins);
-            PStrCat(s, mins == 1 ? " minute left" : " minutes left");
+            PStrCat(s, mins == 1 ? S_PROG_MINUTE : S_PROG_MINUTES);
         }
         GetDialogItem(pr->dlg, kDetailItem, &kind, &h, &box);
         if (h) SetDialogItemText(h, s);
@@ -1200,7 +1201,7 @@ static void RepCatBytes(const uint8_t *b, int len)
 {
     int i;
     if (len == 0) {                  /* an entry the archive did not name */
-        RepCat("An unnamed entry");
+        RepCat(S_REP_UNNAMED);
         return;
     }
     for (i = 0; i < len; i++) RepPut(b[i] == ':' ? '/' : b[i]);
@@ -1243,7 +1244,7 @@ static void RepLostChars(const char *what, const unsigned char *now)
     RepCat(what);
     RepCatP(now);
     RepMarkBreak();
-    RepCat(" was named in characters this Macintosh cannot write");
+    RepCat(S_REP_LOST_CHARS);
 }
 
 /* djb2 over one path component, raw engine bytes. Raw because a
@@ -1318,7 +1319,7 @@ static void RepInexact(const uint8_t *orig, int olen)
     if (!RepNew(1)) return;
     RepCatBytes(orig, olen);
     RepMarkBreak();
-    RepCat(" opens, but is not the original file");
+    RepCat(S_REP_INEXACT);
 }
 
 static void RepFailed(const uint8_t *orig, int olen, int status)
@@ -1328,13 +1329,13 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
     RepMarkBreak();
     switch (status) {
     case UNC_ERR_TOOLARGE:
-        RepCat(" is too large for this version and was not extracted");
+        RepCat(S_REP_TOOLARGE);
         break;
     case UNC_ERR_MEM:
-        RepCat(" needs more memory than was free");
+        RepCat(S_REP_MEM);
         break;
     case UNC_ERR_UNSUPPORTED:
-        RepCat(" uses a method this version cannot read");
+        RepCat(S_REP_UNSUPPORTED);
         break;
     case UNC_ERR_MODULE:
         /* The only case here that does not carry its own sentence, and
@@ -1349,23 +1350,23 @@ static void RepFailed(const uint8_t *orig, int olen, int status)
         RepCat(unc_strerror(status));
         break;
     case UNC_ERR_CRC:
-        RepCat(" is damaged: its checksum does not match");
+        RepCat(S_REP_CRC);
         break;
     case UNC_ERR_TRUNCATED:
-        RepCat(" ends early: the archive is incomplete");
+        RepCat(S_REP_TRUNCATED);
         break;
     case UNC_ERR_ENCRYPTED:
     case UNC_ERR_PASSWORD:
-        RepCat(" is encrypted and was skipped");
+        RepCat(S_REP_ENCRYPTED);
         break;
     case UNC_ERR_SINK:
-        RepCat(" could not be written to the disk");
+        RepCat(S_REP_SINK);
         break;
     case UNC_ERR_IO:
-        RepCat(" could not be read from the archive");
+        RepCat(S_REP_IO);
         break;
     default:
-        RepCat(" could not be extracted");
+        RepCat(S_REP_FAILED);
         break;
     }
 }
@@ -1792,7 +1793,7 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 if (derr != noErr) {
                     if (derr == dskFulErr) return -1;   /* the run is over */
                     RepEntryFailed(nm + start, i - start,
-                                   " could not be made on the disk");
+                                   S_REP_DIR_FAILED);
                     s->errors++;
                     return 1;                           /* this entry only */
                 }
@@ -1807,14 +1808,14 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                  * one. */
                 if (isNew) {
                     if (compLost)
-                        RepLostChars("Folder ", comp);
+                        RepLostChars(S_REP_FOLDER, comp);
                     else if (changed || numbered)
-                        RepRenamed("Folder ", nm + start, i - start,
-                                   comp, " renamed to ");
+                        RepRenamed(S_REP_FOLDER, nm + start, i - start,
+                                   comp, S_REP_RENAMED);
                     RepDirMemo(dir, h);
                 } else if (merged) {
-                    RepRenamedAt(1, "Folder ", nm + start, i - start,
-                                 comp, " combined with ");
+                    RepRenamedAt(1, S_REP_FOLDER, nm + start, i - start,
+                                 comp, S_REP_COMBINED);
                 }
                 if (i == nlen) return 1;             /* dir entry done */
             }
@@ -1849,10 +1850,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                  * never written (BLOCKERS.md). */
                 RepEntryFailed(nm + leafStart, leafLen,
                                err == dupFNErr
-                               ? " could not be given a name of its own"
+                               ? S_REP_NO_NAME
                                : err == kTooBig
-                               ? " is over 2 GB, too large here"
-                               : " could not be created on the disk");
+                               ? S_REP_OVER_2GB
+                               : S_REP_NOT_CREATED);
                 s->errors++;
                 return 1;
             }
@@ -1870,10 +1871,10 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
         RepLostChars("", s->curName);
     else if (leafChanged)
         RepRenamed("", nm + leafStart, leafLen, s->curName,
-                   " renamed to ");
+                   S_REP_RENAMED);
     else if (info->name_truncated && RepNew(0)) {
         RepCatP(s->curName);
-        RepCat(" is in a folder whose path had to be shortened");
+        RepCat(S_REP_PATH_CUT);
     }
 #ifndef UNC_MAC_STAGE_WRITES
     return 0;                        /* nothing to pre-allocate: we stream */
@@ -2313,15 +2314,14 @@ static int SINK_END(void *ctx, int status)
 static void RepCommentLost(MacSink *s)
 {
     if (RepNew(1))
-        RepCat("The note this archive carries could not be written "
-               "to the disk");
+        RepCat(S_REP_NOTE_LOST);
     s->errors++;
 }
 
 static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
 {
     MacSink *s = (MacSink *)ctx;
-    static const char kName[] = "Comments";
+    static const char kName[] = S_FILE_COMMENTS;
     Str63 name, base;
     short ref = 0;
     long count = (long)len;
@@ -2341,9 +2341,6 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
         }
         BlockMoveData(base, name, base[0] + 1);
         BumpName(name, attempt + 1);
-        if (attempt == 0)
-            RepRenamed("The archive's comment: ", (const uint8_t *)kName,
-                       (int)sizeof kName - 1, name, " written as ");
     }
 
     if (MyOpenFork(s->vRefNum, s->rootDirID, name, fsWrPerm, 0,
@@ -2361,6 +2358,16 @@ static int sink_comment(void *ctx, const uint8_t *buf, uint16_t len)
     }
     FSClose(ref);
     FlushVol(NULL, s->vRefNum);
+
+    /* Said once it is on the disk, under the name it ended with. It was
+     * said at the first collision until 2026-10-15, and so named
+     * `Comments~1` for a note written as `Comments~2`, or as being written
+     * one line above the line saying it could not be. */
+    if (attempt > 0 && RepNew(0)) {
+        RepCat(S_REP_COMMENT);
+        RepMarkBreak();
+        RepCatP(name);
+    }
 
     /* 'TEXT'/'ttxt': a document TeachText and SimpleText open, on every
      * system this application runs on. Spelled numerically because the
@@ -2831,7 +2838,7 @@ static int SegWrappedPartOf(SegHost *h, short vol, long dir,
     /* "MacExtract part N" — on the output volume, which is the one place
      * this application knows it may write. */
     tmp[0] = 0;
-    PStrCat(tmp, "MacExtract part ");
+    PStrCat(tmp, S_FILE_PART);
     PStrCatNum(tmp, (long)part);
     MyHDelete(h->tmpVol, h->tmpDir, tmp);        /* a stale one, if any */
     if (MyHCreate(h->tmpVol, h->tmpDir, tmp) != noErr) return 0;
@@ -2886,7 +2893,7 @@ static void SegPeelClean(SegHost *h)
     for (p = 1; p <= kSegMaxKnown; p++) {
         Str255 tmp;
         tmp[0] = 0;
-        PStrCat(tmp, "MacExtract part ");
+        PStrCat(tmp, S_FILE_PART);
         PStrCatNum(tmp, (long)p);
         MyHDelete(h->tmpVol, h->tmpDir, tmp);
     }
@@ -3111,15 +3118,15 @@ static uint32_t SegRemaining(SegHost *h)
 static void SegCatRemaining(Str255 msg, uint32_t left)
 {
     if (left == 0) return;
-    PStrCat(msg, " About ");
+    PStrCat(msg, S_SEG_LEFT_ABOUT);
     if (left >= 1024) {
         PStrCatNum(msg, (long)((left + 512) / 1024));
-        PStrCat(msg, "K");
+        PStrCat(msg, S_SEG_LEFT_K);
     } else {
         PStrCatNum(msg, (long)left);
-        PStrCat(msg, " bytes");
+        PStrCat(msg, S_SEG_LEFT_BYTES);
     }
-    PStrCat(msg, " still to read.");
+    PStrCat(msg, S_SEG_LEFT_END);
 }
 
 /* The drive the volume `vol` is in, or 0 for none: a server volume, or
@@ -3217,12 +3224,12 @@ static int SegAskUser(SegHost *h, int part)
 
     for (;;) {
         msg[0] = 0;
-        PStrCat(msg, "Part ");
+        PStrCat(msg, S_SEG_PART);
         PStrCatNum(msg, (long)part);
-        PStrCat(msg, " of \"");
+        PStrCat(msg, S_SEG_OF);
         { short i; for (i = 0; i < (short)h->desc.name_len && msg[0] < 200; i++)
                        msg[++msg[0]] = h->desc.name[i]; }
-        PStrCat(msg, "\"");
+        PStrCat(msg, S_SEG_CLOSE_QUOTE);
         left[0] = 0;
         SegCatRemaining(left, SegRemaining(h));     /* 30 bytes at most */
         ParamText(msg, left, "\p", "\p");
@@ -3281,17 +3288,17 @@ static int SegAskUser(SegHost *h, int part)
                 if (got) {
                     Str255 s;
                     s[0] = 0;
-                    PStrCat(s, "That is part ");
+                    PStrCat(s, S_SEG_OTHER_PART);
                     PStrCatNum(s, (long)got);
-                    PStrCat(s, " of the same archive. Part ");
+                    PStrCat(s, S_SEG_OTHER_SAME);
                     PStrCatNum(s, (long)part);
-                    PStrCat(s, " is the one needed.");
+                    PStrCat(s, S_SEG_OTHER_NEEDED);
                     ShowNote(kErrorALRT, s);
                     /* Keep it: a later part will want it. */
                     SegRemember(h, got, reply.vRefNum, 0, reply.fName);
                 } else {
                     ShowNote(kErrorALRT,
-                             "\pThat file is not part of this archive.");
+                             "\p" S_SEG_NOT_PART);
                 }
             }
             continue;             /* ask again */
@@ -3459,12 +3466,13 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
 
     msg[0] = 0;
     if (attempt > 0)
-        PStrCat(msg, "That password was refused. ");
-    PStrCat(msg, "\"");
-    for (i = 0; i < (short)ph->name[0] && msg[0] < 180; i++)
-        msg[++msg[0]] = ph->name[i + 1];
-    PStrCat(msg, "\" is encrypted. Type its password, or click Cancel to "
-                 "skip the entries that need one.");
+        PStrCat(msg, S_PASS_REFUSED);
+    else {
+        PStrCat(msg, S_PASS_OPEN_QUOTE);
+        for (i = 0; i < (short)ph->name[0] && msg[0] < 180; i++)
+            msg[++msg[0]] = ph->name[i + 1];
+        PStrCat(msg, S_PASS_ENCRYPTED);
+    }
     ParamText(msg, "\p", "\p", "\p");
 
     if (ph->hide) HideWindow(ph->hide);
@@ -5165,9 +5173,9 @@ static short RepRows(void)
 static void RepMoreLine(Str255 out)
 {
     out[0] = 0;
-    PStrCat(out, "and ");
+    PStrCat(out, S_REP_MORE);
     PStrCatNum(out, gRepMore);
-    PStrCat(out, " more, which this list had no room for");
+    PStrCat(out, S_REP_MORE_END);
 }
 
 /* How many of `len` bytes fit in `width`, broken at a space where there
@@ -5343,7 +5351,7 @@ static void RepSaveAsText(void)
 
     where.h = 100;
     where.v = 100;
-    SFPutFile(where, "\pSave the report as:", "\pExtraction Report",
+    SFPutFile(where, "\p" S_SF_REPORT_PROMPT, "\p" S_SF_REPORT_NAME,
               NULL, &reply);
     if (!reply.good) return;
 
@@ -5527,14 +5535,14 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                       (Handle)NewUserItemUPP(BarUserItem), &box);
 
         s[0] = 0;
-        PStrCat(s, "Extracting ");
+        PStrCat(s, S_PROG_EXTRACTING);
         { short i; for (i = 1; i <= (short)name[0] && s[0] < 255; i++)
                        s[++s[0]] = name[i]; }
         GetDialogItem(pr.dlg, kStatusItem, &kind, &h, &box);
         if (h) SetDialogItemText(h, s);
 
         GetDialogItem(pr.dlg, kDetailItem, &kind, &h, &box);
-        if (h) SetDialogItemText(h, "\p0%   estimating time left");
+        if (h) SetDialogItemText(h, "\p" S_PROG_START);
 
         SetPort((GrafPtr)pr.dlg);
         DrawDialog(pr.dlg);
@@ -5661,19 +5669,17 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * was being able to say WHICH failure. Before this the OSErr was
          * dropped at the `!= noErr` test and a full disk read as "this file
          * could not be extracted". */
-        PStrCat(outcome, "The disk is full. Free up some space "
-                         "and try again.");
+        PStrCat(outcome, S_OUT_DISK_FULL);
     else if (pr.cancelled || ret == UNC_ERR_ABORTED) {
-        PStrCat(outcome, "Extraction cancelled.");
+        PStrCat(outcome, S_OUT_CANCELLED);
         alrt = kDoneALRT;
     }
     else if (ret == UNC_ERR_SEGMENTED)
         /* A part of a segmented set was never located. Whatever the parts
          * on hand did decode has been written and is worth saying so. */
-        PStrCat(outcome, "This archive has more parts. "
-                         "Find them and try again.");
+        PStrCat(outcome, S_OUT_MORE_PARTS);
     else if (ret == UNC_ERR_IO && entries == 0)
-        PStrCat(outcome, "Could not open the archive.");
+        PStrCat(outcome, S_OUT_CANNOT_OPEN);
     else if (gShortBy > 0 && (errors > 0 || ret != UNC_OK)) {
         /* Ahead of the two generic messages, and covering both of them: a
          * memory shortfall is the same answer whether one entry failed or
@@ -5704,20 +5710,18 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * memory" (BLOCKERS.md, *Withdrawn claims*). The allocator cannot
          * know which requests are optional; the outcome can, because a
          * request that mattered leaves an errored entry behind. */
-        PStrCat(outcome, "Needs at least ");
+        PStrCat(outcome, S_OUT_NEEDS);
         PStrCatNum(outcome, (gShortBy + 8191L) / 8192L * 8L);
         /* WHICH advice, from whether there is a partition to grow at all. */
         if (HasPartition())
-            PStrCat(outcome, "K more memory. Give MacExtract more in "
-                             "Get Info, or start up without MultiFinder.");
+            PStrCat(outcome, S_OUT_NEEDS_GROW);
         else
-            PStrCat(outcome, "K more memory than this Macintosh has free.");
+            PStrCat(outcome, S_OUT_NEEDS_FREE);
     }
     else if (gShortPiece)
         /* The budget had room and the Memory Manager still could not find
          * one piece that big, so a bigger memory size need not help. */
-        PStrCat(outcome, "Memory is too broken up. "
-                         "Quit other programs and try again.");
+        PStrCat(outcome, S_OUT_FRAGMENTED);
     else if (ret == UNC_ERR_UNSUPPORTED && entries == 0 &&
              topFmt != UNC_FORMAT_UNKNOWN && !unc_format_extractable(topFmt)) {
         /* Ahead of the generic message, and the reason detect-only exists
@@ -5727,9 +5731,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * will never extract (DECISIONS.md 2026-08-27). Kept short: the
          * alert wraps between 32 and 36 characters, and the longest name
          * in the table makes 46. */
-        PStrCat(outcome, "MacExtract cannot open ");
+        PStrCat(outcome, S_OUT_FOREIGN);
         PStrCat(outcome, unc_format_name(topFmt));
-        PStrCat(outcome, " files.");
+        PStrCat(outcome, S_OUT_FOREIGN_END);
     }
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what
@@ -5739,10 +5743,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * whatever lay beyond the point where the walk stopped — the
          * engine never saw those entries either, so nothing can name
          * them (FORMATS.md, *Name limits*). */
-        PStrCat(outcome, "Extraction stopped part way through this "
-                         "archive.");
+        PStrCat(outcome, S_OUT_STOPPED);
     else if (ret != UNC_OK)
-        PStrCat(outcome, "This file could not be extracted.");
+        PStrCat(outcome, S_OUT_FAILED);
     /* A run that finished with something behind it. WHERE THE LIST IS
      * BEING SHOWN the verdict says only that — every entry that failed
      * is named a row above it, with what is wrong with it, and a
@@ -5753,14 +5756,11 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
      * characters and a third sits level with the OK button
      * (tools/vmac/README.md). */
     else if (gUnsupported)
-        PStrCat(outcome, gRepN ? "Extraction finished."
-                               : "Some entries use a method this version "
-                                 "cannot read yet.");
+        PStrCat(outcome, gRepN ? S_OUT_FINISHED : S_OUT_SOME_UNSUPP);
     else if (errors)
-        PStrCat(outcome, gRepN ? "Extraction finished."
-                               : "Some entries could not be extracted.");
+        PStrCat(outcome, gRepN ? S_OUT_FINISHED : S_OUT_SOME_FAILED);
     else {
-        PStrCat(outcome, "Extraction complete.");
+        PStrCat(outcome, S_OUT_COMPLETE);
         alrt = kDoneALRT;
     }
 
@@ -6207,8 +6207,8 @@ int main(void)
          * "Extract the files into this folder:" was photographed on
          * System 6 rendering as "Extract the files into this", with
          * the word that carried the meaning cut off. */
-        SFPutFile(dwhere, "\pExtract into this folder:",
-                  "\pExtract here", NULL, &dest);
+        SFPutFile(dwhere, "\p" S_SF_DEST_PROMPT,
+                  "\p" S_SF_DEST_NAME, NULL, &dest);
         if (!dest.good) continue;      /* changed their mind: pick again */
 
         /* Both refNums are working directories on System 7 and later

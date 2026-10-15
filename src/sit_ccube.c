@@ -405,10 +405,15 @@ static int cc_parse(CcImage *im)
     if (seg_off > im->len || im->len - seg_off < 4) return UNC_ERR_CORRUPT;
     im->data = cc_u32(im->t + seg_off);
     if (im->data >= im->len) return UNC_ERR_CORRUPT;
-    /* The engine's own ceiling: a fork is uint32 and a row buffer is
-     * 16 bytes per padded pixel of width, so a silly width is refused
-     * here rather than in the allocator. */
-    if (im->w > 8192u || im->h > 8192u) return UNC_ERR_TOOLARGE;
+    /* The engine's own ceiling, on the WIDTH only: a row buffer is 16
+     * bytes per padded pixel of width, so a silly width is refused here
+     * rather than in the allocator, and with it capped, w * h * channels
+     * fits a uint32 for any height a TIFF short can state. The height
+     * was capped at 8,192 too until 2026-10-15, for no reason anything
+     * recorded, and refused a 16 x 8,208 document StuffIt Deluxe 2.0.1
+     * itself compresses and restores (DECISIONS.md 2026-10-15, *the
+     * height nothing needed*). */
+    if (im->w > 8192u) return UNC_ERR_TOOLARGE;
     return UNC_OK;
 }
 
@@ -642,7 +647,7 @@ int unc_ccube_decode(UncCtx *c, UncFork fork, const uint8_t *stored,
         off[n++] = v;
     }
     if (n == 0 || chans == 0 || chans > 4) return UNC_ERR_CORRUPT;
-    if (w > 8192u || h > 8192u) return UNC_ERR_TOOLARGE;
+    if (w > 8192u) return UNC_ERR_TOOLARGE;      /* see cc_parse */
     off[n] = total;
     if ((uint32_t)w * h * chans != outlen) return UNC_ERR_CORRUPT;
 

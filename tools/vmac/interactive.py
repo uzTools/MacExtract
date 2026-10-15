@@ -711,7 +711,7 @@ def report_reached_image(img, second=False):
     # The three-`_` line as the DOCUMENT spells it. The application's
     # resources hold the template without the name, so this matches the
     # saved file and nothing else — verified at one hit.
-    SAVED = "_______ was named in characters".encode("mac_roman")
+    SAVED = "_______: unknown characters".encode("mac_roman")
     raw = open(img, "rb").read()
     home = tempfile.mkdtemp(prefix="hfs-")
     env = dict(os.environ, HOME=home)
@@ -831,8 +831,7 @@ def phase_report(args, appbin, workdir, shot):
         "Notes.txt renamed to Notes~1.txt",
         # the damaged entry, named as the ARCHIVE names it — the file
         # this shell would have written was deleted when it failed
-        "BrokenBecauseItsChecksumIsWrong.txt is damaged: "
-        "its checksum does not match",
+        "BrokenBecauseItsChecksumIsWrong.txt: checksum mismatch",
         # and the line only a WHOLE name can carry: eighteen photographs
         # whose names differ at character 34, each said in full, so which
         # one became ~11 is answerable
@@ -899,9 +898,9 @@ UTF8_SECOND_FILE = "Second"
 
 UTF8_REPORT_FIXTURE = "derived-800saywhat301j.sit"
 UTF8_REPORT_LINES = [
-    "_______ was named in characters this Macintosh cannot write",
-    "_______.rtf was named in characters this Macintosh cannot write",
-    "_____________.rtf was named in characters this Macintosh cannot write",
+    "_______: unknown characters replaced",
+    "_______.rtf: unknown characters replaced",
+    "_____________.rtf: unknown characters replaced",
 ]
 # The names those lines are ABOUT — `800-SAY-WHAT 3.0.1J:_______` and the
 # two `.rtf`s — are not checked here, and deliberately: `run.py
@@ -1299,7 +1298,7 @@ def phase_e2e(args, appbin, workdir, shot):
 
 
 # The "locate part N" alert (ALRT 131). Its default button is item 1,
-# Find..., so that one is reached with Return and never needs a coordinate.
+# Find…, so that one is reached with Return and never needs a coordinate.
 # Skip and Cancel do: DLOG-style arithmetic off mac/macextract.r, where the
 # ALRT is at (top 90, left 80) and the DITL rects are {92,196,112,266} and
 # {92,110,112,180}, giving the centres below. THEY MOVE IF THE ALERT DOES.
@@ -1548,7 +1547,7 @@ def phase_diskeject(args, appbin, workdir, shot):
         accept_destination(mac, pause=0.5)
         wait_for_alert(mac, scratch)
         time.sleep(3.0)
-        shot(mac, "eject-3-alert.png")          # "...so it was ejected."
+        shot(mac, "eject-3-alert.png")          # "Please insert the disk containing..."
         a_open = image_open(mac, flopa)
         boot_open = image_open(mac, boot)
 
@@ -1622,8 +1621,7 @@ def build_named_set(kind, workdir, fixture):
     **`zip` needs a fixture larger than 64 KB.** `zip -s 64k` marks the
     archive as split whatever its size, so a smaller payload produces one
     `Aset.zip` and no `Aset.z01` at all — a one-part set the application
-    correctly refuses with *"This archive has more parts. Find them and
-    try again."* That photographs as an application bug and is an
+    correctly refuses with *"Parts missing."* That photographs as an application bug and is an
     invocation error; it cost a run on 2026-09-23.
     `fixtures/derived-xmasbeeps.sit` (286 KB) is what this is driven with.
     `split` has no such floor: it cuts any payload into three.
@@ -1999,7 +1997,7 @@ def phase_segments(args, appbin, workdir, shot):
         time.sleep(10.0)
         shot(mac, "seg-3-locate.png")        # part 2 is not beside part 1
 
-        mac.key("Return")                    # default button: Find...
+        mac.key("Return")                    # default button: Find…
         time.sleep(3.0)
         # Which volume Standard File lands on here is NOT ours to assume:
         # it depends on what has consumed the disk-inserted event for the
@@ -2018,7 +2016,7 @@ def phase_segments(args, appbin, workdir, shot):
 
         mac.key("Return")                    # dismiss; back to the alert
         time.sleep(2.0)
-        mac.key("Return")                    # Find... again
+        mac.key("Return")                    # Find… again
         time.sleep(3.0)
         shot(mac, "seg-6-sfgetfile-again.png")
 

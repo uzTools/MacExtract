@@ -301,7 +301,7 @@ If a Compact Pro or zip archive carries a note -- the comment whoever
 made it typed in -- it is written into that folder as a text file called
 Comments, rather than thrown away with the wrapper.
 
-Very occasionally a file uses a compression method this version does not
+Very occasionally a file uses a compression method MacExtract does not
 know. That entry is skipped and the rest of the archive still comes out,
 and the message says so rather than blaming your machine. Those files are
 worth reporting -- most of the methods here were added because somebody
