@@ -1,6 +1,6 @@
 # Retro68 hierarchical File Manager glue — System 6 conformance tests
 
-Two standalone Retro68 applications.
+Three standalone Retro68 applications.
 
 **`iomisc_repro.c` is the one that goes upstream** (`ISSUE.md`): Retro68's
 `HOpen`/`HOpenRF`/`HOpenDF` glue leaves `ioMisc` as stack garbage, and the File
@@ -24,6 +24,42 @@ evidence that `ioMisc` is what broke M10: the verbatim glue copy fails 0/4,
 the same copy with `ioMisc = NULL` passes 4/4 (DECISIONS.md, *the bug was the
 footnote*). Run it with that commit's own `tools/vmac/run.py`, its CLI copied
 to `build/rel/` and the fixtures linked into its `fixtures/`.
+
+**`glue_audit.c` is the second one** (`ISSUE-glue-audit.md`, not filed):
+four more fields multiversal `4c78d24`'s glue leaves unset or clobbers,
+found by reading every File Manager function in `custom/glue.c` against
+Inside Macintosh: Files, ch. 2. It calls verbatim, renamed copies of the
+glue after `Poison()` fills the stack with zeroes (control) or a
+non-zero 16-bit pattern; `-DGLUE_FIXED` (target `GlueAuditFixed`) applies
+**`glue-audit.patch`** to those copies and nothing else. Measured
+2026-10-15, Mac Plus 4 MB under Mini vMac, an HFS (`GlueHFS`) and an MFS
+(`GlueMFS`) test disk; Systems 3.0, 6.0.8 and 7.0.1 gave the same rows:
+
+| case | stack zero | stack non-zero | non-zero, patched (6.0.8) |
+|---|---|---|---|
+| `GetWDInfo`, a folder's WD (`ioWDIndex`, `ioNamePtr` unset) | `noErr` | **`nsvErr`**, garbage outputs | `noErr` |
+| — the field alone: `PBGetWDInfo`, `ioNamePtr = &decoy` | 8 B written | | |
+| `SetFInfo("B")`, `ioFDirIndex` unset, HFS and MFS | B set | `noErr`, **A set, name → "A"** | B set |
+| `HSetFInfo`, `ioDirID` left as the file ID, root and folder | **`fnfErr`** | not run | `noErr` (zeroed stack) |
+| `HOpen`, `ioVersNum` unset, MFS | `noErr` | **`fnfErr`** | `noErr` |
+| — the field alone: `PBHOpen`, `ioVersNum = 0x41`, MFS / HFS | `fnfErr` / `noErr` | | |
+
+```sh
+cmake -B ../../.tmp/glue-build -S . \
+  -DCMAKE_TOOLCHAIN_FILE=/opt/Retro68-build/toolchain/m68k-apple-macos/cmake/retro68.toolchain.cmake
+cmake --build ../../.tmp/glue-build
+./run_audit.py ../../.tmp/glue-build/GlueAudit.bin --system 6   # or 7, or 3
+```
+
+`run_audit.py` makes both test disks, boots, and prints the path of the last
+screenshot, which is read by eye.
+
+**What it cannot see.** The non-zero patterns are chosen, not real stack
+garbage: `0x0001` for `SetFInfo`, `0x4141` for `HOpen`, and for
+`GetWDInfo` the half of a decoy address `(h << 16) | h`. Through the glue,
+`GetWDInfo`'s index lookup fails before any name is written, so the
+write through `ioNamePtr` is shown only by the field-alone row.
+`HSetFInfo` is run on HFS only. Only Mini vMac's Mac Plus ran it.
 
 **`hopen_repro.c`** compares `HOpen`/`HOpenRF`/`HOpenDF` against hand-filled
 `PBHOpenSync` blocks. It is the evidence that withdrew "`HOpen` never writes

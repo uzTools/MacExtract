@@ -77,6 +77,14 @@ Filed 2026-10-13 as https://github.com/autc04/Retro68/issues/320
 issue's patch verbatim (multiversal `4c78d24`, pulled in by Retro68
 `afe277e`). Toolchains built before that still carry the bug.
 
+**Upstream: four more glue fields, measured 2026-10-15 against multiversal
+`4c78d24` on Systems 3.0, 6.0.8 and 7.0.1** — `GetWDInfo` (`ioWDIndex`,
+`ioNamePtr` unset: `nsvErr`), `SetFInfo` (`ioFDirIndex` unset: sets the
+wrong file's Finder info), `HSetFInfo` (`fnfErr` on HFS even with a zeroed stack),
+`HOpen` family (`ioVersNum` unset: `fnfErr` on MFS). MacExtract is
+unaffected (own blocks). Draft and patch: `tools/retro68-hopen-repro/`
+(*glue_audit*); not filed (MANUAL_TESTS.md §7).
+
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
 it, a pointer dragged through the grid flips one bit of the result
 (`0x04000000`, reproduced twice). What must

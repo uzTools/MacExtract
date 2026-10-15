@@ -17,3 +17,9 @@ target_compile_options(hopen_repro PRIVATE -mcpu=68000 -Os)
 # The ioMisc reproduction (ISSUE.md): the one to send upstream.
 add_application(IOMisc iomisc_repro.c)
 target_compile_options(IOMisc PRIVATE -mcpu=68000 -Os)
+
+# The rest of the File Manager glue (README.md, glue_audit).
+add_application(GlueAudit glue_audit.c)
+target_compile_options(GlueAudit PRIVATE -mcpu=68000 -Os)
+add_application(GlueAuditFixed glue_audit.c)
+target_compile_options(GlueAuditFixed PRIVATE -mcpu=68000 -Os -DGLUE_FIXED)

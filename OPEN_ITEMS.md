@@ -199,6 +199,15 @@ before 4.0*). Left:
   the writer, and reading the layout out of it is the route Packit III
   1.3 gave PackIt's ciphers (NOTICE).
 
+## The shell's own File Manager blocks, until Retro68's glue sets every field
+
+Decided 2026-10-15 to move `MyOpenFork`, `MyHCreate` and `MyHDelete` to
+Retro68's `HOpen`/`HOpenRF`/`HCreate`/`HDelete` (DECISIONS.md, *the rest
+of the block*). Blocked by `glue-audit.patch` (`HOpen`'s `ioVersNum`:
+`fnfErr` on MFS). Closes when a Retro68 carrying it is the toolchain here:
+switch, state that minimum Retro68 in the build docs, rebuild `dist/`, and
+re-run every emulated tier once.
+
 ## The double-click helpers: what is left before they ship
 
 `companion/` works (DECISIONS.md 2026-10-11 and 2026-10-12, *where the

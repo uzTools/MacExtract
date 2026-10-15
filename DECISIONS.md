@@ -415,6 +415,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-14 (the BinHex before 4.0) — `.hex` and `.hcx` extract, graded against what BinHex 2.0 itself wrote
 - 2026-10-14 (the layer that had its envelope's name) — an unwrapped entry no longer lands on the envelope being read, and is no longer deleted with it
 - 2026-10-14 (the file the disk was too full for) — a fork of 2 GB or more is refused as one entry, not reported as a full disk
+- 2026-10-15 (the rest of the block) — the shell moves to Retro68's File Manager glue only once the glue sets every input field
 
 ---
 
@@ -26747,3 +26748,31 @@ error — the size is not known until it is too late.
 called `RepEntryFailed` from a check of its own and cost +144: the third
 call made the compiler stop inlining it, a 78 B function.
 
+
+## 2026-10-15 (the rest of the block) — the shell moves to Retro68's File Manager glue only once the glue sets every input field
+
+**Decision (the maintainer's).** Retro68 fixed #320 on 2026-10-14
+(BLOCKERS.md). The shell's own zeroed blocks (`MyOpenFork`, `MyHCreate`,
+`MyHDelete`) are to give way to the standard glue: code every Retro68
+program uses is preferred to a private copy, even at no gain, and the build
+already depends on the toolchain it is given. Not yet, though: #320 fixed
+one field, and nobody had checked the rest.
+
+**Measured.** Every File Manager function in multiversal `4c78d24`'s
+`custom/glue.c` read against Inside Macintosh: Files, ch. 2, then the
+suspects run (`tools/retro68-hopen-repro/`, *glue_audit*): four more, on
+Systems 3.0, 6.0.8 and 7.0.1 alike. The one that would have hit this
+application is `HOpen`'s unset `ioVersNum`: harmless on HFS, `fnfErr` on
+MFS — the 400K disks of the floor System. Switching on `4c78d24` would have
+swapped a bug fixed in our code for one in theirs, on the one System where
+nobody would have looked.
+
+**What made the result believable.** Each glue row has a control with the
+stack zeroed, a row exercising the field alone with no glue, and a
+`-DGLUE_FIXED` build applying only the proposed patch, after which every
+glue row matches its control. Without the patched build, "fails with a
+dirty stack" could have been the test's own pattern.
+
+**Consequence.** The switch waits for that patch upstream (OPEN_ITEMS.md,
+*The shell's own File Manager blocks*); the issue is for the maintainer to
+post (MANUAL_TESTS.md §7).
