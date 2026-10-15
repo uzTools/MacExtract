@@ -86,6 +86,13 @@ unaffected (own blocks). Draft and patch: `tools/retro68-hopen-repro/`
 (*glue_audit*). Filed 2026-10-15 as
 https://github.com/autc04/Retro68/issues/322.
 
+**Upstream: `GetAppFiles`/`ClrAppFiles` never return for index ≥ 2**
+(multiversal `glue.c`, `AppFilePtr` never decrements) — measured
+2026-10-15 on Systems 3.0, 6.0.8 and 7.0.1; a one-line patch fixes all
+three. MacExtract is unaffected (`DropNext` reads `AppParmHandle` itself).
+Draft: `tools/retro68-hopen-repro/ISSUE-appfiles.md`; not filed
+(MANUAL_TESTS.md §7).
+
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
 it, a pointer dragged through the grid flips one bit of the result
 (`0x04000000`, reproduced twice). What must

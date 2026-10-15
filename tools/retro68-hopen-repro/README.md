@@ -1,6 +1,6 @@
 # Retro68 hierarchical File Manager glue — System 6 conformance tests
 
-Four standalone Retro68 applications.
+Five standalone Retro68 applications.
 
 **`iomisc_repro.c` is the one that goes upstream** (`ISSUE.md`): Retro68's
 `HOpen`/`HOpenRF`/`HOpenDF` glue leaves `ioMisc` as stack garbage, and the File
@@ -44,6 +44,15 @@ cmake -B ../../.tmp/glue-build -S . -DGLUE_LIB_DIR=$PWD/../../.tmp/retro68-glue/
 cmake --build ../../.tmp/glue-build
 ./run_audit.py ../../.tmp/glue-build/GlueRepro.bin --system 6    # or 7, or 3
 ```
+
+**`appfiles_repro.c` is the third** (`ISSUE-appfiles.md`, not filed):
+`GetAppFiles`/`ClrAppFiles` loop forever for index ≥ 2 (`AppFilePtr`'s
+`while(index)` never decrements). It writes a two-document list into
+`AppParmHandle` itself, so it needs no Finder and no disk. Measured
+2026-10-15 on Systems 3.0, 6.0.8 and 7.0.1: the stock glue still in
+`GetAppFiles(2)` 30 s on, linked against `appfiles.patch` (`mkgluelib.sh`)
+it returns "Second" at once, and a three-document variant (not kept) all three. It cannot see a real Finder launch; the list
+is the layout Inside Macintosh's Segment Loader gives.
 
 **`glue_audit.c` is the evidence behind it**, as `hopen_repro.c` was for #320:
 four more fields multiversal `4c78d24`'s glue leaves unset or clobbers,

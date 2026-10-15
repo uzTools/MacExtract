@@ -32,3 +32,11 @@ target_compile_options(GlueRepro PRIVATE -mcpu=68000 -Os)
 if(GLUE_LIB_DIR)
   target_link_options(GlueRepro PRIVATE -L${GLUE_LIB_DIR})
 endif()
+
+# GetAppFiles at index >= 2 (ISSUE-appfiles.md): needs no disk, and links
+# whichever libInterface.a GLUE_LIB_DIR names, like GlueRepro.
+add_application(AppFiles appfiles_repro.c)
+target_compile_options(AppFiles PRIVATE -mcpu=68000 -Os)
+if(GLUE_LIB_DIR)
+  target_link_options(AppFiles PRIVATE -L${GLUE_LIB_DIR})
+endif()
