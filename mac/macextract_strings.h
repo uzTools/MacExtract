@@ -119,8 +119,7 @@
 #define S_REP_PATH_CUT      ": folder path shortened"
 /* "Archive comment saved as <new>", when "Comments" was taken */
 #define S_REP_COMMENT       "Archive comment saved as "
-#define S_REP_NOTE_LOST     "The note this archive carries could not be " \
-                            "written to the disk"
+#define S_REP_NOTE_LOST     "This archive's comment could not be saved"
 
 /* "<name>" followed by one of these. */
 #define S_REP_DIR_FAILED    " could not be made on the disk"
