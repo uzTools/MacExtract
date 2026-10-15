@@ -1,7 +1,8 @@
 # Upstream issue draft: four more fields multiversal's glue leaves unset
 
-**Not filed.** For the maintainer to post on autc04/Retro68, as #320 was
-(`ISSUE.md`). The body embeds `glue-audit.patch` and `glue_repro.c`;
+**Filed 2026-10-15** by the maintainer as
+https://github.com/autc04/Retro68/issues/322, the body below verbatim;
+the issue is the record. The body embeds `glue-audit.patch` and `glue_repro.c`;
 regenerate it if either changes. Measured 2026-10-15 with `glue_repro.c`
 linked against multiversal `4c78d24`'s glue (`mkgluelib.sh`) and against
 the same glue with the patch, on Systems 3.0, 6.0.8 and 7.0.1; the claims

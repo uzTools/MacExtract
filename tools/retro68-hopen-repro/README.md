@@ -26,7 +26,7 @@ footnote*). Run it with that commit's own `tools/vmac/run.py`, its CLI copied
 to `build/rel/` and the fixtures linked into its `fixtures/`.
 
 **`glue_repro.c` is the second one that goes upstream**
-(`ISSUE-glue-audit.md`, not filed): 122 lines calling the REAL
+(`ISSUE-glue-audit.md`, filed as Retro68 #322): 122 lines calling the REAL
 `GetWDInfo`, `SetFInfo`, `HSetFInfo` and `HOpen`, so it must be linked
 against the glue being reported on. **`mkgluelib.sh`** builds a private
 `libInterface.a` from a given `glue.c`, with multiversal's own compile line

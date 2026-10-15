@@ -83,7 +83,8 @@ issue's patch verbatim (multiversal `4c78d24`, pulled in by Retro68
 wrong file's Finder info), `HSetFInfo` (`fnfErr` on HFS even with a zeroed stack),
 `HOpen` family (`ioFVersNum` unset: `fnfErr` on MFS). MacExtract is
 unaffected (own blocks). Draft and patch: `tools/retro68-hopen-repro/`
-(*glue_audit*); not filed (MANUAL_TESTS.md §7).
+(*glue_audit*). Filed 2026-10-15 as
+https://github.com/autc04/Retro68/issues/322.
 
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
 it, a pointer dragged through the grid flips one bit of the result
