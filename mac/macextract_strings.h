@@ -130,7 +130,7 @@
  * File Manager cannot write, which is 2 GB on every Macintosh. */
 #define S_REP_TOOLARGE      ": file too large (>2GB)"
 #define S_REP_OVER_2GB      S_REP_TOOLARGE
-#define S_REP_MEM           " needs more memory than was free"
+#define S_REP_MEM           ": not enough memory"
 #define S_REP_UNSUPPORTED   ": unsupported method"
 #define S_REP_CRC           " is damaged: its checksum does not match"
 #define S_REP_TRUNCATED     " ends early: the archive is incomplete"
