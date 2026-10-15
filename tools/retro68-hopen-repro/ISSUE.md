@@ -4,6 +4,9 @@
 https://github.com/autc04/Retro68/issues/320. This is the text as drafted
 (the posted title is the longer *glue leaves `ioMisc` uninitialised; the File
 Manager writes an access path buffer through it*); the issue is the record.
+**Closed as fixed 2026-10-14** by the upstream maintainer: multiversal
+`4c78d24` applies the diff below unchanged, Retro68 `afe277e` bumps the
+submodule.
 
 Re-verified 2026-10-13 against Retro68 master `d8b891a` (2026-10-09): its
 pinned multiversal `d124fa6` and multiversal master `28eac84` carry a
