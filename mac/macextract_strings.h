@@ -81,9 +81,9 @@
 #define S_SEG_LEFT_K        "K"
 #define S_SEG_LEFT_BYTES    " bytes"
 #define S_SEG_LEFT_END      " still to read."
-/* Find... picked the wrong part: "This is part <N>. Please enter Part <M>." */
+/* Find... picked the wrong part: "This is part <N>. Please choose Part <M>." */
 #define S_SEG_OTHER_PART    "This is part "
-#define S_SEG_OTHER_SAME    ". Please enter Part "
+#define S_SEG_OTHER_SAME    ". Please choose Part "
 #define S_SEG_OTHER_NEEDED  "."
 #define S_SEG_NOT_PART      "That file is not part of this archive."
 
