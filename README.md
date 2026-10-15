@@ -194,7 +194,7 @@ Deluxes will not run on a Mac Plus. Unrounded figures and the full table are in
 | Minimum | System 3.0, 68000, **512 KB of RAM** — a Macintosh 512Ke, or a Plus with the system it shipped with in January 1986. A 64K-ROM Macintosh (the 128K and the true 512K) is out: this download bombs there, and the experimental build that does start is on the `rom64k` branch |
 | For everything | **1 MB** — see the StuffIt 5 note below |
 | Also runs on | System 6, System 7, Mac OS 8 and 9, PowerPC via the built-in 68k emulator |
-| Disk | one 800K floppy |
+| Disk | one 800K floppy. Extract onto an HFS disk — an 800K floppy or a hard disk; MFS disks — most 400K floppies — are not supported |
 
 **StuffIt 5 on a 512 KB machine.** A `.sit` written by StuffIt 5 is
 compressed in blocks, and the whole block has to be in memory to unpack it.

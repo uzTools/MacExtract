@@ -101,6 +101,8 @@ Floor target: System 3.0 on a 1 MB Mac Plus (68000) -- the system the Plus
 shipped with in January 1986. It also runs in 512 KB, on a Macintosh 512Ke.
 The same binary runs unchanged through Mac OS 9 and adapts its memory use to
 the machine at runtime, so there is one download for every Mac.
+Extract onto an HFS disk -- an 800K floppy or a hard disk. MFS disks --
+most 400K floppies -- are not supported.
 
 Two things to know about the smallest machines. On System 3.0 the Open dialog
 ignores Command-period, so close it with the Cancel button; Command-period
