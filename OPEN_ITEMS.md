@@ -201,12 +201,14 @@ before 4.0*). Left:
 
 ## The shell's own File Manager blocks, until Retro68's glue sets every field
 
-Decided 2026-10-15 to move `MyOpenFork`, `MyHCreate` and `MyHDelete` to
-Retro68's `HOpen`/`HOpenRF`/`HCreate`/`HDelete` (DECISIONS.md, *the rest
-of the block*). Blocked by `glue-audit.patch` (`HOpen`'s `ioFVersNum`:
-`fnfErr` on MFS). Closes when a Retro68 carrying it is the toolchain here:
-switch, state that minimum Retro68 in the build docs, rebuild `dist/`, and
-re-run every emulated tier once.
+Decided 2026-10-15 to move `MyOpenFork` to Retro68's `HOpen`/`HOpenRF`
+and `MyHDelete` to `HDelete` (DECISIONS.md, *the rest of the block*).
+`MyHCreate` stays: `HCreate` also reads and rewrites the Finder info, two
+more traps per entry for a type `sink_end` stamps anyway. `HDelete` is
+correct today; `HOpen` is blocked by Retro68 #322 (`ioFVersNum`: `fnfErr`
+on MFS). Closes when a Retro68 carrying it is the toolchain here: switch,
+price it on the 68000 build, state that minimum Retro68 in the build
+docs, rebuild `dist/`, and re-run every emulated tier once.
 
 ## The double-click helpers: what is left before they ship
 

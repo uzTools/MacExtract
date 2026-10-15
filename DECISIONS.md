@@ -26752,8 +26752,10 @@ call made the compiler stop inlining it, a 78 B function.
 ## 2026-10-15 (the rest of the block) — the shell moves to Retro68's File Manager glue only once the glue sets every input field
 
 **Decision (the maintainer's).** Retro68 fixed #320 on 2026-10-14
-(BLOCKERS.md). The shell's own zeroed blocks (`MyOpenFork`, `MyHCreate`,
-`MyHDelete`) are to give way to the standard glue: code every Retro68
+(BLOCKERS.md). The shell's own zeroed blocks (`MyOpenFork`,
+`MyHDelete`) are to give way to the standard glue (`MyHCreate` stays —
+corrected the same day: `HCreate` also reads and rewrites the Finder info,
+two more traps per entry that `sink_end`'s stamp makes redundant): code every Retro68
 program uses is preferred to a private copy, even at no gain, and the build
 already depends on the toolchain it is given. Not yet, though: #320 fixed
 one field, and nobody had checked the rest.
