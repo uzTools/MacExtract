@@ -81,7 +81,7 @@ issue's patch verbatim (multiversal `4c78d24`, pulled in by Retro68
 `4c78d24` on Systems 3.0, 6.0.8 and 7.0.1** — `GetWDInfo` (`ioWDIndex`,
 `ioNamePtr` unset: `nsvErr`), `SetFInfo` (`ioFDirIndex` unset: sets the
 wrong file's Finder info), `HSetFInfo` (`fnfErr` on HFS even with a zeroed stack),
-`HOpen` family (`ioVersNum` unset: `fnfErr` on MFS). MacExtract is
+`HOpen` family (`ioFVersNum` unset: `fnfErr` on MFS). MacExtract is
 unaffected (own blocks). Draft and patch: `tools/retro68-hopen-repro/`
 (*glue_audit*); not filed (MANUAL_TESTS.md §7).
 

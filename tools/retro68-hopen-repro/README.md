@@ -41,8 +41,8 @@ non-zero 16-bit pattern; `-DGLUE_FIXED` (target `GlueAuditFixed`) applies
 | — the field alone: `PBGetWDInfo`, `ioNamePtr = &decoy` | 8 B written | | |
 | `SetFInfo("B")`, `ioFDirIndex` unset, HFS and MFS | B set | `noErr`, **A set, name → "A"** | B set |
 | `HSetFInfo`, `ioDirID` left as the file ID, root and folder | **`fnfErr`** | not run | `noErr` (zeroed stack) |
-| `HOpen`, `ioVersNum` unset, MFS | `noErr` | **`fnfErr`** | `noErr` |
-| — the field alone: `PBHOpen`, `ioVersNum = 0x41`, MFS / HFS | `fnfErr` / `noErr` | | |
+| `HOpen`, `ioFVersNum` unset, MFS | `noErr` | **`fnfErr`** | `noErr` |
+| — the field alone: `PBHOpen`, `ioFVersNum = 0x41`, MFS / HFS | `fnfErr` / `noErr` | | |
 
 ```sh
 cmake -B ../../.tmp/glue-build -S . \

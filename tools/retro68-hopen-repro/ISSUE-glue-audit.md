@@ -8,7 +8,7 @@ as they were when measured — regenerate it if either changes. Measured
 
 ---
 
-**Title:** More File Manager glue reads uninitialised param-block fields: `GetWDInfo`, `SetFInfo`, `HSetFInfo`, and `ioVersNum` in the `HOpen` family
+**Title:** More File Manager glue reads uninitialised param-block fields: `GetWDInfo`, `SetFInfo`, `HSetFInfo`, and `ioFVersNum` in the `HOpen` family
 
 **Body:**
 
@@ -17,7 +17,7 @@ Thanks for the quick fix on #320! I went through the rest of the File Manager gl
 1. **`GetWDInfo`** never sets `ioNamePtr` or `ioWDIndex`. Both are inputs to `PBGetWDInfo`: a non-zero `ioWDIndex` makes it index working directories instead of looking up `wdRefNum`, and the volume name is written through `ioNamePtr` unless it's NIL. With non-zero stack contents, `GetWDInfo` returns `nsvErr` (-35) and garbage outputs for a valid WD; with `ioNamePtr` pointing at a buffer, the File Manager writes 8 bytes into it.
 2. **`SetFInfo`** never sets `ioFDirIndex`, and drops the result of `PBGetFInfoSync`, so `if(err)` tests an uninitialised variable (`-Wall` flags it). With `ioFDirIndex = 1` left on the stack, `SetFInfo("B", ...)` returns `noErr` but sets the Finder info **of file A** (index 1), and overwrites the caller's file-name string with `"A"`.
 3. **`HSetFInfo`** doesn't restore `ioDirID` after `PBHGetFInfoSync`, which replaces it with the file ID (`HCreate` does restore it, with a comment). So `PBHSetFInfo` gets the file ID as a directory ID and fails with `fnfErr` (-43) on HFS, in the root and in a subfolder, even with a zeroed stack: it doesn't depend on garbage at all.
-4. **`HOpen`/`HOpenRF`/`HOpenDF`** never set `ioVersNum`. HFS ignores it, but on an MFS volume the version number is part of the file's identity: with a non-zero byte left there, `HOpen` of an existing file returns `fnfErr`. `FSOpen`, `OpenDF` and `OpenRF` already set it to 0.
+4. **`HOpen`/`HOpenRF`/`HOpenDF`** never set `ioFVersNum`. HFS ignores it, but on an MFS volume the version number is part of the file's identity: with a non-zero byte left there, `HOpen` of an existing file returns `fnfErr`. `FSOpen`, `OpenDF` and `OpenRF` already set it to 0.
 
 Measured with the repro below: Mini vMac Mac Plus, Systems 3.0, 6.0.8 and 7.0.1 (identical results on all three), with an HFS and an MFS test disk. It calls verbatim copies of the `4c78d24` glue with the stack filled first with zeroes (control) and then with a non-zero pattern; building it with `-DGLUE_FIXED` applies the patch below, after which every row matches the control:
 
@@ -437,10 +437,10 @@ static void Case4(short vol, const char *what)
     pb.ioParam.ioVRefNum = vol;
     pb.fileParam.ioDirID = 2;
     pb.ioParam.ioPermssn = fsRdPerm;
-    pb.ioParam.ioVersNum = 0x41;
+    pb.fileParam.ioFVersNum = 0x41;
     err = PBHOpenSync(&pb);
     if (!err) PBCloseSync((ParmBlkPtr)&pb);
-    sprintf(line, "4 PBHOpen %s ioVersNum=0x41: err=%d", what, err);
+    sprintf(line, "4 PBHOpen %s ioFVersNum=0x41: err=%d", what, err);
     Say();
 }
 

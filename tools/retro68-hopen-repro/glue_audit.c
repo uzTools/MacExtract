@@ -344,10 +344,10 @@ static void Case4(short vol, const char *what)
     pb.ioParam.ioVRefNum = vol;
     pb.fileParam.ioDirID = 2;
     pb.ioParam.ioPermssn = fsRdPerm;
-    pb.ioParam.ioVersNum = 0x41;
+    pb.fileParam.ioFVersNum = 0x41;
     err = PBHOpenSync(&pb);
     if (!err) PBCloseSync((ParmBlkPtr)&pb);
-    sprintf(line, "4 PBHOpen %s ioVersNum=0x41: err=%d", what, err);
+    sprintf(line, "4 PBHOpen %s ioFVersNum=0x41: err=%d", what, err);
     Say();
 }
 

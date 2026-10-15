@@ -26762,7 +26762,7 @@ one field, and nobody had checked the rest.
 `custom/glue.c` read against Inside Macintosh: Files, ch. 2, then the
 suspects run (`tools/retro68-hopen-repro/`, *glue_audit*): four more, on
 Systems 3.0, 6.0.8 and 7.0.1 alike. The one that would have hit this
-application is `HOpen`'s unset `ioVersNum`: harmless on HFS, `fnfErr` on
+application is `HOpen`'s unset `ioFVersNum`: harmless on HFS, `fnfErr` on
 MFS — the 400K disks of the floor System. Switching on `4c78d24` would have
 swapped a bug fixed in our code for one in theirs, on the one System where
 nobody would have looked.

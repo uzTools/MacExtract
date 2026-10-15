@@ -203,7 +203,7 @@ before 4.0*). Left:
 
 Decided 2026-10-15 to move `MyOpenFork`, `MyHCreate` and `MyHDelete` to
 Retro68's `HOpen`/`HOpenRF`/`HCreate`/`HDelete` (DECISIONS.md, *the rest
-of the block*). Blocked by `glue-audit.patch` (`HOpen`'s `ioVersNum`:
+of the block*). Blocked by `glue-audit.patch` (`HOpen`'s `ioFVersNum`:
 `fnfErr` on MFS). Closes when a Retro68 carrying it is the toolchain here:
 switch, state that minimum Retro68 in the build docs, rebuild `dist/`, and
 re-run every emulated tier once.
