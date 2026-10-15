@@ -147,8 +147,7 @@
  * the OK button. */
 #define S_OUT_DISK_FULL     "Disk full."
 #define S_OUT_CANCELLED     "Extraction cancelled."
-#define S_OUT_MORE_PARTS    "This archive has more parts. Find them and " \
-                            "try again."
+#define S_OUT_MORE_PARTS    "Parts missing."
 #define S_OUT_CANNOT_OPEN   "Could not open the archive."
 /* "Needs at least <N>K more memory. ..." */
 #define S_OUT_NEEDS         "Needs at least "
