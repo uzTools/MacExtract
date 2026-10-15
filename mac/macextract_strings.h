@@ -154,7 +154,7 @@
 #define S_OUT_NEEDS_GROW    "K more memory. Give MacExtract more in Get " \
                             "Info, or start up without MultiFinder."
 #define S_OUT_NEEDS_FREE    "K more memory than this Macintosh has free."
-#define S_OUT_FRAGMENTED    "Memory is too fragmented. Quit other programs " \
+#define S_OUT_FRAGMENTED    "Memory is too broken up. Quit other programs " \
                             "and try again."
 /* "MacExtract cannot open <format> files." */
 #define S_OUT_FOREIGN       "MacExtract cannot open "
