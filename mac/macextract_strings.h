@@ -37,7 +37,7 @@
 #define S_PROGRESS_STATUS   "Extracting"
 
 /* The decoders could not be read again for the next archive. */
-#define S_NO_RELOAD         "There is not enough memory to open the next " \
+#define S_NO_RELOAD         "MacExtract could not get ready for the next " \
                             "archive. Open it again."
 
 /* A part of a segmented archive was not found. ^0 is
