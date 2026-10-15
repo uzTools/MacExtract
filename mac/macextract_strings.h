@@ -42,7 +42,7 @@
 
 /* A part of a segmented archive was not found. ^0 is
  * `Part <N> of "<name>"`, ^1 is S_SEG_LEFT_* or empty. */
-#define S_SEG_FIND          "Find..."
+#define S_SEG_FIND          "Find\0xC9"
 #define S_SEG_SKIP          "Skip"
 #define S_SEG_MISSING       "^0 has not been found.^1"
 #define S_SEG_EJECTED       "Please insert the disk containing ^0.^1"
@@ -122,10 +122,10 @@
 #define S_REP_NOTE_LOST     "This archive's comment could not be saved"
 
 /* "<name>" followed by one of these. */
-#define S_REP_DIR_FAILED    " could not be made on the disk"
-#define S_REP_NO_NAME       " could not be given a name of its own"
-#define S_REP_NOT_CREATED   " could not be created on the disk"
-#define S_REP_INEXACT       " opens, but is not the original file"
+#define S_REP_DIR_FAILED    ": folder could not be created"
+#define S_REP_NO_NAME       ": no free name"
+#define S_REP_NOT_CREATED   ": could not be created"
+#define S_REP_INEXACT       ": not identical to the original"
 /* The same words for both: what the engine cannot hold, and a fork the
  * File Manager cannot write, which is 2 GB on every Macintosh. */
 #define S_REP_TOOLARGE      ": file too large (>2GB)"
@@ -135,9 +135,9 @@
 #define S_REP_CRC           ": checksum mismatch"
 #define S_REP_TRUNCATED     ": archive incomplete"
 #define S_REP_ENCRYPTED     ": skipped (encrypted)"
-#define S_REP_SINK          " could not be written to the disk"
-#define S_REP_IO            " could not be read from the archive"
-#define S_REP_FAILED        " could not be extracted"
+#define S_REP_SINK          ": write error"
+#define S_REP_IO            ": read error"
+#define S_REP_FAILED        ": could not be extracted"
 
 /* ---- C: how the run ended -------------------------------------------- */
 
@@ -152,7 +152,7 @@
 /* "Needs at least <N>K more memory. ..." */
 #define S_OUT_NEEDS         "Needs at least "
 #define S_OUT_NEEDS_GROW    "K more memory. Give MacExtract more in Get " \
-                            "Info, or start up without MultiFinder."
+                            "Info."
 #define S_OUT_NEEDS_FREE    "K more memory than this Macintosh has free."
 #define S_OUT_FRAGMENTED    "Memory is too broken up. Quit other programs " \
                             "and try again."
