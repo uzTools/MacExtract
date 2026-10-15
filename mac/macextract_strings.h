@@ -132,7 +132,7 @@
 #define S_REP_OVER_2GB      S_REP_TOOLARGE
 #define S_REP_MEM           ": not enough memory"
 #define S_REP_UNSUPPORTED   ": unsupported method"
-#define S_REP_CRC           " is damaged: its checksum does not match"
+#define S_REP_CRC           ": checksum mismatch"
 #define S_REP_TRUNCATED     " ends early: the archive is incomplete"
 #define S_REP_ENCRYPTED     " is encrypted and was skipped"
 #define S_REP_SINK          " could not be written to the disk"
