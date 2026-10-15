@@ -64,8 +64,8 @@
 
 /* ---- C: password dialog --------------------------------------------- */
 
-/* "[That password was refused. ]"<archive>" is encrypted. ..." */
-#define S_PASS_REFUSED      "That password was refused. "
+/* "[Incorrect password. ]"<archive>" is encrypted. ..." */
+#define S_PASS_REFUSED      "Incorrect password. "
 #define S_PASS_OPEN_QUOTE   "\""
 #define S_PASS_ENCRYPTED    "\" is encrypted. Type its password, or click " \
                             "Cancel to skip the entries that need one."
