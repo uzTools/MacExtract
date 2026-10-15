@@ -128,7 +128,7 @@
 #define S_REP_INEXACT       " opens, but is not the original file"
 /* The same words for both: what the engine cannot hold, and a fork the
  * File Manager cannot write, which is 2 GB on every Macintosh. */
-#define S_REP_TOOLARGE      ": file too large (<2GB)"
+#define S_REP_TOOLARGE      ": file too large (>2GB)"
 #define S_REP_OVER_2GB      S_REP_TOOLARGE
 #define S_REP_MEM           " needs more memory than was free"
 #define S_REP_UNSUPPORTED   ": unsupported method"
