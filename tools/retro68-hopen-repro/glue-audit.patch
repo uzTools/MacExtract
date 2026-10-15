@@ -4,7 +4,7 @@
      pb.fileParam.ioNamePtr = (StringPtr)name;
      pb.ioParam.ioPermssn = perm;
      pb.ioParam.ioMisc = NULL;
-+    pb.ioParam.ioVersNum = 0;
++    pb.fileParam.ioFVersNum = 0;
      OSErr err = PBHOpenRFSync(&pb);
      *refp = pb.ioParam.ioRefNum;
      return err;
@@ -12,7 +12,7 @@
      pb.fileParam.ioNamePtr = (StringPtr)name;
      pb.ioParam.ioPermssn = perm;
      pb.ioParam.ioMisc = NULL;
-+    pb.ioParam.ioVersNum = 0;
++    pb.fileParam.ioFVersNum = 0;
      OSErr err = PBHOpenSync(&pb);
      *refp = pb.ioParam.ioRefNum;
      return err;
@@ -20,7 +20,7 @@
      pb.fileParam.ioNamePtr = (StringPtr)name;
      pb.ioParam.ioPermssn = perm;
      pb.ioParam.ioMisc = NULL;
-+    pb.ioParam.ioVersNum = 0;
++    pb.fileParam.ioFVersNum = 0;
      OSErr err = PBHOpenDFSync(&pb);
      *refp = pb.ioParam.ioRefNum;
      return err;

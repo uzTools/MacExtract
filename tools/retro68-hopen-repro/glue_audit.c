@@ -36,7 +36,7 @@ pascal OSErr G_HOpen(INTEGER vref, LONGINT dirid, ConstStringPtr name,
     pb.ioParam.ioPermssn = perm;
     pb.ioParam.ioMisc = NULL;
 #ifdef GLUE_FIXED
-    pb.ioParam.ioVersNum = 0;
+    pb.fileParam.ioFVersNum = 0;
 #endif
     OSErr err = PBHOpenSync(&pb);
     *refp = pb.ioParam.ioRefNum;
