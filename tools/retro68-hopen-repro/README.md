@@ -1,6 +1,6 @@
 # Retro68 hierarchical File Manager glue — System 6 conformance tests
 
-Three standalone Retro68 applications.
+Four standalone Retro68 applications.
 
 **`iomisc_repro.c` is the one that goes upstream** (`ISSUE.md`): Retro68's
 `HOpen`/`HOpenRF`/`HOpenDF` glue leaves `ioMisc` as stack garbage, and the File
@@ -25,7 +25,27 @@ the same copy with `ioMisc = NULL` passes 4/4 (DECISIONS.md, *the bug was the
 footnote*). Run it with that commit's own `tools/vmac/run.py`, its CLI copied
 to `build/rel/` and the fixtures linked into its `fixtures/`.
 
-**`glue_audit.c` is the second one** (`ISSUE-glue-audit.md`, not filed):
+**`glue_repro.c` is the second one that goes upstream**
+(`ISSUE-glue-audit.md`, not filed): 122 lines calling the REAL
+`GetWDInfo`, `SetFInfo`, `HSetFInfo` and `HOpen`, so it must be linked
+against the glue being reported on. **`mkgluelib.sh`** builds a private
+`libInterface.a` from a given `glue.c`, with multiversal's own compile line
+(it reproduces the shipped `glue.o` byte for byte), and
+`-DGLUE_LIB_DIR=<that dir>` links it; the shared toolchain is not touched.
+Measured 2026-10-15 on Systems 3.0, 6.0.8 and 7.0.1, linked against
+multiversal `4c78d24`'s glue: the failures in the issue on all three; linked
+against the same glue with `glue-audit.patch`: every line correct on all
+three.
+
+```sh
+./mkgluelib.sh <multiversal>/custom/glue.c ../../.tmp/retro68-glue/lib
+cmake -B ../../.tmp/glue-build -S . -DGLUE_LIB_DIR=$PWD/../../.tmp/retro68-glue/lib \
+  -DCMAKE_TOOLCHAIN_FILE=/opt/Retro68-build/toolchain/m68k-apple-macos/cmake/retro68.toolchain.cmake
+cmake --build ../../.tmp/glue-build
+./run_audit.py ../../.tmp/glue-build/GlueRepro.bin --system 6    # or 7, or 3
+```
+
+**`glue_audit.c` is the evidence behind it**, as `hopen_repro.c` was for #320:
 four more fields multiversal `4c78d24`'s glue leaves unset or clobbers,
 found by reading every File Manager function in `custom/glue.c` against
 Inside Macintosh: Files, ch. 2. It calls verbatim, renamed copies of the

@@ -23,3 +23,12 @@ add_application(GlueAudit glue_audit.c)
 target_compile_options(GlueAudit PRIVATE -mcpu=68000 -Os)
 add_application(GlueAuditFixed glue_audit.c)
 target_compile_options(GlueAuditFixed PRIVATE -mcpu=68000 -Os -DGLUE_FIXED)
+
+# The issue's repro (ISSUE-glue-audit.md). It calls the real glue, so build it
+# against the Retro68 being reported on: -DGLUE_LIB_DIR=<dir holding a
+# libInterface.a> links that one instead of the toolchain's (README.md).
+add_application(GlueRepro glue_repro.c)
+target_compile_options(GlueRepro PRIVATE -mcpu=68000 -Os)
+if(GLUE_LIB_DIR)
+  target_link_options(GlueRepro PRIVATE -L${GLUE_LIB_DIR})
+endif()
