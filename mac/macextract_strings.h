@@ -104,7 +104,7 @@
 /* ---- C: the report's lines ------------------------------------------ */
 
 /* Every line starts with the entry's name, <name> below. */
-#define S_REP_UNNAMED       "An unnamed entry"
+#define S_REP_UNNAMED       "Unnamed entry"
 /* "...and <N> more": lines the report had no room for. The ellipsis is
  * MacRoman 0xC9, a literal of its own so the "a" is not read as one more
  * hex digit of the escape. */
