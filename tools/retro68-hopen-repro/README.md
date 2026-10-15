@@ -45,7 +45,7 @@ cmake --build ../../.tmp/glue-build
 ./run_audit.py ../../.tmp/glue-build/GlueRepro.bin --system 6    # or 7, or 3
 ```
 
-**`appfiles_repro.c` is the third** (`ISSUE-appfiles.md`, not filed):
+**`appfiles_repro.c` is the third** (`ISSUE-appfiles.md`, filed as Retro68 #323):
 `GetAppFiles`/`ClrAppFiles` loop forever for index ≥ 2 (`AppFilePtr`'s
 `while(index)` never decrements). It writes a two-document list into
 `AppParmHandle` itself, so it needs no Finder and no disk. Measured

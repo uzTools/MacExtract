@@ -1,7 +1,8 @@
 # Upstream issue draft: GetAppFiles never returns for index 2 and up
 
-**Not filed.** For the maintainer to post on autc04/Retro68, as #320 and
-#322 were. The body embeds `appfiles.patch` and `appfiles_repro.c`;
+**Filed 2026-10-15** by the maintainer as
+https://github.com/autc04/Retro68/issues/323, the body below verbatim;
+the issue is the record. The body embeds `appfiles.patch` and `appfiles_repro.c`;
 regenerate it if either changes. Measured 2026-10-15 under Mini vMac (Mac
 Plus) on Systems 3.0, 6.0.8 and 7.0.1: the stock glue (identical in
 Retro68 `335fa54f6d` and multiversal `4c78d24`) and the same glue with the
@@ -13,7 +14,7 @@ patch (`mkgluelib.sh`, `-DGLUE_LIB_DIR`).
 
 **Body:**
 
-Hi again! `AppFilePtr` in `custom/glue.c` never decrements `index` in its `while(index)` loop, so `GetAppFiles` and `ClrAppFiles` never return for an index above 1, e.g. when the Finder opens an application with two documents.
+`AppFilePtr` in `custom/glue.c` never decrements `index` in its `while(index)` loop, so `GetAppFiles` and `ClrAppFiles` never return for an index above 1, e.g. when the Finder opens an application with two documents.
 
 ```diff
 --- a/custom/glue.c

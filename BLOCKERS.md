@@ -90,8 +90,8 @@ https://github.com/autc04/Retro68/issues/322.
 (multiversal `glue.c`, `AppFilePtr` never decrements) — measured
 2026-10-15 on Systems 3.0, 6.0.8 and 7.0.1; a one-line patch fixes all
 three. MacExtract is unaffected (`DropNext` reads `AppParmHandle` itself).
-Draft: `tools/retro68-hopen-repro/ISSUE-appfiles.md`; not filed
-(MANUAL_TESTS.md §7).
+Filed 2026-10-15 as https://github.com/autc04/Retro68/issues/323
+(`tools/retro68-hopen-repro/ISSUE-appfiles.md`).
 
 **`HideCursor()` before drawing the grid — confirmed by reproduction**: without
 it, a pointer dragged through the grid flips one bit of the result

@@ -131,9 +131,6 @@ repository submits it** (CLAUDE.md, *Rules*); the maintainer posts it.
 - [ ] **XADMaster reads one byte past a DDn fork's compressed length** —
       `tools/xadmaster-ddn-repro/` (`ISSUE.md`, `make_repro.py`), for
       MacPaw/XADMaster.
-- [ ] **Retro68's `GetAppFiles` hangs at index ≥ 2** —
-      `tools/retro68-hopen-repro/ISSUE-appfiles.md` (one-line patch
-      embedded), for autc04/Retro68, as #322 was.
 
 **Record** the issue URL in BLOCKERS.md beside its claim. A rejection is a
 withdrawn claim, filed with what it cost.
