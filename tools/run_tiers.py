@@ -213,8 +213,8 @@ TIERS = {
 # **Branch rom64k only, raised by 32 B 2026-10-15, and TIERS lowered by the
 # same 32, DERIVED**: GrowApplZone, the control's CODE +12 and A5 +20
 # against main's (tools/build_mac.sh). The machine said otherwise for the
-# probe build, whose CODE + A5 equals main's: +4, +4 and +6 B, MaxMem's
-# purge (BRANCH_NOTES.md). The derivation is the lower, kept.
+# probe build, whose CODE + A5 equals main's: +4, +4 and +6 B, behaviour
+# and not code (BRANCH_NOTES.md). The derivation is the lower, kept.
 TIERS_CONTROL = 213472     # build/mac-resident, CODE + A5, 2026-10-15
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and

@@ -7955,8 +7955,8 @@ alike. Until 2026-10-15 this branch skipped `MaxApplZone` on a ROM version
 word below `$75` instead (`Has128KROM()`; DECISIONS.md 2026-09-01, *two
 byte reads*). Measured: the zone ends exactly at `ApplLimit` (System 6.0.8,
 1 MB), and the budget is +4, +4 and +6 B against `main` on the three
-asserted tiers, the whole of it `_MaxMem`'s purge (DECISIONS.md 2026-10-15,
-*the purge MaxApplZone never did*).
+asserted tiers: `_MaxMem`'s purge on System 6, not attributed on System 3.0
+(DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*).
 
 Measured on the emulated 512K under Apple's MFS System 3.0, with this
 branch's build (re-taken 2026-10-15 with `GrowApplZone`; `main`'s bombs

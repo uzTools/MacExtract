@@ -26765,27 +26765,48 @@ behaviour on every machine; the `Has128KROM()` guard was two.
 **It is not budget-neutral, and the cause is not the code.** The budget came
 out +4, +4 and +6 B against `main` on the three asserted tiers, with the probe
 builds' `CODE` + A5 summing to the same 212,368 B. Arithmetic from section
-sizes would have called that alignment. Two hybrids settled it instead,
+sizes would have called that alignment. Hybrids settled it instead,
 byte-identical to the candidate except for one trap word: `_MaxApplZone` where
 `_MaxMem` was, then also a register clear where `_NewPtr` was. With no
 `NewPtr` the budget is `main`'s to the byte on both systems tried; with a
 `NewPtr` that fails, and so purges (II-13), it is `main`'s +4 on System 6
-and +14 on System 3.0. `_MaxMem` purges every purgeable block (II-38);
-`MaxApplZone` purges none (II-30). The blocks come back by the time the
-engine takes its budget, a few bytes differently arranged. **A same-size
-hybrid splits layout from behaviour in two runs**, where comparing two
-different builds can only report that they differ.
+and +14 on System 3.0. **A same-size hybrid splits layout from behaviour in
+two runs**, where comparing two different builds can only report that they
+differ.
 
-**Why not avoid the purge.** A request sized to the free space exactly would
-grow the zone without purging, since growth comes before purging in II-13,
-but only `_MaxMem` reports how far the zone can grow. Anything else means
-reading the zone header, which the Modern Memory Manager does not keep in the
-classic layout. The difference is in the engine's favour; it is
-recorded, not removed.
+**On System 6 the +4 is the purge; on System 3.0 the +6 is not attributed.**
+(CORRECTED the same day: this entry first gave the purge as the whole
+difference on both.) `_MaxMem` purges every purgeable block (II-38),
+`MaxApplZone` none (II-30); right after launch the purge leaves 4,492 B more
+free on System 6, and the blocks come back by the time the engine takes its
+budget. But a second candidate that never purges (below) still reads +14 B
+on System 3.0 against its own same-size `_MaxApplZone` hybrid, and nothing on
+System 6. So on System 3.0 a whole-zone `NewPtr` leaves more behind whether
+or not anything is purged, and how the +6 divides between that and the purge
+is not measured.
+
+**The purge can be avoided, and was not.** `HeapEnd` is a documented global,
+"address of end of application heap zone" (II-51; Memory, 1992, 2-104), so
+`ApplLimit − HeapEnd` is the growth without `_MaxMem`, and `CompactMem(maxSize)`
+compacts without purging (Memory, 2-71). `NewPtr(CompactMem(0x800000) +
+ApplLimit − HeapEnd)` succeeded on System 6.0.8 at 1 MB, the zone ending at
+`ApplLimit` and `FreeMem` within 36 B of `main`'s after launch. Its budget is
+−32, −32 and −18 B against `main`: on System 6 exactly its probe build's
++32 B of `CODE` + A5 (the same-size hybrid reads the same), on System 3.0
+that less the +14 above. It costs +24 B of `CODE` against `_MaxMem`'s +12, and
+`HeapEnd` was never checked on System 7 or Mac OS 9. The maintainer kept
+`_MaxMem` for its few bytes of budget; the alternative is here if the purge's
+reload at launch, never timed, ever matters.
 
 **Why `_MaxMem` is inline asm, the first in `mac/`.** It returns two values in
 two registers, and Multiverse declares it as Pascal glue: +44 B of `CODE`
-against +12 B inline.
+against +12 B inline. autc04/multiversal pull request 20 (open, 2026-10-15)
+generates that inline code for every trap with a register output; with it,
+this becomes a plain `MaxMem(&grow)` at the same size. It would also inline
+`PurgeSpace`, the budget's own call, whose glue is the only other one in the
+binary: hand-inlined the same way, `CODE` −80 B in all three configurations,
+CODE + A5 −64 B shipped and −96 B lazy and control. Not taken; the toolchain
+here is unpatched.
 
 **Price** (BRANCH_NOTES.md): `CODE` +12 B in `main()` in every configuration;
 A5 −12 B shipped and +20 B elsewhere, `.data` padding only; stack 0; no

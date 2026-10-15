@@ -46,12 +46,18 @@ The `main` tallies are BLOCKERS.md's, taken 2026-10-10/11; `main` was not
 re-swept, because the branch matched them on every tier. The budget figures
 are both builds measured the same morning.
 
-**The budget gap is `_MaxMem`'s purge, measured.** Two hybrids of this
+**The budget gap is behaviour, not code, measured.** Two hybrids of this
 branch, byte-identical in `CODE` and A5, with `_MaxApplZone` in `_MaxMem`'s
-place: without the purging `NewPtr` they read **627,684 and 198,786 B,
-`main`'s exactly**; with it, 627,688 and 198,800 B. So the layout costs 0
-and the purge is the whole difference (DECISIONS.md 2026-10-15, *the purge
-MaxApplZone never did*). It is in the engine's favour, and it is not zero.
+place: without the `NewPtr` they read **627,684 and 198,786 B, `main`'s
+exactly**; with a `NewPtr` that fails and purges, 627,688 and 198,800 B. On
+System 6 the +4 is `_MaxMem`'s purge; on System 3.0 a whole-zone `NewPtr`
+leaves +14 B more even with no purge, so the +6 there is not attributed. It
+is in the engine's favour, and it is not zero.
+
+**A no-purge version was measured and not taken**: `CompactMem` plus
+`ApplLimit − HeapEnd` grows the zone to `ApplLimit` without purging, at +24 B
+of `CODE` and −32, −32, −18 B of budget (DECISIONS.md 2026-10-15, *the purge
+MaxApplZone never did*).
 
 ## The price, against `main`
 
