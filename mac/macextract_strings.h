@@ -131,7 +131,7 @@
 #define S_REP_TOOLARGE      ": file too large (<2GB)"
 #define S_REP_OVER_2GB      S_REP_TOOLARGE
 #define S_REP_MEM           " needs more memory than was free"
-#define S_REP_UNSUPPORTED   " uses a method this version cannot read"
+#define S_REP_UNSUPPORTED   ": unsupported method"
 #define S_REP_CRC           " is damaged: its checksum does not match"
 #define S_REP_TRUNCATED     " ends early: the archive is incomplete"
 #define S_REP_ENCRYPTED     " is encrypted and was skipped"
@@ -164,8 +164,7 @@
 #define S_OUT_STOPPED       "Extraction stopped part way through this " \
                             "archive."
 #define S_OUT_FAILED        "This file could not be extracted."
-#define S_OUT_SOME_UNSUPP   "Some entries use a method this version " \
-                            "cannot read yet."
+#define S_OUT_SOME_UNSUPP   "Unsupported method."
 #define S_OUT_SOME_FAILED   "Some entries could not be extracted."
 /* Instead of the two above when the report lists the entries. */
 #define S_OUT_FINISHED      "Extraction finished."
