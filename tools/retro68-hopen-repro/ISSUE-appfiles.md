@@ -13,9 +13,7 @@ patch (`mkgluelib.sh`, `-DGLUE_LIB_DIR`).
 
 **Body:**
 
-Hi again! `AppFilePtr` in `custom/glue.c`, which `GetAppFiles` and `ClrAppFiles` use, steps through the `AppParmHandle` list with `while(index)` but never decrements `index`, so any index above 1 loops forever. An application the Finder opens with two or more documents hangs when it asks for the second one.
-
-The fix is one line:
+Hi again! `AppFilePtr` in `custom/glue.c` never decrements `index` in its `while(index)` loop, so `GetAppFiles` and `ClrAppFiles` never return for an index above 1, e.g. when the Finder opens an application with two documents.
 
 ```diff
 --- a/custom/glue.c
@@ -30,16 +28,7 @@ The fix is one line:
  }
 ```
 
-Repro below: it puts the list the Finder leaves for two documents in `AppParmHandle`, then calls `GetAppFiles` for each, drawing a line before each call. On Mini vMac (Mac Plus), Systems 3.0, 6.0.8 and 7.0.1, the current glue stops at:
-
-```
-CountAppFiles: message=0 count=2
-GetAppFiles(1)...
-  returned "First"
-GetAppFiles(2)...
-```
-
-With the patch it goes on to `returned "Second"` and `done` on all three (and with a third document, `returned "Third"`). Index 1 and out-of-range indexes don't enter the loop, so they behave as before.
+Tested on Mini vMac (Mac Plus), Systems 3.0, 6.0.8 and 7.0.1 with the repro below: the current glue hangs in `GetAppFiles(2)`; with the fix, every document is returned.
 
 <details><summary>appfiles_repro.c (49 lines)</summary>
 
