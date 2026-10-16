@@ -120,6 +120,14 @@ The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
 - **The time estimate steps backwards for a tick**, on StuffIt 5 (the
   bar never does). Not looked into.
 
+## A file that is not opened goes back to the Open dialog
+
+Since 2026-10-16 a format named and not opened ends the launch, as an
+extraction does (DECISIONS.md 2026-10-16, *the format that ends the
+launch*). A file that is not an archive (*This file could not be
+extracted.*) or could not be opened still returns to the Open dialog.
+Whether those quit too is the maintainer's call.
+
 ## A click during an extraction waits for the next progress callback
 
 The menu bar is read only in the progress pump, so a click shorter than

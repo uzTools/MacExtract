@@ -64,10 +64,10 @@
 
 /* ---- C: password dialog --------------------------------------------- */
 
-/* The first ask: '"<archive>" is encrypted. ...'. Every ask after it:
- * S_PASS_REFUSED alone. */
-#define S_PASS_OPEN_QUOTE   "\""
-#define S_PASS_ENCRYPTED    "\" is encrypted. Please enter its password."
+/* The first ask: 'Enter the password for "<archive>".'. Every ask after
+ * it: S_PASS_REFUSED alone. */
+#define S_PASS_ENTER        "Enter the password for \""
+#define S_PASS_ENTER_END    "\"."
 #define S_PASS_REFUSED      "Incorrect password."
 
 /* ---- C: segmented archives ------------------------------------------ */

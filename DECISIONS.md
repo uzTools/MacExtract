@@ -419,6 +419,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-15 (the File Manager a 64K ROM has) — extracting onto an MFS disk is out of scope, and so is a 64K ROM without HFS
 - 2026-10-15 (the words in one file) — every string the application shows is in mac/macextract_strings.h
 - 2026-10-15 (the height nothing needed) — a `JPEG Lossy` image is capped in width only, and a tall one StuffIt restores now extracts
+- 2026-10-16 (the format that ends the launch) — after "MacExtract cannot open X files." the application quits, as it does after an extraction
 
 ---
 
@@ -26859,3 +26860,28 @@ not the size.
 **Consequence.** `run_sitcombo.py` grades the tall archive against 2.0.1's
 restore (set `settall`, optional); it fails on the capped engine. FORMATS.md,
 *Size limits*, has the row.
+
+## 2026-10-16 (the format that ends the launch) — after "MacExtract cannot open X files." the application quits, as it does after an extraction
+
+**Decision (the maintainer's).** A file in a format this application names
+and does not open (FORMATS.md, *Archives named but not extracted*) now ends
+the launch once its alert is dismissed. It used to go back to the Open
+dialog: such a format keeps every decoder (`ovl_release_if_unwanted` has no
+row for it), so `ovl_spent()` stayed false and the quit of *one archive per
+launch* (2026-10-11) never fired. A list the Finder handed over goes on to
+its next document, as it does after an extraction. A file that is not an
+archive, or could not be opened, still returns to the Open dialog.
+
+**Measured.** System 7.0.1, `interactive.py` on `synth-os9-rar.rar`: after
+OK, this build quits (the application is the boot shell there, so the
+System offers to switch off); the build before it shows the Open dialog
+again. On System 6 the two cannot be told apart that way, because a boot
+shell that quits is launched again.
+
+**Price.** A static flag set in `ExtractOne` and read in `main()`: CODE +24
+shipped and lazy, +28 resident; A5 −8 shipped, −12 resident, which is the
+password prompt's shorter wording (*Enter the password for "X".*, the
+maintainer's, same commit) less the flag. Net +16 B off every budget,
+`TIERS` lowered by 16, derived; `run_tiers.py --check` moves no tally.
+Returning the flag from `ExtractOne` instead cost +72 B of CODE, 60 of them
+in `ExtractOne` itself.

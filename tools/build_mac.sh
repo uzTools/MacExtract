@@ -497,7 +497,9 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # 38,032, +4, the message and alignment.
 # -12 on 2026-10-15: `JPEG Lossy` capped in width only (DECISIONS.md
 # 2026-10-15, *the height nothing needed*).
-UNC_MAC_CODE_DEFAULT=175396
+# +28 on 2026-10-16: a format named and not opened ends the launch
+# (DECISIONS.md 2026-10-16, *the format that ends the launch*); A5 -12.
+UNC_MAC_CODE_DEFAULT=175424
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -657,7 +659,9 @@ UNC_MAC_CODE_DEFAULT=175396
 # RAISED 2026-10-14 to 38,032, +4, with the code ceiling's +60.
 # -548 on 2026-10-15: the strings, moved into mac/macextract_strings.h and
 # shortened (DECISIONS.md 2026-10-15, *the words in one file*).
-UNC_MAC_A5_DEFAULT=37484
+# -12 on 2026-10-16, with the code ceiling's +28: the password prompt's
+# shorter wording.
+UNC_MAC_A5_DEFAULT=37472
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -943,8 +947,12 @@ UNC_MAC_A5_DEFAULT=37484
 # moved into mac/macextract_strings.h and was shortened, which is 564 B of
 # string literals out of the A5 world; the ceiling comes down with it
 # (DECISIONS.md 2026-10-15, *the words in one file*).
-UNC_MAC_CODE_EAGER=55772
-UNC_MAC_A5_EAGER=18564
+# +24 code and -8 A5 on 2026-10-16: a format named and not opened ends the
+# launch, through a static flag (a return value cost +72); the A5 is the
+# password prompt's shorter wording, less the flag (DECISIONS.md
+# 2026-10-16, *the format that ends the launch*).
+UNC_MAC_CODE_EAGER=55796
+UNC_MAC_A5_EAGER=18556
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -988,7 +996,8 @@ UNC_MAC_A5_EAGER=18564
 # `.data` alignment again.
 # -64 code the same day, the shim gone as in the eager pair above.
 # +56 code and +8 A5 on 2026-10-14 for the same refusal.
-UNC_MAC_CODE_LAZY=54192
+# +24 code on 2026-10-16 for the same flag; A5 18,632, under its ceiling.
+UNC_MAC_CODE_LAZY=54216
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (200612, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (105212, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (629500, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200596, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (105196, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (629484, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -215,7 +215,12 @@ TIERS = {
 # (DECISIONS.md 2026-10-15, *the height nothing needed*) and A5 -548 for
 # the shortened strings (*the words in one file*). The shipped pair fell
 # the same 560, so OVL_SAVED did not move.
-TIERS_CONTROL = 212880     # build/mac-resident, CODE + A5, 2026-10-15
+# **Raised by 16 B 2026-10-16, and TIERS lowered by the same 16,
+# DERIVED**: the control's CODE +28 and A5 -12 for ending the launch on a
+# format named and not opened (DECISIONS.md 2026-10-16, *the format that
+# ends the launch*). The shipped pair rose the same 16, so OVL_SAVED did
+# not move.
+TIERS_CONTROL = 212896     # build/mac-resident, CODE + A5, 2026-10-16
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
