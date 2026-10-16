@@ -70,6 +70,7 @@ SIG = b"SuperDisk! Add-In Module"
 # The fixture that carries Disk Expander 1.2, and the file inside it whose
 # resource fork holds the codecs.
 MODULE_FIXTURE = "alysis-disk-expander-12.hqx"
+APP_FILE = "Disk Expander .X"
 MODULE_FILE = "Disk Expander /Disk Expander.rsrc"
 
 # Both SuperDisk! containers in the corpus, as the payload inside the BinHex.
@@ -140,6 +141,12 @@ def modules(macextract, workdir):
     r = sh(macextract, "x", "-o", out, os.path.join(REPO, "fixtures", MODULE_FIXTURE))
     if r.returncode != 0:
         raise SystemExit(f"sdmodule: extracting {MODULE_FIXTURE} failed:\n{r.stderr}")
+    # What the .hqx holds is the self-expanding application, and a chain
+    # of layers stops at an application (DECISIONS.md 2026-10-16, *the
+    # installer that was a layer*), so it is opened as a second step.
+    r = sh(macextract, "x", "-o", out, os.path.join(out, APP_FILE))
+    if r.returncode != 0:
+        raise SystemExit(f"sdmodule: extracting {APP_FILE} failed:\n{r.stderr}")
     fork = open(os.path.join(out, MODULE_FILE), "rb").read()
     res = resource_data(fork)
     found = {}
@@ -449,7 +456,10 @@ def phase_corpus(macextract, mods, workdir, verbose=False):
         full = os.path.join(workdir, "full")
         shutil.rmtree(full, ignore_errors=True)
         os.makedirs(full)
-        r = sh(macextract, "x", "-o", full, os.path.join(REPO, "fixtures", fixture))
+        # The .X itself, opened directly: it is an application, where a
+        # chain of layers stops (DECISIONS.md 2026-10-16, *the installer
+        # that was a layer*).
+        r = sh(macextract, "x", "-o", full, os.path.join(payload, xs[0]))
         if r.returncode != 0:
             raise SystemExit(f"sdmodule: extracting {fixture} failed:\n{r.stderr}")
 

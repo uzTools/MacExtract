@@ -1114,8 +1114,18 @@ def main():
         if os.path.exists(sea):
             base = os.path.join(work, "seactl")
             extract(args.macextract, ctl, base)
+            # The MacBinary leaves the self-extractor, an application,
+            # where a chain of layers stops (DECISIONS.md 2026-10-16, *the
+            # installer that was a layer*); it is then opened directly.
+            app = os.path.join(work, "seaapp")
+            rc, msg = extract(args.macextract, sea, app)
+            apps = [f for f in os.listdir(app) if not f.endswith(".rsrc")]
             o = os.path.join(work, "sea")
-            rc, msg = extract(args.macextract, sea, o)
+            if rc == 0 and len(apps) == 1:
+                rc, msg = extract(args.macextract,
+                                  os.path.join(app, apps[0]), o)
+            elif rc == 0:
+                rc, msg = 1, "the MacBinary left %r" % sorted(apps)
             if rc != 0:
                 problems.append("the self-extracting archive did not "
                                 "extract: %s" % msg.strip()[:120])

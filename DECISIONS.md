@@ -419,7 +419,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-15 (the File Manager a 64K ROM has) — extracting onto an MFS disk is out of scope, and so is a 64K ROM without HFS
 - 2026-10-15 (the words in one file) — every string the application shows is in mac/macextract_strings.h
 - 2026-10-15 (the height nothing needed) — a `JPEG Lossy` image is capped in width only, and a tall one StuffIt restores now extracts
-- 2026-10-16 (the format that ends the launch) — after "MacExtract cannot open X files." the application quits, as it does after an extraction
+- 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
+- 2026-10-16 (the installer that was a layer) — a chain of layers stops at an application: an installer is run, not extracted
 
 ---
 
@@ -26861,27 +26862,63 @@ not the size.
 restore (set `settall`, optional); it fails on the capped engine. FORMATS.md,
 *Size limits*, has the row.
 
-## 2026-10-16 (the format that ends the launch) — after "MacExtract cannot open X files." the application quits, as it does after an extraction
+## 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
 
-**Decision (the maintainer's).** A file in a format this application names
-and does not open (FORMATS.md, *Archives named but not extracted*) now ends
-the launch once its alert is dismissed. It used to go back to the Open
-dialog: such a format keeps every decoder (`ovl_release_if_unwanted` has no
-row for it), so `ovl_spent()` stayed false and the quit of *one archive per
-launch* (2026-10-11) never fired. A list the Finder handed over goes on to
-its next document, as it does after an extraction. A file that is not an
-archive, or could not be opened, still returns to the Open dialog.
+**Decision (the maintainer's).** Extracted, refused, not an archive, could
+not be opened: the application quits once the file's alert or report is
+dismissed, in every build. A list the Finder handed over goes on to its
+next document. Until now only an archive whose decoders had been released
+quit (*one archive per launch*, 2026-10-11); a format named and not opened
+(*MacExtract cannot open RAR files.*) keeps every decoder, so it went back
+to the Open dialog, and so did a file that is not an archive.
 
-**Measured.** System 7.0.1, `interactive.py` on `synth-os9-rar.rar`: after
-OK, this build quits (the application is the boot shell there, so the
-System offers to switch off); the build before it shows the Open dialog
-again. On System 6 the two cannot be told apart that way, because a boot
-shell that quits is launched again.
+**Measured.** System 7.0.1, `interactive.py` on `synth-os9-rar.rar`:
+after OK this build quits (the application is the boot shell there, so the
+System offers to switch off), and the build before it shows the Open
+dialog again. On System 6 the two cannot be told apart that way, because a
+boot shell that quits is launched again. A file that is not an archive
+takes the same `break` and was not run separately.
 
-**Price.** A static flag set in `ExtractOne` and read in `main()`: CODE +24
-shipped and lazy, +28 resident; A5 −8 shipped, −12 resident, which is the
-password prompt's shorter wording (*Enter the password for "X".*, the
-maintainer's, same commit) less the flag. Net +16 B off every budget,
-`TIERS` lowered by 16, derived; `run_tiers.py --check` moves no tally.
-Returning the flag from `ExtractOne` instead cost +72 B of CODE, 60 of them
-in `ExtractOne` itself.
+**Price.** Shipped CODE +4 against the commit before (a test of
+`gDropLeft` at the end of the loop); A5 −20 for the password prompt's
+shorter wording, *Enter the password for "X".* (the maintainer's, same
+day). A static flag for the named format alone had cost +24, and returning
+it from `ExtractOne` +72.
+
+## 2026-10-16 (the installer that was a layer) — a chain of layers stops at an application: an installer is run, not extracted
+
+**Found by the maintainer**: `stuffit_expander_55.bin`, a MacBinary
+holding *Aladdin Expander™ 5.5 Installer* (`APPL`/`STi0`), whose data
+fork is a StuffIt archive. MacExtract unwrapped the MacBinary, extracted
+the installer's data fork, and deleted the installer as an intermediate
+layer; StuffIt Expander leaves the installer. What the installer installs
+is not what its data fork holds.
+
+**Decision.** A layer that leaves one file of type `APPL` ends the chain,
+whatever its data fork sniffs as, in the application and the CLI alike. An
+application opened directly is still extracted: that is the user's
+choice, not a layer. `unar` already stopped there: every `.sea.bin` and
+`.sea.hqx` manifest here lists the application, and none of the emulator
+samples chains through one.
+
+**Measured.** The CLI on the download writes the installer alone, as
+`unar` does (before: the installer's contents, and two output errors).
+Mini vMac, System 6.0.8, `interactive.py`: the Mac writes the installer
+alone, and "Extraction complete."
+
+**What it moved, measured over the corpus**: 69 fixtures now stop at an
+application where they went one layer further, and the `unar` manifests
+of 65 of them already listed the application alone, so the differential
+suite stays 971/971. Five suites had relied on the old chaining, each
+reaching into a self-extractor through its envelope, and now open the
+application as a second step: `run_segments.py` (a DiskDoubler set that
+joins to a `.sea`), `run_sdmodule.py` (SuperDisk!'s modules),
+`run_crypt.py` (the InstallerMaker key in the installer's resource fork),
+`run_sitopt.py` and `run_zipit.py` (wrapped self-extractors; one ZipIt
+MacBinary records no type, so it still goes straight through). Stopping
+at a `.sea` is accepted as what a user may expect (the maintainer,
+2026-10-16).
+
+**Price.** Shipped CODE +32 on its own (the type carried from the sink to
+`ExtractOne`), A5 0; the same commit's `gDropLeft` change took back what
+the flag above had cost, so the day nets +16 B against 2026-10-15.

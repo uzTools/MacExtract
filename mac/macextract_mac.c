@@ -1039,6 +1039,7 @@ typedef struct {
     int          fileCount, dirCount;
     Str63        lastName;
     long         lastDir;
+    OSType       lastType;
     Progress    *pr;
 #ifndef UNC_MAC_STAGE_WRITES
     /* Streaming write path: each chunk goes straight to disk as the engine
@@ -2241,6 +2242,7 @@ static int SINK_END(void *ctx, int status)
         if (!s->cur.is_dir) {
             BlockMoveData(s->curName, s->lastName, s->curName[0] + 1);
             s->lastDir = s->curDirID;
+            s->lastType = s->cur.type;
         }
     } else if (!s->cur.is_dir) {
         /* Cancelled or failed: remove the empty/partial file this entry
@@ -3379,6 +3381,7 @@ typedef struct {
     Str63     name;
     long      dirID;
     UncFormat fmt;        /* what this layer turned out to be */
+    OSType    type;       /* the file it left, when it is one */
 } ExtractShape;
 
 /* ------------------------------------------------------------------ */
@@ -3854,6 +3857,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     gUnsupported = 0;
     sink.fileCount = sink.dirCount = 0;
     sink.lastName[0] = 0;
+    sink.lastType = 0;
     sink.lastDir = 0;
     sink.pr = NULL;
     sink.wrOSErr = noErr;
@@ -4020,6 +4024,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         shape->fileCount = sink.fileCount;
         shape->dirCount = sink.dirCount;
         shape->dirID = sink.lastDir;
+        shape->type = sink.lastType;
         shape->fmt = sh ? sh->desc.scheme : extractedAs;
         BlockMoveData(sink.lastName, shape->name, sink.lastName[0] + 1);
     }
@@ -5504,11 +5509,6 @@ static void ShowReport(const unsigned char *outcome)
     gRepDlg = NULL;
 }
 
-/* Set when the file is a format this application names and cannot open,
- * which ends the launch like an extraction does (main()). A static rather
- * than a return value: 60 B less of ExtractOne, measured 2026-10-16. */
-static Boolean gForeign;
-
 static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                        short outVol, long outDir)
 {
@@ -5625,6 +5625,12 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
                 shape.fmt != UNC_FORMAT_SITSEG &&
                 shape.fmt != UNC_FORMAT_DDSEG &&
                 shape.fmt != UNC_FORMAT_SPLIT) break;
+            /* An application is where the chain stops, whatever its data
+             * fork holds: an installer or a self-extracting archive is run,
+             * and what it installs is not what its data fork extracts to
+             * (DECISIONS.md 2026-10-16, *the installer that was a layer*).
+             * StuffIt Expander and unar stop there too. */
+            if (shape.type == 'APPL') break;
             {
                 short ref;
                 FileIO fio2;
@@ -5739,7 +5745,6 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         PStrCat(outcome, S_OUT_FOREIGN);
         PStrCat(outcome, unc_format_name(topFmt));
         PStrCat(outcome, S_OUT_FOREIGN_END);
-        gForeign = true;
     }
     else if (ret != UNC_OK && entries > 0)
         /* The archive stopped being readable part way down, and what
@@ -6220,21 +6225,14 @@ int main(void)
         /* Both refNums are working directories on System 7 and later
          * and plain volume refNums on System 6; dirID 0 is correct for
          * either (FORMATS.md, the working-directory row). */
-        /* A format named and not opened ends the launch, as an extracted
-         * archive does below, whichever build this is; a list the Finder
-         * handed over goes on to its next document. */
         ExtractOne(reply.vRefNum, 0, reply.fName, dest.vRefNum, 0);
-        if (gForeign && gDropLeft <= 0) break;
 #ifdef UNC_AT_OVERLAY
         /* The decoders this archive did not need are gone, and reading
          * them again is a disk access the eager lifetime exists to avoid.
          * Offering Standard File again offered what could not be done:
          * on an LC475 a .sit opened after a .cpt failed. So the
          * application quits, and the next archive starts a fresh launch
-         * (DECISIONS.md 2026-10-11, *one archive per launch*). A file
-         * that never got as far as a release — not an archive, could
-         * not be opened — still comes back here; a named format quit
-         * above. */
+         * (DECISIONS.md 2026-10-11, *one archive per launch*). */
         { extern int ovl_spent(void);
           if (ovl_spent()) {
               /* Archives still in the Finder's list: read the decoders
@@ -6258,6 +6256,12 @@ int main(void)
               break;
           } }
 #endif
+        /* Whatever became of it — extracted, refused, not an archive —
+         * one file chosen in Standard File ends the launch, in every
+         * build; a list the Finder handed over goes on to its next
+         * document (DECISIONS.md 2026-10-16, *the format that ends the
+         * launch*). */
+        if (gDropLeft <= 0) break;
     }
 #ifdef UNC_AT_HEAPLOG
     HeapLogFlush();

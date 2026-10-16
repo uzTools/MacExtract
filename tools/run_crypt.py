@@ -483,9 +483,21 @@ def check_installermaker(macextract, problems, tmp):
     open(mb, "wb").write(macbinary(
         "Shortcut Update", arc, open(data_p + ".rsrc", "rb").read(),
         ftype=b"APPL", creator=b"STi0"))
+    # The MacBinary leaves the installer, an application, where a chain
+    # of layers stops (DECISIONS.md 2026-10-16, *the installer that was a
+    # layer*); it is then opened directly, its 'MKey' read from the
+    # resource fork beside it.
+    app = os.path.join(tmp, "shortcut-app")
+    os.makedirs(app)
+    r = run([macextract, "x", "-o", app, mb])
+    if r.returncode != 0 or sorted(os.listdir(app)) != [
+            "Shortcut Update", "Shortcut Update.rsrc"]:
+        problems.append("shortcut updater: the MacBinary did not stop at "
+                        "the installer: %r" % sorted(os.listdir(app)))
     out = os.path.join(tmp, "shortcut-out")
     os.makedirs(out)
-    r = run([macextract, "x", "-o", out, "-p", SHORTCUT_PW, mb])
+    r = run([macextract, "x", "-o", out, "-p", SHORTCUT_PW,
+             os.path.join(app, "Shortcut Update")])
     msg = r.stderr.decode("utf-8", "replace")
     # One failure, the damaged one, and it must be reported as such.
     if "1 of 13 entries failed" not in msg or \

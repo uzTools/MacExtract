@@ -216,10 +216,10 @@ TIERS = {
 # the shortened strings (*the words in one file*). The shipped pair fell
 # the same 560, so OVL_SAVED did not move.
 # **Raised by 16 B 2026-10-16, and TIERS lowered by the same 16,
-# DERIVED**: the control's CODE +28 and A5 -12 for ending the launch on a
-# format named and not opened (DECISIONS.md 2026-10-16, *the format that
-# ends the launch*). The shipped pair rose the same 16, so OVL_SAVED did
-# not move.
+# DERIVED**: the control's CODE +36 and A5 -20 for ending the launch on
+# every file and stopping a chain of layers at an application (DECISIONS.md
+# 2026-10-16, *the format that ends the launch*, *the installer that was a
+# layer*). The shipped pair rose the same 16, so OVL_SAVED did not move.
 TIERS_CONTROL = 212896     # build/mac-resident, CODE + A5, 2026-10-16
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and

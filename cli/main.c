@@ -388,6 +388,7 @@ typedef struct {
     /* For envelope auto-unwrap: shape of what was extracted. */
     int         file_count, dir_count;
     char        last_ok_path[PATHBUF];
+    uint32_t    last_ok_type;  /* its Mac type, 0 if none */
 } DiskSink;
 
 /* Render a type/creator code for the listing. High bytes are MacRoman
@@ -1001,8 +1002,11 @@ static int sink_end(void *ctx, int status)
     else {
         s->file_count++;
         if (status == UNC_OK && s->cur_path[0])
+        {
             snprintf(s->last_ok_path, sizeof s->last_ok_path, "%s",
                      s->cur_path);
+            s->last_ok_type = s->cur.type;
+        }
     }
     s->cur_path[0] = 0;
     return 0;
@@ -2807,7 +2811,13 @@ nextlayer:
     if (strcmp(cmd, "x") == 0 && !no_recurse && depth < 8 &&
         layer_unwraps(fmt) &&
         sink.file_count == 1 && sink.dir_count == 0 &&
-        sink.last_ok_path[0]) {
+        sink.last_ok_path[0] &&
+        /* An application is where the chain stops, whatever its data
+         * fork holds: an installer or a self-extracting archive is run,
+         * and what it installs is not what its data fork extracts to
+         * (DECISIONS.md 2026-10-16, *the installer that was a layer*).
+         * unar stops there too. */
+        sink.last_ok_type != 0x4150504CUL /* 'APPL' */) {
         FILE *pf = fopen(sink.last_ok_path, "rb");
         if (pf) {
             FileIO pio_f;

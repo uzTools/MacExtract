@@ -85,6 +85,7 @@ import glob
 import io
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -528,13 +529,37 @@ def grade_wrapped(exe, name, raw_path, fork_path, refused):
     not recognized" after the envelope came off (DECISIONS.md).
 
     The data-fork extraction this compares against is the one
-    grade_extract has already held against `unar`."""
+    grade_extract has already held against `unar`.
+
+    **Two steps since 2026-10-16**: the envelope leaves the self-extractor,
+    an application, where a chain of layers stops (DECISIONS.md
+    2026-10-16, *the installer that was a layer*), so the whole file must
+    give that one file, and opening it must give the data fork's
+    extraction. An envelope whose MacBinary records no type still goes
+    straight through."""
     work = tempfile.mkdtemp(prefix="zipitw-")
     try:
         a, b = os.path.join(work, "whole"), os.path.join(work, "fork")
         os.makedirs(a)
         os.makedirs(b)
-        for out, subj in ((a, raw_path), (b, fork_path)):
+        whole = raw_path
+        # The envelope's own listing says whether what it holds is an
+        # application; one whose MacBinary records no type is not, and
+        # the chain goes on through it.
+        lst = subprocess.run([exe, "l", raw_path], capture_output=True,
+                             timeout=600).stdout.decode("mac_roman")
+        if re.search(r"\sAPPL/", lst):
+            app = os.path.join(work, "app")
+            os.makedirs(app)
+            r = subprocess.run([exe, "x", "--forks", "hidden", "-o", app,
+                                raw_path], capture_output=True, timeout=1800)
+            left = [f for f in os.listdir(app) if not f.startswith("._")]
+            if r.returncode != 0 or len(left) != 1:
+                print("zipit: %s: the envelope did not stop at the "
+                      "application (%r)" % (name, sorted(os.listdir(app))))
+                return 1
+            whole = os.path.join(app, left[0])
+        for out, subj in ((a, whole), (b, fork_path)):
             r = subprocess.run([exe, "x", "--forks", "hidden", "-o", out,
                                 subj], capture_output=True, timeout=1800)
             if r.returncode != 0 and not refused:

@@ -1385,9 +1385,17 @@ def ddseg_specimens(macextract, workroot, fails):
         rc, out = run_full(macextract, whole, os.path.join(d, "_unsplit"))
         fails.check(rc == 0, "ddseg/%s: the unsplit archive did not extract: "
                     "%s" % (base, out.strip()))
-        fails.check(read_tree(os.path.join(d, "_full")) ==
-                    read_tree(os.path.join(d, "_unsplit")),
-                    "ddseg/%s: joined and unsplit reads disagree" % base)
+        # Unless the joined file is an APPLICATION: a chain of layers
+        # stops there (DECISIONS.md 2026-10-16, *the installer that was a
+        # layer*), so the full read is the join itself, while the unsplit
+        # file, opened directly, is extracted.
+        # The type is the split header's; the sidecar records none.
+        lst = run([macextract, "l", parts[0]]).stdout.decode("mac_roman")
+        typ = "APPL" if re.search(r"\sAPPL/", lst) else None
+        want = os.path.join(d, "_ours0" if typ == "APPL" else "_unsplit")
+        fails.check(read_tree(os.path.join(d, "_full")) == read_tree(want),
+                    "ddseg/%s: joined and %s reads disagree"
+                    % (base, "plain-join" if typ == "APPL" else "unsplit"))
         # The CRC DiskDoubler itself put in the header, checked against
         # DiskDoubler's own payload: one flipped byte in a COPY of the
         # last part must fail the join. The generated cases check the
