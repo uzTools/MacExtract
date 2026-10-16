@@ -112,14 +112,6 @@ checked by `tools/check_provenance.py`.
 
 # Part 2 — Open items
 
-## What the LC 475 found that is not fixed
-
-The maintainer's first session on silicon, 2026-10-11 (MANUAL_TESTS.md
-§4). Each is measured on that machine and nowhere else.
-
-- **The time estimate steps backwards for a tick**, on StuffIt 5 (the
-  bar never does). Not looked into.
-
 ## A click during an extraction waits for the next progress callback
 
 The menu bar is read only in the progress pump, so a click shorter than

@@ -1,10 +1,9 @@
 # MANUAL_TESTS.md — what only a person outside this machine can settle
 
-**Status: one machine on silicon.** The maintainer's LC 475 (68LC040,
-System 7.6.1, 12 MB) ran two sessions, 2026-10-11 and 2026-10-12; its
-results are BLOCKERS.md's (*Status*), and what it found open is
-OPEN_ITEMS.md's (*What the LC 475 found that is not fixed*). Nothing older
-has run the application. Everything else here was observed under Mini vMac
+**Status: two machines on silicon.** The maintainer's LC 475 (68LC040,
+System 7.6.1, 12 MB), from 2026-10-11, and a Mac OS 9.2.2 PowerPC, from
+2026-10-14; their results are BLOCKERS.md's (*Status*), and nothing they
+found is open. Nothing older has run the application. Everything else here was observed under Mini vMac
 (System 3.0, 6.0.8, 7.0.1) or QEMU (Mac OS 9.2): evidence, not proof.
 
 Each item below says what to do and what to record. Nothing below is a
