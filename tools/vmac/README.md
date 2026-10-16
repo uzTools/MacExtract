@@ -183,7 +183,7 @@ read.
 | `setup.sh` | fetch + build the emulator, the ROM and the System 3.0, 6.0.8 and 7.0.1 images into `$UNC_VMAC_HOME` (default `~/.cache/macextract/vmac/`) |
 | `sys30.py` | the **System 3.0 / Finder 5.1** tier: same disks, same grid, same grader as `run.py`, but launched by double-click because that system reads no shell name — see above |
 | `mkboot.py` | strip that image to System + Finder and make it boot straight into the application |
-| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below |
+| `run.py` | build the disks, boot, screenshot, decode, check. `--out-kb` sizes the DESTINATION volume, which is how the full-disk path is reached at all — see below. **It cannot grade more than 128 files**: the autotest keeps that many records (`AT_MAXREC`) and an archive with more fails by count, as a 153-file icon set did on 2026-10-16 with every file on the disk |
 | `interactive.py` | drive the real UI (SFGetFile, progress dialog, Cancel, Cmd-., the password dialog) and photograph each step |
 | `os9.py` | boot Mac OS 9 on emulated PowerPC, launch the application from the keyboard, and check both forks of what it wrote — see below |
 | `os9probe.py` | diagnostic: which input primitives actually reach the Mac OS 9 guest? Not part of any suite |

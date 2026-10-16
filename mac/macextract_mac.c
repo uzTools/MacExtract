@@ -1792,6 +1792,8 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
 
 #define kTooBig 1        /* not an OSErr: see SINK_BEGIN's create loop */
 
+static void StampCat(MacSink *s);
+
 static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
 {
     MacSink *s = (MacSink *)ctx;
@@ -1843,6 +1845,7 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 leafLost = compLost;
             } else {
                 int isNew = 0, merged = 0, numbered = 0;
+                long parent = dir;
                 uint32_t h = DirHash(nm + start, i - start);
                 OSErr derr = EnsureDir(s->vRefNum, dir, comp, h,
                                        dir == s->rootDirID, &dir,
@@ -1874,7 +1877,19 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                     RepRenamedAt(1, S_REP_FOLDER, nm + start, i - start,
                                  comp, S_REP_COMBINED);
                 }
-                if (i == nlen) return 1;             /* dir entry done */
+                /* The folder's own entry: its Finder flags, which is where
+                 * a folder says it has a custom icon (0x0400) — without
+                 * them an icon collection comes out as plain folders
+                 * (DECISIONS.md 2026-10-16, *the folders that lost their
+                 * icons*). Not on a folder merged into another. */
+                if (i == nlen) {
+                    if (!merged) {
+                        BlockMoveData(comp, s->curName, comp[0] + 1);
+                        s->curDirID = parent;
+                        StampCat(s);
+                    }
+                    return 1;                        /* dir entry done */
+                }
             }
             start = i + 1;
         }
@@ -2234,6 +2249,32 @@ static int sink_end(void *ctx, int status)
 #define SINK_END sink_end
 #endif
 
+/* Set type/creator, Finder flags and dates on s->curName in s->curDirID,
+ * a file or a FOLDER: Inside Macintosh: Files lays HFileInfo and DirInfo
+ * out so that ioFlFndrInfo.fdFlags and ioDrUsrWds.frFlags, and the two
+ * creation and modification dates, sit at the same offsets. A folder has
+ * no type or creator, so those two words are left alone for it. */
+static void StampCat(MacSink *s)
+{
+    CInfoPBRec pb;
+    Str63 name;
+    BlockMoveData(s->curName, name, s->curName[0] + 1);
+    pb.hFileInfo.ioNamePtr = name;
+    pb.hFileInfo.ioVRefNum = s->vRefNum;
+    pb.hFileInfo.ioDirID = s->curDirID;
+    pb.hFileInfo.ioFDirIndex = 0;
+    if (PBGetCatInfoSync(&pb) == noErr) {
+        if (s->cur.type)    pb.hFileInfo.ioFlFndrInfo.fdType = s->cur.type;
+        if (s->cur.creator) pb.hFileInfo.ioFlFndrInfo.fdCreator = s->cur.creator;
+        pb.hFileInfo.ioFlFndrInfo.fdFlags =
+            s->cur.finder_flags & ~0x0100;   /* clear inited bit */
+        if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
+        if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
+        pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
+        PBSetCatInfoSync(&pb);
+    }
+}
+
 static int SINK_END(void *ctx, int status)
 {
     MacSink *s = (MacSink *)ctx;
@@ -2274,24 +2315,7 @@ static int SINK_END(void *ctx, int status)
 #endif
 
     if (status == UNC_OK && !s->cur.is_dir) {
-        /* Set type/creator, Finder flags and dates. */
-        CInfoPBRec pb;
-        Str63 name;
-        BlockMoveData(s->curName, name, s->curName[0] + 1);
-        pb.hFileInfo.ioNamePtr = name;
-        pb.hFileInfo.ioVRefNum = s->vRefNum;
-        pb.hFileInfo.ioDirID = s->curDirID;
-        pb.hFileInfo.ioFDirIndex = 0;
-        if (PBGetCatInfoSync(&pb) == noErr) {
-            if (s->cur.type)    pb.hFileInfo.ioFlFndrInfo.fdType = s->cur.type;
-            if (s->cur.creator) pb.hFileInfo.ioFlFndrInfo.fdCreator = s->cur.creator;
-            pb.hFileInfo.ioFlFndrInfo.fdFlags =
-                s->cur.finder_flags & ~0x0100;   /* clear inited bit */
-            if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
-            if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
-            pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
-            PBSetCatInfoSync(&pb);
-        }
+        StampCat(s);
 #ifdef UNC_MAC_AUTOTEST
         unc_at_record(s->vRefNum, s->curDirID, s->curName);   /* success only */
 #endif
@@ -3551,18 +3575,17 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     PenSize(1, 1);
 
     filter = NewModalFilterUPP(PassFilter);
-    /* OK on an empty field is not an answer: it was taken for Cancel and
-     * skipped every encrypted entry (the maintainer, 2026-10-16). Only
-     * Cancel declines; OK does nothing until something is typed. A beep
-     * there cost 32 B of budget, this nothing. */
     do {
         ModalDialog(filter, &hit);
-    } while (hit != kPassCancelItem &&
-             (hit != kPassOKItem || gPassBuf[0] == 0));
+    } while (hit != kPassOKItem && hit != kPassCancelItem);
     DisposeDialog(dlg);
     if (ph->hide) ShowWindow(ph->hide);
 
-    if (hit != kPassOKItem || gPassBuf[0] == 0) {
+    /* Only Cancel declines. OK on an empty field is an empty password,
+     * refused like any wrong one, so the dialog comes back saying so; it
+     * was taken for Cancel until 2026-10-16 and skipped every encrypted
+     * entry (DECISIONS.md 2026-10-16, *the empty password*). */
+    if (hit != kPassOKItem) {
         gPassBuf[0] = 0;
         return 0;
     }

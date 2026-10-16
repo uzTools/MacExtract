@@ -510,7 +510,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +8 on 2026-10-16: the password dialog, OK on an empty field waiting
 # and the refusal on a line of its own (DECISIONS.md 2026-10-16, *the
 # empty password*); A5 -8, padding.
-UNC_MAC_CODE_DEFAULT=175472
+# +92 on 2026-10-16: a folder's Finder flags and dates are set, as a
+# file's are, so a custom folder icon survives (DECISIONS.md 2026-10-16,
+# *the folders that lost their icons*), less the empty password's test;
+# A5 +4.
+UNC_MAC_CODE_DEFAULT=175564
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -675,7 +679,8 @@ UNC_MAC_CODE_DEFAULT=175472
 # +20 on 2026-10-16 with the code ceiling's +12: padding, no data added.
 # -20 on 2026-10-16 with the code ceiling's +20: padding, the time left.
 # -8 on 2026-10-16 with the code ceiling's +8: padding.
-UNC_MAC_A5_DEFAULT=37456
+# +4 on 2026-10-16 with the code ceiling's +92.
+UNC_MAC_A5_DEFAULT=37460
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -974,8 +979,10 @@ UNC_MAC_A5_DEFAULT=37456
 # estimate that went back up*).
 # +8 code and -8 A5 on 2026-10-16: the password dialog (DECISIONS.md
 # 2026-10-16, *the empty password*); 0 B of budget.
-UNC_MAC_CODE_EAGER=55848
-UNC_MAC_A5_EAGER=18536
+# +92 code and +4 A5 on 2026-10-16: folders' Finder flags (the default
+# pair above): 96 B off every extraction's budget.
+UNC_MAC_CODE_EAGER=55940
+UNC_MAC_A5_EAGER=18540
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1023,7 +1030,9 @@ UNC_MAC_A5_EAGER=18536
 # +12 code on 2026-10-16, GrowApplZone; A5 18,624, under its ceiling.
 # +24 code on 2026-10-16 for the same time left; A5 18,632, under it.
 # +8 code on 2026-10-16, the password dialog; A5 18,624, under its ceiling.
-UNC_MAC_CODE_LAZY=54272
+# +92 code on 2026-10-16, folders' Finder flags; A5 18,628, under its
+# ceiling.
+UNC_MAC_CODE_LAZY=54364
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

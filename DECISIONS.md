@@ -423,7 +423,8 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
 - 2026-10-16 (the installer that was a layer) — a chain of layers stops at an application: an installer is run, not extracted
 - 2026-10-16 (the estimate that went back up) — the time left is taken from the byte counts, not the percentage, and timed per layer
-- 2026-10-16 (the empty password) — OK on an empty password field waits for a password, and a refusal is added under the request
+- 2026-10-16 (the empty password) — OK on an empty password field is a wrong password, and a refusal is added under the request
+- 2026-10-16 (the folders that lost their icons) — a folder's Finder flags and dates are set as a file's are, so a custom folder icon survives
 
 ---
 
@@ -27044,21 +27045,24 @@ CODE +20 and A5 −20, so `TIERS` does not move, and `OVL_SAVED` falls 32.
 No fixture changes tally at any of the three tiers `run_tiers.py --shipped`
 asserts (74/74, 72/74, 68/74, the same names).
 
-## 2026-10-16 (the empty password) — OK on an empty password field waits for a password, and a refusal is added under the request
+## 2026-10-16 (the empty password) — OK on an empty password field is a wrong password, and a refusal is added under the request
 
 **Found by the maintainer** on the LC 475: OK with the password field
 empty went straight to the report, every encrypted entry skipped.
 `MacAskPassword` returned "no password" for an empty OK exactly as for
 Cancel, and the engine declines an entry it has no password for.
 
-**Decision.** OK does nothing until something has been typed; Cancel is
-the only way to decline. No beep: `SysBeep` there cost 32 B of budget,
-and this costs none.
+**Decision (the maintainer's).** An empty OK is an empty password,
+tried and refused like any wrong one, so the dialog comes back with
+*Incorrect password.*; Cancel is the only way to decline. CORRECTED the
+same day: the first version kept the dialog up and did nothing on an
+empty OK, which made OK look unresponsive; that took a test where this
+removes one.
 
 **Measured.** `interactive.py --password` now presses OK on the empty
-field before typing (*pw-3b-empty-ok*): the dialog stays up and every
-entry decrypts. The same walk on the build before fails, nothing
-decrypted, so the step can fail.
+field before typing (*pw-3b-empty-ok*): the dialog comes back with the
+refusal under the request, and every entry decrypts. The same walk on the
+build before fails, nothing decrypted, so the step can fail.
 
 **And the wording, the same day (the maintainer's).** Every ask shows
 *Enter the password for "X".*; after a refused password *Incorrect
@@ -27068,6 +27072,43 @@ break, so a name that wraps the request onto two lines cannot push it
 off the bottom. Photographed in the same walk: the request alone on the
 first ask and after the empty OK, both lines after the wrong password.
 
-**Price, both together.** CODE +8 and A5 −8 (padding) in the shipped
-build and in the control alike: 0 B of budget, `OVL_SAVED` and `TIERS`
-unmoved, and `run_tiers.py --check` moves no tally.
+**Price.** The wording with the first version: CODE +8 and A5 −8
+(padding) in the shipped build and the control alike, 0 B of budget.
+The final version removes a test, and is priced with the same day's
+*the folders that lost their icons*, built with it.
+
+## 2026-10-16 (the folders that lost their icons) — a folder's Finder flags and dates are set as a file's are, so a custom folder icon survives
+
+**Found by the maintainer**: `NorbikNudleys_Icons.sit`, a StuffIt 5
+icon collection, extracted with no error as plain folders. Each icon is a
+folder whose Finder flags carry `0x0400`, "has custom icon", holding an
+invisible `Icon` + CR file with the icon resources. The engine delivered
+both, the name's CR included, and `lsar -t` verifies all 316 entries;
+the shell set Finder info on files only, so every folder came out with
+flags `0x0000` and the Finder drew a plain one.
+
+**Decision.** The folder's own entry gets the same stamp as a file:
+flags (inited cleared) and creation and modification dates, through the
+same `StampCat`. Inside Macintosh: Files lays out `HFileInfo` and
+`DirInfo` so the flags and the two dates share offsets; type and creator
+are zero for a folder and left alone. Not on a folder merged into
+another. The modification date is overwritten by whatever the run then
+writes inside.
+
+**Measured.** `run.py --keep-disks` on the archive, the folder records
+read off the output disk's catalog (`hfs_peek.py`, MacMount's): `0x04c0`
+on the icon folders, the archive's `0x05c0` less inited, against
+`0x0000` from the build before. On System 7.0.1's Finder the `animals`
+folder shows its thirty icons. The top folder stays plain there, and
+correctly: its `Icon` file, made in 2008, holds only an `icns`, which
+System 7 cannot draw; the 1994 ones hold `ICN#` and the rest.
+
+**Not settled: why StuffIt 5.5 calls the archive damaged.** Both
+decoders here agree on every entry. That the 2008 top-level icon, added
+by a later tool, is what StuffIt objects to is a hypothesis: no StuffIt
+5.5 runs here.
+
+**Price.** CODE +92 and A5 +4 in the shipped build and the control
+alike, with the empty password's test removed: 96 B off every
+extraction's budget, `TIERS` −96 derived, `OVL_SAVED` unmoved,
+`run_tiers.py --check` moves no tally.

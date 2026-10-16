@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (200564, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (105164, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (629452, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (200468, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (105068, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (629356, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -226,7 +226,11 @@ TIERS = {
 # build, whose CODE + A5 equalled main's: +4, +4 and +6 B, behaviour and
 # not code (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*).
 # The derivation is the lower, kept.
-TIERS_CONTROL = 212928     # build/mac-resident, CODE + A5, 2026-10-16
+# **Raised by 96 B more 2026-10-16, and TIERS lowered by the same 96,
+# DERIVED**: a folder's Finder flags, the control's CODE +92 and A5 +4,
+# the shipped pair the same, so OVL_SAVED does not move (DECISIONS.md
+# 2026-10-16, *the folders that lost their icons*).
+TIERS_CONTROL = 213024     # build/mac-resident, CODE + A5, 2026-10-16
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
