@@ -3523,16 +3523,14 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     Rect box;
     ModalFilterUPP filter;
 
+    /* The request on every ask; the refusal under it, on its own line,
+     * once a password has been refused (DITL 132). */
     msg[0] = 0;
-    if (attempt > 0)
-        PStrCat(msg, S_PASS_REFUSED);
-    else {
-        PStrCat(msg, S_PASS_ENTER);
-        for (i = 0; i < (short)ph->name[0] && msg[0] < 180; i++)
-            msg[++msg[0]] = ph->name[i + 1];
-        PStrCat(msg, S_PASS_ENTER_END);
-    }
-    ParamText(msg, "\p", "\p", "\p");
+    PStrCat(msg, S_PASS_ENTER);
+    for (i = 0; i < (short)ph->name[0] && msg[0] < 180; i++)
+        msg[++msg[0]] = ph->name[i + 1];
+    PStrCat(msg, S_PASS_ENTER_END);
+    ParamText(msg, attempt > 0 ? "\p" S_PASS_REFUSED : "\p", "\p", "\p");
 
     if (ph->hide) HideWindow(ph->hide);
     ContigSample();
@@ -3553,9 +3551,14 @@ static int MacAskPassword(void *ctx, uint8_t *buf, uint16_t cap,
     PenSize(1, 1);
 
     filter = NewModalFilterUPP(PassFilter);
+    /* OK on an empty field is not an answer: it was taken for Cancel and
+     * skipped every encrypted entry (the maintainer, 2026-10-16). Only
+     * Cancel declines; OK does nothing until something is typed. A beep
+     * there cost 32 B of budget, this nothing. */
     do {
         ModalDialog(filter, &hit);
-    } while (hit != kPassOKItem && hit != kPassCancelItem);
+    } while (hit != kPassCancelItem &&
+             (hit != kPassOKItem || gPassBuf[0] == 0));
     DisposeDialog(dlg);
     if (ph->hide) ShowWindow(ph->hide);
 

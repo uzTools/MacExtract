@@ -64,8 +64,8 @@
 
 /* ---- C: password dialog --------------------------------------------- */
 
-/* The first ask: 'Enter the password for "<archive>".'. Every ask after
- * it: S_PASS_REFUSED alone. */
+/* Every ask: 'Enter the password for "<archive>".'; after a refused
+ * password, S_PASS_REFUSED as well, on the dialog's third line. */
 #define S_PASS_ENTER        "Enter the password for \""
 #define S_PASS_ENTER_END    "\"."
 #define S_PASS_REFUSED      "Incorrect password."

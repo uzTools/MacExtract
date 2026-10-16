@@ -2110,6 +2110,13 @@ def phase_password(args, appbin, workdir, shot):
         mac.key("Return")                     # Save -> extraction starts
         time.sleep(8.0)
         shot(mac, "pw-3-asked.png")
+        # OK on the EMPTY field first: it must leave the dialog up. Until
+        # 2026-10-16 it was taken for Cancel and every encrypted entry was
+        # skipped, and then nothing typed below reaches a dialog and this
+        # phase fails on the volume.
+        mac.key("Return")
+        time.sleep(3.0)
+        shot(mac, "pw-3b-empty-ok.png")
         for ch in "wrongone":                 # the refused one, first
             mac.key(ch)
         shot(mac, "pw-4-typed-wrong.png")

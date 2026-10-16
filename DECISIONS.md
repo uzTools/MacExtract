@@ -423,6 +423,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
 - 2026-10-16 (the installer that was a layer) — a chain of layers stops at an application: an installer is run, not extracted
 - 2026-10-16 (the estimate that went back up) — the time left is taken from the byte counts, not the percentage, and timed per layer
+- 2026-10-16 (the empty password) — OK on an empty password field waits for a password, and a refusal is added under the request
 
 ---
 
@@ -27042,3 +27043,31 @@ arithmetic three ways compiled to the same size. The resident control is
 CODE +20 and A5 −20, so `TIERS` does not move, and `OVL_SAVED` falls 32.
 No fixture changes tally at any of the three tiers `run_tiers.py --shipped`
 asserts (74/74, 72/74, 68/74, the same names).
+
+## 2026-10-16 (the empty password) — OK on an empty password field waits for a password, and a refusal is added under the request
+
+**Found by the maintainer** on the LC 475: OK with the password field
+empty went straight to the report, every encrypted entry skipped.
+`MacAskPassword` returned "no password" for an empty OK exactly as for
+Cancel, and the engine declines an entry it has no password for.
+
+**Decision.** OK does nothing until something has been typed; Cancel is
+the only way to decline. No beep: `SysBeep` there cost 32 B of budget,
+and this costs none.
+
+**Measured.** `interactive.py --password` now presses OK on the empty
+field before typing (*pw-3b-empty-ok*): the dialog stays up and every
+entry decrypts. The same walk on the build before fails, nothing
+decrypted, so the step can fail.
+
+**And the wording, the same day (the maintainer's).** Every ask shows
+*Enter the password for "X".*; after a refused password *Incorrect
+password.* is added on the dialog's third line, where it had replaced the
+request. It is an item of its own (DITL 132, item 5) rather than a line
+break, so a name that wraps the request onto two lines cannot push it
+off the bottom. Photographed in the same walk: the request alone on the
+first ask and after the empty OK, both lines after the wrong password.
+
+**Price, both together.** CODE +8 and A5 −8 (padding) in the shipped
+build and in the control alike: 0 B of budget, `OVL_SAVED` and `TIERS`
+unmoved, and `run_tiers.py --check` moves no tally.

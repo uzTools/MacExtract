@@ -156,7 +156,7 @@ resource 'DITL' (136, purgeable, preload) {
     }
 };
 
-/* Password dialog, for an encrypted entry. Four items, in the order the
+/* Password dialog, for an encrypted entry. Five items, in the order the
  * code tests them (kPassOKItem..kPassMsgItem in macextract_mac.c):
  *
  *   1  OK       the default button, so Return takes it
@@ -166,8 +166,10 @@ resource 'DITL' (136, purgeable, preload) {
  *               filter in PassFilter swaps the character on its way in,
  *               which is how a Mac hid a password before there was a
  *               password field to ask for
- *   4  the message, which names the archive, and on every later ask only
- *      says the last password was incorrect
+  *   4  the request, which names the archive, on every ask: two lines,
+ *      so a long name wraps without reaching item 5
+ *   5  "Incorrect password." on the third line, on every ask after a
+ *      refused one; empty on the first (the maintainer, 2026-10-16)
  */
 resource 'DLOG' (132, purgeable, preload) {
     { 80, 60, 214, 452 }, dBoxProc, visible, noGoAway, 0, 132, "",
@@ -183,7 +185,8 @@ resource 'DITL' (132, purgeable, preload) {
         { 102, 302, 122, 372 }, Button     { enabled, S_BTN_OK };
         { 102, 216, 122, 286 }, Button     { enabled, S_BTN_CANCEL };
         {  72,  20,  88, 372 }, EditText   { enabled, "" };
-        {  10,  20,  64, 372 }, StaticText { disabled, "^0" };
+        {  10,  20,  42, 372 }, StaticText { disabled, "^0" };
+        {  42,  20,  58, 372 }, StaticText { disabled, "^1" };
     }
 };
 
