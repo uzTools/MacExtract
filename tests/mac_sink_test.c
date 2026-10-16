@@ -435,6 +435,54 @@ int main(int argc, char **argv)
                         "against a %ld budget\n", gShortBy, want, 40000L);
         return ok ? 0 : 1;
     }
+    if (argc >= 2 && strcmp(argv[1], "--eta") == 0) {
+        /* The time left must not go back up on a run whose rate never
+         * changes. Replays an extraction exactly linear in time at the
+         * engine's real cadence: done moves in 8 KB steps and the dialog
+         * reads it at most every 6 ticks. Run on qemu-m68k too, where a
+         * long is the target's 32 bits. The percentage-based formula this
+         * replaced rose by up to 65 minutes here (DECISIONS.md 2026-10-16,
+         * *the estimate that went back up*).
+         *
+         * 2 s of slack: one tick of elapsed time is (t-d)/d ticks of
+         * estimate, 1.65 s at 1%, and that is TickCount's resolution, not
+         * the formula's. It can still turn a rounded minute over — once
+         * in the 4-hour, 400 MB case. Cannot see a rate that really
+         * changes, where a rise is the right answer. */
+        static const long mins[] = { 2, 16, 60, 240 };
+        static const uint32_t totals[] = { 40000UL, 3000000UL, 40000000UL,
+                                           400000000UL };
+        int ok = 1;
+        unsigned i, j;
+        for (i = 0; i < sizeof mins / sizeof mins[0]; i++)
+            for (j = 0; j < sizeof totals / sizeof totals[0]; j++) {
+                long ticks = mins[i] * 3600L, last = -1, lastNow = -6;
+                long rises = 0, worst = 0;
+                uint32_t total = totals[j], done;
+                for (done = 8192; done <= total; done += 8192) {
+                    long now = (long)((long long)ticks * done / total);
+                    long rem;
+                    if (now - lastNow < 6) continue;
+                    lastNow = now;
+                    (void)ProgressReading(now, done, total, &rem);
+                    if (rem < 0) continue;
+                    if (last >= 0 && rem > last + 2) {
+                        rises++;
+                        if (rem - last > worst) worst = rem - last;
+                    }
+                    last = rem;
+                }
+                if (rises) {
+                    fprintf(stderr, "eta: %ld min, %lu bytes: the time left "
+                            "went up %ld times, by up to %ld s\n", mins[i],
+                            (unsigned long)total, rises, worst);
+                    ok = 0;
+                }
+            }
+        fprintf(stderr, "eta: %s\n", ok ? "never goes up on a linear run"
+                                        : "FAILED");
+        return ok ? 0 : 1;
+    }
     if (argc < 3) { fprintf(stderr, "usage: %s <archive> <outdir>\n", argv[0]); return 2; }
 #ifdef UNC_AT_OVERLAY
     if (ovlbox_load_manifest(getenv("OVLBOX_IMAGES")) <= 0) {

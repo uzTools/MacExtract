@@ -145,6 +145,9 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # The figure the low-memory alert quotes. UI cannot be tested here; the
 # arithmetic behind it can, and it is the half that can go wrong quietly.
 ./build/mac_sink_asan --shortfall || { echo "mac-sink: shortfall FAILED"; exit 1; }
+# The time left in the progress dialog: it must not go back up while the
+# rate holds (DECISIONS.md 2026-10-16, *the estimate that went back up*).
+./build/mac_sink_asan --eta || { echo "mac-sink: eta FAILED"; exit 1; }
 # What the shell does to a name HFS cannot take as it stands: 31 characters
 # per component, and the collision that cutting creates numbered ~1. Its
 # own code, and until 2026-08-28 it had no test — the subjects are
@@ -166,7 +169,7 @@ if [ -f fixtures/derived-Compact_Pro_Package ]; then
     fi
     rm -rf "$out"
 fi
-echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + names + comment)"
+echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + eta + names + comment)"
 
 # The alternative write path. The default streams each chunk straight to the
 # File Manager; UNC_MAC_STAGE_WRITES accumulates whole forks in RAM and writes
@@ -201,6 +204,9 @@ if [ "$HAVE_M68K" = yes ]; then
     wait $pid_m68k || { echo "mac-sink: m68k build FAILED"; exit 1; }
     verify "qemu-m68k build/mac_sink_m68k"
     verify "qemu-m68k build/mac_sink_m68k" ram
+    # The estimate's products are sized for a 32-bit long; this is the
+    # lane where a long is 32 bits.
+    qemu-m68k build/mac_sink_m68k --eta || { echo "mac-sink: m68k eta FAILED"; exit 1; }
     echo "mac-sink: m68k big-endian OK (file + RAM paths)"
     verify "qemu-m68k build/mac_sink_m68k" "" "$BOTHFORK_FIXTURES"
     wait $pid_sb68 || { echo "mac-sink: m68k shared-block build FAILED"; exit 1; }
