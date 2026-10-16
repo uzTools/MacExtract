@@ -14,7 +14,7 @@ undated figure here is one nobody can tell is stale.
 
 | branch | what it explores | state |
 |---|---|---|
-| `rom64k` | one guard, `Has128KROM()`, so the application starts on a 64K-ROM Macintosh instead of bombing on `MaxApplZone` | starts and its interface works under emulation; cannot extract without HFS, and no hardware has run it (MANUAL_TESTS.md §6) |
+| `rom64k` | `GrowApplZone()` in place of `MaxApplZone`, so the application starts on a 64K-ROM Macintosh | **merged into `main` 2026-10-16**, after the LC 475 ran it; kept for its `BRANCH_NOTES.md` (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*) |
 
 **`selective-extract` is PARKED BY DECISION, 2026-09-26.** Choosing which
 entries come out is out of scope for the Macintosh application, and the
@@ -23,16 +23,6 @@ brief*; DECISIONS.md 2026-09-26, *the feature that was parked, and is now
 out*). Its `BRANCH_NOTES.md` prices the feature against a build that
 predates the overlays and DART's removal, so nothing in it is a current
 figure. Do not start work on it.
-
-**Merging `main` into `rom64k` deletes the guard, silently.** `main` carries
-the removal commit `2dbe26d` ("the 64K-ROM guard lives on rom64k") and the
-branch has not touched `mac/macextract_mac.c` since it forked, so git replays
-that removal with **no conflict at all** and takes the branch's whole reason
-for existing with it. Check before committing any such merge —
-`git merge-tree origin/main rom64k` and grep the result for `Has128KROM`; five
-occurrences on the tip, zero in the naive merge — and restore it afterwards
-with `git show 2dbe26d -- mac/macextract_mac.c tools/make_dist.sh | git apply
--R`. Done on 2026-09-09; DECISIONS.md that date has the general shape.
 
 **`ndif-udif` is DELETED, 2026-09-25**, at `7269acd`. NDIF and UDIF were
 built and meant to merge; expanding compressed disk images left this

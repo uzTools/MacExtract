@@ -16,7 +16,7 @@
  *   - 31-character, colon-free name sanitization with collision
  *     suffixes; the engine's reversible '/'->':' swap is undone here
  *     (':' in an engine component was '/' in the original Mac name).
- *   - SetApplLimit stack bump before MaxApplZone.
+ *   - SetApplLimit stack bump before GrowApplZone.
  *   - Engine memory goes through NewPtr with a FreeMem()-derived
  *     budget: allocation failures surface as clean per-entry errors.
  *
@@ -59,7 +59,7 @@
 
 /* Extra stack over the 8 KB default, giving a 12 KB stack.
  *
- * It is not free: SetApplLimit lowers ApplLimit and MaxApplZone then grows
+ * It is not free: SetApplLimit lowers ApplLimit and GrowApplZone then grows
  * the heap up to it, so a byte of stack is a byte off FreeMem() and therefore
  * off the engine's budget, at the same 1:1 rate CODE costs it (FORMATS.md,
  * *What the application costs the engine*). It was 24 KB, unpriced, and
@@ -248,6 +248,45 @@ static int HasPartition(void)
 {
     long zone = (long)LMGetApplLimit() - (long)ApplicationZone();
     return zone + 512L * 1024L < (long)LMGetMemTop();
+}
+
+/* Grows the application heap zone to ApplLimit, which is what MaxApplZone
+ * does, with three calls every ROM has: ask how far the zone can grow, ask
+ * for one block that big, give it back. The zone stays grown; the block
+ * leaves a free one.
+ *
+ * Source: Inside Macintosh II, The Memory Manager. II-30: MaxApplZone is
+ * `[Not in ROM]`, and Retro68 emits it as a trap, which bombs on a 64K ROM
+ * (FORMATS.md, *A true Macintosh 512K*). II-38: MaxMem returns "the size in
+ * bytes of the largest contiguous free block in the zone after the
+ * compaction", and for the original application heap zone sets grow to "the
+ * maximum number of bytes by which the zone can grow"; it "doesn't actually
+ * expand the zone". II-13: an allocation the compacted zone cannot satisfy
+ * makes the Memory Manager try "expanding the zone by the requested number
+ * of bytes (rounded up to the nearest 1K bytes)", the original application
+ * zone only and only up to its limit. MaxMem, NewPtr and DisposPtr each have
+ * a trap macro in that volume (II-38, II-36), which is the 64K ROM's.
+ * Where this zone actually ends up is a measurement, not this comment
+ * (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*).
+ *
+ * It does NOT touch the zone header, which is the Memory Manager's: Mac OS
+ * 9's Modern Memory Manager keeps its own. MaxMem also purges the zone's
+ * purgeable blocks, which MaxApplZone does not (II-30). */
+static void GrowApplZone(void)
+{
+    /* _MaxMem inline: its two results are D0 and A0 (II-38), and Multiverse
+     * can only declare that as Pascal glue, which costs 44 B of CODE here
+     * against this. */
+    register Size largest __asm__("d0");
+    register Size grow __asm__("a0");
+    Ptr p;
+    __asm__ volatile (".short 0xA11D"           /* _MaxMem */
+                      : "=r" (largest), "=r" (grow)
+                      :
+                      : "d1", "d2", "a1", "cc", "memory");
+    p = NewPtr(largest + grow);
+    if (p != NULL)
+        DisposePtr(p);
 }
 
 #ifdef UNC_MAC_AUTOTEST
@@ -574,7 +613,7 @@ static void ReserveSample(void)
 /* What the 32 KB stack is actually worth, measured rather than assumed.
  *
  * kStackBump raises the stack from the 8 KB default to 32 KB and had never
- * been priced. It is not free: SetApplLimit lowers ApplLimit and MaxApplZone
+ * been priced. It is not free: SetApplLimit lowers ApplLimit and GrowApplZone
  * then grows the heap up to it, so every byte of stack is a byte off
  * FreeMem() and therefore off the engine's budget — the same 1:1 rate CODE
  * costs it (FORMATS.md, *What the application costs the engine*).
@@ -4581,7 +4620,7 @@ int main(void)
     int ret, entries, errors;
 
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
-    MaxApplZone();
+    GrowApplZone();
     { int i; for (i = 0; i < 12; i++) MoreMasters(); }
     StackPaint();
     StackMark(&gStkSelf);
@@ -6103,7 +6142,7 @@ int main(void)
      * Multiversal import libraries; the low-memory accessor is the
      * documented equivalent (ApplLimit at 0x0130). */
     SetApplLimit((Ptr)((long)LMGetApplLimit() - kStackBump));
-    MaxApplZone();
+    GrowApplZone();
     /* Pre-allocate plenty of master pointers up front. If the File
      * Manager / Dialog Manager exhaust them mid-write, the Memory
      * Manager allocates a new master-pointer block on demand, which

@@ -419,6 +419,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-15 (the File Manager a 64K ROM has) — extracting onto an MFS disk is out of scope, and so is a 64K ROM without HFS
 - 2026-10-15 (the words in one file) — every string the application shows is in mac/macextract_strings.h
 - 2026-10-15 (the height nothing needed) — a `JPEG Lossy` image is capped in width only, and a tall one StuffIt restores now extracts
+- 2026-10-15 (the purge MaxApplZone never did) — one launch path for every ROM, and the four bytes it is not neutral by
 - 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
 - 2026-10-16 (the installer that was a layer) — a chain of layers stops at an application: an installer is run, not extracted
 
@@ -10780,6 +10781,9 @@ correct on every machine the project claims.
 
 
 ## 2026-09-01 (two byte reads) — the guard that lets a 64K-ROM Macintosh start, and why it is not a trap test
+
+**Superseded 2026-10-15** by `GrowApplZone()`, which runs on every ROM
+alike and is on `main` since 2026-10-16 (*the purge MaxApplZone never did*).
 
 **Claim: one guard makes the application start on a 64K ROM, and it costs
 nothing anywhere else.** It lives on the branch `rom64k`, not on `main`: the
@@ -26861,6 +26865,73 @@ not the size.
 **Consequence.** `run_sitcombo.py` grades the tall archive against 2.0.1's
 restore (set `settall`, optional); it fails on the capped engine. FORMATS.md,
 *Size limits*, has the row.
+
+## 2026-10-15 (the purge MaxApplZone never did) — one launch path for every ROM, and the four bytes it is not neutral by
+
+**Claim: `MaxApplZone` can be replaced on every machine by three calls the
+64K ROM has, and the zone ends where it did.** `GrowApplZone()` issues
+`_MaxMem` (largest free block in D0, growth in A0; Inside Macintosh II-38),
+asks `NewPtr` for their sum, which the Memory Manager can only satisfy by
+growing the zone (II-13), and frees it. Measured on System 6.0.8 at 1 MB: the
+zone's end equals `ApplLimit` in both builds. The maintainer asked for one
+behaviour on every machine; the `Has128KROM()` guard was two.
+
+**It is not budget-neutral, and the cause is not the code.** The budget came
+out +4, +4 and +6 B against `main` on the three asserted tiers, with the probe
+builds' `CODE` + A5 summing to the same 212,368 B. Arithmetic from section
+sizes would have called that alignment. Hybrids settled it instead,
+byte-identical to the candidate except for one trap word: `_MaxApplZone` where
+`_MaxMem` was, then also a register clear where `_NewPtr` was. With no
+`NewPtr` the budget is `main`'s to the byte on both systems tried; with a
+`NewPtr` that fails, and so purges (II-13), it is `main`'s +4 on System 6
+and +14 on System 3.0. **A same-size hybrid splits layout from behaviour in
+two runs**, where comparing two different builds can only report that they
+differ.
+
+**On System 6 the +4 is the purge; on System 3.0 the +6 is not attributed.**
+(CORRECTED the same day: this entry first gave the purge as the whole
+difference on both.) `_MaxMem` purges every purgeable block (II-38),
+`MaxApplZone` none (II-30); right after launch the purge leaves 4,492 B more
+free on System 6, and the blocks come back by the time the engine takes its
+budget. But a second candidate that never purges (below) still reads +14 B
+on System 3.0 against its own same-size `_MaxApplZone` hybrid, and nothing on
+System 6. So on System 3.0 a whole-zone `NewPtr` leaves more behind whether
+or not anything is purged, and how the +6 divides between that and the purge
+is not measured.
+
+**The purge can be avoided, and was not.** `HeapEnd` is a documented global,
+"address of end of application heap zone" (II-51; Memory, 1992, 2-104), so
+`ApplLimit − HeapEnd` is the growth without `_MaxMem`, and `CompactMem(maxSize)`
+compacts without purging (Memory, 2-71). `NewPtr(CompactMem(0x800000) +
+ApplLimit − HeapEnd)` succeeded on System 6.0.8 at 1 MB, the zone ending at
+`ApplLimit` and `FreeMem` within 36 B of `main`'s after launch. Its budget is
+−32, −32 and −18 B against `main`: on System 6 exactly its probe build's
++32 B of `CODE` + A5 (the same-size hybrid reads the same), on System 3.0
+that less the +14 above. It costs +24 B of `CODE` against `_MaxMem`'s +12, and
+`HeapEnd` was never checked on System 7 or Mac OS 9. The maintainer kept
+`_MaxMem` for its few bytes of budget; the alternative is here if the purge's
+reload at launch, never timed, ever matters.
+
+**Why `_MaxMem` is inline asm, the first in `mac/`.** It returns two values in
+two registers, and Multiverse declares it as Pascal glue: +44 B of `CODE`
+against +12 B inline. autc04/multiversal pull request 20 (open, 2026-10-15)
+generates that inline code for every trap with a register output; with it,
+this becomes a plain `MaxMem(&grow)` at the same size. It would also inline
+`PurgeSpace`, the budget's own call, whose glue is the only other one in the
+binary: hand-inlined the same way, `CODE` −80 B in all three configurations,
+CODE + A5 −64 B shipped and −96 B lazy and control. Not taken; the toolchain
+here is unpatched.
+
+**Merged into `main` 2026-10-16**, after the maintainer's LC 475 (System
+7.6.1) launched it and extracted an archive; it was built and measured on the
+branch `rom64k`, whose `BRANCH_NOTES.md` keeps the record. Re-measured on `main`'s merged
+build the same day: on the emulated 512K under MFS System 3.0 it opens
+Standard File, where the `dist/` committed before it bombs `ID = 03`;
+`run_tiers.py --check` moves no tally.
+
+**Price** (BRANCH_NOTES.md on that branch): `CODE` +12 B in `main()` in every configuration;
+A5 −12 B shipped and +20 B elsewhere, `.data` padding only; stack 0; no
+extraction lost on any Mini vMac tier or under Mac OS 9.2.
 
 ## 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
 

@@ -500,7 +500,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +36 on 2026-10-16: every file chosen in Standard File ends the launch,
 # and an application ends a chain of layers (DECISIONS.md 2026-10-16, *the
 # format that ends the launch*, *the installer that was a layer*); A5 -20.
-UNC_MAC_CODE_DEFAULT=175432
+# +12 on 2026-10-16: GrowApplZone in main() replaces MaxApplZone, which
+# a 64K ROM does not have (DECISIONS.md 2026-10-15, *the purge
+# MaxApplZone never did*; merged from the branch rom64k). A5 +20, .data
+# padding behind the longer text.
+UNC_MAC_CODE_DEFAULT=175444
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -662,7 +666,8 @@ UNC_MAC_CODE_DEFAULT=175432
 # shortened (DECISIONS.md 2026-10-15, *the words in one file*).
 # -20 on 2026-10-16, with the code ceiling's +36: the password prompt's
 # shorter wording.
-UNC_MAC_A5_DEFAULT=37464
+# +20 on 2026-10-16 with the code ceiling's +12: padding, no data added.
+UNC_MAC_A5_DEFAULT=37484
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -952,8 +957,10 @@ UNC_MAC_A5_DEFAULT=37464
 # ends the launch, and an application ends a chain of layers; the A5 is
 # the password prompt's shorter wording (DECISIONS.md 2026-10-16, *the
 # format that ends the launch*, *the installer that was a layer*).
-UNC_MAC_CODE_EAGER=55808
-UNC_MAC_A5_EAGER=18544
+# +12 code on 2026-10-16, GrowApplZone (the default pair above); A5 -12,
+# padding.
+UNC_MAC_CODE_EAGER=55820
+UNC_MAC_A5_EAGER=18532
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -998,7 +1005,8 @@ UNC_MAC_A5_EAGER=18544
 # -64 code the same day, the shim gone as in the eager pair above.
 # +56 code and +8 A5 on 2026-10-14 for the same refusal.
 # +36 code on 2026-10-16 for the same two; A5 18,636, under its ceiling.
-UNC_MAC_CODE_LAZY=54228
+# +12 code on 2026-10-16, GrowApplZone; A5 18,624, under its ceiling.
+UNC_MAC_CODE_LAZY=54240
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
