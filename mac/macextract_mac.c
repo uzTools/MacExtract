@@ -873,10 +873,38 @@ typedef struct {
     DialogPtr dlg;
     Boolean   cancelled;
     long      lastTicks;    /* TickCount of the last pump, for the 10 Hz gate */
-    long      startTicks;   /* TickCount when extraction began, for the ETA */
+    long      startTicks;   /* TickCount when this layer began, for the ETA */
     short     shownPct;     /* what the bar and the text currently say, so an */
     long      shownRem;     /* unchanged reading costs no redraw and no flicker */
 } Progress;
+
+/* What the dialog says: the percentage, returned, and the time left in
+ * whole seconds through *rem, -1 for "no estimate". Held back for the
+ * first two seconds and below 1%, where the estimate is meaningless and
+ * would show a wild number that then collapses.
+ *
+ * The time left comes from the byte counts, not the percentage, which
+ * stands still while elapsed grows and made the estimate climb
+ * (DECISIONS.md 2026-10-16, *the estimate that went back up*). Both are
+ * scaled to 16 bits so every product fits 32 bits on a 68000, where
+ * 64-bit division is a library call; elapsed*(t-d)/d in two steps since
+ * elapsed*(t-d) overflows past 18 minutes. Outside the UNC_SINK_TEST
+ * fence so tests/mac_sink_test.c --eta runs it. */
+static short ProgressReading(long elapsed, uint32_t done, uint32_t total,
+                             long *rem)
+{
+    unsigned long d = done, t = total;
+    short pct;
+
+    while (t > 0xFFFF) { t >>= 1; d >>= 1; }
+    if (d > t) d = t;
+    pct = (short)(d * 100 / t);
+    *rem = -1;
+    if (pct > 0 && elapsed > 120)
+        *rem = (long)(((unsigned long)elapsed / d * (t - d) +
+                       (unsigned long)elapsed % d * (t - d) / d) / 60);
+    return pct;
+}
 
 #ifndef UNC_SINK_TEST
 /* ---- progress bar -------------------------------------------------
@@ -994,19 +1022,8 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
     if (total == UNC_SIZE_UNKNOWN || total == 0 || !pr->dlg)
         return 1;
 
-    /* /128 first: done*100 overflows a 32-bit long past 42 MB, and this
-     * runs on a 68000 where 64-bit division is a library call. */
-    pct = (short)((done / 128) * 100 / (total / 128 + 1));
-    if (pct > 100) pct = 100;
-    if (pct < 0) pct = 0;
-
-    /* Time left, in whole seconds, from the rate so far. Held back for the
-     * first two seconds and below 1%, where the estimate is meaningless and
-     * would show a wild number that then collapses. -1 means "no estimate".
-     * elapsed*(100-pct) is at most 216,000*100, which fits. */
     elapsed = now - pr->startTicks;
-    rem = -1;
-    if (pct > 0 && elapsed > 120) rem = elapsed * (100 - pct) / pct / 60;
+    pct = ProgressReading(elapsed, done, total, &rem);
 
     /* Redraw nothing if the reading has not changed: SetDialogItemText
      * redraws the item, and at 10 Hz that flickers. */
@@ -5563,7 +5580,6 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     pr.dlg = GetNewDialog(kProgressDLOG, NULL, (WindowPtr)-1);
     pr.cancelled = false;
     pr.lastTicks = 0;
-    pr.startTicks = TickCount();
     pr.shownPct = -1;      /* forces the first tick to draw */
     pr.shownRem = -2;
     gBarPct = 0;
@@ -5637,6 +5653,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
         gShortPiece = 0;
 
         for (depth = 0; depth < 8; depth++) {
+            /* Each layer counts its own bytes from zero, so the rate is
+             * timed from where that layer started. */
+            pr.startTicks = TickCount();
             ret = RunExtract(curVol, curDir, curName, outVol, outDir,
                              vRefNum, dirID,
                              &prog, &entries, &errors, &shape);

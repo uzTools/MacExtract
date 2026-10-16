@@ -422,6 +422,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-15 (the purge MaxApplZone never did) — one launch path for every ROM, and the four bytes it is not neutral by
 - 2026-10-16 (the format that ends the launch) — one file chosen in the Open dialog ends the launch, whatever became of it
 - 2026-10-16 (the installer that was a layer) — a chain of layers stops at an application: an installer is run, not extracted
+- 2026-10-16 (the estimate that went back up) — the time left is taken from the byte counts, not the percentage, and timed per layer
 
 ---
 
@@ -26993,3 +26994,51 @@ at a `.sea` is accepted as what a user may expect (the maintainer,
 **Price.** Shipped CODE +32 on its own (the type carried from the sink to
 `ExtractOne`), A5 0; the same commit's `gDropLeft` change took back what
 the flag above had cost, so the day nets +16 B against 2026-10-15.
+
+## 2026-10-16 (the estimate that went back up) — the time left is taken from the byte counts, not the percentage, and timed per layer
+
+**Seen by the maintainer** on a StuffIt 5 archive: the progress dialog's
+time left went back up by one. **Not specific to StuffIt 5** (measured):
+the estimate was `elapsed * (100 - pct) / pct`, from the WHOLE percentage.
+Within one percent `elapsed` grows and `pct` does not, so the estimate
+climbs until the next percent and then drops. Replayed on a run whose rate
+never changes, at the engine's real cadence (8 KB steps, read at most
+every 6 ticks), it went up 211 times in an hour on a 3 MB archive, by up
+to 16 minutes, and by up to 65 minutes in four hours. The longer a percent
+lasts, the larger the climb, which is why only large archives showed it.
+That this is what the maintainer saw is a hypothesis: their archive was
+not run here.
+
+**The engine was ruled out first** (measured): the CLI logged every
+callback for 759 fixtures, and `done` never goes down within one total.
+The one exception, `uu-wild-terrainman.uu`, is a second pass over the
+same file in the CLI.
+
+**Decision.** `ProgressReading` computes the estimate from `done` and
+`total` themselves: both are shifted down until `total` fits 16 bits, and
+`elapsed * (t - d) / d` is taken as `elapsed / d * (t - d)` plus
+`elapsed % d * (t - d) / d`. Every product fits a 32-bit unsigned long,
+with no 64-bit division (none is linked). The same replay now finds no rise
+over 2 s anywhere up to 400 MB and four hours. That 2 s is TickCount's
+resolution: one tick of `elapsed` is `(t - d) / d` ticks of estimate,
+1.65 s at 1%. It can still turn a rounded minute over once in the 4-hour,
+400 MB case. Above 512 MB the 16-bit `d` is coarser than the engine's
+8 KB step and the climb returns, in smaller steps.
+
+**And each layer is timed from its own start.** `startTicks` was set
+once per file, so in `X.sit.hqx` the inner archive's rate counted the
+BinHex layer's time while its `done` started again from zero. It is now
+reset before each layer. Read from the code, not observed on a Macintosh.
+
+**Test.** `mac_sink_test --eta` runs that replay through the real
+function, natively and on qemu-m68k, where a long is 32 bits. With the old
+formula put back it fails 12 of its 16 cases. It cannot see a rate that
+really changes, where a rise is the right answer.
+
+**Price.** Shipped CODE +20 (`prog_tick` +14, `ExtractOne` +8). A5 +12,
+which is 12 zero bytes of `.data` alignment padding; nothing else in
+`.data` moved. Every extraction's budget is 32 B smaller. Rewording the
+arithmetic three ways compiled to the same size. The resident control is
+CODE +20 and A5 −20, so `TIERS` does not move, and `OVL_SAVED` falls 32.
+No fixture changes tally at any of the three tiers `run_tiers.py --shipped`
+asserts (74/74, 72/74, 68/74, the same names).

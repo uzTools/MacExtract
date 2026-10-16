@@ -14,6 +14,7 @@ undated figure here is one nobody can tell is stale.
 
 | branch | what it explores | state |
 |---|---|---|
+| `eta-backstep` | the progress dialog's time left from the byte counts, so it no longer climbs within a percent; timed per layer | **ready to merge after the release**, 2026-10-16: a steady 1-hour run rose by up to 16 min on `main`, never over 2 s here; +20 B CODE |
 | `rom64k` | `GrowApplZone()` in place of `MaxApplZone`, so the application starts on a 64K-ROM Macintosh | **merged into `main` 2026-10-16**, after the LC 475 ran it; kept for its `BRANCH_NOTES.md` (DECISIONS.md 2026-10-15, *the purge MaxApplZone never did*) |
 
 **`selective-extract` is PARKED BY DECISION, 2026-09-26.** Choosing which

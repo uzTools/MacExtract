@@ -517,7 +517,12 @@ EXPECT = {
 # 2026-10-14, *the file the disk was too full for*).
 # **+32 2026-10-16, -> 138,576**: GrowApplZone, the control's +32
 # against the shipped pair's 0 (CODE +12, A5 -12).
-OVL_SAVED = 138576
+# **-32 the same day, -> 138,544**: the time left from the byte counts,
+# the control's 0 (CODE +20, A5 -20) against the shipped pair's +32
+# (CODE +20, A5 +12, padding); no image moved, so every format's grant
+# falls 32 B and TIERS does not move (DECISIONS.md 2026-10-16, *the
+# estimate that went back up*).
+OVL_SAVED = 138544
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
