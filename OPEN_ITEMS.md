@@ -8,7 +8,7 @@
    numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 974 fixtures in `./ci.sh`. Detail lives once — status in
+oracle across 978 fixtures in `./ci.sh`. Detail lives once — status in
 BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
 TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
@@ -167,15 +167,34 @@ info*), less what this table still names. The leads —
 Closing a row: the reader delivers the field with a `Source:` and a grade,
 and `tools/run_meta.py` holds it.
 
+## Mac OS X's sidecars: what they hold and the engine does not read
+
+Since 2026-10-17 a zip's `__MACOSX/…/._name` and a tar's `._name` are put
+back on their file (DECISIONS.md, *the sidecars Mac OS X left beside the
+file*). Left, none with a specimen here:
+
+- **The Spotlight comment**: the extended attribute
+  `com.apple.metadata:kMDItemFinderComment`, a binary property list,
+  after the Finder info. A bplist reader and a Unicode-to-MacRoman table;
+  the maintainer's call.
+- **A zip entry's Unix time** (`0x5455`/`0x5855`), which Mac OS X writes
+  beside the MS-DOS one: exact, but UTC; the engine keeps the MS-DOS
+  wall clock. The maintainer's call.
+- **A tar sidecar written after its file**: out as itself. bsdtar never
+  writes that order; a pax header between the two is stepped over, but no
+  specimen has one (hypothesis: bsdtar writes one for a non-ASCII name).
+
 ## System 7.0.1 rewrites one byte of FXInfo
 
 FXInfo +9 (`fdXFlags`) reads 0x70 on a System 7.0.1 output disk where the
 shell wrote the archive's 0x00, measured 2026-10-17 by
 `tools/vmac/metarun.py`; System 6.0.8 and 3.0 keep it, and with no FXInfo
-written it stays 0x00 on 7.0.1 too (DECISIONS.md 2026-10-17). Who writes
-it, and whether `fdScript` 0x81 is the cause, is not measured. Closes with
-a run that tells the two apart: the same file with `fdScript` 0, and FXInfo
-read back by the autotest before the Finder can see the file.
+written it stays 0x00 on 7.0.1 too (DECISIONS.md 2026-10-17). **Not
+`fdScript`**: a file with `fdScript` 0 came back 0x70 the same way, and
+another with `fdScript` 0 did not (DECISIONS.md 2026-10-17, *the sidecars
+Mac OS X left beside the file*). The two that changed are both locked and
+both given a comment (hypothesis). Closes with a run that separates those
+two, FXInfo read back by the autotest before the Finder can see the file.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 

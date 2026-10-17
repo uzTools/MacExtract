@@ -881,6 +881,15 @@ def build_manifest(fixture_path, verbose=False):
                 # about a directory is ground truth here.
                 if p in meta and meta[p][2] is not None:
                     ent["finder_flags"] = meta[p][2]
+                # A folder's own AppleDouble, "._" + its name beside it —
+                # what unar writes for a folder whose Finder info it read
+                # (a Mac OS X sidecar, 2026-10-17). Its frFlags are the
+                # folder's; the eight bytes in front of them are a
+                # rectangle, not a type and a creator.
+                if "._" + d in fs:
+                    fflags = parse_appledouble(os.path.join(root, "._" + d))[3]
+                    if fflags is not None:
+                        ent["finder_flags"] = fflags
                 entries.append(ent)
             # One entry per name, whether it arrived as a data-fork
             # file, a "._" sidecar, or both. A sidecar with no data
@@ -888,7 +897,7 @@ def build_manifest(fixture_path, verbose=False):
             # unar writes nothing for a 0-byte data fork (resource-only
             # entries, e.g. PackIt members and FKEY/cdev files).
             for base in sorted({f[2:] if f.startswith("._") else f
-                                for f in fs}):
+                                for f in fs} - (set(dirs) - fs)):
                 p = norm(os.path.normpath(os.path.join(rel, base)))
                 ent = {
                     "name": p,

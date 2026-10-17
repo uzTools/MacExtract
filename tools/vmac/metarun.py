@@ -5,8 +5,9 @@
     tools/vmac/metarun.py --check RUNDIR       # grade disks a run kept
     tools/vmac/metarun.py --expander [--check-expander RUNDIR]
 
-Extracts `synth-as-meta.as`, `synth-sqp-meta.pkg` and `nested.pkg` (made
-per run: A/x, A/B/y, A/z with a date on each folder) with the autotest
+Extracts `synth-as-meta.as`, `synth-sqp-meta.pkg`, `nested.pkg` (made
+per run: A/x, A/B/y, A/z with a date on each folder) and `synth-macosx.zip`
+(Mac OS X's sidecars, tools/synth_macosx.py) with the autotest
 build and `-D UNC_AT_DTCOMMENT` (tools/vmac/run.py, or sys30.py for the
 System 3.0 tier), keeps the disks, and reads back what the shell wrote:
 
@@ -56,9 +57,11 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 import hfscat                                                   # noqa: E402
 import synth_as                                                 # noqa: E402
 import synth_sqp                                                # noqa: E402
+import synth_macosx                                             # noqa: E402
 
 EPOCH_2000 = 0xB492F400
-FIX = ("synth-as-meta.as", "synth-sqp-meta.pkg", "nested.pkg")
+FIX = ("synth-as-meta.as", "synth-sqp-meta.pkg", "nested.pkg",
+       "synth-macosx.zip")
 # `nested.pkg` is generated per run into .tmp/ (nested_items): files
 # written into a folder after one of its subfolders, A/x, A/B/y, A/z, with
 # a date on each folder (DECISIONS.md 2026-10-17, *the date held once per
@@ -130,6 +133,27 @@ def expected():
             w["locked"] = 0
         e[path.replace("/", ":")] = w
     exp["synth-sqp-meta.pkg"] = e
+    # Mac OS X's sidecars, put on their files (tools/synth_macosx.py): the
+    # whole Finder info of each, the folder's DInfo/DXInfo, and Meta's RFC
+    # 1740 entries — its dates, its lock and its comment.
+    m = synth_macosx.describe("zip")["emit"]
+    e = {}
+    for path, w in m.items():
+        g = {}
+        if w["finfo"] != "-":
+            g["finfo"] = shell_finfo(bytes.fromhex(w["finfo"])).hex()
+            g["fxinfo"] = shell_fxinfo(bytes.fromhex(w["fxinfo"]),
+                                       path == "Folder").hex()
+        if path != "Folder":
+            g["locked"] = 1 if w["lock"] == "L" else 0
+        if w["comment"] != "-":
+            g["comment"] = bytes.fromhex(w["comment"])
+        e[path.replace("/", ":")] = g
+    md = synth_macosx.META_DATES
+    e["Folder:Meta"].update(cr=(md[0] + EPOCH_2000) & 0xFFFFFFFF,
+                            md=(md[1] + EPOCH_2000) & 0xFFFFFFFF,
+                            bk=(md[2] + EPOCH_2000) & 0xFFFFFFFF)
+    exp["synth-macosx.zip"] = e
     exp["nested.pkg"] = {"A": dict(cr=0xB0000000, md=0xB0000001),
                          "A:B": dict(cr=0xB0000010, md=0xB0000002),
                          "A:x": dict(locked=0), "A:B:y": dict(locked=0),

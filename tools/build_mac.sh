@@ -546,7 +546,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # SuperDisk!, Private File, ArcMac, zip, tar, gzip and LZH, with a copy of
 # the MS-DOS date conversion in each of the three files that use it. The
 # shipped and lazy pairs do not move. A5 37,552.
-UNC_MAC_CODE_DEFAULT=182192
+# +4,084 code and +12 A5 on 2026-10-17 for Mac OS X's sidecars, every
+# image's code resident here: src/unc_sidecar.c, new, zip's half of them in
+# src/fmt_exo.c and tar's in src/fmt_tar.c (DECISIONS.md 2026-10-17, *the
+# sidecars Mac OS X left beside the file*).
+UNC_MAC_CODE_DEFAULT=186276
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -715,7 +719,7 @@ UNC_MAC_CODE_DEFAULT=182192
 # +72 on 2026-10-17 with the code ceiling's +4,520: three copies of the
 # 24-byte days-before-month table, resident in this configuration only.
 # -12 on 2026-10-17 with the code ceiling's +428: padding.
-UNC_MAC_A5_DEFAULT=37536
+UNC_MAC_A5_DEFAULT=37548
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1053,8 +1057,13 @@ UNC_MAC_A5_DEFAULT=37536
 # 2026-10-17, *the envelopes' own Finder info*).
 # +12 code and -12 A5 on 2026-10-17 at the merge of meta-envelopes, the
 # same mask: 0 B of budget.
+# +0 code and +32 A5 on 2026-10-17 for Mac OS X's sidecars: nine host-vector
+# slots (the sidecar code ovl_zipold patches in for zip's reader in
+# ovl_exo, and unc_copy_fork for tar), 36 B, less alignment. **32 B off
+# every extraction's budget**; the code is all in images (DECISIONS.md
+# 2026-10-17, *the sidecars Mac OS X left beside the file*).
 UNC_MAC_CODE_EAGER=57312
-UNC_MAC_A5_EAGER=18544
+UNC_MAC_A5_EAGER=18576
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.

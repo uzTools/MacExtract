@@ -113,6 +113,8 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_ccube\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_exo\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tar\\.c$")
+    # The Mac OS X sidecars zip and tar share are ovl_zipold's too.
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_sidecar\\.c$")
     # zlib and the inflate wrapper go with them: fmt_exo is their only caller,
     # so nothing resident is left needing deflate.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_inflate\\.c$")
@@ -672,8 +674,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_lzah.c
             ${OVL_DEPS})
 
-# Zip's Shrink and Reduce, kept for zip alone, and tar's reader, kept for a
-# tar (tools/overlay/ovl_zipold.c).
+# Zip's Shrink and Reduce, kept for zip alone, tar's reader, kept for a
+# tar, and the Mac OS X sidecars both share (tools/overlay/ovl_zipold.c).
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
     COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_ZIPOLD
@@ -686,6 +688,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/fmt_tar.c
             ${ENGINE_DIR}/src/fmt_exo_probe.c
+            ${ENGINE_DIR}/src/unc_sidecar.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold_exports_gen.h
@@ -693,6 +696,7 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_reduce.c
             ${ENGINE_DIR}/src/fmt_tar.c
             ${ENGINE_DIR}/src/fmt_exo_probe.c
+            ${ENGINE_DIR}/src/unc_sidecar.c
             ${OVL_DEPS})
 
 add_custom_command(

@@ -49,6 +49,8 @@ unc_readline unc_crypt_packit_des unc_crypt_packit_xor unc_crypt_rc4
 unc_crypt_sit unc_crypt_sit5_key unc_crypt_free unc_entry_long_name
 unc_zip_scan_eocd unc_skip unc_crypt_zip unc_crypt_winzip_aes
 unc_hmac_final unc_crypt_apply unc_crypt_pf unc_as_record
+unc_ad_init unc_ad_feed unc_ad_end unc_ad_apply unc_side_kind unc_side_of
+unc_side_zip_open unc_side_zip_pair unc_copy_fork
 """.split()
 
 HEADERS = ("src/unc_internal.h", "include/macextract.h")
@@ -74,8 +76,12 @@ unc_lzw_free unc_lzw_init unc_lzw_read
 
 # Zip's Shrink and Reduce, which only zip calls: their own image, kept for
 # zip alone, patching itself into the vector the same way (ovl_zipold.c).
+# The Mac OS X sidecars too, since 2026-10-17, which zip calls from ovl_exo
+# and tar from inside this image.
 ZIPOLD = """
 unc_shrink_decode unc_reduce_decode
+unc_ad_init unc_ad_feed unc_ad_end unc_ad_apply unc_side_kind unc_side_of
+unc_side_zip_open unc_side_zip_pair
 """.split()
 
 

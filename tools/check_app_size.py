@@ -218,7 +218,10 @@ TAKEN = "2026-10-14"
 # `ovl_lzh` +1,626, `ovl_stuffit` +584, `ovl_arc` +366, `ovl_now` +86,
 # `ovl_superdisk` +84, `ovl_packit` +12, `ovl_exo` -388 (DECISIONS.md
 # 2026-10-17, *the archives' own Finder info*).
-EXPECT_BUNDLE = 172564
+# -> 176,908 the same day: Mac OS X's sidecars, `ovl_zipold` +3,374 and
+# `ovl_exo` +972 (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left
+# beside the file*).
+EXPECT_BUNDLE = 176908
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-14"
 

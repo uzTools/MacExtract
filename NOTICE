@@ -94,6 +94,16 @@ hand.
                        the transcription is BinHex 2.0's own output
                        from known input (tools/vmac/binhex2.py) and
                        three 1985 files whose sums verify.
+  src/unc_sidecar.c    Mac OS X's AppleDouble sidecars: which names are
+                       sidecars (a leaf starting "._", an optional first
+                       component "__MACOSX"), that folders under
+                       __MACOSX are not emitted, what makes the file a
+                       sidecar (magic, version, entry 2 or 9, a Finder
+                       info of 32 zero bytes stating none) and that one
+                       pairs with the file beside it — XADMacArchiveParser.m
+                       and XADAppleDouble.m. Facts, not code; the writers
+                       they describe are cited from Apple's copyfile and
+                       libarchive (both permissive).
   src/unc_internal.h   the LZAH preload above. The MIME line rule left
                        on 2026-10-05 for deark's dbuf_find_line, which
                        is in the same file this header already cited

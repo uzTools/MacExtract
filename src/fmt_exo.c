@@ -55,12 +55,18 @@ typedef struct ExoSink {
      * thing over a whole archive: this one is the engine's own and
      * lasts one pass. */
     uint8_t  dry;
+    /* A Mac OS X sidecar's header, captured before its file's entry is
+     * offered (zip_side): fed, written nowhere, and the decode
+     * stopped once the capture has all it wants. */
+    UncAdCap *side;
 } ExoSink;
 
 static int exo_emit(void *ctx, const uint8_t *p, int32_t n)
 {
     ExoSink *s = (ExoSink *)ctx;
 
+    if (s->side)
+        return unc_ad_feed(s->side, p, (uint32_t)n) ? UNC_ERR_SINK : UNC_OK;
     /* Peek mode: capture the first 128 bytes and write NOTHING —
      * begin_entry has not been called yet. Once they are in hand the
      * decode is stopped by failing the callback, which is the only
@@ -124,7 +130,7 @@ static void exo_sink_init(ExoSink *s, UncCtx *c)
 {
     s->c = c; s->failed = 0; s->split = 0; s->pos = 0;
     s->ds = s->de = s->rs = s->re = 0;
-    s->head = NULL; s->headgot = 0; s->dry = 0;
+    s->head = NULL; s->headgot = 0; s->dry = 0; s->side = NULL;
 }
 
 static void exo_hint_name(UncCtx *c, UncEntryInfo *e)
@@ -765,6 +771,19 @@ static int zip_decode(UncCtx *c, UncBufIn *in, ExoSink *es, uint32_t method,
     return est;
 }
 
+/* Position the reader at an entry's data, past its local header's name
+ * and extra field: 1 if it is there. Source: APPNOTE.TXT 4.3.7, the
+ * 30-byte local header whose name and extra lengths are at +26 and +28. */
+static int zip_at_data(UncCtx *c, uint32_t part, uint32_t lhoffs)
+{
+    uint8_t lh[30];
+    return zip_seek(c, part, lhoffs) == UNC_OK &&
+           unc_read_full(c->io, lh, 30) == UNC_OK &&
+           lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4 &&
+           zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
+                       unc_get_u16le(lh + 28)) == UNC_OK;
+}
+
 /* ZipIt's MacBinary payload: the first 128 decoded bytes of an entry,
  * so the header can be read before begin_entry is called.
  *
@@ -792,18 +811,13 @@ static int zip_mb_peek(UncCtx *c, uint32_t part, uint32_t lhoffs,
                        uint8_t *mb, uint8_t *iobuf, uint32_t iocap,
                        uint8_t *obuf, uint32_t ocap)
 {
-    uint8_t lh[30];
     UncBufIn in;
     ExoSink es;
     uint32_t crc = UNC_CRC32_INIT, done0;
     int err;
 
     if (usize < 128 || usize == UNC_SIZE_UNKNOWN) return 0;
-    if (zip_seek(c, part, lhoffs) != UNC_OK ||
-        unc_read_full(c->io, lh, 30) != UNC_OK) return 0;
-    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
-    if (zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
-                    unc_get_u16le(lh + 28)) != UNC_OK) return 0;
+    if (!zip_at_data(c, part, lhoffs)) return 0;
 
     exo_sink_init(&es, c);
     es.head = mb;
@@ -890,18 +904,13 @@ static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
                        uint8_t *iobuf, uint32_t iocap,
                        uint8_t *obuf, uint32_t ocap)
 {
-    uint8_t lh[30];
     UncBufIn in;
     ExoSink es;
     uint32_t crc = UNC_CRC32_INIT;
     uint32_t done0;
     int err;
 
-    if (zip_seek(c, part, lhoffs) != UNC_OK ||
-        unc_read_full(c->io, lh, 30) != UNC_OK) return 0;
-    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
-    if (zip_skip(c, (uint32_t)unc_get_u16le(lh + 26) +
-                    unc_get_u16le(lh + 28)) != UNC_OK) return 0;
+    if (!zip_at_data(c, part, lhoffs)) return 0;
 
     exo_sink_init(&es, c);
     es.dry = 1;
@@ -919,6 +928,68 @@ static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
  * the Zip64 extra field instead. Not a ceiling: the format's own
  * escape, which happens to be all-ones. */
 #define ZIP64_ESC32 0xFFFFFFFFu
+
+/* A Mac OS X sidecar, the record at `srel` of the directory in memory,
+ * decoded whole. With `rsrc` 0 it is read only far enough to capture its
+ * AppleDouble head, once — the file and the sidecar each ask, and the
+ * capture of the last one asked is kept — and the answer is 1 if it is a
+ * sidecar, 0 if it is to come out as a file, <0 a Cancel. With `rsrc` 1,
+ * after its file's data fork, entry 2's span goes to the sink and the
+ * sidecar's own CRC-32 is checked: one that fails it fails its file.
+ *
+ * The first pass is zip_mb_peek's, and for the same reason: the fork's
+ * size and the Finder info are what the FILE's entry is offered with, and
+ * the sidecar may come after it. Its fields are the central record's own
+ * — flags +8, method +10, CRC-32 +16, sizes +20 and +24, start disk +34,
+ * local header +42 (APPNOTE.TXT 4.3.12) — and an encrypted one, or one
+ * whose sizes need Zip64, is not paired: it comes out as itself. */
+static int zip_side(UncCtx *c, UncSideZip *z, uint32_t srel, int rsrc,
+                    uint8_t *iobuf, uint32_t iocap,
+                    uint8_t *obuf, uint32_t ocap)
+{
+    const uint8_t *cd = z->cd + srel;
+    uint32_t csize = unc_get_u32le(cd + 20), usize = unc_get_u32le(cd + 24);
+    uint32_t flags = unc_get_u16le(cd + 8);
+    uint32_t crc = UNC_CRC32_INIT, done0 = c->ps.done;
+    UncBufIn in;
+    ExoSink es;
+    int err;
+
+    if (!rsrc) {
+        if (z->caprel == srel) return z->cap.state == UNC_AD_YES;
+        z->caprel = srel;
+        unc_ad_init(&z->cap, usize);
+        if ((flags & 0x0001) || csize == ZIP64_ESC32 || usize == ZIP64_ESC32)
+            goto peeked;
+    }
+    if (!zip_at_data(c, unc_get_u16le(cd + 34), unc_get_u32le(cd + 42))) {
+        if (rsrc) return UNC_ERR_CORRUPT;
+        goto peeked;
+    }
+    exo_sink_init(&es, c);
+    if (rsrc) {
+        es.split = 1;
+        es.rs = z->cap.roff;
+        es.re = z->cap.roff + z->cap.rlen;
+    } else {
+        es.side = &z->cap;
+    }
+    unc_bufin_init(&in, c->io, &c->ps, iobuf, iocap);
+    in.limit = csize;
+    err = zip_decode(c, &in, &es, unc_get_u16le(cd + 10), flags, usize,
+                     &crc, 0, obuf, ocap);
+    if (rsrc)
+        return err == UNC_OK && ~crc != unc_get_u32le(cd + 16)
+             ? UNC_ERR_CRC : err;
+    c->ps.done = done0;              /* counted by the fork's own pass */
+    if (err == UNC_ERR_ABORTED) {
+        z->caprel = UNC_SIZE_UNKNOWN;
+        return err;
+    }
+  peeked:
+    unc_ad_end(&z->cap);
+    return z->cap.state == UNC_AD_YES;
+}
 
 /* 0x334d's Finder flags and dates, which the CENTRAL directory does not
  * carry: deark's ef_infozipmac reads type and creator and then
@@ -1317,6 +1388,8 @@ int unc_zip_extract(UncCtx *c)
     ZipScan scan;
     uint32_t i;
     int err = UNC_OK;
+    /* Mac OS X's sidecars, when the directory names any (unc_sidecar.c). */
+    UncSideZip *sd = NULL;
     /* Which minimum match length this archive's Implode entries were
      * written with: -1 not settled yet, 0 APPNOTE.TXT 5.3.4's reading,
      * 1 PKZIP 1.01/1.02's. Per ARCHIVE and not per entry, which is what
@@ -1506,6 +1579,10 @@ int unc_zip_extract(UncCtx *c)
         }
     }
 
+    /* Pairing a sidecar with its file wants the whole directory: without
+     * it, a sidecar comes out as the file it is stored as. */
+    if (cdbuf) sd = unc_side_zip_open(c->al, cdbuf, cdsize, nentries);
+
     cdrel = 0;                    /* bytes into the directory, either way */
     for (i = 0; i < nentries; i++) {
         uint32_t method, flags, wantcrc, csize, usize;
@@ -1520,7 +1597,7 @@ int unc_zip_extract(UncCtx *c)
         uint32_t aesmethod;
         const uint8_t *cd, *namep;
         uint8_t namebuf[256];
-        uint32_t nread, plen;
+        uint32_t nread, plen, srel;
         int isdir, namesub;
         UncEntryInfo e;
         int sret, est;
@@ -1577,6 +1654,10 @@ int unc_zip_extract(UncCtx *c)
         isdir = plen > 0 && namep[plen - 1] == '/';
         while (plen > 0 && namep[plen - 1] == '/') plen--;
         namesub = 0;
+        /* The folders Mac OS X keeps its sidecars in are not the user's:
+         * never emitted (XADMacArchiveParser.m, -addEntryWithDictionary:). */
+        if (isdir && unc_side_kind(namep, plen, 1) == UNC_SIDE_DIR)
+            goto next_rec;
 
         /* The extra fields, for AES and for Zip64. Where the directory
          * is in memory they are read in place; where it is being
@@ -1823,6 +1904,27 @@ int unc_zip_extract(UncCtx *c)
                 if (!e.mod_date) e.mod_date = mdd;
             }
             mbok = 1;
+        }
+
+        /* A Mac OS X sidecar: put on its file, which takes its Finder
+         * info, comment, dates, lock and resource fork; not emitted itself
+         * when its file takes it. One that pairs with nothing, or is not
+         * AppleDouble, comes out as itself. */
+        srel = UNC_SIZE_UNKNOWN;
+        if (sd && !mbok) {
+            int side;
+            uint32_t t = unc_side_zip_pair(sd, cdrel, &side);
+            if (t != UNC_SIZE_UNKNOWN) {
+                sret = zip_side(c, sd, side ? cdrel : t, 0,
+                                iobuf, iocap, obuf, ocap);
+                if (sret < 0) { err = sret; break; }
+                if (sret && side) goto next_rec;
+                if (sret) {
+                    srel = t;
+                    unc_ad_apply(&sd->cap, &e);
+                    if (!e.is_dir) e.rsrc_size = sd->cap.rlen;
+                }
+            }
         }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -2086,6 +2188,9 @@ int unc_zip_extract(UncCtx *c)
                 }
             }
           entry_done:
+            if (est == UNC_OK && srel != UNC_SIZE_UNKNOWN &&
+                sd->cap.rlen && !c->opt.list_only)
+                est = zip_side(c, sd, srel, 1, iobuf, iocap, obuf, ocap);
             if (c->sink->end_entry(c->sink->ctx, est) < 0) {
                 err = UNC_ERR_SINK;
                 break;
@@ -2096,9 +2201,11 @@ int unc_zip_extract(UncCtx *c)
             }
         }
 
+      next_rec:
         cdrel += 46 + namelen + extralen + commentlen;
     }
 
+    unc_free(c->al, sd);
     unc_free(c->al, fcmt);
     unc_free(c->al, cmt);
     unc_free(c->al, cdbuf);

@@ -16,6 +16,13 @@ ten other fixtures have no manifest — the six `.1`/`.2` parts,
 cannot produce a manifest for any of them anyway. Each is graded by the
 suite that owns it (TESTING.md).
 
+**Two fixtures are a step from their URL.** `libarchive-zip-mac-metadata.zip`
+is libarchive's test file, uuencoded there: `uudecode` it. And the Mac OS X
+sidecar specimens (`Aqua_Candy_Two.zip`, a Finder zip from a 2006 Macworld
+UK disc; `synth-macosx*`) are graded by `tools/run_meta.py` as well as by
+the manifests, which cannot state the `-edge` pair at all (DECISIONS.md
+2026-10-17, *the sidecars Mac OS X left beside the file*).
+
 | name | sha256 | size | url |
 |---|---|---|---|
 | 12x24fkey.bin | c90c11f10b1724b679b4db0495f2a8740f7f57c6d7abae3e8dd87dcb1c25c836 | 562 | http://www.nic.funet.fi/pub/mac/fkey/12x24fkey.bin |
@@ -27,6 +34,7 @@ suite that owns it (TESTING.md).
 | 606updateinit.bin | 0f3c22b8216966afc30b17659b923b19076e37251371e402aba259864af2cd5d | 887 | http://www.nic.funet.fi/pub/mac/init/606updateinit.bin |
 | 800saywhat-301-jp.hqx | 00dfbc3f9405caa2fc46e4a515568c5ec5c5adc9ea0cbecb42f33ffa7bcde9b9 | 123700 | http://www.nic.funet.fi/index/info-mac/info/800saywhat-301-jp.hqx |
 | ACInfo_Comm.sit.bin | e6b0745c08f0a10c07634f70533ea6829b32fe61e694dd6eade2ea5e8e75ef8d | 159360 | http://www.nic.funet.fi/pub/mac/comm/ACInfo_Comm.sit.bin |
+| Aqua_Candy_Two.zip | b2a13ccd249ea7d0a966016bcf898c3cf2551be13c9f262790be475fc19d454b | 4166883 | https://discmaster.textfiles.com/file/32070/MW_UK_2006_06.iso/New%20icon%20sets/Aqua%20Candy%20Two.zip |
 | IIfxserialswitch.bin | 6180632670c941bf1f5576c0d707b3998f0dd819f2fd2edd2c8210d7e5f98f6b | 3180 | http://www.nic.funet.fi/pub/mac/cdev/IIfxserialswitch.bin |
 | MrTs_Paint_Folder.zip | 3dccac5974d2f4289f50c1cc10773a0283ea852705f79506be94874212ed0cc8 | 1019 | https://discmaster.textfiles.com/file/43251/EVN.zip/EVN/Plugins/Mr.Ts_Paint.sea/Mr.T%27s%20Paint.sea/Mr.T%27s%20Paint%20Folder.zip |
 | NPWritersKit.zip | 24a95a079c91037a806da458658d49cd58cbf8fa2e69c8403ac5bdeb51b9e6af | 55970 | https://discmaster.textfiles.com/file/11927/ftp.mactech.com.zip/ftp.mactech.com/ftp.mactech.com/netprofessional/writerskit/NPWritersKit.zip |
@@ -721,6 +729,7 @@ suite that owns it (TESTING.md).
 | lhasa-maclha-l2_lh1.lzh | 94d978ddc8256682428b77646ecbdbd51bc871db59d92b63a225c98ccf1a6fde | 7290 | synthetic:tools/get_lhasa_fixture.py maclha_224/l2_lh1.lzh |
 | lhasa-os2_208-h3_lh5.lzh | d980d1ddc47323fc860b0fb7829d72ce26afbe1f3f59f89e52f0eda54f425212 | 7075 | synthetic:tools/get_lhasa_fixture.py lha_os2_208/h3_lh5.lzh |
 | lhasa-unix114i-h2_lh7.lzh | 9583432d69fe54dc705b87144a4f7a638f4df5843a0e79e769d962680b5a0d5c | 6884 | synthetic:tools/get_lhasa_fixture.py lha_unix114i/h2_lh7.lzh |
+| libarchive-zip-mac-metadata.zip | c64dcbffe3b6edf6545d5be088d3aa455e577c6883b20a205ee0976eef6e2a78 | 615 | https://raw.githubusercontent.com/libarchive/libarchive/v3.7.4/libarchive/test/test_read_format_zip_mac_metadata.zip.uu |
 | library-isbn-barcoder-101.hqx | 0d08b1afe726ec2240c873a9801530143779c8cbc1b567f5f97c3ef0eab7ed21 | 274040 | http://www.nic.funet.fi/index/info-mac/sci/library-isbn-barcoder-101.hqx |
 | life_v1_0.cpt | a142d55e1153054d207a7dc6792c01ebf1d287cd0c125a2169af8cb45f6c4574 | 45394 | http://www.nic.funet.fi/pub/mac/games/life_v1_0.cpt |
 | lingo-library-15.hqx | f87c994cb8b922d9e5db71a5e81ededfe9e9eef51cb98d43ca012b39de7243b5 | 205025 | http://www.nic.funet.fi/index/info-mac/dev/lingo-library-15.hqx |
@@ -923,6 +932,10 @@ suite that owns it (TESTING.md).
 | synth-exo-zip-implode.zip | cf7fae26f4fc84a10ddda54e82000d1223a9987b792175d31e0134395d0adcf0 | 34799 | synthetic:tools/synth_implode.py |
 | synth-exo-zip-reduce.zip | c6bbaed32158f95e211903c4f08428652aaab749627dfa45fed4158e622624c6 | 6516 | synthetic:tools/synth_reduce.py |
 | synth-exo-zip-store.zip | 41013301e866c46e0c63b5915ac0098d9fbc045f64edaeaf6bf4ac37da16df04 | 8404 | synthetic:tools/synth_exo.py --kind zip-store |
+| synth-macosx-edge.tar | eab9cacf41e73204e4d95fb22b4e92e217504d0819fe9efae093f935e3b307f0 | 10240 | synthetic:tools/synth_macosx.py --kind tar-edge |
+| synth-macosx-edge.zip | 9a5e16448e1673d32396e7d7786d37b7f4039d54d7b44c0b913e9e3fa0227ab3 | 1126 | synthetic:tools/synth_macosx.py --kind zip-edge |
+| synth-macosx.tar | d8747c4907aff667847b9728e12afb9f8a430f26fe65e6e67c938e3da19c2102 | 20480 | synthetic:tools/synth_macosx.py --kind tar |
+| synth-macosx.zip | f86330893620a05b79d243db7de96fc1303a82977af2efed571cc54063f661bc | 1887 | synthetic:tools/synth_macosx.py --kind zip |
 | synth-now-mixed.now | e87810e9df1e0a663436531cc7ab2f34153b81fffcefd10b467ccbd7dc6f89ae | 7803 | synthetic:tools/synth_now.py |
 | synth-os9-btoa.btoa | 084b016918298e544fe23e403799cf44979bf87f7d1d2dd88cba5496eb5cc24c | 731 | synthetic:tools/synth_os9.py --kind btoa |
 | synth-os9-mime.mim | 394ebaa16ef4a21a972f69bfdde73ef3a44038b72041c6742413b2d12ffcefd6 | 1248 | synthetic:tools/synth_os9.py --kind mime |

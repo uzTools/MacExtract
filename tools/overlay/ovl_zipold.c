@@ -11,6 +11,11 @@
  * Tar's reader too, since 2026-10-17 (src/fmt_tar.c says why): the eager
  * release keeps this image, and only this one, for a tar.
  *
+ * The Mac OS X sidecars too (src/unc_sidecar.c), since 2026-10-17: zip
+ * calls them from `ovl_exo` through the vector this image patches, and tar
+ * from inside it (DECISIONS.md 2026-10-17, *the sidecars Mac OS X left
+ * beside the file*).
+ *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "overlay.h"

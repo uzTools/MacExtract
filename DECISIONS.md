@@ -432,6 +432,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the envelopes' own Finder info) — MacBinary, AppleSingle, MIME, uuencode and base64 deliver every field their standards hold
 - 2026-10-17 (the window Expander puts back) — StuffIt classic states exactly what Expander 4.0.2 restores, DiskDoubler restores the location its own Expand drops, and its header CRC was already checked
 - 2026-10-17 (the archives' own Finder info) — PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac and ARC, zip, tar, gzip and LZH deliver the Finder info, dates, lock and comment they hold
+- 2026-10-17 (the sidecars Mac OS X left beside the file) — a zip's `__MACOSX/…/._name` and a tar's `._name` are put back on their file: resource fork, Finder info, comment, dates and lock
 
 ---
 
@@ -27825,3 +27826,173 @@ entry expects. The grants table now equals `run_tiers.gain()` row for row,
 as this branch re-took it — `main`'s had stood 352 B below it since before
 2026-10-14 — with the tar row keeping `ovl_zipold`. The time-zone rule is
 listed for the maintainer to confirm (this entry, *the time zone*).
+
+## 2026-10-17 (the sidecars Mac OS X left beside the file) — a zip's `__MACOSX/…/._name` and a tar's `._name` are put back on their file: resource fork, Finder info, comment, dates and lock
+
+**The problem, measured.** Mac OS X writes a file's resource fork and
+Finder info, where an archive cannot hold them, into an AppleDouble file
+named `._` + the name (reference/notes/copyfile.c, `copyfile_pack`). The
+Finder's Compress stores it as `__MACOSX/dir/._name`; bsdtar inline, as
+the member before (reference/notes/libarchive_write_set_format_pax.c).
+Until now both came out as files: a stray `__MACOSX` folder, and files
+with neither fork nor type. **No such zip or tar was in the corpus**
+(measured: every zip and tar in `fixtures/`, `~/.cache/macextract` and
+`/tmp`, none with a `__MACOSX` or `._` member), so the hypothesis held.
+
+**Specimens.** One Discmaster search for `__MACOSX` (paced, one request,
+then two downloads) gave `Aqua_Candy_Two.zip`, an icon set a 2006
+Macworld UK disc carried, made by the Finder of Mac OS X 10.4: 190 files,
+each with a sidecar, every data fork empty and every icon in the resource
+fork. Its order is the Finder's: `dir/name`, then any `__MACOSX/…`
+folder records not yet written, then `__MACOSX/dir/._name` — so a sidecar
+is "adjacent" only if those folder records are skipped (16 of its 190
+are not adjacent otherwise). Filler zero, entries 9 at 50 and 2 at 82.
+libarchive's own test zip (`libarchive-zip-mac-metadata.zip`) is the
+second: ditto's `2.1 unx` with a `0x5855` field and an ACL in the
+sidecar's attributes, no Finder info. A third, a 2024 `.dsk.zip` (100 MB),
+was read and not kept: its sidecar holds only `com.apple.macl` and
+`com.apple.provenance`, and a Finder info of 32 zero bytes — the case
+XADAppleDouble.m's "only if it is not empty" is for. `tools/synth_macosx.py`
+writes the rest with Info-ZIP and GNU tar in the same layouts, every value
+known by construction: copyfile's two entries with an attribute block, an
+RFC 1740 sidecar with entries 9, 4, 8, 10 and 2 placed BEFORE its file, a
+folder's DInfo, a zero Finder info, and in the `-edge` pair a sidecar far
+from its file, one naming nothing, and a file named like a sidecar that is
+not AppleDouble.
+
+**Decision: a sidecar pairs with the file it names, wherever the
+directory puts either.** Names are XADMaster's rule (XADMacArchiveParser.m:
+leaf `._`, an optional first component `__MACOSX`); what makes the file a
+sidecar is XADAppleDouble.m's (magic, version 2, entry 2 or 9), plus a
+resource fork that fits it. Folders under `__MACOSX` are never emitted.
+A file's sidecar is the first naming it after it, going round the
+directory from the file's own record; a sidecar is taken only if that
+search, the file's own, finds it — so the file and the sidecar answer each
+other's question the same way whichever is walked first, and of two
+sidecars for one file the second comes out as itself. A sidecar that
+pairs with nothing, is not AppleDouble, or is encrypted, comes out as
+itself — **never lost**. A 1,024-bit filter over the leaves keeps a file
+no sidecar names at one test, and the walk's last file is tried first for
+a sidecar, which is the Finder's order; a zip whose sidecars are all at
+one end (`zip -r` of an already-extracted tree) costs a walk per pair.
+Both oracles were read for this and neither is followed: XADMaster pairs
+only a neighbour (the previous name, or the queued sidecar the next one
+matches), so `unar` leaves the far one as a second entry; libarchive pairs
+by name anywhere but LOSES a sidecar whose file is absent
+(reference/notes/libarchive_read_support_format_zip.c: `tree_rsrc` is read
+only by lookup). **An adjacency-only version was built and measured**:
+2,262 B of 68000 code against 2,400 for this one, same day, same flags —
+138 B for every zip whose sidecars are not next to their files. Kept.
+
+**What the sidecar gives its file** — everything entries 2, 4, 8, 9, 10
+and 12 hold, through the AppleSingle reader's own `unc_as_record` (RFC
+1740): the resource fork, the 32 bytes of FInfo/FXInfo (or DInfo/DXInfo
+for a folder) whole, the comment, the three dates, the lock. The first
+1,024 bytes of a sidecar are kept (`UNC_AD_WIN`) and an entry wholly
+inside them is read: copyfile's Finder info ends at 82 and an RFC writer
+putting every small entry first needs a few hundred; the forks are spans
+and are not limited by it. A zip sidecar is decoded twice — once, before
+its file's entry is offered, only as far as that window (the
+`zip_mb_peek` pattern, progress uncounted), and once for the resource
+fork, after the file's data fork, with its own CRC-32 checked: a sidecar
+that fails it fails its file. A tar sidecar is stored, so it is read in
+place.
+
+**What Mac OS X writes and this does not read.** The extended attributes
+after the Finder info: on Mac OS X 10.5 and later, the Finder's Spotlight
+comment is the attribute `com.apple.metadata:kMDItemFinderComment`, a
+binary property list — the descendant of the Get Info comment. Reading it
+means a bplist parser and a Unicode-to-MacRoman table in the engine; **not
+done, the maintainer's call** (no specimen here carries one: Aqua Candy's
+sidecars have no attributes, the 2024 one has two others). The lock: Mac
+OS X keeps it as `UF_IMMUTABLE`, which copyfile does not pack, and a zip's
+own external attributes are not this change's.
+
+**Tar.** bsdtar writes `._name` before `name`; libarchive reads it there
+and nowhere else (reference/notes/libarchive_read_support_format_tar.c,
+`read_mac_metadata_blob`, pairing it with whatever comes next). Here the
+next member must be the file it names; one AFTER its file is not paired
+(the writer never puts it there) and comes out as itself. Up to two pax
+headers between the two are stepped over, and a sidecar's own pax values
+are dropped with it rather than landing on its file (UNEXERCISED: no
+specimen or generated case has a pax header there). The sidecar code is in `ovl_zipold`, beside tar's reader
+(which moved there with the archives' Finder info), so both formats keep
+it and nothing else does; zip's half stays in `ovl_exo` beside zip.
+
+**Evidence** — each check shown able to fail:
+- `tools/run_meta.py` (*the Mac OS X sidecars*): synth_macosx.py's four
+  archives by construction, and every zip with a sidecar against
+  libarchive driven through ctypes (`zip:mac-ext`), whose AppleDouble blob
+  per entry is parsed independently; plus no sidecar or `__MACOSX` folder
+  listed where it must not be, and the `-edge` forks byte for byte.
+  Controls: `unc_ad_apply` disabled fails 417 fields (380 on Aqua Candy);
+  pairing disabled fails 15 "listed, and must not be".
+- `tools/run_diff.py`: `Aqua_Candy_Two.zip`, `synth-macosx.zip` and
+  `synth-macosx.tar` against `unar`, which pairs the same neighbours and
+  reads entries 2 and 9: names, type, creator, flags, both forks.
+  `make_manifests.py` learnt that a `._dir` beside a folder is the
+  folder's (it had read it as a file named like the folder); the `-edge`
+  pair is not graded by `unar` because its manifests cannot state a `._`
+  name.
+- `tests/unit_formats.c` (`test_sidecar`): the name rules and the capture,
+  fed a byte at a time and whole; one rule bent fails it.
+- on an emulated Mac (`tools/vmac/metarun.py`, which now extracts
+  `synth-macosx.zip` beside its three fixtures and reads the catalog back):
+  **byte-exact both forks on System 3.0, 6.0.8 and 7.0.1** (4 files, 3
+  resource forks, `run.py --expect`), and every value as the sidecars
+  state it — FInfo/FXInfo of three files, the folder's DInfo/DXInfo, Meta's
+  three dates and lock — **41 values per tier, all exact on 3.0 and
+  6.0.8**; Meta's comment read back with `PBDTGetComment` on 7.0.1's 8 MB
+  volume, absent where there is no Desktop Manager, as decided. On 7.0.1
+  two values are wrong, the known one (OPEN_ITEMS.md, *System 7.0.1
+  rewrites one byte of FXInfo*), and this run moves that item: Meta's
+  `fdScript` is 0 and its `fdXFlags` still came back 0x70, while Doc's,
+  also `fdScript` 0, stayed 0x00. **The `fdScript` 0x81 hypothesis is
+  withdrawn**; what Meta and `Kept Whole` share and Doc does not is a lock
+  and a comment (hypothesis, not separated). Those three runs are on the
+  branch before its rebase onto `main` at 188377b; after it, System 6.0.8
+  again: 4/4 byte-exact, 41 values exact.
+
+**Two grades the new specimens met, and what was done.** `run_meta.py
+--corpus` holds every zip's dates to `lsar`, and the Finder's zip is the
+corpus's first whose entries carry Info-ZIP's Unix time (`0x5855`, and
+`0x5455` in others): `lsar` reports that UTC instant, the engine the
+MS-DOS time beside it, which is the writer's own wall clock in two-second
+steps — 190 of its entries an hour and up to a second apart. Neither
+grades the other, so such an entry's mtime is left out of that sweep, by
+condition (`zip_unix_times`). **Whether the engine should take the Unix
+time instead is the maintainer's call**: it is exact to the second but
+UTC, and a Macintosh date is local, so it would need the zone the shell
+does not know. And a field a sidecar states (entries 8, 10, 12) is the
+sidecar's, which `lsar` does not read: graded by the sidecar lane instead
+(`sidecar_stated`).
+
+**One harness fact.** `run_segments.py`'s un-buffered zip walk aims its
+budget one byte under the run's own peak, and failed on the first build:
+`unc_side_zip_open` allocated before it knew there was a sidecar and freed
+again, which moved every zip's peak by the struct for an instant. It now
+walks the directory once without allocating.
+
+**Price**, against `main` at 188377b built the same way:
+- **shipped (eager) `CODE` +0, A5 +32, so 32 B off every extraction's
+  budget** (nine host-vector slots); lazy `CODE` +0, A5 +32; the control
+  `CODE` +4,084 and A5 +12. `OVL_SAVED` +4,064, `TIERS` −4,096, derived.
+- **Images**: `ovl_zipold` +3,374 (5,238 → 8,612, the shared sidecar
+  code and tar's hook), `ovl_exo` +972 (31,736 → 32,708, zip's half —
+  **60 B under the 32 KB** its PC-relative references reach), the bundle
+  +4,344, the download 240,000 → 244,608 B. A zip keeps both, **−4,346 B
+  of grant**; a tar keeps `ovl_zipold`, **−3,374 B**. By object, under the
+  overlay flags: `unc_sidecar.c` 2,458 B, new; `fmt_exo.c` +774
+  (`zip_side`, `zip_at_data` — which `zip_imp_dry` and `zip_mb_peek` now
+  share — and the hooks); `fmt_tar.c` +798 (`tar_path` out of the loop,
+  `tar_side`, the hooks).
+- **Heap**: 1,318 B (`UncSideZip`, the 1,024-byte window and two filters)
+  only for a zip that names a sidecar; 1,816 B (`TarSide`) only for a tar
+  that does. Nothing for any other archive, not even for an instant.
+- **Stack**: `zip_side`'s frame is 184 B against `zip_imp_dry`'s 180 on
+  the same path below `unc_zip_extract` (1,540 B, unmoved);
+  `unc_tar_extract` 1,252 → 1,284 B; the engine's deepest chain (3,354 B,
+  DiskDoubler) does not move.
+- **Extractions lost**: none — `run_tiers.py --check`, both lanes, all
+  three tiers: shipped 74/74, 72/74, 68/74 and resident 74/74, 70/74,
+  63/74, as on `main`.

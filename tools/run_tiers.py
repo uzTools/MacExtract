@@ -133,10 +133,12 @@ REPO = os.path.dirname(HERE)
 # which is the `--shipped` lane below.
 # **All three lowered by 4,592 B 2026-10-17, DERIVED**: TIERS_CONTROL rose
 # by that much with the archives' Finder info (below).
+# **All three lowered by 4,096 B 2026-10-17, DERIVED**: TIERS_CONTROL rose
+# by that much with Mac OS X's sidecars (below).
 TIERS = {
-    "sys3-512K": (193764, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (98364, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (622652, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189668, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (94268, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (618556, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -256,7 +258,11 @@ TIERS = {
 # +72; the shipped pair +0, so OVL_SAVED +4,592 and a grant moves on the
 # machine only by its images (DECISIONS.md 2026-10-17, *the archives' own
 # Finder info*).
-TIERS_CONTROL = 219728     # build/mac-resident, CODE + A5, 2026-10-17, at the merge of meta-archives
+# **Raised by 4,096 B more 2026-10-17, and TIERS lowered by the same,
+# DERIVED**: Mac OS X's sidecars, the control's CODE +4,084 and A5 +12;
+# the shipped pair +32 (A5), so OVL_SAVED +4,064 (DECISIONS.md 2026-10-17,
+# *the sidecars Mac OS X left beside the file*).
+TIERS_CONTROL = 223824     # build/mac-resident, CODE + A5, 2026-10-17, at the merge of meta-archives
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -584,7 +590,10 @@ EXPECT = {
 # **+4,592 the same day, -> 143,488**: the archives' Finder info, the
 # control's +4,592 against the shipped pair's 0 (DECISIONS.md 2026-10-17,
 # *the archives' own Finder info*).
-OVL_SAVED = 143872
+# **+4,064 the same day, -> 147,936**: Mac OS X's sidecars, the control's
+# +4,096 against the shipped pair's +32 (DECISIONS.md 2026-10-17, *the
+# sidecars Mac OS X left beside the file*).
+OVL_SAVED = 147936
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -716,7 +725,7 @@ IMAGES = {
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15936,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         31736,
+    "OVL_ID_EXO":         32708,
     "OVL_ID_LZH":         11202,
     "OVL_ID_NOW":         5164,
     "OVL_ID_PACKIT":      2656,
@@ -725,9 +734,13 @@ IMAGES = {
     "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7142,
     "OVL_ID_TEXT":        12162,
-    "OVL_ID_ZIPOLD":      5238,
+    "OVL_ID_ZIPOLD":      8612,
 }
-BUNDLE = 172968
+# **ZIPOLD +3,374 B and EXO +972 B, the bundle +4,344 B, 2026-10-17**:
+# Mac OS X's sidecars, the shared code in ZIPOLD and zip's half in EXO,
+# which is 60 B under the 32 KB it can reach (DECISIONS.md 2026-10-17, *the
+# sidecars Mac OS X left beside the file*).
+BUNDLE = 177312
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

@@ -283,6 +283,78 @@ static void put32(uint8_t *p, uint32_t v)
     p[2] = (uint8_t)(v >> 8);  p[3] = (uint8_t)v;
 }
 
+/* Mac OS X's sidecars (src/unc_sidecar.c): the names, and the capture fed
+ * a byte at a time and all at once to the same answer. */
+static void test_sidecar(void)
+{
+    static const uint8_t ad[] = {
+        0x00,0x05,0x16,0x07, 0x00,0x02,0x00,0x00,
+        'M','a','c',' ','O','S',' ','X',' ',' ',' ',' ',' ',' ',' ',' ',
+        0x00,0x02,
+        0,0,0,9, 0,0,0,50, 0,0,0,32,
+        0,0,0,2, 0,0,0,82, 0,0,0,3,
+        'T','E','X','T','t','t','x','t', 0x01,0x20, 0,0x50, 0,0x64, 0,0,
+        0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
+        'r','e','s' };
+    static const uint8_t zero[82 + 3] = { 0x00,0x05,0x16,0x07, 0x00,0x02,0x00,0x00 };
+    UncAdCap a;
+    UncEntryInfo e;
+    uint32_t i;
+
+    CHECK(unc_side_kind((const uint8_t *)"__MACOSX", 8, 1) == UNC_SIDE_DIR);
+    CHECK(unc_side_kind((const uint8_t *)"__MACOSX/a", 10, 1) == UNC_SIDE_DIR);
+    CHECK(unc_side_kind((const uint8_t *)"__MACOSXa", 9, 1) == UNC_SIDE_NO);
+    CHECK(unc_side_kind((const uint8_t *)"a/._b", 5, 0) == UNC_SIDE_FILE);
+    CHECK(unc_side_kind((const uint8_t *)"a/._", 4, 0) == UNC_SIDE_NO);
+    CHECK(unc_side_kind((const uint8_t *)"a/._b", 5, 1) == UNC_SIDE_NO);
+    CHECK(unc_side_of((const uint8_t *)"__MACOSX/d/e/._f", 16,
+                      (const uint8_t *)"d/e/f", 5));
+    CHECK(unc_side_of((const uint8_t *)"__MACOSX/._f", 12,
+                      (const uint8_t *)"f", 1));
+    CHECK(unc_side_of((const uint8_t *)"d/._f", 5, (const uint8_t *)"d/f", 3));
+    CHECK(!unc_side_of((const uint8_t *)"d/._f", 5, (const uint8_t *)"e/f", 3));
+    CHECK(!unc_side_of((const uint8_t *)"d/._f", 5, (const uint8_t *)"d/ff", 4));
+    CHECK(!unc_side_of((const uint8_t *)"__MACOSX/._f", 12,
+                       (const uint8_t *)"x/f", 3));
+
+    unc_ad_init(&a, sizeof ad);
+    for (i = 0; i < sizeof ad && !unc_ad_feed(&a, ad + i, 1); i++) {}
+    CHECK(a.state == UNC_AD_YES && a.roff == 82 && a.rlen == 3);
+    unc_entry_clear(&e);
+    unc_ad_apply(&a, &e);
+    CHECK(e.type == 0x54455854u && e.finder_flags == 0x0120);
+    CHECK((e.meta & (UNC_META_FINFO | UNC_META_FXINFO)) ==
+          (UNC_META_FINFO | UNC_META_FXINFO));
+    CHECK(e.finder_info[11] == 0x50 && e.finder_info[13] == 0x64);
+
+    unc_ad_init(&a, sizeof ad);
+    CHECK(unc_ad_feed(&a, ad, sizeof ad) == 1 && a.state == UNC_AD_YES);
+    /* A resource fork past the end: not a sidecar. */
+    unc_ad_init(&a, sizeof ad - 1);
+    (void)unc_ad_feed(&a, ad, sizeof ad - 1);
+    unc_ad_end(&a);
+    CHECK(a.state == UNC_AD_NOT);
+    /* Cut inside the table: not a sidecar either. */
+    unc_ad_init(&a, sizeof ad);
+    (void)unc_ad_feed(&a, ad, 40);
+    unc_ad_end(&a);
+    CHECK(a.state == UNC_AD_NOT);
+    /* No entry 2 or 9: copyfile always has both; this is not one. */
+    unc_ad_init(&a, sizeof zero);
+    CHECK(unc_ad_feed(&a, zero, sizeof zero) == 1 && a.state == UNC_AD_NOT);
+    /* 32 zero bytes of Finder info state nothing. */
+    {
+        uint8_t z[sizeof ad];
+        memcpy(z, ad, sizeof ad);
+        memset(z + 50, 0, 32);
+        unc_ad_init(&a, sizeof z);
+        (void)unc_ad_feed(&a, z, sizeof z);
+        unc_entry_clear(&e);
+        unc_ad_apply(&a, &e);
+        CHECK(a.state == UNC_AD_YES && e.meta == 0 && e.type == 0);
+    }
+}
+
 static void test_applesingle(void)
 {
     /* AppleSingle with name, Finder info, data + rsrc forks. */
@@ -5227,6 +5299,7 @@ void run_format_tests(void)
     test_macbinary();
     test_macbinary_meta();
     test_applesingle();
+    test_sidecar();
     test_appledouble_noname();
     test_bitin();
     test_huffman_tree();

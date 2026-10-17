@@ -1,0 +1,2717 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "8d23f3a5cfeeb2429cc4f9f0f5a5240b20da46dd0ef17e0f879008c118371cf8",
+   "data_size": 15364,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Cinema Display"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "cd8eddf9a2c3cd210573f80c8f3b3e4b720c48ee6af78474bcac209ef91f7024",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Cinema Display/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Cinema Display/Cinema Display Aqua 20inch",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b858ced3d9cbb4b73da43d09022224d40972195a82032fbf9586ebb634e34080",
+   "rsrc_size": 56154,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Cinema Display/Cinema Display Aqua 23inch",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2b13d673ad44dec2e558ac6ac61b65c5f5d333d483f0153528c9a693416429bc",
+   "rsrc_size": 55800,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Cinema Display/Cinema Display Graphite 20inch",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "068c71578adae2da0d528e9e3d1ee46668c1cec916d90d0bf513a5568acb38a5",
+   "rsrc_size": 56083,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Cinema Display/Cinema Display off 20inch",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "526452f45a5e65fa2f3947d544fa38d633fc7b4ba2f02e194db45b82f4cc9002",
+   "rsrc_size": 41891,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Cinema Display/Cinema Display off 23inch",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "234cf416084f51ef626652750b46cd34da45b12462d80b23d362041e303b5f21",
+   "rsrc_size": 41666,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Dashboard"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d54252b525a3510f803194caf30df64fc631cf5b768b3f7be94721476fb8de7d",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Dashboard/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "aa2881bb9679d1d406a9a1590338d06d69874d44f53b9c1336b6c535e937534b",
+   "rsrc_size": 60076,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard Blue",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "99bf2ee396b1b1a8586ac1709430f656743d8df34f4e99c011577895e759d2ec",
+   "rsrc_size": 58874,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard Graphite",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "44fa609f856a18ce5e1cc4aef8afe952fa861204ad345df197203364cb1190f5",
+   "rsrc_size": 59278,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard Green",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "e115e2bffabc41f48e7d4d9fb67d6a02de7ec71a67c5d19fcc209b34046d95c3",
+   "rsrc_size": 59019,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard Orange",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "afda8c9b4cf5321d9d2ab8e0e4cdca802c139460acc58befe9b54bc89330de42",
+   "rsrc_size": 57085,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard Pink",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "25bd3b47004ce161723c6bd2bc29b3b43b636c004638ac684138a929fd2a2847",
+   "rsrc_size": 57136,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard Purple",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "c7155c09fdd5394f0c9d38875405f90c63d18a7e65714a5981525877d0d75ee4",
+   "rsrc_size": 59382,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dashboard/Dashboard White",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1fe9b202b127bc3f38ea7c0b878270e5caa2d4edab9262611a3f26b8cc421376",
+   "rsrc_size": 55139,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Desktop"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Desktop/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Desktop/Desktop Aqua",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9d4d73e4ffda711c454f77958729f9b48587927abfea967cdc3ac2ced21be342",
+   "rsrc_size": 57436,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Desktop/Desktop Graphite",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "408a3271df53a0fc3d1a4641b69932ca430c270b921a96fd3dcfab01bc71ba27",
+   "rsrc_size": 57464,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Desktop/Desktop off",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b0e47d77b976371da9b2c65adb1808e340e8dfe12f7982cc2f5985bae460ba6f",
+   "rsrc_size": 41287,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Dock"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d54252b525a3510f803194caf30df64fc631cf5b768b3f7be94721476fb8de7d",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Dock/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dock/Finder",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "e7cab689d82aeeebcf7a9053984c6f5cdc282a85f2d67da37490eeccad872060",
+   "rsrc_size": 54547,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dock/Finder graphite",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5858a2ee868af0a4c49084722194ab35bd4139c6ecd9d4a7240b1b3d1e3327c7",
+   "rsrc_size": 54572,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dock/Safari",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b38130fb53fd685921b0ea2a1baa169a5f95674e1f94f9322561f09e10b8c46a",
+   "rsrc_size": 61723,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dock/Trash Empty",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b194e7b6eacb3b87788b95691a56099f60b5793c9ad2e14e230cf8507cd0db77",
+   "rsrc_size": 51465,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Dock/Trash Full",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5da6919138497cbb5f53a1444f819d73e5f51f120673eb5a8c91cc26ad76f64f",
+   "rsrc_size": 52091,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d7cbd65c69ef500523ef5956b64f956c7fd410f4c4fdbe034a9dad3c3537e92c",
+   "data_size": 15364,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder/Aqua"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder/Aqua vertical"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "455010aaafcadcf5f911a6c7143c7122cf98b38216d60a55f91f20e69759c399",
+   "data_size": 15364,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Ape",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "7ef86c36f1134c480d15f720dfecd5fb5dd6c3c38d6be89df8aee4c5d68b77bc",
+   "rsrc_size": 52745,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Applications",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "7bfc158d25087ca8268fbe511c4c60a06f5c7609d404abda2c0c2d355ec48732",
+   "rsrc_size": 57172,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Burn",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "aad6ffc2c579f17b51e234a44bd9eac27440aa8bf42292499313ed5ce5d28e24",
+   "rsrc_size": 59283,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/DJ Pridef",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "eeac980788e1ddb32463d56f60dcc86b60ea6c3f1050399a2dc948a562fe24a6",
+   "rsrc_size": 57049,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Developer",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "f4974c8f35a9404669577526be40b98e22a12622d84bc347009cb43c15f0ebbd",
+   "rsrc_size": 56985,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Documents",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "813ee93c44cbd7fd63c36b7621af7f1c1fb968ed2e016ee42a6248679e450833",
+   "rsrc_size": 56732,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Drop Box",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "cfcbbd5783726942d895c86b2e16b6a2437ff7c05fca6a7cef61049b54009338",
+   "rsrc_size": 52266,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Generic",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "89488e082a3a4b59408470e1a5b7c493eca2f5c82c450a4917c44a1393720d46",
+   "rsrc_size": 53683,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Library",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "291c07485956be193783212e7d6d7e770cb5013cdc51bf268d981aa27f552074",
+   "rsrc_size": 59152,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Movie",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1b7ea115ec70dfb02d12dd24c5613d6765a6d1694dab400ecad2246fb5275f1a",
+   "rsrc_size": 59938,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Music (iPod black)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "180b9cf0dd620c740daafd2356fc97397127b8bcb91a67c2a9af377c951ae5d4",
+   "rsrc_size": 55878,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Music (iPod white)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "d779863eb86af2fc0987ccb7fbb36c6ad5a72d99899931fb8218afca9a5e0788",
+   "rsrc_size": 56261,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Music CD",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9996efe865e5cd68ed6556847d01fe150268a2ac45d394d03f7ce8ecb0759bad",
+   "rsrc_size": 59405,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Photo",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "93998f6148fdfac4501fc62d0890347f0697cfe58a1bfda6e0b6d938dfd8772d",
+   "rsrc_size": 60049,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Pictures",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1770f555a547c6aea18c9db572f8731af1058563f8db0b0c05a12d725fa48b76",
+   "rsrc_size": 58896,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "36d1f5e4d48a7fa7d852e38b096e35fa1dfb22e2be642854cbc0ac883e8682df",
+   "rsrc_size": 56349,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Private",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "fd2e0d652d85b2798cc9a9ffd20a0feb53d1137e97ba89588c655af897281cb4",
+   "rsrc_size": 50992,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Public",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a5159d5cb98419850d4d977e9d4f102897e8f908017413c1bfc3139c7ee0766f",
+   "rsrc_size": 54649,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Site",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3aee91285d2bfd8789902852e7724e5d0a9441b497d10fd9ba9c85067736aea7",
+   "rsrc_size": 58282,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Smart",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "8d328cfc20dd452d93874406f9b48253860250fad124447d0ad7faa95d839c50",
+   "rsrc_size": 55866,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/System",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1b533ab67ebf5d07f4286e1a2380f99d787d7a92f80fc2608d4ea4a05c577cd5",
+   "rsrc_size": 57821,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/User",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "6992e85a593e23cde340c4113643ac362f21c432532400f35c9c22df57a87ced",
+   "rsrc_size": 56984,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua vertical/Volume",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "74a430e1ef11b0ebdf4917c48d71dba0852110a9cb372dc85f492ca112606dc7",
+   "rsrc_size": 63023,
+   "type": "Icon"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d54252b525a3510f803194caf30df64fc631cf5b768b3f7be94721476fb8de7d",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/Aqua/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Ape",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "54932eb963f7bf0ed8bb8001671612c7f292dd6e7db6facc6baeb6b9fe33a0e6",
+   "rsrc_size": 46579,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Applications",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "deff23276c14021653613d21917acd77326c97cb164be7ba8eb324db32cd814a",
+   "rsrc_size": 50461,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Burn",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b05a917ca305a710f40ca7796234fbadf014cda71d9e4213ecec5c733e55f0a5",
+   "rsrc_size": 53716,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/DJ Pridef",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "ced655861c6d8188ae1ff4aa00fe52e39af32116ba16ef5e08d0983460ae3a3c",
+   "rsrc_size": 51187,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Developer",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2d8bffb3f4a18638b64325465dfb4d4724571f63322edfecad5b431605d14780",
+   "rsrc_size": 50744,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Documents",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9d75a0c644c6c79cdffda243d927a687afe7b6cb53c9ad549449cc7b828df276",
+   "rsrc_size": 51494,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Drop Box",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "f5acde53ff23c4ae80e3693079011770a34ea9cf038c76b9e6d999ef78d3a683",
+   "rsrc_size": 46366,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Generic",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "d52248826e3cf791f368e698d309d3d8da552ca91f350fa48de5980bb1c2140b",
+   "rsrc_size": 43445,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Library",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3207669970545c1b1e311ff8e8d178f339161e2bdb279f8119a2fbef7e3a74d5",
+   "rsrc_size": 53352,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Movie",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b69043a57010866e5e517a089f6cd9d00544a4bd2d182f2e10d5d85a31bf2048",
+   "rsrc_size": 54355,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Music (iPod black)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "280112820a6cfda51d3622868300ffee087023123065be3577b9eda688bdd60e",
+   "rsrc_size": 49576,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Music (iPod white)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "57d376774848a3c26e1291736f307d3d50f6fe6a9945c20b7e7d12f37dbc8f51",
+   "rsrc_size": 49955,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Music CD",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9559bb5002c4d95d97f46cd688bc0e0d3e1fc425a3c0bef2607ca8b6ea964ca0",
+   "rsrc_size": 53363,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Photo",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a07b96509ed46bd97f2c81ef9469727adab4cb3496a3248bf7e5d4def0f04c8b",
+   "rsrc_size": 54292,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Pictures",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "08b383c0b2eb72f4b33e9dae66f58b50d580a4441951be5c2aab928b4ed3b53d",
+   "rsrc_size": 53218,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "dc383c3a383baccc89d0814861336e49151f116a3e0b5d1ae6f732ec574d2aa2",
+   "rsrc_size": 49010,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Private",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2a59f8073f7efa106b2b452a07d3c1ec9b312921a0bdc0725ec0e811a7899146",
+   "rsrc_size": 45094,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Public",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "28cc08b59c89b09edcb05bce9da9a80525d6be18cc942671c0d030450d029f7b",
+   "rsrc_size": 48174,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Site",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "c5a290ac1482b377812a7bf6eef8d38afbd1318a76ba6de2ba5e815e5d6a6bdf",
+   "rsrc_size": 52258,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Smart",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "0525f2986fe4fbccb0d9321d99ac23893ab117ada94c8e305b2c54078f3550d7",
+   "rsrc_size": 50077,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/System",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "0c6d04cf0ce82eb8e1cffea3f2c10d246fd5c45ae6d4045e699b8782bf047c5f",
+   "rsrc_size": 50480,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/User",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "d41b38ba70d093374f9b8501d7c3677f1a26dbe3e6ef27e2dad2f10f9a847a54",
+   "rsrc_size": 48659,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Aqua/Volume",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "08a1bdd9619268b4d2d534ae13e6a10bf266b955c65dac2dd074bb2140dceed8",
+   "rsrc_size": 56677,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder/Graphite"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder/Graphite vertical"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d54252b525a3510f803194caf30df64fc631cf5b768b3f7be94721476fb8de7d",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Ape",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "28713629a324b95001e0b21d7dfa8f48dce7cda50fef6c6f8f9189c27360f83b",
+   "rsrc_size": 52793,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Applications",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "8999995dafc2410a11d2bb6e6843f27d72bf1dadd5d400995dfdac581b820963",
+   "rsrc_size": 57208,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Burn",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "af57d2254764ffbbf41046f1ab8fefc5c2c5a5fdb4a76506e16006b23589985d",
+   "rsrc_size": 59375,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/DJ Pridef",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "23120baeaef36e4664e9b8889942a82cfa7fc68df3f782a60467fba240ba093b",
+   "rsrc_size": 57071,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Developer",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3f5afdd5c697a9f24e577f58f90353bcac72edad571475d95ee5761bf6f1e09c",
+   "rsrc_size": 56998,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Documents",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2e1e2ad34143d5a0ca0f7efa02ea49817d39e7f593435832e08255962a7b7c8c",
+   "rsrc_size": 56773,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Drop Box",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b539a22573f5f4618798909f68085253c6c30f3a4a98bcba7e4266cfacc0d313",
+   "rsrc_size": 52341,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Generic",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1d2b2398ef3765ee224504a68d4eb5b6aa23a19739634b14274bce05c8798a60",
+   "rsrc_size": 53671,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Library",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "39ddcdb2a39a2cb1d47160787eb0f01d7a6ac42c4fb76595c37bbee13be31619",
+   "rsrc_size": 59223,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Movie",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3e149a1375892a57551f646bd442590764c5fe301c745d8d9f33adac22c46256",
+   "rsrc_size": 59964,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Music (iPod black)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1eb5be62649e3c13b3d904c81b1308aaa387f06ca154dee8b620fd9de00e5ec2",
+   "rsrc_size": 55834,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Music (iPod white)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3dcb2a6b031c8aea5765e087a0717f7d87e1cbdbb520f47aadaec96d80ad175d",
+   "rsrc_size": 56209,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Music CD",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9492e32023536526eeaea24ae88bae5a6ca8adc0683ea82b066290f43c18730a",
+   "rsrc_size": 59475,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Photo",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "707061a66f984dcf2b3c6ed238d4ee3c65d77dc0528868fe6c0132ffcbb4073e",
+   "rsrc_size": 60036,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Pictures",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "755258aff9ba03872a67f3757f98e2417a63f5fa141c7061cae84cc693412f52",
+   "rsrc_size": 58907,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "127df76a9bc910028e08167260ac05799b1721cbe0641cdc7d77eb8a77a42bb6",
+   "rsrc_size": 56341,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Private",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a7d3ceab8e3d48fa767e3da75e3ceb766a691ad9130ba3f13430b8ffccfaac2a",
+   "rsrc_size": 51066,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Public",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "72728885759db2d2f13a886c513901723d83c388d2cd34e80c5011550fc61860",
+   "rsrc_size": 54702,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Site",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5f67edf0938441810bdd98220dfd802c68a4b3fba5fb0164f67b46f18d17513d",
+   "rsrc_size": 58381,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/System",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "fbd14a37090b15d8ab35388f5b265904870969e3f5f80cb5b49cbfe8b5268108",
+   "rsrc_size": 57858,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/User",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9698c84f9415f0ac0edf38bd84041da5cd8dedffe3c7de501be9c86ad0f7781c",
+   "rsrc_size": 56978,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite vertical/Volume",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "bb480d613857616ea8b06557db6c6532d33777c5b2f3fa95edd08f366ddd1195",
+   "rsrc_size": 63128,
+   "type": "Icon"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d54252b525a3510f803194caf30df64fc631cf5b768b3f7be94721476fb8de7d",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/Graphite/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Ape",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "df5b91960a4ef6a1a7174a084c018dd6839d3b253448e31c4ca44be28c0b526d",
+   "rsrc_size": 46394,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Applications",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "86bf2e9dcede17af936ba329ca5b33c27c952ef4d657f228c30b5184aea3e22e",
+   "rsrc_size": 49989,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Burn",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "63bc45575d141f6eb7bcd2f6432757f60246fb6a65a7cef0567a84fe01f880f0",
+   "rsrc_size": 53524,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/DJ Pridef",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4e9bfe87c34f7921bfa5ce97ce1c1256f0e441fb455fbd723ee874c869454325",
+   "rsrc_size": 50830,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Developer",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5a45000bf7aa1b8ed5d03a2e3dea8e72573d00224caa2724349e7b58cf5d549a",
+   "rsrc_size": 50312,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Documents",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5bd47d129df10c057467441a01469ad5391971baf0ea71d642e40dfbbf0bcbc3",
+   "rsrc_size": 51311,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Drop Box",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a1b1a07132d6aa535b0c6741f14cd2cbc49c67f4de16de0e025ca59053768338",
+   "rsrc_size": 46039,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Generic",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "f6e912fd3923d6aa0e379676eb40170eb5515bca41392ba3fb9f87231e3825f1",
+   "rsrc_size": 42671,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Library",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9adf968f2c61a7b3e9ebab42e97c5f71e245a036bc5d36d912e3cfabe589c96f",
+   "rsrc_size": 53039,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Movie",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "449a377940c9296ba9b17dad777224ac02c8578e739b6874140f931d7e6ea714",
+   "rsrc_size": 54109,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Music (iPod black)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4fff253d5c63fc68975fa077c4559d3692c445d0ddc8df4235c45c90e2f9fab4",
+   "rsrc_size": 48958,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Music (iPod white)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "11e0e242a0a5f8c366f4a9c579fb40a817d310a12de6007bdef4065833f8f836",
+   "rsrc_size": 49337,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Music CD",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "6e9c818bbf5ab5f1e0ad0aeb6197f0c215df189095b839016fc0d7d3bc24693f",
+   "rsrc_size": 52984,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Photo",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "67014d57880ccb69a725080c0e7bb46ba9b0ca50c677db62520404aece895e61",
+   "rsrc_size": 54016,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Pictures",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "ee010309510575f493b0e22edd3f2c1d0d078d8d791f6a4ffa98917d463be296",
+   "rsrc_size": 52918,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "8bc8894f53ea0236f935fceded90f1b2e69d3d5ae0822ebf684da0efab2382ca",
+   "rsrc_size": 48465,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Private",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "f197201f965e2e69ca514370b5f6a1abbbefbed18ea4a218fc5af738386e1172",
+   "rsrc_size": 44768,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Public",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4def0ca646832b5f5b835b88dc570ec0004b40e7362e2979bf492464acbb1415",
+   "rsrc_size": 47716,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Site",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "9d596c03fd17cfe2e1957a3c8fac7d07d5da39d9a677eedf55a2a13c2e90818d",
+   "rsrc_size": 51919,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/System",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a5af2f2f75a6bbde6e2c188c92880ec0a9b700ae7b148e9e29b7bf94df67993b",
+   "rsrc_size": 49837,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/User",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "861fc763088aedf9217ded463d17b832575899af3f616fcf94bdb28204d7ef9b",
+   "rsrc_size": 48053,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Graphite/Volume",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "aa69f4a20f07fb3414cb4df1b0752690d73401788f6da73b9cc11fa57c79bfef",
+   "rsrc_size": 56260,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder/Milky"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Folder/Milky vertical"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "30242727529e74517e7d17d39d44b7e67cd3563f055218d0654adc465c167efe",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/Milky vertical/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Ape",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4e3f2d283c05ebee0898a15cc4984c2a814debb75653801cc3f34338a2e2f05e",
+   "rsrc_size": 49523,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Applications",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "24afc70eada0013c981f0e95c84b410ca31460e87f43f0135d6d3df3c6354a81",
+   "rsrc_size": 54174,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Burn",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "03b5a24fba9ab4144ea18add7b95aa7687e1649882c971dd1967b3c1805ca990",
+   "rsrc_size": 56736,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/DJ Pridef",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "bd3e932636903685c862962b5d846deb03d5674ec24e7fde8a7bb4db7365d4ec",
+   "rsrc_size": 54615,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Developer",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5b0d308e141047c2fd5434cd3e21499dd0b23a2fabc4935b5b5c7527390382fc",
+   "rsrc_size": 53919,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Documents",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "0491fd0a5fcf5012ab1701eda3a5cebfb6530b1b878aaa57290b02a215675d6d",
+   "rsrc_size": 55685,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Drop Box",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2bfd97a38d03eb74386b870036c6bc3ce4520899c8f223c017bb70945dfeb5a2",
+   "rsrc_size": 49502,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Generic",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4b8f2b174a720405ba840b9e5d2df5f45313fa75afecfc6eb1ad27bd3e3de634",
+   "rsrc_size": 48946,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Library",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "ed4e33e33597e32091de53f27e99e81642ca59f892e20a99668af6bbe981c104",
+   "rsrc_size": 56823,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Movie",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4166281e7ad241e4c15f3536df95b9eefab428dc4228975f53bdaf2523ccd32d",
+   "rsrc_size": 56870,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Music (iPod black)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1a45e41eb769d8eae13033bea2d66768f58f0a13e8f164050814dca8c61f203d",
+   "rsrc_size": 52072,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Music (iPod white)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3613ae83f7c5c5f0321e98678a7d304d33794bc2eb625e521aa3bd9f104d55b7",
+   "rsrc_size": 52452,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Music CD",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "bc06c54f93c7798b49282dac257e6cf36d89eda8d7fe1bdc848870f923975a8e",
+   "rsrc_size": 56190,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Photo",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "91d1279de0dc4639b76d63e4bf80f83ac4532f002cbf67a22e6793d0b701a6d2",
+   "rsrc_size": 56484,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Pictures",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a0c8838d8e77ec0631c385a31d22d4fcbaec6a81ae4f85e6bc135079e80ec3a5",
+   "rsrc_size": 55679,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "26c1dda170274da41e7dcadb951acb32d461e44a127f6cfefa2d45452a66e94e",
+   "rsrc_size": 52834,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Private",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "283058c85a2ee988c20cdee5ca3d95a3f6aaaa776bf43d20cde268fa6a301460",
+   "rsrc_size": 48228,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Public",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "e5739b5b48836ed827af018c8ad75a1522bfcbb965918675ce567597838acd33",
+   "rsrc_size": 51483,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Site",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "6f83e78dd7fc7066fc613f02b0f1537c7ae0eaa477212ed78a0adf5d98ccd258",
+   "rsrc_size": 55377,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/System",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "514064f2675af0bd9212bba7f448bb75271d336b04586430e19d6b3bccea2222",
+   "rsrc_size": 54245,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/User",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "20889ac4674226e08a4e8e85aece65a0243115de649056bbceb6576bca7983a2",
+   "rsrc_size": 53545,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky vertical/Volume",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "e6493754a8429b5e05bdf98a4c3293162a8328b7446b63f5ce6c1803004dcc02",
+   "rsrc_size": 59712,
+   "type": "Icon"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Folder/Milky/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Ape",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "d07df24a77db90f660eb3e0415c5291a5e453f24aa8cf0745738cead1a433504",
+   "rsrc_size": 44528,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Applications",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "b42ed3ee8950896eb91b753518089d11a2907be9ebd60f64fa7807884662e867",
+   "rsrc_size": 48035,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Burn",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "619dd0a5eaed73a3d771ffe19d1267dee52ea5b7c22a781ec401add0bb5cc0b9",
+   "rsrc_size": 52179,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/DJ Pridef",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "ee364e0c17fa4d99b75bf39119939391c291669a2b6e3da8f0c16c384b6d1ec9",
+   "rsrc_size": 49332,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Developer",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4f7fcf2e774fa249821776bc7030ffe9559670befb2d28bad6e1347931e704af",
+   "rsrc_size": 48430,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Documents",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "bfb34beadf5bde1a7522b3b0ae0199960b9771161927e33600e76e9d5aafa7b7",
+   "rsrc_size": 50147,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Drop Box",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a5fec83d944df8a1ec7a61f84444ee0099de630ae8f9511da78ad2e8f1076a0f",
+   "rsrc_size": 44436,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Generic",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "eb719ba73cf8157610d7eba02846621238266855a8b60a9b0b14ebf9372eddc4",
+   "rsrc_size": 38445,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Library",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5b07a082c43c9254064f44d13c9c5ae07b788cd7497ec0da0777b443d6b80c0d",
+   "rsrc_size": 51523,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Movie",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2171d6d17bae534009233440f169162aadcc6c645a16394b669fd426411416fb",
+   "rsrc_size": 52653,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Music (iPod black)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "94659ba3f26e7808e07a5bd0a1b850993e7c7c76b2a7520f17b61a223452b07a",
+   "rsrc_size": 46683,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Music (iPod white)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "bb311a7200168747bc56296249d2bac13729c1ea8f905adbc4af72da981947de",
+   "rsrc_size": 47057,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Music CD",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5e1d16baaaa9dbc76aae44ef78d83476138779d87eaccad726acf7a6a3d707cf",
+   "rsrc_size": 51161,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Photo",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "99ae5783df1a2453e9ede125879864c3255552cce4c5a20d96a324c1f2e4f6b9",
+   "rsrc_size": 52503,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Pictures",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "0f19322b18f898bfd29d5dbef84eadf5b17c272c9d8543ebb4032d64224749b9",
+   "rsrc_size": 51482,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "49217543d0bf4e70d221693fa8a6816d7f75ce18de4397790f09f0960faf7436",
+   "rsrc_size": 46202,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Private",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "f0340f554e447ec182ffdc7483992cd938fd3ffc12d38eafac0e479fa5f35644",
+   "rsrc_size": 43167,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Public",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "c850b3df2076dfffdfa63473f33649ab41261e07b38a48741623e6b7f433cb77",
+   "rsrc_size": 45713,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Site",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "81a4a8a5a7953090759dbbc7ec0de0ed4bc520900af64d533aaf636b59357a85",
+   "rsrc_size": 50206,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/System",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4cb72a7e1eeecae943e9797e018ade362d009e0380887bbccc101b0640152557",
+   "rsrc_size": 47460,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/User",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "72b54c967e495d83c76fd29cc579413a7aabc3d81449ee42c20715ca48dbb8f9",
+   "rsrc_size": 45438,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Folder/Milky/Volume",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "75fb048fe552754af8b63365ef8305b82ad0881236886f46ff1d926d3b5d17ee",
+   "rsrc_size": 54413,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Home"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Home/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Home/Home blue",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "f20b679adbd5ea8ccfc3753e4c43288a05238fb90c32408c6566486457b4efe4",
+   "rsrc_size": 67868,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Home/Home red",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "72aeb2d34c179c052e288263d2b8fab8b7e303f14ac1d68215fb1392a9164901",
+   "rsrc_size": 67804,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Network"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Network/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Network/Network",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "3a60c113a1fbe06caf8fbd1db9e115b72aa0a42441c6ad42a526811e4016fd71",
+   "rsrc_size": 61708,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Network/Network alt",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "eb16d2453f4e4db55cde4c21592061d627d08dc73be74f8c6d11862b0be2c134",
+   "rsrc_size": 58617,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/Others"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+   "data_size": 6148,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/Others/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Others/ActivityMonitor",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "5e183bbac4754567b05cad450315a6a8997000177fbc17f680b1a92612f907de",
+   "rsrc_size": 64604,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Others/Podcast",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "eb2b95a120367f5461bbbe1955d8735f8391b0209d1f0fdcdecae201e16cbf0c",
+   "rsrc_size": 50095,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Others/System Prefs",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "7022399f4878ac96d32fa459df8e34373102f9b3e3401fde2b8f7a82a79f06bc",
+   "rsrc_size": 64335,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Others/Terminal",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "21a0a3a1513c6254745677c6e156de66032b20c939ccedd4ad5eba32729fbebc",
+   "rsrc_size": 48369,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/Others/iPhoto",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "fd7512dc6b171423aaf140e2d7cb23569fc51a430eb2afbce8cc7f69350ce191",
+   "rsrc_size": 63377,
+   "type": "Icon"
+  },
+  {
+   "is_dir": true,
+   "name": "Aqua Candy Two/iPod"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "d54252b525a3510f803194caf30df64fc631cf5b768b3f7be94721476fb8de7d",
+   "data_size": 12292,
+   "finder_flags": 16384,
+   "name": "Aqua Candy Two/iPod/.DS_Store",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (black1)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "2ed762410a03bdb08587a814ead1a016a34229dbb3f0cf00abc53a4a302146eb",
+   "rsrc_size": 45055,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (black2)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "6eb914ae60ad0d57eee5eab581b95456f42293a17f52349e7cfb095c3122c78f",
+   "rsrc_size": 49960,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (black3)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "4767792e03d32aa319e5530e32005003683cee6ee734b338cbde033639a6d2da",
+   "rsrc_size": 49458,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (black4)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "c544ce7ce680f10f10b77c6612772fc7f354c8c0e7df1cca77076c270ef471e0",
+   "rsrc_size": 46113,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (black5)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "20aa6350bcb790ac255437b02a7f3b993b0ac7e3d3620dc0c42d5d95db75c686",
+   "rsrc_size": 47142,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (white1)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "77455f59b80fa789b2e312bded1d524769acadcf87194c8508ec5363c6c59eec",
+   "rsrc_size": 46176,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (white2)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "d8d14d742871cf3f5665e8839fa7a5a71d95013ad2103bce2eb9e601015da34f",
+   "rsrc_size": 51065,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (white3)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "d128d5d95c2500f0ee68e38d70f3b32750accaffa629554d9442947da49a645f",
+   "rsrc_size": 50541,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (white4)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "1308cd50c2972ee8c5596d85c493bd78b2cea8a34a09109a36613fced5baa971",
+   "rsrc_size": 47149,
+   "type": "Icon"
+  },
+  {
+   "creator": "Mngl",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 1024,
+   "name": "Aqua Candy Two/iPod/New iPod (white5)",
+   "oracle_methods": [
+    "Deflate",
+    "None"
+   ],
+   "rsrc_sha256": "a77c34c9c091aeadc41d7365c6befa7d72f9a6526936ffa3a65fa9d83b28c8c3",
+   "rsrc_size": 48185,
+   "type": "Icon"
+  }
+ ],
+ "fixture": "Aqua_Candy_Two.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "b2a13ccd249ea7d0a966016bcf898c3cf2551be13c9f262790be475fc19d454b",
+ "size": 4166883
+}

@@ -488,3 +488,20 @@ echo "references ready"
 [ -f reference/notes/itu-t81.pdf ] || \
     curl -sL -o reference/notes/itu-t81.pdf \
         "https://www.w3.org/Graphics/JPEG/itu-t81.pdf"
+
+# The two writers of the AppleDouble sidecars Mac OS X leaves in archives
+# (src/unc_sidecar.c). Apple's copyfile is what packs a file's Finder info,
+# extended attributes and resource fork into `._name` — `copyfile_pack`,
+# the header struct and its two entries — for the Finder's Compress and for
+# bsdtar alike. libarchive 3.7.4 (the version installed here, which
+# tools/run_meta.py drives through ctypes as the second oracle) is bsdtar:
+# its pax writer puts `._name` before `name`, and its zip reader pairs
+# `__MACOSX/` sidecars by name. Pinned, so the citations stay put.
+for _f in copyfile.c:apple-oss-distributions/copyfile/9f91eb6ced021952278816cdc76ad68da8631ccb/copyfile.c \
+          libarchive_write_set_format_pax.c:libarchive/libarchive/v3.7.4/libarchive/archive_write_set_format_pax.c \
+          libarchive_read_support_format_zip.c:libarchive/libarchive/v3.7.4/libarchive/archive_read_support_format_zip.c \
+          libarchive_read_support_format_tar.c:libarchive/libarchive/v3.7.4/libarchive/archive_read_support_format_tar.c; do
+    [ -f "reference/notes/${_f%%:*}" ] || \
+        curl -sfL -o "reference/notes/${_f%%:*}" \
+            "https://raw.githubusercontent.com/${_f#*:}"
+done

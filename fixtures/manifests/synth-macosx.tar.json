@@ -1,0 +1,54 @@
+{
+ "entries": [
+  {
+   "finder_flags": 256,
+   "is_dir": true,
+   "name": "Folder"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "a3ddfc6cf72fde005d64ef868566c4bc9bffb64cbba7df52fe50e8c08cd28350",
+   "data_size": 880,
+   "finder_flags": 288,
+   "name": "Folder/Doc",
+   "rsrc_sha256": "9273a642c7bed7f6b72f47f6d0c7f2a9a00ca1cb4df42c3ff91ba10ac85a9788",
+   "rsrc_size": 286,
+   "type": "TEXT"
+  },
+  {
+   "creator": "MACS",
+   "data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "data_size": 0,
+   "finder_flags": 17408,
+   "name": "Folder/Icon",
+   "rsrc_sha256": "23fbb44f4432892740d028423a4c017606b3f077679825b251d3a8ddec3611e2",
+   "rsrc_size": 286,
+   "type": "Icon"
+  },
+  {
+   "creator": "MEta",
+   "data_sha256": "a1467579df2d76efa293b0357cb6c769d7f9017c3a149ec2f0eebf3b9605a45a",
+   "data_size": 216,
+   "finder_flags": 8192,
+   "name": "Folder/Meta",
+   "rsrc_sha256": "650f6c25077ab62bf720b7f9cb4d0be985cdce2ccc467df7f1f869bca979783c",
+   "rsrc_size": 286,
+   "type": "APPL"
+  },
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "a1a2040a045a4d84b8b1a1f2a35759756e9f45aabab03c87653e5907c486b104",
+   "data_size": 90,
+   "finder_flags": 0,
+   "name": "Folder/Zero",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  }
+ ],
+ "fixture": "synth-macosx.tar",
+ "format": "Tar",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "d8747c4907aff667847b9728e12afb9f8a430f26fe65e6e67c938e3da19c2102",
+ "size": 20480
+}

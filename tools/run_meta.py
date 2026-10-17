@@ -36,6 +36,15 @@ other than the engine:
       (`-`) counts as what a host writes on a new file: zero, unlocked.
       An archive Expander did not extract whole is left out, by name, as
       sitmeta.py's model check leaves it out.
+  the Mac OS X sidecars (sidecar_expectations)
+      zip's `__MACOSX/._name` and tar's `._name`: tools/synth_macosx.py's
+      four archives by construction, and every zip with a sidecar — the
+      generated ones and the Finder's own `Aqua_Candy_Two.zip` — against
+      libarchive (its `mac-ext` reader, through ctypes), whose AppleDouble
+      blob per entry is parsed here: a field it states and the engine
+      prints `-` FAILS. Also that no sidecar or `__MACOSX` folder is
+      listed where synth_macosx.py says it must not be, and that every
+      resource fork extracted from the `-edge` archives is the sidecar's.
 
 Then a CONTROL per field: the engine's row is tampered with, one field at
 a time, and the comparison must fail — or it was comparing nothing.
@@ -737,6 +746,64 @@ def lhasa_headers(archive):
     return out
 
 
+def zip_unix_times(path):
+    """Entries of a zip that carry Info-ZIP's Unix time, 0x5455 or 0x5855
+    (reference/notes/zip_extrafld_infozip.txt): there `lsar` reports that
+    field's UTC instant, and this engine the MS-DOS time beside it — the
+    writer's own wall clock, two-second steps, which is what a Macintosh
+    date is — so the two differ by the writer's time zone and an odd
+    second, and neither grades the other. First met on the Finder's own
+    `Aqua_Candy_Two.zip` (DECISIONS.md 2026-10-17, *the sidecars Mac OS X
+    left beside the file*)."""
+    import zipfile
+    out = set()
+    try:
+        z = zipfile.ZipFile(path)
+    except Exception:
+        return out
+    for i in z.infolist():
+        x, k = i.extra, 0
+        while k + 4 <= len(x):
+            eid, ln = struct.unpack("<HH", x[k:k + 4])
+            if eid in (0x5455, 0x5855):
+                out.add(i.filename.rstrip("/"))
+            k += 4 + ln
+    return out
+
+
+def sidecar_stated(path):
+    """Entries whose Mac OS X sidecar states dates or a lock (entries 8, 10,
+    12), by libarchive's pairing: those are the sidecar's, which `lsar`
+    does not read (XADAppleDouble.m reads entries 2 and 9), and are graded
+    by sidecar_expectations instead."""
+    out = set()
+    if not any(n.startswith("__MACOSX/") or "/._" in "/" + n
+               for n in (archive_names(path) or ())):
+        return out
+    for n, (blob, _mode) in (libarchive_rows(path) or {}).items():
+        if len(blob) < 26 or blob[:4] != bytes.fromhex("00051607"):
+            continue
+        k = struct.unpack(">H", blob[24:26])[0]
+        ids = {struct.unpack(">I", blob[26 + 12 * i:30 + 12 * i])[0]
+               for i in range(k)}
+        if ids & {8, 10, 12}:
+            out.add(n)
+    return out
+
+
+def archive_names(path):
+    import tarfile
+    import zipfile
+    try:
+        return zipfile.ZipFile(path).namelist()
+    except Exception:
+        pass
+    try:
+        return tarfile.open(path).getnames()
+    except Exception:
+        return None
+
+
 def archive_corpus(cli):
     """Every DATED fixture, and every lhasa test archive, against lsar:
     mtime and ctime where XADMaster saw no Macintosh source, comment and
@@ -754,6 +821,8 @@ def archive_corpus(cli):
         if fmt not in DATED and fmt != "StuffIt 5":
             continue
         oracle, _ac = archive_lsar(p)
+        unixtime = zip_unix_times(p) if fmt == "Zip" else set()
+        sidecar = sidecar_stated(p) if fmt in ("Zip", "Tar") else set()
         lha = lhasa_headers(p) if fmt == "LZH" else None
         for name, r in rows.items():
             o = oracle.get(name)
@@ -777,6 +846,10 @@ def archive_corpus(cli):
                 continue
             for k in ("mtime", "ctime", "comment", "lock"):
                 if k in ("mtime", "ctime") and (o["mac"] or fmt not in DATED):
+                    continue
+                if k == "mtime" and name in unixtime:
+                    continue
+                if k in ("mtime", "ctime", "lock") and name in sidecar:
                     continue
                 if k not in o or o[k] == "-" or r.get(k, "-") == "-":
                     continue
@@ -983,6 +1056,141 @@ def expander_controls(pairs):
     return caught, len(seen)
 
 
+def ad_fields(blob):
+    """What an AppleDouble blob states, in meta_rows' terms — parsed here,
+    from reference/notes/rfc1740.txt, and independent of the engine's."""
+    o = {}
+    if len(blob) < 26 or blob[:8] != bytes.fromhex("0005160700020000"):
+        return o
+    n = struct.unpack(">H", blob[24:26])[0]
+    for i in range(n):
+        eid, off, ln = struct.unpack(">III", blob[26 + 12 * i:38 + 12 * i])
+        b = blob[off:off + ln]
+        if eid == 9 and len(b) >= 32 and any(b[:32]):
+            o["finfo"], o["fxinfo"] = b[:16].hex(), b[16:32].hex()
+        elif eid == 4 and b:
+            o["comment"] = b[:255].hex()
+        elif eid == 8 and len(b) >= 12:
+            v = struct.unpack(">I", b[8:12])[0]
+            if v != 0x80000000:
+                o["backup"] = "%08x" % ((v + 0xB492F400) & 0xFFFFFFFF)
+        elif eid in (10, 12):
+            at = 3 if eid == 10 else 1
+            if len(b) > at:
+                o["lock"] = "L" if b[at] & 1 else "n"
+    return o
+
+
+def libarchive_rows(path):
+    """{name: (AppleDouble blob, mode)} from libarchive's own pairing (zip:mac-ext,
+    reference/notes/libarchive_read_support_format_zip.c), or None when the
+    library is not there."""
+    import ctypes
+    try:
+        la = ctypes.CDLL("libarchive.so.13")
+    except OSError:
+        return None
+    vp, cp = ctypes.c_void_p, ctypes.c_char_p
+    la.archive_read_new.restype = vp
+    for f in ("archive_read_support_format_zip_seekable",
+              "archive_read_support_format_tar", "archive_read_free"):
+        getattr(la, f).argtypes = [vp]
+    la.archive_read_set_options.argtypes = [vp, cp]
+    la.archive_read_open_filename.argtypes = [vp, cp, ctypes.c_size_t]
+    la.archive_read_next_header.argtypes = [vp, ctypes.POINTER(vp)]
+    la.archive_entry_pathname.restype = cp
+    la.archive_entry_pathname.argtypes = [vp]
+    la.archive_entry_mac_metadata.restype = vp
+    la.archive_entry_mac_metadata.argtypes = [vp, ctypes.POINTER(ctypes.c_size_t)]
+    la.archive_entry_mode.restype = ctypes.c_uint
+    la.archive_entry_mode.argtypes = [vp]
+    a = la.archive_read_new()
+    la.archive_read_support_format_zip_seekable(a)
+    la.archive_read_support_format_tar(a)
+    la.archive_read_set_options(a, b"zip:mac-ext=1,tar:mac-ext=1")
+    out = {}
+    if la.archive_read_open_filename(a, path.encode(), 10240) == 0:
+        e = vp()
+        while la.archive_read_next_header(a, ctypes.byref(e)) in (0, -20):
+            n = ctypes.c_size_t()
+            m = la.archive_entry_mac_metadata(e, ctypes.byref(n))
+            name = la.archive_entry_pathname(e).decode("utf-8",
+                                                      "surrogateescape")
+            out[name.rstrip("/")] = (ctypes.string_at(m, n.value) if m
+                                     else b"", la.archive_entry_mode(e))
+    la.archive_read_free(a)
+    return out
+
+
+def sidecar_expectations(cli, work, problems):
+    """[(fixture, {entry: {field: value}}, fields)] for the sidecars, and
+    the absence and resource-fork checks appended to `problems`."""
+    import hashlib
+    import synth_macosx as sm
+    fields = ("finfo", "fxinfo", "comment", "backup", "lock")
+    out = []
+    files = {"zip": "synth-macosx.zip", "tar": "synth-macosx.tar",
+             "zip-edge": "synth-macosx-edge.zip",
+             "tar-edge": "synth-macosx-edge.tar"}
+    for kind, fn in sorted(files.items()):
+        fx = os.path.join(REPO, "fixtures", fn)
+        if not os.path.exists(fx):
+            out.append((fx, {}, fields))     # main() reports it missing
+            continue
+        d = sm.describe(kind)
+        got = meta_rows(cli, fx)
+        for n in d["absent"]:
+            if n in got:
+                problems.append("%s: %s listed, and must not be" % (fn, n))
+        out.append((fx, {n: {k: w[k] for k in fields}
+                         for n, w in d["emit"].items()}, fields))
+        if not kind.endswith("edge"):
+            continue
+        # The forks, which `l --meta` does not show and unar cannot grade
+        # here (make_manifests.py refuses these archives' "._" names).
+        dst = os.path.join(work, kind)
+        subprocess.run([cli, "x", "-o", dst, fx], capture_output=True)
+        for n, w in d["emit"].items():
+            if "rsrc" not in w:
+                continue
+            rp = os.path.join(dst, n + ".rsrc")
+            b = open(rp, "rb").read() if os.path.exists(rp) else b""
+            if hashlib.sha256(b).hexdigest() != w["rsrc"]:
+                problems.append("%s: %s's resource fork is %d B, wanted %d"
+                                % (fn, n, len(b), w["rsrc_size"]))
+    # libarchive, on every zip that has a sidecar in it.
+    fdir = os.path.join(REPO, "fixtures")
+    for fn in sorted(os.listdir(fdir)):
+        if not fn.lower().endswith(".zip"):
+            continue
+        fx = os.path.join(fdir, fn)
+        import zipfile
+        try:
+            names = zipfile.ZipFile(fx).namelist()
+        except Exception:
+            continue
+        if not any(x.startswith("__MACOSX/") for x in names):
+            continue
+        rows = libarchive_rows(fx)
+        if rows is None:
+            problems.append("libarchive.so.13 is not installed: the second "
+                            "oracle for the sidecars is missing")
+            return out
+        want = {}
+        for n, (blob, mode) in rows.items():
+            o = ad_fields(blob) if blob else {}
+            # An entry libarchive pairs with nothing states nothing, and
+            # the engine must say the same: every field is compared. The
+            # lock is the mode's owner-write bit unless the sidecar locks
+            # it (the zip reader's rule, DECISIONS.md 2026-10-17, *the
+            # archives' own Finder info*).
+            if o.get("lock") != "L":
+                o["lock"] = "n" if mode & 0o200 else "L"
+            want[n] = {k: o.get(k, "-") for k in fields}
+        out.append((fx, want, fields))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -995,6 +1203,7 @@ def main():
     exp = expectations(a.cli)
     envwork = tempfile.mkdtemp(prefix="meta-env-")
     exp += envelope_expectations(a.cli, envwork, fails)
+    exp += sidecar_expectations(a.cli, envwork, fails)
     for fx, want, fields in exp:
         if not os.path.exists(fx):
             print("run_meta: %s is missing — generate it (fixtures/SOURCES.md)"

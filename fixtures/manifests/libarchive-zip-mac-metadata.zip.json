@@ -1,0 +1,22 @@
+{
+ "entries": [
+  {
+   "creator": "\u0000\u0000\u0000\u0000",
+   "data_sha256": "06577bd4a35a3fb866f891567b5a9ff67223c2f4422fb7629836d0cadb603ed3",
+   "data_size": 8,
+   "finder_flags": 0,
+   "name": "file3",
+   "oracle_methods": [
+    "Deflate"
+   ],
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "\u0000\u0000\u0000\u0000"
+  }
+ ],
+ "fixture": "libarchive-zip-mac-metadata.zip",
+ "format": "Zip",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "c64dcbffe3b6edf6545d5be088d3aa455e577c6883b20a205ee0976eef6e2a78",
+ "size": 615
+}

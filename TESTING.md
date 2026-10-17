@@ -3371,6 +3371,7 @@ is silent. Graded against:
 | the envelopes, generated per run into `.tmp/` by `tools/synth_envelopes.py`: MacBinary I, II and III, uuencode read-only and writable, UUTool with a placed `.finfo`, base64 read-only, mpack-shaped `multipart/appledouble` | MacBinary: deark's debug reading (`modules/macbinary.c`) for the 16 bytes of FInfo and offset 81, macunpack's copy of 81 (`I_LOCKOFF`), which must agree with deark's; UUTool: hexbin's header (`hexbin/mu.c`) for FInfo bytes 0..7 and 10..15; MIME: the applefile part taken out by Python's `email` and read by `lsar`; the begin-line mode, a reading written in the suite (deark's octal, 0200 owner write); the generator's field values for MacBinary's comment and FXInfo, which nothing else reads |
 | the archive formats (`archive_check`), generated per run by `tools/synth_archmeta.py`: a zip with a MacZip file and folder (`0x334d` stored, Finder comment, backup date) and eight entries of foreign permissions and per-file comments; a pax tar; a gzip with MTIME and FCOMMENT; a Private File with its FInfo and FXInfo; an ArcMac entry; Now QuickFiler's sentinel archive (`nowmeta.build`); SuperDisk!'s (`sdmeta.build`); StuffIt 5's sentinel copy of `derived-FloatingNotes.sit` (`sitmeta.sit5_sentinel`), and the same with each second block's CRC spoiled, which must state nothing | the writing side of each layout, field by field (Python's `zipfile`, `tarfile`, the documents' tables); the sentinel archives re-read by the measurement tools' own walkers. And two second readers: `rexnebular_1_0_0.zip`'s `0x334d` records decoded as Info-ZIP's own Macintosh UnZip decodes them (`DecodeMac3ExtraField`), and its lock as that UnZip's `mapattr` takes it; PackIt's lock word in `derived-PackIt.pit` and `synth-packit-1.pit` as `macunpack -3` copies it to byte 81 |
 | `--corpus`, archives (`archive_corpus`) | every zip, tar, gzip, LZH, ARC and StuffIt 5 fixture and every lhasa test archive, against `lsar` run in UTC — mtime and ctime where XADMaster saw no Macintosh source, comment and lock; and for LZH lhasa's own header dumps (`test/output/*-hdr.txt`) in place of `lsar`'s Unix-style dates, 0x41 times and POSIX lock, which XADMaster misreads (DECISIONS.md 2026-10-17, *the archives' own Finder info*): 655 fields on 2026-10-17. Plus StuffIt 5's archive comment on `Sample Archive.sit` in the cache, against `lsar` |
+| Mac OS X's sidecars (`sidecar_expectations`): `synth-macosx.zip`, `.tar` and the `-edge` pair, from `tools/synth_macosx.py` | the generator's values (`--describe`), including which names must NOT be listed — a sidecar, a `__MACOSX` folder — and, for the `-edge` pair, each resource fork extracted byte for byte; and for every zip holding a `__MACOSX` member (`Aqua_Candy_Two.zip`, the Finder's own; libarchive's test zip; the generated two) **libarchive 3.7.4 through ctypes** (`zip:mac-ext`), whose AppleDouble blob per entry is parsed in the suite: an entry it pairs with nothing must state nothing. Added 2026-10-17 (DECISIONS.md, *the sidecars Mac OS X left beside the file*); controls: the apply step removed fails 417 fields, the pairing removed fails 15 "listed" checks |
 | `--corpus`, envelopes (`envelope_corpus`) | every fixture the engine sniffs as MacBinary (deark), uuencode or base64 (the begin line), MIME (Python's `email`, then `lsar`), each ZipIt payload in a zip (Python's `zipfile`, then deark), and the MacGzip and ZipIt specimens in the cache when present: 507 fields of 255 entries on 2026-10-17 |
 
 | DiskDoubler 3.7's own compressed file | the catalog record the subject had before 3.7 compressed it (`tools/vmac/ddmeta.py --writer`'s result; skipped where absent) |
@@ -3421,7 +3422,9 @@ payloads (no reader here takes one out), and a MacBinary comment or FXInfo
 on any real file — none in the corpus or the cache has either, so those
 two are graded on the generator alone. With `--expander`: the dates (not in
 `l --meta`; `metarun.py --expander` reads them off the disk), and any
-StuffIt reader but Expander 4.0.2. The real File Manager and Desktop Manager: that is
+StuffIt reader but Expander 4.0.2. Of the sidecars: entries 4, 8, 10 and
+12 on a real file (copyfile writes only 2 and 9), and the extended
+attributes after the Finder info, which nothing reads. The real File Manager and Desktop Manager: that is
 `tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the
 Finder then does with any of it.
 
@@ -5670,7 +5673,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 986 files, and the
+  the population you give it: the corpus is 992 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

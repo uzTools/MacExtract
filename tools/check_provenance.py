@@ -61,6 +61,7 @@ CARRIES = {
     "unc_internal.h":   "the LZAH preload",
     "fmt_hecx.c":       "BinHex before 4.0, the whole decoder (hexbin's hecx.c)",
     "fmt_binhex_probe.c": "the .hex/.hcx header-line rule (hexbin's hecx.c)",
+    "unc_sidecar.c":    "which names are Mac OS X sidecars, and the pairing rule",
 }
 
 # Mentions a reference only to say what it no longer owes, or to

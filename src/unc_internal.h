@@ -1174,6 +1174,49 @@ UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
 int unc_appledouble_extract(UncCtx *c);
 void unc_as_record(UncEntryInfo *e, uint32_t id, const uint8_t *p,
                    uint32_t n);
+
+/* Mac OS X's AppleDouble sidecars (unc_sidecar.c): the header of one,
+ * captured out of a stream, and the names that pair it with its file. */
+#define UNC_AD_WIN     1024u  /* the head of a sidecar kept (unc_sidecar.c) */
+#define UNC_AD_READING 0
+#define UNC_AD_YES     1      /* a sidecar: the table is in, and sane  */
+#define UNC_AD_NOT     2      /* not one: it comes out as a file       */
+typedef struct UncAdCap {
+    uint32_t got;             /* bytes of the sidecar kept in `win`     */
+    uint32_t size;            /* its declared length                    */
+    uint32_t roff, rlen;      /* entry 2, the resource fork             */
+    uint8_t  state;
+    uint8_t  win[UNC_AD_WIN];
+} UncAdCap;
+void unc_ad_init(UncAdCap *a, uint32_t size);
+int  unc_ad_feed(UncAdCap *a, const uint8_t *p, uint32_t n); /* 1: done */
+void unc_ad_end(UncAdCap *a);       /* the stream ended: decide */
+void unc_ad_apply(const UncAdCap *a, UncEntryInfo *e);
+
+#define UNC_SIDE_NO   0       /* an ordinary name                       */
+#define UNC_SIDE_DIR  1       /* a folder under __MACOSX: not emitted   */
+#define UNC_SIDE_FILE 2       /* named as a sidecar                     */
+int unc_side_kind(const uint8_t *p, uint32_t n, int isdir);
+/* Is `s` the sidecar's name for the path `p`? */
+int unc_side_of(const uint8_t *s, uint32_t sn, const uint8_t *p,
+                uint32_t pn);
+
+/* zip's pairing over its central directory, held in memory. */
+typedef struct UncSideZip {
+    UncAdCap cap;             /* the sidecar at `caprel`, captured      */
+    const uint8_t *cd;
+    uint32_t cdsize, n;
+    uint32_t caprel;
+    uint32_t lastfile;        /* the last ordinary record walked        */
+    uint8_t  files[128], sides[128];  /* leaf filters                  */
+} UncSideZip;
+/* NULL when no record is named as a sidecar, or there is no memory. */
+UncSideZip *unc_side_zip_open(UncAlloc *al, const uint8_t *cd,
+                              uint32_t cdsize, uint32_t n);
+/* For the record at `rel`: its partner's offset, or UNC_SIZE_UNKNOWN. A
+ * file's partner is its sidecar; a sidecar's (*isside set) its file.
+ * Called for every record in order: it keeps the walk's last file. */
+uint32_t unc_side_zip_pair(UncSideZip *z, uint32_t rel, int *isside);
 UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
 int unc_hecx_extract(UncCtx *c);
