@@ -425,6 +425,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-16 (the estimate that went back up) — the time left is taken from the byte counts, not the percentage, and timed per layer
 - 2026-10-16 (the empty password) — OK on an empty password field is a wrong password, and a refusal is added under the request
 - 2026-10-16 (the folders that lost their icons) — a folder's Finder flags and dates are set as a file's are, so a custom folder icon survives
+- 2026-10-17 (the metadata, carried to the disk) — every Finder field, the backup date, the lock and the Get Info comment travel from engine to disk, and a folder keeps its date
 
 ---
 
@@ -8174,8 +8175,9 @@ one in `UncEntryInfo` itself. `name` is `UNC_NAME_MAX` (255) bytes; a
 while `unzip` showed all 457. The file written was a different file from
 the one in the archive, and nothing anywhere said so.
 
-**Why not just carry the name.** `UncEntryInfo` is 302 bytes on the
-68000 target (measured, and re-measured every time the struct grew — the
+**Why not just carry the name.** `UncEntryInfo` is 346 bytes on the
+68000 target (302 until the Finder metadata joined it, 2026-10-17;
+measured, and re-measured every time the struct grew — the
 "280 bytes" that stood in `fmt_lzh.c` was never right, and the "296"
 this entry stated until 2026-09-03 stopped being right a few hours after
 it was written, 2026-09-03, *the struct that grew after it was
@@ -27112,3 +27114,118 @@ by a later tool, is what StuffIt objects to is a hypothesis: no StuffIt
 alike, with the empty password's test removed: 96 B off every
 extraction's budget, `TIERS` −96 derived, `OVL_SAVED` unmoved,
 `run_tiers.py --check` moves no tally.
+
+## 2026-10-17 (the metadata, carried to the disk) — every Finder field, the backup date, the lock and the Get Info comment travel from engine to disk, and a folder keeps its date
+
+**The brief, the maintainer's:** extraction brings back every file and
+folder as it was — the whole Finder info, the extended Finder info, the
+Get Info comment, three dates, the lock; a foreign read-only permission
+becomes locked. Not a matter of taste.
+
+**Decision.** `UncEntryInfo` carries all of it: `finder_info[32]` (FInfo or
+DInfo, then FXInfo or DXInfo, raw, as AppleSingle's entry 9 and the HFS
+catalog hold them), `backup_date`, `comment`/`comment_len` (the engine's
+bytes, valid until `end_entry` returns), `locked` (0 not stated, 1 no, 2
+yes), and a `meta` byte saying which of the first three the archive
+stated, because zero is a value each can hold. The Macintosh shell writes
+everything stated, in `StampCat`: the 32 bytes, the backup date, the
+comment through the Desktop Manager, then the lock, last, files only. Two
+readers deliver it so far, to prove the plumbing: AppleSingle/AppleDouble
+(entries 4, 8's backup date, 9 whole, 10 and 12, RFC 1740) and AppleLink
+packages (the record's 16 bytes, cited to the translator's own
+`AddItems`). The rest are OPEN_ITEMS.md's.
+
+**Two writes are not verbatim, on purpose.**
+- **Finder flag 0x0100 (inited) is cleared**, as before.
+- **FXInfo/DXInfo +10, fdComment/frComment, is cleared.** Measured on
+  System 3.0's own disk (`tools/vmac/hfs_cat.py --fcmt DeskTop`): it is the
+  id of the file's `FCMT` resource in the Finder's `DeskTop` file — Font/DA
+  Mover's 0x5389 is `FCMT` 21385, "Font/DA Mover Version 3.0"; the Finder's
+  0x6727 is 26407. An id copied from another volume names another file's
+  comment or none. *Hypothesis, not run:* that a System 6 Finder would then
+  show or overwrite the wrong one. The text travels as `comment` instead.
+
+**Comments, and the one-behaviour rule.** The calls are mpack's
+(`reference/mpack/macfile.c`): `PBDTGetPath`, `PBDTSetComment`,
+`PBDTFlush`. Measured on every tier (`tools/vmac/metarun.py`, the read-back
+build's `PBHGetVolParms`/`PBDTGetPath` answers):
+
+| volume | PBHGetVolParms | vMAttrib | PBDTGetPath | comment |
+|---|---|---|---|---|
+| System 3.0, 1,440 KB floppy | −50 | — | −50 | not written |
+| System 6.0.8, 1,440 KB floppy | −50 | — | −50 | not written |
+| System 7.0.1, 1,440 KB floppy | 0 | 0xE0 | −123 | not written |
+| System 7.0.1, 8 MB volume | 0 | 0x10E0 (bit 12) | 0 | **read back exact** with `PBDTGetComment` |
+
+So `PBDTGetPath` alone refuses every volume without a Desktop Manager, and
+the `PBHGetVolParms` mpack asks first was dropped (−60 B of CODE). **System 6
+and earlier cannot be given a comment by the path that works on System 7**:
+their Finder keeps it in its own `Desktop` file, which System 7 does not
+read and which that Finder may hold open. Writing it there is a second path
+on some Systems — exactly what the one-behaviour rule forbids — so it is
+**not written, and nothing says so** (a line only some Systems print is
+itself per-machine behaviour). **The conflict is the maintainer's to
+settle** (OPEN_ITEMS.md, *Get Info comments on a System 6 or System 3.0
+volume*). A comment on a System 7 floppy is lost the same way.
+
+**A folder's date.** Creating or deleting an item sets its folder's
+modification date to now, so the date stamped when the folder's entry
+arrived was lost to the first file written inside. A memo of every folder's
+date until the run ends was priced and refused: `gDirMemo` is 200 rows of 8
+B in A5, and a date per row is **+800 B of A5** off every budget, still
+bounded at 200 folders. Instead `DirMd` reads the folder's date before each
+create or delete in it and puts it back after: no memory, no bound, three
+catalog calls per item. Not the destination folder, which is the user's.
+Measured: the mock catalog's control (no restore: the check fails), and on
+the emulator the folder `Placed` reads 0xA0000002 after two files were
+written inside, where `main`'s build reads the run's own time.
+
+**Evidence, end to end** — `tools/vmac/metarun.py`, `synth-as-meta.as` and
+`synth-sqp-meta.pkg`, every value read off the output disk's catalog with
+`tools/vmac/hfs_cat.py` (a reader written for this, libhfs's layout):
+
+| tier | values as the archive states |
+|---|---|
+| System 3.0, 4 MB | **18/18** |
+| System 6.0.8, 4 MB | **18/18** |
+| System 7.0.1, 4 MB, 8 MB output | **17/18**, the comment included |
+| control: `main`'s build, System 7.0.1 | 7/17 — the 10 new values all missing, the folder's date the run's own |
+
+**Not settled: System 7.0.1's `fdXFlags`.** FXInfo +9 reads 0x70 where the
+archive's 0x00 was written, on System 7.0.1 only (6.0.8 keeps 0x00), and
+with `main`'s build — which writes no FXInfo, so `fdScript` stays 0 — it
+stays 0x00. That System 7 rewrites it when `fdScript` (+8) is 0x81 is a
+hypothesis; who writes it is not measured. `metarun.py` keeps failing on
+it rather than tolerating a byte nobody has explained.
+
+**Two harness facts it cost.** The autotest's report reached `in.dsk` only
+with an eject between the file and the grid: Mini vMac writes an image's
+buffered changes on eject, the budget probe's reason (2026-10-10), and
+three runs were spent before that was read. And a resource fork that is
+not shaped like one is masked on the Macintosh's read-back and not on the
+host's, so the first synthetic fixture failed a CRC with its fork
+byte-exact on the disk.
+
+**The CLI** writes none of this to a Linux disk; nothing there would hold
+it, and the `._NAME` sidecar is the raw resource fork that `unar -k hidden`
+writes and the differential suite compares. It lists it instead: `l
+--meta`, graded by `tools/run_meta.py` against `lsar` and the synthesizers.
+
+**A cut AppleSingle was called complete.** The new fixtures are the
+corpus's first AppleSingle archives, and `run_truncation.py` failed five
+cuts of them at once: an entry past the end of the file was skipped as
+"corrupt" and the rest called whole, where `unar` calls it broken. Now such
+an entry marks the file cut — the forks still stream, so what is there
+comes out — and the entry ends `UNC_ERR_TRUNCATED`. +60 B of CODE and 4 of
+A5 of the total below. Control: the five cuts exit 0 on the build before.
+
+**Price.** Shipped: CODE +820, A5 +12, **832 B off every extraction's
+budget on a 1 MB Mac Plus**; lazy CODE +820, A5 −20; control CODE +864, A5
+0. `ovl_sqp` +40, `ovl_text` +8, the bundle +48. `OVL_SAVED` +32, `TIERS`
+−864 DERIVED (tools/run_tiers.py); `run_tiers.py --check` says whether a
+tally moved. Stack: `UncEntryInfo` 302 → 346 B, so every reader's frame
++44 and the engine's deepest chain 3,310 → 3,354 B, derived; the shell's
+chain under `sink_begin` 592 → 636 B (`StampCat` 176 → 208 with its three
+calls sharing one parameter block, `DirMd` 156). **The first cut was +1,032
+B of CODE and `StampCat` 476 B of frame.**
+

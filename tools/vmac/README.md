@@ -2725,6 +2725,40 @@ The same question was then asked of **every** volume walk in this tree,
 because the wrong explanation above is exactly what made the flag look
 like somebody else's problem — see *What every walk can see*, below.
 
+## The Finder metadata, read off the disk — `hfs_cat.py`, `metarun.py`
+
+    metarun.py --system System6.hfv          # or --sys30
+    metarun.py --system Sys7.img --out-kb 8192
+    metarun.py --check .tmp/vmacrun-*/       # re-grade disks a run kept
+    hfs_cat.py out.dsk [--json] [--fcmt DeskTop]
+
+`hfs_cat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
+layout) and prints, per file, the whole FInfo and FXInfo, three dates and
+the locked bit, and per folder the DInfo, DXInfo and dates; `--fcmt` lists
+a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
+`synth-as-meta.as` and `synth-sqp-meta.pkg` with `-D UNC_AT_DTCOMMENT`,
+keeps the disks (`sys30.py --keep-disks` too, since 2026-10-17) and grades
+every value against the synthesizers' input, with the shell's two
+deliberate changes (inited cleared, fdComment cleared). Results:
+DECISIONS.md 2026-10-17, *the metadata, carried to the disk*.
+
+**`-D UNC_AT_DTCOMMENT`** appends a `DTCM` trailer to the autotest report:
+what `PBHGetVolParms` and `PBDTGetPath` answer on the output volume, and
+each file's comment read back with `PBDTGetComment` — the half no host
+tool reads off a System 7 disk. It writes the file, **ejects In**, then
+paints the grid: without the eject the report never reached `in.dsk` on
+System 6.0.8 (three runs), the budget probe's lesson of 2026-10-10.
+
+**A System 7.0.1 floppy has no Desktop Manager** (vMAttrib 0xE0), so the
+comment needs `--out-kb 8192` there; on System 3.0 and 6.0.8 no volume has
+one.
+
+**What they cannot see.** The extents-overflow file (`hfs_cat.py` refuses a
+catalog that continues there), HFS+, MFS, a partition map. `Desktop DB`.
+What the Finder then does with any of it: draws the icon there, opens the
+window at that rectangle, shows the comment. A folder's comment: neither
+fixture gives a folder one.
+
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
 Every switch below rebuilds the autotest application and answers one question

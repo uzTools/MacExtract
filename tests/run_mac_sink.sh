@@ -145,6 +145,11 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # The figure the low-memory alert quotes. UI cannot be tested here; the
 # arithmetic behind it can, and it is the half that can go wrong quietly.
 ./build/mac_sink_asan --shortfall || { echo "mac-sink: shortfall FAILED"; exit 1; }
+# Every metadata field the shell writes — Finder info, extended Finder info,
+# backup date, comment, lock, and a folder's date kept across what is
+# written inside it — each with a control in which the mock drops that
+# write and the check must fail (DECISIONS.md 2026-10-17).
+./build/mac_sink_asan --meta "$(mktemp -d)" || { echo "mac-sink: meta FAILED"; exit 1; }
 # The time left in the progress dialog: it must not go back up while the
 # rate holds (DECISIONS.md 2026-10-16, *the estimate that went back up*).
 ./build/mac_sink_asan --eta || { echo "mac-sink: eta FAILED"; exit 1; }
@@ -169,7 +174,7 @@ if [ -f fixtures/derived-Compact_Pro_Package ]; then
     fi
     rm -rf "$out"
 fi
-echo "mac-sink: native OK (file + RAM paths + cancel cleanup + shortfall + eta + names + comment)"
+echo "mac-sink: native OK (file + RAM paths + cancel cleanup + meta + shortfall + eta + names + comment)"
 
 # The alternative write path. The default streams each chunk straight to the
 # File Manager; UNC_MAC_STAGE_WRITES accumulates whole forks in RAM and writes

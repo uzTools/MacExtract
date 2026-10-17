@@ -3352,6 +3352,43 @@ end up with the same character, which is why
 disabled, and `derived-800saywhat301j.sit` fails it with three names
 missing and three unexpected.
 
+## The Finder metadata beyond type, creator and flags (`tools/run_meta.py`, `mac_sink_test --meta`, in `ci.sh`)
+
+Added 2026-10-17 with the fields `UncEntryInfo` gained that day (DECISIONS.md,
+*the metadata, carried to the disk*). Two halves, because two parties can get
+it wrong.
+
+**The engine's half: `tools/run_meta.py`.** `macextract l --meta` prints one
+`m` row per entry, every field hex: the 32 bytes of FInfo/DInfo and
+FXInfo/DXInfo, the backup date, the lock, the comment, `-` where the archive
+is silent. Graded against:
+
+| subject | oracle |
+|---|---|
+| `synth-as-meta.as`, `synth-as-dosro.as` | `lsar` for Finder info, comment and backup date; `tools/synth_as.py --describe` for the lock, which XADMaster has no key for, and for the backup date 0x80000000, which RFC 1740 calls unknown and XADMaster reports as 2068 |
+| `synth-sqp-meta.pkg` | `tools/synth_sqp.py`'s own items: nothing else reads the container |
+| `--corpus` | every fixture where the engine and `lsar` both state a field: 8 fields on 2026-10-17, the two DiskDoubler AppleDouble sidecars' Finder info |
+
+Each field is then tampered with in the engine's row, one at a time, and the
+comparison must fail: 10 controls, 10 caught.
+
+**The shell's half: `mac_sink_test --meta`** (`tests/run_mac_sink.sh`). A
+folder and two files go through the real `sink_begin`/`sink_end` against a
+mock catalog in which creating or deleting an item stamps its folder with
+"now", as the File Manager does. Checked: DInfo/FInfo bytes, DXInfo/FXInfo
+with the comment id cleared, three dates on each, the lock on one file and
+not the other, the comment through the mock Desktop Manager, and the
+folder's modification date after two files are created inside it; then no
+comment and no report line on a volume without a Desktop Manager. Six
+controls make the mock drop one write each, and each fails exactly its own
+check; a build without the folder-date restore fails that check (measured
+once, 2026-10-17).
+
+**What neither can see.** A field the engine does not read yet: it prints `-`
+and passes. The real File Manager and Desktop Manager: that is
+`tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the
+Finder then does with any of it.
+
 ## A cut archive is NOTICED (`tools/run_truncation.py`, in `ci.sh`)
 
 Added 2026-08-29, and it exists because the suite next to it cannot ask
@@ -3364,10 +3401,13 @@ is missing half its files. Two formats did exactly that (BLOCKERS.md).
 
 The question here is a disagreement: when `unar` calls a cut archive
 broken, do we? The most-entried two fixtures of each format are cut to
-25, 50 and 75 % — **93 archives across 16 formats** since AppleLink
-packages joined on 2026-10-05 — and a fixture where
-`lsar` reports a parse failure and `macextract t` exits 0 is a failure
-of this suite.
+25, 50 and 75 % — **111 archives across 19 formats** on 2026-10-17's
+`ci.sh` (93 across 16 when AppleLink packages joined on 2026-10-05) — and
+a fixture where `lsar` reports a parse failure and `macextract t` exits 0
+is a failure of this suite. **AppleSingle joined 2026-10-17 by failing
+it**: its first fixtures were cut five times and called complete five
+times, an entry past the end of the file having been skipped as corrupt
+(DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
 
 **Established that it can fail** against both defects it was written
 for: putting the DiskDoubler walk's clean-end rule back fails it on
@@ -5594,7 +5634,7 @@ not who spent it.
   through the File Manager, and nothing here buffers the way the Mac
   shell does.
 - **Any file it is not handed.** It is a sweep, so what it measures is
-  the population you give it: the corpus is 983 files, and the
+  the population you give it: the corpus is 986 files, and the
   interesting population for a REJECTION cost is files that are not
   archives at all — `reference/`, this repository's own trees, the
   specimen cache. 8,364 of those were swept on 2026-10-05, which is

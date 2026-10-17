@@ -12,7 +12,9 @@
  *   - Progress in a titled window with a Cancel button (and Cmd-.),
  *     under an Apple menu and a File menu, so System 7 can switch out.
  *   - Streaming writes to the data fork and resource fork (HOpenRF),
- *     then PBSetCatInfo for type/creator/Finder flags/dates.
+ *     then PBSetCatInfo for the Finder info, extended Finder info and
+ *     three dates, the Get Info comment through the Desktop Manager, and
+ *     the lock last (StampCat).
  *   - 31-character, colon-free name sanitization with collision
  *     suffixes; the engine's reversible '/'->':' swap is undone here
  *     (':' in an engine component was '/' in the original Mac name).
@@ -1656,6 +1658,8 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
  * there too, and a second extraction of one archive put `name~1` files
  * through the first one's tree (DECISIONS.md 2026-10-11, *the folder
  * that is already there*). */
+static unsigned long DirMd(short vol, long dir, unsigned long md);
+
 static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
                        int top, long *dirID, int *isNew, int *merged,
                        int *numbered)
@@ -1673,7 +1677,9 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
         uint32_t seen;
         CInfoPBRec pb;
         Str63 tmp;
+        unsigned long md = DirMd(vRefNum, top ? 0 : parent, 0);
         OSErr err = MyDirCreate(vRefNum, parent, name, &created);
+        if (err == noErr) DirMd(vRefNum, parent, md);
         if (err == noErr) {
             *dirID = created;
             *isNew = 1;
@@ -1768,6 +1774,62 @@ static OSErr MyHDelete(short vol, long dir, ConstStr255Param name)
     pb.ioParam.ioVRefNum = vol;
     pb.fileParam.ioDirID = dir;
     return PBHDeleteSync(&pb);
+}
+
+/* Unlock one file (PBHRstFLock): an envelope layer the archive locked has
+ * to be unlocked before the unwrap can delete it. StampCat does the
+ * locking, last, after the forks and the catalog entry. */
+static OSErr MyHUnlock(short vol, long dir, ConstStr255Param name)
+{
+    HParamBlockRec pb;
+    long z;
+    for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+    pb.ioParam.ioNamePtr = (StringPtr)name;
+    pb.ioParam.ioVRefNum = vol;
+    pb.fileParam.ioDirID = dir;
+    return PBHRstFLockSync(&pb);
+}
+
+/* A folder's modification date, held across a change INSIDE it.
+ *
+ * The File Manager sets a folder's modification date to now whenever an
+ * item is created in it or deleted from it, so a folder stamped with its
+ * archived date when its entry arrived lost that date to the first file
+ * written inside (DECISIONS.md 2026-10-16, *the folders that lost their
+ * icons*). Rather than remember every folder's date until the run ends —
+ * a table, and a bound on how many folders keep theirs — the date is read
+ * just before each create or delete in a folder this run is writing into,
+ * and put back just after: three catalog calls per item, no memory, and
+ * no limit (DECISIONS.md 2026-10-17, *the metadata, carried to the
+ * disk*). The destination folder itself is never held: it is the user's,
+ * and its date should say it changed.
+ *
+ * A folder is addressed by its directory ID with ioFDirIndex = -1 (Inside
+ * Macintosh: Files, PBGetCatInfo), which returns its parent and name; the
+ * write goes back through that name and parent, the ordinary way.
+ *
+ * One function for both halves: DirMd(dir, 0) reads, DirMd(dir, md) puts
+ * md back. 0 is "could not read" and "nothing to put", and dir 0 — which
+ * no folder has — is how a caller says "the destination": nothing then. */
+static unsigned long DirMd(short vol, long dir, unsigned long md)
+{
+    CInfoPBRec pb;
+    unsigned char nm[32];           /* a Str31: an HFS name is 31 at most */
+    long z;
+    if (!dir) return 0;
+    for (z = 0; z < (long)sizeof pb; z++) ((char *)&pb)[z] = 0;
+    pb.dirInfo.ioNamePtr = nm;
+    pb.dirInfo.ioVRefNum = vol;
+    pb.dirInfo.ioFDirIndex = -1;
+    pb.dirInfo.ioDrDirID = dir;
+    if (PBGetCatInfoSync(&pb) != noErr) return 0;
+    if (md) {
+        pb.dirInfo.ioDrMdDat = md;
+        pb.dirInfo.ioFDirIndex = 0;
+        pb.dirInfo.ioDrDirID = pb.dirInfo.ioDrParID;
+        PBSetCatInfoSync(&pb);
+    }
+    return pb.dirInfo.ioDrMdDat;
 }
 
 /* Under UNC_AT_TIMING only, the two entry points that do catalog work are
@@ -1908,11 +1970,16 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
              * test is 0x80000000 up to, not including, UNC_SIZE_UNKNOWN, and
              * kTooBig is no OSErr — they are all negative (DECISIONS.md
              * 2026-10-14, *the file the disk was too full for*). */
+            unsigned long md = DirMd(s->vRefNum, s->curDirID == s->rootDirID
+                                                 ? 0 : s->curDirID, 0);
             err = (info->data_size - 0x80000000UL < 0x7FFFFFFFUL ||
                    info->rsrc_size - 0x80000000UL < 0x7FFFFFFFUL)
                   ? kTooBig
                   : MyHCreate(s->vRefNum, s->curDirID, s->curName);
-            if (err == noErr) break;
+            if (err == noErr) {
+                DirMd(s->vRefNum, s->curDirID, md);
+                break;
+            }
             if (err == dskFulErr) return -1;     /* nothing else will fit */
             if (err != dupFNErr || attempt >= 99) {
                 /* One entry's name, not the archive's run: until
@@ -2251,19 +2318,63 @@ static int sink_end(void *ctx, int status)
 
 /* Set type/creator, Finder flags and dates on s->curName in s->curDirID,
  * a file or a FOLDER: Inside Macintosh: Files lays HFileInfo and DirInfo
- * out so that ioFlFndrInfo.fdFlags and ioDrUsrWds.frFlags, and the two
- * creation and modification dates, sit at the same offsets. A folder has
- * no type or creator, so those two words are left alone for it. */
+ * out so that ioFlFndrInfo.fdFlags and ioDrUsrWds.frFlags, the three
+ * dates and the extended Finder info sit at the same offsets. A folder has
+ * no type or creator, so those two words are left alone for it.
+ *
+ * Then the Get Info comment, through the Desktop Manager, on a volume that
+ * has one. The calls are mpack's (reference/mpack/macfile.c): PBDTGetPath,
+ * then PBDTSetComment by name and folder. mpack asks PBHGetVolParms first
+ * (bHasDesktopMgr); this does not, because PBDTGetPath alone refuses every
+ * volume without one, measured 2026-10-17 (tools/vmac/metarun.py): -50 on
+ * System 3.0 and 6.0.8, where PBHGetVolParms is -50 too, and -123 on a
+ * System 7.0.1 floppy, whose vMAttrib is 0xE0. The same calls on every
+ * System; what differs is the VOLUME.
+ * A System 6 or System 3.0 volume has no Desktop Manager: its Finder keeps
+ * comments as `FCMT` resources in its own Desktop file, keyed by the id in
+ * FXInfo (measured, DECISIONS.md 2026-10-17), a file that Finder holds
+ * open and that System 7 does not read. There the comment is not written,
+ * and nothing says so: a line only some Systems print is behaviour that
+ * differs by machine.
+ *
+ * Then, last, the lock: a locked file refuses every write above. Files
+ * only — HFS has no locked folder, and the run writes inside a folder
+ * after its entry. */
 static void StampCat(MacSink *s)
 {
-    CInfoPBRec pb;
+    /* One block for the three calls, which run one after another: three
+     * blocks side by side were 300 B more of this frame, which sits under
+     * sink_begin and sink_end in the engine's call chain (FORMATS.md,
+     * *Stack*). */
+    union { CInfoPBRec c; HParamBlockRec h; DTPBRec d; } u;
+#define pb u.c
     Str63 name;
+    long z;
     BlockMoveData(s->curName, name, s->curName[0] + 1);
     pb.hFileInfo.ioNamePtr = name;
     pb.hFileInfo.ioVRefNum = s->vRefNum;
     pb.hFileInfo.ioDirID = s->curDirID;
     pb.hFileInfo.ioFDirIndex = 0;
     if (PBGetCatInfoSync(&pb) == noErr) {
+        /* The rest of the Finder info, where the archive stated it: the
+         * FInfo or DInfo and the FXInfo or DXInfo whole, as raw bytes,
+         * which is the layout a 68000 holds them in. Then the fields
+         * above them win where they overlap, as before. fdComment and
+         * frComment (FXInfo/DXInfo +10) are cleared: on System 6 and
+         * earlier they are the id of an `FCMT` resource in the Finder's
+         * Desktop file of the volume the file CAME from, measured on
+         * System 3.0's own disk, so a copied id names another file's
+         * comment here or none (DECISIONS.md 2026-10-17). The comment
+         * itself travels as text (below). */
+        if (s->cur.meta & UNC_META_FINFO)
+            BlockMoveData(s->cur.finder_info, &pb.hFileInfo.ioFlFndrInfo, 16);
+        if (s->cur.meta & UNC_META_FXINFO) {
+            unsigned char *fx = (unsigned char *)&pb.hFileInfo.ioFlXFndrInfo;
+            BlockMoveData(s->cur.finder_info + 16, fx, 16);
+            fx[10] = fx[11] = 0;
+        }
+        if (s->cur.meta & UNC_META_BACKUP)
+            pb.hFileInfo.ioFlBkDat = s->cur.backup_date;
         if (s->cur.type)    pb.hFileInfo.ioFlFndrInfo.fdType = s->cur.type;
         if (s->cur.creator) pb.hFileInfo.ioFlFndrInfo.fdCreator = s->cur.creator;
         pb.hFileInfo.ioFlFndrInfo.fdFlags =
@@ -2273,6 +2384,26 @@ static void StampCat(MacSink *s)
         pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
         PBSetCatInfoSync(&pb);
     }
+    if (s->cur.comment_len) {
+        for (z = 0; z < (long)sizeof u; z++) ((char *)&u)[z] = 0;
+        u.d.ioVRefNum = s->vRefNum;
+        if (PBDTGetPath(&u.d) == noErr) {
+            u.d.ioNamePtr = name;
+            u.d.ioDirID = s->curDirID;
+            u.d.ioDTBuffer = (Ptr)s->cur.comment;
+            u.d.ioDTReqCount = s->cur.comment_len;
+            if (PBDTSetCommentSync(&u.d) == noErr)
+                PBDTFlushSync(&u.d);
+        }
+    }
+    if (s->cur.locked == UNC_LOCK_YES && !s->cur.is_dir) {
+        for (z = 0; z < (long)sizeof u; z++) ((char *)&u)[z] = 0;
+        u.h.ioParam.ioNamePtr = name;
+        u.h.ioParam.ioVRefNum = s->vRefNum;
+        u.h.fileParam.ioDirID = s->curDirID;
+        PBHSetFLockSync(&u.h);
+    }
+#undef pb
 }
 
 static int SINK_END(void *ctx, int status)
@@ -2327,7 +2458,10 @@ static int SINK_END(void *ctx, int status)
     } else if (!s->cur.is_dir) {
         /* Cancelled or failed: remove the empty/partial file this entry
          * created in sink_begin, so no incomplete output is left behind. */
-        MyHDelete(s->vRefNum, s->curDirID, s->curName);
+        unsigned long md = DirMd(s->vRefNum, s->curDirID == s->rootDirID
+                                             ? 0 : s->curDirID, 0);
+        if (MyHDelete(s->vRefNum, s->curDirID, s->curName) == noErr)
+            DirMd(s->vRefNum, s->curDirID, md);
     }
     if (status != UNC_OK) {
         s->errors++;
@@ -4475,6 +4609,49 @@ static void at_report_file(const uint32_t *vals, int nvals)
         at_wr(refNum, w, 4);
         at_wr(refNum, gATrec[i].name, (long)gATrec[i].name[0] + 1);
     }
+#ifdef UNC_AT_DTCOMMENT
+    /* 'DTCM', GetVolParms' result and vMAttrib, DTGetPath's result, then
+     * per record GetComment's result, a length byte and the bytes. */
+    {
+        HParamBlockRec vb;
+        DTPBRec dt;
+        unsigned char vp[32], cm[256];
+        long z;
+        OSErr e1, e2;
+        for (z = 0; z < (long)sizeof vb; z++) ((char *)&vb)[z] = 0;
+        for (z = 0; z < 32; z++) vp[z] = 0;
+        vb.ioParam.ioVRefNum = gATrecVol;
+        vb.ioParam.ioBuffer = (Ptr)vp;
+        vb.ioParam.ioReqCount = sizeof vp;
+        e1 = PBHGetVolParmsSync(&vb);
+        for (z = 0; z < (long)sizeof dt; z++) ((char *)&dt)[z] = 0;
+        dt.ioVRefNum = gATrecVol;
+        /* Asked whatever the volume says, which StampCat never does: this
+         * is how what PBDTGetPath answers WITHOUT a Desktop Manager is
+         * measured. */
+        e2 = PBDTGetPath(&dt);
+        at_put32(w, 0x4454434DUL); at_wr(refNum, w, 4);       /* 'DTCM' */
+        at_put32(w, (uint32_t)(long)e1); at_wr(refNum, w, 4);
+        at_wr(refNum, vp + 2, 4);                            /* vMAttrib */
+        at_put32(w, (uint32_t)(long)e2); at_wr(refNum, w, 4);
+        for (i = 0; i < gATnrec; i++) {
+            OSErr e3 = -1;
+            unsigned char n = 0;
+            if (e2 == noErr) {
+                dt.ioNamePtr = gATrec[i].name;
+                dt.ioDirID = gATrec[i].dir;
+                dt.ioDTBuffer = (Ptr)cm;
+                dt.ioDTReqCount = 255;
+                dt.ioDTActCount = 0;
+                e3 = PBDTGetCommentSync(&dt);
+                if (e3 == noErr) n = (unsigned char)dt.ioDTActCount;
+            }
+            at_put32(w, (uint32_t)(long)e3); at_wr(refNum, w, 4);
+            at_wr(refNum, &n, 1);
+            if (n) at_wr(refNum, cm, n);
+        }
+    }
+#endif
     FSClose(refNum);
     FlushVol(NULL, gATreportVol);      /* the host reads this off the image */
 }
@@ -5173,6 +5350,13 @@ int main(void)
             (void)Eject(NULL, gATreportVol);
             at_report(vals, 8);
         }
+#elif defined(UNC_AT_DTCOMMENT)
+        /* File, eject In, grid — the budget probe's order and for its
+         * reason: Mini vMac writes an image's buffered changes out on eject
+         * and not before, and the host stops the machine at the grid. */
+        at_report_file(vals, 8);
+        (void)Eject(NULL, gATreportVol);
+        at_report(vals, 8);
 #else
         at_report(vals, 8);
         at_report_file(vals, 8);
@@ -5690,6 +5874,9 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
              * litter now. Removed before the next layer runs, so a
              * chain does not leave a trail of intermediates. */
             if (ret == UNC_OK && !errors && delName[0]) {
+                /* A layer the archive locked (an AppleSingle's entry 10)
+                 * refuses to be deleted until it is unlocked. */
+                MyHUnlock(delVol, delDir, delName);
                 MyHDelete(delVol, delDir, delName);
                 delName[0] = 0;
                 /* RunExtract flushed the volume before it returned, so

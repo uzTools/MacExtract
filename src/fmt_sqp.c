@@ -30,8 +30,9 @@
  * A record carries both forks as (compressed length, absolute offset,
  * expanded length), and one flag byte with one stored bit per fork:
  *
- *   +4/+12/+80  the DATA fork, stored when bit 1 of +84 is set
- *   +0/+16/+76  the RESOURCE fork, stored when bit 2 of +84 is set
+ *   +8/+12/+80  the DATA fork, stored when bit 1 of +84 is set
+ *   +4/+16/+76  the RESOURCE fork, stored when bit 2 of +84 is set
+ *               (+0 is a zero word nothing reads)
  *   +20         the 16 bytes of Finder info — an FInfo for a file, a
  *               DInfo for a folder, so type and creator are a window
  *               rectangle in a folder's record and are not reported
@@ -193,9 +194,10 @@ int unc_sqp_extract(UncCtx *c)
     obuf = iobuf + iocap;
     /* The path walker is in the allocation rather than on the stack: it
      * is 368 B on the 68000 target and this function already holds a
-     * 302-byte entry, and the stack is 4 KB for the whole call chain
-     * (CLAUDE.md). Measured: the deepest chain here is 748 B —
-     * unc_sqp_extract 516, sqp_fork 172, unc_lzw_read 60
+     * 346-byte entry, and the stack is 4 KB for the whole call chain
+     * (CLAUDE.md). Measured: the deepest chain here is 792 B —
+     * unc_sqp_extract 560, sqp_fork 172, unc_lzw_read 60 (748 B before
+     * the entry grew by 44 on 2026-10-17)
      * (`-fstack-usage`, FORMATS.md, *Stack*).
      * 4-aligned: the two buffers before it are 4,096 B each and the
      * block itself comes from the allocator. */
@@ -252,6 +254,14 @@ int unc_sqp_extract(UncCtx *c)
         if (!folder) {
             e.type    = unc_get_u32be(r + SQP_TYPE);
             e.creator = unc_get_u32be(r + SQP_CREATOR);
+        }
+        /* And the 16 bytes whole, which is what lets a host put back a
+         * file's icon position and window, and a folder's rectangle,
+         * location and view: AddItems @0x2378 copies them whole. */
+        {
+            int k;
+            for (k = 0; k < 16; k++) e.finder_info[k] = r[SQP_TYPE + k];
+            e.meta |= UNC_META_FINFO;
         }
 
         if (folder) {

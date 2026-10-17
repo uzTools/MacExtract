@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "creator": "ttxt",
+   "data_sha256": "a7318fd3710fad10cd17b0db707a7238f7bd60cdbdc9caf4723878a87c9c59f2",
+   "data_size": 416,
+   "finder_flags": 8480,
+   "name": "Kept Whole",
+   "rsrc_sha256": "a3e3a1785f3ea571772defdb8a0a8340d7f066dd1e5caef77edde095337cbdfc",
+   "rsrc_size": 286,
+   "type": "TEXT"
+  }
+ ],
+ "fixture": "synth-as-meta.as",
+ "format": "AppleSingle",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "b740c8d7af4f6597f078e797db8be422f36c641bae47092d795ff6a880da7994",
+ "size": 923
+}

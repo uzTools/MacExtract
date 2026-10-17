@@ -372,7 +372,52 @@ typedef struct UncEntryInfo {
      * uncut one in (see that field). The bytes themselves are gone:
      * they are never held anywhere, which is the point of the cap. */
     uint16_t name_full_len;
+
+    /* The rest of what the Finder keeps about an entry, for a host that
+     * puts back every file and folder as it was (DECISIONS.md 2026-10-17,
+     * *the metadata, carried to the disk*). Each part has its own bit in
+     * `meta`, because zero is a value every one of them can hold: a
+     * backup date of 0 is "never backed up", a location of (0,0) is the
+     * top-left corner. A bit that is clear means the archive did not
+     * state it, and a host leaves whatever it has.
+     *
+     * finder_info is 32 bytes as the archive stores them, raw big-endian:
+     * 0..15 the FInfo of a FILE or the DInfo of a FOLDER (UNC_META_FINFO),
+     * 16..31 the FXInfo or DXInfo (UNC_META_FXINFO) — the order of
+     * AppleSingle's entry 9 and of the HFS catalog's own records (libhfs
+     * apple.h declares all four structures). The fields above are not
+     * replaced by them: `type`, `creator` and `finder_flags` stay
+     * authoritative, and the bytes they overlap (FInfo 0..9, DInfo 8..9)
+     * are whatever the archive held there. */
+    uint8_t  finder_info[32];
+    uint32_t backup_date;      /* Mac epoch (1904) secs; see UNC_META_BACKUP */
+    /* The Get Info comment, `comment_len` bytes in the archive's own
+     * encoding, not NUL-terminated; NULL and 0 when there is none. The
+     * bytes are the ENGINE's and stay valid until end_entry returns for
+     * this entry (a host copying the struct copies the pointer, not the
+     * text). At most UNC_ENTRY_COMMENT_MAX. */
+    const uint8_t *comment;
+    uint16_t comment_len;
+    uint8_t  meta;             /* UNC_META_* bits: which of the above */
+    /* Locked: 0 = not stated, 1 = stated and not locked, 2 = locked. A
+     * foreign permission that HFS can only hold this way counts: a POSIX
+     * mode without owner write, a DOS read-only attribute. */
+    uint8_t  locked;
 } UncEntryInfo;
+
+#define UNC_META_FINFO   0x01  /* finder_info holds 16 archive bytes  */
+#define UNC_META_FXINFO  0x02  /* xfinder_info holds 16 archive bytes */
+#define UNC_META_BACKUP  0x04  /* backup_date is the archive's        */
+
+#define UNC_LOCK_UNKNOWN 0
+#define UNC_LOCK_NO      1
+#define UNC_LOCK_YES     2
+
+/* The longest per-entry comment the engine carries. The Finder's own is
+ * shorter (a System 6 `FCMT` is a Pascal string, so 255 at most — read
+ * off System 3.0's DeskTop file, DECISIONS.md 2026-10-17); mpack's
+ * AppleSingle reader caps at the same 255 (reference/mpack/macfile.c). */
+#define UNC_ENTRY_COMMENT_MAX 255u
 
 /* ------------------------------------------------------------------ */
 /* Sink — receives decoded output                                     */

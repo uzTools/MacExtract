@@ -1,0 +1,16 @@
+{
+ "entries": [
+  {
+   "data_sha256": "23c8a50b8852c9be5aa653ad10f269c0e3732c7e809e9348c8831fbc80760778",
+   "data_size": 160,
+   "name": "Read Only",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0
+  }
+ ],
+ "fixture": "synth-as-dosro.as",
+ "format": "AppleSingle",
+ "oracle": "unar -nr -D -f -q -k hidden -e macintosh (v1.10.8)",
+ "sha256": "f37a48115da05e5919fc3a6e308350405cc195980aaefc81b0c37903cf96bdd1",
+ "size": 261
+}

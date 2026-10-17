@@ -296,6 +296,13 @@ python3 tools/run_shortread.py --macextract build/san/macextract \
 # its negative controls are.
 python3 tools/run_sqp.py --macextract build/san/macextract \
     || fail "AppleLink package (SqueezePlay) tests"
+# The Finder metadata beyond type, creator and flags (`l --meta`): FInfo
+# and FXInfo whole, the backup date, the lock and the Get Info comment,
+# held to lsar where it reads them and to the synthesizers' own input where
+# nothing does, with one tampering control per field, then every fixture
+# where the engine and lsar both state a field (DECISIONS.md 2026-10-17).
+python3 tools/run_meta.py --cli build/san/macextract --corpus \
+    || fail "Finder metadata (l --meta)"
 
 # The one rule all five path walks share, at the one place they used to
 # disagree: a folder the path string has no room for (and, for four hours

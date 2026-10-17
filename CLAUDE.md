@@ -11,10 +11,10 @@ The engine is the product. The Mac app is a thin shell.
 
 ## Where things stand
 
-**M0–M68 are DONE and nothing is in flight.** Every Macintosh archive family
+**M0–M69 are DONE and nothing is in flight.** Every Macintosh archive family
 in FORMATS.md's table extracts; the rest of that table is named-only or
-detect-only by decision. The engine passes a **971-fixture** differential suite
-against `unar` and, where `unar` fails, `macunpack`, plus 9,710 robustness variants. The Macintosh application extracts byte-exact on every
+detect-only by decision. The engine passes a **974-fixture** differential suite
+against `unar` and, where `unar` fails, `macunpack`, plus 9,740 robustness variants. The Macintosh application extracts byte-exact on every
 emulated tier from System 3.0 at 1 MB to Mac OS 9.2; the tallies are
 BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 3.0 and System 6; above those it is deliberate scope, not an open item.
@@ -32,10 +32,10 @@ BLOCKERS.md's (*Status*). The interactive UI is driven end to end on System
 | `tools/vmac/README.md` | how to run the emulator harnesses and probes | before booting anything |
 | `MANUAL_TESTS.md` | what only somebody outside this machine can do — hardware, a copy of the software, an account to post from | when something needs one of those |
 
-That session-start reading is **~11.2k tokens** (PROGRESS 4.3k,
-OPEN_ITEMS 4.3k, BLOCKERS' first two sections 2.6k); BLOCKERS'
+That session-start reading is **~12.2k tokens** (PROGRESS 4.5k,
+OPEN_ITEMS 5.1k, BLOCKERS' first two sections 2.6k); BLOCKERS'
 withdrawn-claims archive is another **~75.8k** and is reference, not
-orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-15; no
+orientation. All five are ESTIMATES (bytes ÷ 3.93, ±5 %, 2026-10-17; no
 tokenizer is installed). `tools/check_docs.py` only fails at 25 % drift, and
 every one of them has gone stale before, so **re-measure them whenever you
 touch these files.** What makes them grow is table cells turning into

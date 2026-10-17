@@ -514,7 +514,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # file's are, so a custom folder icon survives (DECISIONS.md 2026-10-16,
 # *the folders that lost their icons*), less the empty password's test;
 # A5 +4.
-UNC_MAC_CODE_DEFAULT=175564
+# RAISED 2026-10-17, 175,564 -> 176,428, by 864 B of CODE and 0 of A5 for
+# the Finder metadata carried to the disk (DECISIONS.md 2026-10-17, *the
+# metadata, carried to the disk*): the eager pair's pieces below, and the
+# AppleLink reader's 16-byte copy, resident here.
+UNC_MAC_CODE_DEFAULT=176428
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -981,8 +985,22 @@ UNC_MAC_A5_DEFAULT=37460
 # 2026-10-16, *the empty password*); 0 B of budget.
 # +92 code and +4 A5 on 2026-10-16: folders' Finder flags (the default
 # pair above): 96 B off every extraction's budget.
-UNC_MAC_CODE_EAGER=55940
-UNC_MAC_A5_EAGER=18540
+# +820 code and +12 A5 on 2026-10-17 for the Finder metadata carried to the
+# disk: **832 B off every extraction's budget on a 1 MB Mac Plus.** By
+# symbol: `unc_appledouble_extract` +300 (entry 4's comment, entry 8's
+# backup date, entry 9 whole, entries 10 and 12's lock, entries 8-12 read
+# once before the switch, and a cut file called truncated rather than
+# complete: +60 code and +4 A5 of the total), StampCat +202 (FInfo/FXInfo whole, the backup
+# date, the comment through the Desktop Manager, the lock), DirMd 112, new
+# (a folder's date held across a create or delete inside it), sink_begin
+# +130 and sink_end +46 (its three call pairs), MyHDelete no longer inlined
+# and ExtractOne +32 (the unlock before an unwrapped layer is deleted); the
+# A5 is `_sdata` padding. **The first cut was +1,032**: three param blocks
+# side by side, two date helpers, two 16-byte arrays copied apart, three
+# reads where one does, and a PBHGetVolParms that PBDTGetPath makes
+# redundant on every System measured (DECISIONS.md 2026-10-17).
+UNC_MAC_CODE_EAGER=56760
+UNC_MAC_A5_EAGER=18552
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1032,7 +1050,9 @@ UNC_MAC_A5_EAGER=18540
 # +8 code on 2026-10-16, the password dialog; A5 18,624, under its ceiling.
 # +92 code on 2026-10-16, folders' Finder flags; A5 18,628, under its
 # ceiling.
-UNC_MAC_CODE_LAZY=54364
+# +820 code on 2026-10-17, the Finder metadata (the eager pair above); A5
+# 18,608, under its ceiling.
+UNC_MAC_CODE_LAZY=55184
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

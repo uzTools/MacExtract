@@ -909,6 +909,8 @@ suite that owns it (TESTING.md).
 | superboomerangfixer.cpt | a2cfb0018c8d9760d090ab00abc1aaec8aa671d3c702db26a0a83e179069807f | 5248 | http://www.nic.funet.fi/pub/mac/appl/superboomerangfixer.cpt |
 | swapmap.bin | 8961fd04be131f99e0483596613df4582d7c388d7139b6917a2fbb8a732c1966 | 1148 | http://www.nic.funet.fi/pub/mac/fkey/swapmap.bin |
 | synth-arc-mixed.arc | db36b85b5f3a923adf2e6788414752d9112a9fa34ce2c4a03c7496ac6ff6ae78 | 9312 | synthetic:tools/synth_arc.py |
+| synth-as-dosro.as | f37a48115da05e5919fc3a6e308350405cc195980aaefc81b0c37903cf96bdd1 | 261 | synthetic:tools/synth_as.py --case dosro |
+| synth-as-meta.as | b740c8d7af4f6597f078e797db8be422f36c641bae47092d795ff6a880da7994 | 923 | synthetic:tools/synth_as.py --case meta |
 | synth-dd-m3.dd | e08c20870cbe5dc089eb68ac302b40042e5ef186d0197162287ca77248b2ad9b | 941 | synthetic:tools/vmac/ddencode.py --emit m3 |
 | synth-dd-m4.dd | 2572bade92c22502ed54a7e550ff95e3a4d092f076ed77a1cf434f268781e5bf | 1179 | synthetic:tools/vmac/ddencode.py --emit m4 |
 | synth-dd-m5.dd | 1d0949a120fb108a732454278ca84247328ce53fdcb265278b24468dde6ac3fb | 600 | synthetic:tools/vmac/ddencode.py --emit m5 |
@@ -934,6 +936,7 @@ suite that owns it (TESTING.md).
 | synth-sqp-clear.pkg | 50c2e7427b9770e9105cf005fde82f238852ea0e2b8856a176ef22acd238f4da | 28667 | synthetic:tools/synth_sqp.py --case clear |
 | synth-sqp-folder.pkg | 8685c68b16d7ff428b833aff1e59e3e50ceea3cf09bb68e0f16772d2dfdc7dc2 | 2343 | synthetic:tools/synth_sqp.py --case folder |
 | synth-sqp-forks.pkg | 637d2aa7f5bdd3a712d3c0ef1d88aa16e998310f855d4050e3581078fa6eb8d2 | 2397 | synthetic:tools/synth_sqp.py --case forks |
+| synth-sqp-meta.pkg | a6cf64040f5e0ce4aae13256714661363a626053a6e6fa3a74517c0e43824a44 | 1207 | synthetic:tools/synth_sqp.py --case meta |
 | synth-sqp-plain.pkg | b1bf268f7f9ba09ae84eef4d4e3dd7a0768e8d294d91b52bc5d346efb3ffb773 | 3437 | synthetic:tools/synth_sqp.py --case plain |
 | synth-sqp-stored.pkg | e972b130de618995f48e010de6e6004b01c84afdd044aed890ebb1325c9254f3 | 4681 | synthetic:tools/synth_sqp.py --case stored |
 | synth-sqp-v0.pkg | 96c34bb8e7973ac830d6a71d3fdec426be186e07313bd6969d939b219ab8789a | 1331 | synthetic:tools/synth_sqp.py --case v0 |

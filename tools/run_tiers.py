@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (200468, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (105068, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (629356, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (199604, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (104204, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (628492, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -230,7 +230,11 @@ TIERS = {
 # DERIVED**: a folder's Finder flags, the control's CODE +92 and A5 +4,
 # the shipped pair the same, so OVL_SAVED does not move (DECISIONS.md
 # 2026-10-16, *the folders that lost their icons*).
-TIERS_CONTROL = 213024     # build/mac-resident, CODE + A5, 2026-10-16
+# **Raised by 864 B 2026-10-17, and TIERS lowered by the same 864,
+# DERIVED**: the Finder metadata carried to the disk, the control's CODE
+# +864 and A5 0; the shipped pair +832, so OVL_SAVED rises 32
+# (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
+TIERS_CONTROL = 213888     # build/mac-resident, CODE + A5, 2026-10-17
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -526,7 +530,12 @@ EXPECT = {
 # (CODE +20, A5 +12, padding); no image moved, so every format's grant
 # falls 32 B and TIERS does not move (DECISIONS.md 2026-10-16, *the
 # estimate that went back up*).
-OVL_SAVED = 138544
+# **+32 2026-10-17, -> 138,576**: the Finder metadata, the control's +864
+# (CODE +864) against the shipped pair's +832 (CODE +820, A5 +12); the
+# AppleLink image `ovl_sqp` +40 and `ovl_text` +8, so a package's grant
+# falls 872 B, and every other format's 832 bar the bundle's +48
+# (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
+OVL_SAVED = 138576
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -632,6 +641,10 @@ OVL_RESIDUE = -666
 # that counted itself three times*).
 # **STUFFIT -12 B 2026-10-15**: a `JPEG Lossy` image is capped in width
 # only (DECISIONS.md 2026-10-15, *the height nothing needed*).
+# **SQP +40 B, TEXT +8 B, the bundle +48 B 2026-10-17**: the AppleLink
+# reader hands over the record's 16 bytes of Finder info whole; TEXT is
+# the 44-byte larger entry in its readers' frames, alignment (DECISIONS.md
+# 2026-10-17, *the metadata, carried to the disk*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      4994,
@@ -645,12 +658,12 @@ IMAGES = {
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
     "OVL_ID_STUFFIT":     28914,
-    "OVL_ID_SQP":         2000,
+    "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7058,
-    "OVL_ID_TEXT":        11750,
+    "OVL_ID_TEXT":        11758,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 167208
+BUNDLE = 167256
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

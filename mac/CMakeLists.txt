@@ -435,6 +435,13 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # are in every build but the resident control one.
                        ${OVL_COMPILE_DEFS}
                        $<$<BOOL:$ENV{UNC_AT_META}>:-DUNC_AT_META>
+                       # UNC_AT_DTCOMMENT: the report file ends with what the
+                       # volume answers PBHGetVolParms and PBDTGetPath, and
+                       # each extracted file's Get Info comment read back
+                       # with PBDTGetComment — the half of the metadata no
+                       # host tool can read off a System 7 disk
+                       # (tools/vmac/hfs_cat.py, DECISIONS.md 2026-10-17).
+                       $<$<BOOL:$ENV{UNC_AT_DTCOMMENT}>:-DUNC_AT_DTCOMMENT>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).
                        $<$<BOOL:$ENV{UNC_AT_SEPARATE_BLOCKS}>:-DUNC_AT_SEPARATE_BLOCKS>

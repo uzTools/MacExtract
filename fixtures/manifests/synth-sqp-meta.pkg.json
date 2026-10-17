@@ -1,0 +1,33 @@
+{
+ "entries": [
+  {
+   "is_dir": true,
+   "name": "Placed"
+  },
+  {
+   "creator": "ttxt",
+   "data_sha256": "6162f0c24e790228ffc2bd31fd9697a3dd7e1c15c03c7de3e9de2352c486c4fb",
+   "data_size": 700,
+   "finder_flags": 0,
+   "name": "Placed/Icon Here",
+   "rsrc_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rsrc_size": 0,
+   "type": "TEXT"
+  },
+  {
+   "creator": "XMPL",
+   "data_sha256": "61150d1f9522677486c7820c9c172507e7215c237bd4604164e6a54335e3d333",
+   "data_size": 300,
+   "finder_flags": 8192,
+   "name": "Placed/And Here",
+   "rsrc_sha256": "ac0b650db4e55ac33aea581227f26162265a528979e65ab28605e73085567694",
+   "rsrc_size": 200,
+   "type": "APPL"
+  }
+ ],
+ "fixture": "synth-sqp-meta.pkg",
+ "format": "SqueezePlay",
+ "oracle": "tools/synth_sqp.py (the bytes it compressed), with gzip -dc reading every LZW fork through a .Z header",
+ "sha256": "a6cf64040f5e0ce4aae13256714661363a626053a6e6fa3a74517c0e43824a44",
+ "size": 1207
+}

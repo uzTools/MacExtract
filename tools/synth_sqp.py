@@ -219,6 +219,10 @@ def _record(it, data_off, data_clen, rsrc_off, rsrc_clen, flags):
     r[20:24] = it["type"]
     r[24:28] = it["creator"]
     struct.pack_into(">H", r, 28, it["finder"])        # the FInfo, 16 bytes
+    if it.get("rest"):                                 # +30..35: location,
+        r[30:36] = it["rest"]                          # and fdFldr/frView
+    if it.get("rect"):                                 # a folder's frRect
+        r[20:28] = it["rect"]
     name = it["name"].encode("mac-roman")[:31]
     r[36] = len(name)
     r[37:37 + len(name)] = name
@@ -354,7 +358,7 @@ def _wide(n, seed):
 
 def item(name, data=b"", rsrc=b"", type=b"TEXT", creator=b"ttxt",
          finder=0, ctime=0xA5BDA166, mtime=0xA5BDA166, folder=False,
-         level=1):
+         level=1, rest=None, rect=None):
     if folder:
         # The 16 bytes at record +20 are the Finder info PBGetCatInfo
         # returned (AddItems @0x2378 copies all 16), and for a directory
@@ -364,7 +368,8 @@ def item(name, data=b"", rsrc=b"", type=b"TEXT", creator=b"ttxt",
         type = creator = b"\0\0\0\0"
     return {"name": name, "data": data, "rsrc": rsrc, "type": type,
             "creator": creator, "finder": finder, "ctime": ctime,
-            "mtime": mtime, "folder": folder, "level": level}
+            "mtime": mtime, "folder": folder, "level": level,
+            "rest": rest, "rect": rect}
 
 
 def case_plain():
@@ -424,8 +429,28 @@ def case_folder():
             item("After", _text(400, 55))], 1
 
 
+def case_meta():
+    """The whole 16 bytes at +20, for a folder and the files in it: a
+    folder's window rectangle, flags (custom icon), location and view; a
+    file's icon position and window. And dates on the folder that differ
+    from the files', so a host that lets a file written inside overwrite
+    the folder's modification date shows it."""
+    return [item("Placed", folder=True, finder=0x0400,
+                 ctime=0xA0000001, mtime=0xA0000002,
+                 rect=struct.pack(">4h", 40, 20, 300, 500),
+                 rest=struct.pack(">hhH", 0x50, 0x60, 0x0107)),
+            item("Icon Here", _text(700, 61), finder=0x0000,
+                 ctime=0xA0000011, mtime=0xA0000012, level=2,
+                 rest=struct.pack(">hhH", 0x30, 0x40, 0xFFFD)),
+            item("And Here", _text(300, 62), _text(200, 63), level=2,
+                 type=b"APPL", creator=b"XMPL", finder=0x2000,
+                 ctime=0xA0000021, mtime=0xA0000022,
+                 rest=struct.pack(">hhH", 0x30, 0x90, 0x0000))], 1
+
+
 CASES = {
     "plain": case_plain,
+    "meta": case_meta,
     "forks": case_forks,
     "stored": case_stored,
     "clear": case_clear,

@@ -91,7 +91,8 @@ def _dclick(env, ox, oy, x, y):
                    env=env, capture_output=True)
 
 
-def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False):
+def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False,
+            keep=None):
     """Boot, click the application into life, and wait for its grid.
 
     With `probe`, also returns run.py's budget_probe() of the In volume,
@@ -162,6 +163,15 @@ def run_one(fixture, bootimg, emu_dir, png, timeout, poll, probe=False):
             dpy.close()
         fields = (R.budget_probe(indsk) if probe and vals is not None
                   else None)
+        if keep:
+            # Moved, not copied, into a directory of run.py's shape
+            # (fixture-*/in.dsk, out.dsk), which tools/vmac/metarun.py and
+            # checkdisk.py read.
+            dst = tempfile.mkdtemp(prefix="fixture-", dir=keep)
+            for d in (indsk, outdsk):
+                if os.path.exists(d):
+                    os.rename(d, os.path.join(dst, os.path.basename(d)))
+            print(f"         disks kept in {dst}", flush=True)
         shutil.rmtree(work, ignore_errors=True)
     return vals, time.time() - started, fields
 
@@ -182,6 +192,8 @@ def main():
     ap.add_argument("-o", "--outdir", default="sys30-shots",
                     help="where each run's final screenshot is kept")
     ap.add_argument("--json", help="write per-fixture results here")
+    ap.add_argument("--keep-disks", action="store_true",
+                    help="keep each run's in.dsk and out.dsk under .tmp/")
     ap.add_argument("-D", dest="defines", action="append", default=[],
                     help="extra UNC_* build switch (repeatable), e.g. "
                          "-D UNC_AT_BUDGET — same meaning as run.py's")
@@ -208,6 +220,10 @@ def main():
     manifests = os.path.join(fixdir, "manifests")
 
     results, npass, nbad = [], 0, 0
+    keep = None
+    if a.keep_disks:
+        keep = tempfile.mkdtemp(prefix="sys30kept-",
+                                dir=os.path.join(R.REPO, ".tmp"))
     try:
         build_boot(R.build_autotest_app(tuple(a.defines)), bootimg)
         for fixture in fixtures:
@@ -215,7 +231,7 @@ def main():
             png = os.path.join(a.outdir, base + ".png")
             probe = "UNC_AT_BUDGET" in a.defines
             vals, secs, fields = run_one(fixture, bootimg, emu_dir, png,
-                                         a.timeout, a.poll, probe)
+                                         a.timeout, a.poll, probe, keep)
             man = os.path.join(manifests, base + ".json")
             if vals is None:
                 verdict = "NOGRID"

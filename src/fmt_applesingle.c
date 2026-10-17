@@ -12,9 +12,15 @@
  *   count × { u32 id, u32 offset, u32 length }
  *
  * Entry ids used: 1 = data fork, 2 = resource fork, 3 = real name,
- * 8 = dates ("the number of seconds before or after 12:00 a.m.
- * (midnight), January 1, 2000 Greenwich Mean Time"), 9 = Finder info
- * (FInfo then FXInfo: type 4, creator 4, flags 2, ...).
+ * 4 = comment ("Standard Macintosh comment"), 8 = dates ("the number of
+ * seconds before or after 12:00 a.m. (midnight), January 1, 2000
+ * Greenwich Mean Time", create/modify/backup/access, "Any unknown
+ * entries are set to 0x80000000"), 9 = Finder info (FInfo then FXInfo,
+ * 16 bytes each: type 4, creator 4, flags 2, ...), 10 = Macintosh file
+ * info (three filler bytes, then ioFlAttrib, whose 0x01 is AS_LOCKED),
+ * 12 = MS-DOS file info (a filler byte, then the attribute, whose 0x01
+ * is AS_DOS_READONLY). Read-only on DOS is how HFS spells locked, so
+ * either bit locks the file.
  *
  * ONE tolerance here is not the RFC's, and cannot be, because the RFC
  * forbids what it tolerates: "byte ordering in the file fields follows
@@ -88,6 +94,8 @@ int unc_appledouble_extract(UncCtx *c)
     int be, i, n, err, sret;
     uint32_t dataoffs = 0, datalen = 0, rsrcoffs = 0, rsrclen = 0;
     int have_data = 0, have_rsrc = 0;
+    uint32_t cmtoffs = 0, cmtlen = 0, n32;
+    int cut = 0;
 
 
     err = unc_read_at(c->io, 0, hdr, 26);
@@ -113,10 +121,29 @@ int unc_appledouble_extract(UncCtx *c)
         uint32_t offs = as_get_u32(ent + 4, be);
         uint32_t elen = as_get_u32(ent + 8, be);
 
-        /* Sanity-cap every offset/length against the file size. */
+        /* An entry that runs past the end of the file means the file was
+         * CUT: the table states every entry's offset and length (RFC 1740,
+         * appendix B), so bytes it promises and the file lacks are bytes
+         * that went missing. Until 2026-10-17 such an entry was skipped and
+         * the file called complete — `unar` calls it broken, and so does
+         * every other walk here (tools/run_truncation.py, which found it
+         * with the corpus's first AppleSingle fixtures). The forks are
+         * still streamed, so what is there comes out and their own read
+         * ends the entry as truncated; any other entry is dropped. */
         if (filesize != UNC_SIZE_UNKNOWN &&
-            (offs > filesize || elen > filesize - offs))
-            continue;   /* skip corrupt entry, keep the rest */
+            (offs > filesize || elen > filesize - offs)) {
+            cut = 1;
+            if (id != 1 && id != 2) continue;
+        }
+
+        /* Entries 8 to 12 are fixed records of at most 32 bytes: one read
+         * for all of them, before the switch. */
+        n32 = 0;
+        if (id >= 8 && id <= 12) {
+            n32 = elen < 32 ? elen : 32;
+            if (unc_read_at(c->io, offs, tmp, (int32_t)n32) != UNC_OK)
+                continue;
+        }
 
         switch (id) {
         case 1: dataoffs = offs; datalen = elen; have_data = 1; break;
@@ -145,17 +172,42 @@ int unc_appledouble_extract(UncCtx *c)
                 }
             }
             break;
+        case 4: /* comment: read once the table is done, into tmp */
+            cmtoffs = offs;
+            cmtlen = elen;
+            break;
         case 8: /* dates: always big-endian, epoch 2000 (file comment) */
-            if (elen >= 8 && unc_read_at(c->io, offs, tmp, 8) == UNC_OK) {
+            if (n32 >= 8) {
                 e.create_date = unc_get_u32be(tmp) + AS_EPOCH_2000_AS_MAC;
                 e.mod_date    = unc_get_u32be(tmp + 4) + AS_EPOCH_2000_AS_MAC;
+                /* The backup date only: 0x80000000 is the RFC's "unknown",
+                 * and is kept unknown. The two dates above are added to
+                 * blindly, as before; that is a reader's fix of its own. */
+                if (n32 >= 12 && unc_get_u32be(tmp + 8) != 0x80000000u) {
+                    e.backup_date = unc_get_u32be(tmp + 8) +
+                                    AS_EPOCH_2000_AS_MAC;
+                    e.meta |= UNC_META_BACKUP;
+                }
             }
             break;
-        case 9: /* Finder info: type, creator, flags */
-            if (elen >= 10 && unc_read_at(c->io, offs, tmp, 10) == UNC_OK) {
+        case 9: /* Finder info: FInfo, then FXInfo */
+            if (n32 >= 10) {
                 e.type         = unc_get_u32be(tmp);
                 e.creator      = unc_get_u32be(tmp + 4);
                 e.finder_flags = unc_get_u16be(tmp + 8);
+                if (n32 >= 32) {
+                    int k;
+                    for (k = 0; k < 32; k++) e.finder_info[k] = tmp[k];
+                    e.meta |= UNC_META_FINFO | UNC_META_FXINFO;
+                }
+            }
+            break;
+        case 10: /* Macintosh file info: ioFlAttrib in the fourth byte */
+        case 12: /* MS-DOS file info: the attribute in the second byte */
+            {
+                uint32_t at = id == 10 ? 3u : 1u;
+                if (n32 > at && e.locked != UNC_LOCK_YES)
+                    e.locked = (tmp[at] & 0x01) ? UNC_LOCK_YES : UNC_LOCK_NO;
             }
             break;
         default:
@@ -172,6 +224,17 @@ int unc_appledouble_extract(UncCtx *c)
      * writes "_". */
     if (e.name_len == 0 && c->opt.name_hint && c->opt.name_hint_len)
         unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
+
+    /* The comment, into tmp now that the name is out of it: tmp lives
+     * until this function returns, which is after end_entry. */
+    if (cmtlen) {
+        uint32_t cl = cmtlen < UNC_ENTRY_COMMENT_MAX ? cmtlen
+                                                    : UNC_ENTRY_COMMENT_MAX;
+        if (unc_read_at(c->io, cmtoffs, tmp, (int32_t)cl) == UNC_OK) {
+            e.comment = tmp;
+            e.comment_len = (uint16_t)cl;
+        }
+    }
 
     e.data_size = have_data ? datalen : 0;
     e.rsrc_size = have_rsrc ? rsrclen : 0;
@@ -196,6 +259,8 @@ int unc_appledouble_extract(UncCtx *c)
                                      buf, bufsz);
             unc_free(c->al, buf);
         }
+        if (cut && (err == UNC_OK || err == UNC_ERR_IO))
+            err = UNC_ERR_TRUNCATED;
     }
 
     if (c->sink->end_entry(c->sink->ctx, err) < 0) return UNC_ERR_SINK;

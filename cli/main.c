@@ -368,6 +368,9 @@ typedef struct {
                                  * compares nothing at all (TESTING.md,
                                  * *The Finder metadata, and the one
                                  * field no oracle settles*) */
+    int         show_meta;      /* --meta: with l, one row per entry of
+                                 * what the Finder keeps beyond type,
+                                 * creator and flags (print_meta) */
     const char *archive;        /* the archive's own filename: the
                                  * comment file is named after it       */
     int         no_comment;     /* --no-comment: read it, drop it       */
@@ -571,6 +574,40 @@ static int only_wanted(DiskSink *s, const char *name)
     return want;
 }
 
+/* `l --meta`: what the Finder keeps beyond type, creator and flags, one
+ * row per entry, every field hex so that it reads back whatever it holds:
+ *
+ *   m <FInfo|DInfo 32 hex> <FXInfo|DXInfo 32 hex> <backup 8 hex>
+ *     <lock> <comment hex> NAME
+ *
+ * `-` is a field the archive did not state; lock is `-`, `n` (stated, not
+ * locked) or `L`. This is the CLI's whole share of the metadata: it writes
+ * none of it to a Linux disk, where nothing would hold it — the `._NAME`
+ * sidecar is the resource fork alone, the form `unar -k hidden` writes and
+ * the differential suite compares (DECISIONS.md 2026-10-17). */
+static void print_hex(const uint8_t *p, unsigned n)
+{
+    unsigned i;
+    for (i = 0; i < n; i++) printf("%02x", p[i]);
+}
+
+static void print_meta(const UncEntryInfo *e, const char *name)
+{
+    printf("m ");
+    if (e->meta & UNC_META_FINFO) print_hex(e->finder_info, 16);
+    else printf("-");
+    printf(" ");
+    if (e->meta & UNC_META_FXINFO) print_hex(e->finder_info + 16, 16);
+    else printf("-");
+    if (e->meta & UNC_META_BACKUP) printf(" %08lx", (unsigned long)e->backup_date);
+    else printf(" -");
+    printf(" %s ", e->locked == UNC_LOCK_YES ? "L"
+                 : e->locked == UNC_LOCK_NO ? "n" : "-");
+    if (e->comment && e->comment_len) print_hex(e->comment, e->comment_len);
+    else printf("-");
+    printf(" %s\n", name);
+}
+
 static int sink_begin(void *ctx, const UncEntryInfo *info)
 {
     DiskSink *s = (DiskSink *)ctx;
@@ -587,6 +624,10 @@ static int sink_begin(void *ctx, const UncEntryInfo *info)
     s->data_written = s->rsrc_written = 0;
     s->entries++;
 
+    if (s->list_only && s->show_meta) {
+        print_meta(info, name);
+        return 1;
+    }
     if (s->list_only) {
         char t[13], c[13];
         /* Nothing is written, so the filesystem's caps do not apply —
@@ -1997,6 +2038,9 @@ static void usage(void)
         "                 creator, flags — in place of the four-character\n"
         "                 columns, which a parser cannot read back when a\n"
         "                 code holds a space or a NUL\n"
+        "  --meta         with l, the rest of the Finder metadata as hex —\n"
+        "                 FInfo, FXInfo, backup date, lock, comment — one\n"
+        "                 'm' row per entry, '-' where the archive is silent\n"
         "  -v             verbose\n"
         "  --version      print the version and exit\n");
 }
@@ -2006,6 +2050,7 @@ int main(int argc, char **argv)
     const char *cmd, *file = NULL, *outdir = ".", *force = NULL;
     int raw_names = 0, verbose = 0, stats = 0, hidden_forks = 0, overwrite = 0;
     int show_finder = 0;
+    int show_meta = 0;
     int no_comment = 0;
     uint32_t budget = 0;
     int i;
@@ -2093,6 +2138,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--stats") == 0) stats = 1;
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) force = argv[++i];
         else if (strcmp(argv[i], "--finder") == 0) show_finder = 1;
+        else if (strcmp(argv[i], "--meta") == 0) show_meta = 1;
         else if (strcmp(argv[i], "-v") == 0) verbose = 1;
         else if (argv[i][0] == '-') { usage(); return 2; }
         else file = argv[i];
@@ -2144,6 +2190,7 @@ nextlayer:
     sink.unwrap_src = delfile;   /* "" until a layer is being unwrapped */
     sink.verbose = verbose;
     sink.show_finder = show_finder;
+    sink.show_meta = show_meta;
 
     sk.ctx = &sink;
     sk.begin_entry = sink_begin;

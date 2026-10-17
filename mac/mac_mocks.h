@@ -22,7 +22,7 @@ typedef long           LONGINT;
 typedef char          *Ptr;
 typedef Ptr           *Handle;
 typedef long           Size;
-typedef unsigned long  OSType;
+typedef uint32_t       OSType;   /* 4 bytes, as on the Mac */
 typedef unsigned char  Str63[64];
 typedef unsigned char  Str255[256];
 typedef const unsigned char *ConstStr255Param;
@@ -37,6 +37,8 @@ typedef void          *WindowPtr;
 #define fnfErr       (-43)
 #define ioErr        (-36)
 #define dskFulErr    (-34)
+#define fLckdErr     (-45)
+#define paramErr     (-50)
 #define fsRdPerm     1
 #define fsWrPerm     2
 #define fsFromStart  1
@@ -44,25 +46,45 @@ typedef void          *WindowPtr;
 #define true  1
 #define false 0
 
-/* Finder info + catalog param block: only the fields the sink uses. */
-typedef struct FInfo { OSType fdType; OSType fdCreator; short fdFlags;
-                       short fdY, fdX; short fdFldr; } FInfo;
-typedef struct DInfo { char pad[16]; } DInfo;
+/* Finder info and the catalog param blocks, laid out as the 68000 lays
+ * them: 2-byte packing, so that FInfo, FXInfo, DInfo and DXInfo are 16
+ * bytes each and HFileInfo and DirInfo share the offsets of the dates,
+ * the extended Finder info and the directory IDs, which the shell relies
+ * on (StampCat uses the file view for a folder). Field order is
+ * Multiverse.h's (Retro68's universal interfaces). Pointers stay host
+ * pointers, which moves both views' heads by the same amount. */
+#pragma pack(push, 2)
+typedef struct Point { short v, h; } Point;
+typedef struct FInfo { OSType fdType; OSType fdCreator; uint16_t fdFlags;
+                       Point fdLocation; uint16_t fdFldr; } FInfo;
+typedef struct FXInfo { uint16_t fdIconID; uint16_t fdUnused[4];
+                        uint16_t fdComment; int32_t fdPutAway; } FXInfo;
+typedef struct DInfo { short frRect[4]; uint16_t frFlags; Point frLocation;
+                       uint16_t frView; } DInfo;
+typedef struct DXInfo { Point frScroll; int32_t frOpenChain;
+                        uint16_t frUnused; uint16_t frComment;
+                        int32_t frPutAway; } DXInfo;
 
 typedef struct HFileInfo {
     Ptr        ioCompletion;
     StringPtr  ioNamePtr;
     short      ioVRefNum;
     short      ioFRefNum;
-    char       filler1;
+    SignedByte ioFVersNum;
+    SignedByte filler1;
     short      ioFDirIndex;
     SignedByte ioFlAttrib;
     SignedByte ioACUser;
     FInfo      ioFlFndrInfo;
-    long       ioDirID;
-    long       ioFlStBlk, ioFlLgLen, ioFlPyLen;
-    long       ioFlRStBlk, ioFlRLgLen, ioFlRPyLen;
-    unsigned long ioFlCrDat, ioFlMdDat;
+    int32_t    ioDirID;
+    short      ioFlStBlk;
+    int32_t    ioFlLgLen, ioFlPyLen;
+    short      ioFlRStBlk;
+    int32_t    ioFlRLgLen, ioFlRPyLen;
+    uint32_t   ioFlCrDat, ioFlMdDat, ioFlBkDat;
+    FXInfo     ioFlXFndrInfo;
+    int32_t    ioFlParID;
+    int32_t    ioFlClpSiz;
 } HFileInfo;
 
 typedef struct DirInfo {
@@ -70,12 +92,18 @@ typedef struct DirInfo {
     StringPtr  ioNamePtr;
     short      ioVRefNum;
     short      ioFRefNum;
-    char       filler1;
+    SignedByte ioFVersNum;
+    SignedByte filler1;
     short      ioFDirIndex;
     SignedByte ioFlAttrib;
     SignedByte ioACUser;
     DInfo      ioDrUsrWds;
-    long       ioDrDirID;
+    int32_t    ioDrDirID;
+    uint16_t   ioDrNmFls;
+    uint16_t   filler3[9];
+    uint32_t   ioDrCrDat, ioDrMdDat, ioDrBkDat;
+    DXInfo     ioDrFndrInfo;
+    int32_t    ioDrParID;
 } DirInfo;
 
 typedef union CInfoPBRec { HFileInfo hFileInfo; DirInfo dirInfo; } CInfoPBRec;
@@ -85,13 +113,14 @@ typedef struct HFileParam {
     StringPtr  ioNamePtr;
     short      ioVRefNum;
     short      ioFRefNum;
-    char       filler1;
+    SignedByte ioFVersNum;
+    SignedByte filler1;
     short      ioFDirIndex;
-    long       ioDirID;
+    SignedByte ioFlAttrib;
+    SignedByte ioFlVersNum;
+    FInfo      ioFlFndrInfo;
+    int32_t    ioDirID;
 } HFileParam;
-/* IOParam overlaps HFileParam's prefix (ioNamePtr/ioVRefNum at the same
- * offsets); ioRefNum/ioPermssn stay before ioDirID so the two views don't
- * clobber each other in MyOpenFork/MyHCreate. */
 typedef struct HIOParam {
     Ptr        ioCompletion;
     StringPtr  ioNamePtr;
@@ -99,11 +128,30 @@ typedef struct HIOParam {
     short      ioRefNum;
     char       ioVersNum;
     char       ioPermssn;
+    Ptr        ioMisc;
+    Ptr        ioBuffer;
+    int32_t    ioReqCount;
 } HIOParam;
 typedef union HParamBlockRec {
     HFileParam fileParam;
     HIOParam   ioParam;
 } HParamBlockRec;
+
+/* The Desktop Manager's block: only the fields the shell uses, in
+ * Multiverse.h's order. */
+typedef struct DTPBRec {
+    Ptr        ioCompletion;
+    StringPtr  ioNamePtr;
+    short      ioVRefNum;
+    short      ioDTRefNum;
+    short      ioIndex;
+    int32_t    ioTagInfo;
+    Ptr        ioDTBuffer;
+    int32_t    ioDTReqCount;
+    int32_t    ioDTActCount;
+    int32_t    ioDirID;
+} DTPBRec;
+#pragma pack(pop)
 
 /* Toolbox calls, implemented in tests/mac_sink_test.c. */
 Ptr  NewPtr(Size n);
@@ -132,5 +180,11 @@ OSErr PBGetCatInfoSync(CInfoPBRec *pb);
 OSErr PBSetCatInfoSync(CInfoPBRec *pb);
 OSErr PBDirCreateSync(HParamBlockRec *pb);
 OSErr FlushVol(ConstStringPtr volName, short vRefNum);
+OSErr PBHSetFLockSync(HParamBlockRec *pb);
+OSErr PBHRstFLockSync(HParamBlockRec *pb);
+OSErr PBHGetVolParmsSync(HParamBlockRec *pb);
+OSErr PBDTGetPath(DTPBRec *pb);
+OSErr PBDTSetCommentSync(DTPBRec *pb);
+OSErr PBDTFlushSync(DTPBRec *pb);
 
 #endif /* MAC_MOCKS_H */

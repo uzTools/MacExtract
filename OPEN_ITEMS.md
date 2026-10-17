@@ -8,7 +8,7 @@
    numbers to FORMATS.md).
 
 Nothing here stops the engine or the CLI, which are byte-exact against the
-oracle across 971 fixtures in `./ci.sh`. Detail lives once — status in
+oracle across 974 fixtures in `./ci.sh`. Detail lives once — status in
 BLOCKERS.md, reasoning in DECISIONS.md, results in FORMATS.md, re-running in
 TESTING.md or `tools/vmac/README.md`, hardware in MANUAL_TESTS.md.
 
@@ -135,6 +135,54 @@ window "not very reactive" while it extracts, format not noted —
 re-test on a StuffIt 5 archive once this is on the machine. Holding the
 File menu down pauses the extraction — inherent: `MenuSelect` keeps the
 machine until release, and the extraction runs in the same loop.
+
+## The metadata the archives hold and the readers drop
+
+Since 2026-10-17 the engine carries every field the Finder keeps
+(`UncEntryInfo`: FInfo/DInfo and FXInfo/DXInfo whole, the backup date, the
+lock, the Get Info comment) and the Macintosh shell writes all of it
+(DECISIONS.md, *the metadata, carried to the disk*). **Two readers deliver
+it so far**: AppleSingle/AppleDouble (all of it) and AppleLink packages (the
+16 bytes of FInfo/DInfo). Every other reader still delivers type, creator,
+flags and two dates. The leads, from a scan of the references and the
+corpus (2026-10-16) — **none re-verified here; each needs its own source
+or measurement before it is read**:
+
+| format | stored, not read | oracle |
+|---|---|---|
+| MacBinary I/II/III | fdLocation, fdFldr, the Protected bit (+81), the Get Info comment (+99 and after the forks), fdScript/fdXFlags | macunpack for the Protected bit; nothing for the rest |
+| StuffIt 5 | the per-entry comment, read and skipped (`fmt_sit5.c`) | `lsar`'s XADComment; one fixture has one |
+| PackIt | the lock word (+74) | macunpack |
+| Now Compress | the whole 16 bytes at +38, and +62/+66..81 (hypothesis: a date and FXInfo) | `lsar`'s XADFinderInfo |
+| zip | Info-ZIP `0x334d`'s location, folder, FXInfo, backup date and comment; external attributes (DOS read-only, a POSIX mode); the per-file comment | `lsar` in part |
+| tar, LZH, uuencode/base64 | a POSIX mode (a read-only one is a lock) | `lsar`'s XADPosixPermissions |
+| ARC/ArcMac, UUTool `.finfo`, MIME `multipart/appledouble` | the rest of the FInfo they hold; MIME's entries 4 and 8 | per format |
+| StuffIt classic | folder location, view, flags (measured once against Expander 4.0.2) and file location in name-field bytes | StuffIt Expander, one specimen; needs many |
+| SuperDisk! | a 20-byte folder record, discarded, so folders get no dates | none known |
+
+Closing a row: the reader delivers the field with a `Source:` and a grade,
+and `tools/run_meta.py` holds it.
+
+## Get Info comments on a System 6 or System 3.0 volume
+
+**Not written.** The shell writes a comment through the Desktop Manager,
+which a System 6 or System 3.0 volume does not have; their Finder keeps
+comments as `FCMT` resources in its own `Desktop` file, keyed by the id in
+FXInfo — measured on System 3.0's disk, 2026-10-17 (DECISIONS.md, *the
+metadata, carried to the disk*). Writing that file is a second path on some
+Systems only, which the one-behaviour rule forbids, into a file that Finder
+may hold open. Closes by the maintainer's decision on that conflict, or by
+an answer to it that is one path on every System.
+
+## System 7.0.1 rewrites one byte of FXInfo
+
+FXInfo +9 (`fdXFlags`) reads 0x70 on a System 7.0.1 output disk where the
+shell wrote the archive's 0x00, measured 2026-10-17 by
+`tools/vmac/metarun.py`; System 6.0.8 and 3.0 keep it, and with no FXInfo
+written it stays 0x00 on 7.0.1 too (DECISIONS.md 2026-10-17). Who writes
+it, and whether `fdScript` 0x81 is the cause, is not measured. Closes with
+a run that tells the two apart: the same file with `fdScript` 0, and FXInfo
+read back by the autotest before the Finder can see the file.
 
 ## Hand-written 68000 assembly: candidates, held for one VM pass
 

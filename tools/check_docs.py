@@ -631,7 +631,7 @@ CORPUS_FIGURES = [
      "robust", "the robustness suite's size"),
     ("FORMATS.md", r"0 false positives in ([\d,]+) corpus files", "files",
      "the foreign-format sweep's population"),
-    ("FORMATS.md", r"exactly the 6 of ([\d,]+) corpus files", "files",
+    ("FORMATS.md", r"exactly the \d+ of ([\d,]+) corpus files", "files",
      "the AppleLink sweep's population"),
     ("TESTING.md", r"the corpus is ([\d,]+) files", "files",
      "the sniff-I/O probe's population"),
@@ -664,6 +664,15 @@ CORPUS_SCAN = ("CLAUDE.md", "PROGRESS.md", "OPEN_ITEMS.md", "FORMATS.md",
 CORPUS_HISTORICAL = {
     # One entry per (file, kind, figure); it covers every occurrence of
     # that figure in that file. Each was read before it was declared.
+    ("FORMATS.md", "files", 983):
+        "two sweeps dated in their sentences: btoa's probe over the corpus "
+        "on 2026-10-11, and the AppleLink sniffer's 6 of 983, re-measured "
+        "2026-10-08",
+    ("TESTING.md", "files", 983):
+        "MIME's sniff over the corpus, dated 2026-10-11 in the sentence",
+    ("TESTING.md", "manifests", 971):
+        "the short-read lane's 1 B, 3 and 7 caps on the fixed build of "
+        "2026-10-09, an experiment and not the lane's own re-run",
     ("TESTING.md", "manifests", 959):
         "the read-cap lane's bend of 2026-10-09, unc_read_full made to "
         "give up on a short read; an experiment, not a re-run lane",

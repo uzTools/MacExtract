@@ -123,6 +123,56 @@ OSErr HOpen(short v, long d, ConstStr255Param n, SignedByte p, short *ref)
 OSErr HOpenRF(short v, long d, ConstStr255Param n, SignedByte p, short *ref)
 { (void)v; (void)p; return do_open(d, n, 1, ref); }
 
+/* A catalog of what the shell set, per path: the mock stands in for the
+ * File Manager's catalog, so a test can ask what a file or folder came out
+ * with. Creating or deleting an item stamps its folder's modification date
+ * with "now", which is what the File Manager does and what the shell has
+ * to undo for folders whose date the archive states. */
+#define MAX_CAT 1024
+typedef struct {
+    char     path[800];
+    int      used;
+    uint8_t  finfo[16], fxinfo[16];
+    uint32_t cr, md, bk;
+    int      locked;
+    uint8_t  comment[256];
+    int      clen;
+} CatRec;
+static CatRec gCat[MAX_CAT];
+static uint32_t gNow = 0xD0000000u;    /* the mock's clock, one per change */
+/* Controls: a set bit makes the mock DROP that write, so a check that
+ * still passes under it was not testing the write. */
+#define DROP_FINFO   0x01
+#define DROP_FXINFO  0x02
+#define DROP_BACKUP  0x04
+#define DROP_LOCK    0x08
+#define DROP_COMMENT 0x10
+#define DROP_DIRMD   0x20
+static int gDrop;
+static int gHasDT = 1;                 /* the volume has a Desktop Manager */
+static int gDTSetCalls;
+
+static CatRec *cat_rec(const char *path, int make)
+{
+    int i, fr = -1;
+    for (i = 0; i < MAX_CAT; i++) {
+        if (gCat[i].used && strcmp(gCat[i].path, path) == 0) return &gCat[i];
+        if (!gCat[i].used && fr < 0) fr = i;
+    }
+    if (!make || fr < 0) return NULL;
+    memset(&gCat[fr], 0, sizeof gCat[fr]);
+    gCat[fr].used = 1;
+    snprintf(gCat[fr].path, sizeof gCat[fr].path, "%s", path);
+    return &gCat[fr];
+}
+
+static void cat_touch_dir(long dir)
+{
+    const char *dp = (dir >= 0 && dir < gNumDirs) ? gDirs[dir] : gOutDir;
+    CatRec *r = cat_rec(dp, 1);
+    r->md = gNow++;
+}
+
 /* Param-block File Manager calls — the real Mac shell uses these (the H-glue
  * is broken on System 6); the mock exercises the same code path. */
 OSErr PBHOpenSync(HParamBlockRec *pb)
@@ -147,18 +197,71 @@ OSErr PBHCreateSync(HParamBlockRec *pb)
     fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
     if (fd < 0) return dupFNErr;
     close(fd);
+    { CatRec *r = cat_rec(path, 1); memset(r->finfo, 0, 16); r->cr = r->md = gNow; }
+    cat_touch_dir(pb->fileParam.ioDirID);
     return noErr;
 }
 OSErr PBHDeleteSync(HParamBlockRec *pb)
 {
     char path[800], rpath[820];
+    CatRec *r;
     full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 0, path,
               sizeof path);
     full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 1, rpath,
               sizeof rpath);
+    r = cat_rec(path, 0);
+    if (r && r->locked) return fLckdErr;   /* as the File Manager does */
     unlink(rpath);                     /* resource-fork sidecar, if any */
-    return unlink(path) == 0 ? noErr : fnfErr;
+    if (unlink(path) != 0) return fnfErr;
+    if (r) r->used = 0;
+    cat_touch_dir(pb->fileParam.ioDirID);
+    return noErr;
 }
+static OSErr set_lock(HParamBlockRec *pb, int lock)
+{
+    char path[800];
+    CatRec *r;
+    full_path(pb->fileParam.ioDirID, pb->ioParam.ioNamePtr, 0, path,
+              sizeof path);
+    r = cat_rec(path, 0);
+    if (!r) return fnfErr;
+    if (!(lock && (gDrop & DROP_LOCK))) r->locked = lock;
+    return noErr;
+}
+OSErr PBHSetFLockSync(HParamBlockRec *pb) { return set_lock(pb, 1); }
+OSErr PBHRstFLockSync(HParamBlockRec *pb) { return set_lock(pb, 0); }
+/* PBHGetVolParms: vMVersion, then vMAttrib, big-endian, with bit 12
+ * (bHasDesktopMgr) set when the mock volume has a Desktop Manager. */
+OSErr PBHGetVolParmsSync(HParamBlockRec *pb)
+{
+    uint8_t *b = (uint8_t *)pb->ioParam.ioBuffer;
+    if (pb->ioParam.ioReqCount < 6) return paramErr;
+    memset(b, 0, 6);
+    b[1] = 2;
+    if (gHasDT) b[4] = 0x10;
+    return noErr;
+}
+OSErr PBDTGetPath(DTPBRec *pb)
+{
+    if (!gHasDT) return paramErr;
+    pb->ioDTRefNum = 99;
+    return noErr;
+}
+OSErr PBDTSetCommentSync(DTPBRec *pb)
+{
+    char path[800];
+    CatRec *r;
+    gDTSetCalls++;
+    if (pb->ioDTRefNum != 99) return paramErr;
+    full_path(pb->ioDirID, pb->ioNamePtr, 0, path, sizeof path);
+    r = cat_rec(path, 0);
+    if (!r) return fnfErr;
+    if (gDrop & DROP_COMMENT) return noErr;
+    r->clen = pb->ioDTReqCount > 255 ? 255 : (int)pb->ioDTReqCount;
+    memcpy(r->comment, pb->ioDTBuffer, (size_t)r->clen);
+    return noErr;
+}
+OSErr PBDTFlushSync(DTPBRec *pb) { (void)pb; return noErr; }
 
 OSErr FSRead(short ref, long *count, void *buf)
 {
@@ -241,18 +344,62 @@ OSErr PBGetCatInfoSync(CInfoPBRec *pb)
 {
     char path[800];
     struct stat st;
-    full_path(pb->dirInfo.ioDrDirID, pb->dirInfo.ioNamePtr, 0, path,
-              sizeof path);
+    CatRec *r;
+    if (pb->dirInfo.ioFDirIndex < 0) {
+        /* The directory whose ID is ioDrDirID: its name and its parent. */
+        long id = pb->dirInfo.ioDrDirID;
+        char *slash;
+        if (id < 0 || id >= gNumDirs) return fnfErr;
+        snprintf(path, sizeof path, "%s", gDirs[id]);
+        slash = strrchr(path, '/');
+        if (pb->dirInfo.ioNamePtr && slash) {
+            size_t n = strlen(slash + 1);
+            pb->dirInfo.ioNamePtr[0] = (unsigned char)n;
+            memcpy(pb->dirInfo.ioNamePtr + 1, slash + 1, n);
+        }
+        if (slash) {
+            *slash = 0;
+            pb->dirInfo.ioDrParID = dir_id_for(path);
+            *slash = '/';
+        }
+    } else {
+        full_path(pb->dirInfo.ioDrDirID, pb->dirInfo.ioNamePtr, 0, path,
+                  sizeof path);
+    }
     if (stat(path, &st) != 0) return fnfErr;
+    r = cat_rec(path, 1);
+    memcpy(&pb->hFileInfo.ioFlFndrInfo, r->finfo, 16);
+    memcpy(&pb->hFileInfo.ioFlXFndrInfo, r->fxinfo, 16);
+    pb->hFileInfo.ioFlCrDat = r->cr;
+    pb->hFileInfo.ioFlMdDat = r->md;
+    pb->hFileInfo.ioFlBkDat = r->bk;
     if (S_ISDIR(st.st_mode)) {
-        pb->dirInfo.ioFlAttrib |= 0x10;            /* ioDirMask */
+        pb->dirInfo.ioFlAttrib = 0x10;             /* ioDirMask */
         pb->dirInfo.ioDrDirID = dir_id_for(path);
     } else {
-        pb->hFileInfo.ioFlAttrib &= (SignedByte)~0x10;
+        pb->hFileInfo.ioFlAttrib = (SignedByte)(r->locked ? 0x01 : 0);
     }
     return noErr;
 }
-OSErr PBSetCatInfoSync(CInfoPBRec *pb) { (void)pb; return noErr; }
+OSErr PBSetCatInfoSync(CInfoPBRec *pb)
+{
+    char path[800];
+    struct stat st;
+    CatRec *r;
+    full_path(pb->hFileInfo.ioDirID, pb->hFileInfo.ioNamePtr, 0, path,
+              sizeof path);
+    if (stat(path, &st) != 0) return fnfErr;
+    r = cat_rec(path, 1);
+    if (!(gDrop & DROP_FINFO)) memcpy(r->finfo, &pb->hFileInfo.ioFlFndrInfo, 16);
+    else memcpy(r->finfo, &pb->hFileInfo.ioFlFndrInfo, 10);  /* type..flags */
+    if (!(gDrop & DROP_FXINFO))
+        memcpy(r->fxinfo, &pb->hFileInfo.ioFlXFndrInfo, 16);
+    r->cr = pb->hFileInfo.ioFlCrDat;
+    if (!(S_ISDIR(st.st_mode) && (gDrop & DROP_DIRMD)))
+        r->md = pb->hFileInfo.ioFlMdDat;
+    if (!(gDrop & DROP_BACKUP)) r->bk = pb->hFileInfo.ioFlBkDat;
+    return noErr;
+}
 OSErr PBDirCreateSync(HParamBlockRec *pb)
 {
     char path[800];
@@ -265,6 +412,8 @@ OSErr PBDirCreateSync(HParamBlockRec *pb)
         if (errno == EEXIST) return dupFNErr;
         return ioErr;
     }
+    { CatRec *r = cat_rec(path, 1); r->cr = r->md = gNow; }
+    cat_touch_dir(pb->fileParam.ioDirID);
     pb->fileParam.ioDirID = dir_id_for(path);      /* the new dir id */
     return noErr;
 }
@@ -336,6 +485,183 @@ int main(int argc, char **argv)
                     cases[c].what, made, wrote, gone);
             if (!(made && wrote && gone)) ok = 0;
         }
+        return ok ? 0 : 1;
+    }
+    if (argc >= 2 && strcmp(argv[1], "--meta") == 0) {
+        /* Every field of UncEntryInfo's metadata, written by the shell and
+         * read back off the mock catalog: a folder's DInfo, DXInfo, three
+         * dates and comment; a file's FInfo, FXInfo, backup date, comment
+         * and lock; and the folder's modification date surviving the two
+         * files then created inside it. Then the same run once per DROP_*
+         * control, in which the mock throws that one write away: the check
+         * for it must FAIL there, or it was not testing the write.
+         *
+         * Driven through sink_begin/sink_end, as --cancel is: the engine's
+         * half (which reader delivers which field) is graded against lsar
+         * by tools/run_meta.py. Cannot see: the real File Manager's or
+         * Desktop Manager's answers, which tools/vmac/hfs_cat.py reads off
+         * an emulated Mac's disk instead. */
+        static const uint8_t dinfo[16] = {        /* frRect, frFlags 0x0400,
+                                                     frLocation, frView */
+            0x00,0x28, 0x00,0x14, 0x01,0x2c, 0x01,0xf4, 0x04,0x00,
+            0x00,0x50, 0x00,0x60, 0x01,0x07 };
+        static const uint8_t dxinfo[16] = {       /* frScroll, frOpenChain,
+                                                     frUnused, frComment 0x1234,
+                                                     frPutAway */
+            0xff,0xfc, 0xff,0xfe, 0,0,0,0, 0,0, 0x12,0x34, 0,0,0,7 };
+        static const uint8_t finfo[16] = {        /* TEXT ttxt, flags 0x0100
+                                                     (inited, cleared on disk),
+                                                     location (0x30,0x40),
+                                                     fdFldr -3 */
+            'T','E','X','T', 't','t','x','t', 0x01,0x00,
+            0x00,0x30, 0x00,0x40, 0xff,0xfd };
+        static const uint8_t fxinfo[16] = {       /* fdIconID 0x0102, script
+                                                     0x81, fdComment 0x5389,
+                                                     fdPutAway 0x22 */
+            0x01,0x02, 0,0,0,0,0,0x81, 0,0, 0x53,0x89, 0,0,0,0x22 };
+        static const char fcmt[] = "a folder's comment";
+        static const char cmt[] = "Get Info says: keep this";
+        static const struct { int bit; const char *what; } controls[] = {
+            { 0,            "none" },
+            { DROP_FINFO,   "FInfo/DInfo" },
+            { DROP_FXINFO,  "FXInfo/DXInfo" },
+            { DROP_BACKUP,  "backup date" },
+            { DROP_LOCK,    "lock" },
+            { DROP_COMMENT, "comment" },
+            { DROP_DIRMD,   "folder date" },
+        };
+        size_t k;
+        int ok = 1;
+        const char *base = argc >= 3 ? argv[2] : "/tmp/meta_out";
+        for (k = 0; k < sizeof controls / sizeof controls[0]; k++) {
+            MacSink sk2; UncEntryInfo info;
+            char dir[600], path[900];
+            CatRec *rf, *rd, *rp;
+            unsigned bad = 0;
+            FInfo fi;
+            snprintf(dir, sizeof dir, "%s/c%u", base, (unsigned)k);
+            mkdir(base, 0755);
+            mkdir(dir, 0755);
+            snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+            snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+            gNumDirs = 1;
+            memset(gCat, 0, sizeof gCat);
+            gDrop = controls[k].bit;
+            RepReset();
+            memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold", 4); info.name_len = 4; info.is_dir = 1;
+            info.finder_flags = 0x0400;
+            info.create_date = 0xA0000001u; info.mod_date = 0xA0000002u;
+            info.backup_date = 0xA0000003u;
+            memcpy(info.finder_info, dinfo, 16);
+            memcpy(info.finder_info + 16, dxinfo, 16);
+            info.meta = UNC_META_FINFO | UNC_META_FXINFO | UNC_META_BACKUP;
+            info.comment = (const uint8_t *)fcmt;
+            info.comment_len = (uint16_t)strlen(fcmt);
+            sink_begin(&sk2, &info);
+
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold/Doc", 8); info.name_len = 8;
+            info.type = 0x54455854u; info.creator = 0x74747874u;
+            info.finder_flags = 0x0100;
+            info.create_date = 0xA0000011u; info.mod_date = 0xA0000012u;
+            info.backup_date = 0xA0000013u;
+            memcpy(info.finder_info, finfo, 16);
+            memcpy(info.finder_info + 16, fxinfo, 16);
+            info.meta = UNC_META_FINFO | UNC_META_FXINFO | UNC_META_BACKUP;
+            info.comment = (const uint8_t *)cmt;
+            info.comment_len = (uint16_t)strlen(cmt);
+            info.locked = UNC_LOCK_YES;
+            info.data_size = 5; info.rsrc_size = 0;
+            if (sink_begin(&sk2, &info) == 0) {
+                sink_write(&sk2, UNC_FORK_DATA, "hello", 5);
+                sink_end(&sk2, UNC_OK);
+            }
+
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold/Plain", 10); info.name_len = 10;
+            info.locked = UNC_LOCK_NO;
+            info.data_size = 0; info.rsrc_size = 0;
+            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+
+            snprintf(path, sizeof path, "%s/Fold", dir);
+            rd = cat_rec(path, 0);
+            snprintf(path, sizeof path, "%s/Fold/Doc", dir);
+            rf = cat_rec(path, 0);
+            snprintf(path, sizeof path, "%s/Fold/Plain", dir);
+            rp = cat_rec(path, 0);
+            if (!rd || !rf || !rp) {
+                fprintf(stderr, "meta [%s]: an entry is missing\n",
+                        controls[k].what);
+                ok = 0;
+                continue;
+            }
+            memcpy(&fi, rf->finfo, 16);
+            /* Each check is one bit of `bad`. */
+            if (memcmp(rd->finfo, dinfo, 8) || memcmp(rd->finfo + 10, dinfo + 10, 6))
+                bad |= DROP_FINFO;
+            if (memcmp(rf->finfo + 10, finfo + 10, 6) ||
+                fi.fdType != 0x54455854u || fi.fdCreator != 0x74747874u ||
+                fi.fdFlags != 0x0000)
+                bad |= DROP_FINFO;
+            if (memcmp(rd->fxinfo, dxinfo, 10) || rd->fxinfo[10] || rd->fxinfo[11] ||
+                memcmp(rd->fxinfo + 12, dxinfo + 12, 4) ||
+                memcmp(rf->fxinfo, fxinfo, 10) || rf->fxinfo[10] || rf->fxinfo[11] ||
+                memcmp(rf->fxinfo + 12, fxinfo + 12, 4))
+                bad |= DROP_FXINFO;
+            if (rd->bk != 0xA0000003u || rf->bk != 0xA0000013u)
+                bad |= DROP_BACKUP;
+            if (!rf->locked || rp->locked)
+                bad |= DROP_LOCK;
+            if (rf->clen != (int)strlen(cmt) || memcmp(rf->comment, cmt, strlen(cmt)) ||
+                rd->clen != (int)strlen(fcmt) || memcmp(rd->comment, fcmt, strlen(fcmt)) ||
+                rp->clen)
+                bad |= DROP_COMMENT;
+            if (rd->cr != 0xA0000001u || rd->md != 0xA0000002u ||
+                rf->cr != 0xA0000011u || rf->md != 0xA0000012u)
+                bad |= DROP_DIRMD;
+            fprintf(stderr, "meta [drop %s]: failing checks 0x%02x\n",
+                    controls[k].what, bad);
+            if (controls[k].bit == 0 ? bad != 0 : !(bad & (unsigned)controls[k].bit)) {
+                fprintf(stderr, "meta [drop %s]: %s\n", controls[k].what,
+                        controls[k].bit ? "the check PASSED without the write"
+                                        : "FAILED");
+                ok = 0;
+            }
+        }
+        gDrop = 0;
+        /* No Desktop Manager on the volume — a System 6 disk: the comment
+         * is not written, nothing else changes, nothing is reported. */
+        {
+            MacSink sk2; UncEntryInfo info;
+            char dir[600];
+            snprintf(dir, sizeof dir, "%s/nodt", base);
+            mkdir(dir, 0755);
+            snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+            snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+            gNumDirs = 1;
+            gHasDT = 0; gDTSetCalls = 0;
+            RepReset();
+            memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Doc", 3); info.name_len = 3;
+            info.comment = (const uint8_t *)cmt;
+            info.comment_len = (uint16_t)strlen(cmt);
+            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+            if (gDTSetCalls || gRepN || sk2.errors) {
+                fprintf(stderr, "meta [no Desktop Manager]: %d SetComment "
+                        "call(s), %d report line(s), %d error(s)\n",
+                        gDTSetCalls, (int)gRepN, sk2.errors);
+                ok = 0;
+            } else
+                fprintf(stderr, "meta [no Desktop Manager]: no comment "
+                        "written, nothing reported\n");
+            gHasDT = 1;
+        }
+        fprintf(stderr, "meta: %s\n", ok ? "every field written, every "
+                "control caught" : "FAILED");
         return ok ? 0 : 1;
     }
     if (argc >= 2 && strcmp(argv[1], "--utf8") == 0) {
