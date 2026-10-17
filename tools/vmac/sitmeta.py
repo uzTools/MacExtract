@@ -689,6 +689,12 @@ def writer201(emu):
     if os.path.exists(st):
         print(open(st, "rb").read()[128:].split(b"\0")[0]
               .decode("mac-roman", "replace").replace("\r", "\n"))
+    return report_writer(work, after, vol, "writer201")
+
+
+def report_writer(work, after, vol, label):
+    """Where each planted catalog value landed in the archive the writer
+    made (`Meta.sit`, lifted as MacBinary into `work`)."""
     mb = os.path.join(work, "Meta.sit.bin")
     if not os.path.exists(mb):
         raise SystemExit("sitmeta: no Meta.sit came back — %s" % work)
@@ -696,7 +702,7 @@ def writer201(emu):
     dlen = struct.unpack(">I", b[83:87])[0]
     blob = b[128:128 + dlen]
     os.makedirs(RESULTS, exist_ok=True)
-    keep = os.path.join(RESULTS, "writer201-Meta.sit")
+    keep = os.path.join(RESULTS, "%s-Meta.sit" % label)
     open(keep, "wb").write(blob)
     # what the source records held at the moment of stuffing
     before = {r["path"][1:]: r for r in after
@@ -709,7 +715,10 @@ def writer201(emu):
             continue
         h = e["hdr"]
         fields_ = W_DIR if e["kind"] == "dir" else W_FILE
-        print("  %s %s" % (e["kind"], b"/".join(e["path"]).decode()))
+        print("  %s %s  (name CRC %s, @36 %s, archive version %d)" % (
+            e["kind"], b"/".join(e["path"]).decode(),
+            "holds" if struct.unpack(">H", h[34:36])[0] == crc16_arc(h[2:34])
+            else "fails", h[36:38].hex(), blob[14]))
         src = before.get(tuple(e["path"]))
         for f, (off, v) in fields_.items():
             # the planted value, and the record as it stood after the
@@ -726,6 +735,98 @@ def writer201(emu):
             print("     %-11s catalog %-26s header bytes 104..109 %s" % (
                 "locked", "%02x" % src["rec"][2], h[104:110].hex()))
     return 0
+
+
+W_SCRIPT351 = "\r".join([
+    "; written by tools/vmac/sitmeta.py --writer351",
+    'Write Status To "{Startup}MetaStatus.out"',
+    "Continue On Error",
+    'New Archive "{Startup}Meta.sit"',
+    # `better` is the method word 3.5.1 is known to take (sitenc351.py);
+    # the method does not matter here, the header does.
+    'Stuff "{Startup}Wfold" with better',
+    "Close",
+    "Quit", ""])
+
+
+def writer351(emu, launch_wait=40.0):
+    """The same sentinel folder, stuffed by StuffIt Deluxe 3.5.1's own
+    script (sitenc351.py's route: launched by a double-click, Script
+    ticked in Preferences, ⌘E). On System 7.0.1, the image
+    spacesaver.py --install351 makes."""
+    import subprocess
+    import tempfile
+    import sitopt as O
+    import sitenc351 as E
+    from arcmac import macbinary
+    from diskdoubler import Session
+    if not os.path.exists(O.SS_INSTALLED):
+        raise SystemExit("sitmeta: no %s — spacesaver.py --install351"
+                         % O.SS_INSTALLED)
+    work = guard.run_dir("sitmeta-w351")
+    img = os.path.join(work, "w351.hfv")
+    subprocess.run(["cp", "--sparse=always", O.SS_INSTALLED, img],
+                   check=True)
+    env = dict(os.environ, HOME=tempfile.mkdtemp(prefix="hfs-", dir=work))
+    vol = O.VOL351
+    run = lambda *a: subprocess.run(a, env=env, capture_output=True,  # noqa
+                                    check=True)
+    run("hmount", img)
+    for path, kind in W_TREE:
+        mac = ":".join((vol,) + path)
+        if kind == "dir":
+            run("hmkdir", mac)
+        else:
+            src = os.path.join(work, path[-1])
+            open(src, "wb").write(("subject %s\r" % path[-1]).encode() * 40)
+            run("hcopy", "-r", src, mac)
+            run("hattrib", "-t", "TEXT", "-c", "ttxt", mac)
+    sc = os.path.join(work, "script.bin")
+    open(sc, "wb").write(macbinary("Zmeta", "TEXT", "SIT!",
+                                   W_SCRIPT351.encode("mac-roman")))
+    run("hcopy", "-m", sc, (vol + ":" + O.APP_FOLDER351 + ":")
+        .encode("mac-roman"))
+    run("humount")
+    for path, kind in W_TREE:
+        full = (vol.encode(),) + tuple(x.encode() for x in path)
+        for _f, (off, v) in (W_DIR if kind == "dir" else W_FILE).items():
+            hfscat.patch(img, full, off, v)
+        if path[-1] == "Wf2":
+            hfscat.patch(img, full, 2, b"\x01")            # locked
+    s = Session(img, [], os.path.join(work, "shots"), mem=emu)
+    try:
+        O.launch351(s, argparse.Namespace(launch_wait=launch_wait))
+        s.menu(E.EDIT_X, E.PREFS_Y, "prefs-item")
+        s.shot("prefs", wait=6.0)
+        s.mac.click(*E.PREFS_SCRIPT)
+        s.shot("script-ticked", wait=2.0)
+        s.mac.click(*E.PREFS_OK)
+        s.shot("script-menu", wait=4.0)
+        s.mac.command_key("e")
+        s.shot("script-picker", wait=8.0)
+        s.mac._xdo("type", "--delay", "120", "Zmeta")
+        s.shot("script-selected", wait=2.0)
+        s.mac.key("Return")
+        s.shot("script-running", wait=60.0)
+        s.shot("script-done", wait=20.0)
+        E.shut_down(s)
+        written = os.path.join(s.work, "boot.hfv")
+        run("hmount", written)
+        for n in ("Meta.sit", "MetaStatus.out"):
+            subprocess.run(["hcopy", "-m", vol + ":" + n,
+                            os.path.join(work, n + ".bin")],
+                           env=env, capture_output=True)
+        run("humount")
+        after = hfscat.records(open(written, "rb").read())
+    finally:
+        time.sleep(4)
+        s.close()
+    print("sitmeta: shots in %s" % os.path.join(work, "shots"))
+    st = os.path.join(work, "MetaStatus.out.bin")
+    if os.path.exists(st):
+        print(open(st, "rb").read()[128:].split(b"\0")[0]
+              .decode("mac-roman", "replace").replace("\r", "\n"))
+    return report_writer(work, after, vol, "writer351")
 
 
 def shutil_copy(a, b):
@@ -1076,6 +1177,9 @@ def main():
                    help="with --sit5: the archive unmodified (the control)")
     p.add_argument("--writer201", action="store_true",
                    help="StuffIt Deluxe 2.0.1 stuffs a sentinel folder")
+    p.add_argument("--writer351", action="store_true",
+                   help="StuffIt Deluxe 3.5.1 stuffs the same folder "
+                        "(System 7.0.1)")
     p.add_argument("--by-writer", action="store_true")
     p.add_argument("--control", action="store_true",
                    help="with --report: the rules less every gate and "
@@ -1106,6 +1210,8 @@ def main():
                         else 36, a.files_only)
     elif a.writer201:
         return writer201(a.emu)
+    elif a.writer351:
+        return writer351(a.emu)
     elif a.run or a.batch is not None:
         archives = a.archives
         tag = (a.tag or ["run"])[0]

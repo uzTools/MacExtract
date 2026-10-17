@@ -3369,8 +3369,15 @@ is silent. Graded against:
 | `synth-sqp-meta.pkg` | `tools/synth_sqp.py`'s own items: nothing else reads the container |
 | `--corpus` | every fixture where the engine and `lsar` both state a field: 8 fields on 2026-10-17, the two DiskDoubler AppleDouble sidecars' Finder info |
 
+| DiskDoubler 3.7's own compressed file | the catalog record the subject had before 3.7 compressed it (`tools/vmac/ddmeta.py --writer`'s result; skipped where absent) |
+| `--expander` | **StuffIt classic against StuffIt Expander 4.0.2's own output**: for every archive `tools/vmac/sitmeta.py` ran (225 corpus, 21 sentinel), the catalog record Expander wrote for each entry, field for field — a file's FInfo, FXInfo, backup date and lock, a folder's DInfo, DXInfo and backup date; `-` counts as what a host writes on a new entry. 241 archives, 6,627 fields, 0 disagreements on 2026-10-17; 5 archives Expander did not extract whole are left out by name. Skipped, and said so, without sitmeta.py's results |
+
 Each field is then tampered with in the engine's row, one at a time, and the
-comparison must fail: 10 controls, 10 caught.
+comparison must fail: 11 controls, 11 caught; `--expander` has seven of its
+own (a file's four fields, a folder's three). Its stronger controls, run
+once on 2026-10-17: `origin/main`'s engine disagrees on 2,150 fields, and
+each of the eight rules removed from `sit_finder` alone disagrees on 11 to
+500 (DECISIONS.md 2026-10-17, *the window Expander puts back*).
 
 **The shell's half: `mac_sink_test --meta`** (`tests/run_mac_sink.sh`). A
 folder and two files go through the real `sink_begin`/`sink_end` against a
@@ -3392,7 +3399,9 @@ mechanism removed, each fail the cases they should (DECISIONS.md
 2026-10-17, *the date held once per folder*).
 
 **What neither can see.** A field the engine does not read yet: it prints `-`
-and passes. The real File Manager and Desktop Manager: that is
+and passes. With `--expander`: the dates (not in `l --meta`; `metarun.py
+--expander` reads them off the disk), and any StuffIt reader but Expander
+4.0.2. The real File Manager and Desktop Manager: that is
 `tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the
 Finder then does with any of it.
 

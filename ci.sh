@@ -301,7 +301,11 @@ python3 tools/run_sqp.py --macextract build/san/macextract \
 # held to lsar where it reads them and to the synthesizers' own input where
 # nothing does, with one tampering control per field, then every fixture
 # where the engine and lsar both state a field (DECISIONS.md 2026-10-17).
-python3 tools/run_meta.py --cli build/san/macextract --corpus \
+# --expander: StuffIt classic against StuffIt Expander 4.0.2's own output,
+# the catalog records tools/vmac/sitmeta.py read back off its disk; skips,
+# and says so, where those results are absent (DECISIONS.md 2026-10-17,
+# *the window Expander puts back*).
+python3 tools/run_meta.py --cli build/san/macextract --corpus --expander \
     || fail "Finder metadata (l --meta)"
 
 # The one rule all five path walks share, at the one place they used to

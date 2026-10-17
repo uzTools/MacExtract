@@ -2538,7 +2538,7 @@ longest code is 17 bits against the 32 the assignment can represent.
 | `ovl_stuffit` image | 23,670 → **26,274 B** (26,278 until the sort fix of 2026-10-06, which is -4 B), read at launch and released for every archive that is not a StuffIt one |
 | resident `CODE`, SHIPPED build | **+0 B**, A5 +0 |
 | resident `CODE`, the control | 158,972 → 161,596 B (+2,624; `src/sit14.c` is 2,613 B of text and no data or bss at all) |
-| deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 3,354 B (*Stack*) |
+| deepest stack chain | **360 B** — `unc_sit14_decode` 104, `sit14_tree` 84, `sit14_build` 172 — against the engine's deepest 3,350 B (*Stack*) |
 
 The window is sized to the fork rather than always 256 KB, by
 `sit13_winsize`'s argument (*StuffIt classic: method 13's window*), so a
@@ -3545,6 +3545,19 @@ a folder of sentinel catalog records stuffed by its own script): only
 position, rectangle, scroll, lock, `FXInfo` or backup date. Its archives
 are the no-CRC class, so Expander would ignore those bytes anyway.
 
+**StuffIt Deluxe 3.5.1 writes version 2 WITH the name CRC**
+(`--writer351`, the same sentinel folder): the lock (bit 15 of @36),
+`fdLocation` @62, `fdFlags` @74, `frRect` @38, `frFlags` @74, `frView`
+@68, a nested folder's `frLocation` @70 and (−1,−1) there for the top
+one. No `frScroll`, `FXInfo`, `DXInfo` past it or backup date; `fdFldr`
+not planted.
+
+**This engine states exactly this table** since 2026-10-17
+(`src/fmt_sit.c`, `sit_finder`): `run_meta.py --expander`, 241 archives,
+6,627 fields as Expander wrote them, 0 disagreeing; the application,
+`metarun.py --expander`, 24 archives, 496 catalog values, 0 (DECISIONS.md
+2026-10-17, *the window Expander puts back*).
+
 ### DiskDoubler's single-file header (3.7)
 
 `ddmeta.py`; offsets from the header's start
@@ -3553,10 +3566,10 @@ are the no-CRC class, so Expander would ignore those bytes anyway.
 | bytes | what | measured |
 |---|---|---|
 | +40 | Finder flags | written from the catalog by 3.7 |
-| +42..45 | `fdLocation` | **written** by 3.7; **not restored** by its in-place Expand, which leaves the Finder to place the icon |
+| +42..45 | `fdLocation` | **written** by 3.7; **not restored** by its in-place Expand, which leaves the Finder to place the icon; **restored by this engine** since 2026-10-17, with +32..41 as the whole FInfo |
 | +46..47 | `fdFldr` (hypothesis: FInfo's next field; 0 in all 70 headers) | — |
 | +58..77 | nothing 3.7 writes; DiskDoubler Pro 4.1 puts 1, 2 or 3 at +62 in three specimens, unexplained | 0 in every 3.7 header |
-| +82..83 | **CRC-16/XMODEM of bytes 0..81** | 70 headers of 70; 3.7 refuses a header that disagrees, *"Corrupted file or wrong file type"* |
+| +82..83 | **CRC-16/XMODEM of bytes 0..81** | 70 headers of 70, and 102 of 102 more in `fixtures/` and the specimens, none 0; 3.7 refuses a header that disagrees, *"Corrupted file or wrong file type"*; this engine's sniffer refuses a nonzero one that disagrees and accepts 0 (XADMaster) |
 
 `FXInfo` and the backup date are not in the header: they stay on the
 compressed file's own catalog record. DDAR and DDA2 records are not
@@ -5644,7 +5657,8 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **138,608 B** since 2026-10-17's
+measured 2026-09-27. The shipped pair is **138,992 B** since 2026-10-17's
+StuffIt classic and DiskDoubler Finder info, 138,608 B after that day's
 review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
 `GrowApplZone`, 138,544 B after 2026-10-14's refusal of a fork over 2 GB, 138,576 B after that day's BinHex before 4.0, 136,448 B after 2026-10-13's
@@ -5653,8 +5667,9 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **167,256 B** — the sixteen images sum to 167,044 B, so its
-index costs **212 B** (+14 B on 2026-10-11 with the sixteenth image,
+The bundle is **167,664 B** — the sixteen images sum to 167,452 B, so its
+index costs **212 B** (167,256 and 167,044 until 2026-10-17's `ovl_stuffit`
++380 and `ovl_cptdd` +28, *the window Expander puts back*) (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
 of directory per image and 16 bytes of padding to 4, which accounts for
 the whole difference
@@ -5785,7 +5800,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 138,608 B of `CODE` and A5 the shipped build does not carry
+which is the 138,992 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5833,19 +5848,21 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+129,130 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
-| Now Compress | now, codecs | **+126,092 B** (measured) |
-| SuperDisk! | superdisk, codecs | +124,112 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+121,584 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+118,274 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+115,262 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +114,448 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+112,798 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +105,010 B (arithmetic), and **+115,262 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+99,010 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+92,316 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +86,092 B (arithmetic), **+96,344 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,122 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+129,514 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
+| Now Compress | now, codecs | **+126,476 B** (measured) |
+| SuperDisk! | superdisk, codecs | +124,496 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+121,968 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+118,658 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+115,618 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +114,832 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+113,182 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +105,366 B (arithmetic), and **+115,618 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+99,394 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+92,320 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11, the +12 of 2026-10-15 and the −380 of 2026-10-17 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +86,476 B (arithmetic), **+96,728 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,146 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11, the +12 of 2026-10-15 and the −408 of 2026-10-17 with the bundle are arithmetic, no tier re-run) |
+
+**Every row rose 384 B on 2026-10-17, for StuffIt classic's and DiskDoubler's Finder info, except four**: `OVL_SAVED` +384, the control +416 (CODE +428, A5 −12) against the shipped build +32 (CODE +16, A5 +16 of padding); `ovl_stuffit` +380, so the StuffIt row rose 4, `ovl_cptdd` +28, so the DiskDoubler and Compact Pro rows rose 356, and the bundle +408, so the envelope row fell 24 — and on the machine every grant falls 32 B, a StuffIt archive's 412, a DiskDoubler or Compact Pro one's 60 and an envelope's 440 (DECISIONS.md 2026-10-17, *the window Expander puts back*); arithmetic, no tier re-run, and `run_tiers.py --check` moves no tally.
 
 **Every row rose 32 B more the same day, for the review's inited rule and cleared directory IDs**: `OVL_SAVED` +32, the control +64 (CODE +40, A5 +24) against the shipped build +32 (CODE +40, A5 −8), no image moved — so on the machine every grant falls 32 B more (DECISIONS.md 2026-10-17, *the bit that kept the position*); arithmetic.
 
@@ -5937,7 +5954,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 167,256 B held against 138,608 B saved. It costs nothing on the tiers
+it — 167,664 B held against 138,992 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -6602,7 +6619,7 @@ and the call graph comes from the relocations in the linked objects
 
 | | before 2026-08-24 | now |
 |---|---|---|
-| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,354 B**, derived 2026-10-17: 3,310 B since 2026-10-07 (corrected here, where it still read 3,386), plus the 44 B every reader's frame gained with `UncEntryInfo` (`unc_dd_extract` 952 → 996, `-fstack-usage`) |
+| deepest chain in the engine | 6,664 B (`unc_dd_extract` → `dd_fork` → `dd_ddn`) | **3,350 B**, derived 2026-10-17: 3,310 B since 2026-10-07 (corrected here, where it still read 3,386), plus the 44 B every reader's frame gained with `UncEntryInfo` (`unc_dd_extract` 952 → 996, `-fstack-usage`), less 4 the same day for DiskDoubler's FInfo (996 → 992; `unc_sit_extract` 934 → 938, and `sit_finder` 42, a leaf off the walk) |
 | Now Compress chain | 5,632 B | ~1,400 B, and **616 B less since 2026-09-21** — a shape-3 block's 346-byte table staging moved into the per-archive allocation its code tables already live in, measured `-Os -fstack-usage` as 2,264 → 1,648 B over this file's own deepest chain (OPEN_ITEMS.md, *What is still XADMaster's*) |
 | largest single frame | 3,740 B (`dd_fork`) | **2,352 B** (`ars_index_build`) |
 | largest frame in the SHELL | — | **1,544 B** (`ExtractOne`, whose `MacSink` holds an entry), measured 2026-10-17; it was 1,500 B on `main` that day, where this row read 1,480 |
@@ -6726,7 +6743,7 @@ than assumed.
 That 3,290 B became 3,330 B on 2026-08-27: `dd_fork` gained 44 bytes to the
 shared fork writer and gave 4 back when its prologue was hoisted out of nine
 branches (DECISIONS.md, *the fork writer and the filter*, and *the shapes that
-were left*). It was **3,386 B** from later the same day (3,310 since 2026-10-07, 3,354 since 2026-10-17; the table above): `UncPath` keeps the
+were left*). It was **3,386 B** from later the same day (3,310 since 2026-10-07, 3,354 since 2026-10-17, 3,350 later that day; the table above): `UncPath` keeps the
 uncut path length per level, which is 56 bytes in `unc_dd_extract` and 52 in
 each of the other two walk frames (DECISIONS.md, *the path builder's own
 cap*).

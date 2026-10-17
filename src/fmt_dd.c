@@ -1586,6 +1586,22 @@ int unc_dd_extract(UncCtx *c)
             unc_entry_set_name(&e, (const uint8_t *)"diskdoubler", 11);
         }
         dd_entry_from(&e, &f);
+        /* The whole FInfo, where 3.7 wrote it: type, creator and flags
+         * as above, and fdLocation at file +42..45, which DiskDoubler
+         * 3.7 copies from the catalog and its own in-place Expand does
+         * NOT put back. It is put back here, because the file is to come
+         * out as it went in (DECISIONS.md 2026-10-17, *the window
+         * Expander puts back*). fdFldr is left 0: +46..47 is 0 in every
+         * header measured and what it holds is a hypothesis. The 1990
+         * 48-byte header is not measured, so it states nothing more.
+         * Source: FORMATS.md, *Finder info in the archive*, table
+         * *DiskDoubler's single-file header (3.7)*; DECISIONS.md
+         * 2026-10-17, *the window StuffIt kept in the name*
+         * (tools/vmac/ddmeta.py). */
+        if (hsize == 84) {
+            for (i = 0; i < 14; i++) e.finder_info[i] = hdr[28 + i];
+            e.meta = UNC_META_FINFO;
+        }
         return dd_emit(c, &e, &f, hsize);
     }
 }

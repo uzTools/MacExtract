@@ -142,10 +142,12 @@ machine until release, and the extraction runs in the same loop.
 Since 2026-10-17 the engine carries every field the Finder keeps
 (`UncEntryInfo`: FInfo/DInfo and FXInfo/DXInfo whole, the backup date, the
 lock, the Get Info comment) and the Macintosh shell writes all of it
-(DECISIONS.md, *the metadata, carried to the disk*). **Two readers deliver
-it so far**: AppleSingle/AppleDouble (all of it) and AppleLink packages (the
-16 bytes of FInfo/DInfo). Every other reader still delivers type, creator,
-flags and two dates. The leads, from a scan of the references and the
+(DECISIONS.md, *the metadata, carried to the disk*). **Four readers deliver
+it so far**: AppleSingle/AppleDouble (all of it), AppleLink packages (the
+16 bytes of FInfo/DInfo), StuffIt classic (what Expander 4.0.2 restores:
+FInfo/DInfo, a folder's scroll, the lock) and DiskDoubler's single-file
+header (FInfo). Every other reader still delivers type, creator, flags
+and two dates. The leads, from a scan of the references and the
 corpus (2026-10-16) — **none re-verified here; each needs its own source
 or measurement before it is read**:
 
@@ -158,7 +160,6 @@ or measurement before it is read**:
 | zip | Info-ZIP `0x334d`'s location, folder, FXInfo, backup date and comment; external attributes (DOS read-only, a POSIX mode); the per-file comment | `lsar` in part |
 | tar, LZH, uuencode/base64 | a POSIX mode (a read-only one is a lock) | `lsar`'s XADPosixPermissions |
 | ARC/ArcMac, UUTool `.finfo`, MIME `multipart/appledouble` | the rest of the FInfo they hold; MIME's entries 4 and 8 | per format |
-| StuffIt classic | folder location, view, flags (measured once against Expander 4.0.2) and file location in name-field bytes | StuffIt Expander, one specimen; needs many |
 | SuperDisk! | a 20-byte folder record, discarded, so folders get no dates | none known |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,

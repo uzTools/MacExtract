@@ -1996,6 +1996,18 @@ a harness can click is not the same list.
   (DECISIONS.md 2026-10-08, *the stub is the writer's signature*;
   FORMATS.md, *The specimen that carries the bug*).
 
+- **"DiskDoubler 3.7 enforces its header CRC and this engine does not"**
+  — DECISIONS.md 2026-10-17, *the window StuffIt kept in the name*, filed
+  from reading `dd_parse_filehdr` alone. **Withdrawn the same day**:
+  `unc_diskdoubler_probe` has checked +82 since M0 (macutils' `C_HDRCRC`,
+  XADMaster's zero exception), and a header with one byte flipped is
+  "format not recognized". **Cost: one task** — the brief asked for that
+  check to be decided as missing, and the redundant extractor check it
+  invited would have been bytes on a 1 MB machine for nothing. **Why it
+  survived:** the claim was about a format, and was tested against the
+  one function named after the format's header (DECISIONS.md 2026-10-17,
+  *the window Expander puts back*).
+
 ### Corrected figures and superseded write-ups
 
 - **"No zip written by PKZIP 1.01 or 1.02 is in reach, so its

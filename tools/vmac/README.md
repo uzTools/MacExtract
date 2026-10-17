@@ -1908,6 +1908,7 @@ does not have.
     tools/vmac/sitmeta.py --run --tag T ARCHIVE...  any archives, one boot
     tools/vmac/sitmeta.py --report [--control] [--by-writer] --tag T...
     tools/vmac/sitmeta.py --writer201             StuffIt Deluxe 2.0.1 writes
+    tools/vmac/sitmeta.py --writer351             StuffIt Deluxe 3.5.1 writes (System 7.0.1)
     tools/vmac/sitmeta.py --sit5 ARCHIVE [--plain|--info-only|--files-only]
     tools/vmac/ddmeta.py --writer ; ddmeta.py --reader
     tools/vmac/nowmeta.py --run
@@ -2799,6 +2800,8 @@ like somebody else's problem — see *What every walk can see*, below.
     metarun.py --system System6.hfv          # or --sys30
     metarun.py --system Sys7.img --out-kb 8192
     metarun.py --check .tmp/vmacrun-*/       # re-grade disks a run kept
+    metarun.py --expander                    # StuffIt classic, against Expander 4.0.2
+    metarun.py --check-expander .tmp/vmacrun-*/
     hfscat.py out.dsk [--json] [--fcmt DeskTop]   # its control: *Finder info, read back*
 
 `hfscat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
@@ -2812,6 +2815,19 @@ keeps the disks (`sys30.py --keep-disks` too, since 2026-10-17) and grades
 every value against the synthesizers' input, with the shell's two
 deliberate changes (inited cleared, fdComment cleared). Results:
 DECISIONS.md 2026-10-17, *the metadata, carried to the disk*.
+
+**`--expander`** runs seven corpus archives that hold every StuffIt
+classic writer class and every rule between them, and the 17 sentinel
+archives Expander extracted whole, through the application (`run.py
+--keep-disks --expect`, one boot each, about 5 s all-out), and holds every
+catalog record on the output disk to the one StuffIt Expander 4.0.2 wrote
+for the same entry (`sitmeta.py`'s results): FInfo/DInfo, FXInfo/DXInfo,
+three dates, the lock. The only difference allowed is the shell's
+bundle rule. Its control is built in (Expander's records without that
+rule and one byte shifted) and a second was run once: `origin/main`'s
+application, 112 of 496 values wrong (DECISIONS.md 2026-10-17, *the
+window Expander puts back*). It needs `build/rel/macextract` for run.py's
+own verdict.
 
 **`-D UNC_AT_DTCOMMENT`** appends a `DTCM` trailer to the autotest report:
 what `PBHGetVolParms` and `PBDTGetPath` answer on the output volume, and

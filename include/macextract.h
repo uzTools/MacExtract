@@ -381,14 +381,17 @@ typedef struct UncEntryInfo {
      * top-left corner. A bit that is clear means the archive did not
      * state it, and a host leaves whatever it has.
      *
-     * finder_info is 32 bytes as the archive stores them, raw big-endian:
+     * finder_info is 32 bytes, raw big-endian, as a host is to WRITE them:
      * 0..15 the FInfo of a FILE or the DInfo of a FOLDER (UNC_META_FINFO),
      * 16..31 the FXInfo or DXInfo (UNC_META_FXINFO) — the order of
      * AppleSingle's entry 9 and of the HFS catalog's own records (libhfs
-     * apple.h declares all four structures). The fields above are not
-     * replaced by them: `type`, `creator` and `finder_flags` stay
-     * authoritative, and the bytes they overlap (FInfo 0..9, DInfo 8..9)
-     * are whatever the archive held there. */
+     * apple.h declares all four structures). Most readers copy the
+     * archive's bytes; one whose format's own expander restores less, or
+     * masks a bit, states what that expander writes (StuffIt classic,
+     * DECISIONS.md 2026-10-17, *the window Expander puts back*). So where
+     * UNC_META_FINFO is stated, bytes 8..9 are the Finder flags to write,
+     * and `finder_flags` stays the archive's own word as stored; `type`
+     * and `creator`, where nonzero, still win over bytes 0..7. */
     uint8_t  finder_info[32];
     uint32_t backup_date;      /* Mac epoch (1904) secs; see UNC_META_BACKUP */
     /* The Get Info comment, `comment_len` bytes in the archive's own

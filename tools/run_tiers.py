@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (199540, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (104140, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (628428, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (199124, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (103724, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (628012, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -238,7 +238,11 @@ TIERS = {
 # DERIVED**: the review's inited rule and cleared directory IDs, the
 # control's CODE +40 and A5 +24 (DECISIONS.md 2026-10-17, *the bit that
 # kept the position*).
-TIERS_CONTROL = 213952     # build/mac-resident, CODE + A5, 2026-10-17
+# **Raised by 416 B more the same day, and TIERS lowered by the same 416,
+# DERIVED**: StuffIt classic's and DiskDoubler's Finder info, resident in
+# the control (CODE +428, A5 -12: `sit_finder` 310, the two walks +88,
+# StampCat +12) (DECISIONS.md 2026-10-17, *the window Expander puts back*).
+TIERS_CONTROL = 214368     # build/mac-resident, CODE + A5, 2026-10-17
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -542,7 +546,14 @@ EXPECT = {
 # **+32 the same day, -> 138,608**: the review's changes, the control's
 # +64 (CODE +40, A5 +24) against the shipped pair's +32 (CODE +40, A5 -8);
 # no image moved.
-OVL_SAVED = 138608
+# **+384 the same day, -> 138,992**: StuffIt classic's and DiskDoubler's
+# Finder info, the control's +416 (CODE +428, A5 -12) against the shipped
+# pair's +32 (CODE +16, A5 +16 of `.data` padding); `ovl_stuffit` +380 and
+# `ovl_cptdd` +28, so a StuffIt archive's grant falls 412 B, a
+# DiskDoubler or Compact Pro one's 60, an envelope's (the bundle, +408)
+# 440, and every other format's 32 (DECISIONS.md 2026-10-17, *the window
+# Expander puts back*).
+OVL_SAVED = 138992
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -652,25 +663,30 @@ OVL_RESIDUE = -666
 # reader hands over the record's 16 bytes of Finder info whole; TEXT is
 # the 44-byte larger entry in its readers' frames, alignment (DECISIONS.md
 # 2026-10-17, *the metadata, carried to the disk*).
+# **STUFFIT +380 B, CPTDD +28 B, the bundle +408 B 2026-10-17**: StuffIt
+# classic states the Finder info, the scroll and the lock Expander 4.0.2
+# restores (`sit_finder` 310 B and its two calls), and DiskDoubler's
+# single-file header its FInfo whole (DECISIONS.md 2026-10-17, *the
+# window Expander puts back*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      4994,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
-    "OVL_ID_CPTDD":       15908,
+    "OVL_ID_CPTDD":       15936,
     "OVL_ID_CRYPT":       10244,
     "OVL_ID_EXO":         32160,
     "OVL_ID_LZH":         9586,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     28914,
+    "OVL_ID_STUFFIT":     29294,
     "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7058,
     "OVL_ID_TEXT":        11758,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 167256
+BUNDLE = 167664
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

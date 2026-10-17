@@ -2431,9 +2431,20 @@ static void StampCat(MacSink *s)
          * kept the position*). So the archive's bit is kept where it stated
          * the Finder info whole and the file has no bundle, and cleared
          * otherwise: an application gets its icon and the Finder's place. */
-        pb.hFileInfo.ioFlFndrInfo.fdFlags =
-            ((s->cur.meta & UNC_META_FINFO) && !(s->cur.finder_flags & 0x2000))
-            ? s->cur.finder_flags : s->cur.finder_flags & ~0x0100;
+        /* Where the Finder info is stated, ITS flags are the ones to
+         * write (include/macextract.h): a reader may have masked them as
+         * its format's own expander does, and finder_flags is then the
+         * archive's raw word. Read as bytes, so the host-side sink test
+         * sees what a 68000 does. */
+        {
+            unsigned short fl = (s->cur.meta & UNC_META_FINFO)
+                ? (unsigned short)((s->cur.finder_info[8] << 8) |
+                                   s->cur.finder_info[9])
+                : s->cur.finder_flags;
+            pb.hFileInfo.ioFlFndrInfo.fdFlags =
+                ((s->cur.meta & UNC_META_FINFO) && !(fl & 0x2000))
+                ? fl : fl & ~0x0100;
+        }
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
         /* A folder's own entry, for the folder whose date is held — in a
