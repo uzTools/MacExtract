@@ -656,7 +656,11 @@ is one of these with a count of 1**, so this section describes both.
   | +36 | flags; **bit `0x10` marks a directory** |
   | +38, +42 | type and creator, zero on a directory |
   | +46 | u16 Finder flags |
+  | +48 | file `fdLocation`; a folder's `frLocation` (+38..53 is the whole `FInfo`/`DInfo`) |
+  | +52 | a folder's `frView`; a file's `fdFldr`, which QuickFiler 5.0.1 does not restore |
   | +54, +58 | u32 created and modified, Mac dates |
+  | +62 | u32 **backup date** — measured 2026-10-17 against QuickFiler 5.0.1 (`tools/vmac/nowmeta.py`); XADMaster reads it as the access date |
+  | +66 | 16 bytes: a folder's `DXInfo`, restored verbatim; a file's are not restored |
   | +82 | u16, **how many entries a directory holds** |
   | +86 | u32 **data fork length** |
   | +90 | u32 **resource fork length** |

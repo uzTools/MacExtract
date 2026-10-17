@@ -63,12 +63,14 @@ DiskDoubler ß05 wrote states 48 and stops after +47.
 | 28 | 4 | creation date | as +24 |
 | 32 | 4 | type | **pinned**: one offset agrees over 87 entries whose type the oracle recorded |
 | 36 | 4 | creator | **pinned**, same 87 |
-| 40 | 2 | Finder flags | not pinned — no manifest records them |
+| 40 | 2 | Finder flags | **measured 2026-10-17**: DiskDoubler 3.7 copies the catalog's `fdFlags` here (`tools/vmac/ddmeta.py --writer`) |
+| 42 | 4 | `fdLocation` | **measured 2026-10-17**: 3.7 writes the catalog's position here; its in-place Expand does not restore it (FORMATS.md, *Finder info in the archive*) |
 | 48 | 2 | data fork checksum | the decoders check it: `src/fmt_dd.c` fails an entry whose sum disagrees, over the whole corpus |
 | 50 | 2 | resource fork checksum | as +48 |
 | 52 | 1 | `info2` | the XOR garbling, below |
 | 54 | 2 | data fork delta distance | **held against the coder**, below |
 | 56 | 2 | resource fork delta distance | as +54 |
+| 82 | 2 | **CRC-16/XMODEM of bytes 0..81** | **measured 2026-10-17**: 70 headers of 70; 3.7 refuses one that disagrees (`ddmeta.py --reader`) |
 | 84 | | the data fork's bytes, then the resource fork's | |
 | 84 + both | 84 | a byte-identical COPY of the header above | **63 of the corpus's 66 compressed files**, and the three without it are this project's own (below) |
 
