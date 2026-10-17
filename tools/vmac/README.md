@@ -2736,7 +2736,9 @@ like somebody else's problem — see *What every walk can see*, below.
 layout) and prints, per file, the whole FInfo and FXInfo, three dates and
 the locked bit, and per folder the DInfo, DXInfo and dates; `--fcmt` lists
 a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
-`synth-as-meta.as` and `synth-sqp-meta.pkg` with `-D UNC_AT_DTCOMMENT`,
+`synth-as-meta.as`, `synth-sqp-meta.pkg` and a generated `nested.pkg`
+(A/x, A/B/y, A/z, folder dates held across a subfolder) with
+`-D UNC_AT_DTCOMMENT`,
 keeps the disks (`sys30.py --keep-disks` too, since 2026-10-17) and grades
 every value against the synthesizers' input, with the shell's two
 deliberate changes (inited cleared, fdComment cleared). Results:

@@ -3384,6 +3384,13 @@ controls make the mock drop one write each, and each fails exactly its own
 check; a build without the folder-date restore fails that check (measured
 once, 2026-10-17).
 
+**`mac_sink_test --dirdates`** holds the one-entry folder-date cache to the
+three orders the second review named — a subfolder between a folder's
+files (A/x, A/B/y, A/z), a folder entry after its files, a failed entry's
+delete — after the run's flush. Three controls, scratch copies with one
+mechanism removed, each fail the cases they should (DECISIONS.md
+2026-10-17, *the date held once per folder*).
+
 **What neither can see.** A field the engine does not read yet: it prints `-`
 and passes. The real File Manager and Desktop Manager: that is
 `tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the

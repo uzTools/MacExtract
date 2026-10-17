@@ -4,7 +4,8 @@
     tools/vmac/metarun.py [--system System6.hfv|Sys7.img] [--sys30]
     tools/vmac/metarun.py --check RUNDIR       # grade disks a run kept
 
-Extracts `synth-as-meta.as` and `synth-sqp-meta.pkg` with the autotest
+Extracts `synth-as-meta.as`, `synth-sqp-meta.pkg` and `nested.pkg` (made
+per run: A/x, A/B/y, A/z with a date on each folder) with the autotest
 build and `-D UNC_AT_DTCOMMENT` (tools/vmac/run.py, or sys30.py for the
 System 3.0 tier), keeps the disks, and reads back what the shell wrote:
 
@@ -45,7 +46,29 @@ import synth_as                                                 # noqa: E402
 import synth_sqp                                                # noqa: E402
 
 EPOCH_2000 = 0xB492F400
-FIX = ("synth-as-meta.as", "synth-sqp-meta.pkg")
+FIX = ("synth-as-meta.as", "synth-sqp-meta.pkg", "nested.pkg")
+# `nested.pkg` is generated per run into .tmp/ (nested_items): files
+# written into a folder after one of its subfolders, A/x, A/B/y, A/z, with
+# a date on each folder (DECISIONS.md 2026-10-17, *the date held once per
+# folder*).
+
+
+def nested_items():
+    return [synth_sqp.item("A", folder=True, ctime=0xB0000000,
+                           mtime=0xB0000001),
+            synth_sqp.item("x", synth_sqp._text(200, 81), level=2),
+            synth_sqp.item("B", folder=True, level=2, ctime=0xB0000010,
+                           mtime=0xB0000002),
+            synth_sqp.item("y", synth_sqp._text(200, 82), level=3),
+            synth_sqp.item("z", synth_sqp._text(200, 83), level=2)]
+
+
+def fixture_path(f):
+    if f == "nested.pkg":
+        p = os.path.join(REPO, ".tmp", "nested.pkg")
+        open(p, "wb").write(synth_sqp.build(nested_items(), 1))
+        return p
+    return os.path.join(REPO, "fixtures", f)
 
 
 def shell_finfo(b, flags=None):
@@ -95,6 +118,10 @@ def expected():
             w["locked"] = 0
         e[path.replace("/", ":")] = w
     exp["synth-sqp-meta.pkg"] = e
+    exp["nested.pkg"] = {"A": dict(cr=0xB0000000, md=0xB0000001),
+                         "A:B": dict(cr=0xB0000010, md=0xB0000002),
+                         "A:x": dict(locked=0), "A:B:y": dict(locked=0),
+                         "A:z": dict(locked=0)}
     return exp
 
 
@@ -220,8 +247,9 @@ def main():
                else ["run.py", "--mem", a.mem, "--system", a.system])
         cmd = [sys.executable, os.path.join(HERE, drv[0])] + drv[1:] + [
             "-D", "UNC_AT_DTCOMMENT", "--keep-disks"] + (
+            [] if a.sys30 else ["--expect"]) + (
             ["--out-kb", str(a.out_kb)] if a.out_kb else []) + [
-            os.path.join(REPO, "fixtures", f) for f in FIX]
+            fixture_path(f) for f in FIX]
         r = subprocess.run(cmd, capture_output=True, text=True)
         sys.stdout.write(r.stdout)
         kept = [l.split("disks kept in ")[1].strip()

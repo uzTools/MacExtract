@@ -1099,6 +1099,10 @@ typedef struct {
     long         lastDir;
     OSType       lastType;
     Progress    *pr;
+    /* The folder whose modification date is being preserved, and that
+     * date: a ONE-entry cache (DirHold, DirFlush). 0 holds nothing. */
+    long          heldDir;
+    unsigned long heldMd;
 #ifndef UNC_MAC_STAGE_WRITES
     /* Streaming write path: each chunk goes straight to disk as the engine
      * delivers it, so the shell never holds a whole fork in RAM. Exactly one
@@ -1659,11 +1663,19 @@ static OSErr MyDirCreate(short vRefNum, long parent, StringPtr name,
  * through the first one's tree (DECISIONS.md 2026-10-11, *the folder
  * that is already there*). */
 static unsigned long DirMd(short vol, long dir, unsigned long md);
+static void DirHold(MacSink *s, long dir);
 
-static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
+/* Looked up FIRST, and created only when the name is free: the parent's
+ * date is held (DirHold) only before a create that will happen, so
+ * descending into a folder that is already there — every component of
+ * every path — costs one catalog call and touches no cache. Until
+ * 2026-10-17 it created first and read dupFNErr as "already there", two
+ * calls on that path. */
+static OSErr EnsureDir(MacSink *s, long parent, Str63 name, uint32_t hash,
                        int top, long *dirID, int *isNew, int *merged,
                        int *numbered)
 {
+    short vRefNum = s->vRefNum;
     Str63 base;
     int attempt;
 
@@ -1673,29 +1685,37 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
     BlockMoveData(name, base, name[0] + 1);
 
     for (attempt = 0; ; attempt++) {
-        long created;
         uint32_t seen;
-        CInfoPBRec pb;
+        /* The lookup's block and the create's, one after the other in one
+         * union: the two side by side, the create inlined from
+         * MyDirCreate, were 96 B more of sink_begin's frame. */
+        union { CInfoPBRec c; HParamBlockRec h; } u;
+#define pb u.c
         Str63 tmp;
-        unsigned long md = DirMd(vRefNum, top ? 0 : parent, 0);
-        OSErr err = MyDirCreate(vRefNum, parent, name, &created);
-        if (err == noErr) DirMd(vRefNum, parent, md);
-        if (err == noErr) {
-            *dirID = created;
-            *isNew = 1;
-            if (top && gDirMemoN >= kDirMemo) gTopLost = true;
-            return noErr;
-        }
-        if (err != dupFNErr) return err;
-        /* Exists: file or folder? Look it up. */
+        OSErr err;
+        /* There already: file or folder? */
         BlockMoveData(name, tmp, name[0] + 1);
         pb.dirInfo.ioNamePtr = tmp;
         pb.dirInfo.ioVRefNum = vRefNum;
         pb.dirInfo.ioDrDirID = parent;
         pb.dirInfo.ioFDirIndex = 0;
-        if (PBGetCatInfoSync(&pb) != noErr ||
-            !(pb.dirInfo.ioFlAttrib & ioDirMask))
-            return err;                  /* a FILE holds the name */
+        err = PBGetCatInfoSync(&pb);
+        if (err == fnfErr) {
+            DirHold(s, parent);
+            u.h.fileParam.ioCompletion = NULL;
+            u.h.fileParam.ioNamePtr = name;
+            u.h.fileParam.ioVRefNum = vRefNum;
+            u.h.fileParam.ioDirID = parent;
+            err = PBDirCreateSync(&u.h);         /* MyDirCreate's call */
+            if (err != noErr) return err;
+            *dirID = u.h.fileParam.ioDirID;
+            *isNew = 1;
+            if (top && gDirMemoN >= kDirMemo) gTopLost = true;
+            return noErr;
+        }
+        if (err != noErr) return err;
+        if (!(pb.dirInfo.ioFlAttrib & ioDirMask))
+            return dupFNErr;             /* a FILE holds the name */
         *dirID = pb.dirInfo.ioDrDirID;
         seen = (uint32_t)RepDirKnown(*dirID, hash);
         if (top && seen == 0 && !gTopLost)
@@ -1718,6 +1738,7 @@ static OSErr EnsureDir(short vRefNum, long parent, Str63 name, uint32_t hash,
         BumpName(name, attempt + 1);
         *numbered = 1;
     }
+#undef pb
 }
 
 /* ------------------------------------------------------------------ */
@@ -1790,19 +1811,19 @@ static OSErr MyHUnlock(short vol, long dir, ConstStr255Param name)
     return PBHRstFLockSync(&pb);
 }
 
-/* A folder's modification date, held across a change INSIDE it.
+/* A folder's modification date, held across the changes INSIDE it.
  *
  * The File Manager sets a folder's modification date to now whenever an
  * item is created in it or deleted from it, so a folder stamped with its
  * archived date when its entry arrived lost that date to the first file
  * written inside (DECISIONS.md 2026-10-16, *the folders that lost their
  * icons*). Rather than remember every folder's date until the run ends —
- * a table, and a bound on how many folders keep theirs — the date is read
- * just before each create or delete in a folder this run is writing into,
- * and put back just after: three catalog calls per item, no memory, and
- * no limit (DECISIONS.md 2026-10-17, *the metadata, carried to the
- * disk*). The destination folder itself is never held: it is the user's,
- * and its date should say it changed.
+ * a table, and a bound on how many folders keep theirs — the date of the
+ * folder being written into is held while the run writes there, and put
+ * back when it moves on (DirHold, below): constant memory, no limit
+ * (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*, *the date
+ * held once per folder*). The destination folder itself is never held: it
+ * is the user's, and its date should say it changed.
  *
  * A folder is addressed by its directory ID with ioFDirIndex = -1 (Inside
  * Macintosh: Files, PBGetCatInfo), which returns its parent and name; the
@@ -1830,6 +1851,31 @@ static unsigned long DirMd(short vol, long dir, unsigned long md)
         PBSetCatInfoSync(&pb);
     }
     return pb.dirInfo.ioDrMdDat;
+}
+
+/* The one-entry cache over DirMd. Before a create or delete in `dir`, its
+ * date is read and held, and the folder held before it is given its date
+ * back first; so the three catalog calls are paid once per CHANGE of
+ * folder, not per item, and entries of one folder normally arrive
+ * together. Every folder but the held one has its date right at every
+ * moment, which is what makes reading `dir`'s date here safe. The
+ * destination is never held. DirFlush ends the hold: RunExtract calls it
+ * once the engine returns, before anything outside the sink touches the
+ * volume (ExtractOne's envelope-layer delete). Replaced a hold per item on
+ * 2026-10-17, which cost up to 13.5 % at 1x to a floppy (DECISIONS.md,
+ * *the date held once per folder*). */
+static void DirFlush(MacSink *s)
+{
+    if (s->heldDir) DirMd(s->vRefNum, s->heldDir, s->heldMd);
+    s->heldDir = 0;
+}
+
+static void DirHold(MacSink *s, long dir)
+{
+    if (dir == s->rootDirID || dir == s->heldDir) return;
+    DirFlush(s);
+    s->heldMd = DirMd(s->vRefNum, dir, 0);
+    if (s->heldMd) s->heldDir = dir;
 }
 
 /* Under UNC_AT_TIMING only, the two entry points that do catalog work are
@@ -1909,7 +1955,7 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
                 int isNew = 0, merged = 0, numbered = 0;
                 long parent = dir;
                 uint32_t h = DirHash(nm + start, i - start);
-                OSErr derr = EnsureDir(s->vRefNum, dir, comp, h,
+                OSErr derr = EnsureDir(s, dir, comp, h,
                                        dir == s->rootDirID, &dir,
                                        &isNew, &merged, &numbered);
                 if (derr != noErr) {
@@ -1970,16 +2016,12 @@ static int SINK_BEGIN(void *ctx, const UncEntryInfo *info)
              * test is 0x80000000 up to, not including, UNC_SIZE_UNKNOWN, and
              * kTooBig is no OSErr — they are all negative (DECISIONS.md
              * 2026-10-14, *the file the disk was too full for*). */
-            unsigned long md = DirMd(s->vRefNum, s->curDirID == s->rootDirID
-                                                 ? 0 : s->curDirID, 0);
+            DirHold(s, s->curDirID);
             err = (info->data_size - 0x80000000UL < 0x7FFFFFFFUL ||
                    info->rsrc_size - 0x80000000UL < 0x7FFFFFFFUL)
                   ? kTooBig
                   : MyHCreate(s->vRefNum, s->curDirID, s->curName);
-            if (err == noErr) {
-                DirMd(s->vRefNum, s->curDirID, md);
-                break;
-            }
+            if (err == noErr) break;
             if (err == dskFulErr) return -1;     /* nothing else will fit */
             if (err != dupFNErr || attempt >= 99) {
                 /* One entry's name, not the archive's run: until
@@ -2394,6 +2436,13 @@ static void StampCat(MacSink *s)
             ? s->cur.finder_flags : s->cur.finder_flags & ~0x0100;
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
+        /* A folder's own entry, for the folder whose date is held — in a
+         * zip it can arrive after its files: the held date becomes the
+         * archive's, or DirFlush would write the stale one back over it.
+         * PBGetCatInfo left the folder's own ID in ioDirID. */
+        if (s->cur.is_dir && s->cur.mod_date &&
+            pb.hFileInfo.ioDirID == s->heldDir)
+            s->heldMd = s->cur.mod_date;
         pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */
         PBSetCatInfoSync(&pb);
     }
@@ -2471,10 +2520,8 @@ static int SINK_END(void *ctx, int status)
     } else if (!s->cur.is_dir) {
         /* Cancelled or failed: remove the empty/partial file this entry
          * created in sink_begin, so no incomplete output is left behind. */
-        unsigned long md = DirMd(s->vRefNum, s->curDirID == s->rootDirID
-                                             ? 0 : s->curDirID, 0);
-        if (MyHDelete(s->vRefNum, s->curDirID, s->curName) == noErr)
-            DirMd(s->vRefNum, s->curDirID, md);
+        DirHold(s, s->curDirID);
+        MyHDelete(s->vRefNum, s->curDirID, s->curName);
     }
     if (status != UNC_OK) {
         s->errors++;
@@ -4088,6 +4135,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
     sink.lastName[0] = 0;
     sink.lastType = 0;
     sink.lastDir = 0;
+    sink.heldDir = 0;
     sink.pr = NULL;
     sink.wrOSErr = noErr;
     /* gLastWriteErr, gShortBy and gShortPiece are NOT reset here. They
@@ -4238,6 +4286,7 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
         ret = unc_extract_as(extractedAs, &io, &sk, &al, prog, &opt);
     }
     gPeakUsage = ma.initial - ma.lowmark;   /* engine heap high-water mark */
+    DirFlush(&sink);           /* the held folder's date, before anything else */
 
 #ifdef UNC_MAC_SLURP_ARCHIVE
     if (archiveBuf) DisposePtr(archiveBuf);

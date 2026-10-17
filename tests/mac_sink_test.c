@@ -600,6 +600,7 @@ int main(int argc, char **argv)
             info.locked = UNC_LOCK_NO;
             info.data_size = 0; info.rsrc_size = 0;
             if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+            DirFlush(&sk2);                  /* as RunExtract does */
 
             snprintf(path, sizeof path, "%s/Fold", dir);
             rd = cat_rec(path, 0);
@@ -691,6 +692,80 @@ int main(int argc, char **argv)
         }
         fprintf(stderr, "meta: %s\n", ok ? "every field written, every "
                 "control caught" : "FAILED");
+        return ok ? 0 : 1;
+    }
+    if (argc >= 2 && strcmp(argv[1], "--dirdates") == 0) {
+        /* The folder dates the one-entry cache keeps (DirHold, DirFlush),
+         * in the three orders the review named:
+         *   A   files written into a folder after one of its subfolders
+         *       (A/x, A/B/y, A/z);
+         *   Z   a folder entry that arrives after its files, as a zip can;
+         *   F   a failed entry's delete inside a folder with a date.
+         * Each folder's date must be the archive's after the run's flush.
+         * The mock stamps a folder with "now" on every create or delete
+         * inside it, as the File Manager does. Controls are scratch copies
+         * of the shell with one mechanism removed (DECISIONS.md
+         * 2026-10-17, *the date held once per folder*). */
+        static const struct { const char *name; int dir; int fail;
+                              uint32_t md; } seq[] = {
+            { "A",       1, 0, 0xB0000001u },
+            { "A/x",     0, 0, 0 },
+            { "A/B",     1, 0, 0xB0000002u },
+            { "A/B/y",   0, 0, 0 },
+            { "A/z",     0, 0, 0 },
+            { "F",       1, 0, 0xB0000004u },
+            { "F/ok",    0, 0, 0 },
+            { "F/bad",   0, 1, 0 },
+            { "Z/p",     0, 0, 0 },
+            { "Z/q",     0, 0, 0 },
+            { "Z",       1, 0, 0xB0000003u },
+        };
+        static const struct { const char *path; uint32_t md; char tag; }
+            want[] = { { "A", 0xB0000001u, 'A' }, { "A/B", 0xB0000002u, 'A' },
+                       { "F", 0xB0000004u, 'F' }, { "Z", 0xB0000003u, 'Z' } };
+        MacSink sk2; UncEntryInfo info;
+        char dir[600], path[900];
+        size_t k;
+        int ok = 1;
+        snprintf(dir, sizeof dir, "%s", argc >= 3 ? argv[2] : "/tmp/dirdates");
+        mkdir(dir, 0755);
+        snprintf(gOutDir, sizeof gOutDir, "%s", dir);
+        snprintf(gDirs[0], sizeof gDirs[0], "%s", gOutDir);
+        gNumDirs = 1;
+        memset(gCat, 0, sizeof gCat);
+        RepReset();
+        memset(&sk2, 0, sizeof sk2); sk2.vRefNum = 1; sk2.rootDirID = 0;
+        for (k = 0; k < sizeof seq / sizeof seq[0]; k++) {
+            memset(&info, 0, sizeof info);
+            info.name_len = (uint16_t)strlen(seq[k].name);
+            memcpy(info.name, seq[k].name, info.name_len);
+            info.is_dir = (uint8_t)seq[k].dir;
+            info.create_date = seq[k].md ? seq[k].md - 0x100u : 0;
+            info.mod_date = seq[k].md;
+            info.data_size = 0; info.rsrc_size = 0;
+            if (sink_begin(&sk2, &info) == 0)
+                sink_end(&sk2, seq[k].fail ? UNC_ERR_CRC : UNC_OK);
+        }
+        DirFlush(&sk2);                      /* as RunExtract does */
+        for (k = 0; k < sizeof want / sizeof want[0]; k++) {
+            CatRec *r;
+            snprintf(path, sizeof path, "%s/%s", dir, want[k].path);
+            r = cat_rec(path, 0);
+            if (!r || r->md != want[k].md) {
+                fprintf(stderr, "dirdates [%c]: %s has %08lx, wanted %08lx\n",
+                        want[k].tag, want[k].path,
+                        r ? (unsigned long)r->md : 0ul,
+                        (unsigned long)want[k].md);
+                ok = 0;
+            }
+        }
+        snprintf(path, sizeof path, "%s/F/bad", dir);
+        if (access(path, F_OK) == 0) {
+            fprintf(stderr, "dirdates [F]: the failed entry was not deleted\n");
+            ok = 0;
+        }
+        fprintf(stderr, "dirdates: %s\n", ok ? "every folder kept its date"
+                                             : "FAILED");
         return ok ? 0 : 1;
     }
     if (argc >= 2 && strcmp(argv[1], "--utf8") == 0) {
@@ -925,6 +1000,7 @@ int main(int argc, char **argv)
 #endif
 
     ret = unc_extract(&io, &sk, &al, NULL, &opt);
+    DirFlush(&sink);                     /* as RunExtract does */
     fprintf(stderr, "unc_extract -> %d, entries=%d errors=%d\n",
             ret, sink.entries, sink.errors);
     /* The run report, exactly as the Macintosh box would list it: what

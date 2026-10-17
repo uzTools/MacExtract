@@ -427,6 +427,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-16 (the folders that lost their icons) — a folder's Finder flags and dates are set as a file's are, so a custom folder icon survives
 - 2026-10-17 (the metadata, carried to the disk) — every Finder field, the backup date, the lock and the Get Info comment travel from engine to disk, and a folder keeps its date
 - 2026-10-17 (the bit that kept the position) — the archive's inited bit is kept unless the file has a bundle, the source volume's directory IDs are cleared, and a folder's date is priced in time
+- 2026-10-17 (the date held once per folder) — a folder's date is held in a one-entry cache, three catalog calls per change of folder instead of per item
 
 ---
 
@@ -27179,7 +27180,9 @@ date until the run ends was priced and refused: `gDirMemo` is 200 rows of 8
 B in A5, and a date per row is **+800 B of A5** off every budget, still
 bounded at 200 folders. Instead `DirMd` reads the folder's date before each
 create or delete in it and puts it back after: no memory, no bound, three
-catalog calls per item. Not the destination folder, which is the user's.
+catalog calls per item (replaced the same day by a one-entry cache, *the
+date held once per folder*, after +10.6 % and +13.5 % at 1x). Not the
+destination folder, which is the user's.
 Measured: the mock catalog's control (no restore: the check fails), and on
 the emulator the folder `Placed` reads 0xA0000002 after two files were
 written inside, where `main`'s build reads the run's own time.
@@ -27275,7 +27278,9 @@ directories on the volume the entry came from (libhfs `apple.h`). A
 file's +4..7 are fdUnused, and are kept. Not shown harmless by a
 measurement; cleared on the same grounds as fdComment.
 
-**What a folder's date costs**, `-D UNC_AT_TICKGAP` at 1x, System 6.0.8,
+**What a folder's date costs** (superseded the same day by *the date held
+once per folder*, which the second review asked for), `-D UNC_AT_TICKGAP` at
+1x, System 6.0.8,
 to a floppy, repeatable to the tick: **+218 t (3.6 s, +10.6 %)** on
 `derived-CursorAnimator.sit` (86 files) and **+106 t (1.8 s, +13.5 %)** on
 100 files in one folder, against `main`'s build, of which a build with
@@ -27296,4 +27301,51 @@ image came back torn — which `hfs_cat.py` refused rather than read.
 **Price**, the review's part: CODE +40 in every configuration, A5 −8
 shipped and +24 in the control, so **864 B off every budget in all**;
 `OVL_SAVED` 138,608, `TIERS` −928 in all, derived.
+
+## 2026-10-17 (the date held once per folder) — a folder's date is held in a one-entry cache, three catalog calls per change of folder instead of per item
+
+**The second review refused the per-item hold**: +10.6 % and +13.5 % of
+extraction time at 1x to a floppy for three catalog calls per create or
+delete. **Decision, the reviewer's:** a one-entry cache in the sink
+(`heldDir`, `heldMd`). Before a create or delete in folder X — files in
+`sink_begin`, folders in `EnsureDir`, a failed entry's delete in `sink_end`
+— if X is not held, the held folder gets its date back and X's is read and
+held (`DirHold`); the destination is never held. `RunExtract` puts the held
+date back once the engine returns (`DirFlush`), which is before
+`ExtractOne`'s envelope-layer delete. When `StampCat` stamps the held
+folder itself — its own entry after its files, as a zip can — the held
+date becomes the archive's.
+
+**What made it cheap was not only the cache.** `EnsureDir` ran for every
+path component of every file and CREATED first, reading `dupFNErr` as
+"already there", so holding before each attempt would have thrashed the
+cache on every descent. It now looks the name up first and holds and
+creates only when the name is free: one call where two were.
+
+**Measured** (FORMATS.md, *What keeping a folder's date costs*): the
+branch is **2,063 t and 761 t against `main`'s 2,058 and 779** on the two
+subjects, preservation's own share 59 t (+2.9 %) and 1 t.
+
+**Shown to survive**, each with a control that fails:
+
+| case | mock (`mac_sink_test --dirdates`) | emulator (`metarun.py`, real File Manager) |
+|---|---|---|
+| A/x, A/B/y, A/z | A and A/B keep theirs | A and A:B read back on 3.0, 6.0.8 and 7.0.1 |
+| a folder entry after its files | Z keeps its | not run: no committed writer orders a folder after its files |
+| a failed entry's delete | F keeps its | not run |
+| control | no restore in `DirFlush`: A, A/B, F wrong; no flush on a switch: A, A/B, F wrong; no held-date update in `StampCat`: Z wrong | preservation disabled: `Placed`, A, A:B read the run's own time |
+
+**Stack.** `EnsureDir`'s lookup and its inlined create had two parameter
+blocks live at once, +96 B of `sink_begin`'s frame; one union put it back
+to 416 B, `main`'s. The shell's chain under `sink_begin` is 624 B, +32
+over `main`, all `StampCat`.
+
+**Price**, this change: CODE +16 and A5 −16 shipped, +12/−12 in the
+control: 0 B. **864 B off every budget in all**, `OVL_SAVED` 138,608 and
+`TIERS` unmoved from *the bit that kept the position*.
+
+**Seen in passing, not this change's:** the mock sink cannot write
+`derived-CursorAnimator.sit`'s two names holding a `/` (a Linux path
+separator; the committed build fails them the same way); that fixture is
+not in its lane and passes on the emulator.
 

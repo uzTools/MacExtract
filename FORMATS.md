@@ -7156,22 +7156,26 @@ pump can switch to it (*hypothesis*: more than 7 ms).
 
 **Measured 2026-10-17**, `run.py -D UNC_AT_TICKGAP --emu mv-4M-1x`, System
 6.0.8, output to the default floppy. The figure is `run=`, `RunExtract`'s own
-duration in 60 Hz ticks, boot and read-back excluded. Each cell was run twice
-and repeated to the tick. `DirMd` reads a folder's date before each create or
-delete inside it and puts it back after: three catalog calls per item
-(DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
+duration in 60 Hz ticks, boot and read-back excluded, every cell repeated to
+the tick. A folder's date is held in a ONE-entry cache: read before the first
+create or delete in a folder, put back when the run moves to another folder
+or ends (DECISIONS.md 2026-10-17, *the date held once per folder*).
 
-| subject | `main` (8f11eaf) | this branch | branch, `DirMd` disabled | `DirMd`'s share |
+| subject | `main` (8f11eaf) | branch | branch, preservation disabled | preservation's own cost |
 |---|---|---|---|---|
-| `derived-CursorAnimator.sit`, 86 files, 84 in folders | 2,058 t | 2,278 t | 2,060 t | **+218 t, 3.6 s, +10.6 %** |
-| 100 files of 100 B in one folder (synthetic, `synth_sqp.py`'s writer) | 779 t | 889 t | 783 t | **+106 t, 1.8 s, +13.5 %** |
+| `derived-CursorAnimator.sit`, 86 files, 84 in folders | 2,058 t | **2,063 t** | 2,004 t | **+59 t, 1.0 s, +2.9 %** |
+| 100 files of 100 B in one folder (synthetic, `synth_sqp.py`'s writer) | 779 t | **761 t** | 760 t | **+1 t** |
 
-So **18–42 ms per file created in a folder** on a 7 MHz Plus writing to a
-floppy. That the per-file cost differs between the two subjects because of
-the catalog's size and depth is a hypothesis; nothing here separated it.
-The rest of the branch costs 2–4 t. **What it cannot see:** a hard disk,
-which seeks less; a file created at the destination's root, which `DirMd`
-skips.
+**Against `main` the branch is +0.2 % and −2.3 %**: `EnsureDir` now looks a
+folder up before creating it, one catalog call where a failed create and a
+lookup were two, which pays for the cache on these two subjects. **The
+first version held the date per ITEM**, three calls per create or delete:
+2,278 t and 889 t, +10.6 % and +13.5 % over `main`, corrected here the same
+day. The disabled column was taken before `EnsureDir`'s two parameter
+blocks shared one, a stack-only change that the branch column was re-timed
+after, to the same ticks. **What it cannot see:** a hard disk; an archive
+whose entries alternate between folders, where the cache pays three calls
+per change of folder.
 
 ## What -O3 is worth, and where
 

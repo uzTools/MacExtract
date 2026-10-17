@@ -150,6 +150,11 @@ verify ./build/mac_sink_asan ram   # exercise the Mac app's RAM-slurp/xio_* path
 # written inside it — each with a control in which the mock drops that
 # write and the check must fail (DECISIONS.md 2026-10-17).
 ./build/mac_sink_asan --meta "$(mktemp -d)" || { echo "mac-sink: meta FAILED"; exit 1; }
+# Folder dates through the one-entry cache, in the three orders the review
+# named: a subfolder between a folder's files, a folder entry after its
+# files, a failed entry's delete (DECISIONS.md 2026-10-17, *the date held
+# once per folder*).
+./build/mac_sink_asan --dirdates "$(mktemp -d)" || { echo "mac-sink: dirdates FAILED"; exit 1; }
 # The time left in the progress dialog: it must not go back up while the
 # rate holds (DECISIONS.md 2026-10-16, *the estimate that went back up*).
 ./build/mac_sink_asan --eta || { echo "mac-sink: eta FAILED"; exit 1; }
