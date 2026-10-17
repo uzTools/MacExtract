@@ -9,7 +9,7 @@ per run: A/x, A/B/y, A/z with a date on each folder) with the autotest
 build and `-D UNC_AT_DTCOMMENT` (tools/vmac/run.py, or sys30.py for the
 System 3.0 tier), keeps the disks, and reads back what the shell wrote:
 
-  the CATALOG of the output disk (tools/vmac/hfs_cat.py) — for the file
+  the CATALOG of the output disk (tools/vmac/hfscat.py) — for the file
       in the AppleSingle: FInfo, FXInfo, all three dates and the locked
       bit; for the AppleLink package: the folder's DInfo and its three
       dates, AFTER two files were written inside it, and each file's FInfo
@@ -41,7 +41,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
-import hfs_cat                                                  # noqa: E402
+import hfscat                                                   # noqa: E402
 import synth_as                                                 # noqa: E402
 import synth_sqp                                                # noqa: E402
 
@@ -97,7 +97,7 @@ def shell_fxinfo(b, is_dir=False):
 
 
 def expected():
-    """{fixture: {path: {field: value}}} in hfs_cat's vocabulary."""
+    """{fixture: {path: {field: value}}} in hfscat's vocabulary, paths below the volume."""
     c = synth_as.CASES["meta"]
     d = c["dates"]
     exp = {"synth-as-meta.as": {
@@ -181,7 +181,7 @@ def check(rundir):
                 % (len(dirs), rundir, len(FIX))], 0
     for d in dirs:
         img = open(os.path.join(d, "out.dsk"), "rb").read()
-        got = {r["path"]: r for r in hfs_cat.records(img)}
+        got = {r["rel"]: r for r in hfscat.records(img)}
         # Which fixture this directory ran: the one whose first expected
         # path is on its disk (the directories' names are random).
         fx = next((f for f in FIX if next(iter(exp[f])) in got), None)

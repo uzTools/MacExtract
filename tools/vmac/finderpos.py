@@ -24,7 +24,7 @@ tools/synth_sqp.py's writer, generated per run and not a corpus fixture:
 
 After the windows it chooses Special > Shut Down, so whatever the Finder
 wrote back (a new position, the inited bit) reaches the image, and reads
-the catalog again with tools/vmac/hfs_cat.py, before and after.
+the catalog again with tools/vmac/hfscat.py, before and after.
 
     fp-1-volume.png   the Out window: Kept App and Spread
     fp-2-spread.png   the Spread window: the three placed files
@@ -52,7 +52,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(REPO, "tools"))
 import run as R                                                 # noqa: E402
 import interactive as I                                         # noqa: E402
-import hfs_cat                                                  # noqa: E402
+import hfscat                                                   # noqa: E402
 import synth_sqp as S                                           # noqa: E402
 
 # Special > Shut Down: System 7.0.1 (spacesaver.py), System 6.0.8
@@ -83,16 +83,16 @@ def subject():
 
 
 def catalog(img, label):
-    rows = hfs_cat.records(open(img, "rb").read())
+    rows = hfscat.records(open(img, "rb").read())
     for r in rows:
-        if r["kind"] == "f":
+        if r["kind"] == hfscat.FILE:
             loc = struct.unpack(">hh", bytes.fromhex(r["finfo"])[10:14])
             print("finderpos: %-6s f %-18s flags %04x  location v %d h %d"
-                  % (label, r["path"], r["flags"], loc[0], loc[1]))
+                  % (label, r["rel"], r["flags"], loc[0], loc[1]))
         else:
             fi = bytes.fromhex(r["finfo"])
             print("finderpos: %-6s d %-18s frFlags %04x  rect %s  view %04x"
-                  % (label, r["path"], struct.unpack(">H", fi[8:10])[0],
+                  % (label, r["rel"], struct.unpack(">H", fi[8:10])[0],
                      struct.unpack(">4h", fi[:8]), struct.unpack(">H", fi[14:16])[0]))
     return rows
 
@@ -257,8 +257,8 @@ def main():
     if finder_session(a, work, out, a.outdir) == 2:
         return 2
     after = catalog(out, "after")
-    b = {r["path"]: r["finfo"] for r in before}
-    moved = [r["path"] for r in after if b.get(r["path"]) != r["finfo"]]
+    b = {r["rel"]: r["finfo"] for r in before}
+    moved = [r["rel"] for r in after if b.get(r["rel"]) != r["finfo"]]
     print("finderpos: the Finder rewrote the Finder info of %d item(s): %s"
           % (len(moved), ", ".join(moved) or "none"))
     registered(out)

@@ -204,7 +204,7 @@ read.
 | `sitcomment.py` | **StuffIt 5's archive flag byte, bit 5** — measured 2026-10-06. `--read` and `--aete` ask both later boxes what they offer for a comment and print their scripting dictionaries, no emulator; `--specimen` boots Mac OS 9 and has `tools/aesit/` drive StuffIt Deluxe 7.0.3 by Apple event into writing an archive that is encrypted AND commented; `--probe` launches 5.5; `--macos86` replays the Mac OS 8.6 boot that is not the route |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
 | `sitmeta.py` | **which header bytes become a file's or folder's Finder info**: StuffIt Expander 4.0.2 over the classic corpus and over sentinel archives, read back with `hfscat.py`; `--writer201` has StuffIt Deluxe 2.0.1 stuff a folder of sentinel catalog records; `--sit5` puts StuffIt 5 to Expander 5.5 on Mac OS 9. `ddmeta.py`, `nowmeta.py` and `sdmeta.py` ask DiskDoubler 3.7, Now QuickFiler 5.0.1 and SuperDisk!'s self-extractor the same question — see *Finder info, read back* |
-| `hfscat.py` | every catalog record on an HFS image, whole: FInfo/FXInfo, DInfo/DXInfo, dates, the lock bit, and `patch()` to plant values before a boot. `--check` holds it against `hls` |
+| `hfscat.py` | every catalog record on an HFS image, whole: FInfo/FXInfo, DInfo/DXInfo, dates, the lock bit, and `patch()` to plant values before a boot; `--json`, `--fcmt` for a System 6 Desktop file's comments. `--check` holds it against `hls` |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 | `privatefile.py` | **Aladdin Private File 2.0 encrypts known files**: `--fetch` takes the application out of its installer with no installer run, `--make NAME` boots System 7.0.1 with it in `Startup Items` and writes the three specimens `tools/run_privatefile.py` grades — see below |
@@ -2794,14 +2794,14 @@ The same question was then asked of **every** volume walk in this tree,
 because the wrong explanation above is exactly what made the flag look
 like somebody else's problem — see *What every walk can see*, below.
 
-## The Finder metadata, read off the disk — `hfs_cat.py`, `metarun.py`
+## The Finder metadata, read off the disk — `hfscat.py`, `metarun.py`
 
     metarun.py --system System6.hfv          # or --sys30
     metarun.py --system Sys7.img --out-kb 8192
     metarun.py --check .tmp/vmacrun-*/       # re-grade disks a run kept
-    hfs_cat.py out.dsk [--json] [--fcmt DeskTop]
+    hfscat.py out.dsk [--json] [--fcmt DeskTop]   # its control: *Finder info, read back*
 
-`hfs_cat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
+`hfscat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
 layout) and prints, per file, the whole FInfo and FXInfo, three dates and
 the locked bit, and per folder the DInfo, DXInfo and dates; `--fcmt` lists
 a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
@@ -2824,7 +2824,7 @@ System 6.0.8 (three runs), the budget probe's lesson of 2026-10-10.
 comment needs `--out-kb 8192` there; on System 3.0 and 6.0.8 no volume has
 one.
 
-**What they cannot see.** The extents-overflow file (`hfs_cat.py` refuses a
+**What they cannot see.** The extents-overflow file (`hfscat.py` refuses a
 catalog that continues there), HFS+, MFS, a partition map. `Desktop DB`.
 What the Finder then does with any of it: draws the icon there, opens the
 window at that rectangle, shows the comment. A folder's comment: neither

@@ -27144,7 +27144,7 @@ file has a bundle, and fdPutAway, frPutAway and frOpenChain are cleared
 too.)
 - **Finder flag 0x0100 (inited) is cleared**, as before.
 - **FXInfo/DXInfo +10, fdComment/frComment, is cleared.** Measured on
-  System 3.0's own disk (`tools/vmac/hfs_cat.py --fcmt DeskTop`): it is the
+  System 3.0's own disk (`tools/vmac/hfscat.py --fcmt DeskTop`): it is the
   id of the file's `FCMT` resource in the Finder's `DeskTop` file — Font/DA
   Mover's 0x5389 is `FCMT` 21385, "Font/DA Mover Version 3.0"; the Finder's
   0x6727 is 26407. An id copied from another volume names another file's
@@ -27190,7 +27190,7 @@ written inside, where `main`'s build reads the run's own time.
 
 **Evidence, end to end** — `tools/vmac/metarun.py`, `synth-as-meta.as` and
 `synth-sqp-meta.pkg`, every value read off the output disk's catalog with
-`tools/vmac/hfs_cat.py` (a reader written for this, libhfs's layout):
+`tools/vmac/hfscat.py` (libhfs's layout; the reader written for this was folded into the measurement's, *the window StuffIt kept in the name*):
 
 | tier | values as the archive states |
 |---|---|
@@ -27297,7 +27297,7 @@ each fail the FInfo check; only fdComment cleared fails the FXInfo check.
 only at its first coordinate lookup, so the first run's type-select went
 to the X root; and `Mac.shot()` parks the pointer, so a menu photographed
 while held was released off-screen, Shut Down never happened, and the
-image came back torn — which `hfs_cat.py` refused rather than read.
+image came back torn — which `hfscat.py` refused rather than read.
 
 **Price**, the review's part: CODE +40 in every configuration, A5 −8
 shipped and +24 in the control, so **864 B off every budget in all**;
@@ -27432,6 +27432,31 @@ restores — StuffIt classic's `FXInfo`, backup date, `fdFldr` — is not
 shown to be absent from the format: Expander 4.0.2 does not read it and
 StuffIt Deluxe 2.0.1 does not write it, and no other classic writer has
 been run (3.5.1's script path is the next one in reach).
+
+**For the readers, where a format restores only part of `FInfo`.** State
+all 16 bytes, with the parts the expander does not restore at the value
+it writes, so the shell's inited rule (kept when `UNC_META_FINFO` is
+stated and the file has no bundle; *the bit that kept the position*)
+behaves as Expander does. For StuffIt classic that is, measured on the
+1,279 matched corpus files: `fdFldr` 0 and `FXInfo` all zero in every
+one; `fdLocation` (0,0) where no position is restored (551 of 551); and
+inited (0x0100) kept only where the header has it AND a position is
+restored (260 kept, 503 cleared, 516 absent in both) — so the reader
+clears it itself where the name CRC fails or the stored location is
+(−1,−1), and the shell then keeps what it is given. The one place the
+two still part is a file with a bundle, which the shell clears on
+purpose and Expander does not (43 such files kept it, 39 of them
+applications).
+
+**Two header CRCs the expanders enforce and this engine does not.**
+DiskDoubler 3.7 refuses a single-file header whose CRC-16/XMODEM at +82
+(file offsets; bytes 0..81) disagrees, and Expander 5.5 refuses a StuffIt
+5 entry whose second-block CRC-16/ARC at b+2 does. Read, not changed:
+`src/fmt_dd.c`'s `dd_parse_filehdr` reads bytes 4..57 of the 84-byte
+header and nothing past them, and `src/fmt_sit5.c` steps over the second
+block's word at b+2 as `u16 ?`, and reads neither the first block's
+header CRC @32 nor the archive header's @98. Each archive extracts here
+on its fork CRCs alone.
 
 **Cost of the measurement.** Forty-five boots between 23:59 on
 2026-10-16 and 03:49 the next morning, most of the time the classic
