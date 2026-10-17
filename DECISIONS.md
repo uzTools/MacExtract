@@ -426,6 +426,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-16 (the empty password) — OK on an empty password field is a wrong password, and a refusal is added under the request
 - 2026-10-16 (the folders that lost their icons) — a folder's Finder flags and dates are set as a file's are, so a custom folder icon survives
 - 2026-10-17 (the metadata, carried to the disk) — every Finder field, the backup date, the lock and the Get Info comment travel from engine to disk, and a folder keeps its date
+- 2026-10-17 (the bit that kept the position) — the archive's inited bit is kept unless the file has a bundle, the source volume's directory IDs are cleared, and a folder's date is priced in time
 
 ---
 
@@ -27135,7 +27136,10 @@ readers deliver it so far, to prove the plumbing: AppleSingle/AppleDouble
 packages (the record's 16 bytes, cited to the translator's own
 `AddItems`). The rest are OPEN_ITEMS.md's.
 
-**Two writes are not verbatim, on purpose.**
+**Two writes are not verbatim, on purpose.** (Corrected the same day by
+the review, *the bit that kept the position*: inited is now KEPT unless the
+file has a bundle, and fdPutAway, frPutAway and frOpenChain are cleared
+too.)
 - **Finder flag 0x0100 (inited) is cleared**, as before.
 - **FXInfo/DXInfo +10, fdComment/frComment, is cleared.** Measured on
   System 3.0's own disk (`tools/vmac/hfs_cat.py --fcmt DeskTop`): it is the
@@ -27228,4 +27232,68 @@ tally moved. Stack: `UncEntryInfo` 302 → 346 B, so every reader's frame
 chain under `sink_begin` 592 → 636 B (`StampCat` 176 → 208 with its three
 calls sharing one parameter block, `DirMd` 156). **The first cut was +1,032
 B of CODE and `StampCat` 476 B of frame.**
+
+## 2026-10-17 (the bit that kept the position) — the archive's inited bit is kept unless the file has a bundle, the source volume's directory IDs are cleared, and a folder's date is priced in time
+
+**The reviewer's hypothesis, confirmed.** The shell cleared Finder flag
+0x0100 (inited, "the Finder has given it a position") on everything, so a
+restored position was probably discarded. `tools/vmac/finderpos.py`
+extracts a package holding a folder `Spread` (a window rectangle) with
+three files placed where no automatic placement goes, and MacExtract
+itself as an application, then opens the windows in the Finder, shuts
+down, and reads the catalog back:
+
+| System, volume | inited | the three files | `Spread`'s window | application's position | bundle registered |
+|---|---|---|---|---|---|
+| 7.0.1, blank | cleared | moved to a row: (0,0) (0,64) (0,128) | default place | moved to (0,0) | yes, own icon |
+| 7.0.1, blank | kept | **where the archive put them** | **at its rectangle** | kept | yes, own icon |
+| 6.0.8, blank | cleared | (folder not opened) | rectangle rewritten | moved to (0,64) | yes |
+| 6.0.8, blank | kept | kept | kept | kept | yes |
+| 7.0.1, **desktop already there** | kept | kept | kept | kept | **no: generic icon, `MExt` 0 times in `Desktop DB`** |
+| 7.0.1, desktop already there | cleared | moved | — | moved | yes, 14 times |
+| 6.0.8, desktop already there | kept | kept | kept | kept | yes (`APPL`, `BNDL`, signature) |
+
+Frames: `fp-1-volume.png`, `fp-2-spread.png` and `fp-4-volume-app.png` of
+each run, which `finderpos.py` regenerates. "Desktop already there" is
+`--seeded`: the blank volume booted once in the Finder first, the case of a
+user's own disk, and the only one where the bit decides registration.
+
+**Decision.** Keep the archive's inited bit where it stated the Finder info
+whole (`UNC_META_FINFO`) **and the file has no bundle** (0x2000); clear it
+otherwise. The reviewer asked for the bit kept whenever FInfo is stated;
+the last three rows are why not quite: on System 7.0.1 an application on
+the user's disk would then show a generic icon until the desktop is
+rebuilt. So an application gets its icon and the Finder's choice of
+place, and everything else keeps its position. Measured both ways on both
+Systems' seeded volumes: documents and folder kept, application placed and
+registered. **Not measured:** whether a desktop rebuild later registers a
+kept-inited application anyway; System 3.0's Finder.
+
+**The source volume's directory IDs are cleared**, as fdComment is:
+fdPutAway and frPutAway (+12) and a folder's frOpenChain (+4) name
+directories on the volume the entry came from (libhfs `apple.h`). A
+file's +4..7 are fdUnused, and are kept. Not shown harmless by a
+measurement; cleared on the same grounds as fdComment.
+
+**What a folder's date costs**, `-D UNC_AT_TICKGAP` at 1x, System 6.0.8,
+to a floppy, repeatable to the tick: **+218 t (3.6 s, +10.6 %)** on
+`derived-CursorAnimator.sit` (86 files) and **+106 t (1.8 s, +13.5 %)** on
+100 files in one folder, against `main`'s build, of which a build with
+`DirMd` disabled leaves 2–4 t (FORMATS.md, *What keeping a folder's date
+costs*). 18–42 ms per file created in a folder. Kept, as the price of a
+folder's date at no memory; a memo would have been 800 B of A5.
+
+**Controls**, each a scratch copy with one rule reverted, through
+`mac_sink_test --meta`: inited always cleared, and inited kept on a bundle,
+each fail the FInfo check; only fdComment cleared fails the FXInfo check.
+
+**Harness lessons.** `interactive.Mac` gives the emulator keyboard focus
+only at its first coordinate lookup, so the first run's type-select went
+to the X root; and `Mac.shot()` parks the pointer, so a menu photographed
+while held was released off-screen, Shut Down never happened, and the
+image came back torn — which `hfs_cat.py` refused rather than read.
+
+**Price**, the review's part: CODE +40 in every configuration, A5 −8
+shipped and +24 in the control, so **864 B off every budget in all**;
+`OVL_SAVED` 138,608, `TIERS` −928 in all, derived.
 

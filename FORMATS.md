@@ -39,6 +39,7 @@ under *Table notes*.
 - Decode cost, before and after the 2026-08-24 pass (Linux, callgrind `Ir`)
 - Measured on a 7 MHz Mac Plus (Mini vMac 1x, System 6.0.8, 4 MB)
 - How long a click waits (Mac Plus, 1x)
+- What keeping a folder's date costs (Mac Plus, 1x)
 - What -O3 is worth, and where
 - Relative decode cost per format (Linux, same engine)
 - Hand-written 68000 assembly: the candidates, estimated
@@ -5520,8 +5521,8 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **138,576 B** since 2026-10-17's
-Finder metadata, 138,544 B after 2026-10-16's
+measured 2026-09-27. The shipped pair is **138,608 B** since 2026-10-17's
+review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
 `GrowApplZone`, 138,544 B after 2026-10-14's refusal of a fork over 2 GB, 138,576 B after that day's BinHex before 4.0, 136,448 B after 2026-10-13's
 eject before a split set's next part, 136,464 B after that day's MIME progress, 136,240 B after 2026-10-12's Arsenic progress, 135,920 B after that day's reload for a list of archives, 136,080 B after that day's menu bar, 136,064 B after 2026-10-11's fixes from the LC 475, 136,112 B after that day's `JPEG Lossy` work and
@@ -5661,7 +5662,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 138,576 B of `CODE` and A5 the shipped build does not carry
+which is the 138,608 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5709,19 +5710,21 @@ budget per format, and one per layer*).
 
 | sniffed format | images kept | granted, against the control |
 |---|---|---|
-| **AppleLink package** | **sqp, codecs** | **+129,098 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
-| Now Compress | now, codecs | **+126,060 B** (measured) |
-| SuperDisk! | superdisk, codecs | +124,080 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
-| LZH | lzh, codecs | **+121,552 B** (measured) |
-| PackIt | packit, ciphers, codecs | **+118,242 B** (measured) |
-| DiskDoubler | cptdd, codecs | **+115,230 B** (measured) |
-| StuffIt SpaceSaver | spacesaver, codecs | +114,416 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
-| ARC | arc, ciphers, codecs | **+112,766 B** (measured) |
-| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +104,978 B (arithmetic), and **+115,230 B** where the directory says no entry is encrypted (measured) |
-| Tar | exo, codecs | **+98,978 B** (measured) |
-| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+92,284 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
-| Zip, spanned zip | exo, zipold, ciphers, codecs | +86,060 B (arithmetic), **+96,312 B** unencrypted (measured) |
-| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,154 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+| **AppleLink package** | **sqp, codecs** | **+129,130 B** (arithmetic: no `.pkg` is in the Mac sample) — the largest grant any format gets, because `ovl_sqp` is the smallest of the sixteen images at 2,040 B |
+| Now Compress | now, codecs | **+126,092 B** (measured) |
+| SuperDisk! | superdisk, codecs | +124,112 B (arithmetic: no SuperDisk! fixture is in the Mac sample) |
+| LZH | lzh, codecs | **+121,584 B** (measured) |
+| PackIt | packit, ciphers, codecs | **+118,274 B** (measured) |
+| DiskDoubler | cptdd, codecs | **+115,262 B** (measured) |
+| StuffIt SpaceSaver | spacesaver, codecs | +114,448 B (arithmetic: no SpaceSaver fixture is in the Mac sample) |
+| ARC | arc, ciphers, codecs | **+112,798 B** (measured) |
+| Compact Pro, Compact Pro segment | cptdd, ciphers, codecs | +105,010 B (arithmetic), and **+115,262 B** where the directory says no entry is encrypted (measured) |
+| Tar | exo, codecs | **+99,010 B** (measured) |
+| StuffIt, StuffIt 5 | stuffit, ciphers, codecs | **+92,316 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with `ovl_stuffit` are arithmetic, no tier re-run) |
+| Zip, spanned zip | exo, zipold, ciphers, codecs | +86,092 B (arithmetic), **+96,344 B** unencrypted (measured) |
+| every envelope, and every segment scheme that joins to a file | the whole bundle, kept | **−29,122 B** (measured; the −24 B of 2026-10-10, the +28 of 2026-10-11 and the +12 of 2026-10-15 with the bundle are arithmetic, no tier re-run) |
+
+**Every row rose 32 B more the same day, for the review's inited rule and cleared directory IDs**: `OVL_SAVED` +32, the control +64 (CODE +40, A5 +24) against the shipped build +32 (CODE +40, A5 −8), no image moved — so on the machine every grant falls 32 B more (DECISIONS.md 2026-10-17, *the bit that kept the position*); arithmetic.
 
 **Every row rose 32 B on 2026-10-17, for the Finder metadata carried to the disk, except two**: `OVL_SAVED` +32, the control +864 (CODE +864) against the shipped build +832 (CODE +820, A5 +12); `ovl_sqp` +40, so the AppleLink row fell 8, and the bundle +48, so the envelope row fell 16 — and on the machine every grant falls 832 B, a package's 872 and an envelope's 880 (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*); arithmetic, no tier re-run, and `run_tiers.py --check` is what says whether a tally moved.
 
@@ -5811,7 +5814,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 167,256 B held against 138,576 B saved. It costs nothing on the tiers
+it — 167,256 B held against 138,608 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which
@@ -7148,6 +7151,27 @@ the widest gap holds File Manager writes, which do not halve). **What this canno
 see:** System 7's autotest boots the application as the shell, so no
 other process was there to be given time; with the Finder running, each
 pump can switch to it (*hypothesis*: more than 7 ms).
+
+## What keeping a folder's date costs (Mac Plus, 1x)
+
+**Measured 2026-10-17**, `run.py -D UNC_AT_TICKGAP --emu mv-4M-1x`, System
+6.0.8, output to the default floppy. The figure is `run=`, `RunExtract`'s own
+duration in 60 Hz ticks, boot and read-back excluded. Each cell was run twice
+and repeated to the tick. `DirMd` reads a folder's date before each create or
+delete inside it and puts it back after: three catalog calls per item
+(DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
+
+| subject | `main` (8f11eaf) | this branch | branch, `DirMd` disabled | `DirMd`'s share |
+|---|---|---|---|---|
+| `derived-CursorAnimator.sit`, 86 files, 84 in folders | 2,058 t | 2,278 t | 2,060 t | **+218 t, 3.6 s, +10.6 %** |
+| 100 files of 100 B in one folder (synthetic, `synth_sqp.py`'s writer) | 779 t | 889 t | 783 t | **+106 t, 1.8 s, +13.5 %** |
+
+So **18–42 ms per file created in a folder** on a 7 MHz Plus writing to a
+floppy. That the per-file cost differs between the two subjects because of
+the catalog's size and depth is a hypothesis; nothing here separated it.
+The rest of the branch costs 2–4 t. **What it cannot see:** a hard disk,
+which seeks less; a file created at the destination's root, which `DirMd`
+skips.
 
 ## What -O3 is worth, and where
 

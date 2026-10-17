@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (199604, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (104204, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (628492, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (199540, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (104140, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (628428, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -234,7 +234,11 @@ TIERS = {
 # DERIVED**: the Finder metadata carried to the disk, the control's CODE
 # +864 and A5 0; the shipped pair +832, so OVL_SAVED rises 32
 # (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
-TIERS_CONTROL = 213888     # build/mac-resident, CODE + A5, 2026-10-17
+# **Raised by 64 B more the same day, and TIERS lowered by the same 64,
+# DERIVED**: the review's inited rule and cleared directory IDs, the
+# control's CODE +40 and A5 +24 (DECISIONS.md 2026-10-17, *the bit that
+# kept the position*).
+TIERS_CONTROL = 213952     # build/mac-resident, CODE + A5, 2026-10-17
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -535,7 +539,10 @@ EXPECT = {
 # AppleLink image `ovl_sqp` +40 and `ovl_text` +8, so a package's grant
 # falls 872 B, and every other format's 832 bar the bundle's +48
 # (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*).
-OVL_SAVED = 138576
+# **+32 the same day, -> 138,608**: the review's changes, the control's
+# +64 (CODE +40, A5 +24) against the shipped pair's +32 (CODE +40, A5 -8);
+# no image moved.
+OVL_SAVED = 138608
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

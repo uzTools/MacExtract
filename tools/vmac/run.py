@@ -261,7 +261,7 @@ class Display:
 
 
 def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
-            emu_dir=None, extras=(), out_kb=FLOPPY_KB):
+            emu_dir=None, extras=(), out_kb=FLOPPY_KB, out_from=None):
     """Boot the Mac on one fixture.
 
     Returns (values or None, seconds, png, emulator-exited). The last one
@@ -286,7 +286,12 @@ def run_one(fixture, mem, timeout, poll, workdir, bootimg, keep_png=None,
     # `out_kb` exists to make the DESTINATION run out of room on purpose:
     # the full-disk path is otherwise unreachable, and a path nothing has
     # ever executed is not a path anyone should trust. See --out-kb.
-    make_floppy(outdsk, "Out", size_kb=out_kb)
+    if out_from:
+        # A destination that is not blank: one a Finder has already put its
+        # desktop on (tools/vmac/finderpos.py --seeded). Copied sparse.
+        sh("cp", "--sparse=always", out_from, outdsk)
+    else:
+        make_floppy(outdsk, "Out", size_kb=out_kb)
 
     # Hard limits (tools/guard.py): the poll loop ends at `timeout`, so
     # anything alive a minute past that is a harness that lost track of it.
@@ -572,6 +577,9 @@ def main():
                          "fixture. Used for the other parts of a segmented "
                          "set, whose names are deliberately unlike the "
                          "fixture's: the app matches them by header, not name")
+    ap.add_argument("--out-from", metavar="IMG",
+                    help="start the Out volume as a copy of IMG (its name "
+                         "must be Out) instead of a blank one")
     ap.add_argument("--out-kb", type=int, default=FLOPPY_KB,
                     help="size of the DESTINATION volume in KB (default "
                          f"{FLOPPY_KB}). Make it too small for the fixture "
@@ -665,7 +673,8 @@ def sweep(args, fixtures, extras, appbin, rundir):
         try:
             vals, secs, png, died, boot, extract = run_one(
                 fixture, args.mem, args.timeout, args.poll, workdir, bootimg,
-                keep, args.emu, extras=extras, out_kb=args.out_kb)
+                keep, args.emu, extras=extras, out_kb=args.out_kb,
+                out_from=args.out_from)
             status = AT_STATUS.get(signed32(vals[1])) if vals else None
             if vals is None and died:
                 verdict, detail = "EMUDIED", (

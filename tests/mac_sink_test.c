@@ -505,20 +505,24 @@ int main(int argc, char **argv)
                                                      frLocation, frView */
             0x00,0x28, 0x00,0x14, 0x01,0x2c, 0x01,0xf4, 0x04,0x00,
             0x00,0x50, 0x00,0x60, 0x01,0x07 };
-        static const uint8_t dxinfo[16] = {       /* frScroll, frOpenChain,
-                                                     frUnused, frComment 0x1234,
-                                                     frPutAway */
-            0xff,0xfc, 0xff,0xfe, 0,0,0,0, 0,0, 0x12,0x34, 0,0,0,7 };
+        static const uint8_t dxinfo[16] = {       /* frScroll, frOpenChain
+                                                     0x33, frUnused,
+                                                     frComment 0x1234,
+                                                     frPutAway 7 */
+            0xff,0xfc, 0xff,0xfe, 0,0,0,0x33, 0,0, 0x12,0x34, 0,0,0,7 };
         static const uint8_t finfo[16] = {        /* TEXT ttxt, flags 0x0100
-                                                     (inited, cleared on disk),
+                                                     (inited, KEPT: the
+                                                     position is stated),
                                                      location (0x30,0x40),
                                                      fdFldr -3 */
             'T','E','X','T', 't','t','x','t', 0x01,0x00,
             0x00,0x30, 0x00,0x40, 0xff,0xfd };
-        static const uint8_t fxinfo[16] = {       /* fdIconID 0x0102, script
-                                                     0x81, fdComment 0x5389,
-                                                     fdPutAway 0x22 */
-            0x01,0x02, 0,0,0,0,0,0x81, 0,0, 0x53,0x89, 0,0,0,0x22 };
+        static const uint8_t fxinfo[16] = {       /* fdIconID 0x0102,
+                                                     fdUnused 0x55 0x66 (kept),
+                                                     script 0x81, fdComment
+                                                     0x5389, fdPutAway 0x22 */
+            0x01,0x02, 0,0,0x55,0x66,0,0x81, 0,0, 0x53,0x89, 0,0,0,0x22 };
+        static const uint8_t zero6[6] = { 0 };
         static const char fcmt[] = "a folder's comment";
         static const char cmt[] = "Get Info says: keep this";
         static const struct { int bit; const char *what; } controls[] = {
@@ -580,6 +584,17 @@ int main(int argc, char **argv)
                 sink_end(&sk2, UNC_OK);
             }
 
+            /* An application: a bundle (0x2000), whose inited bit is
+             * cleared so the Finder registers it (finderpos.py). */
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold/App", 8); info.name_len = 8;
+            info.type = 0x4150504Cu; info.creator = 0x4D457874u;
+            info.finder_flags = 0x2100;
+            memcpy(info.finder_info, finfo, 16);
+            info.meta = UNC_META_FINFO;
+            info.data_size = 0; info.rsrc_size = 0;
+            if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+
             memset(&info, 0, sizeof info);
             memcpy(info.name, "Fold/Plain", 10); info.name_len = 10;
             info.locked = UNC_LOCK_NO;
@@ -604,12 +619,26 @@ int main(int argc, char **argv)
                 bad |= DROP_FINFO;
             if (memcmp(rf->finfo + 10, finfo + 10, 6) ||
                 fi.fdType != 0x54455854u || fi.fdCreator != 0x74747874u ||
-                fi.fdFlags != 0x0000)
+                fi.fdFlags != 0x0100)
                 bad |= DROP_FINFO;
-            if (memcmp(rd->fxinfo, dxinfo, 10) || rd->fxinfo[10] || rd->fxinfo[11] ||
-                memcmp(rd->fxinfo + 12, dxinfo + 12, 4) ||
-                memcmp(rf->fxinfo, fxinfo, 10) || rf->fxinfo[10] || rf->fxinfo[11] ||
-                memcmp(rf->fxinfo + 12, fxinfo + 12, 4))
+            snprintf(path, sizeof path, "%s/Fold/App", dir);
+            {
+                CatRec *ra = cat_rec(path, 0);
+                FInfo fa;
+                if (!ra) bad |= DROP_FINFO;
+                else {
+                    memcpy(&fa, ra->finfo, 16);
+                    if (fa.fdFlags != 0x2000) bad |= DROP_FINFO;
+                }
+            }
+            /* As the shell writes them: the source volume's comment id,
+             * put-away folder and (a folder's) open chain cleared, the
+             * rest — a file's fdUnused included — as the archive held. */
+            if (memcmp(rd->fxinfo, dxinfo, 4) || memcmp(rd->fxinfo + 4, zero6, 4) ||
+                memcmp(rd->fxinfo + 8, dxinfo + 8, 2) ||
+                memcmp(rd->fxinfo + 10, zero6, 6) ||
+                memcmp(rf->fxinfo, fxinfo, 10) ||
+                memcmp(rf->fxinfo + 10, zero6, 6))
                 bad |= DROP_FXINFO;
             if (rd->bk != 0xA0000003u || rf->bk != 0xA0000013u)
                 bad |= DROP_BACKUP;

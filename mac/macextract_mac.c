@@ -2359,26 +2359,39 @@ static void StampCat(MacSink *s)
         /* The rest of the Finder info, where the archive stated it: the
          * FInfo or DInfo and the FXInfo or DXInfo whole, as raw bytes,
          * which is the layout a 68000 holds them in. Then the fields
-         * above them win where they overlap, as before. fdComment and
-         * frComment (FXInfo/DXInfo +10) are cleared: on System 6 and
-         * earlier they are the id of an `FCMT` resource in the Finder's
-         * Desktop file of the volume the file CAME from, measured on
-         * System 3.0's own disk, so a copied id names another file's
-         * comment here or none (DECISIONS.md 2026-10-17). The comment
-         * itself travels as text (below). */
+         * above them win where they overlap, as before. Three fields name
+         * things on the volume the entry CAME from, and are cleared:
+         * fdComment/frComment (+10), the id of an `FCMT` resource in that
+         * volume's Desktop file (measured on System 3.0's own disk; the
+         * comment itself travels as text, below); fdPutAway/frPutAway
+         * (+12), a directory ID there; and a folder's frOpenChain (+4),
+         * another (libhfs apple.h names all three). A file's +4..7 are
+         * fdUnused and are kept. DECISIONS.md 2026-10-17. */
         if (s->cur.meta & UNC_META_FINFO)
             BlockMoveData(s->cur.finder_info, &pb.hFileInfo.ioFlFndrInfo, 16);
         if (s->cur.meta & UNC_META_FXINFO) {
             unsigned char *fx = (unsigned char *)&pb.hFileInfo.ioFlXFndrInfo;
             BlockMoveData(s->cur.finder_info + 16, fx, 16);
-            fx[10] = fx[11] = 0;
+            for (z = 10; z < 16; z++) fx[z] = 0;
+            if (s->cur.is_dir) fx[4] = fx[5] = fx[6] = fx[7] = 0;
         }
         if (s->cur.meta & UNC_META_BACKUP)
             pb.hFileInfo.ioFlBkDat = s->cur.backup_date;
         if (s->cur.type)    pb.hFileInfo.ioFlFndrInfo.fdType = s->cur.type;
         if (s->cur.creator) pb.hFileInfo.ioFlFndrInfo.fdCreator = s->cur.creator;
+        /* Inited (0x0100) is the Finder's "this icon has its position":
+         * cleared, the Finder places the icon itself and the stored one is
+         * lost, on System 6.0.8 and 7.0.1 alike. But it is also what makes
+         * the Finder register a BUNDLE (0x2000): kept on an application,
+         * System 7.0.1 never puts it in a Desktop DB the volume already
+         * had, and draws a generic icon for it. Both measured with
+         * tools/vmac/finderpos.py (DECISIONS.md 2026-10-17, *the bit that
+         * kept the position*). So the archive's bit is kept where it stated
+         * the Finder info whole and the file has no bundle, and cleared
+         * otherwise: an application gets its icon and the Finder's place. */
         pb.hFileInfo.ioFlFndrInfo.fdFlags =
-            s->cur.finder_flags & ~0x0100;   /* clear inited bit */
+            ((s->cur.meta & UNC_META_FINFO) && !(s->cur.finder_flags & 0x2000))
+            ? s->cur.finder_flags : s->cur.finder_flags & ~0x0100;
         if (s->cur.create_date) pb.hFileInfo.ioFlCrDat = s->cur.create_date;
         if (s->cur.mod_date)    pb.hFileInfo.ioFlMdDat = s->cur.mod_date;
         pb.hFileInfo.ioDirID = s->curDirID;  /* PBGetCatInfo clobbers it */

@@ -2759,6 +2759,34 @@ What the Finder then does with any of it: draws the icon there, opens the
 window at that rectangle, shows the comment. A folder's comment: neither
 fixture gives a folder one.
 
+### What the Finder does with a restored position — `finderpos.py`
+
+    finderpos.py -o DIR                                  # System 7.0.1
+    finderpos.py -o DIR --system System6.hfv --out-at 472,108
+    finderpos.py -o DIR --seeded [...]     # onto a volume with a desktop
+
+Extracts a generated package (a folder with a window rectangle, three
+files placed off any automatic grid, and MacExtract itself as an
+application) with the current tree's autotest build onto an 8 MB volume,
+opens the volume and the folder in the Finder, photographs them, chooses
+Shut Down and reads the catalog back: what the Finder moved, and whether it
+registered the application's bundle (`Desktop` resources on System 6, a
+count of the creator in `Desktop DB` on System 7). `--seeded` first boots
+the blank volume once in the Finder, so it already has a desktop — the
+user's-disk case, through `run.py --out-from IMG`. System 6 has no
+type-select, so `--out-at` is the volume's desktop icon; a run without it
+photographs the desktop and stops. Results: DECISIONS.md 2026-10-17, *the
+bit that kept the position*.
+
+**Two traps it hit.** Typing before `Mac.origin()` sends the keys to the X
+root (the window gets focus at the first coordinate lookup), and
+`Mac.shot()` parks the pointer, so a held menu photographed with it is
+released off-screen: Shut Down never ran and the image was torn.
+
+**What it cannot see.** System 3.0; a desktop rebuild; how the Finder
+places what it relocates, beyond the catalog and the frame; System 7's
+`Desktop DB` beyond a byte count.
+
 ## On-demand probes — the `-D` switches and the one-off harnesses
 
 Every switch below rebuilds the autotest application and answers one question

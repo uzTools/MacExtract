@@ -18,8 +18,9 @@ System 3.0 tier), keeps the disks, and reads back what the shell wrote:
       volume and each file's comment read back with PBDTGetComment.
 
 The expected values are the synthesizers' input (tools/synth_as.py,
-tools/synth_sqp.py) with the two rules the shell applies on purpose:
-Finder flag 0x0100 (inited) cleared, and FXInfo's fdComment cleared
+tools/synth_sqp.py) with the rules the shell applies on purpose: Finder
+flag 0x0100 (inited) cleared on a file with a bundle and kept otherwise,
+and FXInfo's fdComment and fdPutAway (a folder's frOpenChain too) cleared
 (mac/macextract_mac.c, StampCat; DECISIONS.md 2026-10-17). The comment is
 expected where the volume reports bHasDesktopMgr and absent where it does
 not.
@@ -48,16 +49,27 @@ FIX = ("synth-as-meta.as", "synth-sqp-meta.pkg")
 
 
 def shell_finfo(b, flags=None):
-    """The 16 bytes as the shell writes them: inited cleared."""
+    """The 16 bytes as the shell writes them: inited (0x0100) kept, unless
+    the file has a bundle (0x2000), where it is cleared so the Finder
+    registers it (DECISIONS.md 2026-10-17, *the bit that kept the
+    position*)."""
     b = bytearray(b)
-    f = ((b[8] << 8) | b[9]) & ~0x0100
+    f = (b[8] << 8) | b[9]
+    if f & 0x2000:
+        f &= ~0x0100
     b[8], b[9] = f >> 8, f & 0xFF
     return bytes(b)
 
 
-def shell_fxinfo(b):
+def shell_fxinfo(b, is_dir=False):
+    """FXInfo/DXInfo as the shell writes them: the source volume's comment
+    id and put-away folder (+10..15) cleared, and a folder's open chain
+    (+4..7)."""
     b = bytearray(b)
-    b[10] = b[11] = 0
+    for i in range(10, 16):
+        b[i] = 0
+    if is_dir:
+        b[4:8] = b"\0\0\0\0"
     return bytes(b)
 
 
