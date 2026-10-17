@@ -38,6 +38,7 @@ grown before, on request.
 | what | status | why it stays out |
 |---|---|---|
 | Compression | not implemented | this is an extractor |
+| Get Info comments on a disk without a Desktop Manager — System 6 and System 3.0 volumes, and floppies under System 7 | **not written; nothing says so** | decided by the maintainer 2026-10-17: the old Finder keeps comments in its own `Desktop` file, which it may hold open, and writing it would be a second path on some Systems only (DECISIONS.md 2026-10-17, *the metadata, carried to the disk*) |
 | Extracting onto an MFS disk, on any Macintosh | **out of scope, decided 2026-10-15; what happens is not documented** | MFS has no folders; supporting it means a second write path, and without HFS a check for it (DECISIONS.md 2026-10-15, *the File Manager a 64K ROM has*) |
 | Choosing which entries come out, in the Macintosh application | **not implemented; the CLI's `--only` ships** | decided 2026-09-26: a tick list is paid for by every run. The engine keeps both halves a host needs (`UncOptions.list_only`, a `begin_entry` returning >0); built on the kept branch `selective-extract` (BRANCHES.md; DECISIONS.md 2026-09-26, *the feature that was parked, and is now out*) |
 | Hardware decoding — an FPU, a coprocessor, a NuBus codec card | **not implemented, nothing measured for one to do** | every codec is integer work; Arsenic's two divides are 0.72 % of a run (FORMATS.md, *What is still hot*), and a second `-mcpu=68020` build is out too (DECISIONS.md 2026-09-23, *hardware decoding*) |
@@ -162,17 +163,6 @@ or measurement before it is read**:
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,
 and `tools/run_meta.py` holds it.
-
-## Get Info comments on a System 6 or System 3.0 volume
-
-**Not written.** The shell writes a comment through the Desktop Manager,
-which a System 6 or System 3.0 volume does not have; their Finder keeps
-comments as `FCMT` resources in its own `Desktop` file, keyed by the id in
-FXInfo — measured on System 3.0's disk, 2026-10-17 (DECISIONS.md, *the
-metadata, carried to the disk*). Writing that file is a second path on some
-Systems only, which the one-behaviour rule forbids, into a file that Finder
-may hold open. Closes by the maintainer's decision on that conflict, or by
-an answer to it that is one path on every System.
 
 ## System 7.0.1 rewrites one byte of FXInfo
 

@@ -27169,9 +27169,9 @@ their Finder keeps it in its own `Desktop` file, which System 7 does not
 read and which that Finder may hold open. Writing it there is a second path
 on some Systems — exactly what the one-behaviour rule forbids — so it is
 **not written, and nothing says so** (a line only some Systems print is
-itself per-machine behaviour). **The conflict is the maintainer's to
-settle** (OPEN_ITEMS.md, *Get Info comments on a System 6 or System 3.0
-volume*). A comment on a System 7 floppy is lost the same way.
+itself per-machine behaviour). **Settled by the maintainer
+2026-10-17: a limitation, not pursued** (OPEN_ITEMS.md, part 1). A comment
+on a System 7 floppy is lost the same way.
 
 **A folder's date.** Creating or deleting an item sets its folder's
 modification date to now, so the date stamped when the folder's entry
