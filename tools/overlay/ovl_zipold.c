@@ -8,6 +8,9 @@
  * into the host vector exactly as ovl_codecs.c does, and the eager release
  * keeps it for zip alone.
  *
+ * Tar's reader too, since 2026-10-17 (src/fmt_tar.c says why): the eager
+ * release keeps this image, and only this one, for a tar.
+ *
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "overlay.h"
@@ -27,6 +30,8 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
     case OVL_CODEC_EXPORTS:
         OVL_ZIPOLD_EXPORTS_FILL((OverlayHostFns *)a);
         return 0;
+    case OVL_TAR_EXTRACT:
+        return (int32_t)unc_tar_extract((UncCtx *)a);
     default:
         return -1;
     }

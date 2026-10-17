@@ -50,13 +50,16 @@ def crc32_raw(data, crc=0):
 
 
 def encode(name, ftype, creator, data, rsrc, password, keylen=5,
-           version=2, derivation=1, cipher=1):
+           version=2, derivation=1, cipher=1, finfo=None, fxinfo=None):
+    """`finfo`/`fxinfo`, 16 bytes each, replace the record's FInfo (type,
+    creator, then zeros by default) and FXInfo (zeros) whole."""
     key = hashlib.md5(password).digest()[:keylen]
     hdr = struct.pack(">4s5HI", b"CSIT", version, derivation, cipher,
                       keylen, 0, 0)
     n = name.encode("mac_roman")
     rec = (b"CSIT" + bytes([len(n)]) + n + bytes(255 - len(n)) +
-           ftype + creator + bytes(8) + bytes(16) +
+           (finfo if finfo is not None else ftype + creator + bytes(8)) +
+           (fxinfo if fxinfo is not None else bytes(16)) +
            struct.pack(">4I", len(data), len(rsrc), 0xB0000000, 0xB0000001))
     assert len(rec) == 308
     forks = rc4(key)

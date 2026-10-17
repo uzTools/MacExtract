@@ -1,6 +1,7 @@
 /*
- * fmt_exo.c — the exogenous formats: gzip (.gz), Unix compress (.Z),
- * tar, and zip (store, Shrink, Reduce, Implode and deflate).
+ * fmt_exo.c — the exogenous formats: gzip (.gz), Unix compress (.Z)
+ * and zip (store, Shrink, Reduce, Implode and deflate). Tar's reader is
+ * src/fmt_tar.c since 2026-10-17 (that file says why).
  *
  * These are byte-oriented Unix/PC formats, and every one of them has a
  * specification of its own. Those are what is cited, here and at each
@@ -26,6 +27,7 @@
  */
 #include "unc_internal.h"
 #include "fmt_exo_priv.h"
+#include "unc_date.h"
 
 /* Twice UNC_IOBUF. These readers move whole runs rather than bytes:
  * inflate hands back a block at a time, LZW a phrase, and tar copies
@@ -145,6 +147,8 @@ int unc_gzip_extract(UncCtx *c)
     ExoSink es;
     int flg, sret, est = UNC_OK;
     int err = UNC_OK;
+    uint8_t *cmt = NULL;
+    uint32_t clen = 0;
 
     if (unc_read_at(c->io, 0, hdr, 10) != UNC_OK) return UNC_ERR_FORMAT;
     if (hdr[0] != 0x1F || hdr[1] != 0x8B) return UNC_ERR_FORMAT;
@@ -176,11 +180,14 @@ int unc_gzip_extract(UncCtx *c)
             if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
         } while (b != 0);
     }
-    if (flg & 0x10) {   /* FCOMMENT */
+    if (flg & 0x10) {   /* FCOMMENT: kept, up to what an entry carries */
         int b;
+        cmt = (uint8_t *)unc_alloc(c->al, UNC_ENTRY_COMMENT_MAX);
         do {
             b = unc_bufin_next(&in);
             if (b < 0) { err = UNC_ERR_TRUNCATED; goto out; }
+            if (b && cmt && clen < UNC_ENTRY_COMMENT_MAX)
+                cmt[clen++] = (uint8_t)b;
         } while (b != 0);
     }
     if (flg & 0x02) {   /* FHCRC */
@@ -194,6 +201,15 @@ int unc_gzip_extract(UncCtx *c)
     exo_hint_name(c, &e);
     e.data_size = UNC_SIZE_UNKNOWN;   /* ISIZE is only mod 2^32; trailer */
     e.rsrc_size = 0;
+    /* MTIME, a Unix time with 0 for "no time stamp", and FCOMMENT, the
+     * member's comment — ISO 8859-1, handed on as the bytes it is, as
+     * every name is. Source: reference/notes/rfc1952.txt, 2.3.1. */
+    e.mod_date = unc_get_u32le(hdr + 4) ? unc_unix_to_mac(unc_get_u32le(hdr + 4))
+                                        : 0;
+    if (clen) {
+        e.comment = cmt;
+        e.comment_len = (uint16_t)clen;
+    }
 
     sret = c->sink->begin_entry(c->sink->ctx, &e);
     if (sret < 0) { err = UNC_ERR_SINK; goto out; }
@@ -223,6 +239,7 @@ int unc_gzip_extract(UncCtx *c)
     if (unc_fatal(est)) err = est;
 
 out:
+    unc_free(c->al, cmt);
     unc_free(c->al, iobuf);
     return err;
 }
@@ -287,189 +304,6 @@ int unc_compressz_extract(UncCtx *c)
     if (unc_fatal(est)) err = est;
 
 out:
-    unc_free(c->al, iobuf);
-    return err;
-}
-
-/* ------------------------------------------------------------------ */
-/* tar (POSIX ustar; pre-POSIX v7 headers accepted via checksum)      */
-/* ------------------------------------------------------------------ */
-
-/* Parse an octal field (space/NUL padded). Returns value or -1. */
-
-
-/* An octal header field: octal digits terminated/padded by NUL or
- * space (leading spaces allowed), or all NUL. */
-
-
-int unc_tar_extract(UncCtx *c)
-{
-    uint8_t h[512];
-    unc_off_t pos = 0, fsize;
-    int seen = 0;
-    int err = UNC_OK;
-    uint8_t *iobuf;
-    uint32_t iocap = EXO_BUF;
-
-    fsize = c->io->size(c->io->ctx);
-    iobuf = (uint8_t *)unc_alloc(c->al, iocap);
-    if (!iobuf) return UNC_ERR_MEM;
-
-    for (;;) {
-        int64_t size;
-        uint32_t datalen;
-        int typeflag, zero = 1, sret, est, isdir, oversize;
-        int64_t next;
-        int32_t i;
-        UncEntryInfo e;
-        uint8_t path[256];
-        uint32_t plen = 0;
-
-        if (unc_read_at(c->io, pos, h, 512) != UNC_OK) {
-            /* EOF at a block boundary: tolerated (missing end blocks) */
-            err = seen ? UNC_OK : UNC_ERR_FORMAT;
-            break;
-        }
-        for (i = 0; i < 512; i++) if (h[i]) { zero = 0; break; }
-        if (zero) break;   /* end-of-archive marker */
-
-        if (!tar_checksum_ok(h)) {
-            err = seen ? UNC_ERR_CORRUPT : UNC_ERR_FORMAT;
-            break;
-        }
-        seen = 1;
-
-        size = tar_octal(h + 124, 12);
-        typeflag = h[156];
-        if (size < 0) { err = UNC_ERR_CORRUPT; break; }
-        /* A member past the engine's 32-bit reach is refused as an
-         * ENTRY, not as an archive: its header states how long it is,
-         * so where the NEXT member begins is known exactly and the
-         * rest of the tar still reads. What ends the walk is the NEXT
-         * member's position leaving 32 bits — the 4 GB container limit,
-         * which is every format's (FORMATS.md, *Size limits*), and it
-         * is checked after this member is reported rather than before,
-         * so the last one a header describes is still named. */
-        oversize = size > UNC_MAC_MAX;
-        datalen = oversize ? UNC_SIZE_UNKNOWN : (uint32_t)size;
-        next = (int64_t)pos + 512 + ((size + 511) & ~(int64_t)511);
-
-        /* Name: ustar prefix + '/' + name (raw bytes, '/' native). */
-        if (h[345] && h[257] == 'u') {   /* prefix field in use */
-            for (i = 0; i < 155 && h[345 + i]; i++) path[plen++] = h[345 + i];
-            path[plen++] = '/';
-        }
-        for (i = 0; i < 100 && h[i]; i++) path[plen++] = h[i];
-        /* Directory: typeflag '5' (ustar) or a trailing '/' in the
-         * name (the only marking pre-POSIX v7 tar has). */
-        isdir = typeflag == '5' ||
-                (plen > 0 && path[plen - 1] == '/');
-        /* Strip the trailing '/' of directory names. */
-        while (plen > 0 && path[plen - 1] == '/') plen--;
-        /* Drop "." components ("./name" prefixes are routine in v7
-         * tars; GNU tar and unar both strip them on extraction). */
-        {
-            uint32_t r = 0, w = 0, cs = 0;
-            for (r = 0; r <= plen; r++) {
-                if (r == plen || path[r] == '/') {
-                    if (r - cs == 1 && path[cs] == '.')
-                        w = w > 0 ? w - 1 : 0;   /* drop ".", undo sep */
-                    if (r < plen && w > 0 && path[w - 1] != '/')
-                        path[w++] = '/';
-                    cs = r + 1;
-                } else path[w++] = path[r];
-            }
-            plen = w;
-            while (plen > 0 && path[plen - 1] == '/') plen--;
-        }
-        if (plen == 0 && isdir) {
-            /* The "./" root entry itself: nothing to create. */
-            if (next < 0 || (uint64_t)next > (uint64_t)UNC_OFF_MAX) {
-                err = UNC_ERR_CORRUPT; break;
-            }
-            pos = (unc_off_t)next;
-            continue;
-        }
-
-        unc_entry_clear(&e);
-        unc_entry_set_path(&e, path, plen);
-        /* ustar can state 256 bytes (155 + '/' + 100) and the engine
-         * carries 255, so `path` still holds what the entry lost. */
-        if (e.name_truncated) unc_entry_long_name(c, &e, path, plen);
-        e.mod_date = 0;
-        e.rsrc_size = 0;
-
-        if (isdir) {
-            e.is_dir = 1;
-            e.data_size = 0;
-            sret = c->sink->begin_entry(c->sink->ctx, &e);
-            if (sret < 0) { err = UNC_ERR_SINK; break; }
-            if (sret == 0 && c->sink->end_entry(c->sink->ctx, UNC_OK) < 0) {
-                err = UNC_ERR_SINK;
-                break;
-            }
-        } else if (!oversize &&
-                   (typeflag == '0' || typeflag == 0)) {  /* regular file */
-            e.data_size = datalen;
-            e.comp_data_size = datalen;
-            sret = c->sink->begin_entry(c->sink->ctx, &e);
-            if (sret < 0) { err = UNC_ERR_SINK; break; }
-            if (sret == 0) {
-                est = UNC_OK;
-                if (!c->opt.list_only) {
-                    uint32_t left = datalen;
-                    unc_off_t at = pos + 512;
-                    if (fsize != UNC_SIZE_UNKNOWN && at + datalen > fsize) {
-                        est = UNC_ERR_TRUNCATED;
-                    } else if (c->io->seek(c->io->ctx, at) < 0) {
-                        est = UNC_ERR_IO;
-                    } else {
-                        while (left > 0 && est == UNC_OK) {
-                            int32_t n = left < iocap ? (int32_t)left
-                                                     : (int32_t)iocap;
-                            est = unc_read_full(c->io, iobuf, n);
-                            if (est == UNC_OK) {
-                                int perr = unc_progress_add(&c->ps, (uint32_t)n);
-                                if (perr != UNC_OK) est = perr;
-                            }
-                            if (est == UNC_OK && !c->opt.test_only &&
-                                c->sink->write(c->sink->ctx, UNC_FORK_DATA,
-                                               iobuf, n) < 0)
-                                est = UNC_ERR_SINK;
-                            left -= (uint32_t)n;
-                        }
-                    }
-                }
-                if (c->sink->end_entry(c->sink->ctx, est) < 0) {
-                    err = UNC_ERR_SINK;
-                    break;
-                }
-                if (unc_fatal(est)) {
-                    err = est;
-                    break;
-                }
-            }
-        } else {
-            /* Links, devices, GNU extensions and members over 2 GB:
-             * reported, not extracted. */
-            e.data_size = datalen;
-            sret = c->sink->begin_entry(c->sink->ctx, &e);
-            if (sret < 0) { err = UNC_ERR_SINK; break; }
-            if (sret == 0 &&
-                c->sink->end_entry(c->sink->ctx, oversize
-                                   ? UNC_ERR_TOOLARGE
-                                   : UNC_ERR_UNSUPPORTED) < 0) {
-                err = UNC_ERR_SINK;
-                break;
-            }
-        }
-
-        if (next < 0 || (uint64_t)next > (uint64_t)UNC_OFF_MAX) {
-            err = UNC_ERR_CORRUPT; break;
-        }
-        pos = (unc_off_t)next;
-    }
-
     unc_free(c->al, iobuf);
     return err;
 }
@@ -1132,24 +966,52 @@ static int zip_imp_dry(UncCtx *c, uint32_t part, uint32_t lhoffs,
  * Only ever called for an entry whose central record carried a 0x334d,
  * so an archive with no Macintosh field in it pays nothing at all —
  * not the seek, not the read, and not the inflate. */
-#define ZIP_MACATTR_WANT 38u    /* through FlMdDat; the GMT offsets
-                                 * after it are not wanted (above) */
+#define ZIP_MACATTR_WANT 38u    /* through FlBkDat */
 
-typedef struct { uint8_t buf[ZIP_MACATTR_WANT]; uint32_t got; } ZipAttrSink;
+/* The record is read as it inflates: the first 38 bytes kept, the GMT
+ * offsets and the charset skipped (`fixed` is where they end), then the
+ * FullPath C-string skipped and the Finder comment C-string copied into
+ * `cmt`, which may be NULL. */
+typedef struct {
+    uint8_t  buf[ZIP_MACATTR_WANT];
+    uint32_t got, fixed;
+    uint8_t  strs;               /* C-strings ended: 0 path, 1 comment */
+    uint8_t *cmt;
+    uint32_t clen;
+} ZipAttrSink;
 
 static int zip_attr_emit(void *ctx, const uint8_t *p, int32_t n)
 {
     ZipAttrSink *a = (ZipAttrSink *)ctx;
-    while (n > 0 && a->got < ZIP_MACATTR_WANT) {
-        a->buf[a->got++] = *p++;
-        n--;
+    for (; n > 0; n--, p++) {
+        if (a->got < a->fixed) {
+            if (a->got < ZIP_MACATTR_WANT) a->buf[a->got] = *p;
+            a->got++;
+        } else if (a->strs < 2) {
+            if (!*p) a->strs++;
+            else if (a->strs == 1 && a->cmt && a->clen < UNC_ENTRY_COMMENT_MAX)
+                a->cmt[a->clen++] = *p;
+        }
     }
-    return UNC_OK;   /* the tail is deliberately discarded: what
-                      * follows offset 50 is a path and a comment */
+    return UNC_OK;
 }
 
-static void zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
-                          UncEntryInfo *e)
+/* A 0x334d date, local Macintosh time (above). Below one day is "never
+ * set", as both reference implementations have it; so, here, is the
+ * last day before the wrap: rexnebular_1_0_0.zip's backup fields read
+ * 0 on some entries and 0xFFFFAB9F (-21,601 s) on the rest, beside a
+ * BkGMTOffs of -18000 on all, and a backup in February 2040 is not one.
+ * That the second value is "never" moved by a zone is a hypothesis
+ * (DECISIONS.md 2026-10-17, *the archives' own Finder info*). */
+static int zip_mac_date_ok(uint32_t t)
+{
+    return t >= 86400u && t <= 0xFFFFFFFFu - 86400u;
+}
+
+/* `cmt` is where a Finder comment goes, UNC_ENTRY_COMMENT_MAX bytes, or
+ * NULL for none; returns its length. */
+static uint32_t zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
+                              UncEntryInfo *e, uint8_t *cmt)
 {
     uint8_t lh[30];
     uint8_t ex[256];
@@ -1157,15 +1019,15 @@ static void zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
 
     if (zip_seek(c, part, lhoffs) != UNC_OK ||
         unc_read_full(c->io, lh, 30) != UNC_OK)
-        return;
-    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return;
+        return 0;
+    if (!(lh[0] == 'P' && lh[1] == 'K' && lh[2] == 3 && lh[3] == 4)) return 0;
     lnamelen  = unc_get_u16le(lh + 26);
     lextralen = unc_get_u16le(lh + 28);
-    if (!lextralen) return;
+    if (!lextralen) return 0;
     exlen = lextralen < sizeof ex ? lextralen : (uint32_t)sizeof ex;
     if (zip_seek(c, part, lhoffs + 30 + lnamelen) != UNC_OK ||
         unc_read_full(c->io, ex, (int32_t)exlen) != UNC_OK)
-        return;
+        return 0;
 
     for (q = 0; q + 4 <= exlen; ) {
         uint32_t id = unc_get_u16le(ex + q);
@@ -1177,17 +1039,20 @@ static void zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
             uint32_t ulen = unc_get_u32le(d);
             uint32_t fl   = unc_get_u16le(d + 4);
             ZipAttrSink a;
-            const uint8_t *rec = NULL;
+            uint32_t k;
+            int ok = 0;
 
-            if (fl & 0x0008) return;     /* 64-bit dates: not read */
+            if (fl & 0x0008) return 0;   /* 64-bit dates: not read */
             a.got = 0;
+            a.fixed = ZIP_MACATTR_WANT + ((fl & 0x0010) ? 0u : 12u) + 2u;
+            a.strs = 0;
+            a.cmt = cmt;
+            a.clen = 0;
             if (fl & 0x0004) {
                 /* Stored in the field itself, right after type and
                  * creator — no compression method and no CRC. */
-                if (sz >= 14 + ZIP_MACATTR_WANT) {
-                    rec = d + 14;
-                    a.got = ZIP_MACATTR_WANT;
-                }
+                (void)zip_attr_emit(&a, d + 14, (int32_t)(sz - 14));
+                ok = 1;
             } else if (sz >= 20 && unc_get_u16le(d + 14) == 8 &&
                        ulen >= ZIP_MACATTR_WANT && ulen <= 1000000u) {
                 /* u16le method (8 = deflate), u32le CRC, then the
@@ -1199,28 +1064,55 @@ static void zip_mac_attrs(UncCtx *c, uint32_t part, uint32_t lhoffs,
                 uint32_t produced = 0;
                 unc_bufin_init(&in, c->io, NULL, iobuf, (uint32_t)sizeof iobuf);
                 in.limit = sz - 20;
-                if (zip_seek(c, part, lhoffs + 30 + lnamelen + q + 4 + 20)
-                        == UNC_OK &&
-                    unc_inflate_raw(&in, c->al, obuf, (uint32_t)sizeof obuf,
-                                    ulen, &produced, NULL,
-                                    zip_attr_emit, &a) == UNC_OK &&
-                    a.got >= ZIP_MACATTR_WANT)
-                    rec = a.buf;
+                ok = zip_seek(c, part, lhoffs + 30 + lnamelen + q + 4 + 20)
+                         == UNC_OK &&
+                     unc_inflate_raw(&in, c->al, obuf, (uint32_t)sizeof obuf,
+                                     ulen, &produced, NULL,
+                                     zip_attr_emit, &a) == UNC_OK;
             }
-            if (!rec) return;
-            e->finder_flags = unc_get_u16le(rec);
+            if (!ok || a.got < ZIP_MACATTR_WANT) return 0;
+            /* The whole FInfo/DInfo and FXInfo/DXInfo, put back into
+             * Macintosh order: type and creator are the field's own four
+             * bytes each (a folder's frRect, `docs/` above), the rest
+             * little-endian words and one long, as Info-ZIP's own
+             * Macintosh UnZip reads them.
+             * Source: unzip60/macos/source/macos.c, DecodeMac3ExtraField
+             * (fdFlags, fdLocation.v/.h, fdFldr, fdIconID, three
+             * fdReserved words, the fdScript and fdXFlags bytes,
+             * fdComment, the fdPutAway long, then FVersNum and ACUser,
+             * the three dates, the GMT offsets unless flag bit 4, the
+             * TextEncodingBase word, FullPath and FinderComment as
+             * C-strings); reference/notes/zip_extrafld_infozip.txt is
+             * the same table. */
+            for (k = 0; k < 8; k++) e->finder_info[k] = d[6 + k];
+            for (k = 0; k < 8; k += 2) {
+                e->finder_info[8 + k] = a.buf[k + 1];
+                e->finder_info[9 + k] = a.buf[k];
+                e->finder_info[16 + k] = a.buf[8 + k + 1];
+                e->finder_info[17 + k] = a.buf[8 + k];
+            }
+            e->finder_info[24] = a.buf[16];
+            e->finder_info[25] = a.buf[17];
+            e->finder_info[26] = a.buf[19];
+            e->finder_info[27] = a.buf[18];
+            for (k = 0; k < 4; k++) e->finder_info[28 + k] = a.buf[23 - k];
+            e->meta |= UNC_META_FINFO | UNC_META_FXINFO;
+            e->finder_flags = unc_get_u16le(a.buf);
             {
-                uint32_t cr = unc_get_u32le(rec + 26);
-                uint32_t mo = unc_get_u32le(rec + 30);
-                /* A date below one day is "never set": both reference
-                 * implementations treat it so, and the engine's own
-                 * convention is 0 for unstated. */
-                if (cr >= 86400u) e->create_date = cr;
-                if (mo >= 86400u) e->mod_date = mo;
+                uint32_t cr = unc_get_u32le(a.buf + 26);
+                uint32_t mo = unc_get_u32le(a.buf + 30);
+                uint32_t bk = unc_get_u32le(a.buf + 34);
+                if (zip_mac_date_ok(cr)) e->create_date = cr;
+                if (zip_mac_date_ok(mo)) e->mod_date = mo;
+                if (zip_mac_date_ok(bk)) {
+                    e->backup_date = bk;
+                    e->meta |= UNC_META_BACKUP;
+                }
             }
-            return;
+            return a.clen;
         }
     }
+    return 0;
 }
 
 /* One central-directory record's extra fields. Four matter here:
@@ -1445,6 +1337,11 @@ int unc_zip_extract(UncCtx *c)
      * `d->mml_bug_policy`, which is likewise archive-wide and set from
      * the first bug-capable member. */
     int imppol = -1;
+    /* Comment buffers, allocated the first time an entry needs one: the
+     * per-file comment when the directory is not in memory, and a
+     * 0x334d Finder comment. Two, since an entry can have both and the
+     * one kept must outlive the other's read. */
+    uint8_t *cmt = NULL, *fcmt = NULL;
 
     /* Where the end-of-central-directory record may be. A whole archive
      * ends where the file does; a segmented one ends where its LAST
@@ -1831,7 +1728,70 @@ int unc_zip_extract(UncCtx *c)
             e.type = mtype;
             e.creator = mcreator;
         }
-        if (mattrs) zip_mac_attrs(c, startdisk, lhoffs, &e);
+        /* The record's MS-DOS time and date at +12/+14, local time with
+         * no zone (APPNOTE.TXT 4.4.6: "stored in standard MS-DOS
+         * format"); a Macintosh field's own dates replace them below. */
+        e.mod_date = unc_dos_to_mac(unc_get_u16le(cd + 14),
+                                    unc_get_u16le(cd + 12));
+        /* Locked, from the external attributes at +38, read as the
+         * version-made-by host at +5 says (APPNOTE.TXT 4.4.2, 4.4.15).
+         * Hosts whose high half is a POSIX mode — Info-ZIP's own list
+         * for Unix, VMS, Atari, QDOS, Acorn, BeOS, Tandem, THEOS and
+         * AtheOS — are locked when it has no owner write (0200), unless
+         * the half is 0, where UnZip falls back to the DOS byte too.
+         * Every other host, Macintosh (7) included, by the MS-DOS
+         * read-only bit (0x01) of the low byte. Amiga's protection bits
+         * are not read. Source: unzip60/unix/unix.c, mapattr; and for
+         * host 7, unzip60/macos/source/macos.c, mapattr ("only care
+         * about read-only bit, so just look at MS-DOS side of attrs")
+         * then FSpSetFLock — MacZip's own UnZip locks the file from
+         * that bit, whatever the host. Measured on
+         * rexnebular_1_0_0.zip, host 7: 0x81240001 on its read-only
+         * disk images, 0x81b60000 on the rest. */
+        {
+            uint32_t host = cd[5], xa = unc_get_u32le(cd + 38);
+            if (host != 1) {
+                if (host <= 30 && ((0x4007302Cul >> host) & 1u) &&
+                    (xa >> 16))
+                    e.locked = (xa & 0x00800000ul) ? UNC_LOCK_NO
+                                                   : UNC_LOCK_YES;
+                else
+                    e.locked = (xa & 1u) ? UNC_LOCK_YES : UNC_LOCK_NO;
+            }
+        }
+        /* The per-file comment after the name and extra field: in place
+         * where the directory is in memory, copied otherwise. A
+         * 0x334d Finder comment, which IS the Get Info comment, wins
+         * over it below. */
+        if (commentlen) {
+            uint32_t cl = commentlen < UNC_ENTRY_COMMENT_MAX
+                        ? commentlen : UNC_ENTRY_COMMENT_MAX;
+            uint32_t at = cdrel + 46 + namelen + extralen;
+            if (cdbuf) {
+                if (at + cl <= cdsize) {
+                    e.comment = cdbuf + at;
+                    e.comment_len = (uint16_t)cl;
+                }
+            } else {
+                if (!cmt) cmt = (uint8_t *)unc_alloc(c->al,
+                                                     UNC_ENTRY_COMMENT_MAX);
+                if (cmt && zip_seek(c, cddisk, cdoffs + at) == UNC_OK &&
+                    unc_read_full(c->io, cmt, (int32_t)cl) == UNC_OK) {
+                    e.comment = cmt;
+                    e.comment_len = (uint16_t)cl;
+                }
+            }
+        }
+        if (mattrs) {
+            uint32_t fcl;
+            if (!fcmt) fcmt = (uint8_t *)unc_alloc(c->al,
+                                                   UNC_ENTRY_COMMENT_MAX);
+            fcl = zip_mac_attrs(c, startdisk, lhoffs, &e, fcmt);
+            if (fcl) {
+                e.comment = fcmt;
+                e.comment_len = (uint16_t)fcl;
+            }
+        }
 
         /* ZipIt's long field: the entry's data is a MacBinary stream,
          * and what the entry is called for is inside its header. */
@@ -1854,7 +1814,14 @@ int unc_zip_extract(UncCtx *c)
             /* Finder info, lock and dates, as fmt_macbinary.c reads a
              * header; not the comment, which is after both forks in a
              * stream not yet decoded (fmt_lzh.c says the same). */
-            (void)unc_macbinary_meta(&e, mb);
+            {
+                /* A header that leaves a date 0 (MacLHA 2.00 writes both so)
+                 * leaves this container's own one standing. */
+                uint32_t crd = e.create_date, mdd = e.mod_date;
+                (void)unc_macbinary_meta(&e, mb);
+                if (!e.create_date) e.create_date = crd;
+                if (!e.mod_date) e.mod_date = mdd;
+            }
             mbok = 1;
         }
 
@@ -2132,6 +2099,8 @@ int unc_zip_extract(UncCtx *c)
         cdrel += 46 + namelen + extralen + commentlen;
     }
 
+    unc_free(c->al, fcmt);
+    unc_free(c->al, cmt);
     unc_free(c->al, cdbuf);
     unc_free(c->al, iobuf);
     return err;

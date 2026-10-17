@@ -535,7 +535,13 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # MacBinary I header's lock bit masked out of the Finder flags, where
 # System 7 reads it as isAlias (DECISIONS.md 2026-10-17, *the envelopes'
 # own Finder info*).
-UNC_MAC_CODE_DEFAULT=177240
+# +4,520 code on 2026-10-17 for the archives' own Finder info (DECISIONS.md
+# 2026-10-17, *the archives' own Finder info*): every reader that is an
+# image when shipped is resident here — PackIt, StuffIt 5, Now Compress,
+# SuperDisk!, Private File, ArcMac, zip, tar, gzip and LZH, with a copy of
+# the MS-DOS date conversion in each of the three files that use it. The
+# shipped and lazy pairs do not move. A5 37,552.
+UNC_MAC_CODE_DEFAULT=181760
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -701,7 +707,9 @@ UNC_MAC_CODE_DEFAULT=177240
 # -20 on 2026-10-16 with the code ceiling's +20: padding, the time left.
 # -8 on 2026-10-16 with the code ceiling's +8: padding.
 # +4 on 2026-10-16 with the code ceiling's +92.
-UNC_MAC_A5_DEFAULT=37480
+# +72 on 2026-10-17 with the code ceiling's +4,520: three copies of the
+# 24-byte days-before-month table, resident in this configuration only.
+UNC_MAC_A5_DEFAULT=37552
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so

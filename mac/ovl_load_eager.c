@@ -173,7 +173,7 @@ void ovl_release_if_unwanted(UncFormat fmt, UncIO *io)
     case UNC_FORMAT_SIT:         case UNC_FORMAT_SIT5:
         want = OVL_ID_STUFFIT;   break;
     case UNC_FORMAT_ZIP:         want = OVL_ID_EXO;        break;
-    case UNC_FORMAT_TAR:         want = OVL_ID_EXO;        crypt = 0; break;
+    case UNC_FORMAT_TAR:         want = OVL_ID_ZIPOLD;     crypt = 0; break;
     /* Segment SCHEMES, from the other release site: a Compact Pro or spanned
      * zip set is read by that format's own reader over the joined parts. */
     case UNC_FORMAT_CPTSEG:      want = OVL_ID_CPTDD;      break;

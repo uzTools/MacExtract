@@ -87,7 +87,7 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * so the decoder calls into both and an
                                     * overlay cannot call another overlay */
 #define OVL_ID_STUFFIT       137
-#define OVL_ID_EXO           138   /* zip, gzip, Unix compress, tar — and
+#define OVL_ID_EXO           138   /* zip, gzip, Unix compress — and
                                     * zlib, which nothing else calls      */
 #define OVL_ID_CODECS        139   /* the shared machinery, which patches
                                     * itself into the host vector         */
@@ -107,7 +107,10 @@ typedef int32_t (*OverlayEntry)(const OverlayHost *host, int32_t which,
                                     * methods. Only zip calls them, so
                                     * only zip keeps this; it patches
                                     * itself into the host vector as the
-                                    * codecs image does               */
+                                    * codecs image does. And since
+                                    * 2026-10-17 tar's reader, which
+                                    * ovl_exo had no room left for: a
+                                    * tar keeps this image alone    */
 
 /* How many images there can be, for sizing a table rather than for numbering
  * one: mac/ovl_load_lazy.c keeps a loaded image per slot and must not be able

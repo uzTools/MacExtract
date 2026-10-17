@@ -1,4 +1,5 @@
-/* ovl_exo.c — zip, gzip, Unix compress and tar as an overlay.
+/* ovl_exo.c — zip, gzip and Unix compress as an overlay (tar is in
+ * ovl_zipold.c since 2026-10-17).
  *
  * The decoder source is compiled in UNMODIFIED; every engine helper it calls
  * is defined by ovl_forwards_gen.c as a forward through the host vector
@@ -52,8 +53,6 @@ int32_t ovl_main(const OverlayHost *host, int32_t which, void *a, void *b)
         return (int32_t)unc_gzip_extract((UncCtx *)a);
     case OVL_COMPRESSZ_EXTRACT:
         return (int32_t)unc_compressz_extract((UncCtx *)a);
-    case OVL_TAR_EXTRACT:
-        return (int32_t)unc_tar_extract((UncCtx *)a);
     default:
         return -1;
     }

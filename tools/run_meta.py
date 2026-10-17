@@ -40,9 +40,10 @@ import calendar
 import json
 import os
 import struct
+import shutil
 import subprocess
-import sys
 import tempfile
+import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -466,6 +467,341 @@ def env_zip_payloads(cli, deark, path, label, got, work):
             rows.append(("%s: %s" % (label, i.filename), got[i.filename],
                          {"finfo": o["finfo"], "lock": o["lock"]}))
     return rows
+# ------------------------------------------------------------------
+# The archive formats (branch meta-archives): PackIt, StuffIt 5, Now
+# Compress, SuperDisk!, Private File, ArcMac and ARC, zip, tar, gzip, LZH.
+# Their own rows, functions and controls, beside the ones above.
+# ------------------------------------------------------------------
+
+ARCHIVE_FIELDS = ("finfo", "fxinfo", "backup", "lock", "comment", "ctime",
+                  "mtime")
+# The formats whose dates are MS-DOS or Unix ones, which this lane holds
+# against lsar; a Macintosh format's dates pass through unconverted and
+# were never this branch's.
+DATED = ("Zip", "Tar", "Gzip", "LZH", "ARC")
+
+
+def archive_rows(cli, path, extra=()):
+    """`l --meta`'s 'm' and 't' rows, both, keyed by name; and the
+    format the listing names."""
+    r = subprocess.run([cli, "l", "--meta"] + list(extra) + [path],
+                       capture_output=True)
+    out, fmt = {}, None
+    for line in r.stderr.decode("utf-8", "surrogateescape").split("\n"):
+        if fmt is None and line.startswith(path + ": "):
+            fmt = line[len(path) + 2:]
+    # "\n" and not splitlines(): a Macintosh name can hold a CR ("Icon\r").
+    for line in r.stdout.decode("utf-8", "surrogateescape").split("\n"):
+        if line.startswith("m "):
+            f = line.split(" ", 6)
+            out.setdefault(f[6], {}).update(
+                finfo=f[1], fxinfo=f[2], backup=f[3], lock=f[4], comment=f[5])
+        elif line.startswith("t "):
+            f = line.split(" ", 3)
+            out.setdefault(f[3], {}).update(ctime=f[1], mtime=f[2])
+    return out, fmt
+
+
+def lsar_date(s):
+    try:
+        t = calendar.timegm(time.strptime(s[:19], "%Y-%m-%d %H:%M:%S"))
+    except ValueError:            # a year past 9999: no Mac date either
+        return "-"
+    return "%08x" % ((t + MAC_EPOCH) & 0xFFFFFFFF)
+
+
+def archive_lsar(path):
+    """lsar -j, run in UTC so that an MS-DOS time — which XADMaster
+    turns into an instant in the HOST's zone — prints as the wall clock
+    it was (DECISIONS.md 2026-10-17, *the archives' own Finder info*). Per
+    entry: mtime, ctime, comment, lock, and whether XADMaster saw a
+    Macintosh source for it (a type code, a MacBinary payload), where
+    its dates are not the archive's foreign ones."""
+    r = subprocess.run(["lsar", "-j", path], capture_output=True,
+                       env=dict(os.environ, TZ="UTC"))
+    try:
+        d = json.loads(r.stdout)
+    except ValueError:
+        return {}, None
+    props = d.get("lsarProperties") or {}
+    out = {}
+    for e in d.get("lsarContents", []):
+        if e.get("XADIsResourceFork") and e["XADFileName"] in out:
+            continue
+        o = {}
+        if "XADLastModificationDate" in e:
+            o["mtime"] = lsar_date(e["XADLastModificationDate"])
+        if "XADCreationDate" in e:
+            o["ctime"] = lsar_date(e["XADCreationDate"])
+        if "XADComment" in e:
+            o["comment"] = e["XADComment"].encode("mac-roman", "replace").hex()
+        if "XADPosixPermissions" in e:
+            o["lock"] = "n" if e["XADPosixPermissions"] & 0o200 else "L"
+        elif "XADDOSFileAttributes" in e:
+            o["lock"] = "L" if e["XADDOSFileAttributes"] & 1 else "n"
+        o["mac"] = any(k in e for k in ("XADFileType", "XADIsMacBinary",
+                                        "XADMightBeMacBinary"))
+        out[e["XADFileName"]] = o
+    return out, props.get("XADComment")
+
+
+def macunpack_locks(path, work):
+    """PackIt's lock word as macunpack copies it: to byte 81..82 of each
+    `.info` header it writes with -3 (reference/macutils/macunpack/pit.c,
+    H_LOCKOFF). Name from the header's own byte 1 and 2..."""
+    d = os.path.join(work, "mu-" + os.path.basename(path))
+    os.makedirs(d, exist_ok=True)
+    with open(path, "rb") as f:
+        subprocess.run(["macunpack", "-3"], stdin=f, cwd=d,
+                       capture_output=True)
+    out = {}
+    for fn in os.listdir(d):
+        if fn.endswith(".info"):
+            b = open(os.path.join(d, fn), "rb").read()
+            if len(b) >= 83:
+                out[b[2:2 + b[1]].decode("mac-roman")] = \
+                    "L" if b[81] or b[82] else "n"
+    return out
+
+
+def maczip_want(path):
+    import struct
+    import zipfile
+    import zlib
+    want = {}
+    raw = open(path, "rb").read()
+    for zi in zipfile.ZipFile(path).infolist():
+        o = zi.header_offset
+        nl, el = struct.unpack("<HH", raw[o + 26:o + 30])
+        ex, q = raw[o + 30 + nl:o + 30 + nl + el], 0
+        w = {"lock": "L" if zi.external_attr & 1 else "n"}
+        while q + 4 <= len(ex):
+            fid, sz = struct.unpack("<HH", ex[q:q + 4])
+            d = ex[q + 4:q + 4 + sz]
+            if fid == 0x334d:
+                fl = struct.unpack("<H", d[4:6])[0]
+                rec = d[14:] if fl & 4 else zlib.decompress(d[20:], -15)
+                fdflags, v, hh, fldr = struct.unpack("<HhhH", rec[:8])
+                fx = struct.unpack("<HHHHBBHI", rec[8:24])
+                w["finfo"] = (d[6:14] + struct.pack(">HhhH", fdflags, v, hh,
+                                                    fldr)).hex()
+                w["fxinfo"] = struct.pack(">HHHHBBHI", *fx).hex()
+            q += 4 + sz
+        want[zi.filename.rstrip("/")] = w
+    return want
+
+
+def archive_expectations(cli, work, problems):
+    """[(label, path, want, extra args)] — generated cases, and the corpus
+    rows whose oracle is a second reader rather than lsar."""
+    import synth_archmeta as S
+    out = []
+
+    def gen(label, blob_want, ext, extra=()):
+        blob, want = blob_want
+        p = os.path.join(work, label + ext)
+        open(p, "wb").write(blob)
+        out.append((label, p, want, extra))
+
+    gen("am-zip", S.zip_meta(), ".zip")
+    gen("am-tar", S.tar_meta(), ".tar")
+    gen("member", S.gzip_meta(), ".gz")
+    gen("am-pf", S.pf_meta(), ".pf", ("-p", "swordfish"))
+    gen("am-arcmac", S.arcmac_meta(), ".arc")
+    gen("am-now", S.now_meta(), ".now")
+    fx = os.path.join(REPO, "fixtures")
+    sd = os.path.join(fx, "derived-SD__Utilities.x")
+    s5 = os.path.join(fx, "derived-FloatingNotes.sit")
+    for p in (sd, s5):
+        if not os.path.exists(p):
+            problems.append("%s is missing (fixtures/SOURCES.md)"
+                            % os.path.basename(p))
+            return out
+    gen("am-sd", S.sd_meta(sd), ".sd")
+    gen("am-sit5", S.sit5_meta(s5), ".sit")
+    gen("am-sit5-badcrc", S.sit5_meta(s5, break_crc=True), ".sit")
+    # A real MacZip archive: its 0x334d records decoded here as
+    # Info-ZIP's own Macintosh UnZip decodes them (DecodeMac3ExtraField),
+    # and the lock as its mapattr takes it, the MS-DOS read-only bit.
+    rex = os.path.join(fx, "rexnebular_1_0_0.zip")
+    if os.path.exists(rex):
+        out.append(("rexnebular_1_0_0.zip", rex, maczip_want(rex), ()))
+    # PackIt's lock word, against macunpack.
+    for fn in ("derived-PackIt.pit", "synth-packit-1.pit"):
+        p = os.path.join(fx, fn)
+        want = {n: {"lock": v} for n, v in macunpack_locks(p, work).items()}
+        if not want:
+            problems.append("%s: macunpack wrote nothing" % fn)
+        out.append((fn, p, want, ()))
+    return out
+
+
+def archive_compare(got, want, label):
+    bad = []
+    for name, w in want.items():
+        g = got.get(name)
+        if g is None:
+            bad.append("%s: %s not listed" % (label, name))
+            continue
+        for k, v in w.items():
+            if g.get(k) != v:
+                bad.append("%s: %s: %s %s, wanted %s"
+                           % (label, name, k, g.get(k), v))
+    return bad
+
+
+def lhasa_headers(archive):
+    """lhasa's own dump of an archive's headers, which its test suite
+    keeps beside each archive (reference/lhasa/test/output/*/NAME-hdr.txt,
+    written by test/dump-headers.c): mtime from `timestamp` or, where a
+    0x41 header gave one, `win_modification_time`; ctime from
+    `win_creation_time`; the lock from `unix_perms`. A second reader of
+    the LZH headers, and the one that reads level 0's Unix area, which
+    XADMaster does not."""
+    root = os.path.join(REPO, "reference", "lhasa", "test", "archives")
+    rel = os.path.relpath(archive, root)
+    if rel.startswith(".."):
+        # A corpus fixture that is one of lhasa's archives, by content.
+        import hashlib
+        want = hashlib.sha256(open(archive, "rb").read()).digest()
+        for r, _d, fs in os.walk(root):
+            for f in fs:
+                q = os.path.join(r, f)
+                if hashlib.sha256(open(q, "rb").read()).digest() == want:
+                    rel = os.path.relpath(q, root)
+    p = os.path.join(REPO, "reference", "lhasa", "test", "output",
+                     rel + "-hdr.txt")
+    if rel.startswith("..") or not os.path.exists(p):
+        return None
+    out = {}
+
+    def ft(v):
+        t = int(v) // 10000000 - 11644473600
+        return "%08x" % (t + MAC_EPOCH)
+    for block in open(p, encoding="latin-1").read().split("--\n"):
+        kv = dict(l.split(": ", 1) for l in block.splitlines() if ": " in l)
+        name = (kv.get("path", "") + kv.get("filename", "")).rstrip("/")
+        if not name:
+            continue
+        o = {}
+        # Only an instant: lhasa turns a level 0/1 MS-DOS time into one
+        # with mktime() in the zone its test outputs were written in, an
+        # hour east of UTC on all of them, so those are lsar's to grade.
+        unix = int(kv.get("header_level", "0")) >= 2 or \
+            kv.get("os_type", "")[:2] == "85"
+        if "win_modification_time" in kv:
+            o["mtime"] = ft(kv["win_modification_time"])
+        elif unix and int(kv.get("timestamp", "0")):
+            o["mtime"] = "%08x" % (int(kv["timestamp"]) + MAC_EPOCH)
+        if "win_creation_time" in kv:
+            o["ctime"] = ft(kv["win_creation_time"])
+        if "unix_perms" in kv and kv.get("os_type", "")[:2] != "75":
+            o["lock"] = "n" if int(kv["unix_perms"], 8) & 0o200 else "L"
+        out[name] = o
+    return out
+
+
+def archive_corpus(cli):
+    """Every DATED fixture, and every lhasa test archive, against lsar:
+    mtime and ctime where XADMaster saw no Macintosh source, comment and
+    lock wherever both state them. Returns (fails, counts per field)."""
+    paths = [os.path.join(REPO, "fixtures", f)
+             for f in sorted(os.listdir(os.path.join(REPO, "fixtures")))]
+    lh = os.path.join(REPO, "reference", "lhasa", "test", "archives")
+    for root, _d, fs in os.walk(lh):
+        paths += [os.path.join(root, f) for f in sorted(fs)]
+    bad, n = [], {}
+    for p in paths:
+        if not os.path.isfile(p):
+            continue
+        rows, fmt = archive_rows(cli, p)
+        if fmt not in DATED and fmt != "StuffIt 5":
+            continue
+        oracle, _ac = archive_lsar(p)
+        lha = lhasa_headers(p) if fmt == "LZH" else None
+        for name, r in rows.items():
+            o = oracle.get(name)
+            # lhasa lower-cases a name that is all capitals (fix_msdos_allcaps).
+            if lha is not None and name not in lha and name.lower() in lha:
+                lha[name] = lha[name.lower()]
+            if lha is not None and name in lha:
+                # lhasa's dump, where it has one, in place of lsar's
+                # dates and POSIX lock: XADMaster reads neither level 0's
+                # Unix area nor 0x41 right (it prints a year past 22700
+                # for lhmelt's), and takes an OS/2 0xff header's mtime
+                # over the base header's, which neither lhasa nor this
+                # engine reads (DECISIONS.md 2026-10-17, *the archives'
+                # own Finder info*).
+                o = dict(o or {"mac": False})
+                for k in lha[name]:
+                    o.pop(k, None)
+                o.update(lha[name])
+                o["src"] = "lhasa"
+            if o is None:
+                continue
+            for k in ("mtime", "ctime", "comment", "lock"):
+                if k in ("mtime", "ctime") and (o["mac"] or fmt not in DATED):
+                    continue
+                if k not in o or o[k] == "-" or r.get(k, "-") == "-":
+                    continue
+                src = o.get("src", "lsar") if k != "comment" else "lsar"
+                n[src + " " + k] = n.get(src + " " + k, 0) + 1
+                if r[k] != o[k]:
+                    bad.append("%s: %s: %s %s, %s %s"
+                               % (os.path.relpath(p, REPO), name, k, r[k],
+                                  src, o[k]))
+    return bad, n
+
+
+def archive_check(cli, corpus_too):
+    """The archive lanes, their controls, and the corpus; returns fails."""
+    work = tempfile.mkdtemp(prefix="meta-arch-")
+    fails = []
+    exp = archive_expectations(cli, work, fails)
+    compared = tried = caught = 0
+    for label, p, want, extra in exp:
+        got, _fmt = archive_rows(cli, p, extra)
+        fails += archive_compare(got, want, label)
+        compared += sum(len(w) for w in want.values())
+        # Control: each wanted field tampered with in the engine's row.
+        for name, w in want.items():
+            for k in w:
+                if name not in got:
+                    continue
+                g = {name: dict(got[name])}
+                g[name][k] = "-" if g[name].get(k) != "-" else "00"
+                tried += 1
+                caught += bool(archive_compare(g, {name: {k: w[k]}}, label))
+    print("run_meta: archives, %d field(s) compared, %d control(s) caught "
+          "of %d" % (compared, caught, tried))
+    if caught != tried or not tried:
+        fails.append("an archive control passed: the comparison is not "
+                     "comparing")
+    # The archive comment StuffIt 5 keeps behind bit 5, on the one archive
+    # Aladdin wrote with one, where it is in reach.
+    sample = os.path.join(os.path.expanduser("~/.cache/macextract"),
+                          "sitzip", "55", "files", "Tutorial Files",
+                          "Sample Archive.sit")
+    if os.path.exists(sample):
+        _o, want = archive_lsar(sample)
+        r = subprocess.run([cli, "l", sample], capture_output=True)
+        line = [x for x in r.stdout.decode("mac-roman").splitlines()
+                if x.startswith("comment: ")]
+        if not want or line != ["comment: " + want]:
+            fails.append("Sample Archive.sit: archive comment %r, lsar %r"
+                         % (line, want))
+        else:
+            print("run_meta: StuffIt 5 archive comment agrees with lsar")
+    else:
+        print("run_meta: StuffIt 5 archive comment NOT checked (no %s)"
+              % sample)
+    if corpus_too:
+        bad, n = archive_corpus(cli)
+        print("run_meta: archives' corpus against lsar: %s"
+              % ", ".join("%s %d" % kv for kv in sorted(n.items())))
+        fails += bad
+    shutil.rmtree(work, ignore_errors=True)
+    return fails
 
 
 def main():
@@ -518,6 +854,8 @@ def main():
         fails += bad
         bad, c = envelope_corpus(a.cli, envwork, fails)
         fails += bad
+
+    fails += archive_check(a.cli, a.corpus)
 
     for f in fails:
         print("run_meta: FAIL %s" % f)

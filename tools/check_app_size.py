@@ -213,7 +213,12 @@ TAKEN = "2026-10-14"
 # dispatch that replaced the shim. -> 167,208 2026-10-15: `ovl_stuffit` -12,
 # `JPEG Lossy` capped in width only (DECISIONS.md 2026-10-15, *the height
 # nothing needed*).
-EXPECT_BUNDLE = 167208
+# -> 172,564 2026-10-17: the archives' Finder info and the envelopes' before
+# it (+356, inside the tolerance) — `ovl_zipold` +2,580 with tar's reader,
+# `ovl_lzh` +1,626, `ovl_stuffit` +584, `ovl_arc` +366, `ovl_now` +86,
+# `ovl_superdisk` +84, `ovl_packit` +12, `ovl_exo` -388 (DECISIONS.md
+# 2026-10-17, *the archives' own Finder info*).
+EXPECT_BUNDLE = 172564
 TOLERANCE_BUNDLE = 2048
 TAKEN_BUNDLE = "2026-10-14"
 

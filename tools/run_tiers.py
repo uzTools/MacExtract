@@ -131,10 +131,12 @@ REPO = os.path.dirname(HERE)
 # decoder linked in has and not what ships. The shipped build's budget is one
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
+# **All three lowered by 4,592 B 2026-10-17, DERIVED**: TIERS_CONTROL rose
+# by that much with the archives' Finder info (below).
 TIERS = {
-    "sys3-512K": (198772, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (103372, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (627660, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (194180, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (98780, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (623068, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -245,7 +247,12 @@ TIERS = {
 # DERIVED**: the MacBinary I lock bit masked out of the Finder flags, at
 # the merge of meta-envelopes; the shipped pair +0, so OVL_SAVED +32 and no
 # grant moves on the machine.
-TIERS_CONTROL = 214720     # build/mac-resident, CODE + A5, 2026-10-17
+# **Raised by 4,592 B more 2026-10-17, and TIERS lowered by the same 4,592,
+# DERIVED**: the archives' Finder info, the control's CODE +4,520 and A5
+# +72; the shipped pair +0, so OVL_SAVED +4,592 and a grant moves on the
+# machine only by its images (DECISIONS.md 2026-10-17, *the archives' own
+# Finder info*).
+TIERS_CONTROL = 219312     # build/mac-resident, CODE + A5, 2026-10-17
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -349,6 +356,12 @@ EXPECT = {
                   "derived-Library_ISBN_Barcoder.sit",
                   "derived-Terrainman_2.0__.sea",
                   "derived-Troi-ClipSave-Plug-in1.1.sit",
+                  # Joined 2026-10-17: the control grew 4,592 B with the
+                  # archives' Finder info, every reader resident in it, and
+                  # this one needs between 98,780 and 103,372 B. The
+                  # shipped lane does not move (DECISIONS.md 2026-10-17,
+                  # *the archives' own Finder info*).
+                  "derived-PuzzleGetter_0.8.sit",
                   "derived-a2basic.dmg.sit", "popper-1.7.tar.Z",
                   "synth-dd-m5.dd"),
 }
@@ -557,7 +570,10 @@ EXPECT = {
 # 2026-10-17, *the envelopes' own Finder info*).
 # **+32 the same day, -> 138,896**: the MacBinary I mask, the control's
 # +32 against the shipped pair's 0.
-OVL_SAVED = 138896
+# **+4,592 the same day, -> 143,488**: the archives' Finder info, the
+# control's +4,592 against the shipped pair's 0 (DECISIONS.md 2026-10-17,
+# *the archives' own Finder info*).
+OVL_SAVED = 143488
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -672,25 +688,30 @@ OVL_RESIDUE = -666
 # base64 and MIME, UUTool's .finfo whole; zip and LZH call the resident
 # MacBinary reader instead of copying five fields (DECISIONS.md 2026-10-17,
 # *the envelopes' own Finder info*).
+# **ZIPOLD +2,580 B (tar's reader, moved out of EXO), EXO -388 B, LZH
+# +1,626 B, STUFFIT +584 B, ARC +366 B, NOW +86 B, SUPERDISK +84 B, PACKIT
+# +12 B, the bundle +4,952 B 2026-10-17**: the archives' own Finder info;
+# a tar keeps ZIPOLD now, not EXO (DECISIONS.md 2026-10-17, *the archives'
+# own Finder info*).
 IMAGES = {
-    "OVL_ID_ARC":         8120,
+    "OVL_ID_ARC":         8486,
     "OVL_ID_BINHEX":      4994,
     "OVL_ID_BTOA":        2756,
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15908,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         32124,
-    "OVL_ID_LZH":         9576,
-    "OVL_ID_NOW":         5078,
-    "OVL_ID_PACKIT":      2644,
+    "OVL_ID_EXO":         31736,
+    "OVL_ID_LZH":         11202,
+    "OVL_ID_NOW":         5164,
+    "OVL_ID_PACKIT":      2656,
     "OVL_ID_SPACESAVER":  16722,
-    "OVL_ID_STUFFIT":     28914,
+    "OVL_ID_STUFFIT":     29498,
     "OVL_ID_SQP":         2040,
-    "OVL_ID_SUPERDISK":   7058,
+    "OVL_ID_SUPERDISK":   7142,
     "OVL_ID_TEXT":        12162,
-    "OVL_ID_ZIPOLD":      2658,
+    "OVL_ID_ZIPOLD":      5238,
 }
-BUNDLE = 167612
+BUNDLE = 172564
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

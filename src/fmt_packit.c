@@ -340,6 +340,12 @@ resynced:
         e.rsrc_size    = rsrcsize;
         e.create_date  = unc_get_u32be(hdr + 84);  /* H_CTIMOFF */
         e.mod_date     = unc_get_u32be(hdr + 88);  /* H_MTIMOFF */
+        /* "Locked  2  File locked if non-zero" — appendix C of
+         * reference/notes/packit_unpackit.txt. Graded against macunpack,
+         * which copies the word to its MacBinary header's byte 81
+         * (reference/macutils/macunpack/pit.c, H_LOCKOFF), by
+         * tools/run_meta.py. */
+        e.locked = unc_get_u16be(hdr + 74) ? UNC_LOCK_YES : UNC_LOCK_NO;
         e.method_data  = e.method_rsrc = comp ? 4 : 0;
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);

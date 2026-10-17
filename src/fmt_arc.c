@@ -63,6 +63,7 @@
  */
 #include "unc_internal.h"
 #include "fmt_arc_priv.h"
+#include "unc_date.h"
 
 /* Methods. Source: XADARCParser.m and macutils' arc.h, which agree. */
 
@@ -1392,6 +1393,22 @@ int unc_arc_extract(UncCtx *c)
             unc_entry_set_name(&e, macname, i);
             e.type = mactype;
             e.creator = maccreator;
+            /* The whole FInfo, at 34..49 — fdType, fdCreator, fdFlags,
+             * fdLocation, fdFldr, Macintosh byte order — and the PC
+             * header's MS-DOS date and time behind it, the only date an
+             * ArcMac entry has.
+             * Source: reference/notes/ArcMac.DOC, "ArcMac File
+             * Structure" (`fndrInfo: fInfo` after the 32-byte name; the
+             * `finfo` record; `date`/`time` "ms-dos style"); the two
+             * offsets of the PC fields are arc.h's DATE and TIME. */
+            {
+                uint32_t k;
+                for (k = 0; k < 16; k++) e.finder_info[k] = mh[AM_FTYPE + k];
+                e.meta = UNC_META_FINFO;
+            }
+            e.finder_flags = unc_get_u16be(mh + AM_FINFO);
+            e.mod_date = unc_dos_to_mac(unc_get_u16le(mh + AM_MAGIC2 + 0x13),
+                                        unc_get_u16le(mh + AM_MAGIC2 + 0x15));
             e.data_size = dlen;
             e.rsrc_size = rlen;
             e.comp_data_size = compsize;
@@ -1487,6 +1504,13 @@ int unc_arc_extract(UncCtx *c)
         e.rsrc_size = 0;
         e.comp_data_size = compsize;
         e.method_data = (uint8_t)(method & 0x7f);
+        /* The member's MS-DOS date and time, local time with no zone,
+         * at 0x13 and 0x15. Source: reference/deark/modules/arc.c
+         * (member_cb_main: the name, the compressed
+         * size, then `mod_date_raw` and `mod_time_raw` little-endian,
+         * tagged DE_TZCODE_LOCAL). */
+        e.mod_date = unc_dos_to_mac(unc_get_u16le(hdr + 0x13),
+                                    unc_get_u16le(hdr + 0x15));
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; break; }

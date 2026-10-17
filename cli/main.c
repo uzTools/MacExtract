@@ -606,6 +606,15 @@ static void print_meta(const UncEntryInfo *e, const char *name)
     if (e->comment && e->comment_len) print_hex(e->comment, e->comment_len);
     else printf("-");
     printf(" %s\n", name);
+    /* And the two dates every entry has, which no other listing shows:
+     * a 't' row, created then modified, '-' where the engine says 0
+     * ("not stated", macextract.h). */
+    printf("t ");
+    if (e->create_date) printf("%08lx", (unsigned long)e->create_date);
+    else printf("-");
+    if (e->mod_date) printf(" %08lx", (unsigned long)e->mod_date);
+    else printf(" -");
+    printf(" %s\n", name);
 }
 
 static int sink_begin(void *ctx, const UncEntryInfo *info)
@@ -2040,7 +2049,8 @@ static void usage(void)
         "                 code holds a space or a NUL\n"
         "  --meta         with l, the rest of the Finder metadata as hex —\n"
         "                 FInfo, FXInfo, backup date, lock, comment — one\n"
-        "                 'm' row per entry, '-' where the archive is silent\n"
+        "                 'm' row per entry, '-' where the archive is silent;\n"
+        "                 then a 't' row: created, modified, in Mac seconds\n"
         "  -v             verbose\n"
         "  --version      print the version and exit\n");
 }

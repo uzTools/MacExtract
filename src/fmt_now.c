@@ -885,6 +885,27 @@ int unc_now_extract(UncCtx *c)
         e.finder_flags = unc_get_u16be(hdr + 46);
         e.create_date  = unc_get_u32be(hdr + 54);
         e.mod_date     = unc_get_u32be(hdr + 58);
+        /* The rest of what the record keeps, as Now QuickFiler 5.0.1's
+         * Dearchive restores it — MEASURED 2026-10-17 with sentinel
+         * records, tools/vmac/nowmeta.py (FORMATS.md, *Finder info in
+         * the archive*, Now Compress; DECISIONS.md 2026-10-17, *the
+         * window StuffIt kept in the name*): +38..53 is the whole FInfo
+         * of a file or DInfo of a folder (XADNowCompressParser.m reads
+         * the same 16 bytes as its XADFinderInfo, which tools/run_meta.py
+         * grades against), +62 the BACKUP date (XADMaster calls it the
+         * access date; Dearchive puts it in ioFlBkDat), and +66..81 a
+         * folder's DXInfo, verbatim. A file's +66..81 is stated too,
+         * though Dearchive does not restore it: DECISIONS.md 2026-10-17,
+         * *the archives' own Finder info*, says why. */
+        {
+            int k;
+            for (k = 0; k < 16; k++) {
+                e.finder_info[k] = hdr[38 + k];
+                e.finder_info[16 + k] = hdr[66 + k];
+            }
+            e.backup_date = unc_get_u32be(hdr + 62);
+            e.meta = UNC_META_FINFO | UNC_META_FXINFO | UNC_META_BACKUP;
+        }
 
         if (flags & 0x10) {                       /* directory */
             e.is_dir = 1;
