@@ -934,6 +934,24 @@ int unc_superdisk_extract(UncCtx *c)
             uint8_t info[20];
             if (unc_read_at(c->io, p, info, 20) != UNC_OK) { err = UNC_ERR_TRUNCATED; break; }
             e.is_dir = 1;
+            /* The 20 bytes are the folder's DInfo, then its frScroll —
+             * the first four bytes of DXInfo — and nothing else: no
+             * date. MEASURED 2026-10-17 by tools/vmac/sdmeta.py, sentinels
+             * through super-disk-utility.hqx's own self-extractor, which
+             * restored rectangle, view and scroll verbatim (FORMATS.md,
+             * *Finder info in the archive*, SuperDisk!). The rest of
+             * DXInfo is stated as zero, which is what a folder the
+             * extractor creates holds there. */
+            {
+                int k;
+                for (k = 0; k < 16; k++) e.finder_info[k] = info[k];
+                for (k = 0; k < 4; k++) e.finder_info[16 + k] = info[16 + k];
+                /* The archive's word in finder_flags; the one the
+                 * extractor wrote, less 0x0001, in the DInfo. */
+                e.finder_flags = unc_get_u16be(info + 8);
+                e.finder_info[9] &= 0xFE;
+                e.meta = UNC_META_FINFO | UNC_META_FXINFO;
+            }
             sret = c->sink->begin_entry(c->sink->ctx, &e);
             if (sret < 0) { err = UNC_ERR_SINK; break; }
             /* A DECLINED entry gets no end_entry — the contract in
@@ -967,6 +985,19 @@ int unc_superdisk_extract(UncCtx *c)
         e.finder_flags = unc_get_u16be(rec + 16);
         e.create_date  = unc_get_u32be(rec + 22);
         e.mod_date     = unc_get_u32be(rec + 26);
+        /* +18..21 is fdLocation, MEASURED 2026-10-17 by
+         * tools/vmac/sdmeta.py (FORMATS.md, *Finder info in the
+         * archive*, SuperDisk!): the self-extractor put both sentinel
+         * files where the record said. With type, creator and flags that
+         * is FInfo but for fdFldr, which the record does not hold and is
+         * stated as the 0 a file the extractor creates gets — so a host
+         * treats the 16 bytes as the extractor does (DECISIONS.md
+         * 2026-10-17, *the window StuffIt kept in the name*). */
+        {
+            int k;
+            for (k = 0; k < 14; k++) e.finder_info[k] = rec[8 + k];
+            e.meta = UNC_META_FINFO;
+        }
         at = p + 30;
 
         /* Both forks are spanned before anything is decoded: their

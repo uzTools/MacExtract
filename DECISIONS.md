@@ -431,6 +431,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the window StuffIt kept in the name) — where five formats keep the Finder info, measured against each format's own expander
 - 2026-10-17 (the envelopes' own Finder info) — MacBinary, AppleSingle, MIME, uuencode and base64 deliver every field their standards hold
 - 2026-10-17 (the window Expander puts back) — StuffIt classic states exactly what Expander 4.0.2 restores, DiskDoubler restores the location its own Expand drops, and its header CRC was already checked
+- 2026-10-17 (the archives' own Finder info) — PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac and ARC, zip, tar, gzip and LZH deliver the Finder info, dates, lock and comment they hold
 
 ---
 
@@ -27677,3 +27678,150 @@ against `main` (32 B off every budget, the branch's own figure); the
 control +416; `OVL_SAVED` 139,280, `TIERS` −416, the bundle 168,020, all
 derived; the grants table re-taken as each row's change on the branch
 applied to `main`'s; `run_tiers.py --check` moves no tally.
+
+## 2026-10-17 (the archives' own Finder info) — PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac and ARC, zip, tar, gzip and LZH deliver the Finder info, dates, lock and comment they hold
+
+**The brief, the maintainer's** (*the metadata, carried to the disk*): every
+file and folder back as it was. This entry is the archive formats' readers;
+the envelopes are *the envelopes' own Finder info*. Every offset is cited in
+the reader beside it; the tables are FORMATS.md's.
+
+**What each reader now states** — measured where the cell says so, read from
+a document otherwise:
+
+| format | fields | from |
+|---|---|---|
+| PackIt | lock (word @74 non-zero) | the format's own appendix C; graded against macunpack |
+| StuffIt 5 | per-entry comment; the archive comment (bit 5); FInfo/DInfo b+4..19 and FXInfo/DXInfo b+20..35, entry version 1 only, folder frFlags less 0x0001 | measured against Expander 5.5 (*the window StuffIt kept in the name*); the comment's place measured on three archives |
+| Now Compress | FInfo/DInfo +38..53, backup date +62, FXInfo/DXInfo +66..81 | measured against QuickFiler 5.0.1 |
+| SuperDisk! | a file's fdLocation +18..21 (fdFldr stated 0); a folder's DInfo, less 0x0001, and frScroll | measured against its self-extractor |
+| Private File | FInfo @260, FXInfo @276 | PF Encrypt's `MakeFileInfo` |
+| ArcMac / ARC | the whole FInfo at 34..49; the MS-DOS date (both) | ARCMAC.DOC; deark for ARC's |
+| zip | `0x334d` whole: FInfo/DInfo, FXInfo/DXInfo, backup date, Finder comment; the per-file comment; the lock from the external attributes; the MS-DOS date where no Macintosh field gives one | Info-ZIP's Macintosh UnZip (`DecodeMac3ExtraField`, `mapattr`), unix/unix.c `mapattr`, APPNOTE.TXT |
+| tar | lock (mode 00200), mtime, a pax `x` header's mtime and comment | POSIX ustar and pax |
+| gzip | MTIME, FCOMMENT | RFC 1952 |
+| LZH | the base header's time and attribute byte; 0x3f comment, 0x40 MS-DOS attributes, 0x41 Windows times, 0x50 mode, 0x54 mtime; level 0's Unix area | header.doc, LHa for UNIX's `get_header`, lhasa |
+
+**The time zone rule — the maintainer's to confirm.** An MS-DOS date (zip,
+ARC, LZH levels 0 and 1) is the writing machine's wall clock with no zone,
+and so is a Macintosh date: it is carried across unchanged. A Unix time or a
+Windows FILETIME (tar, pax, gzip, LZH levels 2 and 3, 0x54, 0x41) is an
+instant, and the engine knows no zone, so it becomes the Macintosh date
+whose wall clock reads it in UTC (`src/unc_date.h`). The alternative is the
+shell converting with the Macintosh's own zone (`ReadLocation`'s
+`gmtDelta`), which is a per-System behaviour the one-behaviour rule argues
+against and is not measured on System 3.0. Evidence that the rule matches
+writers, measured: MacLHA 2.24's level 2 headers hold a Unix time exactly
+3,600 s before the MacBinary date inside the same entry, a Macintosh one
+hour east of UTC converting correctly; lhasa's test outputs give the same
+level 0/1 dates an hour east of `lsar`'s in UTC, because lhasa converts them
+with `mktime` in its author's zone — the zone a wall clock does not have.
+`0x334d`'s three dates stay as they were (local, the GMT offsets unused).
+
+**StuffIt 5's second-block CRC at b+2.** CRC-16/ARC of the whole second
+block with its own word zeroed holds on **587 of 587 entries of the 53
+Aladdin-written StuffIt 5 archives here** (corpus and cache, measured
+2026-10-17); the five that fail are `synth-sit14.sit`'s, written here by a
+synthesizer that does not compute it. Expander 5.5 refuses an entry whose
+word disagrees. **Decision:** the engine checks it and states the block's
+FInfo/FXInfo only where it holds; type, creator and flags are delivered as
+before, and the forks are graded by their own CRCs as before. Refusing the
+entry, Expander's answer, was not taken: it would lose forks that verify,
+on a word that covers metadata only, and nothing in reach shows an Aladdin
+entry failing it — so no specimen could say which answer a user is better
+served by. Nothing existing was weakened; it is a check that did not exist.
+That the gate can fail: `am-sit5-badcrc` in `tools/run_meta.py`, and the
+gate removed fails 20 fields. **The first block's header CRC @32 and the
+archive header's @98 are still not read.**
+
+**Now Compress: a file's FXInfo is stated though Dearchive does not restore
+it.** The goal is the file as archived, not as one expander puts it back.
+That +66..81 is a file's FXInfo is a hypothesis resting on the layout (the
+same bytes are a folder's DXInfo verbatim, measured) and on one specimen,
+`derived-Expand_Now_1.0.1.sea`, whose file reads fdPutAway 2 — the root
+directory's ID — with every other byte zero. The shell clears fdPutAway and
+fdComment anyway (*the bit that kept the position*), so what reaches a disk
+from it is fdIconID, fdScript and fdXFlags.
+
+**Zip host 7 means the MS-DOS byte.** `rexnebular_1_0_0.zip`'s 22 entries
+are host 7 with a Unix mode in the high half and the read-only bit in sync
+in the low byte (0x81240001 on its disk images, 0x81b60000 elsewhere). Both
+Info-ZIP UnZips read host 7 by the low byte, and MacZip's own then calls
+`FSpSetFLock` from it — so that is the rule, and the Unix-mode hosts are
+Info-ZIP's list (3, 2, 5, 12, 13, 16, 17, 18, 30), falling back to the low
+byte where the high half is 0, as UnZip does. Amiga's protection bits are
+not read.
+
+**Two rules no reference gives, labelled.** A `0x334d` date within a day of
+the wrap is "never", as one below a day is: rexnebular's backup fields read
+0 or 0xFFFFAB9F (−21,601 s) beside BkGMTOffs −18,000 — hypothesis, that it
+is 0 moved by a zone. And ZipIt's `0x2805` View word is NOT stated: one
+specimen, value 0, and no document says which DInfo field it is (OPEN_ITEMS.md).
+
+**Comments travel as the archive's bytes**: zip's CP437, gzip's Latin-1 and
+pax's UTF-8 are not converted to MacRoman, as names are not; an ASCII
+comment is exact, a high byte is not. At most UNC_ENTRY_COMMENT_MAX (255).
+Each reader allocates its comment buffer the first time an entry has one,
+so an archive without comments pays nothing.
+
+**Tar left `ovl_exo`.** That image stood at 32,124 B, 640 B short of the
+±32 KB a 68000 `-mpcrel` image reaches, and the metadata of zip, gzip and
+tar came to ~1.9 KB: the first build failed to link (R_68K_PC16 truncated).
+Tar calls nothing in that image, so its reader moved unchanged into
+`src/fmt_tar.c` and into `ovl_zipold`, the image only zip kept, which now
+answers `OVL_TAR_EXTRACT`; the eager release keeps it for a tar. A bare
+tar's grant RISES by 26,886 B — it keeps the 5,238 B `ovl_zipold` where it
+kept the 32,124 B `ovl_exo` — and a zip pays tar's 2,580 B beside it. A `.tar.gz` keeps the bundle, as before.
+
+**Graded** (`tools/run_meta.py`, TESTING.md): generated cases for every
+format, built in the writing direction (`tools/synth_archmeta.py`), with
+the measured sentinel archives for StuffIt 5, Now Compress and SuperDisk!;
+macunpack for PackIt's lock; Info-ZIP's Macintosh UnZip's own decoding for
+rexnebular's `0x334d` and lock; and the corpus against `lsar` in UTC and,
+for LZH, lhasa's header dumps: 228 generated fields, 655 corpus fields, 0
+disagreeing. Where the two oracles part, lhasa is followed and why is in
+the suite: XADMaster does not read level 0's Unix area (three 0444 files it
+calls writable), prints years past 22700 for 0x41's times, and takes an
+OS/2 0xff header's mtime. Controls: 228 tampered rows caught, and seven
+engine rules undone one at a time each fail the suite. `run_diff.py`
+974/974 unchanged.
+
+**Price**, against `origin/main` (6cd0e47), every configuration built
+(`tools/build_mac.sh`): **shipped (eager) and lazy CODE +0, A5 +0 — 0 B off
+any budget for the application**; resident control CODE +4,520, A5 +72 (the
+readers that are images when shipped, and three copies of the date table).
+Images: `ovl_zipold` +2,580 (tar), `ovl_lzh` +1,626, `ovl_stuffit` +584,
+`ovl_arc` +366, `ovl_now` +86, `ovl_superdisk` +84, `ovl_packit` +12,
+`ovl_exo` −388; the bundle +4,952. So on the machine a grant falls by its
+images: zip 2,192 B, LZH 1,626, StuffIt and StuffIt 5 584, ARC 366, Now 86,
+SuperDisk! 84, PackIt 12, and every ENVELOPE — which keeps the bundle —
+4,952; a bare tar's rises 26,886. `OVL_SAVED` 138,896 → 143,488,
+`TIERS_CONTROL` 214,720 → 219,312 and `TIERS` −4,592, DERIVED
+(`tools/run_tiers.py`). `run_tiers.py --check`: **the shipped lanes refuse
+the same fixtures by name — no extraction lost there**; the RESIDENT
+control's sys6-512K lane refuses one more, `derived-PuzzleGetter_0.8.sit`,
+which needs between 98,780 and 103,372 B; it is the control, not shipped,
+and its EXPECT says so. Stack (`-fstack-usage`): `unc_zip_extract` 1,508 →
+1,540, `unc_lzh_extract` 1,512 → 1,560 and `lzh_ext` 36 → 64,
+`unc_sit5_extract` +8, `unc_gzip_extract` +4, `unc_pf_extract` +4,
+`unc_tar_extract` 1,220 → 1,244; the engine's deepest chain, 3,354 B through
+DiskDoubler, does not move.
+
+**Not done, and why.** ZipIt's View (above). StuffIt 5 version-3 entries:
+none here. LZH's OS/2 headers and a level 0/1 name's bytes after a NUL:
+outside the brief's list, one with no specimen. A pax `g` header is stepped
+over and applies nothing. No emulator run: the shell writes every one of
+these fields already (*the metadata, carried to the disk*), and these
+readers change what is handed to it, not how it is written — `metarun.py`
+over one archive of each format is the run that would show it on a disk.
+
+**At the merge, 2026-10-17 (the reviewer's).** Merged over StuffIt
+classic's readers. Re-measured on the merged tree: the shipped and lazy
+builds unchanged against `main`, the control +4,592 (CODE +4,520, A5 +72),
+`ovl_stuffit` 29,874 (+580 here, both branches' growth), the bundle
+172,968; `OVL_SAVED` 143,872 and `TIERS` −4,592, derived; every shipped
+tally unchanged and the control's sys6-512K refusing `PuzzleGetter` as this
+entry expects. The grants table now equals `run_tiers.gain()` row for row,
+as this branch re-took it — `main`'s had stood 352 B below it since before
+2026-10-14 — with the tar row keeping `ovl_zipold`. The time-zone rule is
+listed for the maintainer to confirm (this entry, *the time zone*).

@@ -112,6 +112,7 @@ else()
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit14\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "sit_ccube\\.c$")
     list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_exo\\.c$")
+    list(FILTER ENGINE_SRC EXCLUDE REGEX "fmt_tar\\.c$")
     # zlib and the inflate wrapper go with them: fmt_exo is their only caller,
     # so nothing resident is left needing deflate.
     list(FILTER ENGINE_SRC EXCLUDE REGEX "unc_inflate\\.c$")
@@ -671,7 +672,8 @@ add_custom_command(
             ${ENGINE_DIR}/src/unc_lzah.c
             ${OVL_DEPS})
 
-# Zip's Shrink and Reduce, kept for zip alone (tools/overlay/ovl_zipold.c).
+# Zip's Shrink and Reduce, kept for zip alone, and tar's reader, kept for a
+# tar (tools/overlay/ovl_zipold.c).
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold.r
     COMMAND ${CMAKE_COMMAND} -E env OVL_ID=OVL_ID_ZIPOLD
@@ -682,11 +684,15 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
             ${ENGINE_DIR}/src/unc_shrink.c
             ${ENGINE_DIR}/src/unc_reduce.c
+            ${ENGINE_DIR}/src/fmt_tar.c
+            ${ENGINE_DIR}/src/fmt_exo_probe.c
     DEPENDS ${ENGINE_DIR}/tools/overlay/ovl_zipold.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_forwards_zipold_gen.c
             ${CMAKE_CURRENT_BINARY_DIR}/ovl_zipold_exports_gen.h
             ${ENGINE_DIR}/src/unc_shrink.c
             ${ENGINE_DIR}/src/unc_reduce.c
+            ${ENGINE_DIR}/src/fmt_tar.c
+            ${ENGINE_DIR}/src/fmt_exo_probe.c
             ${OVL_DEPS})
 
 add_custom_command(

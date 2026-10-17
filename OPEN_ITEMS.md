@@ -144,27 +144,25 @@ Since 2026-10-17 the engine carries every field the Finder keeps
 lock, the Get Info comment) and the Macintosh shell writes all of it
 (DECISIONS.md, *the metadata, carried to the disk*). **Readers that deliver
 everything their format holds**: AppleSingle/AppleDouble, AppleLink
-packages, and since 2026-10-17 MacBinary I/II/III (also inside ZipIt,
-MacLHA and MacGzip, less the comment), uuencode, base64 and MIME
-`multipart/appledouble` (DECISIONS.md 2026-10-17, *the envelopes' own
-Finder info*); StuffIt classic, what Expander 4.0.2 restores (FInfo/DInfo,
-a folder's scroll, the lock), and DiskDoubler's single-file header (FInfo)
-(*the window Expander puts back*). BinHex 4 and before 4 hold nothing more.
-Every other reader still delivers type, creator, flags and two dates. The leads, from a scan of the references and the
-corpus (2026-10-16) — **none re-verified here; each needs its own source
-or measurement before it is read**:
+packages, MacBinary I/II/III (also inside ZipIt, MacLHA and MacGzip, less
+the comment), uuencode, base64 and MIME `multipart/appledouble`; BinHex 4
+and before 4 hold nothing more (DECISIONS.md 2026-10-17, *the envelopes'
+own Finder info*); StuffIt classic, what Expander 4.0.2 restores, and
+DiskDoubler's single-file header (*the window Expander puts back*); and
+PackIt, StuffIt 5, Now Compress, SuperDisk!, Private File, ArcMac and ARC,
+zip, tar, gzip and LZH (DECISIONS.md 2026-10-17, *the archives' own Finder
+info*), less what this table still names. The leads —
+**each needs its own source or measurement before it is read**:
 
 | format | stored, not read | oracle |
 |---|---|---|
 | MacBinary inside ZipIt and MacLHA | the Get Info comment, after both forks in a stream decoded only after the entry is offered | none; none of 14 ZipIt payloads has one (measured 2026-10-17), MacLHA's not read; a second decode or a sink contract change, the maintainer's call |
-| StuffIt 5 | the per-entry comment, read and skipped (`fmt_sit5.c`) | `lsar`'s XADComment; one fixture has one |
-| PackIt | the lock word (+74) | macunpack |
-| Now Compress | the whole 16 bytes at +38, and +62/+66..81 (hypothesis: a date and FXInfo) | `lsar`'s XADFinderInfo |
-| zip | Info-ZIP `0x334d`'s location, folder, FXInfo, backup date and comment; external attributes (DOS read-only, a POSIX mode); the per-file comment | `lsar` in part |
-| tar, LZH | a POSIX mode (a read-only one is a lock) | `lsar`'s XADPosixPermissions |
-| ARC/ArcMac | the rest of the FInfo it holds | per format |
+| zip | ZipIt `0x2805`'s View word: one specimen, value 0, and which DInfo field it is no reference says | ZipIt's own expander, run on an archive with a non-zero View |
+| StuffIt 5 | the Finder info of a version-3 entry, whose second block is four bytes shorter; no entry here is version 3 | Expander 5.5 on one |
+| LZH | OS/2's 0x7f/0xff headers (dates, attributes); a level 0/1 name field's bytes after a NUL, which XADMaster calls a comment | `lsar`; no specimen of the second |
+| tar | a pax `g` (global) header, stepped over | — |
+| DiskDoubler `DDAR`/`DDA2` records | bytes no reference assigns (DDAR +100..117; DDA2 folder +46..53, +62 on); only the 84-byte single-file header is measured (DECISIONS.md 2026-10-17, *the window Expander puts back*) | DiskDoubler's own expander, under emulation |
 | AppleSingle entry 11 | ProDOS's access word (no write-enable is a lock) | none; RFC 1740 gives its size and not its bits, and no reference here does |
-| SuperDisk! | a 20-byte folder record, discarded, so folders get no dates | none known |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,
 and `tools/run_meta.py` holds it.

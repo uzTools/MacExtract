@@ -437,7 +437,7 @@ int unc_tar_extract(UncCtx *c)
 {
     OverlayEntry e;
     if (!ovl_codecs_ready()) return UNC_ERR_MEM;
-    e = ovl_image(OVL_ID_EXO);
+    e = ovl_image(OVL_ID_ZIPOLD);   /* src/fmt_tar.c says why */
     if (!e) return UNC_ERR_MEM;
     return (int)e(&gOvlHost, OVL_TAR_EXTRACT, c, NULL);
 }

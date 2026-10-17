@@ -140,6 +140,14 @@ int unc_pf_extract(UncCtx *c)
         e.finder_flags = unc_get_u16be(r + 268);
         e.create_date  = unc_get_u32be(r + 300);
         e.mod_date     = unc_get_u32be(r + 304);
+        /* The FInfo and FXInfo whole, at 260 and 276 — the record's
+         * layout above, from CCrypt::MakeFileInfo, which fills both from
+         * the file's catalog entry. */
+        {
+            int k;
+            for (k = 0; k < 32; k++) e.finder_info[k] = r[260 + k];
+            e.meta = UNC_META_FINFO | UNC_META_FXINFO;
+        }
         e.data_size    = dlen;
         e.rsrc_size    = rlen;
         e.comp_data_size = dlen;

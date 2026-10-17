@@ -153,6 +153,8 @@ int unc_sit5_extract(UncCtx *c)
     uint8_t datakey[UNC_SIT5_KEYLEN], rsrckey[UNC_SIT5_KEYLEN];
     int havehash = 0, havekey = 0;
     uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
+    uint8_t *cmt = NULL;       /* the entries' comments, allocated when
+                                * the first one turns up */
     int err = UNC_OK;
 
     fsize = unc_io_size32(c->io);
@@ -214,6 +216,41 @@ int unc_sit5_extract(UncCtx *c)
         havehash = 1;
     }
 
+    /* The archive's own comment, behind bit 5: its block is two u16
+     * lengths, the comment's and its TextEdit style scrap's, and the two
+     * texts are the last things before the first entry — measured,
+     * 2026-10-17, on all three archives here that set the bit (`Sample
+     * Archive.sit` of StuffIt Deluxe 5.5's Tutorial Files, and the two
+     * 7.0.3 wrote with a password): the block's end plus the hash's six
+     * bytes where there is one, plus both lengths, is exactly the
+     * header's `firstoffs` (FORMATS.md, *StuffIt 5's archive flag
+     * byte*). XADStuffIt5Parser.m reads them in that order too, with
+     * bit 6's block between the hash and the text, which no archive here
+     * sets — so the text is located from `firstoffs` backwards, and only
+     * where that leaves room for every block before it. The style scrap
+     * is not delivered: the sink's comment is text. */
+    if ((hdr[83] & SIT5_ARCH_20) && c->sink->comment) {
+        uint32_t hp = 100u + ((hdr[83] & SIT5_ARCH_14BYTES) ? 14u : 0u);
+        uint8_t lb[4];
+        if (unc_read_at(c->io, hp, lb, 4) == UNC_OK) {
+            uint32_t clen = unc_get_u16be(lb), slen = unc_get_u16be(lb + 2);
+            hp += 4u + ((hdr[83] & SIT5_ARCH_CRYPTED) ? 1u + UNC_SIT5_KEYLEN
+                                                       : 0u);
+            if (clen && firstoffs >= hp && firstoffs - hp >= clen + slen) {
+                uint8_t *cb = (uint8_t *)unc_alloc(c->al, clen);
+                if (cb) {
+                    int cret = 0;
+                    if (unc_read_at(c->io, firstoffs - slen - clen, cb,
+                                    (int32_t)clen) == UNC_OK)
+                        cret = c->sink->comment(c->sink->ctx, cb,
+                                                (uint16_t)clen);
+                    unc_free(c->al, cb);
+                    if (cret < 0) return UNC_ERR_SINK;
+                }
+            }
+        }
+    }
+
     dirs = (Sit5Dirs *)unc_alloc(c->al, (uint32_t)sizeof *dirs);
     if (!dirs) return UNC_ERR_MEM;
     dirs->count = 0;
@@ -229,7 +266,7 @@ int unc_sit5_extract(UncCtx *c)
         uint32_t headersize, headerend, diroffs, namelen;
         uint32_t datalen, datacomp, datastart;
         uint32_t rsrclen = 0, rsrccomp = 0;
-        uint32_t hpos, flags2;
+        uint32_t hpos, flags2, cmtlen = 0, blen;
         uint16_t datacrc, rsrccrc = 0;
         int entryver, flags, datamethod = 0, rsrcmethod = 0;
         int isdir = 0, encrypted;
@@ -306,16 +343,39 @@ int unc_sit5_extract(UncCtx *c)
         hpos += unc_get_u16be(hdr + 30);    /* true namelen, uncapped */
 
         if (hpos < headerend) {
-            /* comment block: u16 size, skip 2, comment bytes */
+            /* The entry's comment, files and folders alike: u16 size,
+             * two bytes, the text — which is what Expander's Get Info
+             * shows. Source: reference/notes/sit5_specs_theunarchiver.md
+             * ("if header space remains"); its one specimen,
+             * derived-Cool_Tools__.sit, is graded against lsar's
+             * XADComment by tools/run_meta.py. A text longer than the
+             * engine carries is cut to UNC_ENTRY_COMMENT_MAX; a buffer
+             * that cannot be had loses the comment, not the entry. */
+            uint32_t clen;
             if (unc_read_at(c->io, hpos, hdr, 2) != UNC_OK) {
                 err = UNC_ERR_TRUNCATED;
                 goto out;
             }
-            hpos += 4 + unc_get_u16be(hdr);
+            clen = unc_get_u16be(hdr);
+            if (clen && !cmt)
+                cmt = (uint8_t *)unc_alloc(c->al, UNC_ENTRY_COMMENT_MAX);
+            if (clen && cmt) {
+                cmtlen = clen < UNC_ENTRY_COMMENT_MAX ? clen
+                                                      : UNC_ENTRY_COMMENT_MAX;
+                if (unc_read_at(c->io, hpos + 4, cmt, (int32_t)cmtlen)
+                    != UNC_OK) {
+                    err = UNC_ERR_TRUNCATED;
+                    goto out;
+                }
+            }
+            hpos += 4 + clen;
         }
 
-        /* Second block. */
-        if (unc_read_at(c->io, hpos, hdr, 16) != UNC_OK) {
+        /* Second block: u16 flags2, u16 CRC, then the Finder info, 36
+         * bytes in all at entry version 1 and 32 at version 3, then the
+         * resource fork's fields. */
+        blen = entryver == 1 ? 36u : 32u;
+        if (unc_read_at(c->io, hpos, hdr, (int32_t)blen) != UNC_OK) {
             err = UNC_ERR_TRUNCATED;
             goto out;
         }
@@ -331,31 +391,68 @@ int unc_sit5_extract(UncCtx *c)
         e.type         = unc_get_u32be(hdr + 4);
         e.creator      = unc_get_u32be(hdr + 8);
         e.finder_flags = unc_get_u16be(hdr + 12);
-        hpos += 14;   /* u16 flags2, u16 ?, u32 type, u32 creator, u16 flags */
-        hpos += entryver == 1 ? 22 : 18;
+        hpos += blen;
+        if (cmtlen) {
+            e.comment = cmt;
+            e.comment_len = (uint16_t)cmtlen;
+        }
 
         if (flags2 & 1) {
-            if (unc_read_at(c->io, hpos, hdr, 16) != UNC_OK) {
+            uint8_t *r = hdr + 36;
+            if (unc_read_at(c->io, hpos, r, 16) != UNC_OK) {
                 err = UNC_ERR_TRUNCATED;
                 goto out;
             }
-            rsrclen  = unc_get_u32be(hdr);
-            rsrccomp = unc_get_u32be(hdr + 4);
-            rsrccrc  = unc_get_u16be(hdr + 8);
-            rsrcmethod = hdr[12];
+            rsrclen  = unc_get_u32be(r);
+            rsrccomp = unc_get_u32be(r + 4);
+            rsrccrc  = unc_get_u16be(r + 8);
+            rsrcmethod = r[12];
             hpos += 14;
-            if (hdr[13]) {                  /* rsrc password key */
-                if (!encrypted || !rsrclen || hdr[13] != UNC_SIT5_KEYLEN) {
+            if (r[13]) {                    /* rsrc password key */
+                if (!encrypted || !rsrclen || r[13] != UNC_SIT5_KEYLEN) {
                     err = UNC_ERR_CORRUPT;
                     goto out;
                 }
                 if (unc_read_at(c->io, hpos, rsrckey, UNC_SIT5_KEYLEN)
                     != UNC_OK) { err = UNC_ERR_TRUNCATED; goto out; }
                 hasrsrckey = 1;
-                hpos += hdr[13];
+                hpos += r[13];
             }
         }
         datastart = hpos;
+
+        /* The whole FInfo/DInfo at b+4..19 and FXInfo/DXInfo at b+20..35,
+         * which StuffIt Expander 5.5 restores verbatim — MEASURED
+         * 2026-10-17 on a sentinel copy of derived-FloatingNotes.sit
+         * under Mac OS 9.2 (FORMATS.md, *Finder info in the archive*,
+         * StuffIt 5; DECISIONS.md 2026-10-17, *the window StuffIt kept
+         * in the name*). Version 1 only: no entry anywhere here is
+         * version 3, whose block is four bytes shorter and not measured.
+         *
+         * Stated only where the block's own CRC holds. b+2 is CRC-16/ARC
+         * of the whole second block, its own two bytes taken as zero —
+         * measured on all 587 entries of the 53 Aladdin-written StuffIt 5
+         * archives here, and Expander 5.5 refuses an entry whose word
+         * disagrees. Type, creator and flags are delivered either way,
+         * as they were before the word was read; the fork CRCs grade the
+         * forks. What the word decides is whether the REST of the block
+         * is trusted — a decision recorded in DECISIONS.md 2026-10-17,
+         * *the archives' own Finder info*. */
+        if (entryver == 1) {
+            uint16_t bcrc, want = unc_get_u16be(hdr + 2);
+            hdr[2] = hdr[3] = 0;
+            bcrc = unc_crc16_arc(0, hdr, (flags2 & 1) ? 50 : 36);
+            if (hasrsrckey) bcrc = unc_crc16_arc(bcrc, rsrckey, UNC_SIT5_KEYLEN);
+            if (bcrc == want) {
+                int k;
+                for (k = 0; k < 32; k++) e.finder_info[k] = hdr[4 + k];
+                /* The flags as Expander 5.5 writes them, finder_flags
+                 * staying the archive's word (macextract.h): a folder's
+                 * frFlags less 0x0001, as measured. */
+                if (isdir) e.finder_info[9] &= 0xFE;
+                e.meta |= UNC_META_FINFO | UNC_META_FXINFO;
+            }
+        }
 
         /* Path: parent from diroffs map, then this component. */
         {
@@ -456,6 +553,7 @@ int unc_sit5_extract(UncCtx *c)
     }
 
 out:
+    unc_free(c->al, cmt);
     unc_free(c->al, iobuf);
     unc_free(c->al, dirs);
     return err;

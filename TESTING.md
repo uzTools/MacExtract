@@ -3369,13 +3369,19 @@ is silent. Graded against:
 | `synth-sqp-meta.pkg` | `tools/synth_sqp.py`'s own items: nothing else reads the container |
 | `--corpus` | every fixture where the engine and `lsar` both state a field: 8 fields on 2026-10-17, the two DiskDoubler AppleDouble sidecars' Finder info |
 | the envelopes, generated per run into `.tmp/` by `tools/synth_envelopes.py`: MacBinary I, II and III, uuencode read-only and writable, UUTool with a placed `.finfo`, base64 read-only, mpack-shaped `multipart/appledouble` | MacBinary: deark's debug reading (`modules/macbinary.c`) for the 16 bytes of FInfo and offset 81, macunpack's copy of 81 (`I_LOCKOFF`), which must agree with deark's; UUTool: hexbin's header (`hexbin/mu.c`) for FInfo bytes 0..7 and 10..15; MIME: the applefile part taken out by Python's `email` and read by `lsar`; the begin-line mode, a reading written in the suite (deark's octal, 0200 owner write); the generator's field values for MacBinary's comment and FXInfo, which nothing else reads |
+| the archive formats (`archive_check`), generated per run by `tools/synth_archmeta.py`: a zip with a MacZip file and folder (`0x334d` stored, Finder comment, backup date) and eight entries of foreign permissions and per-file comments; a pax tar; a gzip with MTIME and FCOMMENT; a Private File with its FInfo and FXInfo; an ArcMac entry; Now QuickFiler's sentinel archive (`nowmeta.build`); SuperDisk!'s (`sdmeta.build`); StuffIt 5's sentinel copy of `derived-FloatingNotes.sit` (`sitmeta.sit5_sentinel`), and the same with each second block's CRC spoiled, which must state nothing | the writing side of each layout, field by field (Python's `zipfile`, `tarfile`, the documents' tables); the sentinel archives re-read by the measurement tools' own walkers. And two second readers: `rexnebular_1_0_0.zip`'s `0x334d` records decoded as Info-ZIP's own Macintosh UnZip decodes them (`DecodeMac3ExtraField`), and its lock as that UnZip's `mapattr` takes it; PackIt's lock word in `derived-PackIt.pit` and `synth-packit-1.pit` as `macunpack -3` copies it to byte 81 |
+| `--corpus`, archives (`archive_corpus`) | every zip, tar, gzip, LZH, ARC and StuffIt 5 fixture and every lhasa test archive, against `lsar` run in UTC — mtime and ctime where XADMaster saw no Macintosh source, comment and lock; and for LZH lhasa's own header dumps (`test/output/*-hdr.txt`) in place of `lsar`'s Unix-style dates, 0x41 times and POSIX lock, which XADMaster misreads (DECISIONS.md 2026-10-17, *the archives' own Finder info*): 655 fields on 2026-10-17. Plus StuffIt 5's archive comment on `Sample Archive.sit` in the cache, against `lsar` |
 | `--corpus`, envelopes (`envelope_corpus`) | every fixture the engine sniffs as MacBinary (deark), uuencode or base64 (the begin line), MIME (Python's `email`, then `lsar`), each ZipIt payload in a zip (Python's `zipfile`, then deark), and the MacGzip and ZipIt specimens in the cache when present: 507 fields of 255 entries on 2026-10-17 |
 
 | DiskDoubler 3.7's own compressed file | the catalog record the subject had before 3.7 compressed it (`tools/vmac/ddmeta.py --writer`'s result; skipped where absent) |
 | `--expander` | **StuffIt classic against StuffIt Expander 4.0.2's own output**: for every archive `tools/vmac/sitmeta.py` ran (225 corpus, 21 sentinel), the catalog record Expander wrote for each entry, field for field — a file's FInfo, FXInfo, backup date and lock, a folder's DInfo, DXInfo and backup date; `-` counts as what a host writes on a new entry. 241 archives, 6,627 fields, 0 disagreements on 2026-10-17; 5 archives Expander did not extract whole are left out by name. Skipped, and said so, without sitmeta.py's results |
 
 Each field is then tampered with in the engine's row, one at a time, and the
-comparison must fail: 37 controls, 37 caught. **In the envelope tables a
+comparison must fail: 37 controls, 37 caught, and 228 of 228 in the
+archive tables. Seven scratch copies of the engine with one rule each
+undone — StuffIt 5's CRC gate, zip's host rule, LZH's POSIX mode, the
+DOS leap day, the pax mtime, one byte of `0x334d`'s FXInfo order,
+PackIt's lock word — each fail the suite (measured 2026-10-17). **In the envelope tables a
 field the oracle states and the engine prints as `-` FAILS**, which the
 lsar corpus check does not do: a dropped-field control replaces each
 stated field with `-` (505 of 505 caught). Run against `origin/main`'s
@@ -3406,7 +3412,11 @@ mechanism removed, each fail the cases they should (DECISIONS.md
 2026-10-17, *the date held once per folder*).
 
 **What neither can see.** A field the engine does not read yet, outside
-the envelope tables: it prints `-` and passes. Inside them: MacLHA's
+the envelope tables: it prints `-` and passes. In the archive tables a
+generated case grades the reader's arithmetic against the layout as
+documented, not what a real writer puts there: Private File, ArcMac and
+the pax comment have no second reader at all, and no corpus file carries
+a zip Finder comment, a gzip comment, a pax header or a zip backup date. Inside them: MacLHA's
 payloads (no reader here takes one out), and a MacBinary comment or FXInfo
 on any real file — none in the corpus or the cache has either, so those
 two are graded on the generator alone. With `--expander`: the dates (not in

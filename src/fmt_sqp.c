@@ -34,8 +34,9 @@
  *   +4/+16/+76  the RESOURCE fork, stored when bit 2 of +84 is set
  *               (+0 is a zero word nothing reads)
  *   +20         the 16 bytes of Finder info — an FInfo for a file, a
- *               DInfo for a folder, so type and creator are a window
- *               rectangle in a folder's record and are not reported
+ *               DInfo for a folder — handed on whole as finder_info;
+ *               a folder's first eight are its window rectangle, so
+ *               they are not reported as a type and a creator
  *   +36         Str31 name; +68/+72 the two dates
  *
  * There is no checksum anywhere in the format, of a fork or of the

@@ -41,6 +41,7 @@
  * License: LGPL-2.1-or-later. See LICENSE and NOTICE.
  */
 #include "unc_internal.h"
+#include "unc_date.h"
 
 /* Level 0/1 base header, before the name.
  * Source: reference/lha/header.doc.euc, section A, which states every
@@ -76,7 +77,39 @@ typedef struct LzhEnt {
     int      level;
     int      os;            /* level 1/2/3 OS byte; -1 when unstated   */
     int      is_dir;
+    /* Metadata the extended headers state, folded into the entry once the
+     * header is read (lzh_meta). */
+    int32_t  mode;          /* POSIX mode, -1 when unstated            */
+    int32_t  dosattr;       /* MS-DOS attributes, -1 when unstated     */
+    uint32_t xmtime;        /* a Mac date from 0x54 or 0x41, 0 if none */
+    uint32_t xctime;        /* a Mac creation date from 0x41           */
+    uint8_t *cmt;           /* the walk's comment buffer, or NULL      */
 } LzhEnt;
+
+/* A Windows FILETIME — 100 ns since 1601-01-01 UTC, little-endian u64 —
+ * as a Mac date, by the UTC rule of unc_date.h. Long division a byte at
+ * a time keeps every step inside 32 bits: the remainder is below 10^7,
+ * so remainder * 256 + byte is below 2^32. 1601 to 1904 is 9,561,628,800
+ * s (11,644,473,600 to 1970 less unc_date.h's 2,082,844,800).
+ * Source: reference/lhasa/lib/lha_arch_win32.c, lha_arch_utime — "ts *
+ * 10000000 + unix_epoch_offset", the offset being 1970-01-01 as a
+ * FILETIME. */
+static uint32_t lzh_filetime(const uint8_t *p)
+{
+    uint32_t r = 0, qhi = 0, qlo = 0;
+    int i;
+    for (i = 7; i >= 0; i--) {
+        uint32_t cur = (r << 8) | p[i], d = cur / 10000000u;
+        r = cur - d * 10000000u;
+        qhi = (qhi << 8) | (qlo >> 24);
+        qlo = (qlo << 8) | d;
+    }
+    /* q - 9,561,628,800, which is 2:0x39EAE080, must leave a high word
+     * of 0 and be non-zero. */
+    if (qlo < 0x39EAE080u) qhi--;
+    qlo -= 0x39EAE080u;
+    return qhi == 2u ? qlo : 0;
+}
 
 /* ------------------------------------------------------------------ */
 /* Output side: CRC, the sink, and MacLHA's MacBinary payload          */
@@ -666,13 +699,19 @@ static void lzh_add_path(UncEntryInfo *e, const uint8_t *p, uint32_t len,
     }
 }
 
-/* One extended header, of which this reader wants two: the long
- * filename (0x01) and the directory (0x02). Everything else is
- * stepped over — the dates in 0x41/0x54 are Unix or Windows time and
- * this engine does not convert either (see the entry loop). */
+/* One extended header: the long filename (0x01) and the directory
+ * (0x02), and since 2026-10-17 the comment (0x3f), MS-DOS attributes
+ * (0x40), the Windows times (0x41), the POSIX mode (0x50) and the Unix
+ * modification time (0x54). Everything else is stepped over.
+ * Source: reference/lha/header.doc.euc, section B (0x3f "comment
+ * header", and the LHa for UNIX extension's 0x50 permission, 2 bytes,
+ * and 0x54 UNIX time, 4); reference/lha/src/header.c, get_header, for
+ * 0x40 ("MS-DOS attribute", a word); reference/lhasa/lib/ext_header.c
+ * for 0x41 (three u64s: creation, modification, access). All
+ * little-endian. */
 static int lzh_ext(UncCtx *c, uint32_t at, uint32_t size, uint8_t *name,
                    uint32_t *namelen, uint8_t *dir, uint32_t *dirlen,
-                   UncEntryInfo *info)
+                   UncEntryInfo *info, LzhEnt *le)
 {
     uint8_t type;
     uint32_t n;
@@ -680,6 +719,33 @@ static int lzh_ext(UncCtx *c, uint32_t at, uint32_t size, uint8_t *name,
     if (size < 1) return UNC_ERR_CORRUPT;
     if (unc_read_at(c->io, at, &type, 1) != UNC_OK) return UNC_ERR_TRUNCATED;
     n = size - 1;
+    if (type >= 0x3f) {
+        uint8_t b[16];
+        if (type == 0x3f && n && !le->cmt)
+            le->cmt = (uint8_t *)unc_alloc(c->al, UNC_ENTRY_COMMENT_MAX);
+        if (type == 0x3f && n && le->cmt) {
+            uint32_t k = n < UNC_ENTRY_COMMENT_MAX ? n : UNC_ENTRY_COMMENT_MAX;
+            if (unc_read_at(c->io, at + 1, le->cmt, (int32_t)k) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            info->comment = le->cmt;
+            info->comment_len = (uint16_t)k;
+        } else if ((type == 0x40 || type == 0x50) && n >= 2) {
+            if (unc_read_at(c->io, at + 1, b, 2) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            if (type == 0x40) le->dosattr = (int32_t)unc_get_u16le(b);
+            else le->mode = (int32_t)unc_get_u16le(b);
+        } else if (type == 0x54 && n >= 4) {
+            if (unc_read_at(c->io, at + 1, b, 4) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            le->xmtime = unc_unix_to_mac(unc_get_u32le(b));
+        } else if (type == 0x41 && n >= 16) {
+            if (unc_read_at(c->io, at + 1, b, 16) != UNC_OK)
+                return UNC_ERR_TRUNCATED;
+            le->xctime = lzh_filetime(b);
+            le->xmtime = lzh_filetime(b + 8);
+        }
+        return UNC_OK;
+    }
     if (n > UNC_NAME_MAX) {
         if (type == 0x01 || type == 0x02) {
             info->name_truncated = 1;
@@ -722,7 +788,22 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
     e->level = level;
     e->os = -1;
     e->is_dir = lzh_is(e->method, "-lhd-");
+    e->mode = -1;
+    e->xmtime = e->xctime = 0;
     unc_entry_clear(info);
+    /* The base header's time and attribute byte. Levels 0 and 1 store an
+     * MS-DOS date and time (time word first), 2 and 3 a Unix time; the
+     * byte at 19 is the MS-DOS attributes at level 0 and is what LHa
+     * reads as such at every level, writing 0x20 there at level 1.
+     * Source: reference/lha/header.doc.euc, section A; reference/lha/
+     * src/header.c, get_header (`hdr->attribute = get_byte()`, and
+     * generic_to_unix_stamp for levels 0 and 1). */
+    e->dosattr = h[LZH_H_ATTR];
+    info->mod_date = level < 2
+        ? unc_dos_to_mac(unc_get_u16le(h + LZH_H_TIME + 2),
+                         unc_get_u16le(h + LZH_H_TIME))
+        : (unc_get_u32le(h + LZH_H_TIME)
+           ? unc_unix_to_mac(unc_get_u32le(h + LZH_H_TIME)) : 0);
 
     if (level == 0 || level == 1) {
         uint32_t namelen, nameat;
@@ -766,6 +847,18 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
         extnamelen = namelen;
         e->crc = unc_get_u16le(h + 22 + h[LZH_H_NAMELEN]);
         headerend = pos + hdrsize;
+        /* Level 0's extended area, after the CRC: an OS byte, and for
+         * 'U' a minor version, the Unix mtime and the mode.
+         * Source: reference/lha/src/header.c, get_header
+         * (`extend_size = header_size - name_length - 22`, then
+         * EXTEND_UNIX: minor_version, unix_last_modified_stamp,
+         * unix_mode, uid, gid). */
+        if (level == 0 && hdrsize >= 24u + h[LZH_H_NAMELEN] + 12u &&
+            h[24 + h[LZH_H_NAMELEN]] == 'U') {
+            const uint8_t *u = h + 25 + h[LZH_H_NAMELEN];
+            e->xmtime = unc_unix_to_mac(unc_get_u32le(u + 1));
+            e->mode = (int32_t)unc_get_u16le(u + 5);
+        }
         if (level == 1) {
             if (25u + h[LZH_H_NAMELEN] > hdrsize) return UNC_ERR_CORRUPT;
             e->os = h[22 + h[LZH_H_NAMELEN] + 2];
@@ -787,7 +880,7 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
                 if (extsize == 0) break;
                 if (extsize < 3 || extsize > e->compsize) return UNC_ERR_CORRUPT;
                 if (lzh_ext(c, at + 2, extsize - 2, extname, &extnamelen,
-                            extdir, &extdirlen, info) != UNC_OK)
+                            extdir, &extdirlen, info, e) != UNC_OK)
                     return UNC_ERR_TRUNCATED;
                 e->compsize -= extsize;
                 hdrsize += extsize;
@@ -836,7 +929,7 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
             if (extsize < w + 1 || at + extsize > headerend)
                 return UNC_ERR_CORRUPT;
             if (lzh_ext(c, at + w, extsize - w, extname, &extnamelen,
-                        extdir, &extdirlen, info) != UNC_OK)
+                        extdir, &extdirlen, info, e) != UNC_OK)
                 return UNC_ERR_TRUNCATED;
             at += extsize;
         }
@@ -846,6 +939,18 @@ static int lzh_header(UncCtx *c, uint32_t pos, LzhEnt *e, UncEntryInfo *info,
 
     e->dataoff = headerend;
     *next = headerend + e->compsize;
+
+    /* What the extended headers said wins over the base header: a Unix
+     * or Windows time over the MS-DOS one (0x54 is LHa for UNIX's own
+     * mtime for level 1, header.doc.euc), and a POSIX mode over the
+     * MS-DOS attributes for the lock — no owner write (0200), or the
+     * read-only bit (0x01). */
+    if (e->xmtime) info->mod_date = e->xmtime;
+    if (e->xctime) info->create_date = e->xctime;
+    if (e->mode >= 0)
+        info->locked = (e->mode & 0200) ? UNC_LOCK_NO : UNC_LOCK_YES;
+    else
+        info->locked = (e->dosattr & 1) ? UNC_LOCK_YES : UNC_LOCK_NO;
 
     /* Build the path into the caller's entry: directory components
      * (0xff-separated) then the name. Without a directory header the
@@ -928,6 +1033,7 @@ int unc_lzh_extract(UncCtx *c)
     uint32_t iocap = UNC_IOBUF;
     uint32_t pos = 0;
     uint32_t done0;
+    uint8_t *cmt = NULL;        /* 0x3f comments, allocated at the first */
     int err = UNC_OK, any = 0;
 
     iobuf = (uint8_t *)unc_alloc(c->al, iocap);
@@ -942,7 +1048,9 @@ int unc_lzh_extract(UncCtx *c)
         uint32_t next = 0;
         int sret, est = UNC_OK, mac = 0, hret;
 
+        e.cmt = cmt;
         hret = lzh_header(c, pos, &e, &info, &next);
+        cmt = e.cmt;
         if (hret == UNC_ERR_FORMAT) break;       /* end-of-archive */
         if (hret != UNC_OK) { err = hret; break; }
         if (next <= pos) { err = UNC_ERR_CORRUPT; break; }
@@ -1038,7 +1146,14 @@ int unc_lzh_extract(UncCtx *c)
                  * at the end of the compressed stream, and the entry is
                  * offered to the sink before that is decoded (DECISIONS.md
                  * 2026-10-17, *the envelopes' own Finder info*). */
-                (void)unc_macbinary_meta(&info, mb);
+                {
+                    /* A header that leaves a date 0 (MacLHA 2.00 writes both so)
+                     * leaves this container's own one standing. */
+                    uint32_t cd = info.create_date, md = info.mod_date;
+                    (void)unc_macbinary_meta(&info, mb);
+                    if (!info.create_date) info.create_date = cd;
+                    if (!info.mod_date) info.mod_date = md;
+                }
             }
         }
 
@@ -1064,6 +1179,7 @@ int unc_lzh_extract(UncCtx *c)
         pos = next;
     }
 
+    unc_free(c->al, cmt);
     unc_free(c->al, iobuf);
     if (!any && err == UNC_OK) return UNC_ERR_FORMAT;
     return err;
