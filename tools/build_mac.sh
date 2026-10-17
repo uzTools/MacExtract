@@ -526,7 +526,12 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # held in a one-entry cache instead of per item, and EnsureDir looking a
 # name up before creating it (DECISIONS.md 2026-10-17, *the date held once
 # per folder*). CODE + A5 unmoved.
-UNC_MAC_CODE_DEFAULT=176480
+# +744 code and -8 A5 on 2026-10-17 for the envelopes' Finder info
+# (DECISIONS.md 2026-10-17, *the envelopes' own Finder info*): the eager
+# pair's resident pieces below, and here the readers that are images there
+# — MIME's records and comment, the begin-line mode, UUTool's .finfo. A5
+# 37,464, under its ceiling.
+UNC_MAC_CODE_DEFAULT=177224
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1012,8 +1017,18 @@ UNC_MAC_A5_DEFAULT=37472
 # in all** (DECISIONS.md 2026-10-17, *the bit that kept the position*).
 # +16 code and -16 A5 the same day for the second review (the default
 # pair above): 0 B off any budget, 864 in all.
-UNC_MAC_CODE_EAGER=56816
-UNC_MAC_A5_EAGER=18528
+# +464 code and +16 A5 on 2026-10-17 for the envelopes' Finder info:
+# **480 B off every extraction's budget.** By symbol: unc_macbinary_meta
+# 234, new (one MacBinary header read one way, for MacBinary, ZipIt and
+# MacLHA: FInfo whole, the lock, III's two FXInfo bytes),
+# unc_macbinary_extract +126 (the Get Info comment after the resource
+# fork, read before the entry is offered), unc_as_record 290, new, and
+# unc_appledouble_extract -230 (AppleSingle's fixed records as one function
+# MIME's image calls too, and RFC 1740's unknown date kept unknown); the
+# A5 is gOvlFns's two slots, +8, and 8 of `.data` alignment (DECISIONS.md
+# 2026-10-17, *the envelopes' own Finder info*).
+UNC_MAC_CODE_EAGER=57280
+UNC_MAC_A5_EAGER=18544
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1068,7 +1083,9 @@ UNC_MAC_A5_EAGER=18528
 # +40 code the same day for the review (the eager pair above); A5 18,632,
 # under its ceiling.
 # +16 code the same day, the second review; A5 18,616, under its ceiling.
-UNC_MAC_CODE_LAZY=55240
+# +460 code on 2026-10-17, the envelopes' Finder info (the eager pair
+# above); A5 18,652, under its ceiling.
+UNC_MAC_CODE_LAZY=55700
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -27,6 +27,9 @@ typedef struct {
     uint8_t comment[2048];
     uint16_t comment_len;
     int comments;
+    /* Each entry's Get Info comment, copied in begin_entry: the engine's
+     * bytes are only valid until that entry's end_entry returns. */
+    uint8_t ecomment[8][256];
 } CapSink;
 
 static int cap_begin(void *ctx, const UncEntryInfo *info)
@@ -35,6 +38,9 @@ static int cap_begin(void *ctx, const UncEntryInfo *info)
     if (s->count >= 8) return -1;
     s->info[s->count] = *info;
     s->dlen[s->count] = s->rlen[s->count] = 0;
+    if (info->comment_len > sizeof s->ecomment[0]) return -1;
+    if (info->comment_len)
+        memcpy(s->ecomment[s->count], info->comment, info->comment_len);
     return 0;
 }
 
@@ -176,6 +182,94 @@ static void test_macbinary(void)
     }
 }
 
+/* The rest of the Finder info a MacBinary header holds, the lock and the
+ * Get Info comment (DECISIONS.md 2026-10-17, *the envelopes' own Finder
+ * info*). The header is mb_synth's, edited and re-checksummed. */
+static void mb_recrc(uint8_t *b)
+{
+    uint16_t crc = unc_crc16_xmodem(0, b, 124);
+    b[124] = (uint8_t)(crc >> 8); b[125] = (uint8_t)crc;
+}
+
+static void test_macbinary_meta(void)
+{
+    static const char cmt[] = "A comment after the resource fork.";
+    uint8_t arc[1024];
+    uint32_t len, cl = (uint32_t)sizeof cmt - 1;
+    MemIO m;
+    UncIO io;
+    UncAlloc al;
+    UncSink sk;
+    CapSink cap;
+    UncOptions opt;
+    const UncEntryInfo *e = &cap.info[0];
+
+    test_make_alloc(&al);
+
+    /* II: location, folder, Protected, and a comment. */
+    len = mb_synth(arc, "placed", "hello, fork", 11, "RSRC", 4);
+    arc[73] = 0x01; arc[101] = 0x20;
+    arc[75] = 0x00; arc[76] = 0x50; arc[77] = 0x00; arc[78] = 0x64;
+    arc[79] = 0x00; arc[80] = 0x07;
+    arc[81] = 0x01;
+    arc[99] = 0; arc[100] = (uint8_t)cl;
+    mb_recrc(arc);
+    memcpy(arc + len, cmt, cl);
+    test_make_memio(&io, &m, arc, len + cl);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK);
+    CHECK(e->meta == UNC_META_FINFO);
+    CHECK(memcmp(e->finder_info, "TEXTttxt\x01\x20\x00\x50\x00\x64\x00\x07", 16) == 0);
+    CHECK(e->locked == UNC_LOCK_YES);
+    CHECK(e->comment_len == cl && memcmp(cap.ecomment[0], cmt, cl) == 0);
+    CHECK(cap.dlen[0] == 11 && cap.rlen[0] == 4);
+
+    /* The same in list mode: the comment is read without the copy buffer. */
+    memset(&opt, 0, sizeof opt);
+    opt.list_only = 1;
+    test_make_memio(&io, &m, arc, len + cl);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, &opt) == UNC_OK);
+    CHECK(e->comment_len == cl && memcmp(cap.ecomment[0], cmt, cl) == 0);
+
+    /* Cut inside the comment: the forks are whole, the comment is dropped
+     * and the entry is not an error (fmt_macbinary.c says why). */
+    test_make_memio(&io, &m, arc, len + cl - 1);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(cap.count == 1 && cap.status[0] == UNC_OK && e->comment_len == 0);
+
+    /* III: fdScript and fdXFlags, and 73's bit 7 is isAlias, not a lock. */
+    len = mb_synth(arc, "alias", "hello, fork", 11, "RSRC", 4);
+    arc[73] = 0x80;
+    memcpy(arc + 102, "mBIN", 4);
+    arc[106] = 0x81; arc[107] = 0x02;
+    mb_recrc(arc);
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(e->meta == (UNC_META_FINFO | UNC_META_FXINFO));
+    CHECK(e->finder_info[24] == 0x81 && e->finder_info[25] == 0x02);
+    CHECK(e->finder_info[16] == 0 && e->finder_info[31] == 0);
+    CHECK(e->locked == UNC_LOCK_NO && e->comment_len == 0);
+
+    /* I: no CRC, and 73's bit 7, "Locked", is the lock. */
+    len = mb_synth(arc, "old", "hello, fork", 11, "RSRC", 4);
+    arc[73] = 0x80;
+    arc[122] = arc[123] = arc[124] = arc[125] = 0;
+    test_make_memio(&io, &m, arc, len);
+    CHECK(unc_sniff(&io) == UNC_FORMAT_MACBINARY);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(e->locked == UNC_LOCK_YES && e->meta == UNC_META_FINFO);
+    arc[73] = 0x00;
+    test_make_memio(&io, &m, arc, len);
+    cap_make(&sk, &cap);
+    CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
+    CHECK(e->locked == UNC_LOCK_NO);
+}
+
 /* ------------------------------------------------------------------ */
 /* M1: AppleSingle/AppleDouble                                        */
 /* ------------------------------------------------------------------ */
@@ -229,6 +323,25 @@ static void test_applesingle(void)
     CHECK(cap.info[0].finder_flags == 0x0100);
     CHECK(cap.dlen[0] == 9 && memcmp(cap.data[0], "DATA-FORK", 9) == 0);
     CHECK(cap.rlen[0] == 6 && memcmp(cap.rsrc[0], "RSRC!!", 6) == 0);
+
+    /* RFC 1740's "unknown" date, 0x80000000, is left unknown in all
+     * three places it can be (it came out as 1931-12-13 before
+     * 2026-10-17), and a 16-byte entry 9 states its FInfo alone. */
+    {
+        unc_entry_clear(&cap.info[1]);
+        memset(arc, 0, 16);
+        put32(arc, 0x80000000u); put32(arc + 4, 0x00000010u);
+        put32(arc + 8, 0x80000000u);
+        unc_as_record(&cap.info[1], 8, arc, 16);
+        CHECK(cap.info[1].create_date == 0);
+        CHECK(cap.info[1].mod_date == 0x10u + 0xB492F400u);
+        CHECK(!(cap.info[1].meta & UNC_META_BACKUP));
+        memcpy(arc, "APPLausT\x01\x00\x00\x10\x00\x20\x00\x00", 16);
+        unc_as_record(&cap.info[1], 9, arc, 16);
+        CHECK(cap.info[1].meta == UNC_META_FINFO);
+        CHECK(cap.info[1].finder_info[11] == 0x10);
+        CHECK(cap.info[1].finder_flags == 0x0100);
+    }
 }
 
 /* An AppleDouble sidecar with NO "real name" entry — the shape Netatalk
@@ -5109,6 +5222,7 @@ static void test_path_depth(void)
 void run_format_tests(void)
 {
     test_macbinary();
+    test_macbinary_meta();
     test_applesingle();
     test_appledouble_noname();
     test_bitin();

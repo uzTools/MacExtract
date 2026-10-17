@@ -18,13 +18,20 @@ other than the engine:
       `lsar` does not read AppleLink packages at all.
   --corpus                              every fixture: wherever the engine
       states a field and `lsar` reports the same field, they must agree.
+  the envelopes (envelope_expectations, envelope_corpus)
+      MacBinary, uuencode, base64 and MIME multipart/appledouble, generated
+      by tools/synth_envelopes.py and swept over the corpus, against deark,
+      macunpack, hexbin, Python's email and zipfile, and lsar. There, a
+      field the oracle states and the engine prints `-` FAILS.
 
 Then a CONTROL per field: the engine's row is tampered with, one field at
 a time, and the comparison must fail — or it was comparing nothing.
 
-**What it cannot see.** Anything the engine does not deliver: an entry
-whose archive stores a field this engine does not read yet prints `-` and
-passes (the inventory of those is OPEN_ITEMS.md's). The lock, against any
+**What it cannot see.** Outside the envelope tables, anything the engine
+does not deliver: an entry whose archive stores a field this engine does
+not read yet prints `-` and passes (the inventory of those is
+OPEN_ITEMS.md's). Inside them, MacLHA's payloads, and a MacBinary comment
+or FXInfo on a real file (none exists here: generator only). The lock, against any
 reader but the synthesizer. Whether a host WRITES any of it: that is
 tests/mac_sink_test.c --meta, and on an emulated Mac tools/vmac/hfscat.py.
 """
@@ -32,13 +39,16 @@ import argparse
 import calendar
 import json
 import os
+import struct
 import subprocess
 import sys
+import tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
+import guard                        # noqa: E402,F401  tempfile -> .tmp/
 MAC_EPOCH = 2082844800                       # 1904-01-01 to 1970-01-01
 
 
@@ -148,6 +158,311 @@ def corpus(cli):
     return bad, compared
 
 
+# --------------------------------------------------------------------
+# The envelopes: MacBinary (itself, and inside ZipIt and MacGzip),
+# uuencode, base64 and MIME multipart/appledouble (DECISIONS.md
+# 2026-10-17, *the envelopes' own Finder info*). Kept to these functions
+# and this table so that another format's additions merge beside them.
+#
+# Unlike corpus() above, a field the oracle states and the engine prints
+# as `-` FAILS here: these are the formats whose readers deliver every
+# field they hold, so a `-` is a field dropped.
+# --------------------------------------------------------------------
+
+ENV_ORACLES = {
+    # name: (build script, binary under the repository, reference tree)
+    "deark": ("build_deark.sh", "build/deark/deark", "reference/deark"),
+    "macunpack": ("build_macunpack.sh",
+                  "build/macunpack/macunpack/macunpack", "reference/macutils"),
+    "hexbin": ("build_macunpack.sh", "build/macunpack/hexbin/hexbin",
+               "reference/macutils"),
+}
+
+
+def env_oracle(name, problems):
+    """An oracle binary, built if its reference tree is here. A tree that
+    is here and will not build is a failure, not a skip (run_mime.build)."""
+    import run_mime
+    script, binary, tree = ENV_ORACLES[name]
+    path, why = run_mime.build(script, binary, os.path.join(REPO, tree))
+    if why:
+        problems.append("%s will not build: %s" % (name, why.splitlines()[-1]))
+    return path
+
+
+def env_rows(cli, path):
+    """(format the engine sniffed, meta_rows) in one run."""
+    r = subprocess.run([cli, "l", "--meta", path], capture_output=True)
+    lines = r.stdout.decode("utf-8", "surrogateescape").splitlines()
+    fmt = ""
+    for line in r.stderr.decode("utf-8", "surrogateescape").splitlines():
+        if line.startswith(path + ": "):        # the sniffed format
+            fmt = line[len(path) + 2:]
+            break
+    out = {}
+    for line in lines:
+        if line.startswith("m "):
+            f = line.split(" ", 6)
+            out[f[6]] = dict(finfo=f[1], fxinfo=f[2], backup=f[3], lock=f[4],
+                             comment=f[5])
+    return fmt, out
+
+
+def deark_macbinary(deark, path):
+    """deark's own reading of a MacBinary header (modules/macbinary.c, its
+    debug lines): the 16 bytes of FInfo rebuilt from the fields it names,
+    and its "protected" byte. None where deark does not read it as one."""
+    r = subprocess.run([deark, "-l", "-d", "-m", "macbinary", path],
+                       capture_output=True)
+    f = {}
+    for line in r.stdout.decode("latin-1").splitlines():
+        line = line.replace("DEBUG:", "").strip()
+        k, _, v = line.partition(": ")
+        f.setdefault(k, v)
+    if "type" not in f or "position in window" not in f:
+        return None
+    if "finder flags" in f:                      # MacBinary I: 73..74
+        flags = int(f["finder flags"], 16)
+        v23 = False
+    else:
+        flags = (int(f["finder flags (high byte)"].replace("_", ""), 16) << 8 |
+                 int(f.get("finder flags (low byte)", "0x__00")
+                     .replace("_", ""), 16))
+        v23 = True
+    h, v = (int(x) for x in f["position in window"].split(","))
+    def code(v):
+        # deark prints a byte it will not show as <XX> (de_bytes_to_printable)
+        import re
+        return re.sub(rb"<([0-9A-F]{2})>", lambda m: bytes([int(m.group(1), 16)]),
+                      v[1:-1].encode("latin-1"))
+    fi = (code(f["type"]) + code(f["creator"]) +
+          struct.pack(">HhhH", flags, v, h, int(f["window/folder id"])))
+    prot = int(f["protected"], 16) & 1
+    # The lock: "Protected" in every version, and 73's bit 7 in MacBinary
+    # I, where both standards call it "Locked" (fmt_macbinary.c).
+    lock = "L" if prot or (not v23 and flags & 0x8000) else "n"
+    return dict(finfo=fi.hex(), lock=lock, protected=prot)
+
+
+def macunpack_protected(macunpack, path, work):
+    """macutils' reading of offset 81, which it names I_LOCKOFF
+    (fileio/machdr.h): macunpack copies a plain file's header through, so
+    the bit it writes back is the bit it read."""
+    d = tempfile.mkdtemp(dir=work)
+    subprocess.run([macunpack, os.path.abspath(path)], cwd=d,
+                   capture_output=True)
+    best = None
+    for fn in os.listdir(d):
+        b = open(os.path.join(d, fn), "rb").read(128)
+        if len(b) == 128 and b[1] and (best is None or fn != ".bin"):
+            best = b
+    return None if best is None else best[81] & 1
+
+
+def hexbin_finfo(hexbin, path, work):
+    """hexbin's reading of a UUTool .finfo (hexbin/mu.c copies it into its
+    MacBinary header at 65): 16 bytes, of which it clears inited and
+    zeroes the flags' low byte, so only 0..7 and 10..15 are its."""
+    d = tempfile.mkdtemp(dir=work)
+    subprocess.run([hexbin, os.path.abspath(path)], cwd=d,
+                   capture_output=True)
+    for fn in sorted(os.listdir(d)):
+        b = open(os.path.join(d, fn), "rb").read(128)
+        if len(b) == 128 and b[1]:
+            return b[65:81]
+    return None
+
+
+def begin_mode_lock(line):
+    """The lock a "begin <mode>" line states: deark's reading of the mode
+    (modules/xfer.c, octal after one space), and no owner write (0200,
+    posix_ustar.txt) is locked. Written here rather than called, so the
+    engine's own parse is not its grader."""
+    parts = line.split()
+    if len(parts) < 2 or not parts[1] or any(ch not in "01234567"
+                                             for ch in parts[1]):
+        return "-"
+    return "n" if int(parts[1], 8) & 0o200 else "L"
+
+
+def mime_applefiles(path):
+    """Every application/applefile part, decoded by Python's own email
+    package — an independent MIME reader — as (bytes, the data part's
+    name or None)."""
+    import email
+    import email.policy
+    msg = email.message_from_bytes(open(path, "rb").read(),
+                                   policy=email.policy.compat32)
+    out = []
+    for part in msg.walk():
+        if part.get_content_type() == "application/applefile":
+            out.append(part.get_payload(decode=True))
+    return out
+
+
+def envelope_expectations(cli, work, problems):
+    """[(file, {entry: {field: value}}, fields)] for the generated cases,
+    each field held to a second reader where one reads it and to
+    tools/synth_envelopes.py's field values where none does."""
+    import synth_envelopes as se
+    deark = env_oracle("deark", problems)
+    macunpack = env_oracle("macunpack", problems)
+    hexbin = env_oracle("hexbin", problems)
+    out = []
+    for case in sorted(se.CASES):
+        fx = os.path.join(work, case + se.SUFFIX[case])
+        open(fx, "wb").write(se.build(case))
+        want = se.describe(case)
+        name = next(iter(want))
+        w = want[name]
+        if case in se.MB:
+            fields = ("finfo", "fxinfo", "comment", "backup", "lock")
+            o = deark_macbinary(deark, fx) if deark else None
+            if deark and o is None:
+                problems.append("%s: deark does not read it as MacBinary"
+                                % case)
+            if o:
+                w["finfo"] = o["finfo"]
+                w["lock"] = o["lock"]
+            if macunpack:
+                p = macunpack_protected(macunpack, fx, work)
+                if p is None:
+                    problems.append("%s: macunpack wrote no header" % case)
+                elif o and p != o["protected"]:
+                    problems.append("%s: macunpack and deark disagree on "
+                                    "offset 81" % case)
+        elif case == "uu-mu":
+            fields = ("finfo", "lock")
+            b = hexbin_finfo(hexbin, fx, work) if hexbin else None
+            if hexbin and b is None:
+                problems.append("uu-mu: hexbin wrote no header")
+            if b:
+                spec = bytes.fromhex(w["finfo"])
+                w["finfo"] = (b[:8] + spec[8:10] + b[10:16]).hex()
+        elif case == "mime-ad":
+            fields = ("finfo", "fxinfo", "comment", "backup", "lock")
+            parts = mime_applefiles(fx)
+            ad = os.path.join(work, "mime-ad.applefile")
+            open(ad, "wb").write(parts[0] if parts else b"")
+            o = lsar_rows(ad).get(name)
+            if o is None:
+                problems.append("mime-ad: lsar reads no applefile part")
+            else:
+                w.update(o)
+        else:
+            fields = tuple(w)
+            text = se.build(case).decode("latin-1").splitlines()
+            begin = next(x for x in text if x.startswith("begin"))
+            w["lock"] = begin_mode_lock(begin)
+        out.append((fx, want, fields))
+    return out
+
+
+def envelope_corpus(cli, work, problems):
+    """Every fixture the engine reads as MacBinary, uuencode, base64 or
+    MIME, against the second reader for each field it states, with the
+    payloads of the ZipIt and MacGzip specimens in the cache. A field
+    the oracle states and the engine leaves `-` fails."""
+    deark = env_oracle("deark", problems)
+    bad, n, rows = [], 0, []
+    fdir = os.path.join(REPO, "fixtures")
+    subjects = [os.path.join(fdir, f) for f in sorted(os.listdir(fdir))]
+    spec = os.path.join(os.path.expanduser("~"), ".cache", "macextract",
+                        "vmac", "specimens")
+    for sub, pat in (("macgzip", ".gz"), ("zipit", "")):
+        d = os.path.join(spec, sub)
+        if os.path.isdir(d):
+            subjects += [os.path.join(d, f) for f in sorted(os.listdir(d))
+                         if f.endswith(pat)]
+    for p in subjects:
+        if not os.path.isfile(p):
+            continue
+        fmt, got = env_rows(cli, p)
+        label = os.path.basename(p)
+        if fmt == "Gzip":
+            import gzip
+            try:
+                inner = gzip.open(p).read()
+            except (OSError, EOFError):
+                continue
+            q = os.path.join(work, label + ".inner")
+            open(q, "wb").write(inner)
+            fmt, got = env_rows(cli, q)
+            p = q
+        if fmt == "MacBinary" and deark and len(got) == 1:
+            o = deark_macbinary(deark, p)
+            if o:
+                rows.append((label, next(iter(got.values())),
+                             {"finfo": o["finfo"], "lock": o["lock"]}))
+        elif fmt == "Zip" and deark:
+            rows += env_zip_payloads(cli, deark, p, label, got, work)
+        elif fmt in ("uuencode", "base64"):
+            lines = open(p, "rb").read().decode("latin-1").splitlines()
+            begins = [x for x in lines if x.startswith("begin")]
+            tags = (" .rsrc", " .finfo")
+            docs = [x for x in begins if x[10:16] not in tags and
+                    x[10:17] not in tags]
+            mu = any(x[10:17] == " .finfo" for x in begins)
+            if len(got) == 1 and len(docs) == 1:
+                want = {"lock": "-" if mu else begin_mode_lock(docs[0])}
+                rows.append((label, next(iter(got.values())), want))
+        elif fmt == "MIME message":
+            for ad in mime_applefiles(p):
+                q = os.path.join(work, label + ".applefile")
+                open(q, "wb").write(ad)
+                for name, o in lsar_rows(q).items():
+                    if name in got and o:
+                        rows.append((label + ": " + name, got[name], o))
+    for label, g, w in rows:
+        for k, v in w.items():
+            n += 1
+            if g.get(k) != v:
+                bad.append("%s: %s %s, oracle %s" % (label, k, g.get(k), v))
+    # The control: the same rows with one stated field dropped each, as a
+    # reader that stopped reading it would print them.
+    caught = tried = 0
+    for label, g, w in rows:
+        for k in w:
+            if w[k] == "-":
+                continue
+            h = dict(g)
+            h[k] = "-"
+            tried += 1
+            caught += h.get(k) != w[k]
+    print("run_meta: envelopes, %d field(s) of %d entries held to a second "
+          "reader; %d of %d dropped-field controls caught"
+          % (n, len(rows), caught, tried))
+    if not rows or caught != tried:
+        bad.append("envelopes: the corpus comparison is not comparing")
+    return bad, n
+
+
+def env_zip_payloads(cli, deark, path, label, got, work):
+    """ZipIt's MacBinary payloads, taken out by Python's zipfile — an
+    independent zip reader — and read by deark."""
+    import zipfile
+    rows = []
+    try:
+        z = zipfile.ZipFile(path)
+    except (zipfile.BadZipFile, OSError):
+        return rows
+    for i in z.infolist():
+        if i.filename not in got or i.is_dir():
+            continue
+        try:
+            b = z.open(i).read()
+        except Exception:                        # noqa: BLE001
+            continue
+        q = os.path.join(work, "zipit-payload.bin")
+        open(q, "wb").write(b)
+        fmt, _ = env_rows(cli, q)
+        o = deark_macbinary(deark, q) if fmt == "MacBinary" else None
+        if o:
+            rows.append(("%s: %s" % (label, i.filename), got[i.filename],
+                         {"finfo": o["finfo"], "lock": o["lock"]}))
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -157,6 +472,8 @@ def main():
 
     fails, n = [], 0
     exp = expectations(a.cli)
+    envwork = tempfile.mkdtemp(prefix="meta-env-")
+    exp += envelope_expectations(a.cli, envwork, fails)
     for fx, want, fields in exp:
         if not os.path.exists(fx):
             print("run_meta: %s is missing — generate it (fixtures/SOURCES.md)"
@@ -193,6 +510,8 @@ def main():
     if a.corpus:
         bad, c = corpus(a.cli)
         print("run_meta: corpus, %d stated field(s) held against lsar" % c)
+        fails += bad
+        bad, c = envelope_corpus(a.cli, envwork, fails)
         fails += bad
 
     for f in fails:

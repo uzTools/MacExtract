@@ -429,6 +429,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the bit that kept the position) — the archive's inited bit is kept unless the file has a bundle, the source volume's directory IDs are cleared, and a folder's date is priced in time
 - 2026-10-17 (the date held once per folder) — a folder's date is held in a one-entry cache, three catalog calls per change of folder instead of per item
 - 2026-10-17 (the window StuffIt kept in the name) — where five formats keep the Finder info, measured against each format's own expander
+- 2026-10-17 (the envelopes' own Finder info) — MacBinary, AppleSingle, MIME, uuencode and base64 deliver every field their standards hold
 
 ---
 
@@ -27464,3 +27465,87 @@ sweep sharing the machine with another session, and one stall: a wait
 loop that grepped `ps aux` for `minivmac` matched another session's
 waiting shell, and the sweep sat idle until it was replaced by a match
 on process names (`tools/vmac/README.md`).
+
+## 2026-10-17 (the envelopes' own Finder info) — MacBinary, AppleSingle, MIME, uuencode and base64 deliver every field their standards hold
+
+**Decision.** Each envelope reader states what its standard keeps, cited
+in the reader (FORMATS.md, *The envelopes: what each standard holds*):
+
+- **MacBinary** reads one header one way, `unc_macbinary_meta`, shared by
+  `fmt_macbinary.c`, ZipIt (`fmt_exo.c`) and MacLHA (`fmt_lzh.c`); MacGzip
+  reaches it as a MacBinary layer. FInfo whole (65..80, the flags' low
+  byte from 101); the lock from 81's "Protected" bit, and in MacBinary I
+  from 73's bit 7, "Locked" in both I and II; MacBinary III's `fdScript`
+  and `fdXFlags` as FXInfo +8/+9 with the other bytes zero; and in
+  `fmt_macbinary.c` the Get Info comment, on the 128-byte boundary after
+  the resource fork, read before the entry is offered.
+- **AppleSingle's fixed records** (8, 9, 10, 12) are one function,
+  `unc_as_record`, which MIME's applefile part now calls too, so
+  `multipart/appledouble` gains entries 4, 8 and 9 whole as mpack writes
+  them. **RFC 1740's unknown date, 0x80000000, is left unknown** for
+  creation and modification as it already was for backup: both came out
+  as 1931-12-13. A 16-byte entry 9 states its FInfo.
+- **uuencode and base64**: the `begin` mode, octal, without owner write
+  (0200) is locked, with owner write is stated unlocked; MIME's uuencoded
+  parts read it the same way. **Not in a UUTool document**: there the
+  mode is UUTool's preference, the same 0700 in every section, "ignored
+  on the Mac side" (its manual). UUTool's `.finfo` is stated whole.
+- **BinHex 4 and before 4** hold name, type, creator and flags and nothing
+  else (`reference/notes/binhex40_lewis.txt`; `src/fmt_hecx.c`): no
+  change.
+
+**Three readings that are choices, recorded.**
+- **II does not read 73's bit 7 as a lock**, although its standard still
+  labels it "Locked": a II file written under System 7 carries isAlias
+  there, which III's table names; ZipIt 2.2.2's alias `ZipIt.app/ZipIt`
+  is such a header (III, 73 = 0x80). MacBinary I has no CRC and predates
+  both. The bit also stays in `finder_flags` as before, so on System 7 a
+  MacBinary I file with it set is written with isAlias — **pre-existing,
+  the maintainer's call** whether a MacBinary I lock bit should be
+  cleared from the flags it was read from.
+- **The standards tell a downloader to zero `fdLocation` and `fdFldr` and
+  clear inited** (macbinary_ii.txt). Delivered as held instead, by the
+  brief; the shell decides inited (*the bit that kept the position*).
+  `fdFldr` is restored verbatim, as AppleSingle's already was.
+- **A comment that cannot be read is dropped, not an error**: `unar`,
+  which grades a cut file (`run_truncation.py`), reads no comment.
+
+**Not done.** The comment of a MacBinary payload inside ZipIt or MacLHA:
+it follows both forks in a compressed stream, and the entry is offered to
+the sink before the stream is decoded, so it needs a second full decode or
+a sink contract that lets the comment arrive by `end_entry` (the CLI
+lists at `begin_entry`). None of the 14 ZipIt payloads Python's `zipfile`
+reads has one; MacLHA's payloads no tool here takes out. It is
+OPEN_ITEMS.md's, for the maintainer. AppleSingle's entry 11 (ProDOS access): no reference here
+states its bits.
+
+**Evidence** (TESTING.md, *The Finder metadata*): `tools/run_meta.py`
+holds generated cases (`tools/synth_envelopes.py`) to deark, macunpack,
+hexbin, Python's `email` and `lsar`, and sweeps the corpus and the
+specimen cache: **507 fields of 255 entries** against a second reader,
+with `fractionalwidths.sit` the one real Protected bit and ZipIt 2.2.2
+the real MacBinary III payloads. A `-` where the oracle has a value
+fails; against `origin/main`'s CLI the suite fails 522 times. Unit checks
+in `tests/unit_formats.c` cover the comment in list mode and cut, the
+three versions' locks and 0x80000000; reverting the comment read, the
+MacBinary I lock or the unknown-date rule fails 3 checks each.
+**Measured, not on the emulator**: the shell's write path is the one
+AppleSingle's fields took through `metarun.py`, unchanged; no MacBinary or
+MIME file has been extracted under emulation for this.
+
+**Price**, against `origin/main`, every configuration built
+(`tools/build_mac.sh`): **shipped (eager) CODE +464, A5 +16 — 480 B off
+every extraction's budget**; lazy CODE +460, A5 +36; resident control CODE
++744, A5 −8. By symbol, shipped: `unc_macbinary_meta` 234 and
+`unc_as_record` 290, new; `unc_macbinary_extract` +126 (the comment);
+`unc_appledouble_extract` −230; `gOvlFns` +8 (two forwards). Images:
+`ovl_text` **+404** (MIME's records and comment, the mode, the `.finfo`;
+`unc_uu_mode_lock` was 124 B on the first cut and is 98), `ovl_exo` −36,
+`ovl_lzh` −10, the bundle +356. So a MIME, uuencode or base64 grant falls
+884 B, a zip's 444, an LZH's 470, every other format's 480. `OVL_SAVED`
+138,608 → 138,864 and `TIERS` −736, DERIVED (`tools/run_tiers.py`);
+`run_tiers.py --check` gives the same tallies by name on every lane — **no
+extraction lost** in the model; no tier re-run. Stack (`-fstack-usage`):
+`unc_macbinary_extract` 528 → 540, `unc_zip_extract` +4, `unc_lzh_extract`
+−4, the two new functions 32 and 28 B leaves; the engine's deepest chain,
+3,354 B through DiskDoubler, does not move.

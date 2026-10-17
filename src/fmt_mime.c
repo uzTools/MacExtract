@@ -27,9 +27,10 @@
  *       file: multipart/appledouble, application/applefile first, the
  *       data fork second.
  *   reference/mpack/macfile.c — encode_applefile(): the entry ids in
- *       that header part (2 resource fork, 3 real name, 9 Finder info),
- *       the same layout src/fmt_applesingle.c already reads for a file
- *       that arrived on its own.
+ *       that header part (3 real name, 9 Finder info, 8 dates, 4
+ *       comment, 2 resource fork), the same layout src/fmt_applesingle.c
+ *       already reads for a file that arrived on its own, and whose
+ *       fixed records it reads here too (unc_as_record).
  *   reference/mpack/unixos.c  — os_newtypedfile(): a part with no
  *       filename is called "part1", "part2", ...
  *   reference/mpack/decode.c  — handleUuencode(): a text part with no
@@ -67,7 +68,7 @@ enum { MIME_NEST_NONE = 0, MIME_NEST_UU, MIME_NEST_DOC };
 #define AF_ID_DATA       1u
 #define AF_ID_RSRC       2u
 #define AF_ID_NAME       3u
-#define AF_ID_FINFO      9u
+#define AF_ID_COMMENT    4u
 
 typedef struct MimePart {
     uint32_t start, end;         /* raw byte range of the body */
@@ -107,9 +108,7 @@ typedef struct MimeApple {
     uint32_t namelen;
     uint8_t  name_trunc;         /* the part named more than fits */
     uint32_t name_full;          /* by how much, where the part says */
-    uint32_t type, creator;
-    uint16_t flags;
-    int      have_finfo;
+    uint32_t got;                /* bytes of the part in afbuf      */
 } MimeApple;
 
 typedef struct MimeCtx {
@@ -123,6 +122,7 @@ typedef struct MimeCtx {
     uint8_t *uub;                /* UNC_UU_DEC_MAX: one decoded uu line */
     uint8_t  nname[UNC_NAME_MAX + 1];  /* a "begin" line's name */
     uint32_t nnamelen;
+    uint8_t  nlock;              /* what its mode says (unc_uu_mode_lock) */
     uint8_t  bnd[MIME_MAX_DEPTH][MIME_BND_MAX + 1];
     int32_t  bndlen[MIME_MAX_DEPTH];
     int      appledouble[MIME_MAX_DEPTH];
@@ -605,12 +605,11 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
     int n, i, err;
 
     a->rsrc_off = a->rsrc_len = 0;
-    a->have_rsrc = a->have_finfo = 0;
+    a->have_rsrc = 0;
     a->namelen = 0;
     a->name_trunc = 0;
     a->name_full = 0;
-    a->type = a->creator = 0;
-    a->flags = 0;
+    a->got = 0;
 
     err = mime_dec_open(&d, m, p, m->iobuf);
     if (err != UNC_OK) return err;
@@ -620,6 +619,7 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
         m->afbuf[got++] = (uint8_t)ch;
     }
 
+    a->got = got;
     if (got < 26) return UNC_ERR_TRUNCATED;
     magic = unc_get_u32be(m->afbuf);
     if (magic != AF_MAGIC_DOUBLE && magic != AF_MAGIC_SINGLE)
@@ -647,19 +647,43 @@ static int mime_read_applefile(MimeCtx *m, const MimePart *p, MimeApple *a)
                 a->name_full = elen;
             }
             break;
-        case AF_ID_FINFO:
-            if (elen >= 10 && off + 10 <= got) {
-                a->type    = unc_get_u32be(m->afbuf + off);
-                a->creator = unc_get_u32be(m->afbuf + off + 4);
-                a->flags   = unc_get_u16be(m->afbuf + off + 8);
-                a->have_finfo = 1;
-            }
-            break;
         default:
             break;
         }
     }
     return UNC_OK;
+}
+
+/* The rest of what the applefile part says, into `e`: the comment
+ * (entry 4) and the fixed records, 8 to 12, read by fmt_applesingle.c's
+ * own unc_as_record — mpack writes 9 whole, 8 with all four dates and 4
+ * (reference/mpack/macfile.c encode_applefile). Only what lies inside the
+ * decoded prefix is read; the comment points into `afbuf`, which nothing
+ * reuses before the next applefile part, so it outlives end_entry. */
+static void mime_apple_meta(const MimeCtx *m, const MimeApple *a,
+                            UncEntryInfo *e)
+{
+    const uint8_t *b = m->afbuf;
+    int n = (int)unc_get_u16be(b + 24), i;
+    if (n > MIME_AF_ENTRIES) n = MIME_AF_ENTRIES;
+    for (i = 0; i < n; i++) {
+        uint32_t at = 26u + (uint32_t)i * 12u, id, off, elen;
+        if (at + 12u > a->got) break;
+        id   = unc_get_u32be(b + at);
+        off  = unc_get_u32be(b + at + 4);
+        elen = unc_get_u32be(b + at + 8);
+        if (off >= a->got) continue;
+        if (id == AF_ID_COMMENT) {
+            if (elen > UNC_ENTRY_COMMENT_MAX) elen = UNC_ENTRY_COMMENT_MAX;
+            if (elen && elen <= a->got - off) {
+                e->comment = b + off;
+                e->comment_len = (uint16_t)elen;
+            }
+        } else if (id >= 8 && id <= 12) {
+            if (elen > a->got - off) elen = a->got - off;
+            unc_as_record(e, id, b + off, elen < 32 ? elen : 32);
+        }
+    }
 }
 
 /* Emit one entry: a body part, optionally with the applefile part that
@@ -720,14 +744,12 @@ static int mime_emit(MimeCtx *m, const MimeHdrs *h, const MimePart *data,
 
     e.data_size = dsize;
     e.comp_data_size = data ? data->end - data->start : 0;
+    if (data && data->cte == MIME_CTE_UU)
+        e.locked = m->nlock;            /* its "begin" line's mode */
     if (have_af) {
         e.rsrc_size = a->have_rsrc ? a->rsrc_len : 0;
         e.comp_rsrc_size = e.rsrc_size;
-        if (a->have_finfo) {
-            e.type = a->type;
-            e.creator = a->creator;
-            e.finder_flags = a->flags;
-        }
+        mime_apple_meta(m, a, &e);
     }
 
     sret = m->c->sink->begin_entry(m->c->sink->ctx, &e);
@@ -822,6 +844,7 @@ static int mime_body_nested(MimeCtx *m, uint32_t start, uint32_t end,
             for (k = 0; k < eo - so && k < (int32_t)UNC_NAME_MAX; k++)
                 m->nname[k] = m->line[so + k];
             m->nnamelen = (uint32_t)k;
+            m->nlock = (uint8_t)unc_uu_mode_lock(m->line, llen, 6);
             at = mime_tell(m);
 
             /* A "begin" line alone occurs in prose. What makes it a uu

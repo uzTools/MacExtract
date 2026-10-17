@@ -1032,11 +1032,13 @@ int unc_lzh_extract(UncCtx *c)
                 unc_fork_split(&o, ds, ds + dlen, rs, rs + rlen);
                 info.data_size = dlen;
                 info.rsrc_size = rlen;
-                info.type = unc_get_u32be(mb + 65);
-                info.creator = unc_get_u32be(mb + 69);
-                info.finder_flags = (uint16_t)((mb[73] << 8) | mb[101]);
-                info.create_date = unc_get_u32be(mb + 91);
-                info.mod_date = unc_get_u32be(mb + 95);
+                /* Finder info, lock and dates: the header's, read the
+                 * way fmt_macbinary.c reads its own. The comment, which
+                 * MacBinary puts after the resource fork, is not: it is
+                 * at the end of the compressed stream, and the entry is
+                 * offered to the sink before that is decoded (DECISIONS.md
+                 * 2026-10-17, *the envelopes' own Finder info*). */
+                (void)unc_macbinary_meta(&info, mb);
             }
         }
 

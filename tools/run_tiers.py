@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (199540, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (104140, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (628428, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (198804, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (103404, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (627692, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -238,7 +238,10 @@ TIERS = {
 # DERIVED**: the review's inited rule and cleared directory IDs, the
 # control's CODE +40 and A5 +24 (DECISIONS.md 2026-10-17, *the bit that
 # kept the position*).
-TIERS_CONTROL = 213952     # build/mac-resident, CODE + A5, 2026-10-17
+# **Raised by 736 B more the same day, and TIERS lowered by the same 736,
+# DERIVED**: the envelopes' Finder info, the control's CODE +744 and A5 -8
+# (DECISIONS.md 2026-10-17, *the envelopes' own Finder info*).
+TIERS_CONTROL = 214688     # build/mac-resident, CODE + A5, 2026-10-17
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -542,7 +545,13 @@ EXPECT = {
 # **+32 the same day, -> 138,608**: the review's changes, the control's
 # +64 (CODE +40, A5 +24) against the shipped pair's +32 (CODE +40, A5 -8);
 # no image moved.
-OVL_SAVED = 138608
+# **+256 the same day, -> 138,864**: the envelopes' Finder info, the
+# control's +736 (CODE +744, A5 -8) against the shipped pair's +480 (CODE
+# +464, A5 +16); `ovl_text` +404, `ovl_exo` -36, `ovl_lzh` -10, the
+# bundle +356 — so a MIME, uuencode or base64 grant falls 884 B, a zip's
+# 444, an LZH's 470, and every other format's 480 (DECISIONS.md
+# 2026-10-17, *the envelopes' own Finder info*).
+OVL_SAVED = 138864
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.
@@ -652,6 +661,11 @@ OVL_RESIDUE = -666
 # reader hands over the record's 16 bytes of Finder info whole; TEXT is
 # the 44-byte larger entry in its readers' frames, alignment (DECISIONS.md
 # 2026-10-17, *the metadata, carried to the disk*).
+# **TEXT +404 B, EXO -36 B, LZH -10 B, the bundle +356 B 2026-10-17**:
+# MIME's applefile records and comment, the begin-line mode in uuencode,
+# base64 and MIME, UUTool's .finfo whole; zip and LZH call the resident
+# MacBinary reader instead of copying five fields (DECISIONS.md 2026-10-17,
+# *the envelopes' own Finder info*).
 IMAGES = {
     "OVL_ID_ARC":         8120,
     "OVL_ID_BINHEX":      4994,
@@ -659,18 +673,18 @@ IMAGES = {
     "OVL_ID_CODECS":      6404,
     "OVL_ID_CPTDD":       15908,
     "OVL_ID_CRYPT":       10244,
-    "OVL_ID_EXO":         32160,
-    "OVL_ID_LZH":         9586,
+    "OVL_ID_EXO":         32124,
+    "OVL_ID_LZH":         9576,
     "OVL_ID_NOW":         5078,
     "OVL_ID_PACKIT":      2644,
     "OVL_ID_SPACESAVER":  16722,
     "OVL_ID_STUFFIT":     28914,
     "OVL_ID_SQP":         2040,
     "OVL_ID_SUPERDISK":   7058,
-    "OVL_ID_TEXT":        11758,
+    "OVL_ID_TEXT":        12162,
     "OVL_ID_ZIPOLD":      2658,
 }
-BUNDLE = 167256
+BUNDLE = 167612
 
 # What the SHIPPED lane asserts, and it is the refused fixtures BY NAME
 # rather than a tally: a tier that refuses two different fixtures and still

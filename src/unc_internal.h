@@ -1168,9 +1168,12 @@ int unc_cpt_rle_flush(CptRle *r);
 
 UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_macbinary_extract(UncCtx *c);
+int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b);
 UncFormat unc_applesingle_probe(const uint8_t *head, int32_t len,
                                 UncIO *io);
 int unc_appledouble_extract(UncCtx *c);
+void unc_as_record(UncEntryInfo *e, uint32_t id, const uint8_t *p,
+                   uint32_t n);
 UncFormat unc_binhex_probe(const uint8_t *head, int32_t len, UncIO *io);
 int unc_binhex_extract(UncCtx *c);
 int unc_hecx_extract(UncCtx *c);
@@ -1404,6 +1407,7 @@ int32_t unc_uu_decode_line(const uint8_t *buf, int32_t len, uint8_t *out);
  * many bytes it encodes, so the length has to agree. */
 int unc_uu_line_is_data(const uint8_t *p, int32_t len);
 /* Where the name sits inside a "begin" line. */
+int unc_uu_mode_lock(const uint8_t *buf, int32_t len, int32_t at);
 void unc_uu_name_span(const uint8_t *buf, int32_t len, int32_t *soff,
                       int32_t *eoff);
 

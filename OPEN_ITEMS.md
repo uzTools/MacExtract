@@ -142,22 +142,26 @@ machine until release, and the extraction runs in the same loop.
 Since 2026-10-17 the engine carries every field the Finder keeps
 (`UncEntryInfo`: FInfo/DInfo and FXInfo/DXInfo whole, the backup date, the
 lock, the Get Info comment) and the Macintosh shell writes all of it
-(DECISIONS.md, *the metadata, carried to the disk*). **Two readers deliver
-it so far**: AppleSingle/AppleDouble (all of it) and AppleLink packages (the
-16 bytes of FInfo/DInfo). Every other reader still delivers type, creator,
-flags and two dates. The leads, from a scan of the references and the
+(DECISIONS.md, *the metadata, carried to the disk*). **Readers that deliver
+everything their format holds**: AppleSingle/AppleDouble, AppleLink
+packages, and since 2026-10-17 MacBinary I/II/III (also inside ZipIt,
+MacLHA and MacGzip, less the comment), uuencode, base64 and MIME
+`multipart/appledouble`; BinHex 4 and before 4 hold nothing more
+(DECISIONS.md 2026-10-17, *the envelopes' own Finder info*). Every other
+reader still delivers type, creator, flags and two dates. The leads, from a scan of the references and the
 corpus (2026-10-16) — **none re-verified here; each needs its own source
 or measurement before it is read**:
 
 | format | stored, not read | oracle |
 |---|---|---|
-| MacBinary I/II/III | fdLocation, fdFldr, the Protected bit (+81), the Get Info comment (+99 and after the forks), fdScript/fdXFlags | macunpack for the Protected bit; nothing for the rest |
+| MacBinary inside ZipIt and MacLHA | the Get Info comment, after both forks in a stream decoded only after the entry is offered | none; none of 14 ZipIt payloads has one (measured 2026-10-17), MacLHA's not read; a second decode or a sink contract change, the maintainer's call |
 | StuffIt 5 | the per-entry comment, read and skipped (`fmt_sit5.c`) | `lsar`'s XADComment; one fixture has one |
 | PackIt | the lock word (+74) | macunpack |
 | Now Compress | the whole 16 bytes at +38, and +62/+66..81 (hypothesis: a date and FXInfo) | `lsar`'s XADFinderInfo |
 | zip | Info-ZIP `0x334d`'s location, folder, FXInfo, backup date and comment; external attributes (DOS read-only, a POSIX mode); the per-file comment | `lsar` in part |
-| tar, LZH, uuencode/base64 | a POSIX mode (a read-only one is a lock) | `lsar`'s XADPosixPermissions |
-| ARC/ArcMac, UUTool `.finfo`, MIME `multipart/appledouble` | the rest of the FInfo they hold; MIME's entries 4 and 8 | per format |
+| tar, LZH | a POSIX mode (a read-only one is a lock) | `lsar`'s XADPosixPermissions |
+| ARC/ArcMac | the rest of the FInfo it holds | per format |
+| AppleSingle entry 11 | ProDOS's access word (no write-enable is a lock) | none; RFC 1740 gives its size and not its bits, and no reference here does |
 | StuffIt classic | folder location, view, flags (measured once against Expander 4.0.2) and file location in name-field bytes | StuffIt Expander, one specimen; needs many |
 | SuperDisk! | a 20-byte folder record, discarded, so folders get no dates | none known |
 

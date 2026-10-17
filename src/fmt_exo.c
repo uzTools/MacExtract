@@ -1851,11 +1851,10 @@ int unc_zip_extract(UncCtx *c)
             mbre = mbrs + rlen;
             e.data_size = dlen;
             e.rsrc_size = rlen;
-            e.type = unc_get_u32be(mb + 65);
-            e.creator = unc_get_u32be(mb + 69);
-            e.finder_flags = (uint16_t)((mb[73] << 8) | mb[101]);
-            e.create_date = unc_get_u32be(mb + 91);
-            e.mod_date = unc_get_u32be(mb + 95);
+            /* Finder info, lock and dates, as fmt_macbinary.c reads a
+             * header; not the comment, which is after both forks in a
+             * stream not yet decoded (fmt_lzh.c says the same). */
+            (void)unc_macbinary_meta(&e, mb);
             mbok = 1;
         }
 
