@@ -569,7 +569,10 @@ int main(int argc, char **argv)
             memset(&info, 0, sizeof info);
             memcpy(info.name, "Fold/Doc", 8); info.name_len = 8;
             info.type = 0x54455854u; info.creator = 0x74747874u;
-            info.finder_flags = 0x0100;
+            /* The archive's raw word differs from the stated FInfo's
+             * flags (a reader that masks 0x0001 as its expander does,
+             * StuffIt classic): the STATED ones are written. */
+            info.finder_flags = 0x0101;
             info.create_date = 0xA0000011u; info.mod_date = 0xA0000012u;
             info.backup_date = 0xA0000013u;
             memcpy(info.finder_info, finfo, 16);
@@ -591,9 +594,22 @@ int main(int argc, char **argv)
             info.type = 0x4150504Cu; info.creator = 0x4D457874u;
             info.finder_flags = 0x2100;
             memcpy(info.finder_info, finfo, 16);
+            info.finder_info[8] = 0x21;          /* the stated flags too */
             info.meta = UNC_META_FINFO;
             info.data_size = 0; info.rsrc_size = 0;
             if (sink_begin(&sk2, &info) == 0) sink_end(&sk2, UNC_OK);
+
+            /* A FOLDER whose stated flags carry 0x2000, garbage for a
+             * folder: its inited bit stays, with its position (the bundle
+             * exception is a file's; at the merge of meta-sitclassic). */
+            memset(&info, 0, sizeof info);
+            memcpy(info.name, "Fold/Sub", 8); info.name_len = 8;
+            info.is_dir = 1;
+            info.finder_flags = 0x2100;
+            memcpy(info.finder_info, dinfo, 16);
+            info.finder_info[8] = 0x21; info.finder_info[9] = 0x00;
+            info.meta = UNC_META_FINFO;
+            sink_begin(&sk2, &info);
 
             memset(&info, 0, sizeof info);
             memcpy(info.name, "Fold/Plain", 10); info.name_len = 10;
@@ -631,6 +647,14 @@ int main(int argc, char **argv)
                     memcpy(&fa, ra->finfo, 16);
                     if (fa.fdFlags != 0x2000) bad |= DROP_FINFO;
                 }
+            }
+            snprintf(path, sizeof path, "%s/Fold/Sub", dir);
+            {
+                CatRec *rs = cat_rec(path, 0);
+                uint16_t ff = 0;
+                /* the mock keeps the record in host order, as fi above */
+                if (rs) memcpy(&ff, rs->finfo + 8, 2);
+                if (!rs || ff != 0x2100) bad |= DROP_FINFO;
             }
             /* As the shell writes them: the source volume's comment id,
              * put-away folder and (a folder's) open chain cleared, the

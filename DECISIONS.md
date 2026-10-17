@@ -430,6 +430,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the date held once per folder) — a folder's date is held in a one-entry cache, three catalog calls per change of folder instead of per item
 - 2026-10-17 (the window StuffIt kept in the name) — where five formats keep the Finder info, measured against each format's own expander
 - 2026-10-17 (the envelopes' own Finder info) — MacBinary, AppleSingle, MIME, uuencode and base64 deliver every field their standards hold
+- 2026-10-17 (the window Expander puts back) — StuffIt classic states exactly what Expander 4.0.2 restores, DiskDoubler restores the location its own Expand drops, and its header CRC was already checked
 
 ---
 
@@ -27457,7 +27458,9 @@ DiskDoubler 3.7 refuses a single-file header whose CRC-16/XMODEM at +82
 header and nothing past them, and `src/fmt_sit5.c` steps over the second
 block's word at b+2 as `u16 ?`, and reads neither the first block's
 header CRC @32 nor the archive header's @98. Each archive extracts here
-on its fork CRCs alone.
+on its fork CRCs alone. (Corrected 2026-10-17, *the window Expander puts
+back*: the DiskDoubler half is withdrawn — the SNIFFER checks +82 and
+refuses a nonzero mismatch; the StuffIt 5 half stands.)
 
 **Cost of the measurement.** Forty-five boots between 23:59 on
 2026-10-16 and 03:49 the next morning, most of the time the classic
@@ -27562,3 +27565,115 @@ The two other questions for the maintainer were answered by the brief:
 fdLocation and fdFldr are delivered as the archive holds them although both
 MacBinary standards tell a downloader to zero them, and the ZipIt/MacLHA
 comment, in no specimen anywhere, stays in OPEN_ITEMS.md.
+## 2026-10-17 (the window Expander puts back) — StuffIt classic states exactly what Expander 4.0.2 restores, DiskDoubler restores the location its own Expand drops, and its header CRC was already checked
+
+**Decision.** `src/fmt_sit.c`'s `sit_finder` implements FORMATS.md's
+*StuffIt classic, read by StuffIt Expander 4.0.2* table row for row,
+gates and masks included, and garbage as it stands: no more and no less
+than Expander restores. It states the whole FInfo/DInfo (and a folder's
+DXInfo, where `frScroll` lives) with the parts Expander does not restore
+at what it writes, and the lock, under the name CRC, as the tri-state.
+A folder's `finder_flags` follow too: 0 under version 1, where they were
+@74 unmasked before. `src/fmt_dd.c` states a single-file 84-byte
+header's FInfo whole: +32..47 of the file, `fdLocation` at +42 included,
+`fdFldr` 0.
+
+**DiskDoubler's location is restored although 3.7's own Expand does not
+restore it.** The brief is the file as it was before compression, and 3.7
+copied the location out of that file's catalog record (`ddmeta.py
+--writer`: the planted 0x0123/0x0145 is in the header). Matching the
+expander would mean dropping a value the writer kept for the purpose.
+Measured: the engine's FInfo for 3.7's own file equals the record the
+subject had before compression, all 16 bytes (`run_meta.py`). Four
+headers here hold (−1,−1) with inited set; they are restored as they
+stand, which is what the catalog held. The 1990 48-byte header states
+nothing more: not measured.
+
+**DiskDoubler's header CRC: no change, and the earlier claim is
+withdrawn.** The entry above says this engine does not read the +82 CRC.
+`dd_parse_filehdr` does not, but the sniffer does
+(`unc_diskdoubler_probe`, from macutils and XADMaster): a nonzero CRC
+that disagrees is "format not recognized", measured on a fixture with
+one header byte flipped, which is 3.7's refusal under another message.
+It accepts 0, XADMaster's "really old files have 0000"; 3.7 would refuse
+that. Every 84-byte header in reach carries a valid nonzero CRC — 69 in
+`fixtures/`, 33 more among the specimens, 70 of 70 of 3.7's — so no
+specimen exercises the zero case either way, and dropping XADMaster's
+exception would be a guess against the only source that names the
+case. A second check in the extractor would see only bytes the sniffer
+has already passed, so it was not added (BLOCKERS.md, *Withdrawn
+claims*).
+
+**StuffIt Deluxe 3.5.1, the next writer, measured** (`sitmeta.py
+--writer351`, one boot, its own script stuffing the sentinel folder of
+`--writer201`): it writes version 2 WITH the name CRC; the lock as bit 15
+of @36 (0x8000 on the locked file, 0 on the other); `fdLocation` @62,
+`fdFlags` @74, `frRect` @38, `frFlags` @74, `frView` @68, a nested
+folder's `frLocation` @70 and **(−1,−1) at @70 for the top folder**
+itself. It writes no `frScroll` (@100..103 are 0), and the planted
+`FXInfo`, `DXInfo` past the scroll and both backup dates are in no
+header byte. So the second classic writer run, like the first, does not
+store what no expander restores; `fdFldr` was not planted and is not
+measured. The engine reads the archive as Expander would: 4 entries,
+lock L on `Wf2`. Nothing implemented from it.
+
+**Evidence.**
+- `tools/run_meta.py --expander` (in `ci.sh`): the CLI's `l --meta` held
+  against the catalog records Expander wrote, 241 archives (225 corpus,
+  16 sentinel), **6,627 fields, 0 disagreements**; 5 archives Expander
+  did not extract whole left out by name. Controls: `origin/main`'s
+  engine disagrees on 2,150; each rule removed alone disagrees —
+  name CRC 456, version 11, the 0x0001 mask 37, the (−1,−1) exception
+  125, the scroll's h/v order 385, the top folder's (−1,−1) 15, inited
+  cleared with no position 500, the lock's gate 11.
+- `tools/vmac/metarun.py --expander`: the application on System 6.0.8,
+  24 archives (7 corpus covering every writer class and rule, 17
+  sentinel), **496 catalog values read back, all as Expander wrote
+  them** (FInfo/DInfo, FXInfo/DXInfo, three dates, lock), 24/24 forks
+  PASS. Control: `origin/main`'s application, 112 wrong.
+- The one difference allowed is the shell's, on purpose (*the bit that
+  kept the position*): inited cleared where the flags carry a bundle,
+  which Expander keeps. It reaches FOLDERS too, so a folder whose
+  garbage frFlags include 0x2000 loses inited where Expander keeps it;
+  no corpus folder does.
+
+**The flags the shell writes are the stated ones.** The first cut gave
+`finder_flags` Expander's masked value, and the differential suite failed
+four fixtures: `unar` reports @74 as stored, and the inited bit Expander
+drops was gone from the field the suite holds to it. Weakening that check
+was not an option, so `finder_flags` stays the archive's word, the
+masked flags go in `finder_info` 8..9, and `include/macextract.h` now says
+that where `UNC_META_FINFO` is stated those bytes are the flags to write;
+`StampCat` reads them, as bytes (`mac_sink_test --meta`, whose `Doc` now
+carries raw 0x0101 against stated 0x0100: the old rule fails it). For
+AppleSingle and AppleLink, the two readers before this, the two are the
+same bytes, so nothing they write moves.
+
+**Price**, against `origin/main`, per configuration (`tools/build_mac.sh`):
+shipped (eager) CODE +16 and A5 +16 — `StampCat` +12, 4 of alignment, and
+16 B of `.data` padding — **32 B off every extraction's budget on a 1 MB
+Mac Plus**; lazy CODE +12, A5 +20 (padding); resident control CODE +428
+(`sit_finder` 310, not inlined; `unc_sit_extract` +60; `unc_dd_extract`
++28; `StampCat` +12), A5 −12. Images: `ovl_stuffit` +380, `ovl_cptdd`
++28, the bundle +408, so a StuffIt archive's grant falls 412 B, a
+DiskDoubler or Compact Pro one's 60 and an envelope's 440. `OVL_SAVED`
++384 and `TIERS_CONTROL` +416 with `TIERS` −416, DERIVED
+(`tools/run_tiers.py`); `run_tiers.py --check` moves no tally on any
+lane, so **0 extractions lost**. Stack (`-Os -fstack-usage`):
+`unc_sit_extract` 934 → 938, `sit_finder` 42 (a leaf off the walk),
+`unc_dd_extract` 996 → 992, so the engine's deepest chain 3,354 → 3,350
+B, derived.
+
+**At the merge, 2026-10-17 (the reviewer's).** Two adjustments. The shell's
+bundle exception, which clears inited so the Finder registers an
+application, is a FILE's: a folder's 0x2000 means nothing, and a folder
+whose stored flags carry it in garbage now keeps its inited bit and its
+position (`mac_sink_test --meta`'s `Fold/Sub`; the shell without the change
+fails it). And MacBinary I follows this entry's rule: `finder_flags` stays
+the header's own word, what `unar` reports, and only the flags written
+(finder_info[8..9]) lose 73's bit 7 (DECISIONS.md 2026-10-17, *the
+envelopes' own Finder info*). Merged figures: shipped CODE +20, A5 +12
+against `main` (32 B off every budget, the branch's own figure); the
+control +416; `OVL_SAVED` 139,280, `TIERS` −416, the bundle 168,020, all
+derived; the grants table re-taken as each row's change on the branch
+applied to `main`'s; `run_tiers.py --check` moves no tally.

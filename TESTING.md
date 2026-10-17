@@ -3371,13 +3371,20 @@ is silent. Graded against:
 | the envelopes, generated per run into `.tmp/` by `tools/synth_envelopes.py`: MacBinary I, II and III, uuencode read-only and writable, UUTool with a placed `.finfo`, base64 read-only, mpack-shaped `multipart/appledouble` | MacBinary: deark's debug reading (`modules/macbinary.c`) for the 16 bytes of FInfo and offset 81, macunpack's copy of 81 (`I_LOCKOFF`), which must agree with deark's; UUTool: hexbin's header (`hexbin/mu.c`) for FInfo bytes 0..7 and 10..15; MIME: the applefile part taken out by Python's `email` and read by `lsar`; the begin-line mode, a reading written in the suite (deark's octal, 0200 owner write); the generator's field values for MacBinary's comment and FXInfo, which nothing else reads |
 | `--corpus`, envelopes (`envelope_corpus`) | every fixture the engine sniffs as MacBinary (deark), uuencode or base64 (the begin line), MIME (Python's `email`, then `lsar`), each ZipIt payload in a zip (Python's `zipfile`, then deark), and the MacGzip and ZipIt specimens in the cache when present: 507 fields of 255 entries on 2026-10-17 |
 
+| DiskDoubler 3.7's own compressed file | the catalog record the subject had before 3.7 compressed it (`tools/vmac/ddmeta.py --writer`'s result; skipped where absent) |
+| `--expander` | **StuffIt classic against StuffIt Expander 4.0.2's own output**: for every archive `tools/vmac/sitmeta.py` ran (225 corpus, 21 sentinel), the catalog record Expander wrote for each entry, field for field — a file's FInfo, FXInfo, backup date and lock, a folder's DInfo, DXInfo and backup date; `-` counts as what a host writes on a new entry. 241 archives, 6,627 fields, 0 disagreements on 2026-10-17; 5 archives Expander did not extract whole are left out by name. Skipped, and said so, without sitmeta.py's results |
+
 Each field is then tampered with in the engine's row, one at a time, and the
 comparison must fail: 37 controls, 37 caught. **In the envelope tables a
 field the oracle states and the engine prints as `-` FAILS**, which the
 lsar corpus check does not do: a dropped-field control replaces each
 stated field with `-` (505 of 505 caught). Run against `origin/main`'s
 CLI, which reads none of these fields, the suite fails 522 times
-(measured 2026-10-17).
+(measured 2026-10-17). `--expander` has seven controls of its
+own (a file's four fields, a folder's three), and stronger ones, run once on
+2026-10-17: `origin/main`'s engine disagrees on 2,150 fields, and each of
+the eight rules removed from `sit_finder` alone disagrees on 11 to 500
+(DECISIONS.md 2026-10-17, *the window Expander puts back*).
 
 **The shell's half: `mac_sink_test --meta`** (`tests/run_mac_sink.sh`). A
 folder and two files go through the real `sink_begin`/`sink_end` against a
@@ -3402,7 +3409,9 @@ mechanism removed, each fail the cases they should (DECISIONS.md
 the envelope tables: it prints `-` and passes. Inside them: MacLHA's
 payloads (no reader here takes one out), and a MacBinary comment or FXInfo
 on any real file — none in the corpus or the cache has either, so those
-two are graded on the generator alone. The real File Manager and Desktop Manager: that is
+two are graded on the generator alone. With `--expander`: the dates (not in
+`l --meta`; `metarun.py --expander` reads them off the disk), and any
+StuffIt reader but Expander 4.0.2. The real File Manager and Desktop Manager: that is
 `tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the
 Finder then does with any of it.
 

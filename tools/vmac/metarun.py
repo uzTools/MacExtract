@@ -3,6 +3,7 @@
 
     tools/vmac/metarun.py [--system System6.hfv|Sys7.img] [--sys30]
     tools/vmac/metarun.py --check RUNDIR       # grade disks a run kept
+    tools/vmac/metarun.py --expander [--check-expander RUNDIR]
 
 Extracts `synth-as-meta.as`, `synth-sqp-meta.pkg` and `nested.pkg` (made
 per run: A/x, A/B/y, A/z with a date on each folder) with the autotest
@@ -25,6 +26,17 @@ and FXInfo's fdComment and fdPutAway (a folder's frOpenChain too) cleared
 (mac/macextract_mac.c, StampCat; DECISIONS.md 2026-10-17). The comment is
 expected where the volume reports bHasDesktopMgr and absent where it does
 not.
+
+`--expander` is StuffIt classic against StuffIt Expander 4.0.2's OWN
+output: seven corpus archives that between them hold every writer class
+and every rule of FORMATS.md's table (`SIT_PICK`), and the sentinel
+archives Expander extracted whole, each run through the application and
+every catalog record read back, then held field for field against the
+record Expander wrote for the same entry (tools/vmac/sitmeta.py's
+results): FInfo/DInfo, FXInfo/DXInfo, three dates, the lock. The one
+difference expected is the shell's own, on purpose: inited (0x0100) is
+cleared where the flags carry a bundle (0x2000), which Expander keeps
+(DECISIONS.md 2026-10-17, *the bit that kept the position*).
 
 **What it cannot see.** The Finder: whether it then DRAWS an icon at the
 position, opens the window at the rectangle, or shows the comment — none
@@ -227,6 +239,158 @@ def check(rundir):
     return bad, n
 
 
+# StuffIt classic archives for --expander, chosen 2026-10-17 as the fewest
+# small corpus archives that hold every writer class (version byte, 0x0986,
+# name CRC) and every rule: a placed file, a (-1,-1) one, a locked one,
+# flags 0x0001, a bundle, inited without a name CRC, a nested folder, a
+# rectangle, a scroll, a view under version 1.
+SIT_PICK = ("derived-Indexer_Script_1.0.sit", "derived-Fractional_Widths.sit",
+            "derived-MacOS_Permissions_Lister_1..sit", "derived-ttxt_XTND.sit",
+            "derived-DL111.sit", "derived-naffs7.sit", "derived-DEF.sit")
+
+
+def sit_cases():
+    """{archive name: (path to run, [(archive path tuple, kind, record)])}
+    for SIT_PICK and every sentinel archive Expander extracted whole."""
+    import run_meta
+    sys.path.insert(0, os.path.join(REPO, "tools"))
+    tmp = os.path.join(REPO, ".tmp", "metarun-sit")
+    os.makedirs(tmp, exist_ok=True)
+    out = {}
+    for tag, a in run_meta.sitmeta_results():
+        name = a["fixture"]
+        if not (name in SIT_PICK or name.startswith("synth-")):
+            continue
+        ents = [e for e in a["entries"] if e["kind"] != "end"]
+        if any("match" not in e for e in ents):
+            continue
+        blob = run_meta.sit_archive(a)
+        if blob is None:
+            continue
+        p = os.path.join(tmp, name)
+        open(p, "wb").write(blob)
+        out[name] = (p, [(tuple(bytes.fromhex(x) for x in e["path"]),
+                          e["kind"], bytes.fromhex(e["match"]["rec"]))
+                         for e in ents])
+    return out
+
+
+def shell_rec(kind, rec):
+    """Expander's record as the shell is meant to write it: the bundle
+    rule, and FXInfo's source-volume ids cleared (0 in all Expander wrote,
+    so the second changes nothing; it is stated so a change would show)."""
+    b = bytearray(rec)
+    fo = 4 + 8 if kind == "file" else 22 + 8
+    f = (b[fo] << 8) | b[fo + 1]
+    if f & 0x2000:
+        f &= ~0x0100
+    b[fo], b[fo + 1] = f >> 8, f & 0xFF
+    xo = 56 if kind == "file" else 38
+    b[xo + 10:xo + 16] = bytes(6)
+    if kind == "dir":
+        b[xo + 4:xo + 8] = bytes(4)
+    return bytes(b)
+
+
+SIT_FIELDS = {"file": (("FInfo", 4, 16), ("FXInfo", 56, 16), ("locked", 2, 1),
+                       ("cr", 44, 4), ("md", 48, 4), ("bk", 52, 4)),
+              "dir": (("DInfo", 22, 16), ("DXInfo", 38, 16), ("cr", 10, 4),
+                      ("md", 14, 4), ("bk", 18, 4))}
+
+
+def check_expander(rundir, cases, control=False):
+    """Every entry of every archive the run kept, against Expander's
+    record. With `control`, the expected records are Expander's with the
+    shell's rule NOT applied and one field shifted, and must fail."""
+    import json
+    runs = json.load(open(os.path.join(rundir, "metarun-sit.json")))
+    bad, n = [], 0
+    for name, workdir in runs.items():
+        _p, ents = cases[name]
+        img = os.path.join(workdir, "out.dsk")
+        if not os.path.exists(img):
+            bad.append("%s: no output disk" % name)
+            continue
+        got = {}
+        for r in hfscat.records(open(img, "rb").read()):
+            got[(r["path"][1:], r["kind"])] = r["rec"]
+        for path, kind, rec in ents:
+            want = rec if control else shell_rec(kind, rec)
+            if control:
+                want = want[:5] + bytes([want[5] ^ 1]) + want[6:]
+            g = got.get((path, hfscat.FILE if kind == "file"
+                         else hfscat.DIR))
+            label = "%s: %s" % (name, b":".join(path).decode("mac-roman"))
+            if g is None:
+                bad.append("%s is not on the disk" % label)
+                continue
+            for f, off, size in SIT_FIELDS[kind]:
+                n += 1
+                gv, wv = g[off:off + size], want[off:off + size]
+                if f == "locked":
+                    gv, wv = bytes([gv[0] & 1]), bytes([wv[0] & 1])
+                if gv != wv:
+                    bad.append("%s: %s %s, Expander %s"
+                               % (label, f, gv.hex(), wv.hex()))
+    return bad, n
+
+
+def run_expander(a):
+    import json
+    cases = sit_cases()
+    if not cases:
+        print("metarun: no sitmeta.py results; nothing to grade")
+        return 1
+    names = sorted(cases)
+    cmd = [sys.executable, os.path.join(HERE, "run.py"), "--mem", a.mem,
+           "--system", a.system, "--keep-disks", "--expect",
+           "--out-kb", str(a.out_kb or 4096)] + [cases[n][0] for n in names]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    sys.stdout.write(r.stdout)
+    runs, last, verdicts = {}, None, {}
+    for line in r.stdout.splitlines():
+        f = line.split()
+        if len(f) > 1 and f[1] in cases:
+            last = f[1]
+            verdicts[last] = f[0]
+        if "disks kept in " in line and last:
+            runs[last] = line.split("disks kept in ")[1].strip()
+            last = None
+    if not runs:
+        print("metarun: the run kept no disks")
+        return 1
+    rundir = os.path.dirname(next(iter(runs.values())))
+    json.dump(runs, open(os.path.join(rundir, "metarun-sit.json"), "w"),
+              indent=1)
+    # The forks too: run.py's own verdict, the grid against this engine's
+    # Linux output (--expect).
+    failed = sorted(n for n in names if verdicts.get(n) != "PASS")
+    for n in failed:
+        print("metarun: FAIL %s: run.py says %s" % (n, verdicts.get(n)))
+    return grade_expander(rundir, cases, len(names)) or bool(failed)
+
+
+def grade_expander(rundir, cases, want_n):
+    import json
+    runs = json.load(open(os.path.join(rundir, "metarun-sit.json")))
+    bad, n = check_expander(rundir, cases)
+    if len(runs) != want_n:
+        bad.append("%d archives ran of %d" % (len(runs), want_n))
+    cbad, _cn = check_expander(rundir, cases, control=True)
+    for b in bad:
+        print("metarun: FAIL %s" % b)
+    print("metarun: Expander 4.0.2, %d archive(s), %d value(s) read back, "
+          "%s; the control (Expander's records less the shell's rule, one "
+          "byte shifted) disagrees on %d" % (
+              len(runs), n, "all as Expander wrote them" if not bad
+              else "%d WRONG" % len(bad), len(cbad)))
+    if not cbad:
+        print("metarun: FAIL the control passed: the comparison compares "
+              "nothing")
+        return 1
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -240,7 +404,16 @@ def main():
                          "gives a 1,440 KB floppy no Desktop Manager "
                          "(vMAttrib 0xE0, measured 2026-10-17), so the "
                          "comment needs a larger one there")
+    ap.add_argument("--expander", action="store_true",
+                    help="StuffIt classic against Expander 4.0.2's own "
+                         "output (see above)")
+    ap.add_argument("--check-expander", metavar="RUNDIR")
     a = ap.parse_args()
+    if a.check_expander:
+        cases = sit_cases()
+        return grade_expander(a.check_expander, cases, len(cases))
+    if a.expander:
+        return run_expander(a)
     rundir = a.check
     if not rundir:
         drv = (["sys30.py", "--mem", a.mem] if a.sys30

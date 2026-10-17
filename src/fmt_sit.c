@@ -1214,6 +1214,76 @@ static int sit_fork_crypt(UncCtx *c, UncCrypt *cr, uint32_t at,
 
 #define SIT_MAX_DEPTH 32
 
+/* The Finder info, the lock and a folder's window, stated exactly as
+ * StuffIt Expander 4.0.2 puts them back: no more and no less, garbage
+ * values included, which it writes as they stand.
+ *
+ * Source: FORMATS.md, *Finder info in the archive*, table *StuffIt
+ * classic, read by StuffIt Expander 4.0.2*; DECISIONS.md 2026-10-17,
+ * *the window StuffIt kept in the name*. Measured, not published: 225
+ * corpus archives and 21 sentinel archives through Expander under
+ * emulation, every catalog record read back (tools/vmac/sitmeta.py).
+ *
+ *   gate "crc": @34 is the CRC-16/ARC of bytes 2..33 (the name's length
+ *     byte and its 31-byte field). Writers that do not compute it leave
+ *     name leftovers in @34..65, and Expander then restores no position,
+ *     rectangle, scroll or lock.
+ *   gate "v2": archive byte 14 >= 2, for a folder's flags and view.
+ *   file:   type @66, creator @70, fdFlags @74 less 0x0001;
+ *           fdLocation @62..65 (v, h) under "crc", except (-1,-1); where
+ *           no location is restored, inited (0x0100) goes too, so the
+ *           Finder places the icon; fdFldr 0; locked = bit 15 of @36,
+ *           under "crc" (any version).
+ *   folder: frRect @38..45 under "crc"; frFlags @74 less 0x0001 under
+ *           "v2"; frLocation @70..73 under "crc" for a NESTED folder,
+ *           and (-1,-1) for a top-level one or without "crc"; frView
+ *           @68 under "v2"; frScroll @100..103 under "crc", stored h
+ *           then v. The rest of DXInfo is 0.
+ * Nothing in the header becomes FXInfo, a backup date or fdFldr: the
+ * measurement found no byte Expander reads for them (DECISIONS.md, same
+ * entry). All 16 bytes are stated, the parts Expander does not restore
+ * at what it writes, so the shell's inited rule behaves as Expander's.
+ * finder_flags is left as the archive stores it: the flags written are
+ * fi[8..9]. */
+static void sit_finder(UncEntryInfo *e, const uint8_t *h, int v2, int top)
+{
+    uint8_t *fi = e->finder_info;
+    int crc = unc_crc16_arc(0, h + 2, 32) == unc_get_u16be(h + 34);
+    unsigned fl = unc_get_u16be(h + 74) & 0xFFFEu;
+    int k;
+
+    if (e->is_dir) {
+        if (!v2) fl = 0;
+        for (k = 0; k < 4; k++) {
+            if (crc) {
+                fi[k] = h[38 + k];
+                fi[4 + k] = h[42 + k];
+                fi[16 + k] = h[100 + (k ^ 2)];       /* stored h, v */
+            }
+            fi[10 + k] = (crc && !top) ? h[70 + k] : 0xFF;
+        }
+        if (v2) {
+            fi[14] = h[68];
+            fi[15] = h[69];
+        }
+        e->meta = UNC_META_FINFO | UNC_META_FXINFO;
+    } else {
+        int placed = crc && unc_get_u32be(h + 62) != 0xFFFFFFFFu;
+        for (k = 0; k < 8; k++) fi[k] = h[66 + k];
+        for (k = 0; k < 4; k++) fi[10 + k] = placed ? h[62 + k] : 0;
+        if (!placed) fl &= 0xFEFFu;
+        e->meta = UNC_META_FINFO;
+        e->locked = !crc ? UNC_LOCK_UNKNOWN
+                  : (h[36] & 0x80) ? UNC_LOCK_YES : UNC_LOCK_NO;
+    }
+    fi[8] = (uint8_t)(fl >> 8);
+    fi[9] = (uint8_t)fl;
+    /* finder_flags stays the header's own word, as stored (what `unar`
+     * reports, and what the differential suite holds it to); the flags
+     * a host WRITES are fi[8..9] (include/macextract.h). */
+    e->finder_flags = unc_get_u16be(h + 74);
+}
+
 int unc_sit_extract(UncCtx *c)
 {
     uint8_t hdr[SIT_FILEHDRSIZE];
@@ -1221,7 +1291,7 @@ int unc_sit_extract(UncCtx *c)
     uint8_t path[UNC_NAME_MAX + 1];
     uint16_t plen = 0;
     uint16_t pathlens[SIT_MAX_DEPTH];
-    int depth = 0;
+    int depth = 0, v2;
     uint8_t *iobuf, *obuf;
     UncCrypt *cr;
     uint32_t iocap = UNC_IOBUF, ocap = UNC_IOBUF;
@@ -1231,6 +1301,7 @@ int unc_sit_extract(UncCtx *c)
 
     if (unc_read_at(c->io, 0, hdr, 22) != UNC_OK) return UNC_ERR_FORMAT;
     if (!unc_sit_probe(hdr, 22, NULL)) return UNC_ERR_FORMAT;
+    v2 = hdr[14] >= 2;           /* sit_finder's "v2" gate */
     /* The archive states its own length. A file SHORTER than that is
      * cut, and clamping the walk to what is there — which is what keeps
      * it inside the file — is exactly the step that used to erase the
@@ -1285,7 +1356,7 @@ int unc_sit_extract(UncCtx *c)
             e.is_dir = 1;
             e.data_size = e.rsrc_size = 0;
             e.comp_data_size = e.comp_rsrc_size = 0;
-            e.finder_flags = unc_get_u16be(hdr + 74);
+            sit_finder(&e, hdr, v2, depth == 0);
             e.create_date  = unc_get_u32be(hdr + 76);
             e.mod_date     = unc_get_u32be(hdr + 80);
             sret = c->sink->begin_entry(c->sink->ctx, &e);
@@ -1316,7 +1387,7 @@ int unc_sit_extract(UncCtx *c)
         unc_entry_path_append(&e, hdr + 3, namelen);
         e.type         = unc_get_u32be(hdr + 66);
         e.creator      = unc_get_u32be(hdr + 70);
-        e.finder_flags = unc_get_u16be(hdr + 74);
+        sit_finder(&e, hdr, v2, 0);
         e.create_date  = unc_get_u32be(hdr + 76);
         e.mod_date     = unc_get_u32be(hdr + 80);
         e.rsrc_size = rlen;

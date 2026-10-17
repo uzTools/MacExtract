@@ -146,9 +146,11 @@ lock, the Get Info comment) and the Macintosh shell writes all of it
 everything their format holds**: AppleSingle/AppleDouble, AppleLink
 packages, and since 2026-10-17 MacBinary I/II/III (also inside ZipIt,
 MacLHA and MacGzip, less the comment), uuencode, base64 and MIME
-`multipart/appledouble`; BinHex 4 and before 4 hold nothing more
-(DECISIONS.md 2026-10-17, *the envelopes' own Finder info*). Every other
-reader still delivers type, creator, flags and two dates. The leads, from a scan of the references and the
+`multipart/appledouble` (DECISIONS.md 2026-10-17, *the envelopes' own
+Finder info*); StuffIt classic, what Expander 4.0.2 restores (FInfo/DInfo,
+a folder's scroll, the lock), and DiskDoubler's single-file header (FInfo)
+(*the window Expander puts back*). BinHex 4 and before 4 hold nothing more.
+Every other reader still delivers type, creator, flags and two dates. The leads, from a scan of the references and the
 corpus (2026-10-16) — **none re-verified here; each needs its own source
 or measurement before it is read**:
 
@@ -162,7 +164,6 @@ or measurement before it is read**:
 | tar, LZH | a POSIX mode (a read-only one is a lock) | `lsar`'s XADPosixPermissions |
 | ARC/ArcMac | the rest of the FInfo it holds | per format |
 | AppleSingle entry 11 | ProDOS's access word (no write-enable is a lock) | none; RFC 1740 gives its size and not its bits, and no reference here does |
-| StuffIt classic | folder location, view, flags (measured once against Expander 4.0.2) and file location in name-field bytes | StuffIt Expander, one specimen; needs many |
 | SuperDisk! | a 20-byte folder record, discarded, so folders get no dates | none known |
 
 Closing a row: the reader delivers the field with a `Source:` and a grade,

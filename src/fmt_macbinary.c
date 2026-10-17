@@ -175,9 +175,11 @@ int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b)
      * aliases, and left in the flags it is System 7's isAlias, which made
      * a locked file a broken alias (DECISIONS.md 2026-10-17, *the
      * envelopes' own Finder info*). So it is the lock below, and masked
-     * here. */
+     * in the flags written. */
     hi = (uint8_t)(v == 1 ? b[73] & 0x7F : b[73]);
-    e->finder_flags = (uint16_t)((hi << 8) | b[101]);
+    /* finder_flags stays the header's own word (what `unar` reports); the
+     * flags the shell writes are finder_info[8..9] (include/macextract.h). */
+    e->finder_flags = (uint16_t)((b[73] << 8) | b[101]);
     e->create_date  = unc_get_u32be(b + 91);
     e->mod_date     = unc_get_u32be(b + 95);
     for (k = 0; k < 16; k++) e->finder_info[k] = b[65 + k];

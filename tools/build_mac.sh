@@ -526,6 +526,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # held in a one-entry cache instead of per item, and EnsureDir looking a
 # name up before creating it (DECISIONS.md 2026-10-17, *the date held once
 # per folder*). CODE + A5 unmoved.
+# +428 code and -12 A5 on 2026-10-17 for StuffIt classic's and
+# DiskDoubler's Finder info, resident here: sit_finder 310, new (not
+# inlined), unc_sit_extract +60, unc_dd_extract +28, StampCat +12 (the
+# eager pair above); the A5 is `.data` alignment stepping back
+# (DECISIONS.md 2026-10-17, *the window Expander puts back*).
 # +744 code and -8 A5 on 2026-10-17 for the envelopes' Finder info
 # (DECISIONS.md 2026-10-17, *the envelopes' own Finder info*): the eager
 # pair's resident pieces below, and here the readers that are images there
@@ -535,7 +540,7 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # MacBinary I header's lock bit masked out of the Finder flags, where
 # System 7 reads it as isAlias (DECISIONS.md 2026-10-17, *the envelopes'
 # own Finder info*).
-UNC_MAC_CODE_DEFAULT=177240
+UNC_MAC_CODE_DEFAULT=177672
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -701,7 +706,8 @@ UNC_MAC_CODE_DEFAULT=177240
 # -20 on 2026-10-16 with the code ceiling's +20: padding, the time left.
 # -8 on 2026-10-16 with the code ceiling's +8: padding.
 # +4 on 2026-10-16 with the code ceiling's +92.
-UNC_MAC_A5_DEFAULT=37480
+# -12 on 2026-10-17 with the code ceiling's +428: padding.
+UNC_MAC_A5_DEFAULT=37464
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1021,6 +1027,12 @@ UNC_MAC_A5_DEFAULT=37480
 # in all** (DECISIONS.md 2026-10-17, *the bit that kept the position*).
 # +16 code and -16 A5 the same day for the second review (the default
 # pair above): 0 B off any budget, 864 in all.
+# +16 code and +16 A5 on 2026-10-17 for StampCat writing the flags the
+# Finder info STATES, which a reader may have masked as its format's own
+# expander does (StuffIt classic): **32 B off every extraction's budget.**
+# StampCat +12 and 4 of alignment; the A5 is 16 zero bytes of `*fill*`
+# under `.data`'s ALIGN (0x20), nothing in it moved (DECISIONS.md
+# 2026-10-17, *the window Expander puts back*).
 # +464 code and +16 A5 on 2026-10-17 for the envelopes' Finder info:
 # **480 B off every extraction's budget.** By symbol: unc_macbinary_meta
 # 234, new (one MacBinary header read one way, for MacBinary, ZipIt and
@@ -1033,8 +1045,8 @@ UNC_MAC_A5_DEFAULT=37480
 # 2026-10-17, *the envelopes' own Finder info*).
 # +12 code and -12 A5 on 2026-10-17 at the merge of meta-envelopes, the
 # same mask: 0 B of budget.
-UNC_MAC_CODE_EAGER=57292
-UNC_MAC_A5_EAGER=18532
+UNC_MAC_CODE_EAGER=57312
+UNC_MAC_A5_EAGER=18544
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1089,10 +1101,12 @@ UNC_MAC_A5_EAGER=18532
 # +40 code the same day for the review (the eager pair above); A5 18,632,
 # under its ceiling.
 # +16 code the same day, the second review; A5 18,616, under its ceiling.
+# +12 code on 2026-10-17, StampCat writing the stated flags (the eager pair
+# above); A5 18,636, +20 of padding, under its ceiling.
 # +460 code on 2026-10-17, the envelopes' Finder info (the eager pair
 # above); A5 18,652, under its ceiling.
 # +16 code on 2026-10-17, the same mask.
-UNC_MAC_CODE_LAZY=55716
+UNC_MAC_CODE_LAZY=55736
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}
