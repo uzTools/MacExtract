@@ -183,6 +183,7 @@ int unc_b64_extract(UncCtx *c)
         uint32_t nlen = 0;
         int found = 0, eof = 0, sret, est = UNC_OK;
         int32_t llen = 0;
+        uint8_t lock = UNC_LOCK_UNKNOWN;
 
         /* Look for a "begin-base64" line. Without one the whole file is
          * the body — but only from the very beginning, so a second pass
@@ -207,6 +208,9 @@ int unc_b64_extract(UncCtx *c)
             start = 0;                       /* the bare shape */
         } else {
             b64_name_from_begin(line, llen, &nm, &nlen);
+            /* The mode, read as uuencode's is (fmt_uu.c), before the
+             * line buffer is reused. */
+            lock = (uint8_t)unc_uu_mode_lock(line, llen, 13);
         }
 
         err = b64_run(c, start, 0, iobuf, &bytes, &end);
@@ -221,6 +225,7 @@ int unc_b64_extract(UncCtx *c)
             unc_entry_set_name(&e, c->opt.name_hint, c->opt.name_hint_len);
         e.data_size = bytes;
         e.comp_data_size = end - start;
+        e.locked = lock;
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);
         if (sret < 0) { err = UNC_ERR_SINK; break; }

@@ -3605,6 +3605,31 @@ lost hasBeenInited and got a location held in no header; the four files
 directly in the top folder kept theirs. That the depth is the rule is a
 hypothesis, on two files.
 
+### The envelopes: what each standard holds, and what reads it here
+
+**From the standards, not measured against an expander** (no MacBinary,
+uuencode or MIME decoder has been run under emulation for this). Read
+since 2026-10-17 (DECISIONS.md, *the envelopes' own Finder info*); graded
+by `tools/run_meta.py` (TESTING.md).
+
+| format | field | where | becomes |
+|---|---|---|---|
+| MacBinary I/II/III | FInfo | 65..80, flags' low byte at 101 | all 16 bytes |
+| MacBinary I/II/III | "Protected" | 81, bit 0 | locked |
+| MacBinary I | "Locked" | 73, bit 7 | locked (isAlias in III, and not read in II) |
+| MacBinary II/III | Get Info comment | length at 99; text on the 128-byte boundary after the resource fork | the comment, at most 255 bytes; dropped if the file ends first |
+| MacBinary III | `fdScript`, `fdXFlags` | 106, 107 | FXInfo +8, +9, the rest zero |
+| AppleSingle/Double, MIME `multipart/appledouble` | entries 4, 8, 9, 10, 12 | RFC 1740 | comment, three dates (0x80000000 left unknown), FInfo and FXInfo, lock |
+| uuencode, base64 | `begin <mode>` | octal | locked without owner write (0200); not read in a UUTool document |
+| UUTool | `.finfo` | 16 bytes | all of FInfo |
+| BinHex 4, BinHex before 4 | — | name, type, creator, flags only (`binhex40_lewis.txt`; `fmt_hecx.c`) | nothing more to read |
+
+**Who writes them** (2026-10-17, the corpus and the specimen cache): 10 of
+the corpus's 237 MacBinary headers hold a nonzero `fdLocation` (two of them (−1,−1)), 1 the Protected bit
+(`fractionalwidths.sit`), none a comment, a script byte or 73's bit 7 in
+MacBinary I; of the 14 ZipIt payloads Python's `zipfile` reads (16 in all, `run_zipit.py`), 5 are MacBinary III (ZipIt 2.2.2),
+two with `fdXFlags` 0x80 and one an alias with 73's bit 7 set.
+
 ## Archives named but not extracted
 
 **Named since 2026-08-26**, extraction still out by the brief (OPEN_ITEMS.md,
@@ -5088,7 +5113,7 @@ follows; 0 in 2,246. And no fuzzer has a Shrink seed.
 image is `-mpcrel` code for a 68000, whose PC-relative references are 16
 bits, and with the decoder in `src/fmt_exo.c` the image link failed —
 `relocation truncated to fit: R_68K_PC16 against g_ovl_fns` — at about
-33 KB. `ovl_exo` is at **32,160 B** since Reduce's call (2026-10-11), so roughly **600 B** is left before
+33 KB. `ovl_exo` is at **32,124 B** since 2026-10-17 (32,160 from Reduce's call, 2026-10-11, until zip's ZipIt path called the resident MacBinary reader), so roughly **640 B** is left before
 the next zip feature has to go elsewhere too (the exact reach depends on
 where the linker puts `g_ovl_fns`; HYPOTHESIS beyond the one failure).
 
@@ -5644,8 +5669,8 @@ quoted beside. It cancels in a DIFFERENCE taken from one probe pair, which is
 why the overlay gains are measured that way (*What it buys, against the
 control*), and 320 B of the residue there is exactly this: **117,040 B saved
 between the shipped pair against 116,720 B between the probe pair**, both
-measured 2026-09-27. The shipped pair is **138,608 B** since 2026-10-17's
-review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
+measured 2026-09-27. The shipped pair is **138,864 B** since 2026-10-17's
+envelopes' Finder info, 138,608 B after that day's review of the Finder metadata, 138,576 B after that day's metadata, 138,544 B after 2026-10-16's
 time left from the byte counts, 138,576 B after that day's
 `GrowApplZone`, 138,544 B after 2026-10-14's refusal of a fork over 2 GB, 138,576 B after that day's BinHex before 4.0, 136,448 B after 2026-10-13's
 eject before a split set's next part, 136,464 B after that day's MIME progress, 136,240 B after 2026-10-12's Arsenic progress, 135,920 B after that day's reload for a list of archives, 136,080 B after that day's menu bar, 136,064 B after 2026-10-11's fixes from the LC 475, 136,112 B after that day's `JPEG Lossy` work and
@@ -5653,8 +5678,9 @@ eject before a split set's next part, 136,464 B after that day's MIME progress, 
 DiskDoubler buffer reuse) (*Three configurations, one tree*); the probe pair has not been re-measured,
 so the 320 B is that day's difference and not today's.
 
-The bundle is **167,256 B** — the sixteen images sum to 167,044 B, so its
-index costs **212 B** (+14 B on 2026-10-11 with the sixteenth image,
+The bundle is **167,612 B** — the sixteen images sum to 167,402 B, so its
+index costs **210 B** (CORRECTED 2026-10-17: 167,256 and 212 B until
+`ovl_lzh` went 9,586 → 9,576, 2 → 0 mod 4) (+14 B on 2026-10-11 with the sixteenth image,
 `ovl_zipold`: 12 of directory and 2 of padding): a 4-byte header, 12 bytes
 of directory per image and 16 bytes of padding to 4, which accounts for
 the whole difference
@@ -5785,7 +5811,7 @@ been chosen is a read at the moment the application's own floppy may be out.
 The budget a tier gives the engine is therefore not one number any more. It
 is the resident build's budget for that tier — the figures under *512 KB
 machines* and *Floor target verification* — plus what the release leaves,
-which is the 138,608 B of `CODE` and A5 the shipped build does not carry
+which is the 138,864 B of `CODE` and A5 the shipped build does not carry
 (*Three configurations, one tree*), less the images this format keeps and 8 B
 of block header each, less a **666 B residue**: 320 B of that is the probe
 build's own weight and **346 B is unattributed — the same 346 B either side of
@@ -5937,7 +5963,7 @@ rose, because the control took 2,148 B for the same format.
 **The last row is the one no tally had shown**: a `.hqx`, a `.gz`, a `.Z` or
 a MacBinary wrapper does not know what is under it, so the bundle stays and
 that layer runs with **less** memory than a resident build would have given
-it — 167,256 B held against 138,608 B saved. It costs nothing on the tiers
+it — 167,612 B held against 138,864 B saved. It costs nothing on the tiers
 because the layer under the envelope gets its own budget a moment later
 (*What an archive keeps*), and the envelope's own decode is small: the
 heaviest in the Mac sample is `popper-1.7.tar.Z`'s LZW at 147,764 B, which

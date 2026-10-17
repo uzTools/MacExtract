@@ -269,6 +269,34 @@ void unc_uu_name_span(const uint8_t *buf, int32_t len, int32_t *soff,
     *eoff = e;
 }
 
+/* The lock a "begin <mode> <name>" line states, from its octal mode:
+ * locked where the mode has no owner write, 0200. `at` is where the mode
+ * may start, after "begin " or "begin-base64 ", so that base64 and MIME
+ * read it the same way.
+ *
+ * Source: reference/deark/modules/xfer.c, parse_begin_line() — the field
+ * after "begin" (or "begin-base64") and one space is an octal number,
+ * de_strtoll(..., 8), which deark reads as a POSIX mode (it tests 0111 for
+ * execute); reference/notes/posix_ustar.txt, the mode table — 00200 is
+ * S_IWUSR, write permission for the file owner. A file its owner could
+ * not write is the one HFS calls locked (DECISIONS.md 2026-10-17, the
+ * maintainer's brief). A mode that is not all octal digits, or has none,
+ * states nothing. */
+int unc_uu_mode_lock(const uint8_t *buf, int32_t len, int32_t at)
+{
+    uint32_t mode = 0;
+    int32_t i;
+    while (at < len && buf[at] == ' ') at++;
+    /* Only the last three digits reach 0200, so a long mode cannot wrap
+     * into a wrong answer and needs no cap. */
+    for (i = at; i < len && buf[i] != ' '; i++) {
+        if (buf[i] < '0' || buf[i] > '7') return UNC_LOCK_UNKNOWN;
+        mode = mode * 8u + (uint32_t)(buf[i] - '0');
+    }
+    if (i == at) return UNC_LOCK_UNKNOWN;
+    return (mode & 0200u) ? UNC_LOCK_NO : UNC_LOCK_YES;
+}
+
 static void uu_name_from_begin(const UuLine *l, const uint8_t **name,
                                uint32_t *len)
 {
@@ -309,6 +337,7 @@ typedef struct UuDoc {
     uint8_t   name_have_full; /* and the whole of it is in the host's
                                * buffer (UncOptions.long_name) */
     uint8_t   info[16];              /* type, creator, flags, ...      */
+    uint8_t   lock;     /* what the first begin line's mode says */
 } UuDoc;
 
 /* Read one section's lines. If sink is non-NULL the payload is written
@@ -405,6 +434,7 @@ static int uu_scan_doc(UncCtx *c, UncBufIn *in, uint32_t base, UuLine *l,
     }
 
     d->start = l->start;
+    d->lock = (uint8_t)unc_uu_mode_lock(l->buf, l->len, 6);
     uu_name_from_begin(l, &nm, &nlen);
     if (nlen > UNC_NAME_MAX) {
         nlen = UNC_NAME_MAX;
@@ -557,6 +587,20 @@ int unc_uu_extract(UncCtx *c)
             e.type    = unc_get_u32be(d.info);
             e.creator = unc_get_u32be(d.info + 4);
             if (d.finfo.bytes >= 10) e.finder_flags = unc_get_u16be(d.info + 8);
+            /* All of it: UUTool's .finfo is the FInfo record whole —
+             * type, creator, flags, then fdLocation and fdFldr (the
+             * layout tools/derive_mu.py reads out of UUTool itself). */
+            if (d.finfo.bytes >= 16) {
+                uint32_t k;
+                for (k = 0; k < 16; k++) e.finder_info[k] = d.info[k];
+                e.meta |= UNC_META_FINFO;
+            }
+        } else if (!d.finfo.present) {
+            /* A plain uuencode's mode is the file's own permission. Not
+             * a UUTool document's: there it is UUTool's preference, the
+             * same 0700 in every section, and "ignored on the Mac side"
+             * (its manual, *UNIX Preferences*; see uu_tag_is). */
+            e.locked = d.lock;
         }
 
         sret = c->sink->begin_entry(c->sink->ctx, &e);

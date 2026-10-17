@@ -3368,9 +3368,16 @@ is silent. Graded against:
 | `synth-as-meta.as`, `synth-as-dosro.as` | `lsar` for Finder info, comment and backup date; `tools/synth_as.py --describe` for the lock, which XADMaster has no key for, and for the backup date 0x80000000, which RFC 1740 calls unknown and XADMaster reports as 2068 |
 | `synth-sqp-meta.pkg` | `tools/synth_sqp.py`'s own items: nothing else reads the container |
 | `--corpus` | every fixture where the engine and `lsar` both state a field: 8 fields on 2026-10-17, the two DiskDoubler AppleDouble sidecars' Finder info |
+| the envelopes, generated per run into `.tmp/` by `tools/synth_envelopes.py`: MacBinary I, II and III, uuencode read-only and writable, UUTool with a placed `.finfo`, base64 read-only, mpack-shaped `multipart/appledouble` | MacBinary: deark's debug reading (`modules/macbinary.c`) for the 16 bytes of FInfo and offset 81, macunpack's copy of 81 (`I_LOCKOFF`), which must agree with deark's; UUTool: hexbin's header (`hexbin/mu.c`) for FInfo bytes 0..7 and 10..15; MIME: the applefile part taken out by Python's `email` and read by `lsar`; the begin-line mode, a reading written in the suite (deark's octal, 0200 owner write); the generator's field values for MacBinary's comment and FXInfo, which nothing else reads |
+| `--corpus`, envelopes (`envelope_corpus`) | every fixture the engine sniffs as MacBinary (deark), uuencode or base64 (the begin line), MIME (Python's `email`, then `lsar`), each ZipIt payload in a zip (Python's `zipfile`, then deark), and the MacGzip and ZipIt specimens in the cache when present: 507 fields of 255 entries on 2026-10-17 |
 
 Each field is then tampered with in the engine's row, one at a time, and the
-comparison must fail: 10 controls, 10 caught.
+comparison must fail: 37 controls, 37 caught. **In the envelope tables a
+field the oracle states and the engine prints as `-` FAILS**, which the
+lsar corpus check does not do: a dropped-field control replaces each
+stated field with `-` (505 of 505 caught). Run against `origin/main`'s
+CLI, which reads none of these fields, the suite fails 522 times
+(measured 2026-10-17).
 
 **The shell's half: `mac_sink_test --meta`** (`tests/run_mac_sink.sh`). A
 folder and two files go through the real `sink_begin`/`sink_end` against a
@@ -3391,8 +3398,11 @@ delete — after the run's flush. Three controls, scratch copies with one
 mechanism removed, each fail the cases they should (DECISIONS.md
 2026-10-17, *the date held once per folder*).
 
-**What neither can see.** A field the engine does not read yet: it prints `-`
-and passes. The real File Manager and Desktop Manager: that is
+**What neither can see.** A field the engine does not read yet, outside
+the envelope tables: it prints `-` and passes. Inside them: MacLHA's
+payloads (no reader here takes one out), and a MacBinary comment or FXInfo
+on any real file — none in the corpus or the cache has either, so those
+two are graded on the generator alone. The real File Manager and Desktop Manager: that is
 `tools/vmac/metarun.py` on an emulator (`tools/vmac/README.md`). What the
 Finder then does with any of it.
 
