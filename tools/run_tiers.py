@@ -132,9 +132,9 @@ REPO = os.path.dirname(HERE)
 # of these PLUS what the overlay release gives back for the sniffed format,
 # which is the `--shipped` lane below.
 TIERS = {
-    "sys3-512K": (198804, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (103404, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (627692, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (198772, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (103372, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (627660, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -241,7 +241,11 @@ TIERS = {
 # **Raised by 736 B more the same day, and TIERS lowered by the same 736,
 # DERIVED**: the envelopes' Finder info, the control's CODE +744 and A5 -8
 # (DECISIONS.md 2026-10-17, *the envelopes' own Finder info*).
-TIERS_CONTROL = 214688     # build/mac-resident, CODE + A5, 2026-10-17
+# **Raised by 32 B more 2026-10-17, and TIERS lowered by the same 32,
+# DERIVED**: the MacBinary I lock bit masked out of the Finder flags, at
+# the merge of meta-envelopes; the shipped pair +0, so OVL_SAVED +32 and no
+# grant moves on the machine.
+TIERS_CONTROL = 214720     # build/mac-resident, CODE + A5, 2026-10-17
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
@@ -551,7 +555,9 @@ EXPECT = {
 # bundle +356 — so a MIME, uuencode or base64 grant falls 884 B, a zip's
 # 444, an LZH's 470, and every other format's 480 (DECISIONS.md
 # 2026-10-17, *the envelopes' own Finder info*).
-OVL_SAVED = 138864
+# **+32 the same day, -> 138,896**: the MacBinary I mask, the control's
+# +32 against the shipped pair's 0.
+OVL_SAVED = 138896
 
 # A relocatable block costs 8 bytes of header (Inside Macintosh: Memory), and
 # every kept image is one — as is the bundle an envelope holds on to.

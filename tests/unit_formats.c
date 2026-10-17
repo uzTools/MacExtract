@@ -253,6 +253,7 @@ static void test_macbinary_meta(void)
     CHECK(e->finder_info[24] == 0x81 && e->finder_info[25] == 0x02);
     CHECK(e->finder_info[16] == 0 && e->finder_info[31] == 0);
     CHECK(e->locked == UNC_LOCK_NO && e->comment_len == 0);
+    CHECK((e->finder_flags & 0x8000) && (e->finder_info[8] & 0x80));
 
     /* I: no CRC, and 73's bit 7, "Locked", is the lock. */
     len = mb_synth(arc, "old", "hello, fork", 11, "RSRC", 4);
@@ -263,6 +264,8 @@ static void test_macbinary_meta(void)
     cap_make(&sk, &cap);
     CHECK(unc_extract_as(UNC_FORMAT_MACBINARY, &io, &sk, &al, NULL, NULL) == UNC_OK);
     CHECK(e->locked == UNC_LOCK_YES && e->meta == UNC_META_FINFO);
+    /* ...and only the lock: left in the flags it is System 7's isAlias. */
+    CHECK((e->finder_flags & 0x8000) == 0 && (e->finder_info[8] & 0x80) == 0);
     arc[73] = 0x00;
     test_make_memio(&io, &m, arc, len);
     cap_make(&sk, &cap);

@@ -531,7 +531,11 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # pair's resident pieces below, and here the readers that are images there
 # — MIME's records and comment, the begin-line mode, UUTool's .finfo. A5
 # 37,464, under its ceiling.
-UNC_MAC_CODE_DEFAULT=177224
+# +16 code and +8 A5 on 2026-10-17 at the merge of meta-envelopes: a
+# MacBinary I header's lock bit masked out of the Finder flags, where
+# System 7 reads it as isAlias (DECISIONS.md 2026-10-17, *the envelopes'
+# own Finder info*).
+UNC_MAC_CODE_DEFAULT=177240
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -697,7 +701,7 @@ UNC_MAC_CODE_DEFAULT=177224
 # -20 on 2026-10-16 with the code ceiling's +20: padding, the time left.
 # -8 on 2026-10-16 with the code ceiling's +8: padding.
 # +4 on 2026-10-16 with the code ceiling's +92.
-UNC_MAC_A5_DEFAULT=37472
+UNC_MAC_A5_DEFAULT=37480
 # A CEILING PER CONFIGURATION, because one ceiling measured on another build
 # cannot fire. The figures above are the RESIDENT control build, which carries
 # every decoder; the shipped build's resident code is a third of that, so
@@ -1027,8 +1031,10 @@ UNC_MAC_A5_DEFAULT=37472
 # MIME's image calls too, and RFC 1740's unknown date kept unknown); the
 # A5 is gOvlFns's two slots, +8, and 8 of `.data` alignment (DECISIONS.md
 # 2026-10-17, *the envelopes' own Finder info*).
-UNC_MAC_CODE_EAGER=57280
-UNC_MAC_A5_EAGER=18544
+# +12 code and -12 A5 on 2026-10-17 at the merge of meta-envelopes, the
+# same mask: 0 B of budget.
+UNC_MAC_CODE_EAGER=57292
+UNC_MAC_A5_EAGER=18532
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1085,7 +1091,8 @@ UNC_MAC_A5_EAGER=18544
 # +16 code the same day, the second review; A5 18,616, under its ceiling.
 # +460 code on 2026-10-17, the envelopes' Finder info (the eager pair
 # above); A5 18,652, under its ceiling.
-UNC_MAC_CODE_LAZY=55700
+# +16 code on 2026-10-17, the same mask.
+UNC_MAC_CODE_LAZY=55716
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

@@ -235,8 +235,13 @@ def deark_macbinary(deark, path):
         import re
         return re.sub(rb"<([0-9A-F]{2})>", lambda m: bytes([int(m.group(1), 16)]),
                       v[1:-1].encode("latin-1"))
+    # MacBinary I's bit 7 is the lock, not System 7's isAlias, so this
+    # engine keeps it out of the flags where deark prints the header as it
+    # stands (DECISIONS.md 2026-10-17, *the envelopes' own Finder info*, at
+    # the merge). The lock below still reads it from deark's own flags.
+    shown = flags if v23 else flags & 0x7FFF
     fi = (code(f["type"]) + code(f["creator"]) +
-          struct.pack(">HhhH", flags, v, h, int(f["window/folder id"])))
+          struct.pack(">HhhH", shown, v, h, int(f["window/folder id"])))
     prot = int(f["protected"], 16) & 1
     # The lock: "Protected" in every version, and 73's bit 7 in MacBinary
     # I, where both standards call it "Locked" (fmt_macbinary.c).

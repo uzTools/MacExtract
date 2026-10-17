@@ -167,13 +167,21 @@ UncFormat unc_macbinary_probe(const uint8_t *head, int32_t len, UncIO *io)
 int unc_macbinary_meta(UncEntryInfo *e, const uint8_t *b)
 {
     int v = mb_version(b, MB_HDR), k;
+    uint8_t hi;
     if (v == 0) v = 1;
     e->type         = unc_get_u32be(b + 65);
     e->creator      = unc_get_u32be(b + 69);
-    e->finder_flags = (uint16_t)((b[73] << 8) | b[101]);
+    /* In a I header 73's bit 7 is the lock and nothing else: I predates
+     * aliases, and left in the flags it is System 7's isAlias, which made
+     * a locked file a broken alias (DECISIONS.md 2026-10-17, *the
+     * envelopes' own Finder info*). So it is the lock below, and masked
+     * here. */
+    hi = (uint8_t)(v == 1 ? b[73] & 0x7F : b[73]);
+    e->finder_flags = (uint16_t)((hi << 8) | b[101]);
     e->create_date  = unc_get_u32be(b + 91);
     e->mod_date     = unc_get_u32be(b + 95);
     for (k = 0; k < 16; k++) e->finder_info[k] = b[65 + k];
+    e->finder_info[8] = hi;
     e->finder_info[9] = b[101];
     e->meta |= UNC_META_FINFO;
     if (v == 3) {

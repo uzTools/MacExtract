@@ -124,6 +124,10 @@ def mb_describe(c):
              struct.pack(">HhhH", c["flags"], c["v"], c["h"], c["fldr"]))
     if c["version"] == 1:
         finfo = finfo[:9] + b"\0" + finfo[10:]   # I has no low byte
+        # ...and I's bit 7 of the high byte is the lock, not System 7's
+        # isAlias, so it does not reach the flags (DECISIONS.md 2026-10-17,
+        # *the envelopes' own Finder info*, at the merge).
+        finfo = finfo[:8] + bytes([finfo[8] & 0x7F]) + finfo[9:]
     fx = "-"
     if c["version"] == 3:
         # FXInfo: fdIconID, fdUnused[3], fdScript, fdXFlags, fdComment,

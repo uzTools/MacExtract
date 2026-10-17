@@ -27549,3 +27549,16 @@ extraction lost** in the model; no tier re-run. Stack (`-fstack-usage`):
 `unc_macbinary_extract` 528 → 540, `unc_zip_extract` +4, `unc_lzh_extract`
 −4, the two new functions 32 and 28 B leaves; the engine's deepest chain,
 3,354 B through DiskDoubler, does not move.
+
+**At the merge, 2026-10-17 (the reviewer's).** A MacBinary I header's bit 7
+of byte 73 is masked out of the Finder flags as well as read as the lock:
+I predates aliases, so there it can only be the lock, and left in the flags
+System 7 reads it as isAlias, which made a locked file a broken alias. In II
+and III the bit stays where it is. A unit check holds it (the build without
+the mask fails it). Shipped CODE +12, A5 −12: 0 B; the control +32, so
+`OVL_SAVED` +32 and `TIERS` −32, derived. The grants table in FORMATS.md,
+which the branch had left as it was, was re-taken from `run_tiers.gain()`.
+The two other questions for the maintainer were answered by the brief:
+fdLocation and fdFldr are delivered as the archive holds them although both
+MacBinary standards tell a downloader to zero them, and the ZipIt/MacLHA
+comment, in no specimen anywhere, stays in OPEN_ITEMS.md.
