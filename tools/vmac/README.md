@@ -203,6 +203,8 @@ read.
 | `sitzip.py` | the same question put to the two LATER boxes — **StuffIt Deluxe 5.5 and 7.0.3 Classic, on Mac OS 9, with no installer driven**: the engine, the translators and the application are placed into a plain-HFS System Folder from Linux. `--carbonlib` installs the one thing that cannot be placed — see below |
 | `sitcomment.py` | **StuffIt 5's archive flag byte, bit 5** — measured 2026-10-06. `--read` and `--aete` ask both later boxes what they offer for a comment and print their scripting dictionaries, no emulator; `--specimen` boots Mac OS 9 and has `tools/aesit/` drive StuffIt Deluxe 7.0.3 by Apple event into writing an archive that is encrypted AND commented; `--probe` launches 5.5; `--macos86` replays the Mac OS 8.6 boot that is not the route |
 | `expander.py` | **the yardstick**: StuffIt Expander 4.0.2 and this application on one Mac Plus, over one archive, timed by one instrument. `--fetch` downloads Aladdin's distribution and unpacks the application out of it; `--sizes` reads both memory partitions without booting anything |
+| `sitmeta.py` | **which header bytes become a file's or folder's Finder info**: StuffIt Expander 4.0.2 over the classic corpus and over sentinel archives, read back with `hfscat.py`; `--writer201` has StuffIt Deluxe 2.0.1 stuff a folder of sentinel catalog records; `--sit5` puts StuffIt 5 to Expander 5.5 on Mac OS 9. `ddmeta.py`, `nowmeta.py` and `sdmeta.py` ask DiskDoubler 3.7, Now QuickFiler 5.0.1 and SuperDisk!'s self-extractor the same question — see *Finder info, read back* |
+| `hfscat.py` | every catalog record on an HFS image, whole: FInfo/FXInfo, DInfo/DXInfo, dates, the lock bit, and `patch()` to plant values before a boot; `--json`, `--fcmt` for a System 6 Desktop file's comments. `--check` holds it against `hls` |
 | `macmime.py` | **a MIME message written BY a Macintosh**, with mpack's own Macintosh port: `tools/macmime/` compiles `encode_applefile()` and `encode()` out of `reference/mpack` unmodified, and this boots System 6.0.8 into them. `--make` writes the specimen, `--check` grades it (18/18) — see below before changing it, because two of its three failure modes were in the HARNESS |
 | `mkcollide.py` | build an archive whose names collide on HFS, and verify what `BumpName` did with them — nothing in the corpus collides |
 | `privatefile.py` | **Aladdin Private File 2.0 encrypts known files**: `--fetch` takes the application out of its installer with no installer run, `--make NAME` boots System 7.0.1 with it in `Startup Items` and writes the three specimens `tools/run_privatefile.py` grades — see below |
@@ -1897,6 +1899,73 @@ tar, uuencode and the rest need DropStuff with Expander Enhancer, System 7 and
 not free, so timing those would be measuring a configuration a System 6 user
 does not have.
 
+## Finder info, read back — `sitmeta.py` and its three siblings
+
+    tools/vmac/hfscat.py --check IMAGE            the reader, against hls
+    tools/vmac/sitmeta.py --plan                  the classic corpus, in boots
+    tools/vmac/sitmeta.py --batch N               one boot of Expander 4.0.2
+    tools/vmac/sitmeta.py --synth                 the sentinel archives
+    tools/vmac/sitmeta.py --run --tag T ARCHIVE...  any archives, one boot
+    tools/vmac/sitmeta.py --report [--control] [--by-writer] --tag T...
+    tools/vmac/sitmeta.py --writer201             StuffIt Deluxe 2.0.1 writes
+    tools/vmac/sitmeta.py --sit5 ARCHIVE [--plain|--info-only|--files-only]
+    tools/vmac/ddmeta.py --writer ; ddmeta.py --reader
+    tools/vmac/nowmeta.py --run
+    tools/vmac/sdmeta.py
+
+Results: FORMATS.md, *Finder info in the archive*; reasoning: DECISIONS.md
+2026-10-17, *the window StuffIt kept in the name*. Results land in
+`$UNC_VMAC_HOME/../sitmeta/` as JSON, one file per boot, each header beside
+the catalog record it became; `--report` reads every one of them.
+
+**The instrument is the catalog, not the screen.** `hfscat.py` walks the
+catalog B-tree's leaf chain of the image the emulator wrote and returns
+each record whole, offsets from libhfs's `apple.h`. Its control: every
+file's type and creator agree with `hls` (145 of 145 on `System6.hfv`),
+and `--shift 2` makes all 145 disagree. `patch()` re-reads what it wrote,
+and MacMount's independent `fd_location` agrees with it.
+
+**Two kinds of evidence.** The corpus says what real writers put in the
+bytes and what Expander made of it; a SENTINEL archive says which bytes
+Expander reads, because every byte nothing defines names its own offset
+(`0x01 0x27` can only have come from @38). `--report` lines every
+catalog field up against every header byte, then holds the measured
+rules against every entry; `--control` drops each gate and mask, and
+must disagree — 806 entries on the corpus, 500 of them file flags.
+
+**How a boot runs.** Expander is the boot shell (`mkboot.py`), up to
+eight archives sit at the root as `zq00.sit`…, and each is opened with
+⌘E, its name typed into Standard File, and Expand pressed at
+`expander.py`'s coordinate; Return after each dismisses an alert if one
+is up, and ⌘Q at the end commits Expander's writes. `--plan` puts
+archives whose top-level names collide in different boots. An entry
+whose path is found twice on the volume is reported unmatched and left
+out, never guessed (`derived-TaxTemplates1990.sit`'s `README`).
+
+**Three things that cost a boot each:**
+
+- **Wait for a free emulator by process NAME** (`ps -eo comm`), never by
+  grepping `ps aux`: the second matches any shell whose command line
+  mentions `minivmac`, including another session's own wait loop, and
+  two sessions polling that way wait on each other for good. The
+  classic sweep stalled on exactly that, with no emulator running.
+- **DiskDoubler checks its header**: +82 is a CRC-16/XMODEM of bytes
+  0..81, and a sentinel header without it is refused (*"Corrupted file
+  or wrong file type"*). `ddmeta.py` recomputes it.
+- **StuffIt 5 checks its second block**: b+2 is a CRC-16/ARC over the
+  whole block with that word zeroed, and Expander 5.5 refuses an entry
+  that disagrees (*"a disk related error (-12043)"*). Four sentinel
+  boots got that before it was found; `--plain` extracting the same
+  archive is what said the sentinels were the cause. `sit5_sentinel`
+  recomputes it, and a no-op call reproduces the archive byte for byte.
+
+**What none of them can see.** Get Info comments, which are in the
+Finder's Desktop file; any reader but the one each runs (Expander 4.0.2,
+Expander 5.5, DiskDoubler 3.7, QuickFiler 5.0.1, one SuperDisk!
+self-extractor); and, for the top-level folder an expander creates,
+which of the expander or the Finder chose its location — every format
+gives that one a value its header does not hold.
+
 ## The downloads, and why none of them are committed
 
 `setup.sh` fetches by URL and verifies by SHA-256, exactly as `fixtures/` does,
@@ -2725,14 +2794,14 @@ The same question was then asked of **every** volume walk in this tree,
 because the wrong explanation above is exactly what made the flag look
 like somebody else's problem — see *What every walk can see*, below.
 
-## The Finder metadata, read off the disk — `hfs_cat.py`, `metarun.py`
+## The Finder metadata, read off the disk — `hfscat.py`, `metarun.py`
 
     metarun.py --system System6.hfv          # or --sys30
     metarun.py --system Sys7.img --out-kb 8192
     metarun.py --check .tmp/vmacrun-*/       # re-grade disks a run kept
-    hfs_cat.py out.dsk [--json] [--fcmt DeskTop]
+    hfscat.py out.dsk [--json] [--fcmt DeskTop]   # its control: *Finder info, read back*
 
-`hfs_cat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
+`hfscat.py` walks an HFS image's catalog B-tree (libhfs's `apple.h`
 layout) and prints, per file, the whole FInfo and FXInfo, three dates and
 the locked bit, and per folder the DInfo, DXInfo and dates; `--fcmt` lists
 a System 6-or-earlier `Desktop` file's `FCMT` comments. `metarun.py` runs
@@ -2755,7 +2824,7 @@ System 6.0.8 (three runs), the budget probe's lesson of 2026-10-10.
 comment needs `--out-kb 8192` there; on System 3.0 and 6.0.8 no volume has
 one.
 
-**What they cannot see.** The extents-overflow file (`hfs_cat.py` refuses a
+**What they cannot see.** The extents-overflow file (`hfscat.py` refuses a
 catalog that continues there), HFS+, MFS, a partition map. `Desktop DB`.
 What the Finder then does with any of it: draws the icon there, opens the
 window at that rectangle, shows the comment. A folder's comment: neither

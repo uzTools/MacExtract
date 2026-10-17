@@ -26,7 +26,7 @@ a time, and the comparison must fail — or it was comparing nothing.
 whose archive stores a field this engine does not read yet prints `-` and
 passes (the inventory of those is OPEN_ITEMS.md's). The lock, against any
 reader but the synthesizer. Whether a host WRITES any of it: that is
-tests/mac_sink_test.c --meta, and on an emulated Mac tools/vmac/hfs_cat.py.
+tests/mac_sink_test.c --meta, and on an emulated Mac tools/vmac/hfscat.py.
 """
 import argparse
 import calendar

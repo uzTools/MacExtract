@@ -428,6 +428,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-17 (the metadata, carried to the disk) — every Finder field, the backup date, the lock and the Get Info comment travel from engine to disk, and a folder keeps its date
 - 2026-10-17 (the bit that kept the position) — the archive's inited bit is kept unless the file has a bundle, the source volume's directory IDs are cleared, and a folder's date is priced in time
 - 2026-10-17 (the date held once per folder) — a folder's date is held in a one-entry cache, three catalog calls per change of folder instead of per item
+- 2026-10-17 (the window StuffIt kept in the name) — where five formats keep the Finder info, measured against each format's own expander
 
 ---
 
@@ -27143,7 +27144,7 @@ file has a bundle, and fdPutAway, frPutAway and frOpenChain are cleared
 too.)
 - **Finder flag 0x0100 (inited) is cleared**, as before.
 - **FXInfo/DXInfo +10, fdComment/frComment, is cleared.** Measured on
-  System 3.0's own disk (`tools/vmac/hfs_cat.py --fcmt DeskTop`): it is the
+  System 3.0's own disk (`tools/vmac/hfscat.py --fcmt DeskTop`): it is the
   id of the file's `FCMT` resource in the Finder's `DeskTop` file — Font/DA
   Mover's 0x5389 is `FCMT` 21385, "Font/DA Mover Version 3.0"; the Finder's
   0x6727 is 26407. An id copied from another volume names another file's
@@ -27189,7 +27190,7 @@ written inside, where `main`'s build reads the run's own time.
 
 **Evidence, end to end** — `tools/vmac/metarun.py`, `synth-as-meta.as` and
 `synth-sqp-meta.pkg`, every value read off the output disk's catalog with
-`tools/vmac/hfs_cat.py` (a reader written for this, libhfs's layout):
+`tools/vmac/hfscat.py` (libhfs's layout; the reader written for this was folded into the measurement's, *the window StuffIt kept in the name*):
 
 | tier | values as the archive states |
 |---|---|
@@ -27296,7 +27297,7 @@ each fail the FInfo check; only fdComment cleared fails the FXInfo check.
 only at its first coordinate lookup, so the first run's type-select went
 to the X root; and `Mac.shot()` parks the pointer, so a menu photographed
 while held was released off-screen, Shut Down never happened, and the
-image came back torn — which `hfs_cat.py` refused rather than read.
+image came back torn — which `hfscat.py` refused rather than read.
 
 **Price**, the review's part: CODE +40 in every configuration, A5 −8
 shipped and +24 in the control, so **864 B off every budget in all**;
@@ -27349,3 +27350,117 @@ control: 0 B. **864 B off every budget in all**, `OVL_SAVED` 138,608 and
 separator; the committed build fails them the same way); that fixture is
 not in its lane and passes on the emulator.
 
+## 2026-10-17 (the window StuffIt kept in the name) — where five formats keep the Finder info, measured against each format's own expander
+
+**Why.** The brief is that a file and a folder come back exactly as they
+went in: all of `FInfo`/`FXInfo` and `DInfo`/`DXInfo`, comment, three
+dates, lock. No reference says where StuffIt classic keeps a position or
+a window, and four other formats have bytes nobody had assigned. This
+entry is measurement only; `src/` is unchanged, and the readers are
+changed afterwards from it.
+
+**Method.** Each format's own expander is run under emulation and every
+catalog record it wrote is read back off the image (`tools/vmac/hfscat.py`,
+offsets from libhfs's `apple.h`, shown able to fail against `hls`). Two
+kinds of input. The **corpus** says what real writers put in the bytes.
+A **sentinel** archive, every unassigned byte set to a value that names
+its own offset, says which bytes the expander READS, and switching one
+suspected gate per archive separates the gates from each other — the
+first set confounded the version byte with the name CRC, and the second
+set split them. Tables: FORMATS.md, *Finder info in the archive*; how
+to re-run: `tools/vmac/README.md`, *Finder info, read back*.
+
+**StuffIt classic, Expander 4.0.2 — measured.** 225 corpus archives
+(1,719 entries) and three sentinel boots (21 archives). Every rule in
+FORMATS.md's table agrees with every entry, and `--report --control`,
+the same rules less their gates and masks, disagrees on 806.
+
+- **The name field is 31 bytes, and @34 is its CRC.** CRC-16/ARC over
+  bytes 2..33, measured on four headers and then on the corpus;
+  XADMaster's `SITFH_FNAME_CRC` comment had it, the INVENTORY notes'
+  63-byte reading did not. Writers that do not compute it (every
+  version-1 archive bar two, and StuffIt Deluxe 2.0.1, measured writing)
+  leave @34..65 as name leftovers, and **Expander restores a position,
+  rectangle, scroll or lock only when that CRC holds**. That is the
+  answer to "is there a flag that says the bytes are valid": the CRC is.
+- **Two more gates.** A folder's flags and view need version ≥ 2; the
+  0x0986 at @36 gates nothing.
+- **Folder scroll is @100..103, stored h then v** — not @104..107 as the
+  first measurement noted; @104..107 is not restored (that it is
+  frOpenChain, which StuffIt 5 also stores, is a hypothesis).
+- **The lock is bit 15 of @36**, found as the model's only exceptions —
+  three corpus files Expander locked — and confirmed by five sentinel
+  variants.
+- **Expander walks by link**: first child @62 for a folder, next @54 for
+  a file; garbage there silently loses the rest of the archive.
+- **Expander never restores** `fdFldr`, `FXInfo`, `DXInfo` past the
+  scroll, backup dates or `dirFlags`, from any byte; it **writes garbage
+  as it stands**; and the top folder it creates always gets (−1,−1).
+
+**The other four.**
+
+- **DiskDoubler 3.7 — measured**: it writes `fdLocation` at +42, and
+  its in-place Expand does not restore it. +82 is a CRC-16/XMODEM over
+  bytes 0..81 (70 headers of 70) that 3.7 enforces. +58..77 is zero in
+  everything 3.7 wrote.
+- **Now QuickFiler 5.0.1 — measured**: +38..53 is the whole `FInfo`/
+  `DInfo`, +62 the **backup** date (XADMaster calls it access), +66..81
+  a folder's `DXInfo` verbatim. A file's `fdFldr` and `FXInfo` are not
+  restored.
+- **SuperDisk! — measured, one self-extractor**: file +18..21 is
+  `fdLocation`; a folder's 20 bytes are `DInfo` then `frScroll`.
+- **StuffIt 5, Expander 5.5 — measured on one archive**: the second
+  block's b+4..19 is the whole `FInfo`/`DInfo` and b+20..35 the whole
+  `FXInfo`/`DXInfo`, the INVENTORY hypothesis confirmed. b+2 is a CRC of
+  the block (272 entries of 272), which four sentinel boots broke before
+  it was found: each got *"-12043"*, while the unmodified archive
+  extracted, and that control is what kept the refusal from being
+  filed as "Expander 5.5 rejects these values". The script byte always
+  comes back 0x80; two files below the first folder level lost their
+  position in both runs, which only a hypothesis explains.
+
+**Limits.** One reader per format. Get Info comments are not measured:
+they are in the Finder's Desktop file. In every format the folder an
+expander creates at the destination gets a location its header does
+not hold, and which of the expander or the Finder chose it is not
+separated. DiskDoubler's `DDAR`/`DDA2` records, SuperDisk!'s other
+reader and Now Utilities 6.0 are not run.
+
+**Consequence.** Every field the tables mark as restored has a measured
+home, and a reader can take it from there. A field NO expander here
+restores — StuffIt classic's `FXInfo`, backup date, `fdFldr` — is not
+shown to be absent from the format: Expander 4.0.2 does not read it and
+StuffIt Deluxe 2.0.1 does not write it, and no other classic writer has
+been run (3.5.1's script path is the next one in reach).
+
+**For the readers, where a format restores only part of `FInfo`.** State
+all 16 bytes, with the parts the expander does not restore at the value
+it writes, so the shell's inited rule (kept when `UNC_META_FINFO` is
+stated and the file has no bundle; *the bit that kept the position*)
+behaves as Expander does. For StuffIt classic that is, measured on the
+1,279 matched corpus files: `fdFldr` 0 and `FXInfo` all zero in every
+one; `fdLocation` (0,0) where no position is restored (551 of 551); and
+inited (0x0100) kept only where the header has it AND a position is
+restored (260 kept, 503 cleared, 516 absent in both) — so the reader
+clears it itself where the name CRC fails or the stored location is
+(−1,−1), and the shell then keeps what it is given. The one place the
+two still part is a file with a bundle, which the shell clears on
+purpose and Expander does not (43 such files kept it, 39 of them
+applications).
+
+**Two header CRCs the expanders enforce and this engine does not.**
+DiskDoubler 3.7 refuses a single-file header whose CRC-16/XMODEM at +82
+(file offsets; bytes 0..81) disagrees, and Expander 5.5 refuses a StuffIt
+5 entry whose second-block CRC-16/ARC at b+2 does. Read, not changed:
+`src/fmt_dd.c`'s `dd_parse_filehdr` reads bytes 4..57 of the 84-byte
+header and nothing past them, and `src/fmt_sit5.c` steps over the second
+block's word at b+2 as `u16 ?`, and reads neither the first block's
+header CRC @32 nor the archive header's @98. Each archive extracts here
+on its fork CRCs alone.
+
+**Cost of the measurement.** Forty-five boots between 23:59 on
+2026-10-16 and 03:49 the next morning, most of the time the classic
+sweep sharing the machine with another session, and one stall: a wait
+loop that grepped `ps aux` for `minivmac` matched another session's
+waiting shell, and the sweep sat idle until it was replaced by a match
+on process names (`tools/vmac/README.md`).

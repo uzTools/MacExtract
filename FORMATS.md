@@ -23,6 +23,7 @@ under *Table notes*.
 - Encryption
 - AppleLink packages: SqueezePlay, read out of Aladdin's own expander
 - Private File: Aladdin's encrypted single file
+- Finder info in the archive: what each format's own expander puts back
 - Archives named but not extracted
 - Envelope auto-unwrap
 - Segmented archives (multi-part sets)
@@ -3481,6 +3482,128 @@ first commit and is 186**: written through `unc_get_u16be`, the 68000
 rebuilt every field with shifts before comparing it with a small
 constant; byte compares took 36 B off it, and the shipped build's total
 from 464 B to 400 (tools/build_mac.sh, DECISIONS.md 2026-10-09, *the specimen was one search away*).
+
+## Finder info in the archive: what each format's own expander puts back
+
+Measured 2026-10-16 and -17 by handing each format's own expander
+archives under emulation and reading every catalog record back off the
+disk (`tools/vmac/hfscat.py`); how to re-run each is
+`tools/vmac/README.md`, *Finder info, read back*, and the reasoning is
+DECISIONS.md 2026-10-17, *the window StuffIt kept in the name*. A
+**sentinel** is a header byte set to a value that names its own offset; a
+field "not restored" came back 0 with every byte around it a sentinel.
+**Get Info comments are not measured anywhere here**: they live in the
+Finder's Desktop file, which nothing reads.
+
+### StuffIt classic, read by StuffIt Expander 4.0.2
+
+`sitmeta.py`: 225 corpus archives (1,719 entries matched on the volume,
+1 ambiguous), three sentinel boots of 21 archives. The model check
+holds every row below against every entry: **0 disagreements**. With
+the gates and masks removed (`--report --control`) it disagrees on 806:
+500 file flags, 244 file locations, 46 folder locations, 9 locks, 5
+folder flags, 1 view, 1 scroll. No corpus folder exercises the
+rectangle's gate; the sentinels are its only evidence.
+
+| header | becomes | read when | evidence |
+|---|---|---|---|
+| @66, @70 | file type, creator | always | 1,241 files |
+| @74 | file `fdFlags`, less 0x0001, and less 0x0100 (inited) when no position is restored | always | 1,241 files, 744 nonzero |
+| @62..65 | file `fdLocation` (v, h); (−1,−1) is not restored | **name CRC** | sentinels; 263 nonzero files |
+| @36 bit 15 | file **locked** | **name CRC**, any version | sentinels U1–U5; 3 corpus files |
+| @76, @80 | created, modified | always | every entry |
+| @38..45 | folder `frRect` | **name CRC** | sentinels; 396 nonzero folders |
+| @74 | folder `frFlags`, less 0x0001 | **version ≥ 2** | sentinels; 428 nonzero |
+| @68..69 | folder `frView` | **version ≥ 2** | sentinels; 407 nonzero |
+| @70..73 | folder `frLocation`, nested folders; the folder made at the destination gets (−1,−1) | **name CRC** | sentinels; 465 |
+| @100..103 | folder `frScroll`, stored **h then v** | **name CRC** | sentinels; 357 nonzero |
+| — | `fdFldr`, all of `FXInfo`, `DXInfo` past `frScroll`, backup dates, `dirFlags` | never written | every unassigned byte a sentinel, all 0 |
+
+- **Name CRC**: @34 equals CRC-16/ARC of bytes 2..33, the name's length
+  byte and its 31-byte field. **Version**: archive byte 14; version 0 is
+  refused, *"This archive is damaged."* The 0x0986 at @36 gates nothing.
+- **Expander walks by link, not by position**: a folder's first child at
+  @62 and a file's next at @54; garbage there loses the rest of the
+  archive with no alert (S5, T5, T7). @48, @50 and @58 are not followed.
+- **Garbage is written as it stands**: a location of (0x7fff, −0x8000),
+  a rectangle whose bottom is above its top, frFlags 0xffff → 0xfffe (S7).
+
+**Who writes them.** Writer classes are the version byte, whether @36
+holds 0x0986, and whether @34 is the name CRC:
+
+| class | archives | files | folders | files placed | folders with a rectangle |
+|---|---|---|---|---|---|
+| version 1, no name CRC | 102 | 382 | 34 | 0 | 0 |
+| version 1, name CRC | 2 | 4 | 1 | 2 | 0 |
+| version 2, no name CRC | 6 | 38 | 11 | 0 | 0 |
+| version 2, name CRC | 95 | 682 | 406 | 166 | 374 |
+| version 2, 0x0986, name CRC | 21 | 138 | 23 | 95 | 22 |
+
+**StuffIt Deluxe 2.0.1 writes version 2 with @34 = 0** (`--writer201`,
+a folder of sentinel catalog records stuffed by its own script): only
+`frView` @68, `frFlags` @74 and `fdFlags` @74 reach the header; no
+position, rectangle, scroll, lock, `FXInfo` or backup date. Its archives
+are the no-CRC class, so Expander would ignore those bytes anyway.
+
+### DiskDoubler's single-file header (3.7)
+
+`ddmeta.py`; offsets from the header's start
+(docs/formats/diskdoubler-container.md).
+
+| bytes | what | measured |
+|---|---|---|
+| +40 | Finder flags | written from the catalog by 3.7 |
+| +42..45 | `fdLocation` | **written** by 3.7; **not restored** by its in-place Expand, which leaves the Finder to place the icon |
+| +46..47 | `fdFldr` (hypothesis: FInfo's next field; 0 in all 70 headers) | — |
+| +58..77 | nothing 3.7 writes; DiskDoubler Pro 4.1 puts 1, 2 or 3 at +62 in three specimens, unexplained | 0 in every 3.7 header |
+| +82..83 | **CRC-16/XMODEM of bytes 0..81** | 70 headers of 70; 3.7 refuses a header that disagrees, *"Corrupted file or wrong file type"* |
+
+`FXInfo` and the backup date are not in the header: they stay on the
+compressed file's own catalog record. DDAR and DDA2 records are not
+measured.
+
+### Now Compress (Now QuickFiler 5.0.1, Dearchive)
+
+`nowmeta.py`; record offsets (docs/formats/now-compress.md, *The archive
+layer*).
+
+| record | file | folder |
+|---|---|---|
+| +38..47 | type, creator, flags | `frRect`, `frFlags` |
+| +48..51 | `fdLocation` | `frLocation` |
+| +52..53 | `fdFldr`: **not restored** | `frView` |
+| +62..65 | **backup date** (XADMaster's access date) | backup date |
+| +66..81 | **not restored** | `DXInfo`, verbatim |
+
+A nested folder gets all 32 bytes verbatim; the top-level folder's
+flags, location, view and script byte are QuickFiler's own.
+
+### SuperDisk! (`super-disk-utility.hqx`'s self-extractor)
+
+`sdmeta.py`.
+
+| bytes | what |
+|---|---|
+| file record +18..21 | `fdLocation`, restored on both sentinel files |
+| folder record, 20 bytes | `DInfo` then `frScroll`: rectangle, view and scroll verbatim, flags less 0x0001; the one folder measured sat at the top level and its v moved (0x010b → 0x00f7) |
+
+### StuffIt 5, read by StuffIt Expander 5.5 (Mac OS 9.2)
+
+`sitmeta.py --sit5`, on `derived-FloatingNotes.sit` (9 entries): a
+sentinel copy and the unmodified control. Offsets are from an entry's
+second block (`src/fmt_sit5.c`); every entry in the corpus is version 1,
+so the version-3 block is not measured.
+
+| block | file | folder |
+|---|---|---|
+| b+2..3 | **CRC-16/ARC of the whole second block, this word zeroed**: 272 entries of 272; Expander 5.5 refuses an entry that disagrees, *"a disk related error (-12043)"* | the same |
+| b+4..19 | the whole `FInfo`: type, creator, flags, `fdLocation`, `fdFldr` | the whole `DInfo`, `frFlags` less 0x0001 |
+| b+20..35 | the whole `FXInfo`; `fdScript` always comes back 0x80 | the whole `DXInfo`; `frScript` likewise |
+
+Two exceptions, both runs. The two files below the first folder level
+lost hasBeenInited and got a location held in no header; the four files
+directly in the top folder kept theirs. That the depth is the rule is a
+hypothesis, on two files.
 
 ## Archives named but not extracted
 

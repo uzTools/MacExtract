@@ -440,7 +440,7 @@ target_compile_options(MacExtract PRIVATE -mcpu=68000 -Os -Wno-multichar
                        # each extracted file's Get Info comment read back
                        # with PBDTGetComment — the half of the metadata no
                        # host tool can read off a System 7 disk
-                       # (tools/vmac/hfs_cat.py, DECISIONS.md 2026-10-17).
+                       # (tools/vmac/hfscat.py, DECISIONS.md 2026-10-17).
                        $<$<BOOL:$ENV{UNC_AT_DTCOMMENT}>:-DUNC_AT_DTCOMMENT>
                        # UNC_AT_SEPARATE_BLOCKS: force the two-separate-NewPtr
                        # staging path (re-tests the old "3 blocks bomb" claim).
