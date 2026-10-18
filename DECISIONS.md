@@ -438,6 +438,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the question after the look) — the destination is asked once the format is known, a file nothing here extracts is refused before it, Cancel there ends the launch, and the app no longer names a format it cannot open
 - 2026-10-18 (the formats it only named) — the engine and the CLI stop recognising the sixteen formats they never extracted, and a negative test keeps the safety the recognition gave
 - 2026-10-18 (the allocator nobody had built yet) — a split set beside an AppleSingle with a comment crashed the application; the peek now has an allocator of its own
+- 2026-10-18 (the comment the root kept) — a Get Info comment reached the disk only at a volume's root; Find… opens where the parts are; the progress line no longer flickers
 
 ---
 
@@ -28482,3 +28483,50 @@ the mock-Toolbox sink test does not reach `RunExtract`; the walk that
 caught it is an emulator walk, run by hand (an incomplete StuffIt set
 beside an AppleSingle carrying a comment). A harness phase for it is not
 written.
+
+## 2026-10-18 (the comment the root kept) — a Get Info comment reached the disk only at a volume's root; Find… opens where the parts are; the progress line no longer flickers
+
+**Found by the maintainer** on the LC 475 (System 7.6.1): extracted into a
+folder, `Comment.as`'s `Kept Whole` and `Spotlight.zip`'s folder `Spot` had
+no comment, while every file inside `Spot` kept its own.
+
+**The cause, measured** on System 7.0.1 with the shipped build: extracted
+to a volume's root, Get Info shows the comment; into a folder, the box is
+empty and the `Desktop DB` holds no copy of it. What the run writes at the
+top of the output reaches `StampCat` with directory 0 and the working
+directory `SFPutFile` answered. The File Manager calls resolve 0 through
+that working directory. `PBDTSetComment`, given `PBDTGetPath`'s volume, reads
+it as the root. **The fix**: the parent's own ID, which `PBGetCatInfo` has
+just returned (`ioFlParID`, `ioDrParID` at the same offset); the same walk
+then shows the comment. The emulator tiers never saw it, because
+`run.py` and `metarun.py` extract to a volume's root.
+
+**The sink test could not fail on it**: its mock answered no parent ID and
+took directory 0 anywhere. It now reports the output folder's own ID as
+the parent of the top level and refuses 0 in the Desktop Manager call, and
+the old line fails `meta [drop none]` (0x10) there.
+
+**Two more from the same pass, asked for by the maintainer.** Find…
+(a missing part) opened in the destination, the folder Standard File last
+showed; it now opens in the folder of the lowest-numbered part found, set
+through `SFSaveDisk` and `CurDirStore` after `PBGetWDInfo`. Remembering
+the folder `SFGetFile` showed would be a third the size, and wrong for an
+archive dropped on the application, which never passes through it —
+the way the maintainer ran every test of this pass.
+
+**The progress line flickered twice over.** It redrew an unchanged
+*"about 3 minutes"* every second; it now compares the estimate as shown.
+That left a flicker on some changes of the percentage and not others,
+seen on the LC: `SetDialogItemText` erases the item before drawing it, and
+the blank shows when the refresh falls between. The line is now drawn over
+the old one in `srcCopy` and only what lies right of it erased; the item
+keeps the text for an update. Its baseline, the item's top plus the font's
+ascent, is where TextEdit was assumed to draw a static text's first line;
+checked by eye on the LC, where an update under the About box drew the
+line in the same place.
+
+**Measured.** Shipped CODE +228 and A5 −4 (Find… 108, the line drawn
+without a blank 64): 224 B off every budget; the control the same, so
+`OVL_SAVED` does not move and `TIERS` −224, derived. The Find… folder and
+the progress line are not seen by any harness; the maintainer checked both
+on the LC.

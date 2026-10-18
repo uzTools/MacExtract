@@ -1027,8 +1027,13 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
     elapsed = now - pr->startTicks;
     pct = ProgressReading(elapsed, done, total, &rem);
 
-    /* Redraw nothing if the reading has not changed: SetDialogItemText
-     * redraws the item, and at 10 Hz that flickers. */
+    /* The estimate as it will be SHOWN: -1 while estimating, seconds
+     * under a minute (5 at least), else whole minutes in seconds. Redraw
+     * nothing if that and the percentage have not changed:
+     * SetDialogItemText erases and redraws the item, and redrawing the
+     * same "about 3 minutes" every second flickered on an LC 475. */
+    if (rem >= 0)
+        rem = rem < 5 ? 5 : rem < 60 ? rem : (rem + 30) / 60 * 60;
     if (pct == pr->shownPct && rem == pr->shownRem) return 1;
     pr->shownPct = pct;
     pr->shownRem = rem;
@@ -1046,16 +1051,39 @@ static int prog_tick(void *ctx, uint32_t done, uint32_t total)
             PStrCat(s, S_PROG_ESTIMATING);
         } else if (rem < 60) {
             PStrCat(s, S_PROG_ABOUT);
-            PStrCatNum(s, rem < 5 ? 5 : rem);
+            PStrCatNum(s, rem);
             PStrCat(s, S_PROG_SECONDS);
         } else {
-            long mins = (rem + 30) / 60;
+            long mins = rem / 60;
             PStrCat(s, S_PROG_ABOUT);
             PStrCatNum(s, mins);
             PStrCat(s, mins == 1 ? S_PROG_MINUTE : S_PROG_MINUTES);
         }
+        /* Not SetDialogItemText: it erases the item before drawing it, and
+         * on an LC 475 that blank was seen on some changes of the
+         * percentage and not others, as the refresh fell. The item keeps
+         * the text for an update; the line is drawn over the old one in
+         * srcCopy, which paints each character's background, and only
+         * what lies right of it is erased. The baseline is the item's top
+         * plus the font's ascent, where TextEdit puts a static text's
+         * first line: checked by eye against an update on the LC
+         * (DECISIONS.md 2026-10-18, *the comment the root kept*). */
         GetDialogItem(pr->dlg, kDetailItem, &kind, &h, &box);
-        if (h) SetDialogItemText(h, s);
+        if (h) {
+            FontInfo fi;
+            Point pen;
+            PtrToXHand(s + 1, h, s[0]);
+            GetFontInfo(&fi);
+            MoveTo(box.left, (short)(box.top + fi.ascent));
+            TextMode(srcCopy);
+            DrawString(s);
+            TextMode(srcOr);
+            GetPen(&pen);
+            if (pen.h < box.right) {
+                box.left = pen.h;
+                EraseRect(&box);
+            }
+        }
     }
     return 1;
 }
@@ -2520,13 +2548,16 @@ static void StampCat(MacSink *s)
     union { CInfoPBRec c; HParamBlockRec h; DTPBRec d; } u;
 #define pb u.c
     Str63 name;
-    long z;
+    long z, par = s->curDirID;
     BlockMoveData(s->curName, name, s->curName[0] + 1);
     pb.hFileInfo.ioNamePtr = name;
     pb.hFileInfo.ioVRefNum = s->vRefNum;
     pb.hFileInfo.ioDirID = s->curDirID;
     pb.hFileInfo.ioFDirIndex = 0;
     if (PBGetCatInfoSync(&pb) == noErr) {
+        /* The parent's real directory ID, for the Desktop Manager below
+         * (ioDrParID sits at the same offset). */
+        par = pb.hFileInfo.ioFlParID;
         /* The rest of the Finder info, where the archive stated it: the
          * FInfo or DInfo and the FXInfo or DXInfo whole, as raw bytes,
          * which is the layout a 68000 holds them in. Then the fields
@@ -2595,7 +2626,13 @@ static void StampCat(MacSink *s)
         u.d.ioVRefNum = s->vRefNum;
         if (PBDTGetPath(&u.d) == noErr) {
             u.d.ioNamePtr = name;
-            u.d.ioDirID = s->curDirID;
+            /* Not curDirID: at the top of the output that is 0, which the
+             * calls above resolve through the working directory and
+             * PBDTSetComment, given PBDTGetPath's volume, reads as the
+             * root — measured with the comment lost in any folder but a
+             * volume's root (DECISIONS.md 2026-10-18, *the comment the
+             * root kept*). */
+            u.d.ioDirID = par;
             u.d.ioDTBuffer = (Ptr)s->cur.comment;
             u.d.ioDTReqCount = s->cur.comment_len;
             if (PBDTSetCommentSync(&u.d) == noErr)
@@ -3648,6 +3685,30 @@ static int SegEjectPrevious(SegHost *h, int part)
     return PBEject(&pb) == noErr;
 }
 
+/* Find… opens in the folder of the lowest-numbered part located so far,
+ * not in the one Standard File last showed, which by then is the
+ * destination. SFSaveDisk holds the volume's reference number negated and
+ * CurDirStore the folder's ID (Inside Macintosh: Files, *Standard File
+ * Package*, Setting the Current Directory). A part's location may be a
+ * working directory with folder 0, as SFGetFile answers; PBGetWDInfo
+ * gives its volume and folder, and a real volume reference number comes
+ * back unchanged with the root's ID. Where it fails, Standard File keeps
+ * its own folder. */
+static void SegStartIn(SegHost *h)
+{
+    WDPBRec w;
+    int p;
+    for (p = 1; p <= kSegMaxKnown && !h->loc[p].name[0]; p++) ;
+    if (p > kSegMaxKnown) return;
+    w.ioNamePtr = NULL;
+    w.ioWDIndex = 0;
+    w.ioWDProcID = 0;
+    w.ioVRefNum = h->loc[p].vRefNum;
+    if (PBGetWDInfoSync(&w) != noErr) return;
+    LMSetSFSaveDisk(-w.ioWDVRefNum);
+    LMSetCurDirStore(h->loc[p].dirID ? h->loc[p].dirID : w.ioWDDirID);
+}
+
 /* Ask the user to point at part `part`. Returns nonzero once it has been
  * located. The autotest build has no user, so this is not compiled there
  * and a part that was not found beside the archive is simply missing. */
@@ -3700,6 +3761,7 @@ static int SegAskUser(SegHost *h, int part)
         if (hit == kSegFindItem) {
             SetPt(&where, 90, 90);
             reply.good = false;
+            SegStartIn(h);
     #ifdef UNC_AT_STACK
         SFPGetFile(where, "\p", NULL, -1, NULL, NewDlgHookProc(SFHook),
                    &reply, getDlgID, NULL);

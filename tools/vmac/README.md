@@ -2848,7 +2848,10 @@ one.
 catalog that continues there), HFS+, MFS, a partition map. `Desktop DB`.
 What the Finder then does with any of it: draws the icon there, opens the
 window at that rectangle, shows the comment. A folder's comment: neither
-fixture gives a folder one.
+fixture gives a folder one. **An output that is not a volume's root**: both
+extract to Out's root, where directory 0 and the root agree, so a comment
+lost in any folder passed here (DECISIONS.md 2026-10-18, *the comment the
+root kept*).
 
 ### Dates in the Macintosh's zone — `tzrun.py`
 

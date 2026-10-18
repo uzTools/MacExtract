@@ -48,6 +48,13 @@ static char gOutDir[512];
 #define MAX_DIRS 512
 static char gDirs[MAX_DIRS][700];
 static int  gNumDirs = 1;   /* [0] filled in main() */
+/* The output folder's OWN directory ID. The shell addresses it as 0, the
+ * working directory SFPutFile answers, which the File Manager resolves;
+ * the Desktop Manager does not, and reads 0 as the volume's root. The
+ * catalog reports this ID as the parent of what sits at the top, as the
+ * real one reports the folder's (DECISIONS.md 2026-10-18, *the comment
+ * the root kept*). */
+#define OUT_REAL_ID 1000
 
 /* Sanitize a Pascal Str63 into a C name (': ' path handling not needed
  * — sink already produced a leaf component). */
@@ -92,6 +99,7 @@ static void full_path(long dir, ConstStr255Param name, int rsrc,
 {
     char leaf[64];
     const char *base = (dir >= 0 && dir < gNumDirs) ? gDirs[dir] : gOutDir;
+    if (dir == OUT_REAL_ID) base = gOutDir;
     pstr(name, leaf, sizeof leaf);
     snprintf(out, cap, "%s/%s%s", base, rsrc ? "._" : "", leaf);
 }
@@ -254,6 +262,7 @@ OSErr PBDTSetCommentSync(DTPBRec *pb)
     CatRec *r;
     gDTSetCalls++;
     if (pb->ioDTRefNum != 99) return paramErr;
+    if (pb->ioDirID == 0) return fnfErr;       /* the root: not the output */
     full_path(pb->ioDirID, pb->ioNamePtr, 0, path, sizeof path);
     r = cat_rec(path, 0);
     if (!r) return fnfErr;
@@ -364,8 +373,17 @@ OSErr PBGetCatInfoSync(CInfoPBRec *pb)
             *slash = '/';
         }
     } else {
+        char *slash;
+        int par;
         full_path(pb->dirInfo.ioDrDirID, pb->dirInfo.ioNamePtr, 0, path,
                   sizeof path);
+        slash = strrchr(path, '/');
+        if (slash) {
+            *slash = 0;
+            par = dir_id_for(path);
+            *slash = '/';
+            pb->hFileInfo.ioFlParID = par ? par : OUT_REAL_ID;
+        }
     }
     if (stat(path, &st) != 0) return fnfErr;
     r = cat_rec(path, 1);

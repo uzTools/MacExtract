@@ -566,7 +566,10 @@ ls -la "$BUILD_DIR"/MacExtract.APPL "$BUILD_DIR"/MacExtract.bin "$BUILD_DIR"/Mac
 # +72 code and -8 A5 on 2026-10-18: the peek's own allocator, so a split set
 # beside an AppleSingle with a comment no longer crashes (DECISIONS.md
 # 2026-10-18, *the allocator nobody had built yet*): the control.
-UNC_MAC_CODE_DEFAULT=187052
+# +228 code and -4 A5 on 2026-10-18: the comment at the top of the output,
+# Find… where the parts are and a progress line drawn without a blank
+# (DECISIONS.md 2026-10-18, *the comment the root kept*): the control.
+UNC_MAC_CODE_DEFAULT=187280
 # The A5 ratchet, added 2026-09-02 with the measurement that made it
 # necessary: 16,384 B of .data cost 16,418 B of budget, so data is not free
 # and never was (FORMATS.md, *What the application costs the engine*; the
@@ -1111,8 +1114,12 @@ UNC_MAC_A5_DEFAULT=36892
 # +72 code and +24 A5 on 2026-10-18: the peek's own allocator, so a split set
 # beside an AppleSingle with a comment no longer crashes (DECISIONS.md
 # 2026-10-18, *the allocator nobody had built yet*): 96 B off every budget.
-UNC_MAC_CODE_EAGER=56536
-UNC_MAC_A5_EAGER=17880
+# +228 code and -4 A5 on 2026-10-18: the comment at the top of the output,
+# Find… where the parts are and a progress line drawn without a blank
+# (DECISIONS.md 2026-10-18, *the comment the root kept*): 224 B off every
+# budget.
+UNC_MAC_CODE_EAGER=56764
+UNC_MAC_A5_EAGER=17876
 # +8 on 2026-10-02 for the same reason as the eager pair above: the
 # overlay call that now says WHICH of StuffIt 2.x's ciphers an entry
 # wants. A5 fell to 19,096 and its ceiling is left where it was.
@@ -1179,7 +1186,8 @@ UNC_MAC_A5_EAGER=17880
 # -1,328 code on 2026-10-18, the formats it only named (the eager pair
 # above); A5 -704 to 17,964, under its ceiling.
 # +76 code on 2026-10-18, the same allocator.
-UNC_MAC_CODE_LAZY=54960
+# +228 code on 2026-10-18, the same three.
+UNC_MAC_CODE_LAZY=55188
 UNC_MAC_A5_LAZY=19200
 if [ -n "$UNC_OVL_RESIDENT" ]; then
     UNC_MAC_MAX_CODE=${UNC_MAC_MAX_CODE:-$UNC_MAC_CODE_DEFAULT}

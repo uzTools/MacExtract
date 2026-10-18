@@ -142,10 +142,12 @@ REPO = os.path.dirname(HERE)
 # **All three RAISED by 2,032 B 2026-10-18, DERIVED**: TIERS_CONTROL fell
 # by that much when the engine stopped naming the formats it does not
 # extract (below).
+# **Lowered by 224 B 2026-10-18, DERIVED**: TIERS_CONTROL rose by that much
+# with the comment at the top of the output (below).
 TIERS = {
-    "sys3-512K": (189556, "System 3.0, Macintosh 512Ke (225,956 B free)"),
-    "sys6-512K": (94156, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
-    "floor-1M":  (618444, "System 6.0.8, 1 MB Mac Plus — the floor target"),
+    "sys3-512K": (189332, "System 3.0, Macintosh 512Ke (225,956 B free)"),
+    "sys6-512K": (93932, "System 6.0.8, Macintosh 512Ke (130,556 B free)"),
+    "floor-1M":  (618220, "System 6.0.8, 1 MB Mac Plus — the floor target"),
 }
 
 # RE-TAKEN on all three machines 2026-10-09 (`-D UNC_OVL_RESIDENT -D
@@ -287,7 +289,12 @@ TIERS = {
 # (DECISIONS.md 2026-10-18, *the allocator nobody had built yet*), the
 # control's CODE +72 and A5 -8 against the shipped pair's +96, so OVL_SAVED
 # -32 and every grant falls 96 B on the machine.
-TIERS_CONTROL = 223936     # build/mac-resident, CODE + A5, 2026-10-18
+# **+224 2026-10-18, and TIERS -224, DERIVED**: the comment at the top of
+# the output, Find… where the parts are and a progress line drawn without
+# a blank (DECISIONS.md 2026-10-18, *the comment the root kept*): CODE +228
+# and A5 -4 in the control and the shipped pair alike, so OVL_SAVED does
+# not move and every grant falls 224 B on the machine.
+TIERS_CONTROL = 224160     # build/mac-resident, CODE + A5, 2026-10-18
 # **What this control cannot see: the autotest harness.** TIERS was read
 # on the machine from an autotest build (`UNC_MAC_AUTOTEST`), and
 # build/mac-resident has no harness in it, so harness growth lowers what a
