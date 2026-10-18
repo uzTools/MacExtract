@@ -439,6 +439,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the formats it only named) — the engine and the CLI stop recognising the sixteen formats they never extracted, and a negative test keeps the safety the recognition gave
 - 2026-10-18 (the allocator nobody had built yet) — a split set beside an AppleSingle with a comment crashed the application; the peek now has an allocator of its own
 - 2026-10-18 (the comment the root kept) — a Get Info comment reached the disk only at a volume's root; Find… opens where the parts are; the progress line no longer flickers
+- 2026-10-18 (the format nobody reads) — "Unknown format." and "Archive damaged." replace "This file could not be extracted."; what the iMac pass measured
 
 ---
 
@@ -28530,3 +28531,29 @@ without a blank 64): 224 B off every budget; the control the same, so
 `OVL_SAVED` does not move and `TIERS` −224, derived. The Find… folder and
 the progress line are not seen by any harness; the maintainer checked both
 on the LC.
+
+## 2026-10-18 (the format nobody reads) — "Unknown format." and "Archive damaged." replace "This file could not be extracted."; what the iMac pass measured
+
+**The maintainer's call**, on Mac OS 9.2.2 with `Other.rar`: *"This file
+could not be extracted"* reads as a corrupted archive. It covered two
+cases, and now names each in his words: **Unknown format.** where the last
+layer's sniff found no reader (`shape.fmt` is `UNC_FORMAT_UNKNOWN`), and
+**Archive damaged.** where a reader claimed the file and failed before its
+first entry. Shipped CODE +32, A5 0; the control
++64, so `OVL_SAVED` +32 and `TIERS` −64, derived.
+
+**Measured on the iMac in the same pass**, for the record of what the shell
+leans on:
+- **gmtDelta includes summer time on 9.2.2.** Paris with automatic daylight
+  saving on 2026-10-18: a 22:51 UTC date came out 0:51 (+2), and the
+  January tar date 1:00 UTC came out 2:00, the known hour (*dates in the
+  Macintosh's own zone*). On 7.6.1, Map at Paris with daylight saving
+  unticked gave +1.
+- **Find… follows General Controls.** With *Documents: Last folder used in
+  the application*, Mac OS 8/9 opens every Standard File dialog where the
+  application last was, so `SegStartIn` is overridden and Find… opened in
+  the destination; with *Folder set by the application* it opened beside the
+  archive. The user's setting wins, and is left to win.
+- **`.DS_Store` comes out invisible**, all 16 of `Aqua_Candy_Two.zip`'s:
+  their `__MACOSX` sidecars carry flags 0x4000; Sherlock found them only
+  when asked for invisible files.

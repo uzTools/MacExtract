@@ -1972,7 +1972,10 @@ static void StampCat(MacSink *s);
  * (unzip60/macos/source/mactime.c, GMTDelta) uses gmtDelta alone, and
  * Mini vMac fills the field from the host's tm_gmtoff, daylight saving
  * included (OSGLUXWN.c) — three readings that the current offset is
- * gmtDelta, none of them Apple's (hypothesis; DECISIONS.md). Only the
+ * gmtDelta, none of them Apple's. Measured on Mac OS 9.2.2 on 2026-10-18,
+ * Paris with automatic daylight saving, in summer time: a 22:51 UTC date
+ * came out 0:51, so 9.2.2's gmtDelta includes the hour; 7.6.1 with Map
+ * at Paris and daylight saving unticked gave +1 (DECISIONS.md). Only the
  * offset NOW is known, so a date from the other half of the year is a
  * daylight-saving hour out, as Info-ZIP's own caveat says of its port. */
 #ifdef UNC_SINK_TEST
@@ -6180,6 +6183,7 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
     int ret, entries, errors;
     Str255 outcome;
     short alrt;
+    ExtractShape shape;  /* the last layer's, which the outcome reads too */
 
     RepReset();          /* this file's report, not the last one's */
     ContigSample();
@@ -6208,7 +6212,6 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
      * folders is what an envelope yields, and the file is then sniffed
      * rather than trusted by name. */
     {
-        ExtractShape shape;
         short curVol = vRefNum;
         long curDir = dirID;
         Str63 curName;
@@ -6383,7 +6386,10 @@ static void ExtractOne(short vRefNum, long dirID, ConstStr255Param name,
          * them (FORMATS.md, *Name limits*). */
         PStrCat(outcome, S_OUT_STOPPED);
     else if (ret != UNC_OK)
-        PStrCat(outcome, S_OUT_FAILED);
+        /* The last layer's sniff (RunExtract): a file no reader claims
+         * is not a damaged one. */
+        PStrCat(outcome, shape.fmt == UNC_FORMAT_UNKNOWN ? S_OUT_UNKNOWN
+                                                         : S_OUT_DAMAGED);
     /* A run that finished with something behind it. WHERE THE LIST IS
      * BEING SHOWN the verdict says only that — every entry that failed
      * is named a row above it, with what is wrong with it, and a

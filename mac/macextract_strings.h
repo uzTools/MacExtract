@@ -157,7 +157,11 @@
                             "and try again."
 #define S_OUT_STOPPED       "Extraction stopped part way through this " \
                             "archive."
-#define S_OUT_FAILED        "This file could not be extracted."
+/* Nothing here reads it, and a format this reads but could not: the
+ * maintainer's two words, 2026-10-18 (DECISIONS.md, *the format
+ * nobody reads*). */
+#define S_OUT_UNKNOWN       "Unknown format."
+#define S_OUT_DAMAGED       "Archive damaged."
 #define S_OUT_SOME_UNSUPP   "Unsupported method."
 #define S_OUT_SOME_FAILED   "Some entries could not be extracted."
 /* Instead of the two above when the report lists the entries. */

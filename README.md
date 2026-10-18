@@ -114,7 +114,7 @@ the only thing that works when you are swapping floppies.
 **Does not open:** StuffIt X and the PC-side and modern archives — RAR,
 7-Zip, xz, bzip2, Zstandard, Cabinet, `ar`/`.deb`, cpio and the rest. To
 MacExtract they are files like any other it does not read: the Mac says
-*"This file could not be extracted."* straight after you pick it, without
+*"Unknown format."* straight after you pick it, without
 asking where to put anything, and the command-line tool says *format not
 recognized*.
 
