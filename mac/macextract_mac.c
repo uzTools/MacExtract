@@ -3174,6 +3174,27 @@ static int env_end(void *ctx, int status)
     return 0;
 }
 
+/* The allocator a peek runs on: plain NewPtr and DisposePtr, outside the
+ * engine's budget. SegScanWrapped unwraps envelopes beside a set before
+ * RunExtract has built `al`, and must not take the budget early either:
+ * mal_alloc fixes it at its first call, and that is meant to come after
+ * the overlay release. Until 2026-10-18 the peek was handed `al` still
+ * uninitialised, harmless while no envelope reader allocated; AppleSingle's
+ * comment then did, and a split set beside an AppleSingle with a comment
+ * crashed the application (the maintainer's LC 475; DECISIONS.md
+ * 2026-10-18, *the allocator nobody had built yet*). */
+static void *peek_alloc(void *ctx, uint32_t size)
+{
+    (void)ctx;
+    return NewPtr((Size)size);
+}
+
+static void peek_free(void *ctx, void *ptr)
+{
+    (void)ctx;
+    if (ptr) DisposePtr((Ptr)ptr);
+}
+
 /* Run one envelope layer of a file into `es`. 0 if it is not one. */
 static int EnvRun(short vol, long dir, ConstStr255Param nm, EnvSink *es,
                   UncAlloc *al)
@@ -4258,9 +4279,13 @@ static int RunExtract(short inVol, long inDir, ConstStr255Param name,
              * download arrives, and also how a half-unstuffed one does.
              * A complete set opens nothing beside it. */
             if (sh->desc.scheme == UNC_FORMAT_SITSEG && !SegHaveAll(sh)) {
+                UncAlloc pal;
+                pal.ctx = NULL;
+                pal.alloc = peek_alloc;
+                pal.free = peek_free;
                 if (origVol != inVol || origDir != inDir)
-                    SegScanWrapped(sh, origVol, origDir, &al);
-                SegScanWrapped(sh, inVol, inDir, &al);
+                    SegScanWrapped(sh, origVol, origDir, &pal);
+                SegScanWrapped(sh, inVol, inDir, &pal);
             }
             /* A message/partial set is required to state its part
              * count only on the LAST part (RFC 2046 5.2.2), so a set

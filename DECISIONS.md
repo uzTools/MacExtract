@@ -437,6 +437,7 @@ which fails CI if it drifts from the headings below it.
 - 2026-10-18 (the comment Spotlight kept) — a Mac OS X sidecar's Spotlight comment becomes the file's Get Info comment, as UTF-8 that the shell folds into MacRoman
 - 2026-10-18 (the question after the look) — the destination is asked once the format is known, a file nothing here extracts is refused before it, Cancel there ends the launch, and the app no longer names a format it cannot open
 - 2026-10-18 (the formats it only named) — the engine and the CLI stop recognising the sixteen formats they never extracted, and a negative test keeps the safety the recognition gave
+- 2026-10-18 (the allocator nobody had built yet) — a split set beside an AppleSingle with a comment crashed the application; the peek now has an allocator of its own
 
 ---
 
@@ -28445,3 +28446,39 @@ README's comparison table keeps its StuffIt X row (🔴), which is true.
 (3) `reference/wimlib` is no longer fetched (`tools/fetch_references.sh`):
 WIM's specimen is written by p7zip, and nothing cites wimlib; the shared
 `reference/` copy was left in place.
+
+## 2026-10-18 (the allocator nobody had built yet) — a split set beside an AppleSingle with a comment crashed the application; the peek now has an allocator of its own
+
+**Found by the maintainer** on the LC 475 (System 7.6.1): opening
+`Palette.sit.1`, part 1 of a set whose part 2 is missing, crashed just
+after the progress window, *"an error of type 2"*, in a folder holding the
+final test's other archives; the same file alone had asked for its part
+correctly the day before. **Reproduced** under Mini vMac on System 7.0.1
+(*"illegal instruction"*) with the whole folder, then by bisection with
+`Comment.as` and `Dates.tar` beside it, and not with the other half.
+
+**The cause, measured.** When a StuffIt set is incomplete, `RunExtract`
+unwraps the envelopes beside it to look for a wrapped part
+(`SegScanWrapped`), handing them `&al` — which is set up some eighty lines
+LATER. The allocator was stack garbage, and nothing called it as long as
+no envelope reader allocated. AppleSingle's comment, read since 2026-10-17
+(*the envelopes' own Finder info*), does: `Comment.as` has one. The
+engine's own reading of every file in the folder was clean under ASan
+(`unc_segment_match`, and the CLI's whole run), so the fault was the
+shell's alone.
+
+**The fix.** The peek runs on its own allocator, `NewPtr` and `DisposePtr`
+outside the budget, rather than on `al` moved earlier: `mal_alloc` fixes
+the engine's budget at its first call, which must come after the overlay
+release, and a peek's allocations are small and freed at once.
+
+**Measured.** The same two walks on System 7.0.1 now reach *"Part 2 of
+"Palette.sit" has not been found."*, with the pair and with the whole
+folder. Shipped CODE +72, A5 +24: 96 B off every budget; the control +64,
+`OVL_SAVED` −32, `TIERS` −64, derived.
+
+**What nothing in CI sees.** The scan runs only in the Macintosh shell, and
+the mock-Toolbox sink test does not reach `RunExtract`; the walk that
+caught it is an emulator walk, run by hand (an incomplete StuffIt set
+beside an AppleSingle carrying a comment). A harness phase for it is not
+written.
